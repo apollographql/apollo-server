@@ -1,6 +1,6 @@
 import { composeAndValidate } from '../composeAndValidate';
 import gql from 'graphql-tag';
-import { GraphQLObjectType } from 'graphql';
+import { GraphQLObjectType, DocumentNode } from 'graphql';
 import {
   astSerializer,
   typeSerializer,
@@ -276,60 +276,111 @@ it('errors on invalid usages of default operation names', () => {
   `);
 });
 
-describe('value types integration tests', () => {
-  it('handles valid value types correctly', () => {
-    const duplicatedValueTypes = gql`
-      scalar Date
-
-      union CatalogItem = Couch | Mattress
-
-      interface Product {
-        sku: ID!
-      }
-
-      input NewProductInput {
-        sku: ID!
-        type: CatalogItemEnum
-      }
-
-      enum CatalogItemEnum {
-        COUCH
-        MATTRESS
-      }
-
-      type Couch implements Product {
-        sku: ID!
-        material: String!
-      }
-
-      type Mattress implements Product {
-        sku: ID!
-        size: String!
-      }
-    `;
-
+describe('composition of value types', () => {
+  function getSchemaWithValueType(valueType: DocumentNode) {
     const serviceA = {
       typeDefs: gql`
+        ${valueType}
+
         type Query {
-          product: Product
+          filler: String
         }
-        ${duplicatedValueTypes}
       `,
       name: 'serviceA',
     };
 
     const serviceB = {
-      typeDefs: gql`
-        type Query {
-          topProducts: [Product]
-        }
-        ${duplicatedValueTypes}
-      `,
+      typeDefs: valueType,
       name: 'serviceB',
     };
 
-    const { errors } = composeAndValidate([serviceA, serviceB]);
-    expect(errors).toHaveLength(0);
+    return composeAndValidate([serviceA, serviceB]);
+  }
+
+  describe('success', () => {
+    it('scalars', () => {
+      const { errors, schema } = getSchemaWithValueType(
+        gql`
+          scalar Date
+        `,
+      );
+      expect(errors).toHaveLength(0);
+      expect(schema.getType('Date')).toMatchInlineSnapshot(`scalar Date`);
+    });
+
+    it('unions and object types', () => {
+      const { errors, schema } = getSchemaWithValueType(
+        gql`
+          union CatalogItem = Couch | Mattress
+
+          type Couch {
+            sku: ID!
+            material: String!
+          }
+
+          type Mattress {
+            sku: ID!
+            size: String!
+          }
+        `,
+      );
+      expect(errors).toHaveLength(0);
+      expect(schema.getType('CatalogItem')).toMatchInlineSnapshot(
+        `union CatalogItem = Couch | Mattress`,
+      );
+      expect(schema.getType('Couch')).toMatchInlineSnapshot(`
+              type Couch {
+                sku: ID!
+                material: String!
+              }
+          `);
+    });
+
+    it('input types', () => {
+      const { errors, schema } = getSchemaWithValueType(gql`
+        input NewProductInput {
+          sku: ID!
+          type: String
+        }
+      `);
+      expect(errors).toHaveLength(0);
+      expect(schema.getType('NewProductInput')).toMatchInlineSnapshot(`
+              input NewProductInput {
+                sku: ID!
+                type: String
+              }
+          `);
+    });
+
+    it('interfaces', () => {
+      const { errors, schema } = getSchemaWithValueType(gql`
+        interface Product {
+          sku: ID!
+        }
+      `);
+      expect(errors).toHaveLength(0);
+      expect(schema.getType('Product')).toMatchInlineSnapshot(`
+              interface Product {
+                sku: ID!
+              }
+          `);
+    });
+
+    it('enums', () => {
+      const { errors, schema } = getSchemaWithValueType(gql`
+        enum CatalogItemEnum {
+          COUCH
+          MATTRESS
+        }
+      `);
+      expect(errors).toHaveLength(0);
+      expect(schema.getType('CatalogItemEnum')).toMatchInlineSnapshot(`
+              enum CatalogItemEnum {
+                COUCH
+                MATTRESS
+              }
+          `);
+    });
   });
 
   describe('errors', () => {
@@ -498,5 +549,106 @@ describe('value types integration tests', () => {
         }
       `);
     });
+  });
+});
+
+describe('composition of schemas with directives', () => {
+  /**
+   * To see which usage sites indicate whether a directive is "executable" or
+   * merely for use by the type-system ("type-system"), see the GraphQL spec:
+   * https://graphql.github.io/graphql-spec/June2018/#sec-Type-System.Directives
+   */
+  it('preserves executable and purges type-system directives', () => {
+    const serviceA = {
+      typeDefs: gql`
+        "directives at FIELDs are executable"
+        directive @audit(risk: Int!) on FIELD
+
+        "directives at FIELD_DEFINITIONs are for the type-system"
+        directive @transparency(concealment: Int!) on FIELD_DEFINITION
+
+        type EarthConcern {
+          environmental: String! @transparency(concealment: 5)
+        }
+
+        extend type Query {
+          importantDirectives: [EarthConcern!]!
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        "directives at FIELDs are executable"
+        directive @audit(risk: Int!) on FIELD
+
+        "directives at FIELD_DEFINITIONs are for the type-system"
+        directive @transparency(concealment: Int!) on FIELD_DEFINITION
+
+        "directives at OBJECTs are for the type-system"
+        directive @experimental on OBJECT
+
+        extend type EarthConcern @experimental {
+          societal: String! @transparency(concealment: 6)
+        }
+      `,
+      name: 'serviceB',
+    };
+
+    const { schema, errors } = composeAndValidate([serviceA, serviceB]);
+    expect(errors).toHaveLength(0);
+
+    const audit = schema.getDirective('audit');
+    expect(audit).toMatchInlineSnapshot(`"@audit"`);
+
+    const transparency = schema.getDirective('transparency');
+    expect(transparency).toBeUndefined();
+
+    const type = schema.getType('EarthConcern') as GraphQLObjectType;
+
+    expect(type.astNode).toMatchInlineSnapshot(`
+      type EarthConcern {
+        environmental: String!
+      }
+    `);
+
+    const fields = type.getFields();
+
+    expect(fields['environmental'].astNode).toMatchInlineSnapshot(
+      `environmental: String!`,
+    );
+
+    expect(fields['societal'].astNode).toMatchInlineSnapshot(
+      `societal: String!`,
+    );
+  });
+
+  it(`doesn't strip the special case @deprecated type-system directive`, () => {
+    const serviceA = {
+      typeDefs: gql`
+        type EarthConcern {
+          environmental: String!
+        }
+
+        extend type Query {
+          importantDirectives: [EarthConcern!]!
+            @deprecated(reason: "Don't remove me please")
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const { schema, errors } = composeAndValidate([serviceA]);
+    expect(errors).toHaveLength(0);
+
+    const deprecated = schema.getDirective('deprecated');
+    expect(deprecated).toMatchInlineSnapshot(`"@deprecated"`);
+
+    const queryType = schema.getType('Query') as GraphQLObjectType;
+    const field = queryType.getFields()['importantDirectives'];
+
+    expect(field.isDeprecated).toBe(true);
+    expect(field.deprecationReason).toEqual("Don't remove me please");
   });
 });

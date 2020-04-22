@@ -108,7 +108,7 @@ const client = new ApolloClient({
 });
 ```
 
-> For more information, take a look at the [Getting Started Guide for React](docs/react/essentials/get-started)
+> For more information, take a look at the [Getting Started Guide for React](https://www.apollographql.com/docs/react/essentials/get-started/)
 
 ### Deploy to Netlify
 

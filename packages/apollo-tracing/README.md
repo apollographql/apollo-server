@@ -4,7 +4,7 @@ This package is used to collect and expose trace data in the [Apollo Tracing](ht
 
 It relies on instrumenting a GraphQL schema to collect resolver timings, and exposes trace data for an individual request under `extensions` as part of the GraphQL response.
 
-This data can be consumed by [Apollo Engine](https://www.apollographql.com/engine/) or any other tool to provide visualization and history of field-by-field execution performance.
+This data can be consumed by [Apollo Graph Manager](https://www.apollographql.com/platform/) (previously, Apollo Engine) or any other tool to provide visualization and history of field-by-field execution performance.
 
 ## Usage
 

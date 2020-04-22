@@ -37,7 +37,6 @@ export const AnyType = new GraphQLScalarType({
   },
 });
 
-// FIXME: move to apollo-env
 function isPromise<T>(value: PromiseOrValue<T>): value is Promise<T> {
   return Boolean(value && 'then' in value && typeof value.then === 'function');
 }
@@ -77,7 +76,6 @@ export const entitiesField: GraphQLFieldConfig<any, any> = {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(AnyType))),
     },
   },
-  description: '',
   resolve(_source, { representations }, context, info) {
     return representations.map((reference: { __typename: string } & object) => {
       const { __typename } = reference;

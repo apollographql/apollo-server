@@ -71,7 +71,7 @@ app.listen({ port: 4000 }, () =>
 );
 ```
 
-> Note; `qs-middleware` is only required if running outside of Meteor
+> Note: `qs-middleware` is only required if running outside of Meteor
 
 ## Principles
 

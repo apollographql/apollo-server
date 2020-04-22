@@ -12,7 +12,7 @@ import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
-import { GraphQLRequestContext } from 'apollo-server-types';
+import { GraphQLRequestContext, Logger } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 
@@ -178,13 +178,24 @@ export interface EngineReportingOptions<TContext> {
    */
   rewriteError?: (err: GraphQLError) => GraphQLError | null;
   /**
-   * A human readable name to tag this variant of a schema (i.e. staging, EU)
+   * [DEPRECATED: use graphVariant] A human readable name to tag this variant of a schema (i.e. staging, EU)
    */
   schemaTag?: string;
+  /**
+   * A human readable name to refer to the variant of the graph for which metrics are reported
+   */
+  graphVariant?: string;
   /**
    * Creates the client information for operation traces.
    */
   generateClientInfo?: GenerateClientInfo<TContext>;
+
+  /**
+   * A logger interface to be used for output and errors.  When not provided
+   * it will default to the server's own `logger` implementation and use
+   * `console` when that is not available.
+   */
+  logger?: Logger;
 }
 
 export interface AddTraceArgs {
@@ -198,7 +209,6 @@ export interface AddTraceArgs {
 
 const serviceHeaderDefaults = {
   hostname: os.hostname(),
-  // tslint:disable-next-line no-var-requires
   agentVersion: `apollo-engine-reporting@${require('../package.json').version}`,
   runtimeVersion: `node ${process.version}`,
   // XXX not actually uname, but what node has easily.
@@ -210,6 +220,7 @@ const serviceHeaderDefaults = {
 // to the Engine server.
 export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions<TContext>;
+  private logger: Logger = console;
   private apiKey: string;
   private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
     null,
@@ -227,6 +238,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
+    if (options.logger) this.logger = options.logger;
     this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
     if (!this.apiKey) {
       throw new Error(
@@ -237,7 +249,7 @@ export class EngineReportingAgent<TContext = any> {
     // Since calculating the signature for Engine reporting is potentially an
     // expensive operation, we'll cache the signatures we generate and re-use
     // them based on repeated traces for the same `queryHash`.
-    this.signatureCache = createSignatureCache();
+    this.signatureCache = createSignatureCache({ logger: this.logger });
 
     this.sendReportsImmediately = options.sendReportsImmediately;
     if (!this.sendReportsImmediately) {
@@ -292,7 +304,11 @@ export class EngineReportingAgent<TContext = any> {
         ...serviceHeaderDefaults,
         schemaHash,
         schemaTag:
-          this.options.schemaTag || process.env.ENGINE_SCHEMA_TAG || '',
+          this.options.graphVariant
+          || this.options.schemaTag
+          || process.env.APOLLO_GRAPH_VARIANT
+          || process.env.ENGINE_SCHEMA_TAG
+          || '',
       });
       // initializes this.reports[reportHash]
       this.resetReport(schemaHash);
@@ -354,8 +370,17 @@ export class EngineReportingAgent<TContext = any> {
     await Promise.resolve();
 
     if (this.options.debugPrintReports) {
-      // tslint:disable-next-line no-console
-      console.log(`Engine sending report: ${JSON.stringify(report.toJSON())}`);
+      // In terms of verbosity, and as the name of this option suggests, this
+      // message is either an "info" or a "debug" level message.  However,
+      // we are using `warn` here for compatibility reasons since the
+      // `debugPrintReports` flag pre-dated the existence of log-levels and
+      // changing this to also require `debug: true` (in addition to
+      // `debugPrintReports`) just to reach the level of verbosity to produce
+      // the output would be a breaking change.  The "warn" level is on by
+      // default.  There is a similar theory and comment applied below.
+      this.logger.warn(
+        `Engine sending report: ${JSON.stringify(report.toJSON())}`,
+      );
     }
 
     const protobufError = FullTracesReport.verify(report);
@@ -403,32 +428,44 @@ export class EngineReportingAgent<TContext = any> {
         });
 
         if (curResponse.status >= 500 && curResponse.status < 600) {
-          throw new Error(`${curResponse.status}: ${curResponse.statusText}`);
+          throw new Error(
+            `HTTP status ${curResponse.status}, ${(await curResponse.text()) ||
+              '(no body)'}`,
+          );
         } else {
           return curResponse;
         }
       },
       {
-        retries: this.options.maxAttempts || 5,
+        retries: (this.options.maxAttempts || 5) - 1,
         minTimeout: this.options.minimumRetryDelayMs || 100,
         factor: 2,
       },
     ).catch((err: Error) => {
-      throw new Error(`Error sending report to Apollo Engine servers: ${err}`);
+      throw new Error(
+        `Error sending report to Apollo Engine servers: ${err.message}`,
+      );
     });
 
     if (response.status < 200 || response.status >= 300) {
       // Note that we don't expect to see a 3xx here because request follows
       // redirects.
       throw new Error(
-        `Error sending report to Apollo Engine servers (HTTP status ${
+        `Error sending report to Apollo Engine servers: HTTP status ${
           response.status
-        }): ${await response.text()}`,
+        }, ${(await response.text()) || '(no body)'}`,
       );
     }
     if (this.options.debugPrintReports) {
-      // tslint:disable-next-line no-console
-      console.log(`Engine report: status ${response.status}`);
+      // In terms of verbosity, and as the name of this option suggests, this
+      // message is either an "info" or a "debug" level message.  However,
+      // we are using `warn` here for compatibility reasons since the
+      // `debugPrintReports` flag pre-dated the existence of log-levels and
+      // changing this to also require `debug: true` (in addition to
+      // `debugPrintReports`) just to reach the level of verbosity to produce
+      // the output would be a breaking change.  The "warn" level is on by
+      // default.  There is a similar theory and comment applied above.
+      this.logger.warn(`Engine report: status ${response.status}`);
     }
   }
 
@@ -462,7 +499,7 @@ export class EngineReportingAgent<TContext = any> {
   }): Promise<string> {
     if (!documentAST && !queryString) {
       // This shouldn't happen: one of those options must be passed to runQuery.
-      throw new Error('No queryString or parsedQuery?');
+      throw new Error('No queryString or documentAST?');
     }
 
     const cacheKey = signatureCacheKey(queryHash, operationName);
@@ -488,8 +525,9 @@ export class EngineReportingAgent<TContext = any> {
       return queryString as string;
     }
 
-    const generatedSignature = (this.options.calculateSignature ||
-      defaultEngineReportingSignature)(documentAST, operationName);
+    const generatedSignature = (
+      this.options.calculateSignature || defaultEngineReportingSignature
+    )(documentAST, operationName);
 
     // Intentionally not awaited so the cache can be written to at leisure.
     this.signatureCache.set(cacheKey, generatedSignature);
@@ -513,7 +551,7 @@ export class EngineReportingAgent<TContext = any> {
       if (this.options.reportErrorFunction) {
         this.options.reportErrorFunction(err);
       } else {
-        console.error(err.message);
+        this.logger.error(err.message);
       }
     });
   }
@@ -526,7 +564,11 @@ export class EngineReportingAgent<TContext = any> {
   }
 }
 
-function createSignatureCache(): InMemoryLRUCache<string> {
+function createSignatureCache({
+  logger,
+}: {
+  logger: Logger;
+}): InMemoryLRUCache<string> {
   let lastSignatureCacheWarn: Date;
   let lastSignatureCacheDisposals: number = 0;
   return new InMemoryLRUCache<string>({
@@ -555,7 +597,7 @@ function createSignatureCache(): InMemoryLRUCache<string> {
       ) {
         // Log the time that we last displayed the message.
         lastSignatureCacheWarn = new Date();
-        console.warn(
+        logger.warn(
           [
             'This server is processing a high number of unique operations.  ',
             `A total of ${lastSignatureCacheDisposals} records have been `,

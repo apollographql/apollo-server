@@ -1,70 +1,76 @@
-import { ServiceDefinition } from '@apollo/federation';
-import { GraphQLExecutionResult } from 'apollo-server-types';
+import { GraphQLRequest } from 'apollo-server-types';
 import { parse } from 'graphql';
-import fetch, { HeadersInit } from 'node-fetch';
-import { ServiceEndpointDefinition } from './';
-
-let serviceDefinitionMap: Map<string, string> = new Map();
+import { Headers, HeadersInit } from 'node-fetch';
+import { GraphQLDataSource } from './datasources/types';
+import { Experimental_UpdateServiceDefinitions, SERVICE_DEFINITION_QUERY } from './';
+import { ServiceDefinition } from '@apollo/federation';
 
 export async function getServiceDefinitionsFromRemoteEndpoint({
   serviceList,
   headers = {},
+  serviceSdlCache,
 }: {
-  serviceList: ServiceEndpointDefinition[];
+  serviceList: {
+    name: string;
+    url?: string;
+    dataSource: GraphQLDataSource;
+  }[];
   headers?: HeadersInit;
-}): Promise<[ServiceDefinition[], boolean]> {
+  serviceSdlCache: Map<string, string>;
+}): ReturnType<Experimental_UpdateServiceDefinitions> {
   if (!serviceList || !serviceList.length) {
     throw new Error(
       'Tried to load services from remote endpoints but none provided',
     );
   }
 
-  let isNew = false;
+  let isNewSchema = false;
   // for each service, fetch its introspection schema
-  const services: ServiceDefinition[] = (await Promise.all(
-    serviceList.map(service => {
-      if (!service.url) {
-        throw new Error(
-          `Tried to load schema from ${service.name} but no url found`,
-        );
-      }
-      return fetch(service.url, {
+  const promiseOfServiceList = serviceList.map(({ name, url, dataSource }) => {
+    if (!url) {
+      throw new Error(
+        `Tried to load schema for '${name}' but no 'url' was specified.`);
+    }
+
+    const request: GraphQLRequest = {
+      query: SERVICE_DEFINITION_QUERY,
+      http: {
+        url,
         method: 'POST',
-        body: JSON.stringify({
-          query: 'query GetServiceDefinition { _service { sdl } }',
-        }),
-        headers: { 'Content-Type': 'application/json', ...headers },
+        headers: new Headers(headers),
+      },
+    };
+
+    return dataSource
+      .process({ request, context: {} })
+      .then(({ data, errors }): ServiceDefinition => {
+        if (data && !errors) {
+          const typeDefs = data._service.sdl as string;
+          const previousDefinition = serviceSdlCache.get(name);
+          // this lets us know if any downstream service has changed
+          // and we need to recalculate the schema
+          if (previousDefinition !== typeDefs) {
+            isNewSchema = true;
+          }
+          serviceSdlCache.set(name, typeDefs);
+          return {
+            name,
+            url,
+            typeDefs: parse(typeDefs),
+          };
+        }
+
+        throw new Error(errors?.map(e => e.message).join("\n"));
       })
-        .then(res => res.json())
-        .then(({ data, errors }: GraphQLExecutionResult) => {
-          if (data && !errors) {
-            const typeDefs = data._service.sdl as string;
-            const previousDefinition = serviceDefinitionMap.get(service.name);
-            // this lets us know if any downstream service has changed
-            // and we need to recalculate the schema
-            if (previousDefinition !== typeDefs) {
-              isNew = true;
-            }
-            serviceDefinitionMap.set(service.name, typeDefs);
-            return { ...service, typeDefs: parse(typeDefs) };
-          }
+      .catch(err => {
+        const errorMessage =
+          `Couldn't load service definitions for "${name}" at ${url}` +
+          (err && err.message ? ": " + err.message || err : "");
 
-          // XXX handle local errors better for local development
-          if (errors) {
-            errors.forEach(console.error);
-          }
+        throw new Error(errorMessage);
+      });
+  });
 
-          return false;
-        })
-        .catch(error => {
-          console.warn(
-            `Encountered error when loading ${service.name} at ${service.url}: ${error.message}`,
-          );
-          return false;
-        });
-    }),
-  ).then(services => services.filter(Boolean))) as ServiceDefinition[];
-
-  // return services
-  return [services, isNew];
+  const serviceDefinitions = await Promise.all(promiseOfServiceList);
+  return { serviceDefinitions, isNewSchema }
 }

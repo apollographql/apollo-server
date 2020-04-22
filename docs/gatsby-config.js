@@ -1,74 +1,75 @@
+const themeOptions = require('gatsby-theme-apollo-docs/theme-options');
+
 module.exports = {
   pathPrefix: '/docs/apollo-server',
-  __experimentalThemes: [
+  plugins: [
     {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
+        ...themeOptions,
         root: __dirname,
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
         githubRepo: 'apollographql/apollo-server',
-        defaultVersion: 2,
+        defaultVersion: '2',
         versions: {
-          1: 'version-1',
+          '1': 'version-1',
         },
         sidebarCategories: {
-          null: ['index', 'getting-started', 'whats-new'],
-          Essentials: [
-            'essentials/schema',
-            'essentials/server',
-            'essentials/data',
+          null: [
+            'index',
+            'getting-started',
+            '[Changelog](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)',
           ],
-          Features: [
-            'features/caching',
-            'features/mocking',
-            'features/errors',
-            'features/data-sources',
-            'features/subscriptions',
-            'features/metrics',
-            'features/graphql-playground',
-            'features/scalars-enums',
-            'features/unions-interfaces',
-            'features/directives',
-            'features/creating-directives',
-            'features/authentication',
-            'features/testing',
-            'features/apq',
-            'features/health-checks',
-            'features/file-uploads',
+          'Defining a Schema': [
+            'schema/schema',
+            'schema/scalars-enums',
+            'schema/unions-interfaces',
+            'schema/directives',
+            'schema/creating-directives',
           ],
-          Federation: [
+          'Fetching Data': [
+            'data/resolvers',
+            'data/data-sources',
+            'data/errors',
+            'data/file-uploads',
+            'data/subscriptions',
+          ],
+          'Apollo Federation': [
             'federation/introduction',
-            'federation/concerns',
-            'federation/core-concepts',
-            'federation/implementing',
-            'federation/advanced-features',
+            'federation/implementing-services',
+            'federation/gateway',
+            'federation/entities',
+            'federation/value-types',
             'federation/errors',
-            'federation/migrating-from-stitching',
-            'federation/federation-spec',
             'federation/metrics',
+            'federation/migrating-from-stitching',
+            'federation/other-servers',
+            'federation/federation-spec',
           ],
-          // 'Schema stitching': [
-          //   'features/schema-stitching',
-          //   'features/remote-schemas',
-          //   'features/schema-delegation',
-          //   'features/schema-transforms',
-          // ],
+          Testing: ['testing/mocking', 'testing/testing', 'testing/graphql-playground'],
+          Performance: ['performance/caching', 'performance/apq'],
+          Security: ['security/authentication', 'security/terminating-ssl'],
+          Integrations: [
+            'integrations/middleware',
+            'integrations/plugins',
+          ],
           Deployment: [
-            // 'deployment/index',
             'deployment/heroku',
             'deployment/lambda',
             'deployment/now',
             'deployment/netlify',
             'deployment/azure-functions',
           ],
+          Monitoring: ['monitoring/metrics', 'monitoring/health-checks'],
           'API Reference': [
             'api/apollo-server',
             'api/apollo-federation',
             'api/apollo-gateway',
             'api/graphql-tools',
           ],
-          Migration: [
+          Appendices: [
+            'proxy-configuration',
             'migration-two-dot',
             'migration-engine',
             'migration-file-uploads',

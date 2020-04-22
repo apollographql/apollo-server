@@ -114,6 +114,8 @@ export class ApolloServer extends ApolloServerBase {
           );
         }
       }
+      
+      res.set(corsHeaders);
 
       if (req.method === 'OPTIONS') {
         res.status(204).send('');
@@ -134,8 +136,6 @@ export class ApolloServer extends ApolloServerBase {
           return;
         }
       }
-
-      res.set(corsHeaders);
 
       graphqlCloudFunction(async () => {
         // In a world where this `createHandler` was async, we might avoid this

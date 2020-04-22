@@ -1,6 +1,12 @@
 // Place your settings in this file to overwrite default and user settings.
 {
   "editor.tabSize": 2,
+  // You're welcome to use Prettier on code hunks that are directly related to
+  // your changes but we ask that, rather than using "Format Document" or
+  // `editor.formatOnSave`, you instead highlight your changes and choose
+  // "Format Selection" (Windows: Ctrl-K Ctrl-F; Mac: Cmd-K Cmd-F) to avoid
+  // destructive formatting changes to entire files. Thanks for understanding!
+  "editor.formatOnSave": false,
   "editor.rulers": [80],
   "editor.wordWrapColumn": 80,
   "files.trimTrailingWhitespace": true,

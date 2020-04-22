@@ -283,7 +283,7 @@ new ApolloServer({
 
 ## Replacing `logFunction`
 
-Apollo Server 2 removes the `logFunction` to reduce the exposure of internal implementation details. The experimental, non-public `graphql-extensions` provides a more structured and flexible way of instrumenting Apollo Server. An explanation of to do more granular logging, can be found in the [metrics section](/features/metrics/).
+Apollo Server 2 removes the `logFunction` to reduce the exposure of internal implementation details. The experimental, non-public `graphql-extensions` provides a more structured and flexible way of instrumenting Apollo Server. An explanation of to do more granular logging, can be found in the [metrics section](/monitoring/metrics/).
 
 ## Replacing GraphiQL
 

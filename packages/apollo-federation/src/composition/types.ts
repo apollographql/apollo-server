@@ -1,4 +1,9 @@
-import { SelectionNode, DocumentNode, FieldDefinitionNode } from 'graphql';
+import {
+  SelectionNode,
+  DocumentNode,
+  FieldDefinitionNode,
+  DirectiveDefinitionNode,
+} from 'graphql';
 
 export type ServiceName = string | null;
 
@@ -23,12 +28,14 @@ export interface FederationType {
   externals?: {
     [serviceName: string]: ExternalFieldDefinition[];
   };
+  isValueType?: boolean;
 }
 
 export interface FederationField {
   serviceName?: ServiceName;
   requires?: ReadonlyArray<SelectionNode>;
   provides?: ReadonlyArray<SelectionNode>;
+  belongsToValueType?: boolean;
 }
 
 export interface ServiceDefinition {
@@ -72,6 +79,16 @@ declare module 'graphql/type/definition' {
 
   interface GraphQLField<TSource, TContext> {
     federation?: FederationField;
+  }
+}
+
+declare module 'graphql/type/directives' {
+  interface GraphQLDirective {
+    federation?: {
+      directiveDefinitions: {
+        [serviceName: string]: DirectiveDefinitionNode;
+      };
+    };
   }
 }
 

@@ -1,5 +1,4 @@
 import 'apollo-server-env';
-import 'apollo-env';
 import {
   GraphQLSchema,
   extendSchema,
@@ -15,11 +14,10 @@ import {
   GraphQLObjectType,
   specifiedDirectives,
   TypeDefinitionNode,
+  DirectiveDefinitionNode,
   TypeExtensionNode,
 } from 'graphql';
-import { mapValues } from 'apollo-env';
 import { transformSchema } from 'apollo-graphql';
-
 import federationDirectives from '../directives';
 import {
   findDirectivesOnTypeOrField,
@@ -27,10 +25,14 @@ import {
   parseSelections,
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
+  typeNodesAreEquivalent,
+  mapValues,
+  isFederationDirective,
+  executableDirectiveLocations,
+  stripTypeSystemDirectivesFromTypeDefs,
 } from './utils';
 import {
   ServiceDefinition,
-  ServiceName,
   ExternalFieldDefinition,
   ServiceNameToKeyDirectivesMap,
 } from './types';
@@ -50,13 +52,18 @@ const EmptyMutationDefinition = {
   serviceName: null,
 };
 
-// Map of all definitions to eventually be passed to extendSchema
-interface DefinitionsMap {
+// Map of all type definitions to eventually be passed to extendSchema
+interface TypeDefinitionsMap {
   [name: string]: TypeDefinitionNode[];
 }
-// Map of all extensions to eventually be passed to extendSchema
-interface ExtensionsMap {
+// Map of all type extensions to eventually be passed to extendSchema
+interface TypeExtensionsMap {
   [name: string]: TypeExtensionNode[];
+}
+
+// Map of all directive definitions to eventually be passed to extendSchema
+interface DirectiveDefinitionsMap {
+  [name: string]: { [serviceName: string]: DirectiveDefinitionNode };
 }
 
 /**
@@ -79,7 +86,7 @@ interface ExtensionsMap {
  */
 interface TypeToServiceMap {
   [typeName: string]: {
-    serviceName?: ServiceName;
+    owningService?: string;
     extensionFieldsToOwningServiceMap: { [fieldName: string]: string };
   };
 }
@@ -99,17 +106,25 @@ interface TypeToServiceMap {
 export interface KeyDirectivesMap {
   [typeName: string]: ServiceNameToKeyDirectivesMap;
 }
+
+/**
+ * A set of type names that have been determined to be a value type, a type
+ * shared across at least 2 services.
+ */
+type ValueTypes = Set<string>;
 /**
  * Loop over each service and process its typeDefs (`definitions`)
  * - build up typeToServiceMap
- * - push individual definitions onto either definitionsMap or extensionsMap
+ * - push individual definitions onto either typeDefinitionsMap or typeExtensionsMap
  */
 export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
-  const definitionsMap: DefinitionsMap = Object.create(null);
-  const extensionsMap: ExtensionsMap = Object.create(null);
+  const typeDefinitionsMap: TypeDefinitionsMap = Object.create(null);
+  const typeExtensionsMap: TypeExtensionsMap = Object.create(null);
+  const directiveDefinitionsMap: DirectiveDefinitionsMap = Object.create(null);
   const typeToServiceMap: TypeToServiceMap = Object.create(null);
   const externalFields: ExternalFieldDefinition[] = [];
   const keyDirectivesMap: KeyDirectivesMap = Object.create(null);
+  const valueTypes: ValueTypes = new Set();
 
   for (const { typeDefs, name: serviceName } of serviceList) {
     // Build a new SDL with @external fields removed, as well as information about
@@ -121,7 +136,14 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
 
     externalFields.push(...strippedFields);
 
-    for (let definition of typeDefsWithoutExternalFields.definitions) {
+    // Type system directives from downstream services are not a concern of the
+    // gateway, but rather the services on which the fields live which serve
+    // those types.  In other words, its up to an implementing service to
+    // act on such directives, not the gateway.
+    const typeDefsWithoutTypeSystemDirectives =
+      stripTypeSystemDirectivesFromTypeDefs(typeDefsWithoutExternalFields);
+
+    for (const definition of typeDefsWithoutTypeSystemDirectives.definitions) {
       if (
         definition.kind === Kind.OBJECT_TYPE_DEFINITION ||
         definition.kind === Kind.OBJECT_TYPE_EXTENSION
@@ -156,23 +178,36 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
          * 1. It was declared by a previous service, but this newer one takes precedence, or...
          * 2. It was extended by a service before declared
          */
-        if (typeToServiceMap[typeName]) {
-          typeToServiceMap[typeName].serviceName = serviceName;
-        } else {
+        if (!typeToServiceMap[typeName]) {
           typeToServiceMap[typeName] = {
-            serviceName,
             extensionFieldsToOwningServiceMap: Object.create(null),
           };
         }
 
+        typeToServiceMap[typeName].owningService = serviceName;
+
         /**
          * If this type already exists in the definitions map, push this definition to the array (newer defs
-         * take precedence). If not, create the definitions array and add it to the definitionsMap.
+         * take precedence). If the types are determined to be identical, add the type name
+         * to the valueTypes Set.
+         *
+         * If not, create the definitions array and add it to the typeDefinitionsMap.
          */
-        if (definitionsMap[typeName]) {
-          definitionsMap[typeName].push({ ...definition, serviceName });
+        if (typeDefinitionsMap[typeName]) {
+          const isValueType = typeNodesAreEquivalent(
+            typeDefinitionsMap[typeName][
+              typeDefinitionsMap[typeName].length - 1
+            ],
+            definition,
+          );
+
+          if (isValueType) {
+            valueTypes.add(typeName);
+          }
+
+          typeDefinitionsMap[typeName].push({ ...definition, serviceName });
         } else {
-          definitionsMap[typeName] = [{ ...definition, serviceName }];
+          typeDefinitionsMap[typeName] = [{ ...definition, serviceName }];
         }
       } else if (isTypeExtensionNode(definition)) {
         const typeName = definition.name.value;
@@ -230,12 +265,41 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
         /**
          * If an extension for this type already exists in the extensions map, push this extension to the
          * array (since a type can be extended by multiple services). If not, create the extensions array
-         * and add it to the extensionsMap.
+         * and add it to the typeExtensionsMap.
          */
-        if (extensionsMap[typeName]) {
-          extensionsMap[typeName].push({ ...definition, serviceName });
+        if (typeExtensionsMap[typeName]) {
+          typeExtensionsMap[typeName].push({ ...definition, serviceName });
         } else {
-          extensionsMap[typeName] = [{ ...definition, serviceName }];
+          typeExtensionsMap[typeName] = [{ ...definition, serviceName }];
+        }
+      } else if (definition.kind === Kind.DIRECTIVE_DEFINITION) {
+        const directiveName = definition.name.value;
+
+        // The composed schema should only contain directives and their
+        // ExecutableDirectiveLocations. This filters out any TypeSystemDirectiveLocations.
+        // A new DirectiveDefinitionNode with this filtered list will be what is
+        // added to the schema.
+        const executableLocations = definition.locations.filter(location =>
+          executableDirectiveLocations.includes(location.value),
+        );
+
+        // If none of the directive's locations are executable, we don't need to
+        // include it in the composed schema at all.
+        if (executableLocations.length === 0) continue;
+
+        const definitionWithExecutableLocations: DirectiveDefinitionNode = {
+          ...definition,
+          locations: executableLocations,
+        };
+
+        if (directiveDefinitionsMap[directiveName]) {
+          directiveDefinitionsMap[directiveName][
+            serviceName
+          ] = definitionWithExecutableLocations;
+        } else {
+          directiveDefinitionsMap[directiveName] = {
+            [serviceName]: definitionWithExecutableLocations,
+          };
         }
       }
     }
@@ -247,25 +311,30 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
   // extendSchema will complain about this. We can't add an empty
   // GraphQLObjectType to the schema constructor, so we add an empty definition
   // here. We only add mutation if there is a mutation extension though.
-  if (!definitionsMap.Query) definitionsMap.Query = [EmptyQueryDefinition];
-  if (extensionsMap.Mutation && !definitionsMap.Mutation)
-    definitionsMap.Mutation = [EmptyMutationDefinition];
+  if (!typeDefinitionsMap.Query)
+    typeDefinitionsMap.Query = [EmptyQueryDefinition];
+  if (typeExtensionsMap.Mutation && !typeDefinitionsMap.Mutation)
+    typeDefinitionsMap.Mutation = [EmptyMutationDefinition];
 
   return {
     typeToServiceMap,
-    definitionsMap,
-    extensionsMap,
+    typeDefinitionsMap,
+    typeExtensionsMap,
+    directiveDefinitionsMap,
     externalFields,
     keyDirectivesMap,
+    valueTypes,
   };
 }
 
 export function buildSchemaFromDefinitionsAndExtensions({
-  definitionsMap,
-  extensionsMap,
+  typeDefinitionsMap,
+  typeExtensionsMap,
+  directiveDefinitionsMap,
 }: {
-  definitionsMap: DefinitionsMap;
-  extensionsMap: ExtensionsMap;
+  typeDefinitionsMap: TypeDefinitionsMap;
+  typeExtensionsMap: TypeExtensionsMap;
+  directiveDefinitionsMap: DirectiveDefinitionsMap;
 }) {
   let errors: GraphQLError[] | undefined = undefined;
 
@@ -277,7 +346,12 @@ export function buildSchemaFromDefinitionsAndExtensions({
   // Extend the blank schema with the base type definitions (as an AST node)
   const definitionsDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
-    definitions: Object.values(definitionsMap).flat(),
+    definitions: [
+      ...Object.values(typeDefinitionsMap).flat(),
+      ...Object.values(directiveDefinitionsMap).map(
+        definitions => Object.values(definitions)[0],
+      ),
+    ],
   };
 
   errors = validateSDL(definitionsDocument, schema, compositionRules);
@@ -286,43 +360,59 @@ export function buildSchemaFromDefinitionsAndExtensions({
   // Extend the schema with the extension definitions (as an AST node)
   const extensionsDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
-    definitions: Object.values(extensionsMap).flat(),
+    definitions: Object.values(typeExtensionsMap).flat(),
   };
 
   errors.push(...validateSDL(extensionsDocument, schema, compositionRules));
 
   schema = extendSchema(schema, extensionsDocument, { assumeValidSDL: true });
 
+  // Remove federation directives from the final schema
+  schema = new GraphQLSchema({
+    ...schema.toConfig(),
+    directives: [
+      ...schema.getDirectives().filter(x => !isFederationDirective(x)),
+    ],
+  });
+
   return { schema, errors };
 }
 
 /**
- * Using the typeToServiceMap, augment the passed in `schema` to add `federation` metadata to the types and
- * fields
+ * Using the various information we've collected about the schema, augment the
+ * `schema` itself with `federation` metadata to the types and fields
  */
 export function addFederationMetadataToSchemaNodes({
   schema,
   typeToServiceMap,
   externalFields,
   keyDirectivesMap,
+  valueTypes,
+  directiveDefinitionsMap,
 }: {
   schema: GraphQLSchema;
   typeToServiceMap: TypeToServiceMap;
   externalFields: ExternalFieldDefinition[];
   keyDirectivesMap: KeyDirectivesMap;
+  valueTypes: ValueTypes;
+  directiveDefinitionsMap: DirectiveDefinitionsMap;
 }) {
   for (const [
     typeName,
-    { serviceName: baseServiceName, extensionFieldsToOwningServiceMap },
+    { owningService, extensionFieldsToOwningServiceMap },
   ] of Object.entries(typeToServiceMap)) {
     const namedType = schema.getType(typeName) as GraphQLNamedType;
     if (!namedType) continue;
 
     // Extend each type in the GraphQLSchema with the serviceName that owns it
     // and the key directives that belong to it
+    const isValueType = valueTypes.has(typeName);
+    const serviceName = isValueType ? null : owningService;
+
     namedType.federation = {
       ...namedType.federation,
-      serviceName: baseServiceName,
+      serviceName,
+      isValueType,
       ...(keyDirectivesMap[typeName] && {
         keys: keyDirectivesMap[typeName],
       }),
@@ -343,10 +433,11 @@ export function addFederationMetadataToSchemaNodes({
         ) {
           field.federation = {
             ...field.federation,
-            serviceName: baseServiceName,
+            serviceName,
             provides: parseSelections(
               providesDirective.arguments[0].value.value,
             ),
+            belongsToValueType: isValueType,
           };
         }
       }
@@ -408,20 +499,34 @@ export function addFederationMetadataToSchemaNodes({
       },
     };
   }
+
+  // add all definitions of a specific directive for validation later
+  for (const directiveName of Object.keys(directiveDefinitionsMap)) {
+    const directive = schema.getDirective(directiveName);
+    if (!directive) continue;
+
+    directive.federation = {
+      ...directive.federation,
+      directiveDefinitions: directiveDefinitionsMap[directiveName],
+    };
+  }
 }
 
 export function composeServices(services: ServiceDefinition[]) {
   const {
     typeToServiceMap,
-    definitionsMap,
-    extensionsMap,
+    typeDefinitionsMap,
+    typeExtensionsMap,
+    directiveDefinitionsMap,
     externalFields,
     keyDirectivesMap,
+    valueTypes,
   } = buildMapsFromServiceList(services);
 
   let { schema, errors } = buildSchemaFromDefinitionsAndExtensions({
-    definitionsMap,
-    extensionsMap,
+    typeDefinitionsMap,
+    typeExtensionsMap,
+    directiveDefinitionsMap,
   });
 
   // TODO: We should fix this to take non-default operation root types in
@@ -462,6 +567,8 @@ export function composeServices(services: ServiceDefinition[]) {
     typeToServiceMap,
     externalFields,
     keyDirectivesMap,
+    valueTypes,
+    directiveDefinitionsMap,
   });
 
   /**

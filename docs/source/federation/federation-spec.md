@@ -1,5 +1,6 @@
 ---
-title: Federation specification
+title: Apollo Federation specification
+sidebar_title: Specification
 description: For implementing federation in other languages
 ---
 
@@ -45,9 +46,9 @@ For more information on these additions, see the [glossary](#schema-modification
 
 ## Fetch service capabilities
 
-Schema composition at the gateway relies on understanding the capabilities of underlying services. This is done through an enhanced introspection using a new entry point added to the query root of a service, the `_service` field.
+Schema composition at the gateway requires having each service's schema, annotated with its federation configuration. This information is fetched from each service using `_service`, an enhanced introspection entry point added to the query root of each federated service.
 
-> Note that the `_service` field is never exposed at the gateway. This is soley done to compose the schema.
+> Note that the `_service` field is not exposed by the gateway; it is solely for internal use.
 
 The `_service` resolver should return the `_Service` type which has a single field called `sdl`. This SDL (schema definition language) is a printed version of the service's schema **including** the annotations of federation directives. This SDL does **not** include the additions of the federation spec above. Given an input like this:
 
@@ -275,7 +276,7 @@ When fetching `Review.product` from the Reviews service, it is possible to reque
 ### `@requires`
 
 ```graphql
-directive @requires(fields: _FieldSet!) on FIELD_DEFINITON
+directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
 ```
 
 The `@requires` directive is used to annotate the required input fieldset from a base type for a resolver. It is used to develop a query plan where the required fields may not be needed by the client, but the service may need additional information from other services. For example:

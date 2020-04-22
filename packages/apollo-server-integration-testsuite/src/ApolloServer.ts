@@ -1,10 +1,8 @@
-/* tslint:disable:no-unused-expression */
 import http from 'http';
 import { sha256 } from 'js-sha256';
 import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
-import yup = require('yup');
 
 import { FullTracesReport, Trace } from 'apollo-engine-reporting-protobuf';
 
@@ -118,24 +116,31 @@ const schema = new GraphQLSchema({
 const makeGatewayMock = ({
   optionsSpy = _options => {},
   unsubscribeSpy = () => {},
+  executor = () => ({}),
 }: {
   optionsSpy?: (_options: any) => void;
   unsubscribeSpy?: () => void;
+  executor?: GraphQLExecutor;
 } = {}) => {
   const eventuallyAssigned = {
     resolveLoad: null as ({ schema, executor }) => void,
+    rejectLoad: null as (err: Error) => void,
     triggerSchemaChange: null as (newSchema) => void,
   };
   const mockedLoadResults = new Promise<{
     schema: GraphQLSchema;
     executor: GraphQLExecutor;
-  }>(resolve => {
+  }>((resolve, reject) => {
     eventuallyAssigned.resolveLoad = ({ schema, executor }) => {
       resolve({ schema, executor });
+    };
+    eventuallyAssigned.rejectLoad = (err: Error) => {
+      reject(err);
     };
   });
 
   const mockedGateway: GraphQLService = {
+    executor,
     load: options => {
       optionsSpy(options);
       return mockedLoadResults;
@@ -356,12 +361,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         it("accepts a gateway's schema and calls its executor", async () => {
-          const { gateway, triggers } = makeGatewayMock();
-
           const executor = jest.fn();
           executor.mockReturnValue(
             Promise.resolve({ data: { testString: 'hi - but federated!' } }),
           );
+
+          const { gateway, triggers } = makeGatewayMock({ executor });
 
           triggers.resolveLoad({ schema, executor });
 
@@ -376,6 +381,47 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ testString: 'hi - but federated!' });
           expect(result.errors).toBeUndefined();
           expect(executor).toHaveBeenCalled();
+        });
+
+        it("rejected load promise acts as an error boundary", async () => {
+          const executor = jest.fn();
+          executor.mockResolvedValueOnce(
+            { data: { testString: 'should not get this' } }
+          );
+
+          executor.mockRejectedValueOnce(
+            { errors: [{errorWhichShouldNot: "ever be triggered"}] }
+          );
+
+          const consoleErrorSpy =
+            jest.spyOn(console, 'error').mockImplementation();
+
+          const { gateway, triggers } = makeGatewayMock({ executor });
+
+          triggers.rejectLoad(new Error("load error which should be masked"));
+
+          const { url: uri } = await createApolloServer({
+            gateway,
+            subscriptions: false,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+          const result = await apolloFetch({ query: '{testString}' });
+
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toContainEqual(
+            expect.objectContaining({
+              extensions: expect.objectContaining({
+                code: "INTERNAL_SERVER_ERROR",
+              }),
+              message: "This data graph is missing a valid configuration. " +
+                "More details may be available in the server logs."
+            })
+          );
+          expect(consoleErrorSpy).toHaveBeenCalledWith(
+            "This data graph is missing a valid configuration. " +
+              "load error which should be masked");
+          expect(executor).not.toHaveBeenCalled();
         });
 
         it('uses schema over resolvers + typeDefs', async () => {
@@ -571,6 +617,48 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors).toBeDefined();
         expect(apolloFetchResponse.status).toEqual(403);
       });
+
+      it('preserves user-added "extensions" in the response when parsing errors occur', async () => {
+        await setupApolloServerAndFetchPairForPlugins([
+          {
+            requestDidStart() {
+              return {
+                willSendResponse({ response }) {
+                  response.extensions = { myExtension: true };
+                },
+              };
+            },
+          },
+        ]);
+
+        const result =
+          await apolloFetch({ query: '{ 🦠' });
+        expect(result.errors).toBeDefined();
+        expect(result.extensions).toEqual(expect.objectContaining({
+          myExtension: true
+        }));
+      });
+
+      it('preserves user-added "extensions" in the response when validation errors occur', async () => {
+        await setupApolloServerAndFetchPairForPlugins([
+          {
+            requestDidStart() {
+              return {
+                willSendResponse({ response }) {
+                  response.extensions = { myExtension: true };
+                },
+              };
+            },
+          },
+        ]);
+
+        const result =
+          await apolloFetch({ query: '{ missingFieldWhichWillNotValidate }' });
+        expect(result.errors).toBeDefined();
+        expect(result.extensions).toEqual(expect.objectContaining({
+          myExtension: true
+        }));
+      });
     });
 
     describe('formatError', () => {
@@ -700,7 +788,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('lifecycle', () => {
-      describe('for Apollo Engine', () => {
+      describe('for Apollo Graph Manager', () => {
         let nodeEnv: string;
         let engineServer: EngineMockServer;
 
@@ -1042,6 +1130,55 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(Object.keys(reports[0].tracesPerQuery)[0]).not.toEqual(
               '# -\n{ aliasedField: justAField }',
             );
+          });
+
+          it("doesn't internal server error on an APQ", async () => {
+            await setupApolloServerAndFetchPair();
+
+            const TEST_STRING_QUERY = `
+              { onlyForThisApqTest${
+                Math.random()
+                  .toString()
+                  .split('.')[1]
+              }: justAField }
+            `;
+            const hash = sha256
+              .create()
+              .update(TEST_STRING_QUERY)
+              .hex();
+
+            const result = await apolloFetch({
+            // @ts-ignore The `ApolloFetch` types don't allow `extensions` to be
+            // passed in, in the same way as `variables`, with a request. This
+            // is a typing omission in `apollo-fetch`, as can be seen here:
+            // https://git.io/Jeb63  This will all be going away soon (and
+            // that package is already archived and deprecated.
+              extensions: {
+                persistedQuery: {
+                  version: VERSION,
+                  sha256Hash: hash,
+                }
+              },
+            });
+
+            // Having a persisted query not found error is fine.
+            expect(result.errors).toContainEqual(
+              expect.objectContaining({
+                extensions: expect.objectContaining({
+                  code: "PERSISTED_QUERY_NOT_FOUND",
+                })
+              })
+            );
+
+            // However, having an internal server error is not okay!
+            expect(result.errors).not.toContainEqual(
+              expect.objectContaining({
+                extensions: expect.objectContaining({
+                  code: "INTERNAL_SERVER_ERROR",
+                })
+              })
+            );
+
           });
 
           describe('error munging', () => {
@@ -1500,7 +1637,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
 
-      it('propogates error codes in production', async () => {
+      it('propagates error codes in production', async () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
 
@@ -1533,7 +1670,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         process.env.NODE_ENV = nodeEnv;
       });
 
-      it('propogates error codes with null response in production', async () => {
+      it('propagates error codes with null response in production', async () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
 
@@ -1729,7 +1866,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           // Unfortunately the error connection is not propagated to the
           // observable. What should happen is we provide a default onError
-          // function that notifies the returned observable and can cursomize
+          // function that notifies the returned observable and can customize
           // the behavior with an option in the client constructor. If you're
           // available to make a PR to the following please do!
           // https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts
@@ -1945,70 +2082,149 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('apollo-engine-reporting', () => {
-      it('graphql server functions even when Apollo servers are down', async () => {
-        let return502Resolve: () => void;
-        const return502Promise = new Promise(
-          resolve => (return502Resolve = resolve),
+      async function makeFakeTestableEngineServer({
+        status,
+        waitWriteResponse = false,
+      }: {
+        status: number;
+        waitWriteResponse?: boolean;
+      }) {
+        let writeResponseResolve: () => void;
+        const writeResponsePromise = new Promise(
+          resolve => (writeResponseResolve = resolve),
         );
         const fakeEngineServer = http.createServer(async (_, res) => {
-          await return502Promise;
-          res.writeHead(502);
-          res.end();
+          await writeResponsePromise;
+          res.writeHead(status);
+          res.end('Important text in the body');
         });
         await new Promise(resolve => {
           fakeEngineServer.listen(0, '127.0.0.1', () => {
             resolve();
           });
         });
-        try {
-          const { family, address, port } = fakeEngineServer.address();
-          if (family !== 'IPv4') {
-            throw new Error(`The family was unexpectedly ${family}.`);
-          }
-          const fakeEngineUrl = new URL(`http://${address}:${port}`).toString();
-
-          let reportErrorPromiseResolve: (error: Error) => void;
-          const reportErrorPromise = new Promise<Error>(
-            resolve => (reportErrorPromiseResolve = resolve),
-          );
-          const { url: uri } = await createApolloServer({
-            typeDefs: gql`
-              type Query {
-                something: String!
-              }
-            `,
-            resolvers: { Query: { something: () => 'hello' } },
-            engine: {
-              apiKey: 'service:my-app:secret',
-              endpointUrl: fakeEngineUrl,
-              reportIntervalMs: 1,
-              maxAttempts: 1,
-              reportErrorFunction(error: Error) {
-                reportErrorPromiseResolve(error);
-              },
-            },
-          });
-
-          const apolloFetch = createApolloFetch({ uri });
-
-          // Run a GraphQL query. Ensure that it returns successfully even
-          // though reporting is going to fail. (Note that reporting can't
-          // actually have failed yet because we haven't let return502Promise
-          // resolve.)
-          const result = await apolloFetch({
-            query: `{ something }`,
-          });
-          expect(result.data.something).toBe('hello');
-
-          // Allow reporting to return 502.
-          return502Resolve();
-
-          // Make sure we can get the 502 error from reporting.
-          const sendingError = await reportErrorPromise;
-          expect(sendingError.message).toContain('Error: 502: Bad Gateway');
-        } finally {
+        async function closeServer() {
           await new Promise(resolve => fakeEngineServer.close(() => resolve()));
         }
+
+        const { family, address, port } = fakeEngineServer.address();
+        if (family !== 'IPv4') {
+          throw new Error(`The family was unexpectedly ${family}.`);
+        }
+
+        const fakeEngineUrl = `http://${address}:${port}`;
+
+        if (!waitWriteResponse) {
+          writeResponseResolve();
+        }
+
+        return {
+          closeServer,
+          fakeEngineServer,
+          fakeEngineUrl,
+          writeResponseResolve,
+        };
+      }
+
+      describe('graphql server functions even when Apollo servers are down', () => {
+        async function testWithStatus(
+          status: number,
+          expectedRequestCount: number,
+        ) {
+          const networkError = status === 0;
+
+          const {
+            closeServer,
+            fakeEngineUrl,
+            writeResponseResolve,
+          } = await makeFakeTestableEngineServer({
+            status,
+            waitWriteResponse: true,
+          });
+
+          try {
+            // To simulate a network error, we create and close the server.
+            // This lets us still generate a port that is hopefully unused.
+            if (networkError) {
+              await closeServer();
+            }
+
+            let requestCount = 0;
+            const requestAgent = new http.Agent({ keepAlive: false });
+            const realCreateConnection = (requestAgent as any).createConnection;
+            (requestAgent as any).createConnection = function() {
+              requestCount++;
+              return realCreateConnection.apply(this, arguments);
+            };
+
+            let reportErrorPromiseResolve: (error: Error) => void;
+            const reportErrorPromise = new Promise<Error>(
+              resolve => (reportErrorPromiseResolve = resolve),
+            );
+            const { url: uri } = await createApolloServer({
+              typeDefs: gql`
+                type Query {
+                  something: String!
+                }
+              `,
+              resolvers: { Query: { something: () => 'hello' } },
+              engine: {
+                apiKey: 'service:my-app:secret',
+                endpointUrl: fakeEngineUrl,
+                reportIntervalMs: 1,
+                maxAttempts: 3,
+                requestAgent,
+                reportErrorFunction(error: Error) {
+                  reportErrorPromiseResolve(error);
+                },
+              },
+            });
+
+            const apolloFetch = createApolloFetch({ uri });
+
+            // Run a GraphQL query. Ensure that it returns successfully even
+            // though reporting is going to fail. (Note that reporting can't
+            // actually have failed yet (except in the network-error case)
+            // because we haven't let writeResponsePromise resolve.)
+            const result = await apolloFetch({
+              query: `{ something }`,
+            });
+            expect(result.data.something).toBe('hello');
+
+            if (!networkError) {
+              // Allow reporting to return its response (for every retry).
+              writeResponseResolve();
+            }
+
+            // Make sure we can get the error from reporting.
+            const sendingError = await reportErrorPromise;
+            expect(sendingError).toBeTruthy();
+            if (networkError) {
+              expect(sendingError.message).toContain(
+                'Error sending report to Apollo Engine servers',
+              );
+              expect(sendingError.message).toContain('ECONNREFUSED');
+            } else {
+              expect(sendingError.message).toBe(
+                `Error sending report to Apollo Engine servers: HTTP status ${status}, Important text in the body`,
+              );
+            }
+            expect(requestCount).toBe(expectedRequestCount);
+          } finally {
+            if (!networkError) {
+              await closeServer();
+            }
+          }
+        }
+        it('with retryable error', async () => {
+          await testWithStatus(500, 3);
+        });
+        it('with network error', async () => {
+          await testWithStatus(0, 3);
+        });
+        it('with non-retryable error', async () => {
+          await testWithStatus(400, 1);
+        });
       });
     });
 
@@ -2665,12 +2881,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }),
           });
 
-        const { gateway, triggers } = makeGatewayMock();
-
         const executor = req =>
           (req.source as string).match(/1/)
             ? Promise.resolve({ data: { testString1: 'hello' } })
             : Promise.resolve({ data: { testString2: 'aloha' } });
+
+        const { gateway, triggers } = makeGatewayMock({ executor });
 
         triggers.resolveLoad({
           schema: makeQueryTypeWithField('testString1'),
@@ -2727,7 +2943,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('waits until gateway has resolved a schema to respond to queries', async () => {
-        const { gateway, triggers } = makeGatewayMock();
         const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         let resolveExecutor;
         const executor = () =>
@@ -2736,6 +2951,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
               resolve({ data: { testString: 'hi - but federated!' } });
             };
           });
+
+        const { gateway, triggers } = makeGatewayMock({ executor });
 
         triggers.resolveLoad({ schema, executor });
         const { url: uri } = await createApolloServer({
@@ -2773,8 +2990,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }),
           });
 
-        const { gateway, triggers } = makeGatewayMock();
-
         const makeEventuallyResolvingPromise = val => {
           let resolver;
           const promise = new Promise(
@@ -2799,6 +3014,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
             : (req.source as string).match(/2/)
             ? p2
             : p3;
+
+        const { gateway, triggers } = makeGatewayMock({ executor });
 
         triggers.resolveLoad({
           schema: makeQueryTypeWithField('testString1'),

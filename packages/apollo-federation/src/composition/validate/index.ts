@@ -38,19 +38,21 @@ export const validateServicesBeforeComposition = (
   return warningsOrErrors;
 };
 
-const postCompositionValidators = [
-  validateSchema,
-  ...Object.values(postCompositionRules),
-];
+const postCompositionValidators = Object.values(postCompositionRules);
 
-export const validateComposedSchema = (
-  schema: GraphQLSchema,
-): GraphQLError[] => {
+export const validateComposedSchema = ({
+  schema,
+  serviceList,
+}: {
+  schema: GraphQLSchema;
+  serviceList: ServiceDefinition[];
+}): GraphQLError[] => {
   const warningsOrErrors: GraphQLError[] = [];
 
   // https://github.com/graphql/graphql-js/blob/4b55f10f16cc77302613e8ad67440259c68633df/src/type/validate.js#L56
+  warningsOrErrors.push(...validateSchema(schema));
   for (const validator of postCompositionValidators) {
-    warningsOrErrors.push(...validator(schema));
+    warningsOrErrors.push(...validator({ schema, serviceList }));
   }
 
   return warningsOrErrors;

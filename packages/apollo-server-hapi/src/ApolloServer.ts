@@ -154,9 +154,3 @@ export interface ServerRegistration {
   disableHealthCheck?: boolean;
   uploads?: boolean | Record<string, any>;
 }
-
-export const registerServer = () => {
-  throw new Error(
-    'Please use server.applyMiddleware instead of registerServer. This warning will be removed in the next release',
-  );
-};
