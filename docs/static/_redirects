@@ -1,5 +1,10 @@
 / /docs/apollo-server/
 
+# The v2 docs were beta for a while, and non-default, but now that they are
+# default, the v2 docs don't exist anymore.  So redirect them to the default!
+/docs/apollo-server/v2 /docs/apollo-server/
+/docs/apollo-server/v2/* /docs/apollo-server/:splat
+
 /docs/apollo-server/data/data/ /docs/apollo-server/data/resolvers/
 
 /docs/apollo-server/federation/implementing/ /docs/apollo-server/federation/implementing-services/

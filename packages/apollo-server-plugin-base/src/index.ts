@@ -5,7 +5,23 @@ import {
   GraphQLResponse,
   ValueOrPromise,
   WithRequired,
+  GraphQLRequestContextParsingDidStart,
+  GraphQLRequestContextValidationDidStart,
+  GraphQLRequestContextDidResolveOperation,
+  GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestContextResponseForOperation,
+  GraphQLRequestContextExecutionDidStart,
+  GraphQLRequestContextWillSendResponse,
 } from 'apollo-server-types';
+
+// We re-export all of these so plugin authors only need to depend on a single
+// package.  The overall concept of `apollo-server-types` and this package
+// is that they not depend directly on "core", in order to avoid close
+// coupling of plugin support with server versions.  They are duplicated
+// concepts right now where one package is intended to be for public plugin
+// exposure, while the other (`-types`) is meant to be used internally.
+// In the future, `apollo-server-types` and `apollo-server-plugin-base` will
+// probably roll into the same "types" package, but that is not today!
 export {
   GraphQLServiceContext,
   GraphQLRequestContext,
@@ -13,6 +29,13 @@ export {
   GraphQLResponse,
   ValueOrPromise,
   WithRequired,
+  GraphQLRequestContextParsingDidStart,
+  GraphQLRequestContextValidationDidStart,
+  GraphQLRequestContextDidResolveOperation,
+  GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestContextResponseForOperation,
+  GraphQLRequestContextExecutionDidStart,
+  GraphQLRequestContextWillSendResponse,
 };
 
 export interface ApolloServerPlugin<TContext extends Record<string, any> = Record<string, any>> {
@@ -24,28 +47,16 @@ export interface ApolloServerPlugin<TContext extends Record<string, any> = Recor
 
 export interface GraphQLRequestListener<TContext = Record<string, any>> {
   parsingDidStart?(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'metrics' | 'source'
-    >,
+    requestContext: GraphQLRequestContextParsingDidStart<TContext>,
   ): ((err?: Error) => void) | void;
   validationDidStart?(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'metrics' | 'source' | 'document'
-    >,
+    requestContext: GraphQLRequestContextValidationDidStart<TContext>,
   ): ((err?: ReadonlyArray<Error>) => void) | void;
   didResolveOperation?(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'metrics' | 'source' | 'document' | 'operationName' | 'operation'
-    >,
+    requestContext: GraphQLRequestContextDidResolveOperation<TContext>,
   ): ValueOrPromise<void>;
   didEncounterErrors?(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'metrics' | 'source' | 'errors'
-    >,
+    requestContext: GraphQLRequestContextDidEncounterErrors<TContext>,
   ): ValueOrPromise<void>;
   // If this hook is defined, it is invoked immediately before GraphQL execution
   // would take place. If its return value resolves to a non-null
@@ -53,21 +64,12 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
   // Hooks from different plugins are invoked in series and the first non-null
   // response is used.
   responseForOperation?(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'metrics' | 'source' | 'document' | 'operationName' | 'operation'
-    >,
+    requestContext: GraphQLRequestContextResponseForOperation<TContext>,
   ): ValueOrPromise<GraphQLResponse | null>;
   executionDidStart?(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'metrics' | 'source' | 'document' | 'operationName' | 'operation'
-    >,
+    requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
   ): ((err?: Error) => void) | void;
   willSendResponse?(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'metrics' | 'response'
-    >,
+    requestContext: GraphQLRequestContextWillSendResponse<TContext>,
   ): ValueOrPromise<void>;
 }
