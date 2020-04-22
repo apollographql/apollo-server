@@ -61,7 +61,7 @@ We will now install the dependencies and test our azure function app using apoll
 ```shell
 cd apollo-example
 npm init -y
-npm install apollo-server-azure-functions
+npm install apollo-server-azure-functions graphql
 ```
 
 Copy the code below and paste at you **index.js** file.
