@@ -27,6 +27,7 @@
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",
+    "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-types": "file:../apollo-server-types",
     "graphql-extensions": "file:../graphql-extensions",
     "loglevel": "^1.6.1",
