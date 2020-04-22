@@ -42,6 +42,7 @@ export interface FetchNode {
   variableUsages?: { [name: string]: VariableDefinitionNode };
   requires?: SelectionSetNode;
   internalFragments: Set<FragmentDefinitionNode>;
+  source: string;
 }
 export interface FlattenNode {
   kind: 'Flatten';
