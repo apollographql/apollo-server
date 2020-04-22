@@ -1,20 +1,23 @@
-import { TestableKeyValueCache } from 'apollo-server-caching';
+import {
+  TestableKeyValueCache,
+  KeyValueCacheSetOptions,
+} from 'apollo-server-caching';
 import Redis, { RedisOptions } from 'ioredis';
 import DataLoader from 'dataloader';
 
 export class RedisCache implements TestableKeyValueCache<string> {
   readonly client: any;
-  readonly defaultSetOptions = {
+  readonly defaultSetOptions: KeyValueCacheSetOptions = {
     ttl: 300,
   };
 
-  private loader: DataLoader<string, string>;
+  private loader: DataLoader<string, string | null>;
 
   constructor(options?: RedisOptions) {
     const client = new Redis(options);
     this.client = client;
 
-    this.loader = new DataLoader(keys => this.client.mget(keys), {
+    this.loader = new DataLoader(keys => client.mget(...keys), {
       cache: false,
     });
   }
@@ -22,10 +25,16 @@ export class RedisCache implements TestableKeyValueCache<string> {
   async set(
     key: string,
     value: string,
-    options?: { ttl?: number },
+    options?: KeyValueCacheSetOptions,
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-    await this.client.set(key, value, 'EX', ttl);
+    if (typeof ttl === 'number') {
+      await this.client.set(key, value, 'EX', ttl);
+    } else {
+      // We'll leave out the EXpiration when no value is specified.  Of course,
+      // it may be purged from the cache for other reasons as deemed necessary.
+      await this.client.set(key, value);
+    }
   }
 
   async get(key: string): Promise<string | undefined> {

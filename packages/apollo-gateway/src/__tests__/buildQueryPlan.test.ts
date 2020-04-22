@@ -25,7 +25,7 @@ describe('buildQueryPlan', () => {
 
   beforeEach(() => {
     const serviceMap = Object.fromEntries(
-      ['accounts', 'product', 'inventory', 'reviews', 'books'].map(
+      ['accounts', 'product', 'inventory', 'reviews', 'books', 'documents'].map(
         serviceName => {
           return [
             serviceName,
@@ -54,6 +54,53 @@ describe('buildQueryPlan', () => {
     }
   });
 
+  it(`should not confuse union types with overlapping field names`, () => {
+    const query = gql`
+      query {
+        body {
+          ...on Image {
+            attributes {
+              url
+            }
+          }
+          ...on Text {
+            attributes {
+              bold
+              text
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(
+      buildOperationContext(schema, query, undefined),
+    );
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "documents") {
+          {
+            body {
+              __typename
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+          }
+        },
+      }
+    `);
+  });
+
   it(`should use a single fetch when requesting a root field from one service`, () => {
     const query = gql`
       query {
@@ -66,16 +113,16 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-                                                QueryPlan {
-                                                  Fetch(service: "accounts") {
-                                                    {
-                                                      me {
-                                                        name
-                                                      }
-                                                    }
-                                                  },
-                                                }
-                                `);
+      QueryPlan {
+        Fetch(service: "accounts") {
+          {
+            me {
+              name
+            }
+          }
+        },
+      }
+    `);
   });
 
   it(`should use two independent fetches when requesting root fields from two services`, () => {
@@ -93,69 +140,69 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-                                          QueryPlan {
-                                            Parallel {
-                                              Fetch(service: "accounts") {
-                                                {
-                                                  me {
-                                                    name
-                                                  }
-                                                }
-                                              },
-                                              Sequence {
-                                                Fetch(service: "product") {
-                                                  {
-                                                    topProducts {
-                                                      __typename
-                                                      ... on Book {
-                                                        __typename
-                                                        isbn
-                                                      }
-                                                      ... on Furniture {
-                                                        name
-                                                      }
-                                                    }
-                                                  }
-                                                },
-                                                Flatten(path: "topProducts.@") {
-                                                  Fetch(service: "books") {
-                                                    {
-                                                      ... on Book {
-                                                        __typename
-                                                        isbn
-                                                      }
-                                                    } =>
-                                                    {
-                                                      ... on Book {
-                                                        __typename
-                                                        isbn
-                                                        title
-                                                        year
-                                                      }
-                                                    }
-                                                  },
-                                                },
-                                                Flatten(path: "topProducts.@") {
-                                                  Fetch(service: "product") {
-                                                    {
-                                                      ... on Book {
-                                                        __typename
-                                                        isbn
-                                                        title
-                                                        year
-                                                      }
-                                                    } =>
-                                                    {
-                                                      ... on Book {
-                                                        name
-                                                      }
-                                                    }
-                                                  },
-                                                },
-                                              },
-                                            },
-                                          }
-                            `);
+      QueryPlan {
+        Parallel {
+          Fetch(service: "accounts") {
+            {
+              me {
+                name
+              }
+            }
+          },
+          Sequence {
+            Fetch(service: "product") {
+              {
+                topProducts {
+                  __typename
+                  ... on Book {
+                    __typename
+                    isbn
+                  }
+                  ... on Furniture {
+                    name
+                  }
+                }
+              }
+            },
+            Flatten(path: "topProducts.@") {
+              Fetch(service: "books") {
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                  }
+                } =>
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                    title
+                    year
+                  }
+                }
+              },
+            },
+            Flatten(path: "topProducts.@") {
+              Fetch(service: "product") {
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                    title
+                    year
+                  }
+                } =>
+                {
+                  ... on Book {
+                    name
+                  }
+                }
+              },
+            },
+          },
+        },
+      }
+    `);
   });
 
   it(`should use a single fetch when requesting multiple root fields from the same service`, () => {
@@ -173,111 +220,111 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-                                    QueryPlan {
-                                      Sequence {
-                                        Fetch(service: "product") {
-                                          {
-                                            topProducts {
-                                              __typename
-                                              ... on Book {
-                                                __typename
-                                                isbn
-                                              }
-                                              ... on Furniture {
-                                                name
-                                              }
-                                            }
-                                            product(upc: "1") {
-                                              __typename
-                                              ... on Book {
-                                                __typename
-                                                isbn
-                                              }
-                                              ... on Furniture {
-                                                name
-                                              }
-                                            }
-                                          }
-                                        },
-                                        Parallel {
-                                          Sequence {
-                                            Flatten(path: "topProducts.@") {
-                                              Fetch(service: "books") {
-                                                {
-                                                  ... on Book {
-                                                    __typename
-                                                    isbn
-                                                  }
-                                                } =>
-                                                {
-                                                  ... on Book {
-                                                    __typename
-                                                    isbn
-                                                    title
-                                                    year
-                                                  }
-                                                }
-                                              },
-                                            },
-                                            Flatten(path: "topProducts.@") {
-                                              Fetch(service: "product") {
-                                                {
-                                                  ... on Book {
-                                                    __typename
-                                                    isbn
-                                                    title
-                                                    year
-                                                  }
-                                                } =>
-                                                {
-                                                  ... on Book {
-                                                    name
-                                                  }
-                                                }
-                                              },
-                                            },
-                                          },
-                                          Sequence {
-                                            Flatten(path: "product") {
-                                              Fetch(service: "books") {
-                                                {
-                                                  ... on Book {
-                                                    __typename
-                                                    isbn
-                                                  }
-                                                } =>
-                                                {
-                                                  ... on Book {
-                                                    __typename
-                                                    isbn
-                                                    title
-                                                    year
-                                                  }
-                                                }
-                                              },
-                                            },
-                                            Flatten(path: "product") {
-                                              Fetch(service: "product") {
-                                                {
-                                                  ... on Book {
-                                                    __typename
-                                                    isbn
-                                                    title
-                                                    year
-                                                  }
-                                                } =>
-                                                {
-                                                  ... on Book {
-                                                    name
-                                                  }
-                                                }
-                                              },
-                                            },
-                                          },
-                                        },
-                                      },
-                                    }
-                        `);
+      QueryPlan {
+        Sequence {
+          Fetch(service: "product") {
+            {
+              topProducts {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  name
+                }
+              }
+              product(upc: "1") {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  name
+                }
+              }
+            }
+          },
+          Parallel {
+            Sequence {
+              Flatten(path: "topProducts.@") {
+                Fetch(service: "books") {
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                      title
+                      year
+                    }
+                  }
+                },
+              },
+              Flatten(path: "topProducts.@") {
+                Fetch(service: "product") {
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                      title
+                      year
+                    }
+                  } =>
+                  {
+                    ... on Book {
+                      name
+                    }
+                  }
+                },
+              },
+            },
+            Sequence {
+              Flatten(path: "product") {
+                Fetch(service: "books") {
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                      title
+                      year
+                    }
+                  }
+                },
+              },
+              Flatten(path: "product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                      title
+                      year
+                    }
+                  } =>
+                  {
+                    ... on Book {
+                      name
+                    }
+                  }
+                },
+              },
+            },
+          },
+        },
+      }
+    `);
   });
 
   it(`should use a single fetch when requesting relationship subfields from the same service`, () => {
@@ -297,21 +344,21 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-                              QueryPlan {
-                                Fetch(service: "reviews") {
-                                  {
-                                    topReviews {
-                                      body
-                                      author {
-                                        reviews {
-                                          body
-                                        }
-                                      }
-                                    }
-                                  }
-                                },
-                              }
-                    `);
+      QueryPlan {
+        Fetch(service: "reviews") {
+          {
+            topReviews {
+              body
+              author {
+                reviews {
+                  body
+                }
+              }
+            }
+          }
+        },
+      }
+    `);
   });
 
   it(`should use a single fetch when requesting relationship subfields and provided keys from the same service`, () => {
@@ -332,22 +379,22 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-                                                QueryPlan {
-                                                  Fetch(service: "reviews") {
-                                                    {
-                                                      topReviews {
-                                                        body
-                                                        author {
-                                                          id
-                                                          reviews {
-                                                            body
-                                                          }
-                                                        }
-                                                      }
-                                                    }
-                                                  },
-                                                }
-                                `);
+      QueryPlan {
+        Fetch(service: "reviews") {
+          {
+            topReviews {
+              body
+              author {
+                id
+                reviews {
+                  body
+                }
+              }
+            }
+          }
+        },
+      }
+    `);
   });
 
   describe(`when requesting an extension field from another service`, () => {
@@ -366,37 +413,37 @@ describe('buildQueryPlan', () => {
       const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
       expect(queryPlan).toMatchInlineSnapshot(`
-                                                                QueryPlan {
-                                                                  Sequence {
-                                                                    Fetch(service: "accounts") {
-                                                                      {
-                                                                        me {
-                                                                          name
-                                                                          __typename
-                                                                          id
-                                                                        }
-                                                                      }
-                                                                    },
-                                                                    Flatten(path: "me") {
-                                                                      Fetch(service: "reviews") {
-                                                                        {
-                                                                          ... on User {
-                                                                            __typename
-                                                                            id
-                                                                          }
-                                                                        } =>
-                                                                        {
-                                                                          ... on User {
-                                                                            reviews {
-                                                                              body
-                                                                            }
-                                                                          }
-                                                                        }
-                                                                      },
-                                                                    },
-                                                                  },
-                                                                }
-                                                `);
+        QueryPlan {
+          Sequence {
+            Fetch(service: "accounts") {
+              {
+                me {
+                  name
+                  __typename
+                  id
+                }
+              }
+            },
+            Flatten(path: "me") {
+              Fetch(service: "reviews") {
+                {
+                  ... on User {
+                    __typename
+                    id
+                  }
+                } =>
+                {
+                  ... on User {
+                    reviews {
+                      body
+                    }
+                  }
+                }
+              },
+            },
+          },
+        }
+      `);
     });
 
     describe(`when the parent selection set is empty`, () => {
@@ -414,36 +461,36 @@ describe('buildQueryPlan', () => {
         const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
         expect(queryPlan).toMatchInlineSnapshot(`
-                                        QueryPlan {
-                                          Sequence {
-                                            Fetch(service: "accounts") {
-                                              {
-                                                me {
-                                                  __typename
-                                                  id
-                                                }
-                                              }
-                                            },
-                                            Flatten(path: "me") {
-                                              Fetch(service: "reviews") {
-                                                {
-                                                  ... on User {
-                                                    __typename
-                                                    id
-                                                  }
-                                                } =>
-                                                {
-                                                  ... on User {
-                                                    reviews {
-                                                      body
-                                                    }
-                                                  }
-                                                }
-                                              },
-                                            },
-                                          },
-                                        }
-                                `);
+          QueryPlan {
+            Sequence {
+              Fetch(service: "accounts") {
+                {
+                  me {
+                    __typename
+                    id
+                  }
+                }
+              },
+              Flatten(path: "me") {
+                Fetch(service: "reviews") {
+                  {
+                    ... on User {
+                      __typename
+                      id
+                    }
+                  } =>
+                  {
+                    ... on User {
+                      reviews {
+                        body
+                      }
+                    }
+                  }
+                },
+              },
+            },
+          }
+        `);
       });
     });
 
@@ -463,37 +510,37 @@ describe('buildQueryPlan', () => {
       const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
       expect(queryPlan).toMatchInlineSnapshot(`
-                        QueryPlan {
-                          Sequence {
-                            Fetch(service: "accounts") {
-                              {
-                                me {
-                                  __typename
-                                  id
-                                }
-                              }
-                            },
-                            Flatten(path: "me") {
-                              Fetch(service: "reviews") {
-                                {
-                                  ... on User {
-                                    __typename
-                                    id
-                                  }
-                                } =>
-                                {
-                                  ... on User {
-                                    reviews {
-                                      body
-                                    }
-                                    numberOfReviews
-                                  }
-                                }
-                              },
-                            },
-                          },
-                        }
-                  `);
+        QueryPlan {
+          Sequence {
+            Fetch(service: "accounts") {
+              {
+                me {
+                  __typename
+                  id
+                }
+              }
+            },
+            Flatten(path: "me") {
+              Fetch(service: "reviews") {
+                {
+                  ... on User {
+                    __typename
+                    id
+                  }
+                } =>
+                {
+                  ... on User {
+                    reviews {
+                      body
+                    }
+                    numberOfReviews
+                  }
+                }
+              },
+            },
+          },
+        }
+      `);
     });
   });
 
@@ -513,37 +560,37 @@ describe('buildQueryPlan', () => {
       const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
       expect(queryPlan).toMatchInlineSnapshot(`
-                                                                QueryPlan {
-                                                                  Sequence {
-                                                                    Fetch(service: "reviews") {
-                                                                      {
-                                                                        topReviews {
-                                                                          body
-                                                                          author {
-                                                                            __typename
-                                                                            id
-                                                                          }
-                                                                        }
-                                                                      }
-                                                                    },
-                                                                    Flatten(path: "topReviews.@.author") {
-                                                                      Fetch(service: "accounts") {
-                                                                        {
-                                                                          ... on User {
-                                                                            __typename
-                                                                            id
-                                                                          }
-                                                                        } =>
-                                                                        {
-                                                                          ... on User {
-                                                                            name
-                                                                          }
-                                                                        }
-                                                                      },
-                                                                    },
-                                                                  },
-                                                                }
-                                                `);
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                topReviews {
+                  body
+                  author {
+                    __typename
+                    id
+                  }
+                }
+              }
+            },
+            Flatten(path: "topReviews.@.author") {
+              Fetch(service: "accounts") {
+                {
+                  ... on User {
+                    __typename
+                    id
+                  }
+                } =>
+                {
+                  ... on User {
+                    name
+                  }
+                }
+              },
+            },
+          },
+        }
+      `);
     });
 
     describe(`when requesting a field defined in another service which requires a field in the base service`, () => {
@@ -559,36 +606,36 @@ describe('buildQueryPlan', () => {
         const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
         expect(queryPlan).toMatchInlineSnapshot(`
-                                                                  QueryPlan {
-                                                                    Sequence {
-                                                                      Fetch(service: "product") {
-                                                                        {
-                                                                          topCars {
-                                                                            __typename
-                                                                            id
-                                                                            price
-                                                                          }
-                                                                        }
-                                                                      },
-                                                                      Flatten(path: "topCars.@") {
-                                                                        Fetch(service: "reviews") {
-                                                                          {
-                                                                            ... on Car {
-                                                                              __typename
-                                                                              id
-                                                                              price
-                                                                            }
-                                                                          } =>
-                                                                          {
-                                                                            ... on Car {
-                                                                              retailPrice
-                                                                            }
-                                                                          }
-                                                                        },
-                                                                      },
-                                                                    },
-                                                                  }
-                                                  `);
+          QueryPlan {
+            Sequence {
+              Fetch(service: "product") {
+                {
+                  topCars {
+                    __typename
+                    id
+                    price
+                  }
+                }
+              },
+              Flatten(path: "topCars.@") {
+                Fetch(service: "reviews") {
+                  {
+                    ... on Car {
+                      __typename
+                      id
+                      price
+                    }
+                  } =>
+                  {
+                    ... on Car {
+                      retailPrice
+                    }
+                  }
+                },
+              },
+            },
+          }
+        `);
       });
     });
 
@@ -607,36 +654,36 @@ describe('buildQueryPlan', () => {
         const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
         expect(queryPlan).toMatchInlineSnapshot(`
-                                                                                QueryPlan {
-                                                                                  Sequence {
-                                                                                    Fetch(service: "reviews") {
-                                                                                      {
-                                                                                        topReviews {
-                                                                                          author {
-                                                                                            __typename
-                                                                                            id
-                                                                                          }
-                                                                                        }
-                                                                                      }
-                                                                                    },
-                                                                                    Flatten(path: "topReviews.@.author") {
-                                                                                      Fetch(service: "accounts") {
-                                                                                        {
-                                                                                          ... on User {
-                                                                                            __typename
-                                                                                            id
-                                                                                          }
-                                                                                        } =>
-                                                                                        {
-                                                                                          ... on User {
-                                                                                            name
-                                                                                          }
-                                                                                        }
-                                                                                      },
-                                                                                    },
-                                                                                  },
-                                                                                }
-                                                                `);
+          QueryPlan {
+            Sequence {
+              Fetch(service: "reviews") {
+                {
+                  topReviews {
+                    author {
+                      __typename
+                      id
+                    }
+                  }
+                }
+              },
+              Flatten(path: "topReviews.@.author") {
+                Fetch(service: "accounts") {
+                  {
+                    ... on User {
+                      __typename
+                      id
+                    }
+                  } =>
+                  {
+                    ... on User {
+                      name
+                    }
+                  }
+                },
+              },
+            },
+          }
+        `);
       });
     });
   });
@@ -655,36 +702,36 @@ describe('buildQueryPlan', () => {
       const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
       expect(queryPlan).toMatchInlineSnapshot(`
-                                                                QueryPlan {
-                                                                  Sequence {
-                                                                    Fetch(service: "reviews") {
-                                                                      {
-                                                                        topReviews {
-                                                                          author {
-                                                                            __typename
-                                                                            id
-                                                                          }
-                                                                        }
-                                                                      }
-                                                                    },
-                                                                    Flatten(path: "topReviews.@.author") {
-                                                                      Fetch(service: "accounts") {
-                                                                        {
-                                                                          ... on User {
-                                                                            __typename
-                                                                            id
-                                                                          }
-                                                                        } =>
-                                                                        {
-                                                                          ... on User {
-                                                                            birthDate
-                                                                          }
-                                                                        }
-                                                                      },
-                                                                    },
-                                                                  },
-                                                                }
-                                                `);
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                topReviews {
+                  author {
+                    __typename
+                    id
+                  }
+                }
+              }
+            },
+            Flatten(path: "topReviews.@.author") {
+              Fetch(service: "accounts") {
+                {
+                  ... on User {
+                    __typename
+                    id
+                  }
+                } =>
+                {
+                  ... on User {
+                    birthDate
+                  }
+                }
+              },
+            },
+          },
+        }
+      `);
     });
   });
 
@@ -704,22 +751,22 @@ describe('buildQueryPlan', () => {
       const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
       expect(queryPlan).toMatchInlineSnapshot(`
-                QueryPlan {
-                  Fetch(service: "product") {
-                    {
-                      topProducts {
-                        __typename
-                        ... on Book {
-                          price
-                        }
-                        ... on Furniture {
-                          price
-                        }
-                      }
-                    }
-                  },
+        QueryPlan {
+          Fetch(service: "product") {
+            {
+              topProducts {
+                __typename
+                ... on Book {
+                  price
                 }
-            `);
+                ... on Furniture {
+                  price
+                }
+              }
+            }
+          },
+        }
+      `);
     });
   });
 
@@ -789,5 +836,403 @@ describe('buildQueryPlan', () => {
         },
       }
     `);
+  });
+
+  it(`interface fragments should expand into possible types only`, () => {
+    const query = gql`
+      query {
+        books {
+          ... on Product {
+            name
+            ... on Furniture {
+              upc
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Sequence {
+          Fetch(service: "books") {
+            {
+              books {
+                __typename
+                isbn
+                title
+                year
+              }
+            }
+          },
+          Flatten(path: "books.@") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                  title
+                  year
+                }
+              } =>
+              {
+                ... on Book {
+                  name
+                }
+              }
+            },
+          },
+        },
+      }
+    `);
+  });
+
+  it(`interface inside interface should expand into possible types only`, () => {
+    const query = gql`
+      query {
+        product(upc: "") {
+          details {
+            country
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "product") {
+          {
+            product(upc: "") {
+              __typename
+              ... on Book {
+                details {
+                  country
+                }
+              }
+              ... on Furniture {
+                details {
+                  country
+                }
+              }
+            }
+          }
+        },
+      }
+    `);
+  });
+
+  describe(`experimental compression to downstream services`, () => {
+    it(`should generate fragments internally to downstream requests`, () => {
+      const query = gql`
+        query {
+          topReviews {
+            body
+            author
+            product {
+              name
+              price
+              details {
+                country
+              }
+            }
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                topReviews {
+                  ...__QueryPlanFragment_1__
+                }
+              }
+              fragment __QueryPlanFragment_1__ on Review {
+                body
+                author
+                product {
+                  ...__QueryPlanFragment_0__
+                }
+              }
+              fragment __QueryPlanFragment_0__ on Product {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              }
+            },
+            Parallel {
+              Sequence {
+                Flatten(path: "topReviews.@.product") {
+                  Fetch(service: "books") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    }
+                  },
+                },
+                Flatten(path: "topReviews.@.product") {
+                  Fetch(service: "product") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        name
+                      }
+                    }
+                  },
+                },
+              },
+              Flatten(path: "topReviews.@.product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  {
+                    ... on Furniture {
+                      name
+                      price
+                      details {
+                        country
+                      }
+                    }
+                    ... on Book {
+                      price
+                      details {
+                        country
+                      }
+                    }
+                  }
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it(`shouldn't generate fragments for selection sets of length 2 or less`, () => {
+      const query = gql`
+        query {
+          topReviews {
+            body
+            author
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "reviews") {
+            {
+              topReviews {
+                body
+                author
+              }
+            }
+          },
+        }
+      `);
+    });
+
+    it(`should generate fragments for selection sets of length 3 or greater`, () => {
+      const query = gql`
+        query {
+          topReviews {
+            id
+            body
+            author
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "reviews") {
+            {
+              topReviews {
+                ...__QueryPlanFragment_0__
+              }
+            }
+            fragment __QueryPlanFragment_0__ on Review {
+              id
+              body
+              author
+            }
+          },
+        }
+      `);
+    });
+
+    it(`should generate fragments correctly when aliases are used`, () => {
+      const query = gql`
+        query {
+          reviews: topReviews {
+            content: body
+            author
+            product {
+              name
+              cost: price
+              details {
+                origin: country
+              }
+            }
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                reviews: topReviews {
+                  ...__QueryPlanFragment_1__
+                }
+              }
+              fragment __QueryPlanFragment_1__ on Review {
+                content: body
+                author
+                product {
+                  ...__QueryPlanFragment_0__
+                }
+              }
+              fragment __QueryPlanFragment_0__ on Product {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              }
+            },
+            Parallel {
+              Sequence {
+                Flatten(path: "reviews.@.product") {
+                  Fetch(service: "books") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    }
+                  },
+                },
+                Flatten(path: "reviews.@.product") {
+                  Fetch(service: "product") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        name
+                      }
+                    }
+                  },
+                },
+              },
+              Flatten(path: "reviews.@.product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  {
+                    ... on Furniture {
+                      name
+                      cost: price
+                      details {
+                        origin: country
+                      }
+                    }
+                    ... on Book {
+                      cost: price
+                      details {
+                        origin: country
+                      }
+                    }
+                  }
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
   });
 });

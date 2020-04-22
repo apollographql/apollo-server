@@ -10,7 +10,7 @@ import {
   GraphQLError,
   GraphQLNonNull,
   GraphQLScalarType,
-  introspectionQuery,
+  getIntrospectionQuery,
   BREAK,
   DocumentNode,
   getOperationAST,
@@ -21,6 +21,8 @@ import request = require('supertest');
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import gql from 'graphql-tag';
 import { ValueOrPromise } from 'apollo-server-types';
+import { GraphQLRequestListener } from "apollo-server-plugin-base";
+import { PersistedQueryNotFoundError } from "apollo-server-errors";
 
 export * from './ApolloServer';
 
@@ -205,6 +207,10 @@ export interface DestroyAppFunc {
 export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
   describe('apolloServer', () => {
     let app;
+    let didEncounterErrors: jest.Mock<
+      ReturnType<GraphQLRequestListener['didEncounterErrors']>,
+      Parameters<GraphQLRequestListener['didEncounterErrors']>
+    >;
 
     afterEach(async () => {
       if (app) {
@@ -284,22 +290,55 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('throws error if trying to use mutation using GET request', async () => {
-        app = await createApp();
+        didEncounterErrors = jest.fn();
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            plugins: [
+              {
+                requestDidStart() {
+                  return { didEncounterErrors };
+                }
+              }
+            ]
+          }
+        });
         const query = {
           query: 'mutation test{ testMutation(echo: "ping") }',
         };
         const req = request(app)
           .get('/graphql')
           .query(query);
-        return req.then(res => {
+
+        await req.then(res => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
           expect(res.error.text).toMatch('GET supports only query operation');
         });
+
+        expect(didEncounterErrors).toBeCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([expect.objectContaining({
+              message: 'GET supports only query operation',
+            })]),
+          }),
+        );
       });
 
       it('throws error if trying to use mutation with fragment using GET request', async () => {
-        app = await createApp();
+        didEncounterErrors = jest.fn();
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            plugins: [
+              {
+                requestDidStart() {
+                  return { didEncounterErrors };
+                }
+              }
+            ]
+          }
+        });
         const query = {
           query: `fragment PersonDetails on PersonType {
               firstName
@@ -314,11 +353,19 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const req = request(app)
           .get('/graphql')
           .query(query);
-        return req.then(res => {
+        await req.then(res => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
           expect(res.error.text).toMatch('GET supports only query operation');
         });
+
+        expect(didEncounterErrors).toBeCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([expect.objectContaining({
+              message: 'GET supports only query operation',
+            })]),
+          }),
+        );
       });
 
       it('can handle a GET request with variables', async () => {
@@ -386,7 +433,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             cacheControl: {
               defaultMaxAge: 5,
               stripFormattedExtensions: false,
-              calculateCacheControlHeaders: false,
+              calculateHttpHeaders: false,
             },
           },
         });
@@ -573,7 +620,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         app = await createApp();
         const req = request(app)
           .post('/graphql')
-          .send({ query: introspectionQuery });
+          .send({ query: getIntrospectionQuery() });
         return req.then(res => {
           expect(res.status).toEqual(200);
           expect(res.body.data.__schema.types[0].fields[0].name).toEqual(
@@ -1174,23 +1221,192 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         },
       };
 
-      beforeEach(async () => {
+      let didEncounterErrors: jest.Mock<
+        ReturnType<GraphQLRequestListener['didEncounterErrors']>,
+        Parameters<GraphQLRequestListener['didEncounterErrors']>
+      >;
+
+      function createMockCache() {
         const map = new Map<string, string>();
-        const cache = {
-          set: async (key, val) => {
+        return {
+          set: jest.fn(async (key, val) => {
             await map.set(key, val);
-          },
-          get: async key => map.get(key),
-          delete: async key => map.delete(key),
+          }),
+          get: jest.fn(async key => map.get(key)),
+          delete: jest.fn(async key => map.delete(key)),
         };
+      }
+
+      beforeEach(async () => {
+        didEncounterErrors = jest.fn();
+        const cache = createMockCache();
         app = await createApp({
           graphqlOptions: {
             schema,
+            plugins: [
+              {
+                requestDidStart() {
+                  return { didEncounterErrors };
+                }
+              }
+            ],
             persistedQueries: {
               cache,
             },
           },
         });
+      });
+
+      it('when ttlSeconds is set, passes ttl to the apq cache set call', async () => {
+        const cache = createMockCache();
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            persistedQueries: {
+              cache: cache,
+              ttl: 900,
+            },
+          },
+        });
+
+        await request(app)
+          .post('/graphql')
+          .send({
+            extensions,
+            query,
+          });
+
+        expect(cache.set).toHaveBeenCalledWith(
+          expect.stringMatching(/^apq:/),
+          '{testString}',
+          expect.objectContaining({
+            ttl: 900,
+          }),
+        );
+      });
+
+      it('when ttlSeconds is unset, ttl is not passed to apq cache',
+        async () => {
+          const cache = createMockCache();
+          app = await createApp({
+            graphqlOptions: {
+              schema,
+              persistedQueries: {
+                cache: cache,
+              },
+            },
+          });
+
+          await request(app)
+            .post('/graphql')
+            .send({
+              extensions,
+              query,
+            });
+
+          expect(cache.set).toHaveBeenCalledWith(
+            expect.stringMatching(/^apq:/),
+            '{testString}',
+            expect.not.objectContaining({
+              ttl: 900,
+            }),
+          );
+        }
+      );
+
+      it('errors when version is not specified', async () => {
+        const result = await request(app)
+          .get('/graphql')
+          .query({
+            query,
+            extensions: JSON.stringify({
+              persistedQuery: {
+                // Version intentionally omitted.
+                sha256Hash: extensions.persistedQuery.sha256Hash,
+              }
+            }),
+          });
+
+        expect(result).toMatchObject({
+          status: 400,
+          // Different integrations' response text varies in format.
+          text: expect.stringContaining('Unsupported persisted query version'),
+          req: expect.objectContaining({
+            method: 'GET',
+          }),
+        });
+
+        expect(didEncounterErrors).toBeCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([expect.objectContaining({
+              message: 'Unsupported persisted query version',
+            })]),
+          }),
+        );
+      });
+
+      it('errors when version is unsupported', async () => {
+        const result = await request(app)
+          .get('/graphql')
+          .query({
+            query,
+            extensions: JSON.stringify({
+              persistedQuery: {
+                // Version intentionally wrong.
+                version: VERSION + 1,
+                sha256Hash: extensions.persistedQuery.sha256Hash,
+              }
+            }),
+          });
+
+        expect(result).toMatchObject({
+          status: 400,
+          // Different integrations' response text varies in format.
+          text: expect.stringContaining('Unsupported persisted query version'),
+          req: expect.objectContaining({
+            method: 'GET',
+          }),
+        });
+
+        expect(didEncounterErrors).toBeCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([expect.objectContaining({
+              message: 'Unsupported persisted query version',
+            })]),
+          }),
+        );
+      });
+
+      it('errors when hash is mismatched', async () => {
+        const result = await request(app)
+          .get('/graphql')
+          .query({
+            query,
+            extensions: JSON.stringify({
+              persistedQuery: {
+                version: 1,
+                // Sha intentionally wrong.
+                sha256Hash: extensions.persistedQuery.sha256Hash.substr(0,5),
+              }
+            }),
+          });
+
+        expect(result).toMatchObject({
+          status: 400,
+          // Different integrations' response text varies in format.
+          text: expect.stringContaining('provided sha does not match query'),
+          req: expect.objectContaining({
+            method: 'GET',
+          }),
+        });
+
+        expect(didEncounterErrors).toBeCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([expect.objectContaining({
+              message: 'provided sha does not match query',
+            })]),
+          }),
+        );
       });
 
       it('returns PersistedQueryNotFound on the first try', async () => {
@@ -1206,6 +1422,14 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         expect(result.body.errors[0].extensions.code).toEqual(
           'PERSISTED_QUERY_NOT_FOUND',
         );
+
+        expect(didEncounterErrors).toBeCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([
+              expect.any(PersistedQueryNotFoundError)
+            ]),
+          }),
+        );
       });
       it('returns result on the second try', async () => {
         await request(app)
@@ -1213,12 +1437,28 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .send({
             extensions,
           });
+
+        // Only the first request should result in an error.
+        expect(didEncounterErrors).toHaveBeenCalledTimes(1);
+        expect(didEncounterErrors).toBeCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([
+              expect.any(PersistedQueryNotFoundError)
+            ]),
+          }),
+        );
+
         const result = await request(app)
           .post('/graphql')
           .send({
             extensions,
             query,
           });
+
+        // There should be no additional errors now.  In other words, we'll
+        // re-assert that we've been called the same single time that we
+        // asserted above.
+        expect(didEncounterErrors).toHaveBeenCalledTimes(1);
 
         expect(result.body.data).toEqual({ testString: 'it works' });
         expect(result.body.errors).toBeUndefined();

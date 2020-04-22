@@ -54,6 +54,17 @@ export function testKeyValueCache_Expiration(
       expect(await keyValueCache.get('short')).toBeUndefined();
       expect(await keyValueCache.get('long')).toBeUndefined();
     });
+
+    it('does not expire when ttl is null', async () => {
+      await keyValueCache.set('forever', 'yours', { ttl: null });
+      expect(await keyValueCache.get('forever')).toBe('yours');
+      advanceTimeBy(1500);
+      jest.advanceTimersByTime(1500);
+      expect(await keyValueCache.get('forever')).toBe('yours');
+      advanceTimeBy(4000);
+      jest.advanceTimersByTime(4000);
+      expect(await keyValueCache.get('forever')).toBe('yours');
+    });
   });
 }
 

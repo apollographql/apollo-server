@@ -179,5 +179,42 @@ describe('SDL normalization and its respective parts', () => {
         }
       `);
     });
+
+    it('should allow schema describing default types', () => {
+      const typeDefsToNormalize = gql`
+        schema {
+          query: Query
+          mutation: Mutation
+        }
+
+        type Query {
+          product: Product
+        }
+
+        type Product @extends @key(fields: "sku") {
+          sku: String @external
+        }
+
+        type Mutation {
+          updateProduct: Product
+        }
+      `;
+
+      const normalized = normalizeTypeDefs(typeDefsToNormalize);
+
+      expect(normalized).toMatchInlineSnapshot(`
+        extend type Query {
+          product: Product
+        }
+
+        extend type Product @key(fields: "sku") {
+          sku: String @external
+        }
+
+        extend type Mutation {
+          updateProduct: Product
+        }
+      `);
+    });
   });
 });

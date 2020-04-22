@@ -15,6 +15,7 @@
     { "path": "./packages/apollo-server-caching/src/__tests__/" },
     { "path": "./packages/apollo-server-cloud-functions/src/__tests__/" },
     { "path": "./packages/apollo-server-core/src/__tests__/" },
+    { "path": "./packages/apollo-server-errors/src/__tests__/" },
     { "path": "./packages/apollo-server-express/src/__tests__/" },
     { "path": "./packages/apollo-server-fastify/src/__tests__/" },
     { "path": "./packages/apollo-server-hapi/src/__tests__/" },
