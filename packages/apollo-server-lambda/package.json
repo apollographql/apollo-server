@@ -26,14 +26,14 @@
   },
   "dependencies": {
     "@apollographql/graphql-playground-html": "1.6.24",
-    "@types/aws-lambda": "^8.10.31",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-types": "file:../apollo-server-types",
     "graphql-tools": "^4.0.0"
   },
   "devDependencies": {
-    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
+    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite",
+    "@types/aws-lambda": "^8.10.31"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
