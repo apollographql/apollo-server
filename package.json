@@ -64,6 +64,7 @@
     "@types/body-parser": "1.19.0",
     "@types/bunyan": "1.8.6",
     "@types/connect": "3.4.33",
+    "@types/cors": "^2.8.4",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/graphql-upload": "^8.0.3",
     "@types/hapi": "17.8.7",
