@@ -1,11 +1,14 @@
-import { KeyValueCache } from 'apollo-server-caching';
+import {
+  TestableKeyValueCache,
+  KeyValueCacheSetOptions,
+} from 'apollo-server-caching';
 import Memcached from 'memcached';
 import { promisify } from 'util';
 
-export class MemcachedCache implements KeyValueCache {
+export class MemcachedCache implements TestableKeyValueCache {
   // FIXME: Replace any with proper promisified type
   readonly client: any;
-  readonly defaultSetOptions = {
+  readonly defaultSetOptions: KeyValueCacheSetOptions = {
     ttl: 300,
   };
 
@@ -23,10 +26,16 @@ export class MemcachedCache implements KeyValueCache {
   async set(
     key: string,
     value: string,
-    options?: { ttl?: number },
+    options?: KeyValueCacheSetOptions,
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-    await this.client.set(key, value, ttl);
+    if (typeof ttl === 'number') {
+      await this.client.set(key, value, ttl);
+    } else {
+      // In Memcached, zero indicates no specific expiration time.  Of course,
+      // it may be purged from the cache for other reasons as deemed necessary.
+      await this.client.set(key, value, 0);
+    }
   }
 
   async get(key: string): Promise<string | undefined> {
@@ -37,6 +46,8 @@ export class MemcachedCache implements KeyValueCache {
     return await this.client.del(key);
   }
 
+  // Drops all data from Memcached. This should only be used by test suites ---
+  // production code should never drop all data from an end user cache.
   async flush(): Promise<void> {
     await this.client.flush();
   }

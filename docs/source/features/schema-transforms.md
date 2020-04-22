@@ -5,7 +5,7 @@ description: Automatically transforming schemas
 
 Schema transforms are a tool for making modified copies of `GraphQLSchema` objects, while preserving the possibility of delegating back to original schema.
 
-Transforms are useful when working with [remote schemas](./remote-schemas.html), building GraphQL gateways that combine multiple schemas, and/or using [schema stitching](./schema-stitching.html) to combine schemas together without conflicts between types or fields.
+Transforms are useful when working with [remote schemas](/features/remote-schemas/), building GraphQL gateways that combine multiple schemas, and/or using [schema stitching](/features/schema-stitching/) to combine schemas together without conflicts between types or fields.
 
 While it's possible to modify a schema by hand, the manual approach requires a deep understanding of all the relationships between `GraphQLSchema` properties, which makes it error-prone and labor-intensive. Transforms provide a generic abstraction over all those details, which improves code quality and saves time, not only now but also in the future, because transforms are designed to be reused again and again.
 
@@ -80,9 +80,9 @@ What we need is a `transformRequest` function that knows how to rename any occur
 
 By the same reasoning, we also need a `transformResult` function, because any results contain a `__typename` field whose value is `Test`, that name needs to be updated to `NewTest` in the final result.
 
-<h2 id="api">API</h2>
+## API
 
-<h3 id="Transform">Transform</h3>
+### Transform
 
 ```ts
 interface Transform = {
@@ -102,13 +102,13 @@ type Result = ExecutionResult & {
 };
 ```
 
-<h3 id="transformSchema">transformSchema</h3>
+### transformSchema
 
 Given a `GraphQLSchema` and an array of `Transform` objects, produce a new schema with those transforms applied.
 
 Delegating resolvers will also be generated to map from new schema root fields to old schema root fields. Often these automatic resolvers are sufficient, so you don't have to implement your own.
 
-<h2 id="built-in">Built-in transforms</h2>
+## Built-in transforms
 
 Built-in transforms are ready-made classes implementing the `Transform` interface. They are intended to cover many of the most common schema transformation use cases, but they also serve as examples of how to implement transforms for your own needs.
 
@@ -211,7 +211,7 @@ type FieldToFragmentMapping = {
 };
 ```
 
-<h2 id="other-built-in">delegateToSchema transforms</h2>
+## delegateToSchema transforms
 
 The following transforms are automatically applied by `delegateToSchema` during schema delegation, to translate between new and old types and fields:
 

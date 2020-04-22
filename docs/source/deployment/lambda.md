@@ -26,7 +26,7 @@ Setting up a project to work with Lambda isn't that different from a typical Nod
 
 First, install the `apollo-server-lambda` package:
 
-```sh
+```shell
 npm install apollo-server-lambda graphql
 ```
 
@@ -74,7 +74,7 @@ For the sake of this example, the following file can just be copied and pasted i
 service: apollo-lambda
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs12.x
 functions:
   graphql:
     # this is formatted as <FILENAME>.<HANDLER>
@@ -83,6 +83,10 @@ functions:
     - http:
         path: graphql
         method: post
+        cors: true
+    - http:
+        path: graphql
+        method: get
         cors: true
 ```
 
@@ -113,6 +117,7 @@ api keys:
   None
 endpoints:
   POST - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/graphql
+  GET - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/graphql
 functions:
   graphql: apollo-lambda-dev-graphql
 ```
@@ -222,3 +227,23 @@ exports.graphqlHandler = server.createHandler({
   },
 });
 ```
+
+## Setting up GraphQL Playground
+
+By default, `serverless` will deploy to AWS with the `stage` set to `development` resulting in an API endpoint at `/dev/graphql`.
+
+To allow GraphQL Playground to correctly use the `dev` endpoint, add a new `endpoint` configuration within the `playground` option to the `ApolloServer` instantiation options:
+
+```js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  // highlight-start
+  playground: {
+    endpoint: "/dev/graphql"
+  }
+  // highlight-end
+});
+```
+
+For information on additional configuration options, see [GraphQL Playground](https://www.apollographql.com/docs/apollo-server/testing/graphql-playground/).

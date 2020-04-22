@@ -24,8 +24,8 @@ export * from 'graphql-subscriptions';
 // ApolloServer integration.
 export {
   ApolloServer,
-  registerServer,
   ServerRegistration,
+  ApolloServerExpressConfig,
 } from './ApolloServer';
 
 export { CorsOptions } from 'cors';

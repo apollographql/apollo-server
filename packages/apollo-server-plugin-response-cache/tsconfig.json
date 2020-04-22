@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["**/__tests__", "**/__mocks__"],
+  "references": [
+    { "path": "../apollo-cache-control" },
+    { "path": "../apollo-server-plugin-base" },
+    { "path": "../apollo-server-caching" },
+    { "path": "../apollo-server-types" },
+  ]
+}

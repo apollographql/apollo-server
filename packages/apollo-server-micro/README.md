@@ -1,9 +1,5 @@
----
-title: Micro
-description: Setting up Apollo Server with Micro
----
+[![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core) [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server) [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/apollo)
 
-[![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core) [![Build Status](https://circleci.com/gh/apollographql/apollo-cache-control-js.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-cache-control-js) [![Coverage Status](https://coveralls.io/repos/github/apollographql/apollo-server/badge.svg?branch=master)](https://coveralls.io/github/apollographql/apollo-server?branch=master) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](https://www.apollographql.com/#slack)
 
 This is the [Micro](https://github.com/zeit/micro) integration for the Apollo community GraphQL Server. [Read the docs.](https://www.apollographql.com/docs/apollo-server/) [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
 
@@ -14,8 +10,8 @@ handles incoming GraphQL requests via the default `/graphql` endpoint.
 
 1) Package installation.
 
-```sh
-npm install --save micro apollo-server-micro@rc graphql
+```shell
+npm install micro apollo-server-micro graphql
 ```
 
 2) `index.js`
@@ -64,14 +60,14 @@ microservice, using [`micro-cors`](https://github.com/possibilities/micro-cors):
 
 1) Package installation.
 
-```sh
-npm install --save micro micro-cors apollo-server-micro@rc graphql
+```shell
+npm install micro micro-cors apollo-server-micro graphql
 ```
 
 2) `index.js`
 
-```js line=1,19
-const cors = require('micro-cors')();
+```js
+const cors = require('micro-cors')(); // highlight-line
 const { ApolloServer, gql } = require('apollo-server-micro');
 
 const typeDefs = gql`
@@ -89,7 +85,8 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-module.exports = cors(apolloServer.createHandler());
+const handler = apolloServer.createHandler(); // highlight-line
+module.exports = cors((req, res) => req.method === 'OPTIONS' ? res.end() : handler(req, res)) // highlight-line
 ```
 
 3) `package.json`
@@ -115,13 +112,13 @@ uses a custom GraphQL endpoint path:
 
 1) Package installation.
 
-```sh
-npm install --save micro apollo-server-micro@rc graphql
+```shell
+npm install micro apollo-server-micro graphql
 ```
 
 2) `index.js`
 
-```js line=18
+```js
 const { ApolloServer, gql } = require('apollo-server-micro');
 
 const typeDefs = gql`
@@ -139,7 +136,7 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-module.exports = apolloServer.createHandler({ path: '/data' });
+module.exports = apolloServer.createHandler({ path: '/data' }); // highlight-line
 ```
 
 3) `package.json`
@@ -153,7 +150,7 @@ module.exports = apolloServer.createHandler({ path: '/data' });
 }
 ```
 
-4) After an `npm start`, access `http://localhost:3000/graphql` in your
+4) After an `npm start`, access `http://localhost:3000/data` in your
 browser to run queries using
 [`graphql-playground`](https://github.com/prismagraphql/graphql-playground),
 or send GraphQL requests directly to the same URL.
@@ -166,13 +163,13 @@ fully custom routing:
 
 1) Package installation.
 
-```sh
-npm install --save micro microrouter apollo-server-micro@rc graphql
+```shell
+npm install micro microrouter apollo-server-micro graphql
 ```
 
 2) `index.js`
 
-```js line=1,21-26
+```js{1,21-26}
 const { router, get, post, options } = require('microrouter');
 const { ApolloServer, gql } = require('apollo-server-micro');
 
@@ -211,7 +208,7 @@ module.exports = router(
 }
 ```
 
-4) After an `npm start`, access `http://localhost:3000/graphql` in your
+4) After an `npm start`, access `http://localhost:3000/data` in your
 browser to run queries using
 [`graphql-playground`](https://github.com/prismagraphql/graphql-playground),
 or send GraphQL requests directly to the same URL.

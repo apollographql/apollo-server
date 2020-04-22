@@ -210,6 +210,21 @@ describe('HTTPCache', () => {
       expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
       expect(response.headers.get('Age')).toEqual('10');
     });
+
+    it('allows disabling caching when the TTL is 0 (falsy)', async () => {
+      fetch.mockJSONResponseOnce(
+        { name: 'Ada Lovelace' },
+        { 'Cache-Control': 'max-age=30' },
+      );
+
+      await httpCache.fetch(new Request('https://api.example.com/people/1'), {
+        cacheOptions: (response: Response, request: Request) => ({
+          ttl: 0,
+        }),
+      });
+
+      expect(store.size).toEqual(0);
+    });
   });
 
   it('allows specifying a custom cache key', async () => {
@@ -443,5 +458,19 @@ describe('HTTPCache', () => {
     expect(response2.status).toEqual(200);
     expect(await response2.json()).toEqual({ name: 'Alan Turing' });
     expect(response2.headers.get('Age')).toEqual('10');
+  });
+
+  it('fetches a response from the origin with a custom fetch function', async () => {
+    fetch.mockJSONResponseOnce({ name: 'Ada Lovelace' });
+
+    const customFetch = jest.fn(fetch);
+    const customHttpCache = new HTTPCache(store as any, customFetch);
+
+    const response = await customHttpCache.fetch(
+      new Request('https://api.example.com/people/1'),
+    );
+
+    expect(customFetch.mock.calls.length).toEqual(1);
+    expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
   });
 });

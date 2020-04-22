@@ -17,7 +17,12 @@ export async function collectCacheControlHints(
 ): Promise<CacheHint[]> {
   enableGraphQLExtensions(schema);
 
-  const cacheControlExtension = new CacheControlExtension(options);
+  // Because this test helper looks at the formatted extensions, we always want
+  // to include them.
+  const cacheControlExtension = new CacheControlExtension({
+    ...options,
+    stripFormattedExtensions: false,
+  });
 
   const response = await graphql({
     schema,

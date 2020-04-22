@@ -39,7 +39,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h2 id="makeExecutableSchema" title="makeExecutableSchema">makeExecutableSchema(options)</h2>
+## makeExecutableSchema(options)
 
 `makeExecutableSchema` takes a single argument: an object of options. Only the `typeDefs` option is required.
 
@@ -61,7 +61,7 @@ const jsSchema = makeExecutableSchema({
 
 - `typeDefs` is a required argument and should be a GraphQL schema language string or array of GraphQL schema language strings or a function that takes no arguments and returns an array of GraphQL schema language strings. The order of the strings in the array is not important, but it must include a schema definition.
 
-- `resolvers` is an optional argument _(empty object by default)_ and should be an object that follows the pattern explained in the [resolvers documentation](../essentials/data.html).
+- `resolvers` is an optional argument _(empty object by default)_ and should be an object that follows the pattern explained in the [resolvers documentation](/data/resolvers/).
 
 - `logger` is an optional argument, which can be used to print errors to the server console that are usually swallowed by GraphQL. The `logger` argument should be an object with a `log` function, eg. `const logger = { log: e => console.log(e) }`
 
@@ -82,7 +82,7 @@ const jsSchema = makeExecutableSchema({
 
 - `inheritResolversFromInterfaces` GraphQL Objects that implement interfaces will inherit missing resolvers from their interface types defined in the `resolvers` object.
 
-<h2 id="addMockFunctionsToSchema" title="addMockFunctionToSchema">addMockFunctionToSchema(options)</h2>
+## addMockFunctionToSchema(options)
 
 ```js
 const { addMockFunctionsToSchema } = require('apollo-server');
@@ -96,7 +96,7 @@ addMockFunctionsToSchema({
 
 Given an instance of GraphQLSchema and a mock object, `addMockFunctionsToSchema` modifies the schema in place to return mock data for any valid query that is sent to the server. If `mocks` is not passed, the defaults will be used for each of the scalar types. If `preserveResolvers` is set to `true`, existing resolve functions will not be overwritten to provide mock data. This can be used to mock some parts of the server and not others.
 
-<h2 id="MockList" title="MockList">MockList(list, mockFunction)</h2>
+## MockList(list, mockFunction)
 
 ```js
 const { MockList } = require('apollo-server');
@@ -106,9 +106,7 @@ new MockList(length: number | number[], mockFunction: Function);
 
 This is an object you can return from your mock resolvers which calls the `mockFunction` once for each list item. The first argument can either be an exact length, or an inclusive range of possible lengths for the list, in case you want to see how your UI responds to varying lists of data.
 
-<h2 id="addResolveFunctionsToSchema" title="addResolveFunctionsToSchema">
-  addResolveFunctionsToSchema({ schema, resolvers, resolverValidationOptions?, inheritResolversFromInterfaces? })
-</h2>
+## addResolveFunctionsToSchema({ schema, resolvers, resolverValidationOptions?, inheritResolversFromInterfaces? })
 
 `addResolveFunctionsToSchema` takes an options object of `IAddResolveFunctionsToSchemaOptions` and modifies the schema in place by attaching the resolvers to the relevant types.
 
@@ -129,7 +127,8 @@ const resolvers = {
 addResolveFunctionsToSchema({ schema, resolvers });
 ```
 
-The `IAddResolveFunctionsToSchemaOptions` object has 4 properties that are described in [`makeExecutableSchema`](/docs/graphql-tools/generate-schema.html#makeExecutableSchema).
+The `IAddResolveFunctionsToSchemaOptions` object has 4 properties that are described in [`makeExecutableSchema`](https://www.apollographql.com/docs/graphql-tools/generate-schema/#makeexecutableschemaoptions).
+
 ```ts
 export interface IAddResolveFunctionsToSchemaOptions {
   schema: GraphQLSchema;
@@ -139,14 +138,12 @@ export interface IAddResolveFunctionsToSchemaOptions {
 }
 ```
 
-<h2 id="addSchemaLevelResolveFunction" title="addSchemaLevelResolveFunction">
-  addSchemaLevelResolveFunction(schema, rootResolveFunction)
-</h2>
+## addSchemaLevelResolveFunction(schema, rootResolveFunction)
 
 Some operations, such as authentication, need to be done only once per query. Logically, these operations belong in an obj resolve function, but unfortunately GraphQL-JS does not let you define one. `addSchemaLevelResolveFunction` solves this by modifying the GraphQLSchema that is passed as the first argument.
 
 
-<h2 id="delegateToSchema">delegateToSchema</h2>
+## delegateToSchema
 
 The `delegateToSchema` method can be found on the `info.mergeInfo` object within any resolver function, and should be called with the following named options:
 
@@ -226,7 +223,7 @@ const resolvers = {
 
 ### context: { [key: string]: any }
 
-GraphQL context that is going to be past to subschema execution or subsciption call.
+GraphQL context that is going to be passed to subschema execution or subscription call.
 
 ### info: GraphQLResolveInfo
 
@@ -236,14 +233,14 @@ Also provides the `info.mergeInfo.delegateToSchema` function discussed above.
 
 ### transforms: Array<Transform>
 
-[Transforms](../features/schema-transforms.html) to apply to the query and results. Should be the same transforms that were used to transform the schema, if any. After transformation, `transformedSchema.transforms` contains the transforms that were applied.
+[Transforms](/features/schema-transforms/) to apply to the query and results. Should be the same transforms that were used to transform the schema, if any. After transformation, `transformedSchema.transforms` contains the transforms that were applied.
 
-<h3 id="considerations">Additional considerations - Aliases</h3>
+### Additional considerations - Aliases
 
 Delegation preserves aliases that are passed from the parent query. However that presents problems, because default GraphQL resolvers retrieve field from parent based on their name, not aliases. This way results with aliases will be missing from the delegated result. `mergeSchemas` and `transformSchemas` go around that by using `src/stitching/defaultMergedResolver` for all fields without explicit resolver. When building new libraries around delegation, one should consider how the aliases will be handled.
 
 
-<h2 id="mergeSchemas">mergeSchemas</h2>
+## mergeSchemas
 
 ```ts
 mergeSchemas({
@@ -272,7 +269,7 @@ This is the main function that implements schema stitching. Read below for a des
 
 ### resolvers
 
-`resolvers` accepts resolvers in same format as [`makeExecutableSchema`](#makeExecutableSchema). It can also take an Array of resolvers. One addition to the resolver format is the possibility to specify a `fragment` for a resolver. The `fragment` must be a GraphQL fragment definition string, specifying which fields from the parent schema are required for the resolver to function properly.
+`resolvers` accepts resolvers in same format as [`makeExecutableSchema`](#makeexecutableschemaoptions). It can also take an Array of resolvers. One addition to the resolver format is the possibility to specify a `fragment` for a resolver. The `fragment` must be a GraphQL fragment definition string, specifying which fields from the parent schema are required for the resolver to function properly.
 
 ```js
 resolvers: {
@@ -320,7 +317,7 @@ interface IDelegateToSchemaOptions<TContext = {
 }
 ```
 
-As described in the documentation above, `info.mergeInfo.delegateToSchema` allows delegating to any `GraphQLSchema` object, optionally applying transforms in the process. See [Schema Delegation](../features/schema-delegation.html) and the [*Using with transforms*](#using-with-transforms) section of this document.
+As described in the documentation above, `info.mergeInfo.delegateToSchema` allows delegating to any `GraphQLSchema` object, optionally applying transforms in the process. See [Schema Delegation](/features/schema-delegation/) and the [*Using with transforms*](#built-in-transforms) section of this document.
 
 ### onTypeConflict
 
@@ -363,7 +360,7 @@ const onTypeConflict = (left, right, info) => {
 
 When using schema transforms, `onTypeConflict` is often unnecessary, since transforms can be used to prevent conflicts before merging schemas. However, if you're not using schema transforms, `onTypeConflict` can be a quick way to make `mergeSchemas` produce more desirable results.
 
-<h3 id="Transform">Transform</h3>
+### Transform
 
 ```ts
 interface Transform = {
@@ -383,13 +380,13 @@ type Result = ExecutionResult & {
 };
 ```
 
-<h3 id="transformSchema">transformSchema</h3>
+### transformSchema
 
 Given a `GraphQLSchema` and an array of `Transform` objects, produce a new schema with those transforms applied.
 
 Delegating resolvers will also be generated to map from new schema root fields to old schema root fields. Often these automatic resolvers are sufficient, so you don't have to implement your own.
 
-<h2 id="built-in">Built-in transforms</h2>
+## Built-in transforms
 
 Built-in transforms are ready-made classes implementing the `Transform` interface. They are intended to cover many of the most common schema transformation use cases, but they also serve as examples of how to implement transforms for your own needs.
 
@@ -492,7 +489,7 @@ type FieldToFragmentMapping = {
 };
 ```
 
-<h2 id="other-built-in">delegateToSchema transforms</h2>
+## delegateToSchema transforms
 
 The following transforms are automatically applied by `delegateToSchema` during schema delegation, to translate between new and old types and fields:
 

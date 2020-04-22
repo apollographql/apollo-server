@@ -5,7 +5,7 @@ description: How to send requests to Apollo Server over HTTP.
 
 Apollo Server accepts both GET and POST requests.
 
-<h2 id="postRequests">POST requests</h2>
+## POST requests
 
 Apollo Server accepts POST requests with a JSON body. A valid request must contain either a `query` or an `operationName` (or both, in case of a named query), and may include `variables.` Here's an example for a valid body of a post request:
 
@@ -27,7 +27,7 @@ Variables can be an object or a JSON-encoded string. I.e. the following is equiv
 }
 ```
 
-<h3 id="batching">Batching</h3>
+### Batching
 
 A batch of queries can be sent by simply sending a JSON-encoded array of queries, e.g.
 
@@ -39,7 +39,7 @@ If a batch of queries is sent, the response will be an array of GraphQL response
 
 If Apollo Server is running under a different origin than your client, you will need to enable CORS support on the server, or proxy the GraphQL requests through a web server under the main origin.
 
-<h2 id="getRequests">GET requests</h2>
+## GET requests
 
 Apollo Server also accepts GET requests. A GET request must pass query and optionally variables and operationName in the URL.
 

@@ -7,7 +7,10 @@ import {
   URL,
   URLSearchParams,
   URLSearchParamsInit,
+  fetch,
 } from 'apollo-server-env';
+
+import { ValueOrPromise } from 'apollo-server-types';
 
 import { DataSource, DataSourceConfig } from 'apollo-datasource';
 
@@ -41,16 +44,18 @@ export interface CacheOptions {
 export type Body = BodyInit | object;
 export { Request };
 
-type ValueOrPromise<T> = T | Promise<T>;
-
 export abstract class RESTDataSource<TContext = any> extends DataSource {
   httpCache!: HTTPCache;
   context!: TContext;
   memoizedResults = new Map<string, Promise<any>>();
 
+  constructor(private httpFetch?: typeof fetch) {
+    super();
+  }
+
   initialize(config: DataSourceConfig<TContext>): void {
     this.context = config.context;
-    this.httpCache = new HTTPCache(config.cache);
+    this.httpCache = new HTTPCache(config.cache, this.httpFetch);
   }
 
   baseURL?: string;
@@ -104,7 +109,12 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
   protected parseBody(response: Response): Promise<object | string> {
     const contentType = response.headers.get('Content-Type');
+    const contentLength = response.headers.get('Content-Length');
     if (
+      // As one might expect, a "204 No Content" is empty! This means there
+      // isn't enough to `JSON.parse`, and trying will result in an error.
+      response.status !== 204 &&
+      contentLength !== '0' &&
       contentType &&
       (contentType.startsWith('application/json') ||
         contentType.startsWith('application/hal+json'))
@@ -202,7 +212,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     }
 
     if (!(init.headers && init.headers instanceof Headers)) {
-      init.headers = new Headers(init.headers);
+      init.headers = new Headers(init.headers || Object.create(null));
     }
 
     const options = init as RequestOptions;
@@ -218,16 +228,20 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
       url.searchParams.append(name, value);
     }
 
-    // We accept arbitrary objects as body and serialize them as JSON
+    // We accept arbitrary objects and arrays as body and serialize them as JSON
     if (
       options.body !== undefined &&
       options.body !== null &&
       (options.body.constructor === Object ||
+        Array.isArray(options.body) ||
         ((options.body as any).toJSON &&
           typeof (options.body as any).toJSON === 'function'))
     ) {
       options.body = JSON.stringify(options.body);
-      options.headers.set('Content-Type', 'application/json');
+      // If Content-Type header has not been previously set, set to application/json
+      if (!options.headers.get('Content-Type')) {
+        options.headers.set('Content-Type', 'application/json');
+      }
     }
 
     const request = new Request(String(url), options);

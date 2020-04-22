@@ -1,5 +1,3 @@
-/// <reference path="./types/graphql-upload.d.ts" />
-
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 // We'll memoize this function once at module load time since it should never

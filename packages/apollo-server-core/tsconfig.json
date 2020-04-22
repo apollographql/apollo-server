@@ -5,16 +5,16 @@
     "outDir": "./dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__", "src/requestPipelineAPI.ts"],
+  "exclude": ["**/__tests__", "**/__mocks__"],
   "references": [
-    { "path": "./tsconfig.requestPipelineAPI.json" },
     { "path": "../apollo-cache-control" },
     { "path": "../apollo-datasource" },
     { "path": "../apollo-engine-reporting" },
     { "path": "../apollo-server-caching" },
     { "path": "../apollo-server-errors" },
     { "path": "../apollo-server-plugin-base" },
+    { "path": "../apollo-server-types" },
     { "path": "../apollo-tracing" },
-    { "path": "../graphql-extensions" }
+    { "path": "../graphql-extensions" },
   ]
 }

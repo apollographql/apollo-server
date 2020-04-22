@@ -1,12 +1,14 @@
-import { Request, Headers } from 'apollo-server-env';
+import { Request, Headers, ValueOrPromise } from 'apollo-server-env';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
 import {
+  ApolloError,
   formatApolloErrors,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
+  hasPersistedQueryError,
 } from 'apollo-server-errors';
 import {
   processGraphQLRequest,
@@ -16,7 +18,8 @@ import {
   GraphQLResponse,
 } from './requestPipeline';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
-import { ApolloServerPlugin, WithRequired } from 'apollo-server-plugin-base';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { WithRequired, GraphQLExecutionResult } from 'apollo-server-types';
 
 export interface HttpQueryRequest {
   method: string;
@@ -28,7 +31,7 @@ export interface HttpQueryRequest {
   query: Record<string, any> | Array<Record<string, any>>;
   options:
     | GraphQLOptions
-    | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
+    | ((...args: Array<any>) => ValueOrPromise<GraphQLOptions>);
   request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
@@ -69,25 +72,43 @@ export class HttpQueryError extends Error {
 /**
  * If options is specified, then the errors array will be formatted
  */
-function throwHttpGraphQLError<E extends Error>(
+export function throwHttpGraphQLError<E extends Error>(
   statusCode: number,
   errors: Array<E>,
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
+  extensions?: GraphQLExecutionResult['extensions'],
 ): never {
+  const defaultHeaders = { 'Content-Type': 'application/json' };
+  // force no-cache on PersistedQuery errors
+  const headers = hasPersistedQueryError(errors)
+    ? {
+        ...defaultHeaders,
+        'Cache-Control': 'private, no-cache, must-revalidate',
+      }
+    : defaultHeaders;
+
+  type Result =
+   & Pick<GraphQLExecutionResult, 'extensions'>
+   & { errors: E[] | ApolloError[] }
+
+  const result: Result = {
+    errors: options
+      ? formatApolloErrors(errors, {
+          debug: options.debug,
+          formatter: options.formatError,
+        })
+      : errors,
+  };
+
+  if (extensions) {
+    result.extensions = extensions;
+  }
+
   throw new HttpQueryError(
     statusCode,
-    prettyJSONStringify({
-      errors: options
-        ? formatApolloErrors(errors, {
-            debug: options.debug,
-            formatter: options.formatError,
-          })
-        : errors,
-    }),
+    prettyJSONStringify(result),
     true,
-    {
-      'Content-Type': 'application/json',
-    },
+    headers,
   );
 }
 
@@ -106,10 +127,6 @@ export async function runHttpQuery(
     // the normal options provided by the user, such as: formatError,
     // debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
-    e.message = `Invalid options provided to ApolloServer: ${e.message}`;
-    if (!debugDefault) {
-      e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
-    }
     return throwHttpGraphQLError(500, [e], { debug: debugDefault });
   }
   if (options.debug === undefined) {
@@ -144,9 +161,11 @@ export async function runHttpQuery(
 
   const config = {
     schema: options.schema,
+    logger: options.logger,
     rootValue: options.rootValue,
     context: options.context || {},
     validationRules: options.validationRules,
+    executor: options.executor,
     fieldResolver: options.fieldResolver,
 
     // FIXME: Use proper option types to ensure this
@@ -158,6 +177,7 @@ export async function runHttpQuery(
       | CacheControlExtensionOptions
       | undefined,
     dataSources: options.dataSources,
+    documentStore: options.documentStore,
 
     extensions: options.extensions,
     persistedQueries: options.persistedQueries,
@@ -169,6 +189,8 @@ export async function runHttpQuery(
     debug: options.debug,
 
     plugins: options.plugins || [],
+
+    reporting: options.reporting,
   };
 
   return processHTTPRequest(config, request);
@@ -229,6 +251,11 @@ export async function processHTTPRequest<TContext>(
     // in ApolloServer#graphQLServerOptions, before runHttpQuery is invoked).
     const context = cloneObject(options.context);
     return {
+      // While `logger` is guaranteed by internal Apollo Server usage of
+      // this `processHTTPRequest` method, this method has been publicly
+      // exported since perhaps as far back as Apollo Server 1.x.  Therefore,
+      // for compatibility reasons, we'll default to `console`.
+      logger: options.logger || console,
       request,
       response: {
         http: {
@@ -238,6 +265,9 @@ export async function processHTTPRequest<TContext>(
       context,
       cache: options.cache,
       debug: options.debug,
+      metrics: {
+        captureTraces: !!options.reporting,
+      },
     };
   }
 
@@ -278,13 +308,19 @@ export async function processHTTPRequest<TContext>(
 
       try {
         const requestContext = buildRequestContext(request);
+
         const response = await processGraphQLRequest(options, requestContext);
 
         // This code is run on parse/validation errors and any other error that
         // doesn't reach GraphQL execution
         if (response.errors && typeof response.data === 'undefined') {
           // don't include options, since the errors have already been formatted
-          return throwHttpGraphQLError(400, response.errors as any);
+          return throwHttpGraphQLError(
+            (response.http && response.http.status) || 400,
+            response.errors as any,
+            undefined,
+            response.extensions,
+          );
         }
 
         if (response.http) {
@@ -332,7 +368,7 @@ function parseGraphQLRequest(
   let queryString: string | undefined = requestParams.query;
   let extensions = requestParams.extensions;
 
-  if (typeof extensions === 'string') {
+  if (typeof extensions === 'string' && extensions !== '') {
     // For GET requests, we have to JSON-parse extensions. (For POST
     // requests they get parsed as part of parsing the larger body they're
     // inside.)
@@ -363,7 +399,7 @@ function parseGraphQLRequest(
   const operationName = requestParams.operationName;
 
   let variables = requestParams.variables;
-  if (typeof variables === 'string') {
+  if (typeof variables === 'string' && variables !== '') {
     try {
       // XXX Really we should only do this for GET requests, but for
       // compatibility reasons we'll keep doing this at least for now for

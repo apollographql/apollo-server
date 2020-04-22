@@ -1,1 +1,0 @@
-../../../packages/apollo-server-koa/README.md

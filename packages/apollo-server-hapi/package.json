@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-hapi",
-  "version": "2.3.2",
+  "version": "2.12.0",
   "description": "Production-ready Node.js GraphQL server for Hapi",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,9 +25,10 @@
     "node": ">=8"
   },
   "dependencies": {
-    "@apollographql/graphql-playground-html": "^1.6.6",
+    "@apollographql/graphql-playground-html": "1.6.24",
     "accept": "^3.0.2",
     "apollo-server-core": "file:../apollo-server-core",
+    "apollo-server-types": "file:../apollo-server-types",
     "boom": "^7.1.0",
     "graphql-subscriptions": "^1.0.0",
     "graphql-tools": "^4.0.0"
@@ -36,6 +37,6 @@
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
   }
 }

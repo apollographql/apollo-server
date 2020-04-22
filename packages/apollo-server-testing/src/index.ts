@@ -1,1 +1,4 @@
-export { default as createTestClient } from './createTestClient';
+export {
+  default as createTestClient,
+  ApolloServerTestClient,
+} from './createTestClient';

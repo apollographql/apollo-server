@@ -1,4 +1,4 @@
-import { GraphQLError } from 'graphql';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
@@ -15,14 +15,30 @@ export class ApolloError extends Error implements GraphQLError {
   constructor(
     message: string,
     code?: string,
-    properties?: Record<string, any>,
+    extensions?: Record<string, any>,
   ) {
     super(message);
 
-    if (properties) {
-      Object.keys(properties).forEach(key => {
-        this[key] = properties[key];
-      });
+    // This variable was previously named `properties`, which allowed users to set
+    // arbitrary properties on the ApolloError object. This use case is still supported,
+    // but deprecated in favor of using the ApolloError.extensions object instead.
+    // This change intends to comply with the GraphQL spec on errors. See:
+    // https://github.com/graphql/graphql-spec/blob/master/spec/Section%207%20--%20Response.md#response-format
+    //
+    // Going forward, users should use the ApolloError.extensions object for storing
+    // and reading arbitrary data on an error, as arbitrary properties on the ApolloError
+    // itself won't be supported in the future.
+    //
+    // XXX Filter 'message' and 'extensions' specifically so they don't overwrite the class property.
+    // We _could_ filter all of the class properties, but have chosen to only do
+    // so if it's an issue for other users. Please feel free to open an issue if you
+    // find yourself here with this exact problem.
+    if (extensions) {
+      Object.keys(extensions)
+        .filter(keyName => keyName !== 'message' && keyName !== 'extensions')
+        .forEach(key => {
+          this[key] = extensions[key];
+        });
     }
 
     // if no name provided, use the default. defineProperty ensures that it stays non-enumerable
@@ -30,9 +46,12 @@ export class ApolloError extends Error implements GraphQLError {
       Object.defineProperty(this, 'name', { value: 'ApolloError' });
     }
 
-    // extensions are flattened to be included in the root of GraphQLError's, so
-    // don't add properties to extensions
-    this.extensions = { code };
+    // Before the mentioned change to extensions, users could previously set the extensions
+    // object by providing it as a key on the third argument to the constructor.
+    // This step provides backwards compatibility for those hypothetical users.
+    const userProvidedExtensions = (extensions && extensions.extensions) || null;
+
+    this.extensions = { ...extensions, ...userProvidedExtensions, code };
   }
 }
 
@@ -211,9 +230,9 @@ export class UserInputError extends ApolloError {
 }
 
 export function formatApolloErrors(
-  errors: Array<Error>,
+  errors: ReadonlyArray<Error>,
   options?: {
-    formatter?: Function;
+    formatter?: (error: GraphQLError) => GraphQLFormattedError;
     debug?: boolean;
   },
 ): Array<ApolloError> {
@@ -243,6 +262,19 @@ export function formatApolloErrors(
   // }
 
   const enrichedErrors = errors.map(error => enrichError(error, debug));
+  const makePrintable = error => {
+    if (error instanceof Error) {
+      // Error defines its `message` and other fields as non-enumerable, meaning JSON.stringigfy does not print them.
+      const graphQLError = error as GraphQLFormattedError;
+      return {
+        message: graphQLError.message,
+        ...(graphQLError.locations && { locations: graphQLError.locations }),
+        ...(graphQLError.path && { path: graphQLError.path }),
+        ...(graphQLError.extensions && { extensions: graphQLError.extensions }),
+      };
+    }
+    return error;
+  };
 
   if (!formatter) {
     return enrichedErrors;
@@ -250,7 +282,7 @@ export function formatApolloErrors(
 
   return enrichedErrors.map(error => {
     try {
-      return formatter(error);
+      return makePrintable(formatter(error));
     } catch (err) {
       if (debug) {
         return enrichError(err, debug);
@@ -263,4 +295,14 @@ export function formatApolloErrors(
       }
     }
   }) as Array<ApolloError>;
+}
+
+export function hasPersistedQueryError(errors: Array<Error>): boolean {
+  return Array.isArray(errors)
+    ? errors.some(
+        error =>
+          error instanceof PersistedQueryNotFoundError ||
+          error instanceof PersistedQueryNotSupportedError,
+      )
+    : false;
 }

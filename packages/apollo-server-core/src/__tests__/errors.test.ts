@@ -1,4 +1,3 @@
-/* tslint:disable:no-unused-expression */
 import { GraphQLError } from 'graphql';
 
 import {
@@ -9,6 +8,9 @@ import {
   ValidationError,
   UserInputError,
   SyntaxError,
+  hasPersistedQueryError,
+  PersistedQueryNotFoundError,
+  PersistedQueryNotSupportedError,
 } from 'apollo-server-errors';
 
 describe('Errors', () => {
@@ -112,6 +114,11 @@ describe('Errors', () => {
       expect(error instanceof ApolloError).toBe(true);
       expect(formatter).toHaveBeenCalledTimes(1);
     });
+    it('Formats native Errors in a JSON-compatible way', () => {
+      const error = new Error('Hello');
+      const [formattedError] = formatApolloErrors([error]);
+      expect(JSON.parse(JSON.stringify(formattedError)).message).toBe('Hello');
+    });
   });
   describe('Named Errors', () => {
     const message = 'message';
@@ -182,6 +189,39 @@ describe('Errors', () => {
 
       expect(formattedError.extensions.exception.field1).toEqual('property1');
       expect(formattedError.extensions.exception.field2).toEqual('property2');
+    });
+  });
+  describe('hasPersistedQueryError', () => {
+    it('should return true if errors contain error of type PersistedQueryNotFoundError', () => {
+      const errors = [
+        new PersistedQueryNotFoundError(),
+        new AuthenticationError('401'),
+      ];
+      const result = hasPersistedQueryError(errors);
+      expect(result).toBe(true);
+    });
+
+    it('should return true if errors contain error of type PersistedQueryNotSupportedError', () => {
+      const errors = [
+        new PersistedQueryNotSupportedError(),
+        new AuthenticationError('401'),
+      ];
+      const result = hasPersistedQueryError(errors);
+      expect(result).toBe(true);
+    });
+
+    it('should return false if errors does not contain PersistedQuery error', () => {
+      const errors = [
+        new ForbiddenError('401'),
+        new AuthenticationError('401'),
+      ];
+      const result = hasPersistedQueryError(errors);
+      expect(result).toBe(false);
+    });
+
+    it('should return false if an error is thrown', () => {
+      const result = hasPersistedQueryError({});
+      expect(result).toBe(false);
     });
   });
 });

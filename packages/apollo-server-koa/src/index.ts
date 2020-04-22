@@ -24,6 +24,5 @@ export * from 'graphql-subscriptions';
 // ApolloServer integration.
 export {
   ApolloServer,
-  registerServer,
   ServerRegistration,
 } from './ApolloServer';

@@ -5,9 +5,10 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
+import { ValueOrPromise } from 'apollo-server-types';
 
 export interface KoaGraphQLOptionsFunction {
-  (ctx: Koa.Context): GraphQLOptions | Promise<GraphQLOptions>;
+  (ctx: Koa.Context): ValueOrPromise<GraphQLOptions>;
 }
 
 export interface KoaHandler {

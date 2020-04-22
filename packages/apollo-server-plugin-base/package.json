@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-plugin-base",
-  "version": "0.2.2",
+  "version": "0.7.1",
   "description": "Apollo Server plugin base classes",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,11 +10,10 @@
   "engines": {
     "node": ">=6"
   },
-  "devDependencies": {
-    "apollo-server-core": "file:../apollo-server-core",
-    "apollo-server-env": "file:../apollo-server-env"
+  "dependencies": {
+    "apollo-server-types": "file:../apollo-server-types"
   },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
   }
 }

@@ -1,0 +1,76 @@
+{
+  "extends": [
+    "apollo-open-source"
+  ],
+  "automerge": false,
+  "packageRules": [
+    {
+      "packageNames": ["@types/node"],
+      "allowedVersions": "8.x"
+    },
+    /*
+      Avoid major version bumps to server frameworks (those used by the
+      various Apollo Server integrations (e.g. Fastify, Express, Koa, etc.),
+      which must be reserved for a major version bump to Apollo Server itself.
+
+      For more thoughts here, see my comment on the commits that introduced
+      these threshholds via `git blame`.
+    */
+    {
+      "packageNames": ["fastify"],
+      "allowedVersions": "<2"
+    },
+    {
+      "packageNames": ["fastify-cors"],
+      "allowedVersions": "<1"
+    },
+    {
+      "packageNames": ["koa-bodyparser"],
+      "allowedVersions": "<4"
+    },
+    {
+      "packageNames": ["@koa/cors"],
+      "allowedVersions": "<3"
+    },
+    {
+      "packageNames": ["log4js"],
+      "allowedVersions": "<5"
+    },
+    {
+      "packageNames": ["hapi", "@types/hapi"],
+      "allowedVersions": "<18"
+    },
+    {
+      "packageNames": ["ws"],
+      "allowedVersions": "<7"
+    },
+    // Remove when we're no longer supporting Node.js v6
+    {
+      "packageNames": ["nock"],
+      "allowedVersions": "<11"
+    },
+    /*
+      Docs-related Renovate rules
+
+      These ensure that the `docs/` folder, which is its own application with
+      its own dependencies which lives inside this repository, plays by its
+      own Renovate rules.  Those rules are defined within the external (npm)
+      package called `renovate-config-apolllo-docs` (defined here only by
+      the `apollo-docs` suffix).
+    */
+    {
+      "paths": [
+        "docs/package.json"
+      ],
+      "extends": [
+        "apollo-docs"
+      ],
+      // We need to tell Renovate to check the branches for each major version
+      // of Apollo Server.  "Past" major versions should be added here!
+      "baseBranches": [
+        "master",
+        "version-2"
+      ]
+    }
+  ]
+}

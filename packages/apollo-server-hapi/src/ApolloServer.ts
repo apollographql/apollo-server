@@ -23,8 +23,8 @@ function handleFileUploads(uploadsConfig: FileUploadOptions) {
     ) {
       Object.defineProperty(request, 'payload', {
         value: await processFileUploads(
-          request,
-          request.response,
+          request.raw.req,
+          request.raw.res,
           uploadsConfig,
         ),
         writable: false,
@@ -154,9 +154,3 @@ export interface ServerRegistration {
   disableHealthCheck?: boolean;
   uploads?: boolean | Record<string, any>;
 }
-
-export const registerServer = () => {
-  throw new Error(
-    'Please use server.applyMiddleware instead of registerServer. This warning will be removed in the next release',
-  );
-};

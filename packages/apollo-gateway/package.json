@@ -1,0 +1,40 @@
+{
+  "name": "@apollo/gateway",
+  "version": "0.14.1",
+  "description": "Apollo Gateway",
+  "author": "opensource@apollographql.com",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript"
+  ],
+  "engines": {
+    "node": ">=8"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@apollo/federation": "file:../apollo-federation",
+    "@types/node-fetch": "2.5.4",
+    "apollo-engine-reporting-protobuf": "file:../apollo-engine-reporting-protobuf",
+    "apollo-env": "^0.6.1",
+    "apollo-graphql": "^0.4.0",
+    "apollo-server-caching": "file:../apollo-server-caching",
+    "apollo-server-core": "file:../apollo-server-core",
+    "apollo-server-env": "file:../apollo-server-env",
+    "apollo-server-errors": "file:../apollo-server-errors",
+    "apollo-server-types": "file:../apollo-server-types",
+    "graphql-extensions": "file:../graphql-extensions",
+    "loglevel": "^1.6.1",
+    "make-fetch-happen": "^8.0.0",
+    "pretty-format": "^25.0.0"
+  },
+  "peerDependencies": {
+    "graphql": "^14.2.1 || ^15.0.0"
+  }
+}

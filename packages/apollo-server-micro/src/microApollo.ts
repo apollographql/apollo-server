@@ -8,10 +8,11 @@ import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 
 import { MicroRequest } from './types';
+import { ValueOrPromise } from 'apollo-server-types';
 
 // Allowed Micro Apollo Server options.
 export interface MicroGraphQLOptionsFunction {
-  (req?: IncomingMessage): GraphQLOptions | Promise<GraphQLOptions>;
+  (req?: IncomingMessage): ValueOrPromise<GraphQLOptions>;
 }
 
 // Utility function used to set multiple headers on a response object.

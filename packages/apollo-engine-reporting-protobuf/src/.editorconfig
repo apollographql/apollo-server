@@ -1,0 +1,12 @@
+# reports.proto is copied from an internal Apollo repository which applies these
+# editorconfig standards.
+
+root = true
+
+[reports.proto]
+charset = utf-8
+end_of_line = lf
+indent_size = 2
+indent_style = tab
+insert_final_newline = true
+trim_trailing_whitespace = true

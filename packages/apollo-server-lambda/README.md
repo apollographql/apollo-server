@@ -1,14 +1,10 @@
----
-title: Lambda
-description: Setting up Apollo Server with AWS Lambda
----
+[![npm version](https://badge.fury.io/js/apollo-server-lambda.svg)](https://badge.fury.io/js/apollo-server-lambda) [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server) [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/apollo)
 
-[![npm version](https://badge.fury.io/js/apollo-server-lambda.svg)](https://badge.fury.io/js/apollo-server-lambda) [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server) [![Coverage Status](https://coveralls.io/repos/github/apollographql/apollo-server/badge.svg?branch=master)](https://coveralls.io/github/apollographql/apollo-server?branch=master) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](https://www.apollographql.com/#slack)
 
 This is the AWS Lambda integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/v2). [Read the CHANGELOG](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md).
 
-```sh
-npm install apollo-server-lambda@rc graphql
+```shell
+npm install apollo-server-lambda graphql
 ```
 
 ## Deploying with AWS Serverless Application Model (SAM)
@@ -39,6 +35,14 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  
+  // By default, the GraphQL Playground interface and GraphQL introspection
+  // is disabled in "production" (i.e. when `process.env.NODE_ENV` is `production`).
+  //
+  // If you'd like to have GraphQL Playground and introspection enabled in production,
+  // the `playground` and `introspection` options must be set explicitly to `true`.
+  playground: true,
+  introspection: true,
 });
 
 exports.handler = server.createHandler();
@@ -81,7 +85,7 @@ Resources:
 
 This will read and transform the template, created in previous step. Package and upload the artifact to the S3 bucket and generate another template for the deployment.
 
-```sh
+```shell
 aws cloudformation package \
   --template-file template.yaml \
   --output-template-file serverless-output.yaml \
@@ -90,7 +94,7 @@ aws cloudformation package \
 
 #### 5. Deploy the API
 
-The will create the Lambda Function and API Gateway for GraphQL. We use the stack-name `prod` to mean production but any stack name can be used.
+This will create the Lambda Function and API Gateway for GraphQL. We use the stack-name `prod` to mean production but any stack name can be used.
 
 ```
 aws cloudformation deploy \

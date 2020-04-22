@@ -5,6 +5,7 @@ import {
 } from 'apollo-server-core';
 
 import { Request, Response, URL } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-types';
 
 // Design principles:
 // - You can issue a GET or POST with your query.
@@ -12,7 +13,7 @@ import { Request, Response, URL } from 'apollo-server-env';
 //
 
 export interface CloudflareOptionsFunction {
-  (req?: Request): GraphQLOptions | Promise<GraphQLOptions>;
+  (req?: Request): ValueOrPromise<GraphQLOptions>;
 }
 
 export function graphqlCloudflare(

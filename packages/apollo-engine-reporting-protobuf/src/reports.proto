@@ -4,8 +4,6 @@ package mdg.engine.proto;
 
 import "google/protobuf/timestamp.proto";
 
-option optimize_for = SPEED;
-
 message Trace {
 	message CachePolicy {
 		enum Scope {
@@ -82,15 +80,25 @@ message Trace {
 		uint32 column = 2;
 	}
 
+	// We store information on each resolver execution as a Node on a tree.
+	// The structure of the tree corresponds to the structure of the GraphQL
+	// response; it does not indicate the order in which resolvers were
+	// invoked.  Note that nodes representing indexes (and the root node)
+	// don't contain all Node fields (eg types and times).
 	message Node {
-		// The name of the field (for Nodes representing a resolver call) or
-		// the index in a list (for intermediate Nodes representing elements of
-		// a list).  Note that nodes representing indexes (and the root node)
-		// don't contain all Node fields (eg types and times).
+		// The name of the field (for Nodes representing a resolver call) or the
+		// index in a list (for intermediate Nodes representing elements of a list).
+		// field_name is the name of the field as it appears in the GraphQL
+		// response: ie, it may be an alias.  (In that case, the original_field_name
+		// field holds the actual field name from the schema.) In any context where
+		// we're building up a path, we use the response_name rather than the
+		// original_field_name.
 		oneof id {
-			string field_name = 1;
+			string response_name = 1;
 			uint32 index = 2;
 		}
+
+		string original_field_name = 14;
 
 		// The field's return type; e.g. "String!" for User.email:String!
 		string type = 3;
@@ -111,6 +119,62 @@ message Trace {
 		reserved 4;
 	}
 
+	// represents a node in the query plan, under which there is a trace tree for that service fetch.
+	// In particular, each fetch node represents a call to an implementing service, and calls to implementing
+	// services may not be unique. See https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/src/QueryPlan.ts
+	// for more information and details.
+	message QueryPlanNode {
+		// This represents a set of nodes to be executed sequentially by the Gateway executor
+		message SequenceNode {
+			repeated QueryPlanNode nodes = 1;
+		}
+		// This represents a set of nodes to be executed in parallel by the Gateway executor
+		message ParallelNode {
+			repeated QueryPlanNode nodes = 1;
+		}
+		// This represents a node to send an operation to an implementing service
+		message FetchNode {
+			// XXX When we want to include more details about the sub-operation that was
+			// executed against this service, we should include that here in each fetch node.
+			// This might include an operation signature, requires directive, reference resolutions, etc.
+			string serviceName = 1;
+
+			bool traceParsingFailed = 2;
+
+			// This Trace only contains start_time, end_time, duration_ns, and root;
+			// all timings were calculated **on the federated service**, and clock skew
+			// will be handled by the ingress server.
+			Trace trace = 3;
+
+			// relative to the outer trace's start_time, in ns, measured in the gateway.
+			uint64 sent_time_offset = 4;
+
+			// Wallclock times measured in the gateway for when this operation was
+			// sent and received.
+			google.protobuf.Timestamp sent_time = 5;
+			google.protobuf.Timestamp received_time = 6;
+		}
+
+		// This node represents a way to reach into the response path and attach related entities.
+		// XXX Flatten is really not the right name and this node may be renamed in the query planner.
+		message FlattenNode {
+			repeated ResponsePathElement response_path = 1;
+			QueryPlanNode node = 2;
+		}
+		message ResponsePathElement {
+			oneof id {
+				string field_name = 1;
+				uint32 index = 2;
+			}
+		}
+		oneof node {
+			SequenceNode sequence = 1;
+			ParallelNode parallel = 2;
+			FetchNode fetch = 3;
+			FlattenNode flatten = 4;
+		}
+	}
+
 	// Wallclock time when the trace began.
 	google.protobuf.Timestamp start_time = 4; // required
 	// Wallclock time when the trace ended.
@@ -118,11 +182,13 @@ message Trace {
 	// High precision duration of the trace; may not equal end_time-start_time
 	// (eg, if your machine's clock changed during the trace).
 	uint64 duration_ns = 11; // required
+	// A tree containing information about all resolvers run directly by this
+	// service, including errors.
+	Node root = 14;
 
-	// These fields are specific to engineproxy.
-	google.protobuf.Timestamp origin_reported_start_time = 15;
-	google.protobuf.Timestamp origin_reported_end_time = 16;
-	uint64 origin_reported_duration_ns = 17;
+	// -------------------------------------------------------------------------
+	// Fields below this line are *not* included in federated traces (the traces
+	// sent from federated services to the gateway).
 
 	// In addition to details.raw_query, we include a "signature" of the query,
 	// which can be normalized: for example, you may want to discard aliases, drop
@@ -135,15 +201,6 @@ message Trace {
 	// Engineproxy provides the signature in legacy_signature_needs_resigning
 	// instead.
 	string signature = 19;
-
-	// Older agents (eg the Go engineproxy) relied to some degree on the Engine
-	// backend to run their own semi-compatible implementation of a specific
-	// variant of query signatures. The backend won't do that for new agents, but
-	// we keep this old field around to ensure that queries only get new IDs when
-	// you upgrade to the new agent, not just when we make backend changes
-	// to minimize backend-side signature calculation. Deprecated and ignored
-	// in FullTracesReports.
-	string legacy_signature_needs_resigning = 5;
 
 	Details details = 6;
 
@@ -158,7 +215,11 @@ message Trace {
 
 	CachePolicy cache_policy = 18;
 
-	Node root = 14;
+	// If this Trace was created by a gateway, this is the query plan, including
+	// sub-Traces for federated services. Note that the 'root' tree on the
+	// top-level Trace won't contain any resolvers (though it could contain errors
+	// that occurred in the gateway itself).
+	QueryPlanNode query_plan = 26;
 
 	// Was this response served from a full query response cache?  (In that case
 	// the node tree will have no resolvers.)
@@ -170,6 +231,27 @@ message Trace {
 	// (This typically means that a previous request was rejected as an unknown
 	// persisted query.)
 	bool persisted_query_register = 22;
+
+	// Was this operation registered and a part of the safelist?
+	bool registered_operation = 24;
+
+	// Was this operation forbidden due to lack of safelisting?
+	bool forbidden_operation = 25;
+
+	// --------------------------------------------------------------
+	// Fields below this line are only set by the old Go engineproxy.
+	google.protobuf.Timestamp origin_reported_start_time = 15;
+	google.protobuf.Timestamp origin_reported_end_time = 16;
+	uint64 origin_reported_duration_ns = 17;
+
+	// Older agents (eg the Go engineproxy) relied to some degree on the Engine
+	// backend to run their own semi-compatible implementation of a specific
+	// variant of query signatures. The backend does not do this for new agents (which
+	// set the above 'signature' field). It used to still "re-sign" signatures
+	// from engineproxy, but we've now simplified the backend to no longer do this.
+	// Deprecated and ignored in FullTracesReports.
+	string legacy_signature_needs_resigning = 5;
+
 
 	// removed: Node parse = 12; Node validate = 13;
 	//          Id128 server_id = 1; Id128 client_id = 2;
@@ -224,6 +306,8 @@ message ClientNameStats {
 	map<string, uint64> cache_hits_per_version = 4;
 	map<string, uint64> persisted_query_hits_per_version = 10;
 	map<string, uint64> persisted_query_misses_per_version = 11;
+	map<string, uint64> registered_operation_count_per_version = 12;
+	map<string, uint64> forbidden_operation_count_per_version = 13;
 	repeated int64 cache_latency_count = 5; // Duration histogram; see docs/histograms.md
 	PathErrorStats root_error_stats = 6;
 	uint64 requests_with_errors_count = 7;
@@ -244,6 +328,8 @@ message QueryLatencyStats {
 	uint64 requests_with_errors_count = 8;
 	repeated int64 public_cache_ttl_count = 9;
 	repeated int64 private_cache_ttl_count = 10;
+	uint64 registered_operation_count = 11;
+	uint64 forbidden_operation_count = 12;
 }
 
 message StatsContext {
@@ -360,7 +446,7 @@ message StatsReport {
 
 	// Older agents (Go engineproxy) didn't explicitly include the operation name
 	// in the key of this map, and the server had to parse it out (after a
-	// re-signing operation). The key here is just the query
+	// re-signing operation which is no longer performed). The key here is just the query
 	// signature. Deprecated.
 	map<string, QueryStats> legacy_per_query_implicit_operation_name = 12;
 
@@ -394,4 +480,9 @@ message FullTracesReport {
 // Just a sequence of traces with the same statsReportKey.
 message Traces {
 	repeated Trace trace = 1;
+}
+
+message TraceV1 {
+	ReportHeader header = 1;
+	Trace trace = 2;
 }

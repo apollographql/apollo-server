@@ -4,12 +4,11 @@
 // you're not using express or your version doesn't quite match up.
 import express from 'express';
 import http from 'http';
-import net from 'net';
 import {
   ApolloServer as ApolloServerBase,
   CorsOptions,
+  ApolloServerExpressConfig,
 } from 'apollo-server-express';
-import { Config } from 'apollo-server-core';
 
 export * from './exports';
 
@@ -26,10 +25,17 @@ export interface ServerInfo {
 export class ApolloServer extends ApolloServerBase {
   private httpServer?: http.Server;
   private cors?: CorsOptions | boolean;
+  private onHealthCheck?: (req: express.Request) => Promise<any>;
 
-  constructor(config: Config & { cors?: CorsOptions | boolean }) {
+  constructor(
+    config: ApolloServerExpressConfig & {
+      cors?: CorsOptions | boolean;
+      onHealthCheck?: (req: express.Request) => Promise<any>;
+    },
+  ) {
     super(config);
     this.cors = config && config.cors;
+    this.onHealthCheck = config && config.onHealthCheck;
   }
 
   private createServerInfo(
@@ -37,7 +43,16 @@ export class ApolloServer extends ApolloServerBase {
     subscriptionsPath?: string,
   ): ServerInfo {
     const serverInfo: any = {
-      ...(server.address() as net.AddressInfo),
+      // TODO: Once we bump to `@types/node@10` or higher, we can replace cast
+      // with the `net.AddressInfo` type, rather than this custom interface.
+      // Unfortunately, prior to the 10.x types, this type existed on `dgram`,
+      // but not on `net`, and in later types, the `server.address()` signature
+      // can also be a string.
+      ...(server.address() as {
+        address: string;
+        family: string;
+        port: number;
+      }),
       server,
       subscriptionsPath,
     };
@@ -82,11 +97,14 @@ export class ApolloServer extends ApolloServerBase {
     // object, so we have to create it.
     const app = express();
 
+    app.disable('x-powered-by');
+
     // provide generous values for the getting started experience
     super.applyMiddleware({
       app,
       path: '/',
       bodyParserConfig: { limit: '50mb' },
+      onHealthCheck: this.onHealthCheck,
       cors:
         typeof this.cors !== 'undefined'
           ? this.cors
