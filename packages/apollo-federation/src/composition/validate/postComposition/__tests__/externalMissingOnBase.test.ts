@@ -39,8 +39,9 @@ describe('externalMissingOnBase', () => {
       name: 'serviceC',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB, serviceC]);
-    const warnings = validateExternalMissingOnBase(schema);
+    const serviceList = [serviceA, serviceB, serviceC];
+    const { schema } = composeServices([serviceA, serviceB, serviceC]);
+    const warnings = validateExternalMissingOnBase({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -76,8 +77,9 @@ describe('externalMissingOnBase', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateExternalMissingOnBase(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalMissingOnBase({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {

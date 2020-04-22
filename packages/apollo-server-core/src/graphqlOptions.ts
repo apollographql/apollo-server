@@ -12,12 +12,19 @@ import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { GraphQLParseOptions } from 'graphql-tools';
-import { GraphQLExecutor, ValueOrPromise } from 'apollo-server-types';
+import {
+  GraphQLExecutor,
+  ValueOrPromise,
+  GraphQLResponse,
+  GraphQLRequestContext,
+  Logger,
+} from 'apollo-server-types';
 
 /*
  * GraphQLServerOptions
  *
  * - schema: an executable GraphQL schema used to fulfill requests.
+ * - (optional) logger: a `Logger`-compatible implementation to be used for server-level messages.
  * - (optional) formatError: Formatting function applied to all errors before response is sent
  * - (optional) rootValue: rootValue passed to GraphQL execution, or a function to resolving the rootValue from the DocumentNode
  * - (optional) context: the context passed to GraphQL execution
@@ -35,12 +42,16 @@ export interface GraphQLServerOptions<
   TRootValue = any
 > {
   schema: GraphQLSchema;
+  logger?: Logger;
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
   context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
   executor?: GraphQLExecutor;
-  formatResponse?: Function;
+  formatResponse?: (
+    response: GraphQLResponse | null,
+    requestContext: GraphQLRequestContext<TContext>,
+  ) => GraphQLResponse
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
   tracing?: boolean;
@@ -60,7 +71,15 @@ export type DataSources<TContext> = {
 };
 
 export interface PersistedQueryOptions {
-  cache: KeyValueCache;
+  cache?: KeyValueCache;
+  /**
+   * Specified in **seconds**, this time-to-live (TTL) value limits the lifespan
+   * of how long the persisted query should be cached.  To specify a desired
+   * lifespan of "infinite", set this to `null`, in which case the eviction will
+   * be determined by the cache's eviction policy, but the record will never
+   * simply expire.
+   */
+  ttl?: number | null;
 }
 
 export default GraphQLServerOptions;

@@ -24,7 +24,7 @@ We’ve chosen to split this functionality up to give you the flexibility to cho
 ```js
 const { HttpLink } = require('apollo-link-http');
 const fetch = require('node-fetch');
-const { introspectSchema, makeRemoteExecutableSchema } = require('apollo-server');
+const { introspectSchema, makeRemoteExecutableSchema } = require('graphql-tools');
 
 const link = new HttpLink({ uri: 'http://api.githunt.com/graphql', fetch });
 
@@ -80,12 +80,14 @@ In this case, we're dealing with two schemas that implement a system with users 
 
 ```js
 const {
-  makeExecutableSchema,
-  addMockFunctionsToSchema,
-  mergeSchemas,
   ApolloServer,
   gql,
 } = require('apollo-server');
+const {
+  makeExecutableSchema,
+  addMockFunctionsToSchema,
+  mergeSchemas,
+} = require('graphql-tools');
 
 // Mocked chirp schema
 // We don't worry about the schema implementation right now since we're just
@@ -123,6 +125,10 @@ const authorSchema = makeExecutableSchema({
 
 addMockFunctionsToSchema({ schema: authorSchema });
 
+const schema = mergeSchemas({
+    schemas: [chirpSchema, authorSchema],
+});
+
 const server = new ApolloServer({ schema });
 
 server.listen().then(({ url }) => {
@@ -143,6 +149,8 @@ type Query {
 We now have a single schema that supports asking for `userById` and `chirpsByAuthorId` in the same query!
 
 ### Adding resolvers between schemas
+
+*Note*: if you require this functionality, it would be better if you use [Apollo Federation](../federation/migrating-from-stitching/). The below explains how to implement it manually.
 
 Combining existing root fields is a great start, but in practice we will often want to introduce additional fields for working with the relationships between types that came from different subschemas. For example, we might want to go from a particular user to their chirps, or from a chirp to its author. Or we might want to query a `latestChirps` field and then get the author of each of those chirps. If the only way to obtain a chirp's author is to call the `userById(id)` root query field with the `authorId` of a given chirp, and we don't know the chirp's `authorId` until we receive the GraphQL response, then we won't be able to obtain the authors as part of the same query.
 
@@ -245,7 +253,7 @@ const {
   FilterRootFields,
   RenameTypes,
   RenameRootFields,
-} = require('apollo-server');
+} = require('graphql-tools');
 
 // Mocked chirp schema; we don't want to worry about the schema
 // implementation right now since we're just demonstrating
