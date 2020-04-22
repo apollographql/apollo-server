@@ -31,7 +31,7 @@
     "apollo-server-types": "file:../apollo-server-types",
     "graphql-extensions": "file:../graphql-extensions",
     "loglevel": "^1.6.1",
-    "make-fetch-happen": "^7.1.1",
+    "make-fetch-happen": "^8.0.0",
     "pretty-format": "^25.0.0"
   },
   "peerDependencies": {
