@@ -5,6 +5,8 @@
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
 - Deprecate the `ENGINE_API_KEY` environment variable in favor of a newly introduced `APOLLO_KEY`.  Continued use of `ENGINE_API_KEY` will result in deprecation warnings and support for it will be removed in a future major version.  [#3923](https://github.com/apollographql/apollo-server/pull/3923)
+- Cache stringified representations of downstream query bodies within the query plan to address performance implications incurred by repeatedly `print`ing the same`DocumentNode`s with the `graphql` printer.  This improvement is more pronounced on larger documents.  [PR #4018](https://github.com/apollographql/apollo-server/pull/4018)
+- Add inadvertently excluded `apollo-server-errors` runtime dependency. [#3927](https://github.com/apollographql/apollo-server/pull/3927)
 
 ## 0.14.1
 

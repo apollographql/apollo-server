@@ -11,6 +11,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - Deprecate the `ENGINE_API_KEY` environment variable in favor of a newly introduced `APOLLO_KEY`.  Continued use of `ENGINE_API_KEY` will result in deprecation warnings and support for it will be removed in a future major version. 
  [#3923](https://github.com/apollographql/apollo-server/pull/3923)
+- Allow passing a `WebSocket.Server` to `ApolloServer.installSubscriptionHandlers`. [PR #2314](https://github.com/apollographql/apollo-server/pull/2314)
 
 ### v2.12.0
 
