@@ -6,9 +6,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md)
 
 ### vNEXT
-
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- `apollo-engine-reporting`: Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  Similarly, within the `engine` configuration object, the `schemaTag` property has been renamed `graphVariant`.  The functionality remains otherwise unchanged, but their new names mirror the name used within Apollo Graph Manager.  Continued use of the now-deprecated names will result in deprecation warnings and support will be dropped completely in the next "major" update.  To avoid misconfiguration, a runtime error will be thrown if _both_ new and deprecated names are set. [PR #3855](https://github.com/apollographql/apollo-server/pull/3855)
 - Allow passing a `WebSocket.Server` to `ApolloServer.installSubscriptionHandlers`. [PR #2314](https://github.com/apollographql/apollo-server/pull/2314)
 
 ### v2.12.0

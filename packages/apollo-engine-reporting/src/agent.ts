@@ -45,6 +45,29 @@ export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
 
+// AS3: Drop support for deprecated bits.
+export function getEngineGraphVariant(engine: EngineReportingOptions<any> | boolean | undefined, logger: Logger = console): string | undefined {
+  if (engine === false) {
+    return;
+  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
+    if (engine.graphVariant && engine.schemaTag) {
+      throw new Error('Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.');
+    }
+    if (engine.schemaTag) {
+      logger.warn('[Deprecation warning] Usage of engine.schemaTag is deprecated. Please use engine.graphVariant instead.');
+    }
+    return engine.graphVariant || engine.schemaTag;
+  } else {
+    if (process.env.ENGINE_SCHEMA_TAG) {
+      logger.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
+    }
+    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
+      throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
+    }
+    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
+  }
+}
+
 export interface EngineReportingOptions<TContext> {
   /**
    * API key for the service. Get this from
@@ -222,6 +245,7 @@ export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions<TContext>;
   private logger: Logger = console;
   private apiKey: string;
+  private graphVariant: string;
   private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
     null,
   );
@@ -240,6 +264,7 @@ export class EngineReportingAgent<TContext = any> {
     this.options = options;
     if (options.logger) this.logger = options.logger;
     this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
+    this.graphVariant = getEngineGraphVariant(options, this.logger) || '';
     if (!this.apiKey) {
       throw new Error(
         'To use EngineReportingAgent, you must specify an API key via the apiKey option or the ENGINE_API_KEY environment variable.',
@@ -303,12 +328,7 @@ export class EngineReportingAgent<TContext = any> {
       this.reportHeaders[schemaHash] = new ReportHeader({
         ...serviceHeaderDefaults,
         schemaHash,
-        schemaTag:
-          this.options.graphVariant
-          || this.options.schemaTag
-          || process.env.APOLLO_GRAPH_VARIANT
-          || process.env.ENGINE_SCHEMA_TAG
-          || '',
+        schemaTag: this.graphVariant,
       });
       // initializes this.reports[reportHash]
       this.resetReport(schemaHash);
