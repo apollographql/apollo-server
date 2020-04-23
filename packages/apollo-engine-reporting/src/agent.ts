@@ -47,6 +47,7 @@ export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
 
+// AS3: Drop support for deprecated `ENGINE_API_KEY`.
 export function getEngineApiKey(
   {engine, skipWarn = false, logger= console }:
     {engine: EngineReportingOptions<any> | boolean | undefined, skipWarn?: boolean, logger?: Logger }
@@ -67,6 +68,29 @@ export function getEngineApiKey(
     warnedOnDeprecatedApiKey = true;
   }
   return  apiKeyFromEnv || legacyApiKeyFromEnv || ''
+}
+
+// AS3: Drop support for deprecated `ENGINE_SCHEMA_TAG`.
+export function getEngineGraphVariant(engine: EngineReportingOptions<any> | boolean | undefined, logger: Logger = console): string | undefined {
+  if (engine === false) {
+    return;
+  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
+    if (engine.graphVariant && engine.schemaTag) {
+      throw new Error('Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.');
+    }
+    if (engine.schemaTag) {
+      logger.warn('[Deprecation warning] Usage of engine.schemaTag is deprecated. Please use engine.graphVariant instead.');
+    }
+    return engine.graphVariant || engine.schemaTag;
+  } else {
+    if (process.env.ENGINE_SCHEMA_TAG) {
+      logger.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
+    }
+    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
+      throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
+    }
+    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
+  }
 }
 
 export interface EngineReportingOptions<TContext> {
@@ -246,6 +270,7 @@ export class EngineReportingAgent<TContext = any> {
   private readonly options: EngineReportingOptions<TContext>;
   private readonly apiKey: string;
   private logger: Logger = console;
+  private graphVariant: string;
   private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
     null,
   );
@@ -264,6 +289,7 @@ export class EngineReportingAgent<TContext = any> {
     this.options = options;
     this.apiKey = getEngineApiKey({engine: this.options, skipWarn: false, logger: this.logger});
     if (options.logger) this.logger = options.logger;
+    this.graphVariant = getEngineGraphVariant(options, this.logger) || '';
     if (!this.apiKey) {
       throw new Error(
         `To use EngineReportingAgent, you must specify an API key via the apiKey option or the APOLLO_KEY environment variable.`,
@@ -327,12 +353,7 @@ export class EngineReportingAgent<TContext = any> {
       this.reportHeaders[schemaHash] = new ReportHeader({
         ...serviceHeaderDefaults,
         schemaHash,
-        schemaTag:
-          this.options.graphVariant
-          || this.options.schemaTag
-          || process.env.APOLLO_GRAPH_VARIANT
-          || process.env.ENGINE_SCHEMA_TAG
-          || '',
+        schemaTag: this.graphVariant,
       });
       // initializes this.reports[reportHash]
       this.resetReport(schemaHash);

@@ -71,7 +71,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import {getEngineApiKey} from "apollo-engine-reporting/dist/agent";
+import { getEngineApiKey, getEngineGraphVariant } from "apollo-engine-reporting/dist/agent";
 import { Logger } from "apollo-server-types";
 
 const NoIntrospection = (context: ValidationContext) => ({
@@ -86,22 +86,6 @@ const NoIntrospection = (context: ValidationContext) => ({
     }
   },
 });
-
-function getEngineGraphVariant(engine: Config['engine']): string | undefined {
-  if (engine === false) {
-    return;
-  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
-    return engine.graphVariant || engine.schemaTag;
-  } else {
-    if (process.env.ENGINE_SCHEMA_TAG) {
-      console.warn('[deprecated] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
-    }
-    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
-      throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
-    }
-    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
-  }
-}
 
 function getEngineServiceId(engine: Config['engine'], logger: Logger): string | undefined {
   const engineApiKey = getEngineApiKey({engine, skipWarn: true, logger} );
@@ -435,7 +419,7 @@ export class ApolloServerBase {
         ),
       );
 
-      const graphVariant = getEngineGraphVariant(engine);
+      const graphVariant = getEngineGraphVariant(engine, this.logger);
       const engineConfig =
         this.engineApiKeyHash && this.engineServiceId
           ? {
