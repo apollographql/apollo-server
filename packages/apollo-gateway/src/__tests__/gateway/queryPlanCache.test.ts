@@ -2,10 +2,9 @@ import gql from 'graphql-tag';
 import { createTestClient } from 'apollo-server-testing';
 import { ApolloServerBase as ApolloServer } from 'apollo-server-core';
 import { buildFederatedSchema } from '@apollo/federation';
-import { TestableKeyValueCache } from 'apollo-server-caching';
 
 import { LocalGraphQLDataSource } from '../../datasources/LocalGraphQLDataSource';
-import { ApolloGateway, QueryPlan } from '../../';
+import { ApolloGateway, QueryPlan, QueryPlanCache } from '../../';
 
 import * as accounts from '../__fixtures__/schemas/accounts';
 import * as books from '../__fixtures__/schemas/books';
@@ -115,7 +114,7 @@ it('supports alternative cache implementations via config', async () => {
   const get = jest.fn((key) => Promise.resolve(cache[key]));
   const set = jest.fn((key, value) => (cache[key] = value));
 
-  const mockCache: TestableKeyValueCache<QueryPlan> = {
+  const mockCache: QueryPlanCache = {
     get,
     set,
     async delete() {},
