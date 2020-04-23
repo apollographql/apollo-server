@@ -6,6 +6,7 @@
 
 - Cache stringified representations of downstream query bodies within the query plan to address performance implications incurred by repeatedly `print`ing the same`DocumentNode`s with the `graphql` printer.  This improvement is more pronounced on larger documents.  [PR #4018](https://github.com/apollographql/apollo-server/pull/4018)
 - Add inadvertently excluded `apollo-server-errors` runtime dependency. [#3927](https://github.com/apollographql/apollo-server/pull/3927)
+- Support alternate query plan cache implementations via config. [#4026](https://github.com/apollographql/apollo-server/pull/4026)
 
 ## 0.14.1
 
