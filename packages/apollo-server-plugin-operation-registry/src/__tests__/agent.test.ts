@@ -442,8 +442,8 @@ describe('Agent', () => {
         });
       });
 
-      describe('When given a schemaTag', () => {
-        const schemaTag = 'master';
+      describe('When given a graphVariant', () => {
+        const graphVariant = 'master';
         const getOperationManifestRelativeUrl = (
           ...args: Parameters<typeof getOperationManifestUrl>
         ) =>
@@ -454,13 +454,13 @@ describe('Agent', () => {
 
         it('fetches manifests for the corresponding schema tag', async () => {
           nockStorageSecret(genericServiceID, genericApiKeyHash);
-          const agent = createAgent({ schemaTag });
+          const agent = createAgent({ graphVariant: graphVariant });
           const nockedManifest = nockBase()
             .get(
               getOperationManifestRelativeUrl(
                 genericServiceID,
                 genericStorageSecret,
-                schemaTag,
+                graphVariant,
               ),
             )
             .reply(200, manifest(sampleManifestRecords.a));

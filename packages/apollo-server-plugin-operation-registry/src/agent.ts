@@ -23,7 +23,7 @@ export interface AgentOptions {
   schemaHash: string;
   engine: any;
   store: InMemoryLRUCache;
-  schemaTag: string;
+  graphVariant: string;
 }
 
 type SignatureStore = Set<string>;
@@ -181,9 +181,9 @@ export default class Agent {
 
   private async fetchLegacyManifest(): Promise<Response> {
     this.logger.debug(`Fetching legacy manifest.`);
-    if (this.options.schemaTag !== 'current') {
+    if (this.options.graphVariant !== 'current') {
       this.logger.warn(
-        `The legacy manifest contains operations registered for the "current" tag, but the specified schema tag is "${this.options.schemaTag}".`,
+        `The legacy manifest contains operations registered for the "current" variant, but the specified variant is "${this.options.graphVariant}".`,
       );
     }
     const legacyManifestUrl = getLegacyOperationManifestUrl(
@@ -206,7 +206,7 @@ export default class Agent {
     const storageSecretManifestUrl = getOperationManifestUrl(
       this.options.engine.serviceID,
       storageSecret,
-      this.options.schemaTag,
+      this.options.graphVariant,
     );
 
     this.logger.debug(
@@ -219,7 +219,7 @@ export default class Agent {
 
     if (response.status === 404 || response.status === 403) {
       this.logger.warn(
-        `No manifest found for tag "${this.options.schemaTag}" at ${storageSecretManifestUrl}. ${callToAction}`,
+        `No manifest found for tag "${this.options.graphVariant}" at ${storageSecretManifestUrl}. ${callToAction}`,
       );
       return this.fetchLegacyManifest();
     }
