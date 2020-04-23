@@ -53,106 +53,123 @@ it('supports passing additional scalar fields defined by a requires', async () =
 });
 
 
-const publisherService: ServiceDefinitionModule = {
-  name: 'publisher',
-  typeDefs: gql`
-    type Publisher {
-      id: ID!
-      name: String!
-    }
 
-    extend type User @key(fields: "id") {
-      id: ID! @external
-      organization: Organization! @external
-      publisher: Publisher! @requires(fields: "organization { name address { country } }")
-      publisherCity: String! @requires(fields: "organization { address { city coordinates { type value }}}")
-    }
 
-    type Organization {
-      name: String!
-      address: Address
-    }
 
-    type Address {
-      city: String!
-      country: String!
-      coordinates: [Coordinate!]!
-    }
-
-    type Coordinate {
-      type: CoordinateType!
-      value: Float!
-    }
-
-    enum CoordinateType {
-      LATITUDE
-      LONGITUDE
-    }
-  `,
-  resolvers: {
-    User: {
-      publisher(user) {
-        return {
-          id: 1,
-          name: user.organization.name + ' ' + user.organization.address.country,
-        }
-      },
-      publisherCity(user) {
-        return user.organization.address.city + ' ' + user.organization.address.coordinates.map((coordinate: any) => coordinate.value).join(' ');
-      },
-    },
-  },
-};
-
-const userService: ServiceDefinitionModule = {
-  name: 'user',
+const serviceA: ServiceDefinitionModule = {
+  name: 'serviceA',
   typeDefs: gql`
     type Query {
-      me: User
+      me: A
     }
-
-    type User @key(fields: "id") {
+    type A @key(fields: "id") {
       id: ID!
       name: String!
-      organization: Organization!
+      nested1: Nested1!
+      nested2: Nested2!
+      nested3: Nested3!
     }
-
-    type Organization {
-      name: String!
-      address: Address
+    type Nested1 {
+      nameA: String!
+      nameB: String!
+      nested2: Nested2
     }
-
-    type Address {
-      city: String!
-      country: String!
-      coordinates: [Coordinate!]!
+    type Nested2 {
+      nameA: String!
+      nameB: String!
+      nameC: String!
+      nameD: String!
+      nested3: [Nested3!]!
     }
-
-    type Coordinate {
-      type: CoordinateType!
-      value: Float!
+    type Nested3 {
+      nameA: String!
+      nameB: String!
+      nameC: String!
+      nameD: String!
+      nameE: String!
+      nested4: Nested4!
     }
-
-    enum CoordinateType {
-      LATITUDE
-      LONGITUDE
+    type Nested4 @key(fields: "id") {
+      id: ID!
+      nameA: String!
+      nameB: String!
+      nameC: String!
+      nested5: Nested5!
+    }
+    type Nested5 {
+      id: ID!
+      nameA: String!
+      nameB: String!
     }
   `,
   resolvers: {
     Query: {
       me() {
         return {
-          id: 'abc',
-          name: 'meme',
-          organization: {
-            name: 'org 1',
-            address: {
-              city: 'New York',
-              country: 'USA',
-              coordinates: [
-                {type: 'LATITUDE', value: 123},
-                {type: 'LONGITUDE', value: 321},
-              ]
+          id: '1',
+          name: 'name',
+          nested1: {
+            nameA: "nested1.nameA",
+            nameB: "nested1.nameB",
+            nested2: {
+              nameA: "nested1.nested2.nameA",
+              nameB: "nested1.nested2.nameB",
+              nameC: "nested1.nested2.nameC",
+              nameD: "nested1.nested2.nameD",
+              nested3: {
+                nameA: "nested1.nested2.nested3.nameA",
+                nameB: "nested1.nested2.nested3.nameB",
+                nameC: "nested1.nested2.nested3.nameC",
+                nameD: "nested1.nested2.nested3.nameD",
+                nameE: "nested1.nested2.nested3.nameE",
+                nested4: {
+                  nameA: "nested1.nested2.nested3.nested4.nameA",
+                  nameB: "nested1.nested2.nested3.nested4.nameB",
+                  nameD: "nested1.nested2.nested3.nested4.nameC",
+                  nested5: {
+                    nameA: "nested1.nested2.nested3.nested4.nested5.nameA",
+                    nameB: "nested1.nested2.nested3.nested4.nested5.nameB",
+                  }
+                }
+              }
+            }
+          },
+          nested2: {
+            nameA: "nested2.nameA",
+            nameB: "nested2.nameB",
+            nameC: "nested2.nameC",
+            nameD: "nested2.nameD",
+            nested3: {
+              nameA: "nested2.nested3.nameA",
+              nameB: "nested2.nested3.nameB",
+              nameC: "nested2.nested3.nameC",
+              nameD: "nested2.nested3.nameD",
+              nameE: "nested2.nested3.nameE",
+              nested4: {
+                nameA: "nested2.nested3.nested4.nameA",
+                nameB: "nested2.nested3.nested4.nameB",
+                nameC: "nested2.nested3.nested4.nameC",
+                nested5: {
+                  nameA: "nested2.nested3.nested4.nested5.nameA",
+                  nameB: "nested2.nested3.nested4.nested5.nameB",
+                }
+              }
+            }
+          },
+          nested3: {
+            nameA: "nested3.nameA",
+            nameB: "nested3.nameB",
+            nameC: "nested3.nameC",
+            nameD: "nested3.nameD",
+            nameE: "nested3.nameE",
+            nested4: {
+              nameA: "nested3.nested4.nameA",
+              nameB: "nested3.nested4.nameB",
+              nameC: "nested3.nested4.nameC",
+              nested5: {
+                nameA: "nested3.nested4.nested5.nameA",
+                nameB: "nested3.nested4.nested5.nameB",
+              }
             }
           }
         }
@@ -161,85 +178,159 @@ const userService: ServiceDefinitionModule = {
   },
 };
 
-it('supports passing additional deeply nested fields defined by a requires', async () => {
+const serviceB: ServiceDefinitionModule = {
+  name: 'serviceB',
+  typeDefs: gql`
+    extend type A @key(fields: "id") {
+      id: ID! @external
+      nested1: Nested1! @external
+      nested2: Nested2! @external
+      nested3: Nested3! @external
+      calculated1: String! @requires(fields: "nested1 { nameA nested2 { nameA } }")
+      calculated2: String! @requires(fields: "nested1 { nameB  nested2 { nameB nested3 { nameA } } }")
+      calculated3: String! @requires(fields: "nested1 { nested2 { nested3 { nameB } } } nested2 { nameC nested3 { nameC } }")
+      calculated4: String! @requires(fields: "nested2 { nameD nested3 { nameD nested4 { nameA } } }")
+      calculated5: String! @requires(fields: "nested2 { nested3 { nested4 { nameB nested5 { nameA nameB } } } } nested3 { nameE nested4 { nameC } }")
+    }
+    type Nested1 {
+      nameA: String!
+      nameB: String!
+      nested2: Nested2
+    }
+    type Nested2 {
+      nameA: String!
+      nameB: String!
+      nameC: String!
+      nameD: String!
+      nested3: [Nested3!]!
+    }
+    type Nested3 {
+      nameA: String!
+      nameB: String!
+      nameC: String!
+      nameD: String!
+      nameE: String!
+      nested4: Nested4!
+    }
+    extend type Nested4 @key(fields: "id") {
+      id: ID! @external
+      nameA: String! @external
+      nameB: String! @external
+      nameC: String! @external
+      nested5: Nested5! @external
+    }
+    type Nested5 {
+      id: ID!
+      nameA: String!
+      nameB: String!
+    }
+  `,
+  resolvers: {
+    A: {
+      calculated1(parent) {
+        return parent.nested1.nameA + ' ' + parent.nested1.nested2.nameA;
+      },
+      calculated2(parent) {
+        return parent.nested1.nameB + ' ' + parent.nested1.nested2.nameB + ' ' + parent.nested1.nested2.nested3.nameA;
+      },
+      calculated3(parent) {
+        return parent.nested1.nested2.nested3.nameB + ' ' + parent.nested2.nameC + ' ' + parent.nested2.nested3.nameC;
+      },
+      calculated4(parent) {
+        return parent.nested2.nameD + ' ' + parent.nested2.nested3.nameD + ' ' + parent.nested2.nested3.nested4.nameA;
+      },
+      calculated5(parent) {
+        return parent.nested2.nested3.nested4.nameB + ' '
+          + parent.nested2.nested3.nested4.nested5.nameA + ' '
+          + parent.nested2.nested3.nested4.nested5.nameB + ' '
+          + parent.nested3.nameA + ' '
+          + parent.nested3.nested4.nameC;
+      },
+    },
+  },
+};
+
+
+
+it('supports multiple arbitrarily nested fields defined by a requires', async () => {
   const query = gql`
     query Me {
       me {
         name
-        publisher {
-          id
-          name
-        }
-        publisherCity
+        calculated1
+        calculated2
+        calculated3
+        calculated4
+        calculated5
       }
     }
   `;
 
-  const { data, queryPlan } = await execute([userService, publisherService], {
+  const { data, queryPlan } = await execute([serviceA, serviceB], {
     query,
   });
 
   console.log(data);
-  expect(queryPlan).toMatchInlineSnapshot(`
-    QueryPlan {
-      Sequence {
-        Fetch(service: "user") {
-          {
-            me {
-              name
-              __typename
-              id
-              organization {
-                name
-                address {
-                  country
-                  city
-                  city
-                  coordinates {
-                    type
-                    value
-                    type
-                    value
-                  }
-                }
-              }
-            }
-          }
-        },
-        Flatten(path: "me") {
-          Fetch(service: "publisher") {
-            {
-              ... on User {
-                __typename
-                id
-                organization {
-                  name
-                  address {
-                    country
-                    city
-                    city
-                    coordinates {
-                      type
-                      value
-                      type
-                      value
-                    }
-                  }
-                }
-              }
-            } =>
-            {
-              ... on User {
-                publisher {
-                  id
-                  name
-                }
-                publisherCity
-              }
-            }
-          },
-        },
-      },
-    }
-  `);
+  // expect(queryPlan).toMatchInlineSnapshot(`
+  //   QueryPlan {
+  //     Sequence {
+  //       Fetch(service: "user") {
+  //         {
+  //           me {
+  //             name
+  //             __typename
+  //             id
+  //             organization {
+  //               name
+  //               address {
+  //                 country
+  //                 city
+  //                 city
+  //                 coordinates {
+  //                   type
+  //                   value
+  //                   type
+  //                   value
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+  //       },
+  //       Flatten(path: "me") {
+  //         Fetch(service: "publisher") {
+  //           {
+  //             ... on User {
+  //               __typename
+  //               id
+  //               organization {
+  //                 name
+  //                 address {
+  //                   country
+  //                   city
+  //                   city
+  //                   coordinates {
+  //                     type
+  //                     value
+  //                     type
+  //                     value
+  //                   }
+  //                 }
+  //               }
+  //             }
+  //           } =>
+  //           {
+  //             ... on User {
+  //               publisher {
+  //                 id
+  //                 name
+  //               }
+  //               publisherCity
+  //             }
+  //           }
+  //         },
+  //       },
+  //     },
+  //   }
+  // `);
 });
