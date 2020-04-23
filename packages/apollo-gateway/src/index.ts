@@ -8,8 +8,9 @@ import {
   GraphQLExecutionResult,
   Logger,
   GraphQLRequestContextExecutionDidStart,
+  WithRequired,
 } from 'apollo-server-types';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache, TestableKeyValueCache } from 'apollo-server-caching';
 import {
   isObjectType,
   isIntrospectionType,
@@ -64,6 +65,7 @@ interface GatewayConfigBase {
   experimental_autoFragmentization?: boolean;
   fetcher?: typeof fetch;
   serviceHealthCheck?: boolean;
+  queryPlanStore?: WithRequired<TestableKeyValueCache<QueryPlan>, 'flush'>;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -189,7 +191,7 @@ export class ApolloGateway implements GraphQLService {
   protected serviceMap: DataSourceMap = Object.create(null);
   protected config: GatewayConfig;
   private logger: Logger;
-  protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
+  protected queryPlanStore?: WithRequired<TestableKeyValueCache<QueryPlan>, 'flush'> ;
   private engineConfig: GraphQLServiceEngineConfig | undefined;
   private pollingTimer?: NodeJS.Timer;
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
@@ -757,7 +759,9 @@ export class ApolloGateway implements GraphQLService {
   }
 
   private initializeQueryPlanStore(): void {
-    this.queryPlanStore = new InMemoryLRUCache<QueryPlan>({
+    this.queryPlanStore =
+      this.config.queryPlanStore ||
+      new InMemoryLRUCache<QueryPlan>({
       // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
       // since the technique to calculate the size of a DocumentNode is
       // only using JSON.stringify on the DocumentNode (and thus doesn't account
