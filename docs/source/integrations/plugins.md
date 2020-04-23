@@ -99,7 +99,7 @@ const myPlugin = {
 
       parsingDidStart(requestContext) {
         console.log('Parsing started!');
-      }
+      },
 
       validationDidStart(requestContext) {
         console.log('Validation started!');
