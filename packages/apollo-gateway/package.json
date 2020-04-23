@@ -12,7 +12,7 @@
     "Javascript"
   ],
   "engines": {
-    "node": ">=8"
+    "node": ">=12.13.0"
   },
   "license": "MIT",
   "publishConfig": {
