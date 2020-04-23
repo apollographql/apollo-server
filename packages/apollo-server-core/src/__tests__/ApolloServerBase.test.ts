@@ -94,3 +94,50 @@ describe('ApolloServerBase construction', () => {
     );
   });
 });
+
+describe('environment variables', () => {
+  const OLD_ENV = process.env;
+
+  beforeEach(() => {
+    jest.resetModules();
+    process.env = { ...OLD_ENV };
+    delete process.env.ENGINE_API_KEY;
+    delete process.env.APOLLO_KEY;
+  });
+
+  afterEach(() => {
+    process.env = OLD_ENV;
+  });
+
+  it('constructs a reporting agent with the ENGINE_API_KEY (deprecated) environment variable and warns', async () => {
+    // set the variables
+    process.env.ENGINE_API_KEY = 'just:fake:stuff';
+    const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
+
+    const server = new ApolloServerBase({
+      typeDefs,
+      resolvers
+    });
+
+    await server.stop();
+    expect(spyConsoleWarn).toHaveBeenCalledTimes(1);
+    spyConsoleWarn.mockReset();
+  });
+
+  it('warns with both the legacy env var and new env var set', async () => {
+    // set the variables
+    process.env.ENGINE_API_KEY = 'just:fake:stuff';
+    process.env.APOLLO_KEY = 'also:fake:stuff';
+    const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
+
+    const server = new ApolloServerBase({
+      typeDefs,
+      resolvers
+    });
+
+    await server.stop();
+    // Once for deprecation, once for double-set
+    expect(spyConsoleWarn).toHaveBeenCalledTimes(2);
+    spyConsoleWarn.mockReset();
+  });
+});
