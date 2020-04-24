@@ -2,7 +2,6 @@ import {
   ApolloGateway,
   GatewayConfig,
   Experimental_UpdateServiceDefinitions,
-  Experimental_DidUpdateCompositionCallback,
 } from '../../index';
 import * as accounts from '../__fixtures__/schemas/accounts';
 import * as books from '../__fixtures__/schemas/books';
@@ -56,9 +55,7 @@ describe('lifecycle hooks', () => {
       experimental_didFailComposition,
     });
 
-    try {
-      await gateway.load();
-    } catch {}
+    await expect(gateway.load()).rejects.toThrowError();
 
     const callbackArgs = experimental_didFailComposition.mock.calls[0][0];
     expect(callbackArgs.serviceList).toHaveLength(1);
@@ -71,8 +68,6 @@ describe('lifecycle hooks', () => {
   });
 
   it('calls experimental_didUpdateComposition on schema update', async () => {
-    jest.useFakeTimers();
-
     const compositionMetadata = {
       formatVersion: 1,
       id: 'abc',
@@ -113,24 +108,33 @@ describe('lifecycle hooks', () => {
       };
     });
 
-    const didUpdate: Experimental_DidUpdateCompositionCallback = () => {};
-    const mockDidUpdate = jest.fn(didUpdate);
+    const mockDidUpdate = jest.fn();
 
     const gateway = new ApolloGateway({
       experimental_updateServiceDefinitions: mockUpdate,
       experimental_didUpdateComposition: mockDidUpdate,
-      experimental_pollInterval: 10,
+      experimental_pollInterval: 100,
     });
 
-    await gateway.load();
+    let resolve1: Function;
+    let resolve2: Function;
+    const schemaChangeBlocker1 = new Promise(res => (resolve1 = res));
+    const schemaChangeBlocker2 = new Promise(res => (resolve2 = res));
 
+    gateway.onSchemaChange(
+      jest
+        .fn()
+        .mockImplementationOnce(() => resolve1())
+        .mockImplementationOnce(() => resolve2()),
+    );
+
+    gateway.load();
+
+    await schemaChangeBlocker1;
     expect(mockUpdate).toBeCalledTimes(1);
     expect(mockDidUpdate).toBeCalledTimes(1);
 
-    jest.runOnlyPendingTimers();
-    // XXX This allows the ApolloGateway.updateComposition() Promise to resolve
-    // after the poll ticks, and is necessary for allowing mockDidUpdate to see the expected calls.
-    await Promise.resolve();
+    await schemaChangeBlocker2;
 
     expect(mockUpdate).toBeCalledTimes(2);
     expect(mockDidUpdate).toBeCalledTimes(2);
@@ -176,5 +180,30 @@ describe('lifecycle hooks', () => {
       'Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.',
     );
     consoleSpy.mockRestore();
+  });
+
+  it('registers schema change callbacks when experimental_pollInterval is set for unmanaged configs', async () => {
+    const experimental_updateServiceDefinitions: Experimental_UpdateServiceDefinitions = jest.fn(
+      async (_config: GatewayConfig) => {
+        return { serviceDefinitions, isNewSchema: true };
+      },
+    );
+
+    const gateway = new ApolloGateway({
+      serviceList: [{ name: 'book', url: 'http://localhost:32542' }],
+      experimental_updateServiceDefinitions,
+      experimental_pollInterval: 100,
+    });
+
+    let resolve: Function;
+    const schemaChangeBlocker = new Promise(res => (resolve = res));
+    const schemaChangeCallback = jest.fn(() => resolve());
+
+    gateway.onSchemaChange(schemaChangeCallback);
+    gateway.load();
+
+    await schemaChangeBlocker;
+
+    expect(schemaChangeCallback).toBeCalledTimes(1);
   });
 });

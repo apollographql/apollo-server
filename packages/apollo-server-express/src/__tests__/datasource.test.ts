@@ -1,6 +1,6 @@
 import express from 'express';
 
-import http from 'http';
+import http, { Server } from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
@@ -10,10 +10,9 @@ import { ApolloServer } from '../ApolloServer';
 import { createServerInfo } from 'apollo-server-integration-testsuite';
 import { gql } from '../index';
 
-const restPort = 4001;
-
 export class IdAPI extends RESTDataSource {
-  baseURL = `http://localhost:${restPort}/`;
+  // Set in subclass
+  // baseURL = `http://localhost:${restPort}/`;
 
   async getId(id: string) {
     return this.get(`id/${id}`);
@@ -63,11 +62,15 @@ restAPI.use('/str/:id', (req, res) => {
 });
 
 describe('apollo-server-express', () => {
-  let restServer;
+  let restServer: Server;
+  let restUrl: string;
 
   beforeAll(async () => {
-    await new Promise(resolve => {
-      restServer = restAPI.listen(restPort, resolve);
+    restUrl = await new Promise(resolve => {
+      restServer = restAPI.listen(0, () => {
+        const { port } = restServer.address();
+        resolve(`http://localhost:${port}`);
+      });
     });
   });
 
@@ -92,14 +95,16 @@ describe('apollo-server-express', () => {
       typeDefs,
       resolvers,
       dataSources: () => ({
-        id: new IdAPI(),
+        id: new class extends IdAPI {
+          baseURL = restUrl;
+        },
       }),
     });
     const app = express();
 
     server.applyMiddleware({ app });
     httpServer = await new Promise<http.Server>(resolve => {
-      const s = app.listen({ port: 0 }, () => resolve(s));
+      const s: Server = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 
@@ -122,14 +127,16 @@ describe('apollo-server-express', () => {
       typeDefs,
       resolvers,
       dataSources: () => ({
-        id: new IdAPI(),
+        id: new class extends IdAPI {
+          baseURL = restUrl;
+        },
       }),
     });
     const app = express();
 
     server.applyMiddleware({ app });
-    httpServer = await new Promise<http.Server>(resolve => {
-      const s = app.listen({ port: 0 }, () => resolve(s));
+    httpServer = await new Promise(resolve => {
+      const s: Server = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 

@@ -11,9 +11,9 @@ module.exports = {
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
         githubRepo: 'apollographql/apollo-server',
-        defaultVersion: 2,
+        defaultVersion: '2',
         versions: {
-          1: 'version-1',
+          '1': 'version-1',
         },
         sidebarCategories: {
           null: [
@@ -29,27 +29,31 @@ module.exports = {
             'schema/creating-directives',
           ],
           'Fetching Data': [
-            'data/data',
+            'data/resolvers',
             'data/data-sources',
             'data/errors',
             'data/file-uploads',
             'data/subscriptions',
           ],
-          Federation: [
+          'Apollo Federation': [
             'federation/introduction',
-            'federation/concerns',
-            'federation/core-concepts',
-            'federation/implementing',
-            'federation/advanced-features',
+            'federation/implementing-services',
+            'federation/gateway',
+            'federation/entities',
+            'federation/value-types',
             'federation/errors',
-            'federation/migrating-from-stitching',
-            'federation/federation-spec',
             'federation/metrics',
+            'federation/migrating-from-stitching',
+            'federation/other-servers',
+            'federation/federation-spec',
           ],
           Testing: ['testing/mocking', 'testing/testing', 'testing/graphql-playground'],
           Performance: ['performance/caching', 'performance/apq'],
           Security: ['security/authentication', 'security/terminating-ssl'],
-          Integrations: ['integrations/middleware'],
+          Integrations: [
+            'integrations/middleware',
+            'integrations/plugins',
+          ],
           Deployment: [
             'deployment/heroku',
             'deployment/lambda',
