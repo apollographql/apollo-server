@@ -198,16 +198,16 @@ const serviceB: ServiceDefinitionModule = {
           ' ' +
           parent.nested1.nested2.nameB +
           ' ' +
-          parent.nested1.nested2.nested3.nameA
+          parent.nested1.nested2.nested3[0].nameA
         );
       },
       calculated3(parent) {
         return (
-          parent.nested1.nested2.nested3.nameB +
+          parent.nested1.nested2.nested3[0].nameB +
           ' ' +
           parent.nested2.nameC +
           ' ' +
-          parent.nested2.nested3.nameC
+          parent.nested2.nested3[0].nameC
         );
       },
       calculated4(parent) {
@@ -215,8 +215,6 @@ const serviceB: ServiceDefinitionModule = {
           parent.nested2.nameC +
           ' ' +
           parent.nested2.nameD +
-          ' ' +
-          parent.nested2.nested3[0].nameD +
           ' ' +
           parent.nested2.nested3[0].nested4.nameA
         );
@@ -260,8 +258,7 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
         'nested1.nameB nested1.nested2.nameB nested1.nested2.nested3.nameA',
       calculated3:
         'nested1.nested2.nested3.nameB nested2.nameC nested2.nested3.nameC',
-      calculated4:
-        'nested2.nameC nested2.nameD nested2.nested3.nameD nested2.nested3.nested4.nameA',
+      calculated4: 'nested2.nameC nested2.nameD nested2.nested3.nested4.nameA',
       nested2: {
         nested3: [
           {
@@ -272,67 +269,121 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
     },
   });
 
-  console.log(data);
-  // expect(queryPlan).toMatchInlineSnapshot(`
-  //   QueryPlan {
-  //     Sequence {
-  //       Fetch(service: "user") {
-  //         {
-  //           me {
-  //             name
-  //             __typename
-  //             id
-  //             organization {
-  //               name
-  //               address {
-  //                 country
-  //                 city
-  //                 city
-  //                 coordinates {
-  //                   type
-  //                   value
-  //                   type
-  //                   value
-  //                 }
-  //               }
-  //             }
-  //           }
-  //         }
-  //       },
-  //       Flatten(path: "me") {
-  //         Fetch(service: "publisher") {
-  //           {
-  //             ... on User {
-  //               __typename
-  //               id
-  //               organization {
-  //                 name
-  //                 address {
-  //                   country
-  //                   city
-  //                   city
-  //                   coordinates {
-  //                     type
-  //                     value
-  //                     type
-  //                     value
-  //                   }
-  //                 }
-  //               }
-  //             }
-  //           } =>
-  //           {
-  //             ... on User {
-  //               publisher {
-  //                 id
-  //                 name
-  //               }
-  //               publisherCity
-  //             }
-  //           }
-  //         },
-  //       },
-  //     },
-  //   }
-  // `);
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "serviceA") {
+          {
+            me {
+              name
+              __typename
+              id
+              nested1 {
+                nameA
+                nameB
+                nested2 {
+                  nameA
+                  nameB
+                  nameB
+                  nested3 {
+                    nameA
+                    nameB
+                    nameA
+                    nameB
+                    nameB
+                  }
+                }
+              }
+              nested2 {
+                nameC
+                nameC
+                nameD
+                nested3 {
+                  nameC
+                  __typename
+                  id
+                  nested4 {
+                    nameA
+                    nameB
+                    nameA
+                    nameB
+                  }
+                }
+              }
+            }
+          }
+        },
+        Parallel {
+          Flatten(path: "me") {
+            Fetch(service: "serviceB") {
+              {
+                ... on A {
+                  __typename
+                  id
+                  nested1 {
+                    nameA
+                    nameB
+                    nested2 {
+                      nameA
+                      nameB
+                      nameB
+                      nested3 {
+                        nameA
+                        nameB
+                        nameA
+                        nameB
+                        nameB
+                      }
+                    }
+                  }
+                  nested2 {
+                    nameC
+                    nameC
+                    nameD
+                    nested3 {
+                      nameC
+                      __typename
+                      id
+                      nested4 {
+                        nameA
+                        nameB
+                        nameA
+                        nameB
+                      }
+                    }
+                  }
+                }
+              } =>
+              {
+                ... on A {
+                  calculated1
+                  calculated2
+                  calculated3
+                  calculated4
+                }
+              }
+            },
+          },
+          Flatten(path: "me.nested2.nested3.@") {
+            Fetch(service: "serviceB") {
+              {
+                ... on Nested3 {
+                  __typename
+                  id
+                  nested4 {
+                    nameB
+                  }
+                }
+              } =>
+              {
+                ... on Nested3 {
+                  calculated5
+                }
+              }
+            },
+          },
+        },
+      },
+    }
+  `);
 });
