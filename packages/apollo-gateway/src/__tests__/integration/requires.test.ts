@@ -52,10 +52,6 @@ it('supports passing additional scalar fields defined by a requires', async () =
   expect(queryPlan).toCallService('books');
 });
 
-
-
-
-
 const serviceA: ServiceDefinitionModule = {
   name: 'serviceA',
   typeDefs: gql`
@@ -106,15 +102,18 @@ const serviceA: ServiceDefinitionModule = {
               nameB: 'nested1.nested2.nameB',
               nameC: 'nested1.nested2.nameC',
               nameD: 'nested1.nested2.nameD',
-              nested3: {
-                nameA: 'nested1.nested2.nested3.nameA',
-                nameB: 'nested1.nested2.nested3.nameB',
-                nameC: 'nested1.nested2.nested3.nameC',
-                nested4: {
-                  nameA: 'nested1.nested2.nested3.nested4.nameA',
-                  nameB: 'nested1.nested2.nested3.nested4.nameB',
+              nested3: [
+                {
+                  id: '2',
+                  nameA: 'nested1.nested2.nested3.nameA',
+                  nameB: 'nested1.nested2.nested3.nameB',
+                  nameC: 'nested1.nested2.nested3.nameC',
+                  nested4: {
+                    nameA: 'nested1.nested2.nested3.nested4.nameA',
+                    nameB: 'nested1.nested2.nested3.nested4.nameB',
+                  },
                 },
-              },
+              ],
             },
           },
           nested2: {
@@ -122,15 +121,18 @@ const serviceA: ServiceDefinitionModule = {
             nameB: 'nested2.nameB',
             nameC: 'nested2.nameC',
             nameD: 'nested2.nameD',
-            nested3: {
-              nameA: 'nested2.nested3.nameA',
-              nameB: 'nested2.nested3.nameB',
-              nameC: 'nested2.nested3.nameC',
-              nested4: {
-                nameA: 'nested2.nested3.nested4.nameA',
-                nameB: 'nested2.nested3.nested4.nameB',
+            nested3: [
+              {
+                id: '3',
+                nameA: 'nested2.nested3.nameA',
+                nameB: 'nested2.nested3.nameB',
+                nameC: 'nested2.nested3.nameC',
+                nested4: {
+                  nameA: 'nested2.nested3.nested4.nameA',
+                  nameB: 'nested2.nested3.nested4.nameB',
+                },
               },
-            },
+            ],
           },
         };
       },
@@ -210,11 +212,13 @@ const serviceB: ServiceDefinitionModule = {
       },
       calculated4(parent) {
         return (
+          parent.nested2.nameC +
+          ' ' +
           parent.nested2.nameD +
           ' ' +
-          parent.nested2.nested3.nameD +
+          parent.nested2.nested3[0].nameD +
           ' ' +
-          parent.nested2.nested3.nested4.nameA
+          parent.nested2.nested3[0].nested4.nameA
         );
       },
     },
@@ -235,11 +239,9 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
         calculated2
         calculated3
         calculated4
-        nested1 {
-          nested2 {
-            nested3 {
-              calculated5
-            }
+        nested2 {
+          nested3 {
+            calculated5
           }
         }
       }
@@ -248,6 +250,26 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
 
   const { data, queryPlan } = await execute([serviceA, serviceB], {
     query,
+  });
+
+  expect(data).toEqual({
+    me: {
+      name: 'name',
+      calculated1: 'nested1.nameA nested1.nested2.nameA',
+      calculated2:
+        'nested1.nameB nested1.nested2.nameB nested1.nested2.nested3.nameA',
+      calculated3:
+        'nested1.nested2.nested3.nameB nested2.nameC nested2.nested3.nameC',
+      calculated4:
+        'nested2.nameC nested2.nameD nested2.nested3.nameD nested2.nested3.nested4.nameA',
+      nested2: {
+        nested3: [
+          {
+            calculated5: 'nested2.nested3.nested4.nameB',
+          },
+        ],
+      },
+    },
   });
 
   console.log(data);
