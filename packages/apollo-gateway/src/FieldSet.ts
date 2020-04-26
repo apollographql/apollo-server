@@ -158,7 +158,10 @@ function mergeSelectionsSetsInternal(fieldNodes: SelectionNode[]): SelectionNode
   for (const fieldNode of fieldNodes) {
     // @ts-ignore
     if (!fieldNode.selectionSet) {
-      scalars.push(fieldNode);
+      // @ts-ignore
+      if (!scalars.find(scalar => scalar.name.value === fieldNode.name.value)) {
+        scalars.push(fieldNode);
+      }
       continue;
     }
     // @ts-ignore

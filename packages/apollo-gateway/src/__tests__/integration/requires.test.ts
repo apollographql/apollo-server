@@ -284,18 +284,13 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
                 nested2 {
                   nameA
                   nameB
-                  nameB
                   nested3 {
                     nameA
-                    nameB
-                    nameA
-                    nameB
                     nameB
                   }
                 }
               }
               nested2 {
-                nameC
                 nameC
                 nameD
                 nested3 {
@@ -303,8 +298,6 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
                   __typename
                   id
                   nested4 {
-                    nameA
-                    nameB
                     nameA
                     nameB
                   }
@@ -326,18 +319,13 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
                     nested2 {
                       nameA
                       nameB
-                      nameB
                       nested3 {
                         nameA
-                        nameB
-                        nameA
-                        nameB
                         nameB
                       }
                     }
                   }
                   nested2 {
-                    nameC
                     nameC
                     nameD
                     nested3 {
@@ -345,8 +333,6 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
                       __typename
                       id
                       nested4 {
-                        nameA
-                        nameB
                         nameA
                         nameB
                       }
