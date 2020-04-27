@@ -279,7 +279,7 @@ export class EngineReportingAgent<TContext = any> {
     handleLegacyOptions(this.options);
   }
 
-  public newExtension(): ApolloServerPlugin<TContext> {
+  public newPlugin(): ApolloServerPlugin<TContext> {
     return plugin(this.options, this.addTrace.bind(this));
   }
 

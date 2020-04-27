@@ -775,7 +775,7 @@ export class ApolloServerBase {
             'to report metrics to Apollo Graph Manager.',
         );
       }
-      pluginsToInit.push(this.engineReportingAgent!.newExtension());
+      pluginsToInit.push(this.engineReportingAgent!.newPlugin());
     } else if (engine !== false && federatedSchema) {
       // We haven't configured this app to use Engine directly. But it looks like
       // we are a federated service backend, so we should be capable of including
