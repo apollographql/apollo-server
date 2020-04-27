@@ -17,7 +17,7 @@ import {
   enableGraphQLExtensions,
 } from 'graphql-extensions';
 import { DataSource } from 'apollo-datasource';
-import { PersistedQueryOptions } from '.';
+import { PersistedQueryOptions } from './graphqlOptions';
 import {
   symbolRequestListenerDispatcher,
   enablePluginsForSchemaResolvers,
