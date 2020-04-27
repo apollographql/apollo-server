@@ -71,6 +71,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
+import { getEngineApiKey, getEngineGraphVariant } from "apollo-engine-reporting/dist/agent";
 import { Logger } from "apollo-server-types";
 
 const NoIntrospection = (context: ValidationContext) => ({
@@ -86,36 +87,8 @@ const NoIntrospection = (context: ValidationContext) => ({
   },
 });
 
-function getEngineApiKey(engine: Config['engine']): string | undefined {
-  const keyFromEnv = process.env.ENGINE_API_KEY || '';
-  if (engine === false) {
-    return;
-  } else if (typeof engine === 'object' && engine.apiKey) {
-    return engine.apiKey;
-  } else if (keyFromEnv) {
-    return keyFromEnv;
-  }
-  return;
-}
-
-function getEngineGraphVariant(engine: Config['engine']): string | undefined {
-  if (engine === false) {
-    return;
-  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
-    return engine.graphVariant || engine.schemaTag;
-  } else {
-    if (process.env.ENGINE_SCHEMA_TAG) {
-      console.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
-    }
-    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
-      throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
-    }
-    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
-  }
-}
-
-function getEngineServiceId(engine: Config['engine']): string | undefined {
-  const engineApiKey = getEngineApiKey(engine);
+function getEngineServiceId(engine: Config['engine'], logger: Logger): string | undefined {
+  const engineApiKey = getEngineApiKey({engine, skipWarn: true, logger} );
   if (engineApiKey) {
     return engineApiKey.split(':', 2)[1];
   }
@@ -345,8 +318,8 @@ export class ApolloServerBase {
     // service ID from the API key for plugins which only needs service ID.
     // The truthiness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
-    this.engineServiceId = getEngineServiceId(engine);
-    const apiKey = getEngineApiKey(engine);
+    this.engineServiceId = getEngineServiceId(engine, this.logger);
+    const apiKey = getEngineApiKey({engine, skipWarn: true, logger: this.logger});
     if (apiKey) {
       this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)
@@ -446,7 +419,7 @@ export class ApolloServerBase {
         ),
       );
 
-      const graphVariant = getEngineGraphVariant(engine);
+      const graphVariant = getEngineGraphVariant(engine, this.logger);
       const engineConfig =
         this.engineApiKeyHash && this.engineServiceId
           ? {
