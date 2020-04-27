@@ -41,7 +41,7 @@
     "graphql-extensions": "file:../graphql-extensions",
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^4.0.0",
-    "graphql-upload": "^8.0.2",
+    "graphql-upload": "^10.0.0",
     "loglevel": "^1.6.7",
     "sha.js": "^2.4.11",
     "subscriptions-transport-ws": "^0.9.11",
