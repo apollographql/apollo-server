@@ -429,7 +429,9 @@ describe('apollo-server-fastify', () => {
               },
               Mutation: {
                 singleUpload: async (_, args) => {
-                  expect((await args.file).stream).toBeDefined();
+                  const stream = (await args.file).createReadStream();
+                  expect(stream).toBeDefined();
+                  stream.destroy();
                   return args.file;
                 },
               },
