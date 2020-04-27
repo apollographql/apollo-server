@@ -17,11 +17,11 @@ import {
   enableGraphQLExtensions,
 } from 'graphql-extensions';
 import { DataSource } from 'apollo-datasource';
+import { PersistedQueryOptions } from '.';
 import {
-  PersistedQueryOptions,
   symbolRequestListenerDispatcher,
   enablePluginsForSchemaResolvers,
-} from '.';
+} from "./utils/schemaInstrumentation"
 import {
   CacheControlExtension,
   CacheControlExtensionOptions,
