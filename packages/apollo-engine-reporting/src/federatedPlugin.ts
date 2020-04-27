@@ -5,6 +5,8 @@ import { EngineReportingOptions } from "./agent";
 
 type FederatedReportingOptions<TContext> = Pick<EngineReportingOptions<TContext>, 'rewriteError'>
 
+// This ftv1 plugin produces a base64'd Trace protobuf containing only the
+// durationNs, startTime, endTime, and root fields.
 const federatedPlugin = <TContext>(
   options: FederatedReportingOptions<TContext> = Object.create(null),
 ): ApolloServerPlugin<TContext> => {
