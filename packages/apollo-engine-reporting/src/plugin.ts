@@ -43,15 +43,23 @@ export const plugin = <TContext>(
 
   return {
     requestDidStart(requestContext) {
+      // We still need the entire `requestContext` to pass through to the
+      // `generateClientInfo` method, but we'll destructure for brevity within.
+      const {
+        metrics,
+        logger: requestLogger,
+        schemaHash,
+        request: { http, variables },
+      } = requestContext;
+
       const treeBuilder: EngineReportingTreeBuilder =
         new EngineReportingTreeBuilder({
           rewriteError: options.rewriteError,
-          logger: requestContext.logger || logger,
+          logger: requestLogger || logger,
         });
 
       treeBuilder.startTiming();
 
-      const metrics = requestContext.metrics;
       metrics.startHrTime = treeBuilder.startHrTime;
 
       let preflightDone: boolean = false;
@@ -59,13 +67,11 @@ export const plugin = <TContext>(
         if (preflightDone) return;
         preflightDone = true;
 
-        if (requestContext.request.http) {
+        if (http) {
           treeBuilder.trace.http = new Trace.HTTP({
             method:
-              Trace.HTTP.Method[
-                requestContext.request.http
-                  .method as keyof typeof Trace.HTTP.Method
-              ] || Trace.HTTP.Method.UNKNOWN,
+              Trace.HTTP.Method[http.method as keyof typeof Trace.HTTP.Method]
+                || Trace.HTTP.Method.UNKNOWN,
             // Host and path are not used anywhere on the backend, so let's not bother
             // trying to parse request.url to get them, which is a potential
             // source of bugs because integrations have different behavior here.
@@ -80,7 +86,7 @@ export const plugin = <TContext>(
           if (options.sendHeaders) {
             makeHTTPRequestHeaders(
               treeBuilder.trace.http,
-              requestContext.request.http.headers,
+              http.headers,
               options.sendHeaders,
             );
           }
@@ -93,9 +99,9 @@ export const plugin = <TContext>(
           treeBuilder.trace.persistedQueryRegister = true;
         }
 
-        if (requestContext.request.variables) {
+        if (variables) {
           treeBuilder.trace.details = makeTraceDetails(
-            requestContext.request.variables,
+            variables,
             options.sendVariableValues,
             requestContext.source,
           );
@@ -146,7 +152,7 @@ export const plugin = <TContext>(
           documentAST: requestContext.document,
           queryString: requestContext.source,
           trace: treeBuilder.trace,
-          schemaHash: requestContext.schemaHash,
+          schemaHash,
         });
       }
 
