@@ -869,6 +869,7 @@ export class ApolloServerBase {
       request,
       context: options.context || Object.create(null),
       cache: options.cache!,
+      metrics: {},
       response: {
         http: {
           headers: new Headers(),

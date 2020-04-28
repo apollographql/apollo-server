@@ -104,7 +104,7 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
    */
   readonly errors?: ReadonlyArray<GraphQLError>;
 
-  readonly metrics?: GraphQLRequestMetrics;
+  readonly metrics: GraphQLRequestMetrics;
 
   debug?: boolean;
 }
