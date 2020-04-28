@@ -11,19 +11,14 @@ const federatedPlugin = <TContext>(
   options: FederatedReportingOptions<TContext> = Object.create(null),
 ): ApolloServerPlugin<TContext> => {
   return {
-    requestDidStart(requestContext) {
+    requestDidStart({ request: { http } }) {
       const treeBuilder: EngineReportingTreeBuilder =
         new EngineReportingTreeBuilder({
           rewriteError: options.rewriteError,
         });
 
       // XXX Provide a mechanism to customize this logic.
-      const http = requestContext.request.http;
-      if (
-        !http ||
-        !http.headers ||
-        http.headers.get('apollo-federation-include-trace') !== 'ftv1'
-      ) {
+      if (http?.headers.get('apollo-federation-include-trace') !== 'ftv1') {
         return;
       }
 
