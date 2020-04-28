@@ -43,7 +43,6 @@ export const plugin = <TContext>(
 
   return {
     requestDidStart(requestContext) {
-      let queryString: string | undefined;
       const treeBuilder: EngineReportingTreeBuilder =
         new EngineReportingTreeBuilder({
           rewriteError: options.rewriteError,
@@ -94,16 +93,11 @@ export const plugin = <TContext>(
           treeBuilder.trace.persistedQueryRegister = true;
         }
 
-        // Generally, we'll get queryString here and not parsedQuery; we only get
-        // parsedQuery if you're using an OperationStore. In normal cases we'll
-        // get our documentAST in the execution callback after it is parsed.
-        queryString = requestContext.source;
-
         if (requestContext.request.variables) {
           treeBuilder.trace.details = makeTraceDetails(
             requestContext.request.variables,
             options.sendVariableValues,
-            queryString,
+            requestContext.source,
           );
         }
 
@@ -150,7 +144,7 @@ export const plugin = <TContext>(
           operationName,
           queryHash: requestContext.queryHash!,
           documentAST: requestContext.document,
-          queryString,
+          queryString: requestContext.source,
           trace: treeBuilder.trace,
           schemaHash: requestContext.schemaHash,
         });
