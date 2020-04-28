@@ -149,8 +149,8 @@ export const plugin = <TContext>(
         addTrace({
           operationName,
           queryHash: requestContext.queryHash!,
-          documentAST: requestContext.document,
-          queryString: requestContext.source,
+          document: requestContext.document,
+          source: requestContext.source,
           trace: treeBuilder.trace,
           schemaHash,
         });
