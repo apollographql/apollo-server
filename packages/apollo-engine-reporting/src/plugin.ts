@@ -21,8 +21,6 @@ import {
   PersistedQueryNotSupportedError,
 } from 'apollo-server-errors';
 
-type Mutable<T> = { -readonly [P in keyof T]: T[P] };
-
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
 const clientVersionHeaderKey = 'apollographql-client-version';
@@ -52,11 +50,9 @@ export const plugin = <TContext>(
           logger: requestContext.logger || logger,
         });
 
-      const metrics: NonNullable<typeof requestContext['metrics']> =
-        ((requestContext as Mutable<typeof requestContext>)
-          .metrics = requestContext.metrics || Object.create(null));
-
       treeBuilder.startTiming();
+
+      const metrics = requestContext.metrics;
       metrics.startHrTime = treeBuilder.startHrTime;
 
       if (requestContext.request.http) {
