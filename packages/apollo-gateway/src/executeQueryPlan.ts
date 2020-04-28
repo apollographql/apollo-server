@@ -79,6 +79,7 @@ export async function executeQueryPlan<TContext>(
   try {
     ({ data } = await execute({
       schema: operationContext.schema,
+      contextValue: requestContext.context,
       document: {
         kind: Kind.DOCUMENT,
         definitions: [
