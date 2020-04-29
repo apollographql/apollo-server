@@ -5,9 +5,13 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepare": "npm run pbjs && npm run pbts && cp src/* dist",
-    "pbjs": "bash -c 'mkdir -p dist && apollo-pbjs --target static-module --out dist/protobuf.js --wrap commonjs --force-number <(grep -v \"package mdg.engine.proto\" src/reports.proto)'",
-    "pbts": "apollo-pbts -o dist/protobuf.d.ts dist/protobuf.js"
+    "clean": "git clean -fdX -- dist",
+    "prepare": "npm run clean && mkdir dist && npm run prepare:proto && npm run pbjs && npm run pbts && cp src/* dist",
+    "pbjs": "apollo-pbjs --target static-module --out dist/protobuf.js --wrap commonjs --force-number dist/reports.proto",
+    "pbts": "apollo-pbts -o dist/protobuf.d.ts dist/protobuf.js",
+    "prepare:proto": "npm run prepare:proto:nix -s || npm run prepare:proto:win -s",
+    "prepare:proto:nix": "grep -v \"package mdg.engine.proto\" src/reports.proto > dist/reports.proto",
+    "prepare:proto:win": "type src\\reports.proto | findstr /V \"package mdg.engine.proto\" > dist/reports.proto"
   },
   "repository": {
     "type": "git",
