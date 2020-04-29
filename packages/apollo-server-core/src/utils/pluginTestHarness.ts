@@ -13,7 +13,7 @@ import { CacheHint } from 'apollo-cache-control';
 import {
   enablePluginsForSchemaResolvers,
   symbolRequestListenerDispatcher,
-} from '../requestPipelineAPI';
+} from './schemaInstrumentation';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { Dispatcher } from './dispatcher';

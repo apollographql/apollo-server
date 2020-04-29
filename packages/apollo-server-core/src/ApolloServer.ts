@@ -755,7 +755,7 @@ export class ApolloServerBase {
 
     // Internal plugins should be added to `pluginsToInit` here.
     // User's plugins, provided as an argument to this method, will be added
-    // at the end of that list so they take precidence.
+    // at the end of that list so they take precedence.
     // A follow-up commit will actually introduce this.
     // Also, TODO, remove this comment.
 
