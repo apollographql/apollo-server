@@ -126,7 +126,7 @@ export async function processGraphQLRequest<TContext>(
   const extensionStack = initializeExtensionStack();
   (requestContext.context as any)._extensionStack = extensionStack;
 
-  const dispatcher = initializeRequestListenerDispatcher();
+  const dispatcher = await initializeRequestListenerDispatcher();
 
   await initializeDataSources();
 
@@ -568,14 +568,14 @@ export async function processGraphQLRequest<TContext>(
     });
   }
 
-  function initializeRequestListenerDispatcher(): Dispatcher<
-    GraphQLRequestListener
+  async function initializeRequestListenerDispatcher(): Promise<
+    Dispatcher<GraphQLRequestListener>
   > {
     const requestListeners: GraphQLRequestListener<TContext>[] = [];
     if (config.plugins) {
       for (const plugin of config.plugins) {
         if (!plugin.requestDidStart) continue;
-        const listener = plugin.requestDidStart(requestContext);
+        const listener = await plugin.requestDidStart(requestContext);
         if (listener) {
           requestListeners.push(listener);
         }

@@ -42,7 +42,7 @@ export interface ApolloServerPlugin<TContext extends Record<string, any> = Recor
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
   requestDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): GraphQLRequestListener<TContext> | void;
+  ): ValueOrPromise<GraphQLRequestListener<TContext> | void>;
 }
 
 export interface GraphQLRequestListener<TContext = Record<string, any>> {
