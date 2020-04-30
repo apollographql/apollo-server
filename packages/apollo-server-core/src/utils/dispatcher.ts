@@ -41,24 +41,18 @@ export class Dispatcher<T extends GraphQLRequestListener> {
     return null;
   }
 
-  public invokeDidStartHook<
+  public async invokeDidStartHook<
     TMethodName extends keyof T,
-    TEndHookArgs extends Args<ReturnType<AsFunction<T[TMethodName]>>>
+    TEndHookArgs extends Args<ReturnType<AsFunction<T[TMethodName]>>>,
   >(
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>
-  ): DidEndHook<TEndHookArgs> {
-    const didEndHooks: DidEndHook<TEndHookArgs>[] = [];
+  ): Promise<DidEndHook<TEndHookArgs>> {
+    const hookReturnValues: (DidEndHook<TEndHookArgs> | unknown)[] = await this.invokeHookAsync(methodName, ...args);
 
-    for (const target of this.targets) {
-      const method = target[methodName];
-      if (method && typeof method === 'function') {
-        const didEndHook = method.apply(target, args);
-        if (didEndHook) {
-          didEndHooks.push(didEndHook);
-        }
-      }
-    }
+    const didEndHooks = hookReturnValues.filter(
+      (hook): hook is DidEndHook<TEndHookArgs> => typeof hook !== 'undefined',
+    );
 
     return (...args: TEndHookArgs) => {
       didEndHooks.reverse();

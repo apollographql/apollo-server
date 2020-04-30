@@ -51,7 +51,7 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
   ): ((err?: Error) => void) | void;
   validationDidStart?(
     requestContext: GraphQLRequestContextValidationDidStart<TContext>,
-  ): ((err?: ReadonlyArray<Error>) => void) | void;
+  ): ValueOrPromise<((err?: ReadonlyArray<Error>) => void) | void>;
   didResolveOperation?(
     requestContext: GraphQLRequestContextDidResolveOperation<TContext>,
   ): ValueOrPromise<void>;
