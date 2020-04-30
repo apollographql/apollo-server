@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base",
   "compilerOptions": {
+    "target": "es2019",
     "rootDir": "./src",
     "outDir": "./dist"
   },
