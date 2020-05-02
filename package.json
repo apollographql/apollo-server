@@ -104,7 +104,7 @@
     "graphql-tools": "4.0.8",
     "hapi": "17.8.5",
     "ioredis": "4.16.3",
-    "jest": "25.4.0",
+    "jest": "25.5.4",
     "jest-config": "25.4.0",
     "jest-junit": "10.0.0",
     "jest-matcher-utils": "25.4.0",
