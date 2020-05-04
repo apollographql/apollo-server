@@ -7,7 +7,7 @@ module.exports = {
     ],
     preset: "ts-jest",
     testMatch: null,
-    testRegex: "/apollo-gateway/src/__tests__/integration/requires\\.test\\.(js|ts)$",
+    testRegex: "/__tests__/.*\\.test\\.(js|ts)$",
     testPathIgnorePatterns: [
       "/node_modules/",
       "/dist/"
