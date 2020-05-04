@@ -8,7 +8,7 @@
 
 ## 0.15.0
 
-> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/TODO)
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
 
 - __BREAKING__: Drop support for Node.js 8 and Node.js 10.  This is being done primarily for performance gains which stand to be seen by transpiling to a newer ECMAScript target.  For more details, see the related PR.  [#4031](https://github.com/apollographql/apollo-server/pull/4031)
 - __Performance:__ Cache stringified representations of downstream query bodies within the query plan to address performance cost incurred by repeatedly `print`ing the same`DocumentNode`s with the `graphql` printer.  This improvement is more pronounced on larger documents.  [PR #4018](https://github.com/apollographql/apollo-server/pull/4018)

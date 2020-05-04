@@ -8,7 +8,7 @@
 
 ## 0.15.0
 
-> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/TODO)
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
