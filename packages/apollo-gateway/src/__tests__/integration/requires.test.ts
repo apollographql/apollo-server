@@ -373,3 +373,40 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
     }
   `);
 });
+
+it('supports deeply nested fields defined by requires with fragments in user-defined queries', async () => {
+  const query = gql`
+    query Me {
+      me {
+        calculated3
+        ...testFragment
+      }
+    }
+
+    fragment testFragment on A {
+      nested2 {
+        nested3 {
+          nameA
+        }
+      }
+    }
+  `;
+
+  const { data } = await execute([serviceA, serviceB], {
+    query,
+  });
+
+  expect(data).toEqual({
+    me: {
+      calculated3:
+        'nested1.nested2.nested3.nameB nested2.nameC nested2.nested3.nameC',
+      nested2: {
+        nested3: [
+          {
+            nameA: 'nested2.nested3.nameA',
+          },
+        ],
+      },
+    },
+  });
+});
