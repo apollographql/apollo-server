@@ -9,9 +9,11 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- _Nothing yet! Stay tuned!_
+
 ### v2.13.0
 
-> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/TODO)
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
 
 - Allow passing a `WebSocket.Server` to `ApolloServer.installSubscriptionHandlers`. [PR #2314](https://github.com/apollographql/apollo-server/pull/2314)
 - `apollo-server-lambda`: Support file uploads on AWS Lambda [Issue #1419](https://github.com/apollographql/apollo-server/issues/1419) [Issue #1703](https://github.com/apollographql/apollo-server/issues/1703) [PR #3926](https://github.com/apollographql/apollo-server/pull/3926)
