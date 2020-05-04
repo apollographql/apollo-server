@@ -1,4 +1,5 @@
 import {
+  AnyFunctionMap,
   GraphQLServiceContext,
   GraphQLRequestContext,
   GraphQLRequest,
@@ -55,7 +56,8 @@ export type GraphQLRequestListenerExecutionDidEnd =
 export type GraphQLRequestListenerDidResolveField =
   ((error: Error | null, result?: any) => void) | void
 
-export interface GraphQLRequestListener<TContext = Record<string, any>> {
+export interface GraphQLRequestListener<TContext = Record<string, any>>
+  extends AnyFunctionMap {
   parsingDidStart?(
     requestContext: GraphQLRequestContextParsingDidStart<TContext>,
   ): GraphQLRequestListenerParsingDidEnd;

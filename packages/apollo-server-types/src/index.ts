@@ -16,6 +16,23 @@ import { Trace } from 'apollo-engine-reporting-protobuf';
 export type ValueOrPromise<T> = T | Promise<T>;
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
+/**
+ * It is not recommended to use this `AnyFunction` type further.
+ *
+ * This is a legacy type which aims to do what its name suggests (be the type
+ * for _any_ function) but it should be replaced with something from the
+ * TypeScript standard lib.  It doesn't truly cover "any" function right now,
+ * and in particular doesn't consider `this`.  For now, it has been brought
+ * here from the Apollo Server `Dispatcher`, where it was first utilized.
+ */
+export type AnyFunction = (...args: any[]) => any;
+
+/**
+ * A map of `AnyFunction`s which are the interface for our plugin API's
+ * request listeners. (e.g. `GraphQLRequestListener`s).
+ */
+export type AnyFunctionMap = { [key: string]: AnyFunction | undefined };
+
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
  // By default, TypeScript uses structural typing (as opposed to nominal typing)
