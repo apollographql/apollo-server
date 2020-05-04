@@ -7,9 +7,20 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### vNEXT
 
-> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
+> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned._
+- _Nothing yet! Stay tuned!_
+
+### v2.13.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
+
+- Allow passing a `WebSocket.Server` to `ApolloServer.installSubscriptionHandlers`. [PR #2314](https://github.com/apollographql/apollo-server/pull/2314)
+- `apollo-server-lambda`: Support file uploads on AWS Lambda [Issue #1419](https://github.com/apollographql/apollo-server/issues/1419) [Issue #1703](https://github.com/apollographql/apollo-server/issues/1703) [PR #3926](https://github.com/apollographql/apollo-server/pull/3926)
+- `apollo-engine-reporting`: Fix inadvertant conditional formatting which prevented automated persisted query (APQ) hits and misses from being reported to Apollo Graph Manager. [PR #3986](https://github.com/apollographql/apollo-server/pull/3986)
+- `apollo-engine-reporting`: Deprecate the `ENGINE_API_KEY` environment variable in favor of its new name, `APOLLO_KEY`.  Continued use of `ENGINE_API_KEY` will result in deprecation warnings and support for it will be removed in a future major version. [#3923](https://github.com/apollographql/apollo-server/pull/3923)
+- `apollo-engine-reporting`: Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  Similarly, within the `engine` configuration object, the `schemaTag` property has been renamed `graphVariant`.  The functionality remains otherwise unchanged, but their new names mirror the name used within Apollo Graph Manager.  Continued use of the now-deprecated names will result in deprecation warnings and support will be dropped completely in the next "major" update.  To avoid misconfiguration, a runtime error will be thrown if _both_ new and deprecated names are set. [PR #3855](https://github.com/apollographql/apollo-server/pull/3855)
+- `apollo-engine-reporting-protobuf`: __(This is a breaking change only if you directly depend on `apollo-engine-reporting-protobuf`.)__ Drop legacy fields that were never used by `apollo-engine-reporting`. Added new fields `StatsContext` to allow `apollo-server` to send summary stats instead of full traces, and renamed `FullTracesReport` to `Report` and `Traces` to `TracesAndStats` since reports now can include stats as well as traces.
 
 ### v2.12.0
 
