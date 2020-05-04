@@ -1,12 +1,19 @@
 # CHANGELOG for `@apollo/gateway`
 
-### vNEXT
+## vNEXT
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- Deprecated the `ENGINE_API_KEY` environment variable in favor of its new name, `APOLLO_KEY`.  Continued use of `ENGINE_API_KEY` will result in deprecation warnings being printed to the server console.  Support for `ENGINE_API_KEY` will be removed in a future, major update.  [#3923](https://github.com/apollographql/apollo-server/pull/3923)
-- Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  The functionality remains otherwise identical, but the new name mirrors the name used within Apollo Graph Manager.  Use of the now-deprecated name will result in a deprecation warning being printed to the server console.  Support will be removed entirely in a future, major update.  To avoid misconfiguration, runtime errors will be thrown if the new and deprecated name are _both_ set. [#3855](https://github.com/apollographql/apollo-server/pull/3855)
-- Cache stringified representations of downstream query bodies within the query plan to address performance implications incurred by repeatedly `print`ing the same`DocumentNode`s with the `graphql` printer.  This improvement is more pronounced on larger documents.  [PR #4018](https://github.com/apollographql/apollo-server/pull/4018)
+- _Nothing yet! Stay tuned!_
+
+## 0.15.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
+
+- __BREAKING__: Drop support for Node.js 8 and Node.js 10.  This is being done primarily for performance gains which stand to be seen by transpiling to a newer ECMAScript target.  For more details, see the related PR.  [#4031](https://github.com/apollographql/apollo-server/pull/4031)
+- __Performance:__ Cache stringified representations of downstream query bodies within the query plan to address performance cost incurred by repeatedly `print`ing the same`DocumentNode`s with the `graphql` printer.  This improvement is more pronounced on larger documents.  [PR #4018](https://github.com/apollographql/apollo-server/pull/4018)
+- __Deprecation:__ Deprecated the `ENGINE_API_KEY` environment variable in favor of its new name, `APOLLO_KEY`.  The new name mirrors the name used within Apollo Graph Manager.  Aside from the rename, the functionality remains otherwise identical.  Continued use of `ENGINE_API_KEY` will result in deprecation warnings being printed to the server console.  Support for `ENGINE_API_KEY` will be removed in a future, major update.  [#3923](https://github.com/apollographql/apollo-server/pull/3923)
+- __Deprecation:__ Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  The new name mirrors the name used within Apollo Graph Manager.  Aside from the rename, the functionality remains otherwise identical.  Use of the now-deprecated name will result in a deprecation warning being printed to the server console.  Support will be removed entirely in a future, major update.  To avoid misconfiguration, runtime errors will be thrown if the new and deprecated versions are _both_ set. [#3855](https://github.com/apollographql/apollo-server/pull/3855)
 - Add inadvertently excluded `apollo-server-errors` runtime dependency. [#3927](https://github.com/apollographql/apollo-server/pull/3927)
 
 ## 0.14.1

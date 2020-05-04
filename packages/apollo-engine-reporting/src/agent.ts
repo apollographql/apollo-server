@@ -2,10 +2,10 @@ import os from 'os';
 import { gzip } from 'zlib';
 import { DocumentNode, GraphQLError } from 'graphql';
 import {
-  FullTracesReport,
   ReportHeader,
-  Traces,
   Trace,
+  Report,
+  TracesAndStats
 } from 'apollo-engine-reporting-protobuf';
 
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
@@ -61,10 +61,10 @@ export function getEngineApiKey(
   const apiKeyFromEnv = process.env.APOLLO_KEY;
 
   if(legacyApiKeyFromEnv && apiKeyFromEnv && !skipWarn) {
-    logger.warn(`Both ENGINE_API_KEY (deprecated) and APOLLO_KEY are set; defaulting to APOLLO_KEY.`);
+    logger.warn("Using `APOLLO_KEY` since `ENGINE_API_KEY` (deprecated) is also set in the environment.");
   }
   if(legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey && !skipWarn) {
-    logger.warn(`[deprecated] Setting the key via ENGINE_API_KEY is deprecated and will not be supported in future versions.`);
+    logger.warn("[deprecated] The `ENGINE_API_KEY` environment variable has been renamed to `APOLLO_KEY`.");
     warnedOnDeprecatedApiKey = true;
   }
   return  apiKeyFromEnv || legacyApiKeyFromEnv || ''
@@ -79,15 +79,15 @@ export function getEngineGraphVariant(engine: EngineReportingOptions<any> | bool
       throw new Error('Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.');
     }
     if (engine.schemaTag) {
-      logger.warn('[Deprecation warning] Usage of engine.schemaTag is deprecated. Please use engine.graphVariant instead.');
+      logger.warn('[deprecated] The `schemaTag` property within `engine` configuration has been renamed to `graphVariant`.');
     }
     return engine.graphVariant || engine.schemaTag;
   } else {
     if (process.env.ENGINE_SCHEMA_TAG) {
-      logger.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
+      logger.warn('[deprecated] The `ENGINE_SCHEMA_TAG` environment variable has been renamed to `APOLLO_GRAPH_VARIANT`.');
     }
     if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
-      throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
+      throw new Error('`APOLLO_GRAPH_VARIANT` and `ENGINE_SCHEMA_TAG` (deprecated) environment variables must not both be set.')
     }
     return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
   }
@@ -271,12 +271,12 @@ export class EngineReportingAgent<TContext = any> {
   private readonly apiKey: string;
   private logger: Logger = console;
   private graphVariant: string;
-  private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
+  private reports: { [schemaHash: string]: Report } = Object.create(
     null,
   );
   private reportSizes: { [schemaHash: string]: number } = Object.create(null);
   private reportTimer: any; // timer typing is weird and node-specific
-  private sendReportsImmediately?: boolean;
+  private readonly sendReportsImmediately?: boolean;
   private stopped: boolean = false;
   private reportHeaders: { [schemaHash: string]: ReportHeader } = Object.create(
     null,
@@ -375,7 +375,7 @@ export class EngineReportingAgent<TContext = any> {
 
     const statsReportKey = `# ${operationName || '-'}\n${signature}`;
     if (!report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
-      report.tracesPerQuery[statsReportKey] = new Traces();
+      report.tracesPerQuery[statsReportKey] = new TracesAndStats();
       (report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
     }
     // See comment on our override of Traces.encode inside of
@@ -428,11 +428,11 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
 
-    const protobufError = FullTracesReport.verify(report);
+    const protobufError = Report.verify(report);
     if (protobufError) {
       throw new Error(`Error encoding report: ${protobufError}`);
     }
-    const message = FullTracesReport.encode(report).finish();
+    const message = Report.encode(report).finish();
 
     const compressed = await new Promise<Buffer>((resolve, reject) => {
       // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
@@ -602,7 +602,7 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   private resetReport(schemaHash: string) {
-    this.reports[schemaHash] = new FullTracesReport({
+    this.reports[schemaHash] = new Report({
       header: this.reportHeaders[schemaHash],
     });
     this.reportSizes[schemaHash] = 0;

@@ -6,6 +6,12 @@
 
 - _Nothing yet! Stay tuned._
 
+## 0.15.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
 ## 0.14.1
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/b898396e9fcd3b9092b168f9aac8466ca186fa6b)
