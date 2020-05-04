@@ -161,7 +161,11 @@ function mergeFieldNodeSelectionSets(
     )
     .value();
 
-  const mergedFieldNodes = _(fieldNodes)
+  const [aliasedFieldNodes, nonAliasedFieldNodes] = _(fieldNodes)
+    .partition((node) => node.alias)
+    .value();
+
+  const mergedFieldNodes = _(nonAliasedFieldNodes)
     .groupBy((node) => node.name.value)
     .values()
     .map((nodesWithSameName) => {
@@ -177,5 +181,5 @@ function mergeFieldNodeSelectionSets(
     })
     .value();
 
-  return [...mergedFieldNodes, ...fragmentNodes];
+  return [...mergedFieldNodes, ...aliasedFieldNodes, ...fragmentNodes];
 }
