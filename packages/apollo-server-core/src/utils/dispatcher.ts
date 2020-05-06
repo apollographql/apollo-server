@@ -9,10 +9,26 @@ type DidEndHook<TArgs extends any[]> = (...args: TArgs) => void;
 export class Dispatcher<T extends AnyFunctionMap> {
   constructor(protected targets: T[]) {}
 
+  private callTargets<TMethodName extends keyof T>(
+    targets: T[],
+    methodName: TMethodName,
+    ...args: Args<T[TMethodName]>
+  ) {
+    return targets.map(target => {
+      const method = target[methodName];
+      if (method && typeof method === 'function') {
+        return method.apply(target, args);
+      }
+    });
+  }
+
   public async invokeHookAsync<TMethodName extends keyof T>(
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>
   ): Promise<UnwrapPromise<ReturnType<AsFunction<T[TMethodName]>>>[]> {
+    return await Promise.all(
+      this.callTargets(this.targets, methodName, ...args),
+    );
     return await Promise.all(
       this.targets.map(target => {
         const method = target[methodName];
