@@ -85,11 +85,20 @@ export interface GraphQLRequestListener<
   ): ValueOrPromise<GraphQLResponse | null>;
   executionDidStart?(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ): GraphQLRequestListenerExecutionDidEnd | void;
-  willResolveField?(
-    ...fieldResolverArgs: Parameters<GraphQLFieldResolver<any, TContext>>
-  ): GraphQLRequestListenerDidResolveField | void;
+  ):
+    | GraphQLRequestExecutionListener
+    | GraphQLRequestListenerExecutionDidEnd
+    | void;
   willSendResponse?(
     requestContext: GraphQLRequestContextWillSendResponse<TContext>,
   ): ValueOrPromise<void>;
+}
+
+export interface GraphQLRequestExecutionListener<
+  TContext extends BaseContext = DefaultContext
+> extends AnyFunctionMap {
+  executionDidEnd?: GraphQLRequestListenerExecutionDidEnd;
+  willResolveField?(
+    ...fieldResolverArgs: Parameters<GraphQLFieldResolver<any, TContext>>
+  ): GraphQLRequestListenerDidResolveField | void;
 }

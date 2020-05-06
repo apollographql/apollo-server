@@ -39,6 +39,20 @@ export class Dispatcher<T extends AnyFunctionMap> {
     );
   }
 
+  public invokeHookSync<TMethodName extends keyof T>(
+    methodName: TMethodName,
+    ...args: Args<T[TMethodName]>
+  ): ReturnType<AsFunction<T[TMethodName]>>[] {
+    return this.callTargets(this.targets, methodName, ...args);
+  }
+
+  public reverseInvokeHookSync<TMethodName extends keyof T>(
+    methodName: TMethodName,
+    ...args: Args<T[TMethodName]>
+  ): ReturnType<AsFunction<T[TMethodName]>>[] {
+    return this.callTargets(this.targets.reverse(), methodName, ...args);
+  }
+
   public async invokeHooksUntilNonNull<TMethodName extends keyof T>(
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>

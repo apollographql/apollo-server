@@ -21,6 +21,7 @@ import { Request } from 'apollo-server-env';
 import { GraphQLOptions, Context as GraphQLContext } from 'apollo-server-core';
 import {
   ApolloServerPlugin,
+  GraphQLRequestExecutionListener,
   GraphQLRequestListenerDidResolveField,
   GraphQLRequestListenerExecutionDidEnd,
 } from 'apollo-server-plugin-base';
@@ -538,122 +539,191 @@ describe('runQuery', () => {
         expect(executionDidStart).toHaveBeenCalledTimes(1);
       });
 
-      it('works as a function returned from "executionDidStart"', async () => {
-        const executionDidEnd = jest.fn();
-        const executionDidStart = jest.fn(
-          (): GraphQLRequestListenerExecutionDidEnd => executionDidEnd);
+      describe('executionDidEnd', () => {
+        it('works as a function returned from "executionDidStart"', async () => {
+          const executionDidEnd = jest.fn();
+          const executionDidStart = jest.fn(
+            (): GraphQLRequestListenerExecutionDidEnd => executionDidEnd);
 
-        await runQuery({
-          schema,
-          queryString: '{ testString }',
-          plugins: [
-            {
-              requestDidStart() {
-                return {
-                  executionDidStart,
-                };
+          await runQuery({
+            schema,
+            queryString: '{ testString }',
+            plugins: [
+              {
+                requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
               },
-            },
-          ],
-          request: new MockReq(),
+            ],
+            request: new MockReq(),
+          });
+
+          expect(executionDidStart).toHaveBeenCalledTimes(1);
+          expect(executionDidEnd).toHaveBeenCalledTimes(1);
         });
+
+        it('works as a listener on an object returned from "executionDidStart"',
+          async () => {
+            const executionDidEnd = jest.fn();
+            const executionDidStart = jest.fn(
+              (): GraphQLRequestExecutionListener => ({
+                executionDidEnd,
+              }),
+            );
+
+            await runQuery({
+              schema,
+              queryString: '{ testString }',
+              plugins: [
+                {
+                  requestDidStart() {
+                    return {
+                      executionDidStart,
+                    };
+                  },
+                },
+              ],
+              request: new MockReq(),
+            }
+          );
 
         expect(executionDidStart).toHaveBeenCalledTimes(1);
         expect(executionDidEnd).toHaveBeenCalledTimes(1);
       });
+
+      });
+
+      describe('willResolveField', () => {
+        it('called when resolving a field starts', async () => {
+          const willResolveField = jest.fn();
+          const executionDidEnd = jest.fn();
+          const executionDidStart = jest.fn(
+            (): GraphQLRequestExecutionListener => ({
+              willResolveField,
+              executionDidEnd,
+            }),
+          );
+
+          await runQuery({
+            schema,
+            queryString: '{ testString }',
+            plugins: [
+              {
+                requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+            request: new MockReq(),
+          });
+
+          expect(executionDidStart).toHaveBeenCalledTimes(1);
+          expect(willResolveField).toHaveBeenCalledTimes(1);
+          expect(executionDidEnd).toHaveBeenCalledTimes(1);
+        });
+
+        it('called once for each field being resolved', async () => {
+          const willResolveField = jest.fn();
+          const executionDidEnd = jest.fn();
+          const executionDidStart = jest.fn(
+            (): GraphQLRequestExecutionListener => ({
+              willResolveField,
+              executionDidEnd,
+            }),
+          );
+
+          await runQuery({
+            schema,
+            queryString: '{ testString again:testString }',
+            plugins: [
+              {
+                requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+            request: new MockReq(),
+          });
+
+          expect(executionDidStart).toHaveBeenCalledTimes(1);
+          expect(willResolveField).toHaveBeenCalledTimes(2);
+          expect(executionDidEnd).toHaveBeenCalledTimes(1);
+        });
+
+        it('calls the end handler', async () => {
+          const didResolveField: GraphQLRequestListenerDidResolveField =
+            jest.fn();
+          const willResolveField = jest.fn(() => didResolveField);
+          const executionDidEnd = jest.fn();
+          const executionDidStart = jest.fn(
+            (): GraphQLRequestExecutionListener => ({
+              willResolveField,
+              executionDidEnd,
+            }),
+          );
+
+          await runQuery({
+            schema,
+            queryString: '{ testString }',
+            plugins: [
+              {
+                requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+            request: new MockReq(),
+          });
+
+          expect(executionDidStart).toHaveBeenCalledTimes(1);
+          expect(willResolveField).toHaveBeenCalledTimes(1);
+          expect(didResolveField).toHaveBeenCalledTimes(1);
+          expect(executionDidEnd).toHaveBeenCalledTimes(1);
+        });
+
+        it('calls the end handler for each field being resolved', async () => {
+          const didResolveField: GraphQLRequestListenerDidResolveField =
+            jest.fn();
+          const willResolveField = jest.fn(() => didResolveField);
+          const executionDidEnd = jest.fn();
+          const executionDidStart = jest.fn(
+            (): GraphQLRequestExecutionListener => ({
+              willResolveField,
+              executionDidEnd,
+            }),
+          );
+
+          await runQuery({
+            schema,
+            queryString: '{ testString again: testString }',
+            plugins: [
+              {
+                requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+            request: new MockReq(),
+          });
+
+          expect(executionDidStart).toHaveBeenCalledTimes(1);
+          expect(willResolveField).toHaveBeenCalledTimes(2);
+          expect(didResolveField).toHaveBeenCalledTimes(2);
+          expect(executionDidEnd).toHaveBeenCalledTimes(1);
+        });
+      });
     });
 
-    describe('willResolveField', () => {
-      it('called when resolving a field starts', async () => {
-        const willResolveField = jest.fn();
-
-        await runQuery({
-          schema,
-          queryString: '{ testString }',
-          plugins: [
-            {
-              requestDidStart() {
-                return {
-                  willResolveField,
-                };
-              },
-            },
-          ],
-          request: new MockReq(),
-        });
-
-        expect(willResolveField).toHaveBeenCalledTimes(1);
-      });
-
-      it('called once for each field being resolved', async () => {
-        const willResolveField = jest.fn();
-
-        await runQuery({
-          schema,
-          queryString: '{ testString again:testString }',
-          plugins: [
-            {
-              requestDidStart() {
-                return {
-                  willResolveField,
-                };
-              },
-            },
-          ],
-          request: new MockReq(),
-        });
-
-        expect(willResolveField).toHaveBeenCalledTimes(2);
-      });
-
-      it('calls the end handler', async () => {
-        const didResolveField: GraphQLRequestListenerDidResolveField =
-          jest.fn();
-        const willResolveField = jest.fn(() => didResolveField);
-
-        await runQuery({
-          schema,
-          queryString: '{ testString }',
-          plugins: [
-            {
-              requestDidStart() {
-                return {
-                  willResolveField,
-                };
-              },
-            },
-          ],
-          request: new MockReq(),
-        });
-
-        expect(willResolveField).toHaveBeenCalledTimes(1);
-        expect(didResolveField).toHaveBeenCalledTimes(1);
-      });
-
-      it('calls the end handler for each field being resolved', async () => {
-        const didResolveField: GraphQLRequestListenerDidResolveField =
-          jest.fn();
-        const willResolveField = jest.fn(() => didResolveField);
-
-        await runQuery({
-          schema,
-          queryString: '{ testString again: testString }',
-          plugins: [
-            {
-              requestDidStart() {
-                return {
-                  willResolveField,
-                };
-              },
-            },
-          ],
-          request: new MockReq(),
-        });
-
-        expect(willResolveField).toHaveBeenCalledTimes(2);
-        expect(didResolveField).toHaveBeenCalledTimes(2);
-      });
-    });
 
     describe('didEncounterErrors', () => {
       const didEncounterErrors = jest.fn();
@@ -730,9 +800,10 @@ describe('runQuery', () => {
         const executionDidEnd: GraphQLRequestListenerExecutionDidEnd =
           jest.fn(() => callOrder.push('executionDidEnd'));
 
-        const executionDidStart = jest.fn(() => {
+        const executionDidStart = jest.fn(
+          (): GraphQLRequestExecutionListener => {
             callOrder.push("executionDidStart");
-            return executionDidEnd;
+            return { willResolveField, executionDidEnd };
           },
         );
 
@@ -763,7 +834,6 @@ describe('runQuery', () => {
               requestDidStart() {
                 return {
                   executionDidStart,
-                  willResolveField,
                 };
               },
             },
@@ -772,7 +842,6 @@ describe('runQuery', () => {
         });
 
         expect(executionDidStart).toHaveBeenCalledTimes(1);
-        expect(executionDidEnd).toHaveBeenCalledTimes(1);
         expect(willResolveField).toHaveBeenCalledTimes(1);
         expect(didResolveField).toHaveBeenCalledTimes(1);
         expect(callOrder).toStrictEqual([
