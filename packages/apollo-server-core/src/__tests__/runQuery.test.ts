@@ -39,6 +39,7 @@ function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
 
   return processGraphQLRequest(options, {
     request,
+    logger: console,
     context: options.context || {},
     debug: options.debug,
     cache: {} as any,
