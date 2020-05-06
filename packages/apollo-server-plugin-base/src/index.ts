@@ -47,23 +47,21 @@ export interface ApolloServerPlugin<TContext extends Record<string, any> = Recor
   ): GraphQLRequestListener<TContext> | void;
 }
 
-export type GraphQLRequestListenerParsingDidEnd =
-  ((err?: Error) => void) | void;
+export type GraphQLRequestListenerParsingDidEnd = (err?: Error) => void;
 export type GraphQLRequestListenerValidationDidEnd =
-  ((err?: ReadonlyArray<Error>) => void) | void;
-export type GraphQLRequestListenerExecutionDidEnd =
-  ((err?: Error) => void) | void;
+  ((err?: ReadonlyArray<Error>) => void);
+export type GraphQLRequestListenerExecutionDidEnd = ((err?: Error) => void);
 export type GraphQLRequestListenerDidResolveField =
-  ((error: Error | null, result?: any) => void) | void
+  ((error: Error | null, result?: any) => void);
 
 export interface GraphQLRequestListener<TContext = Record<string, any>>
   extends AnyFunctionMap {
   parsingDidStart?(
     requestContext: GraphQLRequestContextParsingDidStart<TContext>,
-  ): GraphQLRequestListenerParsingDidEnd;
+  ): GraphQLRequestListenerParsingDidEnd | void;
   validationDidStart?(
     requestContext: GraphQLRequestContextValidationDidStart<TContext>,
-  ): GraphQLRequestListenerValidationDidEnd;
+  ): GraphQLRequestListenerValidationDidEnd | void;
   didResolveOperation?(
     requestContext: GraphQLRequestContextDidResolveOperation<TContext>,
   ): ValueOrPromise<void>;
@@ -80,10 +78,10 @@ export interface GraphQLRequestListener<TContext = Record<string, any>>
   ): ValueOrPromise<GraphQLResponse | null>;
   executionDidStart?(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ): GraphQLRequestListenerExecutionDidEnd;
+  ): GraphQLRequestListenerExecutionDidEnd | void;
   willResolveField?(
     ...fieldResolverArgs: Parameters<GraphQLFieldResolver<any, TContext>>
-  ): GraphQLRequestListenerDidResolveField;
+  ): GraphQLRequestListenerDidResolveField | void;
   willSendResponse?(
     requestContext: GraphQLRequestContextWillSendResponse<TContext>,
   ): ValueOrPromise<void>;
