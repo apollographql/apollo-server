@@ -10,7 +10,7 @@ const additionalConfig = {
   setupFilesAfterEnv: [path.resolve(__dirname, './src/__tests__/testSetup.ts')],
   testPathIgnorePatterns: [
     ...config.testPathIgnorePatterns,
-    ...NODE_MAJOR_VERSION === 6 ? ["<rootDir>"] : []
+    ...NODE_MAJOR_VERSION < 12 ? ["<rootDir>"] : []
   ]
 };
 
