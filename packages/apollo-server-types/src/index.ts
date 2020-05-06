@@ -13,6 +13,9 @@ import {
 import { KeyValueCache } from 'apollo-server-caching';
 import { Trace } from 'apollo-engine-reporting-protobuf';
 
+export type BaseContext = Record<string, any>;
+export type DefaultContext = BaseContext;
+
 export type ValueOrPromise<T> = T | Promise<T>;
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
