@@ -24,6 +24,8 @@ import {
   GraphQLRequestExecutionListener,
   GraphQLRequestListenerDidResolveField,
   GraphQLRequestListenerExecutionDidEnd,
+  GraphQLRequestListenerParsingDidEnd,
+  GraphQLRequestListenerValidationDidEnd,
 } from 'apollo-server-plugin-base';
 import { GraphQLRequestListener } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
@@ -864,6 +866,22 @@ describe('runQuery', () => {
         let stopAwaiting: Function;
         const toBeAwaited = new Promise(resolve => stopAwaiting = resolve);
 
+        const parsingDidEnd: GraphQLRequestListenerParsingDidEnd =
+          jest.fn(() => callOrder.push('parsingDidEnd'));
+        const parsingDidStart: GraphQLRequestListener['parsingDidStart'] =
+          jest.fn(() => {
+            callOrder.push('parsingDidStart');
+            return parsingDidEnd;
+          });
+
+        const validationDidEnd: GraphQLRequestListenerValidationDidEnd =
+          jest.fn(() => callOrder.push('validationDidEnd'));
+        const validationDidStart: GraphQLRequestListener['validationDidStart'] =
+          jest.fn(() => {
+            callOrder.push('validationDidStart');
+            return validationDidEnd;
+          });
+
         const didResolveField: GraphQLRequestListenerDidResolveField =
           jest.fn(() => callOrder.push("didResolveField"));
 
@@ -908,6 +926,8 @@ describe('runQuery', () => {
             {
               requestDidStart() {
                 return {
+                  parsingDidStart,
+                  validationDidStart,
                   executionDidStart,
                 };
               },
@@ -916,10 +936,18 @@ describe('runQuery', () => {
           request: new MockReq(),
         });
 
+        expect(parsingDidStart).toHaveBeenCalledTimes(1);
+        expect(parsingDidEnd).toHaveBeenCalledTimes(1);
+        expect(validationDidStart).toHaveBeenCalledTimes(1);
+        expect(validationDidEnd).toHaveBeenCalledTimes(1);
         expect(executionDidStart).toHaveBeenCalledTimes(1);
         expect(willResolveField).toHaveBeenCalledTimes(1);
         expect(didResolveField).toHaveBeenCalledTimes(1);
         expect(callOrder).toStrictEqual([
+          "parsingDidStart",
+          "parsingDidEnd",
+          "validationDidStart",
+          "validationDidEnd",
           "executionDidStart",
           "willResolveField",
           "beforeAwaiting",
