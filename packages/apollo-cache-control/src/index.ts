@@ -64,73 +64,72 @@ export const plugin = (
     }
 
     return {
-      willResolveField(...args) {
-        const [, , , info] = args;
-        let hint: CacheHint = {};
+      executionDidStart: () => ({
+        executionDidEnd: () => setOverallCachePolicyWhenUnset(),
+        willResolveField(...args) {
+          const [, , , info] = args;
+          let hint: CacheHint = {};
 
-        // If this field's resolver returns an object or interface, look for
-        // hints on that return type.
-        const targetType = getNamedType(info.returnType);
-        if (
-          targetType instanceof GraphQLObjectType ||
-          targetType instanceof GraphQLInterfaceType
-        ) {
-          if (targetType.astNode) {
+          // If this field's resolver returns an object or interface, look for
+          // hints on that return type.
+          const targetType = getNamedType(info.returnType);
+          if (
+            targetType instanceof GraphQLObjectType ||
+            targetType instanceof GraphQLInterfaceType
+          ) {
+            if (targetType.astNode) {
+              hint = mergeHints(
+                hint,
+                cacheHintFromDirectives(targetType.astNode.directives),
+              );
+            }
+          }
+
+          // Look for hints on the field itself (on its parent type), taking
+          // precedence over previously calculated hints.
+          const fieldDef = info.parentType.getFields()[info.fieldName];
+          if (fieldDef.astNode) {
             hint = mergeHints(
               hint,
-              cacheHintFromDirectives(targetType.astNode.directives),
+              cacheHintFromDirectives(fieldDef.astNode.directives),
             );
           }
-        }
 
-        // Look for hints on the field itself (on its parent type), taking
-        // precedence over previously calculated hints.
-        const fieldDef = info.parentType.getFields()[info.fieldName];
-        if (fieldDef.astNode) {
-          hint = mergeHints(
-            hint,
-            cacheHintFromDirectives(fieldDef.astNode.directives),
-          );
-        }
+          // If this resolver returns an object or is a root field and we haven't
+          // seen an explicit maxAge hint, set the maxAge to 0 (uncached) or the
+          // default if specified in the constructor. (Non-object fields by
+          // default are assumed to inherit their cacheability from their parents.
+          // But on the other hand, while root non-object fields can get explicit
+          // hints from their definition on the Query/Mutation object, if that
+          // doesn't exist then there's no parent field that would assign the
+          // default maxAge, so we do it here.)
+          if (
+            (targetType instanceof GraphQLObjectType ||
+              targetType instanceof GraphQLInterfaceType ||
+              !info.path.prev) &&
+            hint.maxAge === undefined
+          ) {
+            hint.maxAge = defaultMaxAge;
+          }
 
-        // If this resolver returns an object or is a root field and we haven't
-        // seen an explicit maxAge hint, set the maxAge to 0 (uncached) or the
-        // default if specified in the constructor. (Non-object fields by
-        // default are assumed to inherit their cacheability from their parents.
-        // But on the other hand, while root non-object fields can get explicit
-        // hints from their definition on the Query/Mutation object, if that
-        // doesn't exist then there's no parent field that would assign the
-        // default maxAge, so we do it here.)
-        if (
-          (targetType instanceof GraphQLObjectType ||
-            targetType instanceof GraphQLInterfaceType ||
-            !info.path.prev) &&
-          hint.maxAge === undefined
-        ) {
-          hint.maxAge = defaultMaxAge;
-        }
-
-        if (hint.maxAge !== undefined || hint.scope !== undefined) {
-          addHint(hints, info.path, hint);
-        }
-
-        info.cacheControl = {
-          setCacheHint: (hint: CacheHint) => {
+          if (hint.maxAge !== undefined || hint.scope !== undefined) {
             addHint(hints, info.path, hint);
-          },
-          cacheHint: hint,
-        };
-      },
+          }
+
+          info.cacheControl = {
+            setCacheHint: (hint: CacheHint) => {
+              addHint(hints, info.path, hint);
+            },
+            cacheHint: hint,
+          };
+        },
+      }),
 
       responseForOperation() {
         // We are not supplying an answer, we are only setting the cache
         // policy if it's not set! Therefore, we return null.
         setOverallCachePolicyWhenUnset();
         return null;
-      },
-
-      executionDidStart() {
-        return () => setOverallCachePolicyWhenUnset();
       },
 
       willSendResponse(requestContext) {

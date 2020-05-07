@@ -35,6 +35,8 @@ import {
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
+import WebSocket from 'ws';
+
 import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions,
@@ -69,11 +71,12 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { Logger } from "apollo-server-types";
+import { Logger, SchemaHash } from "apollo-server-types";
 import {
   plugin as pluginCacheControl,
   CacheControlExtensionOptions,
 } from 'apollo-cache-control';
+import { getEngineApiKey, getEngineGraphVariant } from "apollo-engine-reporting/dist/agent";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -88,36 +91,8 @@ const NoIntrospection = (context: ValidationContext) => ({
   },
 });
 
-function getEngineApiKey(engine: Config['engine']): string | undefined {
-  const keyFromEnv = process.env.ENGINE_API_KEY || '';
-  if (engine === false) {
-    return;
-  } else if (typeof engine === 'object' && engine.apiKey) {
-    return engine.apiKey;
-  } else if (keyFromEnv) {
-    return keyFromEnv;
-  }
-  return;
-}
-
-function getEngineGraphVariant(engine: Config['engine']): string | undefined {
-  if (engine === false) {
-    return;
-  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
-    return engine.graphVariant || engine.schemaTag;
-  } else {
-    if (process.env.ENGINE_SCHEMA_TAG) {
-      console.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
-    }
-    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
-      throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
-    }
-    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
-  }
-}
-
-function getEngineServiceId(engine: Config['engine']): string | undefined {
-  const engineApiKey = getEngineApiKey(engine);
+function getEngineServiceId(engine: Config['engine'], logger: Logger): string | undefined {
+  const engineApiKey = getEngineApiKey({engine, skipWarn: true, logger} );
   if (engineApiKey) {
     return engineApiKey.split(':', 2)[1];
   }
@@ -138,7 +113,7 @@ type SchemaDerivedData = {
   // on the same operation to be executed immediately.
   documentStore?: InMemoryLRUCache<DocumentNode>;
   schema: GraphQLSchema;
-  schemaHash: string;
+  schemaHash: SchemaHash;
   extensions: Array<() => GraphQLExtension>;
 };
 
@@ -323,8 +298,8 @@ export class ApolloServerBase {
     // service ID from the API key for plugins which only needs service ID.
     // The truthiness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
-    this.engineServiceId = getEngineServiceId(engine);
-    const apiKey = getEngineApiKey(engine);
+    this.engineServiceId = getEngineServiceId(engine, this.logger);
+    const apiKey = getEngineApiKey({engine, skipWarn: true, logger: this.logger});
     if (apiKey) {
       this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)
@@ -424,7 +399,7 @@ export class ApolloServerBase {
         ),
       );
 
-      const graphVariant = getEngineGraphVariant(engine);
+      const graphVariant = getEngineGraphVariant(engine, this.logger);
       const engineConfig =
         this.engineApiKeyHash && this.engineServiceId
           ? {
@@ -647,7 +622,7 @@ export class ApolloServerBase {
     }
   }
 
-  public installSubscriptionHandlers(server: HttpServer) {
+  public installSubscriptionHandlers(server: HttpServer | WebSocket.Server) {
     if (!this.subscriptionServerOptions) {
       if (this.config.gateway) {
         throw Error(
@@ -722,10 +697,12 @@ export class ApolloServerBase {
         },
         keepAlive,
       },
-      {
-        server,
-        path,
-      },
+      server instanceof WebSocket.Server
+        ? server
+        : {
+            server,
+            path,
+          },
     );
   }
 
@@ -767,7 +744,7 @@ export class ApolloServerBase {
 
     // Internal plugins should be added to `pluginsToInit` here.
     // User's plugins, provided as an argument to this method, will be added
-    // at the end of that list so they take precidence.
+    // at the end of that list so they take precedence.
     // A follow-up commit will actually introduce this.
 
     // Enable cache control unless it was explicitly disabled.

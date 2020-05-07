@@ -17,11 +17,11 @@ import {
   enableGraphQLExtensions,
 } from 'graphql-extensions';
 import { DataSource } from 'apollo-datasource';
+import { PersistedQueryOptions } from './graphqlOptions';
 import {
-  PersistedQueryOptions,
-  symbolRequestListenerDispatcher,
+  symbolExecutionDispatcherWillResolveField,
   enablePluginsForSchemaResolvers,
-} from '.';
+} from "./utils/schemaInstrumentation"
 import { TracingExtension } from 'apollo-tracing';
 import {
   ApolloError,
@@ -52,6 +52,7 @@ import {
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestExecutionListener,
 } from 'apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
@@ -125,10 +126,6 @@ export async function processGraphQLRequest<TContext>(
   (requestContext.context as any)._extensionStack = extensionStack;
 
   const dispatcher = initializeRequestListenerDispatcher();
-  Object.defineProperty(requestContext.context, symbolRequestListenerDispatcher, {
-    value: dispatcher,
-  });
-
   await initializeDataSources();
 
   const metrics = requestContext.metrics || Object.create(null);
@@ -358,10 +355,42 @@ export async function processGraphQLRequest<TContext>(
       requestContext as GraphQLRequestContextResponseForOperation<TContext>,
     );
     if (response == null) {
-      const executionDidEnd = await dispatcher.invokeDidStartHook(
+      // This execution dispatcher code is duplicated in `pluginTestHarness`
+      // right now.
+
+      const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
+      dispatcher.invokeHookSync(
         'executionDidStart',
         requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+      ).forEach(executionListener => {
+        if (typeof executionListener === 'function') {
+          executionListeners.push({
+            executionDidEnd: executionListener,
+          });
+        } else if (typeof executionListener === 'object') {
+          executionListeners.push(executionListener);
+        }
+      });
+
+      const executionDispatcher = new Dispatcher(executionListeners);
+
+      // Create a callback that will trigger the execution dispatcher's
+      // `willResolveField` hook.  We will attach this to the context on a
+      // symbol so it can be invoked by our `wrapField` method during execution.
+      const invokeWillResolveField: GraphQLRequestExecutionListener<
+        TContext
+      >['willResolveField'] = (...args) =>
+          executionDispatcher.invokeDidStartHook('willResolveField', ...args);
+
+      Object.defineProperty(
+        requestContext.context,
+        symbolExecutionDispatcherWillResolveField,
+        { value: invokeWillResolveField }
       );
+
+      // If the schema is already enabled, this is a no-op.  Otherwise, the
+      // schema will be augmented so it is able to invoke willResolveField.
+      enablePluginsForSchemaResolvers(config.schema);
 
       try {
         const result = await execute(
@@ -377,9 +406,9 @@ export async function processGraphQLRequest<TContext>(
           errors: result.errors ? formatErrors(result.errors) : undefined,
         };
 
-        executionDidEnd();
+        executionDispatcher.reverseInvokeHookSync("executionDidEnd");
       } catch (executionError) {
-        executionDidEnd(executionError);
+        executionDispatcher.reverseInvokeHookSync("executionDidEnd", executionError);
         return await sendErrorResponse(executionError);
       }
     }
@@ -556,10 +585,8 @@ export async function processGraphQLRequest<TContext>(
   }
 
   function initializeRequestListenerDispatcher(): Dispatcher<
-    GraphQLRequestListener
+    GraphQLRequestListener<TContext>
   > {
-    enablePluginsForSchemaResolvers(config.schema);
-
     const requestListeners: GraphQLRequestListener<TContext>[] = [];
     if (config.plugins) {
       for (const plugin of config.plugins) {
@@ -617,4 +644,3 @@ export async function processGraphQLRequest<TContext>(
     }
   }
 }
-

@@ -13,15 +13,48 @@ import {
 import { KeyValueCache } from 'apollo-server-caching';
 import { Trace } from 'apollo-engine-reporting-protobuf';
 
+export type BaseContext = Record<string, any>;
+export type DefaultContext = BaseContext;
+
 export type ValueOrPromise<T> = T | Promise<T>;
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
+/**
+ * It is not recommended to use this `AnyFunction` type further.
+ *
+ * This is a legacy type which aims to do what its name suggests (be the type
+ * for _any_ function) but it should be replaced with something from the
+ * TypeScript standard lib.  It doesn't truly cover "any" function right now,
+ * and in particular doesn't consider `this`.  For now, it has been brought
+ * here from the Apollo Server `Dispatcher`, where it was first utilized.
+ */
+export type AnyFunction = (...args: any[]) => any;
+
+/**
+ * A map of `AnyFunction`s which are the interface for our plugin API's
+ * request listeners. (e.g. `GraphQLRequestListener`s).
+ */
+export type AnyFunctionMap = { [key: string]: AnyFunction | undefined };
+
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
+
+ // By default, TypeScript uses structural typing (as opposed to nominal typing)
+ // Put another way, if it looks like the type and walks like that type, then
+ // TypeScript lets it be a type.
+ //
+ // That's often okay, but it leaves a lot to be desired since a `string` of one
+ // type can just be passed in as `string` for that type and TypeScript won't
+ // complain.  Flow offers opaque types which solve this, but TypeScript doesn't
+ // offer this (yet?).  This Faux-paque type can be used to gain nominal-esque
+ // typing, which is incredibly beneficial during re-factors!
+ type Fauxpaque<K, T> = K & { __fauxpaque: T };
+
+ export type SchemaHash = Fauxpaque<string, 'SchemaHash'>;
 
 export interface GraphQLServiceContext {
   logger: Logger;
   schema: GraphQLSchema;
-  schemaHash: string;
+  schemaHash: SchemaHash;
   engine: {
     serviceID?: string;
     apiKeyHash?: string;

@@ -1,4 +1,9 @@
-import { GraphQLRequestContext, WithRequired, Logger } from 'apollo-server-types';
+import {
+  GraphQLRequestContext,
+  WithRequired,
+  Logger,
+  SchemaHash,
+} from 'apollo-server-types';
 import { Request, Headers } from 'apollo-server-env';
 import {
   GraphQLResolveInfo,
@@ -42,7 +47,7 @@ export class EngineReportingExtension<TContext = any>
   public constructor(
     options: EngineReportingOptions<TContext>,
     addTrace: (args: AddTraceArgs) => Promise<void>,
-    private schemaHash: string,
+    private schemaHash: SchemaHash,
   ) {
     this.options = {
       ...options,
@@ -101,13 +106,13 @@ export class EngineReportingExtension<TContext = any>
         o.request.headers,
         this.options.sendHeaders,
       );
+    }
 
-      if (o.requestContext.metrics.persistedQueryHit) {
-        this.treeBuilder.trace.persistedQueryHit = true;
-      }
-      if (o.requestContext.metrics.persistedQueryRegister) {
-        this.treeBuilder.trace.persistedQueryRegister = true;
-      }
+    if (o.requestContext.metrics.persistedQueryHit) {
+      this.treeBuilder.trace.persistedQueryHit = true;
+    }
+    if (o.requestContext.metrics.persistedQueryRegister) {
+      this.treeBuilder.trace.persistedQueryRegister = true;
     }
 
     if (o.variables) {
