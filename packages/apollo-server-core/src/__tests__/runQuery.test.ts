@@ -721,6 +721,81 @@ describe('runQuery', () => {
           expect(didResolveField).toHaveBeenCalledTimes(2);
           expect(executionDidEnd).toHaveBeenCalledTimes(1);
         });
+
+        it('uses the custom "fieldResolver" when defined', async () => {
+          const schemaWithResolver = new GraphQLSchema({
+            query: new GraphQLObjectType({
+              name: 'QueryType',
+              fields: {
+                testString: {
+                  type: GraphQLString,
+                  resolve() {
+                    return "using schema-defined resolver";
+                  },
+                },
+              }
+            })
+          });
+
+          const schemaWithoutResolver = new GraphQLSchema({
+            query: new GraphQLObjectType({
+              name: 'QueryType',
+              fields: {
+                testString: {
+                  type: GraphQLString,
+                },
+              }
+            })
+          });
+
+          const differentFieldResolver = () => "I'm diffrnt, ya, I'm diffrnt.";
+
+          const queryString = `{ testString } `;
+
+          const didResolveField: GraphQLRequestListenerDidResolveField =
+            jest.fn();
+          const willResolveField = jest.fn(() => didResolveField);
+
+          const plugins: ApolloServerPlugin[] = [
+            {
+              requestDidStart: () => ({
+                executionDidStart: () => ({
+                  willResolveField,
+                }),
+              })
+            },
+          ];
+
+          const resultFromSchemaWithResolver = await runQuery({
+            schema: schemaWithResolver,
+            queryString,
+            plugins,
+            request: new MockReq(),
+            fieldResolver: differentFieldResolver,
+          });
+
+          expect(willResolveField).toHaveBeenCalledTimes(1);
+          expect(didResolveField).toHaveBeenCalledTimes(1);
+
+          expect(resultFromSchemaWithResolver.data).toEqual({
+            testString: "using schema-defined resolver"
+          });
+
+          const resultFromSchemaWithoutResolver = await runQuery({
+            schema: schemaWithoutResolver,
+            queryString,
+            plugins,
+            request: new MockReq(),
+            fieldResolver: differentFieldResolver,
+          });
+
+          expect(willResolveField).toHaveBeenCalledTimes(2);
+          expect(didResolveField).toHaveBeenCalledTimes(2);
+
+          expect(resultFromSchemaWithoutResolver.data).toEqual({
+            testString: "I'm diffrnt, ya, I'm diffrnt."
+          });
+        });
       });
     });
 
