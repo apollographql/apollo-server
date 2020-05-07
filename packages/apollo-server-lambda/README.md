@@ -72,7 +72,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: graphql.handler
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       Events:
         AnyRequest:
           Type: Api

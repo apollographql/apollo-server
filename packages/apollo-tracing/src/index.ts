@@ -45,35 +45,42 @@ export const plugin = (_futureOptions = {}) => (): ApolloServerPlugin => ({
     startHrTime = process.hrtime();
 
     return {
-      executionDidStart() {
+      executionDidStart: () => ({
         // It's a little odd that we record the end time after execution rather
         // than at the end of the whole request, but because we need to include
         // our formatted trace in the request itself, we have to record it
-        // before the request is over! It's also odd that we don't do traces for
-        // parse or validation errors, but runQuery doesn't currently support
-        // that, as format() is only invoked after execution.
-        return () => {
+        // before the request is over!
+
+        // Historically speaking: It's WAS odd that we don't do traces for parse
+        // or validation errors. Reason being: at the time that this was written
+        // (now a plugin but originally an extension)). That was the case
+        // because runQuery DIDN'T (again, at the time, when it was an
+        // extension) support that since format() was only invoked after
+        // execution.
+        executionDidEnd: () => {
           duration = process.hrtime(startHrTime);
           endWallTime = new Date();
-        };
-      },
-      willResolveField(...args) {
-        const [, , , info] = args;
+        },
 
-        const resolverCall: ResolverCall = {
-          path: info.path,
-          fieldName: info.fieldName,
-          parentType: info.parentType,
-          returnType: info.returnType,
-          startOffset: process.hrtime(startHrTime),
-        };
+        willResolveField(...args) {
+          const [, , , info] = args;
 
-        resolverCalls.push(resolverCall);
+          const resolverCall: ResolverCall = {
+            path: info.path,
+            fieldName: info.fieldName,
+            parentType: info.parentType,
+            returnType: info.returnType,
+            startOffset: process.hrtime(startHrTime),
+          };
 
-        return () => {
-          resolverCall.endOffset = process.hrtime(startHrTime);
-        };
-      },
+          resolverCalls.push(resolverCall);
+
+          return () => {
+            resolverCall.endOffset = process.hrtime(startHrTime);
+          };
+        },
+      }),
+
       willSendResponse({ response }) {
         // In the event that we are called prior to the initialization of
         // critical date metrics, we'll return undefined to signal that the

@@ -25,7 +25,7 @@ describe('buildQueryPlan', () => {
 
   beforeEach(() => {
     const serviceMap = Object.fromEntries(
-      ['accounts', 'product', 'inventory', 'reviews', 'books'].map(
+      ['accounts', 'product', 'inventory', 'reviews', 'books', 'documents'].map(
         serviceName => {
           return [
             serviceName,
@@ -52,6 +52,53 @@ describe('buildQueryPlan', () => {
     if (errors && errors.length > 0) {
       throw new GraphQLSchemaValidationError(errors);
     }
+  });
+
+  it(`should not confuse union types with overlapping field names`, () => {
+    const query = gql`
+      query {
+        body {
+          ...on Image {
+            attributes {
+              url
+            }
+          }
+          ...on Text {
+            attributes {
+              bold
+              text
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(
+      buildOperationContext(schema, query, undefined),
+    );
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "documents") {
+          {
+            body {
+              __typename
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+          }
+        },
+      }
+    `);
   });
 
   it(`should use a single fetch when requesting a root field from one service`, () => {

@@ -1,12 +1,11 @@
 import { GraphQLSchema, GraphQLField, ResponsePath, getNamedType, GraphQLObjectType } from "graphql/type";
 import { defaultFieldResolver } from "graphql/execution";
 import { FieldNode } from "graphql/language";
-import { Dispatcher } from "./dispatcher";
-import { GraphQLRequestListener } from "apollo-server-plugin-base";
+import { GraphQLRequestExecutionListener } from "apollo-server-plugin-base";
 import { GraphQLObjectResolver } from "@apollographql/apollo-tools";
 
-export const symbolRequestListenerDispatcher =
-  Symbol("apolloServerRequestListenerDispatcher");
+export const symbolExecutionDispatcherWillResolveField =
+  Symbol("apolloServerExecutionDispatcherWillResolveField");
 export const symbolPluginsEnabled = Symbol("apolloServerPluginsEnabled");
 
 export function enablePluginsForSchemaResolvers(
@@ -37,14 +36,22 @@ function wrapField(field: GraphQLField<any, any>): void {
       __whenObjectResolved?: Promise<any>;
     };
 
+    const willResolveField =
+      context &&
+      context[symbolExecutionDispatcherWillResolveField] &&
+      (context[symbolExecutionDispatcherWillResolveField] as
+        | GraphQLRequestExecutionListener['willResolveField']
+        | undefined);
+
     // The technique for implementing a  "did resolve field" is accomplished by
-    // returning a function from the `willResolveField` handler.  The
-    // dispatcher will return a callback which will invoke all of those handlers
-    // and we'll save that to call when the object resolution is complete.
-    const endHandler = context && context[symbolRequestListenerDispatcher] &&
-      (context[symbolRequestListenerDispatcher] as Dispatcher<GraphQLRequestListener>)
-        .invokeDidStartHook('willResolveField', source, args, context, info) ||
-          ((_err: Error | null, _result?: any) => { /* do nothing */ });
+    // returning a function from the `willResolveField` handler.  While there
+    // may be several callbacks, depending on the number of plugins which have
+    // implemented a `willResolveField` hook, this hook will call them all
+    // as dictated by the dispatcher.  We will call this when object
+    // resolution is complete.
+    const didResolveField =
+      typeof willResolveField === 'function' &&
+      willResolveField(source, args, context, info);
 
     const resolveObject: GraphQLObjectResolver<
       any,
@@ -84,13 +91,17 @@ function wrapField(field: GraphQLField<any, any>): void {
       // Call the stack's handlers either immediately (if result is not a
       // Promise) or once the Promise is done. Then return that same
       // maybe-Promise value.
-      whenResultIsFinished(result, endHandler);
+      if (typeof didResolveField === "function") {
+        whenResultIsFinished(result, didResolveField);
+      }
       return result;
     } catch (error) {
       // Normally it's a bad sign to see an error both handled and
       // re-thrown. But it is useful to allow extensions to track errors while
       // still handling them in the normal GraphQL way.
-      endHandler(error);
+      if (typeof didResolveField === "function") {
+        didResolveField(error);
+      }
       throw error;
     }
   };;

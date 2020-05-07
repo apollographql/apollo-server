@@ -12,9 +12,12 @@ import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
 import { CacheHint } from 'apollo-cache-control';
 import {
   enablePluginsForSchemaResolvers,
-  symbolRequestListenerDispatcher,
+  symbolExecutionDispatcherWillResolveField,
 } from './schemaInstrumentation';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import {
+  ApolloServerPlugin,
+  GraphQLRequestExecutionListener,
+} from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { Dispatcher } from './dispatcher';
 
@@ -94,8 +97,6 @@ export default async function pluginTestHarness<TContext>({
     });
   }
 
-  enablePluginsForSchemaResolvers(schema);
-
   const requestContext: GraphQLRequestContext<TContext> = {
     logger: logger || console,
     request: graphqlRequest,
@@ -117,30 +118,56 @@ export default async function pluginTestHarness<TContext>({
     throw new Error("Should be impossible to not have a listener.");
   }
 
-  if (typeof listener.willResolveField !== 'function') {
-    throw new Error("Should be impossible to not have 'willResolveField'.");
-  }
-
   const dispatcher = new Dispatcher([listener]);
 
-  // Put the dispatcher on the context so `willResolveField` can access it.
-  Object.defineProperty(requestContext.context, symbolRequestListenerDispatcher, {
-    value: dispatcher,
-  });
+  const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
 
-  const executionDidEnd = dispatcher.invokeDidStartHook(
-    "executionDidStart",
-    requestContext as IPluginTestHarnessExecutionDidStart<TContext>,
+  if (typeof listener.executionDidStart === 'function') {
+    // This execution dispatcher logic is duplicated in the request pipeline
+    // right now.
+    dispatcher.invokeHookSync(
+      'executionDidStart',
+      requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+    ).forEach(executionListener => {
+      if (typeof executionListener === 'function') {
+        executionListeners.push({
+          executionDidEnd: executionListener,
+        });
+      } else if (typeof executionListener === 'object') {
+        executionListeners.push(executionListener);
+      }
+    });
+  }
+
+  const executionDispatcher = new Dispatcher(executionListeners);
+
+  // Create a callback that will trigger the execution dispatcher's
+  // `willResolveField` hook.  We will attach this to the context on a
+  // symbol so it can be invoked by our `wrapField` method during execution.
+  const invokeWillResolveField: GraphQLRequestExecutionListener<
+    TContext
+  >['willResolveField'] = (...args) =>
+      executionDispatcher.invokeDidStartHook('willResolveField', ...args);
+
+  Object.defineProperty(
+    requestContext.context,
+    symbolExecutionDispatcherWillResolveField,
+    { value: invokeWillResolveField }
   );
+
+  // If the schema is already enabled, this is a no-op.  Otherwise, the
+  // schema will be augmented so it is able to invoke willResolveField.
+  enablePluginsForSchemaResolvers(schema);
 
   try {
     // `response` is readonly, so we'll cast to `any` to assign to it.
     (requestContext.response as any) = await executor(
       requestContext as IPluginTestHarnessExecutionDidStart<TContext>,
     );
-    executionDidEnd();
-  } catch (executionError) {
-    executionDidEnd(executionError);
+    executionDispatcher.reverseInvokeHookSync("executionDidEnd");
+
+  } catch (executionErr) {
+    executionDispatcher.reverseInvokeHookSync("executionDidEnd", executionErr);
   }
 
   await dispatcher.invokeHookAsync(
