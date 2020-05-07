@@ -1289,7 +1289,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
         expect(cache.set).toHaveBeenCalledWith(
           expect.stringMatching(/^apq:/),
-          '{testString}',
+          query,
           expect.objectContaining({
             ttl: 900,
           }),

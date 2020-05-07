@@ -912,6 +912,9 @@ describe('runQuery', () => {
         let stopAwaiting: Function;
         const toBeAwaited = new Promise(resolve => stopAwaiting = resolve);
 
+        const validationDidStart: GraphQLRequestListener['validationDidStart'] =
+          jest.fn(() => { callOrder.push('validationDidStart') });
+
         const didResolveSource: GraphQLRequestListener['didResolveSource'] =
           jest.fn(() => { callOrder.push('didResolveSource') });
 
@@ -960,6 +963,7 @@ describe('runQuery', () => {
               requestDidStart() {
                 return {
                   didResolveSource,
+                  validationDidStart,
                   executionDidStart,
                 };
               },
@@ -968,11 +972,13 @@ describe('runQuery', () => {
           request: new MockReq(),
         });
 
+        expect(validationDidStart).toHaveBeenCalledTimes(1);
         expect(executionDidStart).toHaveBeenCalledTimes(1);
         expect(willResolveField).toHaveBeenCalledTimes(1);
         expect(didResolveField).toHaveBeenCalledTimes(1);
         expect(callOrder).toStrictEqual([
           "didResolveSource",
+          "validationDidStart",
           "executionDidStart",
           "willResolveField",
           "beforeAwaiting",
