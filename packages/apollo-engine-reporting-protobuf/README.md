@@ -22,7 +22,7 @@ Currently, this package generates a majority of its code with
 `reports.proto` file. The output is generated with the `prepare` npm script.
 
 The root of the repository provides the `devDependencies` necessary to build
-these definitions (e.g. `pbjs`, `pbts`, `protobuf`, etc.) and the the `prepare`
+these definitions (e.g. `pbjs`, `pbts`, `protobuf`, etc.) and the `prepare`
 npm script is invoked programmatically via the monorepo tooling (e.g. Lerna)
 thanks to _this_ module's `postinstall` script.   Therefore, when making
 changes to this module, `npx lerna run prepare` should be run from the **root**

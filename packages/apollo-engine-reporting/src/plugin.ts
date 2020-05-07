@@ -171,15 +171,17 @@ export const plugin = <TContext>(
 
         executionDidStart() {
           ensurePreflight();
-          return didEnd;
-        },
 
-        willResolveField(...args) {
-          const [, , , info] = args;
-          return treeBuilder.willResolveField(info);
-          // We could save the error into the trace during the end handler, but
-          // it won't have all the information that graphql-js adds to it later,
-          // like 'locations'.
+          return {
+            executionDidEnd: didEnd,
+            willResolveField(...args) {
+              const [, , , info] = args;
+              return treeBuilder.willResolveField(info);
+              // We could save the error into the trace during the end handler, but
+              // it won't have all the information that graphql-js adds to it later,
+              // like 'locations'.
+            },
+          };
         },
 
         didEncounterErrors({ errors }) {

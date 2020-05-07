@@ -28,10 +28,12 @@ const federatedPlugin = <TContext>(
       treeBuilder.startTiming();
 
       return {
-        willResolveField(...args) {
-          const [ , , , info] = args;
-          return treeBuilder.willResolveField(info);
-        },
+        executionDidStart: () => ({
+          willResolveField(...args) {
+            const [ , , , info] = args;
+            return treeBuilder.willResolveField(info);
+          },
+        }),
 
         didEncounterErrors({ errors }) {
           treeBuilder.didEncounterErrors(errors);

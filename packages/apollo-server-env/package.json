@@ -15,7 +15,7 @@
   "browser": "dist/index.browser.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "clean": "rm -rf dist",
+    "clean": "git clean -fdX -- dist",
     "compile": "tsc && cp src/*.d.ts dist",
     "prepare": "npm run clean && npm run compile"
   },
