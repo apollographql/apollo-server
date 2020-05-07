@@ -27,6 +27,7 @@ import {
 } from 'apollo-server-plugin-base';
 import { GraphQLRequestListener } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import { generateSchemaHash } from "../utils/schemaHash";
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
 // GraphQLRequestProcessor refactoring.
@@ -42,8 +43,13 @@ function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
     http: options.request,
   };
 
+  const schemaHash = generateSchemaHash(schema);
+
   return processGraphQLRequest(options, {
     request,
+    schema: options.schema,
+    schemaHash,
+    metrics: {},
     logger: console,
     context: options.context || {},
     debug: options.debug,
