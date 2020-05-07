@@ -18,7 +18,12 @@ import {
 
 import request from 'supertest';
 
-import { GraphQLOptions, Config } from 'apollo-server-core';
+import {
+  GraphQLOptions,
+  Config,
+  PersistedQueryOptions,
+  KeyValueCache,
+} from 'apollo-server-core';
 import gql from 'graphql-tag';
 import { ValueOrPromise } from 'apollo-server-types';
 import { GraphQLRequestListener } from "apollo-server-plugin-base";
@@ -1221,12 +1226,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         },
       };
 
-      let didEncounterErrors: jest.Mock<
-        ReturnType<GraphQLRequestListener['didEncounterErrors']>,
-        Parameters<GraphQLRequestListener['didEncounterErrors']>
-      >;
-
-      function createMockCache() {
+      function createMockCache(): KeyValueCache {
         const map = new Map<string, string>();
         return {
           set: jest.fn(async (key, val) => {
@@ -1237,10 +1237,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         };
       }
 
-      beforeEach(async () => {
-        didEncounterErrors = jest.fn();
-        const cache = createMockCache();
-        app = await createApp({
+      let didEncounterErrors: jest.Mock<
+        ReturnType<GraphQLRequestListener['didEncounterErrors']>,
+        Parameters<GraphQLRequestListener['didEncounterErrors']>
+      >;
+
+      function createApqApp(apqOptions: PersistedQueryOptions = {}) {
+        return createApp({
           graphqlOptions: {
             schema,
             plugins: [
@@ -1252,22 +1255,21 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             ],
             persistedQueries: {
               cache,
+              ...apqOptions,
             },
           },
         });
+      }
+
+      let cache: KeyValueCache;
+
+      beforeEach(async () => {
+        cache = createMockCache();
+        didEncounterErrors = jest.fn();
       });
 
       it('when ttlSeconds is set, passes ttl to the apq cache set call', async () => {
-        const cache = createMockCache();
-        app = await createApp({
-          graphqlOptions: {
-            schema,
-            persistedQueries: {
-              cache: cache,
-              ttl: 900,
-            },
-          },
-        });
+        app = await createApqApp({ ttl: 900 });
 
         await request(app)
           .post('/graphql')
@@ -1287,15 +1289,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('when ttlSeconds is unset, ttl is not passed to apq cache',
         async () => {
-          const cache = createMockCache();
-          app = await createApp({
-            graphqlOptions: {
-              schema,
-              persistedQueries: {
-                cache: cache,
-              },
-            },
-          });
+          app = await createApqApp();
 
           await request(app)
             .post('/graphql')
@@ -1315,6 +1309,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       );
 
       it('errors when version is not specified', async () => {
+        app = await createApqApp();
+
         const result = await request(app)
           .get('/graphql')
           .query({
@@ -1346,6 +1342,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('errors when version is unsupported', async () => {
+        app = await createApqApp();
+
         const result = await request(app)
           .get('/graphql')
           .query({
@@ -1378,6 +1376,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('errors when hash is mismatched', async () => {
+        app = await createApqApp();
+
         const result = await request(app)
           .get('/graphql')
           .query({
@@ -1410,6 +1410,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('returns PersistedQueryNotFound on the first try', async () => {
+        app = await createApqApp();
+
         const result = await request(app)
           .post('/graphql')
           .send({
@@ -1432,6 +1434,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         );
       });
       it('returns result on the second try', async () => {
+        app = await createApqApp();
+
         await request(app)
           .post('/graphql')
           .send({
@@ -1465,6 +1469,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('returns with batched persisted queries', async () => {
+        app = await createApqApp();
+
         const errors = await request(app)
           .post('/graphql')
           .send([
@@ -1510,6 +1516,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('returns result on the persisted query', async () => {
+        app = await createApqApp();
+
         await request(app)
           .post('/graphql')
           .send({
@@ -1532,6 +1540,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('returns error when hash does not match', async () => {
+        app = await createApqApp();
+
         const response = await request(app)
           .post('/graphql')
           .send({
@@ -1549,6 +1559,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('returns correct result using get request', async () => {
+        app = await createApqApp();
+
         await request(app)
           .post('/graphql')
           .send({
