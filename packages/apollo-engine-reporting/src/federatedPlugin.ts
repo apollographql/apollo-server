@@ -52,8 +52,10 @@ const federatedPlugin = <TContext>(
           const extensions =
             response.extensions || (response.extensions = Object.create(null));
 
+          // This should only happen if another plugin is using the same name-
+          // space within the `extensions` object and got to it before us.
           if (typeof extensions.ftv1 !== "undefined") {
-            throw new Error("The `ftv1` `extensions` were already present.");
+            throw new Error("The `ftv1` extension was already present.");
           }
 
           extensions.ftv1 = encodedBuffer.toString('base64');
