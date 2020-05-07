@@ -757,7 +757,6 @@ export class ApolloServerBase {
     // User's plugins, provided as an argument to this method, will be added
     // at the end of that list so they take precedence.
     // A follow-up commit will actually introduce this.
-    // Also, TODO, remove this comment.
 
     const federatedSchema = this.schema && this.schemaIsFederated(this.schema);
     const { engine } = this.config;
