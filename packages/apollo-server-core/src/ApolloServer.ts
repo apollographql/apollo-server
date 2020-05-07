@@ -791,8 +791,12 @@ export class ApolloServerBase {
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ): Promise<GraphQLServerOptions> {
-    const { schema, schemaHash, documentStore, extensions }
-      = await this.schemaDerivedData;
+    const {
+      schema,
+      schemaHash,
+      documentStore,
+      extensions,
+    } = await this.schemaDerivedData;
 
     let context: Context = this.context ? this.context : {};
 
