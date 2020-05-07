@@ -479,6 +479,30 @@ describe('runQuery', () => {
       });
     });
 
+    describe('didResolveSource', () => {
+      const didResolveSource = jest.fn();
+      it('called with the source', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testString }',
+          plugins: [
+            {
+              requestDidStart() {
+                return {
+                  didResolveSource,
+                };
+              },
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        expect(didResolveSource).toHaveBeenCalled();
+        expect(didResolveSource.mock.calls[0][0])
+          .toHaveProperty('source', '{ testString }');
+      });
+    });
+
     describe('parsingDidStart', () => {
       const parsingDidStart = jest.fn();
       it('called when parsing will result in an error', async () => {
@@ -882,6 +906,9 @@ describe('runQuery', () => {
             return validationDidEnd;
           });
 
+        const didResolveSource: GraphQLRequestListener['didResolveSource'] =
+          jest.fn(() => { callOrder.push('didResolveSource') });
+
         const didResolveField: GraphQLRequestListenerDidResolveField =
           jest.fn(() => callOrder.push("didResolveField"));
 
@@ -928,6 +955,7 @@ describe('runQuery', () => {
                 return {
                   parsingDidStart,
                   validationDidStart,
+                  didResolveSource,
                   executionDidStart,
                 };
               },
@@ -944,6 +972,7 @@ describe('runQuery', () => {
         expect(willResolveField).toHaveBeenCalledTimes(1);
         expect(didResolveField).toHaveBeenCalledTimes(1);
         expect(callOrder).toStrictEqual([
+          "didResolveSource",
           "parsingDidStart",
           "parsingDidEnd",
           "validationDidStart",
