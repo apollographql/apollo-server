@@ -481,6 +481,24 @@ describe('runQuery', () => {
         await runOnce();
         expect(requestDidStart.mock.calls.length).toBe(2);
       });
+
+      it('is called with the schema and schemaHash', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testString }',
+          plugins: [
+            {
+              requestDidStart,
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        const invocation = requestDidStart.mock.calls[0][0];
+        expect(invocation).toHaveProperty('schema', schema);
+        expect(invocation).toHaveProperty( /* Shorter as a RegExp */
+          'schemaHash', expect.stringMatching(/^8ff87f3e0/));
+      });
     });
 
     describe('parsingDidStart', () => {
