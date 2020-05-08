@@ -14,7 +14,6 @@ The version headers in this history reflect the versions of Apollo Server itself
   _This change should be purely an implementation detail for a majority of users_.  There are, however, some special considerations which are worth noting:
 
     - The federated tracing plugin's `ftv1` response on `extensions` (which is present on the response from an implementing service to the gateway) is now placed on the `extensions` _after_ the `formatResponse` hook.  Anyone leveraging the `extensions`.`ftv1` data from the `formatResponse` hook will find that it is no longer present at that phase.
-    - Automated persisted query (APQ) errors [`PERSISTED_QUERY_NOT_SUPPORTED`](https://github.com/apollographql/apollo-server/blob/b981b590328a6a321956ca851fb34d19f973aa25/packages/apollo-server-errors/src/index.ts#L214-L222) and [`Unsupported persisted query version`](https://github.com/apollographql/apollo-server/blob/b981b590328a6a321956ca851fb34d19f973aa25/packages/apollo-server-core/src/requestPipeline.ts#L165) may now be reported to Graph Manager, whereas previously they were excluded from transmission.
 
 - _Nothing yet! Stay tuned!_
 
