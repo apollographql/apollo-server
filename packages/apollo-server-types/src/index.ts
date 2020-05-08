@@ -148,12 +148,14 @@ export type Logger = {
   error(message?: any): void;
 }
 
-export type GraphQLRequestContextParsingDidStart<TContext> =
+export type GraphQLRequestContextDidResolveSource<TContext> =
   WithRequired<GraphQLRequestContext<TContext>,
     | 'metrics'
     | 'source'
     | 'queryHash'
   >;
+export type GraphQLRequestContextParsingDidStart<TContext> =
+  GraphQLRequestContextDidResolveSource<TContext>;
 export type GraphQLRequestContextValidationDidStart<TContext> =
   GraphQLRequestContextParsingDidStart<TContext> &
   WithRequired<GraphQLRequestContext<TContext>,

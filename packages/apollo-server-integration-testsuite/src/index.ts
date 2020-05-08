@@ -1242,6 +1242,11 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         Parameters<GraphQLRequestListener['didEncounterErrors']>
       >;
 
+      let didResolveSource: jest.Mock<
+        ReturnType<GraphQLRequestListener['didResolveSource']>,
+        Parameters<GraphQLRequestListener['didResolveSource']>
+      >;
+
       function createApqApp(apqOptions: PersistedQueryOptions = {}) {
         return createApp({
           graphqlOptions: {
@@ -1249,7 +1254,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             plugins: [
               {
                 requestDidStart() {
-                  return { didEncounterErrors };
+                  return {
+                    didResolveSource,
+                    didEncounterErrors,
+                  };
                 }
               }
             ],
@@ -1265,6 +1273,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       beforeEach(async () => {
         cache = createMockCache();
+        didResolveSource = jest.fn();
         didEncounterErrors = jest.fn();
       });
 
@@ -1285,6 +1294,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             ttl: 900,
           }),
         );
+        expect(didResolveSource.mock.calls[0][0])
+          .toHaveProperty('source', query);
       });
 
       it('when ttlSeconds is unset, ttl is not passed to apq cache',
@@ -1305,6 +1316,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               ttl: 900,
             }),
           );
+          expect(didResolveSource.mock.calls[0][0])
+            .toHaveProperty('source', query);
         }
       );
 
@@ -1407,6 +1420,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             })]),
           }),
         );
+
+        expect(didResolveSource).not.toHaveBeenCalled();
       });
 
       it('returns PersistedQueryNotFound on the first try', async () => {
@@ -1432,6 +1447,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             ]),
           }),
         );
+
+        expect(didResolveSource).not.toHaveBeenCalled();
       });
       it('returns result on the second try', async () => {
         app = await createApqApp();
@@ -1452,6 +1469,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           }),
         );
 
+        expect(didResolveSource).not.toHaveBeenCalled();
+
         const result = await request(app)
           .post('/graphql')
           .send({
@@ -1463,6 +1482,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         // re-assert that we've been called the same single time that we
         // asserted above.
         expect(didEncounterErrors).toHaveBeenCalledTimes(1);
+
+        expect(didResolveSource.mock.calls[0][0])
+          .toHaveProperty('source', query);
 
         expect(result.body.data).toEqual({ testString: 'it works' });
         expect(result.body.errors).toBeUndefined();
@@ -1523,6 +1545,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .send({
             extensions,
           });
+
+        expect(didResolveSource).not.toHaveBeenCalled();
+
         await request(app)
           .post('/graphql')
           .send({
@@ -1534,6 +1559,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .send({
             extensions,
           });
+
+        expect(didResolveSource.mock.calls[0][0])
+          .toHaveProperty('source', query);
 
         expect(result.body.data).toEqual({ testString: 'it works' });
         expect(result.body.errors).toBeUndefined();
@@ -1556,6 +1584,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         expect(response.status).toEqual(400);
         expect(response.error.text).toMatch(/does not match query/);
+        expect(didResolveSource).not.toHaveBeenCalled();
       });
 
       it('returns correct result using get request', async () => {
@@ -1573,6 +1602,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             extensions: JSON.stringify(extensions),
           });
         expect(result.body.data).toEqual({ testString: 'it works' });
+        expect(didResolveSource.mock.calls[0][0])
+          .toHaveProperty('source', query);
+
       });
     });
   });
