@@ -16,11 +16,11 @@ The model of federated metrics is that implementing services report timing and e
 
 ## Turning it on
 
-Ensure that all dependencies on `apollo-server` are at version `2.7.0` or higher. Provide an API key to your gateway via the `ENGINE_API_KEY` environment variable for the gateway to report metrics to the default ingress. To ensure that implementing services do not report metrics as well, do not provide them with an `ENGINE_API_KEY` or set `{ engine: true, reporting: false }` in the constructor options to ApolloServer.
+Ensure that all dependencies on `apollo-server` are at version `2.7.0` or higher. Provide an API key to your gateway via the `ENGINE_API_KEY` environment variable for the gateway to report metrics to the default ingress. To ensure that implementing services do not report metrics as well, do not provide them with an `ENGINE_API_KEY` or set `{ engine: false }` in the constructor options to `ApolloServer`.
 
 These options will cause the Apollo gateway to collect tracing information from the underlying federated services and pass them on, along with the query plan, to the Apollo metrics ingress. Currently, only Apollo Server supports detailed metrics insights as an implementing service, but we would love to work with you to implement the protocol in other languages!
 
-> NOTE: By default, metrics will be reported to the `current` variant. To change the variant for reporting, set the `ENGINE_GRAPH_VARIANT` environment variable.
+> NOTE: By default, metrics will be reported to the `current` variant. To change the variant for reporting, set the `APOLLO_GRAPH_VARIANT` environment variable.
 
 ## How tracing data is exposed from a federated service
 
@@ -30,7 +30,7 @@ The Apollo gateway looks to the `extensions` field of all service responses for 
 
 ## How traces are constructed and aggregated
 
-The Apollo gateway constructs traces in the shape of the [query plan](https://www.apollographql.com/docs/apollo-server/federation/implementing/#inspecting-query-plans), embedding an individual `Trace` for each fetch that is performed in the query plan. This indicates the sub-query traces as well as which order they were fetched from the underlying services. The field-level statistics that the Apollo Platform aggregates from these traces are collected over the fields over which the operation was executed **in the federated services**. In other words, field stats are collected based on the operations the query planner makes rather than the operations that the clients make. On the other hand, operation-level statistics are aggregated over the operations exected **by the client**, which means that even if query-planning changes, statistics will still be corresponded to the same client-delivered operation.
+The Apollo gateway constructs traces in the shape of the [query plan](https://www.apollographql.com/docs/apollo-server/federation/implementing/#inspecting-query-plans), embedding an individual `Trace` for each fetch that is performed in the query plan. This indicates the sub-query traces as well as which order they were fetched from the underlying services. The field-level statistics that the Apollo Platform aggregates from these traces are collected over the fields over which the operation was executed **in the federated services**. In other words, field stats are collected based on the operations the query planner makes rather than the operations that the clients make. On the other hand, operation-level statistics are aggregated over the operations executed **by the client**, which means that even if query-planning changes, statistics will still be corresponded to the same client-delivered operation.
 
 ## How errors work
 

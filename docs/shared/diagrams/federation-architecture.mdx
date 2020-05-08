@@ -1,0 +1,12 @@
+```mermaid
+graph BT;
+  webapp(Web app);
+  iosapp(iOS app);
+  gateway([Gateway]);
+  serviceA[Products service];
+  serviceB[Reviews service];
+  serviceC[Inventory service];
+  webapp & iosapp -.- gateway;
+  gateway --- serviceA & serviceB & serviceC;
+  class webapp,iosapp tertiary;
+```
