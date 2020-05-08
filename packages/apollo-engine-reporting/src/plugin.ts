@@ -94,14 +94,23 @@ export const plugin = <TContext>(
         treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
         treeBuilder.trace.registeredOperation = !!metrics.registeredOperation;
 
-        // If the user did not explicitly specify an operation name (which we
-        // would have saved in `executionDidStart`), but the request pipeline made
-        // it far enough to figure out what the operation name must be and store
-        // it on requestContext.operationName, use that name.  (Note that this
-        // depends on the assumption that the RequestContext passed to
-        // requestDidStart, which does not yet have operationName, will be mutated
-        // to add operationName later.)
-        const operationName = requestContext.operationName || '';
+        // If operation resolution (parsing and validating the document followed
+        // by selecting the correct operation) resulted in the population of the
+        // `operationName`, we'll use that. (For anonymous operations,
+        // `requestContext.operationName` is null, which we represent here as
+        // the empty string.)
+        //
+        // If the user explicitly specified an `operationName` in their request
+        // but operation resolution failed (due to parse or validation errors or
+        // because there is no operation with that name in the document), we
+        // still put _that_ user-supplied `operationName` in the trace. This
+        // allows the error to be better understood in Graph Manager. (We are
+        // considering changing the behavior of `operationName` in these three
+        // error cases; https://github.com/apollographql/apollo-server/pull/3465
+        const operationName =
+          requestContext.operationName ||
+          requestContext.request.operationName ||
+          '';
 
         // If this was a federated operation and we're the gateway, add the query plan
         // to the trace.
