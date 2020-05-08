@@ -479,6 +479,15 @@ describe('runQuery', () => {
       });
     });
 
+    /**
+     * This tests the simple invocation of the "didResolveSource" hook, but
+     * doesn't test one of the primary reasons why "source" isn't guaranteed
+     * sooner in the request life-cycle: when "source" is populated via an APQ
+     * cache HIT.
+     *
+     * That functionality is tested in `apollo-server-integration-testsuite`,
+     * within the "Persisted Queries" tests. (Search for "didResolveSource").
+     */
     describe('didResolveSource', () => {
       const didResolveSource = jest.fn();
       it('called with the source', async () => {
