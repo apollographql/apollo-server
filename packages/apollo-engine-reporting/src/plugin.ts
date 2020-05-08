@@ -173,8 +173,7 @@ export const plugin = <TContext>(
         executionDidStart(requestContext) {
           return {
             executionDidEnd: () => didEnd(requestContext),
-            willResolveField(...args) {
-              const [, , , info] = args;
+            willResolveField({ info }) {
               return treeBuilder.willResolveField(info);
               // We could save the error into the trace during the end handler, but
               // it won't have all the information that graphql-js adds to it later,

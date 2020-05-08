@@ -29,8 +29,7 @@ const federatedPlugin = <TContext>(
 
       return {
         executionDidStart: () => ({
-          willResolveField(...args) {
-            const [ , , , info] = args;
+          willResolveField({ info }) {
             return treeBuilder.willResolveField(info);
           },
         }),
