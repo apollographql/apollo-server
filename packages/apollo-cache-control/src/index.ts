@@ -66,8 +66,7 @@ export const plugin = (
     return {
       executionDidStart: () => ({
         executionDidEnd: () => setOverallCachePolicyWhenUnset(),
-        willResolveField(...args) {
-          const [, , , info] = args;
+        willResolveField({ info }) {
           let hint: CacheHint = {};
 
           // If this field's resolver returns an object or interface, look for
