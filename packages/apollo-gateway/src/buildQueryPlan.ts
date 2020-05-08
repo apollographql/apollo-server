@@ -513,9 +513,7 @@ function splitFields(
   groupForField: (field: Field<GraphQLObjectType>) => FetchGroup,
 ) {
   for (const fieldsForResponseName of groupByResponseName(fields).values()) {
-    for (const [parentType, fieldsForParentType] of groupByParentType(
-      fieldsForResponseName,
-    )) {
+    for (const [parentType, fieldsForParentType] of groupByParentType(fieldsForResponseName)) {
       // Field nodes that share the same response name and parent type are guaranteed
       // to have the same field name and arguments. We only need the other nodes when
       // merging selection sets, to take node-specific subfields and directives
@@ -523,10 +521,6 @@ function splitFields(
 
       const field = fieldsForParentType[0];
       const { scope, fieldDef } = field;
-
-      // If the length of possibleTypes is zero, we're nested inside a type condition
-      // that's impossible to fulfill and can be excluded from the query plan altogether.
-      if (scope.possibleTypes.length === 0) continue;
 
       // We skip `__typename` for root types.
       if (fieldDef.name === TypeNameMetaFieldDef.name) {
@@ -776,7 +770,12 @@ function collectFields(
         const fieldDef = context.getFieldDef(scope.parentType, selection);
         fields.push({ scope, fieldNode: selection, fieldDef });
         break;
-      case Kind.INLINE_FRAGMENT:
+      case Kind.INLINE_FRAGMENT: {
+        const newScope = context.newScope(getFragmentCondition(selection), scope);
+        if (newScope.possibleTypes.length === 0) {
+          break;
+        }
+
         collectFields(
           context,
           context.newScope(getFragmentCondition(selection), scope),
@@ -785,22 +784,28 @@ function collectFields(
           visitedFragmentNames,
         );
         break;
+      }
       case Kind.FRAGMENT_SPREAD:
         const fragmentName = selection.name.value;
-
-        if (visitedFragmentNames[fragmentName]) {
-          continue;
-        }
-        visitedFragmentNames[fragmentName] = true;
 
         const fragment = context.fragments[fragmentName];
         if (!fragment) {
           continue;
         }
 
+        const newScope = context.newScope(getFragmentCondition(fragment), scope);
+        if (newScope.possibleTypes.length === 0) {
+          continue;
+        }
+
+        if (visitedFragmentNames[fragmentName]) {
+          continue;
+        }
+        visitedFragmentNames[fragmentName] = true;
+
         collectFields(
           context,
-          context.newScope(getFragmentCondition(fragment), scope),
+          newScope,
           fragment.selectionSet,
           fields,
           visitedFragmentNames,
