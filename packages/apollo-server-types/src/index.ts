@@ -7,6 +7,7 @@ import {
   OperationDefinitionNode,
   DocumentNode,
   GraphQLError,
+  GraphQLResolveInfo,
 } from 'graphql';
 
 // This seems like it could live in this package too.
@@ -146,6 +147,27 @@ export type Logger = {
   warn(message?: any): void;
   error(message?: any): void;
 }
+
+/**
+ * This is an object form of the parameters received by typical
+ * `graphql-js` resolvers.  The function type is `GraphQLFieldResolver`
+ * and normally uses positional parameters.  In order to facilitate better
+ * ergonomics in the Apollo Server plugin API, these have been converted to
+ * named properties on the object using their names from the upstream
+ * `GraphQLFieldResolver` type signature.  Ergonomic wins, in this case,
+ * include not needing to have three unused variables in scope just because
+ * there was a need to access the `info` property in a wrapped plugin.
+ */
+export type GraphQLFieldResolverParams<
+  TSource,
+  TContext,
+  TArgs = { [argName: string]: any }
+> = {
+  source: TSource;
+  args: TArgs;
+  context: TContext;
+  info: GraphQLResolveInfo;
+};
 
 export type GraphQLRequestContextDidResolveSource<TContext> =
   WithRequired<GraphQLRequestContext<TContext>,

@@ -51,7 +51,7 @@ function wrapField(field: GraphQLField<any, any>): void {
     // resolution is complete.
     const didResolveField =
       typeof willResolveField === 'function' &&
-      willResolveField(source, args, context, info);
+      willResolveField({ source, args, context, info });
 
     const resolveObject: GraphQLObjectResolver<
       any,
