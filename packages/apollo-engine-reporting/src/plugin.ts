@@ -1,12 +1,10 @@
 import {
   GraphQLRequestContext,
   Logger,
-  InvalidGraphQLRequestError,
   GraphQLRequestContextExecutionDidStart,
   GraphQLRequestContextDidEncounterErrors,
 } from 'apollo-server-types';
 import { Headers } from 'apollo-server-env';
-import { GraphQLError } from 'graphql';
 import { Trace } from 'apollo-engine-reporting-protobuf';
 
 import {
@@ -18,10 +16,6 @@ import {
 } from './agent';
 import { EngineReportingTreeBuilder } from './treeBuilder';
 import { ApolloServerPlugin } from "apollo-server-plugin-base";
-import {
-  PersistedQueryNotFoundError,
-  PersistedQueryNotSupportedError,
-} from 'apollo-server-errors';
 
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
@@ -125,8 +119,19 @@ export const plugin = <TContext>(
         });
       }
 
+      // While we start the tracing as soon as possible, we only actually report
+      // traces when we have resolved the source.  This is largely because of
+      // the APQ negotiation that takes place before that resolution happens.
+      // This is effectively bypassing the reporting of:
+      //   - PersistedQueryNotFoundError
+      //   - PersistedQueryNotSupportedError
+      //   - InvalidGraphQLRequestError
+      let didResolveSource: boolean = false;
+
       return {
         didResolveSource(requestContext) {
+          didResolveSource = true;
+
           if (metrics.persistedQueryHit) {
             treeBuilder.trace.persistedQueryHit = true;
           }
@@ -170,12 +175,9 @@ export const plugin = <TContext>(
         },
 
         didEncounterErrors(requestContext) {
-          // We don't report some special-cased errors to Graph Manager.
-          // See the definition of this function for the reasons.
-          if (allUnreportableSpecialCasedErrors(requestContext.errors)) {
-            return;
-          }
-
+          // Search above for a comment about "didResolveSource" to see which
+          // of the pre-source-resolution errors we are intentionally avoiding.
+          if (!didResolveSource) return;
           treeBuilder.didEncounterErrors(requestContext.errors);
           didEnd(requestContext);
         },
@@ -183,39 +185,6 @@ export const plugin = <TContext>(
     }
   };
 };
-
-/**
- * Previously, prior to the new plugin API, the Apollo Engine Reporting
- * mechanism was implemented using `graphql-extensions`, the API for which
- * didn't invoke `requestDidStart` until _after_ APQ had been negotiated.
- *
- * The new plugin API starts its `requestDidStart` _before_ APQ validation and
- * various other assertions which weren't included in the `requestDidStart`
- * life-cycle, even if they perhaps should be in terms of error reporting.
- *
- * The new plugin API is able to properly capture such errors within its
- * `didEncounterErrors` lifecycle hook, however, for behavioral consistency
- * reasons, we will still special-case those errors and maintain the legacy
- * behavior to avoid a breaking change.  We can reconsider this in a future
- * version of Apollo Engine Reporting (AS3, perhaps!).
- *
- * @param errors A list of errors to scan for special-cased instances.
- */
-function allUnreportableSpecialCasedErrors(
-  errors: readonly GraphQLError[],
-): boolean {
-  return errors.every(err => {
-    if (
-      err instanceof PersistedQueryNotFoundError ||
-      err instanceof PersistedQueryNotSupportedError ||
-      err instanceof InvalidGraphQLRequestError
-    ) {
-      return true;
-    }
-
-    return false;
-  });
-}
 
 // Helpers for producing traces.
 
