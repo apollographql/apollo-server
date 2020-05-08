@@ -2,6 +2,8 @@ import {
   GraphQLRequestContext,
   Logger,
   InvalidGraphQLRequestError,
+  GraphQLRequestContextExecutionDidStart,
+  GraphQLRequestContextDidEncounterErrors,
 } from 'apollo-server-types';
 import { Headers } from 'apollo-server-env';
 import { GraphQLError } from 'graphql';
@@ -122,7 +124,11 @@ export const plugin = <TContext>(
       }
 
       let endDone: boolean = false;
-      function didEnd() {
+      function didEnd(
+        requestContext:
+          | GraphQLRequestContextExecutionDidStart<TContext>
+          | GraphQLRequestContextDidEncounterErrors<TContext>,
+      ) {
         if (endDone) return;
         endDone = true;
         treeBuilder.stopTiming();
@@ -169,11 +175,11 @@ export const plugin = <TContext>(
           ensurePreflight();
         },
 
-        executionDidStart() {
+        executionDidStart(requestContext) {
           ensurePreflight();
 
           return {
-            executionDidEnd: didEnd,
+            executionDidEnd: () => didEnd(requestContext),
             willResolveField(...args) {
               const [, , , info] = args;
               return treeBuilder.willResolveField(info);
@@ -184,16 +190,16 @@ export const plugin = <TContext>(
           };
         },
 
-        didEncounterErrors({ errors }) {
+        didEncounterErrors(requestContext) {
           // We don't report some special-cased errors to Graph Manager.
           // See the definition of this function for the reasons.
-          if (allUnreportableSpecialCasedErrors(errors)) {
+          if (allUnreportableSpecialCasedErrors(requestContext.errors)) {
             return;
           }
 
           ensurePreflight();
-          treeBuilder.didEncounterErrors(errors);
-          didEnd();
+          treeBuilder.didEncounterErrors(requestContext.errors);
+          didEnd(requestContext);
         },
       };
     }
