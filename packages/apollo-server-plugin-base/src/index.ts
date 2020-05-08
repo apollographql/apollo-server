@@ -7,6 +7,7 @@ import {
   GraphQLResponse,
   ValueOrPromise,
   WithRequired,
+  GraphQLFieldResolverParams,
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
@@ -16,7 +17,6 @@ import {
   GraphQLRequestContextExecutionDidStart,
   GraphQLRequestContextWillSendResponse,
 } from 'apollo-server-types';
-import { GraphQLFieldResolver } from "graphql";
 
 // We re-export all of these so plugin authors only need to depend on a single
 // package.  The overall concept of `apollo-server-types` and this package
@@ -34,6 +34,7 @@ export {
   GraphQLResponse,
   ValueOrPromise,
   WithRequired,
+  GraphQLFieldResolverParams,
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
@@ -102,6 +103,6 @@ export interface GraphQLRequestExecutionListener<
 > extends AnyFunctionMap {
   executionDidEnd?: GraphQLRequestListenerExecutionDidEnd;
   willResolveField?(
-    ...fieldResolverArgs: Parameters<GraphQLFieldResolver<any, TContext>>
+    fieldResolverParams: GraphQLFieldResolverParams<any, TContext>
   ): GraphQLRequestListenerDidResolveField | void;
 }
