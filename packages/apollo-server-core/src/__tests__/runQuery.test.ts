@@ -24,6 +24,8 @@ import {
   GraphQLRequestExecutionListener,
   GraphQLRequestListenerDidResolveField,
   GraphQLRequestListenerExecutionDidEnd,
+  GraphQLRequestListenerParsingDidEnd,
+  GraphQLRequestListenerValidationDidEnd,
 } from 'apollo-server-plugin-base';
 import { GraphQLRequestListener } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
@@ -501,6 +503,39 @@ describe('runQuery', () => {
       });
     });
 
+    /**
+     * This tests the simple invocation of the "didResolveSource" hook, but
+     * doesn't test one of the primary reasons why "source" isn't guaranteed
+     * sooner in the request life-cycle: when "source" is populated via an APQ
+     * cache HIT.
+     *
+     * That functionality is tested in `apollo-server-integration-testsuite`,
+     * within the "Persisted Queries" tests. (Search for "didResolveSource").
+     */
+    describe('didResolveSource', () => {
+      const didResolveSource = jest.fn();
+      it('called with the source', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testString }',
+          plugins: [
+            {
+              requestDidStart() {
+                return {
+                  didResolveSource,
+                };
+              },
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        expect(didResolveSource).toHaveBeenCalled();
+        expect(didResolveSource.mock.calls[0][0])
+          .toHaveProperty('source', '{ testString }');
+      });
+    });
+
     describe('parsingDidStart', () => {
       const parsingDidStart = jest.fn();
       it('called when parsing will result in an error', async () => {
@@ -888,6 +923,25 @@ describe('runQuery', () => {
         let stopAwaiting: Function;
         const toBeAwaited = new Promise(resolve => stopAwaiting = resolve);
 
+        const parsingDidEnd: GraphQLRequestListenerParsingDidEnd =
+          jest.fn(() => callOrder.push('parsingDidEnd'));
+        const parsingDidStart: GraphQLRequestListener['parsingDidStart'] =
+          jest.fn(() => {
+            callOrder.push('parsingDidStart');
+            return parsingDidEnd;
+          });
+
+        const validationDidEnd: GraphQLRequestListenerValidationDidEnd =
+          jest.fn(() => callOrder.push('validationDidEnd'));
+        const validationDidStart: GraphQLRequestListener['validationDidStart'] =
+          jest.fn(() => {
+            callOrder.push('validationDidStart');
+            return validationDidEnd;
+          });
+
+        const didResolveSource: GraphQLRequestListener['didResolveSource'] =
+          jest.fn(() => { callOrder.push('didResolveSource') });
+
         const didResolveField: GraphQLRequestListenerDidResolveField =
           jest.fn(() => callOrder.push("didResolveField"));
 
@@ -932,6 +986,9 @@ describe('runQuery', () => {
             {
               requestDidStart() {
                 return {
+                  parsingDidStart,
+                  validationDidStart,
+                  didResolveSource,
                   executionDidStart,
                 };
               },
@@ -940,10 +997,19 @@ describe('runQuery', () => {
           request: new MockReq(),
         });
 
+        expect(parsingDidStart).toHaveBeenCalledTimes(1);
+        expect(parsingDidEnd).toHaveBeenCalledTimes(1);
+        expect(validationDidStart).toHaveBeenCalledTimes(1);
+        expect(validationDidEnd).toHaveBeenCalledTimes(1);
         expect(executionDidStart).toHaveBeenCalledTimes(1);
         expect(willResolveField).toHaveBeenCalledTimes(1);
         expect(didResolveField).toHaveBeenCalledTimes(1);
         expect(callOrder).toStrictEqual([
+          "didResolveSource",
+          "parsingDidStart",
+          "parsingDidEnd",
+          "validationDidStart",
+          "validationDidEnd",
           "executionDidStart",
           "willResolveField",
           "beforeAwaiting",

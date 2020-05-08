@@ -8,6 +8,7 @@ import {
   GraphQLResponse,
   ValueOrPromise,
   WithRequired,
+  GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextDidResolveOperation,
@@ -35,6 +36,7 @@ export {
   GraphQLResponse,
   ValueOrPromise,
   WithRequired,
+  GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextDidResolveOperation,
@@ -63,6 +65,9 @@ export type GraphQLRequestListenerDidResolveField =
 export interface GraphQLRequestListener<
   TContext extends BaseContext = DefaultContext
 > extends AnyFunctionMap {
+  didResolveSource?(
+    requestContext: GraphQLRequestContextDidResolveSource<TContext>,
+  ): ValueOrPromise<void>;
   parsingDidStart?(
     requestContext: GraphQLRequestContextParsingDidStart<TContext>,
   ): GraphQLRequestListenerParsingDidEnd | void;
