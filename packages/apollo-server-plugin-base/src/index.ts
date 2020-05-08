@@ -1,7 +1,6 @@
 import {
   AnyFunctionMap,
   BaseContext,
-  DefaultContext,
   GraphQLServiceContext,
   GraphQLRequestContext,
   GraphQLRequest,
@@ -29,7 +28,6 @@ import { GraphQLFieldResolver } from "graphql";
 // probably roll into the same "types" package, but that is not today!
 export {
   BaseContext,
-  DefaultContext,
   GraphQLServiceContext,
   GraphQLRequestContext,
   GraphQLRequest,
@@ -47,7 +45,7 @@ export {
 };
 
 export interface ApolloServerPlugin<
-  TContext extends BaseContext = DefaultContext
+  TContext extends BaseContext = BaseContext
 > {
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
   requestDidStart?(
@@ -63,7 +61,7 @@ export type GraphQLRequestListenerDidResolveField =
   ((error: Error | null, result?: any) => void);
 
 export interface GraphQLRequestListener<
-  TContext extends BaseContext = DefaultContext
+  TContext extends BaseContext = BaseContext
 > extends AnyFunctionMap {
   didResolveSource?(
     requestContext: GraphQLRequestContextDidResolveSource<TContext>,
@@ -100,7 +98,7 @@ export interface GraphQLRequestListener<
 }
 
 export interface GraphQLRequestExecutionListener<
-  TContext extends BaseContext = DefaultContext
+  TContext extends BaseContext = BaseContext
 > extends AnyFunctionMap {
   executionDidEnd?: GraphQLRequestListenerExecutionDidEnd;
   willResolveField?(
