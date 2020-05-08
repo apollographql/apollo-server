@@ -691,6 +691,43 @@ describe('runQuery', () => {
           expect(executionDidEnd).toHaveBeenCalledTimes(1);
         });
 
+        it('receives an object with the resolver arguments', async () => {
+          const willResolveField = jest.fn();
+          const executionDidEnd = jest.fn();
+          const executionDidStart = jest.fn(
+            (): GraphQLRequestExecutionListener => ({
+              willResolveField,
+              executionDidEnd,
+            }),
+          );
+
+          await runQuery({
+            schema,
+            context: { ourSpecialContext: true },
+            queryString: '{ testString }',
+            plugins: [
+              {
+                requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+            request: new MockReq(),
+          });
+
+          expect(executionDidStart).toHaveBeenCalledTimes(1);
+          expect(willResolveField).toHaveBeenCalledTimes(1);
+          expect(willResolveField).toHaveBeenNthCalledWith(1, {
+            source: undefined,
+            args: {},
+            context: expect.objectContaining({ ourSpecialContext: true }),
+            info: expect.objectContaining({ fieldName: 'testString' }),
+          });
+          expect(executionDidEnd).toHaveBeenCalledTimes(1);
+        });
+
         it('calls the end handler', async () => {
           const didResolveField: GraphQLRequestListenerDidResolveField =
             jest.fn();
