@@ -62,9 +62,7 @@ export const plugin = (_futureOptions = {}) => (): ApolloServerPlugin => ({
           endWallTime = new Date();
         },
 
-        willResolveField(...args) {
-          const [, , , info] = args;
-
+        willResolveField({ info }) {
           const resolverCall: ResolverCall = {
             path: info.path,
             fieldName: info.fieldName,
