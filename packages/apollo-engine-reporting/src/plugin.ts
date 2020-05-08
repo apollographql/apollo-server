@@ -44,82 +44,45 @@ export const plugin = <TContext>(
 
 
   return {
-    requestDidStart(requestContext) {
-      // We still need the entire `requestContext` to pass through to the
-      // `generateClientInfo` method, but we'll destructure for brevity within.
-      const {
-        metrics,
-        logger: requestLogger,
-        schemaHash,
-        request: { http, variables },
-      } = requestContext;
-
-      const treeBuilder: EngineReportingTreeBuilder =
-        new EngineReportingTreeBuilder({
+    requestDidStart({
+      logger: requestLogger,
+      schemaHash,
+      metrics,
+      request: { http, variables },
+    }) {
+      const treeBuilder: EngineReportingTreeBuilder = new EngineReportingTreeBuilder(
+        {
           rewriteError: options.rewriteError,
           logger: requestLogger || logger,
-        });
+        },
+      );
 
       treeBuilder.startTiming();
 
       metrics.startHrTime = treeBuilder.startHrTime;
 
-      let preflightDone: boolean = false;
-      function ensurePreflight() {
-        if (preflightDone) return;
-        preflightDone = true;
+      if (http) {
+        treeBuilder.trace.http = new Trace.HTTP({
+          method:
+            Trace.HTTP.Method[http.method as keyof typeof Trace.HTTP.Method] ||
+            Trace.HTTP.Method.UNKNOWN,
+          // Host and path are not used anywhere on the backend, so let's not bother
+          // trying to parse request.url to get them, which is a potential
+          // source of bugs because integrations have different behavior here.
+          // On Node's HTTP module, request.url only includes the path
+          // (see https://nodejs.org/api/http.html#http_message_url)
+          // The same is true on Lambda (where we pass event.path)
+          // But on environments like Cloudflare we do get a complete URL.
+          host: null,
+          path: null,
+        });
 
-        if (http) {
-          treeBuilder.trace.http = new Trace.HTTP({
-            method:
-              Trace.HTTP.Method[http.method as keyof typeof Trace.HTTP.Method]
-                || Trace.HTTP.Method.UNKNOWN,
-            // Host and path are not used anywhere on the backend, so let's not bother
-            // trying to parse request.url to get them, which is a potential
-            // source of bugs because integrations have different behavior here.
-            // On Node's HTTP module, request.url only includes the path
-            // (see https://nodejs.org/api/http.html#http_message_url)
-            // The same is true on Lambda (where we pass event.path)
-            // But on environments like Cloudflare we do get a complete URL.
-            host: null,
-            path: null,
-          });
-
-          if (options.sendHeaders) {
-            makeHTTPRequestHeaders(
-              treeBuilder.trace.http,
-              http.headers,
-              options.sendHeaders,
-            );
-          }
-        }
-
-        if (metrics.persistedQueryHit) {
-          treeBuilder.trace.persistedQueryHit = true;
-        }
-        if (metrics.persistedQueryRegister) {
-          treeBuilder.trace.persistedQueryRegister = true;
-        }
-
-        if (variables) {
-          treeBuilder.trace.details = makeTraceDetails(
-            variables,
-            options.sendVariableValues,
-            requestContext.source,
+        if (options.sendHeaders) {
+          makeHTTPRequestHeaders(
+            treeBuilder.trace.http,
+            http.headers,
+            options.sendHeaders,
           );
-        }
-
-        const clientInfo = generateClientInfo(requestContext);
-        if (clientInfo) {
-          // While clientAddress could be a part of the protobuf, we'll ignore it for
-          // now, since the backend does not group by it and Engine frontend will not
-          // support it in the short term
-          const { clientName, clientVersion, clientReferenceId } = clientInfo;
-          // the backend makes the choice of mapping clientName => clientReferenceId if
-          // no custom reference id is provided
-          treeBuilder.trace.clientVersion = clientVersion || '';
-          treeBuilder.trace.clientReferenceId = clientReferenceId || '';
-          treeBuilder.trace.clientName = clientName || '';
         }
       }
 
@@ -163,21 +126,37 @@ export const plugin = <TContext>(
       }
 
       return {
-        parsingDidStart() {
-          ensurePreflight();
-        },
+        didResolveSource(requestContext) {
+          if (metrics.persistedQueryHit) {
+            treeBuilder.trace.persistedQueryHit = true;
+          }
+          if (metrics.persistedQueryRegister) {
+            treeBuilder.trace.persistedQueryRegister = true;
+          }
 
-        validationDidStart() {
-          ensurePreflight();
-        },
+          if (variables) {
+            treeBuilder.trace.details = makeTraceDetails(
+              variables,
+              options.sendVariableValues,
+              requestContext.source,
+            );
+          }
 
-        didResolveOperation() {
-          ensurePreflight();
+          const clientInfo = generateClientInfo(requestContext);
+          if (clientInfo) {
+            // While clientAddress could be a part of the protobuf, we'll ignore
+            // it for now, since the backend does not group by it and Graph
+            // Manager will not support it in the short term
+            const { clientName, clientVersion, clientReferenceId } = clientInfo;
+            // the backend makes the choice of mapping clientName => clientReferenceId if
+            // no custom reference id is provided
+            treeBuilder.trace.clientVersion = clientVersion || '';
+            treeBuilder.trace.clientReferenceId = clientReferenceId || '';
+            treeBuilder.trace.clientName = clientName || '';
+          }
         },
 
         executionDidStart(requestContext) {
-          ensurePreflight();
-
           return {
             executionDidEnd: () => didEnd(requestContext),
             willResolveField(...args) {
@@ -197,7 +176,6 @@ export const plugin = <TContext>(
             return;
           }
 
-          ensurePreflight();
           treeBuilder.didEncounterErrors(requestContext.errors);
           didEnd(requestContext);
         },
