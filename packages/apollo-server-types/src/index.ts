@@ -14,7 +14,6 @@ import { KeyValueCache } from 'apollo-server-caching';
 import { Trace } from 'apollo-engine-reporting-protobuf';
 
 export type BaseContext = Record<string, any>;
-export type DefaultContext = BaseContext;
 
 export type ValueOrPromise<T> = T | Promise<T>;
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
@@ -148,12 +147,14 @@ export type Logger = {
   error(message?: any): void;
 }
 
-export type GraphQLRequestContextParsingDidStart<TContext> =
+export type GraphQLRequestContextDidResolveSource<TContext> =
   WithRequired<GraphQLRequestContext<TContext>,
     | 'metrics'
     | 'source'
     | 'queryHash'
   >;
+export type GraphQLRequestContextParsingDidStart<TContext> =
+  GraphQLRequestContextDidResolveSource<TContext>;
 export type GraphQLRequestContextValidationDidStart<TContext> =
   GraphQLRequestContextParsingDidStart<TContext> &
   WithRequired<GraphQLRequestContext<TContext>,

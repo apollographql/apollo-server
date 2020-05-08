@@ -45,6 +45,7 @@ import {
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
+  GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextExecutionDidStart,
   GraphQLRequestContextResponseForOperation,
   GraphQLRequestContextDidResolveOperation,
@@ -202,6 +203,16 @@ export async function processGraphQLRequest<TContext>(
 
   requestContext.queryHash = queryHash;
   requestContext.source = query;
+
+  // Let the plugins know that we now have a STRING of what we hope will
+  // parse and validate into a document we can execute on.  Unless we have
+  // retrieved this from our APQ cache, there's no guarantee that it is
+  // syntactically correct, so this string should not be trusted as a valid
+  // document until after it's parsed and validated.
+  await dispatcher.invokeHookAsync(
+    'didResolveSource',
+    requestContext as GraphQLRequestContextDidResolveSource<TContext>,
+  );
 
   const requestDidEnd = extensionStack.requestDidStart({
     request: request.http!,
