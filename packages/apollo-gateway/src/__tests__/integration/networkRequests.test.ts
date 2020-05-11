@@ -281,7 +281,7 @@ it(`Errors when the secret isn't hosted on GCS`, async () => {
   await expect(
     gateway.load({ engine: { apiKeyHash, graphId } }),
   ).rejects.toThrowErrorMatchingInlineSnapshot(
-    `"Unable to authenticate with Apollo Graph Manager storage while fetching https://storage.googleapis.com/engine-partial-schema-prod/federated-service/storage-secret/dd55a79d467976346d229a7b12b673ce.json.  Ensure that the API key is configured properly and that a federated service has been pushed.  For details, see https://go.apollo.dev/g/resolve-access-denied."`,
+    `"Unable to authenticate with Apollo Graph Manager storage while fetching https://storage-secrets.api.apollographql.com/federated-service/storage-secret/dd55a79d467976346d229a7b12b673ce.json.  Ensure that the API key is configured properly and that a federated service has been pushed.  For details, see https://go.apollo.dev/g/resolve-access-denied."`,
   );
 });
 
