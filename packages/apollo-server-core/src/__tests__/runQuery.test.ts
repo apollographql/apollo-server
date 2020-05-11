@@ -715,41 +715,123 @@ describe('runQuery', () => {
           expect(executionDidEnd).toHaveBeenCalledTimes(1);
         });
 
-        it('receives an object with the resolver arguments', async () => {
-          const willResolveField = jest.fn();
-          const executionDidEnd = jest.fn();
-          const executionDidStart = jest.fn(
-            (): GraphQLRequestExecutionListener => ({
-              willResolveField,
-              executionDidEnd,
-            }),
-          );
+        describe('receives correct resolver parameter object', () => {
+          it('receives undefined parent when there is no parent', async () => {
+            const willResolveField = jest.fn();
 
-          await runQuery({
-            schema,
-            context: { ourSpecialContext: true },
-            queryString: '{ testString }',
-            plugins: [
-              {
-                requestDidStart() {
-                  return {
-                    executionDidStart,
-                  };
+            await runQuery({
+              schema,
+              queryString: '{ testString }',
+              plugins: [
+                {
+                  requestDidStart() {
+                    return {
+                      executionDidStart: () => ({
+                        willResolveField,
+                      }),
+                    };
+                  },
                 },
-              },
-            ],
-            request: new MockReq(),
+              ],
+              request: new MockReq(),
+            });
+
+            // It is called only once.
+            expect(willResolveField).toHaveBeenCalledTimes(1);
+            const call = willResolveField.mock.calls[0];
+            expect(call[0]).toHaveProperty("source", undefined);
+            expect(call[0]).toHaveProperty("info.path.key", "testString");
+            expect(call[0]).toHaveProperty("info.path.prev", undefined);
           });
 
-          expect(executionDidStart).toHaveBeenCalledTimes(1);
-          expect(willResolveField).toHaveBeenCalledTimes(1);
-          expect(willResolveField).toHaveBeenNthCalledWith(1, {
-            source: undefined,
-            args: {},
-            context: expect.objectContaining({ ourSpecialContext: true }),
-            info: expect.objectContaining({ fieldName: 'testString' }),
+          it('receives the parent when there is one', async () => {
+            const willResolveField = jest.fn();
+
+            await runQuery({
+              schema,
+              queryString: '{ testObject { testString } }',
+              plugins: [
+                {
+                  requestDidStart() {
+                    return {
+                      executionDidStart: () => ({
+                        willResolveField,
+                      }),
+                    };
+                  },
+                },
+              ],
+              request: new MockReq(),
+            });
+
+            // It is called 1st for `testObject` and then 2nd for `testString`.
+            expect(willResolveField).toHaveBeenCalledTimes(2);
+            const [firstCall, secondCall] = willResolveField.mock.calls;
+            expect(firstCall[0]).toHaveProperty("source", undefined);
+            expect(firstCall[0]).toHaveProperty("info.path.key", "testObject");
+            expect(firstCall[0]).toHaveProperty("info.path.prev", undefined);
+
+            expect(secondCall[0]).toHaveProperty('source', {
+              testString: 'a very test string',
+            });
+            expect(secondCall[0]).toHaveProperty("info.path.key", "testString");
+            expect(secondCall[0]).toHaveProperty('info.path.prev', {
+              key: 'testObject',
+              prev: undefined,
+            });
           });
-          expect(executionDidEnd).toHaveBeenCalledTimes(1);
+
+          it('receives context', async () => {
+            const willResolveField = jest.fn();
+
+            await runQuery({
+              schema,
+              context: { ourSpecialContext: true },
+              queryString: '{ testString }',
+              plugins: [
+                {
+                  requestDidStart() {
+                    return {
+                      executionDidStart: () => ({
+                        willResolveField,
+                      }),
+                    };
+                  },
+                },
+              ],
+              request: new MockReq(),
+            });
+
+            expect(willResolveField).toHaveBeenCalledTimes(1);
+            expect(willResolveField.mock.calls[0][0]).toHaveProperty("context",
+              expect.objectContaining({ ourSpecialContext: true }),
+            );
+          });
+
+          it('receives arguments', async () => {
+            const willResolveField = jest.fn();
+
+            await runQuery({
+              schema,
+              queryString: '{ testArgumentValue(base: 99) }',
+              plugins: [
+                {
+                  requestDidStart() {
+                    return {
+                      executionDidStart: () => ({
+                        willResolveField,
+                      }),
+                    };
+                  },
+                },
+              ],
+              request: new MockReq(),
+            });
+
+            expect(willResolveField).toHaveBeenCalledTimes(1);
+            expect(willResolveField.mock.calls[0][0])
+              .toHaveProperty("args.base", 99);
+          });
         });
 
         it('calls the end handler', async () => {
