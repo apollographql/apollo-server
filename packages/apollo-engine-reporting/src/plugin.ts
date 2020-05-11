@@ -105,8 +105,8 @@ export const plugin = <TContext>(
         // because there is no operation with that name in the document), we
         // still put _that_ user-supplied `operationName` in the trace. This
         // allows the error to be better understood in Graph Manager. (We are
-        // considering changing the behavior of `operationName` in these three
-        // error cases; https://github.com/apollographql/apollo-server/pull/3465
+        // considering changing the behavior of `operationName` in these 3 error
+        // cases; https://github.com/apollographql/apollo-server/pull/3465)
         const operationName =
           requestContext.operationName ||
           requestContext.request.operationName ||
