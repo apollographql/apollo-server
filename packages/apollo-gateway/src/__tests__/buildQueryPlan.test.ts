@@ -5,7 +5,7 @@ import {
   GraphQLSchemaValidationError,
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
-import { composeServices, buildFederatedSchema } from '@apollo/federation';
+import { composeServices, buildFederatedSchema, normalizeTypeDefs } from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 
@@ -45,7 +45,7 @@ describe('buildQueryPlan', () => {
     ({ schema, errors } = composeServices(
       Object.entries(serviceMap).map(([serviceName, service]) => ({
         name: serviceName,
-        typeDefs: service.sdl(),
+        typeDefs: normalizeTypeDefs(service.sdl()),
       })),
     ));
 
