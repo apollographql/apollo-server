@@ -6,7 +6,7 @@
 
 - _Nothing yet! Stay tuned._
 
-## 0.16.1
+## 0.16.0
 
 - __BREAKING__: Use a content delivery network for managed configuration, fetch storage secrets and composition configuration from different domains: https://storage-secrets.api.apollographql.com and https://federation.api.apollographql.com. Please mind any firewall for outgoing traffic.
 
