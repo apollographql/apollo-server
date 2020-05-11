@@ -6,6 +6,10 @@
 
 - _Nothing yet! Stay tuned._
 
+## 0.15.1
+
+- Export `defaultRootOperationNameLookup` and `normalizeTypeDefs`; needed by `@apollo/gateway` to normalize root operation types when reporting to Apollo Graph Manager. [#4071](https://github.com/apollographql/apollo-server/pull/4071)
+
 ## 0.15.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)

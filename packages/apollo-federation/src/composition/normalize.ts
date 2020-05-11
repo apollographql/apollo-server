@@ -15,18 +15,18 @@ export function normalizeTypeDefs(typeDefs: DocumentNode) {
   );
 }
 
+// Map of OperationTypeNode to its respective default root operation type name
+export const defaultRootOperationNameLookup: {
+  [node in OperationTypeNode]: DefaultRootOperationTypeName;
+} = {
+  query: 'Query',
+  mutation: 'Mutation',
+  subscription: 'Subscription',
+};
+
 export function defaultRootOperationTypes(
   typeDefs: DocumentNode,
 ): DocumentNode {
-  // Map of OperationTypeNode to its respective default root operation type name
-  const defaultRootOperationNameLookup: {
-    [node in OperationTypeNode]: DefaultRootOperationTypeName;
-  } = {
-    query: 'Query',
-    mutation: 'Mutation',
-    subscription: 'Subscription',
-  };
-
   // Array of default root operation names
   const defaultRootOperationNames = Object.values(
     defaultRootOperationNameLookup,
