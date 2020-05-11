@@ -101,13 +101,13 @@ export class EngineReportingExtension<TContext = any>
         o.request.headers,
         this.options.sendHeaders,
       );
+    }
 
-      if (o.requestContext.metrics.persistedQueryHit) {
-        this.treeBuilder.trace.persistedQueryHit = true;
-      }
-      if (o.requestContext.metrics.persistedQueryRegister) {
-        this.treeBuilder.trace.persistedQueryRegister = true;
-      }
+    if (o.requestContext.metrics.persistedQueryHit) {
+      this.treeBuilder.trace.persistedQueryHit = true;
+    }
+    if (o.requestContext.metrics.persistedQueryRegister) {
+      this.treeBuilder.trace.persistedQueryRegister = true;
     }
 
     if (o.variables) {

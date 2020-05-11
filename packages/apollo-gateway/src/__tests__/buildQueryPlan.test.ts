@@ -5,7 +5,7 @@ import {
   GraphQLSchemaValidationError,
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
-import { composeServices, buildFederatedSchema } from '@apollo/federation';
+import { composeServices, buildFederatedSchema, normalizeTypeDefs } from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 
@@ -45,7 +45,7 @@ describe('buildQueryPlan', () => {
     ({ schema, errors } = composeServices(
       Object.entries(serviceMap).map(([serviceName, service]) => ({
         name: serviceName,
-        typeDefs: service.sdl(),
+        typeDefs: normalizeTypeDefs(service.sdl()),
       })),
     ));
 
@@ -1230,6 +1230,160 @@ describe('buildQueryPlan', () => {
                 },
               },
             },
+          },
+        }
+      `);
+    });
+  });
+
+  it(`should properly expand nested unions with inline fragments`, () => {
+    const query = gql`
+      query {
+        body {
+          ... on Image {
+            ... on Body {
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+          }
+          ... on Text {
+            attributes {
+              bold
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(
+      buildOperationContext(schema, query, undefined),
+    );
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "documents") {
+          {
+            body {
+              __typename
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                }
+              }
+            }
+          }
+        },
+      }
+    `);
+  });
+
+  describe('deduplicates fields / selections regardless of adjacency and type condition nesting', () => {
+    it('for inline fragments', () => {
+      const query = gql`
+        query {
+          body {
+            ... on Image {
+              ... on Text {
+                attributes {
+                  bold
+                }
+              }
+            }
+            ... on Body {
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+            ... on Text {
+              attributes {
+                bold
+                text
+              }
+            }
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "documents") {
+            {
+              body {
+                __typename
+                ... on Text {
+                  attributes {
+                    bold
+                    text
+                  }
+                }
+              }
+            }
+          },
+        }
+      `);
+    });
+
+    it('for named fragment spreads', () => {
+      const query = gql`
+        fragment TextFragment on Text {
+          attributes {
+            bold
+            text
+          }
+        }
+
+        query {
+          body {
+            ... on Image {
+              ...TextFragment
+            }
+            ... on Body {
+              ...TextFragment
+            }
+            ...TextFragment
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "documents") {
+            {
+              body {
+                __typename
+                ... on Text {
+                  attributes {
+                    bold
+                    text
+                  }
+                }
+              }
+            }
           },
         }
       `);

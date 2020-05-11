@@ -2,10 +2,10 @@ import os from 'os';
 import { gzip } from 'zlib';
 import { DocumentNode, GraphQLError } from 'graphql';
 import {
-  FullTracesReport,
   ReportHeader,
-  Traces,
   Trace,
+  Report,
+  TracesAndStats
 } from 'apollo-engine-reporting-protobuf';
 
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
@@ -15,6 +15,8 @@ import { EngineReportingExtension } from './extension';
 import { GraphQLRequestContext, Logger } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
+
+let warnedOnDeprecatedApiKey = false;
 
 export interface ClientInfo {
   clientName?: string;
@@ -44,6 +46,52 @@ export type VariableValueOptions =
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
+
+// AS3: Drop support for deprecated `ENGINE_API_KEY`.
+export function getEngineApiKey(
+  {engine, skipWarn = false, logger= console }:
+    {engine: EngineReportingOptions<any> | boolean | undefined, skipWarn?: boolean, logger?: Logger }
+    ) {
+  if (typeof engine === 'object') {
+    if (engine.apiKey) {
+      return engine.apiKey;
+    }
+  }
+  const legacyApiKeyFromEnv = process.env.ENGINE_API_KEY;
+  const apiKeyFromEnv = process.env.APOLLO_KEY;
+
+  if(legacyApiKeyFromEnv && apiKeyFromEnv && !skipWarn) {
+    logger.warn("Using `APOLLO_KEY` since `ENGINE_API_KEY` (deprecated) is also set in the environment.");
+  }
+  if(legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey && !skipWarn) {
+    logger.warn("[deprecated] The `ENGINE_API_KEY` environment variable has been renamed to `APOLLO_KEY`.");
+    warnedOnDeprecatedApiKey = true;
+  }
+  return  apiKeyFromEnv || legacyApiKeyFromEnv || ''
+}
+
+// AS3: Drop support for deprecated `ENGINE_SCHEMA_TAG`.
+export function getEngineGraphVariant(engine: EngineReportingOptions<any> | boolean | undefined, logger: Logger = console): string | undefined {
+  if (engine === false) {
+    return;
+  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
+    if (engine.graphVariant && engine.schemaTag) {
+      throw new Error('Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.');
+    }
+    if (engine.schemaTag) {
+      logger.warn('[deprecated] The `schemaTag` property within `engine` configuration has been renamed to `graphVariant`.');
+    }
+    return engine.graphVariant || engine.schemaTag;
+  } else {
+    if (process.env.ENGINE_SCHEMA_TAG) {
+      logger.warn('[deprecated] The `ENGINE_SCHEMA_TAG` environment variable has been renamed to `APOLLO_GRAPH_VARIANT`.');
+    }
+    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
+      throw new Error('`APOLLO_GRAPH_VARIANT` and `ENGINE_SCHEMA_TAG` (deprecated) environment variables must not both be set.')
+    }
+    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
+  }
+}
 
 export interface EngineReportingOptions<TContext> {
   /**
@@ -219,15 +267,16 @@ const serviceHeaderDefaults = {
 // EngineReportingExtensions for each request and sends batches of trace reports
 // to the Engine server.
 export class EngineReportingAgent<TContext = any> {
-  private options: EngineReportingOptions<TContext>;
+  private readonly options: EngineReportingOptions<TContext>;
+  private readonly apiKey: string;
   private logger: Logger = console;
-  private apiKey: string;
-  private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
+  private graphVariant: string;
+  private reports: { [schemaHash: string]: Report } = Object.create(
     null,
   );
   private reportSizes: { [schemaHash: string]: number } = Object.create(null);
   private reportTimer: any; // timer typing is weird and node-specific
-  private sendReportsImmediately?: boolean;
+  private readonly sendReportsImmediately?: boolean;
   private stopped: boolean = false;
   private reportHeaders: { [schemaHash: string]: ReportHeader } = Object.create(
     null,
@@ -238,11 +287,12 @@ export class EngineReportingAgent<TContext = any> {
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
+    this.apiKey = getEngineApiKey({engine: this.options, skipWarn: false, logger: this.logger});
     if (options.logger) this.logger = options.logger;
-    this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
+    this.graphVariant = getEngineGraphVariant(options, this.logger) || '';
     if (!this.apiKey) {
       throw new Error(
-        'To use EngineReportingAgent, you must specify an API key via the apiKey option or the ENGINE_API_KEY environment variable.',
+        `To use EngineReportingAgent, you must specify an API key via the apiKey option or the APOLLO_KEY environment variable.`,
       );
     }
 
@@ -303,12 +353,7 @@ export class EngineReportingAgent<TContext = any> {
       this.reportHeaders[schemaHash] = new ReportHeader({
         ...serviceHeaderDefaults,
         schemaHash,
-        schemaTag:
-          this.options.graphVariant
-          || this.options.schemaTag
-          || process.env.APOLLO_GRAPH_VARIANT
-          || process.env.ENGINE_SCHEMA_TAG
-          || '',
+        schemaTag: this.graphVariant,
       });
       // initializes this.reports[reportHash]
       this.resetReport(schemaHash);
@@ -330,7 +375,7 @@ export class EngineReportingAgent<TContext = any> {
 
     const statsReportKey = `# ${operationName || '-'}\n${signature}`;
     if (!report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
-      report.tracesPerQuery[statsReportKey] = new Traces();
+      report.tracesPerQuery[statsReportKey] = new TracesAndStats();
       (report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
     }
     // See comment on our override of Traces.encode inside of
@@ -383,11 +428,11 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
 
-    const protobufError = FullTracesReport.verify(report);
+    const protobufError = Report.verify(report);
     if (protobufError) {
       throw new Error(`Error encoding report: ${protobufError}`);
     }
-    const message = FullTracesReport.encode(report).finish();
+    const message = Report.encode(report).finish();
 
     const compressed = await new Promise<Buffer>((resolve, reject) => {
       // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
@@ -557,7 +602,7 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   private resetReport(schemaHash: string) {
-    this.reports[schemaHash] = new FullTracesReport({
+    this.reports[schemaHash] = new Report({
       header: this.reportHeaders[schemaHash],
     });
     this.reportSizes[schemaHash] = 0;
