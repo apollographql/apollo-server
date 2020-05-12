@@ -38,8 +38,11 @@ export const plugin = <TContext>(
     executableSchema: string;
     executableSchemaId: string;
   }) => void,
-  overrideReportedSchema: { schemaDocument: string; schemaId: string } | null,
-  schemaIdGenerator: (schema: string | GraphQLSchema) => string,
+  overrideReportedSchema: {
+    executableSchemaDocument: string;
+    executableSchemaId: string;
+  } | null,
+  executableSchemaIdGenerator: (schema: string | GraphQLSchema) => string,
 ): ApolloServerPlugin<TContext> => {
   const logger: Logger = options.logger || console;
   const generateClientInfo: GenerateClientInfo<TContext> =
@@ -50,9 +53,11 @@ export const plugin = <TContext>(
       if (options.experimental_schemaReporting) {
         startSchemaReporting({
           executableSchema:
-            overrideReportedSchema?.schemaDocument || printSchema(schema),
+            overrideReportedSchema?.executableSchemaDocument ||
+            printSchema(schema),
           executableSchemaId:
-            overrideReportedSchema?.schemaId || schemaIdGenerator(schema),
+            overrideReportedSchema?.executableSchemaId ||
+            executableSchemaIdGenerator(schema),
         });
       }
     },
@@ -142,8 +147,9 @@ export const plugin = <TContext>(
           document: requestContext.document,
           source: requestContext.source,
           trace: treeBuilder.trace,
-          schemaId:
-            overrideReportedSchema?.schemaId || schemaIdGenerator(schema),
+          executableSchemaId:
+            overrideReportedSchema?.executableSchemaId ||
+            executableSchemaIdGenerator(schema),
         });
       }
 

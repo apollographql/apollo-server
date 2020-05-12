@@ -266,7 +266,7 @@ export interface EngineReportingOptions<TContext> {
    * This is a function that can be used to generate an executable schema id.
    * This is used to determine whether a schema should be sent to graph manager
    */
-  experimental_overrideSchemaIdGenerator?: (
+  experimental_overrideExecutableSchemaIdGenerator?: (
     schema: string | GraphQLSchema,
   ) => string;
 
@@ -287,7 +287,7 @@ export interface AddTraceArgs {
   trace: Trace;
   operationName: string;
   queryHash: string;
-  schemaId: string;
+  executableSchemaId: string;
   source?: string;
   document?: DocumentNode;
 }
@@ -309,14 +309,19 @@ export class EngineReportingAgent<TContext = any> {
   private readonly logger: Logger = console;
   private readonly graphVariant: string;
 
-  private reports: { [schemaHash: string]: Report } = Object.create(null);
-  private reportSizes: { [schemaHash: string]: number } = Object.create(null);
+  private reports: { [executableSchemaId: string]: Report } = Object.create(
+    null,
+  );
+  private reportSizes: { [executableSchemaId: string]: number } = Object.create(
+    null,
+  );
+
   private reportTimer: any; // timer typing is weird and node-specific
   private readonly sendReportsImmediately?: boolean;
   private stopped: boolean = false;
-  private reportHeaders: { [schemaHash: string]: ReportHeader } = Object.create(
-    null,
-  );
+  private reportHeaders: {
+    [executableSchemaId: string]: ReportHeader;
+  } = Object.create(null);
   private signatureCache: InMemoryLRUCache<string>;
 
   private signalHandlers = new Map<NodeJS.Signals, NodeJS.SignalsListener>();
@@ -324,7 +329,7 @@ export class EngineReportingAgent<TContext = any> {
   private currentSchemaReporter?: SchemaReporter;
 
   private readonly bootId: string;
-  private readonly schemaIdGenerator: (
+  private readonly executableSchemaIdGenerator: (
     schema: string | GraphQLSchema,
   ) => string;
 
@@ -369,10 +374,10 @@ export class EngineReportingAgent<TContext = any> {
       });
     }
 
-    if (this.options.experimental_overrideSchemaIdGenerator) {
-      this.schemaIdGenerator = this.options.experimental_overrideSchemaIdGenerator;
+    if (this.options.experimental_overrideExecutableSchemaIdGenerator) {
+      this.executableSchemaIdGenerator = this.options.experimental_overrideExecutableSchemaIdGenerator;
     } else {
-      this.schemaIdGenerator = (schema: string | GraphQLSchema) => {
+      this.executableSchemaIdGenerator = (schema: string | GraphQLSchema) => {
         let graphQLSchema =
           typeof schema === 'string' ? buildSchema(schema) : schema;
 
@@ -391,23 +396,23 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   private overrideSchema(): {
-    schemaDocument: string;
-    schemaId: string;
+    executableSchemaDocument: string;
+    executableSchemaId: string;
   } | null {
     if (!this.options.experimental_overrideReportedSchema) {
       return null;
     }
 
-    let schemaId = this.schemaIdGenerator(
+    let executableSchemaId = this.executableSchemaIdGenerator(
       this.options.experimental_overrideReportedSchema,
     );
 
-    let schemaDocument: string =
+    let executableSchemaDocument: string =
       typeof this.options.experimental_overrideReportedSchema === 'string'
         ? this.options.experimental_overrideReportedSchema
         : printSchema(this.options.experimental_overrideReportedSchema);
 
-    return { schemaDocument, schemaId };
+    return { executableSchemaDocument, executableSchemaId };
   }
 
   public newPlugin(): ApolloServerPlugin<TContext> {
@@ -416,7 +421,7 @@ export class EngineReportingAgent<TContext = any> {
       this.addTrace.bind(this),
       this.startSchemaReporting.bind(this),
       this.overrideSchema(),
-      this.schemaIdGenerator,
+      this.executableSchemaIdGenerator,
     );
   }
 
@@ -426,23 +431,23 @@ export class EngineReportingAgent<TContext = any> {
     document,
     operationName,
     source,
-    schemaId,
+    executableSchemaId,
   }: AddTraceArgs): Promise<void> {
     // Ignore traces that come in after stop().
     if (this.stopped) {
       return;
     }
 
-    if (!(schemaId in this.reports)) {
-      this.reportHeaders[schemaId] = new ReportHeader({
+    if (!(executableSchemaId in this.reports)) {
+      this.reportHeaders[executableSchemaId] = new ReportHeader({
         ...serviceHeaderDefaults,
-        schemaId,
+        executableSchemaId: executableSchemaId,
         schemaTag: this.graphVariant,
       });
       // initializes this.reports[reportHash]
-      this.resetReport(schemaId);
+      this.resetReport(executableSchemaId);
     }
-    const report = this.reports[schemaId];
+    const report = this.reports[executableSchemaId];
 
     const protobufError = Trace.verify(trace);
     if (protobufError) {
@@ -467,16 +472,16 @@ export class EngineReportingAgent<TContext = any> {
     (report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
       encodedTrace,
     );
-    this.reportSizes[schemaId] +=
+    this.reportSizes[executableSchemaId] +=
       encodedTrace.length + Buffer.byteLength(statsReportKey);
 
     // If the buffer gets big (according to our estimate), send.
     if (
       this.sendReportsImmediately ||
-      this.reportSizes[schemaId] >=
+      this.reportSizes[executableSchemaId] >=
         (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
     ) {
-      await this.sendReportAndReportErrors(schemaId);
+      await this.sendReportAndReportErrors(executableSchemaId);
     }
   }
 
@@ -484,9 +489,9 @@ export class EngineReportingAgent<TContext = any> {
     await Promise.all(Object.keys(this.reports).map(id => this.sendReport(id)));
   }
 
-  public async sendReport(schemaId: string): Promise<void> {
-    const report = this.reports[schemaId];
-    this.resetReport(schemaId);
+  public async sendReport(executableSchemaId: string): Promise<void> {
+    const report = this.reports[executableSchemaId];
+    this.resetReport(executableSchemaId);
 
     if (Object.keys(report.tracesPerQuery).length === 0) {
       return;
@@ -713,14 +718,14 @@ export class EngineReportingAgent<TContext = any> {
 
   private async sendAllReportsAndReportErrors(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reports).map(schemaHash =>
-        this.sendReportAndReportErrors(schemaHash),
+      Object.keys(this.reports).map(executableSchemaId =>
+        this.sendReportAndReportErrors(executableSchemaId),
       ),
     );
   }
 
-  private sendReportAndReportErrors(schemaHash: string): Promise<void> {
-    return this.sendReport(schemaHash).catch(err => {
+  private sendReportAndReportErrors(executableSchemaId: string): Promise<void> {
+    return this.sendReport(executableSchemaId).catch(err => {
       // This catch block is primarily intended to catch network errors from
       // the retried request itself, which include network errors and non-2xx
       // HTTP errors.
