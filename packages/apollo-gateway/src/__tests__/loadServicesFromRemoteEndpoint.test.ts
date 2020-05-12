@@ -25,11 +25,14 @@ describe('getServiceDefinitionsFromRemoteEndpoint', () => {
 
     const dataSource = new RemoteGraphQLDataSource({ url });
     const serviceList = [{ name: 'test', url, dataSource }];
+    // Depending on the OS's resolver, the error may result in an error
+    // of `EAI_AGAIN` or `ENOTFOUND`.  This `toThrowError` uses a Regex
+    // to match either case.
     await expect(
       getServiceDefinitionsFromRemoteEndpoint({
         serviceList,
         serviceSdlCache,
       }),
-    ).rejects.toThrowError(/^Couldn't load service definitions for "test" at http:\/\/host-which-better-not-resolve\/graphql: request to http:\/\/host-which-better-not-resolve\/graphql failed, reason: getaddrinfo ENOTFOUND/);
+    ).rejects.toThrowError(/^Couldn't load service definitions for "test" at http:\/\/host-which-better-not-resolve\/graphql: request to http:\/\/host-which-better-not-resolve\/graphql failed, reason: getaddrinfo (ENOTFOUND|EAI_AGAIN)/);
   });
 });
