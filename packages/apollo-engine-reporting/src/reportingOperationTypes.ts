@@ -7,6 +7,8 @@
 // GraphQL mutation operation: AutoregReportServerInfo
 // ====================================================
 
+import { GraphQLFormattedError } from "graphql";
+
 export interface ReportServerInfo_me_UserMutation {
   __typename: 'UserMutation';
 }
@@ -31,6 +33,11 @@ export type ReportServerInfo_me =
 
 export interface AutoregReportServerInfo {
   me: ReportServerInfo_me | null;
+}
+
+export interface AutoregReportServerInfoResult {
+  data?: AutoregReportServerInfo,
+  errors?: ReadonlyArray<GraphQLFormattedError>;
 }
 
 export interface ReportServerInfoVariables {

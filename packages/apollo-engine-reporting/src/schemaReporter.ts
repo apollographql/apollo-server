@@ -1,17 +1,13 @@
 // Fields required for the trial related emails
-import gql from 'graphql-tag';
 import {
-  AutoregReportServerInfo,
   ReportServerInfoVariables,
   EdgeServerInfo,
+  AutoregReportServerInfoResult,
 } from './reportingOperationTypes';
-import { DocumentNode, execute, makePromise, Observable } from 'apollo-link';
-import { FetchResult } from 'apollo-link/lib/types';
-import { HttpLink } from 'apollo-link-http';
-import { fetch } from 'apollo-server-env';
-import { Logger } from 'apollo-server-types';
+import { fetch, Headers, Request } from 'apollo-server-env';
+import { GraphQLRequest, Logger } from 'apollo-server-types';
 
-const reportServerInfoGql = gql`
+const reportServerInfoGql = `
   mutation ReportServerInfo($info: EdgeServerInfo!, $executableSchema: String) {
     me {
       __typename
@@ -63,13 +59,13 @@ interface ReportServerInfoReturnVal {
 
 // This class is meant to be a thin shim around the gql mutations.
 export class SchemaReporter {
-  private readonly apiKey: string;
-  private readonly graphManagerHttpLink: HttpLink;
-
   // These mirror the gql variables
   private readonly serverInfo: EdgeServerInfo;
   private readonly executableSchemaDocument: any;
+  private readonly url: string;
+
   private isStopped: boolean;
+  private readonly headers: Headers;
 
   constructor(
     serverInfo: EdgeServerInfo,
@@ -81,15 +77,13 @@ export class SchemaReporter {
       throw new Error('No api key defined');
     }
 
-    this.apiKey = apiKey;
+    this.headers = new Headers();
+    this.headers.set('Content-Type', 'application/json');
+    this.headers.set('x-api-key', apiKey);
 
-    this.graphManagerHttpLink = new HttpLink({
-      uri:
-        reportingEndpoint ||
-        'https://engine-graphql.apollographql.com/api/graphql',
-      fetch,
-      headers: { 'x-api-key': this.apiKey },
-    });
+    this.url =
+      reportingEndpoint ||
+      'https://engine-graphql.apollographql.com/api/graphql';
 
     this.serverInfo = serverInfo;
     this.executableSchemaDocument = schemaSdl;
@@ -107,9 +101,7 @@ export class SchemaReporter {
   public async reportServerInfo(
     withExecutableSchema: boolean,
   ): Promise<ReportServerInfoReturnVal> {
-    const { data, errors } = await this.graphManagerQuery<
-      AutoregReportServerInfo
-    >(reportServerInfoGql, {
+    const { data, errors } = await this.graphManagerQuery({
       info: this.serverInfo,
       executableSchema: withExecutableSchema
         ? this.executableSchemaDocument
@@ -117,7 +109,9 @@ export class SchemaReporter {
     } as ReportServerInfoVariables);
 
     if (errors) {
-      throw new ReportingError((errors || []).map(x => x.message).join('\n'));
+      throw new ReportingError(
+        (errors || []).map((x: any) => x.message).join('\n'),
+      );
     }
 
     if (!data || !data.me || !data.me.__typename) {
@@ -151,15 +145,20 @@ Got response: "${JSON.stringify(data)}"
     }
   }
 
-  private async graphManagerQuery<
-    Result = Record<string, any>,
-    Variables = Record<string, any>
-  >(query: DocumentNode, variables: Variables): Promise<FetchResult<Result>> {
-    return makePromise<FetchResult<Result>>(
-      execute(this.graphManagerHttpLink, {
-        query,
-        variables,
-      }) as Observable<FetchResult<Result>>,
-    );
+  private async graphManagerQuery(
+    variables: ReportServerInfoVariables,
+  ): Promise<AutoregReportServerInfoResult> {
+    const request: GraphQLRequest = {
+      query: reportServerInfoGql,
+      operationName: 'ReportServerInfo',
+      variables: variables,
+    };
+    const httpRequest = new Request(this.url, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify(request),
+    });
+    const httpResponse = await fetch(httpRequest);
+    return httpResponse.json();
   }
 }
