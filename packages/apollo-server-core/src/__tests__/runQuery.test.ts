@@ -29,6 +29,7 @@ import {
 } from 'apollo-server-plugin-base';
 import { GraphQLRequestListener } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import { generateSchemaHash } from "../utils/schemaHash";
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
 // GraphQLRequestProcessor refactoring.
@@ -44,8 +45,13 @@ function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
     http: options.request,
   };
 
+  const schemaHash = generateSchemaHash(schema);
+
   return processGraphQLRequest(options, {
     request,
+    schema: options.schema,
+    schemaHash,
+    metrics: {},
     logger: console,
     context: options.context || {},
     debug: options.debug,
@@ -476,6 +482,24 @@ describe('runQuery', () => {
         expect(requestDidStart.mock.calls.length).toBe(1);
         await runOnce();
         expect(requestDidStart.mock.calls.length).toBe(2);
+      });
+
+      it('is called with the schema and schemaHash', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testString }',
+          plugins: [
+            {
+              requestDidStart,
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        const invocation = requestDidStart.mock.calls[0][0];
+        expect(invocation).toHaveProperty('schema', schema);
+        expect(invocation).toHaveProperty( /* Shorter as a RegExp */
+          'schemaHash', expect.stringMatching(/^8ff87f3e0/));
       });
     });
 

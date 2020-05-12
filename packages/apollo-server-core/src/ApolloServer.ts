@@ -796,7 +796,12 @@ export class ApolloServerBase {
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ): Promise<GraphQLServerOptions> {
-    const { schema, documentStore, extensions } = await this.schemaDerivedData;
+    const {
+      schema,
+      schemaHash,
+      documentStore,
+      extensions,
+    } = await this.schemaDerivedData;
 
     let context: Context = this.context ? this.context : {};
 
@@ -814,6 +819,7 @@ export class ApolloServerBase {
 
     return {
       schema,
+      schemaHash,
       logger: this.logger,
       plugins: this.plugins,
       documentStore,
@@ -843,6 +849,8 @@ export class ApolloServerBase {
 
     const requestCtx: GraphQLRequestContext = {
       logger: this.logger,
+      schema: options.schema,
+      schemaHash: options.schemaHash,
       request,
       context: options.context || Object.create(null),
       cache: options.cache!,
