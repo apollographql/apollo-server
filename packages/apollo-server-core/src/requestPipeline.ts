@@ -122,16 +122,21 @@ export async function processGraphQLRequest<TContext>(
   // all of our own machinery will certainly set it now.
   const logger = requestContext.logger || console;
 
+  // If request context's `metrics` already exists, preserve it, but _ensure_ it
+  // exists there and shorthand it for use throughout this function. As of this
+  // comment, the sole known case where `metrics` already exists is when the
+  // `captureTraces` property is present and set to the result of the boolean
+  // `reporting` option on the legacy (V1) server options, here:
+  // https://git.io/Jfmsb. I suspect this disappears when this is the direct
+  // entry into request processing, rather than through, e.g. `runHttpQuery`.
+  const metrics = requestContext.metrics =
+    requestContext.metrics || Object.create(null);
+
   const extensionStack = initializeExtensionStack();
   (requestContext.context as any)._extensionStack = extensionStack;
 
   const dispatcher = initializeRequestListenerDispatcher();
   await initializeDataSources();
-
-  const metrics = requestContext.metrics || Object.create(null);
-  if (!requestContext.metrics) {
-    requestContext.metrics = metrics;
-  }
 
   const request = requestContext.request;
 

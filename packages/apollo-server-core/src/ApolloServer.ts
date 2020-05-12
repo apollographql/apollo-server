@@ -206,10 +206,6 @@ export class ApolloServerBase {
     this.parseOptions = parseOptions;
     this.context = context;
 
-    // Plugins will be instantiated if they aren't already, and this.plugins
-    // is populated accordingly.
-    this.ensurePluginInstantiation(plugins);
-
     // While reading process.env is slow, a server should only be constructed
     // once per run, so we place the env check inside the constructor. If env
     // should be used outside of the constructor context, place it as a private
@@ -369,6 +365,11 @@ export class ApolloServerBase {
     } else {
       throw new Error("Unexpected error: Unable to resolve a valid GraphQLSchema.  Please file an issue with a reproduction of this error, if possible.");
     }
+
+    // Plugins will be instantiated if they aren't already, and this.plugins
+    // is populated accordingly.
+    this.ensurePluginInstantiation(plugins);
+
   }
 
   // used by integrations to synchronize the path with subscriptions, some
@@ -517,39 +518,6 @@ export class ApolloServerBase {
     }
 
     const extensions = [];
-
-    const schemaIsFederated = this.schemaIsFederated(schema);
-    const { engine } = this.config;
-    // Keep this extension second so it wraps everything, except error formatting
-    if (this.engineReportingAgent) {
-      if (schemaIsFederated) {
-        // XXX users can configure a federated Apollo Server to send metrics, but the
-        // Gateway should be responsible for that. It's possible that users are running
-        // their own gateway or running a federated service on its own. Nonetheless, in
-        // the likely case it was accidental, we warn users that they should only report
-        // metrics from the Gateway.
-        this.logger.warn(
-          "It looks like you're running a federated schema and you've configured your service " +
-            'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
-            'to report metrics to Apollo Graph Manager.',
-        );
-      }
-      extensions.push(() =>
-        this.engineReportingAgent!.newExtension(schemaHash),
-      );
-    } else if (engine !== false && schemaIsFederated) {
-      // We haven't configured this app to use Engine directly. But it looks like
-      // we are a federated service backend, so we should be capable of including
-      // our trace in a response extension if we are asked to by the gateway.
-      const {
-        EngineFederatedTracingExtension,
-      } = require('apollo-engine-reporting');
-      const rewriteError =
-        engine && typeof engine === 'object' ? engine.rewriteError : undefined;
-      extensions.push(
-        () => new EngineFederatedTracingExtension({ rewriteError }),
-      );
-    }
 
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
@@ -781,6 +749,33 @@ export class ApolloServerBase {
       pluginsToInit.push(pluginCacheControl(cacheControlOptions));
     }
 
+    const federatedSchema = this.schema && this.schemaIsFederated(this.schema);
+    const { engine } = this.config;
+    // Keep this extension second so it wraps everything, except error formatting
+    if (this.engineReportingAgent) {
+      if (federatedSchema) {
+        // XXX users can configure a federated Apollo Server to send metrics, but the
+        // Gateway should be responsible for that. It's possible that users are running
+        // their own gateway or running a federated service on its own. Nonetheless, in
+        // the likely case it was accidental, we warn users that they should only report
+        // metrics from the Gateway.
+        this.logger.warn(
+          "It looks like you're running a federated schema and you've configured your service " +
+            'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
+            'to report metrics to Apollo Graph Manager.',
+        );
+      }
+      pluginsToInit.push(this.engineReportingAgent!.newPlugin());
+    } else if (engine !== false && federatedSchema) {
+      // We haven't configured this app to use Engine directly. But it looks like
+      // we are a federated service backend, so we should be capable of including
+      // our trace in a response extension if we are asked to by the gateway.
+      const { federatedPlugin } = require('apollo-engine-reporting');
+      const rewriteError =
+        engine && typeof engine === 'object' ? engine.rewriteError : undefined;
+      pluginsToInit.push(federatedPlugin({ rewriteError }));
+    }
+
     pluginsToInit.push(...plugins);
 
     this.plugins = pluginsToInit.map(plugin => {
@@ -869,6 +864,7 @@ export class ApolloServerBase {
       request,
       context: options.context || Object.create(null),
       cache: options.cache!,
+      metrics: {},
       response: {
         http: {
           headers: new Headers(),

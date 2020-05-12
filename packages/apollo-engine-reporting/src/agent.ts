@@ -11,10 +11,11 @@ import {
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
-import { EngineReportingExtension } from './extension';
+import { plugin } from './plugin';
 import { GraphQLRequestContext, Logger, SchemaHash } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
+import { ApolloServerPlugin } from "apollo-server-plugin-base";
 
 let warnedOnDeprecatedApiKey = false;
 
@@ -251,8 +252,8 @@ export interface AddTraceArgs {
   operationName: string;
   queryHash: string;
   schemaHash: SchemaHash;
-  queryString?: string;
-  documentAST?: DocumentNode;
+  source?: string;
+  document?: DocumentNode;
 }
 
 const serviceHeaderDefaults = {
@@ -328,20 +329,16 @@ export class EngineReportingAgent<TContext = any> {
     handleLegacyOptions(this.options);
   }
 
-  public newExtension(schemaHash: SchemaHash): EngineReportingExtension<TContext> {
-    return new EngineReportingExtension<TContext>(
-      this.options,
-      this.addTrace.bind(this),
-      schemaHash,
-    );
+  public newPlugin(): ApolloServerPlugin<TContext> {
+    return plugin(this.options, this.addTrace.bind(this));
   }
 
   public async addTrace({
     trace,
     queryHash,
-    documentAST,
+    document,
     operationName,
-    queryString,
+    source,
     schemaHash,
   }: AddTraceArgs): Promise<void> {
     // Ignore traces that come in after stop().
@@ -368,8 +365,8 @@ export class EngineReportingAgent<TContext = any> {
 
     const signature = await this.getTraceSignature({
       queryHash,
-      documentAST,
-      queryString,
+      document,
+      source,
       operationName,
     });
 
@@ -534,17 +531,17 @@ export class EngineReportingAgent<TContext = any> {
   private async getTraceSignature({
     queryHash,
     operationName,
-    documentAST,
-    queryString,
+    document,
+    source,
   }: {
     queryHash: string;
     operationName: string;
-    documentAST?: DocumentNode;
-    queryString?: string;
+    document?: DocumentNode;
+    source?: string;
   }): Promise<string> {
-    if (!documentAST && !queryString) {
+    if (!document && !source) {
       // This shouldn't happen: one of those options must be passed to runQuery.
-      throw new Error('No queryString or documentAST?');
+      throw new Error('No document or source?');
     }
 
     const cacheKey = signatureCacheKey(queryHash, operationName);
@@ -559,7 +556,7 @@ export class EngineReportingAgent<TContext = any> {
       return cachedSignature;
     }
 
-    if (!documentAST) {
+    if (!document) {
       // We didn't get an AST, possibly because of a parse failure. Let's just
       // use the full query string.
       //
@@ -567,12 +564,12 @@ export class EngineReportingAgent<TContext = any> {
       //     hides literals, you might end up sending literals for queries
       //     that fail parsing or validation. Provide some way to mask them
       //     anyway?
-      return queryString as string;
+      return source as string;
     }
 
     const generatedSignature = (
       this.options.calculateSignature || defaultEngineReportingSignature
-    )(documentAST, operationName);
+    )(document, operationName);
 
     // Intentionally not awaited so the cache can be written to at leisure.
     this.signatureCache.set(cacheKey, generatedSignature);
