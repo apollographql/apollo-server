@@ -71,6 +71,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
+import { plugin as pluginTracing } from "apollo-tracing";
 import { Logger, SchemaHash } from "apollo-server-types";
 import {
   plugin as pluginCacheControl,
@@ -745,7 +746,11 @@ export class ApolloServerBase {
     // Internal plugins should be added to `pluginsToInit` here.
     // User's plugins, provided as an argument to this method, will be added
     // at the end of that list so they take precedence.
-    // A follow-up commit will actually introduce this.
+
+    // If the user has enabled it explicitly, add our tracing lugin.
+    if (this.config.tracing) {
+      pluginsToInit.push(pluginTracing())
+    }
 
     // Enable cache control unless it was explicitly disabled.
     if (this.config.cacheControl !== false) {
@@ -806,7 +811,12 @@ export class ApolloServerBase {
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ): Promise<GraphQLServerOptions> {
-    const { schema, documentStore, extensions } = await this.schemaDerivedData;
+    const {
+      schema,
+      schemaHash,
+      documentStore,
+      extensions,
+    } = await this.schemaDerivedData;
 
     let context: Context = this.context ? this.context : {};
 
@@ -824,6 +834,7 @@ export class ApolloServerBase {
 
     return {
       schema,
+      schemaHash,
       logger: this.logger,
       plugins: this.plugins,
       documentStore,
@@ -853,6 +864,8 @@ export class ApolloServerBase {
 
     const requestCtx: GraphQLRequestContext = {
       logger: this.logger,
+      schema: options.schema,
+      schemaHash: options.schemaHash,
       request,
       context: options.context || Object.create(null),
       cache: options.cache!,
