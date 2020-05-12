@@ -12,6 +12,7 @@ import {
   GraphQLFieldResolver,
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
+import { defaultRootOperationNameLookup } from '@apollo/federation';
 import { GraphQLDataSource } from './datasources/types';
 import {
   FetchNode,
@@ -358,6 +359,19 @@ async function executeFetch<TContext>(
             );
             traceParsingFailed = true;
           }
+        }
+        if (traceNode.trace) {
+          // Federation requires the root operations in the composed schema
+          // to have the default names (Query, Mutation, Subscription) even
+          // if the implementing services choose different names, so we override
+          // whatever the implementing service reported here.
+          const rootTypeName =
+            defaultRootOperationNameLookup[
+              context.operationContext.operation.operation
+            ];
+          traceNode.trace.root?.child?.forEach((child) => {
+            child.parentType = rootTypeName;
+          });
         }
         traceNode.traceParsingFailed = traceParsingFailed;
       }
