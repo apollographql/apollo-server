@@ -17,7 +17,12 @@ import {
   enableGraphQLExtensions,
 } from 'graphql-extensions';
 import { DataSource } from 'apollo-datasource';
-import { PersistedQueryOptions } from '.';
+import { PersistedQueryOptions } from './graphqlOptions';
+import {
+  symbolExecutionDispatcherWillResolveField,
+  enablePluginsForSchemaResolvers,
+  symbolUserFieldResolver,
+} from "./utils/schemaInstrumentation"
 import {
   CacheControlExtension,
   CacheControlExtensionOptions,
@@ -45,6 +50,7 @@ import {
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
+  GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextExecutionDidStart,
   GraphQLRequestContextResponseForOperation,
   GraphQLRequestContextDidResolveOperation,
@@ -52,6 +58,7 @@ import {
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestExecutionListener,
 } from 'apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
@@ -127,7 +134,6 @@ export async function processGraphQLRequest<TContext>(
   (requestContext.context as any)._extensionStack = extensionStack;
 
   const dispatcher = initializeRequestListenerDispatcher();
-
   await initializeDataSources();
 
   const metrics = requestContext.metrics || Object.create(null);
@@ -204,6 +210,16 @@ export async function processGraphQLRequest<TContext>(
 
   requestContext.queryHash = queryHash;
   requestContext.source = query;
+
+  // Let the plugins know that we now have a STRING of what we hope will
+  // parse and validate into a document we can execute on.  Unless we have
+  // retrieved this from our APQ cache, there's no guarantee that it is
+  // syntactically correct, so this string should not be trusted as a valid
+  // document until after it's parsed and validated.
+  await dispatcher.invokeHookAsync(
+    'didResolveSource',
+    requestContext as GraphQLRequestContextDidResolveSource<TContext>,
+  );
 
   const requestDidEnd = extensionStack.requestDidStart({
     request: request.http!,
@@ -357,10 +373,54 @@ export async function processGraphQLRequest<TContext>(
       requestContext as GraphQLRequestContextResponseForOperation<TContext>,
     );
     if (response == null) {
-      const executionDidEnd = await dispatcher.invokeDidStartHook(
+      // This execution dispatcher code is duplicated in `pluginTestHarness`
+      // right now.
+
+      const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
+      dispatcher.invokeHookSync(
         'executionDidStart',
         requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+      ).forEach(executionListener => {
+        if (typeof executionListener === 'function') {
+          executionListeners.push({
+            executionDidEnd: executionListener,
+          });
+        } else if (typeof executionListener === 'object') {
+          executionListeners.push(executionListener);
+        }
+      });
+
+      const executionDispatcher = new Dispatcher(executionListeners);
+
+      // Create a callback that will trigger the execution dispatcher's
+      // `willResolveField` hook.  We will attach this to the context on a
+      // symbol so it can be invoked by our `wrapField` method during execution.
+      const invokeWillResolveField: GraphQLRequestExecutionListener<
+        TContext
+      >['willResolveField'] = (...args) =>
+          executionDispatcher.invokeDidStartHook('willResolveField', ...args);
+
+      Object.defineProperty(
+        requestContext.context,
+        symbolExecutionDispatcherWillResolveField,
+        { value: invokeWillResolveField }
       );
+
+      // If the user has provided a custom field resolver, we will attach
+      // it to the context so we can still invoke it after we've wrapped the
+      // fields with `wrapField` within `enablePluginsForSchemaResolvers` of
+      // the `schemaInstrumentation` module.
+      if (config.fieldResolver) {
+        Object.defineProperty(
+          requestContext.context,
+          symbolUserFieldResolver,
+          { value: config.fieldResolver }
+        );
+      }
+
+      // If the schema is already enabled, this is a no-op.  Otherwise, the
+      // schema will be augmented so it is able to invoke willResolveField.
+      enablePluginsForSchemaResolvers(config.schema);
 
       try {
         const result = await execute(
@@ -376,9 +436,9 @@ export async function processGraphQLRequest<TContext>(
           errors: result.errors ? formatErrors(result.errors) : undefined,
         };
 
-        executionDidEnd();
+        executionDispatcher.reverseInvokeHookSync("executionDidEnd");
       } catch (executionError) {
-        executionDidEnd(executionError);
+        executionDispatcher.reverseInvokeHookSync("executionDidEnd", executionError);
         return await sendErrorResponse(executionError);
       }
     }
@@ -569,7 +629,7 @@ export async function processGraphQLRequest<TContext>(
   }
 
   function initializeRequestListenerDispatcher(): Dispatcher<
-    GraphQLRequestListener
+    GraphQLRequestListener<TContext>
   > {
     const requestListeners: GraphQLRequestListener<TContext>[] = [];
     if (config.plugins) {

@@ -12,7 +12,7 @@ import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
-import { GraphQLRequestContext, Logger } from 'apollo-server-types';
+import { GraphQLRequestContext, Logger, SchemaHash } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 
@@ -250,7 +250,7 @@ export interface AddTraceArgs {
   trace: Trace;
   operationName: string;
   queryHash: string;
-  schemaHash: string;
+  schemaHash: SchemaHash;
   queryString?: string;
   documentAST?: DocumentNode;
 }
@@ -328,7 +328,7 @@ export class EngineReportingAgent<TContext = any> {
     handleLegacyOptions(this.options);
   }
 
-  public newExtension(schemaHash: string): EngineReportingExtension<TContext> {
+  public newExtension(schemaHash: SchemaHash): EngineReportingExtension<TContext> {
     return new EngineReportingExtension<TContext>(
       this.options,
       this.addTrace.bind(this),

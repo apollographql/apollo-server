@@ -71,8 +71,8 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
+import { Logger, SchemaHash } from "apollo-server-types";
 import { getEngineApiKey, getEngineGraphVariant } from "apollo-engine-reporting/dist/agent";
-import { Logger } from "apollo-server-types";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -109,7 +109,7 @@ type SchemaDerivedData = {
   // on the same operation to be executed immediately.
   documentStore?: InMemoryLRUCache<DocumentNode>;
   schema: GraphQLSchema;
-  schemaHash: string;
+  schemaHash: SchemaHash;
   extensions: Array<() => GraphQLExtension>;
 };
 
@@ -759,12 +759,16 @@ export class ApolloServerBase {
     return sdlFieldType.name == 'String';
   }
 
-  private ensurePluginInstantiation(plugins?: PluginDefinition[]): void {
-    if (!plugins || !plugins.length) {
-      return;
-    }
+  private ensurePluginInstantiation(plugins: PluginDefinition[] = []): void {
+    const pluginsToInit: PluginDefinition[] = [];
 
-    this.plugins = plugins.map(plugin => {
+    // Internal plugins should be added to `pluginsToInit` here.
+    // User's plugins, provided as an argument to this method, will be added
+    // at the end of that list so they take precedence.
+    // A follow-up commit will actually introduce this.
+
+    pluginsToInit.push(...plugins);
+    this.plugins = pluginsToInit.map(plugin => {
       if (typeof plugin === 'function') {
         return plugin();
       }
