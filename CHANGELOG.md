@@ -14,8 +14,7 @@ The version headers in this history reflect the versions of Apollo Server itself
   _This change should be purely an implementation detail for a majority of users_.  There are, however, some special considerations which are worth noting:
 
     - The federated tracing plugin's `ftv1` response on `extensions` (which is present on the response from an implementing service to the gateway) is now placed on the `extensions` _after_ the `formatResponse` hook.  Anyone leveraging the `extensions`.`ftv1` data from the `formatResponse` hook will find that it is no longer present at that phase.
-
-- _Nothing yet! Stay tuned!_
+- `apollo-tracing`: This package's internal integration with Apollo Server has been switched from using the soon-to-be-deprecated`graphql-extensions` API to using [the request pipeline plugin API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  Behavior should remain otherwise the same.  [PR #3991](https://github.com/apollographql/apollo-server/pull/3991)
 
 ### v2.13.0
 
