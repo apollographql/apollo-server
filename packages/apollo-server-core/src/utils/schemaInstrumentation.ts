@@ -46,18 +46,14 @@ function wrapField(field: GraphQLField<any, any>): void {
     };
 
     const willResolveField =
-      context &&
-      context[symbolExecutionDispatcherWillResolveField] &&
-      (context[symbolExecutionDispatcherWillResolveField] as
+      context?.[symbolExecutionDispatcherWillResolveField] as
         | GraphQLRequestExecutionListener['willResolveField']
-        | undefined);
+        | undefined;
 
     const userFieldResolver =
-      context &&
-      context[symbolUserFieldResolver] &&
-      (context[symbolUserFieldResolver] as
+      context?.[symbolUserFieldResolver] as
         | GraphQLFieldResolver<any, any>
-        | undefined);
+        | undefined;
 
     // The technique for implementing a  "did resolve field" is accomplished by
     // returning a function from the `willResolveField` handler.  While there
