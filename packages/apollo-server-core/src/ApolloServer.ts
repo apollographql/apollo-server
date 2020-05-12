@@ -71,6 +71,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
+import { plugin as pluginTracing } from "apollo-tracing";
 import { Logger, SchemaHash } from "apollo-server-types";
 import { getEngineApiKey, getEngineGraphVariant } from "apollo-engine-reporting/dist/agent";
 
@@ -765,7 +766,11 @@ export class ApolloServerBase {
     // Internal plugins should be added to `pluginsToInit` here.
     // User's plugins, provided as an argument to this method, will be added
     // at the end of that list so they take precedence.
-    // A follow-up commit will actually introduce this.
+
+    // If the user has enabled it explicitly, add our tracing lugin.
+    if (this.config.tracing) {
+      pluginsToInit.push(pluginTracing())
+    }
 
     pluginsToInit.push(...plugins);
     this.plugins = pluginsToInit.map(plugin => {

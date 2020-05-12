@@ -27,7 +27,6 @@ import {
   CacheControlExtension,
   CacheControlExtensionOptions,
 } from 'apollo-cache-control';
-import { TracingExtension } from 'apollo-tracing';
 import {
   ApolloError,
   fromGraphQLError,
@@ -98,7 +97,6 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   dataSources?: () => DataSources<TContext>;
 
   extensions?: Array<() => GraphQLExtension>;
-  tracing?: boolean;
   persistedQueries?: PersistedQueryOptions;
   cacheControl?: CacheControlExtensionOptions;
 
@@ -650,10 +648,6 @@ export async function processGraphQLRequest<TContext>(
     // If custom extension factories were provided, create per-request extension
     // objects.
     const extensions = config.extensions ? config.extensions.map(f => f()) : [];
-
-    if (config.tracing) {
-      extensions.push(new TracingExtension());
-    }
 
     if (config.cacheControl) {
       cacheControlExtension = new CacheControlExtension(config.cacheControl);
