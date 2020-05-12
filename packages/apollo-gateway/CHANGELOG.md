@@ -4,7 +4,16 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned!_
+- _Nothing yet! Stay tuned._
+
+## 0.16.0
+
+- __BREAKING__: Use a content delivery network for managed configuration, fetch storage secrets and composition configuration from different domains: https://storage-secrets.api.apollographql.com and https://federation.api.apollographql.com. Please mind any firewall for outgoing traffic. [#4080](https://github.com/apollographql/apollo-server/pull/4080)
+
+## 0.15.1
+
+- __FIX__: Correctly handle unions with nested conditions that have no `possibleTypes` [#4071](https://github.com/apollographql/apollo-server/pull/4071)
+- __FIX__: Normalize root operation types when reporting to Apollo Graph Manager. Federation always uses the default names `Query`, `Mutation`, and `Subscription` for root operation types even if downstream services choose different names; now we properly normalize traces received from downstream services in the same way. [#4100](https://github.com/apollographql/apollo-server/pull/4100)
 
 ## 0.15.0
 

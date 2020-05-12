@@ -1,4 +1,11 @@
-import { GraphQLSchema, GraphQLField, ResponsePath, getNamedType, GraphQLObjectType } from "graphql/type";
+import {
+  GraphQLSchema,
+  GraphQLField,
+  ResponsePath,
+  getNamedType,
+  GraphQLObjectType,
+  GraphQLFieldResolver,
+} from 'graphql/type';
 import { defaultFieldResolver } from "graphql/execution";
 import { FieldNode } from "graphql/language";
 import { GraphQLRequestExecutionListener } from "apollo-server-plugin-base";
@@ -6,6 +13,8 @@ import { GraphQLObjectResolver } from "@apollographql/apollo-tools";
 
 export const symbolExecutionDispatcherWillResolveField =
   Symbol("apolloServerExecutionDispatcherWillResolveField");
+export const symbolUserFieldResolver =
+  Symbol("apolloServerUserFieldResolver");
 export const symbolPluginsEnabled = Symbol("apolloServerPluginsEnabled");
 
 export function enablePluginsForSchemaResolvers(
@@ -24,7 +33,7 @@ export function enablePluginsForSchemaResolvers(
 }
 
 function wrapField(field: GraphQLField<any, any>): void {
-  const fieldResolver = field.resolve || defaultFieldResolver;
+  const originalFieldResolve = field.resolve;
 
   field.resolve = (source, args, context, info) => {
     // This is a bit of a hack, but since `ResponsePath` is a linked list,
@@ -37,11 +46,14 @@ function wrapField(field: GraphQLField<any, any>): void {
     };
 
     const willResolveField =
-      context &&
-      context[symbolExecutionDispatcherWillResolveField] &&
-      (context[symbolExecutionDispatcherWillResolveField] as
+      context?.[symbolExecutionDispatcherWillResolveField] as
         | GraphQLRequestExecutionListener['willResolveField']
-        | undefined);
+        | undefined;
+
+    const userFieldResolver =
+      context?.[symbolUserFieldResolver] as
+        | GraphQLFieldResolver<any, any>
+        | undefined;
 
     // The technique for implementing a  "did resolve field" is accomplished by
     // returning a function from the `willResolveField` handler.  While there
@@ -77,6 +89,9 @@ function wrapField(field: GraphQLField<any, any>): void {
         parentPath.__whenObjectResolved = whenObjectResolved;
       }
     }
+
+    const fieldResolver =
+      originalFieldResolve || userFieldResolver || defaultFieldResolver;
 
     try {
       let result: any;
