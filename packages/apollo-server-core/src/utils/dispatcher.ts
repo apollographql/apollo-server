@@ -13,7 +13,7 @@ export class Dispatcher<T extends AnyFunctionMap> {
     targets: T[],
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>
-  ) {
+  ): ReturnType<AsFunction<T[TMethodName]>>[] {
     return targets.map(target => {
       const method = target[methodName];
       if (method && typeof method === 'function') {
@@ -25,10 +25,9 @@ export class Dispatcher<T extends AnyFunctionMap> {
   public async invokeHookAsync<TMethodName extends keyof T>(
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>
-  ): Promise<UnwrapPromise<ReturnType<AsFunction<T[TMethodName]>>>[]> {
+  ): Promise<ReturnType<AsFunction<T[TMethodName]>>[]> {
     return await Promise.all(
-      this.callTargets(this.targets, methodName, ...args),
-    );
+      this.callTargets(this.targets, methodName, ...args));
   }
 
   public invokeHookSync<TMethodName extends keyof T>(
