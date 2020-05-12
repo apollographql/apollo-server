@@ -38,12 +38,12 @@ const urlFromEnvOrDefault = (envKey: string, fallback: string) =>
 // Generate and cache our desired operation manifest URL.
 const urlPartialSchemaBase = urlFromEnvOrDefault(
   envOverridePartialSchemaBaseUrl,
-  'https://storage.googleapis.com/engine-partial-schema-prod/',
+  'https://federation.api.apollographql.com/',
 );
 
 const urlStorageSecretBase: string = urlFromEnvOrDefault(
   envOverrideStorageSecretBaseUrl,
-  'https://storage.googleapis.com/engine-partial-schema-prod/',
+  'https://storage-secrets.api.apollographql.com/',
 );
 
 function getStorageSecretUrl(graphId: string, apiKeyHash: string): string {

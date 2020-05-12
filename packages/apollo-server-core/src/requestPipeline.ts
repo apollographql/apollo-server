@@ -21,6 +21,7 @@ import { PersistedQueryOptions } from './graphqlOptions';
 import {
   symbolExecutionDispatcherWillResolveField,
   enablePluginsForSchemaResolvers,
+  symbolUserFieldResolver,
 } from "./utils/schemaInstrumentation"
 import {
   CacheControlExtension,
@@ -404,6 +405,18 @@ export async function processGraphQLRequest<TContext>(
         symbolExecutionDispatcherWillResolveField,
         { value: invokeWillResolveField }
       );
+
+      // If the user has provided a custom field resolver, we will attach
+      // it to the context so we can still invoke it after we've wrapped the
+      // fields with `wrapField` within `enablePluginsForSchemaResolvers` of
+      // the `schemaInstrumentation` module.
+      if (config.fieldResolver) {
+        Object.defineProperty(
+          requestContext.context,
+          symbolUserFieldResolver,
+          { value: config.fieldResolver }
+        );
+      }
 
       // If the schema is already enabled, this is a no-op.  Otherwise, the
       // schema will be augmented so it is able to invoke willResolveField.
