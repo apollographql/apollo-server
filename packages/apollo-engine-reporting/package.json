@@ -1,6 +1,6 @@
 {
   "name": "apollo-engine-reporting",
-  "version": "1.8.1-alpha.0",
+  "version": "2.0.0-alpha.0",
   "description": "Send reports about your GraphQL services to Apollo Graph Manager (previously known as Apollo Engine)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,9 +16,9 @@
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
+    "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-server-types": "file:../apollo-server-types",
-    "async-retry": "^1.2.1",
-    "apollo-server-plugin-base": "file:../apollo-server-plugin-base"
+    "async-retry": "^1.2.1"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
