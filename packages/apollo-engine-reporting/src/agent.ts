@@ -320,6 +320,7 @@ export class EngineReportingAgent<TContext = any> {
 
   private currentSchemaReporter?: SchemaReporter;
   private readonly bootId: string;
+  private executableSchemaToIdMap = new Map<string|GraphQLSchema, string>();
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
@@ -367,14 +368,19 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   public executableSchemaIdGenerator(schema: string | GraphQLSchema) {
-    // TODO caching in the agent so we don't do expensive operations on each request.
+    // TODO: At somepoint fix this caching for managed federation so we treat it as an  LRU and gc old schemas.
+    const cachedId = this.executableSchemaToIdMap.get(schema);
+    if (cachedId) {
+      return cachedId;
+    }
     let schemaDocument = isString(schema) ? schema :
       stripIgnoredCharacters(
         printSchema(lexicographicSortSchema(schema))
       );
 
-    return new sha256().update(schemaDocument)
-      .digest("hex");
+    const id = new sha256().update(schemaDocument).digest("hex");
+    this.executableSchemaToIdMap.set(schema, id);
+    return id;
   }
 
   public newPlugin(): ApolloServerPlugin<TContext> {
