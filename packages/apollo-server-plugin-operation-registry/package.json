@@ -1,0 +1,26 @@
+{
+  "name": "apollo-server-plugin-operation-registry",
+  "version": "0.3.1",
+  "description": "Apollo Server operation registry",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": [],
+  "author": "Apollo <npm@apollographql.com>",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "engines": {
+    "node": ">=8"
+  },
+  "dependencies": {
+    "apollo-graphql": "0.4.4",
+    "apollo-server-caching": "^0.5.0",
+    "apollo-server-errors": "^2.2.0",
+    "apollo-server-plugin-base": "^0.8.0",
+    "fast-json-stable-stringify": "^2.0.0",
+    "loglevel": "^1.6.1",
+    "loglevel-debug": "^0.0.1",
+    "node-fetch": "^2.3.0"
+  },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  }
+}
