@@ -122,12 +122,12 @@ Got response: "${JSON.stringify(data)}"
       `);
     }
 
-    if (data.me.__typename == 'UserMutation') {
+    if (data.me.__typename === 'UserMutation') {
       this.isStopped = true;
       throw new ReportingError(`
       User tokens cannot be used for schema reporting. Only service tokens.
       `);
-    } else if (data.me.__typename == 'ServiceMutation') {
+    } else if (data.me.__typename === 'ServiceMutation') {
       if (!data.me.reportServerInfo) {
         throw new ReportingError(`
 Heartbeat response error. Received incomplete data from Apollo graph manager.
