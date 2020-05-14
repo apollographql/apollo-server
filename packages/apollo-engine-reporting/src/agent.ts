@@ -500,7 +500,7 @@ export class EngineReportingAgent<TContext = any> {
       });
     });
 
-    const endpointUrl =
+    const metricsEndpointUrl =
       (this.options.metricsEndpointUrl ||
         'https://engine-report.apollodata.com') + '/api/ingress/traces';
 
@@ -509,7 +509,7 @@ export class EngineReportingAgent<TContext = any> {
       // Retry on network errors and 5xx HTTP
       // responses.
       async () => {
-        const curResponse = await fetch(endpointUrl, {
+        const curResponse = await fetch(metricsEndpointUrl, {
           method: 'POST',
           headers: {
             'user-agent': 'apollo-engine-reporting',

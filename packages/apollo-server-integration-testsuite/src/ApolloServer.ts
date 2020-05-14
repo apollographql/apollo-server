@@ -852,7 +852,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           public engineOptions(): Partial<EngineReportingOptions<any>> {
             return {
-              endpointUrl: this.getUrl(),
+              metricsEndpointUrl: this.getUrl(),
             };
           }
 
@@ -2170,7 +2170,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               resolvers: { Query: { something: () => 'hello' } },
               engine: {
                 apiKey: 'service:my-app:secret',
-                endpointUrl: fakeEngineUrl,
+                metricsEndpointUrl: fakeEngineUrl,
                 reportIntervalMs: 1,
                 maxAttempts: 3,
                 requestAgent,

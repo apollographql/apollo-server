@@ -81,7 +81,6 @@ export default async function pluginTestHarness<TContext>({
    */
   context?: TContext;
 }): Promise<GraphQLRequestContextWillSendResponse<TContext>> {
-
   if (!schema) {
     schema = new GraphQLSchema({
       query: new GraphQLObjectType({
@@ -97,6 +96,17 @@ export default async function pluginTestHarness<TContext>({
       })
     });
   }
+
+  const schemaHash = generateSchemaHash(schema);
+  if (typeof pluginInstance.serverWillStart === 'function') {
+    pluginInstance.serverWillStart({
+      logger: logger || console,
+      schema,
+      schemaHash,
+      engine: {},
+    });
+  }
+
 
   const requestContext: GraphQLRequestContext<TContext> = {
     logger: logger || console,
