@@ -375,11 +375,7 @@ export class EngineReportingAgent<TContext = any> {
     if (cachedId) {
       return cachedId;
     }
-    let schemaDocument = isString(schema)
-      ? schema
-      : stripIgnoredCharacters(printSchema(lexicographicSortSchema(schema)));
-
-    const id = new sha256().update(schemaDocument).digest('hex');
+    const id = computeExecutableSchemaId(schema);
     this.executableSchemaToIdMap.set(schema, id);
     return id;
   }
@@ -824,4 +820,10 @@ function makeSendValuesBaseOptionsFromLegacy(
     : legacyPrivateOption
     ? { none: true }
     : { all: true };
+}
+
+export function computeExecutableSchemaId(schema: string | GraphQLSchema): string {
+  let schemaDocument = isString(schema) ? schema
+    : stripIgnoredCharacters(printSchema(lexicographicSortSchema(schema)));
+  return new sha256().update(schemaDocument).digest('hex');
 }

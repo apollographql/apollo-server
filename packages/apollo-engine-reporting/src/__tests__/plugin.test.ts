@@ -10,7 +10,7 @@ import {
 import { Request } from 'node-fetch';
 import { makeTraceDetails, makeHTTPRequestHeaders, plugin } from '../plugin';
 import { Headers } from 'apollo-server-env';
-import { AddTraceArgs } from '../agent';
+import { AddTraceArgs, computeExecutableSchemaId } from "../agent";
 import { Trace } from 'apollo-engine-reporting-protobuf';
 import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
 import { sha256 } from 'sha.js';
@@ -57,15 +57,7 @@ describe('schema reporting', () => {
 
   const addTrace = jest.fn();
   const startSchemaReporting = jest.fn();
-  const executableSchemaIdGenerator = jest.fn(
-    (schema: string | GraphQLSchema) => {
-      let schemaDocument = isString(schema)
-        ? schema
-        : stripIgnoredCharacters(printSchema(lexicographicSortSchema(schema)));
-
-      return new sha256().update(schemaDocument).digest('hex');
-    },
-  );
+  const executableSchemaIdGenerator = jest.fn(computeExecutableSchemaId);
 
   beforeEach(() => {
     addTrace.mockClear();
