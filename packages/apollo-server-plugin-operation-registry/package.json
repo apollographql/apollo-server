@@ -12,9 +12,9 @@
   },
   "dependencies": {
     "apollo-graphql": "0.4.4",
-    "apollo-server-caching": "^0.5.0",
-    "apollo-server-errors": "^2.2.0",
-    "apollo-server-plugin-base": "^0.8.0",
+    "apollo-server-caching": "file:../apollo-server-caching",
+    "apollo-server-errors": "file:../apollo-server-errors",
+    "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "fast-json-stable-stringify": "^2.0.0",
     "loglevel": "^1.6.1",
     "loglevel-debug": "^0.0.1",

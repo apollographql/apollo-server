@@ -6,5 +6,9 @@
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__", "**/__mocks__"],
-  "references": []
+  "references": [
+    { "path": "../apollo-server-caching" },
+    { "path": "../apollo-server-errors" },
+    { "path": "../apollo-server-plugin-base" },
+  ]
 }
