@@ -26,7 +26,7 @@ import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { reportingLoop, SchemaReporter } from './schemaReporter';
 import { v4 as uuidv4 } from 'uuid';
 import { sha256 } from 'sha.js';
-import { isString } from "util";
+import { isString } from 'util';
 
 let warnedOnDeprecatedApiKey = false;
 
@@ -251,7 +251,9 @@ export interface EngineReportingOptions<TContext> {
   generateClientInfo?: GenerateClientInfo<TContext>;
 
   /**
-   * Enable experimental schema reporting. Look at https://github.com/apollographql/apollo-schema-reporting-preview-docs for more information.
+   * Enable experimental apollo schema reporting, letting the server report its schema to the Apollo registry.
+   * This will start a thread within the apollo agent that will periodically report server info and a schema potentially
+   * Look at https://github.com/apollographql/apollo-schema-reporting-preview-docs for more information about configuration and use cases.
    */
   experimental_schemaReporting?: boolean;
 
@@ -320,7 +322,7 @@ export class EngineReportingAgent<TContext = any> {
 
   private currentSchemaReporter?: SchemaReporter;
   private readonly bootId: string;
-  private executableSchemaToIdMap = new Map<string|GraphQLSchema, string>();
+  private executableSchemaToIdMap = new Map<string | GraphQLSchema, string>();
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
@@ -373,12 +375,11 @@ export class EngineReportingAgent<TContext = any> {
     if (cachedId) {
       return cachedId;
     }
-    let schemaDocument = isString(schema) ? schema :
-      stripIgnoredCharacters(
-        printSchema(lexicographicSortSchema(schema))
-      );
+    let schemaDocument = isString(schema)
+      ? schema
+      : stripIgnoredCharacters(printSchema(lexicographicSortSchema(schema)));
 
-    const id = new sha256().update(schemaDocument).digest("hex");
+    const id = new sha256().update(schemaDocument).digest('hex');
     this.executableSchemaToIdMap.set(schema, id);
     return id;
   }
@@ -388,7 +389,7 @@ export class EngineReportingAgent<TContext = any> {
       this.options,
       this.addTrace.bind(this),
       this.startSchemaReporting.bind(this),
-      this.executableSchemaIdGenerator.bind(this)
+      this.executableSchemaIdGenerator.bind(this),
     );
   }
 
@@ -582,10 +583,15 @@ export class EngineReportingAgent<TContext = any> {
     const serverInfo = {
       bootId: this.bootId,
       graphVariant: this.graphVariant,
+      // The infra environment in which this edge server is running, e.g. localhost, Kubernetes
+      // Length must be <= 256 characters.
       platform: process.env.APOLLO_SERVER_PLATFORM || 'local',
       runtimeVersion: `node ${process.version}`,
       executableSchemaId: executableSchemaId,
+      // An identifier used to distinguish the version of the server code such as git or docker sha.
+      // Length must be <= 256 charecters
       userVersion: process.env.APOLLO_SERVER_USER_VERSION,
+      // "An identifier for the server instance. Length must be <= 256 characters.
       serverId:
         process.env.APOLLO_SERVER_ID || process.env.HOSTNAME || os.hostname(),
       libraryVersion: `apollo-engine-reporting@${
