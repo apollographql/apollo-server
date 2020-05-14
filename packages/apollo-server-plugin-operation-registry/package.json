@@ -5,8 +5,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [],
+
   "author": "Apollo <npm@apollographql.com>",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "repository": {
+    "type": "git",
+    "url": "apollographql/apollo-server",
+    "directory": "packages/apollo-server-plugin-operation-registry"
+  }
+  "license": "MIT",
   "engines": {
     "node": ">=8"
   },
