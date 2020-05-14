@@ -596,7 +596,7 @@ export class EngineReportingAgent<TContext = any> {
     };
 
     // Jitter the startup between 0 and 5 seconds
-    const delay = Math.floor(Math.random() * 5000);
+    const delay = Math.floor(Math.random() * 10_000);
 
     const schemaReporter = new SchemaReporter(
       serverInfo,
