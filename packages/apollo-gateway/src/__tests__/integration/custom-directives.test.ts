@@ -1,11 +1,7 @@
 import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
 
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+import { fixtures } from '../__fixtures__/schemas/';
 
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
 
@@ -14,7 +10,7 @@ expect.addSnapshotSerializer(queryPlanSerializer);
 
 describe('custom executable directives', () => {
   it('successfully passes directives along in requests to an underlying service', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body @stream
@@ -22,12 +18,9 @@ describe('custom executable directives', () => {
       }
     `;
 
-    const { errors, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { errors, queryPlan } = await execute(fixtures, {
+      query,
+    });
 
     expect(errors).toBeUndefined();
     expect(queryPlan).toCallService('reviews');
@@ -45,7 +38,7 @@ describe('custom executable directives', () => {
   });
 
   it('successfully passes directives and their variables along in requests to underlying services', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body @stream
@@ -56,12 +49,9 @@ describe('custom executable directives', () => {
       }
     `;
 
-    const { errors, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { errors, queryPlan } = await execute(fixtures, {
+      query,
+    });
 
     expect(errors).toBeUndefined();
     expect(queryPlan).toCallService('reviews');
@@ -108,7 +98,7 @@ describe('custom executable directives', () => {
       `,
     };
 
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body @stream
@@ -117,7 +107,7 @@ describe('custom executable directives', () => {
     `;
 
     expect(
-      execute([accounts, books, inventory, product, reviews, invalidService], {
+      execute([...fixtures, invalidService], {
         query,
       }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`
@@ -125,7 +115,7 @@ describe('custom executable directives', () => {
 
 [@transform] -> Custom directives must be implemented in every service. The following services do not implement the @transform directive: invalidService.
 
-[@invalid] -> Custom directives must be implemented in every service. The following services do not implement the @invalid directive: accounts, books, inventory, product, reviews."
+[@invalid] -> Custom directives must be implemented in every service. The following services do not implement the @invalid directive: accounts, books, documents, inventory, product, reviews."
 `);
   });
 
@@ -137,7 +127,7 @@ describe('custom executable directives', () => {
       `,
     };
 
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body @stream
@@ -146,7 +136,7 @@ describe('custom executable directives', () => {
     `;
 
     expect(
-      execute([accounts, books, inventory, product, reviews, invalidService], {
+      execute([...fixtures, invalidService], {
         query,
       }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`
@@ -155,6 +145,7 @@ describe('custom executable directives', () => {
 [@stream] -> custom directives must be defined identically across all services. See below for a list of current implementations:
 	accounts: directive @stream on FIELD
 	books: directive @stream on FIELD
+	documents: directive @stream on FIELD
 	inventory: directive @stream on FIELD
 	product: directive @stream on FIELD
 	reviews: directive @stream on FIELD

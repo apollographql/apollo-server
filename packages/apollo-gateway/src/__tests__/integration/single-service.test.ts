@@ -29,7 +29,7 @@ it('executes a query plan over concrete types', async () => {
     Query: { me },
   });
 
-  const query = gql`
+  const query = `#graphql
     query GetUser {
       me {
         id
@@ -88,7 +88,7 @@ it('does not remove __typename if that is all that is requested on a value type'
     Query: { me },
   });
 
-  const query = gql`
+  const query = `#graphql
     query GetUser {
       me {
         account {

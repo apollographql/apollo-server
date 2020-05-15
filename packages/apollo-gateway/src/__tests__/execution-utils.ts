@@ -1,10 +1,10 @@
-import { GraphQLSchema, GraphQLError, DocumentNode } from 'graphql';
+import { GraphQLSchema, GraphQLError } from 'graphql';
 import {
   GraphQLSchemaValidationError,
   GraphQLSchemaModule,
   GraphQLResolverMap,
 } from 'apollo-graphql';
-import { GraphQLRequest, GraphQLExecutionResult } from 'apollo-server-types';
+import { GraphQLRequest, GraphQLExecutionResult, Logger } from 'apollo-server-types';
 import {
   composeAndValidate,
   buildFederatedSchema,
@@ -22,6 +22,7 @@ import { mergeDeep } from 'apollo-utilities';
 
 import queryPlanSerializer from '../snapshotSerializers/queryPlanSerializer';
 import astSerializer from '../snapshotSerializers/astSerializer';
+import gql from 'graphql-tag';
 const prettyFormat = require('pretty-format');
 
 export type ServiceDefinitionModule = ServiceDefinition & GraphQLSchemaModule;
@@ -39,7 +40,8 @@ export function overrideResolversInService(
 
 export async function execute(
   services: ServiceDefinitionModule[],
-  request: GraphQLRequest & { query: DocumentNode },
+  request: GraphQLRequest,
+  logger?: Logger,
 ): Promise<GraphQLExecutionResult & { queryPlan: QueryPlan }> {
   let schema: GraphQLSchema;
   const serviceMap = Object.fromEntries(
@@ -65,7 +67,7 @@ export async function execute(
   if (errors && errors.length > 0) {
     throw new GraphQLSchemaValidationError(errors);
   }
-  const operationContext = buildOperationContext(schema, request.query);
+  const operationContext = buildOperationContext(schema, gql`${request.query}`);
 
   const queryPlan = buildQueryPlan(operationContext);
 
@@ -76,6 +78,7 @@ export async function execute(
       cache: undefined as any,
       context: {},
       request,
+      logger: logger || console
     },
     operationContext,
   );

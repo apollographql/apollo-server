@@ -69,7 +69,7 @@ const userService: ServiceDefinitionModule = {
 };
 
 it('fetches data correctly list type @key fields', async () => {
-  const query = gql`
+  const query = `#graphql
     query Reviews {
       reviews {
         body

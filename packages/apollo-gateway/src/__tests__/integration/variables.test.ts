@@ -1,14 +1,8 @@
-import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
-
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+import { fixtures } from '../__fixtures__/schemas/';
 
 it('passes variables to root fields', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         name
@@ -17,13 +11,10 @@ it('passes variables to root fields', async () => {
   `;
 
   const upc = '1';
-  const { data, errors, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, errors, queryPlan } = await execute(fixtures, {
+    query,
+    variables: { upc },
+  });
 
   expect(errors).toBeUndefined();
   expect(data).toEqual({
@@ -36,7 +27,7 @@ it('passes variables to root fields', async () => {
 });
 
 it('supports default variables in a variable definition', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String = "1") {
       product(upc: $upc) {
         name
@@ -44,12 +35,9 @@ it('supports default variables in a variable definition', async () => {
     }
   `;
 
-  const { data, errors, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, errors, queryPlan } = await execute(fixtures, {
+    query,
+  });
 
   expect(errors).toBeUndefined();
   expect(data).toEqual({
@@ -62,7 +50,7 @@ it('supports default variables in a variable definition', async () => {
 });
 
 it('passes variables to nested services', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProductsForUser($format: Boolean) {
       me {
         reviews {
@@ -73,13 +61,10 @@ it('passes variables to nested services', async () => {
   `;
 
   const format = true;
-  const { data, errors, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { format },
-    },
-  );
+  const { data, errors, queryPlan } = await execute(fixtures, {
+    query,
+    variables: { format },
+  });
 
   expect(errors).toBeUndefined();
   expect(data).toEqual({
@@ -99,7 +84,7 @@ it('passes variables to nested services', async () => {
 });
 
 it('works with default variables in the schema', async () => {
-  const query = gql`
+  const query = `#graphql
     query LibraryUser($libraryId: ID!, $userId: ID) {
       library(id: $libraryId) {
         userAccount(id: $userId) {
@@ -110,10 +95,10 @@ it('works with default variables in the schema', async () => {
     }
   `;
 
-  const { data, queryPlan, errors } = await execute(
-    [accounts, books, inventory, product, reviews],
-    { query, variables: { libraryId: '1' } },
-  );
+  const { data, queryPlan, errors } = await execute(fixtures, {
+    query,
+    variables: { libraryId: '1' },
+  });
 
   expect(data).toEqual({
     library: {

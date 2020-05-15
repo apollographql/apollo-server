@@ -1,10 +1,6 @@
 import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+import { fixtures } from '../__fixtures__/schemas/';
 
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
 
@@ -12,7 +8,7 @@ expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
 it('handles an abstract type from the base service', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         upc
@@ -23,13 +19,10 @@ it('handles an abstract type from the base service', async () => {
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute(fixtures, {
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({
     product: {
@@ -102,7 +95,7 @@ it('handles an abstract type from the base service', async () => {
 });
 
 it('can request fields on extended interfaces', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         inStock
@@ -113,7 +106,7 @@ it('can request fields on extended interfaces', async () => {
   const upc = '1';
 
   const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
+    fixtures,
     {
       query,
       variables: { upc },
@@ -169,7 +162,7 @@ it('can request fields on extended interfaces', async () => {
 });
 
 it('can request fields on extended types that implement an interface', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         inStock
@@ -182,7 +175,7 @@ it('can request fields on extended types that implement an interface', async () 
 
   const upc = '1';
   const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
+    fixtures,
     {
       query,
       variables: { upc },
@@ -239,7 +232,7 @@ it('can request fields on extended types that implement an interface', async () 
 });
 
 it('prunes unfilled type conditions', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         inStock
@@ -254,13 +247,10 @@ it('prunes unfilled type conditions', async () => {
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute(fixtures, {
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({ product: { inStock: true, isHeavy: false } });
   expect(queryPlan).toCallService('product');
@@ -313,7 +303,7 @@ it('prunes unfilled type conditions', async () => {
 });
 
 it('fetches interfaces returned from other services', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetUserAndProducts {
       me {
         reviews {
@@ -328,12 +318,9 @@ it('fetches interfaces returned from other services', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute(fixtures, {
+    query,
+  });
 
   expect(data).toEqual({
     me: {
@@ -431,7 +418,7 @@ it('fetches interfaces returned from other services', async () => {
 });
 
 it('fetches composite fields from a foreign type casted to an interface [@provides field]', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetUserAndProducts {
       me {
         reviews {
@@ -446,12 +433,9 @@ it('fetches composite fields from a foreign type casted to an interface [@provid
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute(fixtures, {
+    query,
+  });
 
   expect(data).toEqual({
     me: {
@@ -571,7 +555,7 @@ it('fetches composite fields from a foreign type casted to an interface [@provid
 });
 
 it('allows for extending an interface from another service with fields', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         reviews {
@@ -582,13 +566,10 @@ it('allows for extending an interface from another service with fields', async (
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute(fixtures, {
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({
     product: {
@@ -649,7 +630,7 @@ it('allows for extending an interface from another service with fields', async (
 
 describe('unions', () => {
   it('handles unions from the same service', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetUserAndProducts {
         me {
           reviews {
@@ -671,12 +652,9 @@ describe('unions', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { data, queryPlan } = await execute(fixtures, {
+      query,
+    });
 
     expect(data).toEqual({
       me: {
@@ -771,7 +749,7 @@ describe('unions', () => {
   });
 
   it("doesn't expand interfaces with inline type conditions if all possibilities are fufilled by one service", async () => {
-    const query = gql`
+    const query = `#graphql
       query GetProducts {
         topProducts {
           name
@@ -841,7 +819,7 @@ describe('unions', () => {
   //   `;
 
   //   const { data, queryPlan } = await execute(
-  //     [accounts, books, inventory, product, reviews],
+  //     fixtures,
   //     {
   //       query,
   //     },

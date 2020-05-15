@@ -103,7 +103,7 @@ const userService: ServiceDefinitionModule = {
 };
 
 it('works fetches data correctly with complex / nested @key fields', async () => {
-  const query = gql`
+  const query = `#graphql
     query Reviews {
       reviews {
         author {

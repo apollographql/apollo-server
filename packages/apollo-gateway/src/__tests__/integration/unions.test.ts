@@ -6,7 +6,7 @@ expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
 it('handles multiple union type conditions that share a response name (media)', async () => {
-  const query = gql`
+  const query = `#graphql
     query {
       content {
         ...Audio

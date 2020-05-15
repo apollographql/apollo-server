@@ -6,11 +6,7 @@ import { buildFederatedSchema } from '@apollo/federation';
 import { LocalGraphQLDataSource } from '../../datasources/LocalGraphQLDataSource';
 import { ApolloGateway } from '../../';
 
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+import { fixtures } from '../__fixtures__/schemas/';
 
 it('caches the query plan for a request', async () => {
   const planner = require('../../buildQueryPlan');
@@ -19,7 +15,7 @@ it('caches the query plan for a request', async () => {
   planner.buildQueryPlan = jest.fn(originalPlanner);
 
   const gateway = new ApolloGateway({
-    localServiceList: [accounts, books, inventory, product, reviews],
+    localServiceList: fixtures,
     buildService: service => {
       return new LocalGraphQLDataSource(buildFederatedSchema([service]));
     },
@@ -75,7 +71,7 @@ it('supports multiple operations and operationName', async () => {
   `;
 
   const gateway = new ApolloGateway({
-    localServiceList: [accounts, books, inventory, product, reviews],
+    localServiceList: fixtures,
     buildService: service => {
       return new LocalGraphQLDataSource(buildFederatedSchema([service]));
     },
