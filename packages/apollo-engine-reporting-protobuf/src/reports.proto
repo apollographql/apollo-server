@@ -269,11 +269,10 @@ message ReportHeader {
 	string uname = 9;
 	// eg "current", "prod"
 	string schema_tag = 10;
-	// The hex representation of the sha512 of the introspection response
-	string deprecated_schema_hash = 11;
-
 	// An id that is used to represent the schema to Apollo Graph Manager
-	string executable_schema_id = 12;
+	// Using this in place of what used to be schema_hash, since that is no longer
+	// attached to a schema in the backend.
+	string executable_schema_id = 11;
 
 	reserved 3; // removed string service = 3;
 }

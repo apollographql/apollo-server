@@ -71,18 +71,17 @@ export class SchemaReporter {
     serverInfo: EdgeServerInfo,
     schemaSdl: string,
     apiKey: string,
-    reportingEndpoint: string | undefined,
+    schemaReportingEndpoint: string | undefined,
   ) {
-    if (apiKey === '') {
-      throw new Error('No api key defined');
-    }
 
     this.headers = new Headers();
     this.headers.set('Content-Type', 'application/json');
     this.headers.set('x-api-key', apiKey);
+    this.headers.set('apollographql-client-name', 'apollo-server');
+    this.headers.set('apollographql-client-version', require('../package.json').version);
 
     this.url =
-      reportingEndpoint ||
+      schemaReportingEndpoint ||
       'https://engine-graphql.apollographql.com/api/graphql';
 
     this.serverInfo = serverInfo;
@@ -116,7 +115,7 @@ export class SchemaReporter {
 
     if (!data || !data.me || !data.me.__typename) {
       throw new ReportingError(`
-Heartbeat response error. Received incomplete data from Apollo graph manager.
+Heartbeat response error. Received incomplete data from Apollo Graph Manager.
 If this continues please reach out at support@apollographql.com.
 Got response: "${JSON.stringify(data)}"
       `);
@@ -126,11 +125,13 @@ Got response: "${JSON.stringify(data)}"
       this.isStopped = true;
       throw new ReportingError(`
       User tokens cannot be used for schema reporting. Only service tokens.
+      Please go to https://engine.apollographql.com/graph/$INSERT_YOUR_GRAPH/settings
+      to get a token
       `);
     } else if (data.me.__typename === 'ServiceMutation') {
       if (!data.me.reportServerInfo) {
         throw new ReportingError(`
-Heartbeat response error. Received incomplete data from Apollo graph manager.
+Heartbeat response error. Received incomplete data from Apollo Graph Manager.
 If this continues please reach out at support@apollographql.com.
 Got response: "${JSON.stringify(data)}"
       `);

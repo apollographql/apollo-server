@@ -65,7 +65,7 @@ describe('schema reporting', () => {
     executableSchemaIdGenerator.mockClear();
   });
 
-  it('starts reporing if enabled', async () => {
+  it('starts reporting if enabled', async () => {
     const pluginInstance = plugin(
       {
         experimental_schemaReporting: true,

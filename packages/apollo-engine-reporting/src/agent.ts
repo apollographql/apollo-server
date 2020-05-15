@@ -322,7 +322,10 @@ export class EngineReportingAgent<TContext = any> {
 
   private currentSchemaReporter?: SchemaReporter;
   private readonly bootId: string;
-  private executableSchemaToIdMap = new Map<string | GraphQLSchema, string>();
+  private lastSeenExecutableSchemaToId?: {
+    executabeSchema: string | GraphQLSchema,
+    executableSchemaId: string,
+  }
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
@@ -370,13 +373,16 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   public executableSchemaIdGenerator(schema: string | GraphQLSchema) {
-    // TODO: At somepoint fix this caching for managed federation so we treat it as an  LRU and gc old schemas.
-    const cachedId = this.executableSchemaToIdMap.get(schema);
-    if (cachedId) {
-      return cachedId;
+    if (this.lastSeenExecutableSchemaToId?.executabeSchema === schema) {
+      return this.lastSeenExecutableSchemaToId.executableSchemaId
     }
     const id = computeExecutableSchemaId(schema);
-    this.executableSchemaToIdMap.set(schema, id);
+
+    this.lastSeenExecutableSchemaToId = {
+      executabeSchema: schema,
+      executableSchemaId: id,
+    }
+
     return id;
   }
 
@@ -595,7 +601,7 @@ export class EngineReportingAgent<TContext = any> {
       }`,
     };
 
-    // Jitter the startup between 0 and 5 seconds
+    // Jitter the startup between 0 and 10 seconds
     const delay = Math.floor(Math.random() * 10_000);
 
     const schemaReporter = new SchemaReporter(
