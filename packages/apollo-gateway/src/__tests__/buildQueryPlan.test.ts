@@ -5,12 +5,17 @@ import {
   GraphQLSchemaValidationError,
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
-import { composeServices, buildFederatedSchema, normalizeTypeDefs } from '@apollo/federation';
+import {
+  composeServices,
+  buildFederatedSchema,
+  normalizeTypeDefs,
+} from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
+import { fixtureNames } from './__fixtures__/schemas';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
@@ -25,20 +30,14 @@ describe('buildQueryPlan', () => {
 
   beforeEach(() => {
     const serviceMap = Object.fromEntries(
-      ['accounts', 'product', 'inventory', 'reviews', 'books', 'documents'].map(
-        serviceName => {
-          return [
-            serviceName,
-            buildLocalService([
-              require(path.join(
-                __dirname,
-                '__fixtures__/schemas',
-                serviceName,
-              )),
-            ]),
-          ] as [string, LocalGraphQLDataSource];
-        },
-      ),
+      fixtureNames.map((serviceName) => {
+        return [
+          serviceName,
+          buildLocalService([
+            require(path.join(__dirname, '__fixtures__/schemas', serviceName)),
+          ]),
+        ] as [string, LocalGraphQLDataSource];
+      }),
     );
 
     let errors: GraphQLError[];
@@ -58,12 +57,12 @@ describe('buildQueryPlan', () => {
     const query = gql`
       query {
         body {
-          ...on Image {
+          ... on Image {
             attributes {
               url
             }
           }
-          ...on Text {
+          ... on Text {
             attributes {
               bold
               text

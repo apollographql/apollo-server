@@ -11,6 +11,7 @@ import fetch from 'node-fetch';
 import { ApolloGateway } from '../..';
 import { Plugin, Config, Refs } from 'pretty-format';
 import { Report } from 'apollo-engine-reporting-protobuf';
+import { fixtureNames } from '../__fixtures__/schemas';
 
 // Normalize specific fields that change often (eg timestamps) to static values,
 // to make snapshot testing viable.  (If these helpers are more generally
@@ -105,13 +106,7 @@ describe('reporting', () => {
 
     backendServers = [];
     const serviceList = [];
-    for (const serviceName of [
-      'accounts',
-      'product',
-      'inventory',
-      'reviews',
-      'books',
-    ]) {
+    for (const serviceName of fixtureNames) {
       const { server, url } = await startFederatedServer([
         require(path.join(__dirname, '../__fixtures__/schemas', serviceName)),
       ]);
