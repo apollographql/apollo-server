@@ -1,6 +1,5 @@
 import { disableFragmentWarnings } from 'graphql-tag';
 import { execute } from '../execution-utils';
-import { fixtures } from '../__fixtures__/schemas/';
 
 beforeAll(() => {
   disableFragmentWarnings();
@@ -16,7 +15,7 @@ it('supports inline fragments (one level)', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
   });
 
@@ -55,7 +54,7 @@ it('supports inline fragments (multi level)', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
   });
 
@@ -89,7 +88,7 @@ it('supports named fragments (one level)', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
   });
 
@@ -119,7 +118,7 @@ it('supports multiple named fragments (one level, mixed ordering)', async () => 
     }
   `;
 
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
   });
 
@@ -152,7 +151,7 @@ it('supports multiple named fragments (multi level, mixed ordering)', async () =
     }
   `;
 
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
   });
 
@@ -187,7 +186,7 @@ it('supports variables within fragments', async () => {
   `;
 
   const format = true;
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables: { format },
   });
@@ -218,7 +217,7 @@ it('supports root fragments', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
   });
 

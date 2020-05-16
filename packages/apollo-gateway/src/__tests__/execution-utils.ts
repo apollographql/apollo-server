@@ -23,6 +23,7 @@ import { mergeDeep } from 'apollo-utilities';
 import queryPlanSerializer from '../snapshotSerializers/queryPlanSerializer';
 import astSerializer from '../snapshotSerializers/astSerializer';
 import gql from 'graphql-tag';
+import { fixtures } from './__fixtures__/schemas';
 const prettyFormat = require('pretty-format');
 
 export type ServiceDefinitionModule = ServiceDefinition & GraphQLSchemaModule;
@@ -39,9 +40,9 @@ export function overrideResolversInService(
 }
 
 export async function execute(
-  services: ServiceDefinitionModule[],
   request: GraphQLRequest,
-  logger?: Logger,
+  services: ServiceDefinitionModule[] = fixtures,
+  logger: Logger = console,
 ): Promise<GraphQLExecutionResult & { queryPlan: QueryPlan }> {
   let schema: GraphQLSchema;
   const serviceMap = Object.fromEntries(
@@ -78,7 +79,7 @@ export async function execute(
       cache: undefined as any,
       context: {},
       request,
-      logger: logger || console
+      logger
     },
     operationContext,
   );

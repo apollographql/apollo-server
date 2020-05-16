@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
-import { fixtures } from '../__fixtures__/schemas/';
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
 
 expect.addSnapshotSerializer(astSerializer);
@@ -42,7 +41,7 @@ describe('value types', () => {
       }
     `;
 
-    const { data, errors, queryPlan } = await execute(fixtures, {
+    const { data, errors, queryPlan } = await execute({
       query,
     });
 
@@ -285,10 +284,10 @@ describe('value types', () => {
     `;
 
     const { data, errors, queryPlan } = await execute(
-      [firstService, secondService, userService],
       {
         query,
       },
+      [firstService, secondService, userService],
     );
 
     expect(errors).toBeUndefined();

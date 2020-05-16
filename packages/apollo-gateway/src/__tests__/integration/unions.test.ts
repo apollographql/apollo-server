@@ -25,6 +25,7 @@ it('handles multiple union type conditions that share a response name (media)', 
   `;
 
   const { queryPlan, errors } = await execute(
+    { query },
     [
       {
         name: 'contentService',
@@ -51,7 +52,6 @@ it('handles multiple union type conditions that share a response name (media)', 
         },
       },
     ],
-    { query },
   );
 
   expect(errors).toBeUndefined();

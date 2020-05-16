@@ -12,7 +12,7 @@ it('does not have to go to another service when field is given', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute( {
     query,
   });
 
@@ -51,9 +51,12 @@ it('does not load fields provided even when going to other service', async () =>
     }
   `;
 
-  const { data, queryPlan } = await execute([localAccounts, ...restFixtures], {
-    query,
-  });
+  const { data, queryPlan } = await execute(
+    {
+      query,
+    },
+    [localAccounts, ...restFixtures],
+  );
 
   expect(data).toEqual({
     topReviews: [

@@ -1,7 +1,5 @@
 import { execute } from '../execution-utils';
 
-import { fixtures } from '../__fixtures__/schemas/';
-
 describe('query', () => {
   it('supports parallel root fields', async () => {
     const query = `#graphql
@@ -15,7 +13,7 @@ describe('query', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
     });
 

@@ -1,5 +1,4 @@
 import { execute } from '../execution-utils';
-import { fixtures } from '../__fixtures__/schemas/';
 
 it('passes variables to root fields', async () => {
   const query = `#graphql
@@ -11,7 +10,7 @@ it('passes variables to root fields', async () => {
   `;
 
   const upc = '1';
-  const { data, errors, queryPlan } = await execute(fixtures, {
+  const { data, errors, queryPlan } = await execute({
     query,
     variables: { upc },
   });
@@ -35,7 +34,7 @@ it('supports default variables in a variable definition', async () => {
     }
   `;
 
-  const { data, errors, queryPlan } = await execute(fixtures, {
+  const { data, errors, queryPlan } = await execute({
     query,
   });
 
@@ -61,7 +60,7 @@ it('passes variables to nested services', async () => {
   `;
 
   const format = true;
-  const { data, errors, queryPlan } = await execute(fixtures, {
+  const { data, errors, queryPlan } = await execute({
     query,
     variables: { format },
   });
@@ -95,7 +94,7 @@ it('works with default variables in the schema', async () => {
     }
   `;
 
-  const { data, queryPlan, errors } = await execute(fixtures, {
+  const { data, queryPlan, errors } = await execute({
     query,
     variables: { libraryId: '1' },
   });

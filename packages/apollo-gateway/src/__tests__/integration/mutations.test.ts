@@ -1,5 +1,5 @@
 import { execute } from '../execution-utils';
-import { fixtures, reviews, accounts } from '../__fixtures__/schemas/';
+import { reviews, accounts } from '../__fixtures__/schemas/';
 
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
 
@@ -24,7 +24,7 @@ it('supports mutations', async () => {
   `;
 
   const variables = { username: '@complete', password: 'css_completes_me' };
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables,
   });
@@ -57,7 +57,7 @@ it('returning across service boundaries', async () => {
   `;
 
   const variables = { upc: '1', body: 'A great table' };
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables,
   });
@@ -107,7 +107,7 @@ it('multiple root mutations', async () => {
     upc: '1',
     body: 'A great table.',
   };
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables,
   });
@@ -180,7 +180,7 @@ it('multiple root mutations with correct service order', async () => {
     password: 'css_completes_me',
     reviewId: '6',
   };
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables,
   });

@@ -18,7 +18,7 @@ describe('custom executable directives', () => {
       }
     `;
 
-    const { errors, queryPlan } = await execute(fixtures, {
+    const { errors, queryPlan } = await execute( {
       query,
     });
 
@@ -49,7 +49,7 @@ describe('custom executable directives', () => {
       }
     `;
 
-    const { errors, queryPlan } = await execute(fixtures, {
+    const { errors, queryPlan } = await execute( {
       query,
     });
 
@@ -107,9 +107,12 @@ describe('custom executable directives', () => {
     `;
 
     expect(
-      execute([...fixtures, invalidService], {
-        query,
-      }),
+      execute(
+        {
+          query,
+        },
+        [...fixtures, invalidService],
+      ),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`
 "[@stream] -> Custom directives must be implemented in every service. The following services do not implement the @stream directive: invalidService.
 
@@ -136,9 +139,12 @@ describe('custom executable directives', () => {
     `;
 
     expect(
-      execute([...fixtures, invalidService], {
-        query,
-      }),
+      execute(
+        {
+          query,
+        },
+        [...fixtures, invalidService],
+      ),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`
 "[@transform] -> Custom directives must be implemented in every service. The following services do not implement the @transform directive: invalid.
 

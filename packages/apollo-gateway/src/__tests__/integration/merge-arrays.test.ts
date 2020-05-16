@@ -1,5 +1,4 @@
 import { execute } from '../execution-utils';
-import { fixtures } from '../__fixtures__/schemas/';
 
 describe('query', () => {
   it('supports arrays', async () => {
@@ -15,7 +14,7 @@ describe('query', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
     });
 

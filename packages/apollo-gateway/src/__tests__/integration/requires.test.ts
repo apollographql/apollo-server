@@ -1,5 +1,4 @@
 import { execute } from '../execution-utils';
-import { fixtures } from '../__fixtures__/schemas/';
 
 it('supports passing additional fields defined by a requires', async () => {
   const query = `#graphql
@@ -16,7 +15,7 @@ it('supports passing additional fields defined by a requires', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
   });
 

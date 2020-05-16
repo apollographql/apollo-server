@@ -20,7 +20,7 @@ it('supports simple aliases', async () => {
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables: { upc },
   });
@@ -52,7 +52,7 @@ it('supports aliases of root fields on subservices', async () => {
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables: { upc },
   });
@@ -104,7 +104,7 @@ it('supports aliases of nested fields on subservices', async () => {
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables: { upc },
   });

@@ -1,7 +1,4 @@
 import { execute } from '../execution-utils';
-
-import { fixtures } from '../__fixtures__/schemas/';
-
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
 
 expect.addSnapshotSerializer(astSerializer);
@@ -22,7 +19,7 @@ describe('@skip', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
     });
 
@@ -53,7 +50,7 @@ describe('@skip', () => {
     `;
 
     const skip = true;
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
       variables: { skip },
     });
@@ -85,7 +82,7 @@ describe('@skip', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
     });
 
@@ -120,7 +117,7 @@ describe('@skip', () => {
     `;
 
     const skip = false;
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
       variables: { skip },
     });
@@ -156,7 +153,7 @@ describe('@include', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
     });
 
@@ -187,7 +184,7 @@ describe('@include', () => {
     `;
 
     const include = false;
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
       variables: { include },
     });
@@ -220,7 +217,7 @@ describe('@include', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
     });
 
@@ -256,7 +253,7 @@ describe('@include', () => {
     `;
 
     const include = true;
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
       variables: { include },
     });

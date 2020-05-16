@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
-import { fixtures } from '../__fixtures__/schemas/';
 
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
 
@@ -19,7 +18,7 @@ it('handles an abstract type from the base service', async () => {
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables: { upc },
   });
@@ -105,13 +104,10 @@ it('can request fields on extended interfaces', async () => {
 
   const upc = '1';
 
-  const { data, queryPlan } = await execute(
-    fixtures,
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({ product: { inStock: true } });
   expect(queryPlan).toCallService('product');
@@ -174,13 +170,10 @@ it('can request fields on extended types that implement an interface', async () 
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(
-    fixtures,
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({ product: { inStock: true, isHeavy: false } });
   expect(queryPlan).toCallService('product');
@@ -247,7 +240,7 @@ it('prunes unfilled type conditions', async () => {
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables: { upc },
   });
@@ -318,7 +311,7 @@ it('fetches interfaces returned from other services', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
   });
 
@@ -433,7 +426,7 @@ it('fetches composite fields from a foreign type casted to an interface [@provid
     }
   `;
 
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
   });
 
@@ -566,7 +559,7 @@ it('allows for extending an interface from another service with fields', async (
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(fixtures, {
+  const { data, queryPlan } = await execute({
     query,
     variables: { upc },
   });
@@ -652,7 +645,7 @@ describe('unions', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(fixtures, {
+    const { data, queryPlan } = await execute({
       query,
     });
 
@@ -757,31 +750,28 @@ describe('unions', () => {
       }
     `;
 
-    const { queryPlan, errors } = await execute(
-      [
-        {
-          name: 'products',
-          typeDefs: gql`
-            extend type Query {
-              topProducts: [Product]
-            }
+    const { queryPlan, errors } = await execute({ query }, [
+      {
+        name: 'products',
+        typeDefs: gql`
+          extend type Query {
+            topProducts: [Product]
+          }
 
-            interface Product {
-              name: String
-            }
+          interface Product {
+            name: String
+          }
 
-            type Shoe implements Product {
-              name: String
-            }
+          type Shoe implements Product {
+            name: String
+          }
 
-            type Car implements Product {
-              name: String
-            }
-          `,
-        },
-      ],
-      { query },
-    );
+          type Car implements Product {
+            name: String
+          }
+        `,
+      },
+    ]);
 
     expect(errors).toBeUndefined();
     expect(queryPlan).toMatchInlineSnapshot(`
@@ -819,7 +809,6 @@ describe('unions', () => {
   //   `;
 
   //   const { data, queryPlan } = await execute(
-  //     fixtures,
   //     {
   //       query,
   //     },
