@@ -10,7 +10,7 @@ import {
   GraphQLObjectType,
 } from 'graphql';
 import { getResponseName } from './utilities/graphql';
-import { partition } from './utilities/array';
+import { partition, groupBy } from './utilities/array';
 
 export interface Field<
   TParent extends GraphQLCompositeType = GraphQLCompositeType
@@ -43,25 +43,6 @@ export function matchesField(field: Field) {
   // TODO: Compare parent type and arguments
   return (otherField: Field) => {
     return field.fieldDef.name === otherField.fieldDef.name;
-  };
-}
-
-function groupBy<T, U>(keyFunction: (element: T) => U) {
-  return (iterable: Iterable<T>) => {
-    const result = new Map<U, T[]>();
-
-    for (const element of iterable) {
-      const key = keyFunction(element);
-      const group = result.get(key);
-
-      if (group) {
-        group.push(element);
-      } else {
-        result.set(key, [element]);
-      }
-    }
-
-    return result;
   };
 }
 
