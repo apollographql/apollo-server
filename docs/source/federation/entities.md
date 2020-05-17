@@ -182,7 +182,7 @@ extend type Product @key(fields: "upc") {
 Similar to the `reviews` relationship example above, the gateway fetches the required `upc` field from the `products` service and passes it to the `inventory` service, even if the query didn't ask for the `upc`:
 
 ```graphql
-query {
+query GetTopProductAvailability {
   topProducts {
     inStock
   }

@@ -37,6 +37,10 @@ Apollo Server provides libraries for acting both as an implementing service and 
 
 > Apollo Federation does not currently support [GraphQL subscription operations](https://www.apollographql.com/docs/react/data/subscriptions/).
 
+The following presentation by [Mandi Wise](https://twitter.com/mandiwise) further describes the architecture of Apollo Federation and walks through implementing a federated graph:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/v_1bn2sHdk4?start=81" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ## Core principles
 
 ### Incremental adoption
@@ -185,7 +189,7 @@ were implemented as a single, monolithic service:
 
 ```graphql
 # A query that the gateway resolves by calling all three services
-query {
+query GetCurrentUserReviews {
   me {
     username
     reviews {

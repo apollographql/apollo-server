@@ -1,17 +1,12 @@
 import gql from 'graphql-tag';
 import { execute, ServiceDefinitionModule } from '../execution-utils';
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
 it('supports passing additional scalar fields defined by a requires', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetReviwedBookNames {
       me {
         reviews {
@@ -25,12 +20,9 @@ it('supports passing additional scalar fields defined by a requires', async () =
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+  });
 
   expect(data).toEqual({
     me: {
@@ -229,7 +221,7 @@ const serviceB: ServiceDefinitionModule = {
 };
 
 it('supports multiple arbitrarily nested fields defined by a requires', async () => {
-  const query = gql`
+  const query = `#graphql
     query Me {
       me {
         name
@@ -246,9 +238,12 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
     }
   `;
 
-  const { data, queryPlan } = await execute([serviceA, serviceB], {
-    query,
-  });
+  const { data, queryPlan } = await execute(
+    {
+      query,
+    },
+    [serviceA, serviceB],
+  );
 
   expect(data).toEqual({
     me: {
@@ -375,7 +370,7 @@ it('supports multiple arbitrarily nested fields defined by a requires', async ()
 });
 
 it('supports deeply nested fields defined by requires with fragments in user-defined queries', async () => {
-  const query = gql`
+  const query = `#graphql
     query Me {
       me {
         calculated3
@@ -392,9 +387,12 @@ it('supports deeply nested fields defined by requires with fragments in user-def
     }
   `;
 
-  const { data } = await execute([serviceA, serviceB], {
-    query,
-  });
+  const { data } = await execute(
+    {
+      query,
+    },
+    [serviceA, serviceB],
+  );
 
   expect(data).toEqual({
     me: {
