@@ -62,8 +62,10 @@ describe('schema reporting', () => {
         experimental_schemaReporting: true,
       },
       addTrace,
-      startSchemaReporting,
-      executableSchemaIdGenerator,
+      {
+        startSchemaReporting,
+        executableSchemaIdGenerator,
+      }
     );
 
     await pluginTestHarness({
@@ -99,8 +101,10 @@ describe('schema reporting', () => {
         experimental_overrideReportedSchema: typeDefs,
       },
       addTrace,
-      startSchemaReporting,
-      executableSchemaIdGenerator,
+      {
+        startSchemaReporting,
+        executableSchemaIdGenerator,
+      }
     );
 
     await pluginTestHarness({
@@ -145,8 +149,10 @@ describe('schema reporting', () => {
         experimental_schemaReporting: true,
       },
       addTrace,
-      startSchemaReporting,
-      executableSchemaIdGenerator,
+      {
+        startSchemaReporting,
+        executableSchemaIdGenerator,
+      }
     );
 
     await pluginTestHarness({
@@ -199,8 +205,10 @@ it('trace construction', async () => {
       /* no options!*/
     },
     addTrace,
-    startSchemaReporting,
-    executableSchemaIdGenerator,
+    {
+      startSchemaReporting,
+      executableSchemaIdGenerator,
+    }
   );
 
   await pluginTestHarness({
