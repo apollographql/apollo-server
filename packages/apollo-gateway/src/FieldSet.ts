@@ -10,7 +10,7 @@ import {
   GraphQLObjectType,
 } from 'graphql';
 import { getResponseName } from './utilities/graphql';
-import _ from 'lodash';
+import { partition } from './utilities/array';
 
 export interface Field<
   TParent extends GraphQLCompositeType = GraphQLCompositeType
@@ -155,31 +155,31 @@ function mergeSelectionSets(fieldNodes: FieldNode[]): SelectionSetNode {
 function mergeFieldNodeSelectionSets(
   selectionNodes: SelectionNode[],
 ): SelectionNode[] {
-  const [fieldNodes, fragmentNodes] = _(selectionNodes)
-    .partition(
-      (node: SelectionNode): node is FieldNode => node.kind === 'Field',
-    )
-    .value();
+  const [fieldNodes, fragmentNodes] = partition(
+    selectionNodes,
+    (node: SelectionNode): node is FieldNode => node.kind === 'Field',
+  );
 
-  const [aliasedFieldNodes, nonAliasedFieldNodes] = _(fieldNodes)
-    .partition((node) => node.alias)
-    .value();
+  const [aliasedFieldNodes, nonAliasedFieldNodes] = partition(
+    fieldNodes,
+    (node: FieldNode): node is FieldNode => !!node.alias,
+  );
 
-  const mergedFieldNodes = _(nonAliasedFieldNodes)
-    .groupBy((node) => node.name.value)
-    .values()
-    .map((nodesWithSameName) => {
-      const node = nodesWithSameName[0];
-      if (node.selectionSet) {
-        node.selectionSet.selections = mergeFieldNodeSelectionSets(
-          nodesWithSameName.flatMap(
-            (node) => node.selectionSet?.selections || [],
-          ),
-        );
-      }
-      return node;
-    })
-    .value();
+  const mergedFieldNodes = Array.from(
+    groupBy((node: FieldNode) => node.name.value)(
+      nonAliasedFieldNodes,
+    ).values(),
+  ).map((nodesWithSameName) => {
+    const node = nodesWithSameName[0];
+    if (node.selectionSet) {
+      node.selectionSet.selections = mergeFieldNodeSelectionSets(
+        nodesWithSameName.flatMap(
+          (node) => node.selectionSet?.selections || [],
+        ),
+      );
+    }
+    return node;
+  });
 
   return [...mergedFieldNodes, ...aliasedFieldNodes, ...fragmentNodes];
 }
