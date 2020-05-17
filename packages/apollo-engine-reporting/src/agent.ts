@@ -27,7 +27,6 @@ import { reportingLoop, SchemaReporter } from './schemaReporter';
 import { v4 as uuidv4 } from 'uuid';
 import { isString } from 'util';
 
-const sha256 = module.require('crypto').createHash('sha256');
 
 let warnedOnDeprecatedApiKey = false;
 
@@ -870,8 +869,10 @@ function makeSendValuesBaseOptionsFromLegacy(
 export function computeExecutableSchemaId(
   schema: string | GraphQLSchema,
 ): string {
+  // Can't call digest on this object twice. Creating new object each function call
+  const sha256 = module.require('crypto').createHash('sha256');
   let schemaDocument = isString(schema)
     ? schema
     : stripIgnoredCharacters(printSchema(lexicographicSortSchema(schema)));
-  return new sha256().update(schemaDocument).digest('hex');
+  return sha256.update(schemaDocument).digest('hex');
 }
