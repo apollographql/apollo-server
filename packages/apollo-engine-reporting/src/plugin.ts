@@ -31,14 +31,19 @@ const clientVersionHeaderKey = 'apollographql-client-version';
 export const plugin = <TContext>(
   options: EngineReportingOptions<TContext> = Object.create(null),
   addTrace: (args: AddTraceArgs) => Promise<void>,
-  startSchemaReporting: ({
-    executableSchema,
-    executableSchemaId,
+  {
+    startSchemaReporting,
+    executableSchemaIdGenerator,
   }: {
-    executableSchema: string;
-    executableSchemaId: string;
-  }) => void,
-  executableSchemaIdGenerator: (schema: string | GraphQLSchema) => string,
+    startSchemaReporting: ({
+      executableSchema,
+      executableSchemaId,
+    }: {
+      executableSchema: string;
+      executableSchemaId: string;
+    }) => void;
+    executableSchemaIdGenerator: (schema: string | GraphQLSchema) => string;
+  },
 ): ApolloServerPlugin<TContext> => {
   const logger: Logger = options.logger || console;
   const generateClientInfo: GenerateClientInfo<TContext> =
@@ -46,15 +51,14 @@ export const plugin = <TContext>(
 
   return {
     serverWillStart: function({ schema }) {
-      if (options.experimental_schemaReporting) {
-        startSchemaReporting({
-          executableSchema:
-            options.experimental_overrideReportedSchema ||
-            printSchema(schema),
-          executableSchemaId:
-            executableSchemaIdGenerator(options.experimental_overrideReportedSchema || schema)
-        });
-      }
+      if (!options.experimental_schemaReporting) return;
+      startSchemaReporting({
+        executableSchema:
+          options.experimental_overrideReportedSchema || printSchema(schema),
+        executableSchemaId: executableSchemaIdGenerator(
+          options.experimental_overrideReportedSchema || schema,
+        ),
+      });
     },
     requestDidStart({
       logger: requestLogger,
@@ -142,8 +146,9 @@ export const plugin = <TContext>(
           document: requestContext.document,
           source: requestContext.source,
           trace: treeBuilder.trace,
-          executableSchemaId:
-            executableSchemaIdGenerator(options.experimental_overrideReportedSchema || schema),
+          executableSchemaId: executableSchemaIdGenerator(
+            options.experimental_overrideReportedSchema || schema,
+          ),
         });
       }
 

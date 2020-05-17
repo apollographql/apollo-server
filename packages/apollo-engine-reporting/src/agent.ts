@@ -6,8 +6,8 @@ import {
   GraphQLSchema,
   lexicographicSortSchema,
   printSchema,
-  stripIgnoredCharacters,
-} from 'graphql';
+  stripIgnoredCharacters
+} from "graphql";
 import {
   ReportHeader,
   Trace,
@@ -25,8 +25,9 @@ import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { reportingLoop, SchemaReporter } from './schemaReporter';
 import { v4 as uuidv4 } from 'uuid';
-import { sha256 } from 'sha.js';
 import { isString } from 'util';
+
+const sha256 = module.require('crypto').createHash('sha256');
 
 let warnedOnDeprecatedApiKey = false;
 
@@ -131,9 +132,14 @@ export interface EngineReportingOptions<TContext> {
    */
   maxUncompressedReportSize?: number;
   /**
+   * [DEPRECATED] this option was replaced by tracesEndpointUrl
    * The URL of the Engine report ingress server.
    */
-  metricsEndpointUrl?: string;
+  endpointUrl?: string;
+  /**
+   * The URL of the Engine report ingress server. This was previously known as endpointUrl
+   */
+  tracesEndpointUrl?: string;
   /**
    * If set, prints all reports as JSON when they are sent.
    */
@@ -251,9 +257,17 @@ export interface EngineReportingOptions<TContext> {
   generateClientInfo?: GenerateClientInfo<TContext>;
 
   /**
-   * Enable experimental apollo schema reporting, letting the server report its schema to the Apollo registry.
-   * This will start a thread within the apollo agent that will periodically report server info and a schema potentially
-   * Look at https://github.com/apollographql/apollo-schema-reporting-preview-docs for more information about configuration and use cases.
+   * **(Experimental)** Enable schema reporting from this server with
+   * Apollo Graph Manager.
+   *
+   * The use of this option avoids the need to rgister schemas manually within
+   * CI deployment pipelines using `apollo schema:push` by periodically
+   * reporting this server's schema (when changes are detected) along with
+   * additional details about its runtime environment to Apollo Graph Manager.
+   *
+   * See [our _preview
+   * documentation](https://github.com/apollographql/apollo-schema-reporting-preview-docs)
+   * for more information.
    */
   experimental_schemaReporting?: boolean;
 
@@ -263,6 +277,20 @@ export interface EngineReportingOptions<TContext> {
    * This would be useful for comments or other ordering and whitespace changes that get stripped when generating a `GraphQLSchema`
    */
   experimental_overrideReportedSchema?: string;
+
+  /**
+   * The schema reporter will wait before starting reporting.
+   * By default, the report will wait some random amount of time between 0 and 10 seconds.
+   * A longer interval leads to more staggered starts which means it is less likely
+   * multiple servers to get asked to upload a schema.
+   *
+   * If this server runs in lambda or in other constrained environments it would be useful
+   * to decrease the schema reporting max wait time to be less than default.
+   *
+   * This number will be the max for the range in ms that the schema reporter will
+   * wait before starting to report.
+   */
+  experimental_schemaReportingInitialDelayMaxMs?: number;
 
   /**
    * The URL to use for reporting schemas.
@@ -323,9 +351,11 @@ export class EngineReportingAgent<TContext = any> {
   private currentSchemaReporter?: SchemaReporter;
   private readonly bootId: string;
   private lastSeenExecutableSchemaToId?: {
-    executabeSchema: string | GraphQLSchema,
-    executableSchemaId: string,
-  }
+    executableSchema: string | GraphQLSchema;
+    executableSchemaId: string;
+  };
+
+  private readonly tracesEndpointUrl: string;
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
@@ -368,31 +398,41 @@ export class EngineReportingAgent<TContext = any> {
       });
     }
 
+    if (this.options.endpointUrl) {
+      this.logger.warn(
+        'The endpointUrl option for engine has been deprecated. Please use tracesEndpointUrl instead',
+      );
+    }
+    this.tracesEndpointUrl =
+      (this.options.endpointUrl ||
+        this.options.tracesEndpointUrl ||
+        'https://engine-report.apollodata.com') + '/api/ingress/traces';
+
     // Handle the legacy options: privateVariables and privateHeaders
     handleLegacyOptions(this.options);
   }
 
-  public executableSchemaIdGenerator(schema: string | GraphQLSchema) {
-    if (this.lastSeenExecutableSchemaToId?.executabeSchema === schema) {
-      return this.lastSeenExecutableSchemaToId.executableSchemaId
+  private executableSchemaIdGenerator(schema: string | GraphQLSchema) {
+    if (this.lastSeenExecutableSchemaToId?.executableSchema === schema) {
+      return this.lastSeenExecutableSchemaToId.executableSchemaId;
     }
     const id = computeExecutableSchemaId(schema);
 
+    // We override this variable every time we get a new schema so we cache
+    // the last seen value. It mostly a cached pair.
     this.lastSeenExecutableSchemaToId = {
-      executabeSchema: schema,
+      executableSchema: schema,
       executableSchemaId: id,
-    }
+    };
 
     return id;
   }
 
   public newPlugin(): ApolloServerPlugin<TContext> {
-    return plugin(
-      this.options,
-      this.addTrace.bind(this),
-      this.startSchemaReporting.bind(this),
-      this.executableSchemaIdGenerator.bind(this),
-    );
+    return plugin(this.options, this.addTrace.bind(this), {
+      startSchemaReporting: this.startSchemaReporting.bind(this),
+      executableSchemaIdGenerator: this.executableSchemaIdGenerator.bind(this),
+    });
   }
 
   public async addTrace({
@@ -509,16 +549,12 @@ export class EngineReportingAgent<TContext = any> {
       });
     });
 
-    const metricsEndpointUrl =
-      (this.options.metricsEndpointUrl ||
-        'https://engine-report.apollodata.com') + '/api/ingress/traces';
-
     // Wrap fetch with async-retry for automatic retrying
     const response: Response = await retry(
       // Retry on network errors and 5xx HTTP
       // responses.
       async () => {
-        const curResponse = await fetch(metricsEndpointUrl, {
+        const curResponse = await fetch(this.tracesEndpointUrl, {
           method: 'POST',
           headers: {
             'user-agent': 'apollo-engine-reporting',
@@ -602,7 +638,10 @@ export class EngineReportingAgent<TContext = any> {
     };
 
     // Jitter the startup between 0 and 10 seconds
-    const delay = Math.floor(Math.random() * 10_000);
+    const delay = Math.floor(
+      Math.random() *
+        (this.options.experimental_schemaReportingInitialDelayMaxMs || 10_000),
+    );
 
     const schemaReporter = new SchemaReporter(
       serverInfo,
@@ -828,8 +867,11 @@ function makeSendValuesBaseOptionsFromLegacy(
     : { all: true };
 }
 
-export function computeExecutableSchemaId(schema: string | GraphQLSchema): string {
-  let schemaDocument = isString(schema) ? schema
+export function computeExecutableSchemaId(
+  schema: string | GraphQLSchema,
+): string {
+  let schemaDocument = isString(schema)
+    ? schema
     : stripIgnoredCharacters(printSchema(lexicographicSortSchema(schema)));
   return new sha256().update(schemaDocument).digest('hex');
 }

@@ -1,20 +1,11 @@
 import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
-import {
-  graphql,
-  GraphQLError,
-  GraphQLSchema,
-  lexicographicSortSchema,
-  printSchema,
-  stripIgnoredCharacters,
-} from 'graphql';
+import { graphql, GraphQLError, printSchema } from 'graphql';
 import { Request } from 'node-fetch';
 import { makeTraceDetails, makeHTTPRequestHeaders, plugin } from '../plugin';
 import { Headers } from 'apollo-server-env';
-import { AddTraceArgs, computeExecutableSchemaId } from "../agent";
+import { AddTraceArgs, computeExecutableSchemaId } from '../agent';
 import { Trace } from 'apollo-engine-reporting-protobuf';
 import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
-import { sha256 } from 'sha.js';
-import { isString } from 'util';
 
 const typeDefs = `
   type User {
@@ -141,8 +132,10 @@ describe('schema reporting', () => {
     // Get the first argument from the first time this is called.
     // Not using called with because that has to be exhaustive and this isn't
     // testing trace generation
-    expect(addTrace.mock.calls[0][0].executableSchemaId).toBe(
-      expectedExecutableSchemaId,
+    expect(addTrace).toBeCalledWith(
+      expect.objectContaining({
+        executableSchemaId: expectedExecutableSchemaId,
+      }),
     );
   });
 

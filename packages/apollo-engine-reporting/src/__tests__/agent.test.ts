@@ -1,7 +1,8 @@
 import {
   signatureCacheKey,
   handleLegacyOptions,
-  EngineReportingOptions, computeExecutableSchemaId
+  EngineReportingOptions,
+  computeExecutableSchemaId
 } from "../agent";
 import { buildSchema } from "graphql";
 
@@ -57,12 +58,12 @@ describe('Executable Schema Id', () => {
       }
 
     `;
-  it('to be normalized for graphql schemas', () => {
+  it('does normalize GraphQL schemas', () => {
     expect(computeExecutableSchemaId(buildSchema(unsortedGQLSchemaDocument))).toEqual(
       computeExecutableSchemaId(buildSchema(sortedGQLSchemaDocument))
     );
   });
-  it('to not be normalized for strings', () => {
+  it('does not normalize strings', () => {
     expect(computeExecutableSchemaId(unsortedGQLSchemaDocument)).not.toEqual(
       computeExecutableSchemaId(sortedGQLSchemaDocument)
     );
