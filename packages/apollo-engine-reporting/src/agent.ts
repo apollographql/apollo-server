@@ -279,10 +279,10 @@ export interface EngineReportingOptions<TContext> {
   experimental_overrideReportedSchema?: string;
 
   /**
-   * The schema reporter will wait before starting reporting.
-   * By default, the report will wait some random amount of time between 0 and 10 seconds.
+   * The schema reporter waits before starting reporting.
+   * By default, the report waits some random amount of time between 0 and 10 seconds.
    * A longer interval leads to more staggered starts which means it is less likely
-   * multiple servers to get asked to upload a schema.
+   * multiple servers will get asked to upload the same schema.
    *
    * If this server runs in lambda or in other constrained environments it would be useful
    * to decrease the schema reporting max wait time to be less than default.
@@ -751,11 +751,11 @@ export class EngineReportingAgent<TContext = any> {
     });
   }
 
-  private resetReport(schemaId: string) {
-    this.reports[schemaId] = new Report({
-      header: this.reportHeaders[schemaId],
+  private resetReport(executableSchemaId: string) {
+    this.reports[executableSchemaId] = new Report({
+      header: this.reportHeaders[executableSchemaId],
     });
-    this.reportSizes[schemaId] = 0;
+    this.reportSizes[executableSchemaId] = 0;
   }
 }
 
