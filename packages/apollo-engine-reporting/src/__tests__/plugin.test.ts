@@ -201,8 +201,7 @@ describe('schema reporting', () => {
   });
 });
 
-
-it("trace construction", async () => {
+it('trace construction', async () => {
   const schema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({ schema });
 
@@ -477,18 +476,22 @@ function makeTestHTTP(): Trace.HTTP {
 describe('tests for the shouldReportQuery reporting option', () => {
   const schemaReportingFunctions = {
     startSchemaReporting: jest.fn(),
-    executableSchemaIdGenerator: jest.fn()
-  }
+    executableSchemaIdGenerator: jest.fn(),
+  };
   const schema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({ schema });
 
   const addTrace = jest.fn();
   beforeEach(() => {
     addTrace.mockClear();
-  })
+  });
 
   it('report no traces', async () => {
-    const pluginInstance = plugin({ traceReporting: false }, addTrace, schemaReportingFunctions);
+    const pluginInstance = plugin(
+      { traceReporting: false },
+      addTrace,
+      schemaReportingFunctions,
+    );
 
     const context = await pluginTestHarness({
       pluginInstance,
@@ -517,7 +520,10 @@ describe('tests for the shouldReportQuery reporting option', () => {
         traceReporting: async request => {
           return request.request.operationName === 'report';
         },
-      }, addTrace, schemaReportingFunctions);
+      },
+      addTrace,
+      schemaReportingFunctions,
+    );
 
     const context1 = await pluginTestHarness({
       pluginInstance,
@@ -566,17 +572,17 @@ describe('tests for the shouldReportQuery reporting option', () => {
   });
 
   it('report traces async based on operation name', async () => {
-
     const pluginInstance = plugin(
       {
-        traceReporting: async (request) => {
+        traceReporting: async request => {
           let shouldTrace = await (async () => {
             return request.request.operationName === 'report';
-          })()
+          })();
           return shouldTrace;
         },
       },
       addTrace,
+      schemaReportingFunctions
     );
 
     const context1 = await pluginTestHarness({

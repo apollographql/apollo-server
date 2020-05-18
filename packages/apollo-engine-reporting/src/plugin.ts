@@ -218,14 +218,17 @@ export const plugin = <TContext>(
 
       return {
         async didResolveOperation(requestContext) {
-          if (typeof options.traceReporting !== "function") return;
-          const shouldReportTrace = await options.traceReporting(requestContext);
+          if (typeof options.traceReporting !== 'function') return;
+          const shouldReportTrace = await options.traceReporting(
+            requestContext,
+          );
 
           // Help the user understand they've returned an unexpected value,
           // which might be a subtle mistake.
-          if (typeof shouldReportTrace !== "boolean") {
+          if (typeof shouldReportTrace !== 'boolean') {
             (requestContext.logger || logger).warn(
-              "The 'traceReporting' predicate function must return a boolean value.");
+              "The 'traceReporting' predicate function must return a boolean value.",
+            );
             return;
           }
 
