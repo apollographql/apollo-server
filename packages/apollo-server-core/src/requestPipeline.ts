@@ -113,6 +113,14 @@ export type DataSources<TContext> = {
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
+/**
+ * We attach this symbol to the constructor of extensions to mark that we've
+ * already warned about the deprecation of the `graphql-extensions` API for that
+ * particular definition.
+ */
+const symbolExtensionDeprecationDone =
+  Symbol("apolloServerExtensionDeprecationDone");
+
 export async function processGraphQLRequest<TContext>(
   config: GraphQLRequestPipelineConfig<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
@@ -633,6 +641,44 @@ export async function processGraphQLRequest<TContext>(
     // If custom extension factories were provided, create per-request extension
     // objects.
     const extensions = config.extensions ? config.extensions.map(f => f()) : [];
+
+    // Warn about usage of (deprecated) `graphql-extensions` implementations.
+    // Since extensions are often provided as factory functions which
+    // instantiate an extension on each request, we'll attach a symbol to the
+    // constructor after we've warned to ensure that we don't do it on each
+    // request.  Another option here might be to keep a `Map` of constructor
+    // instances within this module, but I hope this will do the trick.
+    const hasOwn = Object.prototype.hasOwnProperty;
+    extensions.forEach((extension) => {
+      // Using `hasOwn` just in case there is a user-land `hasOwnProperty`
+      // defined on the `constructor` object.
+      if (
+        !extension.constructor ||
+        hasOwn.call(extension.constructor, symbolExtensionDeprecationDone)
+      ) {
+        return;
+      }
+
+      Object.defineProperty(
+        extension.constructor,
+        symbolExtensionDeprecationDone,
+        { value: true }
+      );
+
+      const extensionName = extension.constructor.name;
+      logger.warn(
+        '[deprecated] ' +
+          (extensionName
+            ? 'A "' + extensionName + '" '
+            : 'An anonymous extension ') +
+          'was defined within the "extensions" configuration for ' +
+          'Apollo Server.  The API on which this extension is built ' +
+          '("graphql-extensions") is being deprecated in the next major ' +
+          'version of Apollo Server in favor of the new plugin API.  See ' +
+          'https://go.apollo.dev/s/plugins for the documentation on how ' +
+          'these plugins are to be defined and used.',
+      );
+    });
 
     return new GraphQLExtensionStack(extensions);
   }
