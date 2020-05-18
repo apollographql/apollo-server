@@ -32,7 +32,7 @@
     "graphql-extensions": "file:../graphql-extensions",
     "loglevel": "^1.6.1",
     "make-fetch-happen": "^8.0.0",
-    "pretty-format": "^25.0.0"
+    "pretty-format": "^26.0.0"
   },
   "peerDependencies": {
     "graphql": "^14.2.1 || ^15.0.0"
