@@ -27,6 +27,7 @@ import {
   GraphQLRequestListenerExecutionDidEnd,
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
+  GraphQLRequestContext,
 } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { generateSchemaHash } from "../utils/schemaHash";
@@ -36,7 +37,10 @@ import { generateSchemaHash } from "../utils/schemaHash";
 // These tests will be rewritten as GraphQLRequestProcessor tests after the
 // refactoring is complete.
 
-function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
+function runQuery(
+  options: QueryOptions,
+  requestContextExtra?: Partial<GraphQLRequestContext>,
+): Promise<GraphQLResponse> {
   const request: GraphQLRequest = {
     query: options.queryString,
     operationName: options.operationName,
@@ -56,6 +60,7 @@ function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
     context: options.context || {},
     debug: options.debug,
     cache: {} as any,
+    ...requestContextExtra,
   });
 }
 
