@@ -76,8 +76,64 @@ describe('executeQueryPlan', () => {
       request: {
         variables: {},
       },
+      logger: console,
     };
   }
+
+  it(`WIP`, async () => {
+    const query = gql`
+      query {
+        topProducts(first: 4) {
+          upc
+          ... on Furniture {
+            shippingInfo {
+              shippingCost
+            }
+          }
+        }
+      }
+    `;
+
+    const operationContext = buildOperationContext(schema, query);
+    const queryPlan = buildQueryPlan(operationContext);
+
+    const response = await executeQueryPlan(
+      queryPlan,
+      serviceMap,
+      buildRequestContext(),
+      operationContext,
+    );
+
+    expect(response).toMatchInlineSnapshot(`
+      Object {
+        "data": Object {
+          "topProducts": Array [
+            Object {
+              "shippingInfo": Object {
+                "shippingCost": "0.1",
+              },
+              "upc": "1",
+            },
+            Object {
+              "shippingInfo": Object {
+                "shippingCost": "0.1",
+              },
+              "upc": "2",
+            },
+            Object {
+              "shippingInfo": Object {
+                "shippingCost": "0.1",
+              },
+              "upc": "3",
+            },
+            Object {
+              "upc": "0262510871",
+            },
+          ],
+        },
+      }
+    `);
+  });
 
   describe(`errors`, () => {
     it(`should not include an empty "errors" array when no errors were encountered`, async () => {

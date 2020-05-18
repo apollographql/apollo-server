@@ -53,6 +53,7 @@ export const typeDefs = gql`
     brand: Brand
     metadata: [MetadataOrError]
     details: ProductDetailsFurniture
+    shippingInfo: ShippingInfo
   }
 
   extend type Book implements Product @key(fields: "isbn") {
@@ -64,6 +65,13 @@ export const typeDefs = gql`
     name(delimeter: String = " "): String @requires(fields: "title year")
     price: String
     details: ProductDetailsBook
+  }
+
+  type ShippingInfo @key(fields: "") {
+    height: Int
+    width: Int
+    length: Int
+    weight: Int
   }
 
   interface Vehicle {
@@ -120,6 +128,12 @@ const products = [
       asile: 10,
     },
     metadata: [{ key: 'Condition', value: 'excellent' }],
+    shippingInfo: {
+      height: 1,
+      width: 1,
+      length: 10,
+      weight: 50
+    },
   },
   {
     __typename: 'Furniture',
@@ -132,6 +146,12 @@ const products = [
       referrer: 'https://canopy.co',
     },
     metadata: [{ key: 'Condition', value: 'used' }],
+    shippingInfo: {
+      height: 1,
+      width: 1,
+      length: 10,
+      weight: 50
+    },
   },
   {
     __typename: 'Furniture',
@@ -144,6 +164,12 @@ const products = [
       asile: 10,
     },
     metadata: [{ key: 'Condition', value: 'like new' }],
+    shippingInfo: {
+      height: 1,
+      width: 1,
+      length: 10,
+      weight: 50
+    },
   },
   { __typename: 'Book', isbn: '0262510871', price: 39 },
   { __typename: 'Book', isbn: '0136291554', price: 29 },

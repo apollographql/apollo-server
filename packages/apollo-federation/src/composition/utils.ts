@@ -137,6 +137,9 @@ function removeExternalFieldsFromExtensionVisitor<
 }
 
 export function parseSelections(source: string) {
+  if (source.trim() === "") {
+    return [];
+  }
   return (parse(`query { ${source} }`)
     .definitions[0] as OperationDefinitionNode).selectionSet.selections;
 }

@@ -10,6 +10,7 @@ import {
   accounts,
   books,
   documents,
+  shipping,
 } from '../__fixtures__/schemas/';
 
 // The order of this was specified to preserve existing test coverage. Typically
@@ -21,6 +22,7 @@ const serviceDefinitions = [
   accounts,
   books,
   documents,
+  shipping,
 ].map((s, i) => ({
   name: s.name,
   typeDefs: s.typeDefs,

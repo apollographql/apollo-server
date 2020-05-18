@@ -70,6 +70,8 @@ export const keyFieldsMissingExternal = ({
   const typeInfo = new TypeInfo(schema);
 
   for (const { typeName, keyArgument } of keyDirectiveInfoOnTypeExtensions) {
+    if (keyArgument.trim() === "") continue;
+
     const keyDirectiveSelectionSet = parse(
       `fragment __generated on ${typeName} { ${keyArgument} }`,
     );
