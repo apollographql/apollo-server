@@ -136,9 +136,8 @@ export default async function pluginTestHarness<TContext>({
   const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
 
   if (typeof listener.executionDidStart === 'function') {
-    // This execution dispatcher logic is duplicated in the request pipeline
-    // right now.
-    dispatcher.invokeHookSync(
+    // This logic is duplicated in the request pipeline right now.
+    await dispatcher.invokeHookAsync(
       'didResolveOperation',
       requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
     );

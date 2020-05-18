@@ -211,10 +211,38 @@ export interface EngineReportingOptions<TContext> {
    */
   sendVariableValues?: VariableValueOptions;
   /**
-   * By default Apollo server will report all queries to Graph Manager.
-   * If you would like to disable reporting and tracing for certain queries you can give a function that takes in
-   * graphqlRequestContext. The return value of the function will be used to determine if any stats or tracing information will be collected for the query.
-   * Always returning false will behave similarly to turning off reporting and no instrumentation will take place.
+   * This option allows configuring the behavior of request tracing and
+   * reporting to [Apollo Graph Manager](https://engine.apollographql.com/).
+   *
+   * By default, this is set to `true`, which results in *all* requests being
+   * traced and reported. This behavior can be _disabled_ by setting this option
+   * to `false`. Alternatively, it can be selectively enabled or disabled on a
+   * per-request basis using a predicate function.
+   *
+   * When specified as a predicate function, the _return value_ of its
+   * invocation (per request) will determine whether or not that request is
+   * traced and reported. The predicate function will receive the request
+   * context (specifically, at the
+   * [`GraphQLRequestContextDidResolveOperation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)
+   * phase)) which permits tracing based on dynamic properties, e.g., HTTP
+   * headers or the `operationName` (when available):
+   *
+   * **Example:**
+   *
+   * ```js
+   * traceReporting(requestContext) {
+   *   // Always trace `query HomeQuery { ... }`.
+   *   if (requestContext.operationName === "HomeQuery") return true;
+   *
+   *   // Also trace if the "trace" header is set to "true".
+   *   if (requestContext.request.http?.headers?.get("trace") === "true") {
+   *     return true;
+   *   }
+   *
+   *   // Otherwise, do not trace!
+   *   return false;
+   * },
+   * ```
    *
    */
   traceReporting?: ReportOptions<TContext>
