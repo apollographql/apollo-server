@@ -6,7 +6,7 @@ import {
 import { fetch, Headers, Request } from 'apollo-server-env';
 import { GraphQLRequest, Logger } from 'apollo-server-types';
 
-const reportServerInfoGql = `
+export const reportServerInfoGql = `
   mutation ReportServerInfo($info: EdgeServerInfo!, $executableSchema: String) {
     me {
       __typename
