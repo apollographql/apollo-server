@@ -58,8 +58,8 @@ describe('Executable Schema Id', () => {
       }
 
     `;
-  it('does normalize GraphQL schemas', () => {
-    expect(computeExecutableSchemaId(buildSchema(unsortedGQLSchemaDocument))).toEqual(
+  it('does not normalize GraphQL schemas', () => {
+    expect(computeExecutableSchemaId(buildSchema(unsortedGQLSchemaDocument))).not.toEqual(
       computeExecutableSchemaId(buildSchema(sortedGQLSchemaDocument))
     );
   });

@@ -4,9 +4,7 @@ import {
   DocumentNode,
   GraphQLError,
   GraphQLSchema,
-  lexicographicSortSchema,
   printSchema,
-  stripIgnoredCharacters,
 } from 'graphql';
 import {
   ReportHeader,
@@ -872,6 +870,6 @@ export function computeExecutableSchemaId(
   const schemaDocument =
     typeof schema === 'string'
       ? schema
-      : stripIgnoredCharacters(printSchema(lexicographicSortSchema(schema)));
+      : printSchema(schema);
   return sha256.update(schemaDocument).digest('hex');
 }
