@@ -6,8 +6,8 @@ import {
   GraphQLSchema,
   lexicographicSortSchema,
   printSchema,
-  stripIgnoredCharacters
-} from "graphql";
+  stripIgnoredCharacters,
+} from 'graphql';
 import {
   ReportHeader,
   Trace,
@@ -26,7 +26,6 @@ import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { reportingLoop, SchemaReporter } from './schemaReporter';
 import { v4 as uuidv4 } from 'uuid';
 import { isString } from 'util';
-
 
 let warnedOnDeprecatedApiKey = false;
 

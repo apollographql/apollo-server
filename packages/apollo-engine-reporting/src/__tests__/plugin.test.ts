@@ -65,7 +65,7 @@ describe('schema reporting', () => {
       {
         startSchemaReporting,
         executableSchemaIdGenerator,
-      }
+      },
     );
 
     await pluginTestHarness({
@@ -104,7 +104,7 @@ describe('schema reporting', () => {
       {
         startSchemaReporting,
         executableSchemaIdGenerator,
-      }
+      },
     );
 
     await pluginTestHarness({
@@ -152,7 +152,7 @@ describe('schema reporting', () => {
       {
         startSchemaReporting,
         executableSchemaIdGenerator,
-      }
+      },
     );
 
     await pluginTestHarness({
@@ -208,7 +208,7 @@ it('trace construction', async () => {
     {
       startSchemaReporting,
       executableSchemaIdGenerator,
-    }
+    },
   );
 
   await pluginTestHarness({
@@ -222,7 +222,7 @@ it('trace construction', async () => {
       },
       http: new Request('http://localhost:123/foo'),
     },
-    executor: async ({ request: { query: source }}) => {
+    executor: async ({ request: { query: source } }) => {
       return await graphql({
         schema,
         source,
