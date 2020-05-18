@@ -122,7 +122,7 @@ Queries across service boundaries will start off from the `_entities` root field
 For example, if we execute a query for the top product's `reviews`:
 
 ```graphql
-query {
+query GetTopProductReviews {
   topProducts {
     reviews {
       body

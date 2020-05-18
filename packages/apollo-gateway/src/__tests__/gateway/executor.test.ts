@@ -1,17 +1,12 @@
 import gql from 'graphql-tag';
 import { ApolloGateway } from '../../';
-
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+import { fixtures } from '../__fixtures__/schemas/';
 import { ApolloServer } from "apollo-server";
 
 describe('ApolloGateway executor', () => {
   it('validates requests prior to execution', async () => {
     const gateway = new ApolloGateway({
-      localServiceList: [accounts, books, inventory, product, reviews],
+      localServiceList: fixtures,
     });
 
     const { executor } = await gateway.load();
