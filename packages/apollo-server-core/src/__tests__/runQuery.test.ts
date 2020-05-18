@@ -22,12 +22,12 @@ import { GraphQLOptions, Context as GraphQLContext } from 'apollo-server-core';
 import {
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
+  GraphQLRequestListener,
   GraphQLRequestListenerDidResolveField,
   GraphQLRequestListenerExecutionDidEnd,
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
 } from 'apollo-server-plugin-base';
-import { GraphQLRequestListener } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { generateSchemaHash } from "../utils/schemaHash";
 
