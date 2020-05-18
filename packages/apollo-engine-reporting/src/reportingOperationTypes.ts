@@ -31,12 +31,12 @@ export type ReportServerInfo_me =
   | ReportServerInfo_me_UserMutation
   | ReportServerInfo_me_ServiceMutation;
 
-export interface AutoregReportServerInfo {
+export interface SchemaReportingServerInfo {
   me: ReportServerInfo_me | null;
 }
 
-export interface AutoregReportServerInfoResult {
-  data?: AutoregReportServerInfo;
+export interface SchemaReportingServerInfoResult {
+  data?: SchemaReportingServerInfo;
   errors?: ReadonlyArray<GraphQLFormattedError>;
 }
 

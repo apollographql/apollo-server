@@ -1,7 +1,7 @@
 import {
   ReportServerInfoVariables,
   EdgeServerInfo,
-  AutoregReportServerInfoResult,
+  SchemaReportingServerInfoResult,
 } from './reportingOperationTypes';
 import { fetch, Headers, Request } from 'apollo-server-env';
 import { GraphQLRequest, Logger } from 'apollo-server-types';
@@ -109,47 +109,62 @@ export class SchemaReporter {
       executableSchema: withExecutableSchema
         ? this.executableSchemaDocument
         : null,
-    } as ReportServerInfoVariables);
+    });
 
     if (errors) {
       throw new Error((errors || []).map((x: any) => x.message).join('\n'));
     }
 
     if (!data || !data.me || !data.me.__typename) {
-      throw new Error(`
-Heartbeat response error. Received incomplete data from Apollo Graph Manager.
-If this continues please reach out at support@apollographql.com.
-Got response: "${JSON.stringify(data)}"
-      `);
+      throw new Error(
+        [
+          'Unexpected response shape from Apollo Graph Manager when',
+          'reporting server information for schema reporting. If',
+          'this continues, please reach out to support@apollographql.com.',
+          'Received response:',
+          JSON.stringify(data),
+        ].join(' '),
+      );
     }
-
     if (data.me.__typename === 'UserMutation') {
       this.isStopped = true;
-      throw new Error(`
-      This server was configured with an API key for a user.  Only a service's API key may be used for schema reporting.
-      Please visit the settings for this graph at https://engine.apollographql.com/ to obtain an API key for a service.
-      `);
+      throw new Error(
+        [
+          'This server was configured with an API key for a user.',
+          "Only a service's API key may be used for schema reporting.",
+          'Please visit the settings for this graph at',
+          'https://engine.apollographql.com/ to obtain an API key for a service.',
+        ].join(' '),
+      );
     } else if (data.me.__typename === 'ServiceMutation') {
       if (!data.me.reportServerInfo) {
-        throw new Error(`
-Heartbeat response error. Received incomplete data from Apollo Graph Manager.
-If this continues please reach out at support@apollographql.com.
-Got response: "${JSON.stringify(data)}"
-      `);
+        throw new Error(
+          [
+            'Unexpected response shape from Apollo Graph Manager when',
+            'reporting server information during schema reporting. If',
+            'this continues, please reach out to support@apollographql.com.',
+            'Received response:',
+            JSON.stringify(data),
+          ].join(' '),
+        );
       }
       return data.me.reportServerInfo;
     } else {
-      throw new Error(`
-Unexpected response. Received unexpected data from Apollo Graph Manager
-If this continues please reach out at support@apollographql.com.
-Got response: "${JSON.stringify(data)}"
-      `);
+      throw new Error(
+        [
+          'Unexpected response shape from Apollo Graph Manager when',
+          'reporting server information during schema reporting. If',
+          'this continues, please reach out to support@apollographql.com.',
+          'Received response:',
+          JSON.stringify(data),
+        ].join(' '),
+      );
     }
   }
 
   private async graphManagerQuery(
     variables: ReportServerInfoVariables,
-  ): Promise<AutoregReportServerInfoResult> {
+  ): Promise<SchemaReportingServerInfoResult> {
     const request: GraphQLRequest = {
       query: reportServerInfoGql,
       operationName: 'ReportServerInfo',

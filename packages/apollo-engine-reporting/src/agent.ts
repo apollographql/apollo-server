@@ -25,7 +25,6 @@ import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { reportingLoop, SchemaReporter } from './schemaReporter';
 import { v4 as uuidv4 } from 'uuid';
-import { isString } from 'util';
 
 let warnedOnDeprecatedApiKey = false;
 
@@ -398,7 +397,7 @@ export class EngineReportingAgent<TContext = any> {
 
     if (this.options.endpointUrl) {
       this.logger.warn(
-        'The endpointUrl option for engine has been deprecated. Please use tracesEndpointUrl instead',
+        '[deprecated] The `endpointUrl` option within `engine` has been renamed to `tracesEndpointUrl`.',
       );
     }
     this.tracesEndpointUrl =
@@ -870,8 +869,9 @@ export function computeExecutableSchemaId(
 ): string {
   // Can't call digest on this object twice. Creating new object each function call
   const sha256 = module.require('crypto').createHash('sha256');
-  let schemaDocument = isString(schema)
-    ? schema
-    : stripIgnoredCharacters(printSchema(lexicographicSortSchema(schema)));
+  const schemaDocument =
+    typeof schema === 'string'
+      ? schema
+      : stripIgnoredCharacters(printSchema(lexicographicSortSchema(schema)));
   return sha256.update(schemaDocument).digest('hex');
 }
