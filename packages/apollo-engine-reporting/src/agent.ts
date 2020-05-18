@@ -56,7 +56,7 @@ export type VariableValueOptions =
     }
   | SendValuesBaseOptions;
 
-export type ReportOptions<TContext> =
+export type TraceReportingOptions<TContext> =
   ((request: GraphQLRequestContextDidResolveOperation<TContext>) => Promise<boolean>) | boolean;
 
 export type GenerateClientInfo<TContext> = (
@@ -245,7 +245,7 @@ export interface EngineReportingOptions<TContext> {
    * ```
    *
    */
-  traceReporting?: ReportOptions<TContext>
+  traceReporting?: TraceReportingOptions<TContext>
   /**
    * [DEPRECATED] Use sendVariableValues
    * Passing an array into privateVariables is equivalent to passing { exceptNames: array } into

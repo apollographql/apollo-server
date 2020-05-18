@@ -147,10 +147,14 @@ export const plugin = <TContext>(
 
         // Returning here if we aren't reporting the trace to make sure,
         // endDone is set and the treeBuilder has stopped
+        // If we are running in gateway mode don't send the ftv1 trace
+        // after we have stopped trace timing.
 
+        // Return early if we aren't going to report the trace, but check
+        // `endDone` is true and the treebuilder has stopped.
+        // Also set captureTraces to false so if this is a gateway the
+        // `ftv1-trace-header` will not be sent to downstream services.
         if (!reportTrace) {
-          // If we are running in gateway mode don't send the ftv1 trace
-          // after we have stopped trace timing.
           metrics.captureTraces = false;
           return;
         }

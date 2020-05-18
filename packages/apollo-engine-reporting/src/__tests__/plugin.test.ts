@@ -564,6 +564,66 @@ describe('tests for the shouldReportQuery reporting option', () => {
     expect(addTrace).not.toBeCalled();
     expect(context2.metrics.captureTraces).toBeFalsy();
   });
+
+  it('report traces async based on operation name', async () => {
+
+    const pluginInstance = plugin(
+      {
+        traceReporting: async (request) => {
+          let shouldTrace = await (async () => {
+            return request.request.operationName === 'report';
+          })()
+          return shouldTrace;
+        },
+      },
+      addTrace,
+    );
+
+    const context1 = await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query: queryReport,
+        operationName: 'report',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    expect(addTrace).toBeCalledTimes(1);
+    expect(context1.metrics.captureTraces).toBeTruthy();
+    addTrace.mockClear();
+
+    const context2 = await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query,
+        operationName: 'q',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    expect(addTrace).not.toBeCalled();
+    expect(context2.metrics.captureTraces).toBeFalsy();
+  });
 });
 
 /**
