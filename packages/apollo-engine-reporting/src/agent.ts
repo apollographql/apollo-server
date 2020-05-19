@@ -262,7 +262,7 @@ export interface EngineReportingOptions<TContext> {
    * additional details about its runtime environment to Apollo Graph Manager.
    *
    * See [our _preview
-   * documentation](https://github.com/apollographql/apollo-schema-reporting-preview-docs)
+   * documentation_](https://github.com/apollographql/apollo-schema-reporting-preview-docs)
    * for more information.
    */
   experimental_schemaReporting?: boolean;
