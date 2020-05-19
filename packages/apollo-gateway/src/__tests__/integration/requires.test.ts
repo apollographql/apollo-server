@@ -1,11 +1,8 @@
 import gql from 'graphql-tag';
-import { execute, ServiceDefinitionModule } from '../execution-utils';
-import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
+import { execute } from '../execution-utils';
+import { serializeQueryPlan } from '../..';
 
-expect.addSnapshotSerializer(astSerializer);
-expect.addSnapshotSerializer(queryPlanSerializer);
-
-it('supports passing additional scalar fields defined by a requires', async () => {
+it('supports passing additional fields defined by a requires', async () => {
   const query = `#graphql
     query GetReviwedBookNames {
       me {
@@ -44,87 +41,34 @@ it('supports passing additional scalar fields defined by a requires', async () =
   expect(queryPlan).toCallService('books');
 });
 
-const serviceA: ServiceDefinitionModule = {
-  name: 'serviceA',
+const serviceA = {
+  name: 'a',
   typeDefs: gql`
     type Query {
-      me: A
+      user: User
     }
-    type A @key(fields: "id") {
+
+    type User @key(fields: "id") {
       id: ID!
-      name: String!
-      nested1: Nested1!
-      nested2: Nested2!
+      preferences: Preferences
     }
-    type Nested1 {
-      nameA: String!
-      nameB: String!
-      nested2: Nested2
+
+    type Preferences {
+      favorites: Things
     }
-    type Nested2 {
-      nameA: String!
-      nameB: String!
-      nameC: String!
-      nameD: String!
-      nested3: [Nested3!]!
-    }
-    type Nested3 @key(fields: "id") {
-      id: ID!
-      nameA: String!
-      nameB: String!
-      nameC: String!
-      nested4: Nested4!
-    }
-    type Nested4 {
-      nameA: String!
-      nameB: String!
+
+    type Things {
+      color: String
+      animal: String
     }
   `,
   resolvers: {
     Query: {
-      me() {
+      user() {
         return {
           id: '1',
-          name: 'name',
-          nested1: {
-            nameA: 'nested1.nameA',
-            nameB: 'nested1.nameB',
-            nested2: {
-              nameA: 'nested1.nested2.nameA',
-              nameB: 'nested1.nested2.nameB',
-              nameC: 'nested1.nested2.nameC',
-              nameD: 'nested1.nested2.nameD',
-              nested3: [
-                {
-                  id: '2',
-                  nameA: 'nested1.nested2.nested3.nameA',
-                  nameB: 'nested1.nested2.nested3.nameB',
-                  nameC: 'nested1.nested2.nested3.nameC',
-                  nested4: {
-                    nameA: 'nested1.nested2.nested3.nested4.nameA',
-                    nameB: 'nested1.nested2.nested3.nested4.nameB',
-                  },
-                },
-              ],
-            },
-          },
-          nested2: {
-            nameA: 'nested2.nameA',
-            nameB: 'nested2.nameB',
-            nameC: 'nested2.nameC',
-            nameD: 'nested2.nameD',
-            nested3: [
-              {
-                id: '3',
-                nameA: 'nested2.nested3.nameA',
-                nameB: 'nested2.nested3.nameB',
-                nameC: 'nested2.nested3.nameC',
-                nested4: {
-                  nameA: 'nested2.nested3.nested4.nameA',
-                  nameB: 'nested2.nested3.nested4.nameB',
-                },
-              },
-            ],
+          preferences: {
+            favorites: { color: 'limegreen', animal: 'platypus' },
           },
         };
       },
@@ -132,279 +76,192 @@ const serviceA: ServiceDefinitionModule = {
   },
 };
 
-const serviceB: ServiceDefinitionModule = {
-  name: 'serviceB',
+const serviceB = {
+  name: 'b',
   typeDefs: gql`
-    extend type A @key(fields: "id") {
+    extend type User @key(fields: "id") {
       id: ID! @external
-      nested1: Nested1! @external
-      nested2: Nested2! @external
-      calculated1: String!
-        @requires(fields: "nested1 { nameA nested2 { nameA } }")
-      calculated2: String!
-        @requires(
-          fields: "nested1 { nameB  nested2 { nameB nested3 { nameA } } }"
-        )
-      calculated3: String!
-        @requires(
-          fields: "nested1 { nested2 { nested3 { nameB } } } nested2 { nameC nested3 { nameC } }"
-        )
-      calculated4: String!
-        @requires(
-          fields: "nested2 { nameC nameD nested3 { nested4 { nameA } } }"
-        )
+      preferences: Preferences @external
+      favoriteColor: String
+        @requires(fields: "preferences { favorites { color } }")
+      favoriteAnimal: String
+        @requires(fields: "preferences { favorites { animal } }")
     }
-    type Nested1 {
-      nameA: String!
-      nameB: String!
-      nested2: Nested2
+
+    extend type Preferences {
+      favorites: Things @external
     }
-    type Nested2 {
-      nameA: String!
-      nameB: String!
-      nameC: String!
-      nameD: String!
-      nested3: [Nested3!]!
-    }
-    extend type Nested3 @key(fields: "id") {
-      id: ID! @external
-      nameA: String! @external
-      nameB: String! @external
-      nameC: String! @external
-      nested4: Nested4! @external
-      calculated5: String! @requires(fields: "nested4 { nameB }")
-    }
-    type Nested4 {
-      nameA: String!
-      nameB: String!
+
+    extend type Things {
+      color: String @external
+      animal: String @external
     }
   `,
   resolvers: {
-    A: {
-      calculated1(parent) {
-        return parent.nested1.nameA + ' ' + parent.nested1.nested2.nameA;
+    User: {
+      favoriteColor(user: any) {
+        return user.preferences.favorites.color;
       },
-      calculated2(parent) {
-        return (
-          parent.nested1.nameB +
-          ' ' +
-          parent.nested1.nested2.nameB +
-          ' ' +
-          parent.nested1.nested2.nested3[0].nameA
-        );
-      },
-      calculated3(parent) {
-        return (
-          parent.nested1.nested2.nested3[0].nameB +
-          ' ' +
-          parent.nested2.nameC +
-          ' ' +
-          parent.nested2.nested3[0].nameC
-        );
-      },
-      calculated4(parent) {
-        return (
-          parent.nested2.nameC +
-          ' ' +
-          parent.nested2.nameD +
-          ' ' +
-          parent.nested2.nested3[0].nested4.nameA
-        );
-      },
-    },
-    Nested3: {
-      calculated5(parent) {
-        return parent.nested4.nameB;
+      favoriteAnimal(user: any) {
+        return user.preferences.favorites.animal;
       },
     },
   },
 };
 
-it('supports multiple arbitrarily nested fields defined by a requires', async () => {
+it('collapses nested requires', async () => {
   const query = `#graphql
-    query Me {
-      me {
-        name
-        calculated1
-        calculated2
-        calculated3
-        calculated4
-        nested2 {
-          nested3 {
-            calculated5
-          }
-        }
+    query UserFavorites {
+      user {
+        favoriteColor
+        favoriteAnimal
       }
     }
   `;
 
-  const { data, queryPlan } = await execute(
+  const { data, errors, queryPlan } = await execute(
     {
       query,
     },
     [serviceA, serviceB],
   );
 
-  expect(data).toEqual({
-    me: {
-      name: 'name',
-      calculated1: 'nested1.nameA nested1.nested2.nameA',
-      calculated2:
-        'nested1.nameB nested1.nested2.nameB nested1.nested2.nested3.nameA',
-      calculated3:
-        'nested1.nested2.nested3.nameB nested2.nameC nested2.nested3.nameC',
-      calculated4: 'nested2.nameC nested2.nameD nested2.nested3.nested4.nameA',
-      nested2: {
-        nested3: [
-          {
-            calculated5: 'nested2.nested3.nested4.nameB',
-          },
-        ],
-      },
-    },
-  });
+  expect(errors).toEqual(undefined);
 
-  expect(queryPlan).toMatchInlineSnapshot(`
-    QueryPlan {
+  expect(serializeQueryPlan(queryPlan)).toMatchInlineSnapshot(`
+    "QueryPlan {
       Sequence {
-        Fetch(service: "serviceA") {
+        Fetch(service: \\"a\\") {
           {
-            me {
-              name
+            user {
               __typename
               id
-              nested1 {
-                nameA
-                nested2 {
-                  nameA
-                  nameB
-                  nested3 {
-                    nameA
-                    nameB
-                  }
+              preferences {
+                favorites {
+                  color
+                  animal
                 }
-                nameB
-              }
-              nested2 {
-                nameC
-                nested3 {
-                  nameC
-                  nested4 {
-                    nameA
-                    nameB
-                  }
-                  __typename
-                  id
-                }
-                nameD
               }
             }
           }
         },
-        Parallel {
-          Flatten(path: "me") {
-            Fetch(service: "serviceB") {
-              {
-                ... on A {
-                  __typename
-                  id
-                  nested1 {
-                    nameA
-                    nested2 {
-                      nameA
-                      nameB
-                      nested3 {
-                        nameA
-                        nameB
-                      }
-                    }
-                    nameB
+        Flatten(path: \\"user\\") {
+          Fetch(service: \\"b\\") {
+            {
+              ... on User {
+                __typename
+                id
+                preferences {
+                  favorites {
+                    color
+                    animal
                   }
-                  nested2 {
-                    nameC
-                    nested3 {
-                      nameC
-                      nested4 {
-                        nameA
-                        nameB
-                      }
-                      __typename
-                      id
-                    }
-                    nameD
-                  }
-                }
-              } =>
-              {
-                ... on A {
-                  calculated1
-                  calculated2
-                  calculated3
-                  calculated4
                 }
               }
-            },
-          },
-          Flatten(path: "me.nested2.nested3.@") {
-            Fetch(service: "serviceB") {
-              {
-                ... on Nested3 {
-                  __typename
-                  id
-                  nested4 {
-                    nameB
-                  }
-                }
-              } =>
-              {
-                ... on Nested3 {
-                  calculated5
-                }
+            } =>
+            {
+              ... on User {
+                favoriteColor
+                favoriteAnimal
               }
-            },
+            }
           },
         },
       },
-    }
+    }"
   `);
+
+  expect(data).toEqual({
+    user: {
+      favoriteAnimal: 'platypus',
+      favoriteColor: 'limegreen',
+    },
+  });
+
+  expect(queryPlan).toCallService('a');
+  expect(queryPlan).toCallService('b');
 });
 
-it('supports deeply nested fields defined by requires with fragments in user-defined queries', async () => {
+it('collapses nested requires with user-defined fragments', async () => {
   const query = `#graphql
-    query Me {
-      me {
-        calculated3
-        ...testFragment
+    query UserFavorites {
+      user {
+        favoriteAnimal
+        ...favoriteColor
       }
     }
 
-    fragment testFragment on A {
-      nested2 {
-        nested3 {
-          nameA
+    fragment favoriteColor on User {
+      preferences {
+        favorites {
+          color
         }
       }
     }
   `;
 
-  const { data } = await execute(
+  const { data, errors, queryPlan } = await execute(
     {
       query,
     },
     [serviceA, serviceB],
   );
 
-  expect(data).toEqual({
-    me: {
-      calculated3:
-        'nested1.nested2.nested3.nameB nested2.nameC nested2.nested3.nameC',
-      nested2: {
-        nested3: [
+  expect(errors).toEqual(undefined);
+
+  expect(serializeQueryPlan(queryPlan)).toMatchInlineSnapshot(`
+    "QueryPlan {
+      Sequence {
+        Fetch(service: \\"a\\") {
           {
-            nameA: 'nested2.nested3.nameA',
+            user {
+              __typename
+              id
+              preferences {
+                favorites {
+                  animal
+                  color
+                }
+              }
+            }
+          }
+        },
+        Flatten(path: \\"user\\") {
+          Fetch(service: \\"b\\") {
+            {
+              ... on User {
+                __typename
+                id
+                preferences {
+                  favorites {
+                    animal
+                    color
+                  }
+                }
+              }
+            } =>
+            {
+              ... on User {
+                favoriteAnimal
+              }
+            }
           },
-        ],
+        },
+      },
+    }"
+  `);
+
+  expect(data).toEqual({
+    user: {
+      favoriteAnimal: 'platypus',
+      preferences: {
+        favorites: {
+          color: 'limegreen',
+        },
       },
     },
   });
+
+  expect(queryPlan).toCallService('a');
+  expect(queryPlan).toCallService('b');
 });
