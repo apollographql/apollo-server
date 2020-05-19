@@ -342,6 +342,24 @@ const serviceHeaderDefaults = {
   uname: `${os.platform()}, ${os.type()}, ${os.release()}, ${os.arch()})`,
 };
 
+class ReportData {
+  report!: Report;
+  size!: number;
+  readonly header: ReportHeader;
+  constructor(executableSchemaId: string, graphVariant: string) {
+    this.header = new ReportHeader({
+      ...serviceHeaderDefaults,
+      executableSchemaId,
+      schemaTag: graphVariant,
+    });
+    this.reset();
+  }
+  reset() {
+    this.report = new Report({ header: this.header });
+    this.size = 0;
+  }
+}
+
 // EngineReportingAgent is a persistent object which creates
 // EngineReportingExtensions for each request and sends batches of trace reports
 // to the Engine server.
@@ -351,19 +369,13 @@ export class EngineReportingAgent<TContext = any> {
   private readonly logger: Logger = console;
   private readonly graphVariant: string;
 
-  private reports: { [executableSchemaId: string]: Report } = Object.create(
-    null,
-  );
-  private reportSizes: { [executableSchemaId: string]: number } = Object.create(
-    null,
-  );
+  private readonly reportDataByExecutableSchemaId: {
+    [executableSchemaId: string]: ReportData | undefined;
+  } = Object.create(null);
 
   private reportTimer: any; // timer typing is weird and node-specific
   private readonly sendReportsImmediately?: boolean;
   private stopped: boolean = false;
-  private reportHeaders: {
-    [executableSchemaId: string]: ReportHeader;
-  } = Object.create(null);
   private signatureCache: InMemoryLRUCache<string>;
 
   private signalHandlers = new Map<NodeJS.Signals, NodeJS.SignalsListener>();
@@ -459,6 +471,16 @@ export class EngineReportingAgent<TContext = any> {
     });
   }
 
+  private getReportData(executableSchemaId: string): ReportData {
+    const existing = this.reportDataByExecutableSchemaId[executableSchemaId];
+    if (existing) {
+      return existing;
+    }
+    const reportData = new ReportData(executableSchemaId, this.graphVariant);
+    this.reportDataByExecutableSchemaId[executableSchemaId] = reportData;
+    return reportData;
+  }
+
   public async addTrace({
     trace,
     queryHash,
@@ -472,16 +494,8 @@ export class EngineReportingAgent<TContext = any> {
       return;
     }
 
-    if (!(executableSchemaId in this.reports)) {
-      this.reportHeaders[executableSchemaId] = new ReportHeader({
-        ...serviceHeaderDefaults,
-        executableSchemaId: executableSchemaId,
-        schemaTag: this.graphVariant,
-      });
-      // initializes this.reports[reportHash]
-      this.resetReport(executableSchemaId);
-    }
-    const report = this.reports[executableSchemaId];
+    const reportData = this.getReportData(executableSchemaId);
+    const { report } = reportData;
 
     const protobufError = Trace.verify(trace);
     if (protobufError) {
@@ -506,13 +520,12 @@ export class EngineReportingAgent<TContext = any> {
     (report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
       encodedTrace,
     );
-    this.reportSizes[executableSchemaId] +=
-      encodedTrace.length + Buffer.byteLength(statsReportKey);
+    reportData.size += encodedTrace.length + Buffer.byteLength(statsReportKey);
 
     // If the buffer gets big (according to our estimate), send.
     if (
       this.sendReportsImmediately ||
-      this.reportSizes[executableSchemaId] >=
+      reportData.size >=
         (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
     ) {
       await this.sendReportAndReportErrors(executableSchemaId);
@@ -521,13 +534,16 @@ export class EngineReportingAgent<TContext = any> {
 
   public async sendAllReports(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reports).map((id) => this.sendReport(id)),
+      Object.keys(this.reportDataByExecutableSchemaId).map((id) =>
+        this.sendReport(id),
+      ),
     );
   }
 
   public async sendReport(executableSchemaId: string): Promise<void> {
-    const report = this.reports[executableSchemaId];
-    this.resetReport(executableSchemaId);
+    const reportData = this.getReportData(executableSchemaId);
+    const { report } = reportData;
+    reportData.reset();
 
     if (Object.keys(report.tracesPerQuery).length === 0) {
       return;
@@ -759,7 +775,9 @@ export class EngineReportingAgent<TContext = any> {
 
   private async sendAllReportsAndReportErrors(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reports).map((executableSchemaId) =>
+      Object.keys(
+        this.reportDataByExecutableSchemaId,
+      ).map((executableSchemaId) =>
         this.sendReportAndReportErrors(executableSchemaId),
       ),
     );
@@ -776,13 +794,6 @@ export class EngineReportingAgent<TContext = any> {
         this.logger.error(err.message);
       }
     });
-  }
-
-  private resetReport(executableSchemaId: string) {
-    this.reports[executableSchemaId] = new Report({
-      header: this.reportHeaders[executableSchemaId],
-    });
-    this.reportSizes[executableSchemaId] = 0;
   }
 }
 
