@@ -132,7 +132,8 @@ export interface EngineReportingOptions<TContext> {
    */
   endpointUrl?: string;
   /**
-   * The URL of the Engine report ingress server. This was previously known as endpointUrl
+   * The URL to the Apollo Graph Manager ingress endpoint.
+   * (Previously, this was `endpointUrl`, which will be removed in AS3).
    */
   tracesEndpointUrl?: string;
   /**
