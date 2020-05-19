@@ -44,7 +44,7 @@ export function reportingLoop(
         // We can add hardcoded backoff in the future,
         // or on repeated failures stop responding reporting.
         logger.error(
-          `Error in reporting server info to Apollo Graph Manager for schema reporting: ${error}`,
+          `Error reporting server info to Apollo Graph Manager during schema reporting: ${error}`,
         );
         sendNextWithExecutableSchema = false;
         setTimeout(inner, fallbackReportingDelayInMs);
