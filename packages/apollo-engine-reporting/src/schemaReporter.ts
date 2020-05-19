@@ -178,16 +178,18 @@ export class SchemaReporter {
     try {
       const httpResponse = await fetch(httpRequest);
       if (!httpResponse.ok) {
-        throw new Error("Failed to get a 200 response from graph manager");
+        throw new Error([
+          `An unexpected HTTP status code (${http.response.status}) was`
+          'encountered during schema reporting.'
+        ].join(' '));
       }
 
-      const json = await httpResponse.json();
-      return json;
+      return await httpResponse.json();
     } catch (error) {
       throw new Error(
         [
-          'Unexpected http error from Apollo Graph Manager when reporting server info.',
-          'Did not receive a valid json response from Graph Manager',
+          'Unexpected HTTP error from Apollo Graph Manager when reporting server info.',
+          'Did not receive a valid JSON response from Apollo Graph Manager',
           'If this continues to happen please reach out to support@apollographql.com',
           'Error:',
           error

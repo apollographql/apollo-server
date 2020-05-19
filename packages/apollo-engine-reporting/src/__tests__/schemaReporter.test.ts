@@ -142,8 +142,7 @@ describe('Schema reporter', () => {
     const variables = {
       info: serverInfo,
       executableSchema: 'schemaSdl'
-    }
-    {}
+    };
     mockReporterRequest(url, variables).reply(200, {
       data: {
         me: {
