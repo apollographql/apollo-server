@@ -67,15 +67,10 @@ export type GenerateClientInfo<TContext> = (
 ) => ClientInfo;
 
 // AS3: Drop support for deprecated `ENGINE_API_KEY`.
-export function getEngineApiKey({
-  engine,
-  skipWarn = false,
-  logger = console,
-}: {
-  engine: EngineReportingOptions<any> | boolean | undefined;
-  skipWarn?: boolean;
-  logger?: Logger;
-}) {
+export function getEngineApiKey(
+  {engine, skipWarn = false, logger= console }:
+    {engine: EngineReportingOptions<any> | boolean | undefined, skipWarn?: boolean, logger?: Logger }
+    ) {
   if (typeof engine === 'object') {
     if (engine.apiKey) {
       return engine.apiKey;
@@ -84,52 +79,34 @@ export function getEngineApiKey({
   const legacyApiKeyFromEnv = process.env.ENGINE_API_KEY;
   const apiKeyFromEnv = process.env.APOLLO_KEY;
 
-  if (legacyApiKeyFromEnv && apiKeyFromEnv && !skipWarn) {
-    logger.warn(
-      'Using `APOLLO_KEY` since `ENGINE_API_KEY` (deprecated) is also set in the environment.',
-    );
+  if(legacyApiKeyFromEnv && apiKeyFromEnv && !skipWarn) {
+    logger.warn("Using `APOLLO_KEY` since `ENGINE_API_KEY` (deprecated) is also set in the environment.");
   }
-  if (legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey && !skipWarn) {
-    logger.warn(
-      '[deprecated] The `ENGINE_API_KEY` environment variable has been renamed to `APOLLO_KEY`.',
-    );
+  if(legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey && !skipWarn) {
+    logger.warn("[deprecated] The `ENGINE_API_KEY` environment variable has been renamed to `APOLLO_KEY`.");
     warnedOnDeprecatedApiKey = true;
   }
-  return apiKeyFromEnv || legacyApiKeyFromEnv || '';
+  return  apiKeyFromEnv || legacyApiKeyFromEnv || ''
 }
 
 // AS3: Drop support for deprecated `ENGINE_SCHEMA_TAG`.
-export function getEngineGraphVariant(
-  engine: EngineReportingOptions<any> | boolean | undefined,
-  logger: Logger = console,
-): string | undefined {
+export function getEngineGraphVariant(engine: EngineReportingOptions<any> | boolean | undefined, logger: Logger = console): string | undefined {
   if (engine === false) {
     return;
-  } else if (
-    typeof engine === 'object' &&
-    (engine.graphVariant || engine.schemaTag)
-  ) {
+  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
     if (engine.graphVariant && engine.schemaTag) {
-      throw new Error(
-        'Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.',
-      );
+      throw new Error('Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.');
     }
     if (engine.schemaTag) {
-      logger.warn(
-        '[deprecated] The `schemaTag` property within `engine` configuration has been renamed to `graphVariant`.',
-      );
+      logger.warn('[deprecated] The `schemaTag` property within `engine` configuration has been renamed to `graphVariant`.');
     }
     return engine.graphVariant || engine.schemaTag;
   } else {
     if (process.env.ENGINE_SCHEMA_TAG) {
-      logger.warn(
-        '[deprecated] The `ENGINE_SCHEMA_TAG` environment variable has been renamed to `APOLLO_GRAPH_VARIANT`.',
-      );
+      logger.warn('[deprecated] The `ENGINE_SCHEMA_TAG` environment variable has been renamed to `APOLLO_GRAPH_VARIANT`.');
     }
     if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
-      throw new Error(
-        '`APOLLO_GRAPH_VARIANT` and `ENGINE_SCHEMA_TAG` (deprecated) environment variables must not both be set.',
-      );
+      throw new Error('`APOLLO_GRAPH_VARIANT` and `ENGINE_SCHEMA_TAG` (deprecated) environment variables must not both be set.')
     }
     return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
   }
@@ -438,11 +415,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
-    this.apiKey = getEngineApiKey({
-      engine: this.options,
-      skipWarn: false,
-      logger: this.logger,
-    });
+    this.apiKey = getEngineApiKey({engine: this.options, skipWarn: false, logger: this.logger});
     if (options.logger) this.logger = options.logger;
     this.bootId = uuidv4();
     this.graphVariant = getEngineGraphVariant(options, this.logger) || '';
