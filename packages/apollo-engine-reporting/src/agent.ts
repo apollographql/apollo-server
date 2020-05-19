@@ -23,6 +23,7 @@ import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { reportingLoop, SchemaReporter } from './schemaReporter';
 import { v4 as uuidv4 } from 'uuid';
+import { createHash } from 'crypto';
 
 let warnedOnDeprecatedApiKey = false;
 
@@ -867,7 +868,7 @@ export function computeExecutableSchemaId(
   schema: string | GraphQLSchema,
 ): string {
   // Can't call digest on this object twice. Creating new object each function call
-  const sha256 = module.require('crypto').createHash('sha256');
+  const sha256 = createHash('sha256');
   const schemaDocument =
     typeof schema === 'string'
       ? schema
