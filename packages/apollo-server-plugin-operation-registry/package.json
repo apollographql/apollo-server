@@ -1,11 +1,10 @@
 {
   "name": "apollo-server-plugin-operation-registry",
-  "version": "0.3.1",
+  "version": "0.3.2-alpha.0",
   "description": "Apollo Server operation registry",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [],
-
   "author": "Apollo <npm@apollographql.com>",
   "repository": {
     "type": "git",
