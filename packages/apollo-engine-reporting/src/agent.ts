@@ -57,10 +57,15 @@ export type GenerateClientInfo<TContext> = (
 ) => ClientInfo;
 
 // AS3: Drop support for deprecated `ENGINE_API_KEY`.
-export function getEngineApiKey(
-  {engine, skipWarn = false, logger= console }:
-    {engine: EngineReportingOptions<any> | boolean | undefined, skipWarn?: boolean, logger?: Logger }
-    ) {
+export function getEngineApiKey({
+  engine,
+  skipWarn = false,
+  logger = console,
+}: {
+  engine: EngineReportingOptions<any> | boolean | undefined;
+  skipWarn?: boolean;
+  logger?: Logger;
+}) {
   if (typeof engine === 'object') {
     if (engine.apiKey) {
       return engine.apiKey;
@@ -69,34 +74,52 @@ export function getEngineApiKey(
   const legacyApiKeyFromEnv = process.env.ENGINE_API_KEY;
   const apiKeyFromEnv = process.env.APOLLO_KEY;
 
-  if(legacyApiKeyFromEnv && apiKeyFromEnv && !skipWarn) {
-    logger.warn("Using `APOLLO_KEY` since `ENGINE_API_KEY` (deprecated) is also set in the environment.");
+  if (legacyApiKeyFromEnv && apiKeyFromEnv && !skipWarn) {
+    logger.warn(
+      'Using `APOLLO_KEY` since `ENGINE_API_KEY` (deprecated) is also set in the environment.',
+    );
   }
-  if(legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey && !skipWarn) {
-    logger.warn("[deprecated] The `ENGINE_API_KEY` environment variable has been renamed to `APOLLO_KEY`.");
+  if (legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey && !skipWarn) {
+    logger.warn(
+      '[deprecated] The `ENGINE_API_KEY` environment variable has been renamed to `APOLLO_KEY`.',
+    );
     warnedOnDeprecatedApiKey = true;
   }
-  return  apiKeyFromEnv || legacyApiKeyFromEnv || ''
+  return apiKeyFromEnv || legacyApiKeyFromEnv || '';
 }
 
 // AS3: Drop support for deprecated `ENGINE_SCHEMA_TAG`.
-export function getEngineGraphVariant(engine: EngineReportingOptions<any> | boolean | undefined, logger: Logger = console): string | undefined {
+export function getEngineGraphVariant(
+  engine: EngineReportingOptions<any> | boolean | undefined,
+  logger: Logger = console,
+): string | undefined {
   if (engine === false) {
     return;
-  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
+  } else if (
+    typeof engine === 'object' &&
+    (engine.graphVariant || engine.schemaTag)
+  ) {
     if (engine.graphVariant && engine.schemaTag) {
-      throw new Error('Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.');
+      throw new Error(
+        'Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.',
+      );
     }
     if (engine.schemaTag) {
-      logger.warn('[deprecated] The `schemaTag` property within `engine` configuration has been renamed to `graphVariant`.');
+      logger.warn(
+        '[deprecated] The `schemaTag` property within `engine` configuration has been renamed to `graphVariant`.',
+      );
     }
     return engine.graphVariant || engine.schemaTag;
   } else {
     if (process.env.ENGINE_SCHEMA_TAG) {
-      logger.warn('[deprecated] The `ENGINE_SCHEMA_TAG` environment variable has been renamed to `APOLLO_GRAPH_VARIANT`.');
+      logger.warn(
+        '[deprecated] The `ENGINE_SCHEMA_TAG` environment variable has been renamed to `APOLLO_GRAPH_VARIANT`.',
+      );
     }
     if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
-      throw new Error('`APOLLO_GRAPH_VARIANT` and `ENGINE_SCHEMA_TAG` (deprecated) environment variables must not both be set.')
+      throw new Error(
+        '`APOLLO_GRAPH_VARIANT` and `ENGINE_SCHEMA_TAG` (deprecated) environment variables must not both be set.',
+      );
     }
     return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
   }
@@ -356,7 +379,11 @@ export class EngineReportingAgent<TContext = any> {
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
-    this.apiKey = getEngineApiKey({engine: this.options, skipWarn: false, logger: this.logger});
+    this.apiKey = getEngineApiKey({
+      engine: this.options,
+      skipWarn: false,
+      logger: this.logger,
+    });
     if (options.logger) this.logger = options.logger;
     this.bootId = uuidv4();
     this.graphVariant = getEngineGraphVariant(options, this.logger) || '';
@@ -382,7 +409,7 @@ export class EngineReportingAgent<TContext = any> {
 
     if (this.options.handleSignals !== false) {
       const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
-      signals.forEach(signal => {
+      signals.forEach((signal) => {
         // Note: Node only started sending signal names to signal events with
         // Node v10 so we can't use that feature here.
         const handler: NodeJS.SignalsListener = async () => {
@@ -493,7 +520,9 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   public async sendAllReports(): Promise<void> {
-    await Promise.all(Object.keys(this.reports).map(id => this.sendReport(id)));
+    await Promise.all(
+      Object.keys(this.reports).map((id) => this.sendReport(id)),
+    );
   }
 
   public async sendReport(executableSchemaId: string): Promise<void> {
@@ -564,8 +593,9 @@ export class EngineReportingAgent<TContext = any> {
 
         if (curResponse.status >= 500 && curResponse.status < 600) {
           throw new Error(
-            `HTTP status ${curResponse.status}, ${(await curResponse.text()) ||
-              '(no body)'}`,
+            `HTTP status ${curResponse.status}, ${
+              (await curResponse.text()) || '(no body)'
+            }`,
           );
         } else {
           return curResponse;
@@ -652,7 +682,7 @@ export class EngineReportingAgent<TContext = any> {
     this.currentSchemaReporter = schemaReporter;
     const logger = this.logger;
 
-    setTimeout(function() {
+    setTimeout(function () {
       reportingLoop(schemaReporter, logger, false, fallbackReportingDelayInMs);
     }, delay);
   }
@@ -729,14 +759,14 @@ export class EngineReportingAgent<TContext = any> {
 
   private async sendAllReportsAndReportErrors(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reports).map(executableSchemaId =>
+      Object.keys(this.reports).map((executableSchemaId) =>
         this.sendReportAndReportErrors(executableSchemaId),
       ),
     );
   }
 
   private sendReportAndReportErrors(executableSchemaId: string): Promise<void> {
-    return this.sendReport(executableSchemaId).catch(err => {
+    return this.sendReport(executableSchemaId).catch((err) => {
       // This catch block is primarily intended to catch network errors from
       // the retried request itself, which include network errors and non-2xx
       // HTTP errors.
@@ -870,8 +900,6 @@ export function computeExecutableSchemaId(
   // Can't call digest on this object twice. Creating new object each function call
   const sha256 = createHash('sha256');
   const schemaDocument =
-    typeof schema === 'string'
-      ? schema
-      : printSchema(schema);
+    typeof schema === 'string' ? schema : printSchema(schema);
   return sha256.update(schemaDocument).digest('hex');
 }
