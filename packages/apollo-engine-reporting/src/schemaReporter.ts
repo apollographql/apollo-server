@@ -175,23 +175,26 @@ export class SchemaReporter {
       headers: this.headers,
       body: JSON.stringify(request),
     });
-    try {
-      const httpResponse = await fetch(httpRequest);
-      if (!httpResponse.ok) {
-        throw new Error([
-          `An unexpected HTTP status code (${httpResponse.status}) was`,
-          'encountered during schema reporting.'
-        ].join(' '));
-      }
 
+    const httpResponse = await fetch(httpRequest);
+
+    if (!httpResponse.ok) {
+      throw new Error([
+        `An unexpected HTTP status code (${httpResponse.status}) was`,
+        'encountered during schema reporting.'
+      ].join(' '));
+    }
+
+    try {
+      // JSON parsing failure due to malformed data is the likely failure case
+      // here.  Any non-JSON response (e.g. HTML) is usually the suspect.
       return await httpResponse.json();
     } catch (error) {
       throw new Error(
         [
-          'Unexpected HTTP error from Apollo Graph Manager when reporting server info.',
-          'Did not receive a valid JSON response from Apollo Graph Manager',
-          'If this continues to happen please reach out to support@apollographql.com',
-          'Error:',
+          "Couldn't report server info to Apollo Graph Manager.",
+          'Parsing response as JSON failed.',
+          'If this continues please reach out to support@apollographql.com',
           error
         ].join(' '),
       );
