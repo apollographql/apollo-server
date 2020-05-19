@@ -5,17 +5,18 @@ import {
   GraphQLRequestContextDidEncounterErrors,
 } from 'apollo-server-types';
 import { Headers } from 'apollo-server-env';
+import { GraphQLSchema, printSchema } from 'graphql';
 import { Trace } from 'apollo-engine-reporting-protobuf';
 
 import {
+  AddTraceArgs,
   EngineReportingOptions,
   GenerateClientInfo,
-  AddTraceArgs,
-  VariableValueOptions,
   SendValuesBaseOptions,
+  VariableValueOptions,
 } from './agent';
 import { EngineReportingTreeBuilder } from './treeBuilder';
-import { ApolloServerPlugin } from "apollo-server-plugin-base";
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
@@ -30,18 +31,39 @@ const clientVersionHeaderKey = 'apollographql-client-version';
 export const plugin = <TContext>(
   options: EngineReportingOptions<TContext> = Object.create(null),
   addTrace: (args: AddTraceArgs) => Promise<void>,
-  // schemaHash: string,
+  {
+    startSchemaReporting,
+    executableSchemaIdGenerator,
+  }: {
+    startSchemaReporting: ({
+      executableSchema,
+      executableSchemaId,
+    }: {
+      executableSchema: string;
+      executableSchemaId: string;
+    }) => void;
+    executableSchemaIdGenerator: (schema: string | GraphQLSchema) => string;
+  },
 ): ApolloServerPlugin<TContext> => {
   const logger: Logger = options.logger || console;
   const generateClientInfo: GenerateClientInfo<TContext> =
     options.generateClientInfo || defaultGenerateClientInfo;
 
-
   return {
+    serverWillStart: function({ schema }) {
+      if (!options.experimental_schemaReporting) return;
+      startSchemaReporting({
+        executableSchema:
+          options.experimental_overrideReportedSchema || printSchema(schema),
+        executableSchemaId: executableSchemaIdGenerator(
+          options.experimental_overrideReportedSchema || schema,
+        ),
+      });
+    },
     requestDidStart({
       logger: requestLogger,
-      schemaHash,
       metrics,
+      schema,
       request: { http, variables },
     }) {
       const treeBuilder: EngineReportingTreeBuilder = new EngineReportingTreeBuilder(
@@ -124,7 +146,9 @@ export const plugin = <TContext>(
           document: requestContext.document,
           source: requestContext.source,
           trace: treeBuilder.trace,
-          schemaHash,
+          executableSchemaId: executableSchemaIdGenerator(
+            options.experimental_overrideReportedSchema || schema,
+          ),
         });
       }
 
@@ -190,7 +214,7 @@ export const plugin = <TContext>(
           didEnd(requestContext);
         },
       };
-    }
+    },
   };
 };
 

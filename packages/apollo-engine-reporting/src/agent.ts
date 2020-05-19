@@ -1,21 +1,29 @@
 import os from 'os';
 import { gzip } from 'zlib';
-import { DocumentNode, GraphQLError } from 'graphql';
+import {
+  DocumentNode,
+  GraphQLError,
+  GraphQLSchema,
+  printSchema,
+} from 'graphql';
 import {
   ReportHeader,
   Trace,
   Report,
-  TracesAndStats
+  TracesAndStats,
 } from 'apollo-engine-reporting-protobuf';
 
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { plugin } from './plugin';
-import { GraphQLRequestContext, Logger, SchemaHash } from 'apollo-server-types';
+import { GraphQLRequestContext, Logger } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
-import { ApolloServerPlugin } from "apollo-server-plugin-base";
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { reportingLoop, SchemaReporter } from './schemaReporter';
+import { v4 as uuidv4 } from 'uuid';
+import { createHash } from 'crypto';
 
 let warnedOnDeprecatedApiKey = false;
 
@@ -120,9 +128,15 @@ export interface EngineReportingOptions<TContext> {
    */
   maxUncompressedReportSize?: number;
   /**
+   * [DEPRECATED] this option was replaced by tracesEndpointUrl
    * The URL of the Engine report ingress server.
    */
   endpointUrl?: string;
+  /**
+   * The URL to the Apollo Graph Manager ingress endpoint.
+   * (Previously, this was `endpointUrl`, which will be removed in AS3).
+   */
+  tracesEndpointUrl?: string;
   /**
    * If set, prints all reports as JSON when they are sent.
    */
@@ -240,6 +254,47 @@ export interface EngineReportingOptions<TContext> {
   generateClientInfo?: GenerateClientInfo<TContext>;
 
   /**
+   * **(Experimental)** Enable schema reporting from this server with
+   * Apollo Graph Manager.
+   *
+   * The use of this option avoids the need to rgister schemas manually within
+   * CI deployment pipelines using `apollo schema:push` by periodically
+   * reporting this server's schema (when changes are detected) along with
+   * additional details about its runtime environment to Apollo Graph Manager.
+   *
+   * See [our _preview
+   * documentation_](https://github.com/apollographql/apollo-schema-reporting-preview-docs)
+   * for more information.
+   */
+  experimental_schemaReporting?: boolean;
+
+  /**
+   * Override the reported schema that is reported to AGM.
+   * This schema does not go through any normalizations and the string is directly sent to Apollo Graph Manager.
+   * This would be useful for comments or other ordering and whitespace changes that get stripped when generating a `GraphQLSchema`
+   */
+  experimental_overrideReportedSchema?: string;
+
+  /**
+   * The schema reporter waits before starting reporting.
+   * By default, the report waits some random amount of time between 0 and 10 seconds.
+   * A longer interval leads to more staggered starts which means it is less likely
+   * multiple servers will get asked to upload the same schema.
+   *
+   * If this server runs in lambda or in other constrained environments it would be useful
+   * to decrease the schema reporting max wait time to be less than default.
+   *
+   * This number will be the max for the range in ms that the schema reporter will
+   * wait before starting to report.
+   */
+  experimental_schemaReportingInitialDelayMaxMs?: number;
+
+  /**
+   * The URL to use for reporting schemas.
+   */
+  schemaReportingUrl?: string;
+
+  /**
    * A logger interface to be used for output and errors.  When not provided
    * it will default to the server's own `logger` implementation and use
    * `console` when that is not available.
@@ -251,7 +306,7 @@ export interface AddTraceArgs {
   trace: Trace;
   operationName: string;
   queryHash: string;
-  schemaHash: SchemaHash;
+  executableSchemaId: string;
   source?: string;
   document?: DocumentNode;
 }
@@ -270,27 +325,42 @@ const serviceHeaderDefaults = {
 export class EngineReportingAgent<TContext = any> {
   private readonly options: EngineReportingOptions<TContext>;
   private readonly apiKey: string;
-  private logger: Logger = console;
-  private graphVariant: string;
-  private reports: { [schemaHash: string]: Report } = Object.create(
+  private readonly logger: Logger = console;
+  private readonly graphVariant: string;
+
+  private reports: { [executableSchemaId: string]: Report } = Object.create(
     null,
   );
-  private reportSizes: { [schemaHash: string]: number } = Object.create(null);
+  private reportSizes: { [executableSchemaId: string]: number } = Object.create(
+    null,
+  );
+
   private reportTimer: any; // timer typing is weird and node-specific
   private readonly sendReportsImmediately?: boolean;
   private stopped: boolean = false;
-  private reportHeaders: { [schemaHash: string]: ReportHeader } = Object.create(
-    null,
-  );
+  private reportHeaders: {
+    [executableSchemaId: string]: ReportHeader;
+  } = Object.create(null);
   private signatureCache: InMemoryLRUCache<string>;
 
   private signalHandlers = new Map<NodeJS.Signals, NodeJS.SignalsListener>();
+
+  private currentSchemaReporter?: SchemaReporter;
+  private readonly bootId: string;
+  private lastSeenExecutableSchemaToId?: {
+    executableSchema: string | GraphQLSchema;
+    executableSchemaId: string;
+  };
+
+  private readonly tracesEndpointUrl: string;
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
     this.apiKey = getEngineApiKey({engine: this.options, skipWarn: false, logger: this.logger});
     if (options.logger) this.logger = options.logger;
+    this.bootId = uuidv4();
     this.graphVariant = getEngineGraphVariant(options, this.logger) || '';
+
     if (!this.apiKey) {
       throw new Error(
         `To use EngineReportingAgent, you must specify an API key via the apiKey option or the APOLLO_KEY environment variable.`,
@@ -325,12 +395,41 @@ export class EngineReportingAgent<TContext = any> {
       });
     }
 
+    if (this.options.endpointUrl) {
+      this.logger.warn(
+        '[deprecated] The `endpointUrl` option within `engine` has been renamed to `tracesEndpointUrl`.',
+      );
+    }
+    this.tracesEndpointUrl =
+      (this.options.endpointUrl ||
+        this.options.tracesEndpointUrl ||
+        'https://engine-report.apollodata.com') + '/api/ingress/traces';
+
     // Handle the legacy options: privateVariables and privateHeaders
     handleLegacyOptions(this.options);
   }
 
+  private executableSchemaIdGenerator(schema: string | GraphQLSchema) {
+    if (this.lastSeenExecutableSchemaToId?.executableSchema === schema) {
+      return this.lastSeenExecutableSchemaToId.executableSchemaId;
+    }
+    const id = computeExecutableSchemaId(schema);
+
+    // We override this variable every time we get a new schema so we cache
+    // the last seen value. It mostly a cached pair.
+    this.lastSeenExecutableSchemaToId = {
+      executableSchema: schema,
+      executableSchemaId: id,
+    };
+
+    return id;
+  }
+
   public newPlugin(): ApolloServerPlugin<TContext> {
-    return plugin(this.options, this.addTrace.bind(this));
+    return plugin(this.options, this.addTrace.bind(this), {
+      startSchemaReporting: this.startSchemaReporting.bind(this),
+      executableSchemaIdGenerator: this.executableSchemaIdGenerator.bind(this),
+    });
   }
 
   public async addTrace({
@@ -339,23 +438,23 @@ export class EngineReportingAgent<TContext = any> {
     document,
     operationName,
     source,
-    schemaHash,
+    executableSchemaId,
   }: AddTraceArgs): Promise<void> {
     // Ignore traces that come in after stop().
     if (this.stopped) {
       return;
     }
 
-    if (!(schemaHash in this.reports)) {
-      this.reportHeaders[schemaHash] = new ReportHeader({
+    if (!(executableSchemaId in this.reports)) {
+      this.reportHeaders[executableSchemaId] = new ReportHeader({
         ...serviceHeaderDefaults,
-        schemaHash,
+        executableSchemaId: executableSchemaId,
         schemaTag: this.graphVariant,
       });
       // initializes this.reports[reportHash]
-      this.resetReport(schemaHash);
+      this.resetReport(executableSchemaId);
     }
-    const report = this.reports[schemaHash];
+    const report = this.reports[executableSchemaId];
 
     const protobufError = Trace.verify(trace);
     if (protobufError) {
@@ -380,28 +479,26 @@ export class EngineReportingAgent<TContext = any> {
     (report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
       encodedTrace,
     );
-    this.reportSizes[schemaHash] +=
+    this.reportSizes[executableSchemaId] +=
       encodedTrace.length + Buffer.byteLength(statsReportKey);
 
     // If the buffer gets big (according to our estimate), send.
     if (
       this.sendReportsImmediately ||
-      this.reportSizes[schemaHash] >=
+      this.reportSizes[executableSchemaId] >=
         (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
     ) {
-      await this.sendReportAndReportErrors(schemaHash);
+      await this.sendReportAndReportErrors(executableSchemaId);
     }
   }
 
   public async sendAllReports(): Promise<void> {
-    await Promise.all(
-      Object.keys(this.reports).map(hash => this.sendReport(hash)),
-    );
+    await Promise.all(Object.keys(this.reports).map(id => this.sendReport(id)));
   }
 
-  public async sendReport(schemaHash: string): Promise<void> {
-    const report = this.reports[schemaHash];
-    this.resetReport(schemaHash);
+  public async sendReport(executableSchemaId: string): Promise<void> {
+    const report = this.reports[executableSchemaId];
+    this.resetReport(executableSchemaId);
 
     if (Object.keys(report.tracesPerQuery).length === 0) {
       return;
@@ -449,16 +546,12 @@ export class EngineReportingAgent<TContext = any> {
       });
     });
 
-    const endpointUrl =
-      (this.options.endpointUrl || 'https://engine-report.apollodata.com') +
-      '/api/ingress/traces';
-
     // Wrap fetch with async-retry for automatic retrying
     const response: Response = await retry(
       // Retry on network errors and 5xx HTTP
       // responses.
       async () => {
-        const curResponse = await fetch(endpointUrl, {
+        const curResponse = await fetch(this.tracesEndpointUrl, {
           method: 'POST',
           headers: {
             'user-agent': 'apollo-engine-reporting',
@@ -511,6 +604,59 @@ export class EngineReportingAgent<TContext = any> {
     }
   }
 
+  public startSchemaReporting({
+    executableSchemaId,
+    executableSchema,
+  }: {
+    executableSchemaId: string;
+    executableSchema: string;
+  }) {
+    if (this.currentSchemaReporter) {
+      this.currentSchemaReporter.stop();
+    }
+
+    const serverInfo = {
+      bootId: this.bootId,
+      graphVariant: this.graphVariant,
+      // The infra environment in which this edge server is running, e.g. localhost, Kubernetes
+      // Length must be <= 256 characters.
+      platform: process.env.APOLLO_SERVER_PLATFORM || 'local',
+      runtimeVersion: `node ${process.version}`,
+      executableSchemaId: executableSchemaId,
+      // An identifier used to distinguish the version of the server code such as git or docker sha.
+      // Length must be <= 256 charecters
+      userVersion: process.env.APOLLO_SERVER_USER_VERSION,
+      // "An identifier for the server instance. Length must be <= 256 characters.
+      serverId:
+        process.env.APOLLO_SERVER_ID || process.env.HOSTNAME || os.hostname(),
+      libraryVersion: `apollo-engine-reporting@${
+        require('../package.json').version
+      }`,
+    };
+
+    // Jitter the startup between 0 and 10 seconds
+    const delay = Math.floor(
+      Math.random() *
+        (this.options.experimental_schemaReportingInitialDelayMaxMs || 10_000),
+    );
+
+    const schemaReporter = new SchemaReporter(
+      serverInfo,
+      executableSchema,
+      this.apiKey,
+      this.options.schemaReportingUrl,
+    );
+
+    const fallbackReportingDelayInMs = 20_000;
+
+    this.currentSchemaReporter = schemaReporter;
+    const logger = this.logger;
+
+    setTimeout(function() {
+      reportingLoop(schemaReporter, logger, false, fallbackReportingDelayInMs);
+    }, delay);
+  }
+
   // Stop prevents reports from being sent automatically due to time or buffer
   // size, and stop buffering new traces. You may still manually send a last
   // report by calling sendReport().
@@ -523,6 +669,10 @@ export class EngineReportingAgent<TContext = any> {
     if (this.reportTimer) {
       clearInterval(this.reportTimer);
       this.reportTimer = undefined;
+    }
+
+    if (this.currentSchemaReporter) {
+      this.currentSchemaReporter.stop();
     }
 
     this.stopped = true;
@@ -579,14 +729,14 @@ export class EngineReportingAgent<TContext = any> {
 
   private async sendAllReportsAndReportErrors(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reports).map(schemaHash =>
-        this.sendReportAndReportErrors(schemaHash),
+      Object.keys(this.reports).map(executableSchemaId =>
+        this.sendReportAndReportErrors(executableSchemaId),
       ),
     );
   }
 
-  private sendReportAndReportErrors(schemaHash: string): Promise<void> {
-    return this.sendReport(schemaHash).catch(err => {
+  private sendReportAndReportErrors(executableSchemaId: string): Promise<void> {
+    return this.sendReport(executableSchemaId).catch(err => {
       // This catch block is primarily intended to catch network errors from
       // the retried request itself, which include network errors and non-2xx
       // HTTP errors.
@@ -598,11 +748,11 @@ export class EngineReportingAgent<TContext = any> {
     });
   }
 
-  private resetReport(schemaHash: string) {
-    this.reports[schemaHash] = new Report({
-      header: this.reportHeaders[schemaHash],
+  private resetReport(executableSchemaId: string) {
+    this.reports[executableSchemaId] = new Report({
+      header: this.reportHeaders[executableSchemaId],
     });
-    this.reportSizes[schemaHash] = 0;
+    this.reportSizes[executableSchemaId] = 0;
   }
 }
 
@@ -712,4 +862,16 @@ function makeSendValuesBaseOptionsFromLegacy(
     : legacyPrivateOption
     ? { none: true }
     : { all: true };
+}
+
+export function computeExecutableSchemaId(
+  schema: string | GraphQLSchema,
+): string {
+  // Can't call digest on this object twice. Creating new object each function call
+  const sha256 = createHash('sha256');
+  const schemaDocument =
+    typeof schema === 'string'
+      ? schema
+      : printSchema(schema);
+  return sha256.update(schemaDocument).digest('hex');
 }

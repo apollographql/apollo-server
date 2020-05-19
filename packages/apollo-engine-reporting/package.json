@@ -18,7 +18,8 @@
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-server-types": "file:../apollo-server-types",
-    "async-retry": "^1.2.1"
+    "async-retry": "^1.2.1",
+    "uuid": "^8.0.0"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
