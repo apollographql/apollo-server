@@ -179,7 +179,7 @@ export class SchemaReporter {
       const httpResponse = await fetch(httpRequest);
       if (!httpResponse.ok) {
         throw new Error([
-          `An unexpected HTTP status code (${http.response.status}) was`
+          `An unexpected HTTP status code (${httpResponse.status}) was`,
           'encountered during schema reporting.'
         ].join(' '));
       }
