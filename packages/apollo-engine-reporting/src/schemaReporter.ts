@@ -2,7 +2,6 @@ import {
   ReportServerInfoVariables,
   EdgeServerInfo,
   SchemaReportingServerInfoResult,
-  SchemaReportingServerInfo,
 } from './reportingOperationTypes';
 import { fetch, Headers, Request } from 'apollo-server-env';
 import { GraphQLRequest, Logger } from 'apollo-server-types';
@@ -116,7 +115,7 @@ export class SchemaReporter {
       throw new Error((errors || []).map((x: any) => x.message).join('\n'));
     }
 
-    function msgForUnexpectedResponse(data: SchemaReportingServerInfo): string {
+    function msgForUnexpectedResponse(data: any): string {
       return [
         'Unexpected response shape from Apollo Graph Manager when',
         'reporting server information for schema reporting. If',
