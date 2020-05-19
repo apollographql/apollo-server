@@ -16,6 +16,8 @@ The version headers in this history reflect the versions of Apollo Server itself
     - The federated tracing plugin's `ftv1` response on `extensions` (which is present on the response from an implementing service to the gateway) is now placed on the `extensions` _after_ the `formatResponse` hook.  Anyone leveraging the `extensions`.`ftv1` data from the `formatResponse` hook will find that it is no longer present at that phase.
 - `apollo-tracing`: This package's internal integration with Apollo Server has been switched from using the soon-to-be-deprecated`graphql-extensions` API to using [the request pipeline plugin API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  Behavior should remain otherwise the same.  [PR #3991](https://github.com/apollographql/apollo-server/pull/3991)
 
+- `apollo-engine-reporting`: Added a `traceReporting` api to allow trace reporting to be enabled or disabled on a per request basis. The option takes either a boolean or a function that takes a `GraphQLRequestContextDidResolveOperation` and returns a boolean. If the boolean is false the trace will not be instrumented or sent to Apollo Graph Manager. The current default is true so all traces will get instrumented and sent, which is the same as the previous default behavior. [PR #3918](https://github.com/apollographql/apollo-server/pull/3918)
+
 ### v2.13.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)

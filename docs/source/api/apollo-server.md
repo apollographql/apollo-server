@@ -404,7 +404,7 @@ addMockFunctionsToSchema({
 
     - `{ none: true }`: Don't send any variable values. **(DEFAULT)**
     - `{ all: true }`: Send all variable values.
-    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.  For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`. 
+    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.  For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`.
     - `{ exceptNames: [...] }`: A case-sensitive list of names of variables whose values should not be sent to Apollo servers.
     - `{ onlyNames: [...] }`: A case-sensitive list of names of variables whose values will be sent to Apollo servers.
 
@@ -473,6 +473,17 @@ addMockFunctionsToSchema({
 *  `schemaTag`: String
 
    A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
+
+* `traceReporting`: Boolean | async (GraphQLRequestContextDidResolveOperation) => Boolean
+
+    If this is option returns true tracing and instrumentation will be enabled for a
+    given request. If it is false the request will not be instrumented, and a trace will not
+    be constructed or sent to Apollo Graph Manager.
+
+    This function will receive a `GraphQLRequestContextDidResolveOperation`, which will contain
+    client and operation information allowing those to be used in the
+    determination of whether a request should be traced. If nothing is provided
+    the default behavior is to trace every request and send them to Apollo Graph Manager.
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 

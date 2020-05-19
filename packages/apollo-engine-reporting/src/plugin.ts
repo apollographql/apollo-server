@@ -80,11 +80,8 @@ export const plugin = <TContext>(
       const logger = requestLogger || loggerForPlugin;
 
       // If the options are false don't do any metrics timing.
-      if (options.traceReporting === false) {
-        // If we are running in gateway mode don't send the ftv1 trace
-        metrics.captureTraces = false;
-        return {};
-      }
+      if (options.traceReporting === false) return {};
+
       metrics.captureTraces = true;
 
       const treeBuilder: EngineReportingTreeBuilder = new EngineReportingTreeBuilder(
@@ -145,19 +142,7 @@ export const plugin = <TContext>(
         endDone = true;
         treeBuilder.stopTiming();
 
-        // Returning here if we aren't reporting the trace to make sure,
-        // endDone is set and the treeBuilder has stopped
-        // If we are running in gateway mode don't send the ftv1 trace
-        // after we have stopped trace timing.
-
-        // Return early if we aren't going to report the trace, but check
-        // `endDone` is true and the treebuilder has stopped.
-        // Also set captureTraces to false so if this is a gateway the
-        // `ftv1-trace-header` will not be sent to downstream services.
-        if (!reportTrace) {
-          metrics.captureTraces = false;
-          return;
-        }
+        if (!reportTrace) return;
 
         treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
         treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
@@ -215,30 +200,10 @@ export const plugin = <TContext>(
       //   - PersistedQueryNotSupportedError
       //   - InvalidGraphQLRequestError
       let didResolveSource: boolean = false;
+      let hasCalledShouldReport: boolean = false;
 
       return {
-        async didResolveOperation(requestContext) {
-          if (typeof options.traceReporting !== 'function') return;
-          const shouldReportTrace = await options.traceReporting(
-            requestContext,
-          );
-
-          // Help the user understand they've returned an unexpected value,
-          // which might be a subtle mistake.
-          if (typeof shouldReportTrace !== 'boolean') {
-            (requestContext.logger || logger).warn(
-              "The 'traceReporting' predicate function must return a boolean value.",
-            );
-            return;
-          }
-
-          if (!shouldReportTrace) didEnd(requestContext, false);
-        },
         didResolveSource(requestContext) {
-          // We can early abort if traceReporting returned false
-          // In this case the treeBuilder is already stopped so
-          // we can ignore everything in this function
-          if (endDone) return;
           didResolveSource = true;
 
           if (metrics.persistedQueryHit) {
@@ -269,15 +234,36 @@ export const plugin = <TContext>(
             treeBuilder.trace.clientName = clientName || '';
           }
         },
+        async didResolveOperation(requestContext) {
+          const shouldReportTrace = shouldTraceOperation(
+            options,
+            requestContext,
+            logger,
+          );
+          hasCalledShouldReport = true;
+          if (!shouldReportTrace) {
+            // Also set captureTraces to false so if this is a gateway the
+            // `ftv1-trace-header` will not be sent to downstream services.
+            requestContext.metrics.captureTraces = false;
 
+            // End early if we aren't going to send the trace so we continue to
+            // run the tree builder.
+            didEnd(requestContext, false);
+          }
+        },
         executionDidStart() {
+          // If end is done return an empty object since we aren't going to do tracing
+          if (endDone) return {};
+
           return {
             willResolveField({ info }) {
               // We can early abort if traceReporting returned false
               // In this case the treeBuilder is already stopped so
               // we don't want to get resolver timings
 
-              if (!endDone) treeBuilder.willResolveField(info);
+              if (!endDone) {
+                treeBuilder.willResolveField(info);
+              }
               // We could save the error into the trace during the end handler, but
               // it won't have all the information that graphql-js adds to it later,
               // like 'locations'.
@@ -287,22 +273,49 @@ export const plugin = <TContext>(
 
         willSendResponse(requestContext) {
           // See comment above for why `didEnd` must be called in two hooks.
-          didEnd(requestContext, true);
+          if (!endDone) didEnd(requestContext, true);
         },
-
-        didEncounterErrors(requestContext) {
+        async didEncounterErrors(requestContext) {
           // Search above for a comment about "didResolveSource" to see which
           // of the pre-source-resolution errors we are intentionally avoiding.
           if (!didResolveSource || endDone) return;
           treeBuilder.didEncounterErrors(requestContext.errors);
 
           // See comment above for why `didEnd` must be called in two hooks.
-          didEnd(requestContext, true);
+          if (!endDone) {
+            const shouldTrace =
+              hasCalledShouldReport ||
+              (await shouldTraceOperation(options, requestContext, logger));
+            didEnd(requestContext, shouldTrace);
+          }
         },
       };
     },
   };
 };
+
+async function shouldTraceOperation<TContext>(
+  options: EngineReportingOptions<TContext>,
+  requestContext:
+    | GraphQLRequestContextDidResolveOperation<TContext>
+    | GraphQLRequestContextDidEncounterErrors<TContext>,
+  logger: Logger,
+): Promise<boolean> {
+  if (typeof options.traceReporting !== 'function')
+    return options.traceReporting || true;
+  const shouldReportTrace = await options.traceReporting(requestContext);
+
+  // Help the user understand they've returned an unexpected value,
+  // which might be a subtle mistake.
+  if (typeof shouldReportTrace !== 'boolean') {
+    (requestContext.logger || logger).warn(
+      "The 'traceReporting' predicate function must return a boolean value.",
+    );
+    return true;
+  }
+
+  return shouldReportTrace;
+}
 
 // Helpers for producing traces.
 

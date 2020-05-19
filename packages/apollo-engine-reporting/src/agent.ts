@@ -18,10 +18,10 @@ import retry from 'async-retry';
 
 import { plugin } from './plugin';
 import {
-  GraphQLRequestContext,
+  GraphQLRequestContext, GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextDidResolveOperation,
-  Logger,
-} from 'apollo-server-types';
+  Logger
+} from "apollo-server-types";
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
@@ -58,7 +58,9 @@ export type VariableValueOptions =
 
 export type TraceReportingOptions<TContext> =
   | ((
-      request: GraphQLRequestContextDidResolveOperation<TContext>,
+      request:
+        |GraphQLRequestContextDidResolveOperation<TContext>
+      |  GraphQLRequestContextDidEncounterErrors<TContext>,
     ) => Promise<boolean>)
   | boolean;
 
