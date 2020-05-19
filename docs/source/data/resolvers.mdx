@@ -198,7 +198,7 @@ type Query {
 Here's a valid query against that schema:
 
 ```graphql
-query {
+query GetBooksByLibrary {
   libraries {
     books {
       author {
@@ -325,7 +325,7 @@ server.listen().then(({ url }) => {
 If we now update our query to also ask for each book's `title`:
 
 ```graphql{4}
-query {
+query GetBooksByLibrary {
   libraries {
     books {
       title

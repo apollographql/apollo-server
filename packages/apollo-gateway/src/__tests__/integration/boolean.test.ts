@@ -1,12 +1,4 @@
-import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
-
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
-
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
 
 expect.addSnapshotSerializer(astSerializer);
@@ -16,7 +8,7 @@ expect.addSnapshotSerializer(queryPlanSerializer);
 // eventually we want to do this to prevent downstream fetches that aren't needed
 describe('@skip', () => {
   it('supports @skip when a boolean condition is met', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body
@@ -27,12 +19,9 @@ describe('@skip', () => {
       }
     `;
 
-    const { data, errors, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { data, queryPlan } = await execute({
+      query,
+    });
 
     expect(data).toEqual({
       topReviews: [
@@ -49,7 +38,7 @@ describe('@skip', () => {
   });
 
   it('supports @skip when a boolean condition is met (variable driven)', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers($skip: Boolean!) {
         topReviews {
           body
@@ -61,13 +50,10 @@ describe('@skip', () => {
     `;
 
     const skip = true;
-    const { data, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-        variables: { skip },
-      },
-    );
+    const { data, queryPlan } = await execute({
+      query,
+      variables: { skip },
+    });
 
     expect(data).toEqual({
       topReviews: [
@@ -85,7 +71,7 @@ describe('@skip', () => {
 
   // Data looks good here, suspect the matcher is incorrect
   it('supports @skip when a boolean condition is not met', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body
@@ -96,12 +82,9 @@ describe('@skip', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { data, queryPlan } = await execute({
+      query,
+    });
 
     expect(data).toEqual({
       topReviews: [
@@ -122,7 +105,7 @@ describe('@skip', () => {
 
   // Data looks good here, suspect the matcher is incorrect
   it('supports @skip when a boolean condition is not met (variable driven)', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers($skip: Boolean!) {
         topReviews {
           body
@@ -134,13 +117,10 @@ describe('@skip', () => {
     `;
 
     const skip = false;
-    const { data, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-        variables: { skip },
-      },
-    );
+    const { data, queryPlan } = await execute({
+      query,
+      variables: { skip },
+    });
 
     expect(data).toEqual({
       topReviews: [
@@ -162,7 +142,7 @@ describe('@skip', () => {
 
 describe('@include', () => {
   it('supports @include when a boolean condition is not met', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body
@@ -173,12 +153,9 @@ describe('@include', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { data, queryPlan } = await execute({
+      query,
+    });
 
     expect(data).toEqual({
       topReviews: [
@@ -195,7 +172,7 @@ describe('@include', () => {
   });
 
   it('supports @include when a boolean condition is not met (variable driven)', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers($include: Boolean!) {
         topReviews {
           body
@@ -207,13 +184,10 @@ describe('@include', () => {
     `;
 
     const include = false;
-    const { data, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-        variables: { include },
-      },
-    );
+    const { data, queryPlan } = await execute({
+      query,
+      variables: { include },
+    });
 
     expect(data).toEqual({
       topReviews: [
@@ -232,7 +206,7 @@ describe('@include', () => {
   // Data looks good here, suspect the matcher is incorrect
   // Added the query plan snapshot for a view.
   it('supports @include when a boolean condition is met', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body
@@ -243,12 +217,9 @@ describe('@include', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { data, queryPlan } = await execute({
+      query,
+    });
 
     expect(data).toEqual({
       topReviews: [
@@ -270,7 +241,7 @@ describe('@include', () => {
   // Data looks good here, suspect the matcher is incorrect
   // Added the query plan snapshot for a view.
   it('supports @include when a boolean condition is met (variable driven)', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers($include: Boolean!) {
         topReviews {
           body
@@ -282,13 +253,10 @@ describe('@include', () => {
     `;
 
     const include = true;
-    const { data, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-        variables: { include },
-      },
-    );
+    const { data, queryPlan } = await execute({
+      query,
+      variables: { include },
+    });
 
     expect(data).toEqual({
       topReviews: [

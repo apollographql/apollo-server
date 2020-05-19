@@ -115,7 +115,7 @@ const userService: ServiceDefinitionModule = {
 };
 
 it('fetches data correctly with multiple @key fields', async () => {
-  const query = gql`
+  const query = `#graphql
     query {
       reviews {
         body
@@ -128,10 +128,10 @@ it('fetches data correctly with multiple @key fields', async () => {
   `;
 
   const { data, queryPlan, errors } = await execute(
-    [userService, reviewService, actuaryService],
     {
       query,
     },
+    [userService, reviewService, actuaryService],
   );
 
   expect(errors).toBeFalsy();
@@ -220,7 +220,7 @@ it('fetches data correctly with multiple @key fields', async () => {
 });
 
 it('fetches keys as needed to reduce round trip queries', async () => {
-  const query = gql`
+  const query = `#graphql
     query {
       users {
         risk
@@ -232,10 +232,10 @@ it('fetches keys as needed to reduce round trip queries', async () => {
   `;
 
   const { data, queryPlan, errors } = await execute(
-    [userService, reviewService, actuaryService],
     {
       query,
     },
+    [userService, reviewService, actuaryService]
   );
 
   expect(errors).toBeFalsy();
