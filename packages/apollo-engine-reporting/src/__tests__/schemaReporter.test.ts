@@ -99,7 +99,11 @@ describe('Schema reporter', () => {
       },
     });
 
-    await expect(schemaReporter.reportServerInfo(false)).rejects.toThrow();
+    await expect(
+      schemaReporter.reportServerInfo(false),
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `"An unexpected HTTP status code (500) was encountered during schema reporting."`,
+    );
   });
 
   it('throws on 200 malformed response', async () => {
@@ -119,7 +123,11 @@ describe('Schema reporter', () => {
       },
     });
 
-    await expect(schemaReporter.reportServerInfo(false)).rejects.toThrow();
+    await expect(
+      schemaReporter.reportServerInfo(false),
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `"Unexpected response shape from Apollo Graph Manager when reporting server information for schema reporting. If this continues, please reach out to support@apollographql.com. Received response: {\\"me\\":{\\"reportServerInfo\\":{\\"__typename\\":\\"ReportServerInfoResponse\\"}}}"`,
+    );
 
     mockReporterRequest(url).reply(200, {
       data: {
@@ -128,7 +136,11 @@ describe('Schema reporter', () => {
         },
       },
     });
-    await expect(schemaReporter.reportServerInfo(false)).rejects.toThrow();
+    await expect(
+      schemaReporter.reportServerInfo(false),
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `"This server was configured with an API key for a user. Only a service's API key may be used for schema reporting. Please visit the settings for this graph at https://engine.apollographql.com/ to obtain an API key for a service."`,
+    );
   });
 
   it('sends schema if withExecutableSchema is true.', async () => {
