@@ -2,6 +2,7 @@ import {
   ReportServerInfoVariables,
   EdgeServerInfo,
   SchemaReportingServerInfoResult,
+  SchemaReportingServerInfo,
 } from './reportingOperationTypes';
 import { fetch, Headers, Request } from 'apollo-server-env';
 import { GraphQLRequest, Logger } from 'apollo-server-types';
@@ -115,17 +116,20 @@ export class SchemaReporter {
       throw new Error((errors || []).map((x: any) => x.message).join('\n'));
     }
 
-    if (!data || !data.me || !data.me.__typename) {
-      throw new Error(
-        [
-          'Unexpected response shape from Apollo Graph Manager when',
-          'reporting server information for schema reporting. If',
-          'this continues, please reach out to support@apollographql.com.',
-          'Received response:',
-          JSON.stringify(data),
-        ].join(' '),
-      );
+    function msgForUnexpectedResponse(data: SchemaReportingServerInfo): string {
+      return [
+        'Unexpected response shape from Apollo Graph Manager when',
+        'reporting server information for schema reporting. If',
+        'this continues, please reach out to support@apollographql.com.',
+        'Received response:',
+        JSON.stringify(data),
+      ].join(' ');
     }
+
+    if (!data || !data.me || !data.me.__typename) {
+      throw new Error(msgForUnexpectedResponse(data));
+    }
+
     if (data.me.__typename === 'UserMutation') {
       this.isStopped = true;
       throw new Error(
@@ -138,27 +142,11 @@ export class SchemaReporter {
       );
     } else if (data.me.__typename === 'ServiceMutation') {
       if (!data.me.reportServerInfo) {
-        throw new Error(
-          [
-            'Unexpected response shape from Apollo Graph Manager when',
-            'reporting server information during schema reporting. If',
-            'this continues, please reach out to support@apollographql.com.',
-            'Received response:',
-            JSON.stringify(data),
-          ].join(' '),
-        );
+        throw new Error(msgForUnexpectedResponse(data));
       }
       return data.me.reportServerInfo;
     } else {
-      throw new Error(
-        [
-          'Unexpected response shape from Apollo Graph Manager when',
-          'reporting server information during schema reporting. If',
-          'this continues, please reach out to support@apollographql.com.',
-          'Received response:',
-          JSON.stringify(data),
-        ].join(' '),
-      );
+      throw new Error(msgForUnexpectedResponse(data));
     }
   }
 
