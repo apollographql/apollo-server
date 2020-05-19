@@ -16,6 +16,21 @@ The version headers in this history reflect the versions of Apollo Server itself
     - The federated tracing plugin's `ftv1` response on `extensions` (which is present on the response from an implementing service to the gateway) is now placed on the `extensions` _after_ the `formatResponse` hook.  Anyone leveraging the `extensions`.`ftv1` data from the `formatResponse` hook will find that it is no longer present at that phase.
 - `apollo-tracing`: This package's internal integration with Apollo Server has been switched from using the soon-to-be-deprecated`graphql-extensions` API to using [the request pipeline plugin API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  Behavior should remain otherwise the same.  [PR #3991](https://github.com/apollographql/apollo-server/pull/3991)
 
+- `apollo-engine-reporting`: Added an experimental schema reporting feature to engine reporting. Previously the only way to get schemas into the schema registry in Apollo Graph Manager, was to use the cli and run `apollo schema:push`. _Apollo schema reporting protocol_, is a *new* specification for GraphQL servers to automatically report schemas to the Apollo Graph Manager schema registry.  [PR #4084](https://github.com/apollographql/apollo-server/pull/4084), [Preview docs](https://github.com/apollographql/apollo-schema-reporting-preview-docs)
+
+    - To enable schema reporting provide a Graph Manager API key (available from [Apollo Graph Manager](https://engine.apollographql.com/)) in the `APOLLO_KEY` environment variable *and* set the `experimental_schemaReporting` option to `true` in the Apollo Server constructor options, like so:
+    ```js
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      engine: {
+        experimental_schemaReporting: true,
+        /* Other existing options can remain the same. */
+      },
+    });
+    ```
+  - When enabled, a schema reporter is initiated by the `apollo-engine-reporting` agent.  It will loop until the `ApolloServer` instance is stopped, periodically calling back to Apollo Graph Manager to send information.  The life-cycle of this reporter is managed by the agent.
+
 ### v2.13.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
