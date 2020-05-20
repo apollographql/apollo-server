@@ -1,8 +1,8 @@
 import {
   GraphQLRequestContext,
   Logger,
-  GraphQLRequestContextExecutionDidStart,
   GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestContextWillSendResponse,
 } from 'apollo-server-types';
 import { Headers } from 'apollo-server-env';
 import { GraphQLSchema, printSchema } from 'graphql';
@@ -117,7 +117,7 @@ export const plugin = <TContext>(
       let endDone: boolean = false;
       function didEnd(
         requestContext:
-          | GraphQLRequestContextExecutionDidStart<TContext>
+          | GraphQLRequestContextWillSendResponse<TContext>
           | GraphQLRequestContextDidEncounterErrors<TContext>,
       ) {
         if (endDone) return;
@@ -214,9 +214,8 @@ export const plugin = <TContext>(
           }
         },
 
-        executionDidStart(requestContext) {
+        executionDidStart() {
           return {
-            executionDidEnd: () => didEnd(requestContext),
             willResolveField({ info }) {
               return treeBuilder.willResolveField(info);
               // We could save the error into the trace during the end handler, but
@@ -224,6 +223,10 @@ export const plugin = <TContext>(
               // like 'locations'.
             },
           };
+        },
+
+        willSendResponse(requestContext) {
+          didEnd(requestContext);
         },
 
         didEncounterErrors(requestContext) {
