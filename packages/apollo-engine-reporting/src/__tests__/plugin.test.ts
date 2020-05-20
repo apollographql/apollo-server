@@ -58,7 +58,7 @@ describe('schema reporting', () => {
   const schema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({ schema });
 
-  const addTrace = jest.fn().mockResolvedValue(undefined);
+  const addTrace = jest.fn(() => Promise.resolve());
   const startSchemaReporting = jest.fn();
   const executableSchemaIdGenerator = jest.fn(computeExecutableSchemaId);
 
@@ -481,7 +481,7 @@ describe('tests for the shouldReportQuery reporting option', () => {
   const schema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({ schema });
 
-  const addTrace = jest.fn();
+  const addTrace = jest.fn(() => Promise.resolve());
   beforeEach(() => {
     addTrace.mockClear();
   });
@@ -575,10 +575,9 @@ describe('tests for the shouldReportQuery reporting option', () => {
     const pluginInstance = plugin(
       {
         traceReporting: async request => {
-          let shouldTrace = await (async () => {
+          return await (async () => {
             return request.request.operationName === 'report';
           })();
-          return shouldTrace;
         },
       },
       addTrace,

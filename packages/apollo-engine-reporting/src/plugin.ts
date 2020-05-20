@@ -123,6 +123,37 @@ export const plugin = <TContext>(
         }
       }
 
+      let shouldReportTrace: null | boolean;
+
+      async function shouldTraceOperation(
+        requestContext:
+          | GraphQLRequestContextDidResolveOperation<TContext>
+          | GraphQLRequestContextDidEncounterErrors<TContext>,
+      ): Promise<void> {
+        if (typeof options.traceReporting === "boolean") {
+          shouldReportTrace = options.traceReporting
+          return;
+        }
+
+        if (typeof options.traceReporting !== 'function') {
+          // Default case we always report
+          shouldReportTrace = true;
+          return;
+        }
+
+        shouldReportTrace = await options.traceReporting(requestContext);
+
+        // Help the user understand they've returned an unexpected value,
+        // which might be a subtle mistake.
+        if (typeof shouldReportTrace !== 'boolean') {
+          (requestContext.logger || logger).warn(
+            "The 'traceReporting' predicate function must return a boolean value.",
+          );
+          shouldReportTrace = true;
+        }
+      }
+
+
       /**
        * Due to a number of exceptions in the request pipeline — which are
        * intended to preserve backwards compatible behavior with the
@@ -139,13 +170,12 @@ export const plugin = <TContext>(
           | GraphQLRequestContextWillSendResponse<TContext>
           | GraphQLRequestContextDidEncounterErrors<TContext>
           | GraphQLRequestContextDidResolveOperation<TContext>,
-        reportTrace: boolean,
       ) {
         if (endDone) return;
         endDone = true;
         treeBuilder.stopTiming();
 
-        if (!reportTrace) return;
+        if (!shouldReportTrace) return;
 
         treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
         treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
@@ -203,7 +233,6 @@ export const plugin = <TContext>(
       //   - PersistedQueryNotSupportedError
       //   - InvalidGraphQLRequestError
       let didResolveSource: boolean = false;
-      let hasCalledShouldReport: boolean = false;
 
       return {
         didResolveSource(requestContext) {
@@ -238,12 +267,8 @@ export const plugin = <TContext>(
           }
         },
         async didResolveOperation(requestContext) {
-          const shouldReportTrace = shouldTraceOperation(
-            options,
-            requestContext,
-            logger,
-          );
-          hasCalledShouldReport = true;
+          await shouldTraceOperation(requestContext);
+
           if (!shouldReportTrace) {
             // Also set captureTraces to false so if this is a gateway the
             // `ftv1-trace-header` will not be sent to downstream services.
@@ -251,19 +276,15 @@ export const plugin = <TContext>(
 
             // End early if we aren't going to send the trace so we continue to
             // run the tree builder.
-            didEnd(requestContext, false);
+            didEnd(requestContext);
           }
         },
         executionDidStart() {
-          // If end is done return an empty object since we aren't going to do tracing
+          // If we stopped tracing early return an empty object here.
           if (endDone) return {};
 
           return {
             willResolveField({ info }) {
-              // We can early abort if traceReporting returned false
-              // In this case the treeBuilder is already stopped so
-              // we don't want to get resolver timings
-
               if (!endDone) {
                 treeBuilder.willResolveField(info);
               }
@@ -276,7 +297,7 @@ export const plugin = <TContext>(
 
         willSendResponse(requestContext) {
           // See comment above for why `didEnd` must be called in two hooks.
-          if (!endDone) didEnd(requestContext, true);
+          didEnd(requestContext);
         },
         async didEncounterErrors(requestContext) {
           // Search above for a comment about "didResolveSource" to see which
@@ -284,41 +305,18 @@ export const plugin = <TContext>(
           if (!didResolveSource || endDone) return;
           treeBuilder.didEncounterErrors(requestContext.errors);
 
-          // See comment above for why `didEnd` must be called in two hooks.
-          if (!endDone) {
-            const shouldTrace =
-              hasCalledShouldReport ||
-              (await shouldTraceOperation(options, requestContext, logger));
-            didEnd(requestContext, shouldTrace);
+          if (shouldReportTrace == null) {
+            // We can reach didEncounterErrors before we call didResolveOperation
+            await shouldTraceOperation(requestContext);
           }
+
+          // See comment above for why `didEnd` must be called in two hooks.
+          didEnd(requestContext);
         },
       };
     },
   };
 };
-
-async function shouldTraceOperation<TContext>(
-  options: EngineReportingOptions<TContext>,
-  requestContext:
-    | GraphQLRequestContextDidResolveOperation<TContext>
-    | GraphQLRequestContextDidEncounterErrors<TContext>,
-  logger: Logger,
-): Promise<boolean> {
-  if (typeof options.traceReporting !== 'function')
-    return options.traceReporting || true;
-  const shouldReportTrace = await options.traceReporting(requestContext);
-
-  // Help the user understand they've returned an unexpected value,
-  // which might be a subtle mistake.
-  if (typeof shouldReportTrace !== 'boolean') {
-    (requestContext.logger || logger).warn(
-      "The 'traceReporting' predicate function must return a boolean value.",
-    );
-    return true;
-  }
-
-  return shouldReportTrace;
-}
 
 // Helpers for producing traces.
 
