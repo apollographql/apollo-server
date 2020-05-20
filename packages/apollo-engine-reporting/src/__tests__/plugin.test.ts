@@ -207,7 +207,7 @@ it('trace construction', async () => {
 
   const startSchemaReporting = jest.fn();
   const executableSchemaIdGenerator = jest.fn();
-  const addTrace = jest.fn();
+  const addTrace = jest.fn(() => Promise.resolve());
 
   const pluginInstance = plugin(
     {
