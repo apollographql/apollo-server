@@ -161,6 +161,7 @@ export const plugin = <TContext>(
           executableSchemaId: executableSchemaIdGenerator(
             options.experimental_overrideReportedSchema || schema,
           ),
+          logger,
         });
       }
 

@@ -332,6 +332,7 @@ export interface AddTraceArgs {
   executableSchemaId: string;
   source?: string;
   document?: DocumentNode;
+  logger: Logger,
 }
 
 const serviceHeaderDefaults = {
@@ -488,6 +489,16 @@ export class EngineReportingAgent<TContext = any> {
     operationName,
     source,
     executableSchemaId,
+    /**
+     * Since this agent instruments the plugin with its `options.logger`, but
+     * also passes off a reference to this `addTrace` method which is invoked
+     * with the availability of a per-request `logger`, this `logger` (in this
+     * destructuring) is already conditionally either:
+     *
+     *   1. The `logger` that was passed into the `options` for the agent.
+     *   2. The request-specific `logger`.
+     */
+    logger,
   }: AddTraceArgs): Promise<void> {
     // Ignore traces that come in after stop().
     if (this.stopped) {
@@ -508,6 +519,7 @@ export class EngineReportingAgent<TContext = any> {
       document,
       source,
       operationName,
+      logger,
     });
 
     const statsReportKey = `# ${operationName || '-'}\n${signature}`;
@@ -729,11 +741,13 @@ export class EngineReportingAgent<TContext = any> {
     operationName,
     document,
     source,
+    logger,
   }: {
     queryHash: string;
     operationName: string;
     document?: DocumentNode;
     source?: string;
+    logger: Logger;
   }): Promise<string> {
     if (!document && !source) {
       // This shouldn't happen: one of those options must be passed to runQuery.
@@ -768,7 +782,24 @@ export class EngineReportingAgent<TContext = any> {
     )(document, operationName);
 
     // Intentionally not awaited so the cache can be written to at leisure.
-    this.signatureCache.set(cacheKey, generatedSignature);
+    //
+    // As of the writing of this comment, this signature cache is exclusively
+    // backed by an `InMemoryLRUCache` which cannot do anything
+    // non-synchronously, though that will probably change in the future,
+    // and a distributed cache store, like Redis, doesn't seem unfathomable.
+    //
+    // Due in part to the plugin being separate from the `EngineReportingAgent`,
+    // the loggers are difficult to track down here.  Errors will be logged to
+    // either the request-specific logger on the request context (if available)
+    // or to the `logger` that was passed into `EngineReportingOptions` which
+    // is provided in the `EngineReportingAgent` constructor options.
+    this.signatureCache.set(cacheKey, generatedSignature)
+      .catch(err => {
+        logger.warn(
+          'Could not store signature cache. ' +
+          (err && err.message) || err
+        )
+      });
 
     return generatedSignature;
   }
