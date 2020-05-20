@@ -152,6 +152,13 @@ export const plugin = <TContext>(
           treeBuilder.trace.queryPlan = metrics.queryPlanTrace;
         }
 
+        // Intentionally un-awaited so as not to block the response.  Any
+        // errors will be logged, but will not manifest a user-facing error.
+        // The logger in this case is a request specific logger OR the logger
+        // defined by the plugin if that's unavailable.  The request-specific
+        // logger is preferred since this is very much coupled directly to a
+        // client-triggered action which might be more granularly tagged by
+        // logging implementations.
         addTrace({
           operationName,
           queryHash: requestContext.queryHash!,
@@ -162,7 +169,7 @@ export const plugin = <TContext>(
             options.experimental_overrideReportedSchema || schema,
           ),
           logger,
-        });
+        }).catch(logger.error);
       }
 
       // While we start the tracing as soon as possible, we only actually report

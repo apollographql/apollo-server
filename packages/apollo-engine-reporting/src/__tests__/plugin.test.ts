@@ -46,7 +46,7 @@ describe('schema reporting', () => {
   const schema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({ schema });
 
-  const addTrace = jest.fn();
+  const addTrace = jest.fn().mockResolvedValue(undefined);
   const startSchemaReporting = jest.fn();
   const executableSchemaIdGenerator = jest.fn(computeExecutableSchemaId);
 
