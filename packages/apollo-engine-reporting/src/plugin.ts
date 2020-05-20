@@ -285,9 +285,7 @@ export const plugin = <TContext>(
 
           return {
             willResolveField({ info }) {
-              if (!endDone) {
-                treeBuilder.willResolveField(info);
-              }
+              treeBuilder.willResolveField(info);
               // We could save the error into the trace during the end handler, but
               // it won't have all the information that graphql-js adds to it later,
               // like 'locations'.
