@@ -80,7 +80,10 @@ export const plugin = <TContext>(
       const logger = requestLogger || loggerForPlugin;
 
       // If the options are false don't do any metrics timing.
-      if (options.traceReporting === false) return {};
+      if (options.traceReporting === false) {
+        metrics.captureTraces = false;
+        return {};
+      }
 
       metrics.captureTraces = true;
 

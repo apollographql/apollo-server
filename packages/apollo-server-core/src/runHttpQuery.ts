@@ -262,10 +262,7 @@ export async function processHTTPRequest<TContext>(
       context,
       cache: options.cache,
       debug: options.debug,
-      metrics: {
-        // Defaults to false. Gets set to true by the reporting agent
-        captureTraces: false,
-      },
+      metrics: {},
     };
   }
 

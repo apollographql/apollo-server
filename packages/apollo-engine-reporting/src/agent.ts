@@ -59,8 +59,8 @@ export type VariableValueOptions =
 export type TraceReportingOptions<TContext> =
   | ((
       request:
-        |GraphQLRequestContextDidResolveOperation<TContext>
-      |  GraphQLRequestContextDidEncounterErrors<TContext>,
+      | GraphQLRequestContextDidResolveOperation<TContext>
+      | GraphQLRequestContextDidEncounterErrors<TContext>,
     ) => Promise<boolean>)
   | boolean;
 
