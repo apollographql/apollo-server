@@ -114,6 +114,16 @@ export const plugin = <TContext>(
         }
       }
 
+      /**
+       * Due to a number of exceptions in the request pipeline — which are
+       * intended to preserve backwards compatible behavior with the
+       * first generation of the request pipeline plugins prior to the
+       * introduction of `didEncounterErrors` — we need to have this "didEnd"
+       * functionality invoked from two places.  This accounts for the fact
+       * that sometimes, under some special-cased error conditions,
+       * `willSendResponse` is not invoked.  To zoom in on some of these cases,
+       * check the `requestPipeline.ts` for `emitErrorAndThrow`.
+       */
       let endDone: boolean = false;
       function didEnd(
         requestContext:
@@ -226,6 +236,7 @@ export const plugin = <TContext>(
         },
 
         willSendResponse(requestContext) {
+          // See comment above for why `didEnd` must be called in two hooks.
           didEnd(requestContext);
         },
 
@@ -234,6 +245,8 @@ export const plugin = <TContext>(
           // of the pre-source-resolution errors we are intentionally avoiding.
           if (!didResolveSource) return;
           treeBuilder.didEncounterErrors(requestContext.errors);
+
+          // See comment above for why `didEnd` must be called in two hooks.
           didEnd(requestContext);
         },
       };
