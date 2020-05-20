@@ -45,7 +45,13 @@ export const plugin = <TContext>(
     executableSchemaIdGenerator: (schema: string | GraphQLSchema) => string;
   },
 ): ApolloServerPlugin<TContext> => {
-  const logger: Logger = options.logger || console;
+  /**
+   * Non request-specific logging will go into this general logger.  Request-
+   * specific log output (where the log output is only a result of a specific
+   * request) will go to the `logger` which we get from the request context.
+   */
+  const loggerForPlugin: Logger = options.logger || console;
+
   const generateClientInfo: GenerateClientInfo<TContext> =
     options.generateClientInfo || defaultGenerateClientInfo;
 
@@ -66,10 +72,16 @@ export const plugin = <TContext>(
       schema,
       request: { http, variables },
     }) {
+      /**
+       * Request specific log output should go into the `logger` from the
+       * request context when it's provided.
+       */
+      const logger = requestLogger || loggerForPlugin;
+
       const treeBuilder: EngineReportingTreeBuilder = new EngineReportingTreeBuilder(
         {
           rewriteError: options.rewriteError,
-          logger: requestLogger || logger,
+          logger,
         },
       );
 
