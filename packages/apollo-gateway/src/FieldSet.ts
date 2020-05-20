@@ -138,7 +138,7 @@ function mergeFieldNodeSelectionSets(
 ): SelectionNode[] {
   const [fieldNodes, fragmentNodes] = partition(
     selectionNodes,
-    (node: SelectionNode): node is FieldNode => node.kind === 'Field',
+    (node: SelectionNode): node is FieldNode => node.kind === Kind.FIELD,
   );
 
   const [aliasedFieldNodes, nonAliasedFieldNodes] = partition(
