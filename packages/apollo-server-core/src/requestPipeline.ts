@@ -160,8 +160,16 @@ export async function processGraphQLRequest<TContext>(
     // It looks like we've received a persisted query. Check if we
     // support them.
     if (!config.persistedQueries || !config.persistedQueries.cache) {
+      // We are returning to `runHttpQuery` to preserve legacy behavior while
+      // still delivering observability to the `didEncounterErrors` hook.
+      // This particular error will _not_ trigger `willSendResponse`.
+      // See comment on `emitErrorAndThrow` for more details.
       return await emitErrorAndThrow(new PersistedQueryNotSupportedError());
     } else if (extensions.persistedQuery.version !== 1) {
+      // We are returning to `runHttpQuery` to preserve legacy behavior while
+      // still delivering observability to the `didEncounterErrors` hook.
+      // This particular error will _not_ trigger `willSendResponse`.
+      // See comment on `emitErrorAndThrow` for more details.
       return await emitErrorAndThrow(
         new InvalidGraphQLRequestError('Unsupported persisted query version'));
     }
@@ -188,12 +196,20 @@ export async function processGraphQLRequest<TContext>(
       if (query) {
         metrics.persistedQueryHit = true;
       } else {
+        // We are returning to `runHttpQuery` to preserve legacy behavior while
+        // still delivering observability to the `didEncounterErrors` hook.
+        // This particular error will _not_ trigger `willSendResponse`.
+        // See comment on `emitErrorAndThrow` for more details.
         return await emitErrorAndThrow(new PersistedQueryNotFoundError());
       }
     } else {
       const computedQueryHash = computeQueryHash(query);
 
       if (queryHash !== computedQueryHash) {
+        // We are returning to `runHttpQuery` to preserve legacy behavior while
+        // still delivering observability to the `didEncounterErrors` hook.
+        // This particular error will _not_ trigger `willSendResponse`.
+        // See comment on `emitErrorAndThrow` for more details.
         return await emitErrorAndThrow(
           new InvalidGraphQLRequestError('provided sha does not match query'));
       }
@@ -209,6 +225,10 @@ export async function processGraphQLRequest<TContext>(
     // now, but this should be replaced with the new operation ID algorithm.
     queryHash = computeQueryHash(query);
   } else {
+    // We are returning to `runHttpQuery` to preserve legacy behavior
+    // while still delivering observability to the `didEncounterErrors` hook.
+    // This particular error will _not_ trigger `willSendResponse`.
+    // See comment on `emitErrorAndThrow` for more details.
     return await emitErrorAndThrow(
       new InvalidGraphQLRequestError('Must provide query string.'));
   }
@@ -359,6 +379,9 @@ export async function processGraphQLRequest<TContext>(
     // an error) and not actually write, we'll write to the cache if it was
     // determined earlier in the request pipeline that we should do so.
     if (metrics.persistedQueryRegister && persistedQueryCache) {
+      // While it shouldn't normally be necessary to wrap this `Promise` in a
+      // `Promise.resolve` invocation, it seems that the underlying cache store
+      // is returning a non-native `Promise` (e.g. Bluebird, etc.).
       Promise.resolve(
         persistedQueryCache.set(
           queryHash,
@@ -556,7 +579,15 @@ export async function processGraphQLRequest<TContext>(
   }
 
   /**
-   * Report an error via `didEncounterErrors` and then `throw` it.
+   * HEREIN LIE LEGACY COMPATIBILITY
+   *
+   * DO NOT PERPETUATE THE USE OF THIS METHOD IN NEWLY INTRODUCED CODE.
+   *
+   * Report an error via `didEncounterErrors` and then `throw` it again,
+   * ENTIRELY BYPASSING the rest of the request pipeline and returning
+   * control to `runHttpQuery.ts`.
+   *
+   * Any number of other life-cycle events may not be invoked in this case.
    *
    * Prior to the introduction of this function, some errors were being thrown
    * within the request pipeline and going directly to handling within
