@@ -39,8 +39,9 @@ export class DurationHistogram {
       : unboundedBucket;
   }
 
-  public incrementDuration(durationNs: number) {
+  public incrementDuration(durationNs: number): DurationHistogram {
     this.incrementBucket(DurationHistogram.durationToBucket(durationNs));
+    return this;
   }
 
   public incrementBucket(bucket: number, value = 1) {
