@@ -19,7 +19,15 @@ export function compactMap<T, U>(
 export function partition<T, U extends T>(
   array: T[],
   predicate: (element: T, index: number, array: T[]) => element is U,
-): [U[], T[]] {
+): [U[], T[]];
+export function partition<T>(
+  array: T[],
+  predicate: (element: T, index: number, array: T[]) => boolean,
+): [T[], T[]];
+export function partition<T>(
+  array: T[],
+  predicate: (element: T, index: number, array: T[]) => boolean,
+): [T[], T[]] {
   array.map;
   return array.reduce(
     (accumulator, element, index) => {
@@ -30,7 +38,7 @@ export function partition<T, U extends T>(
         accumulator
       );
     },
-    [[], []] as [U[], T[]],
+    [[], []] as [T[], T[]],
   );
 }
 
