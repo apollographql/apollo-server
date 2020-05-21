@@ -122,43 +122,35 @@ export default async function pluginTestHarness<TContext>({
   requestContext.overallCachePolicy = overallCachePolicy;
 
   if (typeof pluginInstance.requestDidStart !== "function") {
-    throw new Error("Should be impossible as the plugin is defined.");
+    throw new Error("This test harness expects this to be defined.");
   }
 
   const listener = pluginInstance.requestDidStart(requestContext);
 
-  if (!listener) {
-    throw new Error("Should be impossible to not have a listener.");
-  }
-
-  const dispatcher = new Dispatcher([listener]);
+  const dispatcher = new Dispatcher(listener ? [listener] : []);
 
   const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
 
-  if (typeof listener.executionDidStart === 'function') {
-    // This logic is duplicated in the request pipeline right now.
-    await dispatcher.invokeHookAsync(
-      'didResolveOperation',
-      requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
-    );
-  }
+  // This logic is duplicated in the request pipeline right now.
+  await dispatcher.invokeHookAsync(
+    'didResolveOperation',
+    requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+  );
 
-  if (typeof listener.executionDidStart === 'function') {
-    // This execution dispatcher logic is duplicated in the request pipeline
-    // right now.
-    dispatcher.invokeHookSync(
-      'executionDidStart',
-      requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
-    ).forEach(executionListener => {
-      if (typeof executionListener === 'function') {
-        executionListeners.push({
-          executionDidEnd: executionListener,
-        });
-      } else if (typeof executionListener === 'object') {
-        executionListeners.push(executionListener);
-      }
-    });
-  }
+  // This execution dispatcher logic is duplicated in the request pipeline
+  // right now.
+  dispatcher.invokeHookSync(
+    'executionDidStart',
+    requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+  ).forEach(executionListener => {
+    if (typeof executionListener === 'function') {
+      executionListeners.push({
+        executionDidEnd: executionListener,
+      });
+    } else if (typeof executionListener === 'object') {
+      executionListeners.push(executionListener);
+    }
+  });
 
   const executionDispatcher = new Dispatcher(executionListeners);
 

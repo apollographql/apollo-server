@@ -472,7 +472,13 @@ addMockFunctionsToSchema({
 
 *  `schemaTag`: String
 
-   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
+   > Will be deprecated in 3.0. Use the option `graphVariant` instead.
+
+   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associated with the same string.
+
+*  `graphVariant`: String
+
+   A human-readable name for the variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Graph Manager UI. Additionally schema validation with a graph variant will only check metrics associated with the same string.
 
 * `traceReporting`: Boolean | async (GraphQLRequestContextDidResolveOperation) => Boolean
 
