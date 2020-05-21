@@ -9,9 +9,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- `apollo-engine-reporting`: Added an _experimental_ schema reporting option,
-  `experimental_schemaReporting`, for Apollo Graph Manager users. **During this
-  experiment, we'd appreciate testing and feedback from current and new
+- `apollo-engine-reporting`: **Currently only for non-federated graphs.**
+  Added an _experimental_ schema reporting option,
+  `experimental_schemaReporting`, for Apollo Graph Manager users. **During
+  this experiment, we'd appreciate testing and feedback from current and new
   users of the schema registry!**
 
   Prior to the introduction of this feature, the only way to get schemas into
