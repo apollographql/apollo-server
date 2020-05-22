@@ -20,6 +20,8 @@ import { GraphQLDataSource } from './types';
 import createSHA from 'apollo-server-core/dist/utils/createSHA';
 
 export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Record<string, any>> implements GraphQLDataSource<TContext> {
+  private fetcher: typeof fetch = fetch;
+
   constructor(
     config?: Partial<RemoteGraphQLDataSource<TContext>> &
       object &
@@ -144,7 +146,8 @@ export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Reco
     });
 
     try {
-      const httpResponse = await fetch(httpRequest);
+      // Use our local `fetcher` to allow for fetch injection
+      const httpResponse = await this.fetcher(httpRequest);
 
       if (!httpResponse.ok) {
         throw await this.errorFromResponse(httpResponse);

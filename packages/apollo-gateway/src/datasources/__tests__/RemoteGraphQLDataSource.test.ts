@@ -9,6 +9,7 @@ import {
 import { RemoteGraphQLDataSource } from '../RemoteGraphQLDataSource';
 import { Headers } from 'apollo-server-env';
 import { GraphQLRequestContext } from 'apollo-server-types';
+import { Response } from '../../../../../../apollo-tooling/packages/apollo-env/lib';
 
 beforeEach(() => {
   fetch.mockReset();
@@ -236,6 +237,30 @@ describe('constructing requests', () => {
       });
     });
   });
+});
+
+describe('fetcher', () => {
+  it('RemoteGraphQLDataSource constructor allows for an injectable `fetcher` just like the gateway', async () => {
+    const injectedFetch = fetch.mockJSONResponseOnce({ data: { injected: true } });
+    const DataSource = new RemoteGraphQLDataSource({
+      url: 'https://api.example.com/foo',
+      // @ts-ignore The below works, the fetcher is a typeof fetch, which is correct, but the signature varies slightly below
+      fetcher: injectedFetch
+    });
+
+    const { data } = await DataSource.process({
+      request: {
+        query: '{ me { name } }',
+        variables: { id: '1' },
+      },
+      context: {},
+    });
+
+    expect(injectedFetch).toHaveBeenCalled();
+    expect(data).toEqual({injected: true});
+
+  });
+
 });
 
 describe('willSendRequest', () => {
