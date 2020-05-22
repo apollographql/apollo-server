@@ -752,6 +752,78 @@ describe('composeServices', () => {
                   `);
     });
 
+    it('allows extension of the Subscription type with no base type definition', () => {
+      const serviceA = {
+        typeDefs: gql`
+          extend type Subscription {
+            postAdded: Post
+          }
+
+          type Post {
+            author: String!
+            comment: String!
+          }
+        `,
+        name: 'serviceA',
+      };
+
+      const serviceB = {
+        typeDefs: gql`
+          extend type Subscription {
+            postRemoved: ID
+          }
+        `,
+        name: 'serviceB',
+      };
+
+      const { schema, errors } = composeServices([serviceA, serviceB]);
+      expect(errors).toHaveLength(0);
+      expect(schema).toBeDefined();
+
+      expect(schema.getType('Subscription')).toMatchInlineSnapshot(`
+                        type Subscription {
+                          postAdded: Post
+                          postRemoved: ID
+                        }
+                  `);
+    });
+
+    it('treats root Subscriptions type definition as an extension, not base definitions', () => {
+      const serviceA = {
+        typeDefs: gql`
+          type Subscription {
+            postAdded: Post
+          }
+
+          type Post {
+            author: String!
+            comment: String!
+          }
+        `,
+        name: 'serviceA',
+      };
+
+      const serviceB = {
+        typeDefs: gql`
+          extend type Subscription {
+            postRemoved: ID
+          }
+        `,
+        name: 'serviceB',
+      };
+
+      const { schema, errors } = composeServices([serviceA, serviceB]);
+      expect(errors).toHaveLength(0);
+      expect(schema).toBeDefined();
+
+      expect(schema.getType('Subscription')).toMatchInlineSnapshot(`
+                        type Subscription {
+                          postAdded: Post
+                          postRemoved: ID
+                        }
+                  `);
+    });
+
     // TODO: not sure what to do here. Haven't looked into it yet :)
     it.skip('works with custom root types', () => {});
   });
