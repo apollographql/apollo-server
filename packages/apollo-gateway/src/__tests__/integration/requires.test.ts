@@ -265,3 +265,129 @@ it('collapses nested requires with user-defined fragments', async () => {
   expect(queryPlan).toCallService('a');
   expect(queryPlan).toCallService('b');
 });
+
+it('does not expand null objects in resolvers', async () => {
+  const serviceA = {
+    name: 'a',
+    typeDefs: gql`
+      type Query {
+        actors: [Actor!]!
+      }
+
+      type Actor @key(fields: "id") {
+        id: ID!
+        name: String!
+        dob: Date
+        movies: [Movie]
+      }
+
+      type Date {
+        year: String!
+      }
+
+      type Movie {
+        name: String!
+      }
+    `,
+    resolvers: {
+      Query: {
+        actors() {
+          return [
+            {
+              id: '1',
+              name: 'Tom Hanks',
+              dob: null,
+              movies: [
+                {
+                  name: 'Forrest Gump',
+                },
+                null,
+              ],
+            },
+            {
+              id: '2',
+              name: 'Kate Winslet',
+              dob: {
+                year: '1975',
+              },
+              movies: null,
+            },
+          ];
+        },
+      },
+    },
+  };
+
+  const serviceB = {
+    name: 'b',
+    typeDefs: gql`
+      extend type Actor @key(fields: "id") {
+        id: ID! @external
+        dob: Date @external
+        movies: [Movie] @external
+        info: String! @requires(fields: "dob { year } movies { name }")
+      }
+
+      extend type Date {
+        year: String! @external
+      }
+
+      extend type Movie {
+        name: String! @external
+      }
+    `,
+    resolvers: {
+      Actor: {
+        info(actor: any) {
+          let info = '';
+          if (actor.dob) {
+            info += 'Born ' + actor.dob.year;
+          }
+          if (actor.movies) {
+            info +=
+              'Movies: ' +
+              actor.movies
+                .filter((movie: any) => movie)
+                .map((movie: any) => movie.name)
+                .join(', ');
+          }
+          return info;
+        },
+      },
+    },
+  };
+
+  const query = `#graphql
+    query Actors {
+      actors {
+        name
+        info
+      }
+    }
+  `;
+
+  const { data, errors, queryPlan } = await execute(
+    {
+      query,
+    },
+    [serviceA, serviceB],
+  );
+
+  expect(errors).toEqual(undefined);
+
+  expect(data).toEqual({
+    actors: [
+      {
+        name: 'Tom Hanks',
+        info: 'Movies: Forrest Gump',
+      },
+      {
+        name: 'Kate Winslet',
+        info: 'Born 1975',
+      },
+    ],
+  });
+
+  expect(queryPlan).toCallService('a');
+  expect(queryPlan).toCallService('b');
+});
