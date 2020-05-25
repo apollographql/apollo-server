@@ -26,7 +26,7 @@ export enum CacheScope {
 }
 
 export interface CacheControlExtensionOptions {
-  defaultMaxAge?: number;
+  defaultMaxAge?: number | null;
   // FIXME: We should replace these with
   // more appropriately named options.
   calculateHttpHeaders?: boolean;
@@ -51,10 +51,11 @@ declare module 'apollo-server-types' {
 
 export class CacheControlExtension<TContext = any>
   implements GraphQLExtension<TContext> {
-  private defaultMaxAge: number;
+  private defaultMaxAge: number | null;
 
   constructor(public options: CacheControlExtensionOptions = {}) {
-    this.defaultMaxAge = options.defaultMaxAge || 0;
+    this.defaultMaxAge =
+      options.defaultMaxAge !== null ? options.defaultMaxAge || 0 : null;
   }
 
   private hints: Map<ResponsePath, CacheHint> = new Map();
@@ -100,14 +101,15 @@ export class CacheControlExtension<TContext = any>
     // while root non-object fields can get explicit hints from their definition
     // on the Query/Mutation object, if that doesn't exist then there's no
     // parent field that would assign the default maxAge, so we do it here.)
-    // if (
-    //   (targetType instanceof GraphQLObjectType ||
-    //     targetType instanceof GraphQLInterfaceType ||
-    //     !info.path.prev) &&
-    //   hint.maxAge === undefined
-    // ) {
-    //   hint.maxAge = this.defaultMaxAge;
-    // }
+    if (
+      (targetType instanceof GraphQLObjectType ||
+        targetType instanceof GraphQLInterfaceType ||
+        !info.path.prev) &&
+      hint.maxAge === undefined &&
+      this.defaultMaxAge !== null
+    ) {
+      hint.maxAge = this.defaultMaxAge;
+    }
 
     if (hint.maxAge !== undefined || hint.scope !== undefined) {
       this.addHint(info.path, hint);
@@ -199,10 +201,9 @@ export class CacheControlExtension<TContext = any>
 
     // If maxAge is 0, then we consider it uncacheable so it doesn't matter what
     // the scope was.
-    const maxAge = lowestMaxAge || this.defaultMaxAge;
-    return maxAge
+    return lowestMaxAge
       ? {
-          maxAge,
+          maxAge: lowestMaxAge,
           scope,
         }
       : undefined;

@@ -1,9 +1,59 @@
-import { buildSchemaWithCacheControlSupport } from './cacheControlSupport';
+import {
+  buildSchemaWithCacheControlSupport,
+  makeExecutableSchemaWithCacheControlSupport
+} from './cacheControlSupport';
 
 import { CacheScope } from '../';
 import { collectCacheControlHints } from './collectCacheControlHints';
 
 describe('@cacheControl directives', () => {
+  it('it should not apply the defaultMaxAge for types when defaultMaxAge is null and no cacheControl directive is set', async () => {
+    const typeDefs = `
+    type Foo {
+        id: ID!
+        name: String!
+    }
+
+  type User {
+    id: ID!
+    name: String!
+    status: String!
+      foo: Foo!
+  }
+
+  type Query {
+    fooUser: User @cacheControl(maxAge: 100)
+  }
+    `;
+
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs,
+    });
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          fooUser {
+            id
+            name
+            status
+            foo {
+                id
+                name
+            }
+        }
+        }
+      `, {
+        defaultMaxAge: null
+      }
+    );
+
+    expect(hints).not.toContainEqual({ path: ['fooUser', 'foo'], maxAge: 0 });
+    expect(hints).toContainEqual({ path: ['fooUser'], maxAge: 100 });
+  });
+
+
   it('should set maxAge: 0 and no scope for a field without cache hints', async () => {
     const schema = buildSchemaWithCacheControlSupport(`
       type Query {
