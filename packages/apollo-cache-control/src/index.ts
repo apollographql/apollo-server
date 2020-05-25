@@ -100,14 +100,14 @@ export class CacheControlExtension<TContext = any>
     // while root non-object fields can get explicit hints from their definition
     // on the Query/Mutation object, if that doesn't exist then there's no
     // parent field that would assign the default maxAge, so we do it here.)
-    if (
-      (targetType instanceof GraphQLObjectType ||
-        targetType instanceof GraphQLInterfaceType ||
-        !info.path.prev) &&
-      hint.maxAge === undefined
-    ) {
-      hint.maxAge = this.defaultMaxAge;
-    }
+    // if (
+    //   (targetType instanceof GraphQLObjectType ||
+    //     targetType instanceof GraphQLInterfaceType ||
+    //     !info.path.prev) &&
+    //   hint.maxAge === undefined
+    // ) {
+    //   hint.maxAge = this.defaultMaxAge;
+    // }
 
     if (hint.maxAge !== undefined || hint.scope !== undefined) {
       this.addHint(info.path, hint);
@@ -199,9 +199,10 @@ export class CacheControlExtension<TContext = any>
 
     // If maxAge is 0, then we consider it uncacheable so it doesn't matter what
     // the scope was.
-    return lowestMaxAge
+    const maxAge = lowestMaxAge || this.defaultMaxAge;
+    return maxAge
       ? {
-          maxAge: lowestMaxAge,
+          maxAge,
           scope,
         }
       : undefined;
