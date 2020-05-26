@@ -210,8 +210,8 @@ export interface EngineReportingOptions<TContext> {
    * [`GraphQLRequestContextDidResolveOperation`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)
    * phase, which permits tracing based on dynamic properties, e.g., HTTP
    * headers or the `operationName` (when available),
-   * otherwise it will receive the request context in the  [`GraphQLRequestContextDidEncounterError](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didencountererrors)
-   * phase)):
+   * otherwise it will receive the request context in the  [`GraphQLRequestContextDidEncounterError`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didencountererrors)
+   * phase:
    *
    * **Example:**
    *
