@@ -92,8 +92,6 @@ export const plugin = <TContext>(
         return;
       }
 
-      metrics.captureTraces = true;
-
       const treeBuilder: EngineReportingTreeBuilder = new EngineReportingTreeBuilder(
         {
           rewriteError: options.rewriteError,
@@ -130,33 +128,31 @@ export const plugin = <TContext>(
         }
       }
 
-      let shouldReportTrace: null | boolean;
-
       async function shouldTraceOperation(
         requestContext:
           | GraphQLRequestContextDidResolveOperation<TContext>
           | GraphQLRequestContextDidEncounterErrors<TContext>,
       ): Promise<void> {
         if (typeof options.traceReporting === 'boolean') {
-          shouldReportTrace = options.traceReporting;
+          metrics.captureTraces = options.traceReporting;
           return;
         }
 
         if (typeof options.traceReporting !== 'function') {
           // Default case we always report
-          shouldReportTrace = true;
+          metrics.captureTraces = true;
           return;
         }
 
-        shouldReportTrace = await options.traceReporting(requestContext);
+        metrics.captureTraces = await options.traceReporting(requestContext);
 
         // Help the user understand they've returned an unexpected value,
         // which might be a subtle mistake.
-        if (typeof shouldReportTrace !== 'boolean') {
+        if (typeof metrics.captureTraces !== 'boolean') {
           logger.warn(
             "The 'traceReporting' predicate function must return a boolean value.",
           );
-          shouldReportTrace = true;
+          metrics.captureTraces = true;
         }
       }
 
@@ -181,7 +177,7 @@ export const plugin = <TContext>(
         endDone = true;
         treeBuilder.stopTiming();
 
-        if (!shouldReportTrace) return;
+        if (metrics.captureTraces === false) return;
 
         treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
         treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
@@ -275,11 +271,7 @@ export const plugin = <TContext>(
         async didResolveOperation(requestContext) {
           await shouldTraceOperation(requestContext);
 
-          if (!shouldReportTrace) {
-            // Also set captureTraces to false so if this is a gateway the
-            // `ftv1-trace-header` will not be sent to downstream services.
-            requestContext.metrics.captureTraces = false;
-
+          if (!metrics.captureTraces) {
             // End early if we aren't going to send the trace so we continue to
             // run the tree builder.
             didEnd(requestContext);
@@ -309,7 +301,7 @@ export const plugin = <TContext>(
           if (!didResolveSource || endDone) return;
           treeBuilder.didEncounterErrors(requestContext.errors);
 
-          if (shouldReportTrace == null) {
+          if (metrics.captureTraces === undefined) {
             // We can reach didEncounterErrors before we call didResolveOperation
             await shouldTraceOperation(requestContext);
           }
