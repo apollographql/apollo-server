@@ -78,11 +78,16 @@ export const plugin = <TContext>(
        * request context when it's provided.
        */
       const logger = requestLogger || loggerForPlugin;
+      if(!['function', 'boolean', 'undefined'].includes(
+        typeof options.traceReporting,
+      )) {
+        throw new Error("Invalid option passed to `traceReporting`.");
+      };
 
       // If the options are false don't do any metrics timing.
       if (options.traceReporting === false) {
         metrics.captureTraces = false;
-        return {};
+        return;
       }
 
       metrics.captureTraces = true;
@@ -146,7 +151,7 @@ export const plugin = <TContext>(
         // Help the user understand they've returned an unexpected value,
         // which might be a subtle mistake.
         if (typeof shouldReportTrace !== 'boolean') {
-          (requestContext.logger || logger).warn(
+          logger.warn(
             "The 'traceReporting' predicate function must return a boolean value.",
           );
           shouldReportTrace = true;
@@ -280,8 +285,8 @@ export const plugin = <TContext>(
           }
         },
         executionDidStart() {
-          // If we stopped tracing early return an empty object here.
-          if (endDone) return {};
+          // If we stopped tracing early, return to avoid creating the listener.
+          if (endDone) return;
 
           return {
             willResolveField({ info }) {
