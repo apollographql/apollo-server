@@ -207,8 +207,8 @@ export interface EngineReportingOptions<TContext> {
    * traced and reported. The predicate function will receive the request
    * context. If validation and parsing of the request succeeds the function will
    * receive the request context in the
-   * [`GraphQLRequestContextDidResolveOperation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)
-   * phase)), which permits tracing based on dynamic properties, e.g., HTTP
+   * [`GraphQLRequestContextDidResolveOperation`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)
+   * phase, which permits tracing based on dynamic properties, e.g., HTTP
    * headers or the `operationName` (when available),
    * otherwise it will receive the request context in the  [`GraphQLRequestContextDidEncounterError](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didencountererrors)
    * phase)):
