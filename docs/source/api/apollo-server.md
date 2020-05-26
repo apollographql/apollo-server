@@ -482,8 +482,8 @@ addMockFunctionsToSchema({
 
 * `traceReporting`: Boolean | async (GraphQLRequestContextDidResolveOperation) => Boolean
 
-    If this is option returns true tracing and instrumentation will be enabled for a
-    given request. If it is false the request will not be instrumented, and a trace will not
+    If this option returns `true`, tracing and instrumentation will be enabled for a
+    given request. If it is `false`, the request will not be instrumented, and a trace will not
     be constructed or sent to Apollo Graph Manager.
 
     This function will receive a `GraphQLRequestContextDidResolveOperation`, which will contain
