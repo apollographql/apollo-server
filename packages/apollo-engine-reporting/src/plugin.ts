@@ -133,6 +133,9 @@ export const plugin = <TContext>(
           | GraphQLRequestContextDidResolveOperation<TContext>
           | GraphQLRequestContextDidEncounterErrors<TContext>,
       ): Promise<void> {
+        if (metrics.captureTraces !== undefined)
+          return;
+
         if (typeof options.traceReporting === 'boolean') {
           metrics.captureTraces = options.traceReporting;
           return;
@@ -271,7 +274,7 @@ export const plugin = <TContext>(
         async didResolveOperation(requestContext) {
           await shouldTraceOperation(requestContext);
 
-          if (!metrics.captureTraces) {
+          if (metrics.captureTraces === false) {
             // End early if we aren't going to send the trace so we continue to
             // run the tree builder.
             didEnd(requestContext);
@@ -292,6 +295,9 @@ export const plugin = <TContext>(
         },
 
         willSendResponse(requestContext) {
+          // shouldTraceOperation will be called before this in `didResolveOperation`
+          // so we don't need to call it again here.
+
           // See comment above for why `didEnd` must be called in two hooks.
           didEnd(requestContext);
         },
@@ -301,10 +307,8 @@ export const plugin = <TContext>(
           if (!didResolveSource || endDone) return;
           treeBuilder.didEncounterErrors(requestContext.errors);
 
-          if (metrics.captureTraces === undefined) {
-            // We can reach didEncounterErrors before we call didResolveOperation
-            await shouldTraceOperation(requestContext);
-          }
+          // This will exit early if we have already set metrics.captureTraces
+          await shouldTraceOperation(requestContext);
 
           // See comment above for why `didEnd` must be called in two hooks.
           didEnd(requestContext);
