@@ -78,11 +78,13 @@ export const plugin = <TContext>(
        * request context when it's provided.
        */
       const logger = requestLogger || loggerForPlugin;
-      if(!['function', 'boolean', 'undefined'].includes(
-        typeof options.traceReporting,
-      )) {
-        throw new Error("Invalid option passed to `traceReporting`.");
-      };
+      if (
+        !['function', 'boolean', 'undefined'].includes(
+          typeof options.traceReporting,
+        )
+      ) {
+        throw new Error('Invalid option passed to `traceReporting`.');
+      }
 
       // If the options are false don't do any metrics timing.
       if (options.traceReporting === false) {
@@ -135,8 +137,8 @@ export const plugin = <TContext>(
           | GraphQLRequestContextDidResolveOperation<TContext>
           | GraphQLRequestContextDidEncounterErrors<TContext>,
       ): Promise<void> {
-        if (typeof options.traceReporting === "boolean") {
-          shouldReportTrace = options.traceReporting
+        if (typeof options.traceReporting === 'boolean') {
+          shouldReportTrace = options.traceReporting;
           return;
         }
 
@@ -157,7 +159,6 @@ export const plugin = <TContext>(
           shouldReportTrace = true;
         }
       }
-
 
       /**
        * Due to a number of exceptions in the request pipeline — which are

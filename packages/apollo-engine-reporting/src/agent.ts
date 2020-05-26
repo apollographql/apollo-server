@@ -18,10 +18,11 @@ import retry from 'async-retry';
 
 import { plugin } from './plugin';
 import {
-  GraphQLRequestContext, GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestContext,
+  GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextDidResolveOperation,
-  Logger
-} from "apollo-server-types";
+  Logger,
+} from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
@@ -59,8 +60,8 @@ export type VariableValueOptions =
 export type TraceReportingOptions<TContext> =
   | ((
       request:
-      | GraphQLRequestContextDidResolveOperation<TContext>
-      | GraphQLRequestContextDidEncounterErrors<TContext>,
+        | GraphQLRequestContextDidResolveOperation<TContext>
+        | GraphQLRequestContextDidEncounterErrors<TContext>,
     ) => Promise<boolean>)
   | boolean;
 
@@ -570,7 +571,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public async sendAllReports(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reportDataByExecutableSchemaId).map((id) =>
+      Object.keys(this.reportDataByExecutableSchemaId).map(id =>
         this.sendReport(id),
       ),
     );
