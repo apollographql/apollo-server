@@ -84,13 +84,13 @@ describe('CacheControlExtension', () => {
       expect(cachePolicy).toHaveProperty('maxAge', 10);
     });
 
-    it('returns maxAge of 0 if any cache hint has a maxAge of 0', () => {
+    it('returns undefined if any cache hint has a maxAge of 0', () => {
       cacheControlExtension.addHint(responsePath, { maxAge: 120 });
       cacheControlExtension.addHint(responseSubPath, { maxAge: 0 });
       cacheControlExtension.addHint(responseSubSubPath, { maxAge: 20 });
 
       const cachePolicy = cacheControlExtension.computeOverallCachePolicy();
-      expect(cachePolicy).toHaveProperty('maxAge', 0);
+      expect(cachePolicy).toBeUndefined();
     });
 
     it('returns PUBLIC scope by default', () => {
