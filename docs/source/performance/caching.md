@@ -90,6 +90,39 @@ const server = new ApolloServer({
 }));
 ```
 
+If you elect not to have a defaultMaxAge of 0 set for all resolvers and types you must explicitly set it to `null`. For example:
+
+```javascript
+
+const typeDefs = `
+  type Foo {
+    id: ID!
+    name: String!
+  }
+
+  type User {
+    id: ID!
+    name: String!
+    status: String!
+    foo: Foo!
+  }
+
+  type Query {
+    user: User @cacheControl(maxAge: 0, scope: PRIVATE)
+    userFoo: User @cacheControl(maxAge: 100)
+  }
+`;
+
+const server = new ApolloServer({
+  // ...
+  cacheControl: {
+    defaultMaxAge: null,
+  },
+}));
+```
+
+This is useful if you have multiple queries of identical types like in the example shown, `query user` will have a maxAge of 0 while `query userFoo` will have a maxAge of `100`.
+
 ### The overall cache policy
 
 Apollo Server's cache API lets you declare fine-grained cache hints on specific resolvers. Apollo Server then combines these hints into an overall cache policy for the response. The `maxAge` of this policy is the minimum `maxAge` across all fields in your request. As [described above](#setting-a-default-maxage), the default `maxAge` of all root fields and non-scalar fields is 0, so the overall cache policy for a response will have `maxAge` 0 (ie, uncacheable) unless all root and non-scalar fields in the response have cache hints (or if `defaultMaxAge` is specified).
