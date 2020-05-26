@@ -473,7 +473,7 @@ function makeTestHTTP(): Trace.HTTP {
   });
 }
 
-describe('tests for the shouldReportQuery reporting option', () => {
+describe('tests for the "traceReporting" option', () => {
   const schemaReportingFunctions = {
     startSchemaReporting: jest.fn(),
     executableSchemaIdGenerator: jest.fn(),
