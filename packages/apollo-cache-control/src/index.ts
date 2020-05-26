@@ -199,9 +199,7 @@ export class CacheControlExtension<TContext = any>
       }
     }
 
-    // If maxAge is 0, then we consider it uncacheable so it doesn't matter what
-    // the scope was.
-    return lowestMaxAge >= 0
+    return lowestMaxAge || lowestMaxAge === 0
       ? {
           maxAge: lowestMaxAge,
           scope,
