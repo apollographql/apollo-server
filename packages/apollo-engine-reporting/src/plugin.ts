@@ -289,7 +289,8 @@ export const plugin = <TContext>(
           }
         },
         executionDidStart() {
-          // If we stopped tracing early, return to avoid creating the listener.
+          // If we stopped tracing early, return undefined so we don't trace
+          // an object
           if (endDone) return;
 
           return {
