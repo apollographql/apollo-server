@@ -88,6 +88,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   rootValue?: ((document: DocumentNode) => any) | any;
   validationRules?: ValidationRule[];
   executor?: GraphQLExecutor;
+  executeFn?: typeof graphqlExecute;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
 
   dataSources?: () => DataSources<TContext>;
@@ -550,7 +551,7 @@ export async function processGraphQLRequest<TContext>(
         // (eg apollo-engine-reporting) assumes that.
         return await config.executor(requestContext);
       } else {
-        return await graphqlExecute(executionArgs);
+        return await (config.executeFn || graphqlExecute)(executionArgs);
       }
     } finally {
       executionDidEnd();

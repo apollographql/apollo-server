@@ -5,6 +5,8 @@ import {
   DocumentNode,
   GraphQLError,
   GraphQLFormattedError,
+  execute,
+  subscribe,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
@@ -50,6 +52,8 @@ export interface GraphQLServerOptions<
   context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
   executor?: GraphQLExecutor;
+  executeFn?: typeof execute,
+  subscribeFn?: typeof subscribe,
   formatResponse?: (
     response: GraphQLResponse | null,
     requestContext: GraphQLRequestContext<TContext>,
