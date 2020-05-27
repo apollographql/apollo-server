@@ -20,7 +20,7 @@ import { GraphQLDataSource } from './types';
 import createSHA from 'apollo-server-core/dist/utils/createSHA';
 
 export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Record<string, any>> implements GraphQLDataSource<TContext> {
-  private fetcher: typeof fetch = fetch;
+  fetcher: typeof fetch = fetch;
 
   constructor(
     config?: Partial<RemoteGraphQLDataSource<TContext>> &
