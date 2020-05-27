@@ -17,7 +17,6 @@ import {
   GraphQLRequestContext,
   GraphQLResponse,
 } from './requestPipeline';
-import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { WithRequired, GraphQLExecutionResult } from 'apollo-server-types';
 
@@ -161,6 +160,7 @@ export async function runHttpQuery(
 
   const config = {
     schema: options.schema,
+    schemaHash: options.schemaHash,
     logger: options.logger,
     rootValue: options.rootValue,
     context: options.context || {},
@@ -173,9 +173,6 @@ export async function runHttpQuery(
     // cacheControl defaults will also have been set if a boolean argument is
     // passed in.
     cache: options.cache!,
-    cacheControl: options.cacheControl as
-      | CacheControlExtensionOptions
-      | undefined,
     dataSources: options.dataSources,
     documentStore: options.documentStore,
 
@@ -256,6 +253,8 @@ export async function processHTTPRequest<TContext>(
       // exported since perhaps as far back as Apollo Server 1.x.  Therefore,
       // for compatibility reasons, we'll default to `console`.
       logger: options.logger || console,
+      schema: options.schema,
+      schemaHash: options.schemaHash,
       request,
       response: {
         http: {
