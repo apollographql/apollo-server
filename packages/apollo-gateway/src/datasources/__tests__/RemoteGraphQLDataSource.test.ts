@@ -244,8 +244,7 @@ describe('fetcher', () => {
     const injectedFetch = fetch.mockJSONResponseOnce({ data: { injected: true } });
     const DataSource = new RemoteGraphQLDataSource({
       url: 'https://api.example.com/foo',
-      // @ts-ignore The below works, the fetcher is a typeof fetch, which is correct, but the signature varies slightly below
-      fetcher: injectedFetch
+      fetcher: injectedFetch,
     });
 
     const { data } = await DataSource.process({
