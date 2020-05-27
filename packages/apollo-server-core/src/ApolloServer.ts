@@ -716,6 +716,7 @@ export class ApolloServerBase {
           return { ...connection, context };
         },
         keepAlive,
+        validationRules: this.requestOptions.validationRules
       },
       server instanceof WebSocket.Server
         ? server

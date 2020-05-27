@@ -9,7 +9,17 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned!_
+- **SECURITY:** If subscriptions were disabled with `subscriptions: false`, there is not a possible security risk.  When subscriptions are enabled (**the default, when `subscriptions: false` is not explicitly set, regardless of whether there is a `Subscription` type in the schema**), ALL `validationRules` (including those that prevent introspection) will now passed be through to the underlying `SubscriptionServer` which is implemented by the [`subscriptions-transport-ws` ](https://github.com/apollographql/subscriptions-transport-ws) package.  The previous behavior of not passing `validationRules` was a bug.
+
+  This change means two things, the second of which affects most use cases:
+
+  - User-provided validation rules (those provided by implementors to the `validationRules` option during `ApolloServer` construction) will now be passed to and enforced by the subscriptions server.
+
+  - Internal validation rules, like the [`NoIntrospection`](https://github.com/apollographql/apollo-server/blob/7d6f23443/packages/apollo-server-core/src/ApolloServer.ts#L77-L88) validation rule, will also be passed to - and enforced by - the subscriptions server.
+
+    > The `NoIntrospection` validation rule is used by Apollo Server to disable introspection when `introspection: true` is set explicitly, or when it is disabled implicitly when the `NODE_ENV` environment variable is set to `production`.  (The former, automatic disabling of introspection in production can be disabled by explicitly setting `introspection: true`.  If this is set on a server, then there is no change in behavior by this commit.)
+
+  **To be clear, if subscriptions were disabled with `subscriptions: false`, the server is unaffected.  In all other cases, introspection was unexpectedly enabled on the WebSocket endpoint provided by `SubscriptionServer` when it was meant to be disabled, either with `introspection: false` or when deployed to production.  The risk is largely dependent on the data exposed in the schema itself.**
 
 ### v2.13.0
 
