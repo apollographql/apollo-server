@@ -1256,8 +1256,8 @@ export class ApolloServerBase {
     };
   }
 
-  public async executeOperation(request: GraphQLRequest) {
-    const options = await this.graphQLServerOptions();
+  public async executeOperation(request: GraphQLRequest, integrationContextArgument?: Record<string, any>) {
+    const options = await this.graphQLServerOptions(integrationContextArgument);
 
     if (typeof options.context === 'function') {
       options.context = (options.context as () => never)();
