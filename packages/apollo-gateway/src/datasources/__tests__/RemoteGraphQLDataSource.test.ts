@@ -240,7 +240,7 @@ describe('constructing requests', () => {
 });
 
 describe('fetcher', () => {
-  it('RemoteGraphQLDataSource constructor allows for an injectable `fetcher`', async () => {
+  it('uses a custom provided `fetcher`', async () => {
     const injectedFetch = fetch.mockJSONResponseOnce({ data: { injected: true } });
     const DataSource = new RemoteGraphQLDataSource({
       url: 'https://api.example.com/foo',
