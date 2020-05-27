@@ -140,7 +140,7 @@ new ApolloServer({
 
 * `engine`: <`EngineReportingOptions`> | boolean
 
-  Provided the `ENGINE_API_KEY` environment variable is set, the Graph Manager reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to include variable values and HTTP headers. When using the Engine proxy, this option should be set to `false`.
+  Provided the `APOLLO_KEY` environment variable is set, the Graph Manager reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to include variable values and HTTP headers. When using the Engine proxy, this option should be set to `false`.
 
 * `persistedQueries`: <`Object`> | false
 
@@ -340,7 +340,7 @@ addMockFunctionsToSchema({
 
   API key for the service. Obtain an API key from
   [Graph Manager](https://engine.apollographql.com) by logging in and creating
-  a service. You can also specify an API key with the `ENGINE_API_KEY`
+  a service. You can also specify an API key with the `APOLLO_KEY`
   environment variable, although the `apiKey` option takes precedence.
 
 * `logger`: `Logger`

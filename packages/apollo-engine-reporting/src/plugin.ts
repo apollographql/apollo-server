@@ -133,6 +133,8 @@ export const plugin = <TContext>(
           | GraphQLRequestContextDidResolveOperation<TContext>
           | GraphQLRequestContextDidEncounterErrors<TContext>,
       ): Promise<void> {
+        // This could be hit if we call `shouldTraceOperation` more than once during a request.
+        // such as if `didEncounterError` gets called after `didResolveOperation`.
         if (metrics.captureTraces !== undefined)
           return;
 
@@ -179,6 +181,12 @@ export const plugin = <TContext>(
         if (endDone) return;
         endDone = true;
         treeBuilder.stopTiming();
+
+        if (metrics.captureTraces === undefined) {
+          logger.warn(
+            "captureTrace is undefined at the end of the request. This is a bug in the Apollo Engine Reporting plugin."
+          );
+        }
 
         if (metrics.captureTraces === false) return;
 
@@ -286,7 +294,7 @@ export const plugin = <TContext>(
 
           return {
             willResolveField({ info }) {
-              treeBuilder.willResolveField(info);
+              return treeBuilder.willResolveField(info);
               // We could save the error into the trace during the end handler, but
               // it won't have all the information that graphql-js adds to it later,
               // like 'locations'.

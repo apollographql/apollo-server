@@ -220,9 +220,6 @@ export interface EngineReportingOptions<TContext> {
    * This option allows configuring the behavior of request tracing and
    * reporting to [Apollo Graph Manager](https://engine.apollographql.com/).
    *
-   * Note: APOLLO_KEY must be set to send traces to Apollo Graph Manager. If it is
-   * not set the reporting plugin will not be initialized.
-   *
    * By default, this is set to `true`, which results in *all* requests being
    * traced and reported. This behavior can be _disabled_ by setting this option
    * to `false`. Alternatively, it can be selectively enabled or disabled on a
