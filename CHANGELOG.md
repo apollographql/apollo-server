@@ -9,6 +9,12 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+- _Nothing yet! Stay tuned!_
+
+### v2.14.0
+
+- `apollo-server-core` / `apollo-server-plugin-base`: Add support for `willResolveField` and corresponding end-handler within `executionDidStart`.  This brings the remaining bit of functionality that was previously only available from `graphql-extensions` to the new plugin API.  The `graphql-extensions` API (which was never documented) will be deprecated in Apollo Server 3.x.  To see the documentation for the request pipeline API, see [its documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  For more details, see the attached PR.  [PR #3988](https://github.com/apollographql/apollo-server/pull/3988)
+- `apollo-server-core`: Deprecate `graphql-extensions`.  All internal usages of the `graphql-extensions` API have been migrated to the request pipeline plugin API.  For any implementor-supplied `extensions`, a deprecation warning will be printed once per-extension, per-server-startup, notifying of the intention to deprecate.  Extensions should migrate to the plugin API, which is outlined in [its documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/). [PR #4135](https://github.com/apollographql/apollo-server/pull/4135)
 - `apollo-engine-reporting`: **Currently only for non-federated graphs.**
   Added an _experimental_ schema reporting option,
   `experimental_schemaReporting`, for Apollo Graph Manager users. **During
@@ -48,9 +54,8 @@ The version headers in this history reflect the versions of Apollo Server itself
   _This change should be purely an implementation detail for a majority of users_.  There are, however, some special considerations which are worth noting:
 
     - The federated tracing plugin's `ftv1` response on `extensions` (which is present on the response from an implementing service to the gateway) is now placed on the `extensions` _after_ the `formatResponse` hook.  Anyone leveraging the `extensions`.`ftv1` data from the `formatResponse` hook will find that it is no longer present at that phase.
-- `apollo-tracing`: This package's internal integration with Apollo Server has been switched from using the soon-to-be-deprecated`graphql-extensions` API to using [the request pipeline plugin API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  Behavior should remain otherwise the same.  [PR #3991](https://github.com/apollographql/apollo-server/pull/3991)
-
-
+- `apollo-tracing`: This package's internal integration with Apollo Server has been switched from using the soon-to-be-deprecated `graphql-extensions` API to using [the request pipeline plugin API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  Behavior should remain otherwise the same.  [PR #3991](https://github.com/apollographql/apollo-server/pull/3991)
+- `apollo-cache-control`: This package's internal integration with Apollo Server has been switched from using the soon-to-be-deprecated `graphql-extensions` API to using [the request pipeline plugin API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  Behavior should remain otherwise the same.  [PR #3997](https://github.com/apollographql/apollo-server/pull/3997)
 
 ### v2.13.0
 

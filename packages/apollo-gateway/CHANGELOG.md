@@ -4,6 +4,10 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+- _Nothing yet! Stay tuned!_
+
+## 0.16.1
+
 - __NEW__: Provide the ability to pass a custom `fetcher` during `RemoteGraphQLDataSource` construction to be used when executing operations against downstream services.  Providing a custom `fetcher` may be necessary to accommodate more advanced needs, e.g., configuring custom TLS certificates for internal services.  [PR #4149](https://github.com/apollographql/apollo-server/pull/4149)
 
   The `fetcher` specified should be a compliant implementor of the [Fetch API standard](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).  This addition compliments, though is still orthognonal to, similar behavior originally introduced in [#3783](https://github.com/apollographql/apollo-server/pull/3783), which allowed customization of the implementation used to fetch _gateway configuration and federated SDL from services_ in managed and unmanaged modes, but didn't affect the communication that takes place during _operation execution_.
