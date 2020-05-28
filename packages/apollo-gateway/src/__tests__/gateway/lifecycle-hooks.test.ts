@@ -1,6 +1,8 @@
+import gql from 'graphql-tag';
 import {
   ApolloGateway,
   GatewayConfig,
+  Experimental_DidResolveQueryPlanCallback,
   Experimental_UpdateServiceDefinitions,
 } from '../../index';
 import {
@@ -216,5 +218,26 @@ describe('lifecycle hooks', () => {
     await schemaChangeBlocker;
 
     expect(schemaChangeCallback).toBeCalledTimes(1);
+  });
+
+  it('calls experimental_didResolveQueryPlan when executor is called', async () => {
+    const experimental_didResolveQueryPlan: Experimental_DidResolveQueryPlanCallback = jest.fn()
+
+    const gateway = new ApolloGateway({
+      serviceList: serviceDefinitions,
+      experimental_didResolveQueryPlan,
+    });
+
+    const { executor } = await gateway.load();
+    await executor({
+      document: gql`
+        { product(upc: '1') { name } }
+      `,
+      request: {},
+      queryHash: 'hashed',
+      context: {},
+    });
+
+    expect(experimental_didResolveQueryPlan).toBeCalled();
   });
 });
