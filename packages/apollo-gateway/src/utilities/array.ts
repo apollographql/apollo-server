@@ -16,6 +16,14 @@ export function compactMap<T, U>(
   );
 }
 
+export function partition<T, U extends T>(
+  array: T[],
+  predicate: (element: T, index: number, array: T[]) => element is U,
+): [U[], T[]];
+export function partition<T>(
+  array: T[],
+  predicate: (element: T, index: number, array: T[]) => boolean,
+): [T[], T[]];
 export function partition<T>(
   array: T[],
   predicate: (element: T, index: number, array: T[]) => boolean,
@@ -47,4 +55,23 @@ export function findAndExtract<T>(
   }
 
   return [array[index], remaining];
+}
+
+export function groupBy<T, U>(keyFunction: (element: T) => U) {
+  return (iterable: Iterable<T>) => {
+    const result = new Map<U, T[]>();
+
+    for (const element of iterable) {
+      const key = keyFunction(element);
+      const group = result.get(key);
+
+      if (group) {
+        group.push(element);
+      } else {
+        result.set(key, [element]);
+      }
+    }
+
+    return result;
+  };
 }
