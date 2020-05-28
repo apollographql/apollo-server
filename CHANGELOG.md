@@ -11,6 +11,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet! Stay tuned!_
 
+### v2.14.1
+
+- `apollo-server-testing`: Ensure that user-provided context is cloned when using `createTestClient`, per the instructions in the [intergration testing]() section of the Apollo Server documentation.  [Issue #4170](https://github.com/apollographql/apollo-server/issues/4170) [PR #TODO](https://github.com/apollographql/apollo-server/pull/TODO)
+
 ### v2.14.0
 
 - `apollo-server-core` / `apollo-server-plugin-base`: Add support for `willResolveField` and corresponding end-handler within `executionDidStart`.  This brings the remaining bit of functionality that was previously only available from `graphql-extensions` to the new plugin API.  The `graphql-extensions` API (which was never documented) will be deprecated in Apollo Server 3.x.  To see the documentation for the request pipeline API, see [its documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  For more details, see the attached PR.  [PR #3988](https://github.com/apollographql/apollo-server/pull/3988)
