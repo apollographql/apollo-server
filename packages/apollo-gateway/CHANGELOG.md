@@ -6,6 +6,10 @@
 
 - __FIX__: Collapse nested required fields into a single body in the query plan. Before, some nested fields' selection sets were getting split, causing some of their subfields to be dropped when executing the query. This fix collapses the split selection sets into one. [#4064](https://github.com/apollographql/apollo-server/pull/4064)
 
+## 0.16.2
+
+- __FIX__: Collapse nested required fields into a single body in the query plan. Before, some nested fields' selection sets were getting split, causing some of their subfields to be dropped when executing the query. This fix collapses the split selection sets into one. [#4064](https://github.com/apollographql/apollo-server/pull/4064)
+
 ## 0.16.1
 
 - __NEW__: Provide the ability to pass a custom `fetcher` during `RemoteGraphQLDataSource` construction to be used when executing operations against downstream services.  Providing a custom `fetcher` may be necessary to accommodate more advanced needs, e.g., configuring custom TLS certificates for internal services.  [PR #4149](https://github.com/apollographql/apollo-server/pull/4149)
