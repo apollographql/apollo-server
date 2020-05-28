@@ -1,14 +1,8 @@
-import gql from 'graphql-tag';
 import { execute, overrideResolversInService } from '../execution-utils';
-
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+import { fixtures } from '../__fixtures__/schemas/';
 
 it('does not have to go to another service when field is given', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetReviewers {
       topReviews {
         author {
@@ -18,12 +12,9 @@ it('does not have to go to another service when field is given', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute( {
+    query,
+  });
 
   expect(data).toEqual({
     topReviews: [
@@ -40,6 +31,8 @@ it('does not have to go to another service when field is given', async () => {
 });
 
 it('does not load fields provided even when going to other service', async () => {
+  const [accounts, ...restFixtures] = fixtures;
+
   const username = jest.fn();
   const localAccounts = overrideResolversInService(accounts, {
     User: {
@@ -47,7 +40,7 @@ it('does not load fields provided even when going to other service', async () =>
     },
   });
 
-  const query = gql`
+  const query = `#graphql
     query GetReviewers {
       topReviews {
         author {
@@ -59,10 +52,10 @@ it('does not load fields provided even when going to other service', async () =>
   `;
 
   const { data, queryPlan } = await execute(
-    [localAccounts, books, inventory, product, reviews],
     {
       query,
     },
+    [localAccounts, ...restFixtures],
   );
 
   expect(data).toEqual({

@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 
-export const name = 'unionsWithNameCollisions';
+export const name = 'documents';
 export const typeDefs = gql`
   directive @stream on FIELD
   directive @transform(from: String!) on FIELD

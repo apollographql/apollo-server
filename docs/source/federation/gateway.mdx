@@ -257,7 +257,7 @@ directive @uppercase on FIELD
 And here's an example of a query that uses that directive:
 
 ```graphql
-query {
+query GetUppercaseUsernames {
   users {
     name @uppercase
   }
