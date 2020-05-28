@@ -224,14 +224,16 @@ describe('lifecycle hooks', () => {
     const experimental_didResolveQueryPlan: Experimental_DidResolveQueryPlanCallback = jest.fn()
 
     const gateway = new ApolloGateway({
-      serviceList: serviceDefinitions,
+      localServiceList: [
+        books
+      ],
       experimental_didResolveQueryPlan,
     });
 
     const { executor } = await gateway.load();
     await executor({
       document: gql`
-        { product(upc: '1') { name } }
+        { book(isbn: '0262510871') { year } }
       `,
       request: {},
       queryHash: 'hashed',
