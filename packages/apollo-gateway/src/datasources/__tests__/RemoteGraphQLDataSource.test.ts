@@ -9,6 +9,7 @@ import {
 import { RemoteGraphQLDataSource } from '../RemoteGraphQLDataSource';
 import { Headers } from 'apollo-server-env';
 import { GraphQLRequestContext } from 'apollo-server-types';
+import { Response } from '../../../../../../apollo-tooling/packages/apollo-env/lib';
 
 beforeEach(() => {
   fetch.mockReset();
@@ -236,6 +237,29 @@ describe('constructing requests', () => {
       });
     });
   });
+});
+
+describe('fetcher', () => {
+  it('uses a custom provided `fetcher`', async () => {
+    const injectedFetch = fetch.mockJSONResponseOnce({ data: { injected: true } });
+    const DataSource = new RemoteGraphQLDataSource({
+      url: 'https://api.example.com/foo',
+      fetcher: injectedFetch,
+    });
+
+    const { data } = await DataSource.process({
+      request: {
+        query: '{ me { name } }',
+        variables: { id: '1' },
+      },
+      context: {},
+    });
+
+    expect(injectedFetch).toHaveBeenCalled();
+    expect(data).toEqual({injected: true});
+
+  });
+
 });
 
 describe('willSendRequest', () => {
