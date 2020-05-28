@@ -233,7 +233,7 @@ describe('lifecycle hooks', () => {
     const { executor } = await gateway.load();
     await executor({
       document: gql`
-        { book(isbn: '0262510871') { year } }
+        { book(isbn: "0262510871") { year } }
       `,
       request: {},
       queryHash: 'hashed',
