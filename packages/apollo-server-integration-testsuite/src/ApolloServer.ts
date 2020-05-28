@@ -609,7 +609,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         ]);
 
         // The bug in 4170 (linked above) was occurring because of a failure
-        // to the context in `executeOperation`, in the same way that occurs
+        // to clone context in `executeOperation` in the same way that occurs
         // in `runHttpQuery` prior to entering the request pipeline.  That
         // resulted in the inability to attach a symbol to the context because
         // the symbol already existed on the context.  Of course, a context
