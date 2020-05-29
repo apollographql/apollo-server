@@ -321,7 +321,7 @@ describe('Downstream service health checks', () => {
     });
   });
 
-  describe('Managed mode', () => {
+  describe.skip('Managed mode', () => {
     it('Performs health checks to downstream services on load', async () => {
       mockStorageSecretSuccess();
       mockCompositionConfigLinkSuccess();
