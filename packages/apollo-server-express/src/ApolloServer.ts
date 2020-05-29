@@ -7,16 +7,12 @@ import {
 } from '@apollographql/graphql-playground-html';
 import {
   GraphQLOptions,
-  FileUploadOptions,
   ApolloServerBase,
-  formatApolloErrors,
-  processFileUploads,
   ContextFunction,
   Context,
   Config,
 } from 'apollo-server-core';
 import accepts from 'accepts';
-import typeis from 'type-is';
 import { graphqlExpress } from './expressApollo';
 
 export { GraphQLOptions } from 'apollo-server-core';
@@ -38,39 +34,6 @@ export interface ServerRegistration extends GetMiddlewareOptions {
   // users).
   app: express.Application;
 }
-
-const fileUploadMiddleware = (
-  uploadsConfig: FileUploadOptions,
-  server: ApolloServerBase,
-) => (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-) => {
-  // Note: we use typeis directly instead of via req.is for connect support.
-  if (
-    typeof processFileUploads === 'function' &&
-    typeis(req, ['multipart/form-data'])
-  ) {
-    processFileUploads(req, res, uploadsConfig)
-      .then(body => {
-        req.body = body;
-        next();
-      })
-      .catch(error => {
-        if (error.status && error.expose) res.status(error.status);
-
-        next(
-          formatApolloErrors([error], {
-            formatter: server.requestOptions.formatError,
-            debug: server.requestOptions.debug,
-          }),
-        );
-      });
-  } else {
-    next();
-  }
-};
 
 export interface ExpressContext {
   req: express.Request;
@@ -94,10 +57,6 @@ export class ApolloServer extends ApolloServerBase {
     res: express.Response,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ req, res });
-  }
-
-  protected supportsUploads(): boolean {
-    return true;
   }
 
   public applyMiddleware({ app, ...rest }: ServerRegistration) {
@@ -155,11 +114,6 @@ export class ApolloServer extends ApolloServerBase {
       });
     }
 
-    let uploadsMiddleware;
-    if (this.uploadsConfig && typeof processFileUploads === 'function') {
-      uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
-    }
-
     // XXX multiple paths?
     this.graphqlPath = path;
 
@@ -175,10 +129,6 @@ export class ApolloServer extends ApolloServerBase {
       router.use(path, json());
     } else if (bodyParserConfig !== false) {
       router.use(path, json(bodyParserConfig));
-    }
-
-    if (uploadsMiddleware) {
-      router.use(path, uploadsMiddleware);
     }
 
     // Note: if you enable playground in production and expect to be able to see your

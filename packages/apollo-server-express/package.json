@@ -38,8 +38,7 @@
     "cors": "^2.8.4",
     "express": "^4.17.1",
     "graphql-tools": "^4.0.0",
-    "parseurl": "^1.3.2",
-    "type-is": "^1.6.16"
+    "parseurl": "^1.3.2"
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"

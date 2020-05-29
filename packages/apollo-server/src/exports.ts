@@ -2,7 +2,6 @@ export * from 'graphql-tools';
 
 export {
   gql,
-  GraphQLUpload,
   GraphQLOptions,
   Config,
   GraphQLSchemaModule,

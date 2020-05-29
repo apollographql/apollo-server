@@ -23,7 +23,6 @@ import {
   ApolloServerPlugin,
   GraphQLServiceContext,
 } from 'apollo-server-plugin-base';
-import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 import {
   GraphQLServerOptions,
@@ -34,7 +33,6 @@ import {
   Config,
   Context,
   ContextFunction,
-  FileUploadOptions,
   PluginDefinition,
 } from './types';
 
@@ -88,9 +86,6 @@ function getEngineServiceId(engine: Config['engine'], logger: Logger): string | 
   return;
 }
 
-const forbidUploadsForTesting =
-  process && process.env.NODE_ENV === 'test' && !runtimeSupportsUploads;
-
 function approximateObjectSize<T>(obj: T): number {
   return Buffer.byteLength(JSON.stringify(obj), 'utf8');
 }
@@ -114,8 +109,6 @@ export class ApolloServerBase {
   private engineServiceId?: string;
   private engineApiKeyHash?: string;
   protected plugins: ApolloServerPlugin[] = [];
-
-  protected uploadsConfig?: FileUploadOptions;
 
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
@@ -145,7 +138,6 @@ export class ApolloServerBase {
       mocks,
       mockEntireSchema,
       engine,
-      uploads,
       playground,
       plugins,
       gateway,
@@ -225,30 +217,6 @@ export class ApolloServerBase {
     }
 
     this.requestOptions = requestOptions as GraphQLServerOptions;
-
-    if (uploads !== false && !forbidUploadsForTesting) {
-      if (this.supportsUploads()) {
-        if (!runtimeSupportsUploads) {
-          printNodeFileUploadsMessage(this.logger);
-          throw new Error(
-            '`graphql-upload` is no longer supported on Node.js < v8.5.0.  ' +
-              'See https://bit.ly/gql-upload-node-6.',
-          );
-        }
-
-        if (uploads === true || typeof uploads === 'undefined') {
-          this.uploadsConfig = {};
-        } else {
-          this.uploadsConfig = uploads;
-        }
-        //This is here to check if uploads is requested without support. By
-        //default we enable them if supported by the integration
-      } else if (uploads) {
-        throw new Error(
-          'This implementation of ApolloServer does not support file uploads because the environment cannot accept multi-part forms',
-        );
-      }
-    }
 
     if (engine && typeof engine === 'object') {
       // Use the `ApolloServer` logger unless a more granular logger is set.
@@ -411,27 +379,6 @@ export class ApolloServerBase {
         );
       }
 
-      if (this.uploadsConfig) {
-        const { GraphQLUpload } = require('graphql-upload');
-        if (Array.isArray(resolvers)) {
-          if (resolvers.every(resolver => !resolver.Upload)) {
-            resolvers.push({ Upload: GraphQLUpload });
-          }
-        } else {
-          if (resolvers && !resolvers.Upload) {
-            resolvers.Upload = GraphQLUpload;
-          }
-        }
-
-        // We augment the typeDefs with the Upload scalar, so typeDefs that
-        // don't include it won't fail
-        augmentedTypeDefs.push(
-          gql`
-            scalar Upload
-          `,
-        );
-      }
-
       constructedSchema = makeExecutableSchema({
         typeDefs: augmentedTypeDefs,
         schemaDirectives,
@@ -524,10 +471,6 @@ export class ApolloServerBase {
       this.engineReportingAgent.stop();
       await this.engineReportingAgent.sendAllReports();
     }
-  }
-
-  protected supportsUploads(): boolean {
-    return false;
   }
 
   // Returns true if it appears that the schema was returned from
@@ -728,33 +671,4 @@ export class ApolloServerBase {
 
     return processGraphQLRequest(options, requestCtx);
   }
-}
-
-function printNodeFileUploadsMessage(logger: Logger) {
-  logger.error(
-    [
-      '*****************************************************************',
-      '*                                                               *',
-      '* ERROR! Manual intervention is necessary for Node.js < v8.5.0! *',
-      '*                                                               *',
-      '*****************************************************************',
-      '',
-      'The third-party `graphql-upload` package, which is used to implement',
-      'file uploads in Apollo Server 2.x, no longer supports Node.js LTS',
-      'versions prior to Node.js v8.5.0.',
-      '',
-      'Deployments which NEED file upload capabilities should update to',
-      'Node.js >= v8.5.0 to continue using uploads.',
-      '',
-      'If this server DOES NOT NEED file uploads and wishes to continue',
-      'using this version of Node.js, uploads can be disabled by adding:',
-      '',
-      '  uploads: false,',
-      '',
-      '...to the options for Apollo Server and re-deploying the server.',
-      '',
-      'For more information, see https://bit.ly/gql-upload-node-6.',
-      '',
-    ].join('\n'),
-  );
 }

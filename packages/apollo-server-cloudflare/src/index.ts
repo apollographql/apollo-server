@@ -1,5 +1,4 @@
 export {
-  GraphQLUpload,
   GraphQLOptions,
   Config,
   gql,

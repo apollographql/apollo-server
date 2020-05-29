@@ -101,17 +101,7 @@ export interface Config extends BaseConfig {
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
   //https://github.com/jaydenseric/graphql-upload#type-uploadoptions
-  uploads?: boolean | FileUploadOptions;
   playground?: PlaygroundConfig;
   gateway?: GraphQLService;
   experimental_approximateDocumentStoreMiB?: number;
-}
-
-export interface FileUploadOptions {
-  //Max allowed non-file multipart form field size in bytes; enough for your queries (default: 1 MB).
-  maxFieldSize?: number;
-  //Max allowed file size in bytes (default: Infinity).
-  maxFileSize?: number;
-  //Max allowed number of files (default: Infinity).
-  maxFiles?: number;
 }

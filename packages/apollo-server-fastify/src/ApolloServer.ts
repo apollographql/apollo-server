@@ -2,17 +2,12 @@ import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import { Accepts } from 'accepts';
 import {
   ApolloServerBase,
-  FileUploadOptions,
-  formatApolloErrors,
   PlaygroundRenderPageOptions,
-  processFileUploads,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { IncomingMessage, ServerResponse, Server } from 'http';
 import { graphqlFastify } from './fastifyApollo';
-import { GraphQLOperation } from 'graphql-upload';
 
-const kMultipart = Symbol('multipart');
 const fastJson = require('fast-json-stringify');
 
 export interface ServerRegistration {
@@ -31,41 +26,7 @@ const stringifyHealthCheck = fastJson({
   },
 });
 
-const fileUploadMiddleware = (
-  uploadsConfig: FileUploadOptions,
-  server: ApolloServerBase,
-) => (
-  req: FastifyRequest<IncomingMessage>,
-  reply: FastifyReply<ServerResponse>,
-  done: (err: Error | null, body?: any) => void,
-) => {
-  if (
-    (req.req as any)[kMultipart] &&
-    typeof processFileUploads === 'function'
-  ) {
-    processFileUploads(req.req, reply.res, uploadsConfig)
-      .then((body: GraphQLOperation | GraphQLOperation[]) => {
-        req.body = body;
-        done(null);
-      })
-      .catch((error: any) => {
-        if (error.status && error.expose) reply.status(error.status);
-
-        throw formatApolloErrors([error], {
-          formatter: server.requestOptions.formatError,
-          debug: server.requestOptions.debug,
-        });
-      });
-  } else {
-    done(null);
-  }
-};
-
 export class ApolloServer extends ApolloServerBase {
-  protected supportsUploads(): boolean {
-    return true;
-  }
-
   public createHandler({
     path,
     cors,
@@ -150,20 +111,6 @@ export class ApolloServer extends ApolloServerBase {
               done();
             },
           ];
-
-          if (typeof processFileUploads === 'function' && this.uploadsConfig) {
-            instance.addContentTypeParser(
-              'multipart',
-              (
-                request: IncomingMessage,
-                done: (err: Error | null, body?: any) => void,
-              ) => {
-                (request as any)[kMultipart] = true;
-                done(null);
-              },
-            );
-            preHandlers.push(fileUploadMiddleware(this.uploadsConfig, this));
-          }
 
           instance.route({
             method: ['GET', 'POST'],

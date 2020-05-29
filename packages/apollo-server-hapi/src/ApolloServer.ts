@@ -11,27 +11,7 @@ export { GraphQLOptions } from 'apollo-server-core';
 import {
   ApolloServerBase,
   GraphQLOptions,
-  FileUploadOptions,
-  processFileUploads,
 } from 'apollo-server-core';
-
-function handleFileUploads(uploadsConfig: FileUploadOptions) {
-  return async (request: hapi.Request, _h?: hapi.ResponseToolkit) => {
-    if (
-      typeof processFileUploads === 'function' &&
-      request.mime === 'multipart/form-data'
-    ) {
-      Object.defineProperty(request, 'payload', {
-        value: await processFileUploads(
-          request.raw.req,
-          request.raw.res,
-          uploadsConfig,
-        ),
-        writable: false,
-      });
-    }
-  };
-}
 
 export class ApolloServer extends ApolloServerBase {
   // This translates the arguments from the middleware into graphQL options It
@@ -42,10 +22,6 @@ export class ApolloServer extends ApolloServerBase {
     h: hapi.ResponseToolkit,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ request, h });
-  }
-
-  protected supportsUploads(): boolean {
-    return true;
   }
 
   public async applyMiddleware({
@@ -65,10 +41,6 @@ export class ApolloServer extends ApolloServerBase {
       method: async function(request, h) {
         if (request.path !== path) {
           return h.continue;
-        }
-
-        if (this.uploadsConfig && typeof processFileUploads === 'function') {
-          await handleFileUploads(this.uploadsConfig)(request);
         }
 
         if (this.playgroundOptions && request.method === 'get') {
@@ -147,5 +119,4 @@ export interface ServerRegistration {
   route?: hapi.RouteOptions;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  uploads?: boolean | Record<string, any>;
 }
