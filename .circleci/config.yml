@@ -36,19 +36,8 @@ jobs:
   # The docker tag represents the Node.js version and the full list is available
   # at https://hub.docker.com/r/circleci/node/.
 
-  # NODE: Note certain tests are currently being skipped for Node.js 6.
-  # NodeJS 6:
-  #   executor: { name: oss/node, tag: '6' }
-  #   steps:
-  #     - common_test_steps
-
-  NodeJS 8:
-    executor: { name: oss/node, tag: '8' }
-    steps:
-      - common_test_steps
-
-  NodeJS 10:
-    executor: { name: oss/node, tag: '10' }
+  NodeJS 12:
+    executor: { name: oss/node, tag: '12' }
     steps:
       - common_test_steps
       # We will save the results of this one particular invocation to use in
@@ -61,8 +50,8 @@ jobs:
           paths:
             - ./**
 
-  NodeJS 12:
-    executor: { name: oss/node, tag: '12' }
+  NodeJS 14:
+    executor: { name: oss/node, tag: '14' }
     steps:
       - common_test_steps
 
@@ -92,30 +81,22 @@ workflows:
   version: 2
   Build:
     jobs:
-      # - NodeJS 6:
-      #     <<: *common_non_publish_filters
-      - NodeJS 8:
-          <<: *common_non_publish_filters
-      - NodeJS 10:
-          <<: *common_non_publish_filters
       - NodeJS 12:
+          <<: *common_non_publish_filters
+      - NodeJS 14:
           <<: *common_non_publish_filters
       - oss/lerna_tarballs:
           name: Package tarballs
           <<: *common_non_publish_filters
           requires:
-            # - NodeJS 6
-            - NodeJS 8
-            - NodeJS 10
             - NodeJS 12
+            - NodeJS 14
       - oss/dry_run:
           name: Dry-run
           <<: *common_publish_filters
           requires:
-            # - NodeJS 6
-            - NodeJS 8
-            - NodeJS 10
             - NodeJS 12
+            - NodeJS 14
       - oss/confirmation:
           name: Confirmation
           type: approval
