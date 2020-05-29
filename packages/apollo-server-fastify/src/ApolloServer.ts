@@ -62,10 +62,6 @@ const fileUploadMiddleware = (
 };
 
 export class ApolloServer extends ApolloServerBase {
-  protected supportsSubscriptions(): boolean {
-    return true;
-  }
-
   protected supportsUploads(): boolean {
     return true;
   }
@@ -141,7 +137,6 @@ export class ApolloServer extends ApolloServerBase {
                 if (prefersHTML) {
                   const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
                     endpoint: this.graphqlPath,
-                    subscriptionEndpoint: this.subscriptionsPath,
                     ...this.playgroundOptions,
                   };
                   reply.type('text/html');

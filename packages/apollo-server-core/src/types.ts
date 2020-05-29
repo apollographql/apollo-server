@@ -11,10 +11,6 @@ import {
   GraphQLExecutionResult,
   GraphQLRequestContextExecutionDidStart,
 } from 'apollo-server-types';
-import { ConnectionContext } from 'subscriptions-transport-ws';
-// The types for `ws` use `export = WebSocket`, so we'll use the
-// matching `import =` to bring in its sole export.
-import WebSocket = require('ws');
 
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 
@@ -41,17 +37,6 @@ export type ContextFunction<FunctionParams = any, ProducedContext = object> = (
 // A plugin can return an interface that matches `ApolloServerPlugin`, or a
 // factory function that returns `ApolloServerPlugin`.
 export type PluginDefinition = ApolloServerPlugin | (() => ApolloServerPlugin);
-
-export interface SubscriptionServerOptions {
-  path: string;
-  keepAlive?: number;
-  onConnect?: (
-    connectionParams: Object,
-    websocket: WebSocket,
-    context: ConnectionContext,
-  ) => any;
-  onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
-}
 
 type BaseConfig = Pick<
   GraphQLOptions<Context>,
@@ -115,7 +100,6 @@ export interface Config extends BaseConfig {
   cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
-  subscriptions?: Partial<SubscriptionServerOptions> | string | false;
   //https://github.com/jaydenseric/graphql-upload#type-uploadoptions
   uploads?: boolean | FileUploadOptions;
   playground?: PlaygroundConfig;

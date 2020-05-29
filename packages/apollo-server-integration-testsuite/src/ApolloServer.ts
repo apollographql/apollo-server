@@ -15,10 +15,6 @@ import {
   FieldDefinitionNode,
 } from 'graphql';
 
-import { PubSub } from 'graphql-subscriptions';
-import { SubscriptionClient } from 'subscriptions-transport-ws';
-import WebSocket from 'ws';
-
 import { execute } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
 import {
@@ -306,37 +302,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             /Cannot define both/,
           );
         });
-
-        it('prohibits providing a gateway in addition to subscription options', async () => {
-          const { gateway } = makeGatewayMock();
-
-          const expectedError =
-            'Subscriptions are not yet compatible with the gateway';
-
-          const incompatibleArgsSpy = jest.fn();
-          await createApolloServer({
-            gateway,
-            subscriptions: 'pathToSubscriptions',
-          }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[0][0]).toMatch(expectedError);
-
-          await createApolloServer({
-            gateway,
-            subscriptions: true as any,
-          }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[1][0]).toMatch(expectedError);
-
-          await createApolloServer({
-            gateway,
-            subscriptions: { path: '' } as any,
-          }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(expectedError);
-
-          await createApolloServer({
-            gateway,
-          }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[3][0]).toMatch(expectedError);
-        });
       });
 
       describe('schema creation', () => {
@@ -371,7 +336,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const { url: uri } = await createApolloServer({
             gateway,
-            subscriptions: false,
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -401,7 +365,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const { url: uri } = await createApolloServer({
             gateway,
-            subscriptions: false,
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -1684,257 +1647,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
-    describe('subscriptions', () => {
-      const SOMETHING_CHANGED_TOPIC = 'something_changed';
-      const pubsub = new PubSub();
-      let subscription:
-        | {
-            unsubscribe: () => void;
-          }
-        | undefined;
-
-      function createEvent(num: number) {
-        return setTimeout(
-          () =>
-            pubsub.publish(SOMETHING_CHANGED_TOPIC, {
-              num,
-            }),
-          num + 10,
-        );
-      }
-
-      afterEach(async () => {
-        if (subscription) {
-          try {
-            await subscription.unsubscribe();
-          } catch (e) {}
-          subscription = null;
-        }
-      });
-
-      it('enables subscriptions after creating subscriptions server', done => {
-        const typeDefs = gql`
-          type Query {
-            hi: String
-          }
-
-          type Subscription {
-            num: Int
-          }
-        `;
-
-        const query = `
-        subscription {
-          num
-        }
-      `;
-
-        const resolvers = {
-          Query: {
-            hi: () => 'here to placate graphql-js',
-          },
-          Subscription: {
-            num: {
-              subscribe: () => {
-                createEvent(1);
-                createEvent(2);
-                createEvent(3);
-                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
-              },
-            },
-          },
-        };
-
-        createApolloServer({
-          typeDefs,
-          resolvers,
-        }).then(({ port, server, httpServer }) => {
-          server.installSubscriptionHandlers(httpServer);
-
-          const client = new SubscriptionClient(
-            `ws://localhost:${port}${server.subscriptionsPath}`,
-            {},
-            WebSocket,
-          );
-
-          const observable = client.request({ query });
-
-          let i = 1;
-          subscription = observable.subscribe({
-            next: ({ data }) => {
-              try {
-                expect(data.num).toEqual(i);
-                if (i === 3) {
-                  done();
-                }
-                i++;
-              } catch (e) {
-                done.fail(e);
-              }
-            },
-            error: done.fail,
-            complete: () => {
-              done.fail(new Error('should not complete'));
-            },
-          });
-        });
-      });
-      it('disables subscriptions when option set to false', done => {
-        const typeDefs = gql`
-          type Query {
-            "graphql-js forces there to be a query type"
-            hi: String
-          }
-
-          type Subscription {
-            num: Int
-          }
-        `;
-
-        const query = `
-        subscription {
-          num
-        }
-      `;
-
-        const resolvers = {
-          Query: {
-            hi: () => 'here to placate graphql-js',
-          },
-          Subscription: {
-            num: {
-              subscribe: () => {
-                createEvent(1);
-                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
-              },
-            },
-          },
-        };
-
-        createApolloServer({
-          typeDefs,
-          resolvers,
-          subscriptions: false,
-        }).then(({ port, server, httpServer }) => {
-          try {
-            server.installSubscriptionHandlers(httpServer);
-            done.fail(
-              'subscription server creation should fail, since subscriptions are disabled',
-            );
-          } catch (e) {
-            expect(e.message).toMatch(/disabled/);
-          }
-
-          const client = new SubscriptionClient(
-            `ws://localhost:${port}${server.subscriptionsPath || ''}`,
-            {},
-            WebSocket,
-          );
-
-          const observable = client.request({ query });
-
-          subscription = observable.subscribe({
-            next: () => {
-              done.fail(new Error('should not call next'));
-            },
-            error: () => {
-              done.fail(new Error('should not notify of error'));
-            },
-            complete: () => {
-              done.fail(new Error('should not complete'));
-            },
-          });
-
-          // Unfortunately the error connection is not propagated to the
-          // observable. What should happen is we provide a default onError
-          // function that notifies the returned observable and can customize
-          // the behavior with an option in the client constructor. If you're
-          // available to make a PR to the following please do!
-          // https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts
-          client.onError((_: Error) => {
-            done();
-          });
-        });
-      });
-      it('accepts subscriptions configuration', done => {
-        const onConnect = jest.fn(connectionParams => ({
-          ...connectionParams,
-        }));
-        const typeDefs = gql`
-          type Query {
-            hi: String
-          }
-
-          type Subscription {
-            num: Int
-          }
-        `;
-
-        const query = `
-        subscription {
-          num
-        }
-      `;
-
-        const resolvers = {
-          Query: {
-            hi: () => 'here to placate graphql-js',
-          },
-          Subscription: {
-            num: {
-              subscribe: () => {
-                createEvent(1);
-                createEvent(2);
-                createEvent(3);
-                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
-              },
-            },
-          },
-        };
-
-        const path = '/sub';
-        createApolloServer({
-          typeDefs,
-          resolvers,
-          subscriptions: { onConnect, path },
-        })
-          .then(({ port, server, httpServer }) => {
-            server.installSubscriptionHandlers(httpServer);
-            expect(onConnect).not.toBeCalled();
-
-            expect(server.subscriptionsPath).toEqual(path);
-            const client = new SubscriptionClient(
-              `ws://localhost:${port}${server.subscriptionsPath}`,
-              {},
-              WebSocket,
-            );
-
-            const observable = client.request({ query });
-
-            let i = 1;
-            subscription = observable.subscribe({
-              next: ({ data }) => {
-                try {
-                  expect(onConnect).toHaveBeenCalledTimes(1);
-                  expect(data.num).toEqual(i);
-                  if (i === 3) {
-                    done();
-                  }
-                  i++;
-                } catch (e) {
-                  done.fail(e);
-                }
-              },
-              error: done.fail,
-              complete: () => {
-                done.fail(new Error('should not complete'));
-              },
-            });
-          })
-          .catch(done.fail);
-      });
-    });
-
     describe('Persisted Queries', () => {
       let uri: string;
       const query = gql`
@@ -2876,7 +2588,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const { url: uri } = await createApolloServer({
           gateway,
-          subscriptions: false,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -2899,7 +2610,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         triggers.resolveLoad({ schema, executor: () => {} });
         await createApolloServer({
           gateway,
-          subscriptions: false,
           engine: { apiKey: 'service:tester:1234abc', schemaTag: 'staging' },
         });
 
@@ -2917,7 +2627,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const unsubscribeSpy = jest.fn();
         const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
         triggers.resolveLoad({ schema, executor: () => {} });
-        await createApolloServer({ gateway, subscriptions: false });
+        await createApolloServer({ gateway });
         expect(unsubscribeSpy).not.toHaveBeenCalled();
         await stopServer();
         expect(unsubscribeSpy).toHaveBeenCalled();
@@ -2938,7 +2648,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         triggers.resolveLoad({ schema, executor });
         const { url: uri } = await createApolloServer({
           gateway,
-          subscriptions: false,
         });
         const fetchComplete = jest.fn();
         const apolloFetch = createApolloFetch({ uri });
@@ -3005,7 +2714,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const { url: uri } = await createApolloServer({
           gateway,
-          subscriptions: false,
         });
 
         // TODO: Remove these awaits... I think it may require the `onSchemaChange` to block?

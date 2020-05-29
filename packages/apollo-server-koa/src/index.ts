@@ -18,7 +18,6 @@ export {
 } from 'apollo-server-core';
 
 export * from 'graphql-tools';
-export * from 'graphql-subscriptions';
 
 // ApolloServer integration.
 export {

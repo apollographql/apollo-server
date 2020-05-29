@@ -101,7 +101,6 @@
     "fastify": "2.14.1",
     "form-data": "2.5.1",
     "graphql": "14.6.0",
-    "graphql-subscriptions": "1.1.0",
     "graphql-tag": "2.10.3",
     "graphql-tools": "4.0.8",
     "hapi": "17.8.5",

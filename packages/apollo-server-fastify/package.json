@@ -30,7 +30,6 @@
     "apollo-server-types": "file:../apollo-server-types",
     "fastify-accepts": "^1.0.0",
     "fastify-cors": "^2.2.0",
-    "graphql-subscriptions": "^1.0.0",
     "graphql-tools": "^4.0.0"
   },
   "devDependencies": {

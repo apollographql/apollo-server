@@ -3,13 +3,9 @@ import {
   addMockFunctionsToSchema,
   GraphQLParseOptions,
 } from 'graphql-tools';
-import { Server as HttpServer } from 'http';
 import loglevel from 'loglevel';
 import {
-  execute,
   GraphQLSchema,
-  subscribe,
-  ExecutionResult,
   GraphQLError,
   GraphQLFieldResolver,
   ValidationContext,
@@ -30,14 +26,6 @@ import {
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 import {
-  SubscriptionServer,
-  ExecutionParams,
-} from 'subscriptions-transport-ws';
-
-import WebSocket from 'ws';
-
-import { formatApolloErrors } from 'apollo-server-errors';
-import {
   GraphQLServerOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
@@ -46,7 +34,6 @@ import {
   Config,
   Context,
   ContextFunction,
-  SubscriptionServerOptions,
   FileUploadOptions,
   PluginDefinition,
 } from './types';
@@ -119,7 +106,6 @@ type SchemaDerivedData = {
 
 export class ApolloServerBase {
   private logger: Logger;
-  public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLServerOptions<any>> = Object.create(null);
 
@@ -129,11 +115,7 @@ export class ApolloServerBase {
   private engineApiKeyHash?: string;
   protected plugins: ApolloServerPlugin[] = [];
 
-  protected subscriptionServerOptions?: SubscriptionServerOptions;
   protected uploadsConfig?: FileUploadOptions;
-
-  // set by installSubscriptionHandlers.
-  private subscriptionServer?: SubscriptionServer;
 
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
@@ -163,7 +145,6 @@ export class ApolloServerBase {
       mocks,
       mockEntireSchema,
       engine,
-      subscriptions,
       uploads,
       playground,
       plugins,
@@ -309,42 +290,6 @@ export class ApolloServerBase {
         }),
       );
       // Don't add the extension here (we want to add it later in generateSchemaDerivedData).
-    }
-
-    if (gateway && subscriptions !== false) {
-      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs separate.
-      throw new Error(
-        [
-          'Subscriptions are not yet compatible with the gateway.',
-          "Set `subscriptions: false` in Apollo Server's constructor to",
-          'explicitly disable subscriptions (which are on by default)',
-          'and allow for gateway functionality.',
-        ].join(' '),
-      );
-    } else if (subscriptions !== false) {
-      if (this.supportsSubscriptions()) {
-        if (subscriptions === true || typeof subscriptions === 'undefined') {
-          this.subscriptionServerOptions = {
-            path: this.graphqlPath,
-          };
-        } else if (typeof subscriptions === 'string') {
-          this.subscriptionServerOptions = { path: subscriptions };
-        } else {
-          this.subscriptionServerOptions = {
-            path: this.graphqlPath,
-            ...subscriptions,
-          };
-        }
-        // This is part of the public API.
-        this.subscriptionsPath = this.subscriptionServerOptions.path;
-
-        //This is here to check if subscriptions are requested without support. By
-        //default we enable them if supported by the integration
-      } else if (subscriptions) {
-        throw new Error(
-          'This implementation of ApolloServer does not support GraphQL subscriptions.',
-        );
-      }
     }
 
     this.playgroundOptions = createPlaygroundOptions(playground);
@@ -575,99 +520,10 @@ export class ApolloServerBase {
 
   public async stop() {
     this.toDispose.forEach(dispose => dispose());
-    if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.engineReportingAgent) {
       this.engineReportingAgent.stop();
       await this.engineReportingAgent.sendAllReports();
     }
-  }
-
-  public installSubscriptionHandlers(server: HttpServer | WebSocket.Server) {
-    if (!this.subscriptionServerOptions) {
-      if (this.config.gateway) {
-        throw Error(
-          'Subscriptions are not supported when operating as a gateway',
-        );
-      }
-      if (this.supportsSubscriptions()) {
-        throw Error(
-          'Subscriptions are disabled, due to subscriptions set to false in the ApolloServer constructor',
-        );
-      } else {
-        throw Error(
-          'Subscriptions are not supported, choose an integration, such as apollo-server-express that allows persistent connections',
-        );
-      }
-    }
-    const { SubscriptionServer } = require('subscriptions-transport-ws');
-    const {
-      onDisconnect,
-      onConnect,
-      keepAlive,
-      path,
-    } = this.subscriptionServerOptions;
-
-    // TODO: This shouldn't use this.schema, as it is deprecated in favor of the schemaDerivedData promise.
-    const schema = this.schema;
-    if (this.schema === undefined)
-      throw new Error(
-        'Schema undefined during creation of subscription server.',
-      );
-
-    this.subscriptionServer = SubscriptionServer.create(
-      {
-        schema,
-        execute,
-        subscribe,
-        onConnect: onConnect
-          ? onConnect
-          : (connectionParams: Object) => ({ ...connectionParams }),
-        onDisconnect: onDisconnect,
-        onOperation: async (
-          message: { payload: any },
-          connection: ExecutionParams,
-        ) => {
-          connection.formatResponse = (value: ExecutionResult) => ({
-            ...value,
-            errors:
-              value.errors &&
-              formatApolloErrors([...value.errors], {
-                formatter: this.requestOptions.formatError,
-                debug: this.requestOptions.debug,
-              }),
-          });
-
-          connection.formatError = this.requestOptions.formatError;
-
-          let context: Context = this.context ? this.context : { connection };
-
-          try {
-            context =
-              typeof this.context === 'function'
-                ? await this.context({ connection, payload: message.payload })
-                : context;
-          } catch (e) {
-            throw formatApolloErrors([e], {
-              formatter: this.requestOptions.formatError,
-              debug: this.requestOptions.debug,
-            })[0];
-          }
-
-          return { ...connection, context };
-        },
-        keepAlive,
-      },
-      server instanceof WebSocket.Server
-        ? server
-        : {
-            server,
-            path,
-          },
-    );
-  }
-
-  protected supportsSubscriptions(): boolean {
-    return false;
   }
 
   protected supportsUploads(): boolean {

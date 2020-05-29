@@ -15,7 +15,6 @@ import {
   Context,
   Config,
 } from 'apollo-server-core';
-import { ExecutionParams } from 'subscriptions-transport-ws';
 import accepts from 'accepts';
 import typeis from 'type-is';
 import { graphqlExpress } from './expressApollo';
@@ -76,7 +75,6 @@ const fileUploadMiddleware = (
 export interface ExpressContext {
   req: express.Request;
   res: express.Response;
-  connection?: ExecutionParams;
 }
 
 export interface ApolloServerExpressConfig extends Config {
@@ -96,10 +94,6 @@ export class ApolloServer extends ApolloServerBase {
     res: express.Response,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ req, res });
-  }
-
-  protected supportsSubscriptions(): boolean {
-    return true;
   }
 
   protected supportsUploads(): boolean {
@@ -206,7 +200,6 @@ export class ApolloServer extends ApolloServerBase {
         if (prefersHTML) {
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
             endpoint: req.originalUrl,
-            subscriptionEndpoint: this.subscriptionsPath,
             ...this.playgroundOptions,
           };
           res.setHeader('Content-Type', 'text/html');

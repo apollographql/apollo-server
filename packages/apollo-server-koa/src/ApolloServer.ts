@@ -76,10 +76,6 @@ export class ApolloServer extends ApolloServerBase {
     return super.graphQLServerOptions({ ctx });
   }
 
-  protected supportsSubscriptions(): boolean {
-    return true;
-  }
-
   protected supportsUploads(): boolean {
     return true;
   }
@@ -190,7 +186,6 @@ export class ApolloServer extends ApolloServerBase {
           if (prefersHTML) {
             const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
               endpoint: path,
-              subscriptionEndpoint: this.subscriptionsPath,
               ...this.playgroundOptions,
             };
             ctx.set('Content-Type', 'text/html');
