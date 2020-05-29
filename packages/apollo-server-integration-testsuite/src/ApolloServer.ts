@@ -1449,56 +1449,57 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
 
-      it('errors thrown in extensions call formatError and are wrapped', async () => {
-        const extension = jest.fn(() => {
-          throw new Error('nope');
-        });
+      // AS3 Re-do this for plugins!
+      it.skip('errors thrown in extensions call formatError and are wrapped', async () => {
+        // const extension = jest.fn(() => {
+        //   throw new Error('nope');
+        // });
 
-        const formatError = jest.fn(error => {
-          expect(error instanceof Error).toBe(true);
-          // extension should be called before formatError
-          expect(extension).toHaveBeenCalledTimes(1);
+        // const formatError = jest.fn(error => {
+        //   expect(error instanceof Error).toBe(true);
+        //   // extension should be called before formatError
+        //   expect(extension).toHaveBeenCalledTimes(1);
 
-          error.message = 'masked';
-          return error;
-        });
+        //   error.message = 'masked';
+        //   return error;
+        // });
 
-        class Extension<TContext = any> extends GraphQLExtension {
-          willSendResponse(_o: {
-            graphqlResponse: GraphQLResponse;
-            context: TContext;
-          }) {
-            // formatError should be called after extensions
-            expect(formatError).not.toBeCalled();
-            extension();
-          }
-        }
+        // class Extension<TContext = any> extends GraphQLExtension {
+        //   willSendResponse(_o: {
+        //     graphqlResponse: GraphQLResponse;
+        //     context: TContext;
+        //   }) {
+        //     // formatError should be called after extensions
+        //     expect(formatError).not.toBeCalled();
+        //     extension();
+        //   }
+        // }
 
-        const { url: uri } = await createApolloServer({
-          typeDefs: gql`
-            type Query {
-              fieldWhichWillError: String
-            }
-          `,
-          resolvers: {
-            Query: {
-              fieldWhichWillError: () => {},
-            },
-          },
-          extensions: [() => new Extension()],
-          formatError,
-          debug: true,
-        });
+        // const { url: uri } = await createApolloServer({
+        //   typeDefs: gql`
+        //     type Query {
+        //       fieldWhichWillError: String
+        //     }
+        //   `,
+        //   resolvers: {
+        //     Query: {
+        //       fieldWhichWillError: () => {},
+        //     },
+        //   },
+        //   extensions: [() => new Extension()],
+        //   formatError,
+        //   debug: true,
+        // });
 
-        const apolloFetch = createApolloFetch({ uri });
+        // const apolloFetch = createApolloFetch({ uri });
 
-        const result = await apolloFetch({
-          query: `{fieldWhichWillError}`,
-        });
-        expect(result.data).toBeUndefined();
-        expect(result.errors).toBeDefined();
-        expect(result.errors[0].message).toEqual('masked');
-        expect(formatError).toHaveBeenCalledTimes(1);
+        // const result = await apolloFetch({
+        //   query: `{fieldWhichWillError}`,
+        // });
+        // expect(result.data).toBeUndefined();
+        // expect(result.errors).toBeDefined();
+        // expect(result.errors[0].message).toEqual('masked');
+        // expect(formatError).toHaveBeenCalledTimes(1);
       });
 
       describe('context field', () => {
