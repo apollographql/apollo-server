@@ -9,7 +9,6 @@ import { gql, AuthenticationError, Config } from 'apollo-server-core';
 import { ServerRegistration } from '../ApolloServer';
 
 import {
-  NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
@@ -26,16 +25,7 @@ const resolvers = {
   },
 };
 
-// If we're on Node.js v6, skip this test, since `koa-bodyparser` has dropped
-// support for it and there was an important update to it which we brought in
-// through https://github.com/apollographql/apollo-server/pull/3229.
-// It's worth noting that Node.js v6 has been out of Long-Term-Support status
-// for four months and is no longer recommended by the Node.js Foundation.
-(
-  NODE_MAJOR_VERSION === 6 ?
-  describe.skip :
-  describe
-)('apollo-server-koa', () => {
+describe('apollo-server-koa', () => {
   const { ApolloServer } = require('../ApolloServer');
   const Koa = require('koa');
   let server: ApolloServer;
@@ -57,16 +47,7 @@ const resolvers = {
   );
 });
 
-// If we're on Node.js v6, skip this test, since `koa-bodyparser` has dropped
-// support for it and there was an important update to it which we brought in
-// through https://github.com/apollographql/apollo-server/pull/3229.
-// It's worth noting that Node.js v6 has been out of Long-Term-Support status
-// for four months and is no longer recommended by the Node.js Foundation.
-(
-  NODE_MAJOR_VERSION === 6 ?
-  describe.skip :
-  describe
-)('apollo-server-koa', () => {
+describe('apollo-server-koa', () => {
   const Koa = require('koa');
   const { ApolloServer } = require('../ApolloServer');
   let server: import('../ApolloServer').ApolloServer;
@@ -342,9 +323,7 @@ const resolvers = {
         });
       });
     });
-    // NODE: Skip Node.js 6, but only because `graphql-upload`
-    // doesn't support it anymore.
-    (NODE_MAJOR_VERSION === 6 ? describe.skip : describe)(
+    describe(
       'file uploads',
       () => {
         it('enabled uploads', async () => {

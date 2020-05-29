@@ -1,7 +1,6 @@
 import micro from 'micro';
 import listen from 'test-listen';
 import { createApolloFetch } from 'apollo-fetch';
-import { NODE_MAJOR_VERSION } from 'apollo-server-integration-testsuite';
 import { gql } from 'apollo-server-core';
 import FormData from 'form-data';
 import fs from 'fs';
@@ -146,10 +145,7 @@ describe('apollo-server-micro', function() {
       });
     });
 
-    // NODE: Intentionally skip file upload tests on Node.js 10.
-    // Also skip Node.js 6, but only because `graphql-upload`
-    // doesn't support it.
-    (NODE_MAJOR_VERSION === 6 ? describe.skip : describe)(
+    describe(
       'file uploads',
       function() {
         it('should handle file uploads', async function() {

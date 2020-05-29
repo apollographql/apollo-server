@@ -15,7 +15,6 @@ import {
 } from '../ApolloServer';
 
 import {
-  NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
@@ -480,9 +479,7 @@ describe('apollo-server-express', () => {
         });
       });
     });
-    // NODE: Skip Node.js 6, but only because `graphql-upload`
-    // doesn't support it.
-    (NODE_MAJOR_VERSION === 6 ? describe.skip : describe)(
+    describe(
       'file uploads',
       () => {
         it('enabled uploads', async () => {
