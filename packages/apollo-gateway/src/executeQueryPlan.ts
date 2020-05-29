@@ -89,9 +89,6 @@ export async function executeQueryPlan<TContext>(
       },
       rootValue: data,
       variableValues: requestContext.request.variables,
-      // We have a special field resolver which ensures we support aliases.
-      // FIXME: It's _possible_ this will change after `graphql-extensions` is
-      // deprecated, though not certain. See here, also: https://git.io/Jf8cS.
       fieldResolver: defaultFieldResolverWithAliasSupport,
     }));
   } catch (error) {

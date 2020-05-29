@@ -18,7 +18,7 @@ import typeis from 'type-is';
 
 import { graphqlKoa } from './koaApollo';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions } from 'apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;

@@ -20,7 +20,7 @@ import accepts from 'accepts';
 import typeis from 'type-is';
 import { graphqlExpress } from './expressApollo';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions } from 'apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;

@@ -7,7 +7,7 @@ import {
 
 import { graphqlHapi } from './hapiApollo';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions } from 'apollo-server-core';
 import {
   ApolloServerBase,
   GraphQLOptions,

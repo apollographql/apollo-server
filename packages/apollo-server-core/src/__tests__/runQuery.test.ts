@@ -11,10 +11,8 @@ import {
 } from 'graphql';
 
 import {
-  GraphQLExtensionStack,
-  GraphQLExtension,
   GraphQLResponse,
-} from 'graphql-extensions';
+} from 'apollo-server-types';
 
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
 import { Request } from 'apollo-server-env';
@@ -31,7 +29,6 @@ import {
 } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { generateSchemaHash } from "../utils/schemaHash";
-import { Logger } from "apollo-server-types";
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
 // GraphQLRequestProcessor refactoring.
@@ -390,163 +387,6 @@ describe('runQuery', () => {
       testObject: {
         testString: 'a very testful field resolver string',
       },
-    });
-  });
-
-  describe('graphql extensions', () => {
-    class CustomExtension implements GraphQLExtension<any> {
-      format(): [string, any] {
-        return ['customExtension', { foo: 'bar' }];
-      }
-    }
-
-    describe('deprecation warnings', () => {
-      const queryString = `{ testString }`;
-      async function runWithExtAndReturnLogger(
-        extensions: QueryOptions['extensions'],
-      ): Promise<Logger> {
-        const logger = {
-          warn: jest.fn(() => {}),
-          info: console.info,
-          debug: console.debug,
-          error: console.error,
-        };
-
-        await runQuery(
-          {
-            schema,
-            queryString,
-            extensions,
-            request: new MockReq(),
-          },
-          {
-            logger,
-          },
-        );
-
-        return logger;
-      }
-
-      it('warns about named extensions', async () => {
-        const logger = await runWithExtAndReturnLogger([
-          () => new (class NamedExtension implements GraphQLExtension<any> {})(),
-        ]);
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "NamedExtension" was/));
-      });
-
-      it('warns about anonymous extensions', async () => {
-        const logger = await runWithExtAndReturnLogger([
-          () => new (class implements GraphQLExtension<any> {})(),
-        ]);
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] An anonymous extension was/));
-      });
-
-      it('warns about anonymous class expressions', async () => {
-        // In other words, when the name is the name of the variable.
-        const anon = class implements GraphQLExtension<any> {};
-        const logger = await runWithExtAndReturnLogger([
-          () => new anon(),
-        ]);
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "anon" was/));
-      });
-
-      it('warns for multiple extensions', async () => {
-        const logger = await runWithExtAndReturnLogger([
-          () => new (class Name1Ext implements GraphQLExtension<any> {})(),
-          () => new (class Name2Ext implements GraphQLExtension<any> {})(),
-        ]);
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "Name1Ext" was/));
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "Name2Ext" was/));
-      });
-
-      it('warns only once', async () => {
-        // Will use the same extension across two invocations.
-        class NameExt implements GraphQLExtension<any> {};
-
-        const logger1 = await runWithExtAndReturnLogger([
-          () => new NameExt,
-        ]);
-        expect(logger1.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "NameExt" was/));
-
-        const logger2 = await runWithExtAndReturnLogger([
-          () => new NameExt,
-        ]);
-        expect(logger2.warn).not.toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "NameExt" was/));
-      });
-    });
-
-    it('creates the extension stack', async () => {
-      const queryString = `{ testString }`;
-      const extensions = [() => new CustomExtension()];
-      return runQuery({
-        schema: new GraphQLSchema({
-          query: new GraphQLObjectType({
-            name: 'QueryType',
-            fields: {
-              testString: {
-                type: GraphQLString,
-                resolve(_parent, _args, context) {
-                  expect(context._extensionStack).toBeInstanceOf(
-                    GraphQLExtensionStack,
-                  );
-                  expect(context._extensionStack.extensions[0]).toBeInstanceOf(
-                    CustomExtension,
-                  );
-                },
-              },
-            },
-          }),
-        }),
-        queryString,
-        extensions,
-        request: new MockReq(),
-      });
-    });
-
-    it('runs format response from extensions', async () => {
-      const queryString = `{ testString }`;
-      const expected = { testString: 'it works' };
-      const extensions = [() => new CustomExtension()];
-      return runQuery({
-        schema,
-        queryString,
-        extensions,
-        request: new MockReq(),
-      }).then(res => {
-        expect(res.data).toEqual(expected);
-        expect(res.extensions).toEqual({
-          customExtension: { foo: 'bar' },
-        });
-      });
-    });
-
-    it('runs willSendResponse with extensions context', async () => {
-      class CustomExtension implements GraphQLExtension<any> {
-        willSendResponse(o: any) {
-          expect(o).toHaveProperty('context.baz', 'always here');
-          return o;
-        }
-      }
-
-      const queryString = `{ testString }`;
-      const expected = { testString: 'it works' };
-      const extensions = [() => new CustomExtension()];
-      return runQuery({
-        schema,
-        queryString,
-        context: { baz: 'always here' },
-        extensions,
-        request: new MockReq(),
-      }).then(res => {
-        expect(res.data).toEqual(expected);
-      });
     });
   });
 

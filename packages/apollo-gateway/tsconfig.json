@@ -10,6 +10,5 @@
     { "path": "../apollo-server-core" },
     { "path": "../apollo-server-types" },
     { "path": "../apollo-federation" },
-    { "path": "../graphql-extensions" },
   ]
 }

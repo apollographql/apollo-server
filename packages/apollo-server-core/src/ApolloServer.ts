@@ -19,7 +19,6 @@ import {
   isScalarType,
   isSchema,
 } from 'graphql';
-import { GraphQLExtension } from 'graphql-extensions';
 import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
@@ -116,7 +115,6 @@ type SchemaDerivedData = {
   documentStore?: InMemoryLRUCache<DocumentNode>;
   schema: GraphQLSchema;
   schemaHash: SchemaHash;
-  extensions: Array<() => GraphQLExtension>;
 };
 
 export class ApolloServerBase {
@@ -164,7 +162,6 @@ export class ApolloServerBase {
       introspection,
       mocks,
       mockEntireSchema,
-      extensions,
       engine,
       subscriptions,
       uploads,
@@ -504,7 +501,7 @@ export class ApolloServerBase {
   private generateSchemaDerivedData(schema: GraphQLSchema): SchemaDerivedData {
     const schemaHash = generateSchemaHash(schema!);
 
-    const { mocks, mockEntireSchema, extensions: _extensions } = this.config;
+    const { mocks, mockEntireSchema } = this.config;
 
     if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
       addMockFunctionsToSchema({
@@ -518,19 +515,12 @@ export class ApolloServerBase {
       });
     }
 
-    const extensions = [];
-
-    // Note: doRunQuery will add its own extensions if you set tracing,
-    // or cacheControl.
-    extensions.push(...(_extensions || []));
-
     // Initialize the document store.  This cannot currently be disabled.
     const documentStore = this.initializeDocumentStore();
 
     return {
       schema,
       schemaHash,
-      extensions,
       documentStore,
     };
   }
@@ -811,7 +801,6 @@ export class ApolloServerBase {
       schema,
       schemaHash,
       documentStore,
-      extensions,
     } = await this.schemaDerivedData;
 
     let context: Context = this.context ? this.context : {};
@@ -834,7 +823,6 @@ export class ApolloServerBase {
       logger: this.logger,
       plugins: this.plugins,
       documentStore,
-      extensions,
       context,
       // Allow overrides from options. Be explicit about a couple of them to
       // avoid a bad side effect of the otherwise useful noUnusedLocals option

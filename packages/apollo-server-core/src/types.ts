@@ -15,8 +15,6 @@ import { ConnectionContext } from 'subscriptions-transport-ws';
 // The types for `ws` use `export = WebSocket`, so we'll use the
 // matching `import =` to bring in its sole export.
 import WebSocket = require('ws');
-import { GraphQLExtension } from 'graphql-extensions';
-export { GraphQLExtension } from 'graphql-extensions';
 
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 
@@ -114,7 +112,6 @@ export interface Config extends BaseConfig {
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
   engine?: boolean | EngineReportingOptions<Context>;
-  extensions?: Array<() => GraphQLExtension>;
   cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;

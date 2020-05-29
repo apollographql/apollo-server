@@ -1,7 +1,6 @@
 export {
   GraphQLUpload,
   GraphQLOptions,
-  GraphQLExtension,
   Config,
   gql,
   // Errors

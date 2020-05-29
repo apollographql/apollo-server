@@ -11,11 +11,6 @@ import {
   parse as graphqlParse,
   execute as graphqlExecute,
 } from 'graphql';
-import {
-  GraphQLExtension,
-  GraphQLExtensionStack,
-  enableGraphQLExtensions,
-} from 'graphql-extensions';
 import { DataSource } from 'apollo-datasource';
 import { PersistedQueryOptions } from './graphqlOptions';
 import {
@@ -40,7 +35,6 @@ import {
   GraphQLExecutionResult,
   InvalidGraphQLRequestError,
   ValidationRule,
-  WithRequired,
 } from 'apollo-server-types';
 import {
   ApolloServerPlugin,
@@ -92,7 +86,6 @@ export interface GraphQLRequestPipelineConfig<TContext> {
 
   dataSources?: () => DataSources<TContext>;
 
-  extensions?: Array<() => GraphQLExtension>;
   persistedQueries?: PersistedQueryOptions;
 
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
@@ -113,14 +106,6 @@ export type DataSources<TContext> = {
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
-/**
- * We attach this symbol to the constructor of extensions to mark that we've
- * already warned about the deprecation of the `graphql-extensions` API for that
- * particular definition.
- */
-const symbolExtensionDeprecationDone =
-  Symbol("apolloServerExtensionDeprecationDone");
-
 export async function processGraphQLRequest<TContext>(
   config: GraphQLRequestPipelineConfig<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
@@ -139,9 +124,6 @@ export async function processGraphQLRequest<TContext>(
   // entry into request processing, rather than through, e.g. `runHttpQuery`.
   const metrics = requestContext.metrics =
     requestContext.metrics || Object.create(null);
-
-  const extensionStack = initializeExtensionStack();
-  (requestContext.context as any)._extensionStack = extensionStack;
 
   const dispatcher = initializeRequestListenerDispatcher();
   await initializeDataSources();
@@ -245,21 +227,6 @@ export async function processGraphQLRequest<TContext>(
     'didResolveSource',
     requestContext as GraphQLRequestContextDidResolveSource<TContext>,
   );
-
-  const requestDidEnd = extensionStack.requestDidStart({
-    request: request.http!,
-    queryString: request.query,
-    operationName: request.operationName,
-    variables: request.variables,
-    extensions: request.extensions,
-    context: requestContext.context,
-    persistedQueryHit: metrics.persistedQueryHit,
-    persistedQueryRegister: metrics.persistedQueryRegister,
-    requestContext: requestContext as WithRequired<
-      typeof requestContext,
-      'metrics' | 'queryHash'
-    >,
-  });
 
   try {
     // If we're configured with a document store (by default, we are), we'll
@@ -471,11 +438,6 @@ export async function processGraphQLRequest<TContext>(
       }
     }
 
-    const formattedExtensions = extensionStack.format();
-    if (Object.keys(formattedExtensions).length > 0) {
-      response.extensions = formattedExtensions;
-    }
-
     if (config.formatResponse) {
       const formattedResponse: GraphQLResponse | null = config.formatResponse(
         response,
@@ -488,22 +450,13 @@ export async function processGraphQLRequest<TContext>(
 
     return sendResponse(response);
   } finally {
-    requestDidEnd();
   }
 
   function parse(
     query: string,
     parseOptions?: GraphQLParseOptions,
   ): DocumentNode {
-    const parsingDidEnd = extensionStack.parsingDidStart({
-      queryString: query,
-    });
-
-    try {
-      return graphqlParse(query, parseOptions);
-    } finally {
-      parsingDidEnd();
-    }
+    return graphqlParse(query, parseOptions);
   }
 
   function validate(document: DocumentNode): ReadonlyArray<GraphQLError> {
@@ -512,13 +465,7 @@ export async function processGraphQLRequest<TContext>(
       rules = rules.concat(config.validationRules);
     }
 
-    const validationDidEnd = extensionStack.validationDidStart();
-
-    try {
-      return graphqlValidate(config.schema, document, rules);
-    } finally {
-      validationDidEnd();
-    }
+    return graphqlValidate(config.schema, document, rules);
   }
 
   async function execute(
@@ -539,21 +486,13 @@ export async function processGraphQLRequest<TContext>(
       fieldResolver: config.fieldResolver,
     };
 
-    const executionDidEnd = extensionStack.executionDidStart({
-      executionArgs,
-    });
-
-    try {
-      if (config.executor) {
-        // XXX Nothing guarantees that the only errors thrown or returned
-        // in result.errors are GraphQLErrors, even though other code
-        // (eg apollo-engine-reporting) assumes that.
-        return await config.executor(requestContext);
-      } else {
-        return await graphqlExecute(executionArgs);
-      }
-    } finally {
-      executionDidEnd();
+    if (config.executor) {
+      // XXX Nothing guarantees that the only errors thrown or returned
+      // in result.errors are GraphQLErrors, even though other code
+      // (eg apollo-engine-reporting) assumes that.
+      return await config.executor(requestContext);
+    } else {
+      return await graphqlExecute(executionArgs);
     }
   }
 
@@ -562,20 +501,17 @@ export async function processGraphQLRequest<TContext>(
   ): Promise<GraphQLResponse> {
     // We override errors, data, and extensions with the passed in response,
     // but keep other properties (like http)
-    requestContext.response = extensionStack.willSendResponse({
-      graphqlResponse: {
-        ...requestContext.response,
-        errors: response.errors,
-        data: response.data,
-        extensions: response.extensions,
-      },
-      context: requestContext.context,
-    }).graphqlResponse;
+    requestContext.response = {
+      ...requestContext.response,
+      errors: response.errors,
+      data: response.data,
+      extensions: response.extensions,
+    };
     await dispatcher.invokeHookAsync(
       'willSendResponse',
       requestContext as GraphQLRequestContextWillSendResponse<TContext>,
     );
-    return requestContext.response!;
+    return requestContext.response;
   }
 
   /**
@@ -608,7 +544,6 @@ export async function processGraphQLRequest<TContext>(
 
   async function didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
     requestContext.errors = errors;
-    extensionStack.didEncounterErrors(errors);
 
     return await dispatcher.invokeHookAsync(
       'didEncounterErrors',
@@ -664,54 +599,6 @@ export async function processGraphQLRequest<TContext>(
       }
     }
     return new Dispatcher(requestListeners);
-  }
-
-  function initializeExtensionStack(): GraphQLExtensionStack<TContext> {
-    enableGraphQLExtensions(config.schema);
-
-    // If custom extension factories were provided, create per-request extension
-    // objects.
-    const extensions = config.extensions ? config.extensions.map(f => f()) : [];
-
-    // Warn about usage of (deprecated) `graphql-extensions` implementations.
-    // Since extensions are often provided as factory functions which
-    // instantiate an extension on each request, we'll attach a symbol to the
-    // constructor after we've warned to ensure that we don't do it on each
-    // request.  Another option here might be to keep a `Map` of constructor
-    // instances within this module, but I hope this will do the trick.
-    const hasOwn = Object.prototype.hasOwnProperty;
-    extensions.forEach((extension) => {
-      // Using `hasOwn` just in case there is a user-land `hasOwnProperty`
-      // defined on the `constructor` object.
-      if (
-        !extension.constructor ||
-        hasOwn.call(extension.constructor, symbolExtensionDeprecationDone)
-      ) {
-        return;
-      }
-
-      Object.defineProperty(
-        extension.constructor,
-        symbolExtensionDeprecationDone,
-        { value: true }
-      );
-
-      const extensionName = extension.constructor.name;
-      logger.warn(
-        '[deprecated] ' +
-          (extensionName
-            ? 'A "' + extensionName + '" '
-            : 'An anonymous extension ') +
-          'was defined within the "extensions" configuration for ' +
-          'Apollo Server.  The API on which this extension is built ' +
-          '("graphql-extensions") is being deprecated in the next major ' +
-          'version of Apollo Server in favor of the new plugin API.  See ' +
-          'https://go.apollo.dev/s/plugins for the documentation on how ' +
-          'these plugins are to be defined and used.',
-      );
-    });
-
-    return new GraphQLExtensionStack(extensions);
   }
 
   async function initializeDataSources() {

@@ -6,14 +6,14 @@ import {
   DocumentNode,
   parse,
 } from 'graphql';
-import { enableGraphQLExtensions } from 'graphql-extensions';
 import { GraphQLDataSource } from './types';
+import {
+  enablePluginsForSchemaResolvers,
+} from 'apollo-server-core/dist/utils/schemaInstrumentation';
 
 export class LocalGraphQLDataSource<TContext extends Record<string, any> = Record<string, any>> implements GraphQLDataSource<TContext> {
   constructor(public readonly schema: GraphQLSchema) {
-    // FIXME: This is needed to enable support for `resolveObject`, but we
-    // should move that to `apollo-graphql`
-    enableGraphQLExtensions(schema);
+    enablePluginsForSchemaResolvers(schema);
   }
 
   async process({

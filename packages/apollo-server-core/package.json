@@ -38,7 +38,6 @@
     "apollo-server-types": "file:../apollo-server-types",
     "apollo-tracing": "file:../apollo-tracing",
     "fast-json-stable-stringify": "^2.0.0",
-    "graphql-extensions": "file:../graphql-extensions",
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^4.0.0",
     "graphql-upload": "^10.0.0",

@@ -5,7 +5,6 @@ export {
   gql,
   GraphQLUpload,
   GraphQLOptions,
-  GraphQLExtension,
   Config,
   GraphQLSchemaModule,
   // Errors
