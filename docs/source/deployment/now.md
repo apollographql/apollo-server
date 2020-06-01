@@ -73,7 +73,7 @@ After signing in with GitHub, the [Now](https://zeit.co/now) GitHub app can be a
 The `graphql-server-example` project requires environment variables to enable reporting to Apollo Graph Manager. To deploy to Now with environment variables, the `-e` flag can be used followed by the variables like so:
 
 ```shell
-$ now -e ENGINE_API_KEY=xxxxxxxxx apollographql/graphql-server-example
+$ now -e APOLLO_KEY=xxxxxxxxx apollographql/graphql-server-example
 ```
 
 ![Deployed GraphQL Server](../images/deployment/zeit/zeit-apollo-server.png)
