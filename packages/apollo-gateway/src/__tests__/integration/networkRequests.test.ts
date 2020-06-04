@@ -221,13 +221,13 @@ it('Rollsback to a previous schema when triggered', async () => {
   await gateway.load({ engine: { apiKeyHash, graphId } });
 
   await firstSchemaChangeBlocker;
-  expect(onChange.mock.calls.length).toBe(1);
+  expect(onChange).toHaveBeenCalledTimes(1);
 
   await secondSchemaChangeBlocker;
-  expect(onChange.mock.calls.length).toBe(2);
+  expect(onChange).toHaveBeenCalledTimes(2);
 
   await thirdSchemaChangeBlocker;
-  expect(onChange.mock.calls.length).toBe(3);
+  expect(onChange).toHaveBeenCalledTimes(3);
 });
 
 function failNTimes(n: number, fn: () => nock.Interceptor) {
@@ -393,13 +393,15 @@ describe('Downstream service health checks', () => {
       gateway.experimental_pollInterval = 100;
 
       gateway.onSchemaChange(onChange);
-      gateway.load({ engine: { apiKeyHash, graphId } });
+      await gateway.load({ engine: { apiKeyHash, graphId } });
 
       await schemaChangeBlocker1;
-      expect(onChange.mock.calls.length).toBe(1);
+      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
+      expect(onChange).toHaveBeenCalledTimes(1);
 
       await schemaChangeBlocker2;
       expect(gateway.schema!.getType('User')!.description).toBe('This is my updated User');
+      expect(onChange).toHaveBeenCalledTimes(2);
     });
 
     it('Preserves original schema when health check fails', async () => {
