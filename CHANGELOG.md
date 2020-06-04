@@ -11,7 +11,15 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet! Stay tuned!_
 
+### v2.14.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/2da65ef9204027e43baedf9ce385bb3794fd0c9b)
+
+- `apollo-server-testing`: Ensure that user-provided context is cloned when using `createTestClient`, per the instructions in the [intergration testing]() section of the Apollo Server documentation.  [Issue #4170](https://github.com/apollographql/apollo-server/issues/4170) [PR #4175](https://github.com/apollographql/apollo-server/pull/4175)
+
 ### v2.14.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/d159e320879f594ba2d04036e3e1aa0653ff164d)
 
 - `apollo-server-core` / `apollo-server-plugin-base`: Add support for `willResolveField` and corresponding end-handler within `executionDidStart`.  This brings the remaining bit of functionality that was previously only available from `graphql-extensions` to the new plugin API.  The `graphql-extensions` API (which was never documented) will be deprecated in Apollo Server 3.x.  To see the documentation for the request pipeline API, see [its documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  For more details, see the attached PR.  [PR #3988](https://github.com/apollographql/apollo-server/pull/3988)
 - `apollo-server-core`: Deprecate `graphql-extensions`.  All internal usages of the `graphql-extensions` API have been migrated to the request pipeline plugin API.  For any implementor-supplied `extensions`, a deprecation warning will be printed once per-extension, per-server-startup, notifying of the intention to deprecate.  Extensions should migrate to the plugin API, which is outlined in [its documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/). [PR #4135](https://github.com/apollographql/apollo-server/pull/4135)

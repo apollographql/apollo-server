@@ -246,6 +246,7 @@ export async function processHTTPRequest<TContext>(
     // We allow passing in a function for `context` to ApolloServer,
     // but this only runs once for a batched request (because this is resolved
     // in ApolloServer#graphQLServerOptions, before runHttpQuery is invoked).
+    // NOTE: THIS IS DUPLICATED IN ApolloServerBase.prototype.executeOperation.
     const context = cloneObject(options.context);
     return {
       // While `logger` is guaranteed by internal Apollo Server usage of
@@ -458,6 +459,6 @@ function prettyJSONStringify(value: any) {
   return JSON.stringify(value) + '\n';
 }
 
-function cloneObject<T extends Object>(object: T): T {
+export function cloneObject<T extends Object>(object: T): T {
   return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
 }
