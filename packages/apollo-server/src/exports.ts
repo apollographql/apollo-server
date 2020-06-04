@@ -1,5 +1,3 @@
-export * from 'graphql-tools';
-
 export {
   gql,
   GraphQLOptions,

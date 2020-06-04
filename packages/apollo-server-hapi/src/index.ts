@@ -16,8 +16,6 @@ export {
   PlaygroundRenderPageOptions,
 } from 'apollo-server-core';
 
-export * from 'graphql-tools';
-
 // ApolloServer integration.
 export {
   ApolloServer,

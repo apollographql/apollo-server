@@ -17,5 +17,3 @@ export {
 } from 'apollo-server-core';
 
 export { ApolloServer } from './ApolloServer';
-
-export * from 'graphql-tools';
