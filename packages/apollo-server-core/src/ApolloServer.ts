@@ -678,12 +678,12 @@ export class ApolloServerBase {
         keepAlive,
         validationRules: this.requestOptions.validationRules
       },
-      server instanceof WebSocket.Server
-        ? server
-        : {
-            server,
-            path,
-          },
+      server instanceof HttpServer
+        ? {
+          server,
+          path,
+        }
+        : server
     );
   }
 
