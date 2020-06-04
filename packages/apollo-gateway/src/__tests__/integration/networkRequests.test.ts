@@ -305,7 +305,7 @@ describe('Downstream service health checks', () => {
       expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
     });
 
-    it(`Rejects on initial load when health check fails`, async () => {
+    it(`Crashes on initial load when health check fails`, async () => {
       mockSDLQuerySuccess(service);
       mockServiceHealthCheck(service).reply(500);
 
@@ -315,9 +315,16 @@ describe('Downstream service health checks', () => {
         logger,
       });
 
-      await expect(gateway.load()).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"500: Internal Server Error"`,
-      );
+      // Mock implementation of process.exit with another () => never function.
+      const mockExit = jest
+        .spyOn(process, 'exit')
+        .mockImplementation((code) => {
+          throw new Error(code?.toString());
+        });
+
+      await expect(gateway.load()).rejects.toThrowError('1');
+
+      mockExit.mockRestore();
     });
   });
 
@@ -426,12 +433,14 @@ describe('Downstream service health checks', () => {
       // fails (as expected) so we get creative with the second mock as seen below.
       const original = gateway.updateComposition;
       const mockUpdateComposition = jest
-        .fn(original)
-        .mockImplementationOnce(original)
-        .mockImplementationOnce(async opts => {
+        .fn()
+        .mockImplementationOnce(async () => {
+          await original.apply(gateway);
+        })
+        .mockImplementationOnce(async () => {
           // mock the first poll and handle the error which would otherwise be caught
           // and logged from within the `pollServices` class method
-          await expect(original.apply(gateway, [opts]))
+          await expect(original.apply(gateway))
             .rejects
             .toThrowErrorMatchingInlineSnapshot(
               `"500: Internal Server Error"`,

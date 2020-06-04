@@ -306,11 +306,23 @@ export class ApolloGateway implements GraphQLService {
       this.engineConfig = options.engine;
     }
 
-    await this.updateComposition();
-
     if (isManagedConfig(this.config) || this.experimental_pollInterval) {
+      await this.updateComposition();
       if (!this.pollingTimer) this.pollServices();
+    } else {
+      try {
+        await this.updateComposition();
+      } catch {
+        // In the case that we're neither managed nor polling, the gateway should
+        // crash in the event that it can't load service definitions. Leaving the
+        // gateway running in a non-operable state doesn't make sense and this
+        // allows container managers like K8s to restart the broken container.
+        // Note: the error caught within `this.updateComposition` handles logging
+        // for the relevant error.
+        process.exit(1);
+      }
     }
+
 
     const { graphId, graphVariant } = (options && options.engine) || {};
     const mode = isManagedConfig(this.config) ? 'managed' : 'unmanaged';
@@ -497,12 +509,6 @@ export class ApolloGateway implements GraphQLService {
   private async pollServices() {
     if (this.pollingTimer) clearTimeout(this.pollingTimer);
 
-    try {
-      await this.updateComposition();
-    } catch (err) {
-      this.logger.error(err && err.message || err);
-    }
-
     // Sleep for the specified pollInterval before kicking off another round of polling
     await new Promise(res => {
       this.pollingTimer = setTimeout(
@@ -514,6 +520,12 @@ export class ApolloGateway implements GraphQLService {
       // information, see https://nodejs.org/api/timers.html#timers_timeout_unref.
       this.pollingTimer?.unref();
     });
+
+    try {
+      await this.updateComposition();
+    } catch (err) {
+      this.logger.error(err && err.message || err);
+    }
 
     this.pollServices();
   }
