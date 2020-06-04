@@ -31,7 +31,18 @@ export {
 // ApolloServer Base class
 export { ApolloServerBase } from './ApolloServer';
 export * from './types';
-export * from './requestPipelineAPI';
+export {
+  GraphQLServiceContext,
+  GraphQLRequest,
+  VariableValues,
+  GraphQLResponse,
+  GraphQLRequestMetrics,
+  GraphQLRequestContext,
+  ValidationRule,
+  InvalidGraphQLRequestError,
+  GraphQLExecutor,
+  GraphQLExecutionResult,
+} from 'apollo-server-types';
 
 // This currently provides the ability to have syntax highlighting as well as
 // consistency between client and server gql tags
