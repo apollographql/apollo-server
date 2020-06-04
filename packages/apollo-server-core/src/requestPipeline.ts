@@ -10,6 +10,7 @@ import {
   validate as graphqlValidate,
   parse as graphqlParse,
   execute as graphqlExecute,
+  ParseOptions,
 } from 'graphql';
 import { DataSource } from 'apollo-datasource';
 import { PersistedQueryOptions } from './graphqlOptions';
@@ -56,7 +57,6 @@ import {
   KeyValueCache,
   PrefixingKeyValueCache,
 } from 'apollo-server-caching';
-import { GraphQLParseOptions } from 'graphql-tools';
 
 export {
   GraphQLRequest,
@@ -97,7 +97,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
 
-  parseOptions?: GraphQLParseOptions;
+  parseOptions?: ParseOptions;
 }
 
 export type DataSources<TContext> = {
@@ -454,7 +454,7 @@ export async function processGraphQLRequest<TContext>(
 
   function parse(
     query: string,
-    parseOptions?: GraphQLParseOptions,
+    parseOptions?: ParseOptions,
   ): DocumentNode {
     return graphqlParse(query, parseOptions);
   }

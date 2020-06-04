@@ -5,12 +5,12 @@ import {
   DocumentNode,
   GraphQLError,
   GraphQLFormattedError,
+  ParseOptions,
 } from 'graphql';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { GraphQLParseOptions } from 'graphql-tools';
 import {
   GraphQLExecutor,
   ValueOrPromise,
@@ -61,7 +61,7 @@ export interface GraphQLServerOptions<
   persistedQueries?: PersistedQueryOptions;
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
-  parseOptions?: GraphQLParseOptions;
+  parseOptions?: ParseOptions;
   reporting?: boolean;
 }
 

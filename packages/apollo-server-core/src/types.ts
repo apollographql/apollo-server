@@ -1,9 +1,8 @@
-import { GraphQLSchema, DocumentNode } from 'graphql';
+import { GraphQLSchema, DocumentNode, ParseOptions } from 'graphql';
 import {
   SchemaDirectiveVisitor,
   IResolvers,
   IMocks,
-  GraphQLParseOptions,
 } from 'graphql-tools';
 import {
   ValueOrPromise,
@@ -88,7 +87,7 @@ export interface GraphQLService {
 export interface Config extends BaseConfig {
   modules?: GraphQLSchemaModule[];
   typeDefs?: DocumentNode | Array<DocumentNode> | string | Array<string>;
-  parseOptions?: GraphQLParseOptions;
+  parseOptions?: ParseOptions;
   resolvers?: IResolvers | Array<IResolvers>;
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;

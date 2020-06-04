@@ -1,7 +1,6 @@
 import {
   makeExecutableSchema,
   addMockFunctionsToSchema,
-  GraphQLParseOptions,
 } from 'graphql-tools';
 import loglevel from 'loglevel';
 import {
@@ -14,6 +13,7 @@ import {
   isObjectType,
   isScalarType,
   isSchema,
+  ParseOptions,
 } from 'graphql';
 import {
   InMemoryLRUCache,
@@ -113,7 +113,7 @@ export class ApolloServerBase {
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
 
-  private parseOptions: GraphQLParseOptions;
+  private parseOptions: ParseOptions;
   private schemaDerivedData: Promise<SchemaDerivedData>;
   private config: Config;
   /** @deprecated: This is undefined for servers operating as gateways, and will be removed in a future release **/
