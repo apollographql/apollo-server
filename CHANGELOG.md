@@ -21,6 +21,60 @@ The version headers in this history reflect the versions of Apollo Server itself
 
   **To be clear, if subscriptions were disabled with `subscriptions: false`, the server is unaffected.  In all other cases, introspection was unexpectedly enabled on the WebSocket endpoint provided by `SubscriptionServer` when it was meant to be disabled, either with `introspection: false` or when deployed to production.  The risk is largely dependent on the data exposed in the schema itself.**
 
+### v2.14.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/2da65ef9204027e43baedf9ce385bb3794fd0c9b)
+
+- `apollo-server-testing`: Ensure that user-provided context is cloned when using `createTestClient`, per the instructions in the [intergration testing]() section of the Apollo Server documentation.  [Issue #4170](https://github.com/apollographql/apollo-server/issues/4170) [PR #4175](https://github.com/apollographql/apollo-server/pull/4175)
+
+### v2.14.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/d159e320879f594ba2d04036e3e1aa0653ff164d)
+
+- `apollo-server-core` / `apollo-server-plugin-base`: Add support for `willResolveField` and corresponding end-handler within `executionDidStart`.  This brings the remaining bit of functionality that was previously only available from `graphql-extensions` to the new plugin API.  The `graphql-extensions` API (which was never documented) will be deprecated in Apollo Server 3.x.  To see the documentation for the request pipeline API, see [its documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  For more details, see the attached PR.  [PR #3988](https://github.com/apollographql/apollo-server/pull/3988)
+- `apollo-server-core`: Deprecate `graphql-extensions`.  All internal usages of the `graphql-extensions` API have been migrated to the request pipeline plugin API.  For any implementor-supplied `extensions`, a deprecation warning will be printed once per-extension, per-server-startup, notifying of the intention to deprecate.  Extensions should migrate to the plugin API, which is outlined in [its documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/). [PR #4135](https://github.com/apollographql/apollo-server/pull/4135)
+- `apollo-engine-reporting`: **Currently only for non-federated graphs.**
+  Added an _experimental_ schema reporting option,
+  `experimental_schemaReporting`, for Apollo Graph Manager users. **During
+  this experiment, we'd appreciate testing and feedback from current and new
+  users of the schema registry!**
+
+  Prior to the introduction of this feature, the only way to get schemas into
+  the schema registry in Apollo Graph Manager was to use the CLI and run
+  `apollo schema:push`. _Apollo schema reporting protocol_ is a *new*
+  specification for GraphQL servers to automatically report schemas to the
+  Apollo Graph Manager schema registry.
+
+  **To enable schema reporting,** provide a Graph Manager API key (available
+  free from [Apollo Graph Manager](https://engine.apollographql.com/)) in the
+  `APOLLO_KEY` environment variable *and* set the `experimental_schemaReporting`
+  option to `true` in the Apollo Server constructor options, like so:
+
+  ```js
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    engine: {
+      experimental_schemaReporting: true,
+      /* Other existing options can remain the same. */
+    },
+  });
+  ```
+
+  > When enabled, a schema reporter is initiated by the `apollo-engine-reporting` agent.  It will loop until the `ApolloServer` instance is stopped, periodically calling back to Apollo Graph Manager to send information.  The life-cycle of this reporter is managed by the agent.
+
+  For more details on the implementation of this new protocol, see the PR which
+  introduced it to Apollo Server and the [preview documentation](https://github.com/apollographql/apollo-schema-reporting-preview-docs).
+
+  [PR #4084](https://github.com/apollographql/apollo-server/pull/4084)
+- `apollo-engine-reporting`: The underlying integration of this plugin, which instruments and traces the graph's resolver performance and transmits these metrics to [Apollo Graph Manager](https://engine.apollographql.com/), has been changed from the (soon to be deprecated) `graphql-extensions` API to the new [request pipeline `plugins` API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/). [PR #3998](https://github.com/apollographql/apollo-server/pull/3998)
+
+  _This change should be purely an implementation detail for a majority of users_.  There are, however, some special considerations which are worth noting:
+
+    - The federated tracing plugin's `ftv1` response on `extensions` (which is present on the response from an implementing service to the gateway) is now placed on the `extensions` _after_ the `formatResponse` hook.  Anyone leveraging the `extensions`.`ftv1` data from the `formatResponse` hook will find that it is no longer present at that phase.
+- `apollo-tracing`: This package's internal integration with Apollo Server has been switched from using the soon-to-be-deprecated `graphql-extensions` API to using [the request pipeline plugin API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  Behavior should remain otherwise the same.  [PR #3991](https://github.com/apollographql/apollo-server/pull/3991)
+- `apollo-cache-control`: This package's internal integration with Apollo Server has been switched from using the soon-to-be-deprecated `graphql-extensions` API to using [the request pipeline plugin API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  Behavior should remain otherwise the same.  [PR #3997](https://github.com/apollographql/apollo-server/pull/3997)
+
 ### v2.13.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
