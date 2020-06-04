@@ -6,6 +6,10 @@
 
 - _Nothing yet! Stay tuned._
 
+## 0.16.3
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
 ## 0.16.2
 
 - Only changes in the similarly versioned `@apollo/gateway` package.

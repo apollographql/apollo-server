@@ -5,11 +5,11 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/CHANGELOG.md)
 - [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md)
 
-### vNEXT
+### v2.14.2
 
-> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
+> **Note:** This release is is related to a GitHub Security Advisory published by the Apollo Server team.  Please read the attached advisory to understand the impact.
 
-- _Nothing yet! Stay tuned!_
+- ⚠️ **SECURITY:** Pass all schema validation rules to the subscription server, including validation rules that restrict introspection when introspection is meant to be disabled. **[Read the full GitHub Security Advisory for details](https://github.com/apollographql/apollo-server/security/advisories/GHSA-w42g-7vfc-xf37)**.
 
 ### v2.14.1
 
