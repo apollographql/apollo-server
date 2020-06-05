@@ -277,6 +277,12 @@ export function stripFederationPrimitives(document: DocumentNode) {
         (fieldDefinition) =>
           !reservedRootFields.includes(fieldDefinition.name.value),
       );
+
+      // If the 'Query' type is now empty just remove it
+      if (!filteredFieldDefinitions || filteredFieldDefinitions.length === 0) {
+        return null;
+      }
+
       return {
         ...node,
         fields: filteredFieldDefinitions,

@@ -250,6 +250,25 @@ describe('SDL normalization and its respective parts', () => {
         }
       `);
     });
+
+    it(`removes the Query type altogether if it has no fields left after normalization`, () => {
+      const typeDefs = gql`
+        type Query {
+          _service: _Service!
+          _entities(representations: [_Any!]!): [_Entity]!
+        }
+
+        type Custom {
+          field: String
+        }
+      `;
+
+      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+        type Custom {
+          field: String
+        }
+      `);
+    });
   });
 
   describe('normalizeTypeDefs', () => {
