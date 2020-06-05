@@ -1,13 +1,15 @@
 import {
   GraphQLError,
   visit,
-  OperationTypeNode,
   ObjectTypeDefinitionNode,
   ObjectTypeExtensionNode,
 } from 'graphql';
 import { ServiceDefinition, DefaultRootOperationTypeName } from '../../types';
-
-import { logServiceAndType, errorWithCode } from '../../utils';
+import {
+  logServiceAndType,
+  errorWithCode,
+  defaultRootOperationNameLookup
+} from '../../utils';
 
 /**
  * - When a schema definition or extension is provided, warn user against using
@@ -19,15 +21,6 @@ export const rootFieldUsed = ({
   typeDefs,
 }: ServiceDefinition) => {
   const errors: GraphQLError[] = [];
-
-  // Map of OperationTypeNode to its respective default root operation type name
-  const defaultRootOperationNameLookup: {
-    [node in OperationTypeNode]: DefaultRootOperationTypeName;
-  } = {
-    query: 'Query',
-    mutation: 'Mutation',
-    subscription: 'Subscription',
-  };
 
   // Array of default root operation names
   const defaultRootOperationNames = Object.values(
