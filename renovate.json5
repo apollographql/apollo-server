@@ -25,10 +25,6 @@
       "allowedVersions": "<1"
     },
     {
-      "packageNames": ["koa-bodyparser"],
-      "allowedVersions": "<4"
-    },
-    {
       "packageNames": ["@koa/cors"],
       "allowedVersions": "<3"
     },
