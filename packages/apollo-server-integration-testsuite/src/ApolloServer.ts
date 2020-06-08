@@ -13,6 +13,7 @@ import {
   GraphQLError,
   ValidationContext,
   FieldDefinitionNode,
+  getIntrospectionQuery,
 } from 'graphql';
 
 import { execute } from 'apollo-link';

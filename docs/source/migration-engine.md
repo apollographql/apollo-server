@@ -7,7 +7,7 @@ Apollo Server provides reporting, persisted queries, and cache-control headers i
 
 ## Stand-alone Apollo Server
 
-Apollo Server 2 is able to replace all the metrics-reporting functionality which once required the Apollo Engine Proxy. To enable metrics reporting in Apollo Server 2, add `ENGINE_API_KEY` as an environment variable.  With this setting enabled, Apollo Server 2 will automatically send execution traces directly to Apollo Graph Manager. In addition, by default, Apollo Server supports [persisted queries](https://www.apollographql.com/docs/guides/performance/#automatic-persisted-queried) without needing the proxy's cache. Apollo Server also sets `Cache-Control` headers for consumption by a CDN.  Integrating a CDN provides an alternative to the full response caching inside of Engine proxy.
+Apollo Server 2 is able to replace all the metrics-reporting functionality which once required the Apollo Engine Proxy. To enable metrics reporting in Apollo Server 2, add `APOLLO_KEY` as an environment variable.  With this setting enabled, Apollo Server 2 will automatically send execution traces directly to Apollo Graph Manager. In addition, by default, Apollo Server supports [persisted queries](https://www.apollographql.com/docs/guides/performance/#automatic-persisted-queried) without needing the proxy's cache. Apollo Server also sets `Cache-Control` headers for consumption by a CDN.  Integrating a CDN provides an alternative to the full response caching inside of Engine proxy.
 
 ```js
 const { ApolloServer } = require('apollo-server');
@@ -26,7 +26,7 @@ server.listen().then(({ url }) => {
 
 ## Starting Engine Proxy
 
-Some infrastructure already contains the Engine proxy and requires it for full response caching, so it is necessary to run the proxy as a process alongside Apollo Server. If full response caching is not necessary, then the Engine proxy can be completely replaced by Apollo Server 2. The `apollo-engine` package provides integrations with many [node frameworks](https://www.apollographql.com/docs/engine/setup-node/#not-express), including [express](https://www.apollographql.com/docs/engine/setup-node/#setup-guide), and starts the Engine proxy alongside Apollo Server. The following code demonstrates how to start the proxy with Apollo Server 2. It assumes that the `ENGINE_API_KEY` environment variable is set to the api key of the service.
+Some infrastructure already contains the Engine proxy and requires it for full response caching, so it is necessary to run the proxy as a process alongside Apollo Server. If full response caching is not necessary, then the Engine proxy can be completely replaced by Apollo Server 2. The `apollo-engine` package provides integrations with many [node frameworks](https://www.apollographql.com/docs/engine/setup-node/#not-express), including [express](https://www.apollographql.com/docs/engine/setup-node/#setup-guide), and starts the Engine proxy alongside Apollo Server. The following code demonstrates how to start the proxy with Apollo Server 2. It assumes that the `APOLLO_KEY` environment variable is set to the api key of the service.
 
 ```js
 const { ApolloEngine } = require('apollo-engine');
@@ -46,7 +46,7 @@ const server = new ApolloServer({
 server.applyMiddleware({ app });
 
 const engine = new ApolloEngine({
-  apiKey: process.env.ENGINE_API_KEY,
+  apiKey: process.env.APOLLO_KEY,
 });
 
 engine.listen({
