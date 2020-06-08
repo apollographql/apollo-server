@@ -3,6 +3,7 @@ import {
   defaultRootOperationTypes,
   replaceExtendedDefinitionsWithExtensions,
   normalizeTypeDefs,
+  stripFederationPrimitives,
 } from '../normalize';
 import { astSerializer } from '../../snapshotSerializers';
 
@@ -142,15 +143,160 @@ describe('SDL normalization and its respective parts', () => {
     });
   });
 
+  describe('stripFederationPrimitives', () => {
+    it(`removes all federation directive definitions`, () => {
+      const typeDefs = gql`
+        directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+        directive @external on FIELD_DEFINITION
+        directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+        directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+        directive @extends on OBJECT | INTERFACE
+
+        type Query {
+          thing: String
+        }
+      `;
+
+      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+        type Query {
+          thing: String
+        }
+      `);
+    });
+
+    it(`doesn't remove custom directive definitions`, () => {
+      const typeDefs = gql`
+        directive @custom on OBJECT
+
+        type Query {
+          thing: String
+        }
+      `;
+
+      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+        directive @custom on OBJECT
+
+        type Query {
+          thing: String
+        }
+      `);
+    });
+
+    it(`removes all federation type definitions (scalars, unions, object types)`, () => {
+      const typeDefs = gql`
+        scalar _Any
+        scalar _FieldSet
+
+        union _Entity
+
+        type _Service {
+          sdl: String
+        }
+
+        type Query {
+          thing: String
+        }
+      `;
+
+      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+        type Query {
+          thing: String
+        }
+      `);
+    });
+
+    it(`doesn't remove custom scalar, union, or object type definitions`, () => {
+      const typeDefs = gql`
+        scalar CustomScalar
+
+        type CustomType {
+          field: String!
+        }
+
+        union CustomUnion
+
+        type Query {
+          thing: String
+        }
+      `;
+
+      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+        scalar CustomScalar
+
+        type CustomType {
+          field: String!
+        }
+
+        union CustomUnion
+
+        type Query {
+          thing: String
+        }
+      `);
+    });
+
+    it(`removes all federation field definitions (_service, _entities)`, () => {
+      const typeDefs = gql`
+        type Query {
+          _service: _Service!
+          _entities(representations: [_Any!]!): [_Entity]!
+          thing: String
+        }
+      `;
+
+      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+        type Query {
+          thing: String
+        }
+      `);
+    });
+
+    it(`removes the Query type altogether if it has no fields left after normalization`, () => {
+      const typeDefs = gql`
+        type Query {
+          _service: _Service!
+          _entities(representations: [_Any!]!): [_Entity]!
+        }
+
+        type Custom {
+          field: String
+        }
+      `;
+
+      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+        type Custom {
+          field: String
+        }
+      `);
+    });
+  });
+
   describe('normalizeTypeDefs', () => {
     it('integration', () => {
       const typeDefsToNormalize = gql`
+        directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+        directive @external on FIELD_DEFINITION
+        directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+        directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+        directive @extends on OBJECT | INTERFACE
+
+        scalar _Any
+        scalar _FieldSet
+
+        union _Entity
+
+        type _Service {
+          sdl: String
+        }
+
         schema {
           query: RootQuery
           mutation: RootMutation
         }
 
         type RootQuery {
+          _service: _Service!
+          _entities(representations: [_Any!]!): [_Entity]!
           product: Product
         }
 
