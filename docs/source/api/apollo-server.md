@@ -68,6 +68,12 @@ new ApolloServer({
     | AWS Lambda | <code>{<br/>&nbsp;&nbsp;event: [`APIGatewayProxyEvent`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L78-L92),<br/>&nbsp;&nbsp;context: [`LambdaContext`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L510-L534)<br/>}</code> |
     | Micro | <code>{ req: [`MicroRequest`](https://github.com/apollographql/apollo-server/blob/c356bcf3f2864b8d2fcca0add455071e0606ef46/packages/apollo-server-micro/src/types.ts#L3-L5), res: [`ServerResponse`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/node/v10/http.d.ts#L145-L158) }</code> |
 
+  * `logger`: `Logger`
+
+    A logging implementation to be used in place of `console`.  The implementation must provide the methods which satisfy the requirements of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/80a12d89ea1ae9a0892f4a81d9213eddf95ca965/packages/apollo-server-types/src/index.ts#L114-L121) (i.e. it must provide `debug`, `info`, `warn` and `error` methods).  When a custom logger is provided, it will receive all levels of logging and it is up to the logger itself to determine how it wishes to handle each level.  When a custom logger is _not_ provided, Apollo Server will default to outputting `warn` and `error` levels unless `debug: true` is specified,  in which case it will output all log levels (i.e. `debug` through `error`).
+
+    Additionally, this `logger` will be made available on the `GraphQLRequestContext` and available to plugins.  This allows a plugin to, e.g., augment the logger on a per-request basis within the `requestDidStart` life-cycle hook.
+
   * `rootValue`: <`Any`> | <`Function`>
 
     A value or function called with the parsed `Document`, creating the root value passed to the graphql executor. The function is useful if you wish to provide a different root value based on the query operation type.
@@ -143,6 +149,19 @@ new ApolloServer({
 * `cors`: <`Object` | `boolean`> ([apollo-server](https://github.com/expressjs/cors#cors))
 
   Pass the integration-specific CORS options. `false` removes the CORS middleware and `true` uses the defaults. This option is only available to `apollo-server`. For other server integrations, place `cors` inside of `applyMiddleware`.
+
+* `experimental_approximateDocumentStoreSizeMiB`: `number`
+
+  > **This property is experimental.**  It may be removed or change at any time, even within a patch release.
+
+  When set, this sets the approximate size of the parsed/validated document
+  store (in MiB).  This cache is used to save the already parsed and validated
+  `DocumentNode`s for re-use on subsequent queries which resolve to the same
+  `queryHash` (a SHA-256 of incoming operation).
+
+  When this property is omitted, the cache is still enabled with a default
+  size of 30MiB, which is generally sufficient unless the server is processing
+  a high number of unique operations.
 
 #### Returns
 
@@ -324,6 +343,10 @@ addMockFunctionsToSchema({
   a service. You can also specify an API key with the `ENGINE_API_KEY`
   environment variable, although the `apiKey` option takes precedence.
 
+* `logger`: `Logger`
+
+  By default, this will inherit from the `logger` provided to `ApolloServer` which defaults to `console` when not provided.  If specified within the `EngineReportingOptions` it can be used to send engine reporting to a separate logger.  If provided, the implementation must provide the methods which satisfy the requirements of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/80a12d89ea1ae9a0892f4a81d9213eddf95ca965/packages/apollo-server-types/src/index.ts#L114-L121) (i.e. it must provide `debug`, `info`, `warn` and `error` methods).
+
 *  `calculateSignature`: (ast: DocumentNode, operationName: string) => string
 
    Specify the function for creating a signature for a query.
@@ -381,7 +404,7 @@ addMockFunctionsToSchema({
 
     - `{ none: true }`: Don't send any variable values. **(DEFAULT)**
     - `{ all: true }`: Send all variable values.
-    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.  For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`. 
+    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.  For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`.
     - `{ exceptNames: [...] }`: A case-sensitive list of names of variables whose values should not be sent to Apollo servers.
     - `{ onlyNames: [...] }`: A case-sensitive list of names of variables whose values will be sent to Apollo servers.
 
@@ -449,7 +472,13 @@ addMockFunctionsToSchema({
 
 *  `schemaTag`: String
 
-   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
+   > Will be deprecated in 3.0. Use the option `graphVariant` instead.
+
+   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associated with the same string.
+
+*  `graphVariant`: String
+
+   A human-readable name for the variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Graph Manager UI. Additionally schema validation with a graph variant will only check metrics associated with the same string.
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 

@@ -26,6 +26,9 @@ import {
   TypeNameMetaFieldDef,
   visit,
   VariableDefinitionNode,
+  OperationTypeNode,
+  print,
+  stripIgnoredCharacters,
 } from 'graphql';
 import {
   Field,
@@ -57,8 +60,15 @@ const typenameField = {
   },
 };
 
-export function buildQueryPlan(operationContext: OperationContext): QueryPlan {
-  const context = buildQueryPlanningContext(operationContext);
+interface BuildQueryPlanOptions {
+  autoFragmentization: boolean;
+}
+
+export function buildQueryPlan(
+  operationContext: OperationContext,
+  options: BuildQueryPlanOptions = { autoFragmentization: false },
+): QueryPlan {
+  const context = buildQueryPlanningContext(operationContext, options);
 
   if (context.operation.operation === 'subscription') {
     throw new GraphQLError(
@@ -97,33 +107,60 @@ export function buildQueryPlan(operationContext: OperationContext): QueryPlan {
 
 function executionNodeForGroup(
   context: QueryPlanningContext,
-  group: FetchGroup,
+  {
+    serviceName,
+    fields,
+    requiredFields,
+    internalFragments,
+    mergeAt,
+    dependentGroups,
+  }: FetchGroup,
   parentType?: GraphQLCompositeType,
 ): PlanNode {
-  const selectionSet = selectionSetFromFieldSet(group.fields, parentType);
+  const selectionSet = selectionSetFromFieldSet(fields, parentType);
+  const requires =
+    requiredFields.length > 0
+      ? selectionSetFromFieldSet(requiredFields)
+      : undefined;
+  const variableUsages = context.getVariableUsages(
+    selectionSet,
+    internalFragments,
+  );
+
+  const operation = requires
+    ? operationForEntitiesFetch({
+        selectionSet,
+        variableUsages,
+        internalFragments,
+      })
+    : operationForRootFetch({
+        selectionSet,
+        variableUsages,
+        internalFragments,
+        operation: context.operation.operation,
+      });
 
   const fetchNode: FetchNode = {
     kind: 'Fetch',
-    serviceName: group.serviceName,
+    serviceName,
     selectionSet,
-    requires:
-      group.requiredFields && group.requiredFields.length > 0
-        ? selectionSetFromFieldSet(group.requiredFields)
-        : undefined,
-    variableUsages: context.getVariableUsages(selectionSet),
+    requires,
+    variableUsages,
+    internalFragments,
+    source: stripIgnoredCharacters(print(operation)),
   };
 
   const node: PlanNode =
-    group.mergeAt && group.mergeAt.length > 0
+    mergeAt && mergeAt.length > 0
       ? {
           kind: 'Flatten',
-          path: group.mergeAt,
+          path: mergeAt,
           node: fetchNode,
         }
       : fetchNode;
 
-  if (group.dependentGroups.length > 0) {
-    const dependentNodes = group.dependentGroups.map(dependentGroup =>
+  if (dependentGroups.length > 0) {
+    const dependentNodes = dependentGroups.map(dependentGroup =>
       executionNodeForGroup(context, dependentGroup),
     );
 
@@ -131,6 +168,108 @@ function executionNodeForGroup(
   } else {
     return node;
   }
+}
+
+interface VariableUsages {
+  [name: string]: VariableDefinitionNode
+}
+
+function mapFetchNodeToVariableDefinitions(
+  variableUsages: VariableUsages,
+): VariableDefinitionNode[] {
+  return variableUsages ? Object.values(variableUsages) : [];
+}
+
+function operationForRootFetch({
+  selectionSet,
+  variableUsages,
+  internalFragments,
+  operation = 'query',
+}: {
+  selectionSet: SelectionSetNode;
+  variableUsages: VariableUsages;
+  internalFragments: Set<FragmentDefinitionNode>;
+  operation?: OperationTypeNode;
+}): DocumentNode {
+  return {
+    kind: Kind.DOCUMENT,
+    definitions: [
+      {
+        kind: Kind.OPERATION_DEFINITION,
+        operation,
+        selectionSet,
+        variableDefinitions: mapFetchNodeToVariableDefinitions(variableUsages),
+      },
+      ...internalFragments,
+    ],
+  };
+}
+
+function operationForEntitiesFetch({
+  selectionSet,
+  variableUsages,
+  internalFragments,
+}: {
+  selectionSet: SelectionSetNode;
+  variableUsages: VariableUsages;
+  internalFragments: Set<FragmentDefinitionNode>;
+}): DocumentNode {
+  const representationsVariable = {
+    kind: Kind.VARIABLE,
+    name: { kind: Kind.NAME, value: 'representations' },
+  };
+
+  return {
+    kind: Kind.DOCUMENT,
+    definitions: [
+      {
+        kind: Kind.OPERATION_DEFINITION,
+        operation: 'query',
+        variableDefinitions: ([
+          {
+            kind: Kind.VARIABLE_DEFINITION,
+            variable: representationsVariable,
+            type: {
+              kind: Kind.NON_NULL_TYPE,
+              type: {
+                kind: Kind.LIST_TYPE,
+                type: {
+                  kind: Kind.NON_NULL_TYPE,
+                  type: {
+                    kind: Kind.NAMED_TYPE,
+                    name: { kind: Kind.NAME, value: '_Any' },
+                  },
+                },
+              },
+            },
+          },
+        ] as VariableDefinitionNode[]).concat(
+          mapFetchNodeToVariableDefinitions(variableUsages),
+        ),
+        selectionSet: {
+          kind: Kind.SELECTION_SET,
+          selections: [
+            {
+              kind: Kind.FIELD,
+              name: { kind: Kind.NAME, value: '_entities' },
+              arguments: [
+                {
+                  kind: Kind.ARGUMENT,
+                  name: {
+                    kind: Kind.NAME,
+                    value: representationsVariable.name.value,
+                  },
+                  value: representationsVariable,
+                },
+              ],
+              selectionSet,
+            },
+          ],
+        },
+      },
+      ...internalFragments,
+    ],
+  };
 }
 
 // Wraps the given nodes in a ParallelNode or SequenceNode, unless there's only
@@ -374,9 +513,7 @@ function splitFields(
   groupForField: (field: Field<GraphQLObjectType>) => FetchGroup,
 ) {
   for (const fieldsForResponseName of groupByResponseName(fields).values()) {
-    for (const [parentType, fieldsForParentType] of groupByParentType(
-      fieldsForResponseName,
-    )) {
+    for (const [parentType, fieldsForParentType] of groupByParentType(fieldsForResponseName)) {
       // Field nodes that share the same response name and parent type are guaranteed
       // to have the same field name and arguments. We only need the other nodes when
       // merging selection sets, to take node-specific subfields and directives
@@ -418,6 +555,33 @@ function splitFields(
         );
       } else {
         // For interfaces however, we need to look at all possible runtime types.
+
+        /**
+         * The following is an optimization to prevent an explosion of type
+         * conditions to services when it isn't needed. If all possible runtime
+         * types can be fufilled by only one service then we don't need to
+         * expand the fields into unique type conditions.
+         */
+
+        // Collect all of the field defs on the possible runtime types
+        const possibleFieldDefs = scope.possibleTypes.map(
+          runtimeType => context.getFieldDef(runtimeType, field.fieldNode),
+        );
+
+        // If none of the field defs have a federation property, this interface's
+        // implementors can all be resolved within the same service.
+        const hasNoExtendingFieldDefs = possibleFieldDefs.every(
+          def => !def.federation
+        );
+
+        // With no extending field definitions, we can engage the optimization
+        if (hasNoExtendingFieldDefs) {
+          const group = groupForField(field as Field<GraphQLObjectType>);
+          group.fields.push(
+            completeField(context, scope, group, path, fieldsForResponseName)
+          );
+          continue;
+        }
 
         // We keep track of which possible runtime parent types can be fetched
         // from which group,
@@ -475,7 +639,7 @@ function splitFields(
 
 function completeField(
   context: QueryPlanningContext,
-  scope: Scope<GraphQLObjectType>,
+  scope: Scope<GraphQLCompositeType>,
   parentGroup: FetchGroup,
   path: ResponsePath,
   fields: FieldSet,
@@ -514,15 +678,81 @@ function completeField(
 
     parentGroup.otherDependentGroups.push(...subGroup.dependentGroups);
 
+    let definition: FragmentDefinitionNode;
+    let selectionSet = selectionSetFromFieldSet(subGroup.fields, returnType);
+
+    if (context.autoFragmentization && subGroup.fields.length > 2) {
+      ({ definition, selectionSet } = getInternalFragment(
+        selectionSet,
+        returnType,
+        context,
+      ));
+      parentGroup.internalFragments.add(definition);
+    }
+
+    // "Hoist" internalFragments of the subGroup into the parentGroup so all
+    // fragments can be included in the final request for the root FetchGroup
+    subGroup.internalFragments.forEach(fragment => {
+      parentGroup.internalFragments.add(fragment);
+    });
+
     return {
       scope,
       fieldNode: {
         ...fieldNode,
-        selectionSet: selectionSetFromFieldSet(subGroup.fields, returnType),
+        selectionSet,
       },
       fieldDef,
     };
   }
+}
+
+function getInternalFragment(
+  selectionSet: SelectionSetNode,
+  returnType: GraphQLCompositeType,
+  context: QueryPlanningContext
+) {
+  const key = JSON.stringify(selectionSet);
+  if (!context.internalFragments.has(key)) {
+    const name = `__QueryPlanFragment_${context.internalFragmentCount++}__`;
+
+    const definition: FragmentDefinitionNode = {
+      kind: Kind.FRAGMENT_DEFINITION,
+      name: {
+        kind: Kind.NAME,
+        value: name,
+      },
+      typeCondition: {
+        kind: Kind.NAMED_TYPE,
+        name: {
+          kind: Kind.NAME,
+          value: returnType.name,
+        },
+      },
+      selectionSet,
+    };
+
+    const fragmentSelection: SelectionSetNode = {
+      kind: Kind.SELECTION_SET,
+      selections: [
+        {
+          kind: Kind.FRAGMENT_SPREAD,
+          name: {
+            kind: Kind.NAME,
+            value: name,
+          },
+        },
+      ],
+    };
+
+    context.internalFragments.set(key, {
+      name,
+      definition,
+      selectionSet: fragmentSelection,
+    });
+  }
+
+  return context.internalFragments.get(key)!;
 }
 
 function collectFields(
@@ -540,7 +770,12 @@ function collectFields(
         const fieldDef = context.getFieldDef(scope.parentType, selection);
         fields.push({ scope, fieldNode: selection, fieldDef });
         break;
-      case Kind.INLINE_FRAGMENT:
+      case Kind.INLINE_FRAGMENT: {
+        const newScope = context.newScope(getFragmentCondition(selection), scope);
+        if (newScope.possibleTypes.length === 0) {
+          break;
+        }
+
         collectFields(
           context,
           context.newScope(getFragmentCondition(selection), scope),
@@ -549,22 +784,28 @@ function collectFields(
           visitedFragmentNames,
         );
         break;
+      }
       case Kind.FRAGMENT_SPREAD:
         const fragmentName = selection.name.value;
-
-        if (visitedFragmentNames[fragmentName]) {
-          continue;
-        }
-        visitedFragmentNames[fragmentName] = true;
 
         const fragment = context.fragments[fragmentName];
         if (!fragment) {
           continue;
         }
 
+        const newScope = context.newScope(getFragmentCondition(fragment), scope);
+        if (newScope.possibleTypes.length === 0) {
+          continue;
+        }
+
+        if (visitedFragmentNames[fragmentName]) {
+          continue;
+        }
+        visitedFragmentNames[fragmentName] = true;
+
         collectFields(
           context,
-          context.newScope(getFragmentCondition(fragment), scope),
+          newScope,
           fragment.selectionSet,
           fields,
           visitedFragmentNames,
@@ -621,6 +862,7 @@ class FetchGroup {
   constructor(
     public readonly serviceName: string,
     public readonly fields: FieldSet = [],
+    public readonly internalFragments: Set<FragmentDefinitionNode> = new Set()
   ) {}
 
   requiredFields: FieldSet = [];
@@ -704,15 +946,30 @@ export function buildOperationContext(
   return { schema, operation, fragments };
 }
 
-export function buildQueryPlanningContext({
-  operation,
-  schema,
-  fragments,
-}: OperationContext): QueryPlanningContext {
-  return new QueryPlanningContext(schema, operation, fragments);
+export function buildQueryPlanningContext(
+  { operation, schema, fragments }: OperationContext,
+  options: BuildQueryPlanOptions,
+): QueryPlanningContext {
+  return new QueryPlanningContext(
+    schema,
+    operation,
+    fragments,
+    options.autoFragmentization,
+  );
 }
 
 export class QueryPlanningContext {
+  public internalFragments: Map<
+    string,
+    {
+      name: string;
+      definition: FragmentDefinitionNode;
+      selectionSet: SelectionSetNode;
+    }
+  > = new Map();
+
+  public internalFragmentCount = 0;
+
   protected variableDefinitions: {
     [name: string]: VariableDefinitionNode;
   };
@@ -721,6 +978,7 @@ export class QueryPlanningContext {
     public readonly schema: GraphQLSchema,
     public readonly operation: OperationDefinitionNode,
     public readonly fragments: FragmentMap,
+    public readonly autoFragmentization: boolean,
   ) {
     this.variableDefinitions = Object.create(null);
     visit(operation, {
@@ -753,13 +1011,26 @@ export class QueryPlanningContext {
     return isAbstractType(type) ? this.schema.getPossibleTypes(type) : [type];
   }
 
-  getVariableUsages(selectionSet: SelectionSetNode) {
+  getVariableUsages(
+    selectionSet: SelectionSetNode,
+    fragments: Set<FragmentDefinitionNode>,
+  ) {
     const usages: {
       [name: string]: VariableDefinitionNode;
     } = Object.create(null);
 
-    visit(selectionSet, {
-      Variable: node => {
+    // Construct a document of the selection set and fragment definitions so we
+    // can visit them, adding all variable usages to the `usages` object.
+    const document: DocumentNode = {
+      kind: Kind.DOCUMENT,
+      definitions: [
+        { kind: Kind.OPERATION_DEFINITION, selectionSet, operation: 'query' },
+        ...Array.from(fragments),
+      ],
+    };
+
+    visit(document, {
+      Variable: (node) => {
         usages[node.name.value] = this.variableDefinitions[node.name.value];
       },
     });

@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-env",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
@@ -15,7 +15,7 @@
   "browser": "dist/index.browser.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "clean": "rm -rf dist",
+    "clean": "git clean -fdX -- dist",
     "compile": "tsc && cp src/*.d.ts dist",
     "prepare": "npm run clean && npm run compile"
   },

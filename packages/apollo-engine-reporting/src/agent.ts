@@ -1,20 +1,31 @@
 import os from 'os';
 import { gzip } from 'zlib';
-import { DocumentNode, GraphQLError } from 'graphql';
 import {
-  FullTracesReport,
+  DocumentNode,
+  GraphQLError,
+  GraphQLSchema,
+  printSchema,
+} from 'graphql';
+import {
   ReportHeader,
-  Traces,
   Trace,
+  Report,
+  TracesAndStats,
 } from 'apollo-engine-reporting-protobuf';
 
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
-import { EngineReportingExtension } from './extension';
-import { GraphQLRequestContext } from 'apollo-server-types';
+import { plugin } from './plugin';
+import { GraphQLRequestContext, Logger } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { reportingLoop, SchemaReporter } from './schemaReporter';
+import { v4 as uuidv4 } from 'uuid';
+import { createHash } from 'crypto';
+
+let warnedOnDeprecatedApiKey = false;
 
 export interface ClientInfo {
   clientName?: string;
@@ -45,6 +56,75 @@ export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
 
+// AS3: Drop support for deprecated `ENGINE_API_KEY`.
+export function getEngineApiKey({
+  engine,
+  skipWarn = false,
+  logger = console,
+}: {
+  engine: EngineReportingOptions<any> | boolean | undefined;
+  skipWarn?: boolean;
+  logger?: Logger;
+}) {
+  if (typeof engine === 'object') {
+    if (engine.apiKey) {
+      return engine.apiKey;
+    }
+  }
+  const legacyApiKeyFromEnv = process.env.ENGINE_API_KEY;
+  const apiKeyFromEnv = process.env.APOLLO_KEY;
+
+  if (legacyApiKeyFromEnv && apiKeyFromEnv && !skipWarn) {
+    logger.warn(
+      'Using `APOLLO_KEY` since `ENGINE_API_KEY` (deprecated) is also set in the environment.',
+    );
+  }
+  if (legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey && !skipWarn) {
+    logger.warn(
+      '[deprecated] The `ENGINE_API_KEY` environment variable has been renamed to `APOLLO_KEY`.',
+    );
+    warnedOnDeprecatedApiKey = true;
+  }
+  return apiKeyFromEnv || legacyApiKeyFromEnv || '';
+}
+
+// AS3: Drop support for deprecated `ENGINE_SCHEMA_TAG`.
+export function getEngineGraphVariant(
+  engine: EngineReportingOptions<any> | boolean | undefined,
+  logger: Logger = console,
+): string | undefined {
+  if (engine === false) {
+    return;
+  } else if (
+    typeof engine === 'object' &&
+    (engine.graphVariant || engine.schemaTag)
+  ) {
+    if (engine.graphVariant && engine.schemaTag) {
+      throw new Error(
+        'Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.',
+      );
+    }
+    if (engine.schemaTag) {
+      logger.warn(
+        '[deprecated] The `schemaTag` property within `engine` configuration has been renamed to `graphVariant`.',
+      );
+    }
+    return engine.graphVariant || engine.schemaTag;
+  } else {
+    if (process.env.ENGINE_SCHEMA_TAG) {
+      logger.warn(
+        '[deprecated] The `ENGINE_SCHEMA_TAG` environment variable has been renamed to `APOLLO_GRAPH_VARIANT`.',
+      );
+    }
+    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
+      throw new Error(
+        '`APOLLO_GRAPH_VARIANT` and `ENGINE_SCHEMA_TAG` (deprecated) environment variables must not both be set.',
+      );
+    }
+    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
+  }
+}
+
 export interface EngineReportingOptions<TContext> {
   /**
    * API key for the service. Get this from
@@ -71,9 +151,15 @@ export interface EngineReportingOptions<TContext> {
    */
   maxUncompressedReportSize?: number;
   /**
+   * [DEPRECATED] this option was replaced by tracesEndpointUrl
    * The URL of the Engine report ingress server.
    */
   endpointUrl?: string;
+  /**
+   * The URL to the Apollo Graph Manager ingress endpoint.
+   * (Previously, this was `endpointUrl`, which will be removed in AS3).
+   */
+  tracesEndpointUrl?: string;
   /**
    * If set, prints all reports as JSON when they are sent.
    */
@@ -178,22 +264,75 @@ export interface EngineReportingOptions<TContext> {
    */
   rewriteError?: (err: GraphQLError) => GraphQLError | null;
   /**
-   * A human readable name to tag this variant of a schema (i.e. staging, EU)
+   * [DEPRECATED: use graphVariant] A human readable name to tag this variant of a schema (i.e. staging, EU)
    */
   schemaTag?: string;
+  /**
+   * A human readable name to refer to the variant of the graph for which metrics are reported
+   */
+  graphVariant?: string;
   /**
    * Creates the client information for operation traces.
    */
   generateClientInfo?: GenerateClientInfo<TContext>;
+
+  /**
+   * **(Experimental)** Enable schema reporting from this server with
+   * Apollo Graph Manager.
+   *
+   * The use of this option avoids the need to rgister schemas manually within
+   * CI deployment pipelines using `apollo schema:push` by periodically
+   * reporting this server's schema (when changes are detected) along with
+   * additional details about its runtime environment to Apollo Graph Manager.
+   *
+   * See [our _preview
+   * documentation_](https://github.com/apollographql/apollo-schema-reporting-preview-docs)
+   * for more information.
+   */
+  experimental_schemaReporting?: boolean;
+
+  /**
+   * Override the reported schema that is reported to AGM.
+   * This schema does not go through any normalizations and the string is directly sent to Apollo Graph Manager.
+   * This would be useful for comments or other ordering and whitespace changes that get stripped when generating a `GraphQLSchema`
+   */
+  experimental_overrideReportedSchema?: string;
+
+  /**
+   * The schema reporter waits before starting reporting.
+   * By default, the report waits some random amount of time between 0 and 10 seconds.
+   * A longer interval leads to more staggered starts which means it is less likely
+   * multiple servers will get asked to upload the same schema.
+   *
+   * If this server runs in lambda or in other constrained environments it would be useful
+   * to decrease the schema reporting max wait time to be less than default.
+   *
+   * This number will be the max for the range in ms that the schema reporter will
+   * wait before starting to report.
+   */
+  experimental_schemaReportingInitialDelayMaxMs?: number;
+
+  /**
+   * The URL to use for reporting schemas.
+   */
+  schemaReportingUrl?: string;
+
+  /**
+   * A logger interface to be used for output and errors.  When not provided
+   * it will default to the server's own `logger` implementation and use
+   * `console` when that is not available.
+   */
+  logger?: Logger;
 }
 
 export interface AddTraceArgs {
   trace: Trace;
   operationName: string;
   queryHash: string;
-  schemaHash: string;
-  queryString?: string;
-  documentAST?: DocumentNode;
+  executableSchemaId: string;
+  source?: string;
+  document?: DocumentNode;
+  logger: Logger,
 }
 
 const serviceHeaderDefaults = {
@@ -204,39 +343,74 @@ const serviceHeaderDefaults = {
   uname: `${os.platform()}, ${os.type()}, ${os.release()}, ${os.arch()})`,
 };
 
+class ReportData {
+  report!: Report;
+  size!: number;
+  readonly header: ReportHeader;
+  constructor(executableSchemaId: string, graphVariant: string) {
+    this.header = new ReportHeader({
+      ...serviceHeaderDefaults,
+      executableSchemaId,
+      schemaTag: graphVariant,
+    });
+    this.reset();
+  }
+  reset() {
+    this.report = new Report({ header: this.header });
+    this.size = 0;
+  }
+}
+
 // EngineReportingAgent is a persistent object which creates
 // EngineReportingExtensions for each request and sends batches of trace reports
 // to the Engine server.
 export class EngineReportingAgent<TContext = any> {
-  private options: EngineReportingOptions<TContext>;
-  private apiKey: string;
-  private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
-    null,
-  );
-  private reportSizes: { [schemaHash: string]: number } = Object.create(null);
+  private readonly options: EngineReportingOptions<TContext>;
+  private readonly apiKey: string;
+  private readonly logger: Logger = console;
+  private readonly graphVariant: string;
+
+  private readonly reportDataByExecutableSchemaId: {
+    [executableSchemaId: string]: ReportData | undefined;
+  } = Object.create(null);
+
   private reportTimer: any; // timer typing is weird and node-specific
-  private sendReportsImmediately?: boolean;
+  private readonly sendReportsImmediately?: boolean;
   private stopped: boolean = false;
-  private reportHeaders: { [schemaHash: string]: ReportHeader } = Object.create(
-    null,
-  );
   private signatureCache: InMemoryLRUCache<string>;
 
   private signalHandlers = new Map<NodeJS.Signals, NodeJS.SignalsListener>();
 
+  private currentSchemaReporter?: SchemaReporter;
+  private readonly bootId: string;
+  private lastSeenExecutableSchemaToId?: {
+    executableSchema: string | GraphQLSchema;
+    executableSchemaId: string;
+  };
+
+  private readonly tracesEndpointUrl: string;
+
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
-    this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
+    this.apiKey = getEngineApiKey({
+      engine: this.options,
+      skipWarn: false,
+      logger: this.logger,
+    });
+    if (options.logger) this.logger = options.logger;
+    this.bootId = uuidv4();
+    this.graphVariant = getEngineGraphVariant(options, this.logger) || '';
+
     if (!this.apiKey) {
       throw new Error(
-        'To use EngineReportingAgent, you must specify an API key via the apiKey option or the ENGINE_API_KEY environment variable.',
+        `To use EngineReportingAgent, you must specify an API key via the apiKey option or the APOLLO_KEY environment variable.`,
       );
     }
 
     // Since calculating the signature for Engine reporting is potentially an
     // expensive operation, we'll cache the signatures we generate and re-use
     // them based on repeated traces for the same `queryHash`.
-    this.signatureCache = createSignatureCache();
+    this.signatureCache = createSignatureCache({ logger: this.logger });
 
     this.sendReportsImmediately = options.sendReportsImmediately;
     if (!this.sendReportsImmediately) {
@@ -248,7 +422,7 @@ export class EngineReportingAgent<TContext = any> {
 
     if (this.options.handleSignals !== false) {
       const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
-      signals.forEach(signal => {
+      signals.forEach((signal) => {
         // Note: Node only started sending signal names to signal events with
         // Node v10 so we can't use that feature here.
         const handler: NodeJS.SignalsListener = async () => {
@@ -261,42 +435,78 @@ export class EngineReportingAgent<TContext = any> {
       });
     }
 
+    if (this.options.endpointUrl) {
+      this.logger.warn(
+        '[deprecated] The `endpointUrl` option within `engine` has been renamed to `tracesEndpointUrl`.',
+      );
+    }
+    this.tracesEndpointUrl =
+      (this.options.endpointUrl ||
+        this.options.tracesEndpointUrl ||
+        'https://engine-report.apollodata.com') + '/api/ingress/traces';
+
     // Handle the legacy options: privateVariables and privateHeaders
     handleLegacyOptions(this.options);
   }
 
-  public newExtension(schemaHash: string): EngineReportingExtension<TContext> {
-    return new EngineReportingExtension<TContext>(
-      this.options,
-      this.addTrace.bind(this),
-      schemaHash,
-    );
+  private executableSchemaIdGenerator(schema: string | GraphQLSchema) {
+    if (this.lastSeenExecutableSchemaToId?.executableSchema === schema) {
+      return this.lastSeenExecutableSchemaToId.executableSchemaId;
+    }
+    const id = computeExecutableSchemaId(schema);
+
+    // We override this variable every time we get a new schema so we cache
+    // the last seen value. It mostly a cached pair.
+    this.lastSeenExecutableSchemaToId = {
+      executableSchema: schema,
+      executableSchemaId: id,
+    };
+
+    return id;
+  }
+
+  public newPlugin(): ApolloServerPlugin<TContext> {
+    return plugin(this.options, this.addTrace.bind(this), {
+      startSchemaReporting: this.startSchemaReporting.bind(this),
+      executableSchemaIdGenerator: this.executableSchemaIdGenerator.bind(this),
+    });
+  }
+
+  private getReportData(executableSchemaId: string): ReportData {
+    const existing = this.reportDataByExecutableSchemaId[executableSchemaId];
+    if (existing) {
+      return existing;
+    }
+    const reportData = new ReportData(executableSchemaId, this.graphVariant);
+    this.reportDataByExecutableSchemaId[executableSchemaId] = reportData;
+    return reportData;
   }
 
   public async addTrace({
     trace,
     queryHash,
-    documentAST,
+    document,
     operationName,
-    queryString,
-    schemaHash,
+    source,
+    executableSchemaId,
+    /**
+     * Since this agent instruments the plugin with its `options.logger`, but
+     * also passes off a reference to this `addTrace` method which is invoked
+     * with the availability of a per-request `logger`, this `logger` (in this
+     * destructuring) is already conditionally either:
+     *
+     *   1. The `logger` that was passed into the `options` for the agent.
+     *   2. The request-specific `logger`.
+     */
+    logger,
   }: AddTraceArgs): Promise<void> {
     // Ignore traces that come in after stop().
     if (this.stopped) {
       return;
     }
 
-    if (!(schemaHash in this.reports)) {
-      this.reportHeaders[schemaHash] = new ReportHeader({
-        ...serviceHeaderDefaults,
-        schemaHash,
-        schemaTag:
-          this.options.schemaTag || process.env.ENGINE_SCHEMA_TAG || '',
-      });
-      // initializes this.reports[reportHash]
-      this.resetReport(schemaHash);
-    }
-    const report = this.reports[schemaHash];
+    const reportData = this.getReportData(executableSchemaId);
+    const { report } = reportData;
 
     const protobufError = Trace.verify(trace);
     if (protobufError) {
@@ -306,14 +516,15 @@ export class EngineReportingAgent<TContext = any> {
 
     const signature = await this.getTraceSignature({
       queryHash,
-      documentAST,
-      queryString,
+      document,
+      source,
       operationName,
+      logger,
     });
 
     const statsReportKey = `# ${operationName || '-'}\n${signature}`;
     if (!report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
-      report.tracesPerQuery[statsReportKey] = new Traces();
+      report.tracesPerQuery[statsReportKey] = new TracesAndStats();
       (report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
     }
     // See comment on our override of Traces.encode inside of
@@ -321,28 +532,30 @@ export class EngineReportingAgent<TContext = any> {
     (report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
       encodedTrace,
     );
-    this.reportSizes[schemaHash] +=
-      encodedTrace.length + Buffer.byteLength(statsReportKey);
+    reportData.size += encodedTrace.length + Buffer.byteLength(statsReportKey);
 
     // If the buffer gets big (according to our estimate), send.
     if (
       this.sendReportsImmediately ||
-      this.reportSizes[schemaHash] >=
+      reportData.size >=
         (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
     ) {
-      await this.sendReportAndReportErrors(schemaHash);
+      await this.sendReportAndReportErrors(executableSchemaId);
     }
   }
 
   public async sendAllReports(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reports).map(hash => this.sendReport(hash)),
+      Object.keys(this.reportDataByExecutableSchemaId).map((id) =>
+        this.sendReport(id),
+      ),
     );
   }
 
-  public async sendReport(schemaHash: string): Promise<void> {
-    const report = this.reports[schemaHash];
-    this.resetReport(schemaHash);
+  public async sendReport(executableSchemaId: string): Promise<void> {
+    const reportData = this.getReportData(executableSchemaId);
+    const { report } = reportData;
+    reportData.reset();
 
     if (Object.keys(report.tracesPerQuery).length === 0) {
       return;
@@ -353,14 +566,24 @@ export class EngineReportingAgent<TContext = any> {
     await Promise.resolve();
 
     if (this.options.debugPrintReports) {
-      console.log(`Engine sending report: ${JSON.stringify(report.toJSON())}`);
+      // In terms of verbosity, and as the name of this option suggests, this
+      // message is either an "info" or a "debug" level message.  However,
+      // we are using `warn` here for compatibility reasons since the
+      // `debugPrintReports` flag pre-dated the existence of log-levels and
+      // changing this to also require `debug: true` (in addition to
+      // `debugPrintReports`) just to reach the level of verbosity to produce
+      // the output would be a breaking change.  The "warn" level is on by
+      // default.  There is a similar theory and comment applied below.
+      this.logger.warn(
+        `Engine sending report: ${JSON.stringify(report.toJSON())}`,
+      );
     }
 
-    const protobufError = FullTracesReport.verify(report);
+    const protobufError = Report.verify(report);
     if (protobufError) {
       throw new Error(`Error encoding report: ${protobufError}`);
     }
-    const message = FullTracesReport.encode(report).finish();
+    const message = Report.encode(report).finish();
 
     const compressed = await new Promise<Buffer>((resolve, reject) => {
       // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
@@ -380,16 +603,12 @@ export class EngineReportingAgent<TContext = any> {
       });
     });
 
-    const endpointUrl =
-      (this.options.endpointUrl || 'https://engine-report.apollodata.com') +
-      '/api/ingress/traces';
-
     // Wrap fetch with async-retry for automatic retrying
     const response: Response = await retry(
       // Retry on network errors and 5xx HTTP
       // responses.
       async () => {
-        const curResponse = await fetch(endpointUrl, {
+        const curResponse = await fetch(this.tracesEndpointUrl, {
           method: 'POST',
           headers: {
             'user-agent': 'apollo-engine-reporting',
@@ -402,8 +621,9 @@ export class EngineReportingAgent<TContext = any> {
 
         if (curResponse.status >= 500 && curResponse.status < 600) {
           throw new Error(
-            `HTTP status ${curResponse.status}, ${(await curResponse.text()) ||
-              '(no body)'}`,
+            `HTTP status ${curResponse.status}, ${
+              (await curResponse.text()) || '(no body)'
+            }`,
           );
         } else {
           return curResponse;
@@ -430,8 +650,69 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
     if (this.options.debugPrintReports) {
-      console.log(`Engine report: status ${response.status}`);
+      // In terms of verbosity, and as the name of this option suggests, this
+      // message is either an "info" or a "debug" level message.  However,
+      // we are using `warn` here for compatibility reasons since the
+      // `debugPrintReports` flag pre-dated the existence of log-levels and
+      // changing this to also require `debug: true` (in addition to
+      // `debugPrintReports`) just to reach the level of verbosity to produce
+      // the output would be a breaking change.  The "warn" level is on by
+      // default.  There is a similar theory and comment applied above.
+      this.logger.warn(`Engine report: status ${response.status}`);
     }
+  }
+
+  public startSchemaReporting({
+    executableSchemaId,
+    executableSchema,
+  }: {
+    executableSchemaId: string;
+    executableSchema: string;
+  }) {
+    if (this.currentSchemaReporter) {
+      this.currentSchemaReporter.stop();
+    }
+
+    const serverInfo = {
+      bootId: this.bootId,
+      graphVariant: this.graphVariant,
+      // The infra environment in which this edge server is running, e.g. localhost, Kubernetes
+      // Length must be <= 256 characters.
+      platform: process.env.APOLLO_SERVER_PLATFORM || 'local',
+      runtimeVersion: `node ${process.version}`,
+      executableSchemaId: executableSchemaId,
+      // An identifier used to distinguish the version of the server code such as git or docker sha.
+      // Length must be <= 256 charecters
+      userVersion: process.env.APOLLO_SERVER_USER_VERSION,
+      // "An identifier for the server instance. Length must be <= 256 characters.
+      serverId:
+        process.env.APOLLO_SERVER_ID || process.env.HOSTNAME || os.hostname(),
+      libraryVersion: `apollo-engine-reporting@${
+        require('../package.json').version
+      }`,
+    };
+
+    // Jitter the startup between 0 and 10 seconds
+    const delay = Math.floor(
+      Math.random() *
+        (this.options.experimental_schemaReportingInitialDelayMaxMs || 10_000),
+    );
+
+    const schemaReporter = new SchemaReporter(
+      serverInfo,
+      executableSchema,
+      this.apiKey,
+      this.options.schemaReportingUrl,
+    );
+
+    const fallbackReportingDelayInMs = 20_000;
+
+    this.currentSchemaReporter = schemaReporter;
+    const logger = this.logger;
+
+    setTimeout(function () {
+      reportingLoop(schemaReporter, logger, false, fallbackReportingDelayInMs);
+    }, delay);
   }
 
   // Stop prevents reports from being sent automatically due to time or buffer
@@ -448,23 +729,29 @@ export class EngineReportingAgent<TContext = any> {
       this.reportTimer = undefined;
     }
 
+    if (this.currentSchemaReporter) {
+      this.currentSchemaReporter.stop();
+    }
+
     this.stopped = true;
   }
 
   private async getTraceSignature({
     queryHash,
     operationName,
-    documentAST,
-    queryString,
+    document,
+    source,
+    logger,
   }: {
     queryHash: string;
     operationName: string;
-    documentAST?: DocumentNode;
-    queryString?: string;
+    document?: DocumentNode;
+    source?: string;
+    logger: Logger;
   }): Promise<string> {
-    if (!documentAST && !queryString) {
+    if (!document && !source) {
       // This shouldn't happen: one of those options must be passed to runQuery.
-      throw new Error('No queryString or parsedQuery?');
+      throw new Error('No document or source?');
     }
 
     const cacheKey = signatureCacheKey(queryHash, operationName);
@@ -479,7 +766,7 @@ export class EngineReportingAgent<TContext = any> {
       return cachedSignature;
     }
 
-    if (!documentAST) {
+    if (!document) {
       // We didn't get an AST, possibly because of a parse failure. Let's just
       // use the full query string.
       //
@@ -487,48 +774,65 @@ export class EngineReportingAgent<TContext = any> {
       //     hides literals, you might end up sending literals for queries
       //     that fail parsing or validation. Provide some way to mask them
       //     anyway?
-      return queryString as string;
+      return source as string;
     }
 
-    const generatedSignature = (this.options.calculateSignature ||
-      defaultEngineReportingSignature)(documentAST, operationName);
+    const generatedSignature = (
+      this.options.calculateSignature || defaultEngineReportingSignature
+    )(document, operationName);
 
     // Intentionally not awaited so the cache can be written to at leisure.
-    this.signatureCache.set(cacheKey, generatedSignature);
+    //
+    // As of the writing of this comment, this signature cache is exclusively
+    // backed by an `InMemoryLRUCache` which cannot do anything
+    // non-synchronously, though that will probably change in the future,
+    // and a distributed cache store, like Redis, doesn't seem unfathomable.
+    //
+    // Due in part to the plugin being separate from the `EngineReportingAgent`,
+    // the loggers are difficult to track down here.  Errors will be logged to
+    // either the request-specific logger on the request context (if available)
+    // or to the `logger` that was passed into `EngineReportingOptions` which
+    // is provided in the `EngineReportingAgent` constructor options.
+    this.signatureCache.set(cacheKey, generatedSignature)
+      .catch(err => {
+        logger.warn(
+          'Could not store signature cache. ' +
+          (err && err.message) || err
+        )
+      });
 
     return generatedSignature;
   }
 
   private async sendAllReportsAndReportErrors(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reports).map(schemaHash =>
-        this.sendReportAndReportErrors(schemaHash),
+      Object.keys(
+        this.reportDataByExecutableSchemaId,
+      ).map((executableSchemaId) =>
+        this.sendReportAndReportErrors(executableSchemaId),
       ),
     );
   }
 
-  private sendReportAndReportErrors(schemaHash: string): Promise<void> {
-    return this.sendReport(schemaHash).catch(err => {
+  private sendReportAndReportErrors(executableSchemaId: string): Promise<void> {
+    return this.sendReport(executableSchemaId).catch((err) => {
       // This catch block is primarily intended to catch network errors from
       // the retried request itself, which include network errors and non-2xx
       // HTTP errors.
       if (this.options.reportErrorFunction) {
         this.options.reportErrorFunction(err);
       } else {
-        console.error(err.message);
+        this.logger.error(err.message);
       }
     });
   }
-
-  private resetReport(schemaHash: string) {
-    this.reports[schemaHash] = new FullTracesReport({
-      header: this.reportHeaders[schemaHash],
-    });
-    this.reportSizes[schemaHash] = 0;
-  }
 }
 
-function createSignatureCache(): InMemoryLRUCache<string> {
+function createSignatureCache({
+  logger,
+}: {
+  logger: Logger;
+}): InMemoryLRUCache<string> {
   let lastSignatureCacheWarn: Date;
   let lastSignatureCacheDisposals: number = 0;
   return new InMemoryLRUCache<string>({
@@ -557,7 +861,7 @@ function createSignatureCache(): InMemoryLRUCache<string> {
       ) {
         // Log the time that we last displayed the message.
         lastSignatureCacheWarn = new Date();
-        console.warn(
+        logger.warn(
           [
             'This server is processing a high number of unique operations.  ',
             `A total of ${lastSignatureCacheDisposals} records have been `,
@@ -630,4 +934,14 @@ function makeSendValuesBaseOptionsFromLegacy(
     : legacyPrivateOption
     ? { none: true }
     : { all: true };
+}
+
+export function computeExecutableSchemaId(
+  schema: string | GraphQLSchema,
+): string {
+  // Can't call digest on this object twice. Creating new object each function call
+  const sha256 = createHash('sha256');
+  const schemaDocument =
+    typeof schema === 'string' ? schema : printSchema(schema);
+  return sha256.update(schemaDocument).digest('hex');
 }

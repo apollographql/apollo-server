@@ -1,22 +1,13 @@
 import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
-import {
-  GraphQLExtensionStack,
-  enableGraphQLExtensions,
-} from 'graphql-extensions';
-import { graphql, GraphQLError } from 'graphql';
+import { graphql, GraphQLError, printSchema } from 'graphql';
 import { Request } from 'node-fetch';
-import {
-  EngineReportingExtension,
-  makeTraceDetails,
-  makeHTTPRequestHeaders,
-} from '../extension';
+import { makeTraceDetails, makeHTTPRequestHeaders, plugin } from '../plugin';
 import { Headers } from 'apollo-server-env';
-import { InMemoryLRUCache } from 'apollo-server-caching';
-import { AddTraceArgs } from '../agent';
+import { AddTraceArgs, computeExecutableSchemaId } from '../agent';
 import { Trace } from 'apollo-engine-reporting-protobuf';
+import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
 
-test('trace construction', async () => {
-  const typeDefs = `
+const typeDefs = `
   type User {
     id: Int
     name: String
@@ -39,7 +30,7 @@ test('trace construction', async () => {
   }
 `;
 
-  const query = `
+const query = `
     query q {
       author(id: 5) {
         name
@@ -51,43 +42,194 @@ test('trace construction', async () => {
     }
 `;
 
+describe('schema reporting', () => {
   const schema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({ schema });
-  enableGraphQLExtensions(schema);
 
-  const traces: Array<any> = [];
-  async function addTrace({ trace, operationName, schemaHash }: AddTraceArgs) {
-    traces.push({ schemaHash, operationName, trace });
-  }
+  const addTrace = jest.fn().mockResolvedValue(undefined);
+  const startSchemaReporting = jest.fn();
+  const executableSchemaIdGenerator = jest.fn(computeExecutableSchemaId);
 
-  const reportingExtension = new EngineReportingExtension(
-    {},
-    addTrace,
-    'schema-hash',
-  );
-  const stack = new GraphQLExtensionStack([reportingExtension]);
-  const requestDidEnd = stack.requestDidStart({
-    request: new Request('http://localhost:123/foo') as any,
-    queryString: query,
-    requestContext: {
-      request: {
+  beforeEach(() => {
+    addTrace.mockClear();
+    startSchemaReporting.mockClear();
+    executableSchemaIdGenerator.mockClear();
+  });
+
+  it('starts reporting if enabled', async () => {
+    const pluginInstance = plugin(
+      {
+        experimental_schemaReporting: true,
+      },
+      addTrace,
+      {
+        startSchemaReporting,
+        executableSchemaIdGenerator,
+      },
+    );
+
+    await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
         query,
         operationName: 'q',
         extensions: {
           clientName: 'testing suite',
         },
+        http: new Request('http://localhost:123/foo'),
       },
-      context: {},
-      cache: new InMemoryLRUCache(),
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    expect(startSchemaReporting).toBeCalledTimes(1);
+    expect(startSchemaReporting).toBeCalledWith({
+      executableSchema: printSchema(schema),
+      executableSchemaId: executableSchemaIdGenerator(schema),
+    });
+  });
+
+  it('uses the override schema', async () => {
+    const pluginInstance = plugin(
+      {
+        experimental_schemaReporting: true,
+        experimental_overrideReportedSchema: typeDefs,
+      },
+      addTrace,
+      {
+        startSchemaReporting,
+        executableSchemaIdGenerator,
+      },
+    );
+
+    await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query,
+        operationName: 'q',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    const expectedExecutableSchemaId = executableSchemaIdGenerator(typeDefs);
+    expect(startSchemaReporting).toBeCalledTimes(1);
+    expect(startSchemaReporting).toBeCalledWith({
+      executableSchema: typeDefs,
+      executableSchemaId: expectedExecutableSchemaId,
+    });
+
+    // Get the first argument from the first time this is called.
+    // Not using called with because that has to be exhaustive and this isn't
+    // testing trace generation
+    expect(addTrace).toBeCalledWith(
+      expect.objectContaining({
+        executableSchemaId: expectedExecutableSchemaId,
+      }),
+    );
+  });
+
+  it('uses the same executable schema id for metric reporting', async () => {
+    const pluginInstance = plugin(
+      {
+        experimental_schemaReporting: true,
+      },
+      addTrace,
+      {
+        startSchemaReporting,
+        executableSchemaIdGenerator,
+      },
+    );
+
+    await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query,
+        operationName: 'q',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    const expectedExecutableSchemaId = executableSchemaIdGenerator(schema);
+    expect(startSchemaReporting).toBeCalledTimes(1);
+    expect(startSchemaReporting).toBeCalledWith({
+      executableSchema: printSchema(schema),
+      executableSchemaId: expectedExecutableSchemaId,
+    });
+    // Get the first argument from the first time this is called.
+    // Not using called with because that has to be exhaustive and this isn't
+    // testing trace generation
+    expect(addTrace.mock.calls[0][0].executableSchemaId).toBe(
+      expectedExecutableSchemaId,
+    );
+  });
+});
+
+it('trace construction', async () => {
+  const schema = makeExecutableSchema({ typeDefs });
+  addMockFunctionsToSchema({ schema });
+
+  const traces: Array<AddTraceArgs> = [];
+  async function addTrace(args: AddTraceArgs) {
+    traces.push(args);
+  }
+  const startSchemaReporting = jest.fn();
+  const executableSchemaIdGenerator = jest.fn();
+
+  const pluginInstance = plugin(
+    {
+      /* no options!*/
     },
-    context: {},
-  });
-  await graphql({
+    addTrace,
+    {
+      startSchemaReporting,
+      executableSchemaIdGenerator,
+    },
+  );
+
+  await pluginTestHarness({
+    pluginInstance,
     schema,
-    source: query,
-    contextValue: { _extensionStack: stack },
+    graphqlRequest: {
+      query,
+      operationName: 'q',
+      extensions: {
+        clientName: 'testing suite',
+      },
+      http: new Request('http://localhost:123/foo'),
+    },
+    executor: async ({ request: { query: source } }) => {
+      return await graphql({
+        schema,
+        source,
+      });
+    },
   });
-  requestDidEnd();
+
   // XXX actually write some tests
 });
 
@@ -145,11 +287,17 @@ describe('check variableJson output for sendVariableValues all/none type', () =>
   });
 
   it('Case 4: Check behavior for invalid inputs', () => {
-    expect(makeTraceDetails(variables, { none: false })).toEqual(
+    expect(makeTraceDetails(variables,
+      // @ts-ignore Testing untyped usage; only `{ none: true }` is legal.
+      { none: false }
+    )).toEqual(
       nonFilteredOutput,
     );
 
-    expect(makeTraceDetails(variables, { all: false })).toEqual(filteredOutput);
+    expect(makeTraceDetails(variables,
+      // @ts-ignore Testing untyped usage; only `{ all: true }` is legal.
+      { all: false }
+    )).toEqual(filteredOutput);
   });
 });
 
@@ -270,7 +418,7 @@ describe('variableJson output for sendVariableValues transform: custom function 
     ).toEqual(JSON.stringify(null));
   });
 
-  const errorThrowingModifier = (input: {
+  const errorThrowingModifier = (_input: {
     variables: Record<string, any>;
   }): Record<string, any> => {
     throw new GraphQLError('testing error handling');
@@ -292,8 +440,12 @@ describe('variableJson output for sendVariableValues transform: custom function 
 });
 
 describe('Catch circular reference error during JSON.stringify', () => {
-  const circularReference = {};
-  circularReference['this'] = circularReference;
+  interface SelfCircular {
+    self?: SelfCircular;
+  }
+
+  const circularReference: SelfCircular = {};
+  circularReference['self'] = circularReference;
 
   const circularVariables = {
     bad: circularReference,
@@ -324,8 +476,10 @@ const headersOutput = { name: new Trace.HTTP.Values({ value: ['value'] }) };
 describe('tests for the sendHeaders reporting option', () => {
   it('sendHeaders defaults to hiding all', () => {
     const http = makeTestHTTP();
-    // sendHeaders: null is not a valid TS input, but check the output anyways
-    makeHTTPRequestHeaders(http, headers, null);
+    makeHTTPRequestHeaders(http, headers,
+      // @ts-ignore: `null` is not a valid type; check output on invalid input.
+      null
+    );
     expect(http.requestHeaders).toEqual({});
     makeHTTPRequestHeaders(http, headers, undefined);
     expect(http.requestHeaders).toEqual({});
@@ -345,11 +499,17 @@ describe('tests for the sendHeaders reporting option', () => {
 
   it('invalid inputs for sendHeaders.all and sendHeaders.none', () => {
     const httpSafelist = makeTestHTTP();
-    makeHTTPRequestHeaders(httpSafelist, headers, { none: false });
+    makeHTTPRequestHeaders(httpSafelist, headers,
+      // @ts-ignore Testing untyped usage; only `{ none: true }` is legal.
+      { none: false }
+    );
     expect(httpSafelist.requestHeaders).toEqual(headersOutput);
 
     const httpBlocklist = makeTestHTTP();
-    makeHTTPRequestHeaders(httpBlocklist, headers, { all: false });
+    makeHTTPRequestHeaders(httpBlocklist, headers,
+      // @ts-ignore Testing untyped usage; only `{ all: true }` is legal.
+      { all: false }
+    );
     expect(httpBlocklist.requestHeaders).toEqual({});
   });
 

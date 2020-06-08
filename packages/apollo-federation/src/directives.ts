@@ -23,48 +23,40 @@ import {
 
 export const KeyDirective = new GraphQLDirective({
   name: 'key',
-  description: '',
   locations: [DirectiveLocation.OBJECT, DirectiveLocation.INTERFACE],
   args: {
     fields: {
       type: GraphQLNonNull(GraphQLString),
-      description: '',
     },
   },
 });
 
 export const ExtendsDirective = new GraphQLDirective({
   name: 'extends',
-  description: '',
   locations: [DirectiveLocation.OBJECT, DirectiveLocation.INTERFACE],
 });
 
 export const ExternalDirective = new GraphQLDirective({
   name: 'external',
-  description: '',
   locations: [DirectiveLocation.OBJECT, DirectiveLocation.FIELD_DEFINITION],
 });
 
 export const RequiresDirective = new GraphQLDirective({
   name: 'requires',
-  description: '',
   locations: [DirectiveLocation.FIELD_DEFINITION],
   args: {
     fields: {
       type: GraphQLNonNull(GraphQLString),
-      description: '',
     },
   },
 });
 
 export const ProvidesDirective = new GraphQLDirective({
   name: 'provides',
-  description: '',
   locations: [DirectiveLocation.FIELD_DEFINITION],
   args: {
     fields: {
       type: GraphQLNonNull(GraphQLString),
-      description: '',
     },
   },
 });

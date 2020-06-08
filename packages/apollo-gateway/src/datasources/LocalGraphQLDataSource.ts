@@ -9,14 +9,14 @@ import {
 import { enableGraphQLExtensions } from 'graphql-extensions';
 import { GraphQLDataSource } from './types';
 
-export class LocalGraphQLDataSource implements GraphQLDataSource {
+export class LocalGraphQLDataSource<TContext extends Record<string, any> = Record<string, any>> implements GraphQLDataSource<TContext> {
   constructor(public readonly schema: GraphQLSchema) {
     // FIXME: This is needed to enable support for `resolveObject`, but we
     // should move that to `apollo-graphql`
     enableGraphQLExtensions(schema);
   }
 
-  async process<TContext>({
+  async process({
     request,
     context,
   }: Pick<GraphQLRequestContext<TContext>, 'request' | 'context'>): Promise<

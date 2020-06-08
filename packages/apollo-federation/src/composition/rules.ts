@@ -12,8 +12,8 @@ import { specifiedSDLRules } from 'graphql/validation/specifiedRules';
  */
 
 import {
-  UniqueDirectivesPerLocation as UniqueDirectivesPerLocationFromGraphqlJs,
-} from 'graphql/validation/rules/UniqueDirectivesPerLocation';
+  UniqueDirectivesPerLocationRule as UniqueDirectivesPerLocationRuleFromGraphqlJs,
+} from 'graphql';
 import {
   UniqueTypeNames as UniqueTypeNamesFromGraphqlJs,
 } from 'graphql/validation/rules/UniqueTypeNames';
@@ -41,7 +41,7 @@ import {
  } from './validate/sdl';
 
 const omit = [
-  UniqueDirectivesPerLocationFromGraphqlJs,
+  UniqueDirectivesPerLocationRuleFromGraphqlJs,
   UniqueTypeNamesFromGraphqlJs,
   UniqueEnumValueNamesFromGraphqlJs,
   PossibleTypeExtensionsFromGraphqlJs,
