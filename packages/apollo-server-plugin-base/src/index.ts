@@ -1,10 +1,14 @@
 import {
+  AnyFunctionMap,
+  BaseContext,
   GraphQLServiceContext,
   GraphQLRequestContext,
   GraphQLRequest,
   GraphQLResponse,
   ValueOrPromise,
   WithRequired,
+  GraphQLFieldResolverParams,
+  GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextDidResolveOperation,
@@ -23,12 +27,15 @@ import {
 // In the future, `apollo-server-types` and `apollo-server-plugin-base` will
 // probably roll into the same "types" package, but that is not today!
 export {
+  BaseContext,
   GraphQLServiceContext,
   GraphQLRequestContext,
   GraphQLRequest,
   GraphQLResponse,
   ValueOrPromise,
   WithRequired,
+  GraphQLFieldResolverParams,
+  GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextDidResolveOperation,
@@ -38,20 +45,42 @@ export {
   GraphQLRequestContextWillSendResponse,
 };
 
-export interface ApolloServerPlugin<TContext extends Record<string, any> = Record<string, any>> {
+// Typings Note! (Fix in AS3?)
+//
+// There are a number of types in this module which are specifying `void` as
+// their return type, despite the fact that we _are_ observing the value.
+// It's possible those should instead be `undefined`.  For more details, see
+// the issue that was logged as a result of this discovery during (unrelated) PR
+// review: https://github.com/apollographql/apollo-server/issues/4103
+
+export interface ApolloServerPlugin<
+  TContext extends BaseContext = BaseContext
+> {
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
   requestDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
   ): GraphQLRequestListener<TContext> | void;
 }
 
-export interface GraphQLRequestListener<TContext = Record<string, any>> {
+export type GraphQLRequestListenerParsingDidEnd = (err?: Error) => void;
+export type GraphQLRequestListenerValidationDidEnd =
+  ((err?: ReadonlyArray<Error>) => void);
+export type GraphQLRequestListenerExecutionDidEnd = ((err?: Error) => void);
+export type GraphQLRequestListenerDidResolveField =
+  ((error: Error | null, result?: any) => void);
+
+export interface GraphQLRequestListener<
+  TContext extends BaseContext = BaseContext
+> extends AnyFunctionMap {
+  didResolveSource?(
+    requestContext: GraphQLRequestContextDidResolveSource<TContext>,
+  ): ValueOrPromise<void>;
   parsingDidStart?(
     requestContext: GraphQLRequestContextParsingDidStart<TContext>,
-  ): ((err?: Error) => void) | void;
+  ): GraphQLRequestListenerParsingDidEnd | void;
   validationDidStart?(
     requestContext: GraphQLRequestContextValidationDidStart<TContext>,
-  ): ((err?: ReadonlyArray<Error>) => void) | void;
+  ): GraphQLRequestListenerValidationDidEnd | void;
   didResolveOperation?(
     requestContext: GraphQLRequestContextDidResolveOperation<TContext>,
   ): ValueOrPromise<void>;
@@ -68,8 +97,20 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
   ): ValueOrPromise<GraphQLResponse | null>;
   executionDidStart?(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ): ((err?: Error) => void) | void;
+  ):
+    | GraphQLRequestExecutionListener
+    | GraphQLRequestListenerExecutionDidEnd
+    | void;
   willSendResponse?(
     requestContext: GraphQLRequestContextWillSendResponse<TContext>,
   ): ValueOrPromise<void>;
+}
+
+export interface GraphQLRequestExecutionListener<
+  TContext extends BaseContext = BaseContext
+> extends AnyFunctionMap {
+  executionDidEnd?: GraphQLRequestListenerExecutionDidEnd;
+  willResolveField?(
+    fieldResolverParams: GraphQLFieldResolverParams<any, TContext>
+  ): GraphQLRequestListenerDidResolveField | void;
 }

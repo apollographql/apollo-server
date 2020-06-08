@@ -1,12 +1,48 @@
 # CHANGELOG for `@apollo/gateway`
 
-### vNEXT
+## vNEXT
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- Deprecated the `ENGINE_API_KEY` environment variable in favor of its new name, `APOLLO_KEY`.  Continued use of `ENGINE_API_KEY` will result in deprecation warnings being printed to the server console.  Support for `ENGINE_API_KEY` will be removed in a future, major update.  [#3923](https://github.com/apollographql/apollo-server/pull/3923)
-- Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  The functionality remains otherwise identical, but the new name mirrors the name used within Apollo Graph Manager.  Use of the now-deprecated name will result in a deprecation warning being printed to the server console.  Support will be removed entirely in a future, major update.  To avoid misconfiguration, runtime errors will be thrown if the new and deprecated name are _both_ set. [#3855](https://github.com/apollographql/apollo-server/pull/3855)
-- Cache stringified representations of downstream query bodies within the query plan to address performance implications incurred by repeatedly `print`ing the same`DocumentNode`s with the `graphql` printer.  This improvement is more pronounced on larger documents.  [PR #4018](https://github.com/apollographql/apollo-server/pull/4018)
+- _Nothing yet! Stay tuned._
+
+## 0.16.4
+
+- __NEW__: Provide the `requestContext` as an argument to the experimental callback function `experimental_didResolveQueryPlan`. [#4173](https://github.com/apollographql/apollo-server/pull/4173)
+
+## 0.16.3
+
+- This updates a dependency of `apollo-server-core` that is only used for its TypeScript typings, not for any runtime dependencies.  The reason for the upgrade is that the `apollo-server-core` package (again, used only for types!) was affected by a GitHub Security Advisory.  [See the related `CHANGELOG.md` for Apollo Server for more details, including a link to the advisory](https://github.com/apollographql/apollo-server/blob/354d9910e1c87af93c7d50263a28554b449e48db/CHANGELOG.md#v2142).
+
+## 0.16.2
+
+- __FIX__: Collapse nested required fields into a single body in the query plan. Before, some nested fields' selection sets were getting split, causing some of their subfields to be dropped when executing the query. This fix collapses the split selection sets into one. [#4064](https://github.com/apollographql/apollo-server/pull/4064)
+
+## 0.16.1
+
+- __NEW__: Provide the ability to pass a custom `fetcher` during `RemoteGraphQLDataSource` construction to be used when executing operations against downstream services.  Providing a custom `fetcher` may be necessary to accommodate more advanced needs, e.g., configuring custom TLS certificates for internal services.  [PR #4149](https://github.com/apollographql/apollo-server/pull/4149)
+
+  The `fetcher` specified should be a compliant implementor of the [Fetch API standard](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).  This addition compliments, though is still orthognonal to, similar behavior originally introduced in [#3783](https://github.com/apollographql/apollo-server/pull/3783), which allowed customization of the implementation used to fetch _gateway configuration and federated SDL from services_ in managed and unmanaged modes, but didn't affect the communication that takes place during _operation execution_.
+
+  For now, the default `fetcher` will remain the same ([`node-fetch`](https://npm.im/node-fetch)) implementation.  A future major-version bump will update it to be consistent with other feature-rich implementations of the Fetch API which are used elsewhere in the Apollo Server stack where we use [`make-fetch-happen`](https://npm.im/make-fetch-happen).  In all likelihood, `ApolloGateway` will pass its own `fetcher` to the `RemoteGraphQLDataSource` during service initialization.
+
+## 0.16.0
+
+- __BREAKING__: Use a content delivery network for managed configuration, fetch storage secrets and composition configuration from different domains: https://storage-secrets.api.apollographql.com and https://federation.api.apollographql.com. Please mind any firewall for outgoing traffic. [#4080](https://github.com/apollographql/apollo-server/pull/4080)
+
+## 0.15.1
+
+- __FIX__: Correctly handle unions with nested conditions that have no `possibleTypes` [#4071](https://github.com/apollographql/apollo-server/pull/4071)
+- __FIX__: Normalize root operation types when reporting to Apollo Graph Manager. Federation always uses the default names `Query`, `Mutation`, and `Subscription` for root operation types even if downstream services choose different names; now we properly normalize traces received from downstream services in the same way. [#4100](https://github.com/apollographql/apollo-server/pull/4100)
+
+## 0.15.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
+
+- __BREAKING__: Drop support for Node.js 8 and Node.js 10.  This is being done primarily for performance gains which stand to be seen by transpiling to a newer ECMAScript target.  For more details, see the related PR.  [#4031](https://github.com/apollographql/apollo-server/pull/4031)
+- __Performance:__ Cache stringified representations of downstream query bodies within the query plan to address performance cost incurred by repeatedly `print`ing the same`DocumentNode`s with the `graphql` printer.  This improvement is more pronounced on larger documents.  [PR #4018](https://github.com/apollographql/apollo-server/pull/4018)
+- __Deprecation:__ Deprecated the `ENGINE_API_KEY` environment variable in favor of its new name, `APOLLO_KEY`.  The new name mirrors the name used within Apollo Graph Manager.  Aside from the rename, the functionality remains otherwise identical.  Continued use of `ENGINE_API_KEY` will result in deprecation warnings being printed to the server console.  Support for `ENGINE_API_KEY` will be removed in a future, major update.  [#3923](https://github.com/apollographql/apollo-server/pull/3923)
+- __Deprecation:__ Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  The new name mirrors the name used within Apollo Graph Manager.  Aside from the rename, the functionality remains otherwise identical.  Use of the now-deprecated name will result in a deprecation warning being printed to the server console.  Support will be removed entirely in a future, major update.  To avoid misconfiguration, runtime errors will be thrown if the new and deprecated versions are _both_ set. [#3855](https://github.com/apollographql/apollo-server/pull/3855)
 - Add inadvertently excluded `apollo-server-errors` runtime dependency. [#3927](https://github.com/apollographql/apollo-server/pull/3927)
 
 ## 0.14.1

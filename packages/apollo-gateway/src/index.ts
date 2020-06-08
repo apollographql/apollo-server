@@ -105,10 +105,12 @@ export type Experimental_DidResolveQueryPlanCallback = ({
   queryPlan,
   serviceMap,
   operationContext,
+  requestContext,
 }: {
   readonly queryPlan: QueryPlan;
   readonly serviceMap: ServiceMap;
   readonly operationContext: OperationContext;
+  readonly requestContext: GraphQLRequestContextExecutionDidStart<Record<string, any>>;
 }) => void;
 
 export type Experimental_DidFailCompositionCallback = ({
@@ -476,6 +478,10 @@ export class ApolloGateway implements GraphQLService {
 
     this.logger.debug('Schema loaded and ready for execution');
 
+    // FIXME: The comment below may change when `graphql-extensions` is
+    // removed, as it will be soon.  It's not clear if this will be temporary,
+    // as is suggested, after that time, because we still very much need to
+    // do this special alias resolving.  Original comment:
     // this is a temporary workaround for GraphQLFieldExtensions automatic
     // wrapping of all fields when using ApolloServer. Here we wrap all fields
     // with support for resolving aliases as part of the root value which
@@ -692,6 +698,7 @@ export class ApolloGateway implements GraphQLService {
       this.experimental_didResolveQueryPlan({
         queryPlan,
         serviceMap,
+        requestContext,
         operationContext,
       });
     }

@@ -1,16 +1,29 @@
+import gql from 'graphql-tag';
 import {
   ApolloGateway,
   GatewayConfig,
+  Experimental_DidResolveQueryPlanCallback,
   Experimental_UpdateServiceDefinitions,
 } from '../../index';
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+import {
+  product,
+  reviews,
+  inventory,
+  accounts,
+  books,
+  documents,
+} from '../__fixtures__/schemas/';
 
-const services = [product, reviews, inventory, accounts, books];
-const serviceDefinitions = services.map((s, i) => ({
+// The order of this was specified to preserve existing test coverage. Typically
+// we would just import and use the `fixtures` array.
+const serviceDefinitions = [
+  product,
+  reviews,
+  inventory,
+  accounts,
+  books,
+  documents,
+].map((s, i) => ({
   name: s.name,
   typeDefs: s.typeDefs,
   url: `http://localhost:${i}`,
@@ -205,5 +218,28 @@ describe('lifecycle hooks', () => {
     await schemaChangeBlocker;
 
     expect(schemaChangeCallback).toBeCalledTimes(1);
+  });
+
+  it('calls experimental_didResolveQueryPlan when executor is called', async () => {
+    const experimental_didResolveQueryPlan: Experimental_DidResolveQueryPlanCallback = jest.fn()
+
+    const gateway = new ApolloGateway({
+      localServiceList: [
+        books
+      ],
+      experimental_didResolveQueryPlan,
+    });
+
+    const { executor } = await gateway.load();
+    await executor({
+      document: gql`
+        { book(isbn: "0262510871") { year } }
+      `,
+      request: {},
+      queryHash: 'hashed',
+      context: {},
+    });
+
+    expect(experimental_didResolveQueryPlan).toBeCalled();
   });
 });

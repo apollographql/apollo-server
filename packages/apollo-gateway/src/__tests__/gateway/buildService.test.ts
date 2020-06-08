@@ -6,11 +6,7 @@ import { ApolloServerBase as ApolloServer } from 'apollo-server-core';
 import { RemoteGraphQLDataSource } from '../../datasources/RemoteGraphQLDataSource';
 import { ApolloGateway, SERVICE_DEFINITION_QUERY } from '../../';
 
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+import { fixtures } from '../__fixtures__/schemas/';
 
 beforeEach(() => {
   fetch.mockReset();
@@ -39,12 +35,12 @@ it('calls buildService only once per service', async () => {
 
 it('correctly passes the context from ApolloServer to datasources', async () => {
   const gateway = new ApolloGateway({
-    localServiceList: [accounts, books, inventory, product, reviews],
-    buildService: service => {
+    localServiceList: fixtures,
+    buildService: _service => {
       return new RemoteGraphQLDataSource({
         url: 'https://api.example.com/foo',
         willSendRequest: ({ request, context }) => {
-          request.http.headers.set('x-user-id', context.userId);
+          request.http?.headers.set('x-user-id', context.userId);
         },
       });
     },
@@ -116,11 +112,11 @@ it('makes enhanced introspection request using datasource', async () => {
         url: 'https://api.example.com/one',
       },
     ],
-    buildService: service => {
+    buildService: _service => {
       return new RemoteGraphQLDataSource({
         url: 'https://api.example.com/override',
         willSendRequest: ({ request }) => {
-          request.http.headers.set('custom-header', 'some-custom-value');
+          request.http?.headers.set('custom-header', 'some-custom-value');
         },
       });
     },
@@ -166,7 +162,7 @@ it('customizes request on a per-service basis', async () => {
       return new RemoteGraphQLDataSource({
         url: service.url,
         willSendRequest: ({ request }) => {
-          request.http.headers.set('service-name', service.name);
+          request.http?.headers.set('service-name', service.name);
         },
       });
     },
@@ -209,7 +205,7 @@ it('customizes request on a per-service basis', async () => {
 
 it('does not share service definition cache between gateways', async () => {
   let updates = 0;
-  const updateObserver: any = (...args: any[]) => {
+  const updateObserver: any = (..._args: any[]) => {
     updates += 1;
   };
 

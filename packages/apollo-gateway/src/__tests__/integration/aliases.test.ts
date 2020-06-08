@@ -1,11 +1,6 @@
-import gql from 'graphql-tag';
-import { execute, printPlan } from '../execution-utils';
+import { execute } from '../execution-utils';
 
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+import { fixtures } from '../__fixtures__/schemas/';
 
 // FIXME: remove this when GraphQLExtensions is removed
 import { createTestClient } from 'apollo-server-testing';
@@ -15,7 +10,7 @@ import { LocalGraphQLDataSource } from '../../datasources/LocalGraphQLDataSource
 import { ApolloGateway } from '../../';
 
 it('supports simple aliases', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         name
@@ -25,13 +20,10 @@ it('supports simple aliases', async () => {
   `;
 
   const upc = '1';
-  const { data, errors, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({
     product: {
@@ -44,7 +36,7 @@ it('supports simple aliases', async () => {
 });
 
 it('supports aliases of root fields on subservices', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         name
@@ -60,13 +52,10 @@ it('supports aliases of root fields on subservices', async () => {
   `;
 
   const upc = '1';
-  const { data, errors, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({
     product: {
@@ -95,7 +84,7 @@ it('supports aliases of root fields on subservices', async () => {
 });
 
 it('supports aliases of nested fields on subservices', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         name
@@ -115,13 +104,10 @@ it('supports aliases of nested fields on subservices', async () => {
   `;
 
   const upc = '1';
-  const { data, errors, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({
     product: {
@@ -160,7 +146,7 @@ it('supports aliases of nested fields on subservices', async () => {
 // TODO after we remove GraphQLExtensions from ApolloServer, this can go away
 it('supports aliases when using ApolloServer', async () => {
   const gateway = new ApolloGateway({
-    localServiceList: [accounts, books, inventory, product, reviews],
+    localServiceList: fixtures,
     buildService: service => {
       return new LocalGraphQLDataSource(buildFederatedSchema([service]));
     },
@@ -174,7 +160,7 @@ it('supports aliases when using ApolloServer', async () => {
   const { query } = createTestClient(server);
 
   const result = await query({
-    query: gql`
+    query: `#graphql
       query GetProduct($upc: String!) {
         product(upc: $upc) {
           title: name

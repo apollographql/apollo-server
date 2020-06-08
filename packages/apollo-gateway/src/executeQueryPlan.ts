@@ -12,6 +12,7 @@ import {
   GraphQLFieldResolver,
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
+import { defaultRootOperationNameLookup } from '@apollo/federation';
 import { GraphQLDataSource } from './datasources/types';
 import {
   FetchNode,
@@ -88,11 +89,9 @@ export async function executeQueryPlan<TContext>(
       },
       rootValue: data,
       variableValues: requestContext.request.variables,
-      // FIXME: GraphQL extensions currently wraps every field and creates
-      // a field resolver. Because of this, when using with ApolloServer
-      // the defaultFieldResolver isn't called. We keep this here
-      // because it is the correct solution and when ApolloServer removes
-      // GraphQLExtensions this will be how alias support is maintained
+      // We have a special field resolver which ensures we support aliases.
+      // FIXME: It's _possible_ this will change after `graphql-extensions` is
+      // deprecated, though not certain. See here, also: https://git.io/Jf8cS.
       fieldResolver: defaultFieldResolverWithAliasSupport,
     }));
   } catch (error) {
@@ -360,6 +359,19 @@ async function executeFetch<TContext>(
             );
             traceParsingFailed = true;
           }
+        }
+        if (traceNode.trace) {
+          // Federation requires the root operations in the composed schema
+          // to have the default names (Query, Mutation, Subscription) even
+          // if the implementing services choose different names, so we override
+          // whatever the implementing service reported here.
+          const rootTypeName =
+            defaultRootOperationNameLookup[
+              context.operationContext.operation.operation
+            ];
+          traceNode.trace.root?.child?.forEach((child) => {
+            child.parentType = rootTypeName;
+          });
         }
         traceNode.traceParsingFailed = traceParsingFailed;
       }
