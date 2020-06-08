@@ -17,14 +17,6 @@
       these threshholds via `git blame`.
     */
     {
-      "packageNames": ["fastify"],
-      "allowedVersions": "<2"
-    },
-    {
-      "packageNames": ["fastify-cors"],
-      "allowedVersions": "<1"
-    },
-    {
       "packageNames": ["@koa/cors"],
       "allowedVersions": "<3"
     },
