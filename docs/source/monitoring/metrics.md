@@ -13,10 +13,7 @@ Apollo Server integrates seamlessly with Apollo Graph Manager to help you monito
 
 ### Connecting to Graph Manager
 
-To connect Apollo Server to Graph Manager, first [visit the Graph Manager UI](https://engine.apollographql.com/) to get a Graph Manager API key. You can provide this API key to Apollo Server in one of the following ways:
-
-* Include the API key in the constructor options for `ApolloServer`.
-* Assign the API key to the `ENGINE_API_KEY` environment variable.
+To connect Apollo Server to Graph Manager, first [obtain a graph API key](https://www.apollographql.com/docs/graph-manager/setup-analytics/#pushing-traces-from-apollo-server). To provide this key to Apollo Server, assign it to the `APOLLO_KEY` environment variable in your server's environment.
 
 ### Providing an API key via the `ApolloServer` constructor
 
@@ -47,14 +44,14 @@ server.listen().then(({ url }) => {
 
 ### Providing an API key via environment variables
 
-You can provide your Graph Manager API key to Apollo Server via the `ENGINE_API_KEY` environment variable. Similarly, you can assign a particular [variant](https://www.apollographql.com/docs/platform/schema-registry/#managing-environments)
-to an Apollo Server instance via the `ENGINE_SCHEMA_TAG` environment variable.
+You can provide your Graph Manager API key to Apollo Server via the `APOLLO_KEY` environment variable. Similarly, you can assign a particular [variant](https://www.apollographql.com/docs/platform/schema-registry/#managing-environments)
+to an Apollo Server instance via the `APOLLO_GRAPH_VARIANT` environment variable.
 
 You can set environment variable values on the command line as seen below, or with the [`dotenv` npm package](https://www.npmjs.com/package/dotenv) (or similar).
 
 ```bash
 # Replace the example values below with values specific to your use case.
-ENGINE_API_KEY=YOUR_API_KEY ENGINE_SCHEMA_TAG=development node start-server.js
+APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_VARIANT=development node start-server.js
 ```
 
 ### Debugging Graph Manager reporting
