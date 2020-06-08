@@ -26,6 +26,6 @@
     "node-fetch": "^2.3.0"
   },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+    "graphql": "^15.0.0"
   }
 }
