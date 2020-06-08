@@ -39,7 +39,7 @@ app.listen({ port: 4000 }, () =>
 
 ## Connect
 
-> We recommend using `express` rather than `connect.  However, if you wish to
+> We recommend using `express` rather than `connect`.  However, if you wish to
 > use `connect`, please install [`connect`](https://www.npmjs.com/package/connect)
 > and [`qs-middleware`](https://www.npmjs.com/package/qs-middleware), in addition
 > to `apollo-server-express`.
