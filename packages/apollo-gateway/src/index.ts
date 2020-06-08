@@ -105,10 +105,12 @@ export type Experimental_DidResolveQueryPlanCallback = ({
   queryPlan,
   serviceMap,
   operationContext,
+  requestContext,
 }: {
   readonly queryPlan: QueryPlan;
   readonly serviceMap: ServiceMap;
   readonly operationContext: OperationContext;
+  readonly requestContext: GraphQLRequestContextExecutionDidStart<Record<string, any>>;
 }) => void;
 
 export type Experimental_DidFailCompositionCallback = ({
@@ -696,6 +698,7 @@ export class ApolloGateway implements GraphQLService {
       this.experimental_didResolveQueryPlan({
         queryPlan,
         serviceMap,
+        requestContext,
         operationContext,
       });
     }
