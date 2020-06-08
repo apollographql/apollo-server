@@ -112,6 +112,7 @@
     "jest-junit": "10.0.0",
     "js-sha256": "0.9.0",
     "koa": "2.12.0",
+    "koa-router": "7.4.0",
     "lerna": "3.22.0",
     "log4js": "4.5.1",
     "memcached-mock": "0.1.0",
