@@ -427,7 +427,7 @@ describe('runQuery', () => {
         const invocation = requestDidStart.mock.calls[0][0];
         expect(invocation).toHaveProperty('schema', schema);
         expect(invocation).toHaveProperty( /* Shorter as a RegExp */
-          'schemaHash', expect.stringMatching(/^8ff87f3e0/));
+          'schemaHash', expect.stringMatching(/^cce9f33a/));
       });
     });
 
