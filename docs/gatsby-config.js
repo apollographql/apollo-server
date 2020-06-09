@@ -70,7 +70,7 @@ module.exports = {
           ],
           Appendices: [
             'proxy-configuration',
-            'migration-two-dot',
+            'migration',
             'migration-engine',
           ],
         },
