@@ -3,9 +3,8 @@ import gql from 'graphql-tag';
 import {
   GraphQLObjectType,
   DocumentNode,
-  printSchema,
-  isSpecifiedDirective,
   GraphQLScalarType,
+  specifiedDirectives,
 } from 'graphql';
 import {
   astSerializer,
@@ -634,9 +633,17 @@ describe('composition of schemas with directives', () => {
     const specUrl = "http://my-spec-url.com";
     const deprecationReason = "Don't remove me please";
 
+    // Detecting >15.1.0 by the new addition of the `specifiedBy` directive
+    const isAtLeastGraphqlVersionFifteenPointOne =
+      specifiedDirectives.length >= 4;
+
     const serviceA = {
       typeDefs: gql`
-        scalar MyScalar @specifiedBy(url: "${specUrl}")
+        # This directive needs to be conditionally added depending on the testing
+        # environment's version of graphql (>= 15.1.0 includes this new directive)
+        ${isAtLeastGraphqlVersionFifteenPointOne
+          ? 'scalar MyScalar @specifiedBy(url: "${specUrl}")'
+          : ''}
 
         type EarthConcern {
           environmental: String!
@@ -656,18 +663,18 @@ describe('composition of schemas with directives', () => {
     const deprecated = schema.getDirective('deprecated');
     expect(deprecated).toMatchInlineSnapshot(`"@deprecated"`);
 
-    const specifiedBy = schema.getDirective('specifiedBy');
-    expect(specifiedBy).toMatchInlineSnapshot(`"@specifiedBy"`);
-
     const queryType = schema.getType('Query') as GraphQLObjectType;
     const field = queryType.getFields()['importantDirectives'];
 
     expect(field.isDeprecated).toBe(true);
     expect(field.deprecationReason).toEqual(deprecationReason);
 
-    const customScalar = schema.getType('MyScalar');
-
-    expect((customScalar as GraphQLScalarType).specifiedByUrl).toEqual(specUrl);
+    if (isAtLeastGraphqlVersionFifteenPointOne) {
+      const specifiedBy = schema.getDirective('specifiedBy');
+      expect(specifiedBy).toMatchInlineSnapshot(`"@specifiedBy"`);
+      const customScalar = schema.getType('MyScalar');
+      expect((customScalar as GraphQLScalarType).specifiedByUrl).toEqual(specUrl);
+    }
   });
 });
 

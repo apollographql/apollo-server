@@ -6,6 +6,7 @@ import {
   stripCommonPrimitives,
 } from '../normalize';
 import { astSerializer } from '../../snapshotSerializers';
+import { specifiedDirectives } from 'graphql';
 
 expect.addSnapshotSerializer(astSerializer);
 
@@ -145,12 +146,21 @@ describe('SDL normalization and its respective parts', () => {
 
   describe('stripCommonPrimitives', () => {
     it(`removes all common directive definitions`, () => {
+      // Detecting >15.1.0 by the new addition of the `specifiedBy` directive
+      const isAtLeastGraphqlVersionFifteenPointOne =
+        specifiedDirectives.length >= 4;
+
       const typeDefs = gql`
         # Default directives
+
+        # This directive needs to be conditionally added depending on the testing
+        # environment's version of graphql (>= 15.1.0 includes this new directive)
+        ${isAtLeastGraphqlVersionFifteenPointOne
+          ? 'directive @specifiedBy(url: String!) on SCALAR'
+          : ''}
         directive @deprecated(
           reason: String = "No longer supported"
         ) on FIELD_DEFINITION | ENUM_VALUE
-        directive @specifiedBy(url: String!) on SCALAR
         directive @include(
           if: String = "Included when true."
         ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
@@ -286,12 +296,21 @@ describe('SDL normalization and its respective parts', () => {
 
   describe('normalizeTypeDefs', () => {
     it('integration', () => {
+      // Detecting >15.1.0 by the new addition of the `specifiedBy` directive
+      const isAtLeastGraphqlVersionFifteenPointOne =
+        specifiedDirectives.length >= 4;
+
       const typeDefsToNormalize = gql`
         # Default directives
+
+        # This directive needs to be conditionally added depending on the testing
+        # environment's version of graphql (>= 15.1.0 includes this new directive)
+        ${isAtLeastGraphqlVersionFifteenPointOne
+          ? 'directive @specifiedBy(url: String!) on SCALAR'
+          : ''}
         directive @deprecated(
           reason: String = "No longer supported"
         ) on FIELD_DEFINITION | ENUM_VALUE
-        directive @specifiedBy(url: String!) on SCALAR
         directive @include(
           if: String = "Included when true."
         ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
