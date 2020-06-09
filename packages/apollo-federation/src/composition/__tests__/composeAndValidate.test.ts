@@ -1,6 +1,6 @@
 import { composeAndValidate } from '../composeAndValidate';
 import gql from 'graphql-tag';
-import { GraphQLObjectType, DocumentNode } from 'graphql';
+import { GraphQLObjectType, DocumentNode, printSchema } from 'graphql';
 import {
   astSerializer,
   typeSerializer,
@@ -99,12 +99,12 @@ it('composes and validates all (24) permutations without error', () => {
     reviewsService,
     accountsService,
     productsService,
-  ]).map(config => {
+  ]).map((config) => {
     const { errors } = composeAndValidate(config);
 
     if (errors.length) {
       console.error(
-        `Errors found with composition [${config.map(item => item.name)}]`,
+        `Errors found with composition [${config.map((item) => item.name)}]`,
       );
     }
 
@@ -651,4 +651,133 @@ describe('composition of schemas with directives', () => {
     expect(field.isDeprecated).toBe(true);
     expect(field.deprecationReason).toEqual("Don't remove me please");
   });
+});
+
+it('composition of full-SDL schemas', () => {
+  const serviceA = {
+    typeDefs: gql`
+      # Default directives
+      directive @deprecated(
+        reason: String = "No longer supported"
+      ) on FIELD_DEFINITION | ENUM_VALUE
+      directive @specifiedBy(url: String!) on SCALAR
+      directive @include(
+        if: String = "Included when true."
+      ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+      directive @skip(
+        if: String = "Skipped when true."
+      ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+      # Federation directives
+      directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+      directive @external on FIELD_DEFINITION
+      directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+      directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+      directive @extends on OBJECT | INTERFACE
+
+      scalar _Any
+      scalar _FieldSet
+
+      union _Entity
+
+      type _Service {
+        sdl: String
+      }
+
+      schema {
+        query: RootQuery
+        mutation: RootMutation
+      }
+
+      type RootQuery {
+        _service: _Service!
+        _entities(representations: [_Any!]!): [_Entity]!
+        product: Product
+      }
+
+      type Product @key(fields: "sku") {
+        sku: String!
+        price: Float
+      }
+
+      type RootMutation {
+        updateProduct: Product
+      }
+    `,
+    name: 'serviceA',
+  };
+
+  const serviceB = {
+    typeDefs: gql`
+      # Default directives
+      directive @deprecated(
+        reason: String = "No longer supported"
+      ) on FIELD_DEFINITION | ENUM_VALUE
+      directive @specifiedBy(url: String!) on SCALAR
+      directive @include(
+        if: String = "Included when true."
+      ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+      directive @skip(
+        if: String = "Skipped when true."
+      ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+      # Federation directives
+      directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+      directive @external on FIELD_DEFINITION
+      directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+      directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+      directive @extends on OBJECT | INTERFACE
+
+      scalar _Any
+      scalar _FieldSet
+
+      union _Entity
+
+      type _Service {
+        sdl: String
+      }
+
+      type Query {
+        _service: _Service!
+        _entities(representations: [_Any!]!): [_Entity]!
+        review: Review
+      }
+
+      type Review @key(fields: "id") {
+        id: String!
+        content: String
+      }
+
+      type Mutation {
+        createReview: Review
+      }
+    `,
+    name: 'serviceB',
+  };
+
+  const { schema, errors } = composeAndValidate([serviceA, serviceB]);
+
+  expect(printSchema(schema)).toMatchInlineSnapshot(`
+    "type Product {
+      sku: String!
+      price: Float
+    }
+
+    type Review {
+      id: String!
+      content: String
+    }
+
+    type Query {
+      product: Product
+      review: Review
+    }
+
+    type Mutation {
+      updateProduct: Product
+      createReview: Review
+    }
+    "
+  `);
+  expect(errors).toHaveLength(0);
 });
