@@ -21,10 +21,6 @@
       "allowedVersions": "<3"
     },
     {
-      "packageNames": ["log4js"],
-      "allowedVersions": "<5"
-    },
-    {
       "packageNames": ["@hapi/hapi", "@types/hapi__hapi"],
       "allowedVersions": "<19"
     },
