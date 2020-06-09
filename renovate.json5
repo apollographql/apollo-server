@@ -24,10 +24,6 @@
       "packageNames": ["@hapi/hapi", "@types/hapi__hapi"],
       "allowedVersions": "<19"
     },
-    {
-      "packageNames": ["ws"],
-      "allowedVersions": "<7"
-    },
     /*
       Docs-related Renovate rules
 
