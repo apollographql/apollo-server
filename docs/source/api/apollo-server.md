@@ -127,7 +127,7 @@ new ApolloServer({
 
 * `schema`: <`Object`>
 
-  An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided. If you are using [file uploads](https://www.apollographql.com/docs/guides/file-uploads.html), you will have to add the `Upload` scalar to the schema, as it is not automatically added in case of setting the `schema` manually.
+  An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided.
 
 * `subscriptions`: <`Object`> | <`String`> | false
 
@@ -233,7 +233,7 @@ server.applyMiddleware({ app, path: '/specialUrl' }); // app is from an existing
 
 ## `ApolloServer.getMiddleware`
 
-Similar to the `applyMiddleware` method above, though rather than applying the composition of the various Apollo Server middlewares which comprise a full-featured Apollo Server deployment (e.g. middleware for HTTP body parsing, GraphQL Playground, uploads and subscriptions) the `getMiddleware` simply returns the middleware.
+Similar to the `applyMiddleware` method above, though rather than applying the composition of the various Apollo Server middlewares which comprise a full-featured Apollo Server deployment (e.g. middleware for HTTP body parsing, GraphQL Playground and subscriptions) the `getMiddleware` simply returns the middleware.
 
 The `getMiddleware` method takes the same arguments as `applyMiddleware` **except** `app` should not be passed.  Instead, the result of `getMiddleware` must be added as a middleware directly to an existing application (e.g. with `app.use(...)`).
 
