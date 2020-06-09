@@ -3,7 +3,7 @@ import {
   defaultRootOperationTypes,
   replaceExtendedDefinitionsWithExtensions,
   normalizeTypeDefs,
-  stripFederationPrimitives,
+  stripCommonPrimitives,
 } from '../normalize';
 import { astSerializer } from '../../snapshotSerializers';
 
@@ -143,9 +143,22 @@ describe('SDL normalization and its respective parts', () => {
     });
   });
 
-  describe('stripFederationPrimitives', () => {
-    it(`removes all federation directive definitions`, () => {
+  describe('stripCommonPrimitives', () => {
+    it(`removes all common directive definitions`, () => {
       const typeDefs = gql`
+        # Default directives
+        directive @deprecated(
+          reason: String = "No longer supported"
+        ) on FIELD_DEFINITION | ENUM_VALUE
+        directive @specifiedBy(url: String!) on SCALAR
+        directive @include(
+          if: String = "Included when true."
+        ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+        directive @skip(
+          if: String = "Skipped when true."
+        ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+        # Federation directives
         directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
         directive @external on FIELD_DEFINITION
         directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
@@ -157,7 +170,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         type Query {
           thing: String
         }
@@ -173,7 +186,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         directive @custom on OBJECT
 
         type Query {
@@ -198,7 +211,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         type Query {
           thing: String
         }
@@ -220,7 +233,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         scalar CustomScalar
 
         type CustomType {
@@ -244,7 +257,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         type Query {
           thing: String
         }
@@ -263,7 +276,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         type Custom {
           field: String
         }
@@ -274,6 +287,18 @@ describe('SDL normalization and its respective parts', () => {
   describe('normalizeTypeDefs', () => {
     it('integration', () => {
       const typeDefsToNormalize = gql`
+        # Default directives
+        directive @deprecated(
+          reason: String = "No longer supported"
+        ) on FIELD_DEFINITION | ENUM_VALUE
+        directive @specifiedBy(url: String!) on SCALAR
+        directive @include(
+          if: String = "Included when true."
+        ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+        directive @skip(
+          if: String = "Skipped when true."
+        ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
         directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
         directive @external on FIELD_DEFINITION
         directive @requires(fields: _FieldSet!) on FIELD_DEFINITION

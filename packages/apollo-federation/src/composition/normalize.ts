@@ -7,6 +7,7 @@ import {
   Kind,
   InterfaceTypeDefinitionNode,
   VisitFn,
+  specifiedDirectives,
 } from 'graphql';
 import {
   findDirectivesOnTypeOrField,
@@ -17,10 +18,10 @@ import {
 import federationDirectives from '../directives';
 
 export function normalizeTypeDefs(typeDefs: DocumentNode) {
-  // The order of this is important - `stripFederationPrimitives` must come after
+  // The order of this is important - `stripCommonPrimitives` must come after
   // `defaultRootOperationTypes` because it depends on the `Query` type being named
   // its default: `Query`.
-  return stripFederationPrimitives(
+  return stripCommonPrimitives(
     defaultRootOperationTypes(
       replaceExtendedDefinitionsWithExtensions(typeDefs),
     ),
@@ -261,12 +262,12 @@ export function replaceExtendedDefinitionsWithExtensions(
 // primitives, but in many cases it's more difficult to exclude them.
 //
 // This removes the following from a GraphQL Document:
-// directives: @external, @key, @requires, @provides, @extends
+// directives: @external, @key, @requires, @provides, @extends, @skip, @include, @deprecated, @specifiedBy
 // scalars: _Any, _FieldSet
 // union: _Entity
 // object type: _Service
 // Query fields: _service, _entities
-export function stripFederationPrimitives(document: DocumentNode) {
+export function stripCommonPrimitives(document: DocumentNode) {
   const typeDefinitionVisitor: VisitFn<
     any,
     ObjectTypeDefinitionNode | ObjectTypeExtensionNode
@@ -295,12 +296,12 @@ export function stripFederationPrimitives(document: DocumentNode) {
   };
 
   return visit(document, {
-    // Remove all federation directive definitions from the document
+    // Remove all common directive definitions from the document
     DirectiveDefinition(node) {
-      const isFederationDirective = federationDirectives.some(
+      const isCommonDirective = [...federationDirectives, ...specifiedDirectives].some(
         (directive) => directive.name === node.name.value,
       );
-      return isFederationDirective ? null : node;
+      return isCommonDirective ? null : node;
     },
     // Remove all federation scalar definitions from the document
     ScalarTypeDefinition(node) {

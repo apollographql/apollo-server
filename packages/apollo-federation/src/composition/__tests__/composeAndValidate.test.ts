@@ -1,6 +1,12 @@
 import { composeAndValidate } from '../composeAndValidate';
 import gql from 'graphql-tag';
-import { GraphQLObjectType, DocumentNode, printSchema } from 'graphql';
+import {
+  GraphQLObjectType,
+  DocumentNode,
+  printSchema,
+  isSpecifiedDirective,
+  GraphQLScalarType,
+} from 'graphql';
 import {
   astSerializer,
   typeSerializer,
@@ -624,16 +630,21 @@ describe('composition of schemas with directives', () => {
     );
   });
 
-  it(`doesn't strip the special case @deprecated type-system directive`, () => {
+  it(`doesn't strip the special case @deprecated and @specifiedBy type-system directives`, () => {
+    const specUrl = "http://my-spec-url.com";
+    const deprecationReason = "Don't remove me please";
+
     const serviceA = {
       typeDefs: gql`
+        scalar MyScalar @specifiedBy(url: "${specUrl}")
+
         type EarthConcern {
           environmental: String!
         }
 
         extend type Query {
           importantDirectives: [EarthConcern!]!
-            @deprecated(reason: "Don't remove me please")
+            @deprecated(reason: "${deprecationReason}")
         }
       `,
       name: 'serviceA',
@@ -645,15 +656,22 @@ describe('composition of schemas with directives', () => {
     const deprecated = schema.getDirective('deprecated');
     expect(deprecated).toMatchInlineSnapshot(`"@deprecated"`);
 
+    const specifiedBy = schema.getDirective('specifiedBy');
+    expect(specifiedBy).toMatchInlineSnapshot(`"@specifiedBy"`);
+
     const queryType = schema.getType('Query') as GraphQLObjectType;
     const field = queryType.getFields()['importantDirectives'];
 
     expect(field.isDeprecated).toBe(true);
-    expect(field.deprecationReason).toEqual("Don't remove me please");
+    expect(field.deprecationReason).toEqual(deprecationReason);
+
+    const customScalar = schema.getType('MyScalar');
+
+    expect((customScalar as GraphQLScalarType).specifiedByUrl).toEqual(specUrl);
   });
 });
 
-it('composition of full-SDL schemas', () => {
+it('composition of full-SDL schemas without any errors', () => {
   const serviceA = {
     typeDefs: gql`
       # Default directives
@@ -755,29 +773,6 @@ it('composition of full-SDL schemas', () => {
     name: 'serviceB',
   };
 
-  const { schema, errors } = composeAndValidate([serviceA, serviceB]);
-
-  expect(printSchema(schema)).toMatchInlineSnapshot(`
-    "type Product {
-      sku: String!
-      price: Float
-    }
-
-    type Review {
-      id: String!
-      content: String
-    }
-
-    type Query {
-      product: Product
-      review: Review
-    }
-
-    type Mutation {
-      updateProduct: Product
-      createReview: Review
-    }
-    "
-  `);
+  const { errors } = composeAndValidate([serviceA, serviceB]);
   expect(errors).toHaveLength(0);
 });
