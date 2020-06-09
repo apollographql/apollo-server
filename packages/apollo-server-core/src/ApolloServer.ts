@@ -3,7 +3,11 @@ import {
   addMockFunctionsToSchema,
   GraphQLParseOptions,
 } from 'graphql-tools';
+import { Server as NetServer } from 'net'
+import { Server as TlsServer } from 'tls'
 import { Server as HttpServer } from 'http';
+import { Http2Server, Http2SecureServer } from 'http2';
+import { Server as HttpsServer } from 'https';
 import loglevel from 'loglevel';
 import {
   execute,
@@ -602,7 +606,7 @@ export class ApolloServerBase {
     }
   }
 
-  public installSubscriptionHandlers(server: HttpServer | WebSocket.Server) {
+  public installSubscriptionHandlers(server: HttpServer | HttpsServer | Http2Server | Http2SecureServer | WebSocket.Server) {
     if (!this.subscriptionServerOptions) {
       if (this.config.gateway) {
         throw Error(
@@ -678,7 +682,7 @@ export class ApolloServerBase {
         keepAlive,
         validationRules: this.requestOptions.validationRules
       },
-      server instanceof HttpServer
+      server instanceof NetServer || server instanceof TlsServer
         ? {
           server,
           path,
