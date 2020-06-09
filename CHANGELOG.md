@@ -5,6 +5,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/CHANGELOG.md)
 - [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md)
 
+### v2.14.3
+
+- This release only includes patch updates to dependencies.
+
 ### v2.14.2
 
 > **Note:** This release is is related to a GitHub Security Advisory published by the Apollo Server team.  Please read the attached advisory to understand the impact.
