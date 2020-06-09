@@ -31,7 +31,7 @@ import {
   GraphQLDirective,
   OperationTypeNode,
 } from 'graphql';
-import Maybe from 'graphql/tsutils/Maybe';
+import { Maybe }  from 'graphql/jsutils/Maybe';
 import { ExternalFieldDefinition, DefaultRootOperationTypeName } from './types';
 import federationDirectives from '../directives';
 
