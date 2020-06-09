@@ -4,8 +4,6 @@ import fastify from 'fastify';
 import http from 'http';
 
 import request from 'request';
-import FormData from 'form-data';
-import fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';

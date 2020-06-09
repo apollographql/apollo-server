@@ -2,8 +2,6 @@ import micro from 'micro';
 import listen from 'test-listen';
 import { createApolloFetch } from 'apollo-fetch';
 import { gql } from 'apollo-server-core';
-import FormData from 'form-data';
-import fs from 'fs';
 import rp from 'request-promise';
 
 import { ApolloServer } from '../ApolloServer';

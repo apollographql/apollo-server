@@ -5,8 +5,6 @@ import {
 
 import http = require('http');
 import request = require('request');
-import FormData = require('form-data');
-import fs = require('fs');
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError } from 'apollo-server-core';

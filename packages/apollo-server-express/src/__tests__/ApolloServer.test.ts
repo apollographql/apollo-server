@@ -3,8 +3,6 @@ import express from 'express';
 import http from 'http';
 
 import request from 'request';
-import FormData from 'form-data';
-import fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError } from 'apollo-server-core';
