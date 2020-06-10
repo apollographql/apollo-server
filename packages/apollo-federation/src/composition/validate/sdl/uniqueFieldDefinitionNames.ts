@@ -15,7 +15,7 @@ import {
 } from 'graphql';
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import { TypeMap } from 'graphql/type/schema';
-import Maybe from 'graphql/tsutils/Maybe';
+import { Maybe } from '../../types';
 import { diffTypeNodes, logServiceAndType } from '../../utils';
 
 type TypeNodeWithFields = TypeDefinitionWithFields | TypeExtensionWithFields;
