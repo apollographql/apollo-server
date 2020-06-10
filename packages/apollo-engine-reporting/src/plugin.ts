@@ -34,6 +34,7 @@ export const plugin = <TContext>(
   {
     startSchemaReporting,
     executableSchemaIdGenerator,
+    schemaReport,
   }: {
     startSchemaReporting: ({
       executableSchema,
@@ -43,6 +44,7 @@ export const plugin = <TContext>(
       executableSchemaId: string;
     }) => void;
     executableSchemaIdGenerator: (schema: string | GraphQLSchema) => string;
+    schemaReport: boolean;
   },
 ): ApolloServerPlugin<TContext> => {
   /**
@@ -57,7 +59,7 @@ export const plugin = <TContext>(
 
   return {
     serverWillStart: function({ schema }) {
-      if (!options.experimental_schemaReporting) return;
+      if (!schemaReport) return;
       startSchemaReporting({
         executableSchema:
           options.experimental_overrideReportedSchema || printSchema(schema),

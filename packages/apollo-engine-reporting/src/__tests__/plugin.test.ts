@@ -58,14 +58,13 @@ describe('schema reporting', () => {
 
   it('starts reporting if enabled', async () => {
     const pluginInstance = plugin(
-      {
-        experimental_schemaReporting: true,
-      },
+      {},
       addTrace,
       {
         startSchemaReporting,
         executableSchemaIdGenerator,
-      },
+        schemaReport: true,
+      }
     );
 
     await pluginTestHarness({
@@ -97,13 +96,13 @@ describe('schema reporting', () => {
   it('uses the override schema', async () => {
     const pluginInstance = plugin(
       {
-        experimental_schemaReporting: true,
         experimental_overrideReportedSchema: typeDefs,
       },
       addTrace,
       {
         startSchemaReporting,
         executableSchemaIdGenerator,
+        schemaReport: true,
       },
     );
 
@@ -145,14 +144,13 @@ describe('schema reporting', () => {
 
   it('uses the same executable schema id for metric reporting', async () => {
     const pluginInstance = plugin(
-      {
-        experimental_schemaReporting: true,
-      },
+      {},
       addTrace,
       {
         startSchemaReporting,
         executableSchemaIdGenerator,
-      },
+        schemaReport: true,
+      }
     );
 
     await pluginTestHarness({
