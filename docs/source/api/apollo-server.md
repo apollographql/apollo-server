@@ -482,14 +482,15 @@ addMockFunctionsToSchema({
 
 * `instrumentOperation`: Boolean | async (GraphQLRequestContextDidResolveOperation) => Boolean
 
-    If this option returns `true`, tracing and instrumentation will be enabled for a
-    given request. If it is `false`, the request will not be instrumented, and a trace will not
-    be constructed or sent to Apollo Graph Manager.
+    Specify whether to instrument an operation to send traces and metrics to Apollo.
+    This may resolve to a boolean or a async function returning a promise resolving to a boolean.
+    If the option resolves to false for an operation the operation will not be instrumented
+    and no metrics information will be sent to Apollo.
 
-    This function will receive a `GraphQLRequestContextDidResolveOperation`, which will contain
-    client and operation information allowing those to be used in the
-    determination of whether a request should be traced. If nothing is provided
-    the default behavior is to trace every request and send them to Apollo Graph Manager.
+    The function will receive a GraphQLRequestContextDidResolveOperation with client and operation
+    information or a GraphQLRequestContextDiDEncounterErrors in the case an operation failed
+    to resolve properly. This allows the choice of whether to include a given request in trace
+    and metric reporting to be made on a per-request basis. The default value is true.
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 
