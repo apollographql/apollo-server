@@ -1,9 +1,6 @@
-import { GraphQLSchema, DocumentNode, ParseOptions } from 'graphql';
-import {
-  SchemaDirectiveVisitor,
-  IResolvers,
-  IMocks,
-} from 'graphql-tools';
+import { GraphQLSchema, DocumentNode } from 'graphql';
+import { IMocks } from '@graphql-tools/mock';
+import { IExecutableSchemaDefinition as GraphQLToolsExecutableSchemaDefinition } from '@graphql-tools/schema';
 import {
   ValueOrPromise,
   GraphQLExecutor,
@@ -82,15 +79,21 @@ export interface GraphQLService {
   ): ValueOrPromise<GraphQLExecutionResult>;
 }
 
+// ExecutableSchemaDefinition is based on the similar GraphQL Tools interface
+// with the following differences:
+//  = The `typeDefs` property is simplified to require typeDefs to be statically defined
+//    so that Apollo Server can easily extend them.
+//  = The `logger` property is omitted from the Apollo ExecutableSchemaDefinition as
+//    Apollo Server provides server-based logging rather than schema-based logging.
+export interface ExecutableSchemaDefinition extends Omit<GraphQLToolsExecutableSchemaDefinition, 'typeDefs' | 'logger'> {
+  typeDefs: DocumentNode | string | Array<DocumentNode | string>;
+};
+
 // This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
-export interface Config extends BaseConfig {
+export interface Config extends BaseConfig, Partial<ExecutableSchemaDefinition> {
   modules?: GraphQLSchemaModule[];
-  typeDefs?: DocumentNode | Array<DocumentNode> | string | Array<string>;
-  parseOptions?: ParseOptions;
-  resolvers?: IResolvers | Array<IResolvers>;
   schema?: GraphQLSchema;
-  schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context | ContextFunction;
   introspection?: boolean;
   mocks?: boolean | IMocks;

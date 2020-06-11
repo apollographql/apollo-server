@@ -1,4 +1,5 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import { addMocksToSchema } from '@graphql-tools/mock';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import { graphql, GraphQLError, printSchema } from 'graphql';
 import { Request } from 'node-fetch';
 import { makeTraceDetails, makeHTTPRequestHeaders, plugin } from '../plugin';
@@ -55,8 +56,8 @@ const queryReport = `
 `;
 
 describe('schema reporting', () => {
-  const schema = makeExecutableSchema({ typeDefs });
-  addMockFunctionsToSchema({ schema });
+  let schema = makeExecutableSchema({ typeDefs });
+  schema = addMocksToSchema({ schema });
 
   const addTrace = jest.fn(() => Promise.resolve());
   const startSchemaReporting = jest.fn();
@@ -200,8 +201,8 @@ describe('schema reporting', () => {
 });
 
 it('trace construction', async () => {
-  const schema = makeExecutableSchema({ typeDefs });
-  addMockFunctionsToSchema({ schema });
+  let schema = makeExecutableSchema({ typeDefs });
+  schema = addMocksToSchema({ schema });
 
   const startSchemaReporting = jest.fn();
   const executableSchemaIdGenerator = jest.fn();
@@ -476,8 +477,8 @@ describe('tests for the "reportTiming', () => {
     startSchemaReporting: jest.fn(),
     executableSchemaIdGenerator: jest.fn(),
   };
-  const schema = makeExecutableSchema({ typeDefs });
-  addMockFunctionsToSchema({ schema });
+  let schema = makeExecutableSchema({ typeDefs });
+  schema = addMocksToSchema({ schema });
 
   const addTrace = jest.fn(() => Promise.resolve());
   beforeEach(() => {

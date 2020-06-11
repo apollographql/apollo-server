@@ -152,7 +152,7 @@ export class ApolloServer {
     // const { mocks, mockEntireSchema, extensions: _extensions } = this.config;
 
     // if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
-    //   addMockFunctionsToSchema({
+    //   addMocksToSchema({
     //     schema,
     //     mocks:
     //       typeof mocks === 'boolean' || typeof mocks === 'undefined'

@@ -14,6 +14,9 @@
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base"
   },
+  "devDependencies": {
+    "@graphql-tools/schema": "^7.0.0"
+  },
   "peerDependencies": {
     "graphql": "^15.3.0"
   }

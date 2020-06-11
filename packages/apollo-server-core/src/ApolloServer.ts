@@ -1,7 +1,5 @@
-import {
-  makeExecutableSchema,
-  addMockFunctionsToSchema,
-} from 'graphql-tools';
+import { addMocksToSchema } from '@graphql-tools/mock';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import loglevel from 'loglevel';
 import {
   GraphQLSchema,
@@ -307,8 +305,13 @@ export class ApolloServerBase {
       modules,
       typeDefs,
       resolvers,
+      allowUndefinedInResolve,
+      resolverValidationOptions,
+      directiveResolvers,
       schemaDirectives,
+      schemaTransforms,
       parseOptions,
+      inheritResolversFromInterfaces,
     } = this.config;
     if (gateway) {
       this.toDispose.add(
@@ -389,11 +392,20 @@ export class ApolloServerBase {
         );
       }
 
+      // ExecutableSchemaDefinition properties are passed individually to makeExecutableSchema
+      // Although the 'logger' property is the only currently conflicting property, and this
+      // requires manually updating Apollo Server if additional properties are added, this
+      // prevents bugs secondary to potential future conflicts.
       constructedSchema = makeExecutableSchema({
         typeDefs: augmentedTypeDefs,
-        schemaDirectives,
         resolvers,
+        allowUndefinedInResolve,
+        resolverValidationOptions,
+        directiveResolvers,
+        schemaDirectives,
+        schemaTransforms,
         parseOptions,
+        inheritResolversFromInterfaces,
       });
     }
 
@@ -406,7 +418,7 @@ export class ApolloServerBase {
     const { mocks, mockEntireSchema } = this.config;
 
     if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
-      addMockFunctionsToSchema({
+      schema = addMocksToSchema({
         schema,
         mocks:
           typeof mocks === 'boolean' || typeof mocks === 'undefined'
