@@ -580,6 +580,10 @@ export class ApolloGateway implements GraphQLService {
       });
     };
 
+    if(isManagedConfig(config)) {
+      //Override service url based on name defined in config
+    }
+
     if (isLocalConfig(config) || isRemoteConfig(config)) {
       if (this.engineConfig && !this.warnedStates.remoteWithLocalConfig) {
         // Only display this warning once per start-up.
