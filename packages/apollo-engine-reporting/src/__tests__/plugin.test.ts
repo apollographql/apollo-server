@@ -96,7 +96,7 @@ describe('schema reporting', () => {
   it('uses the override schema', async () => {
     const pluginInstance = plugin(
       {
-        experimental_overrideReportedSchema: typeDefs,
+        overrideReportedSchema: typeDefs,
       },
       addTrace,
       {
