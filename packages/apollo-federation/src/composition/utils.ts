@@ -31,7 +31,11 @@ import {
   GraphQLDirective,
   OperationTypeNode,
 } from 'graphql';
-import { ExternalFieldDefinition, DefaultRootOperationTypeName, Maybe } from './types';
+import {
+  ExternalFieldDefinition,
+  DefaultRootOperationTypeName,
+  Maybe,
+} from './types';
 import federationDirectives from '../directives';
 
 export function isStringValueNode(node: any): node is StringValueNode {
