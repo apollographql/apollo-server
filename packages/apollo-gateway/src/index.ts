@@ -8,6 +8,7 @@ import {
   GraphQLExecutionResult,
   Logger,
   GraphQLRequestContextExecutionDidStart,
+  GraphQLRequest,
 } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import {
@@ -16,6 +17,7 @@ import {
   GraphQLSchema,
   GraphQLError,
   VariableDefinitionNode,
+  parse,
 } from 'graphql';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
@@ -41,7 +43,7 @@ import { HeadersInit } from 'node-fetch';
 import { getVariableValues } from 'graphql/execution/values';
 import fetcher from 'make-fetch-happen';
 import { HttpRequestCache } from './cache';
-import { fetch } from 'apollo-server-env';
+import { fetch, Headers } from 'apollo-server-env';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -346,6 +348,48 @@ export class ApolloGateway implements GraphQLService {
       throw e;
     }
 
+    let serviceNameToOverride = process.env.APOLLO_SERVICE_OVERRIDE_NAME;
+    if(isManagedConfig(this.config) && serviceNameToOverride){
+      let serviceURLToOverride = process.env.APOLLO_SERVICE_OVERRIDE_URL ?? "";
+      if(serviceURLToOverride) {
+        //Override service url based on name defined in config
+        let serviceIndexToOverride = result.serviceDefinitions?.findIndex(sd=>sd.name == serviceNameToOverride) ?? -1;
+        if(serviceIndexToOverride >= 0 && result.serviceDefinitions){
+          result.isNewSchema = true;
+          result.serviceDefinitions[serviceIndexToOverride].url = serviceURLToOverride;
+
+          const request: GraphQLRequest = {
+            query: SERVICE_DEFINITION_QUERY,
+            http: {
+              url: serviceURLToOverride,
+              method: 'POST',
+              headers: new Headers()
+            },
+          };
+
+          this.createAndCacheDataSource({name: serviceNameToOverride, url: serviceURLToOverride})
+            .process({ request, context: {} })
+            .then(({ data, errors }): ServiceDefinition => {
+              if (data && !errors && result.serviceDefinitions) {
+                const typeDefs = data._service.sdl as string;
+                result.serviceDefinitions[serviceIndexToOverride].typeDefs = parse(typeDefs);
+              }
+
+              throw new Error(errors?.map(e => e.message).join("\n"));
+            })
+            .catch(err => {
+              const errorMessage =
+                `Couldn't load service definitions for "${serviceNameToOverride}" at ${serviceURLToOverride}` +
+                (err && err.message ? ": " + err.message || err : "");
+
+              throw new Error(errorMessage);
+            });
+        }
+      } else {
+        this.logger.error(`You must provide a URL to override the ${serviceNameToOverride} service. Set the APOLLO_SERVICE_OVERRIDE_URL to your local running server`);
+      }
+    }
+
     if (
       !result.serviceDefinitions ||
       JSON.stringify(this.serviceDefinitions) ===
@@ -579,10 +623,6 @@ export class ApolloGateway implements GraphQLService {
         fetcher: this.fetcher,
       });
     };
-
-    if(isManagedConfig(config)) {
-      //Override service url based on name defined in config
-    }
 
     if (isLocalConfig(config) || isRemoteConfig(config)) {
       if (this.engineConfig && !this.warnedStates.remoteWithLocalConfig) {
