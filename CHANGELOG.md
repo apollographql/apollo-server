@@ -9,8 +9,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- `apollo-engine-reporting`: Add environment variable `APOLLO_SCHEMA_REPORTING` that can enable schema reporting. If `experimental__schemaReporting` is set it will override the environment variables.
-- `apollo-engine-reporting`: The schema reporting URL has been changed to use the new dedicated sub-domain `https://edge-server-reporting.api.apollographql.com`.
+- `apollo-engine-reporting`: Add environment variable `APOLLO_SCHEMA_REPORTING` that can enable schema reporting. If `experimental__schemaReporting` is set it will override the environment variable. [PR #4206](https://github.com/apollographql/apollo-server/pull/4206)
+- `apollo-engine-reporting`: The schema reporting URL has been changed to use the new dedicated sub-domain `https://edge-server-reporting.api.apollographql.com`. [PR #4232](https://github.com/apollographql/apollo-server/pull/4232)
 
 ### v2.14.3
 
