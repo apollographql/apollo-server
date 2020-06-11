@@ -642,7 +642,7 @@ describe('composition of schemas with directives', () => {
         # This directive needs to be conditionally added depending on the testing
         # environment's version of graphql (>= 15.1.0 includes this new directive)
         ${isAtLeastGraphqlVersionFifteenPointOne
-          ? 'scalar MyScalar @specifiedBy(url: "${specUrl}")'
+          ? `scalar MyScalar @specifiedBy(url: "${specUrl}")`
           : ''}
 
         type EarthConcern {
