@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
-import Maybe from 'graphql/tsutils/Maybe';
+import { Maybe } from '../../types';
 import {
   isTypeNodeAnEntity,
   diffTypeNodes,
