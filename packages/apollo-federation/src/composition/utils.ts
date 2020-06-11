@@ -31,8 +31,11 @@ import {
   GraphQLDirective,
   OperationTypeNode,
 } from 'graphql';
-import Maybe from 'graphql/tsutils/Maybe';
-import { ExternalFieldDefinition, DefaultRootOperationTypeName } from './types';
+import {
+  ExternalFieldDefinition,
+  DefaultRootOperationTypeName,
+  Maybe,
+} from './types';
 import federationDirectives from '../directives';
 
 export function isStringValueNode(node: any): node is StringValueNode {
