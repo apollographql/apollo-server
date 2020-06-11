@@ -18,6 +18,7 @@ import {
   GraphQLError,
   VariableDefinitionNode,
   parse,
+  print,
 } from 'graphql';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
@@ -352,8 +353,8 @@ export class ApolloGateway implements GraphQLService {
     if(isManagedConfig(this.config) && serviceNameToOverride){
       let serviceURLToOverride = process.env.APOLLO_SERVICE_OVERRIDE_URL ?? "";
       if(serviceURLToOverride) {
-        //Override service url based on name defined in config
         let serviceIndexToOverride = result.serviceDefinitions?.findIndex(sd=>sd.name == serviceNameToOverride) ?? -1;
+
         if(serviceIndexToOverride >= 0 && result.serviceDefinitions){
           result.isNewSchema = true;
           result.serviceDefinitions[serviceIndexToOverride].url = serviceURLToOverride;
@@ -367,23 +368,15 @@ export class ApolloGateway implements GraphQLService {
             },
           };
 
-          this.createAndCacheDataSource({name: serviceNameToOverride, url: serviceURLToOverride})
-            .process({ request, context: {} })
-            .then(({ data, errors }): ServiceDefinition => {
-              if (data && !errors && result.serviceDefinitions) {
-                const typeDefs = data._service.sdl as string;
-                result.serviceDefinitions[serviceIndexToOverride].typeDefs = parse(typeDefs);
-              }
+          let source = new RemoteGraphQLDataSource({
+            url: serviceURLToOverride,
+          });
 
-              throw new Error(errors?.map(e => e.message).join("\n"));
-            })
-            .catch(err => {
-              const errorMessage =
-                `Couldn't load service definitions for "${serviceNameToOverride}" at ${serviceURLToOverride}` +
-                (err && err.message ? ": " + err.message || err : "");
-
-              throw new Error(errorMessage);
-            });
+          let { data, errors } = await source.process({request, context:{}});
+          if (data && !errors) {
+            const typeDefs = data._service.sdl as string;
+            result.serviceDefinitions[serviceIndexToOverride].typeDefs = parse(typeDefs);
+          }
         }
       } else {
         this.logger.error(`You must provide a URL to override the ${serviceNameToOverride} service. Set the APOLLO_SERVICE_OVERRIDE_URL to your local running server`);
@@ -592,6 +585,8 @@ export class ApolloGateway implements GraphQLService {
         `Service definition for service ${serviceDef.name} is missing a url`,
       );
     }
+
+    console.log(`ewfwfe${this.config.buildService}`);
 
     return this.config.buildService
       ? this.config.buildService(serviceDef)
