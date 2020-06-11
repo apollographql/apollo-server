@@ -389,6 +389,7 @@ export class EngineReportingAgent<TContext = any> {
   };
 
   private readonly tracesEndpointUrl: string;
+  private readonly schemaReport: boolean;
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
@@ -405,6 +406,13 @@ export class EngineReportingAgent<TContext = any> {
       throw new Error(
         `To use EngineReportingAgent, you must specify an API key via the apiKey option or the APOLLO_KEY environment variable.`,
       );
+    }
+
+
+    if (options.experimental_schemaReporting !== undefined) {
+      this.schemaReport = options.experimental_schemaReporting;
+    } else {
+      this.schemaReport = process.env.APOLLO_SCHEMA_REPORTING === "true"
     }
 
     // Since calculating the signature for Engine reporting is potentially an
@@ -469,6 +477,7 @@ export class EngineReportingAgent<TContext = any> {
     return plugin(this.options, this.addTrace.bind(this), {
       startSchemaReporting: this.startSchemaReporting.bind(this),
       executableSchemaIdGenerator: this.executableSchemaIdGenerator.bind(this),
+      schemaReport: this.schemaReport,
     });
   }
 
