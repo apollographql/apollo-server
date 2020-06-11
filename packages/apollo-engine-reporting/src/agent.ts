@@ -57,7 +57,7 @@ export type VariableValueOptions =
     }
   | SendValuesBaseOptions;
 
-export type InstrumentOperationOptions<TContext> =
+export type TimeOperationOptions<TContext> =
   | ((
       request:
         | GraphQLRequestContextDidResolveOperation<TContext>
@@ -239,7 +239,7 @@ export interface EngineReportingOptions<TContext> {
    * **Example:**
    *
    * ```js
-   * instrumentOperation(requestContext) {
+   * timeOperation(requestContext) {
    *   // Always trace `query HomeQuery { ... }`.
    *   if (requestContext.operationName === "HomeQuery") return true;
    *
@@ -254,7 +254,7 @@ export interface EngineReportingOptions<TContext> {
    * ```
    *
    */
-  instrumentOperation?: InstrumentOperationOptions<TContext>;
+  timeOperation?: TimeOperationOptions<TContext>;
   /**
    * [DEPRECATED] Use sendVariableValues
    * Passing an array into privateVariables is equivalent to passing { exceptNames: array } into

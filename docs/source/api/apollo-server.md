@@ -480,7 +480,7 @@ addMockFunctionsToSchema({
 
    A human-readable name for the variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Graph Manager UI. Additionally schema validation with a graph variant will only check metrics associated with the same string.
 
-* `instrumentOperation`: Boolean | async (GraphQLRequestContextDidResolveOperation) => Boolean
+* `timeOperation`: Boolean | async (GraphQLRequestContextDidResolveOperation | GraphQLRequestContextDidEncounterErrors) => Boolean
 
     Specify whether to instrument an operation to send traces and metrics to Apollo.
     This may resolve to a boolean or a async function returning a promise resolving to a boolean.
