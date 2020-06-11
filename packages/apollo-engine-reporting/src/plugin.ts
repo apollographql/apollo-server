@@ -80,14 +80,14 @@ export const plugin = <TContext>(
       const logger = requestLogger || loggerForPlugin;
       if (
         !['function', 'boolean', 'undefined'].includes(
-          typeof options.traceReporting,
+          typeof options.instrumentOperation,
         )
       ) {
-        throw new Error('Invalid option passed to `traceReporting`.');
+        throw new Error('Invalid option passed to `instrumentOperation`.');
       }
 
       // If the options are false don't do any metrics timing.
-      if (options.traceReporting === false) {
+      if (options.instrumentOperation === false) {
         metrics.captureTraces = false;
         return;
       }
@@ -138,24 +138,24 @@ export const plugin = <TContext>(
         if (metrics.captureTraces !== undefined)
           return;
 
-        if (typeof options.traceReporting === 'boolean') {
-          metrics.captureTraces = options.traceReporting;
+        if (typeof options.instrumentOperation === 'boolean') {
+          metrics.captureTraces = options.instrumentOperation;
           return;
         }
 
-        if (typeof options.traceReporting !== 'function') {
+        if (typeof options.instrumentOperation !== 'function') {
           // Default case we always report
           metrics.captureTraces = true;
           return;
         }
 
-        metrics.captureTraces = await options.traceReporting(requestContext);
+        metrics.captureTraces = await options.instrumentOperation(requestContext);
 
         // Help the user understand they've returned an unexpected value,
         // which might be a subtle mistake.
         if (typeof metrics.captureTraces !== 'boolean') {
           logger.warn(
-            "The 'traceReporting' predicate function must return a boolean value.",
+            "The 'instrumentOperation' predicate function must return a boolean value.",
           );
           metrics.captureTraces = true;
         }
