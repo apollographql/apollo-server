@@ -276,7 +276,7 @@ describe('apollo-server-express', () => {
               reject(error);
             } else {
               expect(body).toMatch('GraphQLPlayground');
-              expect(body).toMatch(`"editor.theme": "light"`);
+              expect(body).toMatch(`\"editor.theme\":\"light\"`);
               expect(body).toMatch(defaultQuery);
               expect(body).toMatch(endpoint);
               expect(response.statusCode).toEqual(200);

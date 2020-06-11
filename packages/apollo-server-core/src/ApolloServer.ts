@@ -78,6 +78,7 @@ import {
   CacheControlExtensionOptions,
 } from 'apollo-cache-control';
 import { getEngineApiKey, getEngineGraphVariant } from "apollo-engine-reporting/dist/agent";
+import { cloneObject } from "./runHttpQuery";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -665,6 +666,7 @@ export class ApolloServerBase {
           return { ...connection, context };
         },
         keepAlive,
+        validationRules: this.requestOptions.validationRules
       },
       server instanceof WebSocket.Server
         ? server
@@ -854,7 +856,16 @@ export class ApolloServerBase {
 
     if (typeof options.context === 'function') {
       options.context = (options.context as () => never)();
+    } else if (typeof options.context === 'object') {
+      // FIXME: We currently shallow clone the context for every request,
+      // but that's unlikely to be what people want.
+      // We allow passing in a function for `context` to ApolloServer,
+      // but this only runs once for a batched request (because this is resolved
+      // in ApolloServer#graphQLServerOptions, before runHttpQuery is invoked).
+      // NOTE: THIS IS DUPLICATED IN runHttpQuery.ts' buildRequestContext.
+      options.context = cloneObject(options.context);
     }
+
 
     const requestCtx: GraphQLRequestContext = {
       logger: this.logger,

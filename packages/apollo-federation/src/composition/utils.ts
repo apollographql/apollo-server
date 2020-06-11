@@ -29,9 +29,13 @@ import {
   ASTNode,
   DirectiveDefinitionNode,
   GraphQLDirective,
+  OperationTypeNode,
 } from 'graphql';
-import Maybe from 'graphql/tsutils/Maybe';
-import { ExternalFieldDefinition } from './types';
+import {
+  ExternalFieldDefinition,
+  DefaultRootOperationTypeName,
+  Maybe,
+} from './types';
 import federationDirectives from '../directives';
 
 export function isStringValueNode(node: any): node is StringValueNode {
@@ -549,3 +553,14 @@ export const executableDirectiveLocations = [
 export function isFederationDirective(directive: GraphQLDirective): boolean {
   return federationDirectives.some(({ name }) => name === directive.name);
 }
+
+export const reservedRootFields = ['_service', '_entities'];
+
+// Map of OperationTypeNode to its respective default root operation type name
+export const defaultRootOperationNameLookup: {
+  [node in OperationTypeNode]: DefaultRootOperationTypeName;
+} = {
+  query: 'Query',
+  mutation: 'Mutation',
+  subscription: 'Subscription',
+};

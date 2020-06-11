@@ -1,6 +1,6 @@
 {
 	"name": "apollo-server-azure-functions",
-	"version": "2.14.0-alpha.2",
+	"version": "2.14.3",
 	"description": "Production-ready Node.js GraphQL server for Azure Functions",
 	"keywords": [
 		"GraphQL",
@@ -25,8 +25,8 @@
 		"node": ">=6"
 	},
 	"dependencies": {
-		"@apollographql/graphql-playground-html": "1.6.24",
-		"@azure/functions": "1.2.0",
+		"@apollographql/graphql-playground-html": "1.6.25",
+		"@azure/functions": "1.2.2",
 		"apollo-server-core": "file:../apollo-server-core",
 		"apollo-server-env": "file:../apollo-server-env",
 		"apollo-server-types": "file:../apollo-server-types",

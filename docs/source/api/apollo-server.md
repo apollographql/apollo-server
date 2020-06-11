@@ -140,7 +140,7 @@ new ApolloServer({
 
 * `engine`: <`EngineReportingOptions`> | boolean
 
-  Provided the `APOLLO_KEY` environment variable is set, the Graph Manager reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to include variable values and HTTP headers. When using the Engine proxy, this option should be set to `false`.
+  If the `APOLLO_KEY` environment variable is set, the Graph Manager reporting agent starts automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See [EngineReportingOptions](#enginereportingoptions) for a full description of how to configure the reporting agent, including how to include variable values and HTTP headers.
 
 * `persistedQueries`: <`Object`> | false
 
@@ -480,7 +480,7 @@ addMockFunctionsToSchema({
 
    A human-readable name for the variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Graph Manager UI. Additionally schema validation with a graph variant will only check metrics associated with the same string.
 
-* `traceReporting`: Boolean | async (GraphQLRequestContextDidResolveOperation) => Boolean
+* `instrumentOperation`: Boolean | async (GraphQLRequestContextDidResolveOperation) => Boolean
 
     If this option returns `true`, tracing and instrumentation will be enabled for a
     given request. If it is `false`, the request will not be instrumented, and a trace will not

@@ -6,6 +6,30 @@
 
 - _Nothing yet! Stay tuned._
 
+## 0.16.6
+
+- In-house `Maybe` type which was previously imported from `graphql` and has been moved in `v15.1.0`. [#4230](https://github.com/apollographql/apollo-server/pull/4230)
+
+## 0.16.5
+
+- Remove federation primitives from SDL during composition. This allows for services to report their *full* SDL from the `{ _service { sdl } }` query as opposed to the previously limited SDL without federation definitions. [#4209](https://github.com/apollographql/apollo-server/pull/4209)
+
+## 0.16.4
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
+## 0.16.3
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
+## 0.16.2
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
+## 0.16.1
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
 ## 0.16.0
 
 - No changes. This package was major versioned to maintain lockstep versioning with @apollo/gateway.
