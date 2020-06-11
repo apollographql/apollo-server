@@ -5,10 +5,13 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/CHANGELOG.md)
 - [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md)
 
-### vNext
+### vNEXT
 
-- `apollo-engine-reporting`: Add environment variable `APOLLO_SCHEMA_REPORTING` that can enable schema reporting. If `experimental__schemaReporting` is set it will override the environment variables.
-- `apollo-engine-reporting`: The schema reporting URL has been changed to use the new dedicated sub-domain `https://edge-server-reporting.api.apollographql.com`.
+> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).
+  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
+- `apollo-engine-reporting`: Add environment variable `APOLLO_SCHEMA_REPORTING` that can enable schema reporting. If `experimental__schemaReporting` is set it will override the environment variable. [PR #4206](https://github.com/apollographql/apollo-server/pull/4206)
+- `apollo-engine-reporting`: The schema reporting URL has been changed to use the new dedicated sub-domain `https://edge-server-reporting.api.apollographql.com`. [PR #4232](https://github.com/apollographql/apollo-server/pull/4232)
+- `apollo-server-core`: Though Apollo Server **is not affected** due to the way it is integrated, in response to [an upstream security advisory for GraphQL Playground](https://github.com/prisma-labs/graphql-playground/security/advisories/GHSA-4852-vrh7-28rf) we have published [the same patch](https://github.com/prisma-labs/graphql-playground/commit/bf1883db538c97b076801a60677733816cb3cfb7) on our `@apollographql/graphql-playground-html` fork and bumped Apollo Server to use it.  Again, this was done out of an **abundance of caution** since the way that Apollo Server utilizes `renderPlaygroundPage` is _not_ vulnerable as it does not allow per-request Playground configuration that could allow interpolation of user-input. [PR #4231](https://github.com/apollographql/apollo-server/pull/4231)
 
 ### v2.14.3
 
