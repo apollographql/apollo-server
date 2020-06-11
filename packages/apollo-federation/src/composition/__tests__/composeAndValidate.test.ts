@@ -700,6 +700,11 @@ it('composition of full-SDL schemas without any errors', () => {
       directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
       directive @extends on OBJECT | INTERFACE
 
+      # Custom type system directive (disregarded by gateway, unconcerned with serviceB's implementation)
+      directive @myTypeSystemDirective on FIELD_DEFINITION
+      # Custom executable directive (must be implemented in all services, definition must be identical)
+      directive @myExecutableDirective on FIELD
+
       scalar _Any
       scalar _FieldSet
 
@@ -752,6 +757,12 @@ it('composition of full-SDL schemas without any errors', () => {
       directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
       directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
       directive @extends on OBJECT | INTERFACE
+
+      # Custom type system directive (disregarded by gateway, unconcerned with serviceA's implementation)
+      directive @myDirective on FIELD_DEFINITION
+
+      # Custom executable directive (must be implemented in all services, definition must be identical)
+      directive @myExecutableDirective on FIELD
 
       scalar _Any
       scalar _FieldSet
