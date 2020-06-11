@@ -1,7 +1,7 @@
 import { GraphQLError, ASTVisitor, UnionTypeDefinitionNode } from 'graphql';
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
-import Maybe from 'graphql/tsutils/Maybe';
 import xorBy from 'lodash.xorby';
+import { Maybe } from '../../types';
 import { errorWithCode, logServiceAndType } from '../../utils';
 import {
   existedTypeNameMessage,
