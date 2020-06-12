@@ -66,13 +66,7 @@ const server = new ApolloServer({
 
 ### Using a GraphQL server besides Apollo Server
 
-There are several community-contributed packages that add federation support to other GraphQL runtimes. These include:
-
-* [GraphQL-Java](https://github.com/apollographql/federation-jvm)
-* [Graphene](https://pypi.org/project/graphene-federation/)
-* [GraphQL-Ruby](https://github.com/Gusto/apollo-federation-ruby)
-
-If you're using one of these packages, ensure that after configuring it, your existing schema-stitching gateway continues to work correctly.
+There are [several community-contributed packages](/federation/other-servers/) that add federation support to other GraphQL runtimes.
 
 ## Step 2: Register your schemas with a GraphQL registry
 
@@ -92,7 +86,7 @@ After you've registered your schemas, you can start exposing your implementing s
 
 We recommend setting up the Apollo Server gateway _alongside_ your existing schema-stitching gateway. Depending on your infrastructure, you might even want to run both in the same _process_ to support dynamically routing traffic through one gateway or the other.
 
-To enable managed configuration through Apollo Graph Manager, set the `ENGINE_API_KEY` and `ENGINE_SCHEMA_TAG` environment variables when you start up your Apollo Server gateway, and **do not provide the `serviceList` constructor option to `ApolloGateway`**. For details, see the [Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/#connecting-apollo-server-to-the-graph-manager).
+To enable managed configuration through Apollo Graph Manager, set the `APOLLO_KEY` and `APOLLO_GRAPH_VARIANT` environment variables when you start up your Apollo Server gateway, and **do not provide the `serviceList` constructor option to `ApolloGateway`**. For details, see the [Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/#connecting-apollo-server-to-the-graph-manager).
 
 After your gateway is set up, you can make direct queries to it that are routed to the correct implementing services.
 

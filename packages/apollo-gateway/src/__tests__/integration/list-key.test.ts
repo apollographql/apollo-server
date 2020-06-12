@@ -69,7 +69,7 @@ const userService: ServiceDefinitionModule = {
 };
 
 it('fetches data correctly list type @key fields', async () => {
-  const query = gql`
+  const query = `#graphql
     query Reviews {
       reviews {
         body
@@ -80,9 +80,12 @@ it('fetches data correctly list type @key fields', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute([userService, reviewService], {
-    query,
-  });
+  const { data, queryPlan } = await execute(
+    {
+      query,
+    },
+    [userService, reviewService],
+  );
 
   expect(data).toEqual({
     reviews: [

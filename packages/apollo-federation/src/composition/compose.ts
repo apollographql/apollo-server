@@ -29,6 +29,8 @@ import {
   mapValues,
   isFederationDirective,
   executableDirectiveLocations,
+  stripTypeSystemDirectivesFromTypeDefs,
+  defaultRootOperationNameLookup,
 } from './utils';
 import {
   ServiceDefinition,
@@ -40,13 +42,13 @@ import { compositionRules } from './rules';
 
 const EmptyQueryDefinition = {
   kind: Kind.OBJECT_TYPE_DEFINITION,
-  name: { kind: Kind.NAME, value: 'Query' },
+  name: { kind: Kind.NAME, value: defaultRootOperationNameLookup.query },
   fields: [],
   serviceName: null,
 };
 const EmptyMutationDefinition = {
   kind: Kind.OBJECT_TYPE_DEFINITION,
-  name: { kind: Kind.NAME, value: 'Mutation' },
+  name: { kind: Kind.NAME, value: defaultRootOperationNameLookup.mutation },
   fields: [],
   serviceName: null,
 };
@@ -135,7 +137,14 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
 
     externalFields.push(...strippedFields);
 
-    for (let definition of typeDefsWithoutExternalFields.definitions) {
+    // Type system directives from downstream services are not a concern of the
+    // gateway, but rather the services on which the fields live which serve
+    // those types.  In other words, its up to an implementing service to
+    // act on such directives, not the gateway.
+    const typeDefsWithoutTypeSystemDirectives =
+      stripTypeSystemDirectivesFromTypeDefs(typeDefsWithoutExternalFields);
+
+    for (const definition of typeDefsWithoutTypeSystemDirectives.definitions) {
       if (
         definition.kind === Kind.OBJECT_TYPE_DEFINITION ||
         definition.kind === Kind.OBJECT_TYPE_EXTENSION
@@ -523,16 +532,9 @@ export function composeServices(services: ServiceDefinition[]) {
 
   // TODO: We should fix this to take non-default operation root types in
   // implementing services into account.
-
-  const operationTypeMap = {
-    query: 'Query',
-    mutation: 'Mutation',
-    subscription: 'Subscription',
-  };
-
   schema = new GraphQLSchema({
     ...schema.toConfig(),
-    ...mapValues(operationTypeMap, typeName =>
+    ...mapValues(defaultRootOperationNameLookup, typeName =>
       typeName
         ? (schema.getType(typeName) as GraphQLObjectType<any, any>)
         : undefined,

@@ -1,13 +1,13 @@
 import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+
+import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
+
+expect.addSnapshotSerializer(astSerializer);
+expect.addSnapshotSerializer(queryPlanSerializer);
 
 it('handles an abstract type from the base service', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         upc
@@ -18,13 +18,10 @@ it('handles an abstract type from the base service', async () => {
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({
     product: {
@@ -35,10 +32,69 @@ it('handles an abstract type from the base service', async () => {
   });
 
   expect(queryPlan).toCallService('product');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "product") {
+          {
+            product(upc: $upc) {
+              __typename
+              ... on Book {
+                upc
+                __typename
+                isbn
+                price
+              }
+              ... on Furniture {
+                upc
+                name
+                price
+              }
+            }
+          }
+        },
+        Flatten(path: "product") {
+          Fetch(service: "books") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+            } =>
+            {
+              ... on Book {
+                __typename
+                isbn
+                title
+                year
+              }
+            }
+          },
+        },
+        Flatten(path: "product") {
+          Fetch(service: "product") {
+            {
+              ... on Book {
+                __typename
+                isbn
+                title
+                year
+              }
+            } =>
+            {
+              ... on Book {
+                name
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('can request fields on extended interfaces', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         inStock
@@ -48,21 +104,61 @@ it('can request fields on extended interfaces', async () => {
 
   const upc = '1';
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({ product: { inStock: true } });
   expect(queryPlan).toCallService('product');
   expect(queryPlan).toCallService('inventory');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "product") {
+          {
+            product(upc: $upc) {
+              __typename
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            }
+          }
+        },
+        Flatten(path: "product") {
+          Fetch(service: "inventory") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            } =>
+            {
+              ... on Book {
+                inStock
+              }
+              ... on Furniture {
+                inStock
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('can request fields on extended types that implement an interface', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         inStock
@@ -74,21 +170,62 @@ it('can request fields on extended types that implement an interface', async () 
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({ product: { inStock: true, isHeavy: false } });
   expect(queryPlan).toCallService('product');
   expect(queryPlan).toCallService('inventory');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "product") {
+          {
+            product(upc: $upc) {
+              __typename
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            }
+          }
+        },
+        Flatten(path: "product") {
+          Fetch(service: "inventory") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            } =>
+            {
+              ... on Book {
+                inStock
+              }
+              ... on Furniture {
+                inStock
+                isHeavy
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('prunes unfilled type conditions', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         inStock
@@ -103,21 +240,63 @@ it('prunes unfilled type conditions', async () => {
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({ product: { inStock: true, isHeavy: false } });
   expect(queryPlan).toCallService('product');
   expect(queryPlan).toCallService('inventory');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "product") {
+          {
+            product(upc: $upc) {
+              __typename
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            }
+          }
+        },
+        Flatten(path: "product") {
+          Fetch(service: "inventory") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            } =>
+            {
+              ... on Book {
+                inStock
+                isCheckedOut
+              }
+              ... on Furniture {
+                inStock
+                isHeavy
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('fetches interfaces returned from other services', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetUserAndProducts {
       me {
         reviews {
@@ -132,12 +311,9 @@ it('fetches interfaces returned from other services', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+  });
 
   expect(data).toEqual({
     me: {
@@ -152,10 +328,90 @@ it('fetches interfaces returned from other services', async () => {
   expect(queryPlan).toCallService('accounts');
   expect(queryPlan).toCallService('reviews');
   expect(queryPlan).toCallService('product');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "accounts") {
+          {
+            me {
+              __typename
+              id
+            }
+          }
+        },
+        Flatten(path: "me") {
+          Fetch(service: "reviews") {
+            {
+              ... on User {
+                __typename
+                id
+              }
+            } =>
+            {
+              ... on User {
+                reviews {
+                  product {
+                    __typename
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                  }
+                }
+              }
+            }
+          },
+        },
+        Parallel {
+          Flatten(path: "me.reviews.@.product") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              } =>
+              {
+                ... on Book {
+                  price
+                }
+                ... on Furniture {
+                  price
+                }
+              }
+            },
+          },
+          Flatten(path: "me.reviews.@.product") {
+            Fetch(service: "books") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+              } =>
+              {
+                ... on Book {
+                  title
+                }
+              }
+            },
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('fetches composite fields from a foreign type casted to an interface [@provides field]', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetUserAndProducts {
       me {
         reviews {
@@ -170,12 +426,9 @@ it('fetches composite fields from a foreign type casted to an interface [@provid
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+  });
 
   expect(data).toEqual({
     me: {
@@ -190,10 +443,112 @@ it('fetches composite fields from a foreign type casted to an interface [@provid
   expect(queryPlan).toCallService('accounts');
   expect(queryPlan).toCallService('reviews');
   expect(queryPlan).toCallService('product');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "accounts") {
+          {
+            me {
+              __typename
+              id
+            }
+          }
+        },
+        Flatten(path: "me") {
+          Fetch(service: "reviews") {
+            {
+              ... on User {
+                __typename
+                id
+              }
+            } =>
+            {
+              ... on User {
+                reviews {
+                  product {
+                    __typename
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                  }
+                }
+              }
+            }
+          },
+        },
+        Parallel {
+          Flatten(path: "me.reviews.@.product") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              } =>
+              {
+                ... on Book {
+                  price
+                }
+                ... on Furniture {
+                  price
+                }
+              }
+            },
+          },
+          Sequence {
+            Flatten(path: "me.reviews.@.product") {
+              Fetch(service: "books") {
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                  }
+                } =>
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                    title
+                    year
+                  }
+                }
+              },
+            },
+            Flatten(path: "me.reviews.@.product") {
+              Fetch(service: "product") {
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                    title
+                    year
+                  }
+                } =>
+                {
+                  ... on Book {
+                    name
+                  }
+                }
+              },
+            },
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('allows for extending an interface from another service with fields', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetProduct($upc: String!) {
       product(upc: $upc) {
         reviews {
@@ -204,13 +559,10 @@ it('allows for extending an interface from another service with fields', async (
   `;
 
   const upc = '1';
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { upc },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { upc },
+  });
 
   expect(data).toEqual({
     product: {
@@ -220,11 +572,58 @@ it('allows for extending an interface from another service with fields', async (
 
   expect(queryPlan).toCallService('reviews');
   expect(queryPlan).toCallService('product');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "product") {
+          {
+            product(upc: $upc) {
+              __typename
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                upc
+              }
+            }
+          }
+        },
+        Flatten(path: "product") {
+          Fetch(service: "reviews") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                upc
+              }
+            } =>
+            {
+              ... on Book {
+                reviews {
+                  body
+                }
+              }
+              ... on Furniture {
+                reviews {
+                  body
+                }
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });
 
 describe('unions', () => {
   it('handles unions from the same service', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetUserAndProducts {
         me {
           reviews {
@@ -246,12 +645,9 @@ describe('unions', () => {
       }
     `;
 
-    const { data, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { data, queryPlan } = await execute({
+      query,
+    });
 
     expect(data).toEqual({
       me: {
@@ -271,6 +667,125 @@ describe('unions', () => {
     expect(queryPlan).toCallService('accounts');
     expect(queryPlan).toCallService('reviews');
     expect(queryPlan).toCallService('product');
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Sequence {
+          Fetch(service: "accounts") {
+            {
+              me {
+                __typename
+                id
+              }
+            }
+          },
+          Flatten(path: "me") {
+            Fetch(service: "reviews") {
+              {
+                ... on User {
+                  __typename
+                  id
+                }
+              } =>
+              {
+                ... on User {
+                  reviews {
+                    product {
+                      __typename
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                      ... on Furniture {
+                        __typename
+                        upc
+                      }
+                    }
+                  }
+                }
+              }
+            },
+          },
+          Flatten(path: "me.reviews.@.product") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              } =>
+              {
+                ... on Book {
+                  price
+                }
+                ... on Furniture {
+                  price
+                  brand {
+                    __typename
+                    ... on Ikea {
+                      asile
+                    }
+                    ... on Amazon {
+                      referrer
+                    }
+                  }
+                }
+              }
+            },
+          },
+        },
+      }
+    `);
+  });
+
+  it("doesn't expand interfaces with inline type conditions if all possibilities are fufilled by one service", async () => {
+    const query = `#graphql
+      query GetProducts {
+        topProducts {
+          name
+        }
+      }
+    `;
+
+    const { queryPlan, errors } = await execute({ query }, [
+      {
+        name: 'products',
+        typeDefs: gql`
+          extend type Query {
+            topProducts: [Product]
+          }
+
+          interface Product {
+            name: String
+          }
+
+          type Shoe implements Product {
+            name: String
+          }
+
+          type Car implements Product {
+            name: String
+          }
+        `,
+      },
+    ]);
+
+    expect(errors).toBeUndefined();
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "products") {
+          {
+            topProducts {
+              __typename
+              name
+            }
+          }
+        },
+      }
+    `);
   });
 
   // FIXME: turn back on when extending unions is supported in composition
@@ -294,7 +809,6 @@ describe('unions', () => {
   //   `;
 
   //   const { data, queryPlan } = await execute(
-  //     [accounts, books, inventory, product, reviews],
   //     {
   //       query,
   //     },

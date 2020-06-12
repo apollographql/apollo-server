@@ -1,5 +1,6 @@
 ---
-title: Federation specification
+title: Apollo Federation specification
+sidebar_title: Specification
 description: For implementing federation in other languages
 ---
 
@@ -121,7 +122,7 @@ Queries across service boundaries will start off from the `_entities` root field
 For example, if we execute a query for the top product's `reviews`:
 
 ```graphql
-query {
+query GetTopProductReviews {
   topProducts {
     reviews {
       body
@@ -275,7 +276,7 @@ When fetching `Review.product` from the Reviews service, it is possible to reque
 ### `@requires`
 
 ```graphql
-directive @requires(fields: _FieldSet!) on FIELD_DEFINITON
+directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
 ```
 
 The `@requires` directive is used to annotate the required input fieldset from a base type for a resolver. It is used to develop a query plan where the required fields may not be needed by the client, but the service may need additional information from other services. For example:

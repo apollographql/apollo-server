@@ -1,6 +1,5 @@
 ---
 title: Schema basics
-sidebar_title: Writing a schema
 ---
 
 Your GraphQL server uses a **schema** to describe the shape of your data graph. This schema defines a hierarchy of **types** with fields that are populated from your back-end data stores. The schema also specifies exactly which **queries** and **mutations** are available for clients to execute against your data graph.
@@ -77,18 +76,18 @@ type Author {
 
 ### The `Query` type
 
-The `Query` type defines exactly which GraphQL queries (i.e., read operations) clients can execute against your data graph. It resembles an [object type](#object-types), but its name is always `Query`.
+The `Query` type defines all of the top-level **entry points** for queries that clients execute against your data graph. It resembles an [object type](#object-types), but its name is always `Query`.
 
-Each field of the `Query` type defines the name and return type of a different supported query. The `Query` type for our example schema might resemble the following:
+Each field of the `Query` type defines the name and return type of a different entry point. The `Query` type for our example schema might resemble the following:
 
 ```graphql
 type Query {
-  getBooks: [Book]
-  getAuthors: [Author]
+  books: [Book]
+  authors: [Author]
 }
 ```
 
-This `Query` type defines two available queries: `getBooks` and `getAuthors`. Each query returns a list of the corresponding type.
+This `Query` type defines two fields: `books` and `authors`. Each field returns a list of the corresponding type.
 
 With a REST-based API, books and authors would probably be returned by different endpoints (e.g., `/api/books` and `/api/authors`). The flexibility of GraphQL enables clients to query both resources with a single request.
 
@@ -99,12 +98,12 @@ When your clients build queries to execute against your data graph, those querie
 Based on our example schema so far, a client could execute the following query, which requests both a list of all book titles _and_ a list of all author names:
 
 ```graphql
-query {
-  getBooks {
+query GetBooksAndAuthors {
+  books {
     title
   }
 
-  getAuthors {
+  authors {
     name
   }
 }
@@ -115,13 +114,13 @@ Our server would then respond to the query with results that match the query's s
 ```json
 {
   "data": {
-    "getBooks": [
+    "books": [
       {
         "title": "Jurassic Park"
       },
       ...
     ],
-    "getAuthors": [
+    "authors": [
       {
         "name": "Michael Crichton"
       },
@@ -133,11 +132,11 @@ Our server would then respond to the query with results that match the query's s
 
 Although it might be useful in some cases to fetch these two separate lists, a client would probably prefer to fetch a single list of books, where each book's author is included in the result.
 
-Because our schema's `Book` type has an `author` field of type `Author`, a client could structure their query like so:
+Because our schema's `Book` type has an `author` field of type `Author`, a client could instead structure their query like so:
 
 ```graphql
-query {
-  getBooks {
+query GetBooks {
+  books {
     title
     author {
       name
@@ -151,7 +150,7 @@ And once again, our server would respond with results that match the query's str
 ```json
 {
   "data": {
-    "getBooks": [
+    "books": [
       {
         "title": "Jurassic Park",
         "author": {
@@ -166,9 +165,9 @@ And once again, our server would respond with results that match the query's str
 
 ### The `Mutation` type
 
-The `Mutation` type is similar in structure and purpose to the [`Query` type](#the-query-type). Whereas the `Query` type defines your data graph's supported _read_ operations, the `Mutation` type defines supported _write_ operations.
+The `Mutation` type is similar in structure and purpose to the [`Query` type](#the-query-type). Whereas the `Query` type defines entry points for _read_ operations, the `Mutation` type defines entry points for _write_ operations.
 
-Each field of the `Mutation` type defines the signature and return type of a different mutation. The `Mutation` type for our example schema might resemble the following:
+Each field of the `Mutation` type defines the signature and return type of a different entry point. The `Mutation` type for our example schema might resemble the following:
 
 ```graphql
 type Mutation {
@@ -183,7 +182,7 @@ This `Mutation` type defines a single available mutation, `addBook`. The mutatio
 Like queries, mutations match the structure of your schema's type definitions. The following mutation creates a new `Book` and requests certain fields of the created object as a return value:
 
 ```graphql
-mutation {
+mutation CreateBook {
   addBook(title: "Fox in Socks", author: "Dr. Seuss") {
     title
     author {

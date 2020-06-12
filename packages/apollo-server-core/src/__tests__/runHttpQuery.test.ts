@@ -78,7 +78,7 @@ describe('runHttpQuery', () => {
       }
     });
 
-    it('should not add no-cache headers if error is not a PersitedQuery error', () => {
+    it('should not add no-cache headers if error is not a PersistedQuery error', () => {
       try {
         throwHttpGraphQLError(200, [new ForbiddenError('401')]);
       } catch (err) {
