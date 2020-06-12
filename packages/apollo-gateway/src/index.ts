@@ -350,7 +350,7 @@ export class ApolloGateway implements GraphQLService {
       throw e;
     }
 
-    if (process.env.APOLLO_SERVICE_OVERRIDE && isManagedConfig(this.config)) {
+    if (process.env.NODE_ENV !== 'production' && process.env.APOLLO_SERVICE_OVERRIDE && isManagedConfig(this.config)) {
       const serviceOverride = process.env.APOLLO_SERVICE_OVERRIDE;
       result.isNewSchema = true;
 
