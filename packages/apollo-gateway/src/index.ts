@@ -355,16 +355,22 @@ export class ApolloGateway implements GraphQLService {
       result.isNewSchema = true;
 
       if (serviceOverride.toLowerCase() === 'true') {
-        await overrideManagedServiceWithLocal(result,process.env.APOLLO_SERVICE_OVERRIDE_NAME, process.env.APOLLO_SERVICE_OVERRIDE_URL);
+        await overrideManagedServiceWithLocal(result, process.env.APOLLO_SERVICE_OVERRIDE_NAME, process.env.APOLLO_SERVICE_OVERRIDE_URL);
       } else {
         console.log(`serviceOverride:${serviceOverride}`)
         //if APOLLO_SERVICE_OVERRIDE=true, we assume a local config file is set
-        let localOverrideConfigFile = JSON.parse(readFileSync(resolve(__dirname, serviceOverride), { encoding: "utf8" }));
+        let file = '';
+        if (serviceOverride.startsWith('/'))
+          file = readFileSync(serviceOverride, { encoding: "utf8" });
+        else
+          file = readFileSync(resolve('./', serviceOverride), { encoding: "utf8" });
+
+        let localOverrideConfigFile = JSON.parse(file);
 
         let promises: Promise<void>[] = [];
-        for(let i=0;i<localOverrideConfigFile.servicesToOverride.length;i++){
+        for (let i = 0; i < localOverrideConfigFile.servicesToOverride.length; i++) {
           let serviceToOverride = localOverrideConfigFile.servicesToOverride[i];
-          promises.push( overrideManagedServiceWithLocal(result,serviceToOverride.name, serviceToOverride.url));
+          promises.push(overrideManagedServiceWithLocal(result, serviceToOverride.name, serviceToOverride.url));
         }
 
         await Promise.all(promises);
