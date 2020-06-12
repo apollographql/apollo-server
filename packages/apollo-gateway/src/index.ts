@@ -357,7 +357,6 @@ export class ApolloGateway implements GraphQLService {
       if (serviceOverride.toLowerCase() === 'true') {
         await overrideManagedServiceWithLocal(result, process.env.APOLLO_SERVICE_OVERRIDE_NAME, process.env.APOLLO_SERVICE_OVERRIDE_URL);
       } else {
-        console.log(`serviceOverride:${serviceOverride}`)
         //if APOLLO_SERVICE_OVERRIDE=true, we assume a local config file is set
         let file = '';
         if (serviceOverride.startsWith('/'))
