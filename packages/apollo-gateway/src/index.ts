@@ -847,9 +847,9 @@ async function overrideManagedServiceWithLocal(compositionResult: {
 }, serviceNameToOverride: string | undefined, localURL: string | undefined) {
   if (localURL) {
     let serviceIndexToOverride = compositionResult.serviceDefinitions?.findIndex(sd => sd.name == serviceNameToOverride) ?? -1;
-    console.log(`serviceIndexToOverride: ${serviceIndexToOverride}`);
-    console.log(`serviceDefinitions: ${compositionResult.serviceDefinitions}`)
-    if (serviceIndexToOverride >= 0 && compositionResult.serviceDefinitions) {
+    if(localURL == undefined || localURL == "") {
+      console.log(`You must provide a URL to override the ${serviceNameToOverride} service. Either set the APOLLO_SERVICE_OVERRIDE_URL to your local running server or ensure the url is set in your local config file`);
+    } else if (serviceIndexToOverride >= 0 && compositionResult.serviceDefinitions) {
       compositionResult.serviceDefinitions[serviceIndexToOverride].url = localURL;
 
       const request: GraphQLRequest = {
@@ -870,8 +870,10 @@ async function overrideManagedServiceWithLocal(compositionResult: {
         const typeDefs = data._service.sdl as string;
         compositionResult.serviceDefinitions[serviceIndexToOverride].typeDefs = parse(typeDefs);
       }
-    } else {
-      console.log(`You must provide a URL to override the ${serviceNameToOverride} service. Either set the APOLLO_SERVICE_OVERRIDE_URL to your local running server or ensure the url is set in your local config file`);
+    } else if(compositionResult.serviceDefinitions){
+      console.log(`The named service wasn't found in the composed service definition list. You provided: ${serviceNameToOverride}`);
+      console.log(`The current defined service names are:`);
+      compositionResult.serviceDefinitions.map(s=>console.log(s.name));
     }
   }
 }
