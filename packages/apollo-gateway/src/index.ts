@@ -46,7 +46,6 @@ import { HttpRequestCache } from './cache';
 import { fetch, Headers } from 'apollo-server-env';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { forEach } from 'lodash';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
