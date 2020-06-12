@@ -683,8 +683,8 @@ export class EngineReportingAgent<TContext = any> {
     this.logger.info(
       `Schema reporter options: ${JSON.stringify(
         {
-          overrideReportedSchema: this.options.overrideReportedSchema,
-          schemaReportingInitialDelayMaxMs: this.options.schemaReportingInitialDelayMaxMs,
+          overrideReportedSchema: this.options.experimental_overrideReportedSchema,
+          schemaReportingInitialDelayMaxMs: this.options.experimental_schemaReportingInitialDelayMaxMs,
           schemaReportingUrl: this.options.schemaReportingUrl,
         }
       )}`
