@@ -4,11 +4,12 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- Remove remaining common primitives from SDL during composition. This is a follow up to [#4209](https://github.com/apollographql/apollo-server/pull/4209), and additionally removes directives which are included in a schema by default (`@skip`, `@include`, `@deprecated`, and `@specifiedBy`) [#4228](https://github.com/apollographql/apollo-server/pull/4209)
+- _Nothing yet! Stay tuned._
 
 ## 0.16.6
 
 - In-house `Maybe` type which was previously imported from `graphql` and has been moved in `v15.1.0`. [#4230](https://github.com/apollographql/apollo-server/pull/4230)
+- Remove remaining common primitives from SDL during composition. This is a follow up to [#4209](https://github.com/apollographql/apollo-server/pull/4209), and additionally removes directives which are included in a schema by default (`@skip`, `@include`, `@deprecated`, and `@specifiedBy`) [#4228](https://github.com/apollographql/apollo-server/pull/4209)
 
 ## 0.16.5
 
