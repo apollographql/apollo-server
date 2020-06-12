@@ -678,6 +678,18 @@ export class EngineReportingAgent<TContext = any> {
     executableSchemaId: string;
     executableSchema: string;
   }) {
+    this.logger.info('Starting schema reporter...')
+
+    this.logger.info(
+      `Schema reporter options: ${JSON.stringify(
+        {
+          overrideReportedSchema: this.options.overrideReportedSchema,
+          schemaReportingInitialDelayMaxMs: this.options.schemaReportingInitialDelayMaxMs,
+          schemaReportingUrl: this.options.schemaReportingUrl,
+        }
+      )}`
+    )
+
     if (this.currentSchemaReporter) {
       this.currentSchemaReporter.stop();
     }
@@ -700,6 +712,10 @@ export class EngineReportingAgent<TContext = any> {
         require('../package.json').version
       }`,
     };
+
+    this.logger.info(
+      `Schema reporter EdgeServerInfo: ${JSON.stringify(serverInfo)}`
+    )
 
     // Jitter the startup between 0 and 10 seconds
     const delay = Math.floor(
