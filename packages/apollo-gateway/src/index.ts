@@ -847,7 +847,8 @@ async function overrideManagedServiceWithLocal(compositionResult: {
 }, serviceNameToOverride: string | undefined, localURL: string | undefined) {
   if (localURL) {
     let serviceIndexToOverride = compositionResult.serviceDefinitions?.findIndex(sd => sd.name == serviceNameToOverride) ?? -1;
-
+    console.log(`serviceIndexToOverride: ${serviceIndexToOverride}`);
+    console.log(`serviceDefinitions: ${compositionResult.serviceDefinitions}`)
     if (serviceIndexToOverride >= 0 && compositionResult.serviceDefinitions) {
       compositionResult.serviceDefinitions[serviceIndexToOverride].url = localURL;
 
