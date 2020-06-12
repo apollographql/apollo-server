@@ -116,7 +116,7 @@ it('Queries remote endpoints for their SDLs', async () => {
 });
 
 
-it('Overrides service definition with local service', async () => {
+it('Overrides single service definition with local variables', async () => {
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
   mockCompositionConfigsSuccess([service]);
@@ -125,16 +125,37 @@ it('Overrides service definition with local service', async () => {
 
   mockSDLQuerySuccess(updatedService);
 
+  process.env.APOLLO_SERVICE_OVERRIDE = 'true';
   process.env.APOLLO_SERVICE_OVERRIDE_NAME = 'accounts';
   process.env.APOLLO_SERVICE_OVERRIDE_URL = updatedService.url;
 
   const gateway = new ApolloGateway({ logger });
   await gateway.load({ engine: { apiKeyHash, graphId } });
 
-  expect(gateway.schema!.getType('User')!.description).toBe('This is my updated User');
+  delete process.env.APOLLO_SERVICE_OVERRIDE;
+  delete process.env.APOLLO_SERVICE_OVERRIDE_NAME;
+  delete process.env.APOLLO_SERVICE_OVERRIDE_URL;
 
-  process.env.APOLLO_SERVICE_OVERRIDE_NAME = undefined;
-  process.env.APOLLO_SERVICE_OVERRIDE_URL = undefined;
+  expect(gateway.schema!.getType('User')!.description).toBe('This is my updated User');
+});
+
+it('Overrides service definition with local override config', async () => {
+  mockStorageSecretSuccess();
+  mockCompositionConfigLinkSuccess();
+  mockCompositionConfigsSuccess([service]);
+  mockImplementingServicesSuccess(service);
+  mockRawPartialSchemaSuccess(service);
+
+  mockSDLQuerySuccess(updatedService);
+
+  process.env.APOLLO_SERVICE_OVERRIDE = 'local.config.json';
+
+  const gateway = new ApolloGateway({ logger });
+  await gateway.load({ engine: { apiKeyHash, graphId } });
+
+  delete process.env.APOLLO_SERVICE_OVERRIDE;
+
+  expect(gateway.schema!.getType('User')!.description).toBe('This is my updated User');
 });
 
 it('Extracts service definitions from remote storage', async () => {

@@ -44,6 +44,9 @@ import { getVariableValues } from 'graphql/execution/values';
 import fetcher from 'make-fetch-happen';
 import { HttpRequestCache } from './cache';
 import { fetch, Headers } from 'apollo-server-env';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+import { forEach } from 'lodash';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -290,8 +293,8 @@ export class ApolloGateway implements GraphQLService {
       if (config.experimental_pollInterval && isRemoteConfig(config)) {
         this.logger.warn(
           'Polling running services is dangerous and not recommended in production. ' +
-            'Polling should only be used against a registry. ' +
-            'If you are polling running services, use with caution.',
+          'Polling should only be used against a registry. ' +
+          'If you are polling running services, use with caution.',
         );
       }
 
@@ -313,7 +316,7 @@ export class ApolloGateway implements GraphQLService {
 
     this.logger.info(
       `Gateway successfully loaded schema.\n\t* Mode: ${mode}${
-        graphId ? `\n\t* Service: ${graphId}@${graphVariant || 'current'}` : ''
+      graphId ? `\n\t* Service: ${graphId}@${graphVariant || 'current'}` : ''
       }`,
     );
 
@@ -343,49 +346,36 @@ export class ApolloGateway implements GraphQLService {
     } catch (e) {
       this.logger.error(
         "Error checking for changes to service definitions: " +
-         (e && e.message || e)
+        (e && e.message || e)
       );
       throw e;
     }
 
-    let serviceNameToOverride = process.env.APOLLO_SERVICE_OVERRIDE_NAME;
-    if(isManagedConfig(this.config) && serviceNameToOverride){
-      let serviceURLToOverride = process.env.APOLLO_SERVICE_OVERRIDE_URL ?? "";
-      if(serviceURLToOverride) {
-        let serviceIndexToOverride = result.serviceDefinitions?.findIndex(sd=>sd.name == serviceNameToOverride) ?? -1;
+    if (process.env.APOLLO_SERVICE_OVERRIDE && isManagedConfig(this.config)) {
+      const serviceOverride = process.env.APOLLO_SERVICE_OVERRIDE;
+      result.isNewSchema = true;
 
-        if(serviceIndexToOverride >= 0 && result.serviceDefinitions){
-          result.isNewSchema = true;
-          result.serviceDefinitions[serviceIndexToOverride].url = serviceURLToOverride;
-
-          const request: GraphQLRequest = {
-            query: SERVICE_DEFINITION_QUERY,
-            http: {
-              url: serviceURLToOverride,
-              method: 'POST',
-              headers: new Headers()
-            },
-          };
-
-          let source = new RemoteGraphQLDataSource({
-            url: serviceURLToOverride,
-          });
-
-          let { data, errors } = await source.process({request, context:{}});
-          if (data && !errors) {
-            const typeDefs = data._service.sdl as string;
-            result.serviceDefinitions[serviceIndexToOverride].typeDefs = parse(typeDefs);
-          }
-        }
+      if (serviceOverride.toLowerCase() === 'true') {
+        await overrideManagedServiceWithLocal(result,process.env.APOLLO_SERVICE_OVERRIDE_NAME, process.env.APOLLO_SERVICE_OVERRIDE_URL);
       } else {
-        this.logger.error(`You must provide a URL to override the ${serviceNameToOverride} service. Set the APOLLO_SERVICE_OVERRIDE_URL to your local running server`);
+        console.log(`serviceOverride:${serviceOverride}`)
+        //if APOLLO_SERVICE_OVERRIDE=true, we assume a local config file is set
+        let localOverrideConfigFile = JSON.parse(readFileSync(resolve(__dirname, serviceOverride), { encoding: "utf8" }));
+
+        let promises: Promise<void>[] = [];
+        for(let i=0;i<localOverrideConfigFile.servicesToOverride.length;i++){
+          let serviceToOverride = localOverrideConfigFile.servicesToOverride[i];
+          promises.push( overrideManagedServiceWithLocal(result,serviceToOverride.name, serviceToOverride.url));
+        }
+
+        await Promise.all(promises);
       }
     }
 
     if (
       !result.serviceDefinitions ||
       JSON.stringify(this.serviceDefinitions) ===
-        JSON.stringify(result.serviceDefinitions)
+      JSON.stringify(result.serviceDefinitions)
     ) {
       this.logger.debug('No change in service definitions since last check.');
       return;
@@ -452,13 +442,13 @@ export class ApolloGateway implements GraphQLService {
           }),
         },
         previousServiceDefinitions &&
-          previousSchema && {
-            serviceDefinitions: previousServiceDefinitions,
-            schema: previousSchema,
-            ...(previousCompositionMetadata && {
-              compositionMetadata: previousCompositionMetadata,
-            }),
-          },
+        previousSchema && {
+          serviceDefinitions: previousServiceDefinitions,
+          schema: previousSchema,
+          ...(previousCompositionMetadata && {
+            compositionMetadata: previousCompositionMetadata,
+          }),
+        },
       );
     }
   }
@@ -588,8 +578,8 @@ export class ApolloGateway implements GraphQLService {
     return this.config.buildService
       ? this.config.buildService(serviceDef)
       : new RemoteGraphQLDataSource({
-          url: serviceDef.url,
-        });
+        url: serviceDef.url,
+      });
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
@@ -629,7 +619,7 @@ export class ApolloGateway implements GraphQLService {
             "Manager managed configuration.  To use the managed " +
             "configuration, do not specify a service list locally.",
           );
-        }).catch(() => {}); // Don't mind errors if managed config is missing.
+        }).catch(() => { }); // Don't mind errors if managed config is missing.
       }
     }
 
@@ -843,6 +833,41 @@ function wrapSchemaWithAliasResolver(schema: GraphQLSchema): GraphQLSchema {
     }
   });
   return schema;
+}
+
+async function overrideManagedServiceWithLocal(compositionResult: {
+  serviceDefinitions?: ServiceDefinition[] | undefined;
+  compositionMetadata?: CompositionMetadata | undefined;
+  isNewSchema: boolean;
+}, serviceNameToOverride: string | undefined, localURL: string | undefined) {
+  if (localURL) {
+    let serviceIndexToOverride = compositionResult.serviceDefinitions?.findIndex(sd => sd.name == serviceNameToOverride) ?? -1;
+
+    if (serviceIndexToOverride >= 0 && compositionResult.serviceDefinitions) {
+      compositionResult.serviceDefinitions[serviceIndexToOverride].url = localURL;
+
+      const request: GraphQLRequest = {
+        query: SERVICE_DEFINITION_QUERY,
+        http: {
+          url: localURL,
+          method: 'POST',
+          headers: new Headers()
+        },
+      };
+
+      let source = new RemoteGraphQLDataSource({
+        url: localURL,
+      });
+
+      let { data, errors } = await source.process({ request, context: {} });
+      if (data && !errors) {
+        const typeDefs = data._service.sdl as string;
+        compositionResult.serviceDefinitions[serviceIndexToOverride].typeDefs = parse(typeDefs);
+      }
+    } else {
+      console.log(`You must provide a URL to override the ${serviceNameToOverride} service. Either set the APOLLO_SERVICE_OVERRIDE_URL to your local running server or ensure the url is set in your local config file`);
+    }
+  }
 }
 
 export {
