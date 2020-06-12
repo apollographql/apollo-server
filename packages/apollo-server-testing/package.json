@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-testing",
-  "version": "2.14.4",
+  "version": "2.14.3",
   "description": "Test utils for apollo-server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
