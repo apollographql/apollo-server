@@ -116,7 +116,7 @@ it('Queries remote endpoints for their SDLs', async () => {
 });
 
 
-fit('Overrides service definition with local service', async () => {
+it('Overrides service definition with local service', async () => {
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
   mockCompositionConfigsSuccess([service]);

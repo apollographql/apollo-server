@@ -17,8 +17,7 @@ import {
   GraphQLSchema,
   GraphQLError,
   VariableDefinitionNode,
-  parse,
-  print,
+  parse
 } from 'graphql';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
@@ -585,8 +584,6 @@ export class ApolloGateway implements GraphQLService {
         `Service definition for service ${serviceDef.name} is missing a url`,
       );
     }
-
-    console.log(`ewfwfe${this.config.buildService}`);
 
     return this.config.buildService
       ? this.config.buildService(serviceDef)
