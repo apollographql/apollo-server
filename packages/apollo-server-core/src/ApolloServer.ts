@@ -314,6 +314,16 @@ export class ApolloServerBase {
       // Don't add the extension here (we want to add it later in generateSchemaDerivedData).
     }
 
+    if (gateway && typeof engine === 'object' && engine.experimental_schemaReporting) {
+      throw new Error(
+        [
+          "Schema reporting is not yet compatible with the gateway. If you're",
+          "interested in using schema reporting with the gateway, please",
+          "contact Apollo support.",
+        ].join(' '),
+      );
+    }
+
     if (gateway && subscriptions !== false) {
       // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs separate.
       throw new Error(
@@ -691,9 +701,13 @@ export class ApolloServerBase {
   // survive transformations like monkey-patching a boolean field onto the
   // schema.
   //
-  // The only thing this is used for is determining whether traces should be
-  // added to responses if requested with an HTTP header; if there's a false
-  // positive, that feature can be disabled by specifying `engine: false`.
+  // This is used for two things:
+  // 1) determining whether traces should be added to responses if requested
+  //    with an HTTP header; if there's a false positive, that feature can be
+  //    disabled by specifying `engine: false`.
+  // 2) determining whether schema-reporting should be allowed; federated
+  //    services shouldn't be reporting schemas, and we accordingly throw if
+  //    it's attempted.
   private schemaIsFederated(schema: GraphQLSchema): boolean {
     const serviceType = schema.getType('_Service');
     if (!(serviceType && isObjectType(serviceType))) {
@@ -766,6 +780,16 @@ export class ApolloServerBase {
             'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
             'to report metrics to Apollo Graph Manager.',
         );
+
+        if (typeof engine === 'object' && engine.experimental_schemaReporting) {
+          throw Error(
+            [
+              "Schema reporting is not yet compatible with federated services.",
+              "If you're interested in using schema reporting with federated",
+              "services, please contact Apollo support.",
+            ].join(' '),
+          );
+        }
       }
       pluginsToInit.push(this.engineReportingAgent!.newPlugin());
     } else if (engine !== false && federatedSchema) {
