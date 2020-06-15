@@ -471,7 +471,7 @@ function makeTestHTTP(): Trace.HTTP {
   });
 }
 
-describe('tests for the "timeOperation', () => {
+describe('tests for the "reportTiming', () => {
   const schemaReportingFunctions = {
     startSchemaReporting: jest.fn(),
     executableSchemaIdGenerator: jest.fn(),
@@ -486,7 +486,7 @@ describe('tests for the "timeOperation', () => {
 
   it('report no traces', async () => {
     const pluginInstance = plugin(
-      { timeOperation: false },
+      { reportTiming: false },
       addTrace,
       schemaReportingFunctions,
     );
@@ -515,7 +515,7 @@ describe('tests for the "timeOperation', () => {
   it('report traces based on operation name', async () => {
     const pluginInstance = plugin(
       {
-        timeOperation: async request => {
+        reportTiming: async request => {
           return request.request.operationName === 'report';
         },
       },
@@ -572,7 +572,7 @@ describe('tests for the "timeOperation', () => {
   it('report traces async based on operation name', async () => {
     const pluginInstance = plugin(
       {
-        timeOperation: async request => {
+        reportTiming: async request => {
           return await (async () => {
             return request.request.operationName === 'report';
           })();
