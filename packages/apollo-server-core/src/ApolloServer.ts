@@ -314,7 +314,7 @@ export class ApolloServerBase {
       // Don't add the extension here (we want to add it later in generateSchemaDerivedData).
     }
 
-    if (gateway && typeof engine === 'object' && engine.experimental_schemaReporting) {
+    if (gateway && this.engineReportingAgent?.schemaReport) {
       throw new Error(
         [
           "Schema reporting is not yet compatible with the gateway. If you're",
@@ -781,7 +781,7 @@ export class ApolloServerBase {
             'to report metrics to Apollo Graph Manager.',
         );
 
-        if (typeof engine === 'object' && engine.experimental_schemaReporting) {
+        if (this.engineReportingAgent.schemaReport) {
           throw Error(
             [
               "Schema reporting is not yet compatible with federated services.",
