@@ -277,10 +277,9 @@ export interface EngineReportingOptions<TContext> {
   generateClientInfo?: GenerateClientInfo<TContext>;
 
   /**
-   * **(Experimental)** Enable schema reporting from this server with
-   * Apollo Graph Manager.
+   * Enable schema reporting from this server with Apollo Graph Manager.
    *
-   * The use of this option avoids the need to rgister schemas manually within
+   * The use of this option avoids the need to register schemas manually within
    * CI deployment pipelines using `apollo schema:push` by periodically
    * reporting this server's schema (when changes are detected) along with
    * additional details about its runtime environment to Apollo Graph Manager.
@@ -289,14 +288,14 @@ export interface EngineReportingOptions<TContext> {
    * documentation_](https://github.com/apollographql/apollo-schema-reporting-preview-docs)
    * for more information.
    */
-  experimental_schemaReporting?: boolean;
+  reportSchema?: boolean;
 
   /**
    * Override the reported schema that is reported to AGM.
    * This schema does not go through any normalizations and the string is directly sent to Apollo Graph Manager.
    * This would be useful for comments or other ordering and whitespace changes that get stripped when generating a `GraphQLSchema`
    */
-  experimental_overrideReportedSchema?: string;
+  overrideReportedSchema?: string;
 
   /**
    * The schema reporter waits before starting reporting.
@@ -310,7 +309,7 @@ export interface EngineReportingOptions<TContext> {
    * This number will be the max for the range in ms that the schema reporter will
    * wait before starting to report.
    */
-  experimental_schemaReportingInitialDelayMaxMs?: number;
+  schemaReportingInitialDelayMaxMs?: number;
 
   /**
    * The URL to use for reporting schemas.
@@ -409,8 +408,8 @@ export class EngineReportingAgent<TContext = any> {
     }
 
 
-    if (options.experimental_schemaReporting !== undefined) {
-      this.schemaReport = options.experimental_schemaReporting;
+    if (options.reportSchema !== undefined) {
+      this.schemaReport = options.reportSchema;
     } else {
       this.schemaReport = process.env.APOLLO_SCHEMA_REPORTING === "true"
     }
@@ -679,12 +678,12 @@ export class EngineReportingAgent<TContext = any> {
     executableSchema: string;
   }) {
     this.logger.info('Starting schema reporter...');
-    if (this.options.experimental_overrideReportedSchema !== undefined) {
+    if (this.options.overrideReportedSchema !== undefined) {
       this.logger.info('Schema to report has been overridden');
     }
-    if (this.options.experimental_schemaReportingInitialDelayMaxMs !== undefined) {
+    if (this.options.schemaReportingInitialDelayMaxMs !== undefined) {
       this.logger.info(`Schema reporting max initial delay override: ${
-        this.options.experimental_schemaReportingInitialDelayMaxMs
+        this.options.schemaReportingInitialDelayMaxMs
       } ms`);
     }
     if (this.options.schemaReportingUrl !== undefined) {
@@ -722,7 +721,7 @@ export class EngineReportingAgent<TContext = any> {
     // Jitter the startup between 0 and 10 seconds
     const delay = Math.floor(
       Math.random() *
-        (this.options.experimental_schemaReportingInitialDelayMaxMs || 10_000),
+        (this.options.schemaReportingInitialDelayMaxMs || 10_000),
     );
 
     const schemaReporter = new SchemaReporter(
