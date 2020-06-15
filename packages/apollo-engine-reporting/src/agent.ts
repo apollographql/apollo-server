@@ -679,10 +679,9 @@ export class EngineReportingAgent<TContext = any> {
     executableSchema: string;
   }) {
     this.logger.info('Starting schema reporter...');
-    this.logger.info(`Schema reporting override is ${
-      this.options.experimental_overrideReportedSchema ?
-        'enabled' : 'disabled'
-    }`);
+    if (this.options.experimental_overrideReportedSchema !== undefined) {
+      this.logger.info('Schema to report has been overridden');
+    }
     if (this.options.experimental_schemaReportingInitialDelayMaxMs !== undefined) {
       this.logger.info(`Schema reporting max initial delay override: ${
         this.options.experimental_schemaReportingInitialDelayMaxMs
