@@ -678,18 +678,20 @@ export class EngineReportingAgent<TContext = any> {
     executableSchemaId: string;
     executableSchema: string;
   }) {
-    this.logger.info('Starting schema reporter...')
-
-    this.logger.info(
-      `Schema reporter options: ${JSON.stringify(
-        {
-          overrideReportedSchema: this.options.experimental_overrideReportedSchema,
-          schemaReportingInitialDelayMaxMs: this.options.experimental_schemaReportingInitialDelayMaxMs,
-          schemaReportingUrl: this.options.schemaReportingUrl,
-        }
-      )}`
-    )
-
+    this.logger.info('Starting schema reporter...');
+    if (this.options.experimental_overrideReportedSchema !== undefined) {
+      this.logger.info('Schema to report has been overridden');
+    }
+    if (this.options.experimental_schemaReportingInitialDelayMaxMs !== undefined) {
+      this.logger.info(`Schema reporting max initial delay override: ${
+        this.options.experimental_schemaReportingInitialDelayMaxMs
+      } ms`);
+    }
+    if (this.options.schemaReportingUrl !== undefined) {
+      this.logger.info(`Schema reporting URL override: ${
+        this.options.schemaReportingUrl
+      }`);
+    }
     if (this.currentSchemaReporter) {
       this.currentSchemaReporter.stop();
     }
@@ -714,7 +716,7 @@ export class EngineReportingAgent<TContext = any> {
     };
 
     this.logger.info(
-      `Schema reporter EdgeServerInfo: ${JSON.stringify(serverInfo)}`
+      `Schema reporting EdgeServerInfo: ${JSON.stringify(serverInfo)}`
     )
 
     // Jitter the startup between 0 and 10 seconds
