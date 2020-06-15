@@ -322,6 +322,21 @@ export interface EngineReportingOptions<TContext> {
    * `console` when that is not available.
    */
   logger?: Logger;
+
+  /**
+   * @deprecated use {@link reportSchema} instead
+   */
+  experimental_schemaReporting?: boolean;
+
+  /**
+   * @deprecated use {@link overrideReportedSchema} instead
+   */
+  experimental_overrideReportedSchema?: string;
+
+  /**
+   * @deprecated use {@link schemaReportingInitialDelayMaxMs} instead
+   */
+  experimental_schemaReportingInitialDelayMaxMs?: number;
 }
 
 export interface AddTraceArgs {
@@ -407,6 +422,41 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
 
+    if (options.experimental_schemaReporting !== undefined) {
+      this.logger.warn(
+        [
+          '[deprecated] The "experimental_schemaReporting" option has been',
+          'renamed to "reportSchema"'
+        ].join(' ')
+      );
+      if (options.reportSchema === undefined) {
+        options.reportSchema = options.experimental_schemaReporting;
+      }
+    }
+
+    if (options.experimental_overrideReportedSchema !== undefined) {
+      this.logger.warn(
+        [
+          '[deprecated] The "experimental_overrideReportedSchema" option has',
+          'been renamed to "overrideReportedSchema"'
+        ].join(' ')
+      );
+      if (options.overrideReportedSchema === undefined) {
+        options.overrideReportedSchema = options.experimental_overrideReportedSchema;
+      }
+    }
+
+    if (options.experimental_schemaReportingInitialDelayMaxMs !== undefined) {
+      this.logger.warn(
+        [
+          '[deprecated] The "experimental_schemaReportingInitialDelayMaxMs"',
+          'option has been renamed to "schemaReportingInitialDelayMaxMs"'
+        ].join(' ')
+      );
+      if (options.schemaReportingInitialDelayMaxMs === undefined) {
+        options.schemaReportingInitialDelayMaxMs = options.experimental_schemaReportingInitialDelayMaxMs;
+      }
+    }
 
     if (options.reportSchema !== undefined) {
       this.schemaReport = options.reportSchema;
