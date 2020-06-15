@@ -9,6 +9,7 @@
 ## 0.16.6
 
 - In-house `Maybe` type which was previously imported from `graphql` and has been moved in `v15.1.0`. [#4230](https://github.com/apollographql/apollo-server/pull/4230)
+- Remove remaining common primitives from SDL during composition. This is a follow up to [#4209](https://github.com/apollographql/apollo-server/pull/4209), and additionally removes directives which are included in a schema by default (`@skip`, `@include`, `@deprecated`, and `@specifiedBy`) [#4228](https://github.com/apollographql/apollo-server/pull/4209)
 
 ## 0.16.5
 

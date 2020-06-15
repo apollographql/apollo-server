@@ -91,7 +91,7 @@ export function stripTypeSystemDirectivesFromTypeDefs(typeDefs: DocumentNode) {
   const typeDefsWithoutTypeSystemDirectives = visit(typeDefs, {
     Directive(node) {
       // The `deprecated` directive is an exceptional case that we want to leave in
-      if (node.name.value === 'deprecated') return;
+      if (node.name.value === 'deprecated' || node.name.value === 'specifiedBy') return;
 
       const isFederationDirective = federationDirectives.some(
         ({ name }) => name === node.name.value,
