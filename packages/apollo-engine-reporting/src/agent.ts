@@ -389,7 +389,7 @@ export class EngineReportingAgent<TContext = any> {
   };
 
   private readonly tracesEndpointUrl: string;
-  private readonly schemaReport: boolean;
+  readonly schemaReport: boolean;
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
