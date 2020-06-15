@@ -683,11 +683,16 @@ export class EngineReportingAgent<TContext = any> {
       this.options.experimental_overrideReportedSchema ?
         'enabled' : 'disabled'
     }`);
-    this.logger.info(`Schema reporting max initial delay: ${
+    if (this.options.experimental_schemaReportingInitialDelayMaxMs !== undefined) {
+      this.logger.info(`Schema reporting max initial delay override: ${
         this.options.experimental_schemaReportingInitialDelayMaxMs
       } ms`);
-    this.logger.info(`Schema reporting URL: ${this.options.schemaReportingUrl}`);
-
+    }
+    if (this.options.schemaReportingUrl !== undefined) {
+      this.logger.info(`Schema reporting URL override: ${
+        this.options.schemaReportingUrl
+      }`);
+    }
     if (this.currentSchemaReporter) {
       this.currentSchemaReporter.stop();
     }
