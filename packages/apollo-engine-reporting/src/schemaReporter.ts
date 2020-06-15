@@ -12,13 +12,30 @@ export const reportServerInfoGql = `
       __typename
       ... on ServiceMutation {
         reportServerInfo(info: $info, executableSchema: $executableSchema) {
-          inSeconds
-          withExecutableSchema
+          __typename
+          ... on ReportServerInfoError {
+            message
+            code
+          }
+          ... on ReportServerInfoResponse {
+            inSeconds
+            withExecutableSchema
+          }
         }
       }
     }
   }
 `;
+
+export interface ReportInfoNext {
+  inSeconds: number;
+  withExecutableSchema: boolean;
+  // If stop reporting is present then
+  // the loop will be cancelled so, inSeconds and
+  // withExecutableSchema do not matter if
+  // stopReporting is true.
+  stopReporting: boolean;
+}
 
 export function reportingLoop(
   schemaReporter: SchemaReporter,
@@ -35,9 +52,11 @@ export function reportingLoop(
     // Apollo Graph Manager
     schemaReporter
       .reportServerInfo(sendNextWithExecutableSchema)
-      .then(({ inSeconds, withExecutableSchema }) => {
-        sendNextWithExecutableSchema = withExecutableSchema;
-        setTimeout(inner, inSeconds * 1000);
+      .then(({ inSeconds, withExecutableSchema, stopReporting }) => {
+        if (!stopReporting) {
+          sendNextWithExecutableSchema = withExecutableSchema;
+          setTimeout(inner, inSeconds * 1000);
+        }
       })
       .catch((error: any) => {
         // In the case of an error we want to continue looping
@@ -54,11 +73,6 @@ export function reportingLoop(
   inner();
 }
 
-interface ReportServerInfoReturnVal {
-  inSeconds: number;
-  withExecutableSchema: boolean;
-}
-
 // This class is meant to be a thin shim around the gql mutations.
 export class SchemaReporter {
   // These mirror the gql variables
@@ -68,12 +82,14 @@ export class SchemaReporter {
 
   private isStopped: boolean;
   private readonly headers: Headers;
+  private readonly logger: Logger;
 
   constructor(
     serverInfo: EdgeServerInfo,
     schemaSdl: string,
     apiKey: string,
     schemaReportingEndpoint: string | undefined,
+    logger: Logger,
   ) {
     this.headers = new Headers();
     this.headers.set('Content-Type', 'application/json');
@@ -91,6 +107,7 @@ export class SchemaReporter {
     this.serverInfo = serverInfo;
     this.executableSchemaDocument = schemaSdl;
     this.isStopped = false;
+    this.logger = logger;
   }
 
   public stopped(): Boolean {
@@ -103,7 +120,7 @@ export class SchemaReporter {
 
   public async reportServerInfo(
     withExecutableSchema: boolean,
-  ): Promise<ReportServerInfoReturnVal> {
+  ): Promise<ReportInfoNext> {
     const { data, errors } = await this.graphManagerQuery({
       info: this.serverInfo,
       executableSchema: withExecutableSchema
@@ -139,14 +156,29 @@ export class SchemaReporter {
           'https://engine.apollographql.com/ to obtain an API key for a service.',
         ].join(' '),
       );
-    } else if (data.me.__typename === 'ServiceMutation') {
-      if (!data.me.reportServerInfo) {
-        throw new Error(msgForUnexpectedResponse(data));
+    } else if (
+      data.me.__typename === 'ServiceMutation' &&
+      data.me.reportServerInfo
+    ) {
+      if (data.me.reportServerInfo.__typename == 'ReportServerInfoResponse') {
+        return { ...data.me.reportServerInfo, stopReporting: false };
+      } else {
+        this.logger.error(
+          [
+            'Received input validation error from Graph Manager:',
+            data.me.reportServerInfo.message,
+            'Stopping reporting. Please fix the input errors.',
+          ].join(' '),
+        );
+        this.stop();
+        return {
+          stopReporting: true,
+          inSeconds: 100,
+          withExecutableSchema: false,
+        };
       }
-      return data.me.reportServerInfo;
-    } else {
-      throw new Error(msgForUnexpectedResponse(data));
     }
+    throw new Error(msgForUnexpectedResponse(data));
   }
 
   private async graphManagerQuery(
@@ -166,10 +198,12 @@ export class SchemaReporter {
     const httpResponse = await fetch(httpRequest);
 
     if (!httpResponse.ok) {
-      throw new Error([
-        `An unexpected HTTP status code (${httpResponse.status}) was`,
-        'encountered during schema reporting.'
-      ].join(' '));
+      throw new Error(
+        [
+          `An unexpected HTTP status code (${httpResponse.status}) was`,
+          'encountered during schema reporting.',
+        ].join(' '),
+      );
     }
 
     try {
@@ -182,7 +216,7 @@ export class SchemaReporter {
           "Couldn't report server info to Apollo Graph Manager.",
           'Parsing response as JSON failed.',
           'If this continues please reach out to support@apollographql.com',
-          error
+          error,
         ].join(' '),
       );
     }
