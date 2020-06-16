@@ -512,3 +512,30 @@ addMockFunctionsToSchema({
    > [WARNING] If you specify a `clientReferenceId`, Graph Manager will treat the
    > `clientName` as a secondary lookup, so changing a `clientName` may result
    > in an unwanted experience.
+
+* `reportSchema`: boolean
+
+   Enables the automatic schema reporting feature of Apollo Server, which will
+   cause it to periodically report the server's schema (when changes are
+   detected) along with details about the runtime environment to Apollo Graph
+   Manager. This feature removes the need to register schemas manually via
+   `apollo service:push` in CI/CD pipelines.
+
+* `overrideReportedSchema`: string
+
+   By default, the schema reported to Apollo Graph Manager will be normalized,
+   which may shift ordering and comments and remove whitespace. This option can
+   be used to override the default schema. Any schema provided will not undergo
+   normalization, which can be helpful to preserve details that normalization
+   removes.
+
+* `schemaReportingInitialDelayMaxMs`: number
+
+   By default, the schema reporter will wait a random amount of time between 0
+   and 10 seconds before making its first report at reporter startup. A longer
+   range of times leads to more staggered starts, which reduces bandwidth
+   since it makes it less likely that multiple servers will get asked to upload
+   the same schema. However, in certain constrained environments (e.g. AWS
+   Lambda), this wait time may be less desirable. This option can be used to
+   change the maximum amount of time that the reporter will wait until it starts
+   sending reports.

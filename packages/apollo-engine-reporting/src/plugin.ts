@@ -63,9 +63,9 @@ export const plugin = <TContext>(
       if (!schemaReport) return;
       startSchemaReporting({
         executableSchema:
-          options.experimental_overrideReportedSchema || printSchema(schema),
+          options.overrideReportedSchema || printSchema(schema),
         executableSchemaId: executableSchemaIdGenerator(
-          options.experimental_overrideReportedSchema || schema,
+          options.overrideReportedSchema || schema,
         ),
       });
     },
@@ -234,7 +234,7 @@ export const plugin = <TContext>(
           source: requestContext.source,
           trace: treeBuilder.trace,
           executableSchemaId: executableSchemaIdGenerator(
-            options.experimental_overrideReportedSchema || schema,
+            options.overrideReportedSchema || schema,
           ),
           logger,
         }).catch(logger.error);
