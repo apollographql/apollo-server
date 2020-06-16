@@ -27,14 +27,17 @@ export const reportServerInfoGql = `
   }
 `;
 
+export type ReportInfoResult = ReportInfoStop | ReportInfoNext;
+
 export interface ReportInfoNext {
+  kind: 'next';
   inSeconds: number;
   withExecutableSchema: boolean;
-  // If stop reporting is present then
-  // the loop will be cancelled so, inSeconds and
-  // withExecutableSchema do not matter if
-  // stopReporting is true.
-  stopReporting: boolean;
+}
+
+export interface ReportInfoStop {
+  kind: 'stop';
+  stopReporting: true
 }
 
 export function reportingLoop(
@@ -52,10 +55,16 @@ export function reportingLoop(
     // Apollo Graph Manager
     schemaReporter
       .reportServerInfo(sendNextWithExecutableSchema)
-      .then(({ inSeconds, withExecutableSchema, stopReporting }) => {
-        if (!stopReporting) {
-          sendNextWithExecutableSchema = withExecutableSchema;
-          setTimeout(inner, inSeconds * 1000);
+      .then((result: ReportInfoResult) => {
+        switch(result.kind) {
+          case "next": {
+            sendNextWithExecutableSchema = result.withExecutableSchema;
+            setTimeout(inner, result.inSeconds * 1000);
+            return;
+          }
+          case "stop": {
+            return;
+          }
         }
       })
       .catch((error: any) => {
@@ -120,7 +129,7 @@ export class SchemaReporter {
 
   public async reportServerInfo(
     withExecutableSchema: boolean,
-  ): Promise<ReportInfoNext> {
+  ): Promise<ReportInfoResult> {
     const { data, errors } = await this.graphManagerQuery({
       info: this.serverInfo,
       executableSchema: withExecutableSchema
@@ -161,7 +170,7 @@ export class SchemaReporter {
       data.me.reportServerInfo
     ) {
       if (data.me.reportServerInfo.__typename == 'ReportServerInfoResponse') {
-        return { ...data.me.reportServerInfo, stopReporting: false };
+        return { ...data.me.reportServerInfo, kind: 'next'};
       } else {
         this.logger.error(
           [
@@ -173,8 +182,7 @@ export class SchemaReporter {
         this.stop();
         return {
           stopReporting: true,
-          inSeconds: 100,
-          withExecutableSchema: false,
+          kind: 'stop'
         };
       }
     }
