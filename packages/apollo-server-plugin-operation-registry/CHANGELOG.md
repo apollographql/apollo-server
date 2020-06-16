@@ -1,5 +1,9 @@
 # Change Log
 
+### 0.4.0:
+
+- __BREAKING__: Use a content delivery network, fetch storage secrets and operation manifests from different domains: https://storage-secrets.api.apollographql.com and https://operations.api.apollographql.com. Please mind any firewall for outgoing traffic.
+
 ### 0.3.1:
 
 - The `schemaTag` option is now deprecated and superseded by `graphVariant`.

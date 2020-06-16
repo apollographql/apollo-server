@@ -6,33 +6,25 @@ export const envOverrideOperationManifest =
 
 export const envOverrideStorageSecretBaseUrl = 'APOLLO_STORAGE_SECRET_BASE_URL';
 
-export const fakeTestBaseUrl = 'https://fake-host-for-apollo-op-reg-tests/';
+export const fakeTestBaseUrl = 'https://fake-host-for-apollo-op-reg-tests';
 
 // Generate and cache our desired operation manifest URL.
-export const urlOperationManifestBase: string = ((): string => {
-  const desiredUrl =
-    process.env[envOverrideOperationManifest] ||
-    // See src/__tests__/jestSetup.ts for more details on this env. variable.
-    process.env['__APOLLO_OPERATION_REGISTRY_TESTS__'] === 'true'
-      ? fakeTestBaseUrl
-      : 'https://storage.googleapis.com/engine-op-manifest-storage-prod/';
-
-  // Make sure it has NO trailing slash.
-  return desiredUrl.replace(/\/$/, '');
-})();
+export const urlOperationManifestBase: string =
+  // Remove trailing slash if any.
+  process.env[envOverrideOperationManifest]?.replace(/\/$/, '') ||
+  // See src/__tests__/jestSetup.ts for more details on this env. variable.
+  process.env['__APOLLO_OPERATION_REGISTRY_TESTS__'] === 'true'
+    ? fakeTestBaseUrl
+    : 'https://operations.api.apollographql.com';
 
 // Generate and cache our desired storage secret URL.
-export const urlStorageSecretBase: string = ((): string => {
-  const desiredUrl =
-    process.env[envOverrideStorageSecretBaseUrl] ||
-    // See src/__tests__/jestSetup.ts for more details on this env. variable.
-    process.env['__APOLLO_OPERATION_REGISTRY_TESTS__'] === 'true'
-      ? fakeTestBaseUrl
-      : 'https://storage.googleapis.com/engine-partial-schema-prod/';
-
-  // Make sure it has NO trailing slash.
-  return desiredUrl.replace(/\/$/, '');
-})();
+export const urlStorageSecretBase: string =
+  // Remove trailing slash if any.
+  process.env[envOverrideStorageSecretBaseUrl]?.replace(/\/$/, '') ||
+  // See src/__tests__/jestSetup.ts for more details on this env. variable.
+  process.env['__APOLLO_OPERATION_REGISTRY_TESTS__'] === 'true'
+    ? fakeTestBaseUrl
+    : 'https://storage-secrets.api.apollographql.com';
 
 export const getStoreKey = (signature: string) => `${signature}`;
 
