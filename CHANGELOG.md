@@ -7,7 +7,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### vNEXT
 
-- _Nothing yet! Stay tuned._
+- `apollo-engine-reporting`: Added a `reportTiming` API to allow trace reporting to be enabled or disabled on a per request basis. The option takes either a boolean or a predicate function that takes a [`GraphQLRequestContextDidResolveOperation`](https://github.com/apollographql/apollo-server/blob/a926b7eedbb87abab2ec70fb03d71743985cb18d/packages/apollo-server-types/src/index.ts#L185-L190) or [`GraphQLRequestContextDidEncounterErrors`](https://github.com/apollographql/apollo-server/blob/a926b7eedbb87abab2ec70fb03d71743985cb18d/packages/apollo-server-types/src/index.ts#L191-L195) and returns a boolean. If the boolean is false the request will not be instrumented for tracing and no trace will be sent to Apollo Graph Manager.  The default is `true` so all traces will get instrumented and sent, which is the same as the previous default behavior. [PR #3918](https://github.com/apollographql/apollo-server/pull/3918)
+- `apollo-engine-reporting`: Removed `GraphQLServerOptions.reporting`. It isn't known whether a trace will be reported at the beginning of the request because of the above change. We believe this field was only used internally within Apollo Server; let us know if this is a problem and we can suggest alternatives. Additionally, the field requestContext.metrics.captureTraces is now initialized later in the request pipeline.  [PR #3918](https://github.com/apollographql/apollo-server/pull/3918)
 
 ### v2.14.4
 

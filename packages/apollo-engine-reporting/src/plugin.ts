@@ -3,6 +3,7 @@ import {
   Logger,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextWillSendResponse,
+  GraphQLRequestContextDidResolveOperation,
 } from 'apollo-server-types';
 import { Headers } from 'apollo-server-env';
 import { GraphQLSchema, printSchema } from 'graphql';
@@ -79,6 +80,19 @@ export const plugin = <TContext>(
        * request context when it's provided.
        */
       const logger = requestLogger || loggerForPlugin;
+      if (
+        !['function', 'boolean', 'undefined'].includes(
+          typeof options.reportTiming,
+        )
+      ) {
+        throw new Error('Invalid option passed to `reportTiming`.');
+      }
+
+      // If the options are false don't do any metrics timing.
+      if (options.reportTiming === false) {
+        metrics.captureTraces = false;
+        return;
+      }
 
       const treeBuilder: EngineReportingTreeBuilder = new EngineReportingTreeBuilder(
         {
@@ -116,6 +130,39 @@ export const plugin = <TContext>(
         }
       }
 
+      async function shouldTraceOperation(
+        requestContext:
+          | GraphQLRequestContextDidResolveOperation<TContext>
+          | GraphQLRequestContextDidEncounterErrors<TContext>,
+      ): Promise<void> {
+        // This could be hit if we call `shouldTraceOperation` more than once during a request.
+        // such as if `didEncounterError` gets called after `didResolveOperation`.
+        if (metrics.captureTraces !== undefined)
+          return;
+
+        if (typeof options.reportTiming === 'boolean') {
+          metrics.captureTraces = options.reportTiming;
+          return;
+        }
+
+        if (typeof options.reportTiming !== 'function') {
+          // Default case we always report
+          metrics.captureTraces = true;
+          return;
+        }
+
+        metrics.captureTraces = await options.reportTiming(requestContext);
+
+        // Help the user understand they've returned an unexpected value,
+        // which might be a subtle mistake.
+        if (typeof metrics.captureTraces !== 'boolean') {
+          logger.warn(
+            "The 'reportTiming' predicate function must return a boolean value.",
+          );
+          metrics.captureTraces = true;
+        }
+      }
+
       /**
        * Due to a number of exceptions in the request pipeline — which are
        * intended to preserve backwards compatible behavior with the
@@ -130,11 +177,20 @@ export const plugin = <TContext>(
       function didEnd(
         requestContext:
           | GraphQLRequestContextWillSendResponse<TContext>
-          | GraphQLRequestContextDidEncounterErrors<TContext>,
+          | GraphQLRequestContextDidEncounterErrors<TContext>
+          | GraphQLRequestContextDidResolveOperation<TContext>,
       ) {
         if (endDone) return;
         endDone = true;
         treeBuilder.stopTiming();
+
+        if (metrics.captureTraces === undefined) {
+          logger.warn(
+            "captureTrace is undefined at the end of the request. This is a bug in the Apollo Engine Reporting plugin."
+          );
+        }
+
+        if (metrics.captureTraces === false) return;
 
         treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
         treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
@@ -225,8 +281,20 @@ export const plugin = <TContext>(
             treeBuilder.trace.clientName = clientName || '';
           }
         },
+        async didResolveOperation(requestContext) {
+          await shouldTraceOperation(requestContext);
 
+          if (metrics.captureTraces === false) {
+            // End early if we aren't going to send the trace so we continue to
+            // run the tree builder.
+            didEnd(requestContext);
+          }
+        },
         executionDidStart() {
+          // If we stopped tracing early, return undefined so we don't trace
+          // an object
+          if (endDone) return;
+
           return {
             willResolveField({ info }) {
               return treeBuilder.willResolveField(info);
@@ -238,15 +306,20 @@ export const plugin = <TContext>(
         },
 
         willSendResponse(requestContext) {
+          // shouldTraceOperation will be called before this in `didResolveOperation`
+          // so we don't need to call it again here.
+
           // See comment above for why `didEnd` must be called in two hooks.
           didEnd(requestContext);
         },
-
-        didEncounterErrors(requestContext) {
+        async didEncounterErrors(requestContext) {
           // Search above for a comment about "didResolveSource" to see which
           // of the pre-source-resolution errors we are intentionally avoiding.
-          if (!didResolveSource) return;
+          if (!didResolveSource || endDone) return;
           treeBuilder.didEncounterErrors(requestContext.errors);
+
+          // This will exit early if we have already set metrics.captureTraces
+          await shouldTraceOperation(requestContext);
 
           // See comment above for why `didEnd` must be called in two hooks.
           didEnd(requestContext);

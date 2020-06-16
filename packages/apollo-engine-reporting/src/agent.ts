@@ -17,7 +17,12 @@ import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { plugin } from './plugin';
-import { GraphQLRequestContext, Logger } from 'apollo-server-types';
+import {
+  GraphQLRequestContext,
+  GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestContextDidResolveOperation,
+  Logger,
+} from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
@@ -51,6 +56,14 @@ export type VariableValueOptions =
       ) => Record<string, any>;
     }
   | SendValuesBaseOptions;
+
+export type ReportTimingOptions<TContext> =
+  | ((
+      request:
+        | GraphQLRequestContextDidResolveOperation<TContext>
+        | GraphQLRequestContextDidEncounterErrors<TContext>,
+    ) => Promise<boolean>)
+  | boolean;
 
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
@@ -204,6 +217,45 @@ export interface EngineReportingOptions<TContext> {
    */
   sendVariableValues?: VariableValueOptions;
   /**
+   * This option allows configuring the behavior of request tracing and
+   * reporting to [Apollo Graph Manager](https://engine.apollographql.com/).
+   *
+   * By default, this is set to `true`, which results in *all* requests being
+   * traced and reported. This behavior can be _disabled_ by setting this option
+   * to `false`. Alternatively, it can be selectively enabled or disabled on a
+   * per-request basis using a predicate function.
+   *
+   * When specified as a predicate function, the _return value_ of its
+   * invocation (per request) will determine whether or not that request is
+   * traced and reported. The predicate function will receive the request
+   * context. If validation and parsing of the request succeeds the function will
+   * receive the request context in the
+   * [`GraphQLRequestContextDidResolveOperation`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)
+   * phase, which permits tracing based on dynamic properties, e.g., HTTP
+   * headers or the `operationName` (when available),
+   * otherwise it will receive the request context in the  [`GraphQLRequestContextDidEncounterError`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didencountererrors)
+   * phase:
+   *
+   * **Example:**
+   *
+   * ```js
+   * reportTiming(requestContext) {
+   *   // Always trace `query HomeQuery { ... }`.
+   *   if (requestContext.operationName === "HomeQuery") return true;
+   *
+   *   // Also trace if the "trace" header is set to "true".
+   *   if (requestContext.request.http?.headers?.get("trace") === "true") {
+   *     return true;
+   *   }
+   *
+   *   // Otherwise, do not trace!
+   *   return false;
+   * },
+   * ```
+   *
+   */
+  reportTiming?: ReportTimingOptions<TContext>;
+  /**
    * [DEPRECATED] Use sendVariableValues
    * Passing an array into privateVariables is equivalent to passing { exceptNames: array } into
    * sendVariableValues, and passing in `true` or `false` is equivalent to passing { none: true } or
@@ -332,7 +384,7 @@ export interface AddTraceArgs {
   executableSchemaId: string;
   source?: string;
   document?: DocumentNode;
-  logger: Logger,
+  logger: Logger;
 }
 
 const serviceHeaderDefaults = {
@@ -430,7 +482,7 @@ export class EngineReportingAgent<TContext = any> {
 
     if (this.options.handleSignals !== false) {
       const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
-      signals.forEach((signal) => {
+      signals.forEach(signal => {
         // Note: Node only started sending signal names to signal events with
         // Node v10 so we can't use that feature here.
         const handler: NodeJS.SignalsListener = async () => {
@@ -555,7 +607,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public async sendAllReports(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reportDataByExecutableSchemaId).map((id) =>
+      Object.keys(this.reportDataByExecutableSchemaId).map(id =>
         this.sendReport(id),
       ),
     );
@@ -630,9 +682,8 @@ export class EngineReportingAgent<TContext = any> {
 
         if (curResponse.status >= 500 && curResponse.status < 600) {
           throw new Error(
-            `HTTP status ${curResponse.status}, ${
-              (await curResponse.text()) || '(no body)'
-            }`,
+            `HTTP status ${curResponse.status}, ${(await curResponse.text()) ||
+              '(no body)'}`,
           );
         } else {
           return curResponse;
@@ -737,7 +788,7 @@ export class EngineReportingAgent<TContext = any> {
     this.currentSchemaReporter = schemaReporter;
     const logger = this.logger;
 
-    setTimeout(function () {
+    setTimeout(function() {
       reportingLoop(schemaReporter, logger, false, fallbackReportingDelayInMs);
     }, delay);
   }
@@ -820,29 +871,25 @@ export class EngineReportingAgent<TContext = any> {
     // either the request-specific logger on the request context (if available)
     // or to the `logger` that was passed into `EngineReportingOptions` which
     // is provided in the `EngineReportingAgent` constructor options.
-    this.signatureCache.set(cacheKey, generatedSignature)
-      .catch(err => {
-        logger.warn(
-          'Could not store signature cache. ' +
-          (err && err.message) || err
-        )
-      });
+    this.signatureCache.set(cacheKey, generatedSignature).catch(err => {
+      logger.warn(
+        'Could not store signature cache. ' + (err && err.message) || err,
+      );
+    });
 
     return generatedSignature;
   }
 
   private async sendAllReportsAndReportErrors(): Promise<void> {
     await Promise.all(
-      Object.keys(
-        this.reportDataByExecutableSchemaId,
-      ).map((executableSchemaId) =>
+      Object.keys(this.reportDataByExecutableSchemaId).map(executableSchemaId =>
         this.sendReportAndReportErrors(executableSchemaId),
       ),
     );
   }
 
   private sendReportAndReportErrors(executableSchemaId: string): Promise<void> {
-    return this.sendReport(executableSchemaId).catch((err) => {
+    return this.sendReport(executableSchemaId).catch(err => {
       // This catch block is primarily intended to catch network errors from
       // the retried request itself, which include network errors and non-2xx
       // HTTP errors.
