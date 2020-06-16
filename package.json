@@ -61,13 +61,14 @@
     "apollo-tracing": "file:packages/apollo-tracing"
   },
   "devDependencies": {
+    "@hapi/hapi": "19.2.0",
     "@types/async-retry": "1.4.2",
     "@types/aws-lambda": "8.10.59",
     "@types/body-parser": "1.19.0",
     "@types/bunyan": "1.8.6",
     "@types/connect": "3.4.33",
     "@types/fast-json-stable-stringify": "2.0.0",
-    "@types/hapi": "17.8.8",
+    "@types/hapi__hapi": "19.0.4",
     "@types/ioredis": "4.17.3",
     "@types/jest": "26.0.9",
     "@types/koa-router": "7.4.1",
@@ -105,7 +106,6 @@
     "graphql": "15.3.0",
     "graphql-tag": "2.11.0",
     "graphql-tools": "4.0.8",
-    "hapi": "17.8.5",
     "ioredis": "4.17.3",
     "jest": "26.2.2",
     "jest-config": "26.2.2",

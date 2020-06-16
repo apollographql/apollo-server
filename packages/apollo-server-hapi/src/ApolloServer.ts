@@ -1,11 +1,11 @@
-import hapi from 'hapi';
+import hapi from '@hapi/hapi';
 import { parseAll } from 'accept';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
 
-import { graphqlHapi } from './hapiApollo';
+import { plugin as graphqlHapi, HapiPluginOptions } from './hapiApollo';
 
 export { GraphQLOptions } from 'apollo-server-core';
 import {
@@ -94,7 +94,7 @@ export class ApolloServer extends ApolloServerBase {
       });
     }
 
-    await app.register({
+    await app.register<HapiPluginOptions>({
       plugin: graphqlHapi,
       options: {
         path,

@@ -17,10 +17,10 @@ describe(
   () => {
     let server: ApolloServer;
 
-    let app: import('hapi').Server;
+    let app: import('@hapi/hapi').Server;
     let httpServer: http.Server;
 
-    const { Server } = require('hapi');
+    const { Server } = require('@hapi/hapi');
 
     testApolloServer(
       async options => {

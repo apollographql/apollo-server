@@ -37,7 +37,7 @@
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   },
   "peerDependencies": {
-    "@hapi/hapi": "^18.2.0",
+    "@hapi/hapi": "^19.2.0",
     "graphql": "^15.0.0"
   }
 }
