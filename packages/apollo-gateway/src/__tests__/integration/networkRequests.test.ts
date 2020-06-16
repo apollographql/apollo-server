@@ -178,7 +178,7 @@ it.each([
   spyGetServiceDefinitionsFromStorage.mockRestore();
 });
 
-it('Rollsback to a previous schema when triggered', async () => {
+it.skip('Rollsback to a previous schema when triggered', async () => {
   // Init
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
@@ -360,7 +360,7 @@ describe('Downstream service health checks', () => {
       ).rejects.toThrowErrorMatchingInlineSnapshot(`"500: Internal Server Error"`);
     });
 
-    it('Rolls over to new schema when health check succeeds', async () => {
+    it.skip('Rolls over to new schema when health check succeeds', async () => {
       mockStorageSecretSuccess();
       mockCompositionConfigLinkSuccess();
       mockCompositionConfigsSuccess([service]);
