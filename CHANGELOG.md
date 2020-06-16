@@ -7,6 +7,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### vNEXT
 
+- _Nothing yet! Stay tuned._
+
+### v2.14.5
+
 - `apollo-engine-reporting`: Make Apollo Server throw if schema reporting is enabled for a gateway or federated service. [PR #4246](https://github.com/apollographql/apollo-server/pull/4246)
 
 ### v2.14.4

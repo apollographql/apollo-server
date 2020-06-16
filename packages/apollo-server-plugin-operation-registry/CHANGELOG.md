@@ -1,8 +1,12 @@
 # Change Log
 
-### 0.4.0:
+### 0.4.1
 
 - __BREAKING__: Use a content delivery network, fetch storage secrets and operation manifests from different domains: https://storage-secrets.api.apollographql.com and https://operations.api.apollographql.com. Please mind any firewall for outgoing traffic.
+
+### 0.4.0:
+
+- This version was accidentally skipped due to a manual update of `package.json`, see `v0.4.1` - @trevor-scheer
 
 ### 0.3.1:
 
