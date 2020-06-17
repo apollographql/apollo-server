@@ -389,6 +389,7 @@ export class EngineReportingAgent<TContext = any> {
   };
 
   private readonly tracesEndpointUrl: string;
+  readonly schemaReport: boolean;
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
@@ -405,6 +406,13 @@ export class EngineReportingAgent<TContext = any> {
       throw new Error(
         `To use EngineReportingAgent, you must specify an API key via the apiKey option or the APOLLO_KEY environment variable.`,
       );
+    }
+
+
+    if (options.experimental_schemaReporting !== undefined) {
+      this.schemaReport = options.experimental_schemaReporting;
+    } else {
+      this.schemaReport = process.env.APOLLO_SCHEMA_REPORTING === "true"
     }
 
     // Since calculating the signature for Engine reporting is potentially an
@@ -469,6 +477,7 @@ export class EngineReportingAgent<TContext = any> {
     return plugin(this.options, this.addTrace.bind(this), {
       startSchemaReporting: this.startSchemaReporting.bind(this),
       executableSchemaIdGenerator: this.executableSchemaIdGenerator.bind(this),
+      schemaReport: this.schemaReport,
     });
   }
 
@@ -669,6 +678,20 @@ export class EngineReportingAgent<TContext = any> {
     executableSchemaId: string;
     executableSchema: string;
   }) {
+    this.logger.info('Starting schema reporter...');
+    if (this.options.experimental_overrideReportedSchema !== undefined) {
+      this.logger.info('Schema to report has been overridden');
+    }
+    if (this.options.experimental_schemaReportingInitialDelayMaxMs !== undefined) {
+      this.logger.info(`Schema reporting max initial delay override: ${
+        this.options.experimental_schemaReportingInitialDelayMaxMs
+      } ms`);
+    }
+    if (this.options.schemaReportingUrl !== undefined) {
+      this.logger.info(`Schema reporting URL override: ${
+        this.options.schemaReportingUrl
+      }`);
+    }
     if (this.currentSchemaReporter) {
       this.currentSchemaReporter.stop();
     }
@@ -691,6 +714,10 @@ export class EngineReportingAgent<TContext = any> {
         require('../package.json').version
       }`,
     };
+
+    this.logger.info(
+      `Schema reporting EdgeServerInfo: ${JSON.stringify(serverInfo)}`
+    )
 
     // Jitter the startup between 0 and 10 seconds
     const delay = Math.floor(

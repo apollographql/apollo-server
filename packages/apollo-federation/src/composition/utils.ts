@@ -31,8 +31,11 @@ import {
   GraphQLDirective,
   OperationTypeNode,
 } from 'graphql';
-import Maybe from 'graphql/tsutils/Maybe';
-import { ExternalFieldDefinition, DefaultRootOperationTypeName } from './types';
+import {
+  ExternalFieldDefinition,
+  DefaultRootOperationTypeName,
+  Maybe,
+} from './types';
 import federationDirectives from '../directives';
 
 export function isStringValueNode(node: any): node is StringValueNode {
@@ -88,7 +91,7 @@ export function stripTypeSystemDirectivesFromTypeDefs(typeDefs: DocumentNode) {
   const typeDefsWithoutTypeSystemDirectives = visit(typeDefs, {
     Directive(node) {
       // The `deprecated` directive is an exceptional case that we want to leave in
-      if (node.name.value === 'deprecated') return;
+      if (node.name.value === 'deprecated' || node.name.value === 'specifiedBy') return;
 
       const isFederationDirective = federationDirectives.some(
         ({ name }) => name === node.name.value,
