@@ -18,6 +18,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 - `apollo-engine-reporting`: Make Apollo Server throw if schema reporting is enabled for a gateway or federated service. [PR #4246](https://github.com/apollographql/apollo-server/pull/4246)
 - `apollo-engine-reporting`: Remove the `experimental_` prefix from schema reporting options, and specifically rename `experimental_schemaReporting` option name to `reportSchema`. (The old option names remain functional, but are deprecated.) [PR #4236](https://github.com/apollographql/apollo-server/pull/4236)
 
+### v2.14.5
+
+- `apollo-engine-reporting`: Make Apollo Server throw if schema reporting is enabled for a gateway or federated service. [PR #4246](https://github.com/apollographql/apollo-server/pull/4246)
+
 ### v2.14.4
 
 - `apollo-engine-reporting`: Add environment variable `APOLLO_SCHEMA_REPORTING` that can enable schema reporting. If `experimental__schemaReporting` is set it will override the environment variable. [PR #4206](https://github.com/apollographql/apollo-server/pull/4206)
