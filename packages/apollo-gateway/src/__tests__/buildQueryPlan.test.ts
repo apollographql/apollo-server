@@ -767,6 +767,86 @@ describe('buildQueryPlan', () => {
         }
       `);
     });
+
+    it(`should not get confused by a fragment spread multiple times`, () => {
+      const query = gql`
+        fragment Price on Product {
+          price
+        }
+
+        query {
+          topProducts {
+            __typename
+            ... on Book {
+              ...Price
+            }
+            ... on Furniture {
+              ...Price
+            }
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+                QueryPlan {
+                  Fetch(service: "product") {
+                    {
+                      topProducts {
+                        __typename
+                        ... on Book {
+                          price
+                        }
+                        ... on Furniture {
+                          price
+                        }
+                      }
+                    }
+                  },
+                }
+            `);
+    });
+
+    it(`should not get confused by a fragment spread multiple times`, () => {
+      const query = gql`
+        fragment Price on Product {
+          price
+        }
+
+        query {
+          topProducts {
+            __typename
+            ... on Book {
+              ...Price
+            }
+            ... on Furniture {
+              ...Price
+            }
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+                QueryPlan {
+                  Fetch(service: "product") {
+                    {
+                      topProducts {
+                        __typename
+                        ... on Book {
+                          price
+                        }
+                        ... on Furniture {
+                          price
+                        }
+                      }
+                    }
+                  },
+                }
+            `);
+    });
   });
 
   // GraphQLError: Cannot query field "isbn" on type "Book"
