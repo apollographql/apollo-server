@@ -6,6 +6,10 @@
 
 - _Nothing yet! Stay tuned._
 
+## 0.16.7
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
 ## 0.16.6
 
 - In-house `Maybe` type which was previously imported from `graphql` and has been moved in `v15.1.0`. [#4230](https://github.com/apollographql/apollo-server/pull/4230)

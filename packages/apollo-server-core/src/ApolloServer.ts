@@ -871,7 +871,6 @@ export class ApolloServerBase {
         any
       >,
       parseOptions: this.parseOptions,
-      reporting: !!this.engineReportingAgent,
       ...this.requestOptions,
     };
   }
