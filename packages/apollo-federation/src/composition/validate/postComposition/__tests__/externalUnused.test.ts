@@ -302,4 +302,43 @@ describe('externalUnused', () => {
     const warnings = validateExternalUnused({ schema, serviceList });
     expect(warnings).toEqual([]);
   });
+
+  it('does not warn when @external is used on type that is an implementation of an interface', () => {
+    const serviceA = {
+      typeDefs: gql`
+        type Car implements Product @key(fields: "id") {
+          id: ID!
+          speed: Int
+        }
+
+        interface Product {
+          id: ID!
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        type Query {
+          products: [Product]
+        }
+
+        extend type Car implements Product @key(fields: "id") {
+          id: ID! @external
+          speed: Int @external
+        }
+
+        interface Product {
+          id: ID!
+        }
+      `,
+      name: 'serviceB',
+    }
+
+    const serviceList = [serviceA, serviceB,];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalUnused({ schema, serviceList });
+    expect(warnings).toEqual([]);
+  });
 });
