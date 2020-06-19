@@ -829,13 +829,11 @@ async function overrideManagedServiceWithLocal(compositionResult: {
   compositionMetadata?: CompositionMetadata | undefined;
   isNewSchema: boolean;
 }, serviceNameToOverride: string | undefined, localURL: string | undefined) {
-  if (localURL) {
+  if (localURL && serviceNameToOverride) {
     let serviceIndexToOverride = compositionResult.serviceDefinitions?.findIndex(sd => sd.name == serviceNameToOverride) ?? -1;
     if (localURL == undefined || localURL == "") {
       console.log(`You must provide a URL to override the ${serviceNameToOverride} service. Either set the APOLLO_SERVICE_OVERRIDE_URL to your local running server or ensure the url is set in your local config file`);
-    } else if (serviceIndexToOverride >= 0 && compositionResult.serviceDefinitions) {
-      compositionResult.serviceDefinitions[serviceIndexToOverride].url = localURL;
-
+    } else if(compositionResult.serviceDefinitions){
       const request: GraphQLRequest = {
         query: SERVICE_DEFINITION_QUERY,
         http: {
@@ -850,14 +848,20 @@ async function overrideManagedServiceWithLocal(compositionResult: {
       });
 
       let { data, errors } = await source.process({ request, context: {} });
-      if (data && !errors) {
-        const typeDefs = data._service.sdl as string;
-        compositionResult.serviceDefinitions[serviceIndexToOverride].typeDefs = parse(typeDefs);
+      if(data && !errors){
+        const typeDefs = parse(data._service.sdl as string);
+
+        if (serviceIndexToOverride >= 0 && data){
+          compositionResult.serviceDefinitions[serviceIndexToOverride].url = localURL;
+          compositionResult.serviceDefinitions[serviceIndexToOverride].typeDefs = typeDefs;
+        }else if(data) {
+          console.log(`The named service wasn't found in the composed service definition list. You provided: ${serviceNameToOverride}`);
+          console.log(`Adding configuration to serviceDefinitions: ${serviceNameToOverride} - ${localURL}`);
+          compositionResult.serviceDefinitions.push({name: serviceNameToOverride, typeDefs, url: localURL });
+        }
+      } else {
+        errors?.map(error=>console.log(error));
       }
-    } else if (compositionResult.serviceDefinitions) {
-      console.log(`The named service wasn't found in the composed service definition list. You provided: ${serviceNameToOverride}`);
-      console.log(`The current defined service names are:`);
-      compositionResult.serviceDefinitions.map(s => console.log(s.name));
     }
   }
 }
