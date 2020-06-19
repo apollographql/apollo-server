@@ -77,7 +77,6 @@ describe('composeServices', () => {
     const { schema } = composeServices([serviceA]);
 
     const directives = schema.getDirectives();
-    expect(directives).toHaveLength(3);
     expect(directives.every(isSpecifiedDirective));
   });
 

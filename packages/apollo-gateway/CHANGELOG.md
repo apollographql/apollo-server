@@ -6,6 +6,18 @@
 
 - _Nothing yet! Stay tuned._
 
+## 0.16.7
+
+- Bumped the version of `apollo-server-core`, but no other changes!
+
+## 0.16.6
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
+## 0.16.5
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
 ## 0.16.4
 
 - __NEW__: Provide the `requestContext` as an argument to the experimental callback function `experimental_didResolveQueryPlan`. [#4173](https://github.com/apollographql/apollo-server/pull/4173)
