@@ -1,8 +1,0 @@
-{
-  "servicesToOverride": [
-      {
-          "name": "accounts",
-          "url": "http://localhost:4002"
-      }
-  ]
-}

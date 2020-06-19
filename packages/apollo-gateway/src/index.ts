@@ -44,8 +44,6 @@ import { getVariableValues } from 'graphql/execution/values';
 import fetcher from 'make-fetch-happen';
 import { HttpRequestCache } from './cache';
 import { fetch, Headers } from 'apollo-server-env';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -77,6 +75,7 @@ interface RemoteGatewayConfig extends GatewayConfigBase {
 
 interface ManagedGatewayConfig extends GatewayConfigBase {
   federationVersion?: number;
+  serviceOverrides?: ServiceEndpointDefinition[];
 }
 interface LocalGatewayConfig extends GatewayConfigBase {
   localServiceList: ServiceDefinition[];
@@ -350,30 +349,16 @@ export class ApolloGateway implements GraphQLService {
       throw e;
     }
 
-    if (process.env.NODE_ENV !== 'production' && process.env.APOLLO_SERVICE_OVERRIDE && isManagedConfig(this.config)) {
-      const serviceOverride = process.env.APOLLO_SERVICE_OVERRIDE;
+    if (isManagedConfig(this.config) && this.config.serviceOverrides) {
       result.isNewSchema = true;
 
-      if (serviceOverride.toLowerCase() === 'true') {
-        await overrideManagedServiceWithLocal(result, process.env.APOLLO_SERVICE_OVERRIDE_NAME, process.env.APOLLO_SERVICE_OVERRIDE_URL);
-      } else {
-        //if APOLLO_SERVICE_OVERRIDE=true, we assume a local config file is set
-        let file = '';
-        if (serviceOverride.startsWith('/'))
-          file = readFileSync(serviceOverride, { encoding: "utf8" });
-        else
-          file = readFileSync(resolve('./', serviceOverride), { encoding: "utf8" });
-
-        let localOverrideConfigFile = JSON.parse(file);
-
-        let promises: Promise<void>[] = [];
-        for (let i = 0; i < localOverrideConfigFile.servicesToOverride.length; i++) {
-          let serviceToOverride = localOverrideConfigFile.servicesToOverride[i];
-          promises.push(overrideManagedServiceWithLocal(result, serviceToOverride.name, serviceToOverride.url));
-        }
-
-        await Promise.all(promises);
+      let promises: Promise<void>[] = [];
+      for (let i = 0; i < this.config.serviceOverrides.length; i++) {
+        let serviceToOverride = this.config.serviceOverrides[i];
+        promises.push(overrideManagedServiceWithLocal(result, serviceToOverride.name, serviceToOverride.url));
       }
+
+      await Promise.all(promises);
     }
 
     if (
@@ -846,7 +831,7 @@ async function overrideManagedServiceWithLocal(compositionResult: {
 }, serviceNameToOverride: string | undefined, localURL: string | undefined) {
   if (localURL) {
     let serviceIndexToOverride = compositionResult.serviceDefinitions?.findIndex(sd => sd.name == serviceNameToOverride) ?? -1;
-    if(localURL == undefined || localURL == "") {
+    if (localURL == undefined || localURL == "") {
       console.log(`You must provide a URL to override the ${serviceNameToOverride} service. Either set the APOLLO_SERVICE_OVERRIDE_URL to your local running server or ensure the url is set in your local config file`);
     } else if (serviceIndexToOverride >= 0 && compositionResult.serviceDefinitions) {
       compositionResult.serviceDefinitions[serviceIndexToOverride].url = localURL;
@@ -869,10 +854,10 @@ async function overrideManagedServiceWithLocal(compositionResult: {
         const typeDefs = data._service.sdl as string;
         compositionResult.serviceDefinitions[serviceIndexToOverride].typeDefs = parse(typeDefs);
       }
-    } else if(compositionResult.serviceDefinitions){
+    } else if (compositionResult.serviceDefinitions) {
       console.log(`The named service wasn't found in the composed service definition list. You provided: ${serviceNameToOverride}`);
       console.log(`The current defined service names are:`);
-      compositionResult.serviceDefinitions.map(s=>console.log(s.name));
+      compositionResult.serviceDefinitions.map(s => console.log(s.name));
     }
   }
 }
