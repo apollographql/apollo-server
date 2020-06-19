@@ -303,42 +303,78 @@ describe('externalUnused', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('does not warn when @external is used on type that is an implementation of an interface', () => {
+  it('does not error when @external is used on a field of a concrete type that implements a shared field of an implemented interface', () => {
     const serviceA = {
       typeDefs: gql`
-        type Car implements Product @key(fields: "id") {
+        type Car implements Vehicle @key(fields: "id") {
           id: ID!
           speed: Int
         }
-
-        interface Product {
+        interface Vehicle {
           id: ID!
+          speed: Int
         }
       `,
       name: 'serviceA',
     };
-
     const serviceB = {
       typeDefs: gql`
-        type Query {
-          products: [Product]
-        }
-
-        extend type Car implements Product @key(fields: "id") {
+        extend type Car implements Vehicle @key(fields: "id") {
           id: ID! @external
           speed: Int @external
         }
-
-        interface Product {
+        interface Vehicle {
           id: ID!
+          speed: Int
         }
       `,
       name: 'serviceB',
-    }
-
-    const serviceList = [serviceA, serviceB,];
+    };
+    const serviceList = [serviceA, serviceB];
     const { schema } = composeServices(serviceList);
-    const warnings = validateExternalUnused({ schema, serviceList });
-    expect(warnings).toEqual([]);
+    const errors = validateExternalUnused({ schema, serviceList });
+    expect(errors).toHaveLength(0);
+  });
+
+  it('does error when @external is used on a field of a concrete type is not shared by its implemented interface', () => {
+    const serviceA = {
+      typeDefs: gql`
+        type Car implements Vehicle @key(fields: "id") {
+          id: ID!
+          speed: Int
+          wheelSize: Int
+        }
+        interface Vehicle {
+          id: ID!
+          speed: Int
+        }
+      `,
+      name: 'serviceA',
+    };
+    const serviceB = {
+      typeDefs: gql`
+        extend type Car implements Vehicle @key(fields: "id") {
+          id: ID! @external
+          speed: Int @external
+          wheelSize: Int @external
+        }
+        interface Vehicle {
+          id: ID!
+          speed: Int
+        }
+      `,
+      name: 'serviceB',
+    };
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const errors = validateExternalUnused({ schema, serviceList });
+    expect(errors).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "code": "EXTERNAL_UNUSED",
+          "message": "[serviceB] Car.wheelSize -> is marked as @external but is not used by a @requires, @key, or @provides directive.",
+        },
+      ]
+    `);
   });
 });
