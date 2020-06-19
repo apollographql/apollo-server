@@ -106,6 +106,27 @@ describe('plugin', () => {
         shouldNotSetCacheControlHeader(requestContext);
       });
     });
+
+    describe('custom HTTP header', () => {
+      const overallCachePolicy: Required<CacheHint> = {
+        maxAge: 1200,
+        scope: CacheScope.Public
+      };
+
+      it('is has the specified header key and the built value', async () => {
+        const requestContext = await makePluginWithOptions({
+          pluginInitializationOptions: {
+            calculateHttpHeaders: true,
+            headerKey: 'Edge-Control',
+            buildHeaderValue: ({maxAge}) => `!no-store, max-age=${maxAge}`
+          },
+          overallCachePolicy,
+        });
+        expect(requestContext.response.http!.headers.get('Edge-Control')).toBe(
+          '!no-store, max-age=1200',
+        );
+      });
+    });
   });
 
   describe('computeOverallCachePolicy', () => {

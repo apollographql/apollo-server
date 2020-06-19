@@ -29,6 +29,8 @@ export interface CacheControlExtensionOptions {
   // more appropriately named options.
   calculateHttpHeaders?: boolean;
   stripFormattedExtensions?: boolean;
+  headerKey?: string;
+  buildHeaderValue?: (cacheHint: CacheHint) => string;
 }
 
 declare module 'graphql/type/definition' {
@@ -154,12 +156,15 @@ export const plugin = (
           options.calculateHttpHeaders &&
           response.http
         ) {
-          response.http.headers.set(
-            'Cache-Control',
-            `max-age=${
-              overallCachePolicy.maxAge
-            }, ${overallCachePolicy.scope.toLowerCase()}`,
-          );
+          const { headerKey = 'Cache-Control', buildHeaderValue } = options;
+
+          const headerValue = buildHeaderValue
+            ? buildHeaderValue(overallCachePolicy)
+            : `max-age=${
+                overallCachePolicy.maxAge
+              }, ${overallCachePolicy.scope.toLowerCase()}`;
+
+          response.http.headers.set(headerKey, headerValue);
         }
 
         // We should have to explicitly ask to leave the formatted extension in,

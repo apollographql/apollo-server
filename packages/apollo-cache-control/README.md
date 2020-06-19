@@ -113,3 +113,15 @@ app.use('/graphql', bodyParser.json(), graphqlExpress({
   },
 }));
 ```
+
+### Using custom header keys and/or values
+
+In certain situations you may want to specify the header key or value, for example, when using a CDN that requires a custom header for edge-caching. This can be achieved with the following configuration:
+
+```javascript
+cacheControl: {
+  calculateHttpHeaders: true,
+  headerKey: 'Edge-Control',
+  buildHeaderValue: (hint) => `!no-store, max-age=${hint.maxAge}`
+}
+```
