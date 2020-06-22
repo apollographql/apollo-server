@@ -21,25 +21,14 @@ Scenario: should not confuse union types with overlapping field names
     """
   Then the query plan should be
     """
-    QueryPlan {
-      Fetch(service: "documents") {
-        {
-          body {
-            __typename
-            ... on Image {
-              attributes {
-                url
-              }
-            }
-            ... on Text {
-              attributes {
-                bold
-                text
-              }
-            }
-          }
-        }
-      },
+    {
+      "kind": "QueryPlan",
+      "node": {
+        "kind": "Fetch",
+        "serviceName": "documents",
+        "variableUsages": [],
+        "source": "{body{__typename ...on Image{attributes{url}}...on Text{attributes{bold text}}}}"
+      }
     }
     """
 
@@ -54,14 +43,14 @@ Scenario: should use a single fetch when requesting a root field from one servic
     """
   Then the query plan should be
     """
-    QueryPlan {
-      Fetch(service: "accounts") {
-        {
-          me {
-            name
-          }
-        }
-      },
+    {
+      "kind": "QueryPlan",
+      "node": {
+        "kind": "Fetch",
+        "serviceName": "accounts",
+        "variableUsages": [],
+        "source": "{me{name}}"
+      }
     }
     """
 
@@ -79,67 +68,68 @@ Scenario: should use two independent fetches when requesting root fields from tw
     """
   Then the query plan should be
     """
-    QueryPlan {
-      Parallel {
-        Fetch(service: "accounts") {
+    {
+      "kind": "QueryPlan",
+      "node": {
+        "kind": "Parallel",
+        "nodes": [
           {
-            me {
-              name
-            }
+            "kind": "Fetch",
+            "serviceName": "accounts",
+            "variableUsages": [],
+            "source": "{me{name}}"
+          },
+          {
+            "kind": "Sequence",
+            "nodes": [
+              {
+                "kind": "Fetch",
+                "serviceName": "product",
+                "variableUsages": [],
+                "source": "{topProducts{__typename ...on Book{__typename isbn}...on Furniture{name}}}"
+              },
+              {
+                "kind": "Flatten",
+                "path": [
+                  "topProducts",
+                  "@"
+                ],
+                "node": {
+                  "kind": "Fetch",
+                  "serviceName": "books",
+                  "requires": [
+                    {
+                      "kind": "InlineFragment",
+                      "typeCondition": "Book"
+                    }
+                  ],
+                  "variableUsages": [],
+                  "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
+                }
+              },
+              {
+                "kind": "Flatten",
+                "path": [
+                  "topProducts",
+                  "@"
+                ],
+                "node": {
+                  "kind": "Fetch",
+                  "serviceName": "product",
+                  "requires": [
+                    {
+                      "kind": "InlineFragment",
+                      "typeCondition": "Book"
+                    }
+                  ],
+                  "variableUsages": [],
+                  "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+                }
+              }
+            ]
           }
-        },
-        Sequence {
-          Fetch(service: "product") {
-            {
-              topProducts {
-                __typename
-                ... on Book {
-                  __typename
-                  isbn
-                }
-                ... on Furniture {
-                  name
-                }
-              }
-            }
-          },
-          Flatten(path: "topProducts.@") {
-            Fetch(service: "books") {
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                }
-              } =>
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                  title
-                  year
-                }
-              }
-            },
-          },
-          Flatten(path: "topProducts.@") {
-            Fetch(service: "product") {
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                  title
-                  year
-                }
-              } =>
-              {
-                ... on Book {
-                  name
-                }
-              }
-            },
-          },
-        },
-      },
+        ]
+      }
     }
     """
 
@@ -157,109 +147,108 @@ Scenario: should use a single fetch when requesting multiple root fields from th
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "product") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          topProducts {
-            __typename
-            ... on Book {
-              __typename
-              isbn
+          "kind": "Fetch",
+          "serviceName": "product",
+          "variableUsages": [],
+          "source": "{topProducts{__typename ...on Book{__typename isbn}...on Furniture{name}}product(upc:\"1\"){__typename ...on Book{__typename isbn}...on Furniture{name}}}"
+        },
+        {
+          "kind": "Parallel",
+          "nodes": [
+            {
+              "kind": "Sequence",
+              "nodes": [
+                {
+                  "kind": "Flatten",
+                  "path": [
+                    "topProducts",
+                    "@"
+                  ],
+                  "node": {
+                    "kind": "Fetch",
+                    "serviceName": "books",
+                    "requires": [
+                      {
+                        "kind": "InlineFragment",
+                        "typeCondition": "Book"
+                      }
+                    ],
+                    "variableUsages": [],
+                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
+                  }
+                },
+                {
+                  "kind": "Flatten",
+                  "path": [
+                    "topProducts",
+                    "@"
+                  ],
+                  "node": {
+                    "kind": "Fetch",
+                    "serviceName": "product",
+                    "requires": [
+                      {
+                        "kind": "InlineFragment",
+                        "typeCondition": "Book"
+                      }
+                    ],
+                    "variableUsages": [],
+                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "Sequence",
+              "nodes": [
+                {
+                  "kind": "Flatten",
+                  "path": [
+                    "product"
+                  ],
+                  "node": {
+                    "kind": "Fetch",
+                    "serviceName": "books",
+                    "requires": [
+                      {
+                        "kind": "InlineFragment",
+                        "typeCondition": "Book"
+                      }
+                    ],
+                    "variableUsages": [],
+                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
+                  }
+                },
+                {
+                  "kind": "Flatten",
+                  "path": [
+                    "product"
+                  ],
+                  "node": {
+                    "kind": "Fetch",
+                    "serviceName": "product",
+                    "requires": [
+                      {
+                        "kind": "InlineFragment",
+                        "typeCondition": "Book"
+                      }
+                    ],
+                    "variableUsages": [],
+                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+                  }
+                }
+              ]
             }
-            ... on Furniture {
-              name
-            }
-          }
-          product(upc: "1") {
-            __typename
-            ... on Book {
-              __typename
-              isbn
-            }
-            ... on Furniture {
-              name
-            }
-          }
+          ]
         }
-      },
-      Parallel {
-        Sequence {
-          Flatten(path: "topProducts.@") {
-            Fetch(service: "books") {
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                }
-              } =>
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                  title
-                  year
-                }
-              }
-            },
-          },
-          Flatten(path: "topProducts.@") {
-            Fetch(service: "product") {
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                  title
-                  year
-                }
-              } =>
-              {
-                ... on Book {
-                  name
-                }
-              }
-            },
-          },
-        },
-        Sequence {
-          Flatten(path: "product") {
-            Fetch(service: "books") {
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                }
-              } =>
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                  title
-                  year
-                }
-              }
-            },
-          },
-          Flatten(path: "product") {
-            Fetch(service: "product") {
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                  title
-                  year
-                }
-              } =>
-              {
-                ... on Book {
-                  name
-                }
-              }
-            },
-          },
-        },
-      },
-    },
+      ]
+    }
   }
   """
 
@@ -279,19 +268,14 @@ Scenario: should use a single fetch when requesting relationship subfields from 
     """
   Then the query plan should be
     """
-    QueryPlan {
-      Fetch(service: "reviews") {
-        {
-          topReviews {
-            body
-            author {
-              reviews {
-                body
-              }
-            }
-          }
-        }
-      },
+    {
+      "kind": "QueryPlan",
+      "node": {
+        "kind": "Fetch",
+        "serviceName": "reviews",
+        "variableUsages": [],
+        "source": "{topReviews{body author{reviews{body}}}}"
+      }
     }
     """
 
@@ -312,20 +296,14 @@ Scenario: should use a single fetch when requesting relationship subfields and p
     """
   Then the query plan should be
     """
-    QueryPlan {
-      Fetch(service: "reviews") {
-        {
-          topReviews {
-            body
-            author {
-              id
-              reviews {
-                body
-              }
-            }
-          }
-        }
-      },
+    {
+      "kind": "QueryPlan",
+      "node": {
+        "kind": "Fetch",
+        "serviceName": "reviews",
+        "variableUsages": [],
+        "source": "{topReviews{body author{id reviews{body}}}}"
+      }
     }
     """
 
@@ -343,35 +321,37 @@ Scenario: when requesting an extension field from another service, it should add
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "accounts") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          me {
-            name
-            __typename
-            id
+          "kind": "Fetch",
+          "serviceName": "accounts",
+          "variableUsages": [],
+          "source": "{me{name __typename id}}"
+        },
+        {
+          "kind": "Flatten",
+          "path": [
+            "me"
+          ],
+          "node": {
+            "kind": "Fetch",
+            "serviceName": "reviews",
+            "requires": [
+              {
+                "kind": "InlineFragment",
+                "typeCondition": "User"
+              }
+            ],
+            "variableUsages": [],
+            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}}}}"
           }
         }
-      },
-      Flatten(path: "me") {
-        Fetch(service: "reviews") {
-          {
-            ... on User {
-              __typename
-              id
-            }
-          } =>
-          {
-            ... on User {
-              reviews {
-                body
-              }
-            }
-          }
-        },
-      },
-    },
+      ]
+    }
   }
   """
 
@@ -388,34 +368,37 @@ Scenario: when requesting an extension field from another service, when the pare
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "accounts") {
+{
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          me {
-            __typename
-            id
+          "kind": "Fetch",
+          "serviceName": "accounts",
+          "variableUsages": [],
+          "source": "{me{__typename id}}"
+        },
+        {
+          "kind": "Flatten",
+          "path": [
+            "me"
+          ],
+          "node": {
+            "kind": "Fetch",
+            "serviceName": "reviews",
+            "requires": [
+              {
+                "kind": "InlineFragment",
+                "typeCondition": "User"
+              }
+            ],
+            "variableUsages": [],
+            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}}}}"
           }
         }
-      },
-      Flatten(path: "me") {
-        Fetch(service: "reviews") {
-          {
-            ... on User {
-              __typename
-              id
-            }
-          } =>
-          {
-            ... on User {
-              reviews {
-                body
-              }
-            }
-          }
-        },
-      },
-    },
+      ]
+    }
   }
   """
 
@@ -433,35 +416,37 @@ Scenario: when requesting an extension field from another service, should only a
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "accounts") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          me {
-            __typename
-            id
+          "kind": "Fetch",
+          "serviceName": "accounts",
+          "variableUsages": [],
+          "source": "{me{__typename id}}"
+        },
+        {
+          "kind": "Flatten",
+          "path": [
+            "me"
+          ],
+          "node": {
+            "kind": "Fetch",
+            "serviceName": "reviews",
+            "requires": [
+              {
+                "kind": "InlineFragment",
+                "typeCondition": "User"
+              }
+            ],
+            "variableUsages": [],
+            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}numberOfReviews}}}"
           }
         }
-      },
-      Flatten(path: "me") {
-        Fetch(service: "reviews") {
-          {
-            ... on User {
-              __typename
-              id
-            }
-          } =>
-          {
-            ... on User {
-              reviews {
-                body
-              }
-              numberOfReviews
-            }
-          }
-        },
-      },
-    },
+      ]
+    }
   }
   """
 
@@ -479,35 +464,39 @@ Scenario: when requesting a composite field with subfields from another service,
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "reviews") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          topReviews {
-            body
-            author {
-              __typename
-              id
-            }
+          "kind": "Fetch",
+          "serviceName": "reviews",
+          "variableUsages": [],
+          "source": "{topReviews{body author{__typename id}}}"
+        },
+        {
+          "kind": "Flatten",
+          "path": [
+            "topReviews",
+            "@",
+            "author"
+          ],
+          "node": {
+            "kind": "Fetch",
+            "serviceName": "accounts",
+            "requires": [
+              {
+                "kind": "InlineFragment",
+                "typeCondition": "User"
+              }
+            ],
+            "variableUsages": [],
+            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{name}}}"
           }
         }
-      },
-      Flatten(path: "topReviews.@.author") {
-        Fetch(service: "accounts") {
-          {
-            ... on User {
-              __typename
-              id
-            }
-          } =>
-          {
-            ... on User {
-              name
-            }
-          }
-        },
-      },
-    },
+      ]
+    }
   }
   """
 
@@ -522,34 +511,38 @@ Scenario: when requesting a composite field with subfields from another service,
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "product") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          topCars {
-            __typename
-            id
-            price
+          "kind": "Fetch",
+          "serviceName": "product",
+          "variableUsages": [],
+          "source": "{topCars{__typename id price}}"
+        },
+        {
+          "kind": "Flatten",
+          "path": [
+            "topCars",
+            "@"
+          ],
+          "node": {
+            "kind": "Fetch",
+            "serviceName": "reviews",
+            "requires": [
+              {
+                "kind": "InlineFragment",
+                "typeCondition": "Car"
+              }
+            ],
+            "variableUsages": [],
+            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Car{retailPrice}}}"
           }
         }
-      },
-      Flatten(path: "topCars.@") {
-        Fetch(service: "reviews") {
-          {
-            ... on Car {
-              __typename
-              id
-              price
-            }
-          } =>
-          {
-            ... on Car {
-              retailPrice
-            }
-          }
-        },
-      },
-    },
+      ]
+    }
   }
   """
 
@@ -566,34 +559,39 @@ Scenario: when requesting a composite field with subfields from another service,
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "reviews") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          topReviews {
-            author {
-              __typename
-              id
-            }
+          "kind": "Fetch",
+          "serviceName": "reviews",
+          "variableUsages": [],
+          "source": "{topReviews{author{__typename id}}}"
+        },
+        {
+          "kind": "Flatten",
+          "path": [
+            "topReviews",
+            "@",
+            "author"
+          ],
+          "node": {
+            "kind": "Fetch",
+            "serviceName": "accounts",
+            "requires": [
+              {
+                "kind": "InlineFragment",
+                "typeCondition": "User"
+              }
+            ],
+            "variableUsages": [],
+            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{name}}}"
           }
         }
-      },
-      Flatten(path: "topReviews.@.author") {
-        Fetch(service: "accounts") {
-          {
-            ... on User {
-              __typename
-              id
-            }
-          } =>
-          {
-            ... on User {
-              name
-            }
-          }
-        },
-      },
-    },
+      ]
+    }
   }
   """
 
@@ -610,34 +608,39 @@ Scenario: when requesting a relationship field with extension subfields from a d
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "reviews") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          topReviews {
-            author {
-              __typename
-              id
-            }
+          "kind": "Fetch",
+          "serviceName": "reviews",
+          "variableUsages": [],
+          "source": "{topReviews{author{__typename id}}}"
+        },
+        {
+          "kind": "Flatten",
+          "path": [
+            "topReviews",
+            "@",
+            "author"
+          ],
+          "node": {
+            "kind": "Fetch",
+            "serviceName": "accounts",
+            "requires": [
+              {
+                "kind": "InlineFragment",
+                "typeCondition": "User"
+              }
+            ],
+            "variableUsages": [],
+            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{birthDate}}}"
           }
         }
-      },
-      Flatten(path: "topReviews.@.author") {
-        Fetch(service: "accounts") {
-          {
-            ... on User {
-              __typename
-              id
-            }
-          } =>
-          {
-            ... on User {
-              birthDate
-            }
-          }
-        },
-      },
-    },
+      ]
+    }
   }
   """
 
@@ -652,20 +655,14 @@ Scenario: for abstract types, it should add __typename when fetching objects of 
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Fetch(service: "product") {
-      {
-        topProducts {
-          __typename
-          ... on Book {
-            price
-          }
-          ... on Furniture {
-            price
-          }
-        }
-      }
-    },
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "product",
+      "variableUsages": [],
+      "source": "{topProducts{__typename ...on Book{price}...on Furniture{price}}}"
+    }
   }
   """
 
@@ -683,52 +680,42 @@ Scenario: should break up when traversing an extension field on an interface typ
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "product") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          topProducts {
-            __typename
-            ... on Book {
-              price
-              __typename
-              isbn
-            }
-            ... on Furniture {
-              price
-              __typename
-              upc
-            }
+          "kind": "Fetch",
+          "serviceName": "product",
+          "variableUsages": [],
+          "source": "{topProducts{__typename ...on Book{price __typename isbn}...on Furniture{price __typename upc}}}"
+        },
+        {
+          "kind": "Flatten",
+          "path": [
+            "topProducts",
+            "@"
+          ],
+          "node": {
+            "kind": "Fetch",
+            "serviceName": "reviews",
+            "requires": [
+              {
+                "kind": "InlineFragment",
+                "typeCondition": "Book"
+              },
+              {
+                "kind": "InlineFragment",
+                "typeCondition": "Furniture"
+              }
+            ],
+            "variableUsages": [],
+            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{reviews{body}}...on Furniture{reviews{body}}}}"
           }
         }
-      },
-      Flatten(path: "topProducts.@") {
-        Fetch(service: "reviews") {
-          {
-            ... on Book {
-              __typename
-              isbn
-            }
-            ... on Furniture {
-              __typename
-              upc
-            }
-          } =>
-          {
-            ... on Book {
-              reviews {
-                body
-              }
-            }
-            ... on Furniture {
-              reviews {
-                body
-              }
-            }
-          }
-        },
-      },
-    },
+      ]
+    }
   }
   """
 
@@ -748,36 +735,38 @@ Scenario: interface fragments should expand into possible types only
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "books") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          books {
-            __typename
-            isbn
-            title
-            year
+          "kind": "Fetch",
+          "serviceName": "books",
+          "variableUsages": [],
+          "source": "{books{__typename isbn title year}}"
+        },
+        {
+          "kind": "Flatten",
+          "path": [
+            "books",
+            "@"
+          ],
+          "node": {
+            "kind": "Fetch",
+            "serviceName": "product",
+            "requires": [
+              {
+                "kind": "InlineFragment",
+                "typeCondition": "Book"
+              }
+            ],
+            "variableUsages": [],
+            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
           }
         }
-      },
-      Flatten(path: "books.@") {
-        Fetch(service: "product") {
-          {
-            ... on Book {
-              __typename
-              isbn
-              title
-              year
-            }
-          } =>
-          {
-            ... on Book {
-              name
-            }
-          }
-        },
-      },
-    },
+      ]
+    }
   }
   """
 
@@ -794,24 +783,14 @@ Scenario: interface inside interface should expand into possible types only
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Fetch(service: "product") {
-      {
-        product(upc: "") {
-          __typename
-          ... on Book {
-            details {
-              country
-            }
-          }
-          ... on Furniture {
-            details {
-              country
-            }
-          }
-        }
-      }
-    },
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "product",
+      "variableUsages": [],
+      "source": "{product(upc:\"\"){__typename ...on Book{details{country}}...on Furniture{details{country}}}}"
+    }
   }
   """
 
@@ -835,102 +814,93 @@ Scenario: experimental compression to downstream services should generate fragme
   When using autofragmentization
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "reviews") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          topReviews {
-            ...__QueryPlanFragment_1__
-          }
-        }
-        fragment __QueryPlanFragment_1__ on Review {
-          body
-          author
-          product {
-            ...__QueryPlanFragment_0__
-          }
-        }
-        fragment __QueryPlanFragment_0__ on Product {
-          __typename
-          ... on Book {
-            __typename
-            isbn
-          }
-          ... on Furniture {
-            __typename
-            upc
-          }
-        }
-      },
-      Parallel {
-        Sequence {
-          Flatten(path: "topReviews.@.product") {
-            Fetch(service: "books") {
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                }
-              } =>
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                  title
-                  year
-                }
-              }
-            },
-          },
-          Flatten(path: "topReviews.@.product") {
-            Fetch(service: "product") {
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                  title
-                  year
-                }
-              } =>
-              {
-                ... on Book {
-                  name
-                }
-              }
-            },
-          },
+          "kind": "Fetch",
+          "serviceName": "reviews",
+          "variableUsages": [],
+          "source": "{topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Book{__typename isbn}...on Furniture{__typename upc}}"
         },
-        Flatten(path: "topReviews.@.product") {
-          Fetch(service: "product") {
+        {
+          "kind": "Parallel",
+          "nodes": [
             {
-              ... on Furniture {
-                __typename
-                upc
-              }
-              ... on Book {
-                __typename
-                isbn
-              }
-            } =>
+              "kind": "Sequence",
+              "nodes": [
+                {
+                  "kind": "Flatten",
+                  "path": [
+                    "topReviews",
+                    "@",
+                    "product"
+                  ],
+                  "node": {
+                    "kind": "Fetch",
+                    "serviceName": "books",
+                    "requires": [
+                      {
+                        "kind": "InlineFragment",
+                        "typeCondition": "Book"
+                      }
+                    ],
+                    "variableUsages": [],
+                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
+                  }
+                },
+                {
+                  "kind": "Flatten",
+                  "path": [
+                    "topReviews",
+                    "@",
+                    "product"
+                  ],
+                  "node": {
+                    "kind": "Fetch",
+                    "serviceName": "product",
+                    "requires": [
+                      {
+                        "kind": "InlineFragment",
+                        "typeCondition": "Book"
+                      }
+                    ],
+                    "variableUsages": [],
+                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+                  }
+                }
+              ]
+            },
             {
-              ... on Furniture {
-                name
-                price
-                details {
-                  country
-                }
-              }
-              ... on Book {
-                price
-                details {
-                  country
-                }
+              "kind": "Flatten",
+              "path": [
+                "topReviews",
+                "@",
+                "product"
+              ],
+              "node": {
+                "kind": "Fetch",
+                "serviceName": "product",
+                "requires": [
+                  {
+                    "kind": "InlineFragment",
+                    "typeCondition": "Furniture"
+                  },
+                  {
+                    "kind": "InlineFragment",
+                    "typeCondition": "Book"
+                  }
+                ],
+                "variableUsages": [],
+                "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name price details{country}}...on Book{price details{country}}}}"
               }
             }
-          },
-        },
-      },
-    },
+          ]
+        }
+      ]
+    }
   }
   """
 
@@ -947,15 +917,14 @@ Scenario: experimental compression to downstream services shouldn't generate fra
   When using autofragmentization
   Then the query plan should be
   """
-  QueryPlan {
-    Fetch(service: "reviews") {
-      {
-        topReviews {
-          body
-          author
-        }
-      }
-    },
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "reviews",
+      "variableUsages": [],
+      "source": "{topReviews{body author}}"
+    }
   }
   """
 
@@ -973,19 +942,14 @@ Scenario: experimental compression to downstream services should generate fragme
   When using autofragmentization
   Then the query plan should be
   """
-  QueryPlan {
-    Fetch(service: "reviews") {
-      {
-        topReviews {
-          ...__QueryPlanFragment_0__
-        }
-      }
-      fragment __QueryPlanFragment_0__ on Review {
-        id
-        body
-        author
-      }
-    },
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "reviews",
+      "variableUsages": [],
+      "source": "{topReviews{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Review{id body author}"
+    }
   }
   """
 
@@ -1009,102 +973,93 @@ Scenario: experimental compression to downstream services should generate fragme
   When using autofragmentization
   Then the query plan should be
   """
-  QueryPlan {
-    Sequence {
-      Fetch(service: "reviews") {
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Sequence",
+      "nodes": [
         {
-          reviews: topReviews {
-            ...__QueryPlanFragment_1__
-          }
-        }
-        fragment __QueryPlanFragment_1__ on Review {
-          content: body
-          author
-          product {
-            ...__QueryPlanFragment_0__
-          }
-        }
-        fragment __QueryPlanFragment_0__ on Product {
-          __typename
-          ... on Book {
-            __typename
-            isbn
-          }
-          ... on Furniture {
-            __typename
-            upc
-          }
-        }
-      },
-      Parallel {
-        Sequence {
-          Flatten(path: "reviews.@.product") {
-            Fetch(service: "books") {
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                }
-              } =>
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                  title
-                  year
-                }
-              }
-            },
-          },
-          Flatten(path: "reviews.@.product") {
-            Fetch(service: "product") {
-              {
-                ... on Book {
-                  __typename
-                  isbn
-                  title
-                  year
-                }
-              } =>
-              {
-                ... on Book {
-                  name
-                }
-              }
-            },
-          },
+          "kind": "Fetch",
+          "serviceName": "reviews",
+          "variableUsages": [],
+          "source": "{reviews:topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{content:body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Book{__typename isbn}...on Furniture{__typename upc}}"
         },
-        Flatten(path: "reviews.@.product") {
-          Fetch(service: "product") {
+        {
+          "kind": "Parallel",
+          "nodes": [
             {
-              ... on Furniture {
-                __typename
-                upc
-              }
-              ... on Book {
-                __typename
-                isbn
-              }
-            } =>
+              "kind": "Sequence",
+              "nodes": [
+                {
+                  "kind": "Flatten",
+                  "path": [
+                    "reviews",
+                    "@",
+                    "product"
+                  ],
+                  "node": {
+                    "kind": "Fetch",
+                    "serviceName": "books",
+                    "requires": [
+                      {
+                        "kind": "InlineFragment",
+                        "typeCondition": "Book"
+                      }
+                    ],
+                    "variableUsages": [],
+                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
+                  }
+                },
+                {
+                  "kind": "Flatten",
+                  "path": [
+                    "reviews",
+                    "@",
+                    "product"
+                  ],
+                  "node": {
+                    "kind": "Fetch",
+                    "serviceName": "product",
+                    "requires": [
+                      {
+                        "kind": "InlineFragment",
+                        "typeCondition": "Book"
+                      }
+                    ],
+                    "variableUsages": [],
+                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+                  }
+                }
+              ]
+            },
             {
-              ... on Furniture {
-                name
-                cost: price
-                details {
-                  origin: country
-                }
-              }
-              ... on Book {
-                cost: price
-                details {
-                  origin: country
-                }
+              "kind": "Flatten",
+              "path": [
+                "reviews",
+                "@",
+                "product"
+              ],
+              "node": {
+                "kind": "Fetch",
+                "serviceName": "product",
+                "requires": [
+                  {
+                    "kind": "InlineFragment",
+                    "typeCondition": "Furniture"
+                  },
+                  {
+                    "kind": "InlineFragment",
+                    "typeCondition": "Book"
+                  }
+                ],
+                "variableUsages": [],
+                "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name cost:price details{origin:country}}...on Book{cost:price details{origin:country}}}}"
               }
             }
-          },
-        },
-      },
-    },
+          ]
+        }
+      ]
+    }
   }
   """
 
@@ -1138,24 +1093,14 @@ Scenario: should properly expand nested unions with inline fragments
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Fetch(service: "documents") {
-      {
-        body {
-          __typename
-          ... on Image {
-            attributes {
-              url
-            }
-          }
-          ... on Text {
-            attributes {
-              bold
-            }
-          }
-        }
-      }
-    },
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "documents",
+      "variableUsages": [],
+      "source": "{body{__typename ...on Image{attributes{url}}...on Text{attributes{bold}}}}"
+    }
   }
   """
 
@@ -1190,20 +1135,14 @@ Scenario: deduplicates fields / selections regardless of adjacency and type cond
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Fetch(service: "documents") {
-      {
-        body {
-          __typename
-          ... on Text {
-            attributes {
-              bold
-              text
-            }
-          }
-        }
-      }
-    },
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "documents",
+      "variableUsages": [],
+      "source": "{body{__typename ...on Text{attributes{bold text}}}}"
+    }
   }
   """
 
@@ -1231,19 +1170,13 @@ Scenario: deduplicates fields / selections regardless of adjacency and type cond
   """
   Then the query plan should be
   """
-  QueryPlan {
-    Fetch(service: "documents") {
-      {
-        body {
-          __typename
-          ... on Text {
-            attributes {
-              bold
-              text
-            }
-          }
-        }
-      }
-    },
+  {
+    "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "documents",
+      "variableUsages": [],
+      "source": "{body{__typename ...on Text{attributes{bold text}}}}"
+    }
   }
   """
