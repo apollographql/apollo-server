@@ -5,13 +5,11 @@ import {
   GraphQLSchemaValidationError,
 } from 'apollo-graphql';
 import { defineFeature, loadFeature } from 'jest-cucumber';
-import { DocumentNode, GraphQLSchema } from 'graphql';
-import prettyFormat from 'pretty-format';
+import { DocumentNode, GraphQLSchema, GraphQLError } from 'graphql';
 import { composeServices, buildFederatedSchema, normalizeTypeDefs } from '@apollo/federation';
 
 import { QueryPlan } from '../..';
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
-import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 
 const buildQueryPlanFeature = loadFeature(
@@ -83,12 +81,12 @@ features.forEach((feature) => {
             queryPlan = buildQueryPlan(
               buildOperationContext(schema, query, undefined),
               options
-            )
+            );
 
-            const serializedPlan = prettyFormat(queryPlan, {
-              plugins: [queryPlanSerializer, astSerializer],
-            });
-            expect(serializedPlan).toEqual(expectedQueryPlan);
+            const serializedPlan = JSON.parse(JSON.stringify(queryPlan, serializeQueryPlanNode));
+            const parsedExpectedPlan = JSON.parse(expectedQueryPlan);
+
+            expect(serializedPlan).toEqual(parsedExpectedPlan);
           })
         }
 
@@ -104,3 +102,28 @@ features.forEach((feature) => {
     });
   });
 });
+
+const serializeQueryPlanNode = (k: string , v: any) => {
+  switch(k){
+    case "selectionSet":
+    case "internalFragments":
+    case "loc":
+    case "arguments":
+    case "directives":
+      return undefined;
+    case "kind":
+      if(v === "SelectionSet") return undefined;
+      return v;
+    case "variableUsages":
+      // TODO check this
+      return Object.keys(v);
+    case "typeCondition":
+      return v.name.value;
+    case "name":
+      return v.value;
+    case "requires":
+      return v && v.selections ? v.selections : undefined;
+    default:
+      return v;
+  }
+}
