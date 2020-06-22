@@ -6,6 +6,10 @@
 
 - __FIX__: The `mergeFieldNodeSelectionSets` method no longer mutates original FieldNode objects. Before, it was updating the selection set of the original object, corrupting the data accross requests.
 
+## 0.16.7
+
+- Bumped the version of `apollo-server-core`, but no other changes!
+
 ## 0.16.6
 
 - Only changes in the similarly versioned `@apollo/federation` package.
