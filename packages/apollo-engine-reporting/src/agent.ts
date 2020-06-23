@@ -17,7 +17,12 @@ import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { plugin } from './plugin';
-import { GraphQLRequestContext, Logger } from 'apollo-server-types';
+import {
+  GraphQLRequestContext,
+  GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestContextDidResolveOperation,
+  Logger,
+} from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
@@ -51,6 +56,14 @@ export type VariableValueOptions =
       ) => Record<string, any>;
     }
   | SendValuesBaseOptions;
+
+export type ReportTimingOptions<TContext> =
+  | ((
+      request:
+        | GraphQLRequestContextDidResolveOperation<TContext>
+        | GraphQLRequestContextDidEncounterErrors<TContext>,
+    ) => Promise<boolean>)
+  | boolean;
 
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
@@ -204,6 +217,45 @@ export interface EngineReportingOptions<TContext> {
    */
   sendVariableValues?: VariableValueOptions;
   /**
+   * This option allows configuring the behavior of request tracing and
+   * reporting to [Apollo Graph Manager](https://engine.apollographql.com/).
+   *
+   * By default, this is set to `true`, which results in *all* requests being
+   * traced and reported. This behavior can be _disabled_ by setting this option
+   * to `false`. Alternatively, it can be selectively enabled or disabled on a
+   * per-request basis using a predicate function.
+   *
+   * When specified as a predicate function, the _return value_ of its
+   * invocation (per request) will determine whether or not that request is
+   * traced and reported. The predicate function will receive the request
+   * context. If validation and parsing of the request succeeds the function will
+   * receive the request context in the
+   * [`GraphQLRequestContextDidResolveOperation`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)
+   * phase, which permits tracing based on dynamic properties, e.g., HTTP
+   * headers or the `operationName` (when available),
+   * otherwise it will receive the request context in the  [`GraphQLRequestContextDidEncounterError`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didencountererrors)
+   * phase:
+   *
+   * **Example:**
+   *
+   * ```js
+   * reportTiming(requestContext) {
+   *   // Always trace `query HomeQuery { ... }`.
+   *   if (requestContext.operationName === "HomeQuery") return true;
+   *
+   *   // Also trace if the "trace" header is set to "true".
+   *   if (requestContext.request.http?.headers?.get("trace") === "true") {
+   *     return true;
+   *   }
+   *
+   *   // Otherwise, do not trace!
+   *   return false;
+   * },
+   * ```
+   *
+   */
+  reportTiming?: ReportTimingOptions<TContext>;
+  /**
    * [DEPRECATED] Use sendVariableValues
    * Passing an array into privateVariables is equivalent to passing { exceptNames: array } into
    * sendVariableValues, and passing in `true` or `false` is equivalent to passing { none: true } or
@@ -277,10 +329,9 @@ export interface EngineReportingOptions<TContext> {
   generateClientInfo?: GenerateClientInfo<TContext>;
 
   /**
-   * **(Experimental)** Enable schema reporting from this server with
-   * Apollo Graph Manager.
+   * Enable schema reporting from this server with Apollo Graph Manager.
    *
-   * The use of this option avoids the need to rgister schemas manually within
+   * The use of this option avoids the need to register schemas manually within
    * CI deployment pipelines using `apollo schema:push` by periodically
    * reporting this server's schema (when changes are detected) along with
    * additional details about its runtime environment to Apollo Graph Manager.
@@ -289,14 +340,14 @@ export interface EngineReportingOptions<TContext> {
    * documentation_](https://github.com/apollographql/apollo-schema-reporting-preview-docs)
    * for more information.
    */
-  experimental_schemaReporting?: boolean;
+  reportSchema?: boolean;
 
   /**
    * Override the reported schema that is reported to AGM.
    * This schema does not go through any normalizations and the string is directly sent to Apollo Graph Manager.
    * This would be useful for comments or other ordering and whitespace changes that get stripped when generating a `GraphQLSchema`
    */
-  experimental_overrideReportedSchema?: string;
+  overrideReportedSchema?: string;
 
   /**
    * The schema reporter waits before starting reporting.
@@ -310,7 +361,7 @@ export interface EngineReportingOptions<TContext> {
    * This number will be the max for the range in ms that the schema reporter will
    * wait before starting to report.
    */
-  experimental_schemaReportingInitialDelayMaxMs?: number;
+  schemaReportingInitialDelayMaxMs?: number;
 
   /**
    * The URL to use for reporting schemas.
@@ -323,6 +374,21 @@ export interface EngineReportingOptions<TContext> {
    * `console` when that is not available.
    */
   logger?: Logger;
+
+  /**
+   * @deprecated use {@link reportSchema} instead
+   */
+  experimental_schemaReporting?: boolean;
+
+  /**
+   * @deprecated use {@link overrideReportedSchema} instead
+   */
+  experimental_overrideReportedSchema?: string;
+
+  /**
+   * @deprecated use {@link schemaReportingInitialDelayMaxMs} instead
+   */
+  experimental_schemaReportingInitialDelayMaxMs?: number;
 }
 
 export interface AddTraceArgs {
@@ -332,7 +398,7 @@ export interface AddTraceArgs {
   executableSchemaId: string;
   source?: string;
   document?: DocumentNode;
-  logger: Logger,
+  logger: Logger;
 }
 
 const serviceHeaderDefaults = {
@@ -389,7 +455,7 @@ export class EngineReportingAgent<TContext = any> {
   };
 
   private readonly tracesEndpointUrl: string;
-  private readonly schemaReport: boolean;
+  readonly schemaReport: boolean;
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
@@ -408,9 +474,44 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
 
-
     if (options.experimental_schemaReporting !== undefined) {
-      this.schemaReport = options.experimental_schemaReporting;
+      this.logger.warn(
+        [
+          '[deprecated] The "experimental_schemaReporting" option has been',
+          'renamed to "reportSchema"'
+        ].join(' ')
+      );
+      if (options.reportSchema === undefined) {
+        options.reportSchema = options.experimental_schemaReporting;
+      }
+    }
+
+    if (options.experimental_overrideReportedSchema !== undefined) {
+      this.logger.warn(
+        [
+          '[deprecated] The "experimental_overrideReportedSchema" option has',
+          'been renamed to "overrideReportedSchema"'
+        ].join(' ')
+      );
+      if (options.overrideReportedSchema === undefined) {
+        options.overrideReportedSchema = options.experimental_overrideReportedSchema;
+      }
+    }
+
+    if (options.experimental_schemaReportingInitialDelayMaxMs !== undefined) {
+      this.logger.warn(
+        [
+          '[deprecated] The "experimental_schemaReportingInitialDelayMaxMs"',
+          'option has been renamed to "schemaReportingInitialDelayMaxMs"'
+        ].join(' ')
+      );
+      if (options.schemaReportingInitialDelayMaxMs === undefined) {
+        options.schemaReportingInitialDelayMaxMs = options.experimental_schemaReportingInitialDelayMaxMs;
+      }
+    }
+
+    if (options.reportSchema !== undefined) {
+      this.schemaReport = options.reportSchema;
     } else {
       this.schemaReport = process.env.APOLLO_SCHEMA_REPORTING === "true"
     }
@@ -430,7 +531,7 @@ export class EngineReportingAgent<TContext = any> {
 
     if (this.options.handleSignals !== false) {
       const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
-      signals.forEach((signal) => {
+      signals.forEach(signal => {
         // Note: Node only started sending signal names to signal events with
         // Node v10 so we can't use that feature here.
         const handler: NodeJS.SignalsListener = async () => {
@@ -555,7 +656,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public async sendAllReports(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reportDataByExecutableSchemaId).map((id) =>
+      Object.keys(this.reportDataByExecutableSchemaId).map(id =>
         this.sendReport(id),
       ),
     );
@@ -630,9 +731,8 @@ export class EngineReportingAgent<TContext = any> {
 
         if (curResponse.status >= 500 && curResponse.status < 600) {
           throw new Error(
-            `HTTP status ${curResponse.status}, ${
-              (await curResponse.text()) || '(no body)'
-            }`,
+            `HTTP status ${curResponse.status}, ${(await curResponse.text()) ||
+              '(no body)'}`,
           );
         } else {
           return curResponse;
@@ -678,18 +778,20 @@ export class EngineReportingAgent<TContext = any> {
     executableSchemaId: string;
     executableSchema: string;
   }) {
-    this.logger.info('Starting schema reporter...')
-
-    this.logger.info(
-      `Schema reporter options: ${JSON.stringify(
-        {
-          overrideReportedSchema: this.options.experimental_overrideReportedSchema,
-          schemaReportingInitialDelayMaxMs: this.options.experimental_schemaReportingInitialDelayMaxMs,
-          schemaReportingUrl: this.options.schemaReportingUrl,
-        }
-      )}`
-    )
-
+    this.logger.info('Starting schema reporter...');
+    if (this.options.overrideReportedSchema !== undefined) {
+      this.logger.info('Schema to report has been overridden');
+    }
+    if (this.options.schemaReportingInitialDelayMaxMs !== undefined) {
+      this.logger.info(`Schema reporting max initial delay override: ${
+        this.options.schemaReportingInitialDelayMaxMs
+      } ms`);
+    }
+    if (this.options.schemaReportingUrl !== undefined) {
+      this.logger.info(`Schema reporting URL override: ${
+        this.options.schemaReportingUrl
+      }`);
+    }
     if (this.currentSchemaReporter) {
       this.currentSchemaReporter.stop();
     }
@@ -714,13 +816,13 @@ export class EngineReportingAgent<TContext = any> {
     };
 
     this.logger.info(
-      `Schema reporter EdgeServerInfo: ${JSON.stringify(serverInfo)}`
+      `Schema reporting EdgeServerInfo: ${JSON.stringify(serverInfo)}`
     )
 
     // Jitter the startup between 0 and 10 seconds
     const delay = Math.floor(
       Math.random() *
-        (this.options.experimental_schemaReportingInitialDelayMaxMs || 10_000),
+        (this.options.schemaReportingInitialDelayMaxMs || 10_000),
     );
 
     const schemaReporter = new SchemaReporter(
@@ -728,6 +830,7 @@ export class EngineReportingAgent<TContext = any> {
       executableSchema,
       this.apiKey,
       this.options.schemaReportingUrl,
+      this.logger
     );
 
     const fallbackReportingDelayInMs = 20_000;
@@ -735,7 +838,7 @@ export class EngineReportingAgent<TContext = any> {
     this.currentSchemaReporter = schemaReporter;
     const logger = this.logger;
 
-    setTimeout(function () {
+    setTimeout(function() {
       reportingLoop(schemaReporter, logger, false, fallbackReportingDelayInMs);
     }, delay);
   }
@@ -818,29 +921,25 @@ export class EngineReportingAgent<TContext = any> {
     // either the request-specific logger on the request context (if available)
     // or to the `logger` that was passed into `EngineReportingOptions` which
     // is provided in the `EngineReportingAgent` constructor options.
-    this.signatureCache.set(cacheKey, generatedSignature)
-      .catch(err => {
-        logger.warn(
-          'Could not store signature cache. ' +
-          (err && err.message) || err
-        )
-      });
+    this.signatureCache.set(cacheKey, generatedSignature).catch(err => {
+      logger.warn(
+        'Could not store signature cache. ' + (err && err.message) || err,
+      );
+    });
 
     return generatedSignature;
   }
 
   private async sendAllReportsAndReportErrors(): Promise<void> {
     await Promise.all(
-      Object.keys(
-        this.reportDataByExecutableSchemaId,
-      ).map((executableSchemaId) =>
+      Object.keys(this.reportDataByExecutableSchemaId).map(executableSchemaId =>
         this.sendReportAndReportErrors(executableSchemaId),
       ),
     );
   }
 
   private sendReportAndReportErrors(executableSchemaId: string): Promise<void> {
-    return this.sendReport(executableSchemaId).catch((err) => {
+    return this.sendReport(executableSchemaId).catch(err => {
       // This catch block is primarily intended to catch network errors from
       // the retried request itself, which include network errors and non-2xx
       // HTTP errors.
