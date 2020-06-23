@@ -4,7 +4,7 @@
 
 There are two files used to test they query plan builder: [build-query-plan.feature](./build-query-plan.feature) and [queryPlanCucumber.test.ts](./queryPlanCucumber.test.ts). These two files make up a set of test descriptions written in gherkin for [Cucumber](https://cucumber.io/), and the Cucumber test implementation details respectively. If you're not familiar with Cucumber or BDD, check out [this video](https://www.youtube.com/watch?v=lC0jzd8sGIA&t=829s) for a great introduction to the concepts involved.
 
-Cucumber has test runners in multiple languages, allowing a test spec to be written in plain English and then individual implementations of the test suite can describe how they would like tests to be run for their specific implementation.
+Cucumber has test runners in multiple languages, allowing a test spec to be written in plain English and then individual implementations of the test suite can describe how they would like tests to be run for their specific implementation. For Java, Kotlin, Ruby, and JS, Cucumber even has a [10-minute tutorial](https://cucumber.io/docs/guides/10-minute-tutorial/) to help get started.
 
 ## Scenarios
 
