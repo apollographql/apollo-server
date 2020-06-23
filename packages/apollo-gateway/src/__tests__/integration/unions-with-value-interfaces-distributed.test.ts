@@ -6,7 +6,8 @@ expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
 const videos = [{ id: 1, url: 'https://foobar.com/videos/1' }];
-const articles = [{ id: 1, url: 'https://foobar.com/articles/1' }];
+const news = [{ id: 1, url: 'https://foobar.com/news/1' }];
+const reviews = [{ id: 1, url: 'https://foobar.com/reviews/1' }];
 const audios = [{ id: 1, audioUrl: 'https://foobar.com/audios/1' }];
 
 const contentService: ServiceDefinitionModule = {
@@ -14,15 +15,20 @@ const contentService: ServiceDefinitionModule = {
   typeDefs: gql`
     type Query {
       content: [Content!]!
+      articles: [Article!]!
     }
-    union Content = Video | Article | Audio
+    union Content = Video | News | Audio
+    union Article = News | Review
     extend type Video @key(fields: "id") {
       id: ID @external
     }
     extend type Audio @key(fields: "id") {
       id: ID @external
     }
-    extend type Article @key(fields: "id") {
+    extend type News @key(fields: "id") {
+      id: ID @external
+    }
+    extend type Review @key(fields: "id") {
       id: ID @external
     }
   `,
@@ -30,13 +36,24 @@ const contentService: ServiceDefinitionModule = {
     Query: {
       content() {
         return [
-          ...articles.map((a) => ({ ...a, type: 'Article' })),
+          ...news.map((a) => ({ ...a, type: 'News' })),
           ...audios.map(({ id }) => ({ id, type: 'Audio' })),
           ...videos.map(({ id }) => ({ id, type: 'Video' })),
         ];
       },
+      articles() {
+        return [
+          ...news.map((a) => ({ ...a, type: 'News' })),
+          ...reviews.map(({ id }) => ({ id, type: 'Review' })),
+        ];
+      },
     },
     Content: {
+      __resolveType(object) {
+        return object.type;
+      },
+    },
+    Article: {
       __resolveType(object) {
         return object.type;
       },
@@ -50,17 +67,30 @@ const articleService: ServiceDefinitionModule = {
     interface WebResource {
       url: String
     }
-    type Article implements WebResource @key(fields: "id") {
+    type News implements WebResource @key(fields: "id") {
+      id: ID
+      url: String
+    }
+    type Review implements WebResource @key(fields: "id") {
       id: ID
       url: String
     }
   `,
   resolvers: {
-    Article: {
+    News: {
       __resolveReference(object) {
-        return articles.find(
-          (article) => article.id === parseInt(object.id, 10),
-        );
+        return news.find((news) => news.id === parseInt(object.id, 10));
+      },
+      id(object) {
+        return object.id;
+      },
+      url(object) {
+        return object.url;
+      },
+    },
+    Review: {
+      __resolveReference(object) {
+        return reviews.find((review) => review.id === parseInt(object.id, 10));
       },
       id(object) {
         return object.id;
@@ -132,6 +162,11 @@ it('handles unions from different services which implements value interfaces', a
           url: audioUrl
         }
       }
+      articles {
+        ... on WebResource {
+          url
+        }
+      }
     }
   `;
 
@@ -154,11 +189,22 @@ it('handles unions from different services which implements value interfaces', a
                 __typename
                 id
               }
-              ... on Article {
+              ... on News {
                 __typename
                 id
               }
               ... on Audio {
+                __typename
+                id
+              }
+            }
+            articles {
+              __typename
+              ... on News {
+                __typename
+                id
+              }
+              ... on Review {
                 __typename
                 id
               }
@@ -184,13 +230,13 @@ it('handles unions from different services which implements value interfaces', a
           Flatten(path: "content.@") {
             Fetch(service: "articleService") {
               {
-                ... on Article {
+                ... on News {
                   __typename
                   id
                 }
               } =>
               {
-                ... on Article {
+                ... on News {
                   url
                 }
               }
@@ -211,15 +257,41 @@ it('handles unions from different services which implements value interfaces', a
               }
             },
           },
+          Flatten(path: "articles.@") {
+            Fetch(service: "articleService") {
+              {
+                ... on News {
+                  __typename
+                  id
+                }
+                ... on Review {
+                  __typename
+                  id
+                }
+              } =>
+              {
+                ... on News {
+                  url
+                }
+                ... on Review {
+                  url
+                }
+              }
+            },
+          },
         },
       },
     }
   `);
   expect(data).toEqual({
     content: [
-      { url: 'https://foobar.com/articles/1' },
+      { url: 'https://foobar.com/news/1' },
       { url: 'https://foobar.com/audios/1' },
       { url: 'https://foobar.com/videos/1' },
+    ],
+    articles: [
+      { url: 'https://foobar.com/news/1' },
+      { url: 'https://foobar.com/reviews/1' },
     ],
   });
 });

@@ -6,7 +6,8 @@ expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
 const videos = [{ id: 1, url: 'https://foobar.com/videos/1' }];
-const articles = [{ id: 1, url: 'https://foobar.com/articles/1' }];
+const news = [{ id: 1, url: 'https://foobar.com/news/1' }];
+const reviews = [{ id: 1, url: 'https://foobar.com/reviews/1' }];
 const audios = [{ id: 1, audioUrl: 'https://foobar.com/audios/1' }];
 
 const contentService: ServiceDefinitionModule = {
@@ -14,9 +15,15 @@ const contentService: ServiceDefinitionModule = {
   typeDefs: gql`
     type Query {
       content: [Content!]!
+      articles: [Article!]!
     }
-    union Content = Video | Article | Audio
-    type Article implements WebResource @key(fields: "id") {
+    union Content = Video | News | Audio
+    union Article = News | Review
+    type News implements WebResource @key(fields: "id") {
+      id: ID
+      url: String
+    }
+    type Review implements WebResource @key(fields: "id") {
       id: ID
       url: String
     }
@@ -34,11 +41,17 @@ const contentService: ServiceDefinitionModule = {
     Query: {
       content() {
         return [
-          ...articles.map((a) => ({ ...a, type: 'Article' })),
+          ...news.map((a) => ({ ...a, type: 'News' })),
           ...audios.map(({ id }) => ({ id, type: 'Audio' })),
           ...videos.map(({ id }) => ({ id, type: 'Video' })),
         ];
       },
+      articles() {
+        return [
+          ...news.map(a => ({ ...a, type: 'News'})),
+          ...reviews.map(a => ({ ...a, type: 'Review'})),
+        ]
+      }
     },
     Content: {
       __resolveType(object) {
@@ -46,9 +59,27 @@ const contentService: ServiceDefinitionModule = {
       },
     },
     Article: {
+      __resolveType(object) {
+        return object.type;
+      },
+    },
+    News: {
       __resolveReference(object) {
-        return articles.find(
-          (article) => article.id === parseInt(object.id, 10),
+        return news.find(
+          (news) => news.id === parseInt(object.id, 10),
+        );
+      },
+      id(object) {
+        return object.id;
+      },
+      url(object) {
+        return object.url;
+      },
+    },
+    Review: {
+      __resolveReference(object) {
+        return reviews.find(
+          (review) => review.id === parseInt(object.id, 10),
         );
       },
       id(object) {
@@ -121,6 +152,11 @@ it('handles unions from different services which implements value interfaces', a
           url: audioUrl
         }
       }
+      articles {
+        ... on WebResource {
+          url
+        }
+      }
     }
   `;
 
@@ -142,12 +178,18 @@ it('handles unions from different services which implements value interfaces', a
                 __typename
                 id
               }
-              ... on Article {
+              ... on News {
                 url
               }
               ... on Audio {
                 __typename
                 id
+              }
+            }
+            articles {
+              __typename
+              ... on WebResource {
+                url
               }
             }
           }
@@ -189,9 +231,13 @@ it('handles unions from different services which implements value interfaces', a
   `);
   expect(data).toEqual({
     content: [
-      { url: 'https://foobar.com/articles/1' },
+      { url: 'https://foobar.com/news/1' },
       { url: 'https://foobar.com/audios/1' },
       { url: 'https://foobar.com/videos/1' },
     ],
+    articles: [
+      { url: 'https://foobar.com/news/1' },
+      { url: 'https://foobar.com/reviews/1' },
+    ]
   });
 });
