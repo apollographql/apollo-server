@@ -34,27 +34,29 @@ const contentService: ServiceDefinitionModule = {
     Query: {
       content() {
         return [
-          ...articles.map((a) => ({...a, type: 'Article'})),
-          ...audios.map(({id}) => ({id, type: 'Audio'})),
-          ...videos.map(({id}) => ({id, type: 'Video'})),
-        ]
-      }
+          ...articles.map((a) => ({ ...a, type: 'Article' })),
+          ...audios.map(({ id }) => ({ id, type: 'Audio' })),
+          ...videos.map(({ id }) => ({ id, type: 'Video' })),
+        ];
+      },
     },
     Content: {
       __resolveType(object) {
         return object.type;
-      }
+      },
     },
     Article: {
       __resolveReference(object) {
-        return articles.find(article => article.id === parseInt(object.id, 10));
+        return articles.find(
+          (article) => article.id === parseInt(object.id, 10),
+        );
       },
       id(object) {
-        return object.id
+        return object.id;
       },
       url(object) {
         return object.url;
-      }
+      },
     },
   },
 };
@@ -73,14 +75,14 @@ const videoService: ServiceDefinitionModule = {
   resolvers: {
     Video: {
       __resolveReference(object) {
-        return videos.find(video => video.id === parseInt(object.id, 10));
+        return videos.find((video) => video.id === parseInt(object.id, 10));
       },
       id(object) {
-        return object.id
+        return object.id;
       },
       url(object) {
         return object.url;
-      }
+      },
     },
   },
 };
@@ -96,18 +98,17 @@ const audioService: ServiceDefinitionModule = {
   resolvers: {
     Audio: {
       __resolveReference(object) {
-        return audios.find(audio => audio.id === parseInt(object.id, 10));
+        return audios.find((audio) => audio.id === parseInt(object.id, 10));
       },
       id(object) {
-        return object.id
+        return object.id;
       },
       audioUrl(object) {
         return object.audioUrl;
-      }
+      },
     },
   },
 };
-
 
 it('handles unions from different services which implements value interfaces', async () => {
   const query = `#graphql
@@ -123,66 +124,74 @@ it('handles unions from different services which implements value interfaces', a
     }
   `;
 
-  const { queryPlan, errors, data } = await execute(
-    { query },
-    [contentService, videoService, audioService],
-  );
+  const { queryPlan, errors, data } = await execute({ query }, [
+    contentService,
+    videoService,
+    audioService,
+  ]);
   expect(errors).toBeUndefined();
 
   expect(queryPlan).toMatchInlineSnapshot(`
-  QueryPlan {
-    Sequence {
-      Fetch(service: "contentService") {
-        {
-          content {
-            __typename
-            ... on WebResource {
-              url
-            }
-            ... on Audio {
-              __typename
-              id
-            }
-          }
-        }
-      },
-      Flatten(path: "content.@") {
-        Fetch(service: "videoService") {
+    QueryPlan {
+      Sequence {
+        Fetch(service: "contentService") {
           {
-            ... on Video {
+            content {
               __typename
-              id
-            }
-          } =>
-          {
-            ... on WebResource {
-              url
+              ... on Video {
+                __typename
+                id
+              }
+              ... on Article {
+                url
+              }
+              ... on Audio {
+                __typename
+                id
+              }
             }
           }
         },
-      },
-      Flatten(path: "content.@") {
-        Fetch(service: "audioService") {
-          {
-            ... on Audio {
-              __typename
-              id
-            }
-          } =>
-          {
-            ... on Audio {
-              url: audioUrl
-            }
-          }
+        Parallel {
+          Flatten(path: "content.@") {
+            Fetch(service: "videoService") {
+              {
+                ... on Video {
+                  __typename
+                  id
+                }
+              } =>
+              {
+                ... on Video {
+                  url
+                }
+              }
+            },
+          },
+          Flatten(path: "content.@") {
+            Fetch(service: "audioService") {
+              {
+                ... on Audio {
+                  __typename
+                  id
+                }
+              } =>
+              {
+                ... on Audio {
+                  url: audioUrl
+                }
+              }
+            },
+          },
         },
       },
     }
-    `);
+  `);
   expect(data).toEqual({
     content: [
       { url: 'https://foobar.com/articles/1' },
       { url: 'https://foobar.com/audios/1' },
       { url: 'https://foobar.com/videos/1' },
-    ]
+    ],
   });
 });
