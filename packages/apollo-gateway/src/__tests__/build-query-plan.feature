@@ -19,7 +19,7 @@ Scenario: should not confuse union types with overlapping field names
       }
     }
     """
-  Then the query plan should be
+  Then query plan
     """
     {
       "kind": "QueryPlan",
@@ -41,7 +41,7 @@ Scenario: should use a single fetch when requesting a root field from one servic
       }
     }
     """
-  Then the query plan should be
+  Then query plan
     """
     {
       "kind": "QueryPlan",
@@ -66,7 +66,7 @@ Scenario: should use two independent fetches when requesting root fields from tw
       }
     }
     """
-  Then the query plan should be
+  Then query plan
     """
     {
       "kind": "QueryPlan",
@@ -145,7 +145,7 @@ Scenario: should use a single fetch when requesting multiple root fields from th
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -266,7 +266,7 @@ Scenario: should use a single fetch when requesting relationship subfields from 
       }
     }
     """
-  Then the query plan should be
+  Then query plan
     """
     {
       "kind": "QueryPlan",
@@ -294,7 +294,7 @@ Scenario: should use a single fetch when requesting relationship subfields and p
       }
     }
     """
-  Then the query plan should be
+  Then query plan
     """
     {
       "kind": "QueryPlan",
@@ -319,7 +319,7 @@ Scenario: when requesting an extension field from another service, it should add
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -366,7 +366,7 @@ Scenario: when requesting an extension field from another service, when the pare
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
 {
     "kind": "QueryPlan",
@@ -414,7 +414,7 @@ Scenario: when requesting an extension field from another service, should only a
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -462,7 +462,7 @@ Scenario: when requesting a composite field with subfields from another service,
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -509,7 +509,7 @@ Scenario: when requesting a composite field with subfields from another service,
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -557,7 +557,7 @@ Scenario: when requesting a composite field with subfields from another service,
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -606,7 +606,7 @@ Scenario: when requesting a relationship field with extension subfields from a d
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -653,7 +653,7 @@ Scenario: for abstract types, it should add __typename when fetching objects of 
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -678,7 +678,7 @@ Scenario: should break up when traversing an extension field on an interface typ
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -733,7 +733,7 @@ Scenario: interface fragments should expand into possible types only
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -781,7 +781,7 @@ Scenario: interface inside interface should expand into possible types only
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -812,7 +812,7 @@ Scenario: experimental compression to downstream services should generate fragme
   }
   """
   When using autofragmentization
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -915,7 +915,7 @@ Scenario: experimental compression to downstream services shouldn't generate fra
   }
   """
   When using autofragmentization
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -940,7 +940,7 @@ Scenario: experimental compression to downstream services should generate fragme
   }
   """
   When using autofragmentization
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -971,7 +971,7 @@ Scenario: experimental compression to downstream services should generate fragme
   }
   """
   When using autofragmentization
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -1091,7 +1091,7 @@ Scenario: should properly expand nested unions with inline fragments
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -1133,7 +1133,7 @@ Scenario: deduplicates fields / selections regardless of adjacency and type cond
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",
@@ -1168,7 +1168,7 @@ Scenario: deduplicates fields / selections regardless of adjacency and type cond
     }
   }
   """
-  Then the query plan should be
+  Then query plan
   """
   {
     "kind": "QueryPlan",

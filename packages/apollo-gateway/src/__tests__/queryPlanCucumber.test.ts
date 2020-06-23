@@ -65,7 +65,7 @@ features.forEach((feature) => {
         }
 
         const givenQuery = () => {
-          given(/^query/im, (operation) => {
+          given(/^query$/im, (operation) => {
             query = gql(operation)
           })
         }
@@ -77,7 +77,7 @@ features.forEach((feature) => {
         }
 
         const thenQueryPlanShouldBe = () => {
-          then(/^the query plan should be/i, (expectedQueryPlan) => {
+          then(/^query plan$/i, (expectedQueryPlan) => {
             queryPlan = buildQueryPlan(
               buildOperationContext(schema, query, undefined),
               options
@@ -93,9 +93,9 @@ features.forEach((feature) => {
         // step over each defined step in the .feature and execute the correct
         // matching step fn defined above
         scenario.steps.forEach(({ stepText }) => {
-          if (/^query/i.test(stepText)) givenQuery();
+          if (/^query$/i.test(stepText)) givenQuery();
           else if (/using autofragmentization/i.test(stepText)) whenUsingAutoFragmentization();
-          else if (/^the query plan should be/i.test(stepText)) thenQueryPlanShouldBe();
+          else if (/^query plan$/i.test(stepText)) thenQueryPlanShouldBe();
           else throw new Error('Invalid steps in .feature file');
         });
       });
