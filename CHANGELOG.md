@@ -7,7 +7,16 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### vNEXT
 
-- _Nothing yet! Stay tuned._
+> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
+
+- _Nothing yet! Stay tuned!_
+
+### v2.15.0
+
+- `apollo-engine-reporting`: Added a `reportTiming` API to allow trace reporting to be enabled or disabled on a per request basis. The option takes either a boolean or a predicate function that takes a [`GraphQLRequestContextDidResolveOperation`](https://github.com/apollographql/apollo-server/blob/a926b7eedbb87abab2ec70fb03d71743985cb18d/packages/apollo-server-types/src/index.ts#L185-L190) or [`GraphQLRequestContextDidEncounterErrors`](https://github.com/apollographql/apollo-server/blob/a926b7eedbb87abab2ec70fb03d71743985cb18d/packages/apollo-server-types/src/index.ts#L191-L195) and returns a boolean. If the boolean is false the request will not be instrumented for tracing and no trace will be sent to Apollo Graph Manager.  The default is `true` so all traces will get instrumented and sent, which is the same as the previous default behavior. [PR #3918](https://github.com/apollographql/apollo-server/pull/3918)
+- `apollo-engine-reporting`: Removed `GraphQLServerOptions.reporting`. It isn't known whether a trace will be reported at the beginning of the request because of the above change. We believe this field was only used internally within Apollo Server; let us know if this is a problem and we can suggest alternatives. Additionally, the field `requestContext.metrics.captureTraces` is now initialized later in the request pipeline.  [PR #3918](https://github.com/apollographql/apollo-server/pull/3918)
+- `apollo-engine-reporting`: Make Apollo Server throw if schema reporting is enabled for a gateway or federated service. [PR #4246](https://github.com/apollographql/apollo-server/pull/4246)
+- `apollo-engine-reporting`: Remove the `experimental_` prefix from schema reporting options, and specifically rename `experimental_schemaReporting` option name to `reportSchema`. (The old option names remain functional, but are deprecated.) [PR #4236](https://github.com/apollographql/apollo-server/pull/4236)
 
 ### v2.14.5
 
@@ -15,8 +24,6 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.14.4
 
-> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).
-  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 - `apollo-engine-reporting`: Add environment variable `APOLLO_SCHEMA_REPORTING` that can enable schema reporting. If `experimental__schemaReporting` is set it will override the environment variable. [PR #4206](https://github.com/apollographql/apollo-server/pull/4206)
 - `apollo-engine-reporting`: The schema reporting URL has been changed to use the new dedicated sub-domain `https://edge-server-reporting.api.apollographql.com`. [PR #4232](https://github.com/apollographql/apollo-server/pull/4232)
 - `apollo-server-core`: Though Apollo Server **is not affected** due to the way it is integrated, in response to [an upstream security advisory for GraphQL Playground](https://github.com/prisma-labs/graphql-playground/security/advisories/GHSA-4852-vrh7-28rf) we have published [the same patch](https://github.com/prisma-labs/graphql-playground/commit/bf1883db538c97b076801a60677733816cb3cfb7) on our `@apollographql/graphql-playground-html` fork and bumped Apollo Server to use it.  Again, this was done out of an **abundance of caution** since the way that Apollo Server utilizes `renderPlaygroundPage` is _not_ vulnerable as it does not allow per-request Playground configuration that could allow interpolation of user-input. [PR #4231](https://github.com/apollographql/apollo-server/pull/4231)
