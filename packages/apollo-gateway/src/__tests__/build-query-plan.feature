@@ -27,7 +27,7 @@ Scenario: should not confuse union types with overlapping field names
         "kind": "Fetch",
         "serviceName": "documents",
         "variableUsages": [],
-        "source": "{body{__typename ...on Image{attributes{url}}...on Text{attributes{bold text}}}}"
+        "operation": "{body{__typename ...on Image{attributes{url}}...on Text{attributes{bold text}}}}"
       }
     }
     """
@@ -49,7 +49,7 @@ Scenario: should use a single fetch when requesting a root field from one servic
         "kind": "Fetch",
         "serviceName": "accounts",
         "variableUsages": [],
-        "source": "{me{name}}"
+        "operation": "{me{name}}"
       }
     }
     """
@@ -77,7 +77,7 @@ Scenario: should use two independent fetches when requesting root fields from tw
             "kind": "Fetch",
             "serviceName": "accounts",
             "variableUsages": [],
-            "source": "{me{name}}"
+            "operation": "{me{name}}"
           },
           {
             "kind": "Sequence",
@@ -86,7 +86,7 @@ Scenario: should use two independent fetches when requesting root fields from tw
                 "kind": "Fetch",
                 "serviceName": "product",
                 "variableUsages": [],
-                "source": "{topProducts{__typename ...on Book{__typename isbn}...on Furniture{name}}}"
+                "operation": "{topProducts{__typename ...on Book{__typename isbn}...on Furniture{name}}}"
               },
               {
                 "kind": "Flatten",
@@ -104,7 +104,7 @@ Scenario: should use two independent fetches when requesting root fields from tw
                     }
                   ],
                   "variableUsages": [],
-                  "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
+                  "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
                 }
               },
               {
@@ -123,7 +123,7 @@ Scenario: should use two independent fetches when requesting root fields from tw
                     }
                   ],
                   "variableUsages": [],
-                  "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+                  "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
                 }
               }
             ]
@@ -156,7 +156,7 @@ Scenario: should use a single fetch when requesting multiple root fields from th
           "kind": "Fetch",
           "serviceName": "product",
           "variableUsages": [],
-          "source": "{topProducts{__typename ...on Book{__typename isbn}...on Furniture{name}}product(upc:\"1\"){__typename ...on Book{__typename isbn}...on Furniture{name}}}"
+          "operation": "{topProducts{__typename ...on Book{__typename isbn}...on Furniture{name}}product(upc:\"1\"){__typename ...on Book{__typename isbn}...on Furniture{name}}}"
         },
         {
           "kind": "Parallel",
@@ -180,7 +180,7 @@ Scenario: should use a single fetch when requesting multiple root fields from th
                       }
                     ],
                     "variableUsages": [],
-                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
+                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
                   }
                 },
                 {
@@ -199,7 +199,7 @@ Scenario: should use a single fetch when requesting multiple root fields from th
                       }
                     ],
                     "variableUsages": [],
-                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
                   }
                 }
               ]
@@ -222,7 +222,7 @@ Scenario: should use a single fetch when requesting multiple root fields from th
                       }
                     ],
                     "variableUsages": [],
-                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
+                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
                   }
                 },
                 {
@@ -240,7 +240,7 @@ Scenario: should use a single fetch when requesting multiple root fields from th
                       }
                     ],
                     "variableUsages": [],
-                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
                   }
                 }
               ]
@@ -274,7 +274,7 @@ Scenario: should use a single fetch when requesting relationship subfields from 
         "kind": "Fetch",
         "serviceName": "reviews",
         "variableUsages": [],
-        "source": "{topReviews{body author{reviews{body}}}}"
+        "operation": "{topReviews{body author{reviews{body}}}}"
       }
     }
     """
@@ -302,7 +302,7 @@ Scenario: should use a single fetch when requesting relationship subfields and p
         "kind": "Fetch",
         "serviceName": "reviews",
         "variableUsages": [],
-        "source": "{topReviews{body author{id reviews{body}}}}"
+        "operation": "{topReviews{body author{id reviews{body}}}}"
       }
     }
     """
@@ -330,7 +330,7 @@ Scenario: when requesting an extension field from another service, it should add
           "kind": "Fetch",
           "serviceName": "accounts",
           "variableUsages": [],
-          "source": "{me{name __typename id}}"
+          "operation": "{me{name __typename id}}"
         },
         {
           "kind": "Flatten",
@@ -347,7 +347,7 @@ Scenario: when requesting an extension field from another service, it should add
               }
             ],
             "variableUsages": [],
-            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}}}}"
+            "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}}}}"
           }
         }
       ]
@@ -377,7 +377,7 @@ Scenario: when requesting an extension field from another service, when the pare
           "kind": "Fetch",
           "serviceName": "accounts",
           "variableUsages": [],
-          "source": "{me{__typename id}}"
+          "operation": "{me{__typename id}}"
         },
         {
           "kind": "Flatten",
@@ -394,7 +394,7 @@ Scenario: when requesting an extension field from another service, when the pare
               }
             ],
             "variableUsages": [],
-            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}}}}"
+            "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}}}}"
           }
         }
       ]
@@ -425,7 +425,7 @@ Scenario: when requesting an extension field from another service, should only a
           "kind": "Fetch",
           "serviceName": "accounts",
           "variableUsages": [],
-          "source": "{me{__typename id}}"
+          "operation": "{me{__typename id}}"
         },
         {
           "kind": "Flatten",
@@ -442,7 +442,7 @@ Scenario: when requesting an extension field from another service, should only a
               }
             ],
             "variableUsages": [],
-            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}numberOfReviews}}}"
+            "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}numberOfReviews}}}"
           }
         }
       ]
@@ -473,7 +473,7 @@ Scenario: when requesting a composite field with subfields from another service,
           "kind": "Fetch",
           "serviceName": "reviews",
           "variableUsages": [],
-          "source": "{topReviews{body author{__typename id}}}"
+          "operation": "{topReviews{body author{__typename id}}}"
         },
         {
           "kind": "Flatten",
@@ -492,7 +492,7 @@ Scenario: when requesting a composite field with subfields from another service,
               }
             ],
             "variableUsages": [],
-            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{name}}}"
+            "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{name}}}"
           }
         }
       ]
@@ -520,7 +520,7 @@ Scenario: when requesting a composite field with subfields from another service,
           "kind": "Fetch",
           "serviceName": "product",
           "variableUsages": [],
-          "source": "{topCars{__typename id price}}"
+          "operation": "{topCars{__typename id price}}"
         },
         {
           "kind": "Flatten",
@@ -538,7 +538,7 @@ Scenario: when requesting a composite field with subfields from another service,
               }
             ],
             "variableUsages": [],
-            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Car{retailPrice}}}"
+            "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Car{retailPrice}}}"
           }
         }
       ]
@@ -568,7 +568,7 @@ Scenario: when requesting a composite field with subfields from another service,
           "kind": "Fetch",
           "serviceName": "reviews",
           "variableUsages": [],
-          "source": "{topReviews{author{__typename id}}}"
+          "operation": "{topReviews{author{__typename id}}}"
         },
         {
           "kind": "Flatten",
@@ -587,7 +587,7 @@ Scenario: when requesting a composite field with subfields from another service,
               }
             ],
             "variableUsages": [],
-            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{name}}}"
+            "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{name}}}"
           }
         }
       ]
@@ -617,7 +617,7 @@ Scenario: when requesting a relationship field with extension subfields from a d
           "kind": "Fetch",
           "serviceName": "reviews",
           "variableUsages": [],
-          "source": "{topReviews{author{__typename id}}}"
+          "operation": "{topReviews{author{__typename id}}}"
         },
         {
           "kind": "Flatten",
@@ -636,7 +636,7 @@ Scenario: when requesting a relationship field with extension subfields from a d
               }
             ],
             "variableUsages": [],
-            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{birthDate}}}"
+            "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{birthDate}}}"
           }
         }
       ]
@@ -661,7 +661,7 @@ Scenario: for abstract types, it should add __typename when fetching objects of 
       "kind": "Fetch",
       "serviceName": "product",
       "variableUsages": [],
-      "source": "{topProducts{__typename ...on Book{price}...on Furniture{price}}}"
+      "operation": "{topProducts{__typename ...on Book{price}...on Furniture{price}}}"
     }
   }
   """
@@ -689,7 +689,7 @@ Scenario: should break up when traversing an extension field on an interface typ
           "kind": "Fetch",
           "serviceName": "product",
           "variableUsages": [],
-          "source": "{topProducts{__typename ...on Book{price __typename isbn}...on Furniture{price __typename upc}}}"
+          "operation": "{topProducts{__typename ...on Book{price __typename isbn}...on Furniture{price __typename upc}}}"
         },
         {
           "kind": "Flatten",
@@ -711,7 +711,7 @@ Scenario: should break up when traversing an extension field on an interface typ
               }
             ],
             "variableUsages": [],
-            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{reviews{body}}...on Furniture{reviews{body}}}}"
+            "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{reviews{body}}...on Furniture{reviews{body}}}}"
           }
         }
       ]
@@ -744,7 +744,7 @@ Scenario: interface fragments should expand into possible types only
           "kind": "Fetch",
           "serviceName": "books",
           "variableUsages": [],
-          "source": "{books{__typename isbn title year}}"
+          "operation": "{books{__typename isbn title year}}"
         },
         {
           "kind": "Flatten",
@@ -762,7 +762,7 @@ Scenario: interface fragments should expand into possible types only
               }
             ],
             "variableUsages": [],
-            "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+            "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
           }
         }
       ]
@@ -789,7 +789,7 @@ Scenario: interface inside interface should expand into possible types only
       "kind": "Fetch",
       "serviceName": "product",
       "variableUsages": [],
-      "source": "{product(upc:\"\"){__typename ...on Book{details{country}}...on Furniture{details{country}}}}"
+      "operation": "{product(upc:\"\"){__typename ...on Book{details{country}}...on Furniture{details{country}}}}"
     }
   }
   """
@@ -823,7 +823,7 @@ Scenario: experimental compression to downstream services should generate fragme
           "kind": "Fetch",
           "serviceName": "reviews",
           "variableUsages": [],
-          "source": "{topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Book{__typename isbn}...on Furniture{__typename upc}}"
+          "operation": "{topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Book{__typename isbn}...on Furniture{__typename upc}}"
         },
         {
           "kind": "Parallel",
@@ -848,7 +848,7 @@ Scenario: experimental compression to downstream services should generate fragme
                       }
                     ],
                     "variableUsages": [],
-                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
+                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
                   }
                 },
                 {
@@ -868,7 +868,7 @@ Scenario: experimental compression to downstream services should generate fragme
                       }
                     ],
                     "variableUsages": [],
-                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
                   }
                 }
               ]
@@ -894,7 +894,7 @@ Scenario: experimental compression to downstream services should generate fragme
                   }
                 ],
                 "variableUsages": [],
-                "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name price details{country}}...on Book{price details{country}}}}"
+                "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name price details{country}}...on Book{price details{country}}}}"
               }
             }
           ]
@@ -923,7 +923,7 @@ Scenario: experimental compression to downstream services shouldn't generate fra
       "kind": "Fetch",
       "serviceName": "reviews",
       "variableUsages": [],
-      "source": "{topReviews{body author}}"
+      "operation": "{topReviews{body author}}"
     }
   }
   """
@@ -948,7 +948,7 @@ Scenario: experimental compression to downstream services should generate fragme
       "kind": "Fetch",
       "serviceName": "reviews",
       "variableUsages": [],
-      "source": "{topReviews{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Review{id body author}"
+      "operation": "{topReviews{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Review{id body author}"
     }
   }
   """
@@ -982,7 +982,7 @@ Scenario: experimental compression to downstream services should generate fragme
           "kind": "Fetch",
           "serviceName": "reviews",
           "variableUsages": [],
-          "source": "{reviews:topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{content:body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Book{__typename isbn}...on Furniture{__typename upc}}"
+          "operation": "{reviews:topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{content:body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Book{__typename isbn}...on Furniture{__typename upc}}"
         },
         {
           "kind": "Parallel",
@@ -1007,7 +1007,7 @@ Scenario: experimental compression to downstream services should generate fragme
                       }
                     ],
                     "variableUsages": [],
-                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
+                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
                   }
                 },
                 {
@@ -1027,7 +1027,7 @@ Scenario: experimental compression to downstream services should generate fragme
                       }
                     ],
                     "variableUsages": [],
-                    "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
+                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
                   }
                 }
               ]
@@ -1053,7 +1053,7 @@ Scenario: experimental compression to downstream services should generate fragme
                   }
                 ],
                 "variableUsages": [],
-                "source": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name cost:price details{origin:country}}...on Book{cost:price details{origin:country}}}}"
+                "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name cost:price details{origin:country}}...on Book{cost:price details{origin:country}}}}"
               }
             }
           ]
@@ -1099,7 +1099,7 @@ Scenario: should properly expand nested unions with inline fragments
       "kind": "Fetch",
       "serviceName": "documents",
       "variableUsages": [],
-      "source": "{body{__typename ...on Image{attributes{url}}...on Text{attributes{bold}}}}"
+      "operation": "{body{__typename ...on Image{attributes{url}}...on Text{attributes{bold}}}}"
     }
   }
   """
@@ -1141,7 +1141,7 @@ Scenario: deduplicates fields / selections regardless of adjacency and type cond
       "kind": "Fetch",
       "serviceName": "documents",
       "variableUsages": [],
-      "source": "{body{__typename ...on Text{attributes{bold text}}}}"
+      "operation": "{body{__typename ...on Text{attributes{bold text}}}}"
     }
   }
   """
@@ -1176,7 +1176,7 @@ Scenario: deduplicates fields / selections regardless of adjacency and type cond
       "kind": "Fetch",
       "serviceName": "documents",
       "variableUsages": [],
-      "source": "{body{__typename ...on Text{attributes{bold text}}}}"
+      "operation": "{body{__typename ...on Text{attributes{bold text}}}}"
     }
   }
   """

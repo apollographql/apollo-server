@@ -124,6 +124,10 @@ const serializeQueryPlanNode = (k: string , v: any) => {
     case "requires":
       return v && v.selections ? v.selections : undefined;
     default:
+      // replace source with operation
+      if(v && v.kind && v.kind === "Fetch"){
+        return { ...v, operation: v.source, source: undefined };
+      }
       return v;
   }
 }
