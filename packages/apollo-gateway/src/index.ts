@@ -142,7 +142,7 @@ export type Experimental_DidUpdateCompositionCallback = (
  */
 export type Experimental_UpdateServiceDefinitions = (
   config: GatewayConfig,
-  engineConfig: GraphQLServiceEngineConfig | undefined,
+  engineConfig?: GraphQLServiceEngineConfig ,
 ) => Promise<{
   serviceDefinitions?: ServiceDefinition[];
   compositionMetadata?: CompositionMetadata;
