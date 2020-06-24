@@ -67,7 +67,7 @@ __In the event that publishing via CI/CD is not possible, it may be done manuall
 1. Log into `npm` with the `apollo-bot` user.
 
 The `apollo-bot` user credentials are available to project owners, but generally used by CI/CD.
-Logging in with the follwing command will use a different npm user configuration file at `$HOME/.npmrc-apollo-bot` so as not to override personal login credentials which may already be used.
+Logging in with the following command will use a different npm user configuration file at `$HOME/.npmrc-apollo-bot` so as not to override personal login credentials which may already be used.
 
 ```
 NPM_CONFIG_USERCONFIG="$HOME/.npmrc-apollo-bot" npm login
