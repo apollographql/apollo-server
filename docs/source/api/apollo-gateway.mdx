@@ -61,7 +61,7 @@ example of using `ApolloGateway`, see [The gateway](/federation/gateway/).
 
     If you provide this function, `ApolloGateway` calls it for every
     implementing service in your data graph. The function must return an object
-    that implements the [`GraphQLDataSource` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/src/datasources/types.ts), such as an instance of [RemoteGraphQLDataSource](#remotegraphqldatasource) or a subclass of it.
+    that implements the [`GraphQLDataSource` interface](https://github.com/apollographql/apollo-server/blob/570f548b88/packages/apollo-gateway/src/datasources/types.ts), such as an instance of [RemoteGraphQLDataSource](#remotegraphqldatasource) or a subclass of it.
 
     The example below demonstrates adding an `x-user-id`
     HTTP header to every request the gateway sends to an implementing service:
