@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-express"
+    "url": "https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-express"
   },
   "keywords": [
     "GraphQL",

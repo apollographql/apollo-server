@@ -26,7 +26,7 @@ APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_VARIANT=development node start-server.js
 
 ### Debugging Apollo Studio reporting
 
-You can set the [`debugPrintReports` option](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-engine-reporting/src/agent.ts#L429-L433) in the `engine` section of the `ApolloServer` constructor to automatically log debugging information for all reporting requests sent to Apollo Studio.  For example:
+You can set the [`debugPrintReports` option](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-engine-reporting/src/agent.ts#L429-L433) in the `engine` section of the `ApolloServer` constructor to automatically log debugging information for all reporting requests sent to Apollo Studio.  For example:
 
 ```js{8}
 const { ApolloServer } = require("apollo-server");
@@ -98,7 +98,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-Specifying this function overrides the [`defaultGenerateClientInfo` function](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-engine-reporting/src/extension.ts#L205-L228) that Apollo Server calls otherwise.
+Specifying this function overrides the [`defaultGenerateClientInfo` function](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-engine-reporting/src/extension.ts#L205-L228) that Apollo Server calls otherwise.
 
 ## Logging
 

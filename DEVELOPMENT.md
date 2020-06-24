@@ -8,8 +8,8 @@ For now, this will be a collection of tips and tricks for the maintainers of the
 
 Depending on the size of the release, it may be ideal to have a staging PR which gathers the various features we're intending on releasing into the version.  This can be a great way for the community to understand the scope of a release and a clear way for maintainers to publicize it and gather feedback.
 
-1. Create a branch off `master` named `release-X.Y.Z`, where `X.Y.Z` is the intended release.
-2. Edit the `CHANGELOG.md`, removing the `vNEXT` section entirely.  This section will remain on `master` and be resolved during the merge.
+1. Create a branch off `main` named `release-X.Y.Z`, where `X.Y.Z` is the intended release.
+2. Edit the `CHANGELOG.md`, removing the `vNEXT` section entirely.  This section will remain on `main` and be resolved during the merge.
 3. Add a new section for `### vX.Y.Z` with a bullet indicating that something is coming soon:
 
    ```
@@ -18,9 +18,9 @@ Depending on the size of the release, it may be ideal to have a staging PR which
    - Nothing yet! Stay tuned.
    ```
 
-4. Commit this change so GitHub will allow a PR to be opened against `master` with a notable change.  A suggested commit message is `Prepare CHANGELOG.md for upcoming vX.Y.Z release.`
+4. Commit this change so GitHub will allow a PR to be opened against `main` with a notable change.  A suggested commit message is `Prepare CHANGELOG.md for upcoming vX.Y.Z release.`
 5. Push the branch to GitHub
-6. On GitHub, open a PR from the new release branch which targets `master`.
+6. On GitHub, open a PR from the new release branch which targets `main`.
    __For the title of the PR__, use "Release X.Y.Z".  __For the body,__ use the contents of the template in the `.github/APOLLO_RELEASE_TEMPLATE.md` file in this repository.  Adjust the body as you see necessary.
 
 ## Publishing a release

@@ -92,7 +92,7 @@
 
 ## v0.12.1
 
-- Update to include [fixes from `@apollo/federation`](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md).
+- Update to include [fixes from `@apollo/federation`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-federation/CHANGELOG.md).
 
 ## v0.12.0
 
