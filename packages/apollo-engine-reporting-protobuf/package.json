@@ -15,7 +15,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-engine-reporting/tree/main/packages/apollo-engine-reporting-protobuf"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-engine-reporting-protobuf"
   },
   "keywords": [
     "GraphQL",

@@ -5,7 +5,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-caching"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-caching"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "bugs": {
