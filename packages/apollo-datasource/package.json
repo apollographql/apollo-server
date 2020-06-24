@@ -1,7 +1,7 @@
 {
   "name": "apollo-datasource",
   "version": "0.7.1",
-  "author": "opensource@apollographql.com",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "repository": {
     "type": "git",

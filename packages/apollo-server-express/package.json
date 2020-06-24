@@ -17,7 +17,7 @@
     "Connect",
     "Javascript"
   ],
-  "author": "opensource@apollographql.com",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
