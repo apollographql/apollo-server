@@ -6,6 +6,10 @@
 
 - _Nothing yet! Stay tuned._
 
+## 0.16.9
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
 ## 0.16.7
 
 - Bumped the version of `apollo-server-core`, but no other changes!
