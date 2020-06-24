@@ -35,7 +35,7 @@ To bump the version, use the `release:version-bump` npm script.
 
    __Option 1__: _(Recommended)_ Bump all packages by the same version bump (e.g. patch, minor, prerelease, etc.).
 
-   > __Note__: Be sure to replace `<version-bump>` in the following command with the appropriate [version bump keyword](https://github.com/lerna/lerna/tree/master/commands/version#semver-bump).
+   > __Note__: Be sure to replace `<version-bump>` in the following command with the appropriate [version bump keyword](https://github.com/lerna/lerna/tree/f6e7a13e60/commands/version#semver-bump)
 
    ```
    npm run release:version-bump -- <version-bump>
