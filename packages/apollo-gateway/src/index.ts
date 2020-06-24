@@ -142,6 +142,7 @@ export type Experimental_DidUpdateCompositionCallback = (
  */
 export type Experimental_UpdateServiceDefinitions = (
   config: GatewayConfig,
+  engineConfig: GraphQLServiceEngineConfig | undefined,
 ) => Promise<{
   serviceDefinitions?: ServiceDefinition[];
   compositionMetadata?: CompositionMetadata;
@@ -337,7 +338,7 @@ export class ApolloGateway implements GraphQLService {
     let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
     this.logger.debug('Checking service definitions...');
     try {
-      result = await this.updateServiceDefinitions(this.config);
+      result = await this.updateServiceDefinitions(this.config, this.engineConfig);
     } catch (e) {
       this.logger.error(
         "Error checking for changes to service definitions: " +
@@ -816,5 +817,6 @@ export {
   buildOperationContext,
   QueryPlan,
   ServiceMap,
+  getServiceDefinitionsFromStorage
 };
 export * from './datasources';
