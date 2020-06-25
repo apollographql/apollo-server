@@ -3,12 +3,12 @@ title: Proxy configuration
 description: Configuring proxy settings for outgoing requests
 ---
 
-Certain features of the Apollo Platform require Apollo Server to make outgoing requests to the Apollo Graph Manager.  These include:
+Certain features of the Apollo platform require Apollo Server to make outgoing requests to Apollo Studio.  These include:
 
 * Managed federation
 * Operation registry
 
-Depending on security policies, it may be necessary to configure an outgoing HTTP proxy in order to allow these requests.
+Depending on security policies, you might need to configure an outgoing HTTP proxy in order to allow these requests.
 
 While Apollo Server supports standard Node.js "agent" configuration via [`https.globalAgent`](https://nodejs.org/api/https.html#https_https_globalagent) and [`http.globalAgent`](https://nodejs.org/api/http.html#http_http_globalagent) directly, we recommend using the [`global-agent`](https://github.com/gajus/global-agent#global-agent) package to reduce the amount of necessary configuration involved with [creating a custom agent](https://nodejs.org/api/http.html#http_class_http_agent).
 

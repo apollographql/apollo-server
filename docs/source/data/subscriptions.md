@@ -247,6 +247,6 @@ The Apollo Server implementation of `PubSub` can be replaced by another implemen
 - [Kafka](https://github.com/ancashoria/graphql-kafka-subscriptions)
 - [Postgres](https://github.com/GraphQLCollege/graphql-postgres-subscriptions)
 - [Google Cloud Firestore](https://github.com/MrBoolean/graphql-firestore-subscriptions)
-- [Add your implementation...](https://github.com/apollographql/apollo-server/pull/new/master)
+- [Add your implementation...](https://github.com/apollographql/apollo-server/pull/new/main)
 
 You can implement a `PubSub` of your own, using the exported `PubSubEngine` interface from `apollo-server` or another integration. If you want to set up a GraphQL server using the `graphql-subscriptions` package (not recommended for production), follow [this guide](https://www.apollographql.com/docs/graphql-subscriptions/).

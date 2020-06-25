@@ -127,7 +127,7 @@ Now, commit and push:
 ```bash
 git add .
 git commit -m "Add Apollo Server and Client"
-git push -u origin master
+git push -u origin # Specify your branch name, if necessary.
 ```
 
 Check the repository to make sure the code showed up.
