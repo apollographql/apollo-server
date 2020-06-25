@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-hapi"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-hapi"
   },
   "keywords": [
     "GraphQL",
@@ -15,7 +16,7 @@
     "Server",
     "Javascript"
   ],
-  "author": "Jonas Helfer <jonas@helfer.email>",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"

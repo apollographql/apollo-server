@@ -2,14 +2,14 @@
 
 The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g. which are not actual HTTP integrations; packages not prefixed with `apollo-server`) may use different versions.  For more details, check the publish commit for that version in the Git history, or check the individual CHANGELOGs for specific packages which are maintained separately:
 
-- [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/CHANGELOG.md)
-- [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md)
+- [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-gateway/CHANGELOG.md)
+- [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-federation/CHANGELOG.md)
 
 ### vNEXT
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned!_
+- The default branch of the repository has been changed to `main`.  As this changed a number of references in the repository's `package.json` and `README.md` files (e.g., for badges, links, etc.), this necessitates a release to publish those changes to npm. [PR #4302](https://github.com/apollographql/apollo-server/pull/4302)
 
 ### v2.15.0
 
