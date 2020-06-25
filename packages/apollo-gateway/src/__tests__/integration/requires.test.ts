@@ -1,6 +1,10 @@
 import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
-import { serializeQueryPlan } from '../..';
+import { serializeQueryPlan, ApolloGateway } from '../..';
+import { createTestClient } from 'apollo-server-testing';
+import { ApolloServerBase as ApolloServer } from 'apollo-server-core';
+import { buildFederatedSchema } from '@apollo/federation';
+import { LocalGraphQLDataSource } from '../../datasources/LocalGraphQLDataSource';
 
 it('supports passing additional fields defined by a requires', async () => {
   const query = `#graphql
@@ -263,4 +267,51 @@ it('collapses nested requires with user-defined fragments', async () => {
 
   expect(queryPlan).toCallService('a');
   expect(queryPlan).toCallService('b');
+});
+
+it('does not corrupt cached queryplan data across requests', async () => {
+  const gateway = new ApolloGateway({
+    localServiceList: [serviceA, serviceB],
+    buildService: service => {
+      return new LocalGraphQLDataSource(buildFederatedSchema([service]));
+    },
+  });
+
+  const { schema, executor } = await gateway.load();
+
+  const server = new ApolloServer({ schema, executor });
+
+  const call = createTestClient(server);
+
+  const query1 = `#graphql
+    query UserFavoriteColor {
+      user {
+        favoriteColor
+      }
+    }
+  `;
+
+  const query2 = `#graphql
+    query UserFavorites {
+      user {
+        favoriteColor
+        favoriteAnimal
+      }
+    }
+  `;
+
+  const result1 = await call.query({
+    query: query1,
+  });
+  const result2 = await call.query({
+    query: query2,
+  });
+  const result3 = await call.query({
+    query: query1,
+  });
+
+  expect(result1.errors).toEqual(undefined);
+  expect(result2.errors).toEqual(undefined);
+  expect(result3.errors).toEqual(undefined);
+  expect(result1).toEqual(result3);
 });
