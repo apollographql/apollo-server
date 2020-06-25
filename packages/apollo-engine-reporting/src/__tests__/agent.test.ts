@@ -2,7 +2,9 @@ import {
   signatureCacheKey,
   handleLegacyOptions,
   EngineReportingOptions,
-} from '../agent';
+  computeExecutableSchemaId
+} from "../agent";
+import { buildSchema } from "graphql";
 
 describe('signature cache key', () => {
   it('generates without the operationName', () => {
@@ -15,6 +17,59 @@ describe('signature cache key', () => {
     );
   });
 });
+
+describe('Executable Schema Id', () => {
+  const unsortedGQLSchemaDocument = `
+      directive @example on FIELD
+      union AccountOrUser = Account | User
+      type Query {
+        userOrAccount(name: String, id: String): AccountOrUser
+      }
+
+      type User {
+        accounts: [Account!]
+        email: String
+        name: String!
+      }
+
+      type Account {
+        name: String!
+        id: ID!
+      }
+    `;
+
+  const sortedGQLSchemaDocument = `
+      directive @example on FIELD
+      union AccountOrUser = Account | User
+
+      type Account {
+        name: String!
+        id: ID!
+      }
+
+      type Query {
+        userOrAccount(id: String, name: String): AccountOrUser
+      }
+
+      type User {
+        accounts: [Account!]
+        email: String
+        name: String!
+      }
+
+    `;
+  it('does not normalize GraphQL schemas', () => {
+    expect(computeExecutableSchemaId(buildSchema(unsortedGQLSchemaDocument))).not.toEqual(
+      computeExecutableSchemaId(buildSchema(sortedGQLSchemaDocument))
+    );
+  });
+  it('does not normalize strings', () => {
+    expect(computeExecutableSchemaId(unsortedGQLSchemaDocument)).not.toEqual(
+      computeExecutableSchemaId(sortedGQLSchemaDocument)
+    );
+  });
+});
+
 
 describe("test handleLegacyOptions(), which converts the deprecated privateVariable and privateHeaders options to the new options' formats", () => {
   it('Case 1: privateVariables/privateHeaders == False; same as all', () => {

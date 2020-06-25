@@ -2,21 +2,134 @@
 
 The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g. which are not actual HTTP integrations; packages not prefixed with `apollo-server`) may use different versions.  For more details, check the publish commit for that version in the Git history, or check the individual CHANGELOGs for specific packages which are maintained separately:
 
-- [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/CHANGELOG.md)
-- [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md)
+- [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-gateway/CHANGELOG.md)
+- [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-federation/CHANGELOG.md)
 
 ### vNEXT
 
-> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
+> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned._
+- The default branch of the repository has been changed to `main`.  As this changed a number of references in the repository's `package.json` and `README.md` files (e.g., for badges, links, etc.), this necessitates a release to publish those changes to npm. [PR #4302](https://github.com/apollographql/apollo-server/pull/4302)
+
+### v2.15.0
+
+- `apollo-engine-reporting`: Added a `reportTiming` API to allow trace reporting to be enabled or disabled on a per request basis. The option takes either a boolean or a predicate function that takes a [`GraphQLRequestContextDidResolveOperation`](https://github.com/apollographql/apollo-server/blob/a926b7eedbb87abab2ec70fb03d71743985cb18d/packages/apollo-server-types/src/index.ts#L185-L190) or [`GraphQLRequestContextDidEncounterErrors`](https://github.com/apollographql/apollo-server/blob/a926b7eedbb87abab2ec70fb03d71743985cb18d/packages/apollo-server-types/src/index.ts#L191-L195) and returns a boolean. If the boolean is false the request will not be instrumented for tracing and no trace will be sent to Apollo Graph Manager.  The default is `true` so all traces will get instrumented and sent, which is the same as the previous default behavior. [PR #3918](https://github.com/apollographql/apollo-server/pull/3918)
+- `apollo-engine-reporting`: Removed `GraphQLServerOptions.reporting`. It isn't known whether a trace will be reported at the beginning of the request because of the above change. We believe this field was only used internally within Apollo Server; let us know if this is a problem and we can suggest alternatives. Additionally, the field `requestContext.metrics.captureTraces` is now initialized later in the request pipeline.  [PR #3918](https://github.com/apollographql/apollo-server/pull/3918)
+- `apollo-engine-reporting`: Make Apollo Server throw if schema reporting is enabled for a gateway or federated service. [PR #4246](https://github.com/apollographql/apollo-server/pull/4246)
+- `apollo-engine-reporting`: Remove the `experimental_` prefix from schema reporting options, and specifically rename `experimental_schemaReporting` option name to `reportSchema`. (The old option names remain functional, but are deprecated.) [PR #4236](https://github.com/apollographql/apollo-server/pull/4236)
+
+### v2.14.5
+
+- `apollo-engine-reporting`: Make Apollo Server throw if schema reporting is enabled for a gateway or federated service. [PR #4246](https://github.com/apollographql/apollo-server/pull/4246)
+
+### v2.14.4
+
+- `apollo-engine-reporting`: Add environment variable `APOLLO_SCHEMA_REPORTING` that can enable schema reporting. If `experimental__schemaReporting` is set it will override the environment variable. [PR #4206](https://github.com/apollographql/apollo-server/pull/4206)
+- `apollo-engine-reporting`: The schema reporting URL has been changed to use the new dedicated sub-domain `https://edge-server-reporting.api.apollographql.com`. [PR #4232](https://github.com/apollographql/apollo-server/pull/4232)
+- `apollo-server-core`: Though Apollo Server **is not affected** due to the way it is integrated, in response to [an upstream security advisory for GraphQL Playground](https://github.com/prisma-labs/graphql-playground/security/advisories/GHSA-4852-vrh7-28rf) we have published [the same patch](https://github.com/prisma-labs/graphql-playground/commit/bf1883db538c97b076801a60677733816cb3cfb7) on our `@apollographql/graphql-playground-html` fork and bumped Apollo Server to use it.  Again, this was done out of an **abundance of caution** since the way that Apollo Server utilizes `renderPlaygroundPage` is _not_ vulnerable as it does not allow per-request Playground configuration that could allow interpolation of user-input. [PR #4231](https://github.com/apollographql/apollo-server/pull/4231)
+
+### v2.14.3
+
+- This release only includes patch updates to dependencies.
+
+### v2.14.2
+
+> **Note:** This release is is related to a GitHub Security Advisory published by the Apollo Server team.  Please read the attached advisory to understand the impact.
+
+- ⚠️ **SECURITY:** Pass all schema validation rules to the subscription server, including validation rules that restrict introspection when introspection is meant to be disabled. **[Read the full GitHub Security Advisory for details](https://github.com/apollographql/apollo-server/security/advisories/GHSA-w42g-7vfc-xf37)**.
+
+### v2.14.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/2da65ef9204027e43baedf9ce385bb3794fd0c9b)
+
+- `apollo-server-testing`: Ensure that user-provided context is cloned when using `createTestClient`, per the instructions in the [intergration testing]() section of the Apollo Server documentation.  [Issue #4170](https://github.com/apollographql/apollo-server/issues/4170) [PR #4175](https://github.com/apollographql/apollo-server/pull/4175)
+
+### v2.14.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/d159e320879f594ba2d04036e3e1aa0653ff164d)
+
+- `apollo-server-core` / `apollo-server-plugin-base`: Add support for `willResolveField` and corresponding end-handler within `executionDidStart`.  This brings the remaining bit of functionality that was previously only available from `graphql-extensions` to the new plugin API.  The `graphql-extensions` API (which was never documented) will be deprecated in Apollo Server 3.x.  To see the documentation for the request pipeline API, see [its documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  For more details, see the attached PR.  [PR #3988](https://github.com/apollographql/apollo-server/pull/3988)
+- `apollo-server-core`: Deprecate `graphql-extensions`.  All internal usages of the `graphql-extensions` API have been migrated to the request pipeline plugin API.  For any implementor-supplied `extensions`, a deprecation warning will be printed once per-extension, per-server-startup, notifying of the intention to deprecate.  Extensions should migrate to the plugin API, which is outlined in [its documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins/). [PR #4135](https://github.com/apollographql/apollo-server/pull/4135)
+- `apollo-engine-reporting`: **Currently only for non-federated graphs.**
+  Added an _experimental_ schema reporting option,
+  `experimental_schemaReporting`, for Apollo Graph Manager users. **During
+  this experiment, we'd appreciate testing and feedback from current and new
+  users of the schema registry!**
+
+  Prior to the introduction of this feature, the only way to get schemas into
+  the schema registry in Apollo Graph Manager was to use the CLI and run
+  `apollo schema:push`. _Apollo schema reporting protocol_ is a *new*
+  specification for GraphQL servers to automatically report schemas to the
+  Apollo Graph Manager schema registry.
+
+  **To enable schema reporting,** provide a Graph Manager API key (available
+  free from [Apollo Graph Manager](https://engine.apollographql.com/)) in the
+  `APOLLO_KEY` environment variable *and* set the `experimental_schemaReporting`
+  option to `true` in the Apollo Server constructor options, like so:
+
+  ```js
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    engine: {
+      experimental_schemaReporting: true,
+      /* Other existing options can remain the same. */
+    },
+  });
+  ```
+
+  > When enabled, a schema reporter is initiated by the `apollo-engine-reporting` agent.  It will loop until the `ApolloServer` instance is stopped, periodically calling back to Apollo Graph Manager to send information.  The life-cycle of this reporter is managed by the agent.
+
+  For more details on the implementation of this new protocol, see the PR which
+  introduced it to Apollo Server and the [preview documentation](https://github.com/apollographql/apollo-schema-reporting-preview-docs).
+
+  [PR #4084](https://github.com/apollographql/apollo-server/pull/4084)
+- `apollo-engine-reporting`: The underlying integration of this plugin, which instruments and traces the graph's resolver performance and transmits these metrics to [Apollo Graph Manager](https://engine.apollographql.com/), has been changed from the (soon to be deprecated) `graphql-extensions` API to the new [request pipeline `plugins` API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/). [PR #3998](https://github.com/apollographql/apollo-server/pull/3998)
+
+  _This change should be purely an implementation detail for a majority of users_.  There are, however, some special considerations which are worth noting:
+
+    - The federated tracing plugin's `ftv1` response on `extensions` (which is present on the response from an implementing service to the gateway) is now placed on the `extensions` _after_ the `formatResponse` hook.  Anyone leveraging the `extensions`.`ftv1` data from the `formatResponse` hook will find that it is no longer present at that phase.
+- `apollo-tracing`: This package's internal integration with Apollo Server has been switched from using the soon-to-be-deprecated `graphql-extensions` API to using [the request pipeline plugin API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  Behavior should remain otherwise the same.  [PR #3991](https://github.com/apollographql/apollo-server/pull/3991)
+- `apollo-cache-control`: This package's internal integration with Apollo Server has been switched from using the soon-to-be-deprecated `graphql-extensions` API to using [the request pipeline plugin API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).  Behavior should remain otherwise the same.  [PR #3997](https://github.com/apollographql/apollo-server/pull/3997)
+
+### v2.13.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
+
+- Allow passing a `WebSocket.Server` to `ApolloServer.installSubscriptionHandlers`. [PR #2314](https://github.com/apollographql/apollo-server/pull/2314)
+- `apollo-server-lambda`: Support file uploads on AWS Lambda [Issue #1419](https://github.com/apollographql/apollo-server/issues/1419) [Issue #1703](https://github.com/apollographql/apollo-server/issues/1703) [PR #3926](https://github.com/apollographql/apollo-server/pull/3926)
+- `apollo-engine-reporting`: Fix inadvertant conditional formatting which prevented automated persisted query (APQ) hits and misses from being reported to Apollo Graph Manager. [PR #3986](https://github.com/apollographql/apollo-server/pull/3986)
+- `apollo-engine-reporting`: Deprecate the `ENGINE_API_KEY` environment variable in favor of its new name, `APOLLO_KEY`.  Continued use of `ENGINE_API_KEY` will result in deprecation warnings and support for it will be removed in a future major version. [#3923](https://github.com/apollographql/apollo-server/pull/3923)
+- `apollo-engine-reporting`: Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  Similarly, within the `engine` configuration object, the `schemaTag` property has been renamed `graphVariant`.  The functionality remains otherwise unchanged, but their new names mirror the name used within Apollo Graph Manager.  Continued use of the now-deprecated names will result in deprecation warnings and support will be dropped completely in the next "major" update.  To avoid misconfiguration, a runtime error will be thrown if _both_ new and deprecated names are set. [PR #3855](https://github.com/apollographql/apollo-server/pull/3855)
+- `apollo-engine-reporting-protobuf`: __(This is a breaking change only if you directly depend on `apollo-engine-reporting-protobuf`.)__ Drop legacy fields that were never used by `apollo-engine-reporting`. Added new fields `StatsContext` to allow `apollo-server` to send summary stats instead of full traces, and renamed `FullTracesReport` to `Report` and `Traces` to `TracesAndStats` since reports now can include stats as well as traces.
+
+### v2.12.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/71a3863f59f4ab2c9052c316479d94c6708c4309)
+
+- `apollo-server-core`: Support providing a custom logger implementation (e.g. [`winston`](https://npm.im/winston), [`bunyan`](https://npm.im/bunyan), etc.) to capture server console messages.  Though there has historically been limited output from Apollo Server, some messages are important to capture in the larger context of production logging facilities or can benefit from using more advanced structure, like JSON-based logging.  This also introduces a `logger` property to the `GraphQLRequestContext` that is exposed to plugins, making it possible for plugins to leverage the same server-level logger, and allowing implementors to create request-specific log contexts, if desired.  When not provided, these will still output to `console`. [PR #3894](https://github.com/apollographql/apollo-server/pull/3894)
+- `apollo-server-core`: When operating in gateway mode using the `gateway` property of the Apollo Server constructor options, the failure to initialize a schema during initial start-up, e.g. connectivity problems, will no longer result in the federated executor from being assigned when the schema eventually becomes available.  This precludes a state where the gateway may never become available to serve federated requests, even when failure conditions are no longer present. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
+- `apollo-server-core`: Prevent a condition which prefixed an error message on each request when the initial gateway initialization resulted in a Promise-rejection which was memoized and re-prepended with `Invalid options provided to ApolloServer:` on each request. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
+- `apollo-server-express`: Disable the automatic inclusion of the `x-powered-by: express` header. [PR #3821](https://github.com/apollographql/apollo-server/pull/3821)
+- `apollo-engine-reporting`: Avoid creating new arrays when building trace trees. [PR #3479](https://github.com/apollographql/apollo-server/pull/3479)
+- `apollo-server-core`: Bump `graphql` `peerDependencies` range to include `^15.0.0`. [PR #3944](https://github.com/apollographql/apollo-server/pull/3944)
+
+### v2.11.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/056f083ddaf116633e6f759a2b3d69248bb18f66)
+
+- The range of accepted `peerDepedencies` versions for `graphql` has been widened to include `graphql@^15.0.0-rc.2` so as to accommodate the latest release-candidate of the `graphql@15` package, and an intention to support it when it is finally released on the `latest` npm tag.  While this change will subdue peer dependency warnings for Apollo Server packages, many dependencies from outside of this repository will continue to raise similar warnings until those packages own `peerDependencies` are updated.  It is unlikely that all of those packages will update their ranges prior to the final version of `graphql@15` being released, but if everything is working as expected, the warnings can be safely ignored. [PR #3825](https://github.com/apollographql/apollo-server/pull/3825)
 
 ### v2.10.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/dba97895485d6444535a684d4646f1363954f698)
 
 - `apollo-server-core`: Update GraphQL Playground to latest version to remove a rogue curly-brace appearing in the top-right corner of the interface under certain conditions. [PR #3702](https://github.com/apollographql/apollo-server/pull/3702) [Playground PR](https://github.com/apollographql/graphql-playground/pull/21)
 - `apollo-server-core`: Typings: Allow the `cache` property inside `persistedQueries` to be optional.  This was already optional at runtime where it defaults to the top-level global cache when unspecified, but with the introduction of the `ttl` property, it now makes sense that one may be provided without the other. [#3671](https://github.com/apollographql/apollo-server/pull/3671)
 
 ### v2.10.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/9c0aa1e661ccc2c5a1471b781102637dd47e21b1)
 
 - `apollo-server-express`: Support `CorsOptionsDelegate` type on `cors` parameter to `applyMiddleware`, to align with the supported type of the underlying [`cors`](https://npm.im/cors) middleware [itself](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/31483b781ac30f98bdf4d40a517e921f2fc2ce37/types/cors/index.d.ts#L32). [#3613](https://github.com/apollographql/apollo-server/pull/3613)
 - `apollo-server-core`: Allow asynchronous initialization of datasources: the `initialize` method on datasources may now return a Promise, which will be settled before any resolvers are called. [#3639](https://github.com/apollographql/apollo-server/pull/3639)

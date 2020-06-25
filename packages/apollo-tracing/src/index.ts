@@ -1,11 +1,11 @@
 import {
   ResponsePath,
   responsePathAsArray,
-  GraphQLResolveInfo,
   GraphQLType,
 } from 'graphql';
+import { ApolloServerPlugin } from "apollo-server-plugin-base";
 
-import { GraphQLExtension } from 'graphql-extensions';
+const { PACKAGE_NAME } = require("../package.json").name;
 
 export interface TracingFormat {
   version: 1;
@@ -33,94 +33,104 @@ interface ResolverCall {
   endOffset?: HighResolutionTime;
 }
 
-export class TracingExtension<TContext = any>
-  implements GraphQLExtension<TContext> {
-  private startWallTime?: Date;
-  private endWallTime?: Date;
-  private startHrTime?: HighResolutionTime;
-  private duration?: HighResolutionTime;
+export const plugin = (_futureOptions = {}) => (): ApolloServerPlugin => ({
+  requestDidStart() {
+    let startWallTime: Date | undefined;
+    let endWallTime: Date | undefined;
+    let startHrTime: HighResolutionTime | undefined;
+    let duration: HighResolutionTime | undefined;
+    const resolverCalls: ResolverCall[] = [];
 
-  private resolverCalls: ResolverCall[] = [];
+    startWallTime = new Date();
+    startHrTime = process.hrtime();
 
-  public requestDidStart() {
-    this.startWallTime = new Date();
-    this.startHrTime = process.hrtime();
-  }
+    return {
+      executionDidStart: () => ({
+        // It's a little odd that we record the end time after execution rather
+        // than at the end of the whole request, but because we need to include
+        // our formatted trace in the request itself, we have to record it
+        // before the request is over!
 
-  public executionDidStart() {
-    // It's a little odd that we record the end time after execution rather than
-    // at the end of the whole request, but because we need to include our
-    // formatted trace in the request itself, we have to record it before the
-    // request is over!  It's also odd that we don't do traces for parse or
-    // validation errors, but runQuery doesn't currently support that, as
-    // format() is only invoked after execution.
-    return () => {
-      this.duration = process.hrtime(this.startHrTime);
-      this.endWallTime = new Date();
-    };
-  }
-
-  public willResolveField(
-    _source: any,
-    _args: { [argName: string]: any },
-    _context: TContext,
-    info: GraphQLResolveInfo,
-  ) {
-    const resolverCall: ResolverCall = {
-      path: info.path,
-      fieldName: info.fieldName,
-      parentType: info.parentType,
-      returnType: info.returnType,
-      startOffset: process.hrtime(this.startHrTime),
-    };
-
-    this.resolverCalls.push(resolverCall);
-
-    return () => {
-      resolverCall.endOffset = process.hrtime(this.startHrTime);
-    };
-  }
-
-  public format(): [string, TracingFormat] | undefined {
-    // In the event that we are called prior to the initialization of critical
-    // date metrics, we'll return undefined to signal that the extension did not
-    // format properly.  Any undefined extension results are simply purged by
-    // the graphql-extensions module.
-    if (
-      typeof this.startWallTime === 'undefined' ||
-      typeof this.endWallTime === 'undefined' ||
-      typeof this.duration === 'undefined'
-    ) {
-      return;
-    }
-
-    return [
-      'tracing',
-      {
-        version: 1,
-        startTime: this.startWallTime.toISOString(),
-        endTime: this.endWallTime.toISOString(),
-        duration: durationHrTimeToNanos(this.duration),
-        execution: {
-          resolvers: this.resolverCalls.map(resolverCall => {
-            const startOffset = durationHrTimeToNanos(resolverCall.startOffset);
-            const duration = resolverCall.endOffset
-              ? durationHrTimeToNanos(resolverCall.endOffset) - startOffset
-              : 0;
-            return {
-              path: [...responsePathAsArray(resolverCall.path)],
-              parentType: resolverCall.parentType.toString(),
-              fieldName: resolverCall.fieldName,
-              returnType: resolverCall.returnType.toString(),
-              startOffset,
-              duration,
-            };
-          }),
+        // Historically speaking: It's WAS odd that we don't do traces for parse
+        // or validation errors. Reason being: at the time that this was written
+        // (now a plugin but originally an extension)). That was the case
+        // because runQuery DIDN'T (again, at the time, when it was an
+        // extension) support that since format() was only invoked after
+        // execution.
+        executionDidEnd: () => {
+          duration = process.hrtime(startHrTime);
+          endWallTime = new Date();
         },
+
+        willResolveField({ info }) {
+          const resolverCall: ResolverCall = {
+            path: info.path,
+            fieldName: info.fieldName,
+            parentType: info.parentType,
+            returnType: info.returnType,
+            startOffset: process.hrtime(startHrTime),
+          };
+
+          resolverCalls.push(resolverCall);
+
+          return () => {
+            resolverCall.endOffset = process.hrtime(startHrTime);
+          };
+        },
+      }),
+
+      willSendResponse({ response }) {
+        // In the event that we are called prior to the initialization of
+        // critical date metrics, we'll return undefined to signal that the
+        // extension did not format properly. Any undefined extension
+        // results are simply purged by the graphql-extensions module.
+        if (
+          typeof startWallTime === 'undefined' ||
+          typeof endWallTime === 'undefined' ||
+          typeof duration === 'undefined'
+        ) {
+          return;
+        }
+
+        const extensions =
+          response.extensions || (response.extensions = Object.create(null));
+
+        // Be defensive and make sure nothing else (other plugin, etc.) has
+        // already used the `tracing` property on `extensions`.
+        if (typeof extensions.tracing !== 'undefined') {
+          throw new Error(PACKAGE_NAME + ": Could not add `tracing` to " +
+            "`extensions` since `tracing` was unexpectedly already present.");
+        }
+
+        // Set the extensions.
+        extensions.tracing = {
+          version: 1,
+          startTime: startWallTime.toISOString(),
+          endTime: endWallTime.toISOString(),
+          duration: durationHrTimeToNanos(duration),
+          execution: {
+            resolvers: resolverCalls.map(resolverCall => {
+              const startOffset = durationHrTimeToNanos(
+                resolverCall.startOffset,
+              );
+              const duration = resolverCall.endOffset
+                ? durationHrTimeToNanos(resolverCall.endOffset) - startOffset
+                : 0;
+              return {
+                path: [...responsePathAsArray(resolverCall.path)],
+                parentType: resolverCall.parentType.toString(),
+                fieldName: resolverCall.fieldName,
+                returnType: resolverCall.returnType.toString(),
+                startOffset,
+                duration,
+              };
+            }),
+          },
+        };
       },
-    ];
-  }
-}
+    };
+  },
+})
 
 type HighResolutionTime = [number, number];
 

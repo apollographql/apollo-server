@@ -71,6 +71,23 @@ function printNode(
         ) +
         config.spacingOuter +
         indentation +
+        (node.internalFragments.size > 0
+          ? '  ' +
+            Array.from(node.internalFragments)
+              .map(fragment =>
+                printer(
+                  fragment,
+                  config,
+                  indentationNext,
+                  depth,
+                  refs,
+                  printer,
+                ),
+              )
+              .join(`\n${indentationNext}`) +
+            config.spacingOuter +
+            indentation
+          : '') +
         '}';
       break;
     case 'Flatten':

@@ -9,13 +9,19 @@ import {
 import gql from 'graphql-tag';
 import { GraphQLRequestContext } from 'apollo-server-types';
 import { AuthenticationError } from 'apollo-server-core';
-import { composeServices, buildFederatedSchema } from '@apollo/federation';
+import {
+  composeServices,
+  buildFederatedSchema,
+  normalizeTypeDefs,
+} from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 import { executeQueryPlan } from '../executeQueryPlan';
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
+import { fixtureNames } from './__fixtures__/schemas';
+
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
@@ -40,27 +46,21 @@ describe('executeQueryPlan', () => {
 
   beforeEach(() => {
     serviceMap = Object.fromEntries(
-      ['accounts', 'product', 'inventory', 'reviews', 'books'].map(
-        serviceName => {
-          return [
-            serviceName,
-            buildLocalService([
-              require(path.join(
-                __dirname,
-                '__fixtures__/schemas',
-                serviceName,
-              )),
-            ]),
-          ] as [string, LocalGraphQLDataSource];
-        },
-      ),
+      fixtureNames.map((serviceName) => {
+        return [
+          serviceName,
+          buildLocalService([
+            require(path.join(__dirname, '__fixtures__/schemas', serviceName)),
+          ]),
+        ] as [string, LocalGraphQLDataSource];
+      }),
     );
 
     let errors: GraphQLError[];
     ({ schema, errors } = composeServices(
       Object.entries(serviceMap).map(([serviceName, service]) => ({
         name: serviceName,
-        typeDefs: service.sdl(),
+        typeDefs: normalizeTypeDefs(service.sdl()),
       })),
     ));
 
@@ -104,7 +104,7 @@ describe('executeQueryPlan', () => {
 
     it(`should include an error when a root-level field errors out`, async () => {
       overrideResolversInService('accounts', {
-        Query: {
+        RootQuery: {
           me() {
             throw new AuthenticationError('Something went wrong');
           },
@@ -151,7 +151,7 @@ describe('executeQueryPlan', () => {
 
     it(`should still include other root-level results if one root-level field errors out`, async () => {
       overrideResolversInService('accounts', {
-        Query: {
+        RootQuery: {
           me() {
             throw new Error('Something went wrong');
           },

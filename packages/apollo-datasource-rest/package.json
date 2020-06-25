@@ -1,11 +1,12 @@
 {
   "name": "apollo-datasource-rest",
-  "version": "0.7.0",
-  "author": "opensource@apollographql.com",
+  "version": "0.9.2",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-datasource-rest"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "bugs": {

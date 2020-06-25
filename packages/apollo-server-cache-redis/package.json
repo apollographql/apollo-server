@@ -1,11 +1,12 @@
 {
   "name": "apollo-server-cache-redis",
-  "version": "1.1.5",
-  "author": "opensource@apollographql.com",
+  "version": "1.2.1",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cache-redis"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-cache-redis"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "bugs": {
@@ -19,7 +20,7 @@
   "dependencies": {
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
-    "dataloader": "^1.4.0",
+    "dataloader": "^2.0.0",
     "ioredis": "^4.0.0"
   }
 }

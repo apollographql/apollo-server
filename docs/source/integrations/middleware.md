@@ -11,9 +11,15 @@ the core `apollo-server` package:
 | Middleware  | Package  |
 |---|---|
 | Express  | `apollo-server-express`  |
-| Fastify  | `apollo-server-fastify`  |
-| hapi  | `apollo-server-hapi`  |
+| AWS Lambda | `apollo-server-lambda` |
 | Koa | `apollo-server-koa` |
+| hapi  | `apollo-server-hapi`  |
+| Micro | `apollo-server-micro` |
+| Fastify  | `apollo-server-fastify`  |
+| Google Cloud Functions | `apollo-server-cloud-functions` |
+| Azure Functions | `apollo-server-azure-functions` |
+| Cloudflare | `apollo-server-cloudflare` |
+
 
 If you've already installed the core `apollo-server` package, you can `npm uninstall`
 it after installing an integration package.
@@ -41,5 +47,7 @@ app.listen({ port: 4000 }, () =>
 
 In the above example, the `app` parameter you provide to `applyMiddleware`
 is your middleware's top-level representation of your application. In Express applications, for example, this variable is commonly named `app`.
+
+By passing the existing `app` into `applyMiddleware`, Apollo Server can internally configure various middleware (including body parsing, the GraphQL Playground frontend, CORS support, etc.) without needing to separately apply those to the `app` with middleware mechanisms like Express.js' `app.use`.
 
 > **Note:** When integrating with hapi, call `applyMiddleware` with `await`.

@@ -6,7 +6,7 @@ import testSuite, {
 import { Config } from 'apollo-server-core';
 import express = require('express');
 import bodyParser = require('body-parser');
-import request = require('supertest');
+import request from 'supertest';
 
 type GcfRequest = {
   path: string | null;

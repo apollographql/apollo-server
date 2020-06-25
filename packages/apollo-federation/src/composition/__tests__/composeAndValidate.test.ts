@@ -1,6 +1,11 @@
 import { composeAndValidate } from '../composeAndValidate';
 import gql from 'graphql-tag';
-import { GraphQLObjectType, DocumentNode } from 'graphql';
+import {
+  GraphQLObjectType,
+  DocumentNode,
+  GraphQLScalarType,
+  specifiedDirectives,
+} from 'graphql';
 import {
   astSerializer,
   typeSerializer,
@@ -99,12 +104,12 @@ it('composes and validates all (24) permutations without error', () => {
     reviewsService,
     accountsService,
     productsService,
-  ]).map(config => {
+  ]).map((config) => {
     const { errors } = composeAndValidate(config);
 
     if (errors.length) {
       console.error(
-        `Errors found with composition [${config.map(item => item.name)}]`,
+        `Errors found with composition [${config.map((item) => item.name)}]`,
       );
     }
 
@@ -624,16 +629,29 @@ describe('composition of schemas with directives', () => {
     );
   });
 
-  it(`doesn't strip the special case @deprecated type-system directive`, () => {
+  it(`doesn't strip the special case @deprecated and @specifiedBy type-system directives`, () => {
+    const specUrl = "http://my-spec-url.com";
+    const deprecationReason = "Don't remove me please";
+
+    // Detecting >15.1.0 by the new addition of the `specifiedBy` directive
+    const isAtLeastGraphqlVersionFifteenPointOne =
+      specifiedDirectives.length >= 4;
+
     const serviceA = {
       typeDefs: gql`
+        # This directive needs to be conditionally added depending on the testing
+        # environment's version of graphql (>= 15.1.0 includes this new directive)
+        ${isAtLeastGraphqlVersionFifteenPointOne
+          ? `scalar MyScalar @specifiedBy(url: "${specUrl}")`
+          : ''}
+
         type EarthConcern {
           environmental: String!
         }
 
         extend type Query {
           importantDirectives: [EarthConcern!]!
-            @deprecated(reason: "Don't remove me please")
+            @deprecated(reason: "${deprecationReason}")
         }
       `,
       name: 'serviceA',
@@ -649,6 +667,130 @@ describe('composition of schemas with directives', () => {
     const field = queryType.getFields()['importantDirectives'];
 
     expect(field.isDeprecated).toBe(true);
-    expect(field.deprecationReason).toEqual("Don't remove me please");
+    expect(field.deprecationReason).toEqual(deprecationReason);
+
+    if (isAtLeastGraphqlVersionFifteenPointOne) {
+      const specifiedBy = schema.getDirective('specifiedBy');
+      expect(specifiedBy).toMatchInlineSnapshot(`"@specifiedBy"`);
+      const customScalar = schema.getType('MyScalar');
+      expect((customScalar as GraphQLScalarType).specifiedByUrl).toEqual(specUrl);
+    }
   });
+});
+
+it('composition of full-SDL schemas without any errors', () => {
+  const serviceA = {
+    typeDefs: gql`
+      # Default directives
+      directive @deprecated(
+        reason: String = "No longer supported"
+      ) on FIELD_DEFINITION | ENUM_VALUE
+      directive @specifiedBy(url: String!) on SCALAR
+      directive @include(
+        if: String = "Included when true."
+      ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+      directive @skip(
+        if: String = "Skipped when true."
+      ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+      # Federation directives
+      directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+      directive @external on FIELD_DEFINITION
+      directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+      directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+      directive @extends on OBJECT | INTERFACE
+
+      # Custom type system directive (disregarded by gateway, unconcerned with serviceB's implementation)
+      directive @myTypeSystemDirective on FIELD_DEFINITION
+      # Custom executable directive (must be implemented in all services, definition must be identical)
+      directive @myExecutableDirective on FIELD
+
+      scalar _Any
+      scalar _FieldSet
+
+      union _Entity
+
+      type _Service {
+        sdl: String
+      }
+
+      schema {
+        query: RootQuery
+        mutation: RootMutation
+      }
+
+      type RootQuery {
+        _service: _Service!
+        _entities(representations: [_Any!]!): [_Entity]!
+        product: Product
+      }
+
+      type Product @key(fields: "sku") {
+        sku: String!
+        price: Float
+      }
+
+      type RootMutation {
+        updateProduct: Product
+      }
+    `,
+    name: 'serviceA',
+  };
+
+  const serviceB = {
+    typeDefs: gql`
+      # Default directives
+      directive @deprecated(
+        reason: String = "No longer supported"
+      ) on FIELD_DEFINITION | ENUM_VALUE
+      directive @specifiedBy(url: String!) on SCALAR
+      directive @include(
+        if: String = "Included when true."
+      ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+      directive @skip(
+        if: String = "Skipped when true."
+      ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+      # Federation directives
+      directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+      directive @external on FIELD_DEFINITION
+      directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+      directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+      directive @extends on OBJECT | INTERFACE
+
+      # Custom type system directive (disregarded by gateway, unconcerned with serviceA's implementation)
+      directive @myDirective on FIELD_DEFINITION
+
+      # Custom executable directive (must be implemented in all services, definition must be identical)
+      directive @myExecutableDirective on FIELD
+
+      scalar _Any
+      scalar _FieldSet
+
+      union _Entity
+
+      type _Service {
+        sdl: String
+      }
+
+      type Query {
+        _service: _Service!
+        _entities(representations: [_Any!]!): [_Entity]!
+        review: Review
+      }
+
+      type Review @key(fields: "id") {
+        id: String!
+        content: String
+      }
+
+      type Mutation {
+        createReview: Review
+      }
+    `,
+    name: 'serviceB',
+  };
+
+  const { errors } = composeAndValidate([serviceA, serviceB]);
+  expect(errors).toHaveLength(0);
 });

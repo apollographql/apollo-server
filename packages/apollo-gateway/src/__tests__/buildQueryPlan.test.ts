@@ -5,12 +5,17 @@ import {
   GraphQLSchemaValidationError,
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
-import { composeServices, buildFederatedSchema } from '@apollo/federation';
+import {
+  composeServices,
+  buildFederatedSchema,
+  normalizeTypeDefs,
+} from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
+import { fixtureNames } from './__fixtures__/schemas';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
@@ -25,33 +30,74 @@ describe('buildQueryPlan', () => {
 
   beforeEach(() => {
     const serviceMap = Object.fromEntries(
-      ['accounts', 'product', 'inventory', 'reviews', 'books'].map(
-        serviceName => {
-          return [
-            serviceName,
-            buildLocalService([
-              require(path.join(
-                __dirname,
-                '__fixtures__/schemas',
-                serviceName,
-              )),
-            ]),
-          ] as [string, LocalGraphQLDataSource];
-        },
-      ),
+      fixtureNames.map((serviceName) => {
+        return [
+          serviceName,
+          buildLocalService([
+            require(path.join(__dirname, '__fixtures__/schemas', serviceName)),
+          ]),
+        ] as [string, LocalGraphQLDataSource];
+      }),
     );
 
     let errors: GraphQLError[];
     ({ schema, errors } = composeServices(
       Object.entries(serviceMap).map(([serviceName, service]) => ({
         name: serviceName,
-        typeDefs: service.sdl(),
+        typeDefs: normalizeTypeDefs(service.sdl()),
       })),
     ));
 
     if (errors && errors.length > 0) {
       throw new GraphQLSchemaValidationError(errors);
     }
+  });
+
+  it(`should not confuse union types with overlapping field names`, () => {
+    const query = gql`
+      query {
+        body {
+          ... on Image {
+            attributes {
+              url
+            }
+          }
+          ... on Text {
+            attributes {
+              bold
+              text
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(
+      buildOperationContext(schema, query, undefined),
+    );
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "documents") {
+          {
+            body {
+              __typename
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+          }
+        },
+      }
+    `);
   });
 
   it(`should use a single fetch when requesting a root field from one service`, () => {
@@ -856,25 +902,490 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-    QueryPlan {
-      Fetch(service: "product") {
-        {
-          product(upc: "") {
-            __typename
-            ... on Book {
-              details {
-                country
+      QueryPlan {
+        Fetch(service: "product") {
+          {
+            product(upc: "") {
+              __typename
+              ... on Book {
+                details {
+                  country
+                }
+              }
+              ... on Furniture {
+                details {
+                  country
+                }
               }
             }
-            ... on Furniture {
+          }
+        },
+      }
+    `);
+  });
+
+  describe(`experimental compression to downstream services`, () => {
+    it(`should generate fragments internally to downstream requests`, () => {
+      const query = gql`
+        query {
+          topReviews {
+            body
+            author
+            product {
+              name
+              price
               details {
                 country
               }
             }
           }
         }
-      },
-    }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                topReviews {
+                  ...__QueryPlanFragment_1__
+                }
+              }
+              fragment __QueryPlanFragment_1__ on Review {
+                body
+                author
+                product {
+                  ...__QueryPlanFragment_0__
+                }
+              }
+              fragment __QueryPlanFragment_0__ on Product {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              }
+            },
+            Parallel {
+              Sequence {
+                Flatten(path: "topReviews.@.product") {
+                  Fetch(service: "books") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    }
+                  },
+                },
+                Flatten(path: "topReviews.@.product") {
+                  Fetch(service: "product") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        name
+                      }
+                    }
+                  },
+                },
+              },
+              Flatten(path: "topReviews.@.product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  {
+                    ... on Furniture {
+                      name
+                      price
+                      details {
+                        country
+                      }
+                    }
+                    ... on Book {
+                      price
+                      details {
+                        country
+                      }
+                    }
+                  }
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it(`shouldn't generate fragments for selection sets of length 2 or less`, () => {
+      const query = gql`
+        query {
+          topReviews {
+            body
+            author
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "reviews") {
+            {
+              topReviews {
+                body
+                author
+              }
+            }
+          },
+        }
+      `);
+    });
+
+    it(`should generate fragments for selection sets of length 3 or greater`, () => {
+      const query = gql`
+        query {
+          topReviews {
+            id
+            body
+            author
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "reviews") {
+            {
+              topReviews {
+                ...__QueryPlanFragment_0__
+              }
+            }
+            fragment __QueryPlanFragment_0__ on Review {
+              id
+              body
+              author
+            }
+          },
+        }
+      `);
+    });
+
+    it(`should generate fragments correctly when aliases are used`, () => {
+      const query = gql`
+        query {
+          reviews: topReviews {
+            content: body
+            author
+            product {
+              name
+              cost: price
+              details {
+                origin: country
+              }
+            }
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                reviews: topReviews {
+                  ...__QueryPlanFragment_1__
+                }
+              }
+              fragment __QueryPlanFragment_1__ on Review {
+                content: body
+                author
+                product {
+                  ...__QueryPlanFragment_0__
+                }
+              }
+              fragment __QueryPlanFragment_0__ on Product {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              }
+            },
+            Parallel {
+              Sequence {
+                Flatten(path: "reviews.@.product") {
+                  Fetch(service: "books") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    }
+                  },
+                },
+                Flatten(path: "reviews.@.product") {
+                  Fetch(service: "product") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        name
+                      }
+                    }
+                  },
+                },
+              },
+              Flatten(path: "reviews.@.product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  {
+                    ... on Furniture {
+                      name
+                      cost: price
+                      details {
+                        origin: country
+                      }
+                    }
+                    ... on Book {
+                      cost: price
+                      details {
+                        origin: country
+                      }
+                    }
+                  }
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+  });
+
+  it(`should properly expand nested unions with inline fragments`, () => {
+    const query = gql`
+      query {
+        body {
+          ... on Image {
+            ... on Body {
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+          }
+          ... on Text {
+            attributes {
+              bold
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(
+      buildOperationContext(schema, query, undefined),
+    );
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "documents") {
+          {
+            body {
+              __typename
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                }
+              }
+            }
+          }
+        },
+      }
     `);
+  });
+
+  describe('deduplicates fields / selections regardless of adjacency and type condition nesting', () => {
+    it('for inline fragments', () => {
+      const query = gql`
+        query {
+          body {
+            ... on Image {
+              ... on Text {
+                attributes {
+                  bold
+                }
+              }
+            }
+            ... on Body {
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+            ... on Text {
+              attributes {
+                bold
+                text
+              }
+            }
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "documents") {
+            {
+              body {
+                __typename
+                ... on Text {
+                  attributes {
+                    bold
+                    text
+                  }
+                }
+              }
+            }
+          },
+        }
+      `);
+    });
+
+    it('for named fragment spreads', () => {
+      const query = gql`
+        fragment TextFragment on Text {
+          attributes {
+            bold
+            text
+          }
+        }
+
+        query {
+          body {
+            ... on Image {
+              ...TextFragment
+            }
+            ... on Body {
+              ...TextFragment
+            }
+            ...TextFragment
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "documents") {
+            {
+              body {
+                __typename
+                ... on Text {
+                  attributes {
+                    bold
+                    text
+                  }
+                }
+              }
+            }
+          },
+        }
+      `);
+    });
   });
 });
