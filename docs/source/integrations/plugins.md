@@ -25,7 +25,7 @@ const myPlugin = {
 };
 ```
 
-> If you're using TypeScript to create a plugin, the `apollo-server-plugin-base` module exports the [`ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) for plugins to implement.
+> If you're using TypeScript to create a plugin, the `apollo-server-plugin-base` module exports the [`ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-plugin-base/src/index.ts) for plugins to implement.
 
 You can define a plugin in the same file where you initialize Apollo Server, or
 you can export it as a separate module:
@@ -99,7 +99,7 @@ const myPlugin = {
 
       parsingDidStart(requestContext) {
         console.log('Parsing started!');
-      }
+      },
 
       validationDidStart(requestContext) {
         console.log('Validation started!');
@@ -121,17 +121,18 @@ The following diagram illustrates the sequence of events that fire for each requ
 
 ```mermaid
 graph TB;
-  request(requestDidStart) --> parsing(parsingDidStart*);
+  request(requestDidStart) --> resolveSource(didResolveSource);
+  resolveSource --"Success"--> parsing(parsingDidStart*);
   parsing --"Success"--> validation(validationDidStart*);
-  validation --"Success"--> resolve(didResolveOperation);
-  resolve --"Success"--> response(responseForOperation);
+  validation --"Success"--> resolveOperation(didResolveOperation);
+  resolveOperation --"Success"--> response(responseForOperation);
   execution(executionDidStart*);
   errors(didEncounterErrors);
   response --"Response provided"--> send;
   response --"No response provided"--> execution;
   execution --"Success"--> send(willSendResponse);
 
-  execution & resolve & parsing & validation --"Failure"--> errors;
+  execution & resolveSource & resolveOperation & parsing & validation --"Failure"--> errors;
   errors --> send;
   class server,request secondary;
 ```
@@ -193,7 +194,7 @@ As the example above shows, `requestDidStart` and request lifecycle functions ac
 parameter. This parameter is of type `GraphQLRequestContext`, which includes a
 `request` (of type `GraphQLRequest`), along with a `response` field (of type `GraphQLResponse`) if it's available.
 
-These types and their related subtypes are all defined in [`apollo-server-types/src/index.ts`](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-types/src/index.ts).
+These types and their related subtypes are all defined in [`apollo-server-types/src/index.ts`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts).
 
 ## Installing a plugin
 
@@ -311,7 +312,24 @@ should not return a value.
 
 ### Request lifecycle events
 
-> If you're using TypeScript to create your plugin, implement the [ `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) from the `apollo-server-plugin-base` module to define functions for request lifecycle events.
+> If you're using TypeScript to create your plugin, implement the [ `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-plugin-base/src/index.ts) from the `apollo-server-plugin-base` module to define functions for request lifecycle events.
+
+### `didResolveSource`
+
+The `didResolveSource` event is invoked after Apollo Server has determined the
+`String`-representation of the incoming operation that it will act upon.  In the
+event that this `String` was not directly passed in from the client, this
+may be retrieved from a cache store (e.g., Automated Persisted Queries).
+
+At this stage, there is not a guarantee that the operation is not malformed.
+
+```typescript
+didResolveSource?(
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>, 'source' | 'logger'>,
+  >,
+): ValueOrPromise<void>;
+```
 
 ### `parsingDidStart`
 

@@ -35,6 +35,8 @@ import {
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
+import WebSocket from 'ws';
+
 import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions,
@@ -69,7 +71,14 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { Logger } from "apollo-server-types";
+import { plugin as pluginTracing } from "apollo-tracing";
+import { Logger, SchemaHash } from "apollo-server-types";
+import {
+  plugin as pluginCacheControl,
+  CacheControlExtensionOptions,
+} from 'apollo-cache-control';
+import { getEngineApiKey, getEngineGraphVariant } from "apollo-engine-reporting/dist/agent";
+import { cloneObject } from "./runHttpQuery";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -84,36 +93,8 @@ const NoIntrospection = (context: ValidationContext) => ({
   },
 });
 
-function getEngineApiKey(engine: Config['engine']): string | undefined {
-  const keyFromEnv = process.env.ENGINE_API_KEY || '';
-  if (engine === false) {
-    return;
-  } else if (typeof engine === 'object' && engine.apiKey) {
-    return engine.apiKey;
-  } else if (keyFromEnv) {
-    return keyFromEnv;
-  }
-  return;
-}
-
-function getEngineGraphVariant(engine: Config['engine']): string | undefined {
-  if (engine === false) {
-    return;
-  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
-    return engine.graphVariant || engine.schemaTag;
-  } else {
-    if (process.env.ENGINE_SCHEMA_TAG) {
-      console.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
-    }
-    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
-      throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
-    }
-    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
-  }
-}
-
-function getEngineServiceId(engine: Config['engine']): string | undefined {
-  const engineApiKey = getEngineApiKey(engine);
+function getEngineServiceId(engine: Config['engine'], logger: Logger): string | undefined {
+  const engineApiKey = getEngineApiKey({engine, skipWarn: true, logger} );
   if (engineApiKey) {
     return engineApiKey.split(':', 2)[1];
   }
@@ -134,7 +115,7 @@ type SchemaDerivedData = {
   // on the same operation to be executed immediately.
   documentStore?: InMemoryLRUCache<DocumentNode>;
   schema: GraphQLSchema;
-  schemaHash: string;
+  schemaHash: SchemaHash;
   extensions: Array<() => GraphQLExtension>;
 };
 
@@ -190,6 +171,7 @@ export class ApolloServerBase {
       playground,
       plugins,
       gateway,
+      cacheControl,
       experimental_approximateDocumentStoreMiB,
       ...requestOptions
     } = config;
@@ -225,10 +207,6 @@ export class ApolloServerBase {
     this.parseOptions = parseOptions;
     this.context = context;
 
-    // Plugins will be instantiated if they aren't already, and this.plugins
-    // is populated accordingly.
-    this.ensurePluginInstantiation(plugins);
-
     // While reading process.env is slow, a server should only be constructed
     // once per run, so we place the env check inside the constructor. If env
     // should be used outside of the constructor context, place it as a private
@@ -247,31 +225,6 @@ export class ApolloServerBase {
       requestOptions.validationRules = requestOptions.validationRules
         ? requestOptions.validationRules.concat(noIntro)
         : noIntro;
-    }
-
-    if (requestOptions.cacheControl !== false) {
-      if (
-        typeof requestOptions.cacheControl === 'boolean' &&
-        requestOptions.cacheControl === true
-      ) {
-        // cacheControl: true means that the user needs the cache-control
-        // extensions. This means we are running the proxy, so we should not
-        // strip out the cache control extension and not add cache-control headers
-        requestOptions.cacheControl = {
-          stripFormattedExtensions: false,
-          calculateHttpHeaders: false,
-          defaultMaxAge: 0,
-        };
-      } else {
-        // Default behavior is to run default header calculation and return
-        // no cacheControl extensions
-        requestOptions.cacheControl = {
-          stripFormattedExtensions: true,
-          calculateHttpHeaders: true,
-          defaultMaxAge: 0,
-          ...requestOptions.cacheControl,
-        };
-      }
     }
 
     if (!requestOptions.cache) {
@@ -343,8 +296,8 @@ export class ApolloServerBase {
     // service ID from the API key for plugins which only needs service ID.
     // The truthiness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
-    this.engineServiceId = getEngineServiceId(engine);
-    const apiKey = getEngineApiKey(engine);
+    this.engineServiceId = getEngineServiceId(engine, this.logger);
+    const apiKey = getEngineApiKey({engine, skipWarn: true, logger: this.logger});
     if (apiKey) {
       this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)
@@ -359,6 +312,16 @@ export class ApolloServerBase {
         }),
       );
       // Don't add the extension here (we want to add it later in generateSchemaDerivedData).
+    }
+
+    if (gateway && this.engineReportingAgent?.schemaReport) {
+      throw new Error(
+        [
+          "Schema reporting is not yet compatible with the gateway. If you're",
+          "interested in using schema reporting with the gateway, please",
+          "contact Apollo support.",
+        ].join(' '),
+      );
     }
 
     if (gateway && subscriptions !== false) {
@@ -413,6 +376,11 @@ export class ApolloServerBase {
     } else {
       throw new Error("Unexpected error: Unable to resolve a valid GraphQLSchema.  Please file an issue with a reproduction of this error, if possible.");
     }
+
+    // Plugins will be instantiated if they aren't already, and this.plugins
+    // is populated accordingly.
+    this.ensurePluginInstantiation(plugins);
+
   }
 
   // used by integrations to synchronize the path with subscriptions, some
@@ -444,7 +412,7 @@ export class ApolloServerBase {
         ),
       );
 
-      const graphVariant = getEngineGraphVariant(engine);
+      const graphVariant = getEngineGraphVariant(engine, this.logger);
       const engineConfig =
         this.engineApiKeyHash && this.engineServiceId
           ? {
@@ -562,39 +530,6 @@ export class ApolloServerBase {
 
     const extensions = [];
 
-    const schemaIsFederated = this.schemaIsFederated(schema);
-    const { engine } = this.config;
-    // Keep this extension second so it wraps everything, except error formatting
-    if (this.engineReportingAgent) {
-      if (schemaIsFederated) {
-        // XXX users can configure a federated Apollo Server to send metrics, but the
-        // Gateway should be responsible for that. It's possible that users are running
-        // their own gateway or running a federated service on its own. Nonetheless, in
-        // the likely case it was accidental, we warn users that they should only report
-        // metrics from the Gateway.
-        this.logger.warn(
-          "It looks like you're running a federated schema and you've configured your service " +
-            'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
-            'to report metrics to Apollo Graph Manager.',
-        );
-      }
-      extensions.push(() =>
-        this.engineReportingAgent!.newExtension(schemaHash),
-      );
-    } else if (engine !== false && schemaIsFederated) {
-      // We haven't configured this app to use Engine directly. But it looks like
-      // we are a federated service backend, so we should be capable of including
-      // our trace in a response extension if we are asked to by the gateway.
-      const {
-        EngineFederatedTracingExtension,
-      } = require('apollo-engine-reporting');
-      const rewriteError =
-        engine && typeof engine === 'object' ? engine.rewriteError : undefined;
-      extensions.push(
-        () => new EngineFederatedTracingExtension({ rewriteError }),
-      );
-    }
-
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
     extensions.push(...(_extensions || []));
@@ -667,7 +602,7 @@ export class ApolloServerBase {
     }
   }
 
-  public installSubscriptionHandlers(server: HttpServer) {
+  public installSubscriptionHandlers(server: HttpServer | WebSocket.Server) {
     if (!this.subscriptionServerOptions) {
       if (this.config.gateway) {
         throw Error(
@@ -741,11 +676,14 @@ export class ApolloServerBase {
           return { ...connection, context };
         },
         keepAlive,
+        validationRules: this.requestOptions.validationRules
       },
-      {
-        server,
-        path,
-      },
+      server instanceof WebSocket.Server
+        ? server
+        : {
+            server,
+            path,
+          },
     );
   }
 
@@ -763,9 +701,13 @@ export class ApolloServerBase {
   // survive transformations like monkey-patching a boolean field onto the
   // schema.
   //
-  // The only thing this is used for is determining whether traces should be
-  // added to responses if requested with an HTTP header; if there's a false
-  // positive, that feature can be disabled by specifying `engine: false`.
+  // This is used for two things:
+  // 1) determining whether traces should be added to responses if requested
+  //    with an HTTP header; if there's a false positive, that feature can be
+  //    disabled by specifying `engine: false`.
+  // 2) determining whether schema-reporting should be allowed; federated
+  //    services shouldn't be reporting schemas, and we accordingly throw if
+  //    it's attempted.
   private schemaIsFederated(schema: GraphQLSchema): boolean {
     const serviceType = schema.getType('_Service');
     if (!(serviceType && isObjectType(serviceType))) {
@@ -782,12 +724,87 @@ export class ApolloServerBase {
     return sdlFieldType.name == 'String';
   }
 
-  private ensurePluginInstantiation(plugins?: PluginDefinition[]): void {
-    if (!plugins || !plugins.length) {
-      return;
+  private ensurePluginInstantiation(plugins: PluginDefinition[] = []): void {
+    const pluginsToInit: PluginDefinition[] = [];
+
+    // Internal plugins should be added to `pluginsToInit` here.
+    // User's plugins, provided as an argument to this method, will be added
+    // at the end of that list so they take precedence.
+
+    // If the user has enabled it explicitly, add our tracing lugin.
+    if (this.config.tracing) {
+      pluginsToInit.push(pluginTracing())
     }
 
-    this.plugins = plugins.map(plugin => {
+    // Enable cache control unless it was explicitly disabled.
+    if (this.config.cacheControl !== false) {
+      let cacheControlOptions: CacheControlExtensionOptions = {};
+      if (
+        typeof this.config.cacheControl === 'boolean' &&
+        this.config.cacheControl === true
+      ) {
+        // cacheControl: true means that the user needs the cache-control
+        // extensions. This means we are running the proxy, so we should not
+        // strip out the cache control extension and not add cache-control headers
+        cacheControlOptions = {
+          stripFormattedExtensions: false,
+          calculateHttpHeaders: false,
+          defaultMaxAge: 0,
+        };
+      } else {
+        // Default behavior is to run default header calculation and return
+        // no cacheControl extensions
+        cacheControlOptions = {
+          stripFormattedExtensions: true,
+          calculateHttpHeaders: true,
+          defaultMaxAge: 0,
+          ...this.config.cacheControl,
+        };
+      }
+
+      pluginsToInit.push(pluginCacheControl(cacheControlOptions));
+    }
+
+    const federatedSchema = this.schema && this.schemaIsFederated(this.schema);
+    const { engine } = this.config;
+    // Keep this extension second so it wraps everything, except error formatting
+    if (this.engineReportingAgent) {
+      if (federatedSchema) {
+        // XXX users can configure a federated Apollo Server to send metrics, but the
+        // Gateway should be responsible for that. It's possible that users are running
+        // their own gateway or running a federated service on its own. Nonetheless, in
+        // the likely case it was accidental, we warn users that they should only report
+        // metrics from the Gateway.
+        this.logger.warn(
+          "It looks like you're running a federated schema and you've configured your service " +
+            'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
+            'to report metrics to Apollo Graph Manager.',
+        );
+
+        if (this.engineReportingAgent.schemaReport) {
+          throw Error(
+            [
+              "Schema reporting is not yet compatible with federated services.",
+              "If you're interested in using schema reporting with federated",
+              "services, please contact Apollo support.",
+            ].join(' '),
+          );
+        }
+      }
+      pluginsToInit.push(this.engineReportingAgent!.newPlugin());
+    } else if (engine !== false && federatedSchema) {
+      // We haven't configured this app to use Engine directly. But it looks like
+      // we are a federated service backend, so we should be capable of including
+      // our trace in a response extension if we are asked to by the gateway.
+      const { federatedPlugin } = require('apollo-engine-reporting');
+      const rewriteError =
+        engine && typeof engine === 'object' ? engine.rewriteError : undefined;
+      pluginsToInit.push(federatedPlugin({ rewriteError }));
+    }
+
+    pluginsToInit.push(...plugins);
+
+    this.plugins = pluginsToInit.map(plugin => {
       if (typeof plugin === 'function') {
         return plugin();
       }
@@ -815,7 +832,12 @@ export class ApolloServerBase {
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ): Promise<GraphQLServerOptions> {
-    const { schema, documentStore, extensions } = await this.schemaDerivedData;
+    const {
+      schema,
+      schemaHash,
+      documentStore,
+      extensions,
+    } = await this.schemaDerivedData;
 
     let context: Context = this.context ? this.context : {};
 
@@ -833,6 +855,7 @@ export class ApolloServerBase {
 
     return {
       schema,
+      schemaHash,
       logger: this.logger,
       plugins: this.plugins,
       documentStore,
@@ -848,7 +871,6 @@ export class ApolloServerBase {
         any
       >,
       parseOptions: this.parseOptions,
-      reporting: !!this.engineReportingAgent,
       ...this.requestOptions,
     };
   }
@@ -858,13 +880,25 @@ export class ApolloServerBase {
 
     if (typeof options.context === 'function') {
       options.context = (options.context as () => never)();
+    } else if (typeof options.context === 'object') {
+      // FIXME: We currently shallow clone the context for every request,
+      // but that's unlikely to be what people want.
+      // We allow passing in a function for `context` to ApolloServer,
+      // but this only runs once for a batched request (because this is resolved
+      // in ApolloServer#graphQLServerOptions, before runHttpQuery is invoked).
+      // NOTE: THIS IS DUPLICATED IN runHttpQuery.ts' buildRequestContext.
+      options.context = cloneObject(options.context);
     }
+
 
     const requestCtx: GraphQLRequestContext = {
       logger: this.logger,
+      schema: options.schema,
+      schemaHash: options.schemaHash,
       request,
       context: options.context || Object.create(null),
       cache: options.cache!,
+      metrics: {},
       response: {
         http: {
           headers: new Headers(),

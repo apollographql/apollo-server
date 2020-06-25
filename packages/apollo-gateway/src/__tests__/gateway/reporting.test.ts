@@ -5,12 +5,13 @@ import { GraphQLSchemaModule } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { buildFederatedSchema } from '@apollo/federation';
 import { ApolloServer } from 'apollo-server';
-import { FullTracesReport } from 'apollo-engine-reporting-protobuf';
 import { execute, toPromise } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
 import fetch from 'node-fetch';
 import { ApolloGateway } from '../..';
 import { Plugin, Config, Refs } from 'pretty-format';
+import { Report } from 'apollo-engine-reporting-protobuf';
+import { fixtureNames } from '../__fixtures__/schemas';
 
 // Normalize specific fields that change often (eg timestamps) to static values,
 // to make snapshot testing viable.  (If these helpers are more generally
@@ -105,13 +106,7 @@ describe('reporting', () => {
 
     backendServers = [];
     const serviceList = [];
-    for (const serviceName of [
-      'accounts',
-      'product',
-      'inventory',
-      'reviews',
-      'books',
-    ]) {
+    for (const serviceName of fixtureNames) {
       const { server, url } = await startFederatedServer([
         require(path.join(__dirname, '../__fixtures__/schemas', serviceName)),
       ]);
@@ -189,7 +184,7 @@ describe('reporting', () => {
     // nock returns binary bodies as hex strings
     const gzipReportBuffer = Buffer.from(reportBody, 'hex');
     const reportBuffer = gunzipSync(gzipReportBuffer);
-    const report = FullTracesReport.decode(reportBuffer);
+    const report = Report.decode(reportBuffer);
 
     // Some handwritten tests to capture salient properties.
     const statsReportKey = '# -\n{me{name}topProducts{name}}';
@@ -219,6 +214,7 @@ describe('reporting', () => {
 
     expect(report).toMatchInlineSnapshot(`
       Object {
+        "endTime": null,
         "header": "<HEADER>",
         "tracesPerQuery": Object {
           "# -

@@ -44,23 +44,23 @@ function gcsNock(url: Parameters<typeof nock>[0]): nock.Scope {
 }
 
 export function mockStorageSecret() {
-  return gcsNock('https://storage.googleapis.com:443').get(
-    `/engine-partial-schema-prod/${graphId}/storage-secret/${apiKeyHash}.json`,
+  return gcsNock('https://storage-secrets.api.apollographql.com:443').get(
+    `/${graphId}/storage-secret/${apiKeyHash}.json`,
   );
 }
 
 export function mockStorageSecretSuccess() {
-  return gcsNock('https://storage.googleapis.com:443')
+  return gcsNock('https://storage-secrets.api.apollographql.com:443')
     .get(
-      `/engine-partial-schema-prod/${graphId}/storage-secret/${apiKeyHash}.json`,
+      `/${graphId}/storage-secret/${apiKeyHash}.json`,
     )
     .reply(200, `"${storageSecret}"`);
 }
 
 // get composition config link, using received storage secret
 export function mockCompositionConfigLink() {
-  return gcsNock('https://storage.googleapis.com:443').get(
-    `/engine-partial-schema-prod/${storageSecret}/current/v1/composition-config-link`,
+  return gcsNock('https://federation.api.apollographql.com:443').get(
+    `/${storageSecret}/current/v1/composition-config-link`,
   );
 }
 
@@ -72,8 +72,8 @@ export function mockCompositionConfigLinkSuccess() {
 
 // get composition configs, using received composition config link
 export function mockCompositionConfigs() {
-  return gcsNock('https://storage.googleapis.com:443').get(
-    `/engine-partial-schema-prod/${storageSecret}/current/v1/composition-configs/composition-config-path.json`,
+  return gcsNock('https://federation.api.apollographql.com:443').get(
+    `/${storageSecret}/current/v1/composition-configs/composition-config-path.json`,
   );
 }
 
@@ -88,8 +88,8 @@ export function mockCompositionConfigsSuccess(services: MockService[]) {
 
 // get implementing service reference, using received composition-config
 export function mockImplementingServices({ gcsDefinitionPath }: MockService) {
-  return gcsNock('https://storage.googleapis.com:443').get(
-    `/engine-partial-schema-prod/${storageSecret}/current/v1/implementing-services/${accountsService}/${gcsDefinitionPath}`,
+  return gcsNock('https://federation.api.apollographql.com:443').get(
+    `/${storageSecret}/current/v1/implementing-services/${accountsService}/${gcsDefinitionPath}`,
   );
 }
 
@@ -103,8 +103,8 @@ export function mockImplementingServicesSuccess(service: MockService) {
 
 // get raw-partial-schema, using received composition-config
 export function mockRawPartialSchema({ partialSchemaPath }: MockService) {
-  return gcsNock('https://storage.googleapis.com:443').get(
-    `/engine-partial-schema-prod/${storageSecret}/current/raw-partial-schemas/${partialSchemaPath}`,
+  return gcsNock('https://federation.api.apollographql.com:443').get(
+    `/${storageSecret}/current/raw-partial-schemas/${partialSchemaPath}`,
   );
 }
 

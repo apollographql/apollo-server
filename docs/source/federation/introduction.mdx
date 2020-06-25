@@ -37,6 +37,10 @@ Apollo Server provides libraries for acting both as an implementing service and 
 
 > Apollo Federation does not currently support [GraphQL subscription operations](https://www.apollographql.com/docs/react/data/subscriptions/).
 
+The following presentation by [Mandi Wise](https://twitter.com/mandiwise) further describes the architecture of Apollo Federation and walks through implementing a federated graph:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/v_1bn2sHdk4?start=81" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ## Core principles
 
 ### Incremental adoption
@@ -174,9 +178,9 @@ operations across those implementing services.
 
 ### Managed federation
 
-In addition to running a gateway with a static list of services, Apollo Gateway can operate in **managed federation** mode, where [Apollo Graph Manager](https://www.apollographql.com/docs/graph-manager/) acts as the source of truth for each implementing service's schema.
+In addition to running a gateway with a static list of services, Apollo Gateway can operate in **managed federation** mode, where [Apollo Studio](https://www.apollographql.com/docs/graph-manager/) acts as the source of truth for each implementing service's schema.
 
-This mode enables multiple teams working on a data graph to coordinate when and how underlying services change. For more information, read [Managing a federated graph](https://www.apollographql.com/docs/graph-manager/federation/).
+This mode enables multiple teams working on a data graph to coordinate when and how underlying services change. For more information, read [Managed federation overview](https://www.apollographql.com/docs/graph-manager/managed-federation/overview/).
 
 ## Query example
 
@@ -185,7 +189,7 @@ were implemented as a single, monolithic service:
 
 ```graphql
 # A query that the gateway resolves by calling all three services
-query {
+query GetCurrentUserReviews {
   me {
     username
     reviews {

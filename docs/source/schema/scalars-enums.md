@@ -237,7 +237,7 @@ type Query {
 A query might look like this:
 
 ```graphql
-query {
+query GetAvatar {
   avatar(borderColor: RED)
 }
 ```
@@ -245,7 +245,7 @@ query {
 To pass the enum value as a variable, use a string of JSON, like so:
 
 ```graphql
-query MyAvatar($color: AllowedColor) {
+query GetAvatar($color: AllowedColor) {
   avatar(borderColor: $color)
 }
 ```

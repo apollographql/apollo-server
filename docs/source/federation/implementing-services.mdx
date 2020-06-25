@@ -13,7 +13,7 @@ This article describes how to create an **implementing service** for a federated
 
 ## Defining an implementing service
 
-> To be part of a federated graph, an implementing service must conform to the [Apollo Federation specification](/federation/federation-spec/), which exposes the service's capabilities to the gateway, as well as to tools like Apollo Graph Manager.
+> To be part of a federated graph, an implementing service must conform to the [Apollo Federation specification](/federation/federation-spec/), which exposes the service's capabilities to the gateway, as well as to tools like Apollo Studio.
 
 Converting an existing schema into an implementing service is the first step in building a federated graph. To start, here's a *non-federated* Apollo Server setup:
 
@@ -221,7 +221,7 @@ Also make sure to read about the [gateway's support for custom directives](./gat
 
 ## Securing implementing services
 
-Because of the power and flexibility of Apollo Federation's `_entities` field, your implementing services should **not** be directly accessible by clients. Instead, only your [gateway](./gateway/) should have access to your implementing serivces. Clients then communicate with the gateway:
+Because of the power and flexibility of Apollo Federation's `_entities` field, your implementing services should **not** be directly accessible by clients. Instead, only your [gateway](./gateway/) should have access to your implementing services. Clients then communicate with the gateway:
 
 <FederationArchitecture />
 
