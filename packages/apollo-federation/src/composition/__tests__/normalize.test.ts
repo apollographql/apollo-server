@@ -3,9 +3,10 @@ import {
   defaultRootOperationTypes,
   replaceExtendedDefinitionsWithExtensions,
   normalizeTypeDefs,
-  stripFederationPrimitives,
+  stripCommonPrimitives,
 } from '../normalize';
 import { astSerializer } from '../../snapshotSerializers';
+import { specifiedDirectives } from 'graphql';
 
 expect.addSnapshotSerializer(astSerializer);
 
@@ -143,9 +144,31 @@ describe('SDL normalization and its respective parts', () => {
     });
   });
 
-  describe('stripFederationPrimitives', () => {
-    it(`removes all federation directive definitions`, () => {
+  describe('stripCommonPrimitives', () => {
+    it(`removes all common directive definitions`, () => {
+      // Detecting >15.1.0 by the new addition of the `specifiedBy` directive
+      const isAtLeastGraphqlVersionFifteenPointOne =
+        specifiedDirectives.length >= 4;
+
       const typeDefs = gql`
+        # Default directives
+
+        # This directive needs to be conditionally added depending on the testing
+        # environment's version of graphql (>= 15.1.0 includes this new directive)
+        ${isAtLeastGraphqlVersionFifteenPointOne
+          ? 'directive @specifiedBy(url: String!) on SCALAR'
+          : ''}
+        directive @deprecated(
+          reason: String = "No longer supported"
+        ) on FIELD_DEFINITION | ENUM_VALUE
+        directive @include(
+          if: String = "Included when true."
+        ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+        directive @skip(
+          if: String = "Skipped when true."
+        ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+        # Federation directives
         directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
         directive @external on FIELD_DEFINITION
         directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
@@ -157,7 +180,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         type Query {
           thing: String
         }
@@ -173,7 +196,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         directive @custom on OBJECT
 
         type Query {
@@ -198,7 +221,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         type Query {
           thing: String
         }
@@ -220,7 +243,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         scalar CustomScalar
 
         type CustomType {
@@ -244,7 +267,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         type Query {
           thing: String
         }
@@ -263,7 +286,7 @@ describe('SDL normalization and its respective parts', () => {
         }
       `;
 
-      expect(stripFederationPrimitives(typeDefs)).toMatchInlineSnapshot(`
+      expect(stripCommonPrimitives(typeDefs)).toMatchInlineSnapshot(`
         type Custom {
           field: String
         }
@@ -273,7 +296,28 @@ describe('SDL normalization and its respective parts', () => {
 
   describe('normalizeTypeDefs', () => {
     it('integration', () => {
+      // Detecting >15.1.0 by the new addition of the `specifiedBy` directive
+      const isAtLeastGraphqlVersionFifteenPointOne =
+        specifiedDirectives.length >= 4;
+
       const typeDefsToNormalize = gql`
+        # Default directives
+
+        # This directive needs to be conditionally added depending on the testing
+        # environment's version of graphql (>= 15.1.0 includes this new directive)
+        ${isAtLeastGraphqlVersionFifteenPointOne
+          ? 'directive @specifiedBy(url: String!) on SCALAR'
+          : ''}
+        directive @deprecated(
+          reason: String = "No longer supported"
+        ) on FIELD_DEFINITION | ENUM_VALUE
+        directive @include(
+          if: String = "Included when true."
+        ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+        directive @skip(
+          if: String = "Skipped when true."
+        ) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
         directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
         directive @external on FIELD_DEFINITION
         directive @requires(fields: _FieldSet!) on FIELD_DEFINITION

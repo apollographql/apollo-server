@@ -1,11 +1,12 @@
 {
   "name": "apollo-server-errors",
   "version": "2.4.1",
-  "author": "opensource@apollographql.com",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-errors"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-errors"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "bugs": {

@@ -54,7 +54,7 @@ In the above example, we provide the `serviceList` configuration option to the
 of our implementing services. You can specify any string value for `name`, which
 is used primarily for query planner output, error messages, and logging.
 
-> In production, we recommend running the gateway in a **managed mode**, which relies on static files rather than introspection. For details, see the [Apollo Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/).
+> In production, we recommend running the gateway in a **managed mode**, which relies on static files rather than introspection. For details, see the [Apollo Studio documentation](https://www.apollographql.com/docs/graph-manager/managed-federation/setup/).
 
 On startup, the gateway fetches each implementing service's schema from its `url` and composes those schemas into a single federated data graph. It then begins accepting incoming requests and creates query plans for them that execute across one or more services.
 
