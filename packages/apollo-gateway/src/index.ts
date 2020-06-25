@@ -53,7 +53,7 @@ interface GatewayConfigBase {
   // should cutover to use the new option when it's built.
   __exposeQueryPlanExperimental?: boolean;
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
-
+  experimental_localDevServiceOverrides?: ServiceEndpointDefinition[];
   // experimental observability callbacks
   experimental_didResolveQueryPlan?: Experimental_DidResolveQueryPlanCallback;
   experimental_didFailComposition?: Experimental_DidFailCompositionCallback;
@@ -258,7 +258,7 @@ export class ApolloGateway implements GraphQLService {
     this.updateServiceDefinitions = this.loadServiceDefinitions;
 
     if (config) {
-      this.updateServiceDefinitions =
+      this.updateServiceDefinitions = (config.experimental_localDevServiceOverrides) ? this.loadServiceDefinitionsWithLocalOverrides :
         config.experimental_updateServiceDefinitions ||
         this.updateServiceDefinitions;
       // set up experimental observability callbacks
@@ -561,6 +561,43 @@ export class ApolloGateway implements GraphQLService {
     for (const serviceDef of services) {
       this.createAndCacheDataSource(serviceDef);
     }
+  }
+
+  protected async loadServiceDefinitionsWithLocalOverrides(
+    config: GatewayConfig
+  ): ReturnType<Experimental_UpdateServiceDefinitions> {
+    let managedConfig = await this.loadServiceDefinitions(config);
+
+    if(!config.experimental_localDevServiceOverrides) return managedConfig;
+
+    const serviceList = config.experimental_localDevServiceOverrides.map(serviceDefinition => ({
+      ...serviceDefinition,
+      dataSource: this.createAndCacheDataSource(serviceDefinition),
+    }));
+
+    let serviceOverrides = await getServiceDefinitionsFromRemoteEndpoint({
+      serviceList,
+      ...((config as RemoteGatewayConfig)?.introspectionHeaders
+        ? { headers: (config as RemoteGatewayConfig).introspectionHeaders }
+        : {}),
+      serviceSdlCache: this.serviceSdlCache,
+    });
+
+    if(!serviceOverrides.serviceDefinitions || !managedConfig.serviceDefinitions) return managedConfig;
+
+    for(let i = 0; i<serviceOverrides.serviceDefinitions.length;i++){
+      let serviceToOverride = serviceOverrides.serviceDefinitions[i];
+      let serviceIndexToOverride = managedConfig.serviceDefinitions.findIndex(sd => sd.name == serviceToOverride.name);
+
+      if(serviceIndexToOverride >= 0){
+        managedConfig.serviceDefinitions[serviceIndexToOverride].url = serviceToOverride.url;
+        managedConfig.serviceDefinitions[serviceIndexToOverride].typeDefs = serviceToOverride.typeDefs;
+      }else {
+        managedConfig.serviceDefinitions.push(serviceToOverride);
+      }
+    }
+
+    return managedConfig;
   }
 
   protected async loadServiceDefinitions(

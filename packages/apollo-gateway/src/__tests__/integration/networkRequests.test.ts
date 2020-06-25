@@ -115,6 +115,22 @@ it('Queries remote endpoints for their SDLs', async () => {
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 });
 
+it('Extracts service definitions from remote storage and overrides single service', async () => {
+  mockStorageSecretSuccess();
+  mockCompositionConfigLinkSuccess();
+  mockCompositionConfigsSuccess([service]);
+  mockImplementingServicesSuccess(service);
+  mockRawPartialSchemaSuccess(service);
+  mockSDLQuerySuccess(updatedService);
+
+  const gateway = new ApolloGateway({ logger,experimental_localDevServiceOverrides: [{name: 'accounts', url: updatedService.url}]});
+
+  await gateway.load({ engine: { apiKeyHash, graphId } });
+
+  expect(gateway.schema!.getType('User')!.description).toBe('This is my updated User');
+
+});
+
 it('Extracts service definitions from remote storage', async () => {
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
