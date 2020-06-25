@@ -2,7 +2,7 @@
 
 This package provides utilities for combining multiple GraphQL microservices into a single GraphQL endpoint.
 
-Each microservice should implement the [federation schema specification](https://www.apollographql.com/docs/apollo-server/federation/federation-spec/). This can be done either through [Apollo Federation](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-federation) or a variety of other open source products.
+Each microservice should implement the [federation schema specification](https://www.apollographql.com/docs/apollo-server/federation/federation-spec/). This can be done either through [Apollo Federation](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-federation) or a variety of other open source products.
 
 For complete documentation, see the [Apollo Gateway API reference](https://www.apollographql.com/docs/apollo-server/api/apollo-gateway/).
 

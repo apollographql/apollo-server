@@ -4,9 +4,9 @@
           or discuss it on our Spectrum.chat community (https://spectrum.chat/apollo).
 * 💡 Feature requests?
           Please search for an existing feature request before opening a new one.
-          If there is an existing feature request, use the 👍 to show your support 
-          for it.  If the specifics of your use case are not covered in the existing 
-          conversation, please take the time to *add new conversation* which helps 
+          If there is an existing feature request, use the 👍 to show your support
+          for it.  If the specifics of your use case are not covered in the existing
+          conversation, please take the time to *add new conversation* which helps
           move the feature's design forward.
 * ❗️ Bug?
           This is the right place! 😄
@@ -14,7 +14,7 @@
 Before reporting a bug, please check for existing or closed issues
 first and read the instructions for filing a bug report:
 
-https://github.com/apollographql/apollo-server/blob/master/CONTRIBUTING.md#reporting-bugs
+https://github.com/apollographql/apollo-server/blob/main/CONTRIBUTING.md#reporting-bugs
 
 ### This bug report should include:
 

@@ -51,7 +51,7 @@ $ heroku git:remote -a <HEROKU_APP_NAME>
 
 $ git add .
 $ git commit -am "make it better"
-$ git push heroku master # or your branch name
+$ git push heroku # Specify your branch name, if necessary.
 ```
 
 Send a query to your GraphQL service at your Heroku Application at `<HEROKU_APP_NAME>.herokuapp.com`

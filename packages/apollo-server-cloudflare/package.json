@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cloudflare-workers"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-cloudflare-workers"
   },
   "keywords": [
     "GraphQL",
