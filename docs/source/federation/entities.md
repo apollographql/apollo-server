@@ -191,7 +191,7 @@ query GetTopProductAvailability {
 
 ## The `Query` and `Mutation` types
 
-In Apollo Federation, the `Query` and `Mutation` base types originate in the gateway itself and _all_ of your implementing services are automatically treated as [extending](#extending) these types to add the operations they support without explicitly adding the `extends` keyword.
+In Apollo Federation, the `Query` and `Mutation` base types originate in the graph composition itself and _all_ of your implementing services are automatically treated as [extending](#extending) these types to add the operations they support without explicitly adding the `extends` keyword.
 
 For example, the `products` service might extend the root `Query` type to add a `topProducts` query, like so:
 
