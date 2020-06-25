@@ -266,51 +266,93 @@ it('collapses nested requires with user-defined fragments', async () => {
   expect(queryPlan).toCallService('b');
 });
 
-it('does not expand nulls into objects passed to resolvers', async () => {
+it('passes null values correctly', async () => {
+  const serviceA = {
+    name: 'a',
+    typeDefs: gql`
+      type Query {
+        user: User
+      }
+
+      type User @key(fields: "id") {
+        id: ID!
+        favorite: Color
+        dislikes: [Color]
+      }
+
+      type Color {
+        name: String!
+      }
+    `,
+    resolvers: {
+      Query: {
+        user() {
+          return {
+            id: '1',
+            favorite: null,
+            dislikes: [null],
+          };
+        },
+      },
+    },
+  };
+
+  const serviceB = {
+    name: 'b',
+    typeDefs: gql`
+      extend type User @key(fields: "id") {
+        id: ID! @external
+        favorite: Color @external
+        dislikes: [Color] @external
+        favoriteColor: String @requires(fields: "favorite { name }")
+        dislikedColors: String @requires(fields: "dislikes { name }")
+      }
+
+      extend type Color {
+        name: String! @external
+      }
+    `,
+    resolvers: {
+      User: {
+        favoriteColor(user: any) {
+          if (user.favorite !== null) {
+            throw Error(
+              'Favorite color should be null. Instead, got: ' +
+                JSON.stringify(user.favorite),
+            );
+          }
+          return 'unknown';
+        },
+        dislikedColors(user: any) {
+          const color = user.dislikes[0];
+          if (color !== null) {
+            throw Error(
+              'Disliked colors should be null. Instead, got: ' +
+                JSON.stringify(user.dislikes),
+            );
+          }
+          return 'unknown';
+        },
+      },
+    },
+  };
+
   const query = `#graphql
     query UserFavorites {
       user {
         favoriteColor
+        dislikedColors
       }
     }
   `;
 
-  const { data, errors } = await execute({ query }, [
-    {
-      ...serviceA,
-      resolvers: {
-        Query: {
-          user() {
-            return {
-              id: '1',
-              preferences: null,
-            };
-          },
-        },
-      },
-    },
-    {
-      ...serviceB,
-      resolvers: {
-        User: {
-          favoriteColor(user: any) {
-            if (user.preferences !== null) {
-              throw Error(
-                'Preferences should be null. Instead, got: ' +
-                  JSON.stringify(user.preferences),
-              );
-            }
-            return 'unknown';
-          },
-        },
-      },
-    },
-  ]);
+  const { data, errors } = await execute({ query }, [serviceA, serviceB]);
 
   expect(errors).toEqual(undefined);
   expect(data).toEqual({
     user: {
       favoriteColor: 'unknown',
+      dislikedColors: 'unknown',
     },
   });
 });
