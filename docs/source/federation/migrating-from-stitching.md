@@ -11,17 +11,9 @@ schema stitching, see [this blog post](https://blog.apollographql.com/apollo-fed
 
 ## Summary of steps
 
-This documentation describes a set of steps for migrating architecture **incrementally** from
-stitching to federation. In order to do so, we rely on the fact that changes necessary for
-federation are completely _backwards compatible_. In other words, services that implement a
-part of the graph (**implementing services**) can be used in both your stitching gateway
-and your Apollo gateway.
+This guide describes a set of steps for migrating architecture **incrementally** from stitching to federation. In order to do so, we rely on the fact that changes necessary for federation are completely backwards compatible. In other words, services that implement a part of the graph (**implementing services**) can be used in both your stitching gateway and your Apollo gateway.
 
-A brief explanation of the migration strategy is that we recommend that you begin by modifying
-existing services in place to support the federation specification. You should do this while
-the services are still running to support a stitching gateway. At this point, you can stand up
-an Apollo gateway side-by-side with your existing stitching gateway and migrate over the links
-between the services in an incremental, backwards compatible way.
+We recommend that you begin by modifying existing services _in place_ to support the federation specification while continuing to support schema stitching as well. At this point, you can stand up an Apollo gateway side-by-side with your existing stitching gateway and migrate over the links between the services in an incremental, backwards-compatible way.
 
 Here are the high-level steps for migrating to Apollo Federation:
 
@@ -84,7 +76,7 @@ If you're using one of these packages, ensure that after configuring it, your ex
 
 ## Step 2: Register your schemas with a GraphQL registry
 
-We strongly recommend that you register all of your GraphQL schemas with an [external registry](https://principledgraphql.com/integrity#3-track-the-schema-in-a-registry). This registry is going to be used to support running the gateway with the supporting service's partial schemas as configuration. Additionally, it enables tracking changes at the service level and protecting the graph from changes that break composition.
+We strongly recommend that you register all of your GraphQL schemas with an [external registry](https://principledgraphql.com/integrity#3-track-the-schema-in-a-registry). This registry supports running the gateway with the implementing services' partial schemas. Additionally, it enables tracking changes at the service level and protecting the graph from changes that break composition.
 
 [Apollo Graph Manager](https://www.apollographql.com/docs/graph-manager/) provides a free schema registry that helps you manage your federated gateway's configuration. You provide your gateway a Graph Manager API key on startup, which directs the gateway to download your schemas automatically in a fault-tolerant way.
 
