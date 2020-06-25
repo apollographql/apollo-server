@@ -265,3 +265,52 @@ it('collapses nested requires with user-defined fragments', async () => {
   expect(queryPlan).toCallService('a');
   expect(queryPlan).toCallService('b');
 });
+
+it('does not expand nulls into objects passed to resolvers', async () => {
+  const query = `#graphql
+    query UserFavorites {
+      user {
+        favoriteColor
+      }
+    }
+  `;
+
+  const { data, errors } = await execute({ query }, [
+    {
+      ...serviceA,
+      resolvers: {
+        Query: {
+          user() {
+            return {
+              id: '1',
+              preferences: null,
+            };
+          },
+        },
+      },
+    },
+    {
+      ...serviceB,
+      resolvers: {
+        User: {
+          favoriteColor(user: any) {
+            if (user.preferences !== null) {
+              throw Error(
+                'Preferences should be null. Instead, got: ' +
+                  JSON.stringify(user.preferences),
+              );
+            }
+            return 'unknown';
+          },
+        },
+      },
+    },
+  ]);
+
+  expect(errors).toEqual(undefined);
+  expect(data).toEqual({
+    user: {
+      favoriteColor: 'unknown',
+    },
+  });
+});

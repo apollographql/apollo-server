@@ -411,9 +411,9 @@ function executeSelectionSet(
         }
         if (Array.isArray(source[responseName])) {
           result[responseName] = source[responseName].map((value: any) =>
-            selectionSet ? executeSelectionSet(value, selectionSet) : value,
+            value && selectionSet ? executeSelectionSet(value, selectionSet) : value,
           );
-        } else if (selectionSet) {
+        } else if (source[responseName] && selectionSet) {
           result[responseName] = executeSelectionSet(
             source[responseName],
             selectionSet,
