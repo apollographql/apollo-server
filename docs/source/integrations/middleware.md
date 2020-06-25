@@ -11,9 +11,15 @@ the core `apollo-server` package:
 | Middleware  | Package  |
 |---|---|
 | Express  | `apollo-server-express`  |
-| Fastify  | `apollo-server-fastify`  |
-| hapi  | `apollo-server-hapi`  |
+| AWS Lambda | `apollo-server-lambda` |
 | Koa | `apollo-server-koa` |
+| hapi  | `apollo-server-hapi`  |
+| Micro | `apollo-server-micro` |
+| Fastify  | `apollo-server-fastify`  |
+| Google Cloud Functions | `apollo-server-cloud-functions` |
+| Azure Functions | `apollo-server-azure-functions` |
+| Cloudflare | `apollo-server-cloudflare` |
+
 
 If you've already installed the core `apollo-server` package, you can `npm uninstall`
 it after installing an integration package.

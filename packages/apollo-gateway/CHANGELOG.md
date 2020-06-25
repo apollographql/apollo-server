@@ -4,7 +4,31 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- __FIX__: Collapse nested required fields into a single body in the query plan. Before, some nested fields' selection sets were getting split, causing some of their subfields to be dropped when executing the query. This fix collapses the split selection sets into one. [#4064](https://github.com/apollographql/apollo-server/pull/4064)
+- The default branch of the repository has been changed to `main`.  As this changed a number of references in the repository's `package.json` and `README.md` files (e.g., for badges, links, etc.), this necessitates a release to publish those changes to npm. [PR #4302](https://github.com/apollographql/apollo-server/pull/4302)
+
+## 0.16.9
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
+## 0.16.7
+
+- Bumped the version of `apollo-server-core`, but no other changes!
+
+## 0.16.6
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
+## 0.16.5
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
+## 0.16.4
+
+- __NEW__: Provide the `requestContext` as an argument to the experimental callback function `experimental_didResolveQueryPlan`. [#4173](https://github.com/apollographql/apollo-server/pull/4173)
+
+## 0.16.3
+
+- This updates a dependency of `apollo-server-core` that is only used for its TypeScript typings, not for any runtime dependencies.  The reason for the upgrade is that the `apollo-server-core` package (again, used only for types!) was affected by a GitHub Security Advisory.  [See the related `CHANGELOG.md` for Apollo Server for more details, including a link to the advisory](https://github.com/apollographql/apollo-server/blob/354d9910e1c87af93c7d50263a28554b449e48db/CHANGELOG.md#v2142).
 
 ## 0.16.2
 
@@ -68,7 +92,7 @@
 
 ## v0.12.1
 
-- Update to include [fixes from `@apollo/federation`](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md).
+- Update to include [fixes from `@apollo/federation`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-federation/CHANGELOG.md).
 
 ## v0.12.0
 

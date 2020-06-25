@@ -19,7 +19,7 @@ module.exports = {
           null: [
             'index',
             'getting-started',
-            '[Changelog](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)',
+            '[Changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)',
           ],
           'Defining a Schema': [
             'schema/schema',
@@ -57,7 +57,6 @@ module.exports = {
           Deployment: [
             'deployment/heroku',
             'deployment/lambda',
-            'deployment/now',
             'deployment/netlify',
             'deployment/azure-functions',
           ],
@@ -71,7 +70,6 @@ module.exports = {
           Appendices: [
             'proxy-configuration',
             'migration-two-dot',
-            'migration-engine',
             'migration-file-uploads',
           ],
         },

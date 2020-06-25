@@ -13,6 +13,7 @@ import {
   GraphQLError,
   ValidationContext,
   FieldDefinitionNode,
+  getIntrospectionQuery,
 } from 'graphql';
 
 import { PubSub } from 'graphql-subscriptions';
@@ -2039,6 +2040,118 @@ export function testApolloServer<AS extends ApolloServerBase>(
             });
           })
           .catch(done.fail);
+      });
+      it('allows introspection when introspection is enabled on ApolloServer', done => {
+        const typeDefs = gql`
+          type Query {
+            hi: String
+          }
+
+          type Subscription {
+            num: Int
+          }
+        `;
+
+        const query = getIntrospectionQuery();
+
+        const resolvers = {
+          Query: {
+            hi: () => 'here to placate graphql-js',
+          },
+          Subscription: {
+            num: {
+              subscribe: () => {
+                createEvent(1);
+                createEvent(2);
+                createEvent(3);
+                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
+              },
+            },
+          },
+        };
+
+        createApolloServer({
+          typeDefs,
+          resolvers,
+          introspection: true,
+        }).then(({ port, server, httpServer }) => {
+          server.installSubscriptionHandlers(httpServer);
+
+          const client = new SubscriptionClient(
+            `ws://localhost:${port}${server.subscriptionsPath}`,
+            {},
+            WebSocket,
+          );
+
+          const observable = client.request({ query });
+
+          subscription = observable.subscribe({
+            next: ({ data }) => {
+              try {
+                expect(data).toMatchObject({ __schema: expect.any(Object) })
+              } catch (e) {
+                done.fail(e);
+              }
+              done();
+            }
+          });
+        });
+      });
+      it('disallows introspection when it\'s disabled on ApolloServer', done => {
+        const typeDefs = gql`
+          type Query {
+            hi: String
+          }
+
+          type Subscription {
+            num: Int
+          }
+        `;
+
+        const query = getIntrospectionQuery();
+
+        const resolvers = {
+          Query: {
+            hi: () => 'here to placate graphql-js',
+          },
+          Subscription: {
+            num: {
+              subscribe: () => {
+                createEvent(1);
+                createEvent(2);
+                createEvent(3);
+                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
+              },
+            },
+          },
+        };
+
+        createApolloServer({
+          typeDefs,
+          resolvers,
+          introspection: false,
+        }).then(({ port, server, httpServer }) => {
+          server.installSubscriptionHandlers(httpServer);
+
+          const client = new SubscriptionClient(
+            `ws://localhost:${port}${server.subscriptionsPath}`,
+            {},
+            WebSocket,
+          );
+
+          const observable = client.request({ query });
+
+          subscription = observable.subscribe({
+            next: ({ data }) => {
+              try {
+                expect(data).toBeUndefined();
+              } catch (e) {
+                done.fail(e);
+              }
+              done();
+            }
+          });
+        });
       });
     });
 

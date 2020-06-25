@@ -16,7 +16,7 @@ The model of federated metrics is that implementing services report timing and e
 
 ## Turning it on
 
-Ensure that all dependencies on `apollo-server` are at version `2.7.0` or higher. Provide an API key to your gateway via the `ENGINE_API_KEY` environment variable for the gateway to report metrics to the default ingress. To ensure that implementing services do not report metrics as well, do not provide them with an `ENGINE_API_KEY` or set `{ engine: false }` in the constructor options to `ApolloServer`.
+Ensure that all dependencies on `apollo-server` are at version `2.7.0` or higher. Provide an API key to your gateway via the `APOLLO_KEY` environment variable for the gateway to report metrics to the default ingress. To ensure that implementing services do not report metrics as well, do not provide them with an `APOLLO_KEY` or set `{ engine: false }` in the constructor options to `ApolloServer`.
 
 These options will cause the Apollo gateway to collect tracing information from the underlying federated services and pass them on, along with the query plan, to the Apollo metrics ingress. Currently, only Apollo Server supports detailed metrics insights as an implementing service, but we would love to work with you to implement the protocol in other languages!
 
@@ -26,7 +26,7 @@ These options will cause the Apollo gateway to collect tracing information from 
 
 > NOTE: this section details how the gateway communicates with federated services around encoded tracing information and is not necessary to understand in order to enable federated tracing.
 
-The Apollo gateway looks to the `extensions` field of all service responses for the presence of an `ftv1` field. This field contains a representation of the tracing information for the sub-query that was executed against the service, sent as the Base64 encoding of the [protobuf representation](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-engine-reporting-protobuf/src/reports.proto) of the trace. In order to request this information of federated services, the gateway will send the header pair `'apollo-federation-include-trace': 'ftv1'` on fetches if configured to collect metrics, as per above. By default a federated Apollo Server service will recognize this header pair and attach tracing information in extensions of the response.
+The Apollo gateway looks to the `extensions` field of all service responses for the presence of an `ftv1` field. This field contains a representation of the tracing information for the sub-query that was executed against the service, sent as the Base64 encoding of the [protobuf representation](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-engine-reporting-protobuf/src/reports.proto) of the trace. In order to request this information of federated services, the gateway will send the header pair `'apollo-federation-include-trace': 'ftv1'` on fetches if configured to collect metrics, as per above. By default a federated Apollo Server service will recognize this header pair and attach tracing information in extensions of the response.
 
 ## How traces are constructed and aggregated
 

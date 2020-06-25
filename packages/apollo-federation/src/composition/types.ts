@@ -5,6 +5,8 @@ import {
   DirectiveDefinitionNode,
 } from 'graphql';
 
+export type Maybe<T> = null | undefined | T;
+
 export type ServiceName = string | null;
 
 export type DefaultRootOperationTypeName =

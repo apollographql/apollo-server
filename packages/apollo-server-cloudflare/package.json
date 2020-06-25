@@ -1,12 +1,13 @@
 {
   "name": "apollo-server-cloudflare",
-  "version": "2.14.1",
+  "version": "2.15.0",
   "description": "Production-ready Node.js GraphQL server for Cloudflare workers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cloudflare-workers"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-cloudflare-workers"
   },
   "keywords": [
     "GraphQL",

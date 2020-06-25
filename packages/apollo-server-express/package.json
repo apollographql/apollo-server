@@ -1,12 +1,13 @@
 {
   "name": "apollo-server-express",
-  "version": "2.14.1",
+  "version": "2.15.0",
   "description": "Production-ready Node.js GraphQL server for Express and Connect",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-express"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-express"
   },
   "keywords": [
     "GraphQL",
@@ -16,7 +17,7 @@
     "Connect",
     "Javascript"
   ],
-  "author": "opensource@apollographql.com",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
@@ -26,7 +27,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/graphql-playground-html": "1.6.24",
+    "@apollographql/graphql-playground-html": "1.6.26",
     "@types/accepts": "^1.3.5",
     "@types/body-parser": "1.19.0",
     "@types/cors": "^2.8.4",
