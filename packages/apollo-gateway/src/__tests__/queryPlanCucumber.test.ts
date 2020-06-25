@@ -110,6 +110,7 @@ const serializeQueryPlanNode = (k: string , v: any) => {
     case "loc":
     case "arguments":
     case "directives":
+    case "source":
       return undefined;
     case "kind":
       if(v === "SelectionSet") return undefined;
@@ -126,7 +127,11 @@ const serializeQueryPlanNode = (k: string , v: any) => {
     default:
       // replace source with operation
       if(v && v.kind && v.kind === "Fetch"){
-        return { ...v, operation: v.source, source: undefined };
+        return { ...v, operation: v.source };
+      }
+      // replace selectionSet with selections[]
+      if(v && v.kind == "InlineFragment"){
+        return { ...v, selections: v.selectionSet.selections }
       }
       return v;
   }
