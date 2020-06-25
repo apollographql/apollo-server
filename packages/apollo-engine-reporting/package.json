@@ -6,7 +6,7 @@
   "types": "./dist/index.d.ts",
   "license": "MIT",
   "repository": "https://github.com/apollographql/apollo-engine-reporting",
-  "author": "Apollo <community@apollographql.com>",
+  "author": "Apollo <opensource@apollographql.com>",
   "engines": {
     "node": ">=6.0"
   },

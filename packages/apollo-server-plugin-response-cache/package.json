@@ -6,10 +6,11 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-plugin-response-cache"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-plugin-response-cache"
   },
   "keywords": [],
-  "author": "Apollo <npm@apollographql.com>",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
