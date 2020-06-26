@@ -3,30 +3,34 @@ import {
   DocumentNode,
   visit,
   ObjectTypeDefinitionNode,
+  ObjectTypeExtensionNode,
   Kind,
-  OperationTypeNode,
   InterfaceTypeDefinitionNode,
+  VisitFn,
+  specifiedDirectives,
 } from 'graphql';
-import { findDirectivesOnTypeOrField, defKindToExtKind } from './utils';
+import {
+  findDirectivesOnTypeOrField,
+  defKindToExtKind,
+  reservedRootFields,
+  defaultRootOperationNameLookup
+} from './utils';
+import federationDirectives from '../directives';
 
 export function normalizeTypeDefs(typeDefs: DocumentNode) {
-  return defaultRootOperationTypes(
-    replaceExtendedDefinitionsWithExtensions(typeDefs),
+  // The order of this is important - `stripCommonPrimitives` must come after
+  // `defaultRootOperationTypes` because it depends on the `Query` type being named
+  // its default: `Query`.
+  return stripCommonPrimitives(
+    defaultRootOperationTypes(
+      replaceExtendedDefinitionsWithExtensions(typeDefs),
+    ),
   );
 }
 
 export function defaultRootOperationTypes(
   typeDefs: DocumentNode,
 ): DocumentNode {
-  // Map of OperationTypeNode to its respective default root operation type name
-  const defaultRootOperationNameLookup: {
-    [node in OperationTypeNode]: DefaultRootOperationTypeName;
-  } = {
-    query: 'Query',
-    mutation: 'Mutation',
-    subscription: 'Subscription',
-  };
-
   // Array of default root operation names
   const defaultRootOperationNames = Object.values(
     defaultRootOperationNameLookup,
@@ -250,4 +254,68 @@ export function replaceExtendedDefinitionsWithExtensions(
   }
 
   return typeDefsWithExtendedTypesReplaced;
+}
+
+// For non-ApolloServer libraries that support federation, this allows a
+// library to report the entire schema's SDL rather than an awkward, stripped out
+// subset of the schema. Generally there's no need to include the federation
+// primitives, but in many cases it's more difficult to exclude them.
+//
+// This removes the following from a GraphQL Document:
+// directives: @external, @key, @requires, @provides, @extends, @skip, @include, @deprecated, @specifiedBy
+// scalars: _Any, _FieldSet
+// union: _Entity
+// object type: _Service
+// Query fields: _service, _entities
+export function stripCommonPrimitives(document: DocumentNode) {
+  const typeDefinitionVisitor: VisitFn<
+    any,
+    ObjectTypeDefinitionNode | ObjectTypeExtensionNode
+  > = (node) => {
+    // Remove the `_entities` and `_service` fields from the `Query` type
+    if (node.name.value === defaultRootOperationNameLookup.query) {
+      const filteredFieldDefinitions = node.fields?.filter(
+        (fieldDefinition) =>
+          !reservedRootFields.includes(fieldDefinition.name.value),
+      );
+
+      // If the 'Query' type is now empty just remove it
+      if (!filteredFieldDefinitions || filteredFieldDefinitions.length === 0) {
+        return null;
+      }
+
+      return {
+        ...node,
+        fields: filteredFieldDefinitions,
+      };
+    }
+
+    // Remove the _Service type from the document
+    const isFederationType = node.name.value === '_Service';
+    return isFederationType ? null : node;
+  };
+
+  return visit(document, {
+    // Remove all common directive definitions from the document
+    DirectiveDefinition(node) {
+      const isCommonDirective = [...federationDirectives, ...specifiedDirectives].some(
+        (directive) => directive.name === node.name.value,
+      );
+      return isCommonDirective ? null : node;
+    },
+    // Remove all federation scalar definitions from the document
+    ScalarTypeDefinition(node) {
+      const isFederationScalar = ['_Any', '_FieldSet'].includes(
+        node.name.value,
+      );
+      return isFederationScalar ? null : node;
+    },
+    // Remove all federation union definitions from the document
+    UnionTypeDefinition(node) {
+      const isFederationUnion = node.name.value === "_Entity";
+      return isFederationUnion ? null : node;
+    },
+    ObjectTypeDefinition: typeDefinitionVisitor,
+    ObjectTypeExtension: typeDefinitionVisitor,
+  });
 }

@@ -29,6 +29,29 @@ describe('executableDirectivesIdentical', () => {
     expect(errors).toHaveLength(0);
   });
 
+  it('throws no errors when directives (excluding their TypeSystemDirectiveLocations) are identical for every service', () => {
+    const serviceA = {
+      typeDefs: gql`
+        directive @stream on FIELD
+        directive @instrument(tag: String!) on FIELD | FIELD_DEFINITION
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        directive @stream on FIELD
+        directive @instrument(tag: String!) on FIELD
+      `,
+      name: 'serviceB',
+    };
+
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const errors = executableDirectivesIdentical({ schema, serviceList });
+    expect(errors).toHaveLength(0);
+  });
+
   it("throws errors when custom, executable directives aren't defined with the same locations in every service", () => {
     const serviceA = {
       typeDefs: gql`

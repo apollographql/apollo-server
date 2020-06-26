@@ -28,6 +28,9 @@ import {
   typeNodesAreEquivalent,
   mapValues,
   isFederationDirective,
+  executableDirectiveLocations,
+  stripTypeSystemDirectivesFromTypeDefs,
+  defaultRootOperationNameLookup,
 } from './utils';
 import {
   ServiceDefinition,
@@ -39,13 +42,13 @@ import { compositionRules } from './rules';
 
 const EmptyQueryDefinition = {
   kind: Kind.OBJECT_TYPE_DEFINITION,
-  name: { kind: Kind.NAME, value: 'Query' },
+  name: { kind: Kind.NAME, value: defaultRootOperationNameLookup.query },
   fields: [],
   serviceName: null,
 };
 const EmptyMutationDefinition = {
   kind: Kind.OBJECT_TYPE_DEFINITION,
-  name: { kind: Kind.NAME, value: 'Mutation' },
+  name: { kind: Kind.NAME, value: defaultRootOperationNameLookup.mutation },
   fields: [],
   serviceName: null,
 };
@@ -134,7 +137,14 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
 
     externalFields.push(...strippedFields);
 
-    for (let definition of typeDefsWithoutExternalFields.definitions) {
+    // Type system directives from downstream services are not a concern of the
+    // gateway, but rather the services on which the fields live which serve
+    // those types.  In other words, its up to an implementing service to
+    // act on such directives, not the gateway.
+    const typeDefsWithoutTypeSystemDirectives =
+      stripTypeSystemDirectivesFromTypeDefs(typeDefsWithoutExternalFields);
+
+    for (const definition of typeDefsWithoutTypeSystemDirectives.definitions) {
       if (
         definition.kind === Kind.OBJECT_TYPE_DEFINITION ||
         definition.kind === Kind.OBJECT_TYPE_EXTENSION
@@ -265,14 +275,31 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
         }
       } else if (definition.kind === Kind.DIRECTIVE_DEFINITION) {
         const directiveName = definition.name.value;
-        // TypeSystemDirectives that are not part of the federation spec should
-        // be rejected in validation. Because of this, we just ignore doing any
-        // locations checking as part of raw composition
+
+        // The composed schema should only contain directives and their
+        // ExecutableDirectiveLocations. This filters out any TypeSystemDirectiveLocations.
+        // A new DirectiveDefinitionNode with this filtered list will be what is
+        // added to the schema.
+        const executableLocations = definition.locations.filter(location =>
+          executableDirectiveLocations.includes(location.value),
+        );
+
+        // If none of the directive's locations are executable, we don't need to
+        // include it in the composed schema at all.
+        if (executableLocations.length === 0) continue;
+
+        const definitionWithExecutableLocations: DirectiveDefinitionNode = {
+          ...definition,
+          locations: executableLocations,
+        };
+
         if (directiveDefinitionsMap[directiveName]) {
-          directiveDefinitionsMap[directiveName][serviceName] = definition;
+          directiveDefinitionsMap[directiveName][
+            serviceName
+          ] = definitionWithExecutableLocations;
         } else {
           directiveDefinitionsMap[directiveName] = {
-            [serviceName]: definition,
+            [serviceName]: definitionWithExecutableLocations,
           };
         }
       }
@@ -505,16 +532,9 @@ export function composeServices(services: ServiceDefinition[]) {
 
   // TODO: We should fix this to take non-default operation root types in
   // implementing services into account.
-
-  const operationTypeMap = {
-    query: 'Query',
-    mutation: 'Mutation',
-    subscription: 'Subscription',
-  };
-
   schema = new GraphQLSchema({
     ...schema.toConfig(),
-    ...mapValues(operationTypeMap, typeName =>
+    ...mapValues(defaultRootOperationNameLookup, typeName =>
       typeName
         ? (schema.getType(typeName) as GraphQLObjectType<any, any>)
         : undefined,

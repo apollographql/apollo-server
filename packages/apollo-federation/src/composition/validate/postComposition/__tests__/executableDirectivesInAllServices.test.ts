@@ -27,6 +27,29 @@ describe('executableDirectivesInAllServices', () => {
     expect(errors).toHaveLength(0);
   });
 
+  it("throws no errors when type system directives aren't defined in every service", () => {
+    const serviceA = {
+      typeDefs: gql`
+        directive @stream on FIELD
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        directive @stream on FIELD
+        # This directive is ignored by composition and therefore post-composition validators
+        directive @ignored on FIELD_DEFINITION
+      `,
+      name: 'serviceB',
+    };
+
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const errors = executableDirectivesInAllServices({ schema, serviceList });
+    expect(errors).toHaveLength(0);
+  });
+
   it("throws errors when custom, executable directives aren't defined in every service", () => {
     const serviceA = {
       typeDefs: gql`

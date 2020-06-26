@@ -51,7 +51,7 @@ $ heroku git:remote -a <HEROKU_APP_NAME>
 
 $ git add .
 $ git commit -am "make it better"
-$ git push heroku master # or your branch name
+$ git push heroku # Specify your branch name, if necessary.
 ```
 
 Send a query to your GraphQL service at your Heroku Application at `<HEROKU_APP_NAME>.herokuapp.com`
@@ -68,10 +68,10 @@ Then, on the app detail page, there is a tab bar at the top, with a "Deploy" opt
 
 ## Configuring environment variables
 
-To enable the production mode of Apollo Server, you need to set the `NODE_ENV` variable to `production`. To ensure you have visibility into your GraphQL performance in Apollo Server, you'll want to add the `ENGINE_API_KEY` environment variable to Heroku. For the API key, log in to the [Graph Manager UI](https://engine.apollographql.com) and navigate to your service or create a new one.
+To enable the production mode of Apollo Server, you need to set the `NODE_ENV` variable to `production`. To ensure you have visibility into your GraphQL performance in Apollo Server, you'll want to add the `APOLLO_KEY` environment variable to Heroku. For the API key, log in to [Apollo Studio](https://studio.apollographql.com) and navigate to your graph or create a new one.
 
-Under the “Settings” tab, click **Reveal Config Vars**. Next, set `NODE_ENV` to `production` and copy your key from the [Graph Manager UI](http://engine.apollographql.com/) as the value for `ENGINE_API_KEY`.
+Under the Settings tab, click **Reveal Config Vars**. Next, set `NODE_ENV` to `production` and copy your graph API key from [Apollo Studio](http://studio.apollographql.com/) as the value for `APOLLO_KEY`.
 
-![Add Graph Manager API Key Screenshot](../images/deployment/heroku/add-env-vars.png)
+![Add Studio API Key Screenshot](../images/deployment/heroku/add-env-vars.png)
 
-Send a query to your Heroku app's GraphQL service at `<HEROKU_APP_NAME>.herokuapp.com` and then check out the tracing data in the [Graph Manager UI](http://engine.apollographql.com/).
+Send a query to your Heroku app's GraphQL service at `<HEROKU_APP_NAME>.herokuapp.com` and then check out the tracing data in [Apollo Studio](http://studio.apollographql.com/).

@@ -6,7 +6,12 @@ export const typeDefs = gql`
   directive @stream on FIELD
   directive @transform(from: String!) on FIELD
 
-  extend type Query {
+  schema {
+    query: RootQuery
+    mutation: Mutation
+  }
+
+  extend type RootQuery {
     user(id: ID!): User
     me: User
   }
@@ -36,7 +41,7 @@ export const typeDefs = gql`
     metadata: [UserMetadata]
   }
 
-  extend type Mutation {
+  type Mutation {
     login(username: String!, password: String!): User
   }
 
@@ -80,7 +85,7 @@ const libraryUsers: { [name: string]: string[] } = {
 };
 
 export const resolvers: GraphQLResolverMap<any> = {
-  Query: {
+  RootQuery: {
     user(_, args) {
       return { id: args.id };
     },

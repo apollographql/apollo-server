@@ -1,16 +1,11 @@
-import gql, { disableFragmentWarnings } from 'graphql-tag';
+import { disableFragmentWarnings } from 'graphql-tag';
 import { execute } from '../execution-utils';
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
 
 beforeAll(() => {
   disableFragmentWarnings();
 });
 it('supports inline fragments (one level)', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetUser {
       me {
         ... on User {
@@ -20,12 +15,9 @@ it('supports inline fragments (one level)', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+  });
 
   expect(data).toEqual({
     me: {
@@ -37,7 +29,7 @@ it('supports inline fragments (one level)', async () => {
 });
 
 it('supports inline fragments (multi level)', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetUser {
       me {
         ... on User {
@@ -62,12 +54,9 @@ it('supports inline fragments (multi level)', async () => {
     }
   `;
 
-  const { data, queryPlan, errors } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+  });
 
   expect(data).toEqual({
     me: {
@@ -87,7 +76,7 @@ it('supports inline fragments (multi level)', async () => {
 });
 
 it('supports named fragments (one level)', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetUser {
       me {
         ...userDetails
@@ -99,12 +88,9 @@ it('supports named fragments (one level)', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+  });
 
   expect(data).toEqual({
     me: {
@@ -116,7 +102,7 @@ it('supports named fragments (one level)', async () => {
 });
 
 it('supports multiple named fragments (one level, mixed ordering)', async () => {
-  const query = gql`
+  const query = `#graphql
     fragment userInfo on User {
       name
     }
@@ -132,12 +118,9 @@ it('supports multiple named fragments (one level, mixed ordering)', async () => 
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+  });
 
   expect(data).toEqual({
     me: {
@@ -150,7 +133,7 @@ it('supports multiple named fragments (one level, mixed ordering)', async () => 
 });
 
 it('supports multiple named fragments (multi level, mixed ordering)', async () => {
-  const query = gql`
+  const query = `#graphql
     fragment reviewDetails on Review {
       body
     }
@@ -168,12 +151,9 @@ it('supports multiple named fragments (multi level, mixed ordering)', async () =
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+  });
 
   expect(data).toEqual({
     me: {
@@ -190,7 +170,7 @@ it('supports multiple named fragments (multi level, mixed ordering)', async () =
 });
 
 it('supports variables within fragments', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetUser($format: Boolean) {
       me {
         ...userDetails
@@ -206,13 +186,10 @@ it('supports variables within fragments', async () => {
   `;
 
   const format = true;
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables: { format },
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables: { format },
+  });
 
   expect(data).toEqual({
     me: {
@@ -230,7 +207,7 @@ it('supports variables within fragments', async () => {
 });
 
 it('supports root fragments', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetUser {
       ... on Query {
         me {
@@ -240,12 +217,9 @@ it('supports root fragments', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+  });
 
   expect(data).toEqual({
     me: {

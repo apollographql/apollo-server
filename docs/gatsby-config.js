@@ -11,15 +11,15 @@ module.exports = {
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
         githubRepo: 'apollographql/apollo-server',
-        defaultVersion: 2,
+        defaultVersion: '2',
         versions: {
-          1: 'version-1',
+          '1': 'version-1',
         },
         sidebarCategories: {
           null: [
             'index',
             'getting-started',
-            '[Changelog](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)',
+            '[Changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)',
           ],
           'Defining a Schema': [
             'schema/schema',
@@ -29,22 +29,23 @@ module.exports = {
             'schema/creating-directives',
           ],
           'Fetching Data': [
-            'data/data',
+            'data/resolvers',
             'data/data-sources',
             'data/errors',
             'data/file-uploads',
             'data/subscriptions',
           ],
-          Federation: [
+          'Apollo Federation': [
             'federation/introduction',
-            'federation/concerns',
-            'federation/core-concepts',
-            'federation/implementing',
-            'federation/advanced-features',
+            'federation/implementing-services',
+            'federation/gateway',
+            'federation/entities',
+            'federation/value-types',
             'federation/errors',
-            'federation/migrating-from-stitching',
-            'federation/federation-spec',
             'federation/metrics',
+            'federation/migrating-from-stitching',
+            'federation/other-servers',
+            'federation/federation-spec',
           ],
           Testing: ['testing/mocking', 'testing/testing', 'testing/graphql-playground'],
           Performance: ['performance/caching', 'performance/apq'],
@@ -56,7 +57,6 @@ module.exports = {
           Deployment: [
             'deployment/heroku',
             'deployment/lambda',
-            'deployment/now',
             'deployment/netlify',
             'deployment/azure-functions',
           ],
@@ -70,7 +70,6 @@ module.exports = {
           Appendices: [
             'proxy-configuration',
             'migration-two-dot',
-            'migration-engine',
             'migration-file-uploads',
           ],
         },

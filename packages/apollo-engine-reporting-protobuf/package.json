@@ -1,17 +1,22 @@
 {
   "name": "apollo-engine-reporting-protobuf",
-  "version": "0.4.1",
+  "version": "0.5.1",
   "description": "Protobuf format for Apollo Engine",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepare": "npm run pbjs && npm run pbts && cp src/* dist",
-    "pbjs": "bash -c 'mkdir -p dist && pbjs --target static-module --out dist/protobuf.js --wrap commonjs --force-number <(grep -v \"package mdg.engine.proto\" src/reports.proto)'",
-    "pbts": "pbts -o dist/protobuf.d.ts dist/protobuf.js"
+    "clean": "git clean -fdX -- dist",
+    "prepare": "npm run clean && mkdir dist && npm run prepare:proto && npm run pbjs && npm run pbts && cp src/* dist",
+    "pbjs": "apollo-pbjs --target static-module --out dist/protobuf.js --wrap commonjs --force-number dist/reports.proto",
+    "pbts": "apollo-pbts -o dist/protobuf.d.ts dist/protobuf.js",
+    "prepare:proto": "npm run prepare:proto:nix -s || npm run prepare:proto:win -s",
+    "prepare:proto:nix": "grep -v \"package mdg.engine.proto\" src/reports.proto > dist/reports.proto",
+    "prepare:proto:win": "type src\\reports.proto | findstr /V \"package mdg.engine.proto\" > dist/reports.proto"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-engine-reporting/tree/master/packages/apollo-engine-reporting-protobuf"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-engine-reporting-protobuf"
   },
   "keywords": [
     "GraphQL",
@@ -20,13 +25,13 @@
     "Server",
     "Javascript"
   ],
-  "author": "Apollo <community@apollographql.com>",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-engine-reporting/issues"
   },
   "homepage": "https://github.com/apollographql/apollo-engine-reporting#readme",
   "dependencies": {
-    "protobufjs": "^6.8.6"
+    "@apollo/protobufjs": "^1.0.3"
   }
 }

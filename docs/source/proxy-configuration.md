@@ -3,12 +3,12 @@ title: Proxy configuration
 description: Configuring proxy settings for outgoing requests
 ---
 
-Certain features of the Apollo Platform require Apollo Server to make outgoing requests to the Apollo Graph Manager.  These include:
+Certain features of the Apollo platform require Apollo Server to make outgoing requests to Apollo Studio.  These include:
 
 * Managed federation
 * Operation registry
 
-Depending on security policies, it may be necessary to configure an outgoing HTTP proxy in order to allow these requests.
+Depending on security policies, you might need to configure an outgoing HTTP proxy in order to allow these requests.
 
 While Apollo Server supports standard Node.js "agent" configuration via [`https.globalAgent`](https://nodejs.org/api/https.html#https_https_globalagent) and [`http.globalAgent`](https://nodejs.org/api/http.html#http_http_globalagent) directly, we recommend using the [`global-agent`](https://github.com/gajus/global-agent#global-agent) package to reduce the amount of necessary configuration involved with [creating a custom agent](https://nodejs.org/api/http.html#http_class_http_agent).
 
@@ -91,13 +91,13 @@ Of course, a custom namespace can also be provided as well.  For more details on
 
 Depending on the proxy communication, it may be necessary to extend the default "root" certificates which Node.js trusts to include a certificate provided by the proxy administrator.  These certificates will usually allow the proxy to handle SSL/TLS traffic and permits the proxy to analyze such traffic.
 
-This can be done [via Node.js' `NODE_EXTRA_CA_CERTS_FILE` environment variable](https://nodejs.org/api/cli.html#cli_node_extra_ca_certs_file):
+This can be done [via Node.js' `NODE_EXTRA_CA_CERTS` environment variable](https://nodejs.org/api/cli.html#cli_node_extra_ca_certs_file):
 
 1. The appropriate certificate (i.e. PEM file) must be present on the file-system where the server is running.
-2. Start the server with the `NODE_EXTRA_CA_CERTS_FILE` environment variable set to that path, combined with the existing proxy configuration variables which were explained above:
+2. Start the server with the `NODE_EXTRA_CA_CERTS` environment variable set to that path, combined with the existing proxy configuration variables which were explained above:
 
    ```shell
-   $ NODE_EXTRA_CA_CERTS_FILE=/full/path/to/certificate.pem \
+   $ NODE_EXTRA_CA_CERTS=/full/path/to/certificate.pem \
        GLOBAL_AGENT_HTTP_PROXY=http://proxy:3128/ \
        node index.js
    ```

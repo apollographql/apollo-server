@@ -7,7 +7,8 @@
   "include": ["src/**/*"],
   "exclude": ["**/__tests__", "**/__mocks__"],
   "references": [
-    { "path": "../graphql-extensions" },
+    { "path": "../apollo-server-errors" },
     { "path": "../apollo-server-types" },
+    { "path": "../apollo-server-plugin-base" },
   ]
 }

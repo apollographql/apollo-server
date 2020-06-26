@@ -4,13 +4,14 @@ import {
   errorWithCode,
   isFederationDirective,
   logDirective,
-  isExecutableDirective,
 } from '../../utils';
 import { PostCompositionValidator } from '.';
 
 /**
- * All custom directives must be implemented in every service. This validator
- * is not responsible for ensuring the directives are an ExecutableDirective.
+ * All custom directives with executable locations must be implemented in every
+ * service. This validator is not responsible for ensuring the directives are an
+ * ExecutableDirective, however composition ensures this by filtering out all
+ * TypeSystemDirectiveLocations.
  */
 export const executableDirectivesInAllServices: PostCompositionValidator = ({
   schema,
@@ -20,12 +21,7 @@ export const executableDirectivesInAllServices: PostCompositionValidator = ({
 
   const customExecutableDirectives = schema
     .getDirectives()
-    .filter(
-      x =>
-        !isFederationDirective(x) &&
-        !isSpecifiedDirective(x) &&
-        isExecutableDirective(x),
-    );
+    .filter(x => !isFederationDirective(x) && !isSpecifiedDirective(x));
 
   customExecutableDirectives.forEach(directive => {
     if (!directive.federation) return;

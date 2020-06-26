@@ -29,7 +29,7 @@ it('executes a query plan over concrete types', async () => {
     Query: { me },
   });
 
-  const query = gql`
+  const query = `#graphql
     query GetUser {
       me {
         id
@@ -37,9 +37,12 @@ it('executes a query plan over concrete types', async () => {
       }
     }
   `;
-  const { data, queryPlan } = await execute([localAccounts], {
-    query,
-  });
+  const { data, queryPlan } = await execute(
+    {
+      query,
+    },
+    [localAccounts],
+  );
 
   expect(data).toEqual({ me: { id: 1, name: 'James' } });
   expect(queryPlan).toCallService('accounts');
@@ -47,15 +50,18 @@ it('executes a query plan over concrete types', async () => {
 });
 
 it('does not remove __typename on root types', async () => {
-  const query = gql`
+  const query = `#graphql
     query GetUser {
       __typename
     }
   `;
 
-  const { data } = await execute([accounts], {
-    query,
-  });
+  const { data } = await execute(
+    {
+      query,
+    },
+    [accounts],
+  );
 
   expect(data).toEqual({ __typename: 'Query' });
 });
@@ -66,16 +72,19 @@ it('does not remove __typename if that is all that is requested on an entity', a
     Query: { me },
   });
 
-  const query = gql`
+  const query = `#graphql
     query GetUser {
       me {
         __typename
       }
     }
   `;
-  const { data, queryPlan } = await execute([localAccounts], {
-    query,
-  });
+  const { data, queryPlan } = await execute(
+    {
+      query,
+    },
+    [localAccounts],
+  );
 
   expect(data).toEqual({ me: { __typename: 'User' } });
   expect(queryPlan).toCallService('accounts');
@@ -88,7 +97,7 @@ it('does not remove __typename if that is all that is requested on a value type'
     Query: { me },
   });
 
-  const query = gql`
+  const query = `#graphql
     query GetUser {
       me {
         account {
@@ -97,9 +106,12 @@ it('does not remove __typename if that is all that is requested on a value type'
       }
     }
   `;
-  const { data, queryPlan } = await execute([localAccounts], {
-    query,
-  });
+  const { data, queryPlan } = await execute(
+    {
+      query,
+    },
+    [localAccounts],
+  );
 
   expect(data).toEqual({ me: { account: { __typename: 'Account' } } });
   expect(queryPlan).toCallService('accounts');
