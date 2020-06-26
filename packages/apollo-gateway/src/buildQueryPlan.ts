@@ -573,8 +573,8 @@ function splitFields(
 
         // If none of the field defs have a federation property, this interface's
         // implementors can all be resolved within the same service.
-        const hasNoExtendingFieldDefs = possibleFieldDefs.every(
-          def => !getFederationMetadata(def)
+        const hasNoExtendingFieldDefs = !possibleFieldDefs.some(
+          getFederationMetadata,
         );
 
         // With no extending field definitions, we can engage the optimization
