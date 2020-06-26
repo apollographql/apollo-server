@@ -1,11 +1,12 @@
 {
   "name": "apollo-server-errors",
-  "version": "2.3.4",
-  "author": "opensource@apollographql.com",
+  "version": "2.4.1",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-errors"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-errors"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "bugs": {
@@ -17,6 +18,6 @@
     "node": ">=6"
   },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
   }
 }

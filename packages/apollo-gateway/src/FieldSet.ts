@@ -10,6 +10,7 @@ import {
   GraphQLObjectType,
 } from 'graphql';
 import { getResponseName } from './utilities/graphql';
+import { partition, groupBy } from './utilities/array';
 
 export interface Field<
   TParent extends GraphQLCompositeType = GraphQLCompositeType
@@ -45,44 +46,8 @@ export function matchesField(field: Field) {
   };
 }
 
-function groupBy<T, U>(keyFunction: (element: T) => U) {
-  return (iterable: Iterable<T>) => {
-    const result = new Map<U, T[]>();
-
-    for (const element of iterable) {
-      const key = keyFunction(element);
-      const group = result.get(key);
-
-      if (group) {
-        group.push(element);
-      } else {
-        result.set(key, [element]);
-      }
-    }
-
-    return result;
-  };
-}
-
-// The response name isn't sufficient for determining uniqueness. In the case of
-// unions, for example, we can see a response name collision where the parent type
-// is different. In this case, these should not be merged (media)!
-// query {
-//   content {
-//     ... on Audio {
-//       media {
-//         url
-//       }
-//     }
-//     ... on Video {
-//       media {
-//         aspectRatio
-//       }
-//     }
-//   }
-// }
-export const groupByParentTypeAndResponseName = groupBy<Field, string>(field =>
-  `${field.scope.parentType}:${getResponseName(field.fieldNode)}`,
+export const groupByResponseName = groupBy<Field, string>(field =>
+  getResponseName(field.fieldNode)
 );
 
 export const groupByParentType = groupBy<Field, GraphQLCompositeType>(
@@ -98,7 +63,7 @@ export function selectionSetFromFieldSet(
     selections: Array.from(groupByParentType(fields)).flatMap(
       ([typeCondition, fieldsByParentType]: [GraphQLCompositeType, FieldSet]) =>
         wrapInInlineFragmentIfNeeded(
-          Array.from(groupByParentTypeAndResponseName(fieldsByParentType).values()).map(
+          Array.from(groupByResponseName(fieldsByParentType).values()).map(
             fieldsByResponseName => {
               return combineFields(fieldsByResponseName)
                 .fieldNode;
@@ -164,6 +129,38 @@ function mergeSelectionSets(fieldNodes: FieldNode[]): SelectionSetNode {
 
   return {
     kind: 'SelectionSet',
-    selections,
+    selections: mergeFieldNodeSelectionSets(selections),
   };
+}
+
+function mergeFieldNodeSelectionSets(
+  selectionNodes: SelectionNode[],
+): SelectionNode[] {
+  const [fieldNodes, fragmentNodes] = partition(
+    selectionNodes,
+    (node): node is FieldNode => node.kind === Kind.FIELD,
+  );
+
+  const [aliasedFieldNodes, nonAliasedFieldNodes] = partition(
+    fieldNodes,
+    node => !!node.alias,
+  );
+
+  const mergedFieldNodes = Array.from(
+    groupBy((node: FieldNode) => node.name.value)(
+      nonAliasedFieldNodes,
+    ).values(),
+  ).map((nodesWithSameName) => {
+    const node = nodesWithSameName[0];
+    if (node.selectionSet) {
+      node.selectionSet.selections = mergeFieldNodeSelectionSets(
+        nodesWithSameName.flatMap(
+          (node) => node.selectionSet?.selections || [],
+        ),
+      );
+    }
+    return node;
+  });
+
+  return [...mergedFieldNodes, ...aliasedFieldNodes, ...fragmentNodes];
 }

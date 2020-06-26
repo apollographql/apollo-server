@@ -103,7 +103,7 @@ const userService: ServiceDefinitionModule = {
 };
 
 it('works fetches data correctly with complex / nested @key fields', async () => {
-  const query = gql`
+  const query = `#graphql
     query Reviews {
       reviews {
         author {
@@ -116,9 +116,12 @@ it('works fetches data correctly with complex / nested @key fields', async () =>
     }
   `;
 
-  const { data, queryPlan } = await execute([userService, reviewService], {
-    query,
-  });
+  const { data, queryPlan } = await execute(
+    {
+      query,
+    },
+    [userService, reviewService],
+  );
 
   expect(data).toEqual({
     reviews: [
@@ -168,7 +171,6 @@ it('works fetches data correctly with complex / nested @key fields', async () =>
                 organization {
                   id
                   __typename
-                  id
                 }
               }
             }

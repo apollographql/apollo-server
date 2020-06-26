@@ -7,20 +7,22 @@ import {
   ExecutionArgs,
   GraphQLError,
   GraphQLFormattedError,
+  validate as graphqlValidate,
+  parse as graphqlParse,
+  execute as graphqlExecute,
 } from 'graphql';
-import * as graphql from 'graphql';
 import {
   GraphQLExtension,
   GraphQLExtensionStack,
   enableGraphQLExtensions,
 } from 'graphql-extensions';
 import { DataSource } from 'apollo-datasource';
-import { PersistedQueryOptions } from '.';
+import { PersistedQueryOptions } from './graphqlOptions';
 import {
-  CacheControlExtension,
-  CacheControlExtensionOptions,
-} from 'apollo-cache-control';
-import { TracingExtension } from 'apollo-tracing';
+  symbolExecutionDispatcherWillResolveField,
+  enablePluginsForSchemaResolvers,
+  symbolUserFieldResolver,
+} from "./utils/schemaInstrumentation"
 import {
   ApolloError,
   fromGraphQLError,
@@ -43,6 +45,15 @@ import {
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
+  GraphQLRequestContextDidResolveSource,
+  GraphQLRequestContextExecutionDidStart,
+  GraphQLRequestContextResponseForOperation,
+  GraphQLRequestContextDidResolveOperation,
+  GraphQLRequestContextParsingDidStart,
+  GraphQLRequestContextValidationDidStart,
+  GraphQLRequestContextWillSendResponse,
+  GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestExecutionListener,
 } from 'apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
@@ -82,9 +93,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   dataSources?: () => DataSources<TContext>;
 
   extensions?: Array<() => GraphQLExtension>;
-  tracing?: boolean;
   persistedQueries?: PersistedQueryOptions;
-  cacheControl?: CacheControlExtensionOptions;
 
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
   formatResponse?: (
@@ -104,22 +113,33 @@ export type DataSources<TContext> = {
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
+/**
+ * We attach this symbol to the constructor of extensions to mark that we've
+ * already warned about the deprecation of the `graphql-extensions` API for that
+ * particular definition.
+ */
+const symbolExtensionDeprecationDone =
+  Symbol("apolloServerExtensionDeprecationDone");
+
 export async function processGraphQLRequest<TContext>(
   config: GraphQLRequestPipelineConfig<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
 ): Promise<GraphQLResponse> {
-  let cacheControlExtension: CacheControlExtension | undefined;
+  // For legacy reasons, this exported method may exist without a `logger` on
+  // the context.  We'll need to make sure we account for that, even though
+  // all of our own machinery will certainly set it now.
+  const logger = requestContext.logger || console;
+
+  // If request context's `metrics` already exists, preserve it, but _ensure_ it
+  // exists there and shorthand it for use throughout this function.
+  const metrics = requestContext.metrics =
+    requestContext.metrics || Object.create(null);
+
   const extensionStack = initializeExtensionStack();
   (requestContext.context as any)._extensionStack = extensionStack;
 
   const dispatcher = initializeRequestListenerDispatcher();
-
-  initializeDataSources();
-
-  const metrics = requestContext.metrics || Object.create(null);
-  if (!requestContext.metrics) {
-    requestContext.metrics = metrics;
-  }
+  await initializeDataSources();
 
   const request = requestContext.request;
 
@@ -135,11 +155,18 @@ export async function processGraphQLRequest<TContext>(
     // It looks like we've received a persisted query. Check if we
     // support them.
     if (!config.persistedQueries || !config.persistedQueries.cache) {
-      throw new PersistedQueryNotSupportedError();
+      // We are returning to `runHttpQuery` to preserve legacy behavior while
+      // still delivering observability to the `didEncounterErrors` hook.
+      // This particular error will _not_ trigger `willSendResponse`.
+      // See comment on `emitErrorAndThrow` for more details.
+      return await emitErrorAndThrow(new PersistedQueryNotSupportedError());
     } else if (extensions.persistedQuery.version !== 1) {
-      throw new InvalidGraphQLRequestError(
-        'Unsupported persisted query version',
-      );
+      // We are returning to `runHttpQuery` to preserve legacy behavior while
+      // still delivering observability to the `didEncounterErrors` hook.
+      // This particular error will _not_ trigger `willSendResponse`.
+      // See comment on `emitErrorAndThrow` for more details.
+      return await emitErrorAndThrow(
+        new InvalidGraphQLRequestError('Unsupported persisted query version'));
     }
 
     // We'll store a reference to the persisted query cache so we can actually
@@ -164,19 +191,26 @@ export async function processGraphQLRequest<TContext>(
       if (query) {
         metrics.persistedQueryHit = true;
       } else {
-        throw new PersistedQueryNotFoundError();
+        // We are returning to `runHttpQuery` to preserve legacy behavior while
+        // still delivering observability to the `didEncounterErrors` hook.
+        // This particular error will _not_ trigger `willSendResponse`.
+        // See comment on `emitErrorAndThrow` for more details.
+        return await emitErrorAndThrow(new PersistedQueryNotFoundError());
       }
     } else {
       const computedQueryHash = computeQueryHash(query);
 
       if (queryHash !== computedQueryHash) {
-        throw new InvalidGraphQLRequestError(
-          'provided sha does not match query',
-        );
+        // We are returning to `runHttpQuery` to preserve legacy behavior while
+        // still delivering observability to the `didEncounterErrors` hook.
+        // This particular error will _not_ trigger `willSendResponse`.
+        // See comment on `emitErrorAndThrow` for more details.
+        return await emitErrorAndThrow(
+          new InvalidGraphQLRequestError('provided sha does not match query'));
       }
 
       // We won't write to the persisted query cache until later.
-      // Defering the writing gives plugins the ability to "win" from use of
+      // Deferring the writing gives plugins the ability to "win" from use of
       // the cache, but also have their say in whether or not the cache is
       // written to (by interrupting the request with an error).
       metrics.persistedQueryRegister = true;
@@ -186,11 +220,26 @@ export async function processGraphQLRequest<TContext>(
     // now, but this should be replaced with the new operation ID algorithm.
     queryHash = computeQueryHash(query);
   } else {
-    throw new InvalidGraphQLRequestError('Must provide query string.');
+    // We are returning to `runHttpQuery` to preserve legacy behavior
+    // while still delivering observability to the `didEncounterErrors` hook.
+    // This particular error will _not_ trigger `willSendResponse`.
+    // See comment on `emitErrorAndThrow` for more details.
+    return await emitErrorAndThrow(
+      new InvalidGraphQLRequestError('Must provide query string.'));
   }
 
   requestContext.queryHash = queryHash;
   requestContext.source = query;
+
+  // Let the plugins know that we now have a STRING of what we hope will
+  // parse and validate into a document we can execute on.  Unless we have
+  // retrieved this from our APQ cache, there's no guarantee that it is
+  // syntactically correct, so this string should not be trusted as a valid
+  // document until after it's parsed and validated.
+  await dispatcher.invokeHookAsync(
+    'didResolveSource',
+    requestContext as GraphQLRequestContextDidResolveSource<TContext>,
+  );
 
   const requestDidEnd = extensionStack.requestDidStart({
     request: request.http!,
@@ -216,9 +265,9 @@ export async function processGraphQLRequest<TContext>(
       try {
         requestContext.document = await config.documentStore.get(queryHash);
       } catch (err) {
-        console.warn(
-          'An error occurred while attempting to read from the documentStore.',
-          err,
+        logger.warn(
+          'An error occurred while attempting to read from the documentStore. '
+          + (err && err.message) || err,
         );
       }
     }
@@ -228,10 +277,7 @@ export async function processGraphQLRequest<TContext>(
     if (!requestContext.document) {
       const parsingDidEnd = await dispatcher.invokeDidStartHook(
         'parsingDidStart',
-        requestContext as WithRequired<
-          typeof requestContext,
-          'metrics' | 'source'
-        >,
+        requestContext as GraphQLRequestContextParsingDidStart<TContext>,
       );
 
       try {
@@ -244,10 +290,7 @@ export async function processGraphQLRequest<TContext>(
 
       const validationDidEnd = await dispatcher.invokeDidStartHook(
         'validationDidStart',
-        requestContext as WithRequired<
-          typeof requestContext,
-          'document' | 'source' | 'metrics'
-        >,
+        requestContext as GraphQLRequestContextValidationDidStart<TContext>,
       );
 
       const validationErrors = validate(requestContext.document);
@@ -275,7 +318,10 @@ export async function processGraphQLRequest<TContext>(
         Promise.resolve(
           config.documentStore.set(queryHash, requestContext.document),
         ).catch(err =>
-          console.warn('Could not store validated document.', err),
+          logger.warn(
+            'Could not store validated document. ' +
+            (err && err.message) || err
+          )
         );
       }
     }
@@ -300,10 +346,7 @@ export async function processGraphQLRequest<TContext>(
     try {
       await dispatcher.invokeHookAsync(
         'didResolveOperation',
-        requestContext as WithRequired<
-          typeof requestContext,
-          'document' | 'source' | 'operation' | 'operationName' | 'metrics'
-        >,
+        requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
       );
     } catch (err) {
       // XXX: The HttpQueryError is special-cased here because we currently
@@ -313,6 +356,14 @@ export async function processGraphQLRequest<TContext>(
       // for the time-being this just maintains existing behavior for what
       // happens when `throw`-ing an `HttpQueryError` in `didResolveOperation`.
       if (err instanceof HttpQueryError) {
+        // In order to report this error reliably to the request pipeline, we'll
+        // have to regenerate it with the original error message and stack for
+        // the purposes of the `didEncounterErrors` life-cycle hook (which
+        // expects `GraphQLError`s), but still throw the `HttpQueryError`, so
+        // the appropriate status code is enforced by `runHttpQuery.ts`.
+        const graphqlError = new GraphQLError(err.message);
+        graphqlError.stack = err.stack;
+        await didEncounterErrors([graphqlError]);
         throw err;
       }
       return await sendErrorResponse(err);
@@ -323,32 +374,81 @@ export async function processGraphQLRequest<TContext>(
     // an error) and not actually write, we'll write to the cache if it was
     // determined earlier in the request pipeline that we should do so.
     if (metrics.persistedQueryRegister && persistedQueryCache) {
-      Promise.resolve(persistedQueryCache.set(queryHash, query)).catch(
-        console.warn,
-      );
+      // While it shouldn't normally be necessary to wrap this `Promise` in a
+      // `Promise.resolve` invocation, it seems that the underlying cache store
+      // is returning a non-native `Promise` (e.g. Bluebird, etc.).
+      Promise.resolve(
+        persistedQueryCache.set(
+          queryHash,
+          query,
+          config.persistedQueries &&
+            typeof config.persistedQueries.ttl !== 'undefined'
+            ? {
+                ttl: config.persistedQueries.ttl,
+              }
+            : Object.create(null),
+        ),
+      ).catch(logger.warn);
     }
 
     let response: GraphQLResponse | null = await dispatcher.invokeHooksUntilNonNull(
       'responseForOperation',
-      requestContext as WithRequired<
-        typeof requestContext,
-        'document' | 'source' | 'operation' | 'operationName' | 'metrics'
-      >,
+      requestContext as GraphQLRequestContextResponseForOperation<TContext>,
     );
     if (response == null) {
-      const executionDidEnd = await dispatcher.invokeDidStartHook(
+      // This execution dispatcher code is duplicated in `pluginTestHarness`
+      // right now.
+
+      const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
+      dispatcher.invokeHookSync(
         'executionDidStart',
-        requestContext as WithRequired<
-          typeof requestContext,
-          'document' | 'source' | 'operation' | 'operationName' | 'metrics'
-        >,
+        requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+      ).forEach(executionListener => {
+        if (typeof executionListener === 'function') {
+          executionListeners.push({
+            executionDidEnd: executionListener,
+          });
+        } else if (typeof executionListener === 'object') {
+          executionListeners.push(executionListener);
+        }
+      });
+
+      const executionDispatcher = new Dispatcher(executionListeners);
+
+      // Create a callback that will trigger the execution dispatcher's
+      // `willResolveField` hook.  We will attach this to the context on a
+      // symbol so it can be invoked by our `wrapField` method during execution.
+      const invokeWillResolveField: GraphQLRequestExecutionListener<
+        TContext
+      >['willResolveField'] = (...args) =>
+          executionDispatcher.invokeDidStartHook('willResolveField', ...args);
+
+      Object.defineProperty(
+        requestContext.context,
+        symbolExecutionDispatcherWillResolveField,
+        { value: invokeWillResolveField }
       );
 
+      // If the user has provided a custom field resolver, we will attach
+      // it to the context so we can still invoke it after we've wrapped the
+      // fields with `wrapField` within `enablePluginsForSchemaResolvers` of
+      // the `schemaInstrumentation` module.
+      if (config.fieldResolver) {
+        Object.defineProperty(
+          requestContext.context,
+          symbolUserFieldResolver,
+          { value: config.fieldResolver }
+        );
+      }
+
+      // If the schema is already enabled, this is a no-op.  Otherwise, the
+      // schema will be augmented so it is able to invoke willResolveField.
+      enablePluginsForSchemaResolvers(config.schema);
+
       try {
-        const result = await execute(requestContext as WithRequired<
-          typeof requestContext,
-          'document' | 'operation' | 'operationName' | 'queryHash'
-        >);
+        const result = await execute(
+          requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+        );
 
         if (result.errors) {
           await didEncounterErrors(result.errors);
@@ -359,24 +459,10 @@ export async function processGraphQLRequest<TContext>(
           errors: result.errors ? formatErrors(result.errors) : undefined,
         };
 
-        executionDidEnd();
+        executionDispatcher.reverseInvokeHookSync("executionDidEnd");
       } catch (executionError) {
-        executionDidEnd(executionError);
+        executionDispatcher.reverseInvokeHookSync("executionDidEnd", executionError);
         return await sendErrorResponse(executionError);
-      }
-    }
-
-    if (cacheControlExtension) {
-      if (requestContext.overallCachePolicy) {
-        // If we read this response from a cache and it already has its own
-        // policy, teach that to cacheControlExtension so that it'll use the
-        // saved policy for HTTP headers. (If cacheControlExtension was a
-        // plugin, it could just read from the requestContext, but it isn't.)
-        cacheControlExtension.overrideOverallCachePolicy(
-          requestContext.overallCachePolicy,
-        );
-      } else {
-        requestContext.overallCachePolicy = cacheControlExtension.computeOverallCachePolicy();
       }
     }
 
@@ -409,7 +495,7 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return graphql.parse(query, parseOptions);
+      return graphqlParse(query, parseOptions);
     } finally {
       parsingDidEnd();
     }
@@ -424,17 +510,14 @@ export async function processGraphQLRequest<TContext>(
     const validationDidEnd = extensionStack.validationDidStart();
 
     try {
-      return graphql.validate(config.schema, document, rules);
+      return graphqlValidate(config.schema, document, rules);
     } finally {
       validationDidEnd();
     }
   }
 
   async function execute(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'document' | 'operationName' | 'operation' | 'queryHash'
-    >,
+    requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
   ): Promise<GraphQLExecutionResult> {
     const { request, document } = requestContext;
 
@@ -462,7 +545,7 @@ export async function processGraphQLRequest<TContext>(
         // (eg apollo-engine-reporting) assumes that.
         return await config.executor(requestContext);
       } else {
-        return await graphql.execute(executionArgs);
+        return await graphqlExecute(executionArgs);
       }
     } finally {
       executionDidEnd();
@@ -485,12 +568,37 @@ export async function processGraphQLRequest<TContext>(
     }).graphqlResponse;
     await dispatcher.invokeHookAsync(
       'willSendResponse',
-      requestContext as WithRequired<
-        typeof requestContext,
-        'metrics' | 'response'
-      >,
+      requestContext as GraphQLRequestContextWillSendResponse<TContext>,
     );
     return requestContext.response!;
+  }
+
+  /**
+   * HEREIN LIE LEGACY COMPATIBILITY
+   *
+   * DO NOT PERPETUATE THE USE OF THIS METHOD IN NEWLY INTRODUCED CODE.
+   *
+   * Report an error via `didEncounterErrors` and then `throw` it again,
+   * ENTIRELY BYPASSING the rest of the request pipeline and returning
+   * control to `runHttpQuery.ts`.
+   *
+   * Any number of other life-cycle events may not be invoked in this case.
+   *
+   * Prior to the introduction of this function, some errors were being thrown
+   * within the request pipeline and going directly to handling within
+   * the `runHttpQuery.ts` module, rather than first being reported to the
+   * plugin API's `didEncounterErrors` life-cycle hook (where they are to be
+   * expected!).
+   *
+   * @param error The error to report to the request pipeline plugins prior
+   *              to being thrown.
+   *
+   * @throws
+   *
+   */
+  async function emitErrorAndThrow(error: GraphQLError): Promise<never> {
+    await didEncounterErrors([error]);
+    throw error;
   }
 
   async function didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
@@ -499,10 +607,7 @@ export async function processGraphQLRequest<TContext>(
 
     return await dispatcher.invokeHookAsync(
       'didEncounterErrors',
-      requestContext as WithRequired<
-        typeof requestContext,
-        'metrics' | 'source' | 'errors'
-      >,
+      requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
     );
   }
 
@@ -541,7 +646,7 @@ export async function processGraphQLRequest<TContext>(
   }
 
   function initializeRequestListenerDispatcher(): Dispatcher<
-    GraphQLRequestListener
+    GraphQLRequestListener<TContext>
   > {
     const requestListeners: GraphQLRequestListener<TContext>[] = [];
     if (config.plugins) {
@@ -563,32 +668,66 @@ export async function processGraphQLRequest<TContext>(
     // objects.
     const extensions = config.extensions ? config.extensions.map(f => f()) : [];
 
-    if (config.tracing) {
-      extensions.push(new TracingExtension());
-    }
+    // Warn about usage of (deprecated) `graphql-extensions` implementations.
+    // Since extensions are often provided as factory functions which
+    // instantiate an extension on each request, we'll attach a symbol to the
+    // constructor after we've warned to ensure that we don't do it on each
+    // request.  Another option here might be to keep a `Map` of constructor
+    // instances within this module, but I hope this will do the trick.
+    const hasOwn = Object.prototype.hasOwnProperty;
+    extensions.forEach((extension) => {
+      // Using `hasOwn` just in case there is a user-land `hasOwnProperty`
+      // defined on the `constructor` object.
+      if (
+        !extension.constructor ||
+        hasOwn.call(extension.constructor, symbolExtensionDeprecationDone)
+      ) {
+        return;
+      }
 
-    if (config.cacheControl) {
-      cacheControlExtension = new CacheControlExtension(config.cacheControl);
-      extensions.push(cacheControlExtension);
-    }
+      Object.defineProperty(
+        extension.constructor,
+        symbolExtensionDeprecationDone,
+        { value: true }
+      );
+
+      const extensionName = extension.constructor.name;
+      logger.warn(
+        '[deprecated] ' +
+          (extensionName
+            ? 'A "' + extensionName + '" '
+            : 'An anonymous extension ') +
+          'was defined within the "extensions" configuration for ' +
+          'Apollo Server.  The API on which this extension is built ' +
+          '("graphql-extensions") is being deprecated in the next major ' +
+          'version of Apollo Server in favor of the new plugin API.  See ' +
+          'https://go.apollo.dev/s/plugins for the documentation on how ' +
+          'these plugins are to be defined and used.',
+      );
+    });
 
     return new GraphQLExtensionStack(extensions);
   }
 
-  function initializeDataSources() {
+  async function initializeDataSources() {
     if (config.dataSources) {
       const context = requestContext.context;
 
       const dataSources = config.dataSources();
 
+      const initializers: any[] = [];
       for (const dataSource of Object.values(dataSources)) {
         if (dataSource.initialize) {
-          dataSource.initialize({
-            context,
-            cache: requestContext.cache,
-          });
+          initializers.push(
+            dataSource.initialize({
+              context,
+              cache: requestContext.cache,
+            })
+          );
         }
       }
+
+      await Promise.all(initializers);
 
       if ('dataSources' in context) {
         throw new Error(

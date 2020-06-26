@@ -11,9 +11,9 @@ schema stitching, see [this blog post](https://blog.apollographql.com/apollo-fed
 
 ## Summary of steps
 
-You can (and should) migrate **incrementally** from schema stitching to Apollo Federation.
-To do so, you run an Apollo Server gateway _alongside_ your existing schema-stitching gateway and migrate the services that implement your data graph (**implementing services**)
-one at a time.
+This guide describes a set of steps for migrating architecture **incrementally** from stitching to federation. In order to do so, we rely on the fact that changes necessary for federation are completely backwards compatible. In other words, services that implement a part of the graph (**implementing services**) can be used in both your stitching gateway and your Apollo gateway.
+
+We recommend that you begin by modifying existing services _in place_ to support the federation specification while continuing to support schema stitching as well. At this point, you can stand up an Apollo gateway side-by-side with your existing stitching gateway and migrate over the links between the services in an incremental, backwards-compatible way.
 
 Here are the high-level steps for migrating to Apollo Federation:
 
@@ -66,21 +66,15 @@ const server = new ApolloServer({
 
 ### Using a GraphQL server besides Apollo Server
 
-There are several community-contributed packages that add federation support to other GraphQL runtimes. These include:
-
-* [GraphQL-Java](https://github.com/apollographql/federation-jvm)
-* [Graphene](https://pypi.org/project/graphene-federation/)
-* [GraphQL-Ruby](https://github.com/Gusto/apollo-federation-ruby)
-
-If you're using one of these packages, ensure that after configuring it, your existing schema-stitching gateway continues to work correctly.
+There are [several community-contributed packages](/federation/other-servers/) that add federation support to other GraphQL runtimes.
 
 ## Step 2: Register your schemas with a GraphQL registry
 
-We strongly recommend that you register all of your GraphQL schemas with an [external registry](https://principledgraphql.com/integrity#3-track-the-schema-in-a-registry). Doing so improves the reliability of your data graph and maintains a single source of truth to simplify collaboration.
+We strongly recommend that you register all of your GraphQL schemas with an [external registry](https://principledgraphql.com/integrity#3-track-the-schema-in-a-registry). This registry supports running the gateway with the implementing services' partial schemas. Additionally, it enables tracking changes at the service level and protecting the graph from changes that break composition.
 
-[Apollo Graph Manager](https://www.apollographql.com/docs/graph-manager/) provides a free schema registry that helps you manage your federated gateway's configuration. You provide your gateway a Graph Manager API key on startup, which directs the gateway to download your schemas automatically in a fault-tolerant way.
+[Apollo Studio](https://www.apollographql.com/docs/graph-manager/) provides a free schema registry that helps you manage your federated gateway's configuration. You provide your gateway a Studio API key on startup, which directs the gateway to download your schemas automatically in a fault-tolerant way.
 
-Graph Manager can also provide [schema validation](https://www.apollographql.com/docs/graph-manager/federation/#validating-changes-to-the-graph) to ensure that all
+Studio can also provide [schema validation](https://www.apollographql.com/docs/graph-manager/federation/#validating-changes-to-the-graph) to ensure that all
 changes you
 make to your implementing services are compatible with your complete data graph.
 
@@ -92,7 +86,7 @@ After you've registered your schemas, you can start exposing your implementing s
 
 We recommend setting up the Apollo Server gateway _alongside_ your existing schema-stitching gateway. Depending on your infrastructure, you might even want to run both in the same _process_ to support dynamically routing traffic through one gateway or the other.
 
-To enable managed configuration through Apollo Graph Manager, set the `ENGINE_API_KEY` and `ENGINE_SCHEMA_TAG` environment variables when you start up your Apollo Server gateway, and **do not provide the `serviceList` constructor option to `ApolloGateway`**. For details, see the [Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/#connecting-apollo-server-to-the-graph-manager).
+To enable managed configuration with Apollo Studio, set the `APOLLO_KEY` and `APOLLO_GRAPH_VARIANT` environment variables when you start up your Apollo Server gateway, and **do not provide the `serviceList` constructor option to `ApolloGateway`**. For details, see the [Apollo Studio documentation](https://www.apollographql.com/docs/graph-manager/managed-federation/setup/).
 
 After your gateway is set up, you can make direct queries to it that are routed to the correct implementing services.
 

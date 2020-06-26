@@ -1,8 +1,10 @@
 import { GraphQLError, visit } from 'graphql';
 import { ServiceDefinition } from '../../types';
-import { logServiceAndType, errorWithCode } from '../../utils';
-
-const reservedRootFields = ['_service', '_entities'];
+import {
+  logServiceAndType,
+  errorWithCode,
+  reservedRootFields
+} from '../../utils';
 
 /**
  * - Schemas should not define the _service or _entitites fields on the query root
