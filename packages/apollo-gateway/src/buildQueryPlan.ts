@@ -51,6 +51,7 @@ import {
 } from './QueryPlan';
 import { getFieldDef, getResponseName } from './utilities/graphql';
 import { MultiMap } from './utilities/MultiMap';
+import { getFederationMetadata } from '@apollo/federation/dist/composition/utils';
 
 const typenameField = {
   kind: Kind.FIELD,
@@ -397,7 +398,9 @@ function splitSubfields(
     const { parentType } = scope;
 
     let baseService, owningService;
-    if (parentType.federation && parentType.federation.isValueType) {
+
+    const parentTypeFederationMetadata = getFederationMetadata(parentType);
+    if (parentTypeFederationMetadata?.isValueType) {
       baseService = parentGroup.serviceName;
       owningService = parentGroup.serviceName;
     } else {
@@ -571,7 +574,7 @@ function splitFields(
         // If none of the field defs have a federation property, this interface's
         // implementors can all be resolved within the same service.
         const hasNoExtendingFieldDefs = possibleFieldDefs.every(
-          def => !def.federation
+          def => !getFederationMetadata(def)
         );
 
         // With no extending field definitions, we can engage the optimization
@@ -1054,19 +1057,19 @@ export class QueryPlanningContext {
   }
 
   getBaseService(parentType: GraphQLObjectType): string | null {
-    return (parentType.federation && parentType.federation.serviceName) || null;
+    return (getFederationMetadata(parentType)?.serviceName) || null;
   }
 
   getOwningService(
     parentType: GraphQLObjectType,
     fieldDef: GraphQLField<any, any>,
   ): string | null {
+    const fieldFederationMetadata = getFederationMetadata(fieldDef);
     if (
-      fieldDef.federation &&
-      fieldDef.federation.serviceName &&
-      !fieldDef.federation.belongsToValueType
+      fieldFederationMetadata?.serviceName &&
+      !fieldFederationMetadata?.belongsToValueType
     ) {
-      return fieldDef.federation.serviceName;
+      return fieldFederationMetadata.serviceName;
     } else {
       return this.getBaseService(parentType);
     }
@@ -1093,11 +1096,7 @@ export class QueryPlanningContext {
     });
 
     for (const possibleType of this.getPossibleTypes(parentType)) {
-      const keys =
-        possibleType.federation &&
-        possibleType.federation.keys &&
-        possibleType.federation.keys[serviceName] &&
-        possibleType.federation.keys[serviceName];
+      const keys = getFederationMetadata(possibleType)?.keys?.[serviceName];
 
       if (!(keys && keys.length > 0)) continue;
 
@@ -1132,11 +1131,12 @@ export class QueryPlanningContext {
 
     requiredFields.push(...this.getKeyFields({ parentType, serviceName }));
 
-    if (fieldDef.federation && fieldDef.federation.requires) {
+    const fieldFederationMetadata = getFederationMetadata(fieldDef);
+    if (fieldFederationMetadata?.requires) {
       requiredFields.push(
         ...collectFields(this, this.newScope(parentType), {
           kind: Kind.SELECTION_SET,
-          selections: fieldDef.federation.requires,
+          selections: fieldFederationMetadata.requires,
         }),
       );
     }
@@ -1161,11 +1161,12 @@ export class QueryPlanningContext {
       }),
     );
 
-    if (fieldDef.federation && fieldDef.federation.provides) {
+    const fieldFederationMetadata = getFederationMetadata(fieldDef);
+    if (fieldFederationMetadata?.provides) {
       providedFields.push(
         ...collectFields(this, this.newScope(returnType), {
           kind: Kind.SELECTION_SET,
-          selections: fieldDef.federation.provides,
+          selections: fieldFederationMetadata.provides,
         }),
       );
     }
