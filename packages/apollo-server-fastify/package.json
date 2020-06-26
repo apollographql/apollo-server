@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-fastify"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-fastify"
   },
   "keywords": [
     "GraphQL",
@@ -15,7 +16,7 @@
     "Fastify",
     "Javascript"
   ],
-  "author": "opensource@apollographql.com",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
