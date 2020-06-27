@@ -129,7 +129,7 @@
     "ts-jest": "26.1.1",
     "typescript": "3.9.5",
     "winston": "3.3.3",
-    "winston-transport": "4.3.0",
+    "winston-transport": "4.4.0",
     "ws": "6.2.1"
   },
   "jest": {
