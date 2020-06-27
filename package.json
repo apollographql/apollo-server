@@ -67,7 +67,7 @@
     "@types/connect": "3.4.33",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/hapi": "17.8.8",
-    "@types/ioredis": "4.16.6",
+    "@types/ioredis": "4.16.7",
     "@types/jest": "25.2.3",
     "@types/koa-router": "7.4.1",
     "@types/lodash": "4.14.155",
