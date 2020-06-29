@@ -21,6 +21,7 @@ import {
 } from './helpers.test-helpers';
 import { Headers } from 'apollo-server-env';
 import { GraphQLRequest } from 'apollo-server-plugin-base';
+import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 // While not ideal, today, Apollo Server has a very real expectation of an HTTP
 // request context.  That will change in the future.  While we can sometimes
@@ -51,6 +52,10 @@ describe('Operation registry plugin', () => {
     const graphId = 'test-service';
     const apiKey = `service:${graphId}:not-an-api-key`;
     const hashedApiKey = hashApiKey(apiKey);
+    const engineOptions: EngineReportingOptions<any> = {
+      apiKey,
+      sendReportsImmediately: true,
+    };
     const typeDefs = gql`
       type Query {
         hello: String
@@ -88,10 +93,7 @@ describe('Operation registry plugin', () => {
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
-          engine: {
-            apiKey,
-            sendReportsImmediately: true,
-          },
+          engine: engineOptions,
           plugins: [
             plugin({
               onUnregisteredOperation,
@@ -141,10 +143,7 @@ describe('Operation registry plugin', () => {
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
-          engine: {
-            apiKey,
-            sendReportsImmediately: true,
-          },
+          engine: engineOptions,
           plugins: [
             plugin({
               onUnregisteredOperation,
@@ -180,10 +179,7 @@ describe('Operation registry plugin', () => {
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
-          engine: {
-            apiKey,
-            sendReportsImmediately: true,
-          },
+          engine: engineOptions,
           plugins: [
             plugin({
               forbidUnregisteredOperations,
@@ -236,10 +232,7 @@ describe('Operation registry plugin', () => {
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
-          engine: {
-            apiKey,
-            sendReportsImmediately: true,
-          },
+          engine: engineOptions,
           plugins: [
             plugin({
               forbidUnregisteredOperations,
@@ -277,10 +270,7 @@ describe('Operation registry plugin', () => {
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
-          engine: {
-            apiKey,
-            sendReportsImmediately: true,
-          },
+          engine: engineOptions,
           plugins: [
             plugin({
               onForbiddenOperation,
