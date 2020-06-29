@@ -5,12 +5,14 @@ import {
   GraphQLSchemaValidationError,
 } from 'apollo-graphql';
 import { defineFeature, loadFeature } from 'jest-cucumber';
-import { DocumentNode, GraphQLSchema, GraphQLError } from 'graphql';
-import { composeServices, buildFederatedSchema, normalizeTypeDefs } from '@apollo/federation';
+import { DocumentNode, GraphQLSchema, GraphQLError, Kind } from 'graphql';
+import { composeServices, buildFederatedSchema, normalizeTypeDefs, ServiceDefinition } from '@apollo/federation';
 
 import { QueryPlan } from '../..';
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
-import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
+import { buildQueryPlan, buildOperationContext, BuildQueryPlanOptions } from '../buildQueryPlan';
+
+import { fixtureNames } from '../__tests__/__fixtures__/schemas';
 
 const buildQueryPlanFeature = loadFeature(
   './packages/apollo-gateway/src/__tests__/build-query-plan.feature'
@@ -34,38 +36,22 @@ features.forEach((feature) => {
         let schema: GraphQLSchema;
         let errors: GraphQLError[];
         let queryPlan: QueryPlan;
-        let options: any = {};
+        let options: BuildQueryPlanOptions = { autoFragmentization: false };
 
-        const serviceMap = Object.fromEntries(
-          ['accounts', 'product', 'inventory', 'reviews', 'books', 'documents'].map(
-            serviceName => {
-              return [
-                serviceName,
-                buildLocalService([
-                  require(path.join(
-                    __dirname,
-                    '__fixtures__/schemas',
-                    serviceName,
-                  )),
-                ]),
-              ] as [string, LocalGraphQLDataSource];
-            },
-          ),
-        );
-
-        ({ schema, errors } = composeServices(
-          Object.entries(serviceMap).map(([serviceName, service]) => ({
-            name: serviceName,
-            typeDefs: normalizeTypeDefs(service.sdl()),
-          })),
-        ));
+        const services: ServiceDefinition[] = fixtureNames.map(name => ({
+          name,
+          typeDefs: normalizeTypeDefs(buildLocalService([
+            require(path.join(__dirname, '__fixtures__/schemas', name))
+          ]).sdl())
+        }));
+        ({ schema, errors} = composeServices(services));
 
         if (errors && errors.length > 0) {
           throw new GraphQLSchemaValidationError(errors);
         }
 
         const givenQuery = () => {
-          given(/^query$/im, (operation) => {
+          given(/^query$/im, (operation: string) => {
             query = gql(operation)
           })
         }
@@ -77,7 +63,7 @@ features.forEach((feature) => {
         }
 
         const thenQueryPlanShouldBe = () => {
-          then(/^query plan$/i, (expectedQueryPlan) => {
+          then(/^query plan$/i, (expectedQueryPlan: string) => {
             queryPlan = buildQueryPlan(
               buildOperationContext(schema, query, undefined),
               options
@@ -93,10 +79,11 @@ features.forEach((feature) => {
         // step over each defined step in the .feature and execute the correct
         // matching step fn defined above
         scenario.steps.forEach(({ stepText }) => {
-          if (/^query$/i.test(stepText)) givenQuery();
-          else if (/using autofragmentization/i.test(stepText)) whenUsingAutoFragmentization();
-          else if (/^query plan$/i.test(stepText)) thenQueryPlanShouldBe();
-          else throw new Error('Invalid steps in .feature file');
+          const title = stepText.toLocaleLowerCase();
+          if (title === "query") givenQuery();
+          else if (title === "using autofragmentization") whenUsingAutoFragmentization();
+          else if (title === "query plan") thenQueryPlanShouldBe();
+          else throw new Error(`Unrecognized steps used in "build-query-plan.feature"`);
         });
       });
     });
@@ -113,7 +100,7 @@ const serializeQueryPlanNode = (k: string , v: any) => {
     case "source":
       return undefined;
     case "kind":
-      if(v === "SelectionSet") return undefined;
+      if(v === Kind.SELECTION_SET) return undefined;
       return v;
     case "variableUsages":
       // TODO check this
@@ -123,14 +110,14 @@ const serializeQueryPlanNode = (k: string , v: any) => {
     case "name":
       return v.value;
     case "requires":
-      return v && v.selections ? v.selections : undefined;
+      return v?.selections;
     default:
       // replace source with operation
-      if(v && v.kind && v.kind === "Fetch"){
+      if(v?.kind === "Fetch"){
         return { ...v, operation: v.source };
       }
       // replace selectionSet with selections[]
-      if(v && v.kind == "InlineFragment"){
+      if(v?.kind === Kind.INLINE_FRAGMENT){
         return { ...v, selections: v.selectionSet.selections }
       }
       return v;
