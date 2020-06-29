@@ -12,8 +12,8 @@
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "preLaunchTask": "tsc: build - tsconfig.json",
       "env": {
-        "APOLLO_KEY": "",
-        "APOLLO_GRAPH_VARIANT": "production"
+        "APOLLO_KEY": "service:acephei:Lac36Cx8AI8NyXI_E9pwKw",
+        "APOLLO_GRAPH_VARIANT": "development"
       }
     }
   ]

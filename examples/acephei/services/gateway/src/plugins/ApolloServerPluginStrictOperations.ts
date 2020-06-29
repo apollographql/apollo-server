@@ -5,7 +5,7 @@ import {
 } from "apollo-server-plugin-base";
 import { ApolloError } from "apollo-server-errors";
 import loglevel from "loglevel";
-import { PluginDefinition } from "apollo-server-core/dist";
+import { PluginDefinition } from "apollo-server-core";
 
 interface Options {
   debug?: boolean;

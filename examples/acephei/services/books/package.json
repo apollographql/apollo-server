@@ -11,8 +11,7 @@
     "apollo-server": "file:../../../../packages/apollo-server"
   },
   "dependencies": {
-    "dataloader": "^1.4.0",
-    "graphql": "^14.5.8"
+    "dataloader": "^1.4.0"
   },
   "engines": {
     "node": "12.x"

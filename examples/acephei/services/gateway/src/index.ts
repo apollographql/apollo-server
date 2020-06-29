@@ -38,8 +38,22 @@ if (!apolloKey) {
   }
 }
 
-const gateway = new ApolloGateway(gatewayOptions);
+const apolloOperationRegistryPlugin = apolloKey ? require("apollo-server-plugin-operation-registry")({
+  graphVariant,
+  forbidUnregisteredOperations({
+    context, // Destructure the shared request `context`.
+    request: {
+      http: { headers } // Destructure the `headers` class.
+    },
+  }) {
+    // If a magic header is in place, allow any unregistered operation.
+    if (headers.get("override")) return false;
+    // Enforce operation safelisting on all other users.
+    return isProd;
+  }
+}) : {};
 
+const gateway = new ApolloGateway(gatewayOptions);
 const server = new ApolloServer({
   gateway,
   subscriptions: false, // Must be disabled with the gateway; see above.
@@ -68,20 +82,7 @@ const server = new ApolloServer({
     DepthLimitingPlugin({ maxDepth: 10 }),
     StrictOperationsPlugin(),
     ReportForbiddenOperationsPlugin({ debug: true }),
-    require("apollo-server-plugin-operation-registry")({
-      graphVariant,
-      forbidUnregisteredOperations({
-        context, // Destructure the shared request `context`.
-        request: {
-          http: { headers } // Destructure the `headers` class.
-        },
-      }) {
-        // If a magic header is in place, allow any unregistered operation.
-        if (headers.get("override")) return false;
-        // Enforce operation safelisting on all other users.
-        return process.env.NODE_ENV === "production";
-      }
-    })
+    apolloOperationRegistryPlugin
   ]
 });
 
