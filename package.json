@@ -94,7 +94,7 @@
     "apollo-link-persisted-queries": "0.2.2",
     "azure-functions-ts-essentials": "1.3.2",
     "body-parser": "1.19.0",
-    "bunyan": "1.8.13",
+    "bunyan": "1.8.14",
     "codecov": "3.7.0",
     "connect": "3.7.0",
     "deep-freeze": "0.0.1",
