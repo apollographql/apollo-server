@@ -1,0 +1,47 @@
+{
+  "name": "federation-demo",
+  "description": "Full federation demo to illuminate good design patterns and practices.",
+  "scripts": {
+    "watch": "tsc --build tsconfig.json --watch",
+    "start": "nodemon -e js,graphql,json --watch services start.js",
+    "postinstall": "tsc --build tsconfig.json",
+    "check": "concurrently \"npm:check:*\"",
+    "push": "concurrently \"npm:push:*\"",
+    "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/ ./{services,clients}/*/tsconfig.tsbuildinfo ./__tmp__*",
+    "check:accounts": "apollo service:check --localSchemaFile=./services/accounts/schema.graphql --serviceName=accounts",
+    "check:books": "apollo service:check --localSchemaFile=./services/books/schema.graphql --serviceName=books",
+    "check:products": "apollo service:check --localSchemaFile=./services/products/schema.graphql --serviceName=products",
+    "check:reviews": "apollo service:check --localSchemaFile=./services/reviews/schema.graphql --serviceName=reviews",
+    "check:web": "apollo client:check --clientName=web --includes=./clients/web/src/index.ts",
+    "check:ios": "apollo client:check --clientName=ios --includes=./clients/ios/src/index.ts",
+    "push:accounts": "apollo service:push --localSchemaFile=./services/accounts/schema.graphql --serviceName=accounts --serviceURL=https://acephei-accounts.herokuapp.com",
+    "push:books": "apollo service:push --localSchemaFile=./services/books/schema.graphql --serviceName=books --serviceURL=https://acephei-books.herokuapp.com",
+    "push:products": "apollo service:push --localSchemaFile=./services/products/schema.graphql --serviceName=products --serviceURL=https://acephei-products.herokuapp.com",
+    "push:reviews": "apollo service:push --localSchemaFile=./services/reviews/schema.graphql --serviceName=reviews --serviceURL=https://acephei-reviews.herokuapp.com",
+    "push:ios": "apollo client:push --clientName=ios --includes=./clients/ios/src/index.ts",
+    "push:web": "apollo client:push --clientName=web --includes=./clients/web/src/index.ts"
+  },
+  "dependencies": {
+    "accounts": "file:services/accounts",
+    "books": "file:services/books",
+    "gateway": "file:services/gateway",
+    "ios": "file:clients/ios",
+    "products": "file:services/products",
+    "reviews": "file:services/reviews",
+    "web": "file:clients/web"
+  },
+  "devDependencies": {
+    "@types/react": "^16.9.9",
+    "apollo": "^2.21.0",
+    "concurrently": "^4.1.2",
+    "nodemon": "^1.19.3",
+    "react": "^16.10.2",
+    "typescript": "^3.6.3"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "*/**/dist"
+    ],
+    "ext": "js"
+  }
+}

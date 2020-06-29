@@ -1,0 +1,23 @@
+{
+  "name": "acephei-accounts",
+  "scripts": {
+    "heroku-postbuild": "tsc --build tsconfig.json"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "peerDependencies": {
+    "@apollo/federation": "file:../../../../packages/apollo-federation",
+    "apollo-datasource": "file:../../../../packages/apollo-datasource",
+    "apollo-server": "file:../../../../packages/apollo-server"
+  },
+  "dependencies": {
+    "dataloader": "^1.4.0",
+    "graphql": "^14.6"
+  },
+  "engines": {
+    "node": "12.x"
+  },
+  "devDependencies": {
+    "typescript": "^3.6.3"
+  }
+}

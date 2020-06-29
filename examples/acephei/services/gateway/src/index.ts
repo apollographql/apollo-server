@@ -1,0 +1,71 @@
+import { ApolloServer } from "apollo-server";
+import { ApolloGateway, RemoteGraphQLDataSource } from "@apollo/gateway";
+import DepthLimitingPlugin from "./plugins/ApolloServerPluginDepthLimiting";
+import StrictOperationsPlugin from "./plugins/ApolloServerPluginStrictOperations";
+import ReportForbiddenOperationsPlugin from "./plugins/ApolloServerPluginReportForbiddenOperation";
+
+const graphVariant = process.env.APOLLO_GRAPH_VARIANT || "development";
+
+class AuthenticatedDataSource extends RemoteGraphQLDataSource {
+  willSendRequest({ request, context }) {
+    request.http.headers.set("userid", context.userID);
+  }
+}
+
+const gateway = new ApolloGateway({
+  debug: true,
+  buildService({ url }) {
+    return new AuthenticatedDataSource({ url });
+  }
+});
+
+const server = new ApolloServer({
+  gateway,
+  subscriptions: false, // Must be disabled with the gateway; see above.
+  engine: {
+    apiKey: process.env.APOLLO_KEY,   //We set the APOLLO_KEY environment variable
+    graphVariant,                           //We set the APOLLO_GRAPH_VARIANT environment variable
+    sendVariableValues: {
+      all: true
+    },
+    sendHeaders: {
+      all: true
+    }
+  },
+  context: ({ req }) => {
+    // get the user token from the headers
+    const token = req.headers.authorization || "";
+
+    // parse JWT into scope and user identity
+    // const userID = getUserId(token);
+    const userID = "1";
+
+    // add the user to the context
+    return { userID };
+  },
+  plugins: [
+    DepthLimitingPlugin({ maxDepth: 10 }),
+    StrictOperationsPlugin(),
+    ReportForbiddenOperationsPlugin({ debug: true }),
+    // TODO: Figure out package issue
+    // require("apollo-server-plugin-operation-registry")({
+    //   graphVariant,
+    //   forbidUnregisteredOperations({
+    //     context, // Destructure the shared request `context`.
+    //     request: {
+    //       http: { headers } // Destructure the `headers` class.
+    //     },
+    //   }) {
+    //     // If a magic header is in place, allow any unregistered operation.
+    //     if (headers.get("override")) return false;
+    //     // Enforce operation safelisting on all other users.
+    //     return process.env.NODE_ENV === "production";
+    //   }
+    // })
+  ]
+});
+
+const port = process.env.PORT || 4000;
+server.listen({ port }).then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
