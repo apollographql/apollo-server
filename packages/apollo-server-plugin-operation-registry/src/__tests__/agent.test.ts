@@ -443,7 +443,7 @@ describe('Agent', () => {
       });
 
       describe('When given a graphVariant', () => {
-        const graphVariant = 'master';
+        const graphVariant = 'main';
         const getOperationManifestRelativeUrl = (
           ...args: Parameters<typeof getOperationManifestUrl>
         ) =>

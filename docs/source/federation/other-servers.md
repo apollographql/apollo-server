@@ -19,4 +19,4 @@ The following is a list of known open source GraphQL server libraries that have 
 | Ruby        | graphql-ruby  | [apollo-federation-ruby](https://github.com/Gusto/apollo-federation-ruby)        |
 | Rust        | async-graphql | [async-graphql](https://github.com/async-graphql/async-graphql)                  |
 
-Do you maintain a library that implements Apollo Federation that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/tree/master/docs/source/federation/other-servers.md) to be added to the list!
+Do you maintain a library that implements Apollo Federation that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/tree/main/docs/source/federation/other-servers.md) to be added to the list!

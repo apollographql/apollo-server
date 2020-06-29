@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [],
-  "author": "Apollo <npm@apollographql.com>",
+  "author": "Apollo <opensource@apollographql.com>",
   "repository": {
     "type": "git",
     "url": "apollographql/apollo-server",

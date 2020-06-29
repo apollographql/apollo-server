@@ -9,7 +9,7 @@
     "url": "apollographql/apollo-server",
     "directory": "packages/graphql-extensions"
   },
-  "author": "Martijn Walraven <martijn@martijnwalraven.com>",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "engines": {
     "node": ">=6.0"

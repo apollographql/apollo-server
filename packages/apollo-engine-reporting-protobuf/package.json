@@ -15,7 +15,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-engine-reporting/tree/master/packages/apollo-engine-reporting-protobuf"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-engine-reporting-protobuf"
   },
   "keywords": [
     "GraphQL",
@@ -24,7 +25,7 @@
     "Server",
     "Javascript"
   ],
-  "author": "Apollo <community@apollographql.com>",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-engine-reporting/issues"
