@@ -13,7 +13,7 @@ import { HttpRequestCache } from './cache';
 
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { OperationManifest } from "./ApolloServerPluginOperationRegistry";
-import { Response, fetch } from "apollo-server-env";
+import { Response, RequestInit, fetch } from "apollo-server-env";
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
@@ -170,7 +170,7 @@ export default class Agent {
     return this.storageSecret;
   }
 
-  private fetchOptions = {
+  private fetchOptions: RequestInit = {
     // GET is what we request, but keep in mind that, when we include and get
     // a match on the `If-None-Match` header we'll get an early return with a
     // status code 304.
