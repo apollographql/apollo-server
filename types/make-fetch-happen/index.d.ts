@@ -1,3 +1,9 @@
+/**
+ * We are attempting to get types included natively in this package, but it
+ * has not happened, yet!
+ *
+ * See https://github.com/npm/make-fetch-happen/issues/20
+ */
 declare module 'make-fetch-happen' {
   import {
     Response,
