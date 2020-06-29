@@ -1,5 +1,9 @@
 # Change Log
 
+### vNEXT
+
+- __BREAKING__: Drop support for checking for "legacy" manifest locations.  These legacy manifests were deprecated when `v0.2.0` of the operation registry plugin was released.  In order to provide support for both manifests, the plugin has continued to poll for legacy operation manifests in the event that the new format could not be located.  With this change, this legacy probing will cease.  We will continue to host the legacy manifests until July 31, 2020.  Users are encouraged to update to this version to ensure that they are not inadvertently leveraging legacy manifests any longer. [PR #4330](https://github.com/apollographql/apollo-server/pull/4330)
+
 ### 0.4.1
 
 - __BREAKING__: Use a content delivery network, fetch storage secrets and operation manifests from different domains: https://storage-secrets.api.apollographql.com and https://operations.api.apollographql.com. Please mind any firewall for outgoing traffic.

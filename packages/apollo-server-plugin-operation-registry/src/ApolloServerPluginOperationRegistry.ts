@@ -1,4 +1,3 @@
-import * as assert from 'assert';
 import { pluginName, getStoreKey, signatureForLogging } from './common';
 import {
   ApolloServerPlugin,
@@ -19,7 +18,6 @@ import {
 } from 'apollo-graphql';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
-import { GraphQLSchema } from 'graphql/type';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
@@ -106,13 +104,9 @@ for observability purposes, but all operations will be permitted.`,
 
   return (): ApolloServerPlugin => ({
     async serverWillStart({
-      schema,
-      schemaHash,
       engine,
     }: GraphQLServiceContext): Promise<void> {
       logger.debug('Initializing operation registry plugin.');
-
-      assert.ok(schema instanceof GraphQLSchema);
 
       if (!engine || !engine.serviceID) {
         const messageEngineConfigurationRequired =
@@ -121,8 +115,7 @@ for observability purposes, but all operations will be permitted.`,
       }
 
       logger.debug(
-        `Operation registry is configured for '${engine.serviceID}'.  The schema hash is ${schemaHash}.`,
-      );
+        `Operation registry is configured for '${engine.serviceID}'.`);
 
       // An LRU store with no `maxSize` is effectively an InMemoryStore and
       // exactly what we want for this purpose.
@@ -131,7 +124,6 @@ for observability purposes, but all operations will be permitted.`,
       logger.debug('Initializing operation registry agent...');
 
       agent = new Agent({
-        schemaHash,
         graphVariant,
         engine,
         store,
