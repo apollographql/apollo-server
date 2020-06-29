@@ -1,5 +1,9 @@
 # Change Log
 
+### vNEXT
+
+- Drop use of `loglevel-debug`.  This removes the very long date and time prefix in front of each log line and also the support for the `DEBUG=apollo-server:apollo-server-plugin-operation-registry:*` environment variable.  Both of these were uncommonly necessary or seldom used (with the environment variable also being undocumented).  The existing behavior can be preserved by providing a `logger` that uses [`loglevel-debug`](https://npm.im/loglevel-debug), if desired.  [PR #TODO](https://github.com/apollographql/apollo-server/pull/TODO)
+
 ### 0.4.1
 
 - __BREAKING__: Use a content delivery network, fetch storage secrets and operation manifests from different domains: https://storage-secrets.api.apollographql.com and https://operations.api.apollographql.com. Please mind any firewall for outgoing traffic.
