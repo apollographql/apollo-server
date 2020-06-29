@@ -202,8 +202,6 @@ describe('Agent', () => {
         );
 
         expect(relevantLogs.length).toBe(5);
-
-        logger.debug.mockRestore();
       });
 
       it('populates the manifest store after starting', async () => {
