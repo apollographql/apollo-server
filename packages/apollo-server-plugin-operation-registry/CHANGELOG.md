@@ -1,5 +1,9 @@
 # Change Log
 
+### vNEXT
+
+- __BREAKING__: Drop support for `schemaTag` with `graphVariant` being its successor.  As noted below, `schemaTag` was deprecated in v0.3.1 and a deprecation warning has been shown since.  The `graphVariant` replaces the functionality that `schemaTag` offered and, aside from the name change, its behavior is identical. [PR #TODO]()
+
 ### 0.4.1
 
 - __BREAKING__: Use a content delivery network, fetch storage secrets and operation manifests from different domains: https://storage-secrets.api.apollographql.com and https://operations.api.apollographql.com. Please mind any firewall for outgoing traffic.
@@ -29,7 +33,7 @@
 ### 0.2.0
 
 - Per-tag operation manifests can now be fetched for each tag that has a schema and registered operations.
-- Manifest storage path structure updated to `/${graphId}/${storageSecret}/${schemaTag}/manifest.v2.json`. The storage secret is fetched automatically using your API key. No longer uses schema hash.
+- Manifest storage path structure updated to `/${graphId}/${storageSecret}/${graphVariant}/manifest.v2.json`. The storage secret is fetched automatically using your API key. No longer uses schema hash.
 - Metrics on forbidden and registered operations are now reported to Engine
 
 ### 0.1.0
