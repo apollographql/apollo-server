@@ -25,7 +25,7 @@
     "configurations": [],
     "compounds": [
       {
-        "name": "Compound",
+        "name": "Launch All",
         "configurations": [
           "Launch Accounts",
           "Launch Books",
