@@ -171,11 +171,6 @@ export default class Agent {
   }
 
   private fetchOptions: RequestInit = {
-    // GET is what we request, but keep in mind that, when we include and get
-    // a match on the `If-None-Match` header we'll get an early return with a
-    // status code 304.
-    method: 'GET',
-
     // More than three times our polling interval should be long enough to wait.
     timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
   };
