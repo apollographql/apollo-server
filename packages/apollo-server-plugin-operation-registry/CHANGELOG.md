@@ -2,7 +2,7 @@
 
 ### vNEXT
 
-- __BREAKING__: Drop support for `schemaTag` with `graphVariant` being its successor.  As noted below, `schemaTag` was deprecated in v0.3.1 and a deprecation warning has been shown since.  The `graphVariant` replaces the functionality that `schemaTag` offered and, aside from the name change, its behavior is identical. [PR #TODO]()
+- __BREAKING__: Drop support for `schemaTag` with `graphVariant` being its successor.  As noted below, `schemaTag` was deprecated in v0.3.1 and a deprecation warning has been shown since.  The `graphVariant` replaces the functionality that `schemaTag` offered and, aside from the name change, its behavior is identical. [PR #4328](https://github.com/apollographql/apollo-server/pull/4328)
 
 ### 0.4.1
 
