@@ -12,7 +12,7 @@
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "preLaunchTask": "tsc: build - tsconfig.json",
       "env": {
-        "APOLLO_KEY": "service:acephei:$U3r$3Cr3T|<3Y",
+        "APOLLO_KEY": "",
         "APOLLO_GRAPH_VARIANT": ""
       }
     }
