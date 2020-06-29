@@ -54,7 +54,7 @@ describe('Operation registry plugin', () => {
     const hashedApiKey = hashApiKey(apiKey);
     const engineOptions: EngineReportingOptions<any> = {
       apiKey,
-      sendReportsImmediately: true,
+      reportTiming: false,
     };
     const typeDefs = gql`
       type Query {
