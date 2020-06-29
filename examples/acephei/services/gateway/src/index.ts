@@ -1,9 +1,11 @@
 import { ApolloServer } from "apollo-server";
-import { ApolloGateway, RemoteGraphQLDataSource } from "@apollo/gateway";
+import { ApolloGateway, RemoteGraphQLDataSource, GatewayConfig } from "@apollo/gateway";
 import DepthLimitingPlugin from "./plugins/ApolloServerPluginDepthLimiting";
 import StrictOperationsPlugin from "./plugins/ApolloServerPluginStrictOperations";
 import ReportForbiddenOperationsPlugin from "./plugins/ApolloServerPluginReportForbiddenOperation";
 
+const isProd = process.env.NODE_ENV === "production";
+const apolloKey = process.env.APOLLO_KEY;
 const graphVariant = process.env.APOLLO_GRAPH_VARIANT || "development";
 
 class AuthenticatedDataSource extends RemoteGraphQLDataSource {
@@ -12,18 +14,37 @@ class AuthenticatedDataSource extends RemoteGraphQLDataSource {
   }
 }
 
-const gateway = new ApolloGateway({
-  debug: true,
+let gatewayOptions: GatewayConfig = {
+  debug: isProd ? false : true,
   buildService({ url }) {
     return new AuthenticatedDataSource({ url });
   }
-});
+};
+
+if (!apolloKey) {
+  console.log(`Head over to https://studio.apollographql.com and create an account to follow walkthrough in the Acephei README`);
+
+  gatewayOptions = {
+    serviceList: [
+      { name: "accounts", url: "http://localhost:4001" },
+      { name: "books", url: "http://localhost:4005" },
+      { name: "products", url: "http://localhost:4003" },
+      { name: "reviews", url: "http://localhost:4002" }
+    ],
+    debug: isProd ? false : true,
+    buildService({ url }) {
+      return new AuthenticatedDataSource({ url });
+    }
+  }
+}
+
+const gateway = new ApolloGateway(gatewayOptions);
 
 const server = new ApolloServer({
   gateway,
   subscriptions: false, // Must be disabled with the gateway; see above.
   engine: {
-    apiKey: process.env.APOLLO_KEY,   //We set the APOLLO_KEY environment variable
+    apiKey: apolloKey,   //We set the APOLLO_KEY environment variable
     graphVariant,                           //We set the APOLLO_GRAPH_VARIANT environment variable
     sendVariableValues: {
       all: true
