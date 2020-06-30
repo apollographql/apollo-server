@@ -1,5 +1,9 @@
 # Change Log
 
+### vNEXT
+
+- Switch from using our own HTTP _retries_ and _conditional-request_ implementation built on top of [`node-fetch`](https://npm.im/node-fetch) to a third-party "Fetcher" (i.e., a [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)-compliant implementation) called [`make-fetch-happen`](https://npm.im/make-fetch-happen). [PR #TODO]()
+
 ### 0.4.1
 
 - __BREAKING__: Use a content delivery network, fetch storage secrets and operation manifests from different domains: https://storage-secrets.api.apollographql.com and https://operations.api.apollographql.com. Please mind any firewall for outgoing traffic.
