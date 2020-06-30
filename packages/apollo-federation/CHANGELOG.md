@@ -1,8 +1,12 @@
 # CHANGELOG for `@apollo/federation`
 
-### vNEXT
+## vNEXT
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
+
+- _Nothing yet! Stay tuned!_
+
+## 0.16.10
 
 - The default branch of the repository has been changed to `main`.  As this changed a number of references in the repository's `package.json` and `README.md` files (e.g., for badges, links, etc.), this necessitates a release to publish those changes to npm. [PR #4302](https://github.com/apollographql/apollo-server/pull/4302)
 

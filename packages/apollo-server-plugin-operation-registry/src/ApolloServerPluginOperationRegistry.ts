@@ -23,6 +23,7 @@ import { GraphQLSchema } from 'graphql/type';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
+import { fetch } from "apollo-server-env";
 
 type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,
@@ -45,6 +46,7 @@ export interface OperationManifest {
 
 export interface Options {
   debug?: boolean;
+  fetcher?: typeof fetch;
   forbidUnregisteredOperations?:
     | boolean
     | ForbidUnregisteredOperationsPredicate;
@@ -136,6 +138,7 @@ for observability purposes, but all operations will be permitted.`,
         engine,
         store,
         logger,
+        fetcher: options.fetcher,
       });
 
       await agent.start();
