@@ -235,7 +235,6 @@ it('collapses nested requires with user-defined fragments', async () => {
                 preferences {
                   favorites {
                     animal
-                    color
                   }
                 }
               }
