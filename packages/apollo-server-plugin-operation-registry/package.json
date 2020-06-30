@@ -18,12 +18,13 @@
   "dependencies": {
     "apollo-graphql": "0.4.5",
     "apollo-server-caching": "file:../apollo-server-caching",
+    "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "fast-json-stable-stringify": "^2.0.0",
     "loglevel": "^1.6.1",
     "loglevel-debug": "^0.0.1",
-    "node-fetch": "^2.3.0"
+    "make-fetch-happen": "^8.0.7"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
