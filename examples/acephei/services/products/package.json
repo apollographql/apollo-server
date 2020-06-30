@@ -7,9 +7,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "peerDependencies": {
-    "@apollo/federation": "file:../../../../packages/apollo-federation",
-    "apollo-datasource": "file:../../../../packages/apollo-datasource",
-    "apollo-server": "file:../../../../packages/apollo-server"
+    "@apollo/federation": "*",
+    "apollo-datasource": "*",
+    "apollo-server": "*"
   },
   "dependencies": {
     "dataloader": "^1.4.0"

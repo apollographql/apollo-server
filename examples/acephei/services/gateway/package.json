@@ -10,9 +10,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "peerDependencies": {
-    "@apollo/gateway": "file:../../../../packages/apollo-gateway",
-    "apollo-server": "file:../../../../packages/apollo-server",
-    "apollo-server-plugin-operation-registry": "file:../../../../packages/apollo-server-plugin-operation-registry"
+    "@apollo/gateway": "*",
+    "apollo-server": "*",
+    "apollo-server-plugin-operation-registry": "*"
   },
   "dependencies": {},
   "engines": {
