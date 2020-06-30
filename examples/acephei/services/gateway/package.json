@@ -1,5 +1,6 @@
 {
   "name": "gateway",
+  "private": true,
   "files": [
     "/dist"
   ],

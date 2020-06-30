@@ -1,5 +1,6 @@
 {
   "name": "products",
+  "private": true,
   "scripts": {
     "heroku-postbuild": "tsc --build tsconfig.json"
   },

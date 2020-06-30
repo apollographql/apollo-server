@@ -1,8 +1,6 @@
-require("accounts");
-require("books");
-require("products");
-require("reviews");
+require("./services/accounts");
+require("./services/books");
+require("./services/products");
+require("./services/reviews");
+require("./services/gateway");
 
-setTimeout(() => {
-  require("gateway");
-}, 2);

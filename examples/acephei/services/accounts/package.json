@@ -1,5 +1,6 @@
 {
-  "name": "acephei-accounts",
+  "name": "accounts",
+  "private": true,
   "scripts": {
     "heroku-postbuild": "tsc --build tsconfig.json"
   },

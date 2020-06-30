@@ -43,7 +43,6 @@ jobs:
 common_publish_filters: &common_publish_filters
   filters:
     branches:
-      # If 'docs' is found, with word boundaries on either side, skip.
       only: /.*?\bmaster\b.*/
 
 workflows:

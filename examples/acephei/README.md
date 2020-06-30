@@ -60,17 +60,17 @@ The launch configurations are defined in the `.vscode/launch.json` folders withi
 If you would like to setup this example with the graph you created in your [Apollo Studio](https://studio.apollographql.com/) account, you'll need to register each downstream service using the [Apollo CLI](https://github.com/apollographql/apollo-tooling):
 
 ```
-apollo service:push --key={SERVICE_API_KEY} --localSchemaFile=./services/accounts/schema.graphql --serviceName=accounts --serviceURL=http://localhost:4001
+apollo service:push --key={service:michael-watson:key_1234} --localSchemaFile=./services/accounts/schema.graphql --serviceName=accounts --serviceURL=http://localhost:4001
 
-apollo service:push --key={SERVICE_API_KEY} --localSchemaFile=./services/books/schema.graphql --serviceName=books --serviceURL=http://localhost:4005
+apollo service:push --key={service:michael-watson:key_1234} --localSchemaFile=./services/books/schema.graphql --serviceName=books --serviceURL=http://localhost:4005
 
-apollo service:push --key={SERVICE_API_KEY} --localSchemaFile=./services/products/schema.graphql --serviceName=products --serviceURL=http://localhost:4003
+apollo service:push --key={service:michael-watson:key_1234} --localSchemaFile=./services/products/schema.graphql --serviceName=products --serviceURL=http://localhost:4003
 
-apollo service:push --key={SERVICE_API_KEY} --localSchemaFile=./services/reviews/schema.graphql --serviceName=reviews --serviceURL=http://localhost:4002
+apollo service:push --key={service:michael-watson:key_1234} --localSchemaFile=./services/reviews/schema.graphql --serviceName=reviews --serviceURL=http://localhost:4002
 ```
 
 After this, you should be able to start the project with your API key:
 
 ```
-APOLLO_KEY={SERVICE_API_KEY} npm start
+APOLLO_KEY={service:michael-watson:key_1234} npm start
 ```

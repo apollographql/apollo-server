@@ -1,5 +1,5 @@
 {
-  "name": "federation-demo",
+  "name": "acephei",
   "description": "Full federation demo to illuminate good design patterns and practices.",
   "scripts": {
     "watch": "tsc --build tsconfig.json --watch",
