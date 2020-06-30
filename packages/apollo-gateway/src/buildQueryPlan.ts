@@ -60,7 +60,7 @@ const typenameField = {
   },
 };
 
-interface BuildQueryPlanOptions {
+export interface BuildQueryPlanOptions {
   autoFragmentization: boolean;
 }
 
