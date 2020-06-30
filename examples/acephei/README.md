@@ -26,7 +26,7 @@ npm install
 
 * *(Optional)*: Setup [Apollo Studio](https://studio.apollographql.com/) account and create your first graph. You'll need to copy the service API key for later on.
 
-### Quistart script
+### Quick start script
 
 There is a `start.js` script that will run all of the gateway and services locally. We combine this in the projects `start` script with nodemon that you can run:
 
