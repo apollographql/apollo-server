@@ -53,7 +53,7 @@ The launch configurations are defined in the `.vscode/launch.json` folders withi
 * Launch Products - Debugs only the products service
 * Launch Reviews - Debugs only the reviews service
 
-*Note*: You may want to set the environment variables for the graph you created in your Apollo Account. Open the `examples/acephei/services/gateway/.vscode/launch.json` and you can set the keys before starting the debugger.
+*Note*: You may want to set the environment variables for the graph you created in your Apollo Account. Open the `services/gateway/.vscode/launch.json` and you can set the keys before starting the debugger.
 
 ## Apollo Studio - Setting up your graph
 
