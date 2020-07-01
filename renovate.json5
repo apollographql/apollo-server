@@ -68,7 +68,7 @@
       // We need to tell Renovate to check the branches for each major version
       // of Apollo Server.  "Past" major versions should be added here!
       "baseBranches": [
-        "master",
+        "main",
         "version-2"
       ]
     }

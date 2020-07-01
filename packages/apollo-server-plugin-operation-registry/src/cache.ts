@@ -5,7 +5,7 @@ import { InMemoryLRUCache } from 'apollo-server-caching';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 function cacheKey(request: Request) {
-  return `gateway:request-cache:${request.method}:${request.url}`;
+  return `op-reg:request-cache:${request.method}:${request.url}`;
 }
 
 interface CachedRequest {

@@ -1,12 +1,13 @@
 {
   "name": "apollo-server-core",
-  "version": "2.15.0",
+  "version": "2.15.1",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-core"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-core"
   },
   "keywords": [
     "GraphQL",
@@ -14,7 +15,7 @@
     "Server",
     "Javascript"
   ],
-  "author": "Jonas Helfer <jonas@helfer.email>",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
