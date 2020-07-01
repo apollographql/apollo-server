@@ -5,6 +5,7 @@ import {
   isFederationDirective,
   logDirective,
   typeNodesAreEquivalent,
+  getFederationMetadata,
 } from '../../utils';
 import { PostCompositionValidator } from '.';
 
@@ -24,10 +25,12 @@ export const executableDirectivesIdentical: PostCompositionValidator = ({
     .filter(x => !isFederationDirective(x) && !isSpecifiedDirective(x));
 
   customDirectives.forEach(directive => {
-    if (!directive.federation) return;
+    const directiveFederationMetadata = getFederationMetadata(directive);
+
+    if (!directiveFederationMetadata) return;
 
     const definitions = Object.entries(
-      directive.federation.directiveDefinitions,
+      directiveFederationMetadata.directiveDefinitions,
     );
 
     // Side-by-side compare all definitions of a single directive, if there's a

@@ -1,5 +1,5 @@
 import { isObjectType, typeFromAST, isEqualType, GraphQLError } from 'graphql';
-import { logServiceAndType, errorWithCode } from '../../utils';
+import { logServiceAndType, errorWithCode, getFederationMetadata } from '../../utils';
 import { PostCompositionValidator } from '.';
 
 /**
@@ -16,10 +16,11 @@ export const externalTypeMismatch: PostCompositionValidator = ({ schema }) => {
 
     // If externals is populated, we need to look at each one and confirm
     // there is a matching @requires
-    if (namedType.federation && namedType.federation.externals) {
+    const typeFederationMetadata = getFederationMetadata(namedType);
+    if (typeFederationMetadata?.externals) {
       // loop over every service that has extensions with @external
       for (const [serviceName, externalFieldsForService] of Object.entries(
-        namedType.federation.externals,
+        typeFederationMetadata.externals,
       )) {
         // for a single service, loop over the external fields.
         for (const { field: externalField } of externalFieldsForService) {
@@ -51,7 +52,7 @@ export const externalTypeMismatch: PostCompositionValidator = ({ schema }) => {
               errorWithCode(
                 'EXTERNAL_TYPE_MISMATCH',
                 logServiceAndType(serviceName, typeName, externalFieldName) +
-                  `Type \`${externalFieldType.name}\` does not match the type of the original field in ${namedType.federation.serviceName} (\`${matchingBaseField.type}\`)`,
+                  `Type \`${externalFieldType.name}\` does not match the type of the original field in ${typeFederationMetadata.serviceName} (\`${matchingBaseField.type}\`)`,
               ),
             );
           }
