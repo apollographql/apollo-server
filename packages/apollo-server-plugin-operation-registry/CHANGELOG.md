@@ -4,6 +4,10 @@
 
 - _Nothing yet! Stay tuned!_
 
+## 0.4.4
+
+- Reinstate typings for `make-fetch-happen` at the `apollo-gateway` project level (and now, additionally, `apollo-server-plugin-operation-registry`) [PR #4333](https://github.com/apollographql/apollo-server/pull/4333)
+
 ## 0.4.3
 
 - Switch from using our own HTTP _retries_ and _conditional-request_ implementation built on top of [`node-fetch`](https://npm.im/node-fetch) to a third-party "Fetcher" (i.e., a [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)-compliant implementation) called [`make-fetch-happen`](https://npm.im/make-fetch-happen). [PR #TODO]()
