@@ -45,6 +45,7 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
 
     return {
         serverWillStart: async () => {
+            //This currrent example doesn't refresh the costMapping, but it could be updated on a certain interval
             let apiKey = process.env.APOLLO_KEY;
             if (!apiKey) throw new Error("You must set the APOLLO_KEY environment variable");
 
@@ -78,6 +79,7 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                     costMapping[fieldName] = fieldStat.metrics.fieldHistogram.durationMs;
                 })
             } catch (err) {
+                //We don't want to throw an error if we are unable to fetch a cost mapping due to Apollo API not being up
                 logger.error(err);
             }
         },
@@ -88,6 +90,7 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                     if (!requestContext.document) return;
 
                     let totalCost = 0.0;
+                    //Check the cache if it has a previous calculation for the given queryHash
                     let cacheHit = await cache.get(requestContext.queryHash ?? '');
                     if (cacheHit) {
                         let cachedDuration = Number.parseFloat(cacheHit);
@@ -99,9 +102,12 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                         let typeFieldMax = 0.0;
                         const typeInfo = new TypeInfo(requestContext.schema);
                         logger.debug(`Calculating cost for ${requestContext.operationName ?? requestContext.queryHash}`);
+
+                        //We are going to want to visit our document with the typeInfo of our schema
                         visit(
                             requestContext.document,
                             visitWithTypeInfo(typeInfo, {
+                                //On each node, we want to calculate the cost
                                 Field(node) {
                                     const fieldDef = typeInfo.getFieldDef();
                                     const parentType = typeInfo.getParentType();
@@ -110,6 +116,7 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                                     if (!parentType) return node;
 
                                     let costToAdd = 0.0;
+                                    //The field costs returned from Apollo are in the form of Type.fieldName
                                     let costKey = `${parentType.name}.${fieldDef.name}`;
                                     const nodeCost = costMapping[costKey];
 
@@ -128,18 +135,25 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                                         logger.debug(`${costKey}: ${nodeCost}`);
 
                                         if (lastType == parentType.name && nodeCost > typeFieldMax) {
+                                            //Since GraphQL executes a given Types fields in parallel, we'll need to always take the maximum cost of the field selection
+                                            //First we check if the given node is of the same last Type and if it has a greater cost
+
                                             logger.debug(`${costKey} Type greater cost: ${nodeCost} than: ${typeFieldMax}`);
                                             costToAdd = nodeCost - typeFieldMax;
 
                                             typeFieldMax = nodeCost;
                                         } else if (lastType == parentType.name) {
+                                            //The given node is of the same last type, but has a lower field cost than the current typeField cost max
+                                            //This means we will not add anything to the total cost calculated
                                             logger.debug(`${costKey} Type lower cost: ${nodeCost} than: ${typeFieldMax}`);
                                         } else if (typeFieldMax == 0.0 && !lastType) {
+                                            // If there is no lastType and typeFieldMax is 0, this is the first node of the calculation and should be added to the totalCost
                                             costToAdd = nodeCost;
 
                                             lastType = parentType.name;
                                             typeFieldMax = nodeCost;
                                         } else if (lastType != parentType.name) {
+                                            //Last check, the type has changed and we need to add the node cost to our total cost
                                             costToAdd = nodeCost;
                                             logger.debug(`${costKey} New Type increased cost to ${totalCost} by adding ${nodeCost}`);
 
@@ -147,9 +161,11 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                                             typeFieldMax = nodeCost;
                                         }
                                     } else {
+                                        //We might not have a known cost for a given field, what should we do by default?
                                         logger.warn(`${costKey}: No known cost`);
                                     }
 
+                                    //If there is a cost to add, increase total cost calculated
                                     if (costToAdd > 0) {
                                         totalCost += costToAdd;
                                         logger.debug(`${costKey} Increased cost to ${totalCost} by adding ${costToAdd}`);
@@ -162,6 +178,7 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
 
                         logger.debug(`End of operation cost caclulation`);
 
+                        //If we have a given queryHash, set this in the cache to be used later
                         if (requestContext.queryHash) {
                             logger.debug(`Caching ${requestContext.queryHash}: ${totalCost}`);
                             cache.set(requestContext.queryHash, totalCost.toString());
@@ -169,6 +186,9 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                     }
 
                     logger.debug(`TOTAL COST - ${requestContext.operationName}: ${totalCost}`);
+
+                    //If maxCost is 0, than all queries will be allowed
+                    //Check totalCost against the maxCost set to see if an operation is too expensive
                     if (maxCost > 0 && totalCost > maxCost) {
                         logger.error(`Operation is too expensive (hash:${requestContext.queryHash}) - ${requestContext.operationName}: ${totalCost}`);
                         throw new Error(`Operation is too expensive - ${requestContext.operationName}: ${totalCost}`);
