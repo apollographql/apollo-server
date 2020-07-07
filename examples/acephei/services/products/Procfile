@@ -1,2 +1,0 @@
-web: node dist/index.js
-release: npx apollo service:push --localSchemaFile=./schema.graphql --serviceName=products --serviceURL=https://${HEROKU_APP_NAME}.herokuapp.com --key=$GRAPH_MANAGER_API_KEY
