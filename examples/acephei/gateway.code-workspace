@@ -18,7 +18,7 @@
     },
     {
       "name": "Gateway",
-      "path": "services/gateway"
+      "path": "gateway"
     }
   ],
   "launch": {

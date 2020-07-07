@@ -20,7 +20,7 @@
   "dependencies": {
     "accounts": "file:services/accounts",
     "books": "file:services/books",
-    "gateway": "file:services/gateway",
+    "gateway": "file:gateway",
     "products": "file:services/products",
     "reviews": "file:services/reviews"
   },
