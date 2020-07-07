@@ -16,7 +16,7 @@ class AuthenticatedDataSource extends RemoteGraphQLDataSource {
 }
 
 let gatewayOptions: GatewayConfig = {
-  debug: isProd ? false : true,
+  // debug: isProd ? false : true,
   buildService({ url }) {
     return new AuthenticatedDataSource({ url });
   }
@@ -80,12 +80,15 @@ const server = new ApolloServer({
     return { userID };
   },
   plugins: [
-    OperationCostPlugin({ debug: true, maxCost: 1500 }),
+    OperationCostPlugin({ debug: true, maxCost: 1500, dataFrom: "-604800", durationMsPercentile: 1.0 }),
     DepthLimitingPlugin({ maxDepth: 10 }),
     StrictOperationsPlugin(),
     ReportForbiddenOperationsPlugin({ debug: true }),
-    apolloOperationRegistryPlugin
-  ]
+    // apolloOperationRegistryPlugin,
+  ],
+  async onHealthCheck() {
+    await server.executeOperation({ query: "{ __typename }", });
+  }
 });
 
 const port = process.env.PORT || 4000;

@@ -10,12 +10,13 @@ interface Options {
     debug?: boolean;
     maxCost?: number;
     durationMsPercentile?: number;
+    dataFrom?: string
 }
 
 const AllGraphOperationsQuery = `#graphql
-    query GetOperationsForGraph($id: ID!, $durationMsPercentile: Float!) {
+    query GetOperationsForGraph($id: ID!, $durationMsPercentile: Float!, $from: Timestamp!) {
         service(id: $id) {
-            stats(from:"-86400") {
+            stats(from:$from) {
                 fieldStats {
                     groupBy {
                             field
@@ -34,6 +35,7 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
     let costMapping = {};
     let maxCost = options.maxCost || 0;
     let durationMsPercentile = options.maxCost || 1.0;
+    let tracesFrom = options.dataFrom || "-86400";
 
     const logger = loglevel.getLogger(`apollo-server:strict-operations-plugin`);
     if (options.debug === true) logger.enableAll();
@@ -55,7 +57,8 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                         query: AllGraphOperationsQuery,
                         variables: {
                             id: graphId,
-                            durationMsPercentile: durationMsPercentile
+                            durationMsPercentile: durationMsPercentile,
+                            from: tracesFrom
                         },
                         http: {
                             method: 'POST',
@@ -106,6 +109,7 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                                     //TODO: question - why wouldn't there be a parent type?
                                     if (!parentType) return node;
 
+                                    let costToAdd = 0.0;
                                     let costKey = `${parentType.name}.${fieldDef.name}`;
                                     const nodeCost = costMapping[costKey];
 
@@ -115,31 +119,40 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                                         if (isSpecifiedScalarType(parentType)) {
                                             //It's a standard type, there won't be any other fields to visit and we want to return that cost
                                             logger.debug(`${costKey}: ${nodeCost}`);
-                                            totalCost = nodeCost;
+                                            costToAdd = nodeCost;
+                                        } else {
+                                            //Non-standard GraphQL type costs will be included in the type/field selections
+                                            logger.debug(`${costKey}: Non-standard GraphQL type - no change to cost`);
                                         }
                                     } else if (nodeCost) {
-                                        // logger.debug(`***${costKey}: ${nodeCost}`);
+                                        logger.debug(`${costKey}: ${nodeCost}`);
 
                                         if (lastType == parentType.name && nodeCost > typeFieldMax) {
-                                            logger.debug(`${costKey}: ${nodeCost}`);
-                                            logger.debug(`${costKey} Type greater cost: ${nodeCost}`);
+                                            logger.debug(`${costKey} Type greater cost: ${nodeCost} than: ${typeFieldMax}`);
+                                            costToAdd = nodeCost - typeFieldMax;
+
                                             typeFieldMax = nodeCost;
+                                        } else if (lastType == parentType.name) {
+                                            logger.debug(`${costKey} Type lower cost: ${nodeCost} than: ${typeFieldMax}`);
                                         } else if (typeFieldMax == 0.0 && !lastType) {
-                                            logger.debug(`${costKey}: ${nodeCost}`);
+                                            costToAdd = nodeCost;
+
                                             lastType = parentType.name;
                                             typeFieldMax = nodeCost;
                                         } else if (lastType != parentType.name) {
-                                            //Type has changed, add in to total cost the typeFieldMax
-                                            totalCost += typeFieldMax;
-                                            logger.debug(`Type changed - ${parentType.name}`);
-                                            logger.debug(`Increased cost to ${totalCost} by adding ${typeFieldMax}`);
+                                            costToAdd = nodeCost;
+                                            logger.debug(`${costKey} New Type increased cost to ${totalCost} by adding ${nodeCost}`);
 
                                             lastType = parentType.name;
                                             typeFieldMax = nodeCost;
-                                            logger.debug(`${costKey}: ${nodeCost}`);
-                                        } else {
-                                            logger.debug(`${costKey}: ${nodeCost}`);
                                         }
+                                    } else {
+                                        logger.warn(`${costKey}: No known cost`);
+                                    }
+
+                                    if (costToAdd > 0) {
+                                        totalCost += costToAdd;
+                                        logger.debug(`${costKey} Increased cost to ${totalCost} by adding ${costToAdd}`);
                                     }
 
                                     return node;
@@ -147,10 +160,7 @@ export default function OperationCostPlugin(options: Options = Object.create(nul
                             })
                         );
 
-                        //The last visited typeFieldMax was not added in
-                        totalCost += typeFieldMax;
-                        logger.debug(`End of operation`);
-                        logger.debug(`Increased cost to ${totalCost} by adding ${typeFieldMax}`);
+                        logger.debug(`End of operation cost caclulation`);
 
                         if (requestContext.queryHash) {
                             logger.debug(`Caching ${requestContext.queryHash}: ${totalCost}`);
