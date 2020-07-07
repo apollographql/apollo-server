@@ -283,60 +283,6 @@ describe('Agent', () => {
         expect(storeDeleteSpy).toBeCalledTimes(0);
       });
 
-      it('continues polling even after initial failure', async () => {
-        nockStorageSecret(genericServiceID, genericApiKeyHash);
-        nockStorageSecretOperationManifest(
-          genericServiceID,
-          genericStorageSecret,
-          500,
-        );
-        const store = defaultStore();
-        const storeSetSpy = jest.spyOn(store, 'set');
-        const storeDeleteSpy = jest.spyOn(store, 'delete');
-        const agent = createAgent({ store });
-        jest.useFakeTimers();
-        await agent.start();
-
-        expect(storeSetSpy).toBeCalledTimes(0);
-        expect(storeDeleteSpy).toBeCalledTimes(0);
-
-        // Only the initial start-up check should have happened by now.
-        expect(agent._timesChecked).toBe(1);
-
-        // If it's one millisecond short of our next poll interval, nothing
-        // should have changed yet.
-        jest.advanceTimersByTime(defaultTestAgentPollSeconds * 1000 - 1);
-
-        // Still only one check.
-        expect(agent._timesChecked).toBe(1);
-        expect(storeSetSpy).toBeCalledTimes(0);
-
-        // Now, we'll expect another GOOD request to fulfill, so we'll nock it.
-        nockStorageSecret(genericServiceID, genericApiKeyHash);
-        nockGoodManifestsUnderStorageSecret(
-          genericServiceID,
-          genericStorageSecret,
-          [
-            sampleManifestRecords.a,
-            sampleManifestRecords.b,
-            sampleManifestRecords.c,
-          ],
-        );
-
-        // If we move forward the last remaining millisecond, we should trigger
-        // and end up with a successful sync.
-        jest.advanceTimersByTime(1);
-
-        // While that timer will fire, it will do work async, and we need to
-        // wait on that work itself.
-        await agent.requestPending();
-
-        // Now the times checked should have gone up.
-        expect(agent._timesChecked).toBe(2);
-        // And store should have been called with operations ABC
-        expect(storeSetSpy).toBeCalledTimes(3);
-      });
-
       it('purges operations which are removed from the manifest', async () => {
         const store = defaultStore();
         const storeSetSpy = jest.spyOn(store, 'set');
