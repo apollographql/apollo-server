@@ -7,7 +7,7 @@ import {
   isUnionType,
   GraphQLError,
 } from 'graphql';
-import { logServiceAndType, errorWithCode } from '../../utils';
+import { logServiceAndType, errorWithCode, getFederationMetadata } from '../../utils';
 import { PostCompositionValidator } from '.';
 
 /**
@@ -24,10 +24,11 @@ export const keyFieldsSelectInvalidType: PostCompositionValidator = ({
   for (const [typeName, namedType] of Object.entries(types)) {
     if (!isObjectType(namedType)) continue;
 
-    if (namedType.federation && namedType.federation.keys) {
+    const typeFederationMetadata = getFederationMetadata(namedType);
+    if (typeFederationMetadata?.keys) {
       const allFieldsInType = namedType.getFields();
       for (const [serviceName, selectionSets] of Object.entries(
-        namedType.federation.keys,
+        typeFederationMetadata.keys,
       )) {
         for (const selectionSet of selectionSets) {
           for (const field of selectionSet as FieldNode[]) {
