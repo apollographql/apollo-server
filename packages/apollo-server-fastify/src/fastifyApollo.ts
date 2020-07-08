@@ -1,33 +1,32 @@
 import {
-  convertNodeHttpToRequest,
   GraphQLOptions,
+  convertNodeHttpToRequest,
   runHttpQuery,
 } from 'apollo-server-core';
-import { FastifyReply, FastifyRequest, RequestHandler } from 'fastify';
-import { IncomingMessage, OutgoingMessage } from 'http';
 import { ValueOrPromise } from 'apollo-server-types';
+import { FastifyReply, FastifyRequest, RouteHandlerMethod } from 'fastify';
 
 export async function graphqlFastify(
   options: (
-    req?: FastifyRequest<IncomingMessage>,
-    res?: FastifyReply<OutgoingMessage>,
+    request?: FastifyRequest,
+    reply?: FastifyReply,
   ) => ValueOrPromise<GraphQLOptions>,
-): Promise<RequestHandler<IncomingMessage, OutgoingMessage>> {
+): Promise<RouteHandlerMethod<any, any, any>> {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
 
   return async (
-    request: FastifyRequest<IncomingMessage>,
-    reply: FastifyReply<OutgoingMessage>,
+    request: FastifyRequest<any, any, any>,
+    reply: FastifyReply,
   ) => {
     try {
       const { graphqlResponse, responseInit } = await runHttpQuery(
         [request, reply],
         {
-          method: request.req.method as string,
+          method: request.raw.method as string,
           options,
-          query: request.req.method === 'POST' ? request.body : request.query,
+          query: request.raw.method === 'POST' ? request.body : request.query,
           request: convertNodeHttpToRequest(request.raw),
         },
       );
@@ -42,12 +41,12 @@ export async function graphqlFastify(
       reply.serializer((payload: string) => payload);
       reply.send(graphqlResponse);
     } catch (error) {
-      if ('HttpQueryError' !== error.name) {
+      if (error.name !== 'HttpQueryError') {
         throw error;
       }
 
       if (error.headers) {
-        Object.keys(error.headers).forEach(header => {
+        Object.keys(error.headers).forEach((header) => {
           reply.header(header, error.headers[header]);
         });
       }

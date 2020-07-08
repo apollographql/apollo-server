@@ -3,22 +3,21 @@ import { Accepts } from 'accepts';
 import {
   ApolloServerBase,
   FileUploadOptions,
-  formatApolloErrors,
   PlaygroundRenderPageOptions,
+  formatApolloErrors,
   processFileUploads,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { IncomingMessage, ServerResponse, Server } from 'http';
-import { graphqlFastify } from './fastifyApollo';
 import { GraphQLOperation } from 'graphql-upload';
+import { graphqlFastify } from './fastifyApollo';
 
 const kMultipart = Symbol('multipart');
 const fastJson = require('fast-json-stringify');
 
 export interface ServerRegistration {
   path?: string;
-  cors?: object | boolean;
-  onHealthCheck?: (req: FastifyRequest<IncomingMessage>) => Promise<any>;
+  cors?: Record<string, unknown> | boolean;
+  onHealthCheck?: (req: FastifyRequest) => Promise<any>;
   disableHealthCheck?: boolean;
 }
 
@@ -35,17 +34,17 @@ const fileUploadMiddleware = (
   uploadsConfig: FileUploadOptions,
   server: ApolloServerBase,
 ) => (
-  req: FastifyRequest<IncomingMessage>,
-  reply: FastifyReply<ServerResponse>,
+  request: FastifyRequest<any, any, any>,
+  reply: FastifyReply,
   done: (err: Error | null, body?: any) => void,
 ) => {
   if (
-    (req.req as any)[kMultipart] &&
+    (request.raw as any)[kMultipart] &&
     typeof processFileUploads === 'function'
   ) {
-    processFileUploads(req.req, reply.res, uploadsConfig)
+    processFileUploads(request.raw, reply.raw, uploadsConfig)
       .then((body: GraphQLOperation | GraphQLOperation[]) => {
-        req.body = body;
+        request.body = body;
         done(null);
       })
       .catch((error: any) => {
@@ -76,34 +75,32 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration = {}) {
-    this.graphqlPath = path ? path : '/graphql';
+    this.graphqlPath = path || '/graphql';
     const promiseWillStart = this.willStart();
 
-    return async (
-      app: FastifyInstance<Server, IncomingMessage, ServerResponse>,
-    ) => {
+    return async (app: FastifyInstance<any, any>) => {
       await promiseWillStart;
 
       if (!disableHealthCheck) {
-        app.get('/.well-known/apollo/server-health', async (req, res) => {
+        app.get('/.well-known/apollo/server-health', async (request, reply) => {
           // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
-          res.type('application/health+json');
+          reply.type('application/health+json');
 
           if (onHealthCheck) {
             try {
-              await onHealthCheck(req);
-              res.send(stringifyHealthCheck({ status: 'pass' }));
+              await onHealthCheck(request);
+              reply.send(stringifyHealthCheck({ status: 'pass' }));
             } catch (e) {
-              res.status(503).send(stringifyHealthCheck({ status: 'fail' }));
+              reply.status(503).send(stringifyHealthCheck({ status: 'fail' }));
             }
           } else {
-            res.send(stringifyHealthCheck({ status: 'pass' }));
+            reply.send(stringifyHealthCheck({ status: 'pass' }));
           }
         });
       }
 
       app.register(
-        async instance => {
+        async (instance) => {
           instance.register(require('fastify-accepts'));
 
           if (cors === true) {
@@ -118,19 +115,19 @@ export class ApolloServer extends ApolloServerBase {
             reply.send();
           });
 
-          const beforeHandlers = [
+          const preHandlers = [
             (
-              req: FastifyRequest<IncomingMessage>,
-              reply: FastifyReply<ServerResponse>,
+              request: FastifyRequest<any, any>,
+              reply: FastifyReply<any, any, any>,
               done: () => void,
             ) => {
               // Note: if you enable playground in production and expect to be able to see your
               // schema, you'll need to manually specify `introspection: true` in the
               // ApolloServer constructor; by default, the introspection query is only
               // enabled in dev.
-              if (this.playgroundOptions && req.req.method === 'GET') {
+              if (this.playgroundOptions && request.raw.method === 'GET') {
                 // perform more expensive content-type check only if necessary
-                const accept = (req as any).accepts() as Accepts;
+                const accept = (request as any).accepts() as Accepts;
                 const types = accept.types() as string[];
                 const prefersHTML =
                   types.find(
@@ -160,20 +157,21 @@ export class ApolloServer extends ApolloServerBase {
             instance.addContentTypeParser(
               'multipart',
               (
-                request: IncomingMessage,
+                request: FastifyRequest<any, any>,
+                _payload: any,
                 done: (err: Error | null, body?: any) => void,
               ) => {
                 (request as any)[kMultipart] = true;
                 done(null);
               },
             );
-            beforeHandlers.push(fileUploadMiddleware(this.uploadsConfig, this));
+            preHandlers.push(fileUploadMiddleware(this.uploadsConfig, this));
           }
 
           instance.route({
             method: ['GET', 'POST'],
             url: '/',
-            beforeHandler: beforeHandlers,
+            preHandler: preHandlers,
             handler: await graphqlFastify(this.graphQLServerOptions.bind(this)),
           });
         },
