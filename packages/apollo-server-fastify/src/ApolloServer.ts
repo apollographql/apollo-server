@@ -6,15 +6,14 @@ import {
   GraphQLOptions,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { IncomingMessage, OutgoingMessage, ServerResponse, Server } from 'http';
 import { graphqlFastify } from './fastifyApollo';
 
 const fastJson = require('fast-json-stringify');
 
 export interface ServerRegistration {
   path?: string;
-  cors?: object | boolean;
-  onHealthCheck?: (req: FastifyRequest<IncomingMessage>) => Promise<any>;
+  cors?: Record<string, unknown> | boolean;
+  onHealthCheck?: (req: FastifyRequest) => Promise<any>;
   disableHealthCheck?: boolean;
 }
 
@@ -29,10 +28,10 @@ const stringifyHealthCheck = fastJson({
 
 export class ApolloServer extends ApolloServerBase {
   async createGraphQLServerOptions(
-    request?: FastifyRequest<IncomingMessage>,
-    reply?: FastifyReply<OutgoingMessage>,
+    request?: FastifyRequest,
+    reply?: FastifyReply,
   ): Promise<GraphQLOptions> {
-     return this.graphQLServerOptions({ request, reply });
+    return this.graphQLServerOptions({ request, reply });
   }
 
   public createHandler({
@@ -41,34 +40,32 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration = {}) {
-    this.graphqlPath = path ? path : '/graphql';
+    this.graphqlPath = path || '/graphql';
     const promiseWillStart = this.willStart();
 
-    return async (
-      app: FastifyInstance<Server, IncomingMessage, ServerResponse>,
-    ) => {
+    return async (app: FastifyInstance) => {
       await promiseWillStart;
 
       if (!disableHealthCheck) {
-        app.get('/.well-known/apollo/server-health', async (req, res) => {
+        app.get('/.well-known/apollo/server-health', async (request, reply) => {
           // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
-          res.type('application/health+json');
+          reply.type('application/health+json');
 
           if (onHealthCheck) {
             try {
-              await onHealthCheck(req);
-              res.send(stringifyHealthCheck({ status: 'pass' }));
+              await onHealthCheck(request);
+              reply.send(stringifyHealthCheck({ status: 'pass' }));
             } catch (e) {
-              res.status(503).send(stringifyHealthCheck({ status: 'fail' }));
+              reply.status(503).send(stringifyHealthCheck({ status: 'fail' }));
             }
           } else {
-            res.send(stringifyHealthCheck({ status: 'pass' }));
+            reply.send(stringifyHealthCheck({ status: 'pass' }));
           }
         });
       }
 
       app.register(
-        async instance => {
+        async (instance) => {
           instance.register(require('fastify-accepts'));
 
           if (cors === true) {
@@ -85,17 +82,17 @@ export class ApolloServer extends ApolloServerBase {
 
           const preHandlers = [
             (
-              req: FastifyRequest<IncomingMessage>,
-              reply: FastifyReply<ServerResponse>,
+              request: FastifyRequest,
+              reply: FastifyReply,
               done: () => void,
             ) => {
               // Note: if you enable playground in production and expect to be able to see your
               // schema, you'll need to manually specify `introspection: true` in the
               // ApolloServer constructor; by default, the introspection query is only
               // enabled in dev.
-              if (this.playgroundOptions && req.req.method === 'GET') {
+              if (this.playgroundOptions && request.raw.method === 'GET') {
                 // perform more expensive content-type check only if necessary
-                const accept = (req as any).accepts() as Accepts;
+                const accept = (request as any).accepts() as Accepts;
                 const types = accept.types() as string[];
                 const prefersHTML =
                   types.find(
