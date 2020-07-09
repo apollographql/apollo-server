@@ -38,10 +38,7 @@ const fileUploadMiddleware = (
   reply: FastifyReply,
   done: (err: Error | null, body?: any) => void,
 ) => {
-  if (
-    (request.raw as any)[kMultipart] &&
-    typeof processFileUploads === 'function'
-  ) {
+  if (request.raw[kMultipart] && typeof processFileUploads === 'function') {
     processFileUploads(request.raw, reply.raw, uploadsConfig)
       .then((body: GraphQLOperation | GraphQLOperation[]) => {
         request.body = body;
@@ -157,11 +154,11 @@ export class ApolloServer extends ApolloServerBase {
             instance.addContentTypeParser(
               'multipart',
               (
-                request: FastifyRequest<any, any>,
+                request: FastifyRequest<any, any, any>,
                 _payload: any,
                 done: (err: Error | null, body?: any) => void,
               ) => {
-                (request as any)[kMultipart] = true;
+                request.raw[kMultipart] = true;
                 done(null);
               },
             );

@@ -29,7 +29,7 @@ const resolvers = {
   },
 };
 
-const port = 9999;
+const port = 9998;
 
 describe('apollo-server-fastify', () => {
   let server: ApolloServer;
@@ -37,7 +37,7 @@ describe('apollo-server-fastify', () => {
   let app: FastifyInstance;
 
   testApolloServer(
-    async options => {
+    async (options) => {
       server = new ApolloServer(options);
       app = fastify();
       app.register(server.createHandler());
@@ -46,7 +46,7 @@ describe('apollo-server-fastify', () => {
     },
     async () => {
       if (server) await server.stop();
-      if (app) await new Promise(resolve => app.close(() => resolve()));
+      if (app) await new Promise((resolve) => app.close(() => resolve()));
       if (httpServer && httpServer.listening) await httpServer.close();
     },
   );
@@ -72,7 +72,7 @@ describe('apollo-server-fastify', () => {
 
   afterEach(async () => {
     if (server) await server.stop();
-    if (app) await new Promise(resolve => app.close(() => resolve()));
+    if (app) await new Promise((resolve) => app.close(() => resolve()));
     if (httpServer) await httpServer.close();
   });
 
