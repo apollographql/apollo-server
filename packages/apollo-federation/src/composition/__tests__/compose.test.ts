@@ -11,6 +11,7 @@ import {
   selectionSetSerializer,
 } from '../../snapshotSerializers';
 import { normalizeTypeDefs } from '../normalize';
+import { getFederationMetadata } from '../utils';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(typeSerializer);
@@ -59,8 +60,8 @@ describe('composeServices', () => {
     const product = schema.getType('Product') as GraphQLObjectType;
     const user = schema.getType('User') as GraphQLObjectType;
 
-    expect(product.federation.serviceName).toEqual('serviceA');
-    expect(user.federation.serviceName).toEqual('serviceB');
+    expect(getFederationMetadata(product).serviceName).toEqual('serviceA');
+    expect(getFederationMetadata(user).serviceName).toEqual('serviceB');
   });
 
   it("doesn't leave federation directives in the final schema", () => {
@@ -115,8 +116,8 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(product.federation.serviceName).toEqual('serviceA');
-      expect(product.getFields()['price'].federation.serviceName).toEqual(
+      expect(getFederationMetadata(product).serviceName).toEqual('serviceA');
+      expect(getFederationMetadata(product.getFields()['price']).serviceName).toEqual(
         'serviceB',
       );
     });
@@ -154,8 +155,8 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(product.federation.serviceName).toEqual('serviceB');
-      expect(product.getFields()['price'].federation.serviceName).toEqual(
+      expect(getFederationMetadata(product).serviceName).toEqual('serviceB');
+      expect(getFederationMetadata(product.getFields()['price']).serviceName).toEqual(
         'serviceA',
       );
     });
@@ -208,11 +209,11 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(product.federation.serviceName).toEqual('serviceB');
-      expect(product.getFields()['price'].federation.serviceName).toEqual(
+      expect(getFederationMetadata(product).serviceName).toEqual('serviceB');
+      expect(getFederationMetadata(product.getFields()['price']).serviceName).toEqual(
         'serviceA',
       );
-      expect(product.getFields()['color'].federation.serviceName).toEqual(
+      expect(getFederationMetadata(product.getFields()['color']).serviceName).toEqual(
         'serviceC',
       );
     });
@@ -269,8 +270,8 @@ describe('composeServices', () => {
                         }
                   `);
 
-      expect(product.federation.serviceName).toEqual('serviceB');
-      expect(product.getFields()['price'].federation.serviceName).toEqual(
+      expect(getFederationMetadata(product).serviceName).toEqual('serviceB');
+      expect(getFederationMetadata(product.getFields()['price']).serviceName).toEqual(
         'serviceC',
       );
     });
@@ -353,10 +354,10 @@ describe('composeServices', () => {
                           name: String!
                         }
                   `);
-      expect(product.getFields()['sku'].federation.serviceName).toEqual(
+      expect(getFederationMetadata(product.getFields()['sku']).serviceName).toEqual(
         'serviceB',
       );
-      expect(product.getFields()['name'].federation.serviceName).toEqual(
+      expect(getFederationMetadata(product.getFields()['name']).serviceName).toEqual(
         'serviceB',
       );
     });
@@ -398,7 +399,7 @@ describe('composeServices', () => {
                                 name: String!
                               }
                         `);
-        expect(product.getFields()['name'].federation.serviceName).toEqual(
+        expect(getFederationMetadata(product.getFields()['name']).serviceName).toEqual(
           'serviceB',
         );
       });
@@ -445,7 +446,7 @@ describe('composeServices', () => {
                                 name: String!
                               }
                         `);
-        expect(product.getFields()['name'].federation.serviceName).toEqual(
+        expect(getFederationMetadata(product.getFields()['name']).serviceName).toEqual(
           'serviceB',
         );
       });
@@ -595,8 +596,8 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(product.federation.serviceName).toEqual('serviceA');
-      expect(product.getFields()['id'].federation.serviceName).toEqual(
+      expect(getFederationMetadata(product).serviceName).toEqual('serviceA');
+      expect(getFederationMetadata(product.getFields()['id']).serviceName).toEqual(
         'serviceB',
       );
     });
@@ -635,7 +636,7 @@ describe('composeServices', () => {
 
       const query = schema.getQueryType();
 
-      expect(query.federation.serviceName).toBeUndefined();
+      expect(getFederationMetadata(query).serviceName).toBeUndefined();
     });
 
     it('treats root Query type definition as an extension, not base definitions', () => {
@@ -676,7 +677,7 @@ describe('composeServices', () => {
 
       const query = schema.getType('Query') as GraphQLObjectType;
 
-      expect(query.federation.serviceName).toBeUndefined();
+      expect(getFederationMetadata(query).serviceName).toBeUndefined();
     });
 
     it('allows extension of the Mutation type with no base type definition', () => {
@@ -878,7 +879,7 @@ describe('composeServices', () => {
 
         const product = schema.getType('Product');
 
-        expect(product.federation.externals).toMatchInlineSnapshot(`
+        expect(getFederationMetadata(product).externals).toMatchInlineSnapshot(`
                               Object {
                                 "serviceB--MISSING": Array [
                                   Object {
@@ -936,10 +937,10 @@ describe('composeServices', () => {
                                 price: Int!
                               }
                         `);
-        expect(product.getFields()['price'].federation.serviceName).toEqual(
+        expect(getFederationMetadata(product.getFields()['price']).serviceName).toEqual(
           'serviceB',
         );
-        expect(product.federation.serviceName).toEqual('serviceA');
+        expect(getFederationMetadata(product).serviceName).toEqual('serviceA');
       });
     });
 
@@ -969,7 +970,7 @@ describe('composeServices', () => {
 
         const product = schema.getType('Product') as GraphQLObjectType;
         expect(
-          product.getFields()['price'].federation.requires,
+          getFederationMetadata(product.getFields()['price']).requires,
         ).toMatchInlineSnapshot(`sku`);
       });
 
@@ -1002,7 +1003,7 @@ describe('composeServices', () => {
         expect(errors).toHaveLength(0);
 
         const product = schema.getType('Product') as GraphQLObjectType;
-        expect(product.getFields()['price'].federation.requires)
+        expect(getFederationMetadata(product.getFields()['price']).requires)
           .toMatchInlineSnapshot(`
                                 sku {
                                   id
@@ -1042,7 +1043,7 @@ describe('composeServices', () => {
         expect(errors).toHaveLength(0);
 
         const review = schema.getType('Review') as GraphQLObjectType;
-        expect(review.getFields()['product'].federation).toMatchInlineSnapshot(`
+        expect(getFederationMetadata(review.getFields()['product'])).toMatchInlineSnapshot(`
           Object {
             "belongsToValueType": false,
             "provides": sku,
@@ -1085,7 +1086,7 @@ describe('composeServices', () => {
         expect(errors).toHaveLength(0);
 
         const review = schema.getType('Review') as GraphQLObjectType;
-        expect(review.getFields()['product'].federation.provides)
+        expect(getFederationMetadata(review.getFields()['product']).provides)
           .toMatchInlineSnapshot(`
                                 sku {
                                   id
@@ -1122,7 +1123,7 @@ describe('composeServices', () => {
         expect(errors).toHaveLength(0);
 
         const review = schema.getType('Review') as GraphQLObjectType;
-        expect(review.getFields()['products'].federation)
+        expect(getFederationMetadata(review.getFields()['products']))
           .toMatchInlineSnapshot(`
           Object {
             "belongsToValueType": false,
@@ -1171,9 +1172,9 @@ describe('composeServices', () => {
         expect(errors).toHaveLength(0);
 
         const valueType = schema.getType('ValueType') as GraphQLObjectType;
-        const userField = valueType.getFields()['user'].federation;
-        expect(userField.belongsToValueType).toBe(true);
-        expect(userField.serviceName).toBe(null);
+        const userFieldFederationMetadata = getFederationMetadata(valueType.getFields()['user']);
+        expect(userFieldFederationMetadata.belongsToValueType).toBe(true);
+        expect(userFieldFederationMetadata.serviceName).toBe(null);
       });
     });
 
@@ -1203,7 +1204,7 @@ describe('composeServices', () => {
         expect(errors).toHaveLength(0);
 
         const product = schema.getType('Product') as GraphQLObjectType;
-        expect(product.federation.keys).toMatchInlineSnapshot(`
+        expect(getFederationMetadata(product).keys).toMatchInlineSnapshot(`
                               Object {
                                 "serviceA": Array [
                                   sku,
@@ -1244,7 +1245,7 @@ describe('composeServices', () => {
         expect(errors).toHaveLength(0);
 
         const product = schema.getType('Product') as GraphQLObjectType;
-        expect(product.federation.keys).toMatchInlineSnapshot(`
+        expect(getFederationMetadata(product).keys).toMatchInlineSnapshot(`
                               Object {
                                 "serviceA": Array [
                                   color {
@@ -1287,7 +1288,7 @@ describe('composeServices', () => {
         expect(errors).toHaveLength(0);
 
         const product = schema.getType('Product') as GraphQLObjectType;
-        expect(product.federation.keys).toMatchInlineSnapshot(`
+        expect(getFederationMetadata(product).keys).toMatchInlineSnapshot(`
                               Object {
                                 "serviceA": Array [
                                   color {

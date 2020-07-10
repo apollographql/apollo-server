@@ -1,5 +1,5 @@
 import { isObjectType, FieldNode, GraphQLError } from 'graphql';
-import { logServiceAndType, errorWithCode } from '../../utils';
+import { logServiceAndType, errorWithCode, getFederationMetadata } from '../../utils';
 import { PostCompositionValidator } from '.';
 
 /**
@@ -18,7 +18,8 @@ export const requiresFieldsMissingExternal: PostCompositionValidator = ({
     // for each field, if there's a requires on it, check that there's a matching
     // @external field, and that the types referenced are from the base type
     for (const [fieldName, field] of Object.entries(namedType.getFields())) {
-      const serviceName = field.federation && field.federation.serviceName;
+      const fieldFederationMetadata = getFederationMetadata(field);
+      const serviceName = fieldFederationMetadata?.serviceName;
 
       // serviceName should always exist on fields that have @requires federation data, since
       // the only case where serviceName wouldn't exist is on a base type, and in that case,
@@ -26,13 +27,12 @@ export const requiresFieldsMissingExternal: PostCompositionValidator = ({
       // composition work. This kind of error should be validated _before_ composition.
       if (!serviceName) continue;
 
-      if (field.federation && field.federation.requires) {
+      if (fieldFederationMetadata?.requires) {
+        const typeFederationMetadata = getFederationMetadata(namedType);
         const externalFieldsOnTypeForService =
-          namedType.federation &&
-          namedType.federation.externals &&
-          namedType.federation.externals[serviceName];
+          typeFederationMetadata?.externals?.[serviceName];
 
-        const selections = field.federation.requires as FieldNode[];
+        const selections = fieldFederationMetadata?.requires as FieldNode[];
         for (const selection of selections) {
           const foundMatchingExternal = externalFieldsOnTypeForService
             ? externalFieldsOnTypeForService.some(
