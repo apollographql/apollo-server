@@ -7,6 +7,8 @@ import testSuite, {
 } from 'apollo-server-integration-testsuite';
 import { Config } from 'apollo-server-core';
 
+const port = 9998;
+
 async function createApp(options: CreateAppOptions = {}) {
   const app = fastify();
 
@@ -15,7 +17,7 @@ async function createApp(options: CreateAppOptions = {}) {
   );
 
   app.register(server.createHandler());
-  await app.listen(9999);
+  await app.listen(port);
 
   return app.server;
 }

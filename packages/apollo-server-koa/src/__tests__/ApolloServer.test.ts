@@ -370,7 +370,7 @@ const resolvers = {
               },
               Mutation: {
                 singleUpload: async (_, args) => {
-                  expect((await args.file).stream).toBeDefined();
+                  expect(await args.file).toBeDefined();
                   return args.file;
                 },
               },

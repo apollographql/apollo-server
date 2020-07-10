@@ -29,7 +29,7 @@ const resolvers = {
   },
 };
 
-const port = 9998;
+const port = 9999;
 
 describe('apollo-server-fastify', () => {
   let server: ApolloServer;
@@ -429,7 +429,7 @@ describe('apollo-server-fastify', () => {
               },
               Mutation: {
                 singleUpload: async (_, args) => {
-                  expect((await args.file).stream).toBeDefined();
+                  expect(await args.file).toBeDefined();
                   return args.file;
                 },
               },
