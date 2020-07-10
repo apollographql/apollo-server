@@ -1,0 +1,19 @@
+extend type Query {
+  """
+    The currently authenticated user root. All nodes off of this
+    root will be authenticated as the current user
+  """
+  me: User
+}
+
+"""
+  The base User in Acephei
+"""
+type User @key(fields: "id") {
+  "A globally unique id for the user"
+  id: ID!
+  "The users full name as provided"
+  name: String
+  "The account username of the user"
+  username: String
+}
