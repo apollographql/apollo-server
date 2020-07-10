@@ -305,7 +305,7 @@ describe('Downstream service health checks', () => {
       expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
     });
 
-    it(`Crashes on initial load when health check fails`, async () => {
+    it(`Rejects on initial load when health check fails`, async () => {
       mockSDLQuerySuccess(service);
       mockServiceHealthCheck(service).reply(500);
 
@@ -315,16 +315,9 @@ describe('Downstream service health checks', () => {
         logger,
       });
 
-      // Mock implementation of process.exit with another () => never function.
-      const mockExit = jest
-        .spyOn(process, 'exit')
-        .mockImplementation((code) => {
-          throw new Error(code?.toString());
-        });
-
-      await expect(gateway.load()).rejects.toThrowError('1');
-
-      mockExit.mockRestore();
+      await expect(gateway.load()).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"500: Internal Server Error"`,
+      );
     });
   });
 

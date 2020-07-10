@@ -306,23 +306,13 @@ export class ApolloGateway implements GraphQLService {
       this.engineConfig = options.engine;
     }
 
-    if (isManagedConfig(this.config) || this.experimental_pollInterval) {
-      await this.updateComposition();
-      if (!this.pollingTimer) this.pollServices();
-    } else {
-      try {
-        await this.updateComposition();
-      } catch {
-        // In the case that we're neither managed nor polling, the gateway should
-        // crash in the event that it can't load service definitions. Leaving the
-        // gateway running in a non-operable state doesn't make sense and this
-        // allows container managers like K8s to restart the broken container.
-        // Note: the error caught within `this.updateComposition` handles logging
-        // for the relevant error.
-        process.exit(1);
-      }
+    await this.updateComposition();
+    if (
+      (isManagedConfig(this.config) || this.experimental_pollInterval) &&
+      !this.pollingTimer
+    ) {
+      this.pollServices();
     }
-
 
     const { graphId, graphVariant } = (options && options.engine) || {};
     const mode = isManagedConfig(this.config) ? 'managed' : 'unmanaged';

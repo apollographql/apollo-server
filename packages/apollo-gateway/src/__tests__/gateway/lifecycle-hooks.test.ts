@@ -88,15 +88,7 @@ describe('lifecycle hooks', () => {
       logger,
     });
 
-    // Mock implementation of process.exit with another () => never function.
-    const mockExit = jest.spyOn(process, 'exit').mockImplementation((code) => {
-      throw new Error(code?.toString());
-    });
-
-    // Confirm the gateway exits with code 1
-    await expect(gateway.load()).rejects.toThrowError('1');
-
-    mockExit.mockRestore();
+    await expect(gateway.load()).rejects.toThrowError();
 
     const callbackArgs = experimental_didFailComposition.mock.calls[0][0];
     expect(callbackArgs.serviceList).toHaveLength(1);

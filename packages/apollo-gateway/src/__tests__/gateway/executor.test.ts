@@ -79,7 +79,7 @@ describe('ApolloGateway executor', () => {
 
     expect(logger.error.mock.calls).toEqual([
       ["Error checking for changes to service definitions: Tried to load services from remote endpoints but none provided"],
-      ["This data graph is missing a valid configuration. 1"]
+      ["This data graph is missing a valid configuration. Tried to load services from remote endpoints but none provided"]
     ]);
 
     mockExit.mockRestore();
