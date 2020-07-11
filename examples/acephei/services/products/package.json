@@ -18,6 +18,6 @@
     "node": "12.x"
   },
   "devDependencies": {
-    "typescript": "^3.6.3"
+    "typescript": "3.9.6"
   }
 }
