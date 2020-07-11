@@ -151,13 +151,16 @@ function mergeFieldNodeSelectionSets(
       nonAliasedFieldNodes,
     ).values(),
   ).map((nodesWithSameName) => {
-    const node = nodesWithSameName[0];
+    const node = { ...nodesWithSameName[0] };
     if (node.selectionSet) {
-      node.selectionSet.selections = mergeFieldNodeSelectionSets(
-        nodesWithSameName.flatMap(
-          (node) => node.selectionSet?.selections || [],
+      node.selectionSet = {
+        ...node.selectionSet,
+        selections: mergeFieldNodeSelectionSets(
+          nodesWithSameName.flatMap(
+            (node) => node.selectionSet?.selections || [],
+          ),
         ),
-      );
+      };
     }
     return node;
   });

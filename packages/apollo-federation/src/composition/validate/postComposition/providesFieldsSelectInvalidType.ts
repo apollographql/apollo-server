@@ -8,7 +8,7 @@ import {
   getNullableType,
   isUnionType,
 } from 'graphql';
-import { logServiceAndType, errorWithCode } from '../../utils';
+import { logServiceAndType, errorWithCode, getFederationMetadata } from '../../utils';
 import { PostCompositionValidator } from '.';
 
 /**
@@ -28,7 +28,8 @@ export const providesFieldsSelectInvalidType: PostCompositionValidator = ({
     // for each field, if there's a provides on it, check the type of the field
     // it references
     for (const [fieldName, field] of Object.entries(namedType.getFields())) {
-      const serviceName = field.federation && field.federation.serviceName;
+      const fieldFederationMetadata = getFederationMetadata(field);
+      const serviceName = fieldFederationMetadata?.serviceName;
 
       // serviceName should always exist on fields that have @provides federation data, since
       // the only case where serviceName wouldn't exist is on a base type, and in that case,
@@ -40,8 +41,8 @@ export const providesFieldsSelectInvalidType: PostCompositionValidator = ({
       if (!isObjectType(fieldType)) continue;
       const allFields = fieldType.getFields();
 
-      if (field.federation && field.federation.provides) {
-        const selections = field.federation.provides as FieldNode[];
+      if (fieldFederationMetadata?.provides) {
+        const selections = fieldFederationMetadata.provides as FieldNode[];
         for (const selection of selections) {
           const name = selection.name.value;
           const matchingField = allFields[name];

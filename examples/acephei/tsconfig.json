@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "composite": true
+    },
+    "files": [],
+    "include": [],
+    "references": [
+      { "path": "./services/accounts" },
+      { "path": "./services/books" },
+      { "path": "./services/products" },
+      { "path": "./services/reviews" },
+      { "path": "./gateway" }
+    ]
+  }

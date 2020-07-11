@@ -1,5 +1,5 @@
 import { isObjectType, FieldNode, GraphQLError } from 'graphql';
-import { logServiceAndType, errorWithCode } from '../../utils';
+import { logServiceAndType, errorWithCode, getFederationMetadata } from '../../utils';
 import { PostCompositionValidator } from '.';
 
 /**
@@ -14,10 +14,11 @@ export const keyFieldsMissingOnBase: PostCompositionValidator = ({
   for (const [typeName, namedType] of Object.entries(types)) {
     if (!isObjectType(namedType)) continue;
 
-    if (namedType.federation && namedType.federation.keys) {
+    const typeFederationMetadata = getFederationMetadata(namedType);
+    if (typeFederationMetadata?.keys) {
       const allFieldsInType = namedType.getFields();
       for (const [serviceName, selectionSets] of Object.entries(
-        namedType.federation.keys,
+        typeFederationMetadata.keys,
       )) {
         for (const selectionSet of selectionSets) {
           for (const field of selectionSet as FieldNode[]) {
@@ -28,18 +29,15 @@ export const keyFieldsMissingOnBase: PostCompositionValidator = ({
 
             // NOTE: We don't need to warn if there is no matching field.
             // keyFieldsSelectInvalidType already does that :)
-
             if (matchingField) {
+              const fieldFederationMetadata = getFederationMetadata(matchingField);
               // warn if not from base type OR IF IT WAS OVERWITTEN
-              if (
-                matchingField.federation &&
-                matchingField.federation.serviceName
-              ) {
+              if (fieldFederationMetadata?.serviceName) {
                 errors.push(
                   errorWithCode(
                     'KEY_FIELDS_MISSING_ON_BASE',
                     logServiceAndType(serviceName, typeName) +
-                      `A @key selects ${name}, but ${typeName}.${name} was either created or overwritten by ${matchingField.federation.serviceName}, not ${serviceName}`,
+                      `A @key selects ${name}, but ${typeName}.${name} was either created or overwritten by ${fieldFederationMetadata.serviceName}, not ${serviceName}`,
                   ),
                 );
               }

@@ -32,13 +32,19 @@ export function graphqlLambda(
     callback,
   ): void => {
     context.callbackWaitsForEmptyEventLoop = false;
+    let { body, isBase64Encoded } = event;
 
-    if (event.httpMethod === 'POST' && !event.body) {
+    if (body && isBase64Encoded) {
+      body = Buffer.from(body, 'base64').toString();
+    }
+
+    if (event.httpMethod === 'POST' && !body) {
       return callback(null, {
         body: 'POST body missing.',
         statusCode: 500,
       });
     }
+
     runHttpQuery([event, context], {
       method: event.httpMethod,
       options: options,
