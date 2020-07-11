@@ -1,67 +1,84 @@
 # CHANGELOG for `@apollo/federation`
 
-### vNEXT
+## vNEXT
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned._
+- _Nothing yet! Stay tuned!_
+
+## v0.17.0
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
+## v0.16.11
+
+- Reinstate typings for `make-fetch-happen` at the `apollo-gateway` project level (and now, additionally, `apollo-server-plugin-operation-registry`) [PR #4333](https://github.com/apollographql/apollo-server/pull/4333)
+
+## 0.16.10
+
+- The default branch of the repository has been changed to `main`.  As this changed a number of references in the repository's `package.json` and `README.md` files (e.g., for badges, links, etc.), this necessitates a release to publish those changes to npm. [PR #4302](https://github.com/apollographql/apollo-server/pull/4302)
+- __BREAKING__: Move federation metadata from custom objects on schema nodes over to the `extensions` field on schema nodes which are intended for metadata. This is a breaking change because it narrows the `graphql` peer dependency from `^14.0.2` to `^14.5.0` which is when [`extensions` were introduced](https://github.com/graphql/graphql-js/pull/2097) for all Type System objects. [PR #4302](https://github.com/apollographql/apollo-server/pull/4313)
+
+## 0.16.9
+
+- Handle `@external` validation edge case for interface implementors [#4284](https://github.com/apollographql/apollo-server/pull/4284)
 
 ## 0.16.7
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
-## 0.16.6
+## v0.16.6
 
 - In-house `Maybe` type which was previously imported from `graphql` and has been moved in `v15.1.0`. [#4230](https://github.com/apollographql/apollo-server/pull/4230)
 - Remove remaining common primitives from SDL during composition. This is a follow up to [#4209](https://github.com/apollographql/apollo-server/pull/4209), and additionally removes directives which are included in a schema by default (`@skip`, `@include`, `@deprecated`, and `@specifiedBy`) [#4228](https://github.com/apollographql/apollo-server/pull/4209)
 
-## 0.16.5
+## v0.16.5
 
 - Remove federation primitives from SDL during composition. This allows for services to report their *full* SDL from the `{ _service { sdl } }` query as opposed to the previously limited SDL without federation definitions. [#4209](https://github.com/apollographql/apollo-server/pull/4209)
 
-## 0.16.4
+## v0.16.4
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
-## 0.16.3
+## v0.16.3
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
-## 0.16.2
+## v0.16.2
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
-## 0.16.1
+## v0.16.1
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
-## 0.16.0
+## v0.16.0
 
 - No changes. This package was major versioned to maintain lockstep versioning with @apollo/gateway.
 
-## 0.15.1
+## v0.15.1
 
 - Export `defaultRootOperationNameLookup` and `normalizeTypeDefs`; needed by `@apollo/gateway` to normalize root operation types when reporting to Apollo Graph Manager. [#4071](https://github.com/apollographql/apollo-server/pull/4071)
 
-## 0.15.0
+## v0.15.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
-## 0.14.1
+## v0.14.1
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/b898396e9fcd3b9092b168f9aac8466ca186fa6b)
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
-## 0.14.0
+## v0.14.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/71a3863f59f4ab2c9052c316479d94c6708c4309)
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
-## 0.13.2
+## v0.13.2
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 

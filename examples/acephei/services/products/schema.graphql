@@ -1,0 +1,113 @@
+extend type Query {
+  """
+    Fetch a simple list of products with an offset
+  """
+  topProducts(first: Int = 5): [Product] @deprecated(reason: "Use `products` instead")
+
+  """
+    Fetch a paginated list of products based on a filter type.
+  """
+  products(first: Int = 5, after: Int = 0, type: ProductType): ProductConnection
+}
+
+"Information about the brand Ikea"
+type Ikea {
+  "Which asile to find an item"
+  asile: Int
+}
+
+"Information about the brand Amazon"
+type Amazon {
+  "The url of a referrer for a product"
+  referrer: String
+}
+
+"A union of all brands represented within the store"
+union Brand = Ikea | Amazon
+
+enum ProductType {
+  LATEST
+  TRENDING
+}
+
+"""
+  The PageInfo type provides pagination helpers for determining
+  if more data can be fetched from the list
+"""
+type PageInfo {
+  """
+    More items exist in the list
+  """
+  hasNextPage: Boolean
+  """
+    Items earlier in the list exist
+  """
+  hasPreviousPage: Boolean
+}
+
+"""
+  A connection edge for the Product type
+"""
+type ProductEdge {
+  product: Product
+}
+
+"""
+  A connection wrapper for lists of products
+"""
+type ProductConnection {
+  "Helpful metadata about the connection"
+  pageInfo: PageInfo
+  "List of products returned by the search"
+  edges: [ProductEdge]
+}
+
+"""
+  The Product type represents all products within the system
+"""
+interface Product {
+  "The primary identifier of products in the graph"
+  upc: String!
+  "The display name of the product"
+  name: String
+  "A simple integer price of the product in US dollars"
+  price: Int
+  "How much the product weighs in kg"
+  weight: Int @deprecated(reason: "Not all product's have a weight")
+}
+
+"""
+  The Furniture type represents all products which are items
+  of furniture.
+"""
+type Furniture implements Product @key(fields: "upc") @key(fields: "sku") {
+  "The modern primary identifier for furniture"
+  upc: String!
+  "The SKU field is how furniture was previously stored, and still exists in some legacy systems"
+  sku: String!
+  name: String
+  price: Int
+  "The brand of furniture"
+  brand: Brand
+  
+  # deprecated at the interface level
+  weight: Int
+}
+
+
+# The Book type is extended to implement a product so it can
+# be returned by product queries. We convert the title + year into a name
+# and use the isbn as the primary identifier
+extend type Book implements Product @key(fields: "isbn") {
+  isbn: String! @external
+  title: String @external
+  year: Int @external
+  "Since books are now products, we can also use their upc as a primary id"
+  upc: String!
+  "The name of a book is the book's title + year published"
+  name(delimeter: String = " "): String @requires(fields: "title year")
+  price: Int
+
+  # deprecated at the interface level
+  weight: Int
+}

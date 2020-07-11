@@ -115,7 +115,7 @@ message Trace {
 
 	// represents a node in the query plan, under which there is a trace tree for that service fetch.
 	// In particular, each fetch node represents a call to an implementing service, and calls to implementing
-	// services may not be unique. See https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/src/QueryPlan.ts
+	// services may not be unique. See https://github.com/apollographql/apollo-server/blob/main/packages/apollo-gateway/src/QueryPlan.ts
 	// for more information and details.
 	message QueryPlanNode {
 		// This represents a set of nodes to be executed sequentially by the Gateway executor

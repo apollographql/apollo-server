@@ -4,33 +4,51 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned._
+- _Nothing yet! Stay tuned!_
 
-## 0.16.7
+## v0.17.0
+
+- __BREAKING__: Move federation metadata from custom objects on schema nodes over to the `extensions` field on schema nodes which are intended for metadata. This is a breaking change because it narrows the `graphql` peer dependency from `^14.0.2` to `^14.5.0` which is when [`extensions` were introduced](https://github.com/graphql/graphql-js/pull/2097) for all Type System objects. [PR #4302](https://github.com/apollographql/apollo-server/pull/4313)
+
+## v0.16.11
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
+## v0.16.10
+
+- The default branch of the repository has been changed to `main`.  As this changed a number of references in the repository's `package.json` and `README.md` files (e.g., for badges, links, etc.), this necessitates a release to publish those changes to npm. [PR #4302](https://github.com/apollographql/apollo-server/pull/4302)
+- __FIX__: The cache implementation for the HTTP-fetcher which is used when communicating with the Apollo Registry when the gateway is configured to use [managed federation](https://www.apollographql.com/docs/graph-manager/managed-federation/overview/) will no longer write to its cache when it receives a 304 response.  This is necessary since such a response indicates that the cache used to conditionally make the request must already be present.  This does not affect GraphQL requests at runtime, only the polling and fetching mechanism for retrieving composed schemas under manged federation. [PR #4325](https://github.com/apollographql/apollo-server/pull/4325)
+- __FIX__: The `mergeFieldNodeSelectionSets` method no longer mutates original FieldNode objects. Before, it was updating the selection set of the original object, corrupting the data accross requests.
+
+## v0.16.9
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
+## v0.16.7
 
 - Bumped the version of `apollo-server-core`, but no other changes!
 
-## 0.16.6
+## v0.16.6
 
 - Only changes in the similarly versioned `@apollo/federation` package.
 
-## 0.16.5
+## v0.16.5
 
 - Only changes in the similarly versioned `@apollo/federation` package.
 
-## 0.16.4
+## v0.16.4
 
 - __NEW__: Provide the `requestContext` as an argument to the experimental callback function `experimental_didResolveQueryPlan`. [#4173](https://github.com/apollographql/apollo-server/pull/4173)
 
-## 0.16.3
+## v0.16.3
 
 - This updates a dependency of `apollo-server-core` that is only used for its TypeScript typings, not for any runtime dependencies.  The reason for the upgrade is that the `apollo-server-core` package (again, used only for types!) was affected by a GitHub Security Advisory.  [See the related `CHANGELOG.md` for Apollo Server for more details, including a link to the advisory](https://github.com/apollographql/apollo-server/blob/354d9910e1c87af93c7d50263a28554b449e48db/CHANGELOG.md#v2142).
 
-## 0.16.2
+## v0.16.2
 
 - __FIX__: Collapse nested required fields into a single body in the query plan. Before, some nested fields' selection sets were getting split, causing some of their subfields to be dropped when executing the query. This fix collapses the split selection sets into one. [#4064](https://github.com/apollographql/apollo-server/pull/4064)
 
-## 0.16.1
+## v0.16.1
 
 - __NEW__: Provide the ability to pass a custom `fetcher` during `RemoteGraphQLDataSource` construction to be used when executing operations against downstream services.  Providing a custom `fetcher` may be necessary to accommodate more advanced needs, e.g., configuring custom TLS certificates for internal services.  [PR #4149](https://github.com/apollographql/apollo-server/pull/4149)
 
@@ -38,16 +56,16 @@
 
   For now, the default `fetcher` will remain the same ([`node-fetch`](https://npm.im/node-fetch)) implementation.  A future major-version bump will update it to be consistent with other feature-rich implementations of the Fetch API which are used elsewhere in the Apollo Server stack where we use [`make-fetch-happen`](https://npm.im/make-fetch-happen).  In all likelihood, `ApolloGateway` will pass its own `fetcher` to the `RemoteGraphQLDataSource` during service initialization.
 
-## 0.16.0
+## v0.16.0
 
 - __BREAKING__: Use a content delivery network for managed configuration, fetch storage secrets and composition configuration from different domains: https://storage-secrets.api.apollographql.com and https://federation.api.apollographql.com. Please mind any firewall for outgoing traffic. [#4080](https://github.com/apollographql/apollo-server/pull/4080)
 
-## 0.15.1
+## v0.15.1
 
 - __FIX__: Correctly handle unions with nested conditions that have no `possibleTypes` [#4071](https://github.com/apollographql/apollo-server/pull/4071)
 - __FIX__: Normalize root operation types when reporting to Apollo Graph Manager. Federation always uses the default names `Query`, `Mutation`, and `Subscription` for root operation types even if downstream services choose different names; now we properly normalize traces received from downstream services in the same way. [#4100](https://github.com/apollographql/apollo-server/pull/4100)
 
-## 0.15.0
+## v0.15.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/e37384a49b2bf474eed0de3e9f4a1bebaeee64c7)
 
@@ -57,13 +75,13 @@
 - __Deprecation:__ Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  The new name mirrors the name used within Apollo Graph Manager.  Aside from the rename, the functionality remains otherwise identical.  Use of the now-deprecated name will result in a deprecation warning being printed to the server console.  Support will be removed entirely in a future, major update.  To avoid misconfiguration, runtime errors will be thrown if the new and deprecated versions are _both_ set. [#3855](https://github.com/apollographql/apollo-server/pull/3855)
 - Add inadvertently excluded `apollo-server-errors` runtime dependency. [#3927](https://github.com/apollographql/apollo-server/pull/3927)
 
-## 0.14.1
+## v0.14.1
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/b898396e9fcd3b9092b168f9aac8466ca186fa6b)
 
 - __FIX__: Resolve condition which surfaced in `0.14.0` which prevented loading the configuration using managed federation. [PR #3979](https://github.com/apollographql/apollo-server/pull/3979)
 
-## 0.14.0
+## v0.14.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/71a3863f59f4ab2c9052c316479d94c6708c4309)
 
@@ -79,7 +97,7 @@
 - Gateway issues health checks to downstream services via `serviceHealthCheck` configuration option. Note: expected behavior differs between managed and unmanaged federation. See PR for new test cases and documentation. [#3930](https://github.com/apollographql/apollo-server/pull/3930)
 
 
-## 0.13.2
+## v0.13.2
 
 - __BREAKING__: The behavior and signature of `RemoteGraphQLDataSource`'s `didReceiveResponse` method has been changed.  No changes are necessary _unless_ your implementation has overridden the default behavior of this method by either extending the class and overriding the method or by providing `didReceiveResponse` as a parameter to the `RemoteGraphQLDataSource`'s constructor options.  Implementations which have provided their own `didReceiveResponse` using either of these methods should view the PR linked here for details on what has changed.  [PR #3743](https://github.com/apollographql/apollo-server/pull/3743)
 - __NEW__: Setting the `apq` option to `true` on the `RemoteGraphQLDataSource` will enable the use of [automated persisted queries (APQ)](https://www.apollographql.com/docs/apollo-server/performance/apq/) when sending queries to downstream services.  Depending on the complexity of queries sent to downstream services, this technique can greatly reduce the size of the payloads being transmitted over the network.  Downstream implementing services must also support APQ functionality to participate in this feature (Apollo Server does by default unless it has been explicitly disabled).  As with normal APQ behavior, a downstream server must have received and registered a query once before it will be able to serve an APQ request. [#3744](https://github.com/apollographql/apollo-server/pull/3744)
@@ -88,7 +106,7 @@
 
 ## v0.12.1
 
-- Update to include [fixes from `@apollo/federation`](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md).
+- Update to include [fixes from `@apollo/federation`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-federation/CHANGELOG.md).
 
 ## v0.12.0
 

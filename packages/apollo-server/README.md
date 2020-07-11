@@ -89,15 +89,15 @@ While the standalone installation above can be used without making a decision ab
 
 The following web frameworks have Apollo Server integrations, and each of these linked integrations has its own installation instructions and examples on its package `README.md`:
 
-- [Express](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-express) _(Most popular)_
-- [Koa](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-koa)
-- [Hapi](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-hapi)
-- [Fastify](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-fastify)
-- [Amazon Lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda)
-- [Micro](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-micro)
-- [Azure Functions](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-azure-functions)
-- [Google Cloud Functions](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cloud-functions)
-- [Cloudflare](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cloudflare) _(Experimental)_
+- [Express](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-express) _(Most popular)_
+- [Koa](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-koa)
+- [Hapi](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-hapi)
+- [Fastify](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-fastify)
+- [Amazon Lambda](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-lambda)
+- [Micro](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-micro)
+- [Azure Functions](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-azure-functions)
+- [Google Cloud Functions](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-cloud-functions)
+- [Cloudflare](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-cloudflare) _(Experimental)_
 
 ## Context
 

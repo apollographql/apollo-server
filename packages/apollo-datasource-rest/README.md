@@ -1,6 +1,6 @@
 # Apollo REST Data Source
 
-This package exports a ([`RESTDataSource`](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest)) class which is used for fetching data from a REST API and exposing it via GraphQL within Apollo Server.
+This package exports a ([`RESTDataSource`](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest)) class which is used for fetching data from a REST API and exposing it via GraphQL within Apollo Server.
 
 ## Documentation
 
@@ -14,9 +14,9 @@ To get started, install the `apollo-datasource-rest` package:
 npm install apollo-datasource-rest
 ```
 
-To define a data source, extend the [`RESTDataSource`](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest) class and implement the data fetching methods that your resolvers require.  Data sources can then be provided via the `dataSources` property to the `ApolloServer` constructor, as demonstrated in the _Accessing data sources from resolvers_ section below.
+To define a data source, extend the [`RESTDataSource`](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest) class and implement the data fetching methods that your resolvers require.  Data sources can then be provided via the `dataSources` property to the `ApolloServer` constructor, as demonstrated in the _Accessing data sources from resolvers_ section below.
 
-Your implementation of these methods can call on convenience methods built into the [RESTDataSource](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest) class to perform HTTP requests, while making it easy to build up query parameters, parse JSON results, and handle errors.
+Your implementation of these methods can call on convenience methods built into the [RESTDataSource](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest) class to perform HTTP requests, while making it easy to build up query parameters, parse JSON results, and handle errors.
 
 ```javascript
 const { RESTDataSource } = require('apollo-datasource-rest');
@@ -43,7 +43,7 @@ class MoviesAPI extends RESTDataSource {
 
 ### HTTP Methods
 
-The `get` method on the [RESTDataSource](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest) makes an HTTP `GET` request. Similarly, there are methods built-in to allow for POST, PUT, PATCH, and DELETE requests.
+The `get` method on the [RESTDataSource](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest) makes an HTTP `GET` request. Similarly, there are methods built-in to allow for POST, PUT, PATCH, and DELETE requests.
 
 ```javascript
 class MoviesAPI extends RESTDataSource {
