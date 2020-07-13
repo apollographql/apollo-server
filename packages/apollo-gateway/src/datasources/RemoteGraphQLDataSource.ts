@@ -145,9 +145,11 @@ export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Reco
       body: JSON.stringify(requestWithoutHttp),
     });
 
+    let httpResponse: Response | undefined;
+
     try {
       // Use our local `fetcher` to allow for fetch injection
-      const httpResponse = await this.fetcher(httpRequest);
+      httpResponse = await this.fetcher(httpRequest);
 
       if (!httpResponse.ok) {
         throw await this.errorFromResponse(httpResponse);
@@ -164,7 +166,7 @@ export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Reco
         http: httpResponse,
       };
     } catch (error) {
-      this.didEncounterError(error, httpRequest);
+      this.didEncounterError?.({ error, request: httpRequest, response: httpResponse, context });
       throw error;
     }
   }
@@ -183,9 +185,9 @@ export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Reco
     >,
   ): ValueOrPromise<GraphQLResponse>;
 
-  public didEncounterError(error: Error, _request: Request) {
-    throw error;
-  }
+  public didEncounterError?(
+    requestContextWithError: { error: Error, response?: Response, context: TContext, request: Request }
+  ): ValueOrPromise<void>;
 
   public parseBody(
     response: Response,
