@@ -75,7 +75,7 @@ export class ApolloServer extends ApolloServerBase {
     this.graphqlPath = path || '/graphql';
     const promiseWillStart = this.willStart();
 
-    return async (app: FastifyInstance<any, any>) => {
+    return async (app: FastifyInstance<any, any, any>) => {
       await promiseWillStart;
 
       if (!disableHealthCheck) {
