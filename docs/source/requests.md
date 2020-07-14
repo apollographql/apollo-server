@@ -46,7 +46,7 @@ Apollo Server also accepts GET requests. A GET request must pass query and optio
 Here is the same query from above in a well-formatted GET request to Apollo Server:
 
 ```
-GET /graphql?query=query%20aTest(%24arg1%3A%20String!)%20%7B%20test(who%3A%20%24arg1)%20%7D&operationName=aTest&variables=me
+GET /graphql?query=query%20aTest(%24arg1%3A%20String!)%20%7B%20test(who%3A%20%24arg1)%20%7D&operationName=aTest&variables=%7B%22arg1%22%3A%22me%22%7D
 ```
 
 caveat: Mutations cannot be executed via GET requests.
