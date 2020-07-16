@@ -1,14 +1,8 @@
 import {
   ASTNode,
   FieldNode,
-  GraphQLCompositeType,
-  GraphQLField,
-  GraphQLInterfaceType,
   GraphQLNullableType,
-  GraphQLObjectType,
-  GraphQLSchema,
   GraphQLType,
-  GraphQLUnionType,
   isListType,
   isNonNullType,
   Kind,
@@ -17,52 +11,9 @@ import {
   OperationDefinitionNode,
   parse,
   print,
-  SchemaMetaFieldDef,
   SelectionNode,
-  TypeMetaFieldDef,
-  TypeNameMetaFieldDef,
   TypeNode,
 } from 'graphql';
-
-/**
- * Not exactly the same as the executor's definition of getFieldDef, in this
- * statically evaluated environment we do not always have an Object type,
- * and need to handle Interface and Union types.
- */
-export function getFieldDef(
-  schema: GraphQLSchema,
-  parentType: GraphQLCompositeType,
-  fieldName: string,
-): GraphQLField<any, any> | undefined {
-  if (
-    fieldName === SchemaMetaFieldDef.name &&
-    schema.getQueryType() === parentType
-  ) {
-    return SchemaMetaFieldDef;
-  }
-  if (
-    fieldName === TypeMetaFieldDef.name &&
-    schema.getQueryType() === parentType
-  ) {
-    return TypeMetaFieldDef;
-  }
-  if (
-    fieldName === TypeNameMetaFieldDef.name &&
-    (parentType instanceof GraphQLObjectType ||
-      parentType instanceof GraphQLInterfaceType ||
-      parentType instanceof GraphQLUnionType)
-  ) {
-    return TypeNameMetaFieldDef;
-  }
-  if (
-    parentType instanceof GraphQLObjectType ||
-    parentType instanceof GraphQLInterfaceType
-  ) {
-    return parentType.getFields()[fieldName];
-  }
-
-  return undefined;
-}
 
 export function getResponseName(node: FieldNode): string {
   return node.alias ? node.alias.value : node.name.value;

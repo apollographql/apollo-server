@@ -23,6 +23,7 @@ import queryPlanSerializer from '../snapshotSerializers/queryPlanSerializer';
 import astSerializer from '../snapshotSerializers/astSerializer';
 import gql from 'graphql-tag';
 import { fixtures } from 'apollo-federation-integration-testsuite';
+import { getQueryPlanner } from '@apollo/query-planner-wasm';
 
 const prettyFormat = require('pretty-format');
 
@@ -55,12 +56,14 @@ export async function execute(
     }),
   );
 
-  const { errors, schema } = getFederatedTestingSchema(services);
+  const { schema, queryPlannerPointer } = getFederatedTestingSchema(services);
 
-  if (errors && errors.length > 0) {
-    throw new GraphQLSchemaValidationError(errors);
-  }
-  const operationContext = buildOperationContext(schema, gql`${request.query}`);
+  const operationContext = buildOperationContext({
+    schema,
+    operationDocument: gql`${request.query}`,
+    operationString: request.query!,
+    queryPlannerPointer,
+  });
 
   const queryPlan = buildQueryPlan(operationContext);
 
@@ -92,14 +95,20 @@ export function getFederatedTestingSchema(services: ServiceDefinitionModule[] = 
     ]),
   );
 
-  const { schema, errors } = composeAndValidate(
+  const { schema, errors, composedSdl } = composeAndValidate(
     Object.entries(serviceMap).map(([serviceName, dataSource]) => ({
       name: serviceName,
       typeDefs: dataSource.sdl(),
     })),
   );
 
-  return { serviceMap, schema, errors };
+  if (errors && errors.length > 0) {
+    throw new GraphQLSchemaValidationError(errors);
+  }
+
+  const queryPlannerPointer = getQueryPlanner(composedSdl!);
+
+  return { serviceMap, schema, errors, queryPlannerPointer };
 }
 
 export function wait(ms: number) {

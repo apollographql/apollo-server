@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { defineFeature, loadFeature } from 'jest-cucumber';
-import { DocumentNode, GraphQLSchema, GraphQLError, Kind } from 'graphql';
+import { DocumentNode } from 'graphql';
 
 import { QueryPlan } from '../..';
 import { buildQueryPlan, buildOperationContext, BuildQueryPlanOptions } from '../buildQueryPlan';
@@ -20,11 +20,12 @@ features.forEach((feature) => {
   defineFeature(feature, (test) => {
     feature.scenarios.forEach((scenario) => {
       test(scenario.title, async ({ given, when, then }) => {
-        let query: DocumentNode;
+        let operationDocument: DocumentNode;
+        let operationString: string;
         let queryPlan: QueryPlan;
         let options: BuildQueryPlanOptions = { autoFragmentization: false };
 
-        const { schema, errors } = getFederatedTestingSchema();
+        const { schema, errors, queryPlannerPointer } = getFederatedTestingSchema();
 
         if (errors && errors.length > 0) {
           throw new GraphQLSchemaValidationError(errors);
@@ -32,7 +33,8 @@ features.forEach((feature) => {
 
         const givenQuery = () => {
           given(/^query$/im, (operation: string) => {
-            query = gql(operation)
+            operationDocument = gql(operation);
+            operationString = operation;
           })
         }
 
@@ -45,7 +47,12 @@ features.forEach((feature) => {
         const thenQueryPlanShouldBe = () => {
           then(/^query plan$/i, (expectedQueryPlan: string) => {
             queryPlan = buildQueryPlan(
-              buildOperationContext(schema, query, undefined),
+              buildOperationContext({
+                schema,
+                operationDocument,
+                operationString,
+                queryPlannerPointer,
+              }),
               options
             );
 

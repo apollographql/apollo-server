@@ -28,14 +28,17 @@ describe('ApolloGateway executor', () => {
 
     const { executor } = await gateway.load();
 
-    const { errors } = await executor({
-      document: gql`
-        query InvalidVariables($first: Int!) {
-          topReviews(first: $first) {
-            body
-          }
+    const source = `#graphql
+      query InvalidVariables($first: Int!) {
+        topReviews(first: $first) {
+          body
         }
-      `,
+      }
+    `;
+
+    const { errors } = await executor({
+      source,
+      document: gql(source),
       request: {
         variables: { first: '3' },
       },

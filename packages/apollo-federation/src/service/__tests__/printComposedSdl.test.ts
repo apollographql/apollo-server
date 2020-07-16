@@ -1,9 +1,9 @@
 import { fixtures } from 'apollo-federation-integration-testsuite';
 import { composeAndValidate } from '../../composition';
-import { parse, print, GraphQLError, visit, StringValueNode } from 'graphql';
+import { parse, GraphQLError, visit, StringValueNode } from 'graphql';
 
 describe('printComposedSdl', () => {
-  let composedSdl: string, errors: GraphQLError[];
+  let composedSdl: string | undefined, errors: GraphQLError[];
 
   beforeAll(() => {
     // composeAndValidate calls `printComposedSdl` to return `composedSdl`
@@ -15,7 +15,7 @@ describe('printComposedSdl', () => {
   });
 
   it('produces a parseable output', () => {
-    expect(() => parse(composedSdl)).not.toThrow();
+    expect(() => parse(composedSdl!)).not.toThrow();
   })
 
   it('prints a fully composed schema correctly', () => {
@@ -291,7 +291,7 @@ describe('printComposedSdl', () => {
   });
 
   it('fieldsets are parseable', () => {
-    const parsedCsdl = parse(composedSdl);
+    const parsedCsdl = parse(composedSdl!);
     const fieldSets: string[] = [];
 
     // Collect all args with the 'fields' name (from @key, @provides, @requires directives)

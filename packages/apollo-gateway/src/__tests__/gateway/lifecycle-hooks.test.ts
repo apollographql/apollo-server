@@ -250,10 +250,14 @@ describe('lifecycle hooks', () => {
     });
 
     const { executor } = await gateway.load();
+
+    const source = `#graphql
+      { book(isbn: "0262510871") { year } }
+    `;
+
     await executor({
-      document: gql`
-        { book(isbn: "0262510871") { year } }
-      `,
+      source,
+      document: gql(source),
       request: {},
       queryHash: 'hashed',
       context: {},

@@ -18,7 +18,7 @@ import {
   VariableDefinitionNode,
 } from 'graphql';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
-import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
+import { composeAndValidate, ServiceDefinition, ComposedGraphQLSchema } from '@apollo/federation';
 import loglevel from 'loglevel';
 
 import { buildQueryPlan, buildOperationContext } from './buildQueryPlan';
@@ -34,7 +34,7 @@ import {
   CompositionMetadata,
 } from './loadServicesFromStorage';
 
-import { serializeQueryPlan, QueryPlan, OperationContext } from './QueryPlan';
+import { serializeQueryPlan, QueryPlan, OperationContext, WasmPointer } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
@@ -42,6 +42,7 @@ import { getVariableValues } from 'graphql/execution/values';
 import fetcher from 'make-fetch-happen';
 import { HttpRequestCache } from './cache';
 import { fetch } from 'apollo-server-env';
+import { getQueryPlanner } from '@apollo/query-planner-wasm';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -187,7 +188,7 @@ export const SERVICE_DEFINITION_QUERY =
   'query __ApolloGetServiceDefinition__ { _service { sdl } }';
 
 export class ApolloGateway implements GraphQLService {
-  public schema?: GraphQLSchema;
+  public schema?: ComposedGraphQLSchema;
   protected serviceMap: DataSourceMap = Object.create(null);
   protected config: GatewayConfig;
   private logger: Logger;
@@ -199,6 +200,7 @@ export class ApolloGateway implements GraphQLService {
   private compositionMetadata?: CompositionMetadata;
   private serviceSdlCache = new Map<string, string>();
   private warnedStates: WarnedStates = Object.create(null);
+  private queryPlannerPointer?: WasmPointer;
 
   private fetcher: typeof fetch = getDefaultGcsFetcher();
 
@@ -248,7 +250,14 @@ export class ApolloGateway implements GraphQLService {
     }
 
     if (isLocalConfig(this.config)) {
-      this.schema = this.createSchema(this.config.localServiceList);
+      const { schema, composedSdl } = this.createSchema(this.config.localServiceList);
+      this.schema = schema;
+
+      if (!composedSdl) {
+        this.logger.error("A valid schema couldn't be composed.")
+      } else {
+       this.queryPlannerPointer = getQueryPlanner(composedSdl);
+      }
     }
 
     this.initializeQueryPlanStore();
@@ -393,35 +402,44 @@ export class ApolloGateway implements GraphQLService {
 
     if (this.queryPlanStore) this.queryPlanStore.flush();
 
-    this.schema = this.createSchema(result.serviceDefinitions);
+    const { schema, composedSdl } = this.createSchema(result.serviceDefinitions);
 
-    // Notify the schema listeners of the updated schema
-    try {
-      this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
-    } catch (e) {
+    if (!composedSdl) {
       this.logger.error(
-        "An error was thrown from an 'onSchemaChange' listener. " +
-        "The schema will still update: " + (e && e.message || e));
-    }
+        "A valid schema couldn't be composed. Falling back to previous schema."
+      )
+    } else {
+      this.schema = schema;
+      this.queryPlannerPointer = getQueryPlanner(composedSdl);
 
-    if (this.experimental_didUpdateComposition) {
-      this.experimental_didUpdateComposition(
-        {
-          serviceDefinitions: result.serviceDefinitions,
-          schema: this.schema,
-          ...(this.compositionMetadata && {
-            compositionMetadata: this.compositionMetadata,
-          }),
-        },
-        previousServiceDefinitions &&
-          previousSchema && {
-            serviceDefinitions: previousServiceDefinitions,
-            schema: previousSchema,
-            ...(previousCompositionMetadata && {
-              compositionMetadata: previousCompositionMetadata,
+      // Notify the schema listeners of the updated schema
+      try {
+        this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
+      } catch (e) {
+        this.logger.error(
+          "An error was thrown from an 'onSchemaChange' listener. " +
+          "The schema will still update: " + (e && e.message || e));
+      }
+
+      if (this.experimental_didUpdateComposition) {
+        this.experimental_didUpdateComposition(
+          {
+            serviceDefinitions: result.serviceDefinitions,
+            schema: this.schema,
+            ...(this.compositionMetadata && {
+              compositionMetadata: this.compositionMetadata,
             }),
           },
-      );
+          previousServiceDefinitions &&
+            previousSchema && {
+              serviceDefinitions: previousServiceDefinitions,
+              schema: previousSchema,
+              ...(previousCompositionMetadata && {
+                compositionMetadata: previousCompositionMetadata,
+              }),
+            },
+        );
+      }
     }
   }
 
@@ -457,7 +475,7 @@ export class ApolloGateway implements GraphQLService {
         .join('\n')}`,
     );
 
-    const { schema, errors } = composeAndValidate(serviceList);
+    const { schema, errors, composedSdl } = composeAndValidate(serviceList);
 
     if (errors && errors.length > 0) {
       if (this.experimental_didFailComposition) {
@@ -485,7 +503,7 @@ export class ApolloGateway implements GraphQLService {
     // with support for resolving aliases as part of the root value which
     // happens because aliases are resolved by sub services and the shape
     // of the root value already contains the aliased fields as responseNames
-    return wrapSchemaWithAliasResolver(schema);
+    return { schema: wrapSchemaWithAliasResolver(schema), composedSdl };
   }
 
   public onSchemaChange(callback: SchemaChangeCallback): Unsubscriber {
@@ -631,13 +649,15 @@ export class ApolloGateway implements GraphQLService {
   public executor = async <TContext>(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
   ): Promise<GraphQLExecutionResult> => {
-    const { request, document, queryHash } = requestContext;
+    const { request, document, queryHash, source } = requestContext;
     const queryPlanStoreKey = queryHash + (request.operationName || '');
-    const operationContext = buildOperationContext(
-      this.schema!,
-      document,
-      request.operationName,
-    );
+    const operationContext = buildOperationContext({
+      schema: this.schema!,
+      operationDocument: document,
+      operationString: source,
+      queryPlannerPointer: this.queryPlannerPointer!,
+      operationName: request.operationName,
+    });
 
     // No need to build a query plan if we know the request is invalid beforehand
     // In the future, this should be controlled by the requestPipeline
@@ -791,7 +811,9 @@ function approximateObjectSize<T>(obj: T): number {
 // planning would be lost. Instead we set a resolver for each field
 // in order to counteract GraphQLExtensions preventing a defaultFieldResolver
 // from doing the same job
-function wrapSchemaWithAliasResolver(schema: GraphQLSchema): GraphQLSchema {
+function wrapSchemaWithAliasResolver(
+  schema: ComposedGraphQLSchema,
+): ComposedGraphQLSchema {
   const typeMap = schema.getTypeMap();
   Object.keys(typeMap).forEach(typeName => {
     const type = typeMap[typeName];
