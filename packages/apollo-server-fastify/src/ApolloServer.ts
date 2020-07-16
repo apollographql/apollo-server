@@ -3,6 +3,7 @@ import { Accepts } from 'accepts';
 import {
   ApolloServerBase,
   FileUploadOptions,
+  GraphQLOptions,
   PlaygroundRenderPageOptions,
   formatApolloErrors,
   processFileUploads,
@@ -64,6 +65,13 @@ export class ApolloServer extends ApolloServerBase {
 
   protected supportsUploads(): boolean {
     return true;
+  }
+
+  async createGraphQLServerOptions(
+    request?: FastifyRequest,
+    reply?: FastifyReply,
+  ): Promise<GraphQLOptions> {
+    return this.graphQLServerOptions({ request, reply });
   }
 
   public createHandler({
@@ -169,7 +177,9 @@ export class ApolloServer extends ApolloServerBase {
             method: ['GET', 'POST'],
             url: '/',
             preHandler: preHandlers,
-            handler: await graphqlFastify(this.graphQLServerOptions.bind(this)),
+            handler: await graphqlFastify(
+              this.createGraphQLServerOptions.bind(this),
+            ),
           });
         },
         {

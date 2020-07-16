@@ -26,22 +26,6 @@ const app = require('fastify')();
 })();
 ```
 
-## V3 Migration Guide
-
-From Fastify v3, deprecated request.req and reply.res for request.raw and reply.raw. ([fastify #2008](https://github.com/fastify/fastify/pull/2008))
-
-For this reason, a modification of the existing guide is required to distinguish the context between websocket and general connection. ([#context-with-subscriptions](https://www.apollographql.com/docs/apollo-server/data/subscriptions/#context-with-subscriptions))
-
-Here is a simple example.
-```js
-const server = new ApolloServer({
-  schema,
-  context: ({ raw, connection }) => {
-    if (!raw) return connection.context;
-  },
-});
-```
-
 ## Principles
 
 GraphQL Server is built with the following principles in mind:
