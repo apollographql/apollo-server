@@ -24,6 +24,10 @@ import {
   FieldNode
 } from 'graphql';
 
+import {
+  FieldNode
+} from '../QueryPlanNew'
+
 /**
  * Not exactly the same as the executor's definition of getFieldDef, in this
  * statically evaluated environment we do not always have an Object type,
@@ -65,7 +69,7 @@ export function getFieldDef(
 }
 
 export function getResponseName(node: FieldNode): string {
-  return node.alias ? node.alias.value : node.name.value;
+  return node.alias ? node.alias : node.name;
 }
 
 export function allNodesAreOfSameKind<T extends ASTNode>(

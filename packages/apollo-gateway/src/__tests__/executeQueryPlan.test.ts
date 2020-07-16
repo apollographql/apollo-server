@@ -12,8 +12,12 @@ import { executeQueryPlan } from '../executeQueryPlan';
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
+<<<<<<< HEAD
 import { getFederatedTestingSchema, buildLocalService } from './execution-utils';
 import { fixtures } from 'apollo-federation-integration-testsuite';
+=======
+import { fixtureNames } from './__fixtures__/schemas';
+>>>>>>> WIP on getting new types adopted in executor
 import { transformQueryPlan } from '../QueryPlanNew';
 
 expect.addSnapshotSerializer(astSerializer);
@@ -182,7 +186,7 @@ describe('executeQueryPlan', () => {
     });
   });
 
-  it(`should only return fields that have been requested directly`, async () => {
+  fit(`should only return fields that have been requested directly`, async () => {
     const query = gql`
       query {
         topReviews {
@@ -195,7 +199,14 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
+<<<<<<< HEAD
     const queryPlan = transformQueryPlan(buildQueryPlan(operationContext))
+=======
+    const plan1 = buildQueryPlan(operationContext);
+    console.log(JSON.stringify({ plan1 }))
+    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
+    console.log(JSON.stringify({ queryPlan }))
+>>>>>>> WIP on getting new types adopted in executor
 
     const response = await executeQueryPlan(
       queryPlan,
