@@ -6,9 +6,10 @@ import {
   formatApolloErrors,
   PlaygroundRenderPageOptions,
   processFileUploads,
+  GraphQLOptions,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { IncomingMessage, ServerResponse, Server } from 'http';
+import { IncomingMessage, OutgoingMessage, ServerResponse, Server } from 'http';
 import { graphqlFastify } from './fastifyApollo';
 import { GraphQLOperation } from 'graphql-upload';
 
@@ -68,6 +69,13 @@ export class ApolloServer extends ApolloServerBase {
 
   protected supportsUploads(): boolean {
     return true;
+  }
+
+  async createGraphQLServerOptions(
+    request?: FastifyRequest<IncomingMessage>,
+    reply?: FastifyReply<OutgoingMessage>,
+  ): Promise<GraphQLOptions> {
+     return this.graphQLServerOptions({ request, reply });
   }
 
   public createHandler({
@@ -174,7 +182,7 @@ export class ApolloServer extends ApolloServerBase {
             method: ['GET', 'POST'],
             url: '/',
             beforeHandler: beforeHandlers,
-            handler: await graphqlFastify(this.graphQLServerOptions.bind(this)),
+            handler: await graphqlFastify(this.createGraphQLServerOptions.bind(this)),
           });
         },
         {
