@@ -1,4 +1,4 @@
-import { isObjectType, typeFromAST, isEqualType, GraphQLError } from 'graphql';
+import { isObjectType, typeFromAST, isEqualType, GraphQLError, GraphQLType } from 'graphql';
 import { logServiceAndType, errorWithCode, getFederationMetadata } from '../../utils';
 import { PostCompositionValidator } from '.';
 
@@ -34,7 +34,7 @@ export const externalTypeMismatch: PostCompositionValidator = ({ schema }) => {
           const externalFieldType = typeFromAST(
             schema,
             externalField.type as any,
-          );
+          ) as GraphQLType;
 
           if (!externalFieldType) {
             errors.push(
@@ -52,7 +52,7 @@ export const externalTypeMismatch: PostCompositionValidator = ({ schema }) => {
               errorWithCode(
                 'EXTERNAL_TYPE_MISMATCH',
                 logServiceAndType(serviceName, typeName, externalFieldName) +
-                  `Type \`${externalFieldType.name}\` does not match the type of the original field in ${typeFederationMetadata.serviceName} (\`${matchingBaseField.type}\`)`,
+                  `Type \`${externalFieldType}\` does not match the type of the original field in ${typeFederationMetadata.serviceName} (\`${matchingBaseField.type}\`)`,
               ),
             );
           }

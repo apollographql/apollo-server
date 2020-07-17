@@ -9,8 +9,9 @@ describe('validateExternalDirectivesOnSchema', () => {
   it('warns when the type of an @external field doesnt match the base', () => {
     const serviceA = {
       typeDefs: gql`
-        type Product @key(fields: "sku") {
+        type Product @key(fields: "sku skew") {
           sku: String!
+          skew: String
           upc: String!
         }
       `,
@@ -21,7 +22,8 @@ describe('validateExternalDirectivesOnSchema', () => {
       typeDefs: gql`
         extend type Product {
           sku: String @external
-          price: Int! @requires(fields: "sku")
+          skew: String! @external
+          price: Int! @requires(fields: "sku skew")
         }
       `,
       name: 'serviceB',
@@ -35,6 +37,10 @@ describe('validateExternalDirectivesOnSchema', () => {
         Object {
           "code": "EXTERNAL_TYPE_MISMATCH",
           "message": "[serviceB] Product.sku -> Type \`String\` does not match the type of the original field in serviceA (\`String!\`)",
+        },
+        Object {
+          "code": "EXTERNAL_TYPE_MISMATCH",
+          "message": "[serviceB] Product.skew -> Type \`String!\` does not match the type of the original field in serviceA (\`String\`)",
         },
       ]
     `);
