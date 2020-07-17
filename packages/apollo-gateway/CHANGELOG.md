@@ -4,7 +4,7 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned!_
+- The `RemoteGraphQLDataSource`'s `didEncounterError` method will now receive [`Response`](https://github.com/apollographql/apollo-server/blob/43470d6561bee31101f3afc56bdd154db3f92b30/packages/apollo-server-env/src/fetch.d.ts#L98-L111) as the third argument when it is available, making its signature `(error: Error, fetchRequest: Request, fetchResponse?: Response)`.  This compliments the existing [`Request`](https://github.com/apollographql/apollo-server/blob/43470d6561bee31101f3afc56bdd154db3f92b30/packages/apollo-server-env/src/fetch.d.ts#L37-L45) type it was already receiving.  Both of these types are [HTTP WHATWG Fetch API](https://fetch.spec.whatwg.org/) types, not `GraphQLRequest`, `GraphQLResponse` types.
 
 ## v0.17.0
 
