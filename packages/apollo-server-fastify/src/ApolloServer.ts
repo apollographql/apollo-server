@@ -3,9 +3,10 @@ import { Accepts } from 'accepts';
 import {
   ApolloServerBase,
   PlaygroundRenderPageOptions,
+  GraphQLOptions,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { IncomingMessage, ServerResponse, Server } from 'http';
+import { IncomingMessage, OutgoingMessage, ServerResponse, Server } from 'http';
 import { graphqlFastify } from './fastifyApollo';
 
 const fastJson = require('fast-json-stringify');
@@ -27,6 +28,13 @@ const stringifyHealthCheck = fastJson({
 });
 
 export class ApolloServer extends ApolloServerBase {
+  async createGraphQLServerOptions(
+    request?: FastifyRequest<IncomingMessage>,
+    reply?: FastifyReply<OutgoingMessage>,
+  ): Promise<GraphQLOptions> {
+     return this.graphQLServerOptions({ request, reply });
+  }
+
   public createHandler({
     path,
     cors,
@@ -116,7 +124,7 @@ export class ApolloServer extends ApolloServerBase {
             method: ['GET', 'POST'],
             url: '/',
             preHandler: preHandlers,
-            handler: await graphqlFastify(this.graphQLServerOptions.bind(this)),
+            handler: await graphqlFastify(this.createGraphQLServerOptions.bind(this)),
           });
         },
         {
