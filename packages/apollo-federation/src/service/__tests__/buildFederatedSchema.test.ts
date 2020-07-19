@@ -89,6 +89,7 @@ type Money {
         "The user's name."
         name: String
         username: String
+        """A "foo" method."""
         foo(
           "Description 1"
           arg1: String
@@ -113,6 +114,7 @@ type User @key(fields: "id") {
   "The user's name."
   name: String
   username: String
+  """A "foo" method."""
   foo(
     "Description 1"
     arg1: String

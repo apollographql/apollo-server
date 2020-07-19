@@ -348,7 +348,8 @@ function printDescription(
 
   const lines = descriptionLines(def.description, 120 - indentation.length);
   if (lines.length === 1) {
-    return indentation + `"${lines[0]}"\n`;
+    const delim = lines[0].includes('"') ? '"""' : '"';
+    return indentation + `${delim}${lines[0]}${delim}\n`;
   } else {
     return (
       indentation + ['"""', ...lines, '"""'].join('\n' + indentation) + '\n'
