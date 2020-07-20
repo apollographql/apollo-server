@@ -453,6 +453,12 @@ addMockFunctionsToSchema({
    'sendReport()' on other signals if you'd like. Note that 'sendReport()'
    does not run synchronously so it cannot work usefully in an 'exit' handler.
 
+*  `sendReportsImmediately `: boolean
+
+   By default false, EngineReportingAgent send metrics regularly.
+   If sendReportsImmediately is set to true, Sends the trace report immediately.
+   This options is useful for stateless environments (e.g. AWS Lambda).
+
 *  `rewriteError`: (err: GraphQLError) => GraphQLError | null
 
    By default, all errors are reported to Apollo Studio.  This function can be used to exclude specific errors from being reported.  This function receives a copy of the `GraphQLError` and can manipulate it before it's reported.  The modified error (e.g., after changing the `err.message` property) should be returned, or the function can return `null` to avoid reporting the error entirely.  It is not permissible to return `undefined`. Note that most `GraphQLError` fields, like `path`, will be copied from the original error to the new error: this way, you can just `return new GraphQLError("message")` without having to explicitly keep it associated with the same node. Specifically, only the `message` and `extensions` properties on the returned `GraphQLError` are observed.  If `extensions` aren't specified, the original `extensions` are used.
