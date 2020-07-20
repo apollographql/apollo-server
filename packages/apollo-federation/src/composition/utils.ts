@@ -30,11 +30,16 @@ import {
   DirectiveDefinitionNode,
   GraphQLDirective,
   OperationTypeNode,
+  isDirective,
+  isNamedType,
 } from 'graphql';
 import {
   ExternalFieldDefinition,
   DefaultRootOperationTypeName,
   Maybe,
+  FederationType,
+  FederationDirective,
+  FederationField,
 } from './types';
 import federationDirectives from '../directives';
 
@@ -564,3 +569,15 @@ export const defaultRootOperationNameLookup: {
   mutation: 'Mutation',
   subscription: 'Subscription',
 };
+
+// This function is overloaded for 3 different input types. Each input type
+// maps to a particular return type, hence the overload.
+export function getFederationMetadata(obj: GraphQLNamedType): FederationType | undefined;
+export function getFederationMetadata(obj: GraphQLField<any, any>): FederationField | undefined;
+export function getFederationMetadata(obj: GraphQLDirective): FederationDirective | undefined;
+export function getFederationMetadata(obj: any) {
+  if (typeof obj === "undefined") return undefined;
+  else if (isNamedType(obj)) return obj.extensions?.federation as FederationType | undefined;
+  else if (isDirective(obj)) return obj.extensions?.federation as FederationDirective | undefined;
+  else return obj.extensions?.federation as FederationField | undefined;
+}
