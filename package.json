@@ -127,8 +127,8 @@
     "subscriptions-transport-ws": "0.9.17",
     "supertest": "4.0.2",
     "test-listen": "1.1.0",
-    "ts-jest": "26.1.1",
-    "typescript": "3.9.6",
+    "ts-jest": "26.1.3",
+    "typescript": "3.9.7",
     "winston": "3.3.3",
     "winston-transport": "4.4.0",
     "ws": "6.2.1"
