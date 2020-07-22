@@ -683,7 +683,7 @@ Scenario: for abstract types, it should add __typename when fetching objects of 
         "kind": "Fetch",
         "serviceName": "product",
         "variableUsages": [],
-        "operation": "{topProducts{__typename ...on Book{price}...on Furniture{price}}}"
+        "operation": "{topProducts{__typename ...on Furniture{price}...on Book{price}}}"
       }
     }
     """
@@ -709,37 +709,52 @@ Scenario: should break up when traversing an extension field on an interface typ
         "nodes": [
           {
             "kind": "Fetch",
+            "operation": "{topProducts{__typename ...on Furniture{price __typename upc}...on Book{price __typename isbn}}}",
             "serviceName": "product",
-            "variableUsages": [],
-            "operation": "{topProducts{__typename ...on Book{price __typename isbn}...on Furniture{price __typename upc}}}"
+            "variableUsages": []
           },
           {
             "kind": "Flatten",
-            "path": ["topProducts", "@"],
             "node": {
               "kind": "Fetch",
-              "serviceName": "reviews",
+              "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{reviews{body}}...on Book{reviews{body}}}}",
               "requires": [
                 {
                   "kind": "InlineFragment",
-                  "typeCondition": "Book",
                   "selections": [
-                    { "kind": "Field", "name": "__typename" },
-                    { "kind": "Field", "name": "isbn" }
-                  ]
+                    {
+                      "kind": "Field",
+                      "name": "__typename"
+                    },
+                    {
+                      "kind": "Field",
+                      "name": "upc"
+                    }
+                  ],
+                  "typeCondition": "Furniture"
                 },
                 {
                   "kind": "InlineFragment",
-                  "typeCondition": "Furniture",
                   "selections": [
-                    { "kind": "Field", "name": "__typename" },
-                    { "kind": "Field", "name": "upc" }
-                  ]
+                    {
+                      "kind": "Field",
+                      "name": "__typename"
+                    },
+                    {
+                      "kind": "Field",
+                      "name": "isbn"
+                    }
+                  ],
+                  "typeCondition": "Book"
                 }
               ],
-              "variableUsages": [],
-              "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{reviews{body}}...on Furniture{reviews{body}}}}"
-            }
+              "serviceName": "reviews",
+              "variableUsages": []
+            },
+            "path": [
+              "topProducts",
+              "@"
+            ]
           }
         ]
       }
@@ -819,7 +834,7 @@ Scenario: interface inside interface should expand into possible types only
         "kind": "Fetch",
         "serviceName": "product",
         "variableUsages": [],
-        "operation": "{product(upc:\"\"){__typename ...on Book{details{country}}...on Furniture{details{country}}}}"
+        "operation": "{product(upc:\"\"){__typename ...on Furniture{details{country}}...on Book{details{country}}}}"
       }
     }
     """
@@ -851,87 +866,129 @@ Scenario: experimental compression to downstream services should generate fragme
         "nodes": [
           {
             "kind": "Fetch",
+            "operation": "{topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Furniture{__typename upc}...on Book{__typename isbn}}",
             "serviceName": "reviews",
-            "variableUsages": [],
-            "operation": "{topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Book{__typename isbn}...on Furniture{__typename upc}}"
+            "variableUsages": []
           },
           {
             "kind": "Parallel",
             "nodes": [
               {
+                "kind": "Flatten",
+                "node": {
+                  "kind": "Fetch",
+                  "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name price details{country}}...on Book{price details{country}}}}",
+                  "requires": [
+                    {
+                      "kind": "InlineFragment",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": "__typename"
+                        },
+                        {
+                          "kind": "Field",
+                          "name": "upc"
+                        }
+                      ],
+                      "typeCondition": "Furniture"
+                    },
+                    {
+                      "kind": "InlineFragment",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": "__typename"
+                        },
+                        {
+                          "kind": "Field",
+                          "name": "isbn"
+                        }
+                      ],
+                      "typeCondition": "Book"
+                    }
+                  ],
+                  "serviceName": "product",
+                  "variableUsages": []
+                },
+                "path": [
+                  "topReviews",
+                  "@",
+                  "product"
+                ]
+              },
+              {
                 "kind": "Sequence",
                 "nodes": [
                   {
                     "kind": "Flatten",
-                    "path": ["topReviews", "@", "product"],
                     "node": {
                       "kind": "Fetch",
-                      "serviceName": "books",
+                      "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}",
                       "requires": [
                         {
                           "kind": "InlineFragment",
-                          "typeCondition": "Book",
                           "selections": [
-                            { "kind": "Field", "name": "__typename" },
-                            { "kind": "Field", "name": "isbn" }
-                          ]
+                            {
+                              "kind": "Field",
+                              "name": "__typename"
+                            },
+                            {
+                              "kind": "Field",
+                              "name": "isbn"
+                            }
+                          ],
+                          "typeCondition": "Book"
                         }
                       ],
-                      "variableUsages": [],
-                      "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
-                    }
+                      "serviceName": "books",
+                      "variableUsages": []
+                    },
+                    "path": [
+                      "topReviews",
+                      "@",
+                      "product"
+                    ]
                   },
                   {
                     "kind": "Flatten",
-                    "path": ["topReviews", "@", "product"],
                     "node": {
                       "kind": "Fetch",
-                      "serviceName": "product",
+                      "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}",
                       "requires": [
                         {
                           "kind": "InlineFragment",
-                          "typeCondition": "Book",
                           "selections": [
-                            { "kind": "Field", "name": "__typename" },
-                            { "kind": "Field", "name": "isbn" },
-                            { "kind": "Field", "name": "title" },
-                            { "kind": "Field", "name": "year" }
-                          ]
+                            {
+                              "kind": "Field",
+                              "name": "__typename"
+                            },
+                            {
+                              "kind": "Field",
+                              "name": "isbn"
+                            },
+                            {
+                              "kind": "Field",
+                              "name": "title"
+                            },
+                            {
+                              "kind": "Field",
+                              "name": "year"
+                            }
+                          ],
+                          "typeCondition": "Book"
                         }
                       ],
-                      "variableUsages": [],
-                      "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
-                    }
+                      "serviceName": "product",
+                      "variableUsages": []
+                    },
+                    "path": [
+                      "topReviews",
+                      "@",
+                      "product"
+                    ]
                   }
                 ]
-              },
-              {
-                "kind": "Flatten",
-                "path": ["topReviews", "@", "product"],
-                "node": {
-                  "kind": "Fetch",
-                  "serviceName": "product",
-                  "requires": [
-                    {
-                      "kind": "InlineFragment",
-                      "typeCondition": "Furniture",
-                      "selections": [
-                        { "kind": "Field", "name": "__typename" },
-                        { "kind": "Field", "name": "upc" }
-                      ]
-                    },
-                    {
-                      "kind": "InlineFragment",
-                      "typeCondition": "Book",
-                      "selections": [
-                        { "kind": "Field", "name": "__typename" },
-                        { "kind": "Field", "name": "isbn" }
-                      ]
-                    }
-                  ],
-                  "variableUsages": [],
-                  "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name price details{country}}...on Book{price details{country}}}}"
-                }
               }
             ]
           }
@@ -1016,87 +1073,129 @@ Scenario: experimental compression to downstream services should generate fragme
         "nodes": [
           {
             "kind": "Fetch",
+            "operation": "{reviews:topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{content:body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Furniture{__typename upc}...on Book{__typename isbn}}",
             "serviceName": "reviews",
-            "variableUsages": [],
-            "operation": "{reviews:topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{content:body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Book{__typename isbn}...on Furniture{__typename upc}}"
+            "variableUsages": []
           },
           {
             "kind": "Parallel",
             "nodes": [
               {
+                "kind": "Flatten",
+                "node": {
+                  "kind": "Fetch",
+                  "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name cost:price details{origin:country}}...on Book{cost:price details{origin:country}}}}",
+                  "requires": [
+                    {
+                      "kind": "InlineFragment",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": "__typename"
+                        },
+                        {
+                          "kind": "Field",
+                          "name": "upc"
+                        }
+                      ],
+                      "typeCondition": "Furniture"
+                    },
+                    {
+                      "kind": "InlineFragment",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": "__typename"
+                        },
+                        {
+                          "kind": "Field",
+                          "name": "isbn"
+                        }
+                      ],
+                      "typeCondition": "Book"
+                    }
+                  ],
+                  "serviceName": "product",
+                  "variableUsages": []
+                },
+                "path": [
+                  "reviews",
+                  "@",
+                  "product"
+                ]
+              },
+              {
                 "kind": "Sequence",
                 "nodes": [
                   {
                     "kind": "Flatten",
-                    "path": ["reviews", "@", "product"],
                     "node": {
                       "kind": "Fetch",
-                      "serviceName": "books",
+                      "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}",
                       "requires": [
                         {
                           "kind": "InlineFragment",
-                          "typeCondition": "Book",
                           "selections": [
-                            { "kind": "Field", "name": "__typename" },
-                            { "kind": "Field", "name": "isbn" }
-                          ]
+                            {
+                              "kind": "Field",
+                              "name": "__typename"
+                            },
+                            {
+                              "kind": "Field",
+                              "name": "isbn"
+                            }
+                          ],
+                          "typeCondition": "Book"
                         }
                       ],
-                      "variableUsages": [],
-                      "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}"
-                    }
+                      "serviceName": "books",
+                      "variableUsages": []
+                    },
+                    "path": [
+                      "reviews",
+                      "@",
+                      "product"
+                    ]
                   },
                   {
                     "kind": "Flatten",
-                    "path": ["reviews", "@", "product"],
                     "node": {
                       "kind": "Fetch",
-                      "serviceName": "product",
+                      "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}",
                       "requires": [
                         {
                           "kind": "InlineFragment",
-                          "typeCondition": "Book",
                           "selections": [
-                            { "kind": "Field", "name": "__typename" },
-                            { "kind": "Field", "name": "isbn" },
-                            { "kind": "Field", "name": "title" },
-                            { "kind": "Field", "name": "year" }
-                          ]
+                            {
+                              "kind": "Field",
+                              "name": "__typename"
+                            },
+                            {
+                              "kind": "Field",
+                              "name": "isbn"
+                            },
+                            {
+                              "kind": "Field",
+                              "name": "title"
+                            },
+                            {
+                              "kind": "Field",
+                              "name": "year"
+                            }
+                          ],
+                          "typeCondition": "Book"
                         }
                       ],
-                      "variableUsages": [],
-                      "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}"
-                    }
+                      "serviceName": "product",
+                      "variableUsages": []
+                    },
+                    "path": [
+                      "reviews",
+                      "@",
+                      "product"
+                    ]
                   }
                 ]
-              },
-              {
-                "kind": "Flatten",
-                "path": ["reviews", "@", "product"],
-                "node": {
-                  "kind": "Fetch",
-                  "serviceName": "product",
-                  "requires": [
-                    {
-                      "kind": "InlineFragment",
-                      "typeCondition": "Furniture",
-                      "selections": [
-                        { "kind": "Field", "name": "__typename" },
-                        { "kind": "Field", "name": "upc" }
-                      ]
-                    },
-                    {
-                      "kind": "InlineFragment",
-                      "typeCondition": "Book",
-                      "selections": [
-                        { "kind": "Field", "name": "__typename" },
-                        { "kind": "Field", "name": "isbn" }
-                      ]
-                    }
-                  ],
-                  "variableUsages": [],
-                  "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name cost:price details{origin:country}}...on Book{cost:price details{origin:country}}}}"
-                }
               }
             ]
           }

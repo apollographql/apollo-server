@@ -587,7 +587,7 @@ describe('runQuery', () => {
         const invocation = requestDidStart.mock.calls[0][0];
         expect(invocation).toHaveProperty('schema', schema);
         expect(invocation).toHaveProperty( /* Shorter as a RegExp */
-          'schemaHash', expect.stringMatching(/^8ff87f3e0/));
+          'schemaHash', expect.stringMatching(/^d11e49055/));
       });
     });
 
@@ -866,6 +866,7 @@ describe('runQuery', () => {
             expect(secondCall[0]).toHaveProperty('info.path.prev', {
               key: 'testObject',
               prev: undefined,
+              typename: "QueryType",
             });
           });
 

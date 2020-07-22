@@ -28,7 +28,7 @@ describe('ApolloGateway executor', () => {
     });
 
     expect(errors![0].message).toMatch(
-      'Variable "$first" got invalid value "3"; Expected type Int.',
+      'Variable "$first" got invalid value "3";',
     );
   });
 

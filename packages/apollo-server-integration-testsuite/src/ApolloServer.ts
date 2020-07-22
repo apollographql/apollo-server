@@ -628,8 +628,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         expect(encounteredFields).toStrictEqual([
-          { key: 'justAField', prev: undefined },
-          { key: 'justAField', prev: undefined },
+          { key: 'justAField', prev: undefined, typename: "Query", },
+          { key: 'justAField', prev: undefined , typename: "Query", },
         ]);
 
         // This bit is just to ensure that nobody removes `context` from the
