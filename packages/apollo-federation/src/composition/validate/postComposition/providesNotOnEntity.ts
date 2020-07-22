@@ -4,7 +4,7 @@ import {
   isListType,
   isNonNullType,
 } from 'graphql';
-import { logServiceAndType, errorWithCode } from '../../utils';
+import { logServiceAndType, errorWithCode, getFederationMetadata } from '../../utils';
 import { PostCompositionValidator } from '.';
 
 /**
@@ -21,7 +21,8 @@ export const providesNotOnEntity: PostCompositionValidator = ({ schema }) => {
     // for each field, if there's a provides on it, check that the containing
     // type has a `key` field under the federation metadata.
     for (const [fieldName, field] of Object.entries(namedType.getFields())) {
-      const serviceName = field.federation && field.federation.serviceName;
+      const fieldFederationMetadata = getFederationMetadata(field)
+      const serviceName = fieldFederationMetadata?.serviceName;
 
       // serviceName should always exist on fields that have @provides federation data, since
       // the only case where serviceName wouldn't exist is on a base type, and in that case,
@@ -29,9 +30,8 @@ export const providesNotOnEntity: PostCompositionValidator = ({ schema }) => {
       // composition work. This kind of error should be validated _before_ composition.
       if (
         !serviceName &&
-        field.federation &&
-        field.federation.provides &&
-        !field.federation.belongsToValueType
+        fieldFederationMetadata?.provides &&
+        !fieldFederationMetadata?.belongsToValueType
       )
         throw Error(
           'Internal Consistency Error: field with provides information does not have service name.',
@@ -45,7 +45,7 @@ export const providesNotOnEntity: PostCompositionValidator = ({ schema }) => {
       const baseType = getBaseType(field.type);
 
       // field has a @provides directive on it
-      if (field.federation && field.federation.provides) {
+      if (fieldFederationMetadata?.provides) {
         if (!isObjectType(baseType)) {
           errors.push(
             errorWithCode(
@@ -58,8 +58,7 @@ export const providesNotOnEntity: PostCompositionValidator = ({ schema }) => {
         }
 
         const fieldType = types[baseType.name];
-        const selectedFieldIsEntity =
-          fieldType.federation && fieldType.federation.keys;
+        const selectedFieldIsEntity = getFederationMetadata(fieldType)?.keys;
 
         if (!selectedFieldIsEntity) {
           errors.push(
