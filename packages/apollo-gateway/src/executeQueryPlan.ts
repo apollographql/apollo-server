@@ -208,7 +208,7 @@ async function executeFetch<TContext>(
 
   let variables = Object.create(null);
   if (fetch.variableUsages) {
-    for (const variableName of Object.keys(fetch.variableUsages)) {
+    for (const variableName of fetch.variableUsages) {
       const providedVariables = context.requestContext.request.variables;
       if (
         providedVariables &&
@@ -222,7 +222,7 @@ async function executeFetch<TContext>(
   if (!fetch.requires) {
     const dataReceivedFromService = await sendOperation(
       context,
-      fetch.source,
+      fetch.operation,
       variables,
     );
 
@@ -249,7 +249,7 @@ async function executeFetch<TContext>(
 
     const dataReceivedFromService = await sendOperation(
       context,
-      fetch.source,
+      fetch.operation,
       { ...variables, representations },
     );
 
