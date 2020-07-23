@@ -60,7 +60,7 @@ describe('executeQueryPlan', () => {
       `;
 
       const operationContext = buildOperationContext(schema, query);
-      const queryPlan = buildQueryPlan(operationContext);
+      const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
       const response = await executeQueryPlan(
         queryPlan,
@@ -90,7 +90,7 @@ describe('executeQueryPlan', () => {
       `;
 
       const operationContext = buildOperationContext(schema, query);
-      const queryPlan = buildQueryPlan(operationContext);
+      const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
       const response = await executeQueryPlan(
         queryPlan,
@@ -140,7 +140,7 @@ describe('executeQueryPlan', () => {
       `;
 
       const operationContext = buildOperationContext(schema, query);
-      const queryPlan = buildQueryPlan(operationContext);
+      const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
       const response = await executeQueryPlan(
         queryPlan,
@@ -168,7 +168,7 @@ describe('executeQueryPlan', () => {
       `;
 
       const operationContext = buildOperationContext(schema, query);
-      const queryPlan = buildQueryPlan(operationContext);
+      const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
       const response = await executeQueryPlan(
         queryPlan,
@@ -182,7 +182,7 @@ describe('executeQueryPlan', () => {
     });
   });
 
-  fit(`should only return fields that have been requested directly`, async () => {
+  it(`should only return fields that have been requested directly`, async () => {
     const query = gql`
       query {
         topReviews {
@@ -261,7 +261,7 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const queryPlan = buildQueryPlan(operationContext);
+    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
     const requestContext = buildRequestContext();
     requestContext.request.variables = { first: 3 };
@@ -333,7 +333,7 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const queryPlan = buildQueryPlan(operationContext);
+    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
     const requestContext = buildRequestContext();
     requestContext.request.variables = { locale: 'en-US' };
@@ -395,7 +395,7 @@ describe('executeQueryPlan', () => {
         ${getIntrospectionQuery()}
       `,
     );
-    const queryPlan = buildQueryPlan(operationContext);
+    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
     const response = await executeQueryPlan(
       queryPlan,
@@ -420,7 +420,7 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const queryPlan = buildQueryPlan(operationContext);
+    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
     const response = await executeQueryPlan(
       queryPlan,
@@ -455,7 +455,7 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const queryPlan = buildQueryPlan(operationContext);
+    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
     const response = await executeQueryPlan(
       queryPlan,
@@ -498,7 +498,7 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const queryPlan = buildQueryPlan(operationContext);
+    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
     const response = await executeQueryPlan(
       queryPlan,
@@ -531,7 +531,7 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const queryPlan = buildQueryPlan(operationContext);
+    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
     const response = await executeQueryPlan(
       queryPlan,
@@ -580,7 +580,7 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const queryPlan = buildQueryPlan(operationContext);
+    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
     const response = await executeQueryPlan(
       queryPlan,
@@ -623,7 +623,7 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const queryPlan = buildQueryPlan(operationContext);
+    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
 
     const response = await executeQueryPlan(
       queryPlan,
