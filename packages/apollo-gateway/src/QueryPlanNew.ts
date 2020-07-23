@@ -99,3 +99,8 @@ export function serializeQueryPlanNode (k: string , v: any) {
 export function transformQueryPlan(queryPlan: OldQueryPlan): QueryPlan {
   return JSON.parse(JSON.stringify(queryPlan, serializeQueryPlanNode));
 }
+
+// todo: move this back to utils/graphql. See note in executeQueryPlan.ts
+export function getResponseName(node: FieldNode): string {
+  return node.alias ? node.alias : node.name;
+}

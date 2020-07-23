@@ -21,11 +21,8 @@ import {
   TypeMetaFieldDef,
   TypeNameMetaFieldDef,
   TypeNode,
-} from 'graphql';
-
-import {
   FieldNode
-} from '../QueryPlanNew'
+} from 'graphql';
 
 /**
  * Not exactly the same as the executor's definition of getFieldDef, in this
@@ -68,7 +65,7 @@ export function getFieldDef(
 }
 
 export function getResponseName(node: FieldNode): string {
-  return node.alias ? node.alias : node.name;
+  return node.alias ? node.alias.value : node.name.value;
 }
 
 export function allNodesAreOfSameKind<T extends ASTNode>(
