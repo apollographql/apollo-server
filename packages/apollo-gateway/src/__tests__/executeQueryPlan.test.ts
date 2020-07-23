@@ -195,10 +195,17 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const plan1 = buildQueryPlan(operationContext);
-    console.log(JSON.stringify({ plan1 }))
-    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext));
-    console.log(JSON.stringify({ queryPlan }))
+    // const plan1 = buildQueryPlan(operationContext);
+
+    // TODO: the query plan is messed up
+    // has a namenode
+    // console.log(JSON.stringify((plan1), ));
+    const queryPlan = JSON.parse(JSON.stringify(transformQueryPlan(buildQueryPlan(operationContext)), (key: any, value: any) => {
+      // return "wow"
+      if(value && value.kind === "Name") return value.value;
+      return value
+    }));
+    // console.log(JSON.stringify(queryPlan))
 
     const response = await executeQueryPlan(
       queryPlan,
