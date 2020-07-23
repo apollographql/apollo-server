@@ -38,7 +38,7 @@ export interface FetchNode {
   serviceName: string;
   variableUsages?: string[];
   requires?: SelectionNode[];
-  source: string;
+  operation: string;
 }
 
 export interface FlattenNode {
