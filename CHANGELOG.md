@@ -9,6 +9,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+- _Nothing yet! Stay tuned!_
+
+## v2.16.0
+
 - `apollo-server-fastify`: Pass Fastify's `request` and `reply` objects into the `context` function, which previously had been receiving nothing. [Issue #3156](https://github.com/apollographql/apollo-server/issues/3156) [PR #3895(https://github.com/apollographql/apollo-server/pull/3895)
 - `apollo-server-lamdbda`: Automatically decode payloads which are Base64-encoded when the `isBase64Encoded` boolean is present on Lambda `event` payloads. [PR #4311](https://github.com/apollographql/apollo-server/pull/4311)
 
