@@ -20,5 +20,8 @@
   "engines": {
     "node": ">=6"
   },
-  "dependencies": {}
+  "dependencies": {
+    "apollo-graphql": "0.5.0",
+    "graphql-tag": "2.10.4"
+  }
 }
