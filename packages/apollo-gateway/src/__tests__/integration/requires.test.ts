@@ -265,32 +265,11 @@ it('collapses nested requires with user-defined fragments', async () => {
   expect(queryPlan).toCallService('b');
 });
 
-<<<<<<< HEAD
-it('does not expand null objects in resolvers', async () => {
-=======
 it('passes null values correctly', async () => {
->>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
   const serviceA = {
     name: 'a',
     typeDefs: gql`
       type Query {
-<<<<<<< HEAD
-        actors: [Actor!]!
-      }
-
-      type Actor @key(fields: "id") {
-        id: ID!
-        name: String!
-        dob: Date
-        movies: [Movie]
-      }
-
-      type Date {
-        year: String!
-      }
-
-      type Movie {
-=======
         user: User
       }
 
@@ -301,43 +280,17 @@ it('passes null values correctly', async () => {
       }
 
       type Color {
->>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
         name: String!
       }
     `,
     resolvers: {
       Query: {
-<<<<<<< HEAD
-        actors() {
-          return [
-            {
-              id: '1',
-              name: 'Tom Hanks',
-              dob: null,
-              movies: [
-                {
-                  name: 'Forrest Gump',
-                },
-                null,
-              ],
-            },
-            {
-              id: '2',
-              name: 'Kate Winslet',
-              dob: {
-                year: '1975',
-              },
-              movies: null,
-            },
-          ];
-=======
         user() {
           return {
             id: '1',
             favorite: null,
             dislikes: [null],
           };
->>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
         },
       },
     },
@@ -346,20 +299,6 @@ it('passes null values correctly', async () => {
   const serviceB = {
     name: 'b',
     typeDefs: gql`
-<<<<<<< HEAD
-      extend type Actor @key(fields: "id") {
-        id: ID! @external
-        dob: Date @external
-        movies: [Movie] @external
-        info: String! @requires(fields: "dob { year } movies { name }")
-      }
-
-      extend type Date {
-        year: String! @external
-      }
-
-      extend type Movie {
-=======
       extend type User @key(fields: "id") {
         id: ID! @external
         favorite: Color @external
@@ -369,28 +308,10 @@ it('passes null values correctly', async () => {
       }
 
       extend type Color {
->>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
         name: String! @external
       }
     `,
     resolvers: {
-<<<<<<< HEAD
-      Actor: {
-        info(actor: any) {
-          let info = '';
-          if (actor.dob) {
-            info += 'Born ' + actor.dob.year;
-          }
-          if (actor.movies) {
-            info +=
-              'Movies: ' +
-              actor.movies
-                .filter((movie: any) => movie)
-                .map((movie: any) => movie.name)
-                .join(', ');
-          }
-          return info;
-=======
       User: {
         favoriteColor(user: any) {
           if (user.favorite !== null) {
@@ -410,54 +331,20 @@ it('passes null values correctly', async () => {
             );
           }
           return 'unknown';
->>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
         },
       },
     },
   };
 
   const query = `#graphql
-<<<<<<< HEAD
-    query Actors {
-      actors {
-        name
-        info
-=======
     query UserFavorites {
       user {
         favoriteColor
         dislikedColors
->>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
       }
     }
   `;
 
-<<<<<<< HEAD
-  const { data, errors, queryPlan } = await execute(
-    {
-      query,
-    },
-    [serviceA, serviceB],
-  );
-
-  expect(errors).toEqual(undefined);
-
-  expect(data).toEqual({
-    actors: [
-      {
-        name: 'Tom Hanks',
-        info: 'Movies: Forrest Gump',
-      },
-      {
-        name: 'Kate Winslet',
-        info: 'Born 1975',
-      },
-    ],
-  });
-
-  expect(queryPlan).toCallService('a');
-  expect(queryPlan).toCallService('b');
-=======
   const { data, errors } = await execute({ query }, [serviceA, serviceB]);
 
   expect(errors).toEqual(undefined);
@@ -467,5 +354,4 @@ it('passes null values correctly', async () => {
       dislikedColors: 'unknown',
     },
   });
->>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
 });

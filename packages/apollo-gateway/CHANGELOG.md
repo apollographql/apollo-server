@@ -4,9 +4,6 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-<<<<<<< HEAD
-- __FIX__: Do not expand null fields within the parent object passed to resolvers. When a composite field was null, it would sometimes be expanded into an object with all null subfields and passed to the resolver. This fix prevents this expansion and sets the field to null, as originally intended.
-=======
 - __FIX__: Pass null required fields correctly within the parent object to resolvers. When a composite field was null, it would sometimes be expanded into an object with all null subfields and passed to the resolver. This fix prevents this expansion and sets the field to null, as originally intended.
 
 ## v0.18.0
@@ -52,7 +49,6 @@
 - This updates a dependency of `apollo-server-core` that is only used for its TypeScript typings, not for any runtime dependencies.  The reason for the upgrade is that the `apollo-server-core` package (again, used only for types!) was affected by a GitHub Security Advisory.  [See the related `CHANGELOG.md` for Apollo Server for more details, including a link to the advisory](https://github.com/apollographql/apollo-server/blob/354d9910e1c87af93c7d50263a28554b449e48db/CHANGELOG.md#v2142).
 
 ## v0.16.2
->>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
 
 - __FIX__: Collapse nested required fields into a single body in the query plan. Before, some nested fields' selection sets were getting split, causing some of their subfields to be dropped when executing the query. This fix collapses the split selection sets into one. [#4064](https://github.com/apollographql/apollo-server/pull/4064)
 
