@@ -8,6 +8,7 @@ import {
   parseSelections,
   isStringValueNode,
   selectionIncludesField,
+  getFederationMetadata,
 } from '../../utils';
 import { PostCompositionValidator } from '.';
 
@@ -23,10 +24,11 @@ export const externalUnused: PostCompositionValidator = ({ schema }) => {
     if (!isObjectType(parentType)) continue;
     // If externals is populated, we need to look at each one and confirm
     // it is used
-    if (parentType.federation && parentType.federation.externals) {
+    const typeFederationMetadata = getFederationMetadata(parentType);
+    if (typeFederationMetadata?.externals) {
       // loop over every service that has extensions with @external
       for (const [serviceName, externalFieldsForService] of Object.entries(
-        parentType.federation.externals,
+        typeFederationMetadata.externals,
       )) {
         // for a single service, loop over the external fields.
         for (const { field: externalField } of externalFieldsForService) {
@@ -141,9 +143,7 @@ export const externalUnused: PostCompositionValidator = ({ schema }) => {
           const hasMatchingRequiresOnType = Object.values(
             parentType.getFields(),
           ).some(maybeRequiresField => {
-            const fieldOwner =
-              maybeRequiresField.federation &&
-              maybeRequiresField.federation.serviceName;
+            const fieldOwner = getFederationMetadata(maybeRequiresField)?.serviceName;
             if (fieldOwner !== serviceName) return false;
 
             const requiresDirectives = findDirectivesOnTypeOrField(
@@ -159,6 +159,55 @@ export const externalUnused: PostCompositionValidator = ({ schema }) => {
           });
 
           if (hasMatchingRequiresOnType) continue;
+
+          /**
+           * @external fields can be required when an interface is returned by
+           * a field and its concrete implementations need to be defined in a
+           * service which use non-key fields from other services. Take for example:
+           *
+           *  // Service A
+           *  type Car implements Vehicle @key(fields: "id") {
+           *    id: ID!
+           *    speed: Int
+           *  }
+           *
+           *  interface Vehicle {
+           *    id: ID!
+           *    speed: Int
+           *  }
+           *
+           *  // Service B
+           *  type Query {
+           *    vehicles: [Vehicle]
+           *  }
+           *
+           *  extend type Car implements Vehicle @key(fields: "id") {
+           *    id: ID! @external
+           *    speed: Int @external
+           *  }
+           *
+           *  interface Vehicle {
+           *    id: ID!
+           *    speed: Int
+           *  }
+           *
+           *  Service B defines Car.speed as an external field which is okay
+           *  because it is required for Query.vehicles to exist in the schema
+           */
+          const fieldsOnInterfacesImplementedByParentType: Set<string> = new Set();
+
+          // Loop over the parent's interfaces
+          for (const _interface of parentType.getInterfaces()) {
+            // Collect the field names from each interface in a set
+            for (const fieldName in _interface.getFields()) {
+              fieldsOnInterfacesImplementedByParentType.add(fieldName);
+            }
+          }
+
+          // If the set contains our field's name, no error is generated
+          if (fieldsOnInterfacesImplementedByParentType.has(externalFieldName)) {
+            continue;
+          }
 
           errors.push(
             errorWithCode(

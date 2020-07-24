@@ -13,6 +13,7 @@ import {
   GraphQLError,
   ValidationContext,
   FieldDefinitionNode,
+  getIntrospectionQuery,
 } from 'graphql';
 
 import { PubSub } from 'graphql-subscriptions';
@@ -566,11 +567,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
     describe('Plugins', () => {
       let apolloFetch: ApolloFetch;
       let apolloFetchResponse: ParsedResponse;
+      let serverInstance: ApolloServerBase;
 
       const setupApolloServerAndFetchPairForPlugins = async (
         plugins: PluginDefinition[] = [],
       ) => {
-        const { url: uri } = await createApolloServer({
+        const { url: uri, server } = await createApolloServer({
+          context: { customContext: true },
           typeDefs: gql`
             type Query {
               justAField: String
@@ -579,6 +582,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           plugins,
         });
 
+        serverInstance = server;
+
         apolloFetch = createApolloFetch({ uri })
           // Store the response so we can inspect it.
           .useAfter(({ response }, next) => {
@@ -586,6 +591,56 @@ export function testApolloServer<AS extends ApolloServerBase>(
             next();
           });
       };
+
+      // Test for https://github.com/apollographql/apollo-server/issues/4170
+      it('works when using executeOperation', async () => {
+        const encounteredFields = [];
+        const encounteredContext = [];
+        await setupApolloServerAndFetchPairForPlugins([
+          {
+            requestDidStart: () => ({
+              executionDidStart: () => ({
+                willResolveField({ info, context }) {
+                  encounteredFields.push(info.path);
+                  encounteredContext.push(context);
+                },
+              }),
+            }),
+          },
+        ]);
+
+        // The bug in 4170 (linked above) was occurring because of a failure
+        // to clone context in `executeOperation` in the same way that occurs
+        // in `runHttpQuery` prior to entering the request pipeline.  That
+        // resulted in the inability to attach a symbol to the context because
+        // the symbol already existed on the context.  Of course, a context
+        // is only created after the first invocation, so we'll run this twice
+        // to encounter the error where it was in the way when we tried to set
+        // it the second time.  While we could have tested for the property
+        // before assigning to it, that is not the contract we have with the
+        // context, which should have been copied on `executeOperation` (which
+        // is meant to be used by testing, currently).
+        await serverInstance.executeOperation({
+          query: '{ justAField }',
+        });
+        await serverInstance.executeOperation({
+          query: '{ justAField }',
+        });
+
+        expect(encounteredFields).toStrictEqual([
+          { key: 'justAField', prev: undefined },
+          { key: 'justAField', prev: undefined },
+        ]);
+
+        // This bit is just to ensure that nobody removes `context` from the
+        // `setupApolloServerAndFetchPairForPlugins` thinking it's unimportant.
+        // When a custom context is not provided, a new one is initialized
+        // on each request.
+        expect(encounteredContext).toStrictEqual([
+          expect.objectContaining({customContext: true}),
+          expect.objectContaining({customContext: true}),
+        ]);
+      });
 
       it('returns correct status code for a normal operation', async () => {
         await setupApolloServerAndFetchPairForPlugins();
@@ -852,7 +907,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           public engineOptions(): Partial<EngineReportingOptions<any>> {
             return {
-              endpointUrl: this.getUrl(),
+              tracesEndpointUrl: this.getUrl(),
             };
           }
 
@@ -1492,37 +1547,71 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(spy).toHaveBeenCalledTimes(2);
         });
 
-        it('clones the context for every request', async () => {
-          const uniqueContext = { key: 'major' };
-          const spy = jest.fn(() => 'hi');
-          const typeDefs = gql`
-            type Query {
-              hello: String
-            }
-          `;
-          const resolvers = {
-            Query: {
-              hello: (_parent: any, _args: any, context: any) => {
-                expect(context.key).toEqual('major');
-                context.key = 'minor';
-                return spy();
+        describe('context cloning', () => {
+          it('clones the context for request pipeline requests', async () => {
+            const uniqueContext = { key: 'major' };
+            const spy = jest.fn(() => 'hi');
+            const typeDefs = gql`
+              type Query {
+                hello: String
+              }
+            `;
+            const resolvers = {
+              Query: {
+                hello: (_parent: any, _args: any, context: any) => {
+                  expect(context.key).toEqual('major');
+                  context.key = 'minor';
+                  return spy();
+                },
               },
-            },
-          };
-          const { url: uri } = await createApolloServer({
-            typeDefs,
-            resolvers,
-            context: uniqueContext,
+            };
+            const { url: uri } = await createApolloServer({
+              typeDefs,
+              resolvers,
+              context: uniqueContext,
+            });
+
+            const apolloFetch = createApolloFetch({ uri });
+
+            expect(spy).not.toBeCalled();
+
+            await apolloFetch({ query: '{hello}' });
+            expect(spy).toHaveBeenCalledTimes(1);
+            await apolloFetch({ query: '{hello}' });
+            expect(spy).toHaveBeenCalledTimes(2);
           });
 
-          const apolloFetch = createApolloFetch({ uri });
+          // https://github.com/apollographql/apollo-server/issues/4170
+          it('for every request with executeOperation', async () => {
+            const uniqueContext = { key: 'major' };
+            const spy = jest.fn(() => 'hi');
+            const typeDefs = gql`
+              type Query {
+                hello: String
+              }
+            `;
+            const resolvers = {
+              Query: {
+                hello: (_parent: any, _args: any, context: any) => {
+                  expect(context.key).toEqual('major');
+                  context.key = 'minor';
+                  return spy();
+                },
+              },
+            };
+            const { server } = await createApolloServer({
+              typeDefs,
+              resolvers,
+              context: uniqueContext,
+            });
 
-          expect(spy).not.toBeCalled();
+            expect(spy).not.toBeCalled();
 
-          await apolloFetch({ query: '{hello}' });
-          expect(spy).toHaveBeenCalledTimes(1);
-          await apolloFetch({ query: '{hello}' });
-          expect(spy).toHaveBeenCalledTimes(2);
+            await server.executeOperation({ query: '{hello}' });
+            expect(spy).toHaveBeenCalledTimes(1);
+            await server.executeOperation({ query: '{hello}' });
+            expect(spy).toHaveBeenCalledTimes(2);
+          });
         });
 
         describe('as a function', () => {
@@ -1952,6 +2041,118 @@ export function testApolloServer<AS extends ApolloServerBase>(
           })
           .catch(done.fail);
       });
+      it('allows introspection when introspection is enabled on ApolloServer', done => {
+        const typeDefs = gql`
+          type Query {
+            hi: String
+          }
+
+          type Subscription {
+            num: Int
+          }
+        `;
+
+        const query = getIntrospectionQuery();
+
+        const resolvers = {
+          Query: {
+            hi: () => 'here to placate graphql-js',
+          },
+          Subscription: {
+            num: {
+              subscribe: () => {
+                createEvent(1);
+                createEvent(2);
+                createEvent(3);
+                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
+              },
+            },
+          },
+        };
+
+        createApolloServer({
+          typeDefs,
+          resolvers,
+          introspection: true,
+        }).then(({ port, server, httpServer }) => {
+          server.installSubscriptionHandlers(httpServer);
+
+          const client = new SubscriptionClient(
+            `ws://localhost:${port}${server.subscriptionsPath}`,
+            {},
+            WebSocket,
+          );
+
+          const observable = client.request({ query });
+
+          subscription = observable.subscribe({
+            next: ({ data }) => {
+              try {
+                expect(data).toMatchObject({ __schema: expect.any(Object) })
+              } catch (e) {
+                done.fail(e);
+              }
+              done();
+            }
+          });
+        });
+      });
+      it('disallows introspection when it\'s disabled on ApolloServer', done => {
+        const typeDefs = gql`
+          type Query {
+            hi: String
+          }
+
+          type Subscription {
+            num: Int
+          }
+        `;
+
+        const query = getIntrospectionQuery();
+
+        const resolvers = {
+          Query: {
+            hi: () => 'here to placate graphql-js',
+          },
+          Subscription: {
+            num: {
+              subscribe: () => {
+                createEvent(1);
+                createEvent(2);
+                createEvent(3);
+                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
+              },
+            },
+          },
+        };
+
+        createApolloServer({
+          typeDefs,
+          resolvers,
+          introspection: false,
+        }).then(({ port, server, httpServer }) => {
+          server.installSubscriptionHandlers(httpServer);
+
+          const client = new SubscriptionClient(
+            `ws://localhost:${port}${server.subscriptionsPath}`,
+            {},
+            WebSocket,
+          );
+
+          const observable = client.request({ query });
+
+          subscription = observable.subscribe({
+            next: ({ data }) => {
+              try {
+                expect(data).toBeUndefined();
+              } catch (e) {
+                done.fail(e);
+              }
+              done();
+            }
+          });
+        });
+      });
     });
 
     describe('Persisted Queries', () => {
@@ -2170,7 +2371,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               resolvers: { Query: { something: () => 'hello' } },
               engine: {
                 apiKey: 'service:my-app:secret',
-                endpointUrl: fakeEngineUrl,
+                tracesEndpointUrl: fakeEngineUrl,
                 reportIntervalMs: 1,
                 maxAttempts: 3,
                 requestAgent,

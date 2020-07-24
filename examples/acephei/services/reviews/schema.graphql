@@ -1,0 +1,105 @@
+"""
+  A review is any feedback about products across the graph
+"""
+type Review @key(fields: "id") {
+  id: ID!
+  "The plain text version of the review"
+  body: String
+  "The user who authored the review"
+  author: User @provides(fields: "username")
+  "The product which this review is about"
+  product: Product
+}
+
+extend type User @key(fields: "id") {
+  id: ID! @external
+  username: String @external
+  "A list of all reviews by the user"
+  reviews: [Review]
+}
+
+# This is a shared value type across the graph
+type PageInfo {
+  hasNextPage: Boolean
+  hasPreviousPage: Boolean
+}
+
+"""
+  A connection edge for the Review type
+"""
+type ReviewEdge {
+  review: Review
+}
+
+"""
+  A connection wrapper for lists of reviews
+"""
+type ReviewConnection {
+  "Helpful metadata about the connection"
+  pageInfo: PageInfo
+  "List of reviews returned by the search"
+  edges: [ReviewEdge]
+}
+
+extend interface Product {
+  """
+    A simple list of all reviews for a product
+  """
+  reviews: [Review] @deprecated(reason: """
+    The `reviews` field on product is deprecated to roll over the return
+    type from a simple list to a paginated list. The easiest way to fix your
+    operations is to alias the new field `reviewList` to `review`:
+      
+      {
+        ... on Product {
+          reviews: reviewList {
+            edges {
+              review {
+                body
+              }
+            }
+          }
+        }
+      }
+    
+    Once all clients have updated, we will roll over this field and deprecate
+    `reviewList` in favor of the field name `reviews` again
+  """)
+  """
+    A paginated list of reviews. This field naming is temporary while all clients
+    migrate off of the un-paginated version of this field call reviews. To ease this migration,
+    alias your usage of `reviewList` to `reviews` so that after the roll over is finished, you
+    can remove the alias and use the final field name:
+
+      {
+        ... on Product {
+          reviews: reviewList {
+            edges {
+              review {
+                body
+              }
+            }
+          }
+        }
+      }
+  """
+  reviewList(first: Int = 5, after: Int = 0): ReviewConnection
+}
+
+extend type Furniture implements Product @key(fields: "upc") {
+  upc: String! @external
+  reviews: [Review] # deprecated on interface
+  reviewList(first: Int = 5, after: Int = 0): ReviewConnection
+}
+
+extend type Book implements Product @key(fields: "isbn") {
+  isbn: String! @external
+  similarBooks: [Book] @external
+  reviews: [Review] # deprecated on interface
+  reviewList(first: Int = 5, after: Int = 0): ReviewConnection
+  """
+    relatedReviews for a book use the knowledge of `similarBooks` from the books
+    service to return related reviews that may be of interest to the user
+  """
+  relatedReviews(first: Int = 5, after: Int = 0): ReviewConnection @requires(fields: "similarBooks { isbn }")
+}

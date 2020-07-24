@@ -1,18 +1,18 @@
 {
   "name": "apollo-cache-control",
-  "version": "0.10.1-alpha.0",
+  "version": "0.11.1",
   "description": "A GraphQL extension for cache control",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "license": "MIT",
   "repository": "apollographql/apollo-cache-control-js",
-  "author": "Martijn Walraven <martijn@martijnwalraven.com>",
+  "author": "Apollo <opensource@apollographql.com>",
   "engines": {
     "node": ">=6.0"
   },
   "dependencies": {
     "apollo-server-env": "file:../apollo-server-env",
-    "graphql-extensions": "file:../graphql-extensions"
+    "apollo-server-plugin-base": "file:../apollo-server-plugin-base"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"

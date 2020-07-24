@@ -89,11 +89,9 @@ export async function executeQueryPlan<TContext>(
       },
       rootValue: data,
       variableValues: requestContext.request.variables,
-      // FIXME: GraphQL extensions currently wraps every field and creates
-      // a field resolver. Because of this, when using with ApolloServer
-      // the defaultFieldResolver isn't called. We keep this here
-      // because it is the correct solution and when ApolloServer removes
-      // GraphQLExtensions this will be how alias support is maintained
+      // We have a special field resolver which ensures we support aliases.
+      // FIXME: It's _possible_ this will change after `graphql-extensions` is
+      // deprecated, though not certain. See here, also: https://git.io/Jf8cS.
       fieldResolver: defaultFieldResolverWithAliasSupport,
     }));
   } catch (error) {

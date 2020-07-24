@@ -5,6 +5,8 @@ import {
   DirectiveDefinitionNode,
 } from 'graphql';
 
+export type Maybe<T> = null | undefined | T;
+
 export type ServiceName = string | null;
 
 export type DefaultRootOperationTypeName =
@@ -38,58 +40,16 @@ export interface FederationField {
   belongsToValueType?: boolean;
 }
 
+export interface FederationDirective {
+  directiveDefinitions: {
+    [serviceName: string]: DirectiveDefinitionNode;
+  }
+}
+
 export interface ServiceDefinition {
   typeDefs: DocumentNode;
   name: string;
   url?: string;
-}
-
-declare module 'graphql/type/definition' {
-  interface GraphQLObjectType {
-    federation?: FederationType;
-  }
-
-  interface GraphQLEnumType {
-    federation?: FederationType;
-  }
-
-  interface GraphQLScalarType {
-    federation?: FederationType;
-  }
-
-  interface GraphQLInterfaceType {
-    federation?: FederationType;
-  }
-
-  interface GraphQLUnionType {
-    federation?: FederationType;
-  }
-
-  interface GraphQLInputObjectType {
-    federation?: FederationType;
-  }
-
-  interface GraphQLEnumValue {
-    federation?: FederationType;
-  }
-
-  interface GraphQLInputField {
-    federation?: FederationField;
-  }
-
-  interface GraphQLField<TSource, TContext> {
-    federation?: FederationField;
-  }
-}
-
-declare module 'graphql/type/directives' {
-  interface GraphQLDirective {
-    federation?: {
-      directiveDefinitions: {
-        [serviceName: string]: DirectiveDefinitionNode;
-      };
-    };
-  }
 }
 
 declare module 'graphql/language/ast' {

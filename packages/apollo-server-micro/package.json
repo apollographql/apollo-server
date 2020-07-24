@@ -1,12 +1,13 @@
 {
   "name": "apollo-server-micro",
-  "version": "2.13.1",
+  "version": "2.16.0",
   "description": "Production-ready Node.js GraphQL server for Micro",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-micro"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-micro"
   },
   "keywords": [
     "GraphQL",
@@ -16,14 +17,14 @@
     "Javascript",
     "ZEIT"
   ],
-  "author": "opensource@apollographql.com",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "@apollographql/graphql-playground-html": "1.6.24",
+    "@apollographql/graphql-playground-html": "1.6.26",
     "accept": "^3.0.2",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-types": "file:../apollo-server-types",

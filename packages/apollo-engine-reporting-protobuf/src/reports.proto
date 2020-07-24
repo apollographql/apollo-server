@@ -115,7 +115,7 @@ message Trace {
 
 	// represents a node in the query plan, under which there is a trace tree for that service fetch.
 	// In particular, each fetch node represents a call to an implementing service, and calls to implementing
-	// services may not be unique. See https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/src/QueryPlan.ts
+	// services may not be unique. See https://github.com/apollographql/apollo-server/blob/main/packages/apollo-gateway/src/QueryPlan.ts
 	// for more information and details.
 	message QueryPlanNode {
 		// This represents a set of nodes to be executed sequentially by the Gateway executor
@@ -269,8 +269,10 @@ message ReportHeader {
 	string uname = 9;
 	// eg "current", "prod"
 	string schema_tag = 10;
-	// The hex representation of the sha512 of the introspection response
-	string schema_hash = 11;
+	// An id that is used to represent the schema to Apollo Graph Manager
+	// Using this in place of what used to be schema_hash, since that is no longer
+	// attached to a schema in the backend.
+	string executable_schema_id = 11;
 
 	reserved 3; // removed string service = 3;
 }

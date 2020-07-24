@@ -29,9 +29,18 @@ import {
   ASTNode,
   DirectiveDefinitionNode,
   GraphQLDirective,
+  OperationTypeNode,
+  isDirective,
+  isNamedType,
 } from 'graphql';
-import Maybe from 'graphql/tsutils/Maybe';
-import { ExternalFieldDefinition } from './types';
+import {
+  ExternalFieldDefinition,
+  DefaultRootOperationTypeName,
+  Maybe,
+  FederationType,
+  FederationDirective,
+  FederationField,
+} from './types';
 import federationDirectives from '../directives';
 
 export function isStringValueNode(node: any): node is StringValueNode {
@@ -87,7 +96,7 @@ export function stripTypeSystemDirectivesFromTypeDefs(typeDefs: DocumentNode) {
   const typeDefsWithoutTypeSystemDirectives = visit(typeDefs, {
     Directive(node) {
       // The `deprecated` directive is an exceptional case that we want to leave in
-      if (node.name.value === 'deprecated') return;
+      if (node.name.value === 'deprecated' || node.name.value === 'specifiedBy') return;
 
       const isFederationDirective = federationDirectives.some(
         ({ name }) => name === node.name.value,
@@ -548,4 +557,27 @@ export const executableDirectiveLocations = [
 
 export function isFederationDirective(directive: GraphQLDirective): boolean {
   return federationDirectives.some(({ name }) => name === directive.name);
+}
+
+export const reservedRootFields = ['_service', '_entities'];
+
+// Map of OperationTypeNode to its respective default root operation type name
+export const defaultRootOperationNameLookup: {
+  [node in OperationTypeNode]: DefaultRootOperationTypeName;
+} = {
+  query: 'Query',
+  mutation: 'Mutation',
+  subscription: 'Subscription',
+};
+
+// This function is overloaded for 3 different input types. Each input type
+// maps to a particular return type, hence the overload.
+export function getFederationMetadata(obj: GraphQLNamedType): FederationType | undefined;
+export function getFederationMetadata(obj: GraphQLField<any, any>): FederationField | undefined;
+export function getFederationMetadata(obj: GraphQLDirective): FederationDirective | undefined;
+export function getFederationMetadata(obj: any) {
+  if (typeof obj === "undefined") return undefined;
+  else if (isNamedType(obj)) return obj.extensions?.federation as FederationType | undefined;
+  else if (isDirective(obj)) return obj.extensions?.federation as FederationDirective | undefined;
+  else return obj.extensions?.federation as FederationField | undefined;
 }

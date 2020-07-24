@@ -18,6 +18,7 @@ import {
   GraphQLResponse,
   GraphQLRequestContext,
   Logger,
+  SchemaHash,
 } from 'apollo-server-types';
 
 /*
@@ -42,6 +43,7 @@ export interface GraphQLServerOptions<
   TRootValue = any
 > {
   schema: GraphQLSchema;
+  schemaHash: SchemaHash;
   logger?: Logger;
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
@@ -63,7 +65,6 @@ export interface GraphQLServerOptions<
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
   parseOptions?: GraphQLParseOptions;
-  reporting?: boolean;
 }
 
 export type DataSources<TContext> = {

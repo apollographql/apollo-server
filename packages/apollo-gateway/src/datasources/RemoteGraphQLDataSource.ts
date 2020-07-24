@@ -20,6 +20,8 @@ import { GraphQLDataSource } from './types';
 import createSHA from 'apollo-server-core/dist/utils/createSHA';
 
 export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Record<string, any>> implements GraphQLDataSource<TContext> {
+  fetcher: typeof fetch = fetch;
+
   constructor(
     config?: Partial<RemoteGraphQLDataSource<TContext>> &
       object &
@@ -138,19 +140,22 @@ export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Reco
     // being transmitted.  Instead, we want those to be used to indicate what
     // we're accessing (e.g. url) and what we access it with (e.g. headers).
     const { http, ...requestWithoutHttp } = request;
-    const httpRequest = new Request(http.url, {
+    const fetchRequest = new Request(http.url, {
       ...http,
       body: JSON.stringify(requestWithoutHttp),
     });
 
-    try {
-      const httpResponse = await fetch(httpRequest);
+    let fetchResponse: Response | undefined;
 
-      if (!httpResponse.ok) {
-        throw await this.errorFromResponse(httpResponse);
+    try {
+      // Use our local `fetcher` to allow for fetch injection
+      fetchResponse = await this.fetcher(fetchRequest);
+
+      if (!fetchResponse.ok) {
+        throw await this.errorFromResponse(fetchResponse);
       }
 
-      const body = await this.parseBody(httpResponse, httpRequest, context);
+      const body = await this.parseBody(fetchResponse, fetchRequest, context);
 
       if (!isObject(body)) {
         throw new Error(`Expected JSON response body, but received: ${body}`);
@@ -158,10 +163,10 @@ export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Reco
 
       return {
         ...body,
-        http: httpResponse,
+        http: fetchResponse,
       };
     } catch (error) {
-      this.didEncounterError(error, httpRequest);
+      this.didEncounterError(error, fetchRequest, fetchResponse);
       throw error;
     }
   }
@@ -180,20 +185,24 @@ export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Reco
     >,
   ): ValueOrPromise<GraphQLResponse>;
 
-  public didEncounterError(error: Error, _request: Request) {
+  public didEncounterError(
+    error: Error,
+    _fetchRequest: Request,
+    _fetchResponse?: Response
+  ) {
     throw error;
   }
 
   public parseBody(
-    response: Response,
-    _request?: Request,
+    fetchResponse: Response,
+    _fetchRequest?: Request,
     _context?: TContext,
   ): Promise<object | string> {
-    const contentType = response.headers.get('Content-Type');
+    const contentType = fetchResponse.headers.get('Content-Type');
     if (contentType && contentType.startsWith('application/json')) {
-      return response.json();
+      return fetchResponse.json();
     } else {
-      return response.text();
+      return fetchResponse.text();
     }
   }
 

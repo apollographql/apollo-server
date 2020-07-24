@@ -1,22 +1,13 @@
 import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
-import {
-  GraphQLExtensionStack,
-  enableGraphQLExtensions,
-} from 'graphql-extensions';
-import { graphql, GraphQLError } from 'graphql';
+import { graphql, GraphQLError, printSchema } from 'graphql';
 import { Request } from 'node-fetch';
-import {
-  EngineReportingExtension,
-  makeTraceDetails,
-  makeHTTPRequestHeaders,
-} from '../extension';
+import { makeTraceDetails, makeHTTPRequestHeaders, plugin } from '../plugin';
 import { Headers } from 'apollo-server-env';
-import { InMemoryLRUCache } from 'apollo-server-caching';
-import { AddTraceArgs } from '../agent';
+import { computeExecutableSchemaId } from '../agent';
 import { Trace } from 'apollo-engine-reporting-protobuf';
+import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
 
-it('trace construction', async () => {
-  const typeDefs = `
+const typeDefs = `
   type User {
     id: Int
     name: String
@@ -39,7 +30,7 @@ it('trace construction', async () => {
   }
 `;
 
-  const query = `
+const query = `
     query q {
       author(id: 5) {
         name
@@ -51,43 +42,201 @@ it('trace construction', async () => {
     }
 `;
 
+const queryReport = `
+    query report {
+      author(id: 5) {
+        name
+        posts(limit: 2) {
+          id
+        }
+      }
+      aBoolean
+    }
+`;
+
+describe('schema reporting', () => {
   const schema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({ schema });
-  enableGraphQLExtensions(schema);
 
-  const traces: Array<AddTraceArgs> = [];
-  async function addTrace(args: AddTraceArgs) {
-    traces.push(args);
-  }
+  const addTrace = jest.fn(() => Promise.resolve());
+  const startSchemaReporting = jest.fn();
+  const executableSchemaIdGenerator = jest.fn(computeExecutableSchemaId);
 
-  const reportingExtension = new EngineReportingExtension(
-    {},
-    addTrace,
-    'schema-hash',
-  );
-  const stack = new GraphQLExtensionStack([reportingExtension]);
-  const requestDidEnd = stack.requestDidStart({
-    request: new Request('http://localhost:123/foo'),
-    queryString: query,
-    requestContext: {
-      request: {
+  beforeEach(() => {
+    addTrace.mockClear();
+    startSchemaReporting.mockClear();
+    executableSchemaIdGenerator.mockClear();
+  });
+
+  it('starts reporting if enabled', async () => {
+    const pluginInstance = plugin(
+      {},
+      addTrace,
+      {
+        startSchemaReporting,
+        executableSchemaIdGenerator,
+        schemaReport: true,
+      }
+    );
+
+    await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
         query,
         operationName: 'q',
         extensions: {
           clientName: 'testing suite',
         },
+        http: new Request('http://localhost:123/foo'),
       },
-      context: {},
-      cache: new InMemoryLRUCache(),
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    expect(startSchemaReporting).toBeCalledTimes(1);
+    expect(startSchemaReporting).toBeCalledWith({
+      executableSchema: printSchema(schema),
+      executableSchemaId: executableSchemaIdGenerator(schema),
+    });
+  });
+
+  it('uses the override schema', async () => {
+    const pluginInstance = plugin(
+      {
+        overrideReportedSchema: typeDefs,
+      },
+      addTrace,
+      {
+        startSchemaReporting,
+        executableSchemaIdGenerator,
+        schemaReport: true,
+      },
+    );
+
+    await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query,
+        operationName: 'q',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    const expectedExecutableSchemaId = executableSchemaIdGenerator(typeDefs);
+    expect(startSchemaReporting).toBeCalledTimes(1);
+    expect(startSchemaReporting).toBeCalledWith({
+      executableSchema: typeDefs,
+      executableSchemaId: expectedExecutableSchemaId,
+    });
+
+    // Get the first argument from the first time this is called.
+    // Not using called with because that has to be exhaustive and this isn't
+    // testing trace generation
+    expect(addTrace).toBeCalledWith(
+      expect.objectContaining({
+        executableSchemaId: expectedExecutableSchemaId,
+      }),
+    );
+  });
+
+  it('uses the same executable schema id for metric reporting', async () => {
+    const pluginInstance = plugin(
+      {},
+      addTrace,
+      {
+        startSchemaReporting,
+        executableSchemaIdGenerator,
+        schemaReport: true,
+      }
+    );
+
+    await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query,
+        operationName: 'q',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    const expectedExecutableSchemaId = executableSchemaIdGenerator(schema);
+    expect(startSchemaReporting).toBeCalledTimes(1);
+    expect(startSchemaReporting).toBeCalledWith({
+      executableSchema: printSchema(schema),
+      executableSchemaId: expectedExecutableSchemaId,
+    });
+    // Get the first argument from the first time this is called.
+    // Not using called with because that has to be exhaustive and this isn't
+    // testing trace generation
+    expect(addTrace.mock.calls[0][0].executableSchemaId).toBe(
+      expectedExecutableSchemaId,
+    );
+  });
+});
+
+it('trace construction', async () => {
+  const schema = makeExecutableSchema({ typeDefs });
+  addMockFunctionsToSchema({ schema });
+
+  const startSchemaReporting = jest.fn();
+  const executableSchemaIdGenerator = jest.fn();
+  const addTrace = jest.fn(() => Promise.resolve());
+
+  const pluginInstance = plugin(
+    {
+      /* no options!*/
     },
-    context: {},
-  });
-  await graphql({
+    addTrace,
+    {
+      startSchemaReporting,
+      executableSchemaIdGenerator,
+    },
+  );
+
+  await pluginTestHarness({
+    pluginInstance,
     schema,
-    source: query,
-    contextValue: { _extensionStack: stack },
+    graphqlRequest: {
+      query,
+      operationName: 'q',
+      extensions: {
+        clientName: 'testing suite',
+      },
+      http: new Request('http://localhost:123/foo'),
+    },
+    executor: async ({ request: { query: source } }) => {
+      return await graphql({
+        schema,
+        source,
+      });
+    },
   });
-  requestDidEnd();
+
   // XXX actually write some tests
 });
 
@@ -276,7 +425,7 @@ describe('variableJson output for sendVariableValues transform: custom function 
     ).toEqual(JSON.stringify(null));
   });
 
-  const errorThrowingModifier = (input: {
+  const errorThrowingModifier = (_input: {
     variables: Record<string, any>;
   }): Record<string, any> => {
     throw new GraphQLError('testing error handling');
@@ -321,6 +470,164 @@ function makeTestHTTP(): Trace.HTTP {
     path: null,
   });
 }
+
+describe('tests for the "reportTiming', () => {
+  const schemaReportingFunctions = {
+    startSchemaReporting: jest.fn(),
+    executableSchemaIdGenerator: jest.fn(),
+  };
+  const schema = makeExecutableSchema({ typeDefs });
+  addMockFunctionsToSchema({ schema });
+
+  const addTrace = jest.fn(() => Promise.resolve());
+  beforeEach(() => {
+    addTrace.mockClear();
+  });
+
+  it('report no traces', async () => {
+    const pluginInstance = plugin(
+      { reportTiming: false },
+      addTrace,
+      schemaReportingFunctions,
+    );
+
+    const context = await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query,
+        operationName: 'q',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+    expect(context.metrics.captureTraces).toBeFalsy();
+  });
+
+  it('report traces based on operation name', async () => {
+    const pluginInstance = plugin(
+      {
+        reportTiming: async request => {
+          return request.request.operationName === 'report';
+        },
+      },
+      addTrace,
+      schemaReportingFunctions,
+    );
+
+    const context1 = await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query: queryReport,
+        operationName: 'report',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    expect(addTrace).toBeCalledTimes(1);
+    expect(context1.metrics.captureTraces).toBeTruthy();
+    addTrace.mockClear();
+
+    const context2 = await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query,
+        operationName: 'q',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    expect(addTrace).not.toBeCalled();
+    expect(context2.metrics.captureTraces).toBeFalsy();
+  });
+
+  it('report traces async based on operation name', async () => {
+    const pluginInstance = plugin(
+      {
+        reportTiming: async request => {
+          return await (async () => {
+            return request.request.operationName === 'report';
+          })();
+        },
+      },
+      addTrace,
+      schemaReportingFunctions
+    );
+
+    const context1 = await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query: queryReport,
+        operationName: 'report',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    expect(addTrace).toBeCalledTimes(1);
+    expect(context1.metrics.captureTraces).toBeTruthy();
+    addTrace.mockClear();
+
+    const context2 = await pluginTestHarness({
+      pluginInstance,
+      schema,
+      graphqlRequest: {
+        query,
+        operationName: 'q',
+        extensions: {
+          clientName: 'testing suite',
+        },
+        http: new Request('http://localhost:123/foo'),
+      },
+      executor: async ({ request: { query: source } }) => {
+        return await graphql({
+          schema,
+          source,
+        });
+      },
+    });
+
+    expect(addTrace).not.toBeCalled();
+    expect(context2.metrics.captureTraces).toBeFalsy();
+  });
+});
 
 /**
  * TESTS FOR THE sendHeaders REPORTING OPTION

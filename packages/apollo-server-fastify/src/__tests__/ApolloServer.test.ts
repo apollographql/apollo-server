@@ -1,7 +1,7 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fastify from 'fastify';
 
-import http from 'http';
+import http, { IncomingMessage, OutgoingMessage } from 'http';
 
 import request from 'request';
 import FormData from 'form-data';
@@ -56,13 +56,24 @@ describe('apollo-server-fastify', () => {
   let server: ApolloServer;
   let app: FastifyInstance;
   let httpServer: http.Server;
+  let replyDecorator: jest.Mock | undefined;
+  let requestDecorator: jest.Mock | undefined;
 
   async function createServer(
     serverOptions: Config,
     options: Partial<ServerRegistration> = {},
+    mockDecorators: boolean = false,
   ) {
     server = new ApolloServer(serverOptions);
     app = fastify();
+
+    if (mockDecorators) {
+      replyDecorator = jest.fn();
+      requestDecorator = jest.fn();
+
+      app.decorateReply('replyDecorator', replyDecorator);
+      app.decorateRequest('requestDecorator', requestDecorator);
+    }
 
     app.register(server.createHandler(options));
     await app.listen(port);
@@ -79,6 +90,35 @@ describe('apollo-server-fastify', () => {
   describe('constructor', () => {
     it('accepts typeDefs and resolvers', () => {
       return createServer({ typeDefs, resolvers });
+    });
+  });
+
+  describe('createGraphQLServerOptions', () => {
+    it('provides FastifyRequest and FastifyReply to ContextFunction', async () => {
+      interface ContextArgs {
+        request: FastifyRequest<IncomingMessage> & {
+          requestDecorator: () => any;
+        };
+        reply: FastifyReply<OutgoingMessage> & { replyDecorator: () => any };
+      }
+
+      const context = ({ request, reply }: ContextArgs) => {
+        request!.requestDecorator();
+        reply!.replyDecorator();
+        return {};
+      };
+
+      const { url: uri } = await createServer(
+        { typeDefs, resolvers, context },
+        {},
+        true,
+      );
+
+      const apolloFetch = createApolloFetch({ uri });
+      await apolloFetch({ query: '{hello}' });
+
+      expect(requestDecorator!.mock.calls.length).toEqual(1);
+      expect(replyDecorator!.mock.calls.length).toEqual(1);
     });
   });
 
@@ -222,7 +262,7 @@ describe('apollo-server-fastify', () => {
               reject(error);
             } else {
               expect(body).toMatch('GraphQLPlayground');
-              expect(body).toMatch(`"editor.theme": "light"`);
+              expect(body).toMatch(`\"editor.theme\":\"light\"`);
               expect(body).toMatch(defaultQuery);
               expect(body).toMatch(endpoint);
               expect(response.statusCode).toEqual(200);

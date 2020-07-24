@@ -235,7 +235,6 @@ it('collapses nested requires with user-defined fragments', async () => {
                 preferences {
                   favorites {
                     animal
-                    color
                   }
                 }
               }
@@ -266,11 +265,16 @@ it('collapses nested requires with user-defined fragments', async () => {
   expect(queryPlan).toCallService('b');
 });
 
+<<<<<<< HEAD
 it('does not expand null objects in resolvers', async () => {
+=======
+it('passes null values correctly', async () => {
+>>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
   const serviceA = {
     name: 'a',
     typeDefs: gql`
       type Query {
+<<<<<<< HEAD
         actors: [Actor!]!
       }
 
@@ -286,11 +290,24 @@ it('does not expand null objects in resolvers', async () => {
       }
 
       type Movie {
+=======
+        user: User
+      }
+
+      type User @key(fields: "id") {
+        id: ID!
+        favorite: Color
+        dislikes: [Color]
+      }
+
+      type Color {
+>>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
         name: String!
       }
     `,
     resolvers: {
       Query: {
+<<<<<<< HEAD
         actors() {
           return [
             {
@@ -313,6 +330,14 @@ it('does not expand null objects in resolvers', async () => {
               movies: null,
             },
           ];
+=======
+        user() {
+          return {
+            id: '1',
+            favorite: null,
+            dislikes: [null],
+          };
+>>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
         },
       },
     },
@@ -321,6 +346,7 @@ it('does not expand null objects in resolvers', async () => {
   const serviceB = {
     name: 'b',
     typeDefs: gql`
+<<<<<<< HEAD
       extend type Actor @key(fields: "id") {
         id: ID! @external
         dob: Date @external
@@ -333,10 +359,22 @@ it('does not expand null objects in resolvers', async () => {
       }
 
       extend type Movie {
+=======
+      extend type User @key(fields: "id") {
+        id: ID! @external
+        favorite: Color @external
+        dislikes: [Color] @external
+        favoriteColor: String @requires(fields: "favorite { name }")
+        dislikedColors: String @requires(fields: "dislikes { name }")
+      }
+
+      extend type Color {
+>>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
         name: String! @external
       }
     `,
     resolvers: {
+<<<<<<< HEAD
       Actor: {
         info(actor: any) {
           let info = '';
@@ -352,20 +390,49 @@ it('does not expand null objects in resolvers', async () => {
                 .join(', ');
           }
           return info;
+=======
+      User: {
+        favoriteColor(user: any) {
+          if (user.favorite !== null) {
+            throw Error(
+              'Favorite color should be null. Instead, got: ' +
+                JSON.stringify(user.favorite),
+            );
+          }
+          return 'unknown';
+        },
+        dislikedColors(user: any) {
+          const color = user.dislikes[0];
+          if (color !== null) {
+            throw Error(
+              'Disliked colors should be null. Instead, got: ' +
+                JSON.stringify(user.dislikes),
+            );
+          }
+          return 'unknown';
+>>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
         },
       },
     },
   };
 
   const query = `#graphql
+<<<<<<< HEAD
     query Actors {
       actors {
         name
         info
+=======
+    query UserFavorites {
+      user {
+        favoriteColor
+        dislikedColors
+>>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
       }
     }
   `;
 
+<<<<<<< HEAD
   const { data, errors, queryPlan } = await execute(
     {
       query,
@@ -390,4 +457,15 @@ it('does not expand null objects in resolvers', async () => {
 
   expect(queryPlan).toCallService('a');
   expect(queryPlan).toCallService('b');
+=======
+  const { data, errors } = await execute({ query }, [serviceA, serviceB]);
+
+  expect(errors).toEqual(undefined);
+  expect(data).toEqual({
+    user: {
+      favoriteColor: 'unknown',
+      dislikedColors: 'unknown',
+    },
+  });
+>>>>>>> 2bd66ee64e99acb5db76d15ff9d4700144a14931
 });
