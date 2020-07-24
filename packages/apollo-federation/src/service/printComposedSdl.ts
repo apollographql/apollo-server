@@ -26,6 +26,7 @@ import {
   GraphQLString,
   DEFAULT_DEPRECATION_REASON,
   ASTNode,
+  SelectionNode,
 } from 'graphql';
 import { Maybe, ServiceDefinition, FederationType, FederationField } from '../composition';
 import { isFederationType } from '../types';
@@ -210,14 +211,15 @@ function printFederationTypeDirectives(type: GraphQLObjectType): string {
   const { serviceName: ownerService, keys } = metadata;
   if (!ownerService || !keys) return '';
 
-  // List keys with owner keys first
-  const sortedKeys = Object.entries(keys).sort(([serviceName]) =>
-    serviceName === ownerService ? -1 : 0,
-  );
+  // Separate owner @keys from the rest of the @keys so we can print them
+  // adjacent to the @owner directive.
+  const { [ownerService]: ownerKeys, ...restKeys } = keys
+  const ownerEntry: [string, (readonly SelectionNode[])[]] = [ownerService, ownerKeys];
+  const restEntries = Object.entries(restKeys);
 
   return (
     `\n  @owner(graph: "${ownerService}")` +
-    sortedKeys.map(([service, keys]) =>
+    [ownerEntry, ...restEntries].map(([service, keys]) =>
       keys
         .map(
           (selections) =>
