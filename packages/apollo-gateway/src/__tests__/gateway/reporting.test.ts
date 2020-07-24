@@ -1,4 +1,3 @@
-import path from 'path';
 import { gunzipSync } from 'zlib';
 import nock from 'nock';
 import { GraphQLSchemaModule } from 'apollo-graphql';
@@ -11,7 +10,7 @@ import fetch from 'node-fetch';
 import { ApolloGateway } from '../..';
 import { Plugin, Config, Refs } from 'pretty-format';
 import { Report } from 'apollo-engine-reporting-protobuf';
-import { fixtureNames } from '../__fixtures__/schemas';
+import { fixtures } from 'apollo-federation-integration-testsuite';
 
 // Normalize specific fields that change often (eg timestamps) to static values,
 // to make snapshot testing viable.  (If these helpers are more generally
@@ -106,12 +105,10 @@ describe('reporting', () => {
 
     backendServers = [];
     const serviceList = [];
-    for (const serviceName of fixtureNames) {
-      const { server, url } = await startFederatedServer([
-        require(path.join(__dirname, '../__fixtures__/schemas', serviceName)),
-      ]);
+    for (const fixture of fixtures) {
+      const { server, url } = await startFederatedServer([fixture]);
       backendServers.push(server);
-      serviceList.push({ name: serviceName, url });
+      serviceList.push({ name: fixture.name, url });
     }
 
     const gateway = new ApolloGateway({ serviceList });

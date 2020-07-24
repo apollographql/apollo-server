@@ -5,8 +5,7 @@ import { ApolloServerBase as ApolloServer } from 'apollo-server-core';
 
 import { RemoteGraphQLDataSource } from '../../datasources/RemoteGraphQLDataSource';
 import { ApolloGateway, SERVICE_DEFINITION_QUERY } from '../../';
-
-import { fixtures } from '../__fixtures__/schemas/';
+import { fixtures } from 'apollo-federation-integration-testsuite';
 
 beforeEach(() => {
   fetch.mockReset();

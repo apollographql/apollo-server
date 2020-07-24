@@ -1,4 +1,3 @@
-import { GraphQLSchema, GraphQLError } from 'graphql';
 import {
   GraphQLSchemaValidationError,
   GraphQLSchemaModule,
@@ -23,7 +22,8 @@ import { mergeDeep } from 'apollo-utilities';
 import queryPlanSerializer from '../snapshotSerializers/queryPlanSerializer';
 import astSerializer from '../snapshotSerializers/astSerializer';
 import gql from 'graphql-tag';
-import { fixtures } from './__fixtures__/schemas';
+import { fixtures } from 'apollo-federation-integration-testsuite';
+
 const prettyFormat = require('pretty-format');
 
 export type ServiceDefinitionModule = ServiceDefinition & GraphQLSchemaModule;
@@ -44,7 +44,6 @@ export async function execute(
   services: ServiceDefinitionModule[] = fixtures,
   logger: Logger = console,
 ): Promise<GraphQLExecutionResult & { queryPlan: QueryPlan }> {
-  let schema: GraphQLSchema;
   const serviceMap = Object.fromEntries(
     services.map(({ name, typeDefs, resolvers }) => {
       return [
@@ -56,14 +55,7 @@ export async function execute(
     }),
   );
 
-  let errors: GraphQLError[];
-
-  ({ schema, errors } = composeAndValidate(
-    Object.entries(serviceMap).map(([serviceName, service]) => ({
-      name: serviceName,
-      typeDefs: service.sdl(),
-    })),
-  ));
+  const { errors, schema } = getFederatedTestingSchema(services);
 
   if (errors && errors.length > 0) {
     throw new GraphQLSchemaValidationError(errors);
@@ -85,6 +77,29 @@ export async function execute(
   );
 
   return { ...result, queryPlan };
+}
+
+export function buildLocalService(modules: GraphQLSchemaModule[]) {
+  const schema = buildFederatedSchema(modules);
+  return new LocalGraphQLDataSource(schema);
+}
+
+export function getFederatedTestingSchema(services: ServiceDefinitionModule[] = fixtures) {
+  const serviceMap = Object.fromEntries(
+    services.map((service) => [
+      service.name,
+      buildLocalService([service]),
+    ]),
+  );
+
+  const { schema, errors } = composeAndValidate(
+    Object.entries(serviceMap).map(([serviceName, dataSource]) => ({
+      name: serviceName,
+      typeDefs: dataSource.sdl(),
+    })),
+  );
+
+  return { serviceMap, schema, errors };
 }
 
 export function wait(ms: number) {
