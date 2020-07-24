@@ -5,8 +5,7 @@ import { buildFederatedSchema } from '@apollo/federation';
 
 import { LocalGraphQLDataSource } from '../../datasources/LocalGraphQLDataSource';
 import { ApolloGateway } from '../../';
-
-import { fixtures } from '../__fixtures__/schemas/';
+import { fixtures } from 'apollo-federation-integration-testsuite';
 
 it('caches the query plan for a request', async () => {
   const planner = require('../../buildQueryPlan');
