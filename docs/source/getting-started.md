@@ -152,6 +152,9 @@ Add the following to the bottom of `index.js`:
 // definition and your set of resolvers.
 const server = new ApolloServer({ typeDefs, resolvers });
 
+// The url variable defines where the server will run. This variable is evoked below.
+const url = "http://localhost:4000/" 
+
 // The `listen` method launches a web server.
 server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
