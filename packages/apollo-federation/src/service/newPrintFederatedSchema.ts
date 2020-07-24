@@ -300,9 +300,9 @@ function printFederationDirectives(
       federationDirectives.some((fedDir) => fedDir.name === n.name.value),
     )
     .map(print);
-  const dedupedDirectives = [...new Set(allDirectives)];
+  // const dedupedDirectives = [...new Set(allDirectives)];
 
-  return dedupedDirectives.length > 0 ? ' ' + dedupedDirectives.join(' ') : '';
+  return allDirectives.length > 0 ? ' ' + allDirectives.join(' ') : '';
 }
 
 export function printWithReducedWhitespace(ast: ASTNode): string {
