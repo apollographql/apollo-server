@@ -12,7 +12,7 @@ import {
   accounts,
   books,
   documents,
-} from '../__fixtures__/schemas/';
+} from 'apollo-federation-integration-testsuite';
 
 // The order of this was specified to preserve existing test coverage. Typically
 // we would just import and use the `fixtures` array.

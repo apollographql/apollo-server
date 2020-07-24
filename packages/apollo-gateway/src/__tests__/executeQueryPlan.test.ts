@@ -1,34 +1,22 @@
 import { GraphQLSchema, GraphQLError, getIntrospectionQuery } from 'graphql';
-import path from 'path';
 import {
-  GraphQLSchemaValidationError,
-  GraphQLSchemaModule,
   addResolversToSchema,
   GraphQLResolverMap,
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { GraphQLRequestContext } from 'apollo-server-types';
 import { AuthenticationError } from 'apollo-server-core';
-import {
-  composeServices,
-  buildFederatedSchema,
-  normalizeTypeDefs,
-} from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 import { executeQueryPlan } from '../executeQueryPlan';
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
-import { fixtureNames } from './__fixtures__/schemas';
+import { getFederatedTestingSchema, buildLocalService } from './execution-utils';
+import { fixtures } from 'apollo-federation-integration-testsuite';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
-
-function buildLocalService(modules: GraphQLSchemaModule[]) {
-  const schema = buildFederatedSchema(modules);
-  return new LocalGraphQLDataSource(schema);
-}
 
 describe('executeQueryPlan', () => {
   let serviceMap: {
@@ -43,30 +31,11 @@ describe('executeQueryPlan', () => {
   }
 
   let schema: GraphQLSchema;
+  let errors: GraphQLError[];
 
   beforeEach(() => {
-    serviceMap = Object.fromEntries(
-      fixtureNames.map((serviceName) => {
-        return [
-          serviceName,
-          buildLocalService([
-            require(path.join(__dirname, '__fixtures__/schemas', serviceName)),
-          ]),
-        ] as [string, LocalGraphQLDataSource];
-      }),
-    );
-
-    let errors: GraphQLError[];
-    ({ schema, errors } = composeServices(
-      Object.entries(serviceMap).map(([serviceName, service]) => ({
-        name: serviceName,
-        typeDefs: normalizeTypeDefs(service.sdl()),
-      })),
-    ));
-
-    if (errors && errors.length > 0) {
-      throw new GraphQLSchemaValidationError(errors);
-    }
+    ({ serviceMap, schema, errors } = getFederatedTestingSchema());
+    expect(errors).toHaveLength(0);
   });
 
   function buildRequestContext(): GraphQLRequestContext {

@@ -1,16 +1,17 @@
 {
   "name": "apollo-server-integration-testsuite",
   "private": true,
-  "version": "2.15.0",
+  "version": "2.16.0",
   "description": "Apollo Server Integrations testsuite",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-integration-testsuite"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-integration-testsuite"
   },
   "keywords": [],
-  "author": "Jonas Helfer <jonas@helfer.email>",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
