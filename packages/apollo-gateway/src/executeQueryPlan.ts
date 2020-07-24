@@ -389,7 +389,14 @@ async function executeFetch<TContext>(
 function executeSelectionSet(
   source: Record<string, any> | null,
   selectionSet: SelectionSetNode,
-): Record<string, any> {
+): Record<string, any> | null {
+
+  // If the underlying service has returned null for the parent (source)
+  // then there is no need to iterate through the parent's selection set
+  if (source === null) {
+    return null;
+  }
+
   const result: Record<string, any> = Object.create(null);
 
   for (const selection of selectionSet.selections) {
@@ -398,22 +405,14 @@ function executeSelectionSet(
         const responseName = getResponseName(selection);
         const selectionSet = selection.selectionSet;
 
-        // Null is a valid value for a response, provided that the types match.
-        // Presumably the underlying service has validated that result, so we
-        // can pass it through here
-        // Note: undefined is unexpected here due to GraphQL's type coercion / nullability rules
-        if (source === null) {
-          result[responseName] = null;
-          break;
-        }
         if (typeof source[responseName] === 'undefined') {
           throw new Error(`Field "${responseName}" was not found in response.`);
         }
         if (Array.isArray(source[responseName])) {
           result[responseName] = source[responseName].map((value: any) =>
-            value && selectionSet ? executeSelectionSet(value, selectionSet) : value,
+            selectionSet ? executeSelectionSet(value, selectionSet) : value,
           );
-        } else if (source[responseName] && selectionSet) {
+        } else if (selectionSet) {
           result[responseName] = executeSelectionSet(
             source[responseName],
             selectionSet,
