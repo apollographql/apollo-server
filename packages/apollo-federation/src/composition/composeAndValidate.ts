@@ -6,6 +6,7 @@ import {
 } from './validate';
 import { ServiceDefinition } from './types';
 import { normalizeTypeDefs } from './normalize';
+import { printComposedSdl } from '../service/printComposedSdl';
 
 export function composeAndValidate(serviceList: ServiceDefinition[]) {
   const errors = validateServicesBeforeNormalization(serviceList);
@@ -30,6 +31,13 @@ export function composeAndValidate(serviceList: ServiceDefinition[]) {
     }),
   );
 
+  const composedSdl = printComposedSdl(compositionResult.schema, serviceList);
+
   // TODO remove the warnings array once no longer used by clients
-  return { schema: compositionResult.schema, warnings: [], errors };
+  return {
+    schema: compositionResult.schema,
+    warnings: [],
+    errors,
+    composedSdl,
+  };
 }
