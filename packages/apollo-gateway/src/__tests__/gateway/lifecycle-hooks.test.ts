@@ -13,6 +13,7 @@ import {
   books,
   documents,
 } from 'apollo-federation-integration-testsuite';
+import { Logger } from 'apollo-server-types';
 
 // The order of this was specified to preserve existing test coverage. Typically
 // we would just import and use the `fixtures` array.
@@ -29,6 +30,22 @@ const serviceDefinitions = [
   url: `http://localhost:${i}`,
 }));
 
+let logger: Logger;
+
+beforeEach(() => {
+  const warn = jest.fn();
+  const debug = jest.fn();
+  const error = jest.fn();
+  const info = jest.fn();
+
+  logger = {
+    warn,
+    debug,
+    error,
+    info,
+  };
+});
+
 describe('lifecycle hooks', () => {
   it('uses updateServiceDefinitions override', async () => {
     const experimental_updateServiceDefinitions: Experimental_UpdateServiceDefinitions = jest.fn(
@@ -41,6 +58,7 @@ describe('lifecycle hooks', () => {
       serviceList: serviceDefinitions,
       experimental_updateServiceDefinitions,
       experimental_didUpdateComposition: jest.fn(),
+      logger,
     });
 
     await gateway.load();
@@ -49,7 +67,7 @@ describe('lifecycle hooks', () => {
     expect(gateway.schema!.getType('Furniture')).toBeDefined();
   });
 
-  it('calls experimental_didFailComposition with a bad config', async done => {
+  it('calls experimental_didFailComposition with a bad config', async () => {
     const experimental_didFailComposition = jest.fn();
 
     const gateway = new ApolloGateway({
@@ -65,7 +83,9 @@ describe('lifecycle hooks', () => {
           isNewSchema: true,
         };
       },
+      serviceList: [],
       experimental_didFailComposition,
+      logger,
     });
 
     await expect(gateway.load()).rejects.toThrowError();
@@ -77,7 +97,6 @@ describe('lifecycle hooks', () => {
     );
     expect(callbackArgs.compositionMetadata.id).toEqual('abc');
     expect(experimental_didFailComposition).toBeCalled();
-    done();
   });
 
   it('calls experimental_didUpdateComposition on schema update', async () => {
@@ -126,8 +145,10 @@ describe('lifecycle hooks', () => {
     const gateway = new ApolloGateway({
       experimental_updateServiceDefinitions: mockUpdate,
       experimental_didUpdateComposition: mockDidUpdate,
-      experimental_pollInterval: 100,
+      logger,
     });
+    // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
+    gateway.experimental_pollInterval = 100;
 
     let resolve1: Function;
     let resolve2: Function;
@@ -141,14 +162,13 @@ describe('lifecycle hooks', () => {
         .mockImplementationOnce(() => resolve2()),
     );
 
-    gateway.load();
+    await gateway.load();
 
     await schemaChangeBlocker1;
     expect(mockUpdate).toBeCalledTimes(1);
     expect(mockDidUpdate).toBeCalledTimes(1);
 
     await schemaChangeBlocker2;
-
     expect(mockUpdate).toBeCalledTimes(2);
     expect(mockDidUpdate).toBeCalledTimes(2);
 
@@ -164,13 +184,12 @@ describe('lifecycle hooks', () => {
     // second call should have previous info in the second arg
     expect(secondCall[1]!.schema).toBeDefined();
     expect(secondCall[1]!.compositionMetadata!.schemaHash).toEqual('hash1');
-
-    jest.useRealTimers();
   });
 
   it('uses default service definition updater', async () => {
     const gateway = new ApolloGateway({
       localServiceList: serviceDefinitions,
+      logger,
     });
 
     const { schema } = await gateway.load();
@@ -183,16 +202,15 @@ describe('lifecycle hooks', () => {
   });
 
   it('warns when polling on the default fetcher', async () => {
-    const consoleSpy = jest.spyOn(console, 'warn');
     new ApolloGateway({
       serviceList: serviceDefinitions,
       experimental_pollInterval: 10,
+      logger,
     });
-    expect(consoleSpy).toHaveBeenCalledTimes(1);
-    expect(consoleSpy.mock.calls[0][0]).toMatch(
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledWith(
       'Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.',
     );
-    consoleSpy.mockRestore();
   });
 
   it('registers schema change callbacks when experimental_pollInterval is set for unmanaged configs', async () => {
@@ -206,6 +224,7 @@ describe('lifecycle hooks', () => {
       serviceList: [{ name: 'book', url: 'http://localhost:32542' }],
       experimental_updateServiceDefinitions,
       experimental_pollInterval: 100,
+      logger,
     });
 
     let resolve: Function;
