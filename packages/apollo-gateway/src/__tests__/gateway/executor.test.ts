@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 import { ApolloGateway } from '../../';
-import { fixtures } from '../__fixtures__/schemas/';
 import { ApolloServer } from "apollo-server";
+import { fixtures } from 'apollo-federation-integration-testsuite';
 import { Logger } from 'apollo-server-types';
 
 let logger: Logger;

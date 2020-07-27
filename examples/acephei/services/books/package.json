@@ -1,0 +1,23 @@
+{
+  "name": "books",
+  "private": true,
+  "scripts": {
+    "heroku-postbuild": "tsc --build tsconfig.json"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "peerDependencies": {
+    "@apollo/federation": "*",
+    "apollo-datasource": "*",
+    "apollo-server": "*"
+  },
+  "dependencies": {
+    "dataloader": "^1.4.0"
+  },
+  "engines": {
+    "node": "12.x"
+  },
+  "devDependencies": {
+    "typescript": "3.9.7"
+  }
+}

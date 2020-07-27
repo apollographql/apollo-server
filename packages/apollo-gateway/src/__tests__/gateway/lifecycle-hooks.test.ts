@@ -12,7 +12,7 @@ import {
   accounts,
   books,
   documents,
-} from '../__fixtures__/schemas/';
+} from 'apollo-federation-integration-testsuite';
 import { Logger } from 'apollo-server-types';
 
 // The order of this was specified to preserve existing test coverage. Typically
