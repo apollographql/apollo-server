@@ -12,7 +12,7 @@
 
 ## v0.17.0
 
-- __BREAKING__: Move federation metadata from custom objects on schema nodes over to the `extensions` field on schema nodes which are intended for metadata. This is a breaking change because it narrows the `graphql` peer dependency from `^14.0.2` to `^14.5.0` which is when [`extensions` were introduced](https://github.com/graphql/graphql-js/pull/2097) for all Type System objects. [PR #4302](https://github.com/apollographql/apollo-server/pull/4313)
+- __BREAKING__: Move federation metadata from custom objects on schema nodes over to the `extensions` field on schema nodes which are intended for metadata. This is a breaking change because it narrows the `graphql` peer dependency from `^14.0.2` to `^14.5.0` which is when [`extensions` were introduced](https://github.com/graphql/graphql-js/pull/2097) for all Type System objects. [PR #4313](https://github.com/apollographql/apollo-server/pull/4313)
 
 ## v0.16.11
 
