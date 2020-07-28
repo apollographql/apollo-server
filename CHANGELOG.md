@@ -11,6 +11,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet! Stay tuned!_
 
+## v2.16.1
+
+- This release only includes patch updates to dependencies.
+
 ## v2.16.0
 
 - `apollo-server-fastify`: Pass Fastify's `request` and `reply` objects into the `context` function, which previously had been receiving nothing. [Issue #3156](https://github.com/apollographql/apollo-server/issues/3156) [PR #3895(https://github.com/apollographql/apollo-server/pull/3895)

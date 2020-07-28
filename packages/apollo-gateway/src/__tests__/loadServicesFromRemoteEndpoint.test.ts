@@ -1,7 +1,5 @@
 import { getServiceDefinitionsFromRemoteEndpoint } from '../loadServicesFromRemoteEndpoint';
-import { mockLocalhostSDLQuery } from './integration/nockMocks';
 import { RemoteGraphQLDataSource } from '../datasources';
-import nock = require('nock');
 
 describe('getServiceDefinitionsFromRemoteEndpoint', () => {
   it('errors when no URL was specified', async () => {
