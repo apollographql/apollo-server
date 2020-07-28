@@ -12,12 +12,12 @@ describe('printComposedSdl', () => {
   it('prints a fully composed schema correctly', () => {
     expect(printComposedSdl(schema, fixtures)).toMatchInlineSnapshot(`
       "schema
-        @graph(name: \\"accounts\\", url: \\"undefined\\")
-        @graph(name: \\"books\\", url: \\"undefined\\")
-        @graph(name: \\"documents\\", url: \\"undefined\\")
-        @graph(name: \\"inventory\\", url: \\"undefined\\")
-        @graph(name: \\"product\\", url: \\"undefined\\")
-        @graph(name: \\"reviews\\", url: \\"undefined\\")
+        @graph(name: \\"accounts\\", url: \\"https://accounts.api.com\\")
+        @graph(name: \\"books\\", url: \\"https://books.api.com\\")
+        @graph(name: \\"documents\\", url: \\"https://documents.api.com\\")
+        @graph(name: \\"inventory\\", url: \\"https://inventory.api.com\\")
+        @graph(name: \\"product\\", url: \\"https://product.api.com\\")
+        @graph(name: \\"reviews\\", url: \\"https://reviews.api.com\\")
         @composedGraph(version: 1)
       {
         query: Query
