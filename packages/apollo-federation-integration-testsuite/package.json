@@ -1,7 +1,7 @@
 {
   "name": "apollo-federation-integration-testsuite",
   "private": true,
-  "version": "0.18.1",
+  "version": "0.19.0",
   "description": "Apollo Federation Integrations / Test Fixtures",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
