@@ -32,9 +32,51 @@ new ApolloServer({
 });
 ```
 
-  * `resolvers`: <`Object`> _(required)_
+  * `resolvers`: <`Object`> | <`Array<Object>`> _(required)_
 
     A map of resolvers for the types defined in `typeDefs`. The key should be the type name and the value should be a `Function` to be executed for that type.
+
+    ```js
+    // Resolver map
+    const resolvers = {
+      Query: {
+        authors() {
+          return authors;
+        }
+      },
+    };
+
+    new ApolloServer({
+      typeDefs,
+      resolvers,
+    });
+    ```
+
+    Multiple resolver maps may be passed as an `Array`:
+
+    ```js
+    const authorResolvers = {
+      Query: {
+        authors() {
+          return authors;
+        }
+      },
+    };
+
+    const bookResolvers = {
+      Query: {
+        books() {
+          return books;
+        }
+      },
+    };
+
+    new ApolloServer({
+      typeDefs,
+      // The resolver map objects are deeply merged
+      resolvers: [authorResolvers, bookResolvers],
+    });
+    ```
 
   * `context`: <`Object`> | <`Function`>
 
