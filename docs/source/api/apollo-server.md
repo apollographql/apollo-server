@@ -313,7 +313,7 @@ The `makeExecutableSchema` method is re-exported from apollo-server as a conveni
 
 * `options` : <`Object`>
   * `typeDefs`: <`GraphQLSchema`> _(required)_
-  * `resolvers` : <`Object`>
+  * `resolvers` : <`Object`> | <`Array<Object>`>
   * `logger` : <`Object`>
   * `allowUndefinedInResolve` = false
   * `resolverValidationOptions` = {}
