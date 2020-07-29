@@ -3,11 +3,11 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "lib": ["es2017", "es2019.array", "esnext.asynciterable"],
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "types": ["node", "jest"]
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__", "**/__mocks__"],
-  "references": [
-    { "path": "../apollo-federation-integration-testsuite" }
-  ]
+  "references": []
 }
