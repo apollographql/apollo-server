@@ -6,7 +6,7 @@ import {
   ResponsePath,
   responsePathAsArray,
 } from 'graphql';
-import { ApolloServerPlugin } from "apollo-server-plugin-base";
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 export interface CacheControlFormat {
   version: 1;
@@ -27,10 +27,10 @@ export interface CacheControlExtensionOptions {
   defaultMaxAge?: number;
   // FIXME: We should replace these with
   // more appropriately named options.
-  calculateHttpHeaders?: boolean;
+  calculateHttpHeaders?:
+    | Record<string, ((policy: CacheHint) => string) | boolean>
+    | boolean;
   stripFormattedExtensions?: boolean;
-  headerKey?: string;
-  buildHeaderValue?: (cacheHint: CacheHint) => string;
 }
 
 declare module 'graphql/type/definition' {
@@ -57,7 +57,6 @@ export const plugin = (
   requestDidStart(requestContext) {
     const defaultMaxAge: number = options.defaultMaxAge || 0;
     const hints: MapResponsePathHints = new Map();
-
 
     function setOverallCachePolicyWhenUnset() {
       if (!requestContext.overallCachePolicy) {
@@ -148,23 +147,32 @@ export const plugin = (
         // own computation onto the `requestContext` for other plugins to read.
         const overallCachePolicy =
           overallCachePolicyOverride ||
-          (requestContext.overallCachePolicy =
-            computeOverallCachePolicy(hints));
+          (requestContext.overallCachePolicy = computeOverallCachePolicy(
+            hints,
+          ));
 
         if (
           overallCachePolicy &&
           options.calculateHttpHeaders &&
           response.http
         ) {
-          const { headerKey = 'Cache-Control', buildHeaderValue } = options;
+          const defaultHeaderKey = 'Cache-Control';
+          const defaultHeaderValue = `max-age=${
+            overallCachePolicy.maxAge
+          }, ${overallCachePolicy.scope.toLowerCase()}`;
 
-          const headerValue = buildHeaderValue
-            ? buildHeaderValue(overallCachePolicy)
-            : `max-age=${
-                overallCachePolicy.maxAge
-              }, ${overallCachePolicy.scope.toLowerCase()}`;
-
-          response.http.headers.set(headerKey, headerValue);
+          if (options.calculateHttpHeaders === true) {
+            response.http.headers.set(defaultHeaderKey, defaultHeaderValue);
+          } else if (typeof options.calculateHttpHeaders !== 'boolean') {
+            for (const key of Object.keys(options.calculateHttpHeaders)) {
+              const value = options.calculateHttpHeaders[key];
+              const headerValue =
+                typeof value === 'boolean'
+                  ? defaultHeaderValue
+                  : value(overallCachePolicy);
+              response.http.headers.set(key, headerValue);
+            }
+          }
         }
 
         // We should have to explicitly ask to leave the formatted extension in,
@@ -180,7 +188,7 @@ export const plugin = (
           response.extensions || (response.extensions = Object.create(null));
 
         if (typeof extensions.cacheControl !== 'undefined') {
-          throw new Error("The cacheControl information already existed.");
+          throw new Error('The cacheControl information already existed.');
         }
 
         extensions.cacheControl = {
@@ -190,9 +198,9 @@ export const plugin = (
             ...hint,
           })),
         };
-      }
-    }
-  }
+      },
+    };
+  },
 });
 
 function cacheHintFromDirectives(
@@ -201,17 +209,17 @@ function cacheHintFromDirectives(
   if (!directives) return undefined;
 
   const cacheControlDirective = directives.find(
-    directive => directive.name.value === 'cacheControl',
+    (directive) => directive.name.value === 'cacheControl',
   );
   if (!cacheControlDirective) return undefined;
 
   if (!cacheControlDirective.arguments) return undefined;
 
   const maxAgeArgument = cacheControlDirective.arguments.find(
-    argument => argument.name.value === 'maxAge',
+    (argument) => argument.name.value === 'maxAge',
   );
   const scopeArgument = cacheControlDirective.arguments.find(
-    argument => argument.name.value === 'scope',
+    (argument) => argument.name.value === 'scope',
   );
 
   // TODO: Add proper typechecking of arguments
@@ -271,7 +279,11 @@ function computeOverallCachePolicy(
     : undefined;
 }
 
-function addHint(hints: MapResponsePathHints, path: ResponsePath, hint: CacheHint) {
+function addHint(
+  hints: MapResponsePathHints,
+  path: ResponsePath,
+  hint: CacheHint,
+) {
   const existingCacheHint = hints.get(path);
   if (existingCacheHint) {
     hints.set(path, mergeHints(existingCacheHint, hint));

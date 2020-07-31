@@ -116,12 +116,28 @@ app.use('/graphql', bodyParser.json(), graphqlExpress({
 
 ### Using custom header keys and/or values
 
-In certain situations you may want to specify the header key or value, for example, when using a CDN that requires a custom header for edge-caching. This can be achieved with the following configuration:
+In certain situations you may want to specify the header key or value, for example, when using a CDN that requires a custom header for edge-caching. This can be achieved with the `calculateHttpHeaders` key which can be one of three values (`true`, `false`, Object) and allows the following outcomes:
 
+False: No cache control headers will be included.
+```javascript
+cacheControl: {
+  calculateHttpHeaders: false,
+}
+```
+
+True: The `Cache-Control` header with will be included.
 ```javascript
 cacheControl: {
   calculateHttpHeaders: true,
-  headerKey: 'Edge-Control',
-  buildHeaderValue: (hint) => `!no-store, max-age=${hint.maxAge}`
+}
+```
+
+Object: The keys would be cache-control headers and the corresponding value for those keys would be functions to generate the value. Additionally, if the `Cache-Control` header is present, the default Apollo Server behavior will be present in addition to the custom headers.
+```javascript
+cacheControl: {
+  calculateHttpHeaders: {
+    'Edge-Control':  ({maxAge}) => `!no-store, max-age=${maxAge}`,
+    'Cache-Control': true,
+  },
 }
 ```

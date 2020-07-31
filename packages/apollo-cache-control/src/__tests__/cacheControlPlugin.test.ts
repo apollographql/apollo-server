@@ -16,15 +16,17 @@ import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
 
 describe('plugin', () => {
   describe('willSendResponse', () => {
-    function makePluginWithOptions({
-      pluginInitializationOptions,
-      overallCachePolicy,
-      errors = false,
-    }: {
-      pluginInitializationOptions?: CacheControlExtensionOptions;
-      overallCachePolicy?: Required<CacheHint>;
-      errors?: boolean;
-    } = Object.create(null)) {
+    function makePluginWithOptions(
+      {
+        pluginInitializationOptions,
+        overallCachePolicy,
+        errors = false,
+      }: {
+        pluginInitializationOptions?: CacheControlExtensionOptions;
+        overallCachePolicy?: Required<CacheHint>;
+        errors?: boolean;
+      } = Object.create(null),
+    ) {
       const pluginInstance = plugin(pluginInitializationOptions);
 
       return pluginTestHarness({
@@ -110,20 +112,24 @@ describe('plugin', () => {
     describe('custom HTTP header', () => {
       const overallCachePolicy: Required<CacheHint> = {
         maxAge: 1200,
-        scope: CacheScope.Public
+        scope: CacheScope.Public,
       };
 
       it('is has the specified header key and the built value', async () => {
         const requestContext = await makePluginWithOptions({
           pluginInitializationOptions: {
-            calculateHttpHeaders: true,
-            headerKey: 'Edge-Control',
-            buildHeaderValue: ({maxAge}) => `!no-store, max-age=${maxAge}`
+            calculateHttpHeaders: {
+              'Edge-Control': ({ maxAge }) => `!no-store, max-age=${maxAge}`,
+              'Cache-Control': true,
+            },
           },
           overallCachePolicy,
         });
         expect(requestContext.response.http!.headers.get('Edge-Control')).toBe(
           '!no-store, max-age=1200',
+        );
+        expect(requestContext.response.http!.headers.get('Cache-Control')).toBe(
+          'max-age=1200, public',
         );
       });
     });
