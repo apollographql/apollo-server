@@ -1,6 +1,6 @@
 import { Config, Plugin, Refs } from 'pretty-format';
 import { PlanNode, QueryPlan } from '../QueryPlan';
-import { parse, Kind } from 'graphql';
+import { parse, Kind, visit, OperationDefinitionNode, FieldNode } from 'graphql';
 
 export default {
   test(value: any) {
@@ -65,7 +65,18 @@ function printNode(
             indentationNext
           : '') +
         printer(
-          parse(node.operation),
+          // parse(node.operation)
+          visit(parse(node.operation), {
+            OperationDefinition: op => {
+              if(isQueryPlanOperation(op)) {
+                // since this is a query plan, we know this to be a fieldnode
+                // for (_entities). we don't want to print out that portion,
+                // just the selection in _entities
+                return (op.selectionSet.selections[0] as FieldNode).selectionSet
+              }
+              return op;
+            }
+          }),
           config,
           indentationNext,
           depth,
@@ -144,4 +155,13 @@ function printNodes(
   }
 
   return result;
+}
+
+function isQueryPlanOperation(op: OperationDefinitionNode) {
+  return (
+    op.operation === 'query' &&
+    op.name?.value === undefined &&
+    op.variableDefinitions?.length === 1 &&
+    op.variableDefinitions[0].variable.name.value === 'representations'
+  );
 }

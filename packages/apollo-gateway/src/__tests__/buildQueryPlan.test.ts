@@ -133,14 +133,12 @@ describe('buildQueryPlan', () => {
                     isbn
                   }
                 } =>
-                query ($representations: [_Any!]!) {
-                  _entities(representations: $representations) {
-                    ... on Book {
-                      __typename
-                      isbn
-                      title
-                      year
-                    }
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                    title
+                    year
                   }
                 }
               },
@@ -155,11 +153,9 @@ describe('buildQueryPlan', () => {
                     year
                   }
                 } =>
-                query ($representations: [_Any!]!) {
-                  _entities(representations: $representations) {
-                    ... on Book {
-                      name
-                    }
+                {
+                  ... on Book {
+                    name
                   }
                 }
               },
@@ -221,14 +217,12 @@ describe('buildQueryPlan', () => {
                       isbn
                     }
                   } =>
-                  query ($representations: [_Any!]!) {
-                    _entities(representations: $representations) {
-                      ... on Book {
-                        __typename
-                        isbn
-                        title
-                        year
-                      }
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                      title
+                      year
                     }
                   }
                 },
@@ -243,11 +237,9 @@ describe('buildQueryPlan', () => {
                       year
                     }
                   } =>
-                  query ($representations: [_Any!]!) {
-                    _entities(representations: $representations) {
-                      ... on Book {
-                        name
-                      }
+                  {
+                    ... on Book {
+                      name
                     }
                   }
                 },
@@ -262,14 +254,12 @@ describe('buildQueryPlan', () => {
                       isbn
                     }
                   } =>
-                  query ($representations: [_Any!]!) {
-                    _entities(representations: $representations) {
-                      ... on Book {
-                        __typename
-                        isbn
-                        title
-                        year
-                      }
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                      title
+                      year
                     }
                   }
                 },
@@ -284,11 +274,9 @@ describe('buildQueryPlan', () => {
                       year
                     }
                   } =>
-                  query ($representations: [_Any!]!) {
-                    _entities(representations: $representations) {
-                      ... on Book {
-                        name
-                      }
+                  {
+                    ... on Book {
+                      name
                     }
                   }
                 },
@@ -405,12 +393,10 @@ describe('buildQueryPlan', () => {
                     id
                   }
                 } =>
-                query ($representations: [_Any!]!) {
-                  _entities(representations: $representations) {
-                    ... on User {
-                      reviews {
-                        body
-                      }
+                {
+                  ... on User {
+                    reviews {
+                      body
                     }
                   }
                 }
@@ -454,12 +440,10 @@ describe('buildQueryPlan', () => {
                       id
                     }
                   } =>
-                  query ($representations: [_Any!]!) {
-                    _entities(representations: $representations) {
-                      ... on User {
-                        reviews {
-                          body
-                        }
+                  {
+                    ... on User {
+                      reviews {
+                        body
                       }
                     }
                   }
@@ -505,14 +489,12 @@ describe('buildQueryPlan', () => {
                     id
                   }
                 } =>
-                query ($representations: [_Any!]!) {
-                  _entities(representations: $representations) {
-                    ... on User {
-                      reviews {
-                        body
-                      }
-                      numberOfReviews
+                {
+                  ... on User {
+                    reviews {
+                      body
                     }
+                    numberOfReviews
                   }
                 }
               },
@@ -560,11 +542,9 @@ describe('buildQueryPlan', () => {
                     id
                   }
                 } =>
-                query ($representations: [_Any!]!) {
-                  _entities(representations: $representations) {
-                    ... on User {
-                      name
-                    }
+                {
+                  ... on User {
+                    name
                   }
                 }
               },
@@ -607,11 +587,9 @@ describe('buildQueryPlan', () => {
                       price
                     }
                   } =>
-                  query ($representations: [_Any!]!) {
-                    _entities(representations: $representations) {
-                      ... on Car {
-                        retailPrice
-                      }
+                  {
+                    ... on Car {
+                      retailPrice
                     }
                   }
                 },
@@ -657,11 +635,9 @@ describe('buildQueryPlan', () => {
                       id
                     }
                   } =>
-                  query ($representations: [_Any!]!) {
-                    _entities(representations: $representations) {
-                      ... on User {
-                        name
-                      }
+                  {
+                    ... on User {
+                      name
                     }
                   }
                 },
@@ -707,11 +683,9 @@ describe('buildQueryPlan', () => {
                     id
                   }
                 } =>
-                query ($representations: [_Any!]!) {
-                  _entities(representations: $representations) {
-                    ... on User {
-                      birthDate
-                    }
+                {
+                  ... on User {
+                    birthDate
                   }
                 }
               },
@@ -806,17 +780,15 @@ describe('buildQueryPlan', () => {
                   upc
                 }
               } =>
-              query ($representations: [_Any!]!) {
-                _entities(representations: $representations) {
-                  ... on Book {
-                    reviews {
-                      body
-                    }
+              {
+                ... on Book {
+                  reviews {
+                    body
                   }
-                  ... on Furniture {
-                    reviews {
-                      body
-                    }
+                }
+                ... on Furniture {
+                  reviews {
+                    body
                   }
                 }
               }
@@ -866,11 +838,9 @@ describe('buildQueryPlan', () => {
                   year
                 }
               } =>
-              query ($representations: [_Any!]!) {
-                _entities(representations: $representations) {
-                  ... on Book {
-                    name
-                  }
+              {
+                ... on Book {
+                  name
                 }
               }
             },
@@ -979,14 +949,12 @@ describe('buildQueryPlan', () => {
                         isbn
                       }
                     } =>
-                    query ($representations: [_Any!]!) {
-                      _entities(representations: $representations) {
-                        ... on Book {
-                          __typename
-                          isbn
-                          title
-                          year
-                        }
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
                       }
                     }
                   },
@@ -1001,11 +969,9 @@ describe('buildQueryPlan', () => {
                         year
                       }
                     } =>
-                    query ($representations: [_Any!]!) {
-                      _entities(representations: $representations) {
-                        ... on Book {
-                          name
-                        }
+                    {
+                      ... on Book {
+                        name
                       }
                     }
                   },
@@ -1023,20 +989,18 @@ describe('buildQueryPlan', () => {
                       isbn
                     }
                   } =>
-                  query ($representations: [_Any!]!) {
-                    _entities(representations: $representations) {
-                      ... on Furniture {
-                        name
-                        price
-                        details {
-                          country
-                        }
+                  {
+                    ... on Furniture {
+                      name
+                      price
+                      details {
+                        country
                       }
-                      ... on Book {
-                        price
-                        details {
-                          country
-                        }
+                    }
+                    ... on Book {
+                      price
+                      details {
+                        country
                       }
                     }
                   }
@@ -1174,14 +1138,12 @@ describe('buildQueryPlan', () => {
                         isbn
                       }
                     } =>
-                    query ($representations: [_Any!]!) {
-                      _entities(representations: $representations) {
-                        ... on Book {
-                          __typename
-                          isbn
-                          title
-                          year
-                        }
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
                       }
                     }
                   },
@@ -1196,11 +1158,9 @@ describe('buildQueryPlan', () => {
                         year
                       }
                     } =>
-                    query ($representations: [_Any!]!) {
-                      _entities(representations: $representations) {
-                        ... on Book {
-                          name
-                        }
+                    {
+                      ... on Book {
+                        name
                       }
                     }
                   },
@@ -1218,20 +1178,18 @@ describe('buildQueryPlan', () => {
                       isbn
                     }
                   } =>
-                  query ($representations: [_Any!]!) {
-                    _entities(representations: $representations) {
-                      ... on Furniture {
-                        name
-                        cost: price
-                        details {
-                          origin: country
-                        }
+                  {
+                    ... on Furniture {
+                      name
+                      cost: price
+                      details {
+                        origin: country
                       }
-                      ... on Book {
-                        cost: price
-                        details {
-                          origin: country
-                        }
+                    }
+                    ... on Book {
+                      cost: price
+                      details {
+                        origin: country
                       }
                     }
                   }
