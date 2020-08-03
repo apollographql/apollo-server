@@ -14,7 +14,7 @@ import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
 import { getFederatedTestingSchema, buildLocalService } from './execution-utils';
 import { fixtures } from 'apollo-federation-integration-testsuite';
-import { transformQueryPlan } from '../QueryPlanNew';
+import { transformQueryPlan } from '../QueryPlan';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
