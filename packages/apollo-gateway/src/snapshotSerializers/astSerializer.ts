@@ -16,7 +16,7 @@ export default {
     _refs: Refs,
     _printer: any,
   ): string {
-    return print(addTypeConditionsToASTNodes(value))
+    return print(remapInlineFragmentNodes(value))
       .trim()
       .replace(/\n/g, '\n' + indentation);
   },
@@ -25,7 +25,7 @@ export default {
 // some inline fragment nodes have typeConditions which are strings
 // for those, we need to add a full typeCondition AST node so the graphql
 // printer can handle it
-export function addTypeConditionsToASTNodes(node: ASTNode): ASTNode {
+export function remapInlineFragmentNodes(node: ASTNode): ASTNode {
   return visit(node, {
     InlineFragment: (fragmentNode) => {
       // if the fragmentNode is already a proper graphql AST Node, return it
