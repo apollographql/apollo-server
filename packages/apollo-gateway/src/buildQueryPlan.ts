@@ -47,8 +47,9 @@ import {
   QueryPlan,
   ResponsePath,
   OperationContext,
+  trimSelectionNodes,
   FragmentMap,
-} from './QueryPlan';
+} from './QueryPlanNew';
 import { getFieldDef, getResponseName } from './utilities/graphql';
 import { MultiMap } from './utilities/MultiMap';
 import { getFederationMetadata } from '@apollo/federation/dist/composition/utils';
@@ -101,6 +102,8 @@ export function buildQueryPlan(
   return {
     kind: 'QueryPlan',
     node: nodes.length
+      // if an operation is a mutations, we run the root fields in sequence,
+      // otherwise we run them in parallel
       ? flatWrap(isMutation ? 'Sequence' : 'Parallel', nodes)
       : undefined,
   };
@@ -144,11 +147,9 @@ function executionNodeForGroup(
   const fetchNode: FetchNode = {
     kind: 'Fetch',
     serviceName,
-    selectionSet,
-    requires,
-    variableUsages,
-    internalFragments,
-    source: stripIgnoredCharacters(print(operation)),
+    requires: requires ? trimSelectionNodes(requires?.selections) : undefined,
+    variableUsages: Object.keys(variableUsages),
+    operation: stripIgnoredCharacters(print(operation)),
   };
 
   const node: PlanNode =

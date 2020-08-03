@@ -2,7 +2,8 @@
   FragmentDefinitionNode,
   GraphQLSchema,
   OperationDefinitionNode,
-  Kind
+  Kind,
+  SelectionNode as GraphQLJSSelectionNode
 } from 'graphql';
 import { QueryPlan as OldQueryPlan } from './QueryPlan';
 
@@ -103,4 +104,29 @@ export function transformQueryPlan(queryPlan: OldQueryPlan): QueryPlan {
 // todo: move this back to utils/graphql. See note in executeQueryPlan.ts
 export function getResponseName(node: FieldNode): string {
   return node.alias ? node.alias : node.name;
+}
+
+export const trimSelectionNodes = (selections: readonly GraphQLJSSelectionNode[]): SelectionNode[] => {
+  let remapped: SelectionNode[] = [];
+
+  // intentionally leaving out fragment spread from the input selections, because I don't
+  // THINK that's possible to see in the final query plan -- prove me wrong
+  selections.map(selection => {
+    if(selection.kind === Kind.FIELD){
+      remapped.push({
+        kind: Kind.FIELD,
+        name: selection.name.value,
+        selections: selection.selectionSet ? trimSelectionNodes(selection.selectionSet?.selections) : undefined
+      });
+    }
+    if(selection.kind === Kind.INLINE_FRAGMENT){
+      remapped.push({
+        kind: Kind.INLINE_FRAGMENT,
+        typeCondition: selection.typeCondition?.name.value,
+        selections: trimSelectionNodes(selection.selectionSet?.selections)
+      });
+    }
+  })
+
+  return remapped;
 }
