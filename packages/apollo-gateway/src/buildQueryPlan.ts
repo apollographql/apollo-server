@@ -49,7 +49,7 @@ import {
   OperationContext,
   trimSelectionNodes,
   FragmentMap,
-} from './QueryPlanNew';
+} from './QueryPlan';
 import { getFieldDef, getResponseName } from './utilities/graphql';
 import { MultiMap } from './utilities/MultiMap';
 import { getFederationMetadata } from '@apollo/federation/dist/composition/utils';
