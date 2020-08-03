@@ -8,7 +8,12 @@ import {
   formatApolloErrors,
   processFileUploads,
 } from 'apollo-server-core';
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import {
+  FastifyInstance,
+  FastifyReply,
+  FastifyRequest,
+  RawRequestDefaultExpression,
+} from 'fastify';
 import { GraphQLOperation } from 'graphql-upload';
 import { graphqlFastify } from './fastifyApollo';
 
@@ -35,11 +40,14 @@ const fileUploadMiddleware = (
   uploadsConfig: FileUploadOptions,
   server: ApolloServerBase,
 ) => (
-  request: FastifyRequest<any, any, any>,
+  request: FastifyRequest,
   reply: FastifyReply,
   done: (err: Error | null, body?: any) => void,
 ) => {
-  if (request.raw[kMultipart] && typeof processFileUploads === 'function') {
+  if (
+    (request.raw as any)[kMultipart] &&
+    typeof processFileUploads === 'function'
+  ) {
     processFileUploads(request.raw, reply.raw, uploadsConfig)
       .then((body: GraphQLOperation | GraphQLOperation[]) => {
         request.body = body;
@@ -83,7 +91,7 @@ export class ApolloServer extends ApolloServerBase {
     this.graphqlPath = path || '/graphql';
     const promiseWillStart = this.willStart();
 
-    return async (app: FastifyInstance<any, any, any>) => {
+    return async (app: FastifyInstance) => {
       await promiseWillStart;
 
       if (!disableHealthCheck) {
@@ -122,8 +130,8 @@ export class ApolloServer extends ApolloServerBase {
 
           const preHandlers = [
             (
-              request: FastifyRequest<any, any>,
-              reply: FastifyReply<any, any, any>,
+              request: FastifyRequest,
+              reply: FastifyReply,
               done: () => void,
             ) => {
               // Note: if you enable playground in production and expect to be able to see your
@@ -162,11 +170,11 @@ export class ApolloServer extends ApolloServerBase {
             instance.addContentTypeParser(
               'multipart',
               (
-                request: FastifyRequest<any, any, any>,
-                _payload: any,
+                request: FastifyRequest,
+                _payload: RawRequestDefaultExpression,
                 done: (err: Error | null, body?: any) => void,
               ) => {
-                request.raw[kMultipart] = true;
+                (request.raw as any)[kMultipart] = true;
                 done(null);
               },
             );

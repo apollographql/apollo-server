@@ -11,22 +11,21 @@ export async function graphqlFastify(
     request?: FastifyRequest,
     reply?: FastifyReply,
   ) => ValueOrPromise<GraphQLOptions>,
-): Promise<RouteHandlerMethod<any, any, any>> {
+): Promise<RouteHandlerMethod> {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
 
-  return async (
-    request: FastifyRequest<any, any, any>,
-    reply: FastifyReply,
-  ) => {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const { graphqlResponse, responseInit } = await runHttpQuery(
         [request, reply],
         {
           method: request.raw.method as string,
           options,
-          query: request.raw.method === 'POST' ? request.body : request.query,
+          query: (request.raw.method === 'POST'
+            ? request.body
+            : request.query) as any,
           request: convertNodeHttpToRequest(request.raw),
         },
       );
