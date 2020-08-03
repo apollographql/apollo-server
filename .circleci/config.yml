@@ -66,6 +66,11 @@ jobs:
     steps:
       - common_test_steps
 
+  NodeJS 14:
+    executor: { name: oss/node, tag: '14' }
+    steps:
+      - common_test_steps
+
 # XXX We used to use this filter to only run a "Docs" job on docs branches.
 #     Now we use it to disable all jobs. It's unclear if there's a simpler way
 #     to do this!
@@ -100,6 +105,8 @@ workflows:
           <<: *common_non_publish_filters
       - NodeJS 12:
           <<: *common_non_publish_filters
+      - NodeJS 14:
+          <<: *common_non_publish_filters
       - oss/lerna_tarballs:
           name: Package tarballs
           <<: *common_non_publish_filters
@@ -108,6 +115,7 @@ workflows:
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
+            - NodeJS 14
       - oss/dry_run:
           name: Dry-run
           <<: *common_publish_filters
@@ -116,6 +124,7 @@ workflows:
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
+            - NodeJS 14
       - oss/confirmation:
           name: Confirmation
           type: approval

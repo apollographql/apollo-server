@@ -1,18 +1,11 @@
 import gql from 'graphql-tag';
-import path from 'path';
-import {
-  GraphQLSchemaModule,
-  GraphQLSchemaValidationError,
-} from 'apollo-graphql';
+import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { defineFeature, loadFeature } from 'jest-cucumber';
 import { DocumentNode, GraphQLSchema, GraphQLError, Kind } from 'graphql';
-import { composeServices, buildFederatedSchema, normalizeTypeDefs, ServiceDefinition } from '@apollo/federation';
 
 import { QueryPlan } from '../..';
-import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 import { buildQueryPlan, buildOperationContext, BuildQueryPlanOptions } from '../buildQueryPlan';
-
-import { fixtureNames } from '../__tests__/__fixtures__/schemas';
+import { getFederatedTestingSchema } from './execution-utils';
 
 const buildQueryPlanFeature = loadFeature(
   './packages/apollo-gateway/src/__tests__/build-query-plan.feature'
@@ -23,28 +16,15 @@ const features = [
   buildQueryPlanFeature
 ];
 
-function buildLocalService(modules: GraphQLSchemaModule[]) {
-  const schema = buildFederatedSchema(modules);
-  return new LocalGraphQLDataSource(schema);
-}
-
 features.forEach((feature) => {
   defineFeature(feature, (test) => {
     feature.scenarios.forEach((scenario) => {
       test(scenario.title, async ({ given, when, then }) => {
         let query: DocumentNode;
-        let schema: GraphQLSchema;
-        let errors: GraphQLError[];
         let queryPlan: QueryPlan;
         let options: BuildQueryPlanOptions = { autoFragmentization: false };
 
-        const services: ServiceDefinition[] = fixtureNames.map(name => ({
-          name,
-          typeDefs: normalizeTypeDefs(buildLocalService([
-            require(path.join(__dirname, '__fixtures__/schemas', name))
-          ]).sdl())
-        }));
-        ({ schema, errors} = composeServices(services));
+        const { schema, errors } = getFederatedTestingSchema();
 
         if (errors && errors.length > 0) {
           throw new GraphQLSchemaValidationError(errors);
