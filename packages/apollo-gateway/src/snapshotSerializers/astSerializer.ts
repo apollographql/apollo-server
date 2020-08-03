@@ -16,7 +16,6 @@ export default {
     _refs: Refs,
     _printer: any,
   ): string {
-    // console.log("VAL", JSON.stringify(addTypeConditionsToASTNodes(value)))
     return print(addTypeConditionsToASTNodes(value))
       .trim()
       .replace(/\n/g, '\n' + indentation);
@@ -29,7 +28,6 @@ export default {
 export function addTypeConditionsToASTNodes(node: ASTNode): ASTNode {
   return visit(node, {
     InlineFragment: (fragmentNode) => {
-      console.log({fragmentNode})
       // if the fragmentNode is already a proper graphql AST Node, return it
       if(fragmentNode.selectionSet) return fragmentNode;
 
