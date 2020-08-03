@@ -4,8 +4,8 @@ import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
 import { getFederatedTestingSchema } from './execution-utils';
 
-// expect.addSnapshotSerializer(astSerializer);
-// expect.addSnapshotSerializer(queryPlanSerializer);
+expect.addSnapshotSerializer(astSerializer);
+expect.addSnapshotSerializer(queryPlanSerializer);
 
 describe('buildQueryPlan', () => {
   let schema: GraphQLSchema;
@@ -40,14 +40,24 @@ describe('buildQueryPlan', () => {
     );
 
     expect(queryPlan).toMatchInlineSnapshot(`
-      Object {
-        "kind": "QueryPlan",
-        "node": Object {
-          "kind": "Fetch",
-          "operation": "{body{__typename ...on Image{attributes{url}}...on Text{attributes{bold text}}}}",
-          "requires": undefined,
-          "serviceName": "documents",
-          "variableUsages": Array [],
+      QueryPlan {
+        Fetch(service: "documents") {
+          {
+            body {
+              __typename
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+          }
         },
       }
     `);
@@ -65,14 +75,13 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-      Object {
-        "kind": "QueryPlan",
-        "node": Object {
-          "kind": "Fetch",
-          "operation": "{me{name}}",
-          "requires": undefined,
-          "serviceName": "accounts",
-          "variableUsages": Array [],
+      QueryPlan {
+        Fetch(service: "accounts") {
+          {
+            me {
+              name
+            }
+          }
         },
       }
     `);
@@ -92,103 +101,70 @@ describe('buildQueryPlan', () => {
 
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
     expect(queryPlan).toMatchInlineSnapshot(`
-      Object {
-        "kind": "QueryPlan",
-        "node": Object {
-          "kind": "Parallel",
-          "nodes": Array [
-            Object {
-              "kind": "Fetch",
-              "operation": "{me{name}}",
-              "requires": undefined,
-              "serviceName": "accounts",
-              "variableUsages": Array [],
+      QueryPlan {
+        Parallel {
+          Fetch(service: "accounts") {
+            {
+              me {
+                name
+              }
+            }
+          },
+          Sequence {
+            Fetch(service: "product") {
+              {
+                topProducts {
+                  __typename
+                  ... on Book {
+                    __typename
+                    isbn
+                  }
+                  ... on Furniture {
+                    name
+                  }
+                }
+              }
             },
-            Object {
-              "kind": "Sequence",
-              "nodes": Array [
-                Object {
-                  "kind": "Fetch",
-                  "operation": "{topProducts{__typename ...on Book{__typename isbn}...on Furniture{name}}}",
-                  "requires": undefined,
-                  "serviceName": "product",
-                  "variableUsages": Array [],
-                },
-                Object {
-                  "kind": "Flatten",
-                  "node": Object {
-                    "kind": "Fetch",
-                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}",
-                    "requires": Array [
-                      Object {
-                        "kind": "InlineFragment",
-                        "selections": Array [
-                          Object {
-                            "kind": "Field",
-                            "name": "__typename",
-                            "selections": undefined,
-                          },
-                          Object {
-                            "kind": "Field",
-                            "name": "isbn",
-                            "selections": undefined,
-                          },
-                        ],
-                        "typeCondition": "Book",
-                      },
-                    ],
-                    "serviceName": "books",
-                    "variableUsages": Array [],
-                  },
-                  "path": Array [
-                    "topProducts",
-                    "@",
-                  ],
-                },
-                Object {
-                  "kind": "Flatten",
-                  "node": Object {
-                    "kind": "Fetch",
-                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}",
-                    "requires": Array [
-                      Object {
-                        "kind": "InlineFragment",
-                        "selections": Array [
-                          Object {
-                            "kind": "Field",
-                            "name": "__typename",
-                            "selections": undefined,
-                          },
-                          Object {
-                            "kind": "Field",
-                            "name": "isbn",
-                            "selections": undefined,
-                          },
-                          Object {
-                            "kind": "Field",
-                            "name": "title",
-                            "selections": undefined,
-                          },
-                          Object {
-                            "kind": "Field",
-                            "name": "year",
-                            "selections": undefined,
-                          },
-                        ],
-                        "typeCondition": "Book",
-                      },
-                    ],
-                    "serviceName": "product",
-                    "variableUsages": Array [],
-                  },
-                  "path": Array [
-                    "topProducts",
-                    "@",
-                  ],
-                },
-              ],
+            Flatten(path: "topProducts.@") {
+              Fetch(service: "books") {
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                  }
+                } =>
+                query ($representations: [_Any!]!) {
+                  _entities(representations: $representations) {
+                    ... on Book {
+                      __typename
+                      isbn
+                      title
+                      year
+                    }
+                  }
+                }
+              },
             },
-          ],
+            Flatten(path: "topProducts.@") {
+              Fetch(service: "product") {
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                    title
+                    year
+                  }
+                } =>
+                query ($representations: [_Any!]!) {
+                  _entities(representations: $representations) {
+                    ... on Book {
+                      name
+                    }
+                  }
+                }
+              },
+            },
+          },
         },
       }
     `);
@@ -209,176 +185,116 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-      Object {
-        "kind": "QueryPlan",
-        "node": Object {
-          "kind": "Sequence",
-          "nodes": Array [
-            Object {
-              "kind": "Fetch",
-              "operation": "{topProducts{__typename ...on Book{__typename isbn}...on Furniture{name}}product(upc:\\"1\\"){__typename ...on Book{__typename isbn}...on Furniture{name}}}",
-              "requires": undefined,
-              "serviceName": "product",
-              "variableUsages": Array [],
-            },
-            Object {
-              "kind": "Parallel",
-              "nodes": Array [
-                Object {
-                  "kind": "Sequence",
-                  "nodes": Array [
-                    Object {
-                      "kind": "Flatten",
-                      "node": Object {
-                        "kind": "Fetch",
-                        "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}",
-                        "requires": Array [
-                          Object {
-                            "kind": "InlineFragment",
-                            "selections": Array [
-                              Object {
-                                "kind": "Field",
-                                "name": "__typename",
-                                "selections": undefined,
-                              },
-                              Object {
-                                "kind": "Field",
-                                "name": "isbn",
-                                "selections": undefined,
-                              },
-                            ],
-                            "typeCondition": "Book",
-                          },
-                        ],
-                        "serviceName": "books",
-                        "variableUsages": Array [],
-                      },
-                      "path": Array [
-                        "topProducts",
-                        "@",
-                      ],
-                    },
-                    Object {
-                      "kind": "Flatten",
-                      "node": Object {
-                        "kind": "Fetch",
-                        "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}",
-                        "requires": Array [
-                          Object {
-                            "kind": "InlineFragment",
-                            "selections": Array [
-                              Object {
-                                "kind": "Field",
-                                "name": "__typename",
-                                "selections": undefined,
-                              },
-                              Object {
-                                "kind": "Field",
-                                "name": "isbn",
-                                "selections": undefined,
-                              },
-                              Object {
-                                "kind": "Field",
-                                "name": "title",
-                                "selections": undefined,
-                              },
-                              Object {
-                                "kind": "Field",
-                                "name": "year",
-                                "selections": undefined,
-                              },
-                            ],
-                            "typeCondition": "Book",
-                          },
-                        ],
-                        "serviceName": "product",
-                        "variableUsages": Array [],
-                      },
-                      "path": Array [
-                        "topProducts",
-                        "@",
-                      ],
-                    },
-                  ],
+      QueryPlan {
+        Sequence {
+          Fetch(service: "product") {
+            {
+              topProducts {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  name
+                }
+              }
+              product(upc: "1") {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  name
+                }
+              }
+            }
+          },
+          Parallel {
+            Sequence {
+              Flatten(path: "topProducts.@") {
+                Fetch(service: "books") {
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  query ($representations: [_Any!]!) {
+                    _entities(representations: $representations) {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    }
+                  }
                 },
-                Object {
-                  "kind": "Sequence",
-                  "nodes": Array [
-                    Object {
-                      "kind": "Flatten",
-                      "node": Object {
-                        "kind": "Fetch",
-                        "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}",
-                        "requires": Array [
-                          Object {
-                            "kind": "InlineFragment",
-                            "selections": Array [
-                              Object {
-                                "kind": "Field",
-                                "name": "__typename",
-                                "selections": undefined,
-                              },
-                              Object {
-                                "kind": "Field",
-                                "name": "isbn",
-                                "selections": undefined,
-                              },
-                            ],
-                            "typeCondition": "Book",
-                          },
-                        ],
-                        "serviceName": "books",
-                        "variableUsages": Array [],
-                      },
-                      "path": Array [
-                        "product",
-                      ],
-                    },
-                    Object {
-                      "kind": "Flatten",
-                      "node": Object {
-                        "kind": "Fetch",
-                        "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}",
-                        "requires": Array [
-                          Object {
-                            "kind": "InlineFragment",
-                            "selections": Array [
-                              Object {
-                                "kind": "Field",
-                                "name": "__typename",
-                                "selections": undefined,
-                              },
-                              Object {
-                                "kind": "Field",
-                                "name": "isbn",
-                                "selections": undefined,
-                              },
-                              Object {
-                                "kind": "Field",
-                                "name": "title",
-                                "selections": undefined,
-                              },
-                              Object {
-                                "kind": "Field",
-                                "name": "year",
-                                "selections": undefined,
-                              },
-                            ],
-                            "typeCondition": "Book",
-                          },
-                        ],
-                        "serviceName": "product",
-                        "variableUsages": Array [],
-                      },
-                      "path": Array [
-                        "product",
-                      ],
-                    },
-                  ],
+              },
+              Flatten(path: "topProducts.@") {
+                Fetch(service: "product") {
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                      title
+                      year
+                    }
+                  } =>
+                  query ($representations: [_Any!]!) {
+                    _entities(representations: $representations) {
+                      ... on Book {
+                        name
+                      }
+                    }
+                  }
                 },
-              ],
+              },
             },
-          ],
+            Sequence {
+              Flatten(path: "product") {
+                Fetch(service: "books") {
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  query ($representations: [_Any!]!) {
+                    _entities(representations: $representations) {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    }
+                  }
+                },
+              },
+              Flatten(path: "product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Book {
+                      __typename
+                      isbn
+                      title
+                      year
+                    }
+                  } =>
+                  query ($representations: [_Any!]!) {
+                    _entities(representations: $representations) {
+                      ... on Book {
+                        name
+                      }
+                    }
+                  }
+                },
+              },
+            },
+          },
         },
       }
     `);
@@ -401,14 +317,18 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-      Object {
-        "kind": "QueryPlan",
-        "node": Object {
-          "kind": "Fetch",
-          "operation": "{topReviews{body author{reviews{body}}}}",
-          "requires": undefined,
-          "serviceName": "reviews",
-          "variableUsages": Array [],
+      QueryPlan {
+        Fetch(service: "reviews") {
+          {
+            topReviews {
+              body
+              author {
+                reviews {
+                  body
+                }
+              }
+            }
+          }
         },
       }
     `);
@@ -432,14 +352,19 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-      Object {
-        "kind": "QueryPlan",
-        "node": Object {
-          "kind": "Fetch",
-          "operation": "{topReviews{body author{id reviews{body}}}}",
-          "requires": undefined,
-          "serviceName": "reviews",
-          "variableUsages": Array [],
+      QueryPlan {
+        Fetch(service: "reviews") {
+          {
+            topReviews {
+              body
+              author {
+                id
+                reviews {
+                  body
+                }
+              }
+            }
+          }
         },
       }
     `);
@@ -461,49 +386,36 @@ describe('buildQueryPlan', () => {
       const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Sequence",
-            "nodes": Array [
-              Object {
-                "kind": "Fetch",
-                "operation": "{me{name __typename id}}",
-                "requires": undefined,
-                "serviceName": "accounts",
-                "variableUsages": Array [],
+        QueryPlan {
+          Sequence {
+            Fetch(service: "accounts") {
+              {
+                me {
+                  name
+                  __typename
+                  id
+                }
+              }
+            },
+            Flatten(path: "me") {
+              Fetch(service: "reviews") {
+                {
+                  ... on User {
+                    __typename
+                    id
+                  }
+                } =>
+                query ($representations: [_Any!]!) {
+                  _entities(representations: $representations) {
+                    ... on User {
+                      reviews {
+                        body
+                      }
+                    }
+                  }
+                }
               },
-              Object {
-                "kind": "Flatten",
-                "node": Object {
-                  "kind": "Fetch",
-                  "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}}}}",
-                  "requires": Array [
-                    Object {
-                      "kind": "InlineFragment",
-                      "selections": Array [
-                        Object {
-                          "kind": "Field",
-                          "name": "__typename",
-                          "selections": undefined,
-                        },
-                        Object {
-                          "kind": "Field",
-                          "name": "id",
-                          "selections": undefined,
-                        },
-                      ],
-                      "typeCondition": "User",
-                    },
-                  ],
-                  "serviceName": "reviews",
-                  "variableUsages": Array [],
-                },
-                "path": Array [
-                  "me",
-                ],
-              },
-            ],
+            },
           },
         }
       `);
@@ -524,49 +436,35 @@ describe('buildQueryPlan', () => {
         const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
         expect(queryPlan).toMatchInlineSnapshot(`
-          Object {
-            "kind": "QueryPlan",
-            "node": Object {
-              "kind": "Sequence",
-              "nodes": Array [
-                Object {
-                  "kind": "Fetch",
-                  "operation": "{me{__typename id}}",
-                  "requires": undefined,
-                  "serviceName": "accounts",
-                  "variableUsages": Array [],
+          QueryPlan {
+            Sequence {
+              Fetch(service: "accounts") {
+                {
+                  me {
+                    __typename
+                    id
+                  }
+                }
+              },
+              Flatten(path: "me") {
+                Fetch(service: "reviews") {
+                  {
+                    ... on User {
+                      __typename
+                      id
+                    }
+                  } =>
+                  query ($representations: [_Any!]!) {
+                    _entities(representations: $representations) {
+                      ... on User {
+                        reviews {
+                          body
+                        }
+                      }
+                    }
+                  }
                 },
-                Object {
-                  "kind": "Flatten",
-                  "node": Object {
-                    "kind": "Fetch",
-                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}}}}",
-                    "requires": Array [
-                      Object {
-                        "kind": "InlineFragment",
-                        "selections": Array [
-                          Object {
-                            "kind": "Field",
-                            "name": "__typename",
-                            "selections": undefined,
-                          },
-                          Object {
-                            "kind": "Field",
-                            "name": "id",
-                            "selections": undefined,
-                          },
-                        ],
-                        "typeCondition": "User",
-                      },
-                    ],
-                    "serviceName": "reviews",
-                    "variableUsages": Array [],
-                  },
-                  "path": Array [
-                    "me",
-                  ],
-                },
-              ],
+              },
             },
           }
         `);
@@ -589,49 +487,36 @@ describe('buildQueryPlan', () => {
       const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Sequence",
-            "nodes": Array [
-              Object {
-                "kind": "Fetch",
-                "operation": "{me{__typename id}}",
-                "requires": undefined,
-                "serviceName": "accounts",
-                "variableUsages": Array [],
+        QueryPlan {
+          Sequence {
+            Fetch(service: "accounts") {
+              {
+                me {
+                  __typename
+                  id
+                }
+              }
+            },
+            Flatten(path: "me") {
+              Fetch(service: "reviews") {
+                {
+                  ... on User {
+                    __typename
+                    id
+                  }
+                } =>
+                query ($representations: [_Any!]!) {
+                  _entities(representations: $representations) {
+                    ... on User {
+                      reviews {
+                        body
+                      }
+                      numberOfReviews
+                    }
+                  }
+                }
               },
-              Object {
-                "kind": "Flatten",
-                "node": Object {
-                  "kind": "Fetch",
-                  "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{reviews{body}numberOfReviews}}}",
-                  "requires": Array [
-                    Object {
-                      "kind": "InlineFragment",
-                      "selections": Array [
-                        Object {
-                          "kind": "Field",
-                          "name": "__typename",
-                          "selections": undefined,
-                        },
-                        Object {
-                          "kind": "Field",
-                          "name": "id",
-                          "selections": undefined,
-                        },
-                      ],
-                      "typeCondition": "User",
-                    },
-                  ],
-                  "serviceName": "reviews",
-                  "variableUsages": Array [],
-                },
-                "path": Array [
-                  "me",
-                ],
-              },
-            ],
+            },
           },
         }
       `);
@@ -654,51 +539,36 @@ describe('buildQueryPlan', () => {
       const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Sequence",
-            "nodes": Array [
-              Object {
-                "kind": "Fetch",
-                "operation": "{topReviews{body author{__typename id}}}",
-                "requires": undefined,
-                "serviceName": "reviews",
-                "variableUsages": Array [],
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                topReviews {
+                  body
+                  author {
+                    __typename
+                    id
+                  }
+                }
+              }
+            },
+            Flatten(path: "topReviews.@.author") {
+              Fetch(service: "accounts") {
+                {
+                  ... on User {
+                    __typename
+                    id
+                  }
+                } =>
+                query ($representations: [_Any!]!) {
+                  _entities(representations: $representations) {
+                    ... on User {
+                      name
+                    }
+                  }
+                }
               },
-              Object {
-                "kind": "Flatten",
-                "node": Object {
-                  "kind": "Fetch",
-                  "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{name}}}",
-                  "requires": Array [
-                    Object {
-                      "kind": "InlineFragment",
-                      "selections": Array [
-                        Object {
-                          "kind": "Field",
-                          "name": "__typename",
-                          "selections": undefined,
-                        },
-                        Object {
-                          "kind": "Field",
-                          "name": "id",
-                          "selections": undefined,
-                        },
-                      ],
-                      "typeCondition": "User",
-                    },
-                  ],
-                  "serviceName": "accounts",
-                  "variableUsages": Array [],
-                },
-                "path": Array [
-                  "topReviews",
-                  "@",
-                  "author",
-                ],
-              },
-            ],
+            },
           },
         }
       `);
@@ -717,55 +587,35 @@ describe('buildQueryPlan', () => {
         const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
         expect(queryPlan).toMatchInlineSnapshot(`
-          Object {
-            "kind": "QueryPlan",
-            "node": Object {
-              "kind": "Sequence",
-              "nodes": Array [
-                Object {
-                  "kind": "Fetch",
-                  "operation": "{topCars{__typename id price}}",
-                  "requires": undefined,
-                  "serviceName": "product",
-                  "variableUsages": Array [],
+          QueryPlan {
+            Sequence {
+              Fetch(service: "product") {
+                {
+                  topCars {
+                    __typename
+                    id
+                    price
+                  }
+                }
+              },
+              Flatten(path: "topCars.@") {
+                Fetch(service: "reviews") {
+                  {
+                    ... on Car {
+                      __typename
+                      id
+                      price
+                    }
+                  } =>
+                  query ($representations: [_Any!]!) {
+                    _entities(representations: $representations) {
+                      ... on Car {
+                        retailPrice
+                      }
+                    }
+                  }
                 },
-                Object {
-                  "kind": "Flatten",
-                  "node": Object {
-                    "kind": "Fetch",
-                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Car{retailPrice}}}",
-                    "requires": Array [
-                      Object {
-                        "kind": "InlineFragment",
-                        "selections": Array [
-                          Object {
-                            "kind": "Field",
-                            "name": "__typename",
-                            "selections": undefined,
-                          },
-                          Object {
-                            "kind": "Field",
-                            "name": "id",
-                            "selections": undefined,
-                          },
-                          Object {
-                            "kind": "Field",
-                            "name": "price",
-                            "selections": undefined,
-                          },
-                        ],
-                        "typeCondition": "Car",
-                      },
-                    ],
-                    "serviceName": "reviews",
-                    "variableUsages": Array [],
-                  },
-                  "path": Array [
-                    "topCars",
-                    "@",
-                  ],
-                },
-              ],
+              },
             },
           }
         `);
@@ -787,51 +637,35 @@ describe('buildQueryPlan', () => {
         const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
         expect(queryPlan).toMatchInlineSnapshot(`
-          Object {
-            "kind": "QueryPlan",
-            "node": Object {
-              "kind": "Sequence",
-              "nodes": Array [
-                Object {
-                  "kind": "Fetch",
-                  "operation": "{topReviews{author{__typename id}}}",
-                  "requires": undefined,
-                  "serviceName": "reviews",
-                  "variableUsages": Array [],
+          QueryPlan {
+            Sequence {
+              Fetch(service: "reviews") {
+                {
+                  topReviews {
+                    author {
+                      __typename
+                      id
+                    }
+                  }
+                }
+              },
+              Flatten(path: "topReviews.@.author") {
+                Fetch(service: "accounts") {
+                  {
+                    ... on User {
+                      __typename
+                      id
+                    }
+                  } =>
+                  query ($representations: [_Any!]!) {
+                    _entities(representations: $representations) {
+                      ... on User {
+                        name
+                      }
+                    }
+                  }
                 },
-                Object {
-                  "kind": "Flatten",
-                  "node": Object {
-                    "kind": "Fetch",
-                    "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{name}}}",
-                    "requires": Array [
-                      Object {
-                        "kind": "InlineFragment",
-                        "selections": Array [
-                          Object {
-                            "kind": "Field",
-                            "name": "__typename",
-                            "selections": undefined,
-                          },
-                          Object {
-                            "kind": "Field",
-                            "name": "id",
-                            "selections": undefined,
-                          },
-                        ],
-                        "typeCondition": "User",
-                      },
-                    ],
-                    "serviceName": "accounts",
-                    "variableUsages": Array [],
-                  },
-                  "path": Array [
-                    "topReviews",
-                    "@",
-                    "author",
-                  ],
-                },
-              ],
+              },
             },
           }
         `);
@@ -853,51 +687,35 @@ describe('buildQueryPlan', () => {
       const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Sequence",
-            "nodes": Array [
-              Object {
-                "kind": "Fetch",
-                "operation": "{topReviews{author{__typename id}}}",
-                "requires": undefined,
-                "serviceName": "reviews",
-                "variableUsages": Array [],
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                topReviews {
+                  author {
+                    __typename
+                    id
+                  }
+                }
+              }
+            },
+            Flatten(path: "topReviews.@.author") {
+              Fetch(service: "accounts") {
+                {
+                  ... on User {
+                    __typename
+                    id
+                  }
+                } =>
+                query ($representations: [_Any!]!) {
+                  _entities(representations: $representations) {
+                    ... on User {
+                      birthDate
+                    }
+                  }
+                }
               },
-              Object {
-                "kind": "Flatten",
-                "node": Object {
-                  "kind": "Fetch",
-                  "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on User{birthDate}}}",
-                  "requires": Array [
-                    Object {
-                      "kind": "InlineFragment",
-                      "selections": Array [
-                        Object {
-                          "kind": "Field",
-                          "name": "__typename",
-                          "selections": undefined,
-                        },
-                        Object {
-                          "kind": "Field",
-                          "name": "id",
-                          "selections": undefined,
-                        },
-                      ],
-                      "typeCondition": "User",
-                    },
-                  ],
-                  "serviceName": "accounts",
-                  "variableUsages": Array [],
-                },
-                "path": Array [
-                  "topReviews",
-                  "@",
-                  "author",
-                ],
-              },
-            ],
+            },
           },
         }
       `);
@@ -920,14 +738,19 @@ describe('buildQueryPlan', () => {
       const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Fetch",
-            "operation": "{topProducts{__typename ...on Book{price}...on Furniture{price}}}",
-            "requires": undefined,
-            "serviceName": "product",
-            "variableUsages": Array [],
+        QueryPlan {
+          Fetch(service: "product") {
+            {
+              topProducts {
+                __typename
+                ... on Book {
+                  price
+                }
+                ... on Furniture {
+                  price
+                }
+              }
+            }
           },
         }
       `);
@@ -952,66 +775,53 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-      Object {
-        "kind": "QueryPlan",
-        "node": Object {
-          "kind": "Sequence",
-          "nodes": Array [
-            Object {
-              "kind": "Fetch",
-              "operation": "{topProducts{__typename ...on Book{price __typename isbn}...on Furniture{price __typename upc}}}",
-              "requires": undefined,
-              "serviceName": "product",
-              "variableUsages": Array [],
+      QueryPlan {
+        Sequence {
+          Fetch(service: "product") {
+            {
+              topProducts {
+                __typename
+                ... on Book {
+                  price
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  price
+                  __typename
+                  upc
+                }
+              }
+            }
+          },
+          Flatten(path: "topProducts.@") {
+            Fetch(service: "reviews") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              } =>
+              query ($representations: [_Any!]!) {
+                _entities(representations: $representations) {
+                  ... on Book {
+                    reviews {
+                      body
+                    }
+                  }
+                  ... on Furniture {
+                    reviews {
+                      body
+                    }
+                  }
+                }
+              }
             },
-            Object {
-              "kind": "Flatten",
-              "node": Object {
-                "kind": "Fetch",
-                "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{reviews{body}}...on Furniture{reviews{body}}}}",
-                "requires": Array [
-                  Object {
-                    "kind": "InlineFragment",
-                    "selections": Array [
-                      Object {
-                        "kind": "Field",
-                        "name": "__typename",
-                        "selections": undefined,
-                      },
-                      Object {
-                        "kind": "Field",
-                        "name": "isbn",
-                        "selections": undefined,
-                      },
-                    ],
-                    "typeCondition": "Book",
-                  },
-                  Object {
-                    "kind": "InlineFragment",
-                    "selections": Array [
-                      Object {
-                        "kind": "Field",
-                        "name": "__typename",
-                        "selections": undefined,
-                      },
-                      Object {
-                        "kind": "Field",
-                        "name": "upc",
-                        "selections": undefined,
-                      },
-                    ],
-                    "typeCondition": "Furniture",
-                  },
-                ],
-                "serviceName": "reviews",
-                "variableUsages": Array [],
-              },
-              "path": Array [
-                "topProducts",
-                "@",
-              ],
-            },
-          ],
+          },
         },
       }
     `);
@@ -1034,60 +844,37 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-      Object {
-        "kind": "QueryPlan",
-        "node": Object {
-          "kind": "Sequence",
-          "nodes": Array [
-            Object {
-              "kind": "Fetch",
-              "operation": "{books{__typename isbn title year}}",
-              "requires": undefined,
-              "serviceName": "books",
-              "variableUsages": Array [],
+      QueryPlan {
+        Sequence {
+          Fetch(service: "books") {
+            {
+              books {
+                __typename
+                isbn
+                title
+                year
+              }
+            }
+          },
+          Flatten(path: "books.@") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                  title
+                  year
+                }
+              } =>
+              query ($representations: [_Any!]!) {
+                _entities(representations: $representations) {
+                  ... on Book {
+                    name
+                  }
+                }
+              }
             },
-            Object {
-              "kind": "Flatten",
-              "node": Object {
-                "kind": "Fetch",
-                "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}",
-                "requires": Array [
-                  Object {
-                    "kind": "InlineFragment",
-                    "selections": Array [
-                      Object {
-                        "kind": "Field",
-                        "name": "__typename",
-                        "selections": undefined,
-                      },
-                      Object {
-                        "kind": "Field",
-                        "name": "isbn",
-                        "selections": undefined,
-                      },
-                      Object {
-                        "kind": "Field",
-                        "name": "title",
-                        "selections": undefined,
-                      },
-                      Object {
-                        "kind": "Field",
-                        "name": "year",
-                        "selections": undefined,
-                      },
-                    ],
-                    "typeCondition": "Book",
-                  },
-                ],
-                "serviceName": "product",
-                "variableUsages": Array [],
-              },
-              "path": Array [
-                "books",
-                "@",
-              ],
-            },
-          ],
+          },
         },
       }
     `);
@@ -1107,14 +894,23 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-      Object {
-        "kind": "QueryPlan",
-        "node": Object {
-          "kind": "Fetch",
-          "operation": "{product(upc:\\"\\"){__typename ...on Book{details{country}}...on Furniture{details{country}}}}",
-          "requires": undefined,
-          "serviceName": "product",
-          "variableUsages": Array [],
+      QueryPlan {
+        Fetch(service: "product") {
+          {
+            product(upc: "") {
+              __typename
+              ... on Book {
+                details {
+                  country
+                }
+              }
+              ... on Furniture {
+                details {
+                  country
+                }
+              }
+            }
+          }
         },
       }
     `);
@@ -1144,151 +940,109 @@ describe('buildQueryPlan', () => {
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Sequence",
-            "nodes": Array [
-              Object {
-                "kind": "Fetch",
-                "operation": "{topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Book{__typename isbn}...on Furniture{__typename upc}}",
-                "requires": undefined,
-                "serviceName": "reviews",
-                "variableUsages": Array [],
-              },
-              Object {
-                "kind": "Parallel",
-                "nodes": Array [
-                  Object {
-                    "kind": "Sequence",
-                    "nodes": Array [
-                      Object {
-                        "kind": "Flatten",
-                        "node": Object {
-                          "kind": "Fetch",
-                          "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}",
-                          "requires": Array [
-                            Object {
-                              "kind": "InlineFragment",
-                              "selections": Array [
-                                Object {
-                                  "kind": "Field",
-                                  "name": "__typename",
-                                  "selections": undefined,
-                                },
-                                Object {
-                                  "kind": "Field",
-                                  "name": "isbn",
-                                  "selections": undefined,
-                                },
-                              ],
-                              "typeCondition": "Book",
-                            },
-                          ],
-                          "serviceName": "books",
-                          "variableUsages": Array [],
-                        },
-                        "path": Array [
-                          "topReviews",
-                          "@",
-                          "product",
-                        ],
-                      },
-                      Object {
-                        "kind": "Flatten",
-                        "node": Object {
-                          "kind": "Fetch",
-                          "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}",
-                          "requires": Array [
-                            Object {
-                              "kind": "InlineFragment",
-                              "selections": Array [
-                                Object {
-                                  "kind": "Field",
-                                  "name": "__typename",
-                                  "selections": undefined,
-                                },
-                                Object {
-                                  "kind": "Field",
-                                  "name": "isbn",
-                                  "selections": undefined,
-                                },
-                                Object {
-                                  "kind": "Field",
-                                  "name": "title",
-                                  "selections": undefined,
-                                },
-                                Object {
-                                  "kind": "Field",
-                                  "name": "year",
-                                  "selections": undefined,
-                                },
-                              ],
-                              "typeCondition": "Book",
-                            },
-                          ],
-                          "serviceName": "product",
-                          "variableUsages": Array [],
-                        },
-                        "path": Array [
-                          "topReviews",
-                          "@",
-                          "product",
-                        ],
-                      },
-                    ],
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                topReviews {
+                  ...__QueryPlanFragment_1__
+                }
+              }
+
+              fragment __QueryPlanFragment_1__ on Review {
+                body
+                author
+                product {
+                  ...__QueryPlanFragment_0__
+                }
+              }
+
+              fragment __QueryPlanFragment_0__ on Product {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              }
+            },
+            Parallel {
+              Sequence {
+                Flatten(path: "topReviews.@.product") {
+                  Fetch(service: "books") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                    } =>
+                    query ($representations: [_Any!]!) {
+                      _entities(representations: $representations) {
+                        ... on Book {
+                          __typename
+                          isbn
+                          title
+                          year
+                        }
+                      }
+                    }
                   },
-                  Object {
-                    "kind": "Flatten",
-                    "node": Object {
-                      "kind": "Fetch",
-                      "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name price details{country}}...on Book{price details{country}}}}",
-                      "requires": Array [
-                        Object {
-                          "kind": "InlineFragment",
-                          "selections": Array [
-                            Object {
-                              "kind": "Field",
-                              "name": "__typename",
-                              "selections": undefined,
-                            },
-                            Object {
-                              "kind": "Field",
-                              "name": "upc",
-                              "selections": undefined,
-                            },
-                          ],
-                          "typeCondition": "Furniture",
-                        },
-                        Object {
-                          "kind": "InlineFragment",
-                          "selections": Array [
-                            Object {
-                              "kind": "Field",
-                              "name": "__typename",
-                              "selections": undefined,
-                            },
-                            Object {
-                              "kind": "Field",
-                              "name": "isbn",
-                              "selections": undefined,
-                            },
-                          ],
-                          "typeCondition": "Book",
-                        },
-                      ],
-                      "serviceName": "product",
-                      "variableUsages": Array [],
-                    },
-                    "path": Array [
-                      "topReviews",
-                      "@",
-                      "product",
-                    ],
+                },
+                Flatten(path: "topReviews.@.product") {
+                  Fetch(service: "product") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    } =>
+                    query ($representations: [_Any!]!) {
+                      _entities(representations: $representations) {
+                        ... on Book {
+                          name
+                        }
+                      }
+                    }
                   },
-                ],
+                },
               },
-            ],
+              Flatten(path: "topReviews.@.product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  query ($representations: [_Any!]!) {
+                    _entities(representations: $representations) {
+                      ... on Furniture {
+                        name
+                        price
+                        details {
+                          country
+                        }
+                      }
+                      ... on Book {
+                        price
+                        details {
+                          country
+                        }
+                      }
+                    }
+                  }
+                },
+              },
+            },
           },
         }
       `);
@@ -1310,14 +1064,14 @@ describe('buildQueryPlan', () => {
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Fetch",
-            "operation": "{topReviews{body author}}",
-            "requires": undefined,
-            "serviceName": "reviews",
-            "variableUsages": Array [],
+        QueryPlan {
+          Fetch(service: "reviews") {
+            {
+              topReviews {
+                body
+                author
+              }
+            }
           },
         }
       `);
@@ -1340,14 +1094,19 @@ describe('buildQueryPlan', () => {
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Fetch",
-            "operation": "{topReviews{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Review{id body author}",
-            "requires": undefined,
-            "serviceName": "reviews",
-            "variableUsages": Array [],
+        QueryPlan {
+          Fetch(service: "reviews") {
+            {
+              topReviews {
+                ...__QueryPlanFragment_0__
+              }
+            }
+
+            fragment __QueryPlanFragment_0__ on Review {
+              id
+              body
+              author
+            }
           },
         }
       `);
@@ -1376,151 +1135,109 @@ describe('buildQueryPlan', () => {
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Sequence",
-            "nodes": Array [
-              Object {
-                "kind": "Fetch",
-                "operation": "{reviews:topReviews{...__QueryPlanFragment_1__}}fragment __QueryPlanFragment_1__ on Review{content:body author product{...__QueryPlanFragment_0__}}fragment __QueryPlanFragment_0__ on Product{__typename ...on Book{__typename isbn}...on Furniture{__typename upc}}",
-                "requires": undefined,
-                "serviceName": "reviews",
-                "variableUsages": Array [],
-              },
-              Object {
-                "kind": "Parallel",
-                "nodes": Array [
-                  Object {
-                    "kind": "Sequence",
-                    "nodes": Array [
-                      Object {
-                        "kind": "Flatten",
-                        "node": Object {
-                          "kind": "Fetch",
-                          "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{__typename isbn title year}}}",
-                          "requires": Array [
-                            Object {
-                              "kind": "InlineFragment",
-                              "selections": Array [
-                                Object {
-                                  "kind": "Field",
-                                  "name": "__typename",
-                                  "selections": undefined,
-                                },
-                                Object {
-                                  "kind": "Field",
-                                  "name": "isbn",
-                                  "selections": undefined,
-                                },
-                              ],
-                              "typeCondition": "Book",
-                            },
-                          ],
-                          "serviceName": "books",
-                          "variableUsages": Array [],
-                        },
-                        "path": Array [
-                          "reviews",
-                          "@",
-                          "product",
-                        ],
-                      },
-                      Object {
-                        "kind": "Flatten",
-                        "node": Object {
-                          "kind": "Fetch",
-                          "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Book{name}}}",
-                          "requires": Array [
-                            Object {
-                              "kind": "InlineFragment",
-                              "selections": Array [
-                                Object {
-                                  "kind": "Field",
-                                  "name": "__typename",
-                                  "selections": undefined,
-                                },
-                                Object {
-                                  "kind": "Field",
-                                  "name": "isbn",
-                                  "selections": undefined,
-                                },
-                                Object {
-                                  "kind": "Field",
-                                  "name": "title",
-                                  "selections": undefined,
-                                },
-                                Object {
-                                  "kind": "Field",
-                                  "name": "year",
-                                  "selections": undefined,
-                                },
-                              ],
-                              "typeCondition": "Book",
-                            },
-                          ],
-                          "serviceName": "product",
-                          "variableUsages": Array [],
-                        },
-                        "path": Array [
-                          "reviews",
-                          "@",
-                          "product",
-                        ],
-                      },
-                    ],
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                reviews: topReviews {
+                  ...__QueryPlanFragment_1__
+                }
+              }
+
+              fragment __QueryPlanFragment_1__ on Review {
+                content: body
+                author
+                product {
+                  ...__QueryPlanFragment_0__
+                }
+              }
+
+              fragment __QueryPlanFragment_0__ on Product {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              }
+            },
+            Parallel {
+              Sequence {
+                Flatten(path: "reviews.@.product") {
+                  Fetch(service: "books") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                    } =>
+                    query ($representations: [_Any!]!) {
+                      _entities(representations: $representations) {
+                        ... on Book {
+                          __typename
+                          isbn
+                          title
+                          year
+                        }
+                      }
+                    }
                   },
-                  Object {
-                    "kind": "Flatten",
-                    "node": Object {
-                      "kind": "Fetch",
-                      "operation": "query($representations:[_Any!]!){_entities(representations:$representations){...on Furniture{name cost:price details{origin:country}}...on Book{cost:price details{origin:country}}}}",
-                      "requires": Array [
-                        Object {
-                          "kind": "InlineFragment",
-                          "selections": Array [
-                            Object {
-                              "kind": "Field",
-                              "name": "__typename",
-                              "selections": undefined,
-                            },
-                            Object {
-                              "kind": "Field",
-                              "name": "upc",
-                              "selections": undefined,
-                            },
-                          ],
-                          "typeCondition": "Furniture",
-                        },
-                        Object {
-                          "kind": "InlineFragment",
-                          "selections": Array [
-                            Object {
-                              "kind": "Field",
-                              "name": "__typename",
-                              "selections": undefined,
-                            },
-                            Object {
-                              "kind": "Field",
-                              "name": "isbn",
-                              "selections": undefined,
-                            },
-                          ],
-                          "typeCondition": "Book",
-                        },
-                      ],
-                      "serviceName": "product",
-                      "variableUsages": Array [],
-                    },
-                    "path": Array [
-                      "reviews",
-                      "@",
-                      "product",
-                    ],
+                },
+                Flatten(path: "reviews.@.product") {
+                  Fetch(service: "product") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    } =>
+                    query ($representations: [_Any!]!) {
+                      _entities(representations: $representations) {
+                        ... on Book {
+                          name
+                        }
+                      }
+                    }
                   },
-                ],
+                },
               },
-            ],
+              Flatten(path: "reviews.@.product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  query ($representations: [_Any!]!) {
+                    _entities(representations: $representations) {
+                      ... on Furniture {
+                        name
+                        cost: price
+                        details {
+                          origin: country
+                        }
+                      }
+                      ... on Book {
+                        cost: price
+                        details {
+                          origin: country
+                        }
+                      }
+                    }
+                  }
+                },
+              },
+            },
           },
         }
       `);
@@ -1560,14 +1277,23 @@ describe('buildQueryPlan', () => {
     );
 
     expect(queryPlan).toMatchInlineSnapshot(`
-      Object {
-        "kind": "QueryPlan",
-        "node": Object {
-          "kind": "Fetch",
-          "operation": "{body{__typename ...on Image{attributes{url}}...on Text{attributes{bold}}}}",
-          "requires": undefined,
-          "serviceName": "documents",
-          "variableUsages": Array [],
+      QueryPlan {
+        Fetch(service: "documents") {
+          {
+            body {
+              __typename
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                }
+              }
+            }
+          }
         },
       }
     `);
@@ -1608,14 +1334,19 @@ describe('buildQueryPlan', () => {
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Fetch",
-            "operation": "{body{__typename ...on Text{attributes{bold text}}}}",
-            "requires": undefined,
-            "serviceName": "documents",
-            "variableUsages": Array [],
+        QueryPlan {
+          Fetch(service: "documents") {
+            {
+              body {
+                __typename
+                ... on Text {
+                  attributes {
+                    bold
+                    text
+                  }
+                }
+              }
+            }
           },
         }
       `);
@@ -1648,14 +1379,19 @@ describe('buildQueryPlan', () => {
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
-        Object {
-          "kind": "QueryPlan",
-          "node": Object {
-            "kind": "Fetch",
-            "operation": "{body{__typename ...on Text{attributes{bold text}}}}",
-            "requires": undefined,
-            "serviceName": "documents",
-            "variableUsages": Array [],
+        QueryPlan {
+          Fetch(service: "documents") {
+            {
+              body {
+                __typename
+                ... on Text {
+                  attributes {
+                    bold
+                    text
+                  }
+                }
+              }
+            }
           },
         }
       `);

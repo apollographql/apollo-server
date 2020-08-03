@@ -1,5 +1,6 @@
 import { Config, Plugin, Refs } from 'pretty-format';
 import { PlanNode, QueryPlan } from '../QueryPlan';
+import { parse, Kind } from 'graphql';
 
 export default {
   test(value: any) {
@@ -50,7 +51,9 @@ function printNode(
         indentationNext +
         (node.requires
           ? printer(
-              node.requires,
+              // this is an array of selections, so we need to make it a proper
+              // selectionSet so we can print it
+              ({kind: Kind.SELECTION_SET, selections: node.requires}),
               config,
               indentationNext,
               depth,
@@ -62,7 +65,7 @@ function printNode(
             indentationNext
           : '') +
         printer(
-          node.selectionSet,
+          parse(node.operation),
           config,
           indentationNext,
           depth,
@@ -71,23 +74,23 @@ function printNode(
         ) +
         config.spacingOuter +
         indentation +
-        (node.internalFragments.size > 0
-          ? '  ' +
-            Array.from(node.internalFragments)
-              .map(fragment =>
-                printer(
-                  fragment,
-                  config,
-                  indentationNext,
-                  depth,
-                  refs,
-                  printer,
-                ),
-              )
-              .join(`\n${indentationNext}`) +
-            config.spacingOuter +
-            indentation
-          : '') +
+        // (node.internalFragments.size > 0
+        //   ? '  ' +
+        //     Array.from(node.internalFragments)
+        //       .map(fragment =>
+        //         printer(
+        //           fragment,
+        //           config,
+        //           indentationNext,
+        //           depth,
+        //           refs,
+        //           printer,
+        //         ),
+        //       )
+        //       .join(`\n${indentationNext}`) +
+        //     config.spacingOuter +
+        //     indentation
+        //   : '') +
         '}';
       break;
     case 'Flatten':
