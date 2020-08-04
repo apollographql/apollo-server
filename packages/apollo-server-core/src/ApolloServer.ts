@@ -31,6 +31,7 @@ import {
 import {
   ApolloServerPlugin,
   GraphQLServiceContext,
+  GraphQLServerListener,
 } from 'apollo-server-plugin-base';
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
@@ -76,13 +77,14 @@ import {
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { plugin as pluginTracing } from "apollo-tracing";
-import { Logger, SchemaHash } from "apollo-server-types";
+import { Logger, SchemaHash, ValueOrPromise } from "apollo-server-types";
 import {
   plugin as pluginCacheControl,
   CacheControlExtensionOptions,
 } from 'apollo-cache-control';
 import { getEngineApiKey, getEngineGraphVariant } from "apollo-engine-reporting/dist/agent";
 import { cloneObject } from "./runHttpQuery";
+import isNodeLike from './utils/isNodeLike';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -149,7 +151,7 @@ export class ApolloServerBase {
   private config: Config;
   /** @deprecated: This is undefined for servers operating as gateways, and will be removed in a future release **/
   protected schema?: GraphQLSchema;
-  private toDispose = new Set<() => void>();
+  private toDispose = new Set<() => ValueOrPromise<void>>();
   private experimental_approximateDocumentStoreMiB:
     Config['experimental_approximateDocumentStoreMiB'];
 
@@ -177,6 +179,7 @@ export class ApolloServerBase {
       gateway,
       cacheControl,
       experimental_approximateDocumentStoreMiB,
+      stopOnTerminationSignals,
       ...requestOptions
     } = config;
 
@@ -385,6 +388,32 @@ export class ApolloServerBase {
     // is populated accordingly.
     this.ensurePluginInstantiation(plugins);
 
+    // We handle signals if it was explicitly requested, or if we're in Node,
+    // not in a test, and it wasn't explicitly turned off. (For backwards
+    // compatibility, we check both 'stopOnTerminationSignals' and
+    // 'engine.handleSignals'.)
+    if (
+      typeof stopOnTerminationSignals === 'boolean'
+        ? stopOnTerminationSignals
+        : typeof this.config.engine === 'object' &&
+          typeof this.config.engine.handleSignals === 'boolean'
+        ? this.config.engine.handleSignals
+        : isNodeLike && process.env.NODE_ENV !== 'test'
+    ) {
+      const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
+      signals.forEach((signal) => {
+        // Note: Node only started sending signal names to signal events with
+        // Node v10 so we can't use that feature here.
+        const handler: NodeJS.SignalsListener = async () => {
+          await this.stop();
+          process.kill(process.pid, signal);
+        };
+        process.once(signal, handler);
+        this.toDispose.add(() => {
+          process.removeListener(signal, handler);
+        });
+      });
+    }
   }
 
   // used by integrations to synchronize the path with subscriptions, some
@@ -585,24 +614,33 @@ export class ApolloServerBase {
     if (this.requestOptions.persistedQueries?.cache) {
       service.persistedQueries = {
         cache: this.requestOptions.persistedQueries.cache,
-      }
+      };
     }
 
-    await Promise.all(
-      this.plugins.map(
-        plugin =>
-          plugin.serverWillStart &&
-          plugin.serverWillStart(service),
-      ),
+    const serverListeners = (
+      await Promise.all(
+        this.plugins.map(
+          (plugin) => plugin.serverWillStart && plugin.serverWillStart(service),
+        ),
+      )
+    ).filter(
+      (maybeServerListener): maybeServerListener is GraphQLServerListener =>
+        typeof maybeServerListener === 'object' &&
+        !!maybeServerListener.serverWillStop,
     );
+    this.toDispose.add(async () => {
+      await Promise.all(
+        serverListeners.map(({ serverWillStop }) => serverWillStop?.()),
+      );
+    });
   }
 
   public async stop() {
-    this.toDispose.forEach(dispose => dispose());
+    await Promise.all([...this.toDispose].map(dispose => dispose()));
     if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.engineReportingAgent) {
       this.engineReportingAgent.stop();
-      await this.engineReportingAgent.sendAllReports();
+      await this.engineReportingAgent.sendAllReportsAndReportErrors();
     }
   }
 

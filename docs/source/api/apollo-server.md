@@ -163,6 +163,17 @@ new ApolloServer({
   size of 30MiB, which is generally sufficient unless the server is processing
   a high number of unique operations.
 
+* `stopOnTerminationSignals`: `boolean`
+
+By default (when running in Node and when the `NODE_ENV` environment variable does not equal `test`),
+ApolloServer listens for the `SIGINT` and `SIGTERM` signals and calls `await this.stop()` on
+itself when it is received, and then re-sends the signal to itself so that process shutdown can continue.
+Set this to false to disable this behavior, or to true to enable this behavior even when `NODE_ENV` is
+`test`. You can manually invoke `stop()` in other contexts if you'd
+like. Note that `stop()` does not run synchronously so it cannot work usefully in an `process.on('exit')`
+handler.
+
+
 #### Returns
 
 `ApolloServer`
@@ -447,11 +458,8 @@ addMockFunctionsToSchema({
 
 *  `handleSignals`: boolean
 
-   By default, EngineReportingAgent listens for the 'SIGINT' and 'SIGTERM'
-   signals, stops, sends a final report, and re-sends the signal to
-   itself. Set this to false to disable. You can manually invoke 'stop()' and
-   'sendReport()' on other signals if you'd like. Note that 'sendReport()'
-   does not run synchronously so it cannot work usefully in an 'exit' handler.
+  For backwards compatibility only; specifying `new ApolloServer({engine: {handleSignals: false}})` is
+  equivalent to specifying `new ApolloServer({stopOnTerminationSignals: false})`.
 
 *  `rewriteError`: (err: GraphQLError) => GraphQLError | null
 

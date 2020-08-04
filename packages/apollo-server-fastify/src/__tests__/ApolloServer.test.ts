@@ -64,7 +64,7 @@ describe('apollo-server-fastify', () => {
     options: Partial<ServerRegistration> = {},
     mockDecorators: boolean = false,
   ) {
-    server = new ApolloServer(serverOptions);
+    server = new ApolloServer({ stopOnTerminationSignals: false, ...serverOptions });
     app = fastify();
 
     if (mockDecorators) {
