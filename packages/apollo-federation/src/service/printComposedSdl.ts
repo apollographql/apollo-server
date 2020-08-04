@@ -31,6 +31,7 @@ import {
 import { Maybe, ServiceDefinition, FederationType, FederationField } from '../composition';
 import { isFederationType } from '../types';
 import { isFederationDirective } from '../composition/utils';
+import csdlDirectives from '../csdlDirectives';
 
 type Options = {
   /**
@@ -101,7 +102,11 @@ function printFilteredSchema(
   typeFilter: (type: GraphQLNamedType) => boolean,
   options?: Options,
 ): string {
-  const directives = schema.getDirectives().filter(directiveFilter);
+  // Federation change: include directive definitions for CSDL
+  const directives = [
+    ...csdlDirectives,
+    ...schema.getDirectives().filter(directiveFilter),
+  ];
   const types = Object.values(schema.getTypeMap())
     .sort((type1, type2) => type1.name.localeCompare(type2.name))
     .filter(typeFilter);
