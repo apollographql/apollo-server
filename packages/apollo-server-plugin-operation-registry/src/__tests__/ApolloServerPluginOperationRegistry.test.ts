@@ -55,6 +55,7 @@ describe('Operation registry plugin', () => {
     const engineOptions: EngineReportingOptions<any> = {
       apiKey,
       reportTiming: false,
+      graphVariant: 'current',
     };
     const typeDefs = gql`
       type Query {

@@ -22,6 +22,8 @@ import {
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextDidResolveOperation,
   Logger,
+  ApolloConfig,
+  WithRequired,
 } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
@@ -29,8 +31,6 @@ import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { reportingLoop, SchemaReporter } from './schemaReporter';
 import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'crypto';
-
-let warnedOnDeprecatedApiKey = false;
 
 export interface ClientInfo {
   clientName?: string;
@@ -68,75 +68,6 @@ export type ReportTimingOptions<TContext> =
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
-
-// AS3: Drop support for deprecated `ENGINE_API_KEY`.
-export function getEngineApiKey({
-  engine,
-  skipWarn = false,
-  logger = console,
-}: {
-  engine: EngineReportingOptions<any> | boolean | undefined;
-  skipWarn?: boolean;
-  logger?: Logger;
-}) {
-  if (typeof engine === 'object') {
-    if (engine.apiKey) {
-      return engine.apiKey;
-    }
-  }
-  const legacyApiKeyFromEnv = process.env.ENGINE_API_KEY;
-  const apiKeyFromEnv = process.env.APOLLO_KEY;
-
-  if (legacyApiKeyFromEnv && apiKeyFromEnv && !skipWarn) {
-    logger.warn(
-      'Using `APOLLO_KEY` since `ENGINE_API_KEY` (deprecated) is also set in the environment.',
-    );
-  }
-  if (legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey && !skipWarn) {
-    logger.warn(
-      '[deprecated] The `ENGINE_API_KEY` environment variable has been renamed to `APOLLO_KEY`.',
-    );
-    warnedOnDeprecatedApiKey = true;
-  }
-  return apiKeyFromEnv || legacyApiKeyFromEnv || '';
-}
-
-// AS3: Drop support for deprecated `ENGINE_SCHEMA_TAG`.
-export function getEngineGraphVariant(
-  engine: EngineReportingOptions<any> | boolean | undefined,
-  logger: Logger = console,
-): string | undefined {
-  if (engine === false) {
-    return;
-  } else if (
-    typeof engine === 'object' &&
-    (engine.graphVariant || engine.schemaTag)
-  ) {
-    if (engine.graphVariant && engine.schemaTag) {
-      throw new Error(
-        'Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.',
-      );
-    }
-    if (engine.schemaTag) {
-      logger.warn(
-        '[deprecated] The `schemaTag` property within `engine` configuration has been renamed to `graphVariant`.',
-      );
-    }
-    return engine.graphVariant || engine.schemaTag;
-  } else {
-    if (process.env.ENGINE_SCHEMA_TAG) {
-      logger.warn(
-        '[deprecated] The `ENGINE_SCHEMA_TAG` environment variable has been renamed to `APOLLO_GRAPH_VARIANT`.',
-      );
-    }
-    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
-      throw new Error(
-        '`APOLLO_GRAPH_VARIANT` and `ENGINE_SCHEMA_TAG` (deprecated) environment variables must not both be set.',
-      );
-    }
-    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
-  }
-}
 
 export interface EngineReportingOptions<TContext> {
   /**
@@ -429,9 +360,8 @@ class ReportData {
 // to the Engine server.
 export class EngineReportingAgent<TContext = any> {
   private readonly options: EngineReportingOptions<TContext>;
-  private readonly apiKey: string;
+  private readonly apolloConfig: WithRequired<ApolloConfig, 'key'>;
   private readonly logger: Logger = console;
-  private readonly graphVariant: string;
 
   private readonly reportDataByExecutableSchemaId: {
     [executableSchemaId: string]: ReportData | undefined;
@@ -452,29 +382,25 @@ export class EngineReportingAgent<TContext = any> {
   private readonly tracesEndpointUrl: string;
   readonly schemaReport: boolean;
 
-  public constructor(options: EngineReportingOptions<TContext> = {}) {
+  public constructor(
+    options: EngineReportingOptions<TContext> = {},
+    apolloConfig: WithRequired<ApolloConfig, 'key'>,
+  ) {
     this.options = options;
-    this.apiKey = getEngineApiKey({
-      engine: this.options,
-      skipWarn: false,
-      logger: this.logger,
-    });
     if (options.logger) this.logger = options.logger;
     this.bootId = uuidv4();
-    this.graphVariant = getEngineGraphVariant(options, this.logger) || '';
 
-    if (!this.apiKey) {
-      throw new Error(
-        `To use EngineReportingAgent, you must specify an API key via the apiKey option or the APOLLO_KEY environment variable.`,
-      );
+    if (!apolloConfig.key) {
+      throw new Error('Missing API key.');
     }
+    this.apolloConfig = apolloConfig;
 
     if (options.experimental_schemaReporting !== undefined) {
       this.logger.warn(
         [
           '[deprecated] The "experimental_schemaReporting" option has been',
-          'renamed to "reportSchema"'
-        ].join(' ')
+          'renamed to "reportSchema"',
+        ].join(' '),
       );
       if (options.reportSchema === undefined) {
         options.reportSchema = options.experimental_schemaReporting;
@@ -485,11 +411,12 @@ export class EngineReportingAgent<TContext = any> {
       this.logger.warn(
         [
           '[deprecated] The "experimental_overrideReportedSchema" option has',
-          'been renamed to "overrideReportedSchema"'
-        ].join(' ')
+          'been renamed to "overrideReportedSchema"',
+        ].join(' '),
       );
       if (options.overrideReportedSchema === undefined) {
-        options.overrideReportedSchema = options.experimental_overrideReportedSchema;
+        options.overrideReportedSchema =
+          options.experimental_overrideReportedSchema;
       }
     }
 
@@ -497,18 +424,19 @@ export class EngineReportingAgent<TContext = any> {
       this.logger.warn(
         [
           '[deprecated] The "experimental_schemaReportingInitialDelayMaxMs"',
-          'option has been renamed to "schemaReportingInitialDelayMaxMs"'
-        ].join(' ')
+          'option has been renamed to "schemaReportingInitialDelayMaxMs"',
+        ].join(' '),
       );
       if (options.schemaReportingInitialDelayMaxMs === undefined) {
-        options.schemaReportingInitialDelayMaxMs = options.experimental_schemaReportingInitialDelayMaxMs;
+        options.schemaReportingInitialDelayMaxMs =
+          options.experimental_schemaReportingInitialDelayMaxMs;
       }
     }
 
     if (options.reportSchema !== undefined) {
       this.schemaReport = options.reportSchema;
     } else {
-      this.schemaReport = process.env.APOLLO_SCHEMA_REPORTING === "true"
+      this.schemaReport = process.env.APOLLO_SCHEMA_REPORTING === 'true';
     }
 
     // Since calculating the signature for Engine reporting is potentially an
@@ -567,7 +495,7 @@ export class EngineReportingAgent<TContext = any> {
     if (existing) {
       return existing;
     }
-    const reportData = new ReportData(executableSchemaId, this.graphVariant);
+    const reportData = new ReportData(executableSchemaId, this.apolloConfig.graphVariant);
     this.reportDataByExecutableSchemaId[executableSchemaId] = reportData;
     return reportData;
   }
@@ -636,7 +564,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public async sendAllReports(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reportDataByExecutableSchemaId).map(id =>
+      Object.keys(this.reportDataByExecutableSchemaId).map((id) =>
         this.sendReport(id),
       ),
     );
@@ -702,7 +630,7 @@ export class EngineReportingAgent<TContext = any> {
           method: 'POST',
           headers: {
             'user-agent': 'apollo-engine-reporting',
-            'x-api-key': this.apiKey,
+            'x-api-key': this.apolloConfig.key!,
             'content-encoding': 'gzip',
           },
           body: compressed,
@@ -711,8 +639,9 @@ export class EngineReportingAgent<TContext = any> {
 
         if (curResponse.status >= 500 && curResponse.status < 600) {
           throw new Error(
-            `HTTP status ${curResponse.status}, ${(await curResponse.text()) ||
-              '(no body)'}`,
+            `HTTP status ${curResponse.status}, ${
+              (await curResponse.text()) || '(no body)'
+            }`,
           );
         } else {
           return curResponse;
@@ -763,14 +692,14 @@ export class EngineReportingAgent<TContext = any> {
       this.logger.info('Schema to report has been overridden');
     }
     if (this.options.schemaReportingInitialDelayMaxMs !== undefined) {
-      this.logger.info(`Schema reporting max initial delay override: ${
-        this.options.schemaReportingInitialDelayMaxMs
-      } ms`);
+      this.logger.info(
+        `Schema reporting max initial delay override: ${this.options.schemaReportingInitialDelayMaxMs} ms`,
+      );
     }
     if (this.options.schemaReportingUrl !== undefined) {
-      this.logger.info(`Schema reporting URL override: ${
-        this.options.schemaReportingUrl
-      }`);
+      this.logger.info(
+        `Schema reporting URL override: ${this.options.schemaReportingUrl}`,
+      );
     }
     if (this.currentSchemaReporter) {
       this.currentSchemaReporter.stop();
@@ -778,7 +707,7 @@ export class EngineReportingAgent<TContext = any> {
 
     const serverInfo = {
       bootId: this.bootId,
-      graphVariant: this.graphVariant,
+      graphVariant: this.apolloConfig.graphVariant,
       // The infra environment in which this edge server is running, e.g. localhost, Kubernetes
       // Length must be <= 256 characters.
       platform: process.env.APOLLO_SERVER_PLATFORM || 'local',
@@ -796,21 +725,20 @@ export class EngineReportingAgent<TContext = any> {
     };
 
     this.logger.info(
-      `Schema reporting EdgeServerInfo: ${JSON.stringify(serverInfo)}`
-    )
+      `Schema reporting EdgeServerInfo: ${JSON.stringify(serverInfo)}`,
+    );
 
     // Jitter the startup between 0 and 10 seconds
     const delay = Math.floor(
-      Math.random() *
-        (this.options.schemaReportingInitialDelayMaxMs || 10_000),
+      Math.random() * (this.options.schemaReportingInitialDelayMaxMs || 10_000),
     );
 
     const schemaReporter = new SchemaReporter(
       serverInfo,
       executableSchema,
-      this.apiKey,
+      this.apolloConfig.key!,
       this.options.schemaReportingUrl,
-      this.logger
+      this.logger,
     );
 
     const fallbackReportingDelayInMs = 20_000;
@@ -818,7 +746,7 @@ export class EngineReportingAgent<TContext = any> {
     this.currentSchemaReporter = schemaReporter;
     const logger = this.logger;
 
-    setTimeout(function() {
+    setTimeout(function () {
       reportingLoop(schemaReporter, logger, false, fallbackReportingDelayInMs);
     }, delay);
   }
@@ -896,7 +824,7 @@ export class EngineReportingAgent<TContext = any> {
     // either the request-specific logger on the request context (if available)
     // or to the `logger` that was passed into `EngineReportingOptions` which
     // is provided in the `EngineReportingAgent` constructor options.
-    this.signatureCache.set(cacheKey, generatedSignature).catch(err => {
+    this.signatureCache.set(cacheKey, generatedSignature).catch((err) => {
       logger.warn(
         'Could not store signature cache. ' + (err && err.message) || err,
       );
@@ -907,14 +835,16 @@ export class EngineReportingAgent<TContext = any> {
 
   public async sendAllReportsAndReportErrors(): Promise<void> {
     await Promise.all(
-      Object.keys(this.reportDataByExecutableSchemaId).map(executableSchemaId =>
+      Object.keys(
+        this.reportDataByExecutableSchemaId,
+      ).map((executableSchemaId) =>
         this.sendReportAndReportErrors(executableSchemaId),
       ),
     );
   }
 
   private sendReportAndReportErrors(executableSchemaId: string): Promise<void> {
-    return this.sendReport(executableSchemaId).catch(err => {
+    return this.sendReport(executableSchemaId).catch((err) => {
       // This catch block is primarily intended to catch network errors from
       // the retried request itself, which include network errors and non-2xx
       // HTTP errors.

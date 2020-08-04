@@ -37,7 +37,7 @@ export function getStorageSecretUrl(
 export function getOperationManifestUrl(
   graphId: string,
   storageSecret: string,
-  graphVariant: string = 'current',
+  graphVariant: string,
 ): string {
   return `${urlOperationManifestBase}/${graphId}/${storageSecret}/${graphVariant}/manifest.v2.json`;
 }

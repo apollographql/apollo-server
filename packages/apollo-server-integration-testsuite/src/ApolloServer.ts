@@ -1001,6 +1001,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               validationRules: [validationRule],
               extensions: [() => new Extension()],
               engine: {
+                graphVariant: 'current',
                 ...engineServer.engineOptions(),
                 apiKey: 'service:my-app:secret',
                 maxUncompressedReportSize: 1,
@@ -1076,6 +1077,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 },
               },
               engine: {
+                graphVariant: 'current',
                 ...engineServer.engineOptions(),
                 apiKey: 'service:my-app:secret',
                 maxUncompressedReportSize: 1,
@@ -2460,6 +2462,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               resolvers: { Query: { something: () => 'hello' } },
               engine: {
                 apiKey: 'service:my-app:secret',
+                graphVariant: 'current',
                 tracesEndpointUrl: fakeEngineUrl,
                 reportIntervalMs: 1,
                 maxAttempts: 3,
@@ -3213,6 +3216,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         expect(optionsSpy).toHaveBeenLastCalledWith({
+          apollo: {
+            key: 'service:tester:1234abc',
+            keyHash:
+              '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',
+            graphId: 'tester',
+            graphVariant: 'staging',
+          },
           engine: {
             apiKeyHash:
               '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',

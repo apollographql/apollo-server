@@ -1,6 +1,7 @@
 import { ApolloServerBase } from '../ApolloServer';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import gql from 'graphql-tag';
+import { Logger } from 'apollo-server-types';
 
 const typeDefs = gql`
   type Query {
@@ -45,7 +46,10 @@ describe('ApolloServerBase construction', () => {
     ).not.toThrow();
   });
 
-  it('spits out a deprecation warning when passed a schemaTag in construction', () => {
+  // FIXME(no-engine): This should be changed to check for a deprecation
+  // warning for any use of `engine` (which we can't really do until splitting
+  // out the plugins).
+  it.skip('spits out a deprecation warning when passed a schemaTag in construction', () => {
     const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
     expect(
       () =>
@@ -112,32 +116,47 @@ describe('environment variables', () => {
   it('constructs a reporting agent with the ENGINE_API_KEY (deprecated) environment variable and warns', async () => {
     // set the variables
     process.env.ENGINE_API_KEY = 'just:fake:stuff';
-    const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
+    const warn = jest.fn();
+    const mockLogger: Logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn,
+      error: jest.fn(),
+    };
 
     const server = new ApolloServerBase({
       typeDefs,
-      resolvers
+      resolvers,
+      apollo: { graphVariant: 'xxx' },
+      logger: mockLogger,
     });
 
     await server.stop();
-    expect(spyConsoleWarn).toHaveBeenCalledTimes(1);
-    spyConsoleWarn.mockReset();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toMatch(/deprecated.*ENGINE_API_KEY/);
   });
 
   it('warns with both the legacy env var and new env var set', async () => {
     // set the variables
     process.env.ENGINE_API_KEY = 'just:fake:stuff';
     process.env.APOLLO_KEY = 'also:fake:stuff';
-    const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
+    const warn = jest.fn();
+    const mockLogger: Logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn,
+      error: jest.fn(),
+    };
 
     const server = new ApolloServerBase({
       typeDefs,
-      resolvers
+      resolvers,
+      apollo: { graphVariant: 'xxx' },
+      logger: mockLogger,
     });
 
     await server.stop();
-    // Once for deprecation, once for double-set
-    expect(spyConsoleWarn).toHaveBeenCalledTimes(2);
-    spyConsoleWarn.mockReset();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toMatch(/Using.*APOLLO_KEY.*ENGINE_API_KEY/);
   });
 });
