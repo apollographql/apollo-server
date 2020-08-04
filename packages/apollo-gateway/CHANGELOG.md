@@ -6,6 +6,10 @@
 
 - _Nothing yet! Stay tuned!_
 
+## v0.19.0
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
 ## v0.18.1
 
 - __FIX__: Pass null required fields correctly within the parent object to resolvers. When a composite field was null, it would sometimes be expanded into an object with all null subfields and passed to the resolver. This fix prevents this expansion and sets the field to null, as originally intended. [PR #4157](https://github.com/apollographql/apollo-server/pull/4157)
