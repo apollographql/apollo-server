@@ -102,6 +102,7 @@ function printFilteredSchema(
   typeFilter: (type: GraphQLNamedType) => boolean,
   options?: Options,
 ): string {
+  // Federation change: include directive definitions for CSDL
   const directives = [
     ...csdlDirectives,
     ...schema.getDirectives().filter(directiveFilter),
