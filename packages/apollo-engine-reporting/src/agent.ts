@@ -290,11 +290,8 @@ export interface EngineReportingOptions<TContext> {
    */
   privateHeaders?: Array<String> | boolean;
   /**
-   * By default, EngineReportingAgent listens for the 'SIGINT' and 'SIGTERM'
-   * signals, stops, sends a final report, and re-sends the signal to
-   * itself. Set this to false to disable. You can manually invoke 'stop()' and
-   * 'sendReport()' on other signals if you'd like. Note that 'sendReport()'
-   * does not run synchronously so it cannot work usefully in an 'exit' handler.
+   * For backwards compatibility only; specifying `new ApolloServer({engine: {handleSignals: false}})` is
+   * equivalent to specifying `new ApolloServer({stopOnTerminationSignals: false})`.
    */
   handleSignals?: boolean;
   /**
@@ -445,8 +442,6 @@ export class EngineReportingAgent<TContext = any> {
   private stopped: boolean = false;
   private signatureCache: InMemoryLRUCache<string>;
 
-  private signalHandlers = new Map<NodeJS.Signals, NodeJS.SignalsListener>();
-
   private currentSchemaReporter?: SchemaReporter;
   private readonly bootId: string;
   private lastSeenExecutableSchemaToId?: {
@@ -527,21 +522,6 @@ export class EngineReportingAgent<TContext = any> {
         () => this.sendAllReportsAndReportErrors(),
         this.options.reportIntervalMs || 10 * 1000,
       );
-    }
-
-    if (this.options.handleSignals !== false) {
-      const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
-      signals.forEach(signal => {
-        // Note: Node only started sending signal names to signal events with
-        // Node v10 so we can't use that feature here.
-        const handler: NodeJS.SignalsListener = async () => {
-          this.stop();
-          await this.sendAllReportsAndReportErrors();
-          process.kill(process.pid, signal);
-        };
-        process.once(signal, handler);
-        this.signalHandlers.set(signal, handler);
-      });
     }
 
     if (this.options.endpointUrl) {
@@ -847,11 +827,6 @@ export class EngineReportingAgent<TContext = any> {
   // size, and stop buffering new traces. You may still manually send a last
   // report by calling sendReport().
   public stop() {
-    // Clean up signal handlers so they don't accrue indefinitely.
-    this.signalHandlers.forEach((handler, signal) => {
-      process.removeListener(signal, handler);
-    });
-
     if (this.reportTimer) {
       clearInterval(this.reportTimer);
       this.reportTimer = undefined;
@@ -930,7 +905,7 @@ export class EngineReportingAgent<TContext = any> {
     return generatedSignature;
   }
 
-  private async sendAllReportsAndReportErrors(): Promise<void> {
+  public async sendAllReportsAndReportErrors(): Promise<void> {
     await Promise.all(
       Object.keys(this.reportDataByExecutableSchemaId).map(executableSchemaId =>
         this.sendReportAndReportErrors(executableSchemaId),

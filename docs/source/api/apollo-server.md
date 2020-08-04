@@ -289,6 +289,27 @@ Provide this function to transform the structure of GraphQL response objects bef
 <tr>
 <td colspan="2">
 
+**Lifecycle options**
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `stopOnTerminationSignals`
+
+`Boolean`
+</td>
+<td>
+
+By default (when running in Node and when the `NODE_ENV` environment variable does not equal `test`), ApolloServer listens for the `SIGINT` and `SIGTERM` signals and calls `await this.stop()` on itself when it is received, and then re-sends the signal to itself so that process shutdown can continue. Set this to false to disable this behavior, or to true to enable this behavior even when `NODE_ENV` is `test`. You can manually invoke `stop()` in other contexts if you'd like. Note that `stop()` does not run synchronously so it cannot work usefully in an `process.on('exit')` handler.
+
+</td>
+</tr>
+
+<tr>
+<td colspan="2">
+
 **Debugging options**
 </td>
 </tr>

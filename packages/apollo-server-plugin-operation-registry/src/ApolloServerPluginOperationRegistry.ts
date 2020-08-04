@@ -4,6 +4,7 @@ import {
   GraphQLServiceContext,
   GraphQLRequestListener,
   GraphQLRequestContext,
+  GraphQLServerListener,
 } from 'apollo-server-plugin-base';
 import {
   /**
@@ -97,7 +98,7 @@ for observability purposes, but all operations will be permitted.`,
   return (): ApolloServerPlugin => ({
     async serverWillStart({
       engine,
-    }: GraphQLServiceContext): Promise<void> {
+    }: GraphQLServiceContext): Promise<GraphQLServerListener> {
       logger.debug('Initializing operation registry plugin.');
 
       if (!engine || !engine.serviceID) {
@@ -124,6 +125,12 @@ for observability purposes, but all operations will be permitted.`,
       });
 
       await agent.start();
+
+      return {
+        serverWillStop() {
+          agent.stop();
+        },
+      };
     },
 
     requestDidStart(): GraphQLRequestListener<any> {

@@ -124,6 +124,7 @@ export interface Config extends BaseConfig {
   playground?: PlaygroundConfig;
   gateway?: GraphQLService;
   experimental_approximateDocumentStoreMiB?: number;
+  stopOnTerminationSignals?: boolean;
 }
 
 export interface FileUploadOptions {
