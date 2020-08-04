@@ -24,6 +24,20 @@ describe('printComposedSdl', () => {
         mutation: Mutation
       }
 
+      directive @composedGraph(version: Int!) on SCHEMA
+
+      directive @graph(name: String!, url: String!) on SCHEMA
+
+      directive @owner(graph: String!) on OBJECT
+
+      directive @key(fields: String!, graph: String!) on OBJECT
+
+      directive @resolve(graph: String!) on FIELD_DEFINITION
+
+      directive @provides(fields: String!) on FIELD_DEFINITION
+
+      directive @requires(fields: String!) on FIELD_DEFINITION
+
       directive @stream on FIELD
 
       directive @transform(from: String!) on FIELD
