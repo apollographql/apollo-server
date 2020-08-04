@@ -65,7 +65,6 @@ function printNode(
             indentationNext
           : '') +
         printer(
-          // parse(node.operation)
           visit(parse(node.operation), {
             OperationDefinition: op => {
               if(isQueryPlanOperation(op)) {
@@ -74,7 +73,7 @@ function printNode(
                 // just the selection in _entities
                 return (op.selectionSet.selections[0] as FieldNode).selectionSet
               }
-              return op;
+              return op.selectionSet;
             }
           }),
           config,

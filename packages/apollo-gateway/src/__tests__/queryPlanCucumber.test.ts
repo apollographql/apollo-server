@@ -49,10 +49,9 @@ features.forEach((feature) => {
               options
             );
 
-            const serializedPlan = JSON.parse(JSON.stringify(queryPlan, serializeQueryPlanNode));
             const parsedExpectedPlan = JSON.parse(expectedQueryPlan);
 
-            expect(serializedPlan).toEqual(parsedExpectedPlan);
+            expect(queryPlan).toEqual(parsedExpectedPlan);
           })
         }
 
