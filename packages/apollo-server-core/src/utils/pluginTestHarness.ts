@@ -105,6 +105,9 @@ export default async function pluginTestHarness<TContext>({
       logger: logger || console,
       schema,
       schemaHash,
+      apollo: {
+        graphVariant: 'current',
+      },
       engine: {},
     });
     if (maybeServerListener && maybeServerListener.serverWillStop) {

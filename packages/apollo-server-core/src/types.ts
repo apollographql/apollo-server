@@ -6,10 +6,12 @@ import {
   GraphQLParseOptions,
 } from 'graphql-tools';
 import {
+  ApolloConfig,
   ValueOrPromise,
   GraphQLExecutor,
   GraphQLExecutionResult,
   GraphQLRequestContextExecutionDidStart,
+  ApolloConfigInput,
 } from 'apollo-server-types';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 // The types for `ws` use `export = WebSocket`, so we'll use the
@@ -90,6 +92,7 @@ export type GraphQLServiceEngineConfig = {
 
 export interface GraphQLService {
   load(options: {
+    apollo?: ApolloConfig,
     engine?: GraphQLServiceEngineConfig;
   }): Promise<GraphQLServiceConfig>;
   onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
@@ -113,7 +116,6 @@ export interface Config extends BaseConfig {
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
-  engine?: boolean | EngineReportingOptions<Context>;
   extensions?: Array<() => GraphQLExtension>;
   cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];
@@ -125,8 +127,11 @@ export interface Config extends BaseConfig {
   gateway?: GraphQLService;
   experimental_approximateDocumentStoreMiB?: number;
   stopOnTerminationSignals?: boolean;
+  apollo?: ApolloConfigInput;
+  engine?: boolean | EngineReportingOptions<Context>;
 }
 
+// Configuration for how Apollo Server talks to the Apollo registry.
 export interface FileUploadOptions {
   //Max allowed non-file multipart form field size in bytes; enough for your queries (default: 1 MB).
   maxFieldSize?: number;

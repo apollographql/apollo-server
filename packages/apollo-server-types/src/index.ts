@@ -51,16 +51,35 @@ type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
  export type SchemaHash = Fauxpaque<string, 'SchemaHash'>;
 
-export interface GraphQLServiceContext {
+// Configuration for how Apollo Server talks to the Apollo registry, as
+// passed to the ApolloServer constructor.
+export interface ApolloConfigInput {
+  key?: string;
+  graphId?: string;
+  graphVariant?: string;
+}
+
+// Configuration for how Apollo Server talks to the Apollo registry, with
+// some defaults filled in from the ApolloConfigInput passed to the constructor.
+export interface ApolloConfig {
+  key?: string;
+  keyHash?: string;
+  graphId?: string;
+  graphVariant: string;
+}
+
+ export interface GraphQLServiceContext {
   logger: Logger;
   schema: GraphQLSchema;
   schemaHash: SchemaHash;
+  apollo: ApolloConfig;
+  persistedQueries?: {
+    cache: KeyValueCache;
+  };
+  // For backwards compatibility only; prefer to use `apollo`.
   engine: {
     serviceID?: string;
     apiKeyHash?: string;
-  };
-  persistedQueries?: {
-    cache: KeyValueCache;
   };
 }
 
