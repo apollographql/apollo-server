@@ -17,6 +17,7 @@ import {
 import {
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
+  GraphQLServerListener,
 } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { Dispatcher } from './dispatcher';
@@ -98,15 +99,18 @@ export default async function pluginTestHarness<TContext>({
   }
 
   const schemaHash = generateSchemaHash(schema);
+  let serverListener: GraphQLServerListener | undefined;
   if (typeof pluginInstance.serverWillStart === 'function') {
-    pluginInstance.serverWillStart({
+    const maybeServerListener = await pluginInstance.serverWillStart({
       logger: logger || console,
       schema,
       schemaHash,
       engine: {},
     });
+    if (maybeServerListener && maybeServerListener.serverWillStop) {
+      serverListener = maybeServerListener;
+    }
   }
-
 
   const requestContext: GraphQLRequestContext<TContext> = {
     logger: logger || console,
@@ -187,6 +191,8 @@ export default async function pluginTestHarness<TContext>({
     "willSendResponse",
     requestContext as GraphQLRequestContextWillSendResponse<TContext>,
   );
+
+  await serverListener?.serverWillStop?.();
 
   return requestContext as GraphQLRequestContextWillSendResponse<TContext>;
 }
