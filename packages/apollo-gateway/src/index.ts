@@ -300,10 +300,18 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
-    await this.updateComposition(options);
+    if (options && options.engine) {
+      if (!options.engine.graphVariant)
+        this.logger.warn('No graph variant provided. Defaulting to `current`.');
+      this.engineConfig = options.engine;
+    }
 
-    if (isManagedConfig(this.config) || this.experimental_pollInterval) {
-      if (!this.pollingTimer) this.pollServices();
+    await this.updateComposition();
+    if (
+      (isManagedConfig(this.config) || this.experimental_pollInterval) &&
+      !this.pollingTimer
+    ) {
+      this.pollServices();
     }
 
     const { graphId, graphVariant } = (options && options.engine) || {};
@@ -323,17 +331,7 @@ export class ApolloGateway implements GraphQLService {
     };
   }
 
-  protected async updateComposition(options?: {
-    engine?: GraphQLServiceEngineConfig;
-  }): Promise<void> {
-    // The options argument and internal config update could be handled by this.load()
-    // instead of here. We can remove this as a breaking change in the future.
-    if (options && options.engine) {
-      if (!options.engine.graphVariant)
-        this.logger.warn('No graph variant provided. Defaulting to `current`.');
-      this.engineConfig = options.engine;
-    }
-
+  protected async updateComposition(): Promise<void> {
     let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
     this.logger.debug('Checking service definitions...');
     try {
@@ -497,16 +495,10 @@ export class ApolloGateway implements GraphQLService {
   private async pollServices() {
     if (this.pollingTimer) clearTimeout(this.pollingTimer);
 
-    try {
-      await this.updateComposition();
-    } catch (err) {
-      this.logger.error(err && err.message || err);
-    }
-
     // Sleep for the specified pollInterval before kicking off another round of polling
     await new Promise(res => {
       this.pollingTimer = setTimeout(
-        res,
+        () => res(),
         this.experimental_pollInterval || 10000,
       );
       // Prevent the Node.js event loop from remaining active (and preventing,
@@ -514,6 +506,12 @@ export class ApolloGateway implements GraphQLService {
       // information, see https://nodejs.org/api/timers.html#timers_timeout_unref.
       this.pollingTimer?.unref();
     });
+
+    try {
+      await this.updateComposition();
+    } catch (err) {
+      this.logger.error(err && err.message || err);
+    }
 
     this.pollServices();
   }

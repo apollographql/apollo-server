@@ -1,14 +1,14 @@
 {
-  "name": "apollo-server-integration-testsuite",
+  "name": "apollo-federation-integration-testsuite",
   "private": true,
-  "version": "2.16.1",
-  "description": "Apollo Server Integrations testsuite",
+  "version": "0.19.1",
+  "description": "Apollo Federation Integrations / Test Fixtures",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server",
-    "directory": "packages/apollo-server-integration-testsuite"
+    "directory": "packages/apollo-federation-integration-testsuite"
   },
   "keywords": [],
   "author": "Apollo <opensource@apollographql.com>",
@@ -21,7 +21,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-core": "file:../apollo-server-core",
-    "apollo-server-types": "file:../apollo-server-types"
+    "apollo-graphql": "^0.5.0",
+    "graphql-tag": "^2.10.4"
   }
 }

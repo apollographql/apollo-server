@@ -15,10 +15,9 @@ import {
   defaultTestAgentPollSeconds,
   nockStorageSecretOperationManifest,
   genericApiKeyHash,
-  genericLegacyOperationManifestUrl,
 } from './helpers.test-helpers';
 import Agent, { AgentOptions } from "../agent";
-import { Operation, OperationManifest } from "../ApolloServerPluginOperationRegistry";
+import { Operation } from "../ApolloServerPluginOperationRegistry";
 import { fakeTestBaseUrl, getLegacyOperationManifestUrl, getStoreKey, getOperationManifestUrl, urlOperationManifestBase } from "../common";
 
 // These get a bit verbose within the tests below, so we use this as a
