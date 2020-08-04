@@ -5,7 +5,8 @@
   Kind,
   SelectionNode as GraphQLJSSelectionNode
 } from 'graphql';
-import { QueryPlan as OldQueryPlan } from './QueryPlan';
+import prettyFormat from 'pretty-format';
+import { queryPlanSerializer, astSerializer } from './snapshotSerializers';
 
 export type ResponsePath = (string | number)[];
 
@@ -97,10 +98,11 @@ export function serializeQueryPlanNode (k: string , v: any) {
   }
 }
 
-export function transformQueryPlan(queryPlan: OldQueryPlan): QueryPlan {
-  return JSON.parse(JSON.stringify(queryPlan, serializeQueryPlanNode));
+export function serializeQueryPlan(queryPlan: QueryPlan) {
+  return prettyFormat(queryPlan, {
+    plugins: [queryPlanSerializer, astSerializer],
+  });
 }
-
 
 export function getResponseName(node: FieldNode): string {
   return node.alias ? node.alias : node.name;

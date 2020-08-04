@@ -46,7 +46,7 @@ describe('executeQueryPlan', () => {
       request: {
         variables: {},
       },
-    };
+    } as GraphQLRequestContext;
   }
 
   describe(`errors`, () => {
@@ -182,7 +182,7 @@ describe('executeQueryPlan', () => {
     });
   });
 
-  fit(`should only return fields that have been requested directly`, async () => {
+  it(`should only return fields that have been requested directly`, async () => {
     const query = gql`
       query {
         topReviews {
@@ -195,7 +195,7 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const queryPlan = transformQueryPlan(buildQueryPlan(operationContext))
+    const queryPlan = buildQueryPlan(operationContext)
 
     const response = await executeQueryPlan(
       queryPlan,
