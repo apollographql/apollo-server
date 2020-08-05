@@ -64,40 +64,6 @@ export interface InlineFragmentNode {
   readonly selections: SelectionNode[];
 }
 
-export function serializeQueryPlanNode (k: string , v: any) {
-  switch(k){
-    case "selectionSet":
-    case "internalFragments":
-    case "loc":
-    case "arguments":
-    case "directives":
-    case "source":
-      return undefined;
-    case "kind":
-      if(v === Kind.SELECTION_SET) return undefined;
-      return v;
-    case "variableUsages":
-      // TODO check this
-      return Object.keys(v);
-    case "typeCondition":
-      return v.name.value;
-    case "name":
-      return v.value;
-    case "requires":
-      return v?.selections;
-    default:
-      // replace source with operation
-      if(v?.kind === "Fetch"){
-        return { ...v, operation: v.source };
-      }
-      // replace selectionSet with selections[]
-      if(v?.kind === Kind.INLINE_FRAGMENT){
-        return { ...v, selections: v.selectionSet.selections }
-      }
-      return v;
-  }
-}
-
 export function serializeQueryPlan(queryPlan: QueryPlan) {
   return prettyFormat(queryPlan, {
     plugins: [queryPlanSerializer, astSerializer],
