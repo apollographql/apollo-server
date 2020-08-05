@@ -8,7 +8,7 @@
   "repository": "https://github.com/apollographql/apollo-engine-reporting",
   "author": "Apollo <opensource@apollographql.com>",
   "engines": {
-    "node": ">=6.0"
+    "node": ">=12.0 <15.0"
   },
   "dependencies": {
     "apollo-engine-reporting-protobuf": "file:../apollo-engine-reporting-protobuf",

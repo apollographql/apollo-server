@@ -15,7 +15,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=6"
+    "node": ">=12.0 <15.0"
   },
   "peerDependencies": {
     "graphql": "^15.0.0"
