@@ -37,49 +37,7 @@ export interface ReportInfoNext {
 
 export interface ReportInfoStop {
   kind: 'stop';
-  stopReporting: true
-}
-
-export function reportingLoop(
-  schemaReporter: SchemaReporter,
-  logger: Logger,
-  sendNextWithExecutableSchema: boolean,
-  fallbackReportingDelayInMs: number,
-) {
-  function inner() {
-    // Bail out permanently
-    if (schemaReporter.stopped()) return;
-
-    // Not awaiting this. The callback is handled in the `then` and it calls inner()
-    // to report the server info in however many seconds we were told to wait from
-    // Apollo Graph Manager
-    schemaReporter
-      .reportServerInfo(sendNextWithExecutableSchema)
-      .then((result: ReportInfoResult) => {
-        switch(result.kind) {
-          case "next": {
-            sendNextWithExecutableSchema = result.withExecutableSchema;
-            setTimeout(inner, result.inSeconds * 1000);
-            return;
-          }
-          case "stop": {
-            return;
-          }
-        }
-      })
-      .catch((error: any) => {
-        // In the case of an error we want to continue looping
-        // We can add hardcoded backoff in the future,
-        // or on repeated failures stop responding reporting.
-        logger.error(
-          `Error reporting server info to Apollo Graph Manager during schema reporting: ${error}`,
-        );
-        sendNextWithExecutableSchema = false;
-        setTimeout(inner, fallbackReportingDelayInMs);
-      });
-  }
-
-  inner();
+  stopReporting: true;
 }
 
 // This class is meant to be a thin shim around the gql mutations.
@@ -87,50 +45,105 @@ export class SchemaReporter {
   // These mirror the gql variables
   private readonly serverInfo: EdgeServerInfo;
   private readonly executableSchemaDocument: any;
-  private readonly url: string;
+  private readonly endpointUrl: string;
+  private readonly logger: Logger;
+  private readonly initialReportingDelayInMs: number;
+  private readonly fallbackReportingDelayInMs: number;
 
   private isStopped: boolean;
+  private pollTimer?: NodeJS.Timer;
   private readonly headers: Headers;
-  private readonly logger: Logger;
 
-  constructor(
-    serverInfo: EdgeServerInfo,
-    schemaSdl: string,
-    apiKey: string,
-    schemaReportingEndpoint: string | undefined,
-    logger: Logger,
-  ) {
+  constructor(options: {
+    serverInfo: EdgeServerInfo;
+    schemaSdl: string;
+    apiKey: string;
+    endpointUrl: string | undefined;
+    logger: Logger;
+    initialReportingDelayInMs: number;
+    fallbackReportingDelayInMs: number;
+  }) {
     this.headers = new Headers();
     this.headers.set('Content-Type', 'application/json');
-    this.headers.set('x-api-key', apiKey);
-    this.headers.set('apollographql-client-name', 'apollo-engine-reporting');
+    this.headers.set('x-api-key', options.apiKey);
+    this.headers.set(
+      'apollographql-client-name',
+      'ApolloServerPluginSchemaReporting',
+    );
     this.headers.set(
       'apollographql-client-version',
-      require('../package.json').version,
+      require('../../../package.json').version,
     );
 
-    this.url =
-      schemaReportingEndpoint ||
+    this.endpointUrl =
+      options.endpointUrl ||
       'https://edge-server-reporting.api.apollographql.com/api/graphql';
 
-    this.serverInfo = serverInfo;
-    this.executableSchemaDocument = schemaSdl;
+    this.serverInfo = options.serverInfo;
+    this.executableSchemaDocument = options.schemaSdl;
     this.isStopped = false;
-    this.logger = logger;
+    this.logger = options.logger;
+    this.initialReportingDelayInMs = options.initialReportingDelayInMs;
+    this.fallbackReportingDelayInMs = options.fallbackReportingDelayInMs;
   }
 
   public stopped(): Boolean {
     return this.isStopped;
   }
 
+  public start() {
+    this.pollTimer = setTimeout(
+      () => this.sendOneReportAndScheduleNext(false),
+      this.initialReportingDelayInMs,
+    );
+  }
+
   public stop() {
     this.isStopped = true;
+    if (this.pollTimer) {
+      clearTimeout(this.pollTimer);
+      this.pollTimer = undefined;
+    }
+  }
+
+  private async sendOneReportAndScheduleNext(
+    sendNextWithExecutableSchema: boolean,
+  ) {
+    this.pollTimer = undefined;
+
+    // Bail out permanently
+    if (this.stopped()) return;
+    try {
+      const result = await this.reportServerInfo(sendNextWithExecutableSchema);
+      switch (result.kind) {
+        case 'next':
+          this.pollTimer = setTimeout(
+            () =>
+              this.sendOneReportAndScheduleNext(result.withExecutableSchema),
+            result.inSeconds * 1000,
+          );
+          return;
+        case 'stop':
+          return;
+      }
+    } catch (error) {
+      // In the case of an error we want to continue looping
+      // We can add hardcoded backoff in the future,
+      // or on repeated failures stop responding reporting.
+      this.logger.error(
+        `Error reporting server info to Apollo during schema reporting: ${error}`,
+      );
+      this.pollTimer = setTimeout(
+        () => this.sendOneReportAndScheduleNext(false),
+        this.fallbackReportingDelayInMs,
+      );
+    }
   }
 
   public async reportServerInfo(
     withExecutableSchema: boolean,
   ): Promise<ReportInfoResult> {
-    const { data, errors } = await this.graphManagerQuery({
+    const { data, errors } = await this.apolloQuery({
       info: this.serverInfo,
       executableSchema: withExecutableSchema
         ? this.executableSchemaDocument
@@ -143,7 +156,7 @@ export class SchemaReporter {
 
     function msgForUnexpectedResponse(data: any): string {
       return [
-        'Unexpected response shape from Apollo Graph Manager when',
+        'Unexpected response shape from Apollo when',
         'reporting server information for schema reporting. If',
         'this continues, please reach out to support@apollographql.com.',
         'Received response:',
@@ -162,7 +175,7 @@ export class SchemaReporter {
           'This server was configured with an API key for a user.',
           "Only a service's API key may be used for schema reporting.",
           'Please visit the settings for this graph at',
-          'https://engine.apollographql.com/ to obtain an API key for a service.',
+          'https://studio.apollographql.com/ to obtain an API key for a service.',
         ].join(' '),
       );
     } else if (
@@ -170,11 +183,15 @@ export class SchemaReporter {
       data.me.reportServerInfo
     ) {
       if (data.me.reportServerInfo.__typename == 'ReportServerInfoResponse') {
-        return { ...data.me.reportServerInfo, kind: 'next'};
+        return {
+          kind: 'next',
+          inSeconds: data.me.reportServerInfo.inSeconds,
+          withExecutableSchema: data.me.reportServerInfo.withExecutableSchema,
+        };
       } else {
         this.logger.error(
           [
-            'Received input validation error from Graph Manager:',
+            'Received input validation error from Apollo:',
             data.me.reportServerInfo.message,
             'Stopping reporting. Please fix the input errors.',
           ].join(' '),
@@ -182,14 +199,14 @@ export class SchemaReporter {
         this.stop();
         return {
           stopReporting: true,
-          kind: 'stop'
+          kind: 'stop',
         };
       }
     }
     throw new Error(msgForUnexpectedResponse(data));
   }
 
-  private async graphManagerQuery(
+  private async apolloQuery(
     variables: ReportServerInfoVariables,
   ): Promise<SchemaReportingServerInfoResult> {
     const request: GraphQLRequest = {
@@ -197,7 +214,7 @@ export class SchemaReporter {
       operationName: 'ReportServerInfo',
       variables: variables,
     };
-    const httpRequest = new Request(this.url, {
+    const httpRequest = new Request(this.endpointUrl, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify(request),
@@ -221,7 +238,7 @@ export class SchemaReporter {
     } catch (error) {
       throw new Error(
         [
-          "Couldn't report server info to Apollo Graph Manager.",
+          "Couldn't report server info to Apollo.",
           'Parsing response as JSON failed.',
           'If this continues please reach out to support@apollographql.com',
           error,
