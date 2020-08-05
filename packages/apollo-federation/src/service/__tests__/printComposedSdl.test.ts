@@ -186,6 +186,7 @@ describe('printComposedSdl', () => {
         library(id: ID!): Library @resolve(graph: \\"books\\")
         body: Body! @resolve(graph: \\"documents\\")
         product(upc: String!): Product @resolve(graph: \\"product\\")
+        products(upcs: [String!]!): [Product] @resolve(graph: \\"product\\")
         vehicle(id: String!): Vehicle @resolve(graph: \\"product\\")
         topProducts(first: Int = 5): [Product] @resolve(graph: \\"product\\")
         topCars(first: Int = 5): [Car] @resolve(graph: \\"product\\")

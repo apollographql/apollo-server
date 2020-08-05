@@ -136,6 +136,7 @@ describe('printFederatedSchema', () => {
         library(id: ID!): Library
         body: Body!
         product(upc: String!): Product
+        products(upcs: [String!]!): [Product]
         vehicle(id: String!): Vehicle
         topProducts(first: Int = 5): [Product]
         topCars(first: Int = 5): [Car]
