@@ -21,4 +21,15 @@
   },
   "include": ["src/**/*.ts"],
   "exclude": [],
+  "references": [
+    { "path": "../packages/apollo-cache-control/" },
+    { "path": "../packages/apollo-datasource-rest/" },
+    { "path": "../packages/apollo-engine-reporting/" },
+    { "path": "../packages/apollo-server-caching/" },
+    { "path": "../packages/apollo-server-core/" },
+    { "path": "../packages/apollo-server-errors/" },
+    { "path": "../packages/apollo-server-plugin-base/" },
+    { "path": "../packages/apollo-server-testing/" },
+    { "path": "../packages/apollo-server-types/" },
+  ],
 }
