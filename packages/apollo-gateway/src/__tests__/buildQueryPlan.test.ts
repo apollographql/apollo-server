@@ -1,56 +1,19 @@
-import path from 'path';
 import { GraphQLSchema, GraphQLError } from 'graphql';
-import {
-  GraphQLSchemaModule,
-  GraphQLSchemaValidationError,
-} from 'apollo-graphql';
 import gql from 'graphql-tag';
-import {
-  composeServices,
-  buildFederatedSchema,
-  normalizeTypeDefs,
-} from '@apollo/federation';
-
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
-
-import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
-import { fixtureNames } from './__fixtures__/schemas';
+import { getFederatedTestingSchema } from './execution-utils';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
-function buildLocalService(modules: GraphQLSchemaModule[]) {
-  const schema = buildFederatedSchema(modules);
-  return new LocalGraphQLDataSource(schema);
-}
-
 describe('buildQueryPlan', () => {
   let schema: GraphQLSchema;
+  let errors: GraphQLError[];
 
   beforeEach(() => {
-    const serviceMap = Object.fromEntries(
-      fixtureNames.map((serviceName) => {
-        return [
-          serviceName,
-          buildLocalService([
-            require(path.join(__dirname, '__fixtures__/schemas', serviceName)),
-          ]),
-        ] as [string, LocalGraphQLDataSource];
-      }),
-    );
-
-    let errors: GraphQLError[];
-    ({ schema, errors } = composeServices(
-      Object.entries(serviceMap).map(([serviceName, service]) => ({
-        name: serviceName,
-        typeDefs: normalizeTypeDefs(service.sdl()),
-      })),
-    ));
-
-    if (errors && errors.length > 0) {
-      throw new GraphQLSchemaValidationError(errors);
-    }
+    ({ schema, errors } = getFederatedTestingSchema());
+    expect(errors).toHaveLength(0);
   });
 
   it(`should not confuse union types with overlapping field names`, () => {

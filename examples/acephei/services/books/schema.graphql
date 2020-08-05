@@ -1,0 +1,11 @@
+  "The basic book in the graph"
+  type Book @key(fields: "isbn") {
+    "All books can be found by an isbn"
+    isbn: String!
+    "The title of the book"
+    title: String
+    "The year the book was published"
+    year: Int
+    "A simple list of similar books"
+    similarBooks: [Book]
+  }
