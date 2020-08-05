@@ -1,0 +1,1 @@
+export { InMemoryLRUCache } from './memory';

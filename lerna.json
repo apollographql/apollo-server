@@ -1,9 +1,15 @@
 {
-  "packages": ["packages/*"],
+  "packages": ["packages/*", "v3"],
   "version": "independent",
   "command": {
     "version": {
       "includeMergedTags": true
+    },
+    "bootstrap": {
+      "scope": "@apollo/server"
+    },
+    "publish": {
+      "message": "Release"
     }
   }
 }

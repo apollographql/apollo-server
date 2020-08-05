@@ -1,6 +1,7 @@
 const { defaults } = require("jest-config");
 
 module.exports = {
+  displayName: "Monorepo (v2)",
   testEnvironment: "node",
     setupFiles: [
       "<rootDir>/../apollo-server-env/dist/index.js"
