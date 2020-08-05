@@ -918,7 +918,7 @@ describe('buildQueryPlan', () => {
                   ...__QueryPlanFragment_1__
                 }
               }
-
+              
               fragment __QueryPlanFragment_1__ on Review {
                 body
                 author
@@ -926,7 +926,7 @@ describe('buildQueryPlan', () => {
                   ...__QueryPlanFragment_0__
                 }
               }
-
+              
               fragment __QueryPlanFragment_0__ on Product {
                 __typename
                 ... on Book {
@@ -1065,7 +1065,7 @@ describe('buildQueryPlan', () => {
                 ...__QueryPlanFragment_0__
               }
             }
-
+            
             fragment __QueryPlanFragment_0__ on Review {
               id
               body
@@ -1107,7 +1107,7 @@ describe('buildQueryPlan', () => {
                   ...__QueryPlanFragment_1__
                 }
               }
-
+              
               fragment __QueryPlanFragment_1__ on Review {
                 content: body
                 author
@@ -1115,7 +1115,7 @@ describe('buildQueryPlan', () => {
                   ...__QueryPlanFragment_0__
                 }
               }
-
+              
               fragment __QueryPlanFragment_0__ on Product {
                 __typename
                 ... on Book {
