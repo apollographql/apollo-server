@@ -57,3 +57,5 @@ export { default as processFileUploads } from './processFileUploads';
 export const GraphQLUpload = runtimeSupportsUploads
   ? (require('graphql-upload').GraphQLUpload as GraphQLScalarType)
   : undefined;
+
+export * from './plugin';

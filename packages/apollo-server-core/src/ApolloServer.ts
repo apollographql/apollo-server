@@ -84,8 +84,9 @@ import {
 import { cloneObject } from "./runHttpQuery";
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';
-import { federatedPlugin, EngineReportingAgent } from 'apollo-engine-reporting';
+import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { ApolloServerPluginSchemaReporting, ApolloServerPluginSchemaReportingOptions } from './plugin/schemaReporting';
+import { ApolloServerPluginInlineTrace, ApolloServerPluginInlineTraceOptions } from './plugin';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -810,13 +811,6 @@ export class ApolloServerBase {
         );
       }
       pluginsToInit.push(this.engineReportingAgent!.newPlugin());
-    } else if (engine !== false && federatedSchema) {
-      // We haven't configured this app to use Engine directly. But it looks like
-      // we are a federated service backend, so we should be capable of including
-      // our trace in a response extension if we are asked to by the gateway.
-      const rewriteError =
-        engine && typeof engine === 'object' ? engine.rewriteError : undefined;
-      pluginsToInit.push(federatedPlugin({ rewriteError }));
     }
 
     pluginsToInit.push(...plugins);
@@ -892,6 +886,36 @@ export class ApolloServerBase {
           options.endpointUrl = engine.schemaReportingUrl;
         }
         this.plugins.push(ApolloServerPluginSchemaReporting(options));
+      }
+    }
+
+    // Special case: inline tracing is on by default for federated schemas.
+    {
+      const alreadyHavePlugin = this.plugins.some(
+        (p) => p.__internal_plugin_id__?.() === 'InlineTrace',
+      );
+      if (alreadyHavePlugin) {
+        if (engine !== undefined) {
+          throw Error(
+            "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
+              'creating an ApolloServerPluginInlineTrace plugin. See FIXME(no-engine) for details.',
+          );
+        }
+      } else if (federatedSchema && this.config.engine !== false) {
+        // If we have a federated schema, and we haven't explicitly disabled inline
+        // tracing via ApolloServerPluginInlineTraceDisabled or engine:false,
+        // we set up inline tracing.
+        // (This is slightly different than the pre-ApolloServerPluginInlineTrace where
+        // we would also avoid doing this if an API key was configured and log a warning.)
+        this.logger.info(
+          'Enabling inline tracing for this federated service. To disable, use ' +
+            'ApolloServerPluginInlineTraceDisabled.',
+        );
+        const options: ApolloServerPluginInlineTraceOptions = {};
+        if (typeof engine === 'object') {
+          options.rewriteError = engine.rewriteError;
+        }
+        this.plugins.push(ApolloServerPluginInlineTrace(options));
       }
     }
   }

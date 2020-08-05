@@ -1,24 +1,37 @@
 import { Trace } from 'apollo-engine-reporting-protobuf';
-import { EngineReportingTreeBuilder } from './treeBuilder';
-import { ApolloServerPlugin } from "apollo-server-plugin-base";
-import { EngineReportingOptions } from "./agent";
+import { TraceTreeBuilder } from '../traceTreeBuilder';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { GraphQLError } from 'graphql';
 
-type FederatedReportingOptions<TContext> = Pick<EngineReportingOptions<TContext>, 'rewriteError'>
+export interface ApolloServerPluginInlineTraceOptions {
+  /**
+   * By default, all errors get reported to Engine servers. You can specify a
+   * a filter function to exclude specific errors from being reported by
+   * returning an explicit `null`, or you can mask certain details of the error
+   * by modifying it and returning the modified error.
+   */
+  // FIXME(no-engine): use Pick here to pull it off of the other one
+  // FIXME(no-engine): Fix this doc string to be appropriate for inline
+  //                   tracing
+  rewriteError?: (err: GraphQLError) => GraphQLError | null;
+}
 
 // This ftv1 plugin produces a base64'd Trace protobuf containing only the
 // durationNs, startTime, endTime, and root fields.  This output is placed
 // on the `extensions`.`ftv1` property of the response.  The Apollo Gateway
 // utilizes this data to construct the full trace and submit it to Apollo
 // Graph Manager ingress.
-const federatedPlugin = <TContext>(
-  options: FederatedReportingOptions<TContext> = Object.create(null),
-): ApolloServerPlugin<TContext> => {
+export function ApolloServerPluginInlineTrace(
+  options: ApolloServerPluginInlineTraceOptions = Object.create(null),
+): ApolloServerPlugin {
   return {
+    __internal_plugin_id__() {
+      return 'InlineTrace';
+    },
     requestDidStart({ request: { http } }) {
-      const treeBuilder: EngineReportingTreeBuilder =
-        new EngineReportingTreeBuilder({
-          rewriteError: options.rewriteError,
-        });
+      const treeBuilder = new TraceTreeBuilder({
+        rewriteError: options.rewriteError,
+      });
 
       // XXX Provide a mechanism to customize this logic.
       if (http?.headers.get('apollo-federation-include-trace') !== 'ftv1') {
@@ -55,15 +68,23 @@ const federatedPlugin = <TContext>(
 
           // This should only happen if another plugin is using the same name-
           // space within the `extensions` object and got to it before us.
-          if (typeof extensions.ftv1 !== "undefined") {
-            throw new Error("The `ftv1` extension was already present.");
+          if (typeof extensions.ftv1 !== 'undefined') {
+            throw new Error('The `ftv1` extension was already present.');
           }
 
           extensions.ftv1 = encodedBuffer.toString('base64');
-        }
-      }
+        },
+      };
     },
-  }
-};
+  };
+}
 
-export default federatedPlugin;
+// This plugin does nothing, but it ensures that ApolloServer won't try
+// to add a default ApolloServerPluginInlineTrace.
+export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin {
+  return {
+    __internal_plugin_id__() {
+      return 'InlineTrace';
+    },
+  };
+}
