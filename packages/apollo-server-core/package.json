@@ -46,6 +46,7 @@
     "loglevel": "^1.6.7",
     "sha.js": "^2.4.11",
     "subscriptions-transport-ws": "^0.9.11",
+    "uuid": "^8.0.0",
     "ws": "^6.0.0"
   },
   "peerDependencies": {

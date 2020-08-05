@@ -85,6 +85,7 @@ import { cloneObject } from "./runHttpQuery";
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';
 import { federatedPlugin, EngineReportingAgent } from 'apollo-engine-reporting';
+import { ApolloServerPluginSchemaReporting, ApolloServerPluginSchemaReportingOptions } from './plugin/schemaReporting';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -314,16 +315,6 @@ export class ApolloServerBase {
         this.apolloConfig as WithRequired<ApolloConfig, 'key'>,
       );
       // Don't add the extension here (we want to add it later in generateSchemaDerivedData).
-    }
-
-    if (gateway && this.engineReportingAgent?.schemaReport) {
-      throw new Error(
-        [
-          "Schema reporting is not yet compatible with the gateway. If you're",
-          "interested in using schema reporting with the gateway, please",
-          "contact Apollo support.",
-        ].join(' '),
-      );
     }
 
     if (gateway && subscriptions !== false) {
@@ -817,16 +808,6 @@ export class ApolloServerBase {
             'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
             'to report metrics to Apollo Graph Manager.',
         );
-
-        if (this.engineReportingAgent.schemaReport) {
-          throw Error(
-            [
-              "Schema reporting is not yet compatible with federated services.",
-              "If you're interested in using schema reporting with federated",
-              "services, please contact Apollo support.",
-            ].join(' '),
-          );
-        }
       }
       pluginsToInit.push(this.engineReportingAgent!.newPlugin());
     } else if (engine !== false && federatedSchema) {
@@ -846,6 +827,73 @@ export class ApolloServerBase {
       }
       return plugin;
     });
+
+    // Special case: schema reporting can be turned on via environment variable.
+    {
+      const alreadyHavePlugin = this.plugins.some(
+        (p) => p.__internal_plugin_id__?.() === 'SchemaReporting',
+      );
+      const enabledViaEnvVar = process.env.APOLLO_SCHEMA_REPORTING === 'true';
+      const { engine } = this.config;
+      const enabledViaLegacyOption =
+        typeof engine === 'object' &&
+        (engine.reportSchema || engine.experimental_schemaReporting);
+      if (alreadyHavePlugin || enabledViaEnvVar || enabledViaLegacyOption) {
+        if (federatedSchema) {
+          throw Error(
+            [
+              'Schema reporting is not yet compatible with federated services.',
+              "If you're interested in using schema reporting with federated",
+              'services, please contact Apollo support.',
+            ].join(' '),
+          );
+        }
+        if (this.config.gateway) {
+          throw new Error(
+            [
+              "Schema reporting is not yet compatible with the gateway. If you're",
+              'interested in using schema reporting with the gateway, please',
+              'contact Apollo support.',
+            ].join(' '),
+          );
+        }
+      }
+      if (alreadyHavePlugin) {
+        if (engine !== undefined) {
+          throw Error(
+            "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
+              'creating an ApolloServerPluginSchemaReporting plugin. See FIXME(no-engine) for details.',
+          );
+        }
+      } else if (!this.apolloConfig.key) {
+        if (enabledViaEnvVar) {
+          throw new Error(
+            "You've enabled schema reporting by setting $APOLLO_SCHEMA_REPORTING to true, " +
+              'but you also need to provide your Apollo API key, via the $APOLLO_KEY environment ' +
+              'variable or via `new ApolloServer({apollo: {key})',
+          );
+        }
+        if (enabledViaLegacyOption) {
+          throw new Error(
+            "You've enabled schema reporting in the `engine` argument to `new ApolloServer()`, " +
+              'but you also need to provide your Apollo API key, via the $APOLLO_KEY environment ' +
+              'variable or via `new ApolloServer({apollo: {key})',
+          );
+        }
+      } else if (enabledViaEnvVar || enabledViaLegacyOption) {
+        const options: ApolloServerPluginSchemaReportingOptions = {};
+        if (typeof engine === 'object') {
+          options.initialDelayMaxMs =
+            engine.schemaReportingInitialDelayMaxMs ??
+            engine.experimental_schemaReportingInitialDelayMaxMs;
+          options.overrideReportedSchema =
+            engine.overrideReportedSchema ??
+            engine.experimental_overrideReportedSchema;
+          options.endpointUrl = engine.schemaReportingUrl;
+        }
+        this.plugins.push(ApolloServerPluginSchemaReporting(options));
+      }
+    }
   }
 
   private initializeDocumentStore(): InMemoryLRUCache<DocumentNode> {

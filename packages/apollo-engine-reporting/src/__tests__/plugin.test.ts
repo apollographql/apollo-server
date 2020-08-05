@@ -1,9 +1,8 @@
 import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
-import { graphql, GraphQLError, printSchema } from 'graphql';
+import { graphql, GraphQLError } from 'graphql';
 import { Request } from 'node-fetch';
 import { makeTraceDetails, makeHTTPRequestHeaders, plugin } from '../plugin';
 import { Headers } from 'apollo-server-env';
-import { computeExecutableSchemaId } from '../agent';
 import { Trace } from 'apollo-engine-reporting-protobuf';
 import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
 
@@ -54,151 +53,6 @@ const queryReport = `
     }
 `;
 
-describe('schema reporting', () => {
-  const schema = makeExecutableSchema({ typeDefs });
-  addMockFunctionsToSchema({ schema });
-
-  const addTrace = jest.fn(() => Promise.resolve());
-  const startSchemaReporting = jest.fn();
-  const executableSchemaIdGenerator = jest.fn(computeExecutableSchemaId);
-
-  beforeEach(() => {
-    addTrace.mockClear();
-    startSchemaReporting.mockClear();
-    executableSchemaIdGenerator.mockClear();
-  });
-
-  it('starts reporting if enabled', async () => {
-    const pluginInstance = plugin(
-      {},
-      addTrace,
-      {
-        startSchemaReporting,
-        executableSchemaIdGenerator,
-        schemaReport: true,
-      }
-    );
-
-    await pluginTestHarness({
-      pluginInstance,
-      schema,
-      graphqlRequest: {
-        query,
-        operationName: 'q',
-        extensions: {
-          clientName: 'testing suite',
-        },
-        http: new Request('http://localhost:123/foo'),
-      },
-      executor: async ({ request: { query: source } }) => {
-        return await graphql({
-          schema,
-          source,
-        });
-      },
-    });
-
-    expect(startSchemaReporting).toBeCalledTimes(1);
-    expect(startSchemaReporting).toBeCalledWith({
-      executableSchema: printSchema(schema),
-      executableSchemaId: executableSchemaIdGenerator(schema),
-    });
-  });
-
-  it('uses the override schema', async () => {
-    const pluginInstance = plugin(
-      {
-        overrideReportedSchema: typeDefs,
-      },
-      addTrace,
-      {
-        startSchemaReporting,
-        executableSchemaIdGenerator,
-        schemaReport: true,
-      },
-    );
-
-    await pluginTestHarness({
-      pluginInstance,
-      schema,
-      graphqlRequest: {
-        query,
-        operationName: 'q',
-        extensions: {
-          clientName: 'testing suite',
-        },
-        http: new Request('http://localhost:123/foo'),
-      },
-      executor: async ({ request: { query: source } }) => {
-        return await graphql({
-          schema,
-          source,
-        });
-      },
-    });
-
-    const expectedExecutableSchemaId = executableSchemaIdGenerator(typeDefs);
-    expect(startSchemaReporting).toBeCalledTimes(1);
-    expect(startSchemaReporting).toBeCalledWith({
-      executableSchema: typeDefs,
-      executableSchemaId: expectedExecutableSchemaId,
-    });
-
-    // Get the first argument from the first time this is called.
-    // Not using called with because that has to be exhaustive and this isn't
-    // testing trace generation
-    expect(addTrace).toBeCalledWith(
-      expect.objectContaining({
-        executableSchemaId: expectedExecutableSchemaId,
-      }),
-    );
-  });
-
-  it('uses the same executable schema id for metric reporting', async () => {
-    const pluginInstance = plugin(
-      {},
-      addTrace,
-      {
-        startSchemaReporting,
-        executableSchemaIdGenerator,
-        schemaReport: true,
-      }
-    );
-
-    await pluginTestHarness({
-      pluginInstance,
-      schema,
-      graphqlRequest: {
-        query,
-        operationName: 'q',
-        extensions: {
-          clientName: 'testing suite',
-        },
-        http: new Request('http://localhost:123/foo'),
-      },
-      executor: async ({ request: { query: source } }) => {
-        return await graphql({
-          schema,
-          source,
-        });
-      },
-    });
-
-    const expectedExecutableSchemaId = executableSchemaIdGenerator(schema);
-    expect(startSchemaReporting).toBeCalledTimes(1);
-    expect(startSchemaReporting).toBeCalledWith({
-      executableSchema: printSchema(schema),
-      executableSchemaId: expectedExecutableSchemaId,
-    });
-    // Get the first argument from the first time this is called.
-    // Not using called with because that has to be exhaustive and this isn't
-    // testing trace generation
-    expect(addTrace.mock.calls[0][0].executableSchemaId).toBe(
-      expectedExecutableSchemaId,
-    );
-  });
-});
-
 it('trace construction', async () => {
   const schema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({ schema });
@@ -212,10 +66,7 @@ it('trace construction', async () => {
       /* no options!*/
     },
     addTrace,
-    {
-      startSchemaReporting,
-      executableSchemaIdGenerator,
-    },
+    executableSchemaIdGenerator,
   );
 
   await pluginTestHarness({
@@ -257,7 +108,7 @@ describe('check variableJson output for sendVariableValues null or undefined (de
   });
   it('Case 2: Filter all variables', () => {
     const filteredOutput = new Trace.Details();
-    Object.keys(variables).forEach(name => {
+    Object.keys(variables).forEach((name) => {
       filteredOutput.variablesJson[name] = '';
     });
     expect(makeTraceDetails(variables)).toEqual(filteredOutput);
@@ -274,12 +125,12 @@ describe('check variableJson output for sendVariableValues all/none type', () =>
   });
 
   const filteredOutput = new Trace.Details();
-  Object.keys(variables).forEach(name => {
+  Object.keys(variables).forEach((name) => {
     filteredOutput.variablesJson[name] = '';
   });
 
   const nonFilteredOutput = new Trace.Details();
-  Object.keys(variables).forEach(name => {
+  Object.keys(variables).forEach((name) => {
     nonFilteredOutput.variablesJson[name] = JSON.stringify(variables[name]);
   });
 
@@ -294,17 +145,21 @@ describe('check variableJson output for sendVariableValues all/none type', () =>
   });
 
   it('Case 4: Check behavior for invalid inputs', () => {
-    expect(makeTraceDetails(variables,
-      // @ts-ignore Testing untyped usage; only `{ none: true }` is legal.
-      { none: false }
-    )).toEqual(
-      nonFilteredOutput,
-    );
+    expect(
+      makeTraceDetails(
+        variables,
+        // @ts-ignore Testing untyped usage; only `{ none: true }` is legal.
+        { none: false },
+      ),
+    ).toEqual(nonFilteredOutput);
 
-    expect(makeTraceDetails(variables,
-      // @ts-ignore Testing untyped usage; only `{ all: true }` is legal.
-      { all: false }
-    )).toEqual(filteredOutput);
+    expect(
+      makeTraceDetails(
+        variables,
+        // @ts-ignore Testing untyped usage; only `{ all: true }` is legal.
+        { all: false },
+      ),
+    ).toEqual(filteredOutput);
   });
 });
 
@@ -375,7 +230,7 @@ describe('variableJson output for sendVariableValues transform: custom function 
 
     // Expected output
     const output = new Trace.Details();
-    Object.keys(variables).forEach(name => {
+    Object.keys(variables).forEach((name) => {
       output.variablesJson[name] = JSON.stringify(modifiedValue);
     });
 
@@ -435,7 +290,7 @@ describe('variableJson output for sendVariableValues transform: custom function 
     const variableJson = makeTraceDetails(variables, {
       transform: errorThrowingModifier,
     }).variablesJson;
-    Object.keys(variableJson).forEach(variableName => {
+    Object.keys(variableJson).forEach((variableName) => {
       expect(variableJson[variableName]).toEqual(
         JSON.stringify('[PREDICATE_FUNCTION_ERROR]'),
       );
@@ -472,10 +327,7 @@ function makeTestHTTP(): Trace.HTTP {
 }
 
 describe('tests for the "reportTiming', () => {
-  const schemaReportingFunctions = {
-    startSchemaReporting: jest.fn(),
-    executableSchemaIdGenerator: jest.fn(),
-  };
+  const executableSchemaIdGenerator = jest.fn();
   const schema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({ schema });
 
@@ -488,7 +340,7 @@ describe('tests for the "reportTiming', () => {
     const pluginInstance = plugin(
       { reportTiming: false },
       addTrace,
-      schemaReportingFunctions,
+      executableSchemaIdGenerator,
     );
 
     const context = await pluginTestHarness({
@@ -515,12 +367,12 @@ describe('tests for the "reportTiming', () => {
   it('report traces based on operation name', async () => {
     const pluginInstance = plugin(
       {
-        reportTiming: async request => {
+        reportTiming: async (request) => {
           return request.request.operationName === 'report';
         },
       },
       addTrace,
-      schemaReportingFunctions,
+      executableSchemaIdGenerator,
     );
 
     const context1 = await pluginTestHarness({
@@ -572,14 +424,14 @@ describe('tests for the "reportTiming', () => {
   it('report traces async based on operation name', async () => {
     const pluginInstance = plugin(
       {
-        reportTiming: async request => {
+        reportTiming: async (request) => {
           return await (async () => {
             return request.request.operationName === 'report';
           })();
         },
       },
       addTrace,
-      schemaReportingFunctions
+      executableSchemaIdGenerator,
     );
 
     const context1 = await pluginTestHarness({
@@ -641,9 +493,11 @@ const headersOutput = { name: new Trace.HTTP.Values({ value: ['value'] }) };
 describe('tests for the sendHeaders reporting option', () => {
   it('sendHeaders defaults to hiding all', () => {
     const http = makeTestHTTP();
-    makeHTTPRequestHeaders(http, headers,
+    makeHTTPRequestHeaders(
+      http,
+      headers,
       // @ts-ignore: `null` is not a valid type; check output on invalid input.
-      null
+      null,
     );
     expect(http.requestHeaders).toEqual({});
     makeHTTPRequestHeaders(http, headers, undefined);
@@ -664,16 +518,20 @@ describe('tests for the sendHeaders reporting option', () => {
 
   it('invalid inputs for sendHeaders.all and sendHeaders.none', () => {
     const httpSafelist = makeTestHTTP();
-    makeHTTPRequestHeaders(httpSafelist, headers,
+    makeHTTPRequestHeaders(
+      httpSafelist,
+      headers,
       // @ts-ignore Testing untyped usage; only `{ none: true }` is legal.
-      { none: false }
+      { none: false },
     );
     expect(httpSafelist.requestHeaders).toEqual(headersOutput);
 
     const httpBlocklist = makeTestHTTP();
-    makeHTTPRequestHeaders(httpBlocklist, headers,
+    makeHTTPRequestHeaders(
+      httpBlocklist,
+      headers,
       // @ts-ignore Testing untyped usage; only `{ all: true }` is legal.
-      { all: false }
+      { all: false },
     );
     expect(httpBlocklist.requestHeaders).toEqual({});
   });

@@ -6,7 +6,7 @@ import {
   GraphQLRequestContextDidResolveOperation,
 } from 'apollo-server-types';
 import { Headers } from 'apollo-server-env';
-import { GraphQLSchema, printSchema } from 'graphql';
+import { GraphQLSchema } from 'graphql';
 import { Trace } from 'apollo-engine-reporting-protobuf';
 
 import {
@@ -32,21 +32,7 @@ const clientVersionHeaderKey = 'apollographql-client-version';
 export const plugin = <TContext>(
   options: EngineReportingOptions<TContext> = Object.create(null),
   addTrace: (args: AddTraceArgs) => Promise<void>,
-  {
-    startSchemaReporting,
-    executableSchemaIdGenerator,
-    schemaReport,
-  }: {
-    startSchemaReporting: ({
-      executableSchema,
-      executableSchemaId,
-    }: {
-      executableSchema: string;
-      executableSchemaId: string;
-    }) => void;
-    executableSchemaIdGenerator: (schema: string | GraphQLSchema) => string;
-    schemaReport: boolean;
-  },
+  executableSchemaIdGenerator: (schema: string | GraphQLSchema) => string
 ): ApolloServerPlugin<TContext> => {
   /**
    * Non request-specific logging will go into this general logger.  Request-
@@ -59,16 +45,6 @@ export const plugin = <TContext>(
     options.generateClientInfo || defaultGenerateClientInfo;
 
   return {
-    serverWillStart: function({ schema }) {
-      if (!schemaReport) return;
-      startSchemaReporting({
-        executableSchema:
-          options.overrideReportedSchema || printSchema(schema),
-        executableSchemaId: executableSchemaIdGenerator(
-          options.overrideReportedSchema || schema,
-        ),
-      });
-    },
     requestDidStart({
       logger: requestLogger,
       metrics,

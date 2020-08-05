@@ -28,8 +28,6 @@ import {
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { reportingLoop, SchemaReporter } from './schemaReporter';
-import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'crypto';
 
 export interface ClientInfo {
@@ -372,15 +370,12 @@ export class EngineReportingAgent<TContext = any> {
   private stopped: boolean = false;
   private signatureCache: InMemoryLRUCache<string>;
 
-  private currentSchemaReporter?: SchemaReporter;
-  private readonly bootId: string;
   private lastSeenExecutableSchemaToId?: {
     executableSchema: string | GraphQLSchema;
     executableSchemaId: string;
   };
 
   private readonly tracesEndpointUrl: string;
-  readonly schemaReport: boolean;
 
   public constructor(
     options: EngineReportingOptions<TContext> = {},
@@ -388,56 +383,11 @@ export class EngineReportingAgent<TContext = any> {
   ) {
     this.options = options;
     if (options.logger) this.logger = options.logger;
-    this.bootId = uuidv4();
 
     if (!apolloConfig.key) {
       throw new Error('Missing API key.');
     }
     this.apolloConfig = apolloConfig;
-
-    if (options.experimental_schemaReporting !== undefined) {
-      this.logger.warn(
-        [
-          '[deprecated] The "experimental_schemaReporting" option has been',
-          'renamed to "reportSchema"',
-        ].join(' '),
-      );
-      if (options.reportSchema === undefined) {
-        options.reportSchema = options.experimental_schemaReporting;
-      }
-    }
-
-    if (options.experimental_overrideReportedSchema !== undefined) {
-      this.logger.warn(
-        [
-          '[deprecated] The "experimental_overrideReportedSchema" option has',
-          'been renamed to "overrideReportedSchema"',
-        ].join(' '),
-      );
-      if (options.overrideReportedSchema === undefined) {
-        options.overrideReportedSchema =
-          options.experimental_overrideReportedSchema;
-      }
-    }
-
-    if (options.experimental_schemaReportingInitialDelayMaxMs !== undefined) {
-      this.logger.warn(
-        [
-          '[deprecated] The "experimental_schemaReportingInitialDelayMaxMs"',
-          'option has been renamed to "schemaReportingInitialDelayMaxMs"',
-        ].join(' '),
-      );
-      if (options.schemaReportingInitialDelayMaxMs === undefined) {
-        options.schemaReportingInitialDelayMaxMs =
-          options.experimental_schemaReportingInitialDelayMaxMs;
-      }
-    }
-
-    if (options.reportSchema !== undefined) {
-      this.schemaReport = options.reportSchema;
-    } else {
-      this.schemaReport = process.env.APOLLO_SCHEMA_REPORTING === 'true';
-    }
 
     // Since calculating the signature for Engine reporting is potentially an
     // expensive operation, we'll cache the signatures we generate and re-use
@@ -483,11 +433,11 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   public newPlugin(): ApolloServerPlugin<TContext> {
-    return plugin(this.options, this.addTrace.bind(this), {
-      startSchemaReporting: this.startSchemaReporting.bind(this),
-      executableSchemaIdGenerator: this.executableSchemaIdGenerator.bind(this),
-      schemaReport: this.schemaReport,
-    });
+    return plugin(
+      this.options,
+      this.addTrace.bind(this),
+      this.executableSchemaIdGenerator.bind(this),
+    );
   }
 
   private getReportData(executableSchemaId: string): ReportData {
@@ -495,7 +445,10 @@ export class EngineReportingAgent<TContext = any> {
     if (existing) {
       return existing;
     }
-    const reportData = new ReportData(executableSchemaId, this.apolloConfig.graphVariant);
+    const reportData = new ReportData(
+      executableSchemaId,
+      this.apolloConfig.graphVariant,
+    );
     this.reportDataByExecutableSchemaId[executableSchemaId] = reportData;
     return reportData;
   }
@@ -680,77 +633,6 @@ export class EngineReportingAgent<TContext = any> {
     }
   }
 
-  public startSchemaReporting({
-    executableSchemaId,
-    executableSchema,
-  }: {
-    executableSchemaId: string;
-    executableSchema: string;
-  }) {
-    this.logger.info('Starting schema reporter...');
-    if (this.options.overrideReportedSchema !== undefined) {
-      this.logger.info('Schema to report has been overridden');
-    }
-    if (this.options.schemaReportingInitialDelayMaxMs !== undefined) {
-      this.logger.info(
-        `Schema reporting max initial delay override: ${this.options.schemaReportingInitialDelayMaxMs} ms`,
-      );
-    }
-    if (this.options.schemaReportingUrl !== undefined) {
-      this.logger.info(
-        `Schema reporting URL override: ${this.options.schemaReportingUrl}`,
-      );
-    }
-    if (this.currentSchemaReporter) {
-      this.currentSchemaReporter.stop();
-    }
-
-    const serverInfo = {
-      bootId: this.bootId,
-      graphVariant: this.apolloConfig.graphVariant,
-      // The infra environment in which this edge server is running, e.g. localhost, Kubernetes
-      // Length must be <= 256 characters.
-      platform: process.env.APOLLO_SERVER_PLATFORM || 'local',
-      runtimeVersion: `node ${process.version}`,
-      executableSchemaId: executableSchemaId,
-      // An identifier used to distinguish the version of the server code such as git or docker sha.
-      // Length must be <= 256 charecters
-      userVersion: process.env.APOLLO_SERVER_USER_VERSION,
-      // "An identifier for the server instance. Length must be <= 256 characters.
-      serverId:
-        process.env.APOLLO_SERVER_ID || process.env.HOSTNAME || os.hostname(),
-      libraryVersion: `apollo-engine-reporting@${
-        require('../package.json').version
-      }`,
-    };
-
-    this.logger.info(
-      `Schema reporting EdgeServerInfo: ${JSON.stringify(serverInfo)}`,
-    );
-
-    // Jitter the startup between 0 and 10 seconds
-    const delay = Math.floor(
-      Math.random() * (this.options.schemaReportingInitialDelayMaxMs || 10_000),
-    );
-
-    const schemaReporter = new SchemaReporter(
-      serverInfo,
-      executableSchema,
-      this.apolloConfig.key!,
-      this.options.schemaReportingUrl,
-      this.logger,
-    );
-
-    const fallbackReportingDelayInMs = 20_000;
-
-    this.currentSchemaReporter = schemaReporter;
-    const logger = this.logger;
-
-    setTimeout(function () {
-      reportingLoop(schemaReporter, logger, false, fallbackReportingDelayInMs);
-    }, delay);
-  }
-
   // Stop prevents reports from being sent automatically due to time or buffer
   // size, and stop buffering new traces. You may still manually send a last
   // report by calling sendReport().
@@ -758,10 +640,6 @@ export class EngineReportingAgent<TContext = any> {
     if (this.reportTimer) {
       clearInterval(this.reportTimer);
       this.reportTimer = undefined;
-    }
-
-    if (this.currentSchemaReporter) {
-      this.currentSchemaReporter.stop();
     }
 
     this.stopped = true;
