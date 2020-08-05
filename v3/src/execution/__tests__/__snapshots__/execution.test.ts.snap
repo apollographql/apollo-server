@@ -367,11 +367,11 @@ query Nested {
 }
 `;
 
-exports[`parseGraphqlRequest Returns an error for invalid queries - empty query 1`] = `[GraphQLError: Syntax Error: Expected Name, found }]`;
+exports[`parseGraphqlRequest Returns an error for invalid queries - empty query 1`] = `[GraphQLError: Syntax Error: Expected Name, found "}".]`;
 
-exports[`parseGraphqlRequest Returns an error for invalid queries - empty selection set 1`] = `[GraphQLError: Syntax Error: Expected Name, found }]`;
+exports[`parseGraphqlRequest Returns an error for invalid queries - empty selection set 1`] = `[GraphQLError: Syntax Error: Expected Name, found "}".]`;
 
-exports[`parseGraphqlRequest Returns an error for invalid queries - missing closing } 1`] = `[GraphQLError: Syntax Error: Expected Name, found <EOF>]`;
+exports[`parseGraphqlRequest Returns an error for invalid queries - missing closing } 1`] = `[GraphQLError: Syntax Error: Expected Name, found <EOF>.]`;
 
 exports[`processGraphqlRequest Executable queries - basic - { people { name } } 1`] = `
 Object {
@@ -677,7 +677,7 @@ Array [
 
 exports[`processGraphqlRequest Invalid queries - missing directive 1`] = `
 Array [
-  [GraphQLError: Unknown directive "invalid".],
+  [GraphQLError: Unknown directive "@invalid".],
 ]
 `;
 
@@ -712,19 +712,19 @@ Array [
 
 exports[`processGraphqlRequest Unparseable queries - empty query 1`] = `
 Array [
-  [GraphQLError: Syntax Error: Expected Name, found }],
+  [GraphQLError: Syntax Error: Expected Name, found "}".],
 ]
 `;
 
 exports[`processGraphqlRequest Unparseable queries - empty selection set 1`] = `
 Array [
-  [GraphQLError: Syntax Error: Expected Name, found }],
+  [GraphQLError: Syntax Error: Expected Name, found "}".],
 ]
 `;
 
 exports[`processGraphqlRequest Unparseable queries - missing closing } 1`] = `
 Array [
-  [GraphQLError: Syntax Error: Expected Name, found <EOF>],
+  [GraphQLError: Syntax Error: Expected Name, found <EOF>.],
 ]
 `;
 
@@ -736,7 +736,7 @@ Array [
 
 exports[`validateGraphqlRequest invalid queries against schema: missing directive 1`] = `
 Array [
-  [GraphQLError: Unknown directive "invalid".],
+  [GraphQLError: Unknown directive "@invalid".],
 ]
 `;
 
