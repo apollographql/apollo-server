@@ -42,6 +42,7 @@ import {
   PluginDefinition,
   GraphQLService,
   GraphQLExecutor,
+  ApolloServerPluginInlineTrace,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
@@ -2715,12 +2716,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
             err.message = `Formatted: ${err.message}`;
             return err;
           },
-          engine: {
+          plugins: [ApolloServerPluginInlineTrace({
             rewriteError(err) {
               err.message = `Rewritten for Engine: ${err.message}`;
               return err;
             },
-          },
+          })],
         });
 
         const apolloFetch = createApolloFetchAsIfFromGateway(uri);
