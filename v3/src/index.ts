@@ -20,6 +20,7 @@ import {
   Context,
   ContextFunction,
 } from './execution';
+import { SchemaHash } from "apollo-server-types";
 
 // A subset of the base configuration.
 type Config = Pick<BaseConfig,
@@ -217,7 +218,8 @@ export class ApolloServer {
           plugin.serverWillStart &&
           plugin.serverWillStart({
             schema: schema,
-            schemaHash: 'TODO',
+            schemaHash: 'TODO' as SchemaHash,
+            logger: console, // TODO FIXME AS3
             engine: {
             // TODO(AS3)
             //   serviceID: this.engineServiceId,
@@ -328,6 +330,10 @@ export class ApolloServer {
       request,
       context,
       cache,
+      logger: console, // TODO FIXME AS3
+      schema,
+      schemaHash: "TODO" as SchemaHash, // TODO FIXME AS3
+      metrics: {}, // TODO FIXME AS3
       response: responseInit,
     };
 
