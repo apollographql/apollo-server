@@ -21,10 +21,10 @@
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
-    "fast-json-stable-stringify": "^2.0.0",
-    "loglevel": "^1.6.1",
+    "fast-json-stable-stringify": "^2.1.0",
+    "loglevel": "^1.6.8",
     "loglevel-debug": "^0.0.1",
-    "make-fetch-happen": "^8.0.7"
+    "make-fetch-happen": "^8.0.9"
   },
   "peerDependencies": {
     "graphql": "^15.0.0"

@@ -29,9 +29,9 @@
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-types": "file:../apollo-server-types",
-    "loglevel": "^1.6.1",
-    "make-fetch-happen": "^8.0.0",
-    "pretty-format": "^26.0.0"
+    "loglevel": "^1.6.8",
+    "make-fetch-happen": "^8.0.9",
+    "pretty-format": "^26.2.0"
   },
   "peerDependencies": {
     "graphql": "^15.0.0"
