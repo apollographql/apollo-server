@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server",
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0-alpha.2",
   "description": "Apollo Server",
   "author": "opensource@apollographql.com",
   "engines": {
