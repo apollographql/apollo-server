@@ -8,6 +8,7 @@ import {
   formatApolloErrors,
   processFileUploads,
 } from 'apollo-server-core';
+import fastJson from 'fast-json-stringify';
 import {
   FastifyInstance,
   FastifyReply,
@@ -18,7 +19,6 @@ import { GraphQLOperation } from 'graphql-upload';
 import { graphqlFastify } from './fastifyApollo';
 
 const kMultipart = Symbol('multipart');
-const fastJson = require('fast-json-stringify');
 
 export interface ServerRegistration {
   path?: string;
@@ -29,11 +29,7 @@ export interface ServerRegistration {
 
 const stringifyHealthCheck = fastJson({
   type: 'object',
-  properties: {
-    status: {
-      type: 'string',
-    },
-  },
+  properties: { status: { type: 'string' } },
 });
 
 const fileUploadMiddleware = (
