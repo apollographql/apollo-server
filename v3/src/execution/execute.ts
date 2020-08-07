@@ -70,7 +70,7 @@ import {
   getDirectiveValues,
 } from 'graphql/execution/values';
 
-import Maybe from 'graphql/tsutils/Maybe';
+type Maybe<T> = null | undefined | T;
 
 /**
  * Terminology
@@ -363,7 +363,7 @@ function executeFieldsSerially(
     Object.keys(fields),
     (results, responseName) => {
       const fieldNodes = fields[responseName];
-      const fieldPath = addPath(path, responseName);
+      const fieldPath = addPath(path, responseName, parentType.name);
       const result = resolveField(
         exeContext,
         parentType,
@@ -403,7 +403,7 @@ function executeFields(
 
   for (const responseName of Object.keys(fields)) {
     const fieldNodes = fields[responseName];
-    const fieldPath = addPath(path, responseName);
+    const fieldPath = addPath(path, responseName, parentType.name);
     const result = resolveField(
       exeContext,
       parentType,
@@ -896,7 +896,7 @@ function completeListValue(
   forEach(result as any, (item, index) => {
     // No need to modify the info object containing the path,
     // since from here on it is not ever accessed by resolver functions.
-    const fieldPath = addPath(path, index);
+    const fieldPath = addPath(path, index, undefined);
     const completedItem = completeValueCatchingError(
       exeContext,
       itemType,

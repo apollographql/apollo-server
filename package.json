@@ -102,7 +102,7 @@
     "express": "4.17.1",
     "fastify": "3.2.0",
     "form-data": "2.5.1",
-    "graphql": "15.0.0",
+    "graphql": "15.3.0",
     "graphql-tag": "2.11.0",
     "graphql-tools": "4.0.8",
     "hapi": "17.8.5",
