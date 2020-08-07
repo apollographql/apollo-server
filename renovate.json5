@@ -10,18 +10,6 @@
       "allowedVersions": "12.x"
     },
     /*
-      Avoid major version bumps to server frameworks (those used by the
-      various Apollo Server integrations (e.g. Fastify, Express, Koa, etc.),
-      which must be reserved for a major version bump to Apollo Server itself.
-
-      For more thoughts here, see my comment on the commits that introduced
-      these threshholds via `git blame`.
-    */
-    {
-      "packageNames": ["@hapi/hapi", "@types/hapi__hapi"],
-      "allowedVersions": "<19"
-    },
-    /*
      * Apollo Server 3.x rules
      *
      * Essentially, we want to update Apollo whenever its possible!
