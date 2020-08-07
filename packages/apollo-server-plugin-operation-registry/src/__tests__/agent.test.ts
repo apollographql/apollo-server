@@ -19,6 +19,7 @@ import {
 import Agent, { AgentOptions } from "../agent";
 import { Operation } from "../ApolloServerPluginOperationRegistry";
 import { fakeTestBaseUrl, getLegacyOperationManifestUrl, getStoreKey, getOperationManifestUrl, urlOperationManifestBase } from "../common";
+import { Logger } from "apollo-server-types";
 
 // These get a bit verbose within the tests below, so we use this as a
 // sample store to pick and grab from.
@@ -147,7 +148,7 @@ describe('Agent', () => {
           sampleManifestRecords.c,
         ]);
         const relevantLogs: any = [];
-        const logger = {
+        const logger: Logger = {
           debug: jest.fn().mockImplementation((...args: any[]) => {
             if (
               typeof args[0] === 'string' &&
@@ -166,6 +167,8 @@ describe('Agent', () => {
               relevantLogs.push(args);
             }
           }),
+          info: () => {},
+          error: () => {},
         };
         await createAgent({ logger }).start();
 
@@ -198,8 +201,6 @@ describe('Agent', () => {
         );
 
         expect(relevantLogs.length).toBe(5);
-
-        logger.debug.mockRestore();
       });
 
       it('populates the manifest store after starting', async () => {
