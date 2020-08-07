@@ -25,9 +25,9 @@
     "node": ">=12.0 <15.0"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "^0.4.3",
+    "@apollographql/apollo-tools": "^0.4.8",
     "@apollographql/graphql-playground-html": "1.6.26",
-    "@types/ws": "^7.0.0",
+    "@types/ws": "^7.2.6",
     "apollo-cache-control": "file:../apollo-cache-control",
     "apollo-datasource": "file:../apollo-datasource",
     "apollo-engine-reporting": "file:../apollo-engine-reporting",
@@ -37,10 +37,10 @@
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-server-types": "file:../apollo-server-types",
     "apollo-tracing": "file:../apollo-tracing",
-    "fast-json-stable-stringify": "^2.0.0",
-    "graphql-tag": "^2.9.2",
+    "fast-json-stable-stringify": "^2.1.0",
+    "graphql-tag": "^2.11.0",
     "graphql-tools": "^4.0.0",
-    "loglevel": "^1.6.7",
+    "loglevel": "^1.6.8",
     "sha.js": "^2.4.11"
   },
   "peerDependencies": {

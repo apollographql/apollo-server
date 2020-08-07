@@ -24,7 +24,7 @@
     "node": ">=12.0 <15.0"
   },
   "dependencies": {
-    "node-fetch": "^2.1.2",
-    "util.promisify": "^1.0.0"
+    "node-fetch": "^2.6.0",
+    "util.promisify": "^1.0.1"
   }
 }

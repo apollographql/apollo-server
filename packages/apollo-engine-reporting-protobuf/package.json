@@ -32,6 +32,6 @@
   },
   "homepage": "https://github.com/apollographql/apollo-engine-reporting#readme",
   "dependencies": {
-    "@apollo/protobufjs": "^1.0.3"
+    "@apollo/protobufjs": "^1.0.4"
   }
 }

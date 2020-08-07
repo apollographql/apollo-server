@@ -22,7 +22,7 @@
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
-    "http-cache-semantics": "^4.0.0"
+    "http-cache-semantics": "^4.1.0"
   },
   "devDependencies": {
     "apollo-server-types": "file:../apollo-server-types"
