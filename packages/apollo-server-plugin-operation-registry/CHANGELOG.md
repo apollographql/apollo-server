@@ -2,6 +2,7 @@
 
 ## vNEXT
 
+- __BREAKING__: Drop use of `loglevel-debug`.  This removes the very long date and time prefix in front of each log line and also the support for the `DEBUG=apollo-server:apollo-server-plugin-operation-registry:*` environment variable.  Both of these were uncommonly necessary or seldom used (with the environment variable also being undocumented).  The existing behavior can be preserved by providing a `logger` that uses [`loglevel-debug`](https://npm.im/loglevel-debug), if desired.  [PR #4327](https://github.com/apollographql/apollo-server/pull/4327)
 - __BREAKING__: Drop support for `schemaTag` with `graphVariant` being its successor.  As noted below, `schemaTag` was deprecated in v0.3.1 and a deprecation warning has been shown since.  The `graphVariant` replaces the functionality that `schemaTag` offered and, aside from the name change, its behavior is identical. [PR #4328](https://github.com/apollographql/apollo-server/pull/4328)
 
 ## 0.4.4
