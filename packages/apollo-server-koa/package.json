@@ -37,7 +37,6 @@
     "accepts": "^1.3.7",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-types": "file:../apollo-server-types",
-    "graphql-tools": "^4.0.0",
     "koa": "2.13.0",
     "koa-bodyparser": "^4.3.0",
     "koa-compose": "^4.1.0"
