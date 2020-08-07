@@ -367,9 +367,11 @@ addMockFunctionsToSchema({
    report's header and some other top-level bytes are ignored. The report size is
    limited to the sum of the lengths of serialized traces and signatures.
 
-*  `endpointUrl`: string
+*  `tracesEndpointUrl`: string
 
    The URL of the Apollo Studio report ingress server.
+
+   > In Apollo Server 2, this was `endpointUrl`.
 
 *  `requestAgent`: `http.Agent | https.Agent | false`
 

@@ -143,13 +143,8 @@ export interface EngineReportingOptions<TContext> {
    */
   maxUncompressedReportSize?: number;
   /**
-   * [DEPRECATED] this option was replaced by tracesEndpointUrl
-   * The URL of the Engine report ingress server.
-   */
-  endpointUrl?: string;
-  /**
    * The URL to the Apollo Graph Manager ingress endpoint.
-   * (Previously, this was `endpointUrl`, which will be removed in AS3).
+   * (In Apollo Server 2, this was `endpointUrl`).
    */
   tracesEndpointUrl?: string;
   /**
@@ -519,14 +514,8 @@ export class EngineReportingAgent<TContext = any> {
       });
     }
 
-    if (this.options.endpointUrl) {
-      this.logger.warn(
-        '[deprecated] The `endpointUrl` option within `engine` has been renamed to `tracesEndpointUrl`.',
-      );
-    }
     this.tracesEndpointUrl =
-      (this.options.endpointUrl ||
-        this.options.tracesEndpointUrl ||
+      (this.options.tracesEndpointUrl ||
         'https://engine-report.apollodata.com') + '/api/ingress/traces';
 
     // Handle the legacy options: privateVariables and privateHeaders
