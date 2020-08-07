@@ -38,6 +38,6 @@
   },
   "peerDependencies": {
     "@hapi/hapi": "^19.2.0",
-    "graphql": "^15.0.0"
+    "graphql": "^15.3.0"
   }
 }

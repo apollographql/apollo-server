@@ -15,6 +15,6 @@
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base"
   },
   "peerDependencies": {
-    "graphql": "^15.0.0"
+    "graphql": "^15.3.0"
   }
 }

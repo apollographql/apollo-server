@@ -44,6 +44,6 @@
     "sha.js": "^2.4.11"
   },
   "peerDependencies": {
-    "graphql": "^15.0.0"
+    "graphql": "^15.3.0"
   }
 }
