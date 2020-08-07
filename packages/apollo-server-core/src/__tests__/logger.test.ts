@@ -7,9 +7,6 @@ import * as winston from "winston";
 import WinstonTransport from 'winston-transport';
 import * as bunyan from "bunyan";
 import * as loglevel from "loglevel";
-// We are testing an older version of `log4js` which uses older ECMAScript
-// in order to still support testing on Node.js 6.
-// This should be updated when bump the semver major for AS3.
 import * as log4js from "log4js";
 
 const LOWEST_LOG_LEVEL = "debug";
