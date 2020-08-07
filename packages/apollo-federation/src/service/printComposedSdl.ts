@@ -1,9 +1,3 @@
-/**
- * Forked from graphql-js schemaPrinter.js file @ v14.7.0
- * This file has been modified to support printing federated
- * schema, including associated federation directives.
- */
-
 import {
   GraphQLSchema,
   isSpecifiedDirective,
@@ -32,11 +26,12 @@ import {
   GraphQLString,
   DEFAULT_DEPRECATION_REASON,
   ASTNode,
+  SelectionNode,
 } from 'graphql';
-import { Maybe } from '../composition';
+import { Maybe, ServiceDefinition, FederationType, FederationField } from '../composition';
 import { isFederationType } from '../types';
 import { isFederationDirective } from '../composition/utils';
-import federationDirectives, { gatherDirectives } from '../directives';
+import csdlDirectives from '../csdlDirectives';
 
 type Options = {
   /**
@@ -57,9 +52,15 @@ type Options = {
  *        Provide true to use preceding comments as the description.
  *
  */
-export function printSchema(schema: GraphQLSchema, options?: Options): string {
+export function printComposedSdl(
+  schema: GraphQLSchema,
+  serviceList: ServiceDefinition[],
+  options?: Options,
+): string {
   return printFilteredSchema(
     schema,
+    // Federation change: we need service and url information for the @graph directives
+    serviceList,
     // Federation change: treat the directives defined by the federation spec
     // similarly to the directives defined by the GraphQL spec (ie, don't print
     // their definitions).
@@ -75,6 +76,7 @@ export function printIntrospectionSchema(
 ): string {
   return printFilteredSchema(
     schema,
+    [],
     isSpecifiedDirective,
     isIntrospectionType,
     options,
@@ -94,17 +96,23 @@ function isDefinedType(type: GraphQLNamedType): boolean {
 
 function printFilteredSchema(
   schema: GraphQLSchema,
+  // Federation change: we need service and url information for the @graph directives
+  serviceList: ServiceDefinition[],
   directiveFilter: (type: GraphQLDirective) => boolean,
   typeFilter: (type: GraphQLNamedType) => boolean,
   options?: Options,
 ): string {
-  const directives = schema.getDirectives().filter(directiveFilter);
+  // Federation change: include directive definitions for CSDL
+  const directives = [
+    ...csdlDirectives,
+    ...schema.getDirectives().filter(directiveFilter),
+  ];
   const types = Object.values(schema.getTypeMap())
     .sort((type1, type2) => type1.name.localeCompare(type2.name))
     .filter(typeFilter);
 
   return (
-    [printSchemaDefinition(schema)]
+    [printSchemaDefinition(schema, serviceList)]
       .concat(
         directives.map(directive => printDirective(directive, options)),
         types.map(type => printType(type, options)),
@@ -114,11 +122,10 @@ function printFilteredSchema(
   );
 }
 
-function printSchemaDefinition(schema: GraphQLSchema): string | undefined {
-  if (isSchemaOfCommonNames(schema)) {
-    return;
-  }
-
+function printSchemaDefinition(
+  schema: GraphQLSchema,
+  serviceList: ServiceDefinition[],
+): string | undefined {
   const operationTypes = [];
 
   const queryType = schema.getQueryType();
@@ -136,38 +143,19 @@ function printSchemaDefinition(schema: GraphQLSchema): string | undefined {
     operationTypes.push(`  subscription: ${subscriptionType.name}`);
   }
 
-  return `schema {\n${operationTypes.join('\n')}\n}`;
+  return (
+    'schema' +
+    // Federation change: print @graph and @composedGraph schema directives
+    printFederationSchemaDirectives(serviceList) +
+    `\n{\n${operationTypes.join('\n')}\n}`
+  );
 }
 
-/**
- * GraphQL schema define root types for each type of operation. These types are
- * the same as any other type and can be named in any manner, however there is
- * a common naming convention:
- *
- *   schema {
- *     query: Query
- *     mutation: Mutation
- *   }
- *
- * When using this naming convention, the schema description can be omitted.
- */
-function isSchemaOfCommonNames(schema: GraphQLSchema): boolean {
-  const queryType = schema.getQueryType();
-  if (queryType && queryType.name !== 'Query') {
-    return false;
-  }
-
-  const mutationType = schema.getMutationType();
-  if (mutationType && mutationType.name !== 'Mutation') {
-    return false;
-  }
-
-  const subscriptionType = schema.getSubscriptionType();
-  if (subscriptionType && subscriptionType.name !== 'Subscription') {
-    return false;
-  }
-
-  return true;
+function printFederationSchemaDirectives(serviceList: ServiceDefinition[]) {
+  return (
+    serviceList.map(service => `\n  @graph(name: "${service.name}", url: "${service.url}")`).join('') +
+    `\n  @composedGraph(version: 1)`
+  );
 }
 
 export function printType(type: GraphQLNamedType, options?: Options): string {
@@ -212,10 +200,39 @@ function printObject(type: GraphQLObjectType, options?: Options): string {
   return (
     printDescription(options, type) +
     (isExtension ? 'extend ' : '') +
-    `type ${type.name}${implementedInterfaces}` +
-    // Federation addition for printing @key usages
-    printFederationDirectives(type) +
+    `type ${type.name}` +
+    implementedInterfaces +
+    // Federation addition for printing @owner and @key usages
+    printFederationTypeDirectives(type) +
     printFields(options, type)
+  );
+}
+
+// Federation change: print usages of the @owner and @key directives.
+function printFederationTypeDirectives(type: GraphQLObjectType): string {
+  const metadata: FederationType = type.extensions?.federation;
+  if (!metadata) return '';
+
+  const { serviceName: ownerService, keys } = metadata;
+  if (!ownerService || !keys) return '';
+
+  // Separate owner @keys from the rest of the @keys so we can print them
+  // adjacent to the @owner directive.
+  const { [ownerService]: ownerKeys, ...restKeys } = keys
+  const ownerEntry: [string, (readonly SelectionNode[])[]] = [ownerService, ownerKeys];
+  const restEntries = Object.entries(restKeys);
+
+  return (
+    `\n  @owner(graph: "${ownerService}")` +
+    [ownerEntry, ...restEntries].map(([service, keys]) =>
+      keys
+        .map(
+          (selections) =>
+            `\n  @key(fields: "${selections.map(print)}", graph: "${service}")`,
+        )
+        .join(''),
+    )
+    .join('')
   );
 }
 
@@ -231,9 +248,6 @@ function printInterface(type: GraphQLInterfaceType, options?: Options): string {
     printDescription(options, type) +
     (isExtension ? 'extend ' : '') +
     `interface ${type.name}` +
-    // Federation change: graphql@14 doesn't support interfaces implementing interfaces
-    // printImplementedInterfaces(type) +
-    printFederationDirectives(type) +
     printFields(options, type)
   );
 }
@@ -260,7 +274,10 @@ function printEnum(type: GraphQLEnumType, options?: Options): string {
   );
 }
 
-function printInputObject(type: GraphQLInputObjectType, options?: Options): string {
+function printInputObject(
+  type: GraphQLInputObjectType,
+  options?: Options,
+): string {
   const fields = Object.values(type.getFields()).map(
     (f, i) =>
       printDescription(options, f, '  ', !i) + '  ' + printInputValue(f),
@@ -274,6 +291,7 @@ function printFields(
   options: Options | undefined,
   type: GraphQLObjectType | GraphQLInterfaceType,
 ) {
+
   const fields = Object.values(type.getFields()).map(
     (f, i) =>
       printDescription(options, f, '  ', !i) +
@@ -283,26 +301,14 @@ function printFields(
       ': ' +
       String(f.type) +
       printDeprecated(f) +
-      printFederationDirectives(f),
+      printFederationFieldDirectives(f, type),
   );
-  return printBlock(fields);
-}
 
-// Federation change: *do* print the usages of federation directives.
-function printFederationDirectives(
-  type: GraphQLNamedType | GraphQLField<any, any>,
-): string {
-  if (!type.astNode) return '';
-  if (isInputObjectType(type)) return '';
+  // Federation change: for entities, we want to print the block on a new line.
+  // This is just a formatting nice-to-have.
+  const isEntity = Boolean(type.extensions?.federation?.keys);
 
-  const allDirectives = gatherDirectives(type)
-    .filter((n) =>
-      federationDirectives.some((fedDir) => fedDir.name === n.name.value),
-    )
-    .map(print);
-  const dedupedDirectives = [...new Set(allDirectives)];
-
-  return dedupedDirectives.length > 0 ? ' ' + dedupedDirectives.join(' ') : '';
+  return printBlock(fields, isEntity);
 }
 
 export function printWithReducedWhitespace(ast: ASTNode): string {
@@ -311,8 +317,53 @@ export function printWithReducedWhitespace(ast: ASTNode): string {
     .trim();
 }
 
-function printBlock(items: string[]) {
-  return items.length !== 0 ? ' {\n' + items.join('\n') + '\n}' : '';
+/**
+ * Federation change: print @resolve, @requires, and @provides directives
+ *
+ * @param field
+ * @param parentType
+ */
+function printFederationFieldDirectives(
+  field: GraphQLField<any, any>,
+  parentType: GraphQLObjectType | GraphQLInterfaceType,
+): string {
+  if (!field.extensions?.federation) return '';
+
+  const {
+    serviceName,
+    requires = [],
+    provides = [],
+  }: FederationField = field.extensions.federation;
+
+  let printed = '';
+  // If a `serviceName` exists, we only want to print a `@resolve` directive
+  // if the `serviceName` differs from the `parentType`'s `serviceName`
+  if (
+    serviceName &&
+    serviceName !== parentType.extensions?.federation?.serviceName
+  ) {
+    printed += ` @resolve(graph: "${serviceName}")`;
+  }
+
+  if (requires.length > 0) {
+    printed += ` @requires(fields: "${requires.map(printWithReducedWhitespace).join(' ')}")`;
+  }
+
+  if (provides.length > 0) {
+    printed += ` @provides(fields: "${provides.map(printWithReducedWhitespace).join(' ')}")`;
+  }
+
+  return printed;
+}
+
+// Federation change: `onNewLine` is a formatting nice-to-have for printing
+// types that have a list of directives attached, i.e. an entity.
+function printBlock(items: string[], onNewLine?: boolean) {
+  return items.length !== 0
+    ? onNewLine
+      ? '\n{\n' + items.join('\n') + '\n}'
+      : ' {\n' + items.join('\n') + '\n}'
+    : '';
 }
 
 function printArgs(
@@ -325,7 +376,7 @@ function printArgs(
   }
 
   // If every arg does not have a description, print them on one line.
-  if (args.every(arg => !arg.description)) {
+  if (args.every((arg) => !arg.description)) {
     return '(' + args.map(printInputValue).join(', ') + ')';
   }
 
@@ -375,7 +426,7 @@ function printDeprecated(
   }
   const reason = fieldOrEnumVal.deprecationReason;
   const reasonAST = astFromValue(reason, GraphQLString);
-  if (reasonAST && reason !== '' && reason !== DEFAULT_DEPRECATION_REASON) {
+  if (reasonAST && reason !== DEFAULT_DEPRECATION_REASON) {
     return ' @deprecated(reason: ' + print(reasonAST) + ')';
   }
   return ' @deprecated';
@@ -412,7 +463,7 @@ function printDescriptionWithComments(
   const prefix = indentation && !firstInBlock ? '\n' : '';
   const comment = description
     .split('\n')
-    .map(line => indentation + (line !== '' ? '# ' + line : '#'))
+    .map((line) => indentation + (line !== '' ? '# ' + line : '#'))
     .join('\n');
 
   return prefix + comment + '\n';
