@@ -31,11 +31,15 @@ import {
   executableDirectiveLocations,
   stripTypeSystemDirectivesFromTypeDefs,
   defaultRootOperationNameLookup,
+  getFederationMetadata,
 } from './utils';
 import {
   ServiceDefinition,
   ExternalFieldDefinition,
   ServiceNameToKeyDirectivesMap,
+  FederationType,
+  FederationField,
+  FederationDirective,
 } from './types';
 import { validateSDL } from 'graphql/validation/validate';
 import { compositionRules } from './rules';
@@ -410,13 +414,18 @@ export function addFederationMetadataToSchemaNodes({
     const isValueType = valueTypes.has(typeName);
     const serviceName = isValueType ? null : owningService;
 
-    namedType.federation = {
-      ...namedType.federation,
+    const federationMetadata: FederationType = {
+      ...getFederationMetadata(namedType),
       serviceName,
       isValueType,
       ...(keyDirectivesMap[typeName] && {
         keys: keyDirectivesMap[typeName],
       }),
+    }
+
+    namedType.extensions = {
+      ...namedType.extensions,
+      federation: federationMetadata,
     };
 
     // For object types, add metadata for all the @provides directives from its fields
@@ -432,13 +441,18 @@ export function addFederationMetadataToSchemaNodes({
           providesDirective.arguments &&
           isStringValueNode(providesDirective.arguments[0].value)
         ) {
-          field.federation = {
-            ...field.federation,
+          const fieldFederationMetadata: FederationField = {
+            ...getFederationMetadata(field),
             serviceName,
             provides: parseSelections(
               providesDirective.arguments[0].value.value,
             ),
             belongsToValueType: isValueType,
+          }
+
+          field.extensions = {
+            ...field.extensions,
+            federation: fieldFederationMetadata
           };
         }
       }
@@ -455,9 +469,15 @@ export function addFederationMetadataToSchemaNodes({
       // TODO: Why don't we need to check for non-object types here
       if (isObjectType(namedType)) {
         const field = namedType.getFields()[fieldName];
-        field.federation = {
-          ...field.federation,
+
+        const fieldFederationMetadata: FederationField = {
+          ...getFederationMetadata(field),
           serviceName: extendingServiceName,
+        }
+
+        field.extensions = {
+          ...field.extensions,
+          federation: fieldFederationMetadata,
         };
 
         const [requiresDirective] = findDirectivesOnTypeOrField(
@@ -470,11 +490,16 @@ export function addFederationMetadataToSchemaNodes({
           requiresDirective.arguments &&
           isStringValueNode(requiresDirective.arguments[0].value)
         ) {
-          field.federation = {
-            ...field.federation,
+          const fieldFederationMetadata: FederationField = {
+            ...getFederationMetadata(field),
             requires: parseSelections(
               requiresDirective.arguments[0].value.value,
             ),
+          }
+
+          field.extensions = {
+            ...field.extensions,
+            federation: fieldFederationMetadata,
           };
         }
       }
@@ -485,19 +510,21 @@ export function addFederationMetadataToSchemaNodes({
     const namedType = schema.getType(field.parentTypeName);
     if (!namedType) continue;
 
-    namedType.federation = {
-      ...namedType.federation,
+    const existingMetadata = getFederationMetadata(namedType);
+    const typeFederationMetadata: FederationType = {
+      ...existingMetadata,
       externals: {
-        ...(namedType.federation && namedType.federation.externals),
+        ...existingMetadata?.externals,
         [field.serviceName]: [
-          ...(namedType.federation &&
-          namedType.federation.externals &&
-          namedType.federation.externals[field.serviceName]
-            ? namedType.federation.externals[field.serviceName]
-            : []),
+          ...(existingMetadata?.externals?.[field.serviceName] || []),
           field,
         ],
       },
+    };
+
+    namedType.extensions = {
+      ...namedType.extensions,
+      federation: typeFederationMetadata,
     };
   }
 
@@ -506,10 +533,15 @@ export function addFederationMetadataToSchemaNodes({
     const directive = schema.getDirective(directiveName);
     if (!directive) continue;
 
-    directive.federation = {
-      ...directive.federation,
+    const directiveFederationMetadata: FederationDirective = {
+      ...getFederationMetadata(directive),
       directiveDefinitions: directiveDefinitionsMap[directiveName],
-    };
+    }
+
+    directive.extensions = {
+      ...directive.extensions,
+      federation: directiveFederationMetadata,
+    }
   }
 }
 

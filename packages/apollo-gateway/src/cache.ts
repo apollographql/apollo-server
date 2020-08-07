@@ -31,7 +31,18 @@ export class HttpRequestCache implements CacheManager {
   }
 
   async put(request: Request, response: Response) {
-    let body = await response.text();
+    // A `HEAD` request has no body to cache and a 304 response could have
+    // only been negotiated by using a cached body that was still valid.
+    // Therefore, we do NOT write to the cache in either of these cases.
+    // Without avoiding this, we will invalidate the cache, thus causing
+    // subsequent conditional requests (e.g., `If-None-Match: "MD%") to be
+    // lacking content to conditionally request against and necessitating
+    // a full request/response.
+    if (request.method === "HEAD" || response.status === 304) {
+      return response;
+    }
+
+    const body = await response.text();
 
     this.cache.set(cacheKey(request), {
       body,

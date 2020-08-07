@@ -1,6 +1,6 @@
 import 'apollo-server-env';
 import { isObjectType, GraphQLError } from 'graphql';
-import { logServiceAndType, errorWithCode } from '../../utils';
+import { logServiceAndType, errorWithCode, getFederationMetadata } from '../../utils';
 import { PostCompositionValidator } from '.';
 
 /**
@@ -14,12 +14,14 @@ export const externalMissingOnBase: PostCompositionValidator = ({ schema }) => {
     // Only object types have fields
     if (!isObjectType(namedType)) continue;
 
+    const typeFederationMetadata = getFederationMetadata(namedType);
+
     // If externals is populated, we need to look at each one and confirm
     // that field exists on base service
-    if (namedType.federation && namedType.federation.externals) {
+    if (typeFederationMetadata?.externals) {
       // loop over every service that has extensions with @external
       for (const [serviceName, externalFieldsForService] of Object.entries(
-        namedType.federation.externals,
+        typeFederationMetadata.externals,
       )) {
         // for a single service, loop over the external fields.
         for (const { field: externalField } of externalFieldsForService) {
@@ -33,7 +35,7 @@ export const externalMissingOnBase: PostCompositionValidator = ({ schema }) => {
               errorWithCode(
                 'EXTERNAL_MISSING_ON_BASE',
                 logServiceAndType(serviceName, typeName, externalFieldName) +
-                  `marked @external but ${externalFieldName} is not defined on the base service of ${typeName} (${namedType.federation.serviceName})`,
+                  `marked @external but ${externalFieldName} is not defined on the base service of ${typeName} (${typeFederationMetadata.serviceName})`,
               ),
             );
             continue;
@@ -41,15 +43,14 @@ export const externalMissingOnBase: PostCompositionValidator = ({ schema }) => {
 
           // if the field has a serviceName, then it wasn't defined by the
           // service that owns the type
-          if (
-            matchingBaseField.federation &&
-            matchingBaseField.federation.serviceName
-          ) {
+          const fieldFederationMetadata = getFederationMetadata(matchingBaseField);
+
+          if (fieldFederationMetadata?.serviceName) {
             errors.push(
               errorWithCode(
                 'EXTERNAL_MISSING_ON_BASE',
                 logServiceAndType(serviceName, typeName, externalFieldName) +
-                  `marked @external but ${externalFieldName} was defined in ${matchingBaseField.federation.serviceName}, not in the service that owns ${typeName} (${namedType.federation.serviceName})`,
+                  `marked @external but ${externalFieldName} was defined in ${fieldFederationMetadata.serviceName}, not in the service that owns ${typeName} (${typeFederationMetadata.serviceName})`,
               ),
             );
           }

@@ -4,9 +4,9 @@ import {
   errorWithCode,
   isFederationDirective,
   logDirective,
+  getFederationMetadata,
 } from '../../utils';
 import { PostCompositionValidator } from '.';
-
 /**
  * All custom directives with executable locations must be implemented in every
  * service. This validator is not responsible for ensuring the directives are an
@@ -24,11 +24,13 @@ export const executableDirectivesInAllServices: PostCompositionValidator = ({
     .filter(x => !isFederationDirective(x) && !isSpecifiedDirective(x));
 
   customExecutableDirectives.forEach(directive => {
-    if (!directive.federation) return;
+    const directiveFederationMetadata = getFederationMetadata(directive);
+
+    if (!directiveFederationMetadata) return;
 
     const allServiceNames = serviceList.map(({ name }) => name);
     const serviceNamesWithDirective = Object.keys(
-      directive.federation.directiveDefinitions,
+      directiveFederationMetadata.directiveDefinitions,
     );
 
     const serviceNamesWithoutDirective = allServiceNames.reduce(

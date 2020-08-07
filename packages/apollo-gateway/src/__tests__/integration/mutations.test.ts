@@ -1,7 +1,6 @@
 import { execute } from '../execution-utils';
-import { reviews, accounts } from '../__fixtures__/schemas/';
-
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
+import { accounts, reviews } from 'apollo-federation-integration-testsuite';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
