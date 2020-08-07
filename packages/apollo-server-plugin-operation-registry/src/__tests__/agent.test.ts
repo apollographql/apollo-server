@@ -14,9 +14,9 @@ import {
   genericApiKeyHash,
 } from './helpers.test-helpers';
 import Agent, { AgentOptions } from "../agent";
-import { Logger } from "apollo-server-types";
 import { Operation } from "../ApolloServerPluginOperationRegistry";
 import { fakeTestBaseUrl, getStoreKey, getOperationManifestUrl, urlOperationManifestBase } from "../common";
+import { Logger } from "apollo-server-types";
 
 // These get a bit verbose within the tests below, so we use this as a
 // sample store to pick and grab from.
@@ -129,27 +129,50 @@ describe('Agent', () => {
             sampleManifestRecords.c,
           ],
         );
+        const relevantLogs: any = [];
         const logger: Logger = {
-          debug: jest.fn(),
-          warn: jest.fn(),
-          info: jest.fn(),
-          error: jest.fn(),
+          debug: jest.fn().mockImplementation((...args: any[]) => {
+            if (
+              typeof args[0] === 'string' &&
+              (args[0].match(/Checking for manifest changes/) ||
+                args[0].match(/Incoming manifest ADDs/))
+            ) {
+              relevantLogs.push(args);
+            }
+          }),
+          warn: jest.fn().mockImplementation((...args: any[]) => {
+            if (
+              typeof args[0] === 'string' &&
+              (args[0].match(/Checking for manifest changes/) ||
+                args[0].match(/Incoming manifest ADDs/))
+            ) {
+              relevantLogs.push(args);
+            }
+          }),
+          info: () => {},
+          error: () => {},
         };
         await createAgent({ logger }).start();
 
-        expect(logger.debug).toHaveBeenCalledWith(
+        expect(relevantLogs[0][0]).toBe(
           `Checking for manifest changes at ${urlResolve(
             fakeTestBaseUrl,
             getOperationManifestUrl(genericServiceID, genericStorageSecret),
           )}`,
         );
 
-        expect(logger.debug).toHaveBeenCalledWith(
-          `Incoming manifest ADDs: ${sampleManifestRecords.a.signature}`);
-        expect(logger.debug).toHaveBeenCalledWith(
-          `Incoming manifest ADDs: ${sampleManifestRecords.b.signature}`);
-        expect(logger.debug).toHaveBeenCalledWith(
-          `Incoming manifest ADDs: ${sampleManifestRecords.c.signature}`);
+        // Console should indicate the records have been added in order.
+        expect(relevantLogs[1][0]).toBe(
+          `Incoming manifest ADDs: ${sampleManifestRecords.a.signature}`,
+        );
+        expect(relevantLogs[2][0]).toBe(
+          `Incoming manifest ADDs: ${sampleManifestRecords.b.signature}`,
+        );
+        expect(relevantLogs[3][0]).toBe(
+          `Incoming manifest ADDs: ${sampleManifestRecords.c.signature}`,
+        );
+
+        expect(relevantLogs.length).toBe(4);
       });
 
       it('populates the manifest store after starting', async () => {

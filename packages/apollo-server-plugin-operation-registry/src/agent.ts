@@ -11,13 +11,14 @@ import { HttpRequestCache } from './cache';
 
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { OperationManifest } from "./ApolloServerPluginOperationRegistry";
+import { Logger } from "apollo-server-types";
 import { Response, RequestInit, fetch } from "apollo-server-env";
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
 
 export interface AgentOptions {
-  logger?: loglevel.Logger;
+  logger?: Logger;
   fetcher?: typeof fetch;
   pollSeconds?: number;
   engine: any;
@@ -32,7 +33,7 @@ const callToAction = `Ensure this server's schema has been published with 'apoll
 export default class Agent {
   private fetcher: typeof fetch;
   private timer?: NodeJS.Timer;
-  private logger: loglevel.Logger;
+  private logger: Logger;
   private requestInFlight: Promise<any> | null = null;
   private lastSuccessfulCheck?: Date;
   private storageSecret?: string;
