@@ -2611,7 +2611,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         triggers.resolveLoad({ schema, executor: () => {} });
         await createApolloServer({
           gateway,
-          engine: { apiKey: 'service:tester:1234abc', schemaTag: 'staging' },
+          engine: { apiKey: 'service:tester:1234abc', graphVariant: 'staging' },
         });
 
         expect(optionsSpy).toHaveBeenLastCalledWith({

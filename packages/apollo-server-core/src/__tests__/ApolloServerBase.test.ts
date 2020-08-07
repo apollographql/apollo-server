@@ -45,37 +45,6 @@ describe('ApolloServerBase construction', () => {
     ).not.toThrow();
   });
 
-  it('spits out a deprecation warning when passed a schemaTag in construction', () => {
-    const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
-    expect(
-      () =>
-        new ApolloServerBase({
-          typeDefs,
-          resolvers,
-          engine: {
-            schemaTag: 'foo',
-            apiKey: 'not:real:key',
-          },
-        }).stop()
-    ).not.toThrow();
-    expect(spyConsoleWarn).toBeCalled();
-    spyConsoleWarn.mockRestore();
-  });
-
-  it('throws when passed a schemaTag and graphVariant in construction', () => {
-    expect(
-      () =>
-        new ApolloServerBase({
-          schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema,
-          engine: {
-            schemaTag: 'foo',
-            graphVariant: 'heck',
-            apiKey: 'not:real:key',
-          },
-        }),
-    ).toThrow();
-  });
-
   it('throws when a GraphQLSchema is not provided to the schema configuration option', () => {
     expect(() => {
       new ApolloServerBase({

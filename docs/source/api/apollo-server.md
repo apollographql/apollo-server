@@ -457,12 +457,6 @@ addMockFunctionsToSchema({
 
    By default, all errors are reported to Apollo Studio.  This function can be used to exclude specific errors from being reported.  This function receives a copy of the `GraphQLError` and can manipulate it before it's reported.  The modified error (e.g., after changing the `err.message` property) should be returned, or the function can return `null` to avoid reporting the error entirely.  It is not permissible to return `undefined`. Note that most `GraphQLError` fields, like `path`, will be copied from the original error to the new error: this way, you can just `return new GraphQLError("message")` without having to explicitly keep it associated with the same node. Specifically, only the `message` and `extensions` properties on the returned `GraphQLError` are observed.  If `extensions` aren't specified, the original `extensions` are used.
 
-*  `schemaTag`: String
-
-   > Will be deprecated in 3.0. Use the option `graphVariant` instead.
-
-   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associated with the same string.
-
 *  `graphVariant`: String
 
    A human-readable name for the variant of a schema (such as `staging` or `production`). Setting this value will cause metrics to be segmented in Apollo Studio. Additionally, schema validation with a graph variant only checks metrics associated with the same variant.
