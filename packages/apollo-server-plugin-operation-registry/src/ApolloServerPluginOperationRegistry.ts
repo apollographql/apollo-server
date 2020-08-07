@@ -51,7 +51,6 @@ export interface Options {
     | boolean
     | ForbidUnregisteredOperationsPredicate;
   dryRun?: boolean;
-  schemaTag?: string;
   graphVariant?: string;
   onUnregisteredOperation?: (
     requestContext: GraphQLRequestContext,
@@ -66,13 +65,8 @@ export interface Options {
 export default function plugin(options: Options = Object.create(null)) {
   let agent: Agent;
   let store: InMemoryLRUCache;
-  const graphVariant = options.graphVariant || options.schemaTag || process.env.APOLLO_GRAPH_VARIANT || 'current';
-  if (options.graphVariant && options.schemaTag) {
-    throw new Error('Cannot specify both graphVariant and schemaTag. Please use graphVariant.');
-  }
-  if (options.schemaTag) {
-    console.warn('[Deprecation warning] schemaTag option is deprecated. Please use graphVariant options instead.');
-  }
+  const graphVariant =
+    options.graphVariant || process.env.APOLLO_GRAPH_VARIANT || 'current';
 
   // Setup logging facilities, scoped under the appropriate name.
   const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
