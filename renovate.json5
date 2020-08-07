@@ -18,10 +18,6 @@
       these threshholds via `git blame`.
     */
     {
-      "packageNames": ["@koa/cors"],
-      "allowedVersions": "<3"
-    },
-    {
       "packageNames": ["@hapi/hapi", "@types/hapi__hapi"],
       "allowedVersions": "<19"
     },
