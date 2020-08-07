@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 
 export const name = 'documents';
+export const url = `https://${name}.api.com`;
 export const typeDefs = gql`
   directive @stream on FIELD
   directive @transform(from: String!) on FIELD

@@ -102,25 +102,25 @@ type Money {
 
     const { data, errors } = await graphql(schema, query);
     expect(errors).toBeUndefined();
-    expect(data._service.sdl).toEqual(`"""
-A user. This user is very complicated and requires so so so so so so so so so so
-so so so so so so so so so so so so so so so so so so so so so so much
-description text
+    expect(data?._service.sdl).toEqual(`"""
+A user. This user is very complicated and requires so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so much description text
 """
 type User @key(fields: "id") {
-  "The unique ID of the user."
+  """The unique ID of the user."""
   id: ID!
-  "The user's name."
+
+  """The user's name."""
   name: String
   username: String
   foo(
-    "Description 1"
+    """Description 1"""
     arg1: String
-    "Description 2"
+
+    """Description 2"""
     arg2: String
+
     """
-    Description 3 Description 3 Description 3 Description 3 Description 3
-    Description 3 Description 3 Description 3 Description 3 Description 3 Description 3
+    Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3
     """
     arg3: String
   ): String

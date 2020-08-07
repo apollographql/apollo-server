@@ -1,0 +1,24 @@
+{
+  "name": "gateway",
+  "private": true,
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "heroku-postbuild": "tsc --build tsconfig.json"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "peerDependencies": {
+    "@apollo/gateway": "*",
+    "apollo-server": "*",
+    "apollo-server-plugin-operation-registry": "*"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": "12.x"
+  },
+  "devDependencies": {
+    "typescript": "3.9.7"
+  }
+}
