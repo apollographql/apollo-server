@@ -7,7 +7,7 @@
   "packageRules": [
     {
       "packageNames": ["@types/node"],
-      "allowedVersions": "8.x"
+      "allowedVersions": "12.x"
     },
     /*
       Avoid major version bumps to server frameworks (those used by the
