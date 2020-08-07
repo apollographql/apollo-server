@@ -8,6 +8,7 @@ import {
   parseSelections,
   isStringValueNode,
   selectionIncludesField,
+  getFederationMetadata,
 } from '../../utils';
 import { PostCompositionValidator } from '.';
 
@@ -23,10 +24,11 @@ export const externalUnused: PostCompositionValidator = ({ schema }) => {
     if (!isObjectType(parentType)) continue;
     // If externals is populated, we need to look at each one and confirm
     // it is used
-    if (parentType.federation && parentType.federation.externals) {
+    const typeFederationMetadata = getFederationMetadata(parentType);
+    if (typeFederationMetadata?.externals) {
       // loop over every service that has extensions with @external
       for (const [serviceName, externalFieldsForService] of Object.entries(
-        parentType.federation.externals,
+        typeFederationMetadata.externals,
       )) {
         // for a single service, loop over the external fields.
         for (const { field: externalField } of externalFieldsForService) {
@@ -141,9 +143,7 @@ export const externalUnused: PostCompositionValidator = ({ schema }) => {
           const hasMatchingRequiresOnType = Object.values(
             parentType.getFields(),
           ).some(maybeRequiresField => {
-            const fieldOwner =
-              maybeRequiresField.federation &&
-              maybeRequiresField.federation.serviceName;
+            const fieldOwner = getFederationMetadata(maybeRequiresField)?.serviceName;
             if (fieldOwner !== serviceName) return false;
 
             const requiresDirectives = findDirectivesOnTypeOrField(

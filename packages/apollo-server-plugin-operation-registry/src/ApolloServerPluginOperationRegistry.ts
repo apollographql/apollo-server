@@ -22,7 +22,7 @@ import Agent from './agent';
 import { GraphQLSchema } from 'graphql/type';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
-import loglevelDebug from 'loglevel-debug';
+import { fetch } from "apollo-server-env";
 
 type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,
@@ -45,11 +45,11 @@ export interface OperationManifest {
 
 export interface Options {
   debug?: boolean;
+  fetcher?: typeof fetch;
   forbidUnregisteredOperations?:
     | boolean
     | ForbidUnregisteredOperationsPredicate;
   dryRun?: boolean;
-  schemaTag?: string;
   graphVariant?: string;
   onUnregisteredOperation?: (
     requestContext: GraphQLRequestContext,
@@ -64,20 +64,12 @@ export interface Options {
 export default function plugin(options: Options = Object.create(null)) {
   let agent: Agent;
   let store: InMemoryLRUCache;
-  const graphVariant = options.graphVariant || options.schemaTag || process.env.APOLLO_GRAPH_VARIANT || 'current';
-  if (options.graphVariant && options.schemaTag) {
-    throw new Error('Cannot specify both graphVariant and schemaTag. Please use graphVariant.');
-  }
-  if (options.schemaTag) {
-    console.warn('[Deprecation warning] schemaTag option is deprecated. Please use graphVariant options instead.');
-  }
+  const graphVariant =
+    options.graphVariant || process.env.APOLLO_GRAPH_VARIANT || 'current';
 
   // Setup logging facilities, scoped under the appropriate name.
   const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
   const dryRunPrefix = '[DRYRUN]';
-
-  // Support DEBUG environment variable, à la https://npm.im/debug/.
-  loglevelDebug(logger);
 
   // And also support the `debug` option, if it's truthy.
   if (options.debug === true) {
@@ -136,6 +128,7 @@ for observability purposes, but all operations will be permitted.`,
         engine,
         store,
         logger,
+        fetcher: options.fetcher,
       });
 
       await agent.start();
