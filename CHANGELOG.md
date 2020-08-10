@@ -11,6 +11,15 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet! Stay tuned!_
 
+## v2.16.1
+
+- This release only includes patch updates to dependencies.
+
+## v2.16.0
+
+- `apollo-server-fastify`: Pass Fastify's `request` and `reply` objects into the `context` function, which previously had been receiving nothing. [Issue #3156](https://github.com/apollographql/apollo-server/issues/3156) [PR #3895(https://github.com/apollographql/apollo-server/pull/3895)
+- `apollo-server-lamdbda`: Automatically decode payloads which are Base64-encoded when the `isBase64Encoded` boolean is present on Lambda `event` payloads. [PR #4311](https://github.com/apollographql/apollo-server/pull/4311)
+
 ## v2.15.1
 
 - The default branch of the repository has been changed to `main`.  As this changed a number of references in the repository's `package.json` and `README.md` files (e.g., for badges, links, etc.), this necessitates a release to publish those changes to npm. [PR #4302](https://github.com/apollographql/apollo-server/pull/4302)

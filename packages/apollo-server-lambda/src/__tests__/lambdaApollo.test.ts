@@ -106,9 +106,12 @@ const resolvers = {
   },
 };
 
-// NODE: graphql-upload (8.0.0) requires Node 8.5 or higher
 
-(NODE_MAJOR_VERSION < 8 ? describe.skip : describe)('file uploads', () => {
+// NODE: Skip Node.js 6 and 14, but only because `graphql-upload`
+// doesn't support them on the version use use.
+(
+  [6, 14].includes(NODE_MAJOR_VERSION) ? describe.skip : describe
+)('file uploads', () => {
   let app = <any>null
   beforeAll(async () => {
     app = await createLambda({

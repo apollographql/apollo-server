@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "📚 Questions: Stack Overflow tagged \"apollo\""
+    url: https://stackoverflow.com/questions/tagged/apollo
+    about: >-
+      Many questions are already answered on Stack Overflow!
+      We suggest starting here!
+  - name: "💬 Questions: Spectrum Community Support"
+    url: https://spectrum.chat/apollo/apollo-server
+    about: >-
+      If you're unable to find an answer on Stack Overflow, the Apollo
+      Server channel on our Apollo Community Spectrum is the next best place.

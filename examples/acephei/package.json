@@ -1,0 +1,40 @@
+{
+  "name": "acephei",
+  "description": "Full federation demo to illuminate good design patterns and practices.",
+  "scripts": {
+    "watch": "tsc --build tsconfig.json --watch",
+    "start": "nodemon -e js,graphql,json --watch services start.js",
+    "postinstall": "tsc --build tsconfig.json",
+    "check": "concurrently \"npm:check:*\"",
+    "push": "concurrently \"npm:push:*\"",
+    "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/ ./{services,clients}/*/tsconfig.tsbuildinfo ./__tmp__*",
+    "check:accounts": "npx apollo service:check --localSchemaFile=./services/accounts/schema.graphql --serviceName=accounts",
+    "check:books": "npx apollo service:check --localSchemaFile=./services/books/schema.graphql --serviceName=books",
+    "check:products": "npx apollo service:check --localSchemaFile=./services/products/schema.graphql --serviceName=products",
+    "check:reviews": "npx apollo service:check --localSchemaFile=./services/reviews/schema.graphql --serviceName=reviews",
+    "push:accounts": "npx apollo service:push --localSchemaFile=./services/accounts/schema.graphql --serviceName=accounts --serviceURL=https://acephei-accounts.herokuapp.com",
+    "push:books": "npx apollo service:push --localSchemaFile=./services/books/schema.graphql --serviceName=books --serviceURL=https://acephei-books.herokuapp.com",
+    "push:products": "npx apollo service:push --localSchemaFile=./services/products/schema.graphql --serviceName=products --serviceURL=https://acephei-products.herokuapp.com",
+    "push:reviews": "npx apollo service:push --localSchemaFile=./services/reviews/schema.graphql --serviceName=reviews --serviceURL=https://acephei-reviews.herokuapp.com"
+  },
+  "dependencies": {
+    "accounts": "file:services/accounts",
+    "books": "file:services/books",
+    "gateway": "file:gateway",
+    "products": "file:services/products",
+    "reviews": "file:services/reviews"
+  },
+  "devDependencies": {
+    "@types/react": "16.9.45",
+    "concurrently": "4.1.2",
+    "nodemon": "2.0.4",
+    "react": "16.13.1",
+    "typescript": "3.9.7"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "*/**/dist"
+    ],
+    "ext": "js"
+  }
+}

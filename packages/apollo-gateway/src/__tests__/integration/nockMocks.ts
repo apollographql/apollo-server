@@ -109,5 +109,5 @@ export function mockRawPartialSchema({ partialSchemaPath }: MockService) {
 }
 
 export function mockRawPartialSchemaSuccess(service: MockService) {
-  mockRawPartialSchema(service).reply(200, service.sdl);
+  return mockRawPartialSchema(service).reply(200, service.sdl);
 }
