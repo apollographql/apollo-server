@@ -7,13 +7,15 @@ import { QueryPlan } from '../..';
 import { buildQueryPlan, buildOperationContext, BuildQueryPlanOptions } from '../buildQueryPlan';
 import { getFederatedTestingSchema } from './execution-utils';
 
+const testDir = './packages/apollo-gateway/src/__tests__/';
 const buildQueryPlanFeature = loadFeature(
-  './packages/apollo-gateway/src/__tests__/build-query-plan.feature'
+  testDir + 'build-query-plan.feature'
 );
-
+const fragmentsFeature = loadFeature(testDir + 'integration/fragments.feature');
 
 const features = [
-  buildQueryPlanFeature
+  buildQueryPlanFeature,
+  fragmentsFeature
 ];
 
 features.forEach((feature) => {
