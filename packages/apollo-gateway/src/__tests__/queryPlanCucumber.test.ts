@@ -12,10 +12,12 @@ const buildQueryPlanFeature = loadFeature(
   testDir + 'build-query-plan.feature'
 );
 const fragmentsFeature = loadFeature(testDir + 'integration/fragments.feature');
+const requiresFeature = loadFeature(testDir + 'integration/requires.feature');
 
 const features = [
-  buildQueryPlanFeature,
-  fragmentsFeature
+  // buildQueryPlanFeature,
+  // fragmentsFeature,
+  requiresFeature
 ];
 
 features.forEach((feature) => {
