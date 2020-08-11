@@ -23,7 +23,6 @@
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "fast-json-stable-stringify": "^2.1.0",
     "loglevel": "^1.6.8",
-    "loglevel-debug": "^0.0.1",
     "make-fetch-happen": "^8.0.9"
   },
   "peerDependencies": {
