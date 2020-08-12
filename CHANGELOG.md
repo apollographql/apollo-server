@@ -5,11 +5,18 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-gateway/CHANGELOG.md)
 - [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-federation/CHANGELOG.md)
 
-## vNEXT
+## v3.0.0 (PRERELEASE)
 
-> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
+> The changes noted within this `v3.0.0` section have not been finalized.  This section aims to track all changes that are going into the 3.0 release, but we will not claim that it is comprehensive until we have finalized the 3.0 release.
 
-- _Nothing yet! Stay tuned!_
+### BREAKING CHANGES
+
+- While we are working to re-introduce subscriptions with a higher degree of integration, they have been disabled in the initial versions of Apollo Server.  See [the migration guide section on Subscriptions](./docs/source/migration.md#Subscriptions) to bring them back in their current form.
+- In order to let the `graphql-upload` package evolve on its own, uploads are no longer integrated directly with Apollo Server.  To bring them back in their current form, see [the migration guide section on File Uploads](./docs/source/migration.md#File-uploads)
+- Top-level exports have changed. E.g.,
+
+  - We no longer re-export the entirety of `graphql-tools` (including `makeExecutableSchema`) from all Apollo Server packages.
+  - The `Upload` scalar is no longer exported. (See above as to why.)
 
 ## v2.16.1
 
