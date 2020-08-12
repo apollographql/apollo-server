@@ -3,6 +3,8 @@
   "version": "independent",
   "command": {
     "version": {
+      "message": "Release",
+      "ignoreChanges": ["**/*.md"],
       "includeMergedTags": true
     },
     "bootstrap": {
