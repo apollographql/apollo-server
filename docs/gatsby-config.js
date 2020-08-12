@@ -69,8 +69,8 @@ module.exports = {
           ],
           Appendices: [
             'proxy-configuration',
-            'migration-two-dot',
-            'migration-file-uploads',
+            'migration',
+            'migration-engine',
           ],
         },
       },

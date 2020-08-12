@@ -82,8 +82,7 @@ export const plugin = (_futureOptions = {}) => (): ApolloServerPlugin => ({
       willSendResponse({ response }) {
         // In the event that we are called prior to the initialization of
         // critical date metrics, we'll return undefined to signal that the
-        // extension did not format properly. Any undefined extension
-        // results are simply purged by the graphql-extensions module.
+        // extension did not format properly.
         if (
           typeof startWallTime === 'undefined' ||
           typeof endWallTime === 'undefined' ||

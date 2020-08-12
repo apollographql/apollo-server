@@ -8,17 +8,13 @@ import {
 } from '@apollographql/graphql-playground-html';
 import {
   ApolloServerBase,
-  FileUploadOptions,
   GraphQLOptions,
-  formatApolloErrors,
-  processFileUploads,
 } from 'apollo-server-core';
 import accepts from 'accepts';
-import typeis from 'type-is';
 
 import { graphqlKoa } from './koaApollo';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions } from 'apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;
@@ -31,31 +27,6 @@ export interface GetMiddlewareOptions {
 export interface ServerRegistration extends GetMiddlewareOptions {
   app: Koa;
 }
-
-const fileUploadMiddleware = (
-  uploadsConfig: FileUploadOptions,
-  server: ApolloServerBase,
-) => async (ctx: Koa.Context, next: Function) => {
-  if (typeis(ctx.req, ['multipart/form-data'])) {
-    try {
-      ctx.request.body = await processFileUploads(
-        ctx.req,
-        ctx.res,
-        uploadsConfig,
-      );
-      return next();
-    } catch (error) {
-      if (error.status && error.expose) ctx.status = error.status;
-
-      throw formatApolloErrors([error], {
-        formatter: server.requestOptions.formatError,
-        debug: server.requestOptions.debug,
-      });
-    }
-  } else {
-    return next();
-  }
-};
 
 const middlewareFromPath = (
   path: string,
@@ -74,14 +45,6 @@ export class ApolloServer extends ApolloServerBase {
   // be propagated with a generic to the super class
   async createGraphQLServerOptions(ctx: Koa.Context): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ ctx });
-  }
-
-  protected supportsSubscriptions(): boolean {
-    return true;
-  }
-
-  protected supportsUploads(): boolean {
-    return true;
   }
 
   public applyMiddleware({ app, ...rest }: ServerRegistration) {
@@ -147,11 +110,6 @@ export class ApolloServer extends ApolloServerBase {
       );
     }
 
-    let uploadsMiddleware;
-    if (this.uploadsConfig && typeof processFileUploads === 'function') {
-      uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
-    }
-
     this.graphqlPath = path;
 
     if (cors === true) {
@@ -164,10 +122,6 @@ export class ApolloServer extends ApolloServerBase {
       middlewares.push(middlewareFromPath(path, bodyParser()));
     } else if (bodyParserConfig !== false) {
       middlewares.push(middlewareFromPath(path, bodyParser(bodyParserConfig)));
-    }
-
-    if (uploadsMiddleware) {
-      middlewares.push(middlewareFromPath(path, uploadsMiddleware));
     }
 
     middlewares.push(
@@ -190,7 +144,6 @@ export class ApolloServer extends ApolloServerBase {
           if (prefersHTML) {
             const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
               endpoint: path,
-              subscriptionEndpoint: this.subscriptionsPath,
               ...this.playgroundOptions,
             };
             ctx.set('Content-Type', 'text/html');

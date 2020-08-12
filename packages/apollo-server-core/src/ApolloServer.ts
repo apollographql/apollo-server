@@ -1,15 +1,10 @@
 import {
   makeExecutableSchema,
   addMockFunctionsToSchema,
-  GraphQLParseOptions,
 } from 'graphql-tools';
-import { Server as HttpServer } from 'http';
 import loglevel from 'loglevel';
 import {
-  execute,
   GraphQLSchema,
-  subscribe,
-  ExecutionResult,
   GraphQLError,
   GraphQLFieldResolver,
   ValidationContext,
@@ -18,8 +13,8 @@ import {
   isObjectType,
   isScalarType,
   isSchema,
+  ParseOptions,
 } from 'graphql';
-import { GraphQLExtension } from 'graphql-extensions';
 import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
@@ -28,16 +23,7 @@ import {
   ApolloServerPlugin,
   GraphQLServiceContext,
 } from 'apollo-server-plugin-base';
-import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
-import {
-  SubscriptionServer,
-  ExecutionParams,
-} from 'subscriptions-transport-ws';
-
-import WebSocket from 'ws';
-
-import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions,
   PersistedQueryOptions,
@@ -47,8 +33,6 @@ import {
   Config,
   Context,
   ContextFunction,
-  SubscriptionServerOptions,
-  FileUploadOptions,
   PluginDefinition,
 } from './types';
 
@@ -102,9 +86,6 @@ function getEngineServiceId(engine: Config['engine'], logger: Logger): string | 
   return;
 }
 
-const forbidUploadsForTesting =
-  process && process.env.NODE_ENV === 'test' && !runtimeSupportsUploads;
-
 function approximateObjectSize<T>(obj: T): number {
   return Buffer.byteLength(JSON.stringify(obj), 'utf8');
 }
@@ -116,12 +97,10 @@ type SchemaDerivedData = {
   documentStore?: InMemoryLRUCache<DocumentNode>;
   schema: GraphQLSchema;
   schemaHash: SchemaHash;
-  extensions: Array<() => GraphQLExtension>;
 };
 
 export class ApolloServerBase {
   private logger: Logger;
-  public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLServerOptions<any>> = Object.create(null);
 
@@ -131,16 +110,10 @@ export class ApolloServerBase {
   private engineApiKeyHash?: string;
   protected plugins: ApolloServerPlugin[] = [];
 
-  protected subscriptionServerOptions?: SubscriptionServerOptions;
-  protected uploadsConfig?: FileUploadOptions;
-
-  // set by installSubscriptionHandlers.
-  private subscriptionServer?: SubscriptionServer;
-
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
 
-  private parseOptions: GraphQLParseOptions;
+  private parseOptions: ParseOptions;
   private schemaDerivedData: Promise<SchemaDerivedData>;
   private config: Config;
   /** @deprecated: This is undefined for servers operating as gateways, and will be removed in a future release **/
@@ -164,10 +137,7 @@ export class ApolloServerBase {
       introspection,
       mocks,
       mockEntireSchema,
-      extensions,
       engine,
-      subscriptions,
-      uploads,
       playground,
       plugins,
       gateway,
@@ -248,30 +218,6 @@ export class ApolloServerBase {
 
     this.requestOptions = requestOptions as GraphQLServerOptions;
 
-    if (uploads !== false && !forbidUploadsForTesting) {
-      if (this.supportsUploads()) {
-        if (!runtimeSupportsUploads) {
-          printNodeFileUploadsMessage(this.logger);
-          throw new Error(
-            '`graphql-upload` is no longer supported on Node.js < v8.5.0.  ' +
-              'See https://bit.ly/gql-upload-node-6.',
-          );
-        }
-
-        if (uploads === true || typeof uploads === 'undefined') {
-          this.uploadsConfig = {};
-        } else {
-          this.uploadsConfig = uploads;
-        }
-        //This is here to check if uploads is requested without support. By
-        //default we enable them if supported by the integration
-      } else if (uploads) {
-        throw new Error(
-          'This implementation of ApolloServer does not support file uploads because the environment cannot accept multi-part forms',
-        );
-      }
-    }
-
     if (engine && typeof engine === 'object') {
       // Use the `ApolloServer` logger unless a more granular logger is set.
       if (!engine.logger) {
@@ -322,42 +268,6 @@ export class ApolloServerBase {
           "contact Apollo support.",
         ].join(' '),
       );
-    }
-
-    if (gateway && subscriptions !== false) {
-      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs separate.
-      throw new Error(
-        [
-          'Subscriptions are not yet compatible with the gateway.',
-          "Set `subscriptions: false` in Apollo Server's constructor to",
-          'explicitly disable subscriptions (which are on by default)',
-          'and allow for gateway functionality.',
-        ].join(' '),
-      );
-    } else if (subscriptions !== false) {
-      if (this.supportsSubscriptions()) {
-        if (subscriptions === true || typeof subscriptions === 'undefined') {
-          this.subscriptionServerOptions = {
-            path: this.graphqlPath,
-          };
-        } else if (typeof subscriptions === 'string') {
-          this.subscriptionServerOptions = { path: subscriptions };
-        } else {
-          this.subscriptionServerOptions = {
-            path: this.graphqlPath,
-            ...subscriptions,
-          };
-        }
-        // This is part of the public API.
-        this.subscriptionsPath = this.subscriptionServerOptions.path;
-
-        //This is here to check if subscriptions are requested without support. By
-        //default we enable them if supported by the integration
-      } else if (subscriptions) {
-        throw new Error(
-          'This implementation of ApolloServer does not support GraphQL subscriptions.',
-        );
-      }
     }
 
     this.playgroundOptions = createPlaygroundOptions(playground);
@@ -479,27 +389,6 @@ export class ApolloServerBase {
         );
       }
 
-      if (this.uploadsConfig) {
-        const { GraphQLUpload } = require('graphql-upload');
-        if (Array.isArray(resolvers)) {
-          if (resolvers.every(resolver => !resolver.Upload)) {
-            resolvers.push({ Upload: GraphQLUpload });
-          }
-        } else {
-          if (resolvers && !resolvers.Upload) {
-            resolvers.Upload = GraphQLUpload;
-          }
-        }
-
-        // We augment the typeDefs with the Upload scalar, so typeDefs that
-        // don't include it won't fail
-        augmentedTypeDefs.push(
-          gql`
-            scalar Upload
-          `,
-        );
-      }
-
       constructedSchema = makeExecutableSchema({
         typeDefs: augmentedTypeDefs,
         schemaDirectives,
@@ -514,7 +403,7 @@ export class ApolloServerBase {
   private generateSchemaDerivedData(schema: GraphQLSchema): SchemaDerivedData {
     const schemaHash = generateSchemaHash(schema!);
 
-    const { mocks, mockEntireSchema, extensions: _extensions } = this.config;
+    const { mocks, mockEntireSchema } = this.config;
 
     if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
       addMockFunctionsToSchema({
@@ -528,19 +417,12 @@ export class ApolloServerBase {
       });
     }
 
-    const extensions = [];
-
-    // Note: doRunQuery will add its own extensions if you set tracing,
-    // or cacheControl.
-    extensions.push(...(_extensions || []));
-
     // Initialize the document store.  This cannot currently be disabled.
     const documentStore = this.initializeDocumentStore();
 
     return {
       schema,
       schemaHash,
-      extensions,
       documentStore,
     };
   }
@@ -595,104 +477,10 @@ export class ApolloServerBase {
 
   public async stop() {
     this.toDispose.forEach(dispose => dispose());
-    if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.engineReportingAgent) {
       this.engineReportingAgent.stop();
       await this.engineReportingAgent.sendAllReports();
     }
-  }
-
-  public installSubscriptionHandlers(server: HttpServer | WebSocket.Server) {
-    if (!this.subscriptionServerOptions) {
-      if (this.config.gateway) {
-        throw Error(
-          'Subscriptions are not supported when operating as a gateway',
-        );
-      }
-      if (this.supportsSubscriptions()) {
-        throw Error(
-          'Subscriptions are disabled, due to subscriptions set to false in the ApolloServer constructor',
-        );
-      } else {
-        throw Error(
-          'Subscriptions are not supported, choose an integration, such as apollo-server-express that allows persistent connections',
-        );
-      }
-    }
-    const { SubscriptionServer } = require('subscriptions-transport-ws');
-    const {
-      onDisconnect,
-      onConnect,
-      keepAlive,
-      path,
-    } = this.subscriptionServerOptions;
-
-    // TODO: This shouldn't use this.schema, as it is deprecated in favor of the schemaDerivedData promise.
-    const schema = this.schema;
-    if (this.schema === undefined)
-      throw new Error(
-        'Schema undefined during creation of subscription server.',
-      );
-
-    this.subscriptionServer = SubscriptionServer.create(
-      {
-        schema,
-        execute,
-        subscribe,
-        onConnect: onConnect
-          ? onConnect
-          : (connectionParams: Object) => ({ ...connectionParams }),
-        onDisconnect: onDisconnect,
-        onOperation: async (
-          message: { payload: any },
-          connection: ExecutionParams,
-        ) => {
-          connection.formatResponse = (value: ExecutionResult) => ({
-            ...value,
-            errors:
-              value.errors &&
-              formatApolloErrors([...value.errors], {
-                formatter: this.requestOptions.formatError,
-                debug: this.requestOptions.debug,
-              }),
-          });
-
-          connection.formatError = this.requestOptions.formatError;
-
-          let context: Context = this.context ? this.context : { connection };
-
-          try {
-            context =
-              typeof this.context === 'function'
-                ? await this.context({ connection, payload: message.payload })
-                : context;
-          } catch (e) {
-            throw formatApolloErrors([e], {
-              formatter: this.requestOptions.formatError,
-              debug: this.requestOptions.debug,
-            })[0];
-          }
-
-          return { ...connection, context };
-        },
-        keepAlive,
-        validationRules: this.requestOptions.validationRules
-      },
-      server instanceof WebSocket.Server
-        ? server
-        : {
-            server,
-            path,
-          },
-    );
-  }
-
-  protected supportsSubscriptions(): boolean {
-    return false;
-  }
-
-  protected supportsUploads(): boolean {
-    return false;
   }
 
   // Returns true if it appears that the schema was returned from
@@ -836,7 +624,6 @@ export class ApolloServerBase {
       schema,
       schemaHash,
       documentStore,
-      extensions,
     } = await this.schemaDerivedData;
 
     let context: Context = this.context ? this.context : {};
@@ -859,7 +646,6 @@ export class ApolloServerBase {
       logger: this.logger,
       plugins: this.plugins,
       documentStore,
-      extensions,
       context,
       // Allow overrides from options. Be explicit about a couple of them to
       // avoid a bad side effect of the otherwise useful noUnusedLocals option
@@ -908,33 +694,4 @@ export class ApolloServerBase {
 
     return processGraphQLRequest(options, requestCtx);
   }
-}
-
-function printNodeFileUploadsMessage(logger: Logger) {
-  logger.error(
-    [
-      '*****************************************************************',
-      '*                                                               *',
-      '* ERROR! Manual intervention is necessary for Node.js < v8.5.0! *',
-      '*                                                               *',
-      '*****************************************************************',
-      '',
-      'The third-party `graphql-upload` package, which is used to implement',
-      'file uploads in Apollo Server 2.x, no longer supports Node.js LTS',
-      'versions prior to Node.js v8.5.0.',
-      '',
-      'Deployments which NEED file upload capabilities should update to',
-      'Node.js >= v8.5.0 to continue using uploads.',
-      '',
-      'If this server DOES NOT NEED file uploads and wishes to continue',
-      'using this version of Node.js, uploads can be disabled by adding:',
-      '',
-      '  uploads: false,',
-      '',
-      '...to the options for Apollo Server and re-deploying the server.',
-      '',
-      'For more information, see https://bit.ly/gql-upload-node-6.',
-      '',
-    ].join('\n'),
-  );
 }

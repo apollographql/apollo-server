@@ -176,7 +176,6 @@ export async function runHttpQuery(
     dataSources: options.dataSources,
     documentStore: options.documentStore,
 
-    extensions: options.extensions,
     persistedQueries: options.persistedQueries,
     tracing: options.tracing,
 

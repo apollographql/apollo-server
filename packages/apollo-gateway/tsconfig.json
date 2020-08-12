@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.base",
   "compilerOptions": {
-    "target": "es2019",
     "rootDir": "./src",
     "outDir": "./dist"
   },
@@ -12,6 +11,5 @@
     { "path": "../apollo-server-types" },
     { "path": "../apollo-federation" },
     { "path": "../apollo-federation-integration-testsuite" },
-    { "path": "../graphql-extensions" },
   ]
 }

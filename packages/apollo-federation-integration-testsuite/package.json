@@ -1,7 +1,7 @@
 {
   "name": "apollo-federation-integration-testsuite",
   "private": true,
-  "version": "0.19.1",
+  "version": "0.300.0-alpha.3",
   "description": "Apollo Federation Integrations / Test Fixtures",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,10 +18,10 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "engines": {
-    "node": ">=6"
+    "node": ">=12.0 <15.0"
   },
   "dependencies": {
     "apollo-graphql": "^0.5.0",
-    "graphql-tag": "^2.10.4"
+    "graphql-tag": "^2.11.0"
   }
 }

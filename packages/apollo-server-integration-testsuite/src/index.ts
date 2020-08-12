@@ -31,11 +31,6 @@ import { PersistedQueryNotFoundError } from "apollo-server-errors";
 
 export * from './ApolloServer';
 
-export const NODE_MAJOR_VERSION: number = parseInt(
-  process.versions.node.split('.', 1)[0],
-  10,
-);
-
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
   fields: {

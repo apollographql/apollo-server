@@ -31,6 +31,5 @@
     { "path": "./packages/apollo-server-plugin-response-cache" },
     { "path": "./packages/apollo-server-testing" },
     { "path": "./packages/apollo-tracing" },
-    { "path": "./packages/graphql-extensions" },
   ]
 }

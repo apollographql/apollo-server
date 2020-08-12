@@ -1,7 +1,6 @@
 import {
   ApolloServerBase,
   GraphQLOptions,
-  processFileUploads,
 } from 'apollo-server-core';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
@@ -42,10 +41,6 @@ export class ApolloServer extends ApolloServerBase {
 
       await promiseWillStart;
 
-      if (typeof processFileUploads === 'function') {
-        await this.handleFileUploads(req, res);
-      }
-
       (await this.handleHealthCheck({
         req,
         res,
@@ -56,16 +51,6 @@ export class ApolloServer extends ApolloServerBase {
         (await this.handleGraphqlRequestsWithServer({ req, res })) ||
         send(res, 404, null);
     };
-  }
-
-  // This integration supports file uploads.
-  protected supportsUploads(): boolean {
-    return true;
-  }
-
-  // This integration supports subscriptions.
-  protected supportsSubscriptions(): boolean {
-    return true;
   }
 
   // If health checking is enabled, trigger the `onHealthCheck`
@@ -132,7 +117,6 @@ export class ApolloServer extends ApolloServerBase {
       if (prefersHTML) {
         const middlewareOptions = {
           endpoint: this.graphqlPath,
-          subscriptionEndpoint: this.subscriptionsPath,
           ...this.playgroundOptions,
         };
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -163,22 +147,5 @@ export class ApolloServer extends ApolloServerBase {
       handled = true;
     }
     return handled;
-  }
-
-  // If file uploads are detected, prepare them for easier handling with
-  // the help of `graphql-upload`.
-  private async handleFileUploads(req: MicroRequest, res: ServerResponse) {
-    if (typeof processFileUploads !== 'function') {
-      return;
-    }
-
-    const contentType = req.headers['content-type'];
-    if (
-      this.uploadsConfig &&
-      contentType &&
-      contentType.startsWith('multipart/form-data')
-    ) {
-      req.filePayload = await processFileUploads(req, res, this.uploadsConfig);
-    }
   }
 }

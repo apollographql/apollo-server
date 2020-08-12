@@ -15,6 +15,5 @@
     { "path": "../apollo-server-plugin-base" },
     { "path": "../apollo-server-types" },
     { "path": "../apollo-tracing" },
-    { "path": "../graphql-extensions" },
   ]
 }

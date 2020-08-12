@@ -1,6 +1,6 @@
 {
   "name": "apollo-engine-reporting-protobuf",
-  "version": "0.5.2",
+  "version": "0.300.0-alpha.3",
   "description": "Protobuf format for Apollo Engine",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -32,6 +32,6 @@
   },
   "homepage": "https://github.com/apollographql/apollo-engine-reporting#readme",
   "dependencies": {
-    "@apollo/protobufjs": "^1.0.3"
+    "@apollo/protobufjs": "^1.0.4"
   }
 }

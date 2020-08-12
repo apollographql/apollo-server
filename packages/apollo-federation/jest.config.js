@@ -1,10 +1,5 @@
 const config = require('../../jest.config.base');
 
-const NODE_MAJOR_VERSION = parseInt(
-  process.versions.node.split('.', 1)[0],
-  10
-);
-
 const additionalConfig = {
   setupFiles: [
     'core-js/features/array/flat',
@@ -12,7 +7,6 @@ const additionalConfig = {
   ],
   testPathIgnorePatterns: [
     ...config.testPathIgnorePatterns,
-    ...NODE_MAJOR_VERSION === 6 ? ["<rootDir>"] : []
   ]
 };
 

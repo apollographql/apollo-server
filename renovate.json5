@@ -3,52 +3,31 @@
     "apollo-open-source"
   ],
   "automerge": false,
+  "baseBranches": ["main", "release-3.0"],
   "packageRules": [
     {
       "packageNames": ["@types/node"],
-      "allowedVersions": "8.x"
+      "allowedVersions": "12.x"
     },
     /*
-      Avoid major version bumps to server frameworks (those used by the
-      various Apollo Server integrations (e.g. Fastify, Express, Koa, etc.),
-      which must be reserved for a major version bump to Apollo Server itself.
+     * Apollo Server 3.x rules
+     *
+     * Essentially, we want to update Apollo whenever its possible!
+     *
+     */
+    {
+      "paths": [
+        "v3/package.json"
+      ],
+      "packageRules": [
+        "packagePatterns": ["^apollo-"],
+        "schedule": ["at any time"],
+        "automerge": true,
+        "automergeType": "branch",
+        "groupName": "v3"
+      ],
+    },
 
-      For more thoughts here, see my comment on the commits that introduced
-      these threshholds via `git blame`.
-    */
-    {
-      "packageNames": ["fastify"],
-      "allowedVersions": "<2"
-    },
-    {
-      "packageNames": ["fastify-cors"],
-      "allowedVersions": "<1"
-    },
-    {
-      "packageNames": ["koa-bodyparser"],
-      "allowedVersions": "<4"
-    },
-    {
-      "packageNames": ["@koa/cors"],
-      "allowedVersions": "<3"
-    },
-    {
-      "packageNames": ["log4js"],
-      "allowedVersions": "<5"
-    },
-    {
-      "packageNames": ["hapi", "@types/hapi"],
-      "allowedVersions": "<18"
-    },
-    {
-      "packageNames": ["ws"],
-      "allowedVersions": "<7"
-    },
-    // Remove when we're no longer supporting Node.js v6
-    {
-      "packageNames": ["nock"],
-      "allowedVersions": "<11"
-    },
     /*
       Docs-related Renovate rules
 

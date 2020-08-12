@@ -1,0 +1,1 @@
+export { RESTDataSource } from './rest';

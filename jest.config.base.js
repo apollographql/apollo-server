@@ -1,6 +1,7 @@
 const { defaults } = require("jest-config");
 
 module.exports = {
+  displayName: "Monorepo (v2)",
   testEnvironment: "node",
     setupFiles: [
       "<rootDir>/../apollo-server-env/dist/index.js"
@@ -21,7 +22,7 @@ module.exports = {
       // We don't want to match `apollo-server-env` and
       // `apollo-engine-reporting-protobuf`, because these don't depend on
       // compilation but need to be initialized from as parto of `prepare`.
-      '^(?!apollo-server-env|apollo-engine-reporting-protobuf)(apollo-(?:federation|gateway|server|datasource|cache-control|tracing|engine)[^/]*|graphql-extensions)(?:/dist)?((?:/.*)|$)': '<rootDir>/../../packages/$1/src$2'
+      '^(?!apollo-server-env|apollo-engine-reporting-protobuf)(apollo-(?:federation|gateway|server|datasource|cache-control|tracing|engine)[^/]*)(?:/dist)?((?:/.*)|$)': '<rootDir>/../../packages/$1/src$2'
     },
     clearMocks: true,
     globals: {

@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-env",
-  "version": "2.4.5",
+  "version": "3.0.0-alpha.3",
   "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "repository": {
@@ -21,10 +21,10 @@
     "prepare": "npm run clean && npm run compile"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=12.0 <15.0"
   },
   "dependencies": {
-    "node-fetch": "^2.1.2",
-    "util.promisify": "^1.0.0"
+    "node-fetch": "^2.6.0",
+    "util.promisify": "^1.0.1"
   }
 }

@@ -1,13 +1,10 @@
 import {
-  NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
 
 import http = require('http');
 import request = require('request');
-import FormData = require('form-data');
-import fs = require('fs');
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError } from 'apollo-server-core';
@@ -15,16 +12,15 @@ import { ApolloServer } from '../ApolloServer';
 
 const port = 0;
 
-// NODE: Intentionally skip for Node.js < 8 since Hapi 17 doesn't support those.
-(NODE_MAJOR_VERSION < 8 ? describe.skip : describe)(
+describe(
   'apollo-server-hapi',
   () => {
     let server: ApolloServer;
 
-    let app: import('hapi').Server;
+    let app: import('@hapi/hapi').Server;
     let httpServer: http.Server;
 
-    const { Server } = require('hapi');
+    const { Server } = require('@hapi/hapi');
 
     testApolloServer(
       async options => {
@@ -406,92 +402,6 @@ const port = 0;
               },
             );
           });
-        });
-      });
-      describe('file uploads', () => {
-        xit('enabled uploads', async () => {
-          server = new ApolloServer({
-            typeDefs: gql`
-              type File {
-                filename: String!
-                mimetype: String!
-                encoding: String!
-              }
-
-              type Query {
-                uploads: [File]
-              }
-
-              type Mutation {
-                singleUpload(file: Upload!): File!
-              }
-            `,
-            resolvers: {
-              Query: {
-                uploads: () => {},
-              },
-              Mutation: {
-                singleUpload: async (_, args) => {
-                  expect(await args.file).toBeDefined();
-                  return args.file;
-                },
-              },
-            },
-          });
-          app = new Server({ port });
-
-          await server.applyMiddleware({
-            app,
-            disableHealthCheck: true,
-          });
-          await app.start();
-
-          httpServer = app.listener;
-          const { port: appPort } = app.info;
-
-          const body = new FormData();
-
-          body.append(
-            'operations',
-            JSON.stringify({
-              query: `
-              mutation($file: Upload!) {
-                singleUpload(file: $file) {
-                  filename
-                  encoding
-                  mimetype
-                }
-              }
-            `,
-              variables: {
-                file: null,
-              },
-            }),
-          );
-
-          body.append('map', JSON.stringify({ 1: ['variables.file'] }));
-          body.append('1', fs.createReadStream('package.json'));
-
-          try {
-            const resolved = await fetch(
-              `http://localhost:${appPort}/graphql`,
-              {
-                method: 'POST',
-                body: body as any,
-              },
-            );
-            const response = await resolved.json();
-
-            expect(response.data.singleUpload).toEqual({
-              filename: 'package.json',
-              encoding: '7bit',
-              mimetype: 'application/json',
-            });
-          } catch (error) {
-            // This error began appearing randomly and seems to be a dev dependency bug.
-            // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
-            if (error.code !== 'EPIPE') throw error;
-          }
         });
       });
 

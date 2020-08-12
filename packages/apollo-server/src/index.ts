@@ -16,9 +16,7 @@ export interface ServerInfo {
   address: string;
   family: string;
   url: string;
-  subscriptionsUrl: string;
   port: number | string;
-  subscriptionsPath: string;
   server: http.Server;
 }
 
@@ -40,7 +38,6 @@ export class ApolloServer extends ApolloServerBase {
 
   private createServerInfo(
     server: http.Server,
-    subscriptionsPath?: string,
   ): ServerInfo {
     const serverInfo: any = {
       // TODO: Once we bump to `@types/node@10` or higher, we can replace cast
@@ -54,7 +51,6 @@ export class ApolloServer extends ApolloServerBase {
         port: number;
       }),
       server,
-      subscriptionsPath,
     };
 
     // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
@@ -72,14 +68,6 @@ export class ApolloServer extends ApolloServerBase {
       hostname: hostForUrl,
       port: serverInfo.port,
       pathname: this.graphqlPath,
-    });
-
-    serverInfo.subscriptionsUrl = require('url').format({
-      protocol: 'ws',
-      hostname: hostForUrl,
-      port: serverInfo.port,
-      slashes: true,
-      pathname: subscriptionsPath,
     });
 
     return serverInfo;
@@ -116,10 +104,6 @@ export class ApolloServer extends ApolloServerBase {
     const httpServer = http.createServer(app);
     this.httpServer = httpServer;
 
-    if (this.subscriptionServerOptions) {
-      this.installSubscriptionHandlers(httpServer);
-    }
-
     await new Promise(resolve => {
       httpServer.once('listening', resolve);
       // If the user passed a callback to listen, it'll get called in addition
@@ -128,7 +112,7 @@ export class ApolloServer extends ApolloServerBase {
       httpServer.listen(...(opts.length ? opts : [{ port: 4000 }]));
     });
 
-    return this.createServerInfo(httpServer, this.subscriptionsPath);
+    return this.createServerInfo(httpServer);
   }
 
   public async stop() {

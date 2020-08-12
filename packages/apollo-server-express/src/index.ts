@@ -1,7 +1,5 @@
 export {
-  GraphQLUpload,
   GraphQLOptions,
-  GraphQLExtension,
   Config,
   gql,
   // Errors
@@ -17,9 +15,6 @@ export {
   PlaygroundConfig,
   PlaygroundRenderPageOptions,
 } from 'apollo-server-core';
-
-export * from 'graphql-tools';
-export * from 'graphql-subscriptions';
 
 // ApolloServer integration.
 export {

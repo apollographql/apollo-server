@@ -127,7 +127,7 @@ new ApolloServer({
 
 * `schema`: <`Object`>
 
-  An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided. If you are using [file uploads](https://www.apollographql.com/docs/guides/file-uploads.html), you will have to add the `Upload` scalar to the schema, as it is not automatically added in case of setting the `schema` manually.
+  An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided.
 
 * `subscriptions`: <`Object`> | <`String`> | false
 
@@ -201,7 +201,7 @@ The `applyMiddleware` method is provided by the `apollo-server-{integration}` pa
 
     Specify a custom path. It defaults to `/graphql` if no path is specified.
 
-  * `cors`: <`Object` | `boolean`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapijs.com/api#-routeoptionscors), [koa](https://github.com/koajs/cors/))
+  * `cors`: <`Object` | `boolean`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapi.dev/api/?v=18.3.2#route.options.cors), [koa](https://github.com/koajs/cors/))
 
     Pass the integration-specific cors options. False removes the cors middleware and true uses the defaults.
 
@@ -233,7 +233,7 @@ server.applyMiddleware({ app, path: '/specialUrl' }); // app is from an existing
 
 ## `ApolloServer.getMiddleware`
 
-Similar to the `applyMiddleware` method above, though rather than applying the composition of the various Apollo Server middlewares which comprise a full-featured Apollo Server deployment (e.g. middleware for HTTP body parsing, GraphQL Playground, uploads and subscriptions) the `getMiddleware` simply returns the middleware.
+Similar to the `applyMiddleware` method above, though rather than applying the composition of the various Apollo Server middlewares which comprise a full-featured Apollo Server deployment (e.g. middleware for HTTP body parsing, GraphQL Playground and subscriptions) the `getMiddleware` simply returns the middleware.
 
 The `getMiddleware` method takes the same arguments as `applyMiddleware` **except** `app` should not be passed.  Instead, the result of `getMiddleware` must be added as a middleware directly to an existing application (e.g. with `app.use(...)`).
 
@@ -367,9 +367,11 @@ addMockFunctionsToSchema({
    report's header and some other top-level bytes are ignored. The report size is
    limited to the sum of the lengths of serialized traces and signatures.
 
-*  `endpointUrl`: string
+*  `tracesEndpointUrl`: string
 
    The URL of the Apollo Studio report ingress server.
+
+   > In Apollo Server 2, this was `endpointUrl`.
 
 *  `requestAgent`: `http.Agent | https.Agent | false`
 
@@ -456,12 +458,6 @@ addMockFunctionsToSchema({
 *  `rewriteError`: (err: GraphQLError) => GraphQLError | null
 
    By default, all errors are reported to Apollo Studio.  This function can be used to exclude specific errors from being reported.  This function receives a copy of the `GraphQLError` and can manipulate it before it's reported.  The modified error (e.g., after changing the `err.message` property) should be returned, or the function can return `null` to avoid reporting the error entirely.  It is not permissible to return `undefined`. Note that most `GraphQLError` fields, like `path`, will be copied from the original error to the new error: this way, you can just `return new GraphQLError("message")` without having to explicitly keep it associated with the same node. Specifically, only the `message` and `extensions` properties on the returned `GraphQLError` are observed.  If `extensions` aren't specified, the original `extensions` are used.
-
-*  `schemaTag`: String
-
-   > Will be deprecated in 3.0. Use the option `graphVariant` instead.
-
-   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associated with the same string.
 
 *  `graphVariant`: String
 

@@ -101,40 +101,19 @@ export function getEngineApiKey({
   return apiKeyFromEnv || legacyApiKeyFromEnv || '';
 }
 
-// AS3: Drop support for deprecated `ENGINE_SCHEMA_TAG`.
 export function getEngineGraphVariant(
   engine: EngineReportingOptions<any> | boolean | undefined,
-  logger: Logger = console,
+  _logger: Logger = console,
 ): string | undefined {
   if (engine === false) {
     return;
   } else if (
     typeof engine === 'object' &&
-    (engine.graphVariant || engine.schemaTag)
+    engine.graphVariant
   ) {
-    if (engine.graphVariant && engine.schemaTag) {
-      throw new Error(
-        'Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.',
-      );
-    }
-    if (engine.schemaTag) {
-      logger.warn(
-        '[deprecated] The `schemaTag` property within `engine` configuration has been renamed to `graphVariant`.',
-      );
-    }
-    return engine.graphVariant || engine.schemaTag;
+    return engine.graphVariant;
   } else {
-    if (process.env.ENGINE_SCHEMA_TAG) {
-      logger.warn(
-        '[deprecated] The `ENGINE_SCHEMA_TAG` environment variable has been renamed to `APOLLO_GRAPH_VARIANT`.',
-      );
-    }
-    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
-      throw new Error(
-        '`APOLLO_GRAPH_VARIANT` and `ENGINE_SCHEMA_TAG` (deprecated) environment variables must not both be set.',
-      );
-    }
-    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
+    return process.env.APOLLO_GRAPH_VARIANT;
   }
 }
 
@@ -164,13 +143,8 @@ export interface EngineReportingOptions<TContext> {
    */
   maxUncompressedReportSize?: number;
   /**
-   * [DEPRECATED] this option was replaced by tracesEndpointUrl
-   * The URL of the Engine report ingress server.
-   */
-  endpointUrl?: string;
-  /**
    * The URL to the Apollo Graph Manager ingress endpoint.
-   * (Previously, this was `endpointUrl`, which will be removed in AS3).
+   * (In Apollo Server 2, this was `endpointUrl`).
    */
   tracesEndpointUrl?: string;
   /**
@@ -315,10 +289,6 @@ export interface EngineReportingOptions<TContext> {
    * by modifying it and returning the modified error.
    */
   rewriteError?: (err: GraphQLError) => GraphQLError | null;
-  /**
-   * [DEPRECATED: use graphVariant] A human readable name to tag this variant of a schema (i.e. staging, EU)
-   */
-  schemaTag?: string;
   /**
    * A human readable name to refer to the variant of the graph for which metrics are reported
    */
@@ -544,14 +514,8 @@ export class EngineReportingAgent<TContext = any> {
       });
     }
 
-    if (this.options.endpointUrl) {
-      this.logger.warn(
-        '[deprecated] The `endpointUrl` option within `engine` has been renamed to `tracesEndpointUrl`.',
-      );
-    }
     this.tracesEndpointUrl =
-      (this.options.endpointUrl ||
-        this.options.tracesEndpointUrl ||
+      (this.options.tracesEndpointUrl ||
         'https://engine-report.apollodata.com') + '/api/ingress/traces';
 
     // Handle the legacy options: privateVariables and privateHeaders

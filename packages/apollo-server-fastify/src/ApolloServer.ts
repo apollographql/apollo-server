@@ -2,23 +2,12 @@ import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import { Accepts } from 'accepts';
 import {
   ApolloServerBase,
-  FileUploadOptions,
-  GraphQLOptions,
   PlaygroundRenderPageOptions,
-  formatApolloErrors,
-  processFileUploads,
+  GraphQLOptions,
 } from 'apollo-server-core';
 import fastJson from 'fast-json-stringify';
-import {
-  FastifyInstance,
-  FastifyReply,
-  FastifyRequest,
-  RawRequestDefaultExpression,
-} from 'fastify';
-import { GraphQLOperation } from 'graphql-upload';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { graphqlFastify } from './fastifyApollo';
-
-const kMultipart = Symbol('multipart');
 
 export interface ServerRegistration {
   path?: string;
@@ -32,45 +21,7 @@ const stringifyHealthCheck = fastJson({
   properties: { status: { type: 'string' } },
 });
 
-const fileUploadMiddleware = (
-  uploadsConfig: FileUploadOptions,
-  server: ApolloServerBase,
-) => (
-  request: FastifyRequest,
-  reply: FastifyReply,
-  done: (err: Error | null, body?: any) => void,
-) => {
-  if (
-    (request.raw as any)[kMultipart] &&
-    typeof processFileUploads === 'function'
-  ) {
-    processFileUploads(request.raw, reply.raw, uploadsConfig)
-      .then((body: GraphQLOperation | GraphQLOperation[]) => {
-        request.body = body;
-        done(null);
-      })
-      .catch((error: any) => {
-        if (error.status && error.expose) reply.status(error.status);
-
-        throw formatApolloErrors([error], {
-          formatter: server.requestOptions.formatError,
-          debug: server.requestOptions.debug,
-        });
-      });
-  } else {
-    done(null);
-  }
-};
-
 export class ApolloServer extends ApolloServerBase {
-  protected supportsSubscriptions(): boolean {
-    return true;
-  }
-
-  protected supportsUploads(): boolean {
-    return true;
-  }
-
   async createGraphQLServerOptions(
     request?: FastifyRequest,
     reply?: FastifyReply,
@@ -147,7 +98,6 @@ export class ApolloServer extends ApolloServerBase {
                 if (prefersHTML) {
                   const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
                     endpoint: this.graphqlPath,
-                    subscriptionEndpoint: this.subscriptionsPath,
                     ...this.playgroundOptions,
                   };
                   reply.type('text/html');
@@ -162,28 +112,11 @@ export class ApolloServer extends ApolloServerBase {
             },
           ];
 
-          if (typeof processFileUploads === 'function' && this.uploadsConfig) {
-            instance.addContentTypeParser(
-              'multipart',
-              (
-                request: FastifyRequest,
-                _payload: RawRequestDefaultExpression,
-                done: (err: Error | null, body?: any) => void,
-              ) => {
-                (request.raw as any)[kMultipart] = true;
-                done(null);
-              },
-            );
-            preHandlers.push(fileUploadMiddleware(this.uploadsConfig, this));
-          }
-
           instance.route({
             method: ['GET', 'POST'],
             url: '/',
             preHandler: preHandlers,
-            handler: await graphqlFastify(
-              this.createGraphQLServerOptions.bind(this),
-            ),
+            handler: await graphqlFastify(this.createGraphQLServerOptions.bind(this)),
           });
         },
         {

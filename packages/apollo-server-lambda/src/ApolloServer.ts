@@ -3,27 +3,14 @@ import {
   APIGatewayProxyEvent,
   Context as LambdaContext,
 } from 'aws-lambda';
-import {
-  formatApolloErrors,
-  processFileUploads,
-  FileUploadOptions,
-  ApolloServerBase,
-  GraphQLOptions,
-  Config,
-} from 'apollo-server-core';
+import { ApolloServerBase, GraphQLOptions, Config } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
-import {
-  ServerResponse,
-  IncomingHttpHeaders,
-  IncomingMessage,
-} from 'http';
 
 import { graphqlLambda } from './lambdaApollo';
 import { Headers } from 'apollo-server-env';
-import { Readable, Writable } from 'stream';
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -34,12 +21,7 @@ export interface CreateHandlerOptions {
     credentials?: boolean;
     maxAge?: number;
   };
-  uploadsConfig?: FileUploadOptions;
   onHealthCheck?: (req: APIGatewayProxyEvent) => Promise<any>;
-}
-
-export class FileUploadRequest extends Readable {
-  headers!: IncomingHttpHeaders;
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -54,11 +36,6 @@ export class ApolloServer extends ApolloServerBase {
       };
     }
     super(options);
-  }
-
-  // Uploads are supported in this integration
-  protected supportsUploads(): boolean {
-    return true;
   }
 
   // This translates the arguments from the middleware into graphQL options It
@@ -207,9 +184,9 @@ export class ApolloServer extends ApolloServerBase {
                 },
               });
             });
-        } else {
-          return callback(null, successfulResponse);
-        }
+          } else {
+            return callback(null, successfulResponse);
+          }
       }
 
       if (this.playgroundOptions && event.httpMethod === 'GET') {
@@ -236,9 +213,7 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
-      const response = new Writable() as ServerResponse;
       const callbackFilter: APIGatewayProxyCallback = (error, result) => {
-        response.end();
         callback(
           error,
           result && {
@@ -251,37 +226,7 @@ export class ApolloServer extends ApolloServerBase {
         );
       };
 
-      const fileUploadHandler = (next: Function) => {
-        const contentType =
-          event.headers["content-type"] || event.headers["Content-Type"];
-        if (contentType && contentType.startsWith("multipart/form-data")
-          && typeof processFileUploads === "function") {
-          const request = new FileUploadRequest() as IncomingMessage;
-          request.push(
-            Buffer.from(
-              <any>event.body,
-              event.isBase64Encoded ? "base64" : "ascii"
-            )
-          );
-          request.push(null);
-          request.headers = event.headers;
-          processFileUploads(request, response, this.uploadsConfig || {})
-            .then(body => {
-              event.body = body as any;
-              return next();
-            })
-            .catch(error => {
-              throw formatApolloErrors([error], {
-                formatter: this.requestOptions.formatError,
-                debug: this.requestOptions.debug,
-              });
-            });
-        } else {
-          return next();
-        }
-      };
-
-      fileUploadHandler(() => graphqlLambda(async () => {
+      graphqlLambda(async () => {
         // In a world where this `createHandler` was async, we might avoid this
         // but since we don't want to introduce a breaking change to this API
         // (by switching it to `async`), we'll leverage the
@@ -291,7 +236,7 @@ export class ApolloServer extends ApolloServerBase {
         // its contract) prior to processing the request.
         await promiseWillStart;
         return this.createGraphQLServerOptions(event, context);
-      })(event, context, callbackFilter));
+      })(event, context, callbackFilter);
     };
   }
 }

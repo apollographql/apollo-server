@@ -1,7 +1,5 @@
 export {
-  GraphQLUpload,
   GraphQLOptions,
-  GraphQLExtension,
   Config,
   gql,
   // Errors
@@ -19,5 +17,3 @@ export {
 } from 'apollo-server-core';
 
 export { ApolloServer } from './ApolloServer';
-
-export * from 'graphql-tools';

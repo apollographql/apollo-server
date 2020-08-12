@@ -1,7 +1,7 @@
 import { graphqlCloudflare } from './cloudflareApollo';
 
 import { ApolloServerBase } from 'apollo-server-core';
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions } from 'apollo-server-core';
 import { GraphQLOptions } from 'apollo-server-core';
 import { Request } from 'apollo-server-env';
 

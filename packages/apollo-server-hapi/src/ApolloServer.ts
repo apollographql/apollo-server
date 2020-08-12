@@ -1,37 +1,17 @@
-import hapi from 'hapi';
+import hapi from '@hapi/hapi';
 import { parseAll } from 'accept';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
 
-import { graphqlHapi } from './hapiApollo';
+import { plugin as graphqlHapi, HapiPluginOptions } from './hapiApollo';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions } from 'apollo-server-core';
 import {
   ApolloServerBase,
   GraphQLOptions,
-  FileUploadOptions,
-  processFileUploads,
 } from 'apollo-server-core';
-
-function handleFileUploads(uploadsConfig: FileUploadOptions) {
-  return async (request: hapi.Request, _h?: hapi.ResponseToolkit) => {
-    if (
-      typeof processFileUploads === 'function' &&
-      request.mime === 'multipart/form-data'
-    ) {
-      Object.defineProperty(request, 'payload', {
-        value: await processFileUploads(
-          request.raw.req,
-          request.raw.res,
-          uploadsConfig,
-        ),
-        writable: false,
-      });
-    }
-  };
-}
 
 export class ApolloServer extends ApolloServerBase {
   // This translates the arguments from the middleware into graphQL options It
@@ -42,14 +22,6 @@ export class ApolloServer extends ApolloServerBase {
     h: hapi.ResponseToolkit,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ request, h });
-  }
-
-  protected supportsSubscriptions(): boolean {
-    return true;
-  }
-
-  protected supportsUploads(): boolean {
-    return true;
   }
 
   public async applyMiddleware({
@@ -71,10 +43,6 @@ export class ApolloServer extends ApolloServerBase {
           return h.continue;
         }
 
-        if (this.uploadsConfig && typeof processFileUploads === 'function') {
-          await handleFileUploads(this.uploadsConfig)(request);
-        }
-
         if (this.playgroundOptions && request.method === 'get') {
           // perform more expensive content-type check only if necessary
           const accept = parseAll(request.headers);
@@ -87,7 +55,6 @@ export class ApolloServer extends ApolloServerBase {
           if (prefersHTML) {
             const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
               endpoint: path,
-              subscriptionEndpoint: this.subscriptionsPath,
               version: this.playgroundVersion,
               ...this.playgroundOptions,
             };
@@ -127,7 +94,7 @@ export class ApolloServer extends ApolloServerBase {
       });
     }
 
-    await app.register({
+    await app.register<HapiPluginOptions>({
       plugin: graphqlHapi,
       options: {
         path,
@@ -152,5 +119,4 @@ export interface ServerRegistration {
   route?: hapi.RouteOptions;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  uploads?: boolean | Record<string, any>;
 }
