@@ -63,7 +63,7 @@ describe('buildQueryPlan', () => {
     `);
   });
 
-  it(`should use a single fetch when requesting a root field from one service`, () => {
+  fit(`should use a single fetch when requesting a root field from one service`, () => {
     const query = gql`
       query {
         me {
