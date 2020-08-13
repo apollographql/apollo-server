@@ -1,6 +1,6 @@
 {
   "name": "@apollo/gateway",
-  "version": "0.17.0",
+  "version": "0.19.1",
   "description": "Apollo Gateway",
   "author": "Apollo <opensource@apollographql.com>",
   "main": "dist/index.js",
@@ -23,7 +23,7 @@
     "@types/node-fetch": "2.5.4",
     "apollo-engine-reporting-protobuf": "file:../apollo-engine-reporting-protobuf",
     "apollo-env": "^0.6.1",
-    "apollo-graphql": "^0.4.0",
+    "apollo-graphql": "^0.5.0",
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",

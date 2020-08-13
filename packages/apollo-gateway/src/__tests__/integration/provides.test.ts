@@ -1,5 +1,5 @@
 import { execute, overrideResolversInService } from '../execution-utils';
-import { fixtures } from '../__fixtures__/schemas/';
+import { fixtures } from 'apollo-federation-integration-testsuite';
 
 it('does not have to go to another service when field is given', async () => {
   const query = `#graphql
