@@ -414,7 +414,7 @@ function splitSubfields(
     let baseService, owningService;
 
     const parentTypeFederationMetadata = getFederationMetadata(parentType);
-    if (parentTypeFederationMetadata?.isValueType) {
+    if (parentTypeFederationMetadata!.isValueType) {
       baseService = parentGroup.serviceName;
       owningService = parentGroup.serviceName;
     } else {
@@ -1112,7 +1112,7 @@ export class QueryPlanningContext {
   }
 
   getBaseService(parentType: GraphQLObjectType): string | null {
-    return (getFederationMetadata(parentType)?.serviceName) || null;
+    return (getFederationMetadata(parentType)!.serviceName) || null;
   }
 
   getOwningService(
@@ -1122,7 +1122,7 @@ export class QueryPlanningContext {
     const fieldFederationMetadata = getFederationMetadata(fieldDef);
     if (
       fieldFederationMetadata?.serviceName &&
-      !fieldFederationMetadata?.belongsToValueType
+      !fieldFederationMetadata.belongsToValueType
     ) {
       return fieldFederationMetadata.serviceName;
     } else {
@@ -1151,7 +1151,7 @@ export class QueryPlanningContext {
     });
 
     for (const possibleType of this.getPossibleTypes(parentType)) {
-      const keys = getFederationMetadata(possibleType)?.keys?.[serviceName];
+      const keys = getFederationMetadata(possibleType)!.keys?.[serviceName];
 
       if (!(keys && keys.length > 0)) continue;
 
