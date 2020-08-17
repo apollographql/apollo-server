@@ -228,7 +228,7 @@ function printFederationTypeDirectives(type: GraphQLObjectType): string {
       keys
         .map(
           (selections) =>
-            `\n  @key(fields: "${selections.map(print)}", graph: "${service}")`,
+            `\n  @key(fields: "{ ${selections.map(print)} }", graph: "${service}")`,
         )
         .join(''),
     )
@@ -346,11 +346,11 @@ function printFederationFieldDirectives(
   }
 
   if (requires.length > 0) {
-    printed += ` @requires(fields: "${requires.map(printWithReducedWhitespace).join(' ')}")`;
+    printed += ` @requires(fields: "{ ${requires.map(printWithReducedWhitespace).join(' ')} }")`;
   }
 
   if (provides.length > 0) {
-    printed += ` @provides(fields: "${provides.map(printWithReducedWhitespace).join(' ')}")`;
+    printed += ` @provides(fields: "{ ${provides.map(printWithReducedWhitespace).join(' ')} }")`;
   }
 
   return printed;
