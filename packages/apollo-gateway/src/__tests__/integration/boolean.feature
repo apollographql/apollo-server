@@ -326,14 +326,3 @@ Scenario: supports @include when a boolean condition is met (variable driven)
     }
   }
   """
-
-
-# Scenario:
-#   Given query
-#   """
-
-#   """
-#   Then query plan
-#   """
-#   {}
-#   """
