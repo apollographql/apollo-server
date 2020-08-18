@@ -1,16 +1,25 @@
 import { fixtures } from 'apollo-federation-integration-testsuite';
 import { composeAndValidate } from '../../composition';
-import { printComposedSdl } from '../printComposedSdl';
+import { parse, GraphQLError } from 'graphql';
 
 describe('printComposedSdl', () => {
-  const { schema, errors } = composeAndValidate(fixtures);
+  let composedSdl: string;
+  let errors: readonly GraphQLError[];
+
+  beforeAll(() => {
+    ({composedSdl, errors} = composeAndValidate(fixtures));
+  })
 
   it('composes without errors', () => {
     expect(errors).toHaveLength(0);
   });
 
+  it('produces a parseable output', () => {
+    expect(() => parse(composedSdl)).not.toThrow();
+  })
+
   it('prints a fully composed schema correctly', () => {
-    expect(printComposedSdl(schema, fixtures)).toMatchInlineSnapshot(`
+    expect(composedSdl).toMatchInlineSnapshot(`
       "schema
         @graph(name: \\"accounts\\", url: \\"https://accounts.api.com\\")
         @graph(name: \\"books\\", url: \\"https://books.api.com\\")
@@ -235,10 +244,7 @@ describe('printComposedSdl', () => {
       type User
         @owner(graph: \\"accounts\\")
         @key(fields: \\"id\\", graph: \\"accounts\\")
-        @key(fields: \\"username,name {
-        first
-        last
-      }\\", graph: \\"accounts\\")
+        @key(fields: \\"username name { first last }\\", graph: \\"accounts\\")
         @key(fields: \\"id\\", graph: \\"inventory\\")
         @key(fields: \\"id\\", graph: \\"product\\")
         @key(fields: \\"id\\", graph: \\"reviews\\")
