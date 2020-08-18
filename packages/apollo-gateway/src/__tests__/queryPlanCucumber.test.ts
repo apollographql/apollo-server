@@ -1,28 +1,29 @@
 import gql from 'graphql-tag';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { defineFeature, loadFeature } from 'jest-cucumber';
-import { DocumentNode, GraphQLSchema, GraphQLError, Kind } from 'graphql';
+import { DocumentNode, Kind } from 'graphql';
 
 import { QueryPlan } from '../..';
 import { buildQueryPlan, buildOperationContext, BuildQueryPlanOptions } from '../buildQueryPlan';
 import { getFederatedTestingSchema } from './execution-utils';
 
 const testDir = './packages/apollo-gateway/src/__tests__/';
-const buildQueryPlanFeature = loadFeature(
-  testDir + 'build-query-plan.feature'
-);
-const fragmentsFeature = loadFeature(testDir + 'integration/fragments.feature');
-const requiresFeature = loadFeature(testDir + 'integration/requires.feature');
-const variablesFeature = loadFeature(testDir + 'integration/variables.feature');
-const mutationsFeature = loadFeature(testDir + 'integration/mutations.feature');
 
 const features = [
-  // buildQueryPlanFeature,
-  // fragmentsFeature,
-  // requiresFeature,
-  // variablesFeature,
-  mutationsFeature
-];
+  testDir + 'build-query-plan.feature',
+  testDir + 'integration/fragments.feature',
+  testDir + 'integration/requires.feature',
+  testDir + 'integration/variables.feature',
+  testDir + 'integration/mutations.feature',
+  testDir + 'integration/boolean.feature',
+  testDir + 'integration/provides.feature',
+  testDir + 'integration/value-types.feature',
+  testDir + 'integration/abstract-types.feature',
+  testDir + 'integration/aliases.feature',
+  testDir + 'integration/custom-directives.feature',
+  testDir + 'integration/execution-style.feature',
+  testDir + 'integration/single-service.feature',
+].map(path => loadFeature(path));
 
 features.forEach((feature) => {
   defineFeature(feature, (test) => {
