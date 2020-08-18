@@ -1,4 +1,4 @@
-Feature: Aliases
+Feature: Query Planning > Aliases
 
 
 Scenario: supports simple aliases
