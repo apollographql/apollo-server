@@ -1,10 +1,12 @@
 import os from 'os';
 import { gzip } from 'zlib';
 import {
+  buildSchema,
   DocumentNode,
   GraphQLError,
   GraphQLSchema,
   printSchema,
+  validateSchema
 } from 'graphql';
 import {
   ReportHeader,
@@ -507,6 +509,26 @@ export class EngineReportingAgent<TContext = any> {
       );
       if (options.schemaReportingInitialDelayMaxMs === undefined) {
         options.schemaReportingInitialDelayMaxMs = options.experimental_schemaReportingInitialDelayMaxMs;
+      }
+    }
+
+    // Ensure a provided override schema can be parsed and validated
+    if (options.overrideReportedSchema) {
+      try {
+        const validationErrors = validateSchema(
+          buildSchema(options.overrideReportedSchema, { noLocation: true })
+        );
+        if (validationErrors.length) {
+          throw new Error(
+            validationErrors.map((error) => error.message)
+              .join('\n')
+          );
+        }
+      } catch (err) {
+        throw new Error(
+          "The schema provided to overrideReportedSchema failed to parse or" +
+          `validate: ${err.message}`
+        )
       }
     }
 
