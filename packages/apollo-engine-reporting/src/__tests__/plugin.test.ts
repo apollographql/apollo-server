@@ -3,7 +3,7 @@ import { graphql, GraphQLError } from 'graphql';
 import { Request } from 'node-fetch';
 import { makeTraceDetails, makeHTTPRequestHeaders, plugin } from '../plugin';
 import { Headers } from 'apollo-server-env';
-import { Trace } from 'apollo-engine-reporting-protobuf';
+import { Trace } from 'apollo-reporting-protobuf';
 import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
 
 const typeDefs = `

@@ -12,7 +12,7 @@ import {
 
 // This seems like it could live in this package too.
 import { KeyValueCache } from 'apollo-server-caching';
-import { Trace } from 'apollo-engine-reporting-protobuf';
+import { Trace } from 'apollo-reporting-protobuf';
 
 export type BaseContext = Record<string, any>;
 
