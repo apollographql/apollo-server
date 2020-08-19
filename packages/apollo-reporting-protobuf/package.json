@@ -1,7 +1,7 @@
 {
-  "name": "apollo-engine-reporting-protobuf",
+  "name": "apollo-reporting-protobuf",
   "version": "0.5.2",
-  "description": "Protobuf format for Apollo Engine",
+  "description": "Protobuf format for Apollo usage reporting",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -16,21 +16,20 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server",
-    "directory": "packages/apollo-engine-reporting-protobuf"
+    "directory": "packages/apollo-reporting-protobuf"
   },
   "keywords": [
     "GraphQL",
     "Apollo",
-    "Engine",
     "Server",
     "Javascript"
   ],
   "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/apollographql/apollo-engine-reporting/issues"
+    "url": "https://github.com/apollographql/apollo-server/issues"
   },
-  "homepage": "https://github.com/apollographql/apollo-engine-reporting#readme",
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
     "@apollo/protobufjs": "^1.0.3"
   }

@@ -7,7 +7,7 @@ import {
 } from 'apollo-server-types';
 import { Headers } from 'apollo-server-env';
 import { GraphQLSchema } from 'graphql';
-import { Trace } from 'apollo-engine-reporting-protobuf';
+import { Trace } from 'apollo-reporting-protobuf';
 
 import {
   AddTraceArgs,

@@ -1,4 +1,4 @@
-import { Trace } from 'apollo-engine-reporting-protobuf';
+import { Trace } from 'apollo-reporting-protobuf';
 import { TraceTreeBuilder } from '../traceTreeBuilder';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { GraphQLError } from 'graphql';

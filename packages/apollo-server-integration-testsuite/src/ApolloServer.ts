@@ -4,7 +4,7 @@ import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
 
-import { Report, Trace } from 'apollo-engine-reporting-protobuf';
+import { Report, Trace } from 'apollo-reporting-protobuf';
 
 import {
   GraphQLSchema,

@@ -11,7 +11,7 @@ import {
   Trace,
   Report,
   TracesAndStats,
-} from 'apollo-engine-reporting-protobuf';
+} from 'apollo-reporting-protobuf';
 
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
@@ -499,7 +499,7 @@ export class EngineReportingAgent<TContext = any> {
       (report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
     }
     // See comment on our override of Traces.encode inside of
-    // apollo-engine-reporting-protobuf to learn more about this strategy.
+    // apollo-reporting-protobuf to learn more about this strategy.
     (report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
       encodedTrace,
     );
