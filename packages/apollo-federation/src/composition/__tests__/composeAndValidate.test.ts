@@ -572,6 +572,10 @@ describe('composition of value types', () => {
           id: ID!
           name: String
         }
+
+        type Query {
+          node(id: ID!): Node
+        }
       `,
       name: 'serviceA',
     };
@@ -585,10 +589,6 @@ describe('composition of value types', () => {
         type Product implements Node {
           id: ID!
           name: String
-        }
-
-        type Query {
-          node(id: ID!): Node
         }
       `,
       name: 'serviceB',
@@ -608,33 +608,30 @@ describe('composition of value types', () => {
       name: 'serviceC',
     };
 
-    const { schema, errors } = composeAndValidate([
+    const serviceD = {
+      typeDefs: gql`
+        type Product {
+          id: ID!
+          name: String
+        }
+      `,
+      name: 'serviceD',
+    };
+
+    const { schema, errors, composedSdl } = composeAndValidate([
       serviceA,
       serviceB,
       serviceC,
+      serviceD,
     ]);
 
     expect(errors).toHaveLength(0);
-    expect((schema.getType('Product') as GraphQLObjectType).getInterfaces()).toHaveLength(2);
-    expect(printSchema(schema)).toMatchInlineSnapshot(`
-      "interface Named {
-        name: String
-      }
+    expect((schema.getType('Product') as GraphQLObjectType).getInterfaces())
+      .toHaveLength(2);
 
-      interface Node {
-        id: ID!
-      }
+    expect(printSchema(schema)).toContain('type Product implements Named & Node');
+    expect(composedSdl).toContain('type Product implements Named & Node');
 
-      type Product implements Node & Named {
-        id: ID!
-        name: String
-      }
-
-      type Query {
-        node(id: ID!): Node
-      }
-      "
-    `);
   });
 });
 
