@@ -11,7 +11,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### BREAKING CHANGES
 
+- Dropped support for Node.js v6, v8 and v10.  Apollo Server 3.x is being compiled to ES2020 which maps to Node.js 12+.  Please note that we only test on _even-numbered_ versions of Node.js and only aim to support Node.js versions which are under [long-term support](https://nodejs.org/en/about/releases/#releases) from the Node.js Foundation.
 - While we are working to re-introduce subscriptions with a higher degree of integration, they have been disabled in the initial versions of Apollo Server.  See [the migration guide section on Subscriptions](./docs/source/migration.md#Subscriptions) to bring them back in their current form.
+- The `graphql-extensions` API (e.g., `GraphQLExtensions`, `extensions`) has been dropped in favor of the new [plugins API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).
 - In order to let the `graphql-upload` package evolve on its own, uploads are no longer integrated directly with Apollo Server.  To bring them back in their current form, see [the migration guide section on File Uploads](./docs/source/migration.md#File-uploads)
 - Top-level exports have changed. E.g.,
 
