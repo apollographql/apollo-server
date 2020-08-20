@@ -275,7 +275,7 @@ These are the supported fields of the `engine` object you provide to the [`Apoll
 | `graphVariant` | `String` | <p>The [variant](https://www.apollographql.com/docs/studio/schema/registry/#managing-environments-with-variants) of your graph to associate this server's schema and metrics with.</p><p>Instead of using this field, we recommend specifying a variant by setting its name as the value of the `APOLLO_GRAPH_VARIANT` environment variable in your server's environment.</p> |
 | `logger` | [`Logger`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L146-L152) | <p>If you provide this object, Apollo Server sends it all log messages related to Apollo Studio communication, instead of sending them to the default logger. The object must implement all methods of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L146-L152).</p> |
 
-##### [Schema reporting](https://www.apollographql.com/docs/studio/schema/schema-reporting/) fields
+##### Schema reporting fields
 
 | Name | Type | Description |
 |------|------|-------------|
@@ -283,7 +283,7 @@ These are the supported fields of the `engine` object you provide to the [`Apoll
 | `schemaReportingInitialDelayMaxMs` | `Number` | <p>On startup, Apollo Server waits a random amount of time between 0 milliseconds and this value before it begins reporting its schema. This randomness is useful for staggering schema reports when you deploy multiple server instances simultaneously.</p><p>The default value is 10 seconds (`10000`). You might want to reduce this value in constrained environments, such as AWS Lambda.</p> |
 | `overrideReportedSchema` | `String` | <p>By default, Apollo Server **normalizes** its schema before reporting it to Apollo Studio. Doing so helps make sure that no-op changes to a schema's whitespace or field order aren't incorrectly identified as an updated schema.</p><p>If normalization removes details that you want to preserve, you can provide an SDL string directly to this option. If you do, it is reported directly to Studio instead of the server's normalized schema.</p>   |
 
-##### [Metrics reporting](https://www.apollographql.com/docs/studio/setup-analytics/) fields
+##### Metrics reporting fields
 
 | Name | Type | Description |
 |------|------|-------------|
