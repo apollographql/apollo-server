@@ -355,7 +355,7 @@ Resolver functions take the following positional arguments, in order:
 
 | Argument  | Description  |
 |---|---|
-| `parent` | <p>The return value of the resolver for this field's parent (i.e., the previous resolver in the [resolver chain](#resolver-chains)).</p><p>For resolvers of top-level fields with no parent (such as fields of `Query`), this value is obtained from the `rootValue` function passed to [Apollo Server's constructor](/api/apollo-server/#apolloserver).</p>  |
+| `parent` | <p>The return value of the resolver for this field's parent (i.e., the previous resolver in the [resolver chain](#resolver-chains)).</p><p>For resolvers of top-level fields with no parent (such as fields of `Query`), this value is obtained from the `rootValue` function passed to [Apollo Server's constructor](/api/apollo-server/#constructoroptions-apolloserver).</p>  |
 | `args` |  <p>An object that contains all GraphQL arguments provided for this field.</p><p> For example, when executing `query{ user(id: "4") }`, the `args` object passed to the `user` resolver is `{ "id": "4" }`.</p> |
 | `context` | <p>An object shared across all resolvers that are executing for a particular operation. Use this to share per-operation state, including authentication information, dataloader instances, and anything else to track across resolvers. </p><p>See [The `context` argument](#the-context-argument) for more information.</p> |
 | `info` | <p>Contains information about the operation's execution state, including the field name, the path to the field from the root, and more. </p><p>Its core fields are listed in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/master/src/type/definition.js#L917-L928), and it is extended with additional functionality by other modules, like [`apollo-cache-control`](https://github.com/apollographql/apollo-server/tree/570f548b887/packages/apollo-cache-control).</p> |
@@ -386,7 +386,7 @@ const server = new ApolloServer({
 }
 ```
 
-> The fields of the object passed to your `context` function differ if you're using middleware besides Express. [See the API reference for details.](/api/apollo-server/#apolloserver)
+> The fields of the object passed to your `context` function differ if you're using middleware besides Express. [See the API reference for details.](/api/apollo-server/#middleware-specific-context-fields)
 
 Context initialization can be asynchronous, allowing database connections and other operations to complete:
 
