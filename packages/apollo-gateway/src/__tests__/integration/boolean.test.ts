@@ -76,7 +76,10 @@ describe('@skip', () => {
         topReviews {
           body
           author @skip(if: false) {
-            name
+            name {
+              first
+              last
+            }
           }
         }
       }
@@ -88,14 +91,11 @@ describe('@skip', () => {
 
     expect(data).toEqual({
       topReviews: [
-        { body: 'Love it!', author: { name: 'Ada Lovelace' } },
-        { body: 'Too expensive.', author: { name: 'Ada Lovelace' } },
-        { body: 'Could be better.', author: { name: 'Alan Turing' } },
-        { body: 'Prefer something else.', author: { name: 'Alan Turing' } },
-        {
-          body: 'Wish I had read this before.',
-          author: { name: 'Alan Turing' },
-        },
+        { body: 'Love it!', author: { name: { first: 'Ada', last: 'Lovelace' } } },
+        { body: 'Too expensive.', author: { name: { first: 'Ada', last: 'Lovelace' } } },
+        { body: 'Could be better.', author: { name: { first: 'Alan', last: 'Turing' } } },
+        { body: 'Prefer something else.', author: { name: { first: 'Alan', last: 'Turing' } } },
+        { body: 'Wish I had read this before.', author: { name: { first: 'Alan', last: 'Turing' } } },
       ],
     });
 
@@ -110,7 +110,10 @@ describe('@skip', () => {
         topReviews {
           body
           author @skip(if: $skip) {
-            name
+            name {
+              first
+              last
+            }
           }
         }
       }
@@ -124,14 +127,11 @@ describe('@skip', () => {
 
     expect(data).toEqual({
       topReviews: [
-        { body: 'Love it!', author: { name: 'Ada Lovelace' } },
-        { body: 'Too expensive.', author: { name: 'Ada Lovelace' } },
-        { body: 'Could be better.', author: { name: 'Alan Turing' } },
-        { body: 'Prefer something else.', author: { name: 'Alan Turing' } },
-        {
-          body: 'Wish I had read this before.',
-          author: { name: 'Alan Turing' },
-        },
+        { body: 'Love it!', author: { name: { first: 'Ada', last: 'Lovelace' } } },
+        { body: 'Too expensive.', author: { name: { first: 'Ada', last: 'Lovelace' } } },
+        { body: 'Could be better.', author: { name: { first: 'Alan', last: 'Turing' } } },
+        { body: 'Prefer something else.', author: { name: { first: 'Alan', last: 'Turing' } } },
+        { body: 'Wish I had read this before.', author: { name: { first: 'Alan', last: 'Turing' } } },
       ],
     });
 
@@ -211,7 +211,10 @@ describe('@include', () => {
         topReviews {
           body
           author @include(if: true) {
-            name
+            name {
+              first
+              last
+            }
           }
         }
       }
@@ -223,14 +226,11 @@ describe('@include', () => {
 
     expect(data).toEqual({
       topReviews: [
-        { body: 'Love it!', author: { name: 'Ada Lovelace' } },
-        { body: 'Too expensive.', author: { name: 'Ada Lovelace' } },
-        { body: 'Could be better.', author: { name: 'Alan Turing' } },
-        { body: 'Prefer something else.', author: { name: 'Alan Turing' } },
-        {
-          body: 'Wish I had read this before.',
-          author: { name: 'Alan Turing' },
-        },
+        { body: 'Love it!', author: { name: { first: 'Ada', last: 'Lovelace' } } },
+        { body: 'Too expensive.', author: { name: { first: 'Ada', last: 'Lovelace' } } },
+        { body: 'Could be better.', author: { name: { first: 'Alan', last: 'Turing' } } },
+        { body: 'Prefer something else.', author: { name: { first: 'Alan', last: 'Turing' } } },
+        { body: 'Wish I had read this before.', author: { name: { first: 'Alan', last: 'Turing' } } },
       ],
     });
 
@@ -246,7 +246,10 @@ describe('@include', () => {
         topReviews {
           body
           author @include(if: $include) {
-            name
+            name {
+              first
+              last
+            }
           }
         }
       }
@@ -260,14 +263,11 @@ describe('@include', () => {
 
     expect(data).toEqual({
       topReviews: [
-        { body: 'Love it!', author: { name: 'Ada Lovelace' } },
-        { body: 'Too expensive.', author: { name: 'Ada Lovelace' } },
-        { body: 'Could be better.', author: { name: 'Alan Turing' } },
-        { body: 'Prefer something else.', author: { name: 'Alan Turing' } },
-        {
-          body: 'Wish I had read this before.',
-          author: { name: 'Alan Turing' },
-        },
+        { body: 'Love it!', author: { name: { first: 'Ada', last: 'Lovelace' } } },
+        { body: 'Too expensive.', author: { name: { first: 'Ada', last: 'Lovelace' } } },
+        { body: 'Could be better.', author: { name: { first: 'Alan', last: 'Turing' } } },
+        { body: 'Prefer something else.', author: { name: { first: 'Alan', last: 'Turing' } } },
+        { body: 'Wish I had read this before.', author: { name: { first: 'Alan', last: 'Turing' } } },
       ],
     });
 
