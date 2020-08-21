@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 import { GraphQLResolverMap } from 'apollo-graphql';
 
 export const name = 'accounts';
+export const url = `https://${name}.api.com`;
 export const typeDefs = gql`
   directive @stream on FIELD
   directive @transform(from: String!) on FIELD
@@ -32,13 +33,18 @@ export const typeDefs = gql`
     description: String
   }
 
-  type User @key(fields: "id") {
+  type User @key(fields: "id") @key(fields: "username name { first last }"){
     id: ID!
-    name: String
+    name: Name
     username: String
     birthDate(locale: String): String
     account: AccountType
     metadata: [UserMetadata]
+  }
+
+  type Name {
+    first: String
+    last: String
   }
 
   type Mutation {
@@ -55,14 +61,20 @@ export const typeDefs = gql`
 const users = [
   {
     id: '1',
-    name: 'Ada Lovelace',
+    name: {
+      first: 'Ada',
+      last: 'Lovelace'
+    },
     birthDate: '1815-12-10',
     username: '@ada',
     account: { __typename: 'LibraryAccount', id: '1' },
   },
   {
     id: '2',
-    name: 'Alan Turing',
+    name: {
+      first: 'Alan',
+      last: 'Turing'
+    },
     birthDate: '1912-06-23',
     username: '@complete',
     account: { __typename: 'SMSAccount', number: '8675309' },
@@ -96,6 +108,11 @@ export const resolvers: GraphQLResolverMap<any> = {
   },
   User: {
     __resolveObject(object) {
+      // Nested key example for @key(fields: "username name { first last }")
+      if (object.username && object.name.first && object.name.last) {
+        users.find(user => user.username === object.username);
+      }
+
       return users.find(user => user.id === object.id);
     },
     birthDate(user, args) {

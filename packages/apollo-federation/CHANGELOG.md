@@ -4,7 +4,21 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned!_
+- __FIX__: CSDL complex `@key`s shouldn't result in an unparseable document [PR #4490](https://github.com/apollographql/apollo-server/pull/4490)
+- __FIX__: Value type validations - restrict unions, scalars, enums [PR #4496](https://github.com/apollographql/apollo-server/pull/4496)
+- __FIX__: Composition - aggregate interfaces for types and interfaces in composed schema [PR #4497](https://github.com/apollographql/apollo-server/pull/4497)
+
+## v0.19.1
+
+- Include new directive definitions in CSDL [PR #4452](https://github.com/apollographql/apollo-server/pull/4452)
+
+## v0.19.0
+
+- New federation composition format. Capture federation metadata in SDL [PR #4405](https://github.com/apollographql/apollo-server/pull/4405)
+
+## v0.18.1
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
 
 ## v0.18.0
 

@@ -16,7 +16,7 @@ describe('custom executable directives', () => {
       }
     `;
 
-    const { errors, queryPlan } = await execute( {
+    const { errors, queryPlan } = await execute({
       query,
     });
 
@@ -41,13 +41,16 @@ describe('custom executable directives', () => {
         topReviews {
           body @stream
           author @transform(from: "JSON") {
-            name @stream
+            name @stream {
+              first
+              last
+            }
           }
         }
       }
     `;
 
-    const { errors, queryPlan } = await execute( {
+    const { errors, queryPlan } = await execute({
       query,
     });
 
@@ -55,37 +58,40 @@ describe('custom executable directives', () => {
     expect(queryPlan).toCallService('reviews');
     expect(queryPlan).toCallService('accounts');
     expect(queryPlan).toMatchInlineSnapshot(`
-        QueryPlan {
-          Sequence {
-            Fetch(service: "reviews") {
+      QueryPlan {
+        Sequence {
+          Fetch(service: "reviews") {
+            {
+              topReviews {
+                body @stream
+                author @transform(from: "JSON") {
+                  __typename
+                  id
+                }
+              }
+            }
+          },
+          Flatten(path: "topReviews.@.author") {
+            Fetch(service: "accounts") {
               {
-                topReviews {
-                  body @stream
-                  author @transform(from: "JSON") {
-                    __typename
-                    id
+                ... on User {
+                  __typename
+                  id
+                }
+              } =>
+              {
+                ... on User {
+                  name @stream {
+                    first
+                    last
                   }
                 }
               }
             },
-            Flatten(path: "topReviews.@.author") {
-              Fetch(service: "accounts") {
-                {
-                  ... on User {
-                    __typename
-                    id
-                  }
-                } =>
-                {
-                  ... on User {
-                    name @stream
-                  }
-                }
-              },
-            },
           },
-        }
-      `);
+        },
+      }
+    `);
   });
 
   it("returns validation errors when directives aren't present across all services", async () => {

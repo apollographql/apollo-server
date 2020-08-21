@@ -6,13 +6,26 @@
 
 - _Nothing yet! Stay tuned!_
 
+## v0.19.1
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
+## v0.19.0
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
+## v0.18.1
+
+- __FIX__: Pass null required fields correctly within the parent object to resolvers. When a composite field was null, it would sometimes be expanded into an object with all null subfields and passed to the resolver. This fix prevents this expansion and sets the field to null, as originally intended. [PR #4157](https://github.com/apollographql/apollo-server/pull/4157)
+- __FIX__: Prevent gateway from entering an inoperable state after an initial configuration load failure. [PR #4277](https://github.com/apollographql/apollo-server/pull/4277)
+
 ## v0.18.0
 
 - The `RemoteGraphQLDataSource`'s `didEncounterError` method will now receive [`Response`](https://github.com/apollographql/apollo-server/blob/43470d6561bee31101f3afc56bdd154db3f92b30/packages/apollo-server-env/src/fetch.d.ts#L98-L111) as the third argument when it is available, making its signature `(error: Error, fetchRequest: Request, fetchResponse?: Response)`.  This compliments the existing [`Request`](https://github.com/apollographql/apollo-server/blob/43470d6561bee31101f3afc56bdd154db3f92b30/packages/apollo-server-env/src/fetch.d.ts#L37-L45) type it was already receiving.  Both of these types are [HTTP WHATWG Fetch API](https://fetch.spec.whatwg.org/) types, not `GraphQLRequest`, `GraphQLResponse` types.
 
 ## v0.17.0
 
-- __BREAKING__: Move federation metadata from custom objects on schema nodes over to the `extensions` field on schema nodes which are intended for metadata. This is a breaking change because it narrows the `graphql` peer dependency from `^14.0.2` to `^14.5.0` which is when [`extensions` were introduced](https://github.com/graphql/graphql-js/pull/2097) for all Type System objects. [PR #4302](https://github.com/apollographql/apollo-server/pull/4313)
+- __BREAKING__: Move federation metadata from custom objects on schema nodes over to the `extensions` field on schema nodes which are intended for metadata. This is a breaking change because it narrows the `graphql` peer dependency from `^14.0.2` to `^14.5.0` which is when [`extensions` were introduced](https://github.com/graphql/graphql-js/pull/2097) for all Type System objects. [PR #4313](https://github.com/apollographql/apollo-server/pull/4313)
 
 ## v0.16.11
 
