@@ -8,9 +8,9 @@ import { PostCompositionValidator } from '.';
 import { printWithReducedWhitespace } from '../../../service';
 
 /**
- *  1. KEY_MISSING_ON_BASE - Owning types must specify at least 1 @key directive
+ *  1. KEY_MISSING_ON_BASE - Originating types must specify at least 1 @key directive
  *  2. MULTIPLE_KEYS_ON_EXTENSION - Extending services may not use more than 1 @key directive
- *  3. KEY_NOT_SPECIFIED - Extending services must use a valid @key specified by the owning type
+ *  3. KEY_NOT_SPECIFIED - Extending services must use a valid @key specified by the originating type
  */
 export const keysMatchBaseService: PostCompositionValidator = function ({
   schema,
@@ -32,7 +32,7 @@ export const keysMatchBaseService: PostCompositionValidator = function ({
             errorWithCode(
               'KEY_MISSING_ON_BASE',
               logServiceAndType(serviceName, parentTypeName) +
-                `appears to be an entity but no @key directives are specified on the owning type.`,
+                `appears to be an entity but no @key directives are specified on the originating type.`,
             ),
           );
           continue;
@@ -62,7 +62,7 @@ export const keysMatchBaseService: PostCompositionValidator = function ({
                 errorWithCode(
                   'KEY_NOT_SPECIFIED',
                   logServiceAndType(extendingService, parentTypeName) +
-                    `extends from ${serviceName} but specifies an invalid @key directive. Valid @key directives are specified by the owning type. Available @key directives for this type are:\n` +
+                    `extends from ${serviceName} but specifies an invalid @key directive. Valid @key directives are specified by the originating type. Available @key directives for this type are:\n` +
                     `\t${availableKeys
                       .map((fieldSet) => `@key(fields: "${fieldSet}")`)
                       .join('\n\t')}`,

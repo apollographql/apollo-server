@@ -38,7 +38,7 @@ describe('keysMatchBaseService', () => {
     expect(validationErrors).toHaveLength(0);
   });
 
-  it('requires a @key to be specified on the owning type', () => {
+  it('requires a @key to be specified on the originating type', () => {
     const serviceA = {
       typeDefs: gql`
         type Product {
@@ -71,12 +71,12 @@ describe('keysMatchBaseService', () => {
     expect(validationErrors[0]).toMatchInlineSnapshot(`
       Object {
         "code": "KEY_MISSING_ON_BASE",
-        "message": "[serviceA] Product -> appears to be an entity but no @key directives are specified on the owning type.",
+        "message": "[serviceA] Product -> appears to be an entity but no @key directives are specified on the originating type.",
       }
     `);
   });
 
-  it('requires extending services to use a @key specified by the owning type', () => {
+  it('requires extending services to use a @key specified by the originating type', () => {
     const serviceA = {
       typeDefs: gql`
         type Product @key(fields: "sku upc") {
@@ -109,7 +109,7 @@ describe('keysMatchBaseService', () => {
     expect(validationErrors[0]).toMatchInlineSnapshot(`
       Object {
         "code": "KEY_NOT_SPECIFIED",
-        "message": "[serviceB] Product -> extends from serviceA but specifies an invalid @key directive. Valid @key directives are specified by the owning type. Available @key directives for this type are:
+        "message": "[serviceB] Product -> extends from serviceA but specifies an invalid @key directive. Valid @key directives are specified by the originating type. Available @key directives for this type are:
       	@key(fields: \\"sku upc\\")",
       }
     `);
