@@ -5,6 +5,7 @@ import {
   DocumentNode,
   GraphQLScalarType,
   specifiedDirectives,
+  printSchema,
 } from 'graphql';
 import {
   astSerializer,
@@ -555,6 +556,83 @@ describe('composition of value types', () => {
       `);
     });
   });
+
+  it('composed type implements ALL interfaces that value types implement', () => {
+    const serviceA = {
+      typeDefs: gql`
+        interface Node {
+          id: ID!
+        }
+
+        interface Named {
+          name: String
+        }
+
+        type Product implements Named & Node {
+          id: ID!
+          name: String
+        }
+
+        type Query {
+          node(id: ID!): Node
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        interface Node {
+          id: ID!
+        }
+
+        type Product implements Node {
+          id: ID!
+          name: String
+        }
+      `,
+      name: 'serviceB',
+    };
+
+    const serviceC = {
+      typeDefs: gql`
+        interface Named {
+          name: String
+        }
+
+        type Product implements Named {
+          id: ID!
+          name: String
+        }
+      `,
+      name: 'serviceC',
+    };
+
+    const serviceD = {
+      typeDefs: gql`
+        type Product {
+          id: ID!
+          name: String
+        }
+      `,
+      name: 'serviceD',
+    };
+
+    const { schema, errors, composedSdl } = composeAndValidate([
+      serviceA,
+      serviceB,
+      serviceC,
+      serviceD,
+    ]);
+
+    expect(errors).toHaveLength(0);
+    expect((schema.getType('Product') as GraphQLObjectType).getInterfaces())
+      .toHaveLength(2);
+
+    expect(printSchema(schema)).toContain('type Product implements Named & Node');
+    expect(composedSdl).toContain('type Product implements Named & Node');
+
+  });
 });
 
 describe('composition of schemas with directives', () => {
@@ -630,7 +708,7 @@ describe('composition of schemas with directives', () => {
   });
 
   it(`doesn't strip the special case @deprecated and @specifiedBy type-system directives`, () => {
-    const specUrl = "http://my-spec-url.com";
+    const specUrl = 'http://my-spec-url.com';
     const deprecationReason = "Don't remove me please";
 
     // Detecting >15.1.0 by the new addition of the `specifiedBy` directive
@@ -641,9 +719,11 @@ describe('composition of schemas with directives', () => {
       typeDefs: gql`
         # This directive needs to be conditionally added depending on the testing
         # environment's version of graphql (>= 15.1.0 includes this new directive)
-        ${isAtLeastGraphqlVersionFifteenPointOne
-          ? `scalar MyScalar @specifiedBy(url: "${specUrl}")`
-          : ''}
+        ${
+          isAtLeastGraphqlVersionFifteenPointOne
+            ? `scalar MyScalar @specifiedBy(url: "${specUrl}")`
+            : ''
+        }
 
         type EarthConcern {
           environmental: String!
@@ -673,7 +753,9 @@ describe('composition of schemas with directives', () => {
       const specifiedBy = schema.getDirective('specifiedBy');
       expect(specifiedBy).toMatchInlineSnapshot(`"@specifiedBy"`);
       const customScalar = schema.getType('MyScalar');
-      expect((customScalar as GraphQLScalarType).specifiedByUrl).toEqual(specUrl);
+      expect((customScalar as GraphQLScalarType).specifiedByUrl).toEqual(
+        specUrl,
+      );
     }
   });
 });

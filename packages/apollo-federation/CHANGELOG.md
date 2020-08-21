@@ -6,6 +6,7 @@
 
 - __FIX__: CSDL complex `@key`s shouldn't result in an unparseable document [PR #4490](https://github.com/apollographql/apollo-server/pull/4490)
 - __FIX__: Value type validations - restrict unions, scalars, enums [PR #4496](https://github.com/apollographql/apollo-server/pull/4496)
+- __FIX__: Composition - aggregate interfaces for types and interfaces in composed schema [PR #4497](https://github.com/apollographql/apollo-server/pull/4497)
 
 ## v0.19.1
 
