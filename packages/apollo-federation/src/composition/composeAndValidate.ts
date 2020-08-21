@@ -31,7 +31,11 @@ export function composeAndValidate(serviceList: ServiceDefinition[]) {
     }),
   );
 
-  const composedSdl = printComposedSdl(compositionResult.schema, serviceList);
+  // We shouldn't try to print the SDL if there were errors during composition
+  const composedSdl =
+    errors.length === 0
+      ? printComposedSdl(compositionResult.schema, serviceList)
+      : undefined;
 
   // TODO remove the warnings array once no longer used by clients
   return {

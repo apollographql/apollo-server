@@ -17,6 +17,7 @@ export {
   executableDirectivesInAllServices,
 } from './executableDirectivesInAllServices';
 export { executableDirectivesIdentical } from './executableDirectivesIdentical';
+export { keysMatchBaseService } from './keysMatchBaseService';
 
 export type PostCompositionValidator = ({
   schema,
