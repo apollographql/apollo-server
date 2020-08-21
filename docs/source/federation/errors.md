@@ -24,9 +24,9 @@ If Apollo Gateway encounters an error, composition fails. This document lists co
 | `KEY_FIELDS_SELECT_INVALID_TYPE`  | The `fields` argument of an entity's `@key` includes at least one root field that results in a list, interface, or union type. Root fields of these types cannot be part of a `@key`. |
 | `KEY_FIELDS_MISSING_ON_BASE` | The `fields` argument of an entity's `@key` includes at least one field that's also defined in another service. Each field of an entity should be defined in exactly one service. |
 | `KEY_FIELDS_MISSING_EXTERNAL` | An implementing service is attempting to `extend` another service's entity, but its `@key` includes at least one field that is not marked as `@external`. |
-| `KEY_MISSING_ON_BASE` | An implementing service is attempting to `extend` another service's entity, but the owning service hasn't specified a `@key` with which to extend it by. |
-| `MULTIPLE_KEYS_ON_EXTENSION` | An implementing service is attempting to `extend` another service's entity, but it's specified multiple `@key` directives. Extending services may only use one of the `@key` directives specified by the owning service. |
-| `KEY_NOT_SPECIFIED` | An implementing service is attempting to `extend` another service's entity, but the `@key` it's specified is invalid. Valid `@key`s are specified by the owning service. |
+| `KEY_MISSING_ON_BASE` | An implementing service is attempting to `extend` another service's entity, but the originating service hasn't defined a `@key` for the entity. |
+| `MULTIPLE_KEYS_ON_EXTENSION` | An implementing service is attempting to `extend` another service's entity, but it's specified multiple `@key` directives. Extending services can only use one of the `@key`s specified by the originating service. |
+| `KEY_NOT_SPECIFIED` | An implementing service is attempting to `extend` another service's entity, but it is using a `@key` that is not specified in the originating service. Valid `@key`s are specified by the owning service. |
 
 ## `@external`
 
