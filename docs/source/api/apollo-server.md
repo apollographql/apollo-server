@@ -17,7 +17,7 @@ The core of an Apollo Server implementation. For an example, see [Get started wi
 
 Returns an initialized `ApolloServer` instance.
 
-Takes an `options` object as a parameter. Supported fields of this object are described in [Schema options](#schema-options), [Networking options](#networking-options), and [Debugging options](#debugging-options) below.
+Takes an `options` object as a parameter. Supported fields of this object are described in [Options](#options).
 
 ##### Example
 
@@ -29,7 +29,6 @@ const server = new ApolloServer({
 ```
 
 ##### Options
-
 
 | Name | Type | Description |
 |------|------|-------------|
