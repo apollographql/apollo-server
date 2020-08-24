@@ -1,0 +1,39 @@
+{
+  "folders": [
+    {
+      "name": "Server - Accounts",
+      "path": "services/accounts"
+    },
+    {
+      "name": "Server - Books",
+      "path": "services/books"
+    },
+    {
+      "name": "Server - Products",
+      "path": "services/products"
+    },
+    {
+      "name": "Server - Reviews",
+      "path": "services/reviews"
+    },
+    {
+      "name": "Gateway",
+      "path": "gateway"
+    }
+  ],
+  "launch": {
+    "configurations": [],
+    "compounds": [
+      {
+        "name": "Launch All",
+        "configurations": [
+          "Launch Accounts",
+          "Launch Books",
+          "Launch Products",
+          "Launch Reviews",
+          "Launch Gateway"
+        ]
+      }
+    ]
+  }
+}

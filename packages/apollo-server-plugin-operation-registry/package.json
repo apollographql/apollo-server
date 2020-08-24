@@ -1,0 +1,31 @@
+{
+  "name": "apollo-server-plugin-operation-registry",
+  "version": "0.6.0",
+  "description": "Apollo Server operation registry",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": [],
+  "author": "Apollo <opensource@apollographql.com>",
+  "repository": {
+    "type": "git",
+    "url": "apollographql/apollo-server",
+    "directory": "packages/apollo-server-plugin-operation-registry"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=8"
+  },
+  "dependencies": {
+    "apollo-graphql": "0.5.0",
+    "apollo-server-caching": "file:../apollo-server-caching",
+    "apollo-server-env": "file:../apollo-server-env",
+    "apollo-server-errors": "file:../apollo-server-errors",
+    "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
+    "fast-json-stable-stringify": "^2.0.0",
+    "loglevel": "^1.6.1",
+    "make-fetch-happen": "^8.0.7"
+  },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  }
+}

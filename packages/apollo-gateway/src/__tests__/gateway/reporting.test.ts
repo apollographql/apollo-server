@@ -1,16 +1,16 @@
-import path from 'path';
 import { gunzipSync } from 'zlib';
 import nock from 'nock';
 import { GraphQLSchemaModule } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { buildFederatedSchema } from '@apollo/federation';
 import { ApolloServer } from 'apollo-server';
-import { FullTracesReport } from 'apollo-engine-reporting-protobuf';
 import { execute, toPromise } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
 import fetch from 'node-fetch';
 import { ApolloGateway } from '../..';
 import { Plugin, Config, Refs } from 'pretty-format';
+import { Report } from 'apollo-engine-reporting-protobuf';
+import { fixtures } from 'apollo-federation-integration-testsuite';
 
 // Normalize specific fields that change often (eg timestamps) to static values,
 // to make snapshot testing viable.  (If these helpers are more generally
@@ -28,7 +28,7 @@ function replaceFieldValuesSerializer(
         value &&
         typeof value === 'object' &&
         !value[alreadyProcessed] &&
-        fieldNames.some(n => n in value)
+        fieldNames.some((n) => n in value)
       );
     },
 
@@ -45,7 +45,7 @@ function replaceFieldValuesSerializer(
       // don't reprocess it ourselves.
       const newValue = { ...value };
       Object.defineProperty(newValue, alreadyProcessed, { value: true });
-      fieldNames.forEach(fn => {
+      fieldNames.forEach((fn) => {
         if (fn in value) {
           const replacement = replacements[fn];
           if (typeof replacement === 'function') {
@@ -92,7 +92,7 @@ describe('reporting', () => {
 
   beforeEach(async () => {
     let reportResolver: (report: any) => void;
-    reportPromise = new Promise<any>(resolve => {
+    reportPromise = new Promise<any>((resolve) => {
       reportResolver = resolve;
     });
 
@@ -105,18 +105,10 @@ describe('reporting', () => {
 
     backendServers = [];
     const serviceList = [];
-    for (const serviceName of [
-      'accounts',
-      'product',
-      'inventory',
-      'reviews',
-      'books',
-    ]) {
-      const { server, url } = await startFederatedServer([
-        require(path.join(__dirname, '../__fixtures__/schemas', serviceName)),
-      ]);
+    for (const fixture of fixtures) {
+      const { server, url } = await startFederatedServer([fixture]);
       backendServers.push(server);
-      serviceList.push({ name: serviceName, url });
+      serviceList.push({ name: fixture.name, url });
     }
 
     const gateway = new ApolloGateway({ serviceList });
@@ -146,7 +138,10 @@ describe('reporting', () => {
     const query = gql`
       query {
         me {
-          name
+          name {
+            first
+            last
+          }
         }
         topProducts {
           name
@@ -160,39 +155,42 @@ describe('reporting', () => {
       }),
     );
     expect(result).toMatchInlineSnapshot(`
-                                                                  Object {
-                                                                    "data": Object {
-                                                                      "me": Object {
-                                                                        "name": "Ada Lovelace",
-                                                                      },
-                                                                      "topProducts": Array [
-                                                                        Object {
-                                                                          "name": "Table",
-                                                                        },
-                                                                        Object {
-                                                                          "name": "Couch",
-                                                                        },
-                                                                        Object {
-                                                                          "name": "Chair",
-                                                                        },
-                                                                        Object {
-                                                                          "name": "Structure and Interpretation of Computer Programs (1996)",
-                                                                        },
-                                                                        Object {
-                                                                          "name": "Object Oriented Software Construction (1997)",
-                                                                        },
-                                                                      ],
-                                                                    },
-                                                                  }
-                                        `);
+      Object {
+        "data": Object {
+          "me": Object {
+            "name": Object {
+              "first": "Ada",
+              "last": "Lovelace",
+            },
+          },
+          "topProducts": Array [
+            Object {
+              "name": "Table",
+            },
+            Object {
+              "name": "Couch",
+            },
+            Object {
+              "name": "Chair",
+            },
+            Object {
+              "name": "Structure and Interpretation of Computer Programs (1996)",
+            },
+            Object {
+              "name": "Object Oriented Software Construction (1997)",
+            },
+          ],
+        },
+      }
+    `);
     const reportBody = await reportPromise;
     // nock returns binary bodies as hex strings
     const gzipReportBuffer = Buffer.from(reportBody, 'hex');
     const reportBuffer = gunzipSync(gzipReportBuffer);
-    const report = FullTracesReport.decode(reportBuffer);
+    const report = Report.decode(reportBuffer);
 
     // Some handwritten tests to capture salient properties.
-    const statsReportKey = '# -\n{me{name}topProducts{name}}';
+    const statsReportKey = '# -\n{me{name{first last}}topProducts{name}}';
     expect(Object.keys(report.tracesPerQuery)).toStrictEqual([statsReportKey]);
     expect(report.tracesPerQuery[statsReportKey]!.trace!.length).toBe(1);
     const trace = report.tracesPerQuery[statsReportKey]!.trace![0]!;
@@ -219,10 +217,11 @@ describe('reporting', () => {
 
     expect(report).toMatchInlineSnapshot(`
       Object {
+        "endTime": null,
         "header": "<HEADER>",
         "tracesPerQuery": Object {
           "# -
-      {me{name}topProducts{name}}": Object {
+      {me{name{first last}}topProducts{name}}": Object {
             "trace": Array [
               Object {
                 "clientName": "",
@@ -265,11 +264,27 @@ describe('reporting', () => {
                                 Object {
                                   "child": Array [
                                     Object {
+                                      "child": Array [
+                                        Object {
+                                          "endTime": "45678",
+                                          "parentType": "Name",
+                                          "responseName": "first",
+                                          "startTime": "34567",
+                                          "type": "String",
+                                        },
+                                        Object {
+                                          "endTime": "45678",
+                                          "parentType": "Name",
+                                          "responseName": "last",
+                                          "startTime": "34567",
+                                          "type": "String",
+                                        },
+                                      ],
                                       "endTime": "45678",
                                       "parentType": "User",
                                       "responseName": "name",
                                       "startTime": "34567",
-                                      "type": "String",
+                                      "type": "Name",
                                     },
                                   ],
                                   "endTime": "45678",

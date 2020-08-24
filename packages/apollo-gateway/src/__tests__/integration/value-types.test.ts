@@ -1,12 +1,5 @@
 import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
-
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
-
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
 
 expect.addSnapshotSerializer(astSerializer);
@@ -14,7 +7,7 @@ expect.addSnapshotSerializer(queryPlanSerializer);
 
 describe('value types', () => {
   it('resolves value types within their respective services', async () => {
-    const query = gql`
+    const query = `#graphql
       fragment Metadata on MetadataOrError {
         ... on KeyValue {
           key
@@ -48,12 +41,9 @@ describe('value types', () => {
       }
     `;
 
-    const { data, errors, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { data, errors, queryPlan } = await execute({
+      query,
+    });
 
     expect(errors).toBeUndefined();
 
@@ -272,7 +262,7 @@ describe('value types', () => {
       },
     };
 
-    const query = gql`
+    const query = `#graphql
       query Hello {
         valueType {
           id
@@ -294,10 +284,10 @@ describe('value types', () => {
     `;
 
     const { data, errors, queryPlan } = await execute(
-      [firstService, secondService, userService],
       {
         query,
       },
+      [firstService, secondService, userService],
     );
 
     expect(errors).toBeUndefined();

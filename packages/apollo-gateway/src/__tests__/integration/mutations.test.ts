@@ -1,13 +1,6 @@
-import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
-
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
-
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
+import { accounts, reviews } from 'apollo-federation-integration-testsuite';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
@@ -17,7 +10,7 @@ function spyOnResolver<T extends string>(resolverMap: any, resolverName: T) {
 }
 
 it('supports mutations', async () => {
-  const query = gql`
+  const query = `#graphql
     mutation Login($username: String!, $password: String!) {
       login(username: $username, password: $password) {
         reviews {
@@ -30,13 +23,10 @@ it('supports mutations', async () => {
   `;
 
   const variables = { username: '@complete', password: 'css_completes_me' };
-  const { data, errors, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables,
+  });
 
   expect(data).toEqual({
     login: {
@@ -55,7 +45,7 @@ it('supports mutations', async () => {
 });
 
 it('returning across service boundaries', async () => {
-  const query = gql`
+  const query = `#graphql
     mutation Review($upc: String!, $body: String!) {
       reviewProduct(upc: $upc, body: $body) {
         ... on Furniture {
@@ -66,13 +56,10 @@ it('returning across service boundaries', async () => {
   `;
 
   const variables = { upc: '1', body: 'A great table' };
-  const { data, errors, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables,
+  });
 
   expect(data).toEqual({
     reviewProduct: {
@@ -91,7 +78,7 @@ it('multiple root mutations', async () => {
     'reviewProduct',
   );
 
-  const query = gql`
+  const query = `#graphql
     mutation LoginAndReview(
       $username: String!
       $password: String!
@@ -119,13 +106,10 @@ it('multiple root mutations', async () => {
     upc: '1',
     body: 'A great table.',
   };
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables,
+  });
 
   expect(data).toEqual({
     login: {
@@ -155,7 +139,7 @@ it('multiple root mutations with correct service order', async () => {
   const updateReview = spyOnResolver(reviewsMutations, 'updateReview');
   const deleteReview = spyOnResolver(reviewsMutations, 'deleteReview');
 
-  const query = gql`
+  const query = `#graphql
     mutation LoginAndReview(
       $upc: String!
       $body: String!
@@ -195,13 +179,10 @@ it('multiple root mutations with correct service order', async () => {
     password: 'css_completes_me',
     reviewId: '6',
   };
-  const { data, queryPlan } = await execute(
-    [accounts, books, inventory, product, reviews],
-    {
-      query,
-      variables,
-    },
-  );
+  const { data, queryPlan } = await execute({
+    query,
+    variables,
+  });
 
   expect(data).toEqual({
     deleteReview: true,

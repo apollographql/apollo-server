@@ -1,25 +1,17 @@
 import {
   GraphQLError,
   ASTVisitor,
-  ObjectTypeDefinitionNode,
-  InterfaceTypeDefinitionNode,
-  InputObjectTypeDefinitionNode,
+  TypeDefinitionNode,
 } from 'graphql';
 
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
-import Maybe from 'graphql/tsutils/Maybe';
+import { Maybe } from '../../types';
 import {
   isTypeNodeAnEntity,
   diffTypeNodes,
   errorWithCode,
   logServiceAndType,
 } from '../../utils';
-
-// Types of nodes this validator is responsible for
-type TypesWithRequiredUniqueNames =
-  | ObjectTypeDefinitionNode
-  | InterfaceTypeDefinitionNode
-  | InputObjectTypeDefinitionNode;
 
 export function duplicateTypeNameMessage(typeName: string): string {
   return `There can be only one type named "${typeName}".`;
@@ -38,25 +30,25 @@ export function UniqueTypeNamesWithFields(
   context: SDLValidationContext,
 ): ASTVisitor {
   const knownTypes: {
-    [typeName: string]: TypesWithRequiredUniqueNames;
+    [typeName: string]: TypeDefinitionNode;
   } = Object.create(null);
   const schema = context.getSchema();
 
   return {
-    // ScalarTypeDefinition: checkTypeName,
+    ScalarTypeDefinition: checkTypeName,
     ObjectTypeDefinition: checkTypeName,
     InterfaceTypeDefinition: checkTypeName,
-    // UnionTypeDefinition: checkTypeName,
-    // EnumTypeDefinition: checkTypeName,
+    UnionTypeDefinition: checkTypeName,
+    EnumTypeDefinition: checkTypeName,
     InputObjectTypeDefinition: checkTypeName,
   };
 
-  function checkTypeName(node: TypesWithRequiredUniqueNames) {
+  function checkTypeName(node: TypeDefinitionNode) {
     const typeName = node.name.value;
     const typeFromSchema = schema && schema.getType(typeName);
     const typeNodeFromSchema =
       typeFromSchema &&
-      (typeFromSchema.astNode as Maybe<TypesWithRequiredUniqueNames>);
+      (typeFromSchema.astNode as Maybe<TypeDefinitionNode>);
 
     const typeNodeFromDefs = knownTypes[typeName];
     const duplicateTypeNode = typeNodeFromSchema || typeNodeFromDefs;
@@ -76,6 +68,30 @@ export function UniqueTypeNamesWithFields(
       const { kind, fields } = diffTypeNodes(node, duplicateTypeNode);
 
       const fieldsDiff = Object.entries(fields);
+
+      // Error if the kinds don't match
+      if (kind.length > 0) {
+        context.reportError(
+          errorWithCode(
+            'VALUE_TYPE_KIND_MISMATCH',
+            `${logServiceAndType(
+              duplicateTypeNode.serviceName!,
+              typeName,
+            )}Found kind mismatch on expected value type belonging to services \`${
+              duplicateTypeNode.serviceName
+            }\` and \`${
+              node.serviceName
+            }\`. \`${typeName}\` is defined as both a \`${
+              kind[0]
+            }\` and a \`${
+              kind[1]
+            }\`. In order to define \`${typeName}\` in multiple places, the kinds must be identical.`,
+            [node, duplicateTypeNode],
+          ),
+        );
+        return;
+      }
+
       const typesHaveSameShape =
         fieldsDiff.length === 0 ||
         fieldsDiff.every(([fieldName, types]) => {
@@ -110,28 +126,6 @@ export function UniqueTypeNamesWithFields(
       if (typesHaveSameShape) {
         // Report errors that were collected while determining the matching shape of the types
         possibleErrors.forEach(error => context.reportError(error));
-
-        // Error if the kinds don't match
-        if (kind.length > 0) {
-          context.reportError(
-            errorWithCode(
-              'VALUE_TYPE_KIND_MISMATCH',
-              `${logServiceAndType(
-                duplicateTypeNode.serviceName!,
-                typeName,
-              )}Found kind mismatch on expected value type belonging to services \`${
-                duplicateTypeNode.serviceName
-              }\` and \`${
-                node.serviceName
-              }\`. \`${typeName}\` is defined as both a \`${
-                kind[0]
-              }\` and a \`${
-                kind[1]
-              }\`. In order to define \`${typeName}\` in multiple places, the kinds must be identical.`,
-              [node, duplicateTypeNode],
-            ),
-          );
-        }
 
         // Error if either is an entity
         if (isTypeNodeAnEntity(node) || isTypeNodeAnEntity(duplicateTypeNode)) {

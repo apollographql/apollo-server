@@ -33,6 +33,10 @@
       "allowedVersions": "<3"
     },
     {
+      "packageNames": ["log4js"],
+      "allowedVersions": "<5"
+    },
+    {
       "packageNames": ["hapi", "@types/hapi"],
       "allowedVersions": "<18"
     },
@@ -64,7 +68,7 @@
       // We need to tell Renovate to check the branches for each major version
       // of Apollo Server.  "Past" major versions should be added here!
       "baseBranches": [
-        "master",
+        "main",
         "version-2"
       ]
     }

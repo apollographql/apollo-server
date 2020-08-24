@@ -1,5 +1,13 @@
 / /docs/apollo-server/
 
+# The v2 docs were beta for a while, and non-default, but now that they are
+# default, the v2 docs don't exist anymore.  So redirect them to the default!
+/docs/apollo-server/v2 /docs/apollo-server/
+/docs/apollo-server/v2/* /docs/apollo-server/:splat
+
+/docs/apollo-server/data/data/ /docs/apollo-server/data/resolvers/
+
+/docs/apollo-server/federation/implementing/ /docs/apollo-server/federation/implementing-services/
 /docs/apollo-server/federation/core-concepts/ /docs/apollo-server/federation/entities/
 /docs/apollo-server/federation/advanced-features/ /docs/apollo-server/federation/entities/
 /docs/apollo-server/federation/concerns/ /docs/apollo-server/federation/introduction/#separation-of-concerns
@@ -9,7 +17,7 @@
 /docs/apollo-server/features/test-utils.html /docs/apollo-server/features/testing.html
 
 # Redirects associated with revamp of Apollo Server information architecture
-/docs/apollo-server/whats-new https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md
+/docs/apollo-server/whats-new https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md
 /docs/apollo-server/essentials/data/ /docs/apollo-server/data/data/
 /docs/apollo-server/essentials/schema/ /docs/apollo-server/schema/schema/
 /docs/apollo-server/essentials/server /docs/apollo-server/getting-started/

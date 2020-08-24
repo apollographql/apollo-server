@@ -182,7 +182,7 @@ extend type Product @key(fields: "upc") {
 Similar to the `reviews` relationship example above, the gateway fetches the required `upc` field from the `products` service and passes it to the `inventory` service, even if the query didn't ask for the `upc`:
 
 ```graphql
-query {
+query GetTopProductAvailability {
   topProducts {
     inStock
   }
@@ -191,12 +191,12 @@ query {
 
 ## The `Query` and `Mutation` types
 
-In Apollo Federation, the `Query` and `Mutation` base types originate in the gateway itself. Consequently, _all_ of your implementing services should [extend](#extending) these types to add the operations they support.
+In Apollo Federation, the `Query` and `Mutation` base types originate in the graph composition itself and _all_ of your implementing services are automatically treated as [extending](#extending) these types to add the operations they support without explicitly adding the `extends` keyword.
 
 For example, the `products` service might extend the root `Query` type to add a `topProducts` query, like so:
 
 ```graphql:title=products
-extend type Query {
+type Query {
   topProducts(first: Int = 5): [Product]
 }
 ```
@@ -219,7 +219,7 @@ Apollo Gateway helps you perform this migration much like you perform a database
 
     _Again, this technically deploys a composition error. **However**, this error is handled gracefully in one of two ways, depending on whether you are using [managed federation](https://www.apollographql.com/docs/graph-manager/federation/):_
 
-    * _If you **are** using managed federation, Graph Manager does **not** push an updated schema to your gateway, and the gateway continues to resolve the `inStock` field in the `products` service._
+    * _If you **are** using managed federation, Apollo Studio does **not** push an updated schema to your gateway, and the gateway continues to resolve the `inStock` field in the `products` service._
 
     * _If you are **not** using managed federation, your gateway starts resolving the `inStock` field in whichever service is listed **last** in your gateway's [`serviceList`](/api/apollo-gateway/#apollogateway)._
 

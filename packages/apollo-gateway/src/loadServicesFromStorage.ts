@@ -38,17 +38,68 @@ const urlFromEnvOrDefault = (envKey: string, fallback: string) =>
 // Generate and cache our desired operation manifest URL.
 const urlPartialSchemaBase = urlFromEnvOrDefault(
   envOverridePartialSchemaBaseUrl,
-  'https://storage.googleapis.com/engine-partial-schema-prod/',
+  'https://federation.api.apollographql.com/',
 );
 
 const urlStorageSecretBase: string = urlFromEnvOrDefault(
   envOverrideStorageSecretBaseUrl,
-  'https://storage.googleapis.com/engine-partial-schema-prod/',
+  'https://storage-secrets.api.apollographql.com/',
 );
 
 function getStorageSecretUrl(graphId: string, apiKeyHash: string): string {
   return `${urlStorageSecretBase}/${graphId}/storage-secret/${apiKeyHash}.json`;
 }
+
+function fetchApolloGcs(
+  fetcher: typeof fetch,
+  ...args: Parameters<typeof fetch>
+): ReturnType<typeof fetch> {
+  const [input, init] = args;
+
+  // Used in logging.
+  const url = typeof input === 'object' && input.url || input;
+
+  return fetcher(input, init)
+    .catch(fetchError => {
+      throw new Error(
+      "Cannot access Apollo Graph Manager storage: " + fetchError)
+    })
+    .then(async (response) => {
+      // If the fetcher has a cache and has implemented ETag validation, then
+      // a 304 response may be returned.  Either way, we will return the
+      // non-JSON-parsed version and let the caller decide if that's important
+      // to their needs.
+      if (response.ok || response.status === 304) {
+        return response;
+      }
+
+      // We won't make any assumptions that the body is anything but text, to
+      // avoid parsing errors in this unknown condition.
+      const body = await response.text();
+
+      // Google Cloud Storage returns an `application/xml` error under error
+      // conditions.  We'll special-case our known errors, and resort to
+      // printing the body for others.
+      if (
+        response.headers.get('content-type') === 'application/xml' &&
+        response.status === 403 &&
+        body.includes("<Error><Code>AccessDenied</Code>") &&
+        body.includes("Anonymous caller does not have storage.objects.get")
+      ) {
+          throw new Error(
+            "Unable to authenticate with Apollo Graph Manager storage " +
+            "while fetching " + url + ".  Ensure that the API key is " +
+            "configured properly and that a federated service has been " +
+            "pushed.  For details, see " +
+            "https://go.apollo.dev/g/resolve-access-denied.");
+      }
+
+      // Normally, we'll try to keep the logs clean with errors we expect.
+      // If it's not a known error, reveal the full body for debugging.
+      throw new Error(
+        "Could not communicate with Apollo Graph Manager storage: " + body);
+    });
+};
 
 export async function getServiceDefinitionsFromStorage({
   graphId,
@@ -66,9 +117,9 @@ export async function getServiceDefinitionsFromStorage({
   // fetch the storage secret
   const storageSecretUrl = getStorageSecretUrl(graphId, apiKeyHash);
 
-  const secret: string = await fetcher(storageSecretUrl).then(response =>
-    response.json(),
-  );
+  // The storage secret is a JSON string (e.g. `"secret"`).
+  const secret: string =
+    await fetchApolloGcs(fetcher, storageSecretUrl).then(res => res.json());
 
   if (!graphVariant) {
     graphVariant = 'current';
@@ -76,17 +127,19 @@ export async function getServiceDefinitionsFromStorage({
 
   const baseUrl = `${urlPartialSchemaBase}/${secret}/${graphVariant}/v${federationVersion}`;
 
-  const response = await fetcher(`${baseUrl}/composition-config-link`);
+  const compositionConfigResponse =
+    await fetchApolloGcs(fetcher, `${baseUrl}/composition-config-link`);
 
-  if (response.status === 304) {
+  if (compositionConfigResponse.status === 304) {
     return { isNewSchema: false };
   }
 
-  const linkFileResult: LinkFileResult = await response.json();
+  const linkFileResult: LinkFileResult = await compositionConfigResponse.json();
 
-  const compositionMetadata: CompositionMetadata = await fetcher(
+  const compositionMetadata: CompositionMetadata = await fetchApolloGcs(
+    fetcher,
     `${urlPartialSchemaBase}/${linkFileResult.configPath}`,
-  ).then(response => response.json());
+  ).then(res => res.json());
 
   // It's important to maintain the original order here
   const serviceDefinitions = await Promise.all(

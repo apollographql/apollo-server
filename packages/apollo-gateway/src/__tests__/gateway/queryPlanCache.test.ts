@@ -5,12 +5,7 @@ import { buildFederatedSchema } from '@apollo/federation';
 
 import { LocalGraphQLDataSource } from '../../datasources/LocalGraphQLDataSource';
 import { ApolloGateway } from '../../';
-
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
+import { fixtures } from 'apollo-federation-integration-testsuite';
 
 it('caches the query plan for a request', async () => {
   const planner = require('../../buildQueryPlan');
@@ -19,7 +14,7 @@ it('caches the query plan for a request', async () => {
   planner.buildQueryPlan = jest.fn(originalPlanner);
 
   const gateway = new ApolloGateway({
-    localServiceList: [accounts, books, inventory, product, reviews],
+    localServiceList: fixtures,
     buildService: service => {
       return new LocalGraphQLDataSource(buildFederatedSchema([service]));
     },
@@ -75,7 +70,7 @@ it('supports multiple operations and operationName', async () => {
   `;
 
   const gateway = new ApolloGateway({
-    localServiceList: [accounts, books, inventory, product, reviews],
+    localServiceList: fixtures,
     buildService: service => {
       return new LocalGraphQLDataSource(buildFederatedSchema([service]));
     },
@@ -107,4 +102,119 @@ it('supports multiple operations and operationName', async () => {
       { body: 'Wish I had read this before.' },
     ],
   });
+});
+
+it('does not corrupt cached queryplan data across requests', async () => {
+  const serviceA = {
+    name: 'a',
+    typeDefs: gql`
+      type Query {
+        user: User
+      }
+
+      type User @key(fields: "id") {
+        id: ID!
+        preferences: Preferences
+      }
+
+      type Preferences {
+        favorites: Things
+      }
+
+      type Things {
+        color: String
+        animal: String
+      }
+    `,
+    resolvers: {
+      Query: {
+        user() {
+          return {
+            id: '1',
+            preferences: {
+              favorites: { color: 'limegreen', animal: 'platypus' },
+            },
+          };
+        },
+      },
+    },
+  };
+
+  const serviceB = {
+    name: 'b',
+    typeDefs: gql`
+      extend type User @key(fields: "id") {
+        id: ID! @external
+        preferences: Preferences @external
+        favoriteColor: String
+          @requires(fields: "preferences { favorites { color } }")
+        favoriteAnimal: String
+          @requires(fields: "preferences { favorites { animal } }")
+      }
+
+      extend type Preferences {
+        favorites: Things @external
+      }
+
+      extend type Things {
+        color: String @external
+        animal: String @external
+      }
+    `,
+    resolvers: {
+      User: {
+        favoriteColor(user: any) {
+          return user.preferences.favorites.color;
+        },
+        favoriteAnimal(user: any) {
+          return user.preferences.favorites.animal;
+        },
+      },
+    },
+  };
+
+  const gateway = new ApolloGateway({
+    localServiceList: [serviceA, serviceB],
+    buildService: service => {
+      return new LocalGraphQLDataSource(buildFederatedSchema([service]));
+    },
+  });
+
+  const { schema, executor } = await gateway.load();
+
+  const server = new ApolloServer({ schema, executor });
+
+  const call = createTestClient(server);
+
+  const query1 = `#graphql
+    query UserFavoriteColor {
+      user {
+        favoriteColor
+      }
+    }
+  `;
+
+  const query2 = `#graphql
+    query UserFavorites {
+      user {
+        favoriteColor
+        favoriteAnimal
+      }
+    }
+  `;
+
+  const result1 = await call.query({
+    query: query1,
+  });
+  const result2 = await call.query({
+    query: query2,
+  });
+  const result3 = await call.query({
+    query: query1,
+  });
+
+  expect(result1.errors).toEqual(undefined);
+  expect(result2.errors).toEqual(undefined);
+  expect(result3.errors).toEqual(undefined);
+  expect(result1).toEqual(result3);
 });

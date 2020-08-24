@@ -1,20 +1,14 @@
 import gql from 'graphql-tag';
 import { execute } from '../execution-utils';
-
-import * as accounts from '../__fixtures__/schemas/accounts';
-import * as books from '../__fixtures__/schemas/books';
-import * as inventory from '../__fixtures__/schemas/inventory';
-import * as product from '../__fixtures__/schemas/product';
-import * as reviews from '../__fixtures__/schemas/reviews';
-
 import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
+import { fixtures } from 'apollo-federation-integration-testsuite';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
 describe('custom executable directives', () => {
   it('successfully passes directives along in requests to an underlying service', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body @stream
@@ -22,12 +16,9 @@ describe('custom executable directives', () => {
       }
     `;
 
-    const { errors, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { errors, queryPlan } = await execute({
+      query,
+    });
 
     expect(errors).toBeUndefined();
     expect(queryPlan).toCallService('reviews');
@@ -45,59 +36,62 @@ describe('custom executable directives', () => {
   });
 
   it('successfully passes directives and their variables along in requests to underlying services', async () => {
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body @stream
           author @transform(from: "JSON") {
-            name @stream
+            name @stream {
+              first
+              last
+            }
           }
         }
       }
     `;
 
-    const { errors, queryPlan } = await execute(
-      [accounts, books, inventory, product, reviews],
-      {
-        query,
-      },
-    );
+    const { errors, queryPlan } = await execute({
+      query,
+    });
 
     expect(errors).toBeUndefined();
     expect(queryPlan).toCallService('reviews');
     expect(queryPlan).toCallService('accounts');
     expect(queryPlan).toMatchInlineSnapshot(`
-        QueryPlan {
-          Sequence {
-            Fetch(service: "reviews") {
+      QueryPlan {
+        Sequence {
+          Fetch(service: "reviews") {
+            {
+              topReviews {
+                body @stream
+                author @transform(from: "JSON") {
+                  __typename
+                  id
+                }
+              }
+            }
+          },
+          Flatten(path: "topReviews.@.author") {
+            Fetch(service: "accounts") {
               {
-                topReviews {
-                  body @stream
-                  author @transform(from: "JSON") {
-                    __typename
-                    id
+                ... on User {
+                  __typename
+                  id
+                }
+              } =>
+              {
+                ... on User {
+                  name @stream {
+                    first
+                    last
                   }
                 }
               }
             },
-            Flatten(path: "topReviews.@.author") {
-              Fetch(service: "accounts") {
-                {
-                  ... on User {
-                    __typename
-                    id
-                  }
-                } =>
-                {
-                  ... on User {
-                    name @stream
-                  }
-                }
-              },
-            },
           },
-        }
-      `);
+        },
+      }
+    `);
   });
 
   it("returns validation errors when directives aren't present across all services", async () => {
@@ -108,7 +102,7 @@ describe('custom executable directives', () => {
       `,
     };
 
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body @stream
@@ -117,15 +111,18 @@ describe('custom executable directives', () => {
     `;
 
     expect(
-      execute([accounts, books, inventory, product, reviews, invalidService], {
-        query,
-      }),
+      execute(
+        {
+          query,
+        },
+        [...fixtures, invalidService],
+      ),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`
 "[@stream] -> Custom directives must be implemented in every service. The following services do not implement the @stream directive: invalidService.
 
 [@transform] -> Custom directives must be implemented in every service. The following services do not implement the @transform directive: invalidService.
 
-[@invalid] -> Custom directives must be implemented in every service. The following services do not implement the @invalid directive: accounts, books, inventory, product, reviews."
+[@invalid] -> Custom directives must be implemented in every service. The following services do not implement the @invalid directive: accounts, books, documents, inventory, product, reviews."
 `);
   });
 
@@ -137,7 +134,7 @@ describe('custom executable directives', () => {
       `,
     };
 
-    const query = gql`
+    const query = `#graphql
       query GetReviewers {
         topReviews {
           body @stream
@@ -146,15 +143,19 @@ describe('custom executable directives', () => {
     `;
 
     expect(
-      execute([accounts, books, inventory, product, reviews, invalidService], {
-        query,
-      }),
+      execute(
+        {
+          query,
+        },
+        [...fixtures, invalidService],
+      ),
     ).rejects.toThrowErrorMatchingInlineSnapshot(`
 "[@transform] -> Custom directives must be implemented in every service. The following services do not implement the @transform directive: invalid.
 
 [@stream] -> custom directives must be defined identically across all services. See below for a list of current implementations:
 	accounts: directive @stream on FIELD
 	books: directive @stream on FIELD
+	documents: directive @stream on FIELD
 	inventory: directive @stream on FIELD
 	product: directive @stream on FIELD
 	reviews: directive @stream on FIELD

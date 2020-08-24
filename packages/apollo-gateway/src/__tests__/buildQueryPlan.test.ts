@@ -1,57 +1,66 @@
-import path from 'path';
 import { GraphQLSchema, GraphQLError } from 'graphql';
-import {
-  GraphQLSchemaModule,
-  GraphQLSchemaValidationError,
-} from 'apollo-graphql';
 import gql from 'graphql-tag';
-import { composeServices, buildFederatedSchema } from '@apollo/federation';
-
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
-
-import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
+import { getFederatedTestingSchema } from './execution-utils';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
-function buildLocalService(modules: GraphQLSchemaModule[]) {
-  const schema = buildFederatedSchema(modules);
-  return new LocalGraphQLDataSource(schema);
-}
-
 describe('buildQueryPlan', () => {
   let schema: GraphQLSchema;
+  let errors: GraphQLError[];
 
   beforeEach(() => {
-    const serviceMap = Object.fromEntries(
-      ['accounts', 'product', 'inventory', 'reviews', 'books'].map(
-        serviceName => {
-          return [
-            serviceName,
-            buildLocalService([
-              require(path.join(
-                __dirname,
-                '__fixtures__/schemas',
-                serviceName,
-              )),
-            ]),
-          ] as [string, LocalGraphQLDataSource];
-        },
-      ),
+    ({ schema, errors } = getFederatedTestingSchema());
+    expect(errors).toHaveLength(0);
+  });
+
+  it(`should not confuse union types with overlapping field names`, () => {
+    const query = gql`
+      query {
+        body {
+          ... on Image {
+            attributes {
+              url
+            }
+          }
+          ... on Text {
+            attributes {
+              bold
+              text
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(
+      buildOperationContext(schema, query, undefined),
     );
 
-    let errors: GraphQLError[];
-    ({ schema, errors } = composeServices(
-      Object.entries(serviceMap).map(([serviceName, service]) => ({
-        name: serviceName,
-        typeDefs: service.sdl(),
-      })),
-    ));
-
-    if (errors && errors.length > 0) {
-      throw new GraphQLSchemaValidationError(errors);
-    }
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "documents") {
+          {
+            body {
+              __typename
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+          }
+        },
+      }
+    `);
   });
 
   it(`should use a single fetch when requesting a root field from one service`, () => {
@@ -1183,6 +1192,160 @@ describe('buildQueryPlan', () => {
                 },
               },
             },
+          },
+        }
+      `);
+    });
+  });
+
+  it(`should properly expand nested unions with inline fragments`, () => {
+    const query = gql`
+      query {
+        body {
+          ... on Image {
+            ... on Body {
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+          }
+          ... on Text {
+            attributes {
+              bold
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(
+      buildOperationContext(schema, query, undefined),
+    );
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "documents") {
+          {
+            body {
+              __typename
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                }
+              }
+            }
+          }
+        },
+      }
+    `);
+  });
+
+  describe('deduplicates fields / selections regardless of adjacency and type condition nesting', () => {
+    it('for inline fragments', () => {
+      const query = gql`
+        query {
+          body {
+            ... on Image {
+              ... on Text {
+                attributes {
+                  bold
+                }
+              }
+            }
+            ... on Body {
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+            ... on Text {
+              attributes {
+                bold
+                text
+              }
+            }
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "documents") {
+            {
+              body {
+                __typename
+                ... on Text {
+                  attributes {
+                    bold
+                    text
+                  }
+                }
+              }
+            }
+          },
+        }
+      `);
+    });
+
+    it('for named fragment spreads', () => {
+      const query = gql`
+        fragment TextFragment on Text {
+          attributes {
+            bold
+            text
+          }
+        }
+
+        query {
+          body {
+            ... on Image {
+              ...TextFragment
+            }
+            ... on Body {
+              ...TextFragment
+            }
+            ...TextFragment
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "documents") {
+            {
+              body {
+                __typename
+                ... on Text {
+                  attributes {
+                    bold
+                    text
+                  }
+                }
+              }
+            }
           },
         }
       `);

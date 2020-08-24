@@ -19,11 +19,13 @@ import { isObject } from '../utilities/predicates';
 import { GraphQLDataSource } from './types';
 import createSHA from 'apollo-server-core/dist/utils/createSHA';
 
-export class RemoteGraphQLDataSource implements GraphQLDataSource {
+export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Record<string, any>> implements GraphQLDataSource<TContext> {
+  fetcher: typeof fetch = fetch;
+
   constructor(
-    config?: Partial<RemoteGraphQLDataSource> &
+    config?: Partial<RemoteGraphQLDataSource<TContext>> &
       object &
-      ThisType<RemoteGraphQLDataSource>,
+      ThisType<RemoteGraphQLDataSource<TContext>>,
   ) {
     if (config) {
       return Object.assign(this, config);
@@ -52,7 +54,7 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
    */
   apq: boolean = false;
 
-  async process<TContext>({
+  async process({
     request,
     context,
   }: Pick<GraphQLRequestContext<TContext>, 'request' | 'context'>): Promise<
@@ -123,7 +125,7 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     return respond(response, requestWithQuery);
   }
 
-  private async sendRequest<TContext>(
+  private async sendRequest(
     request: GraphQLRequest,
     context: TContext,
   ): Promise<GraphQLResponse> {
@@ -138,19 +140,22 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     // being transmitted.  Instead, we want those to be used to indicate what
     // we're accessing (e.g. url) and what we access it with (e.g. headers).
     const { http, ...requestWithoutHttp } = request;
-    const httpRequest = new Request(http.url, {
+    const fetchRequest = new Request(http.url, {
       ...http,
       body: JSON.stringify(requestWithoutHttp),
     });
 
-    try {
-      const httpResponse = await fetch(httpRequest);
+    let fetchResponse: Response | undefined;
 
-      if (!httpResponse.ok) {
-        throw await this.errorFromResponse(httpResponse);
+    try {
+      // Use our local `fetcher` to allow for fetch injection
+      fetchResponse = await this.fetcher(fetchRequest);
+
+      if (!fetchResponse.ok) {
+        throw await this.errorFromResponse(fetchResponse);
       }
 
-      const body = await this.parseBody(httpResponse, httpRequest, context);
+      const body = await this.parseBody(fetchResponse, fetchRequest, context);
 
       if (!isObject(body)) {
         throw new Error(`Expected JSON response body, but received: ${body}`);
@@ -158,42 +163,46 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
 
       return {
         ...body,
-        http: httpResponse,
+        http: fetchResponse,
       };
     } catch (error) {
-      this.didEncounterError(error, httpRequest);
+      this.didEncounterError(error, fetchRequest, fetchResponse);
       throw error;
     }
   }
 
-  public willSendRequest?<TContext>(
+  public willSendRequest?(
     requestContext: Pick<
       GraphQLRequestContext<TContext>,
       'request' | 'context'
     >,
   ): ValueOrPromise<void>;
 
-  public didReceiveResponse?<TContext = any>(
+  public didReceiveResponse?(
     requestContext: Required<Pick<
       GraphQLRequestContext<TContext>,
       'request' | 'response' | 'context'>
     >,
   ): ValueOrPromise<GraphQLResponse>;
 
-  public didEncounterError(error: Error, _request: Request) {
+  public didEncounterError(
+    error: Error,
+    _fetchRequest: Request,
+    _fetchResponse?: Response
+  ) {
     throw error;
   }
 
-  public parseBody<TContext>(
-    response: Response,
-    _request?: Request,
+  public parseBody(
+    fetchResponse: Response,
+    _fetchRequest?: Request,
     _context?: TContext,
   ): Promise<object | string> {
-    const contentType = response.headers.get('Content-Type');
+    const contentType = fetchResponse.headers.get('Content-Type');
     if (contentType && contentType.startsWith('application/json')) {
-      return response.json();
+      return fetchResponse.json();
     } else {
-      return response.text();
+      return fetchResponse.text();
     }
   }
 

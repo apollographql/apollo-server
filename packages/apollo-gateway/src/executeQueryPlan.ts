@@ -7,16 +7,12 @@ import {
   execute,
   GraphQLError,
   Kind,
-  OperationTypeNode,
-  print,
   SelectionSetNode,
   TypeNameMetaFieldDef,
-  VariableDefinitionNode,
   GraphQLFieldResolver,
-  stripIgnoredCharacters,
-  DocumentNode,
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
+import { defaultRootOperationNameLookup } from '@apollo/federation';
 import { GraphQLDataSource } from './datasources/types';
 import {
   FetchNode,
@@ -93,11 +89,9 @@ export async function executeQueryPlan<TContext>(
       },
       rootValue: data,
       variableValues: requestContext.request.variables,
-      // FIXME: GraphQL extensions currentl wraps every field and creates
-      // a field resolver. Because of this, when using with ApolloServer
-      // the defaultFieldResolver isn't called. We keep this here
-      // because it is the correct solution and when ApolloServer removes
-      // GraphQLExtensions this will be how alias support is maintained
+      // We have a special field resolver which ensures we support aliases.
+      // FIXME: It's _possible_ this will change after `graphql-extensions` is
+      // deprecated, though not certain. See here, also: https://git.io/Jf8cS.
       fieldResolver: defaultFieldResolverWithAliasSupport,
     }));
   } catch (error) {
@@ -202,12 +196,11 @@ async function executeFetch<TContext>(
   _path: ResponsePath,
   traceNode: Trace.QueryPlanNode.FetchNode | null,
 ): Promise<void> {
+  const logger = context.requestContext.logger || console;
   const service = context.serviceMap[fetch.serviceName];
   if (!service) {
     throw new Error(`Couldn't find service with name "${fetch.serviceName}"`);
   }
-
-  const operationType = context.operationContext.operation.operation;
 
   const entities = Array.isArray(results) ? results : [results];
   if (entities.length < 1) return;
@@ -228,7 +221,7 @@ async function executeFetch<TContext>(
   if (!fetch.requires) {
     const dataReceivedFromService = await sendOperation(
       context,
-      operationForRootFetch(fetch, operationType),
+      fetch.source,
       variables,
     );
 
@@ -255,7 +248,7 @@ async function executeFetch<TContext>(
 
     const dataReceivedFromService = await sendOperation(
       context,
-      operationForEntitiesFetch(fetch),
+      fetch.source,
       { ...variables, representations },
     );
 
@@ -285,12 +278,11 @@ async function executeFetch<TContext>(
     }
   }
 
-  async function sendOperation<TContext>(
+  async function sendOperation(
     context: ExecutionContext<TContext>,
-    operation: DocumentNode,
+    source: string,
     variables: Record<string, any>,
   ): Promise<ResultMap | void | null> {
-    const source = stripIgnoredCharacters(print(operation));
     // We declare this as 'any' because it is missing url and method, which
     // GraphQLRequest.http is supposed to have if it exists.
     let http: any;
@@ -313,7 +305,7 @@ async function executeFetch<TContext>(
       traceNode.sentTime = dateToProtoTimestamp(new Date());
     }
 
-    const response = await service.process<TContext>({
+    const response = await service.process({
       request: {
         query: source,
         variables,
@@ -351,7 +343,7 @@ async function executeFetch<TContext>(
           // supports that, but there's not a no-deps base64 implementation.
           traceBuffer = Buffer.from(traceBase64, 'base64');
         } catch (err) {
-          console.error(
+          logger.error(
             `error decoding base64 for federated trace from ${fetch.serviceName}: ${err}`,
           );
           traceParsingFailed = true;
@@ -362,11 +354,24 @@ async function executeFetch<TContext>(
             const trace = Trace.decode(traceBuffer);
             traceNode.trace = trace;
           } catch (err) {
-            console.error(
+            logger.error(
               `error decoding protobuf for federated trace from ${fetch.serviceName}: ${err}`,
             );
             traceParsingFailed = true;
           }
+        }
+        if (traceNode.trace) {
+          // Federation requires the root operations in the composed schema
+          // to have the default names (Query, Mutation, Subscription) even
+          // if the implementing services choose different names, so we override
+          // whatever the implementing service reported here.
+          const rootTypeName =
+            defaultRootOperationNameLookup[
+              context.operationContext.operation.operation
+            ];
+          traceNode.trace.root?.child?.forEach((child) => {
+            child.parentType = rootTypeName;
+          });
         }
         traceNode.traceParsingFailed = traceParsingFailed;
       }
@@ -384,7 +389,14 @@ async function executeFetch<TContext>(
 function executeSelectionSet(
   source: Record<string, any> | null,
   selectionSet: SelectionSetNode,
-): Record<string, any> {
+): Record<string, any> | null {
+
+  // If the underlying service has returned null for the parent (source)
+  // then there is no need to iterate through the parent's selection set
+  if (source === null) {
+    return null;
+  }
+
   const result: Record<string, any> = Object.create(null);
 
   for (const selection of selectionSet.selections) {
@@ -393,14 +405,6 @@ function executeSelectionSet(
         const responseName = getResponseName(selection);
         const selectionSet = selection.selectionSet;
 
-        // Null is a valid value for a response, provided that the types match.
-        // Presumably the underlying service has validated that result, so we
-        // can pass it through here
-        // Note: undefined is unexpected here due to GraphQL's type coercion / nullability rules
-        if (source === null) {
-          result[responseName] = null;
-          break;
-        }
         if (typeof source[responseName] === 'undefined') {
           throw new Error(`Field "${responseName}" was not found in response.`);
         }
@@ -477,89 +481,6 @@ function downstreamServiceError(
     undefined,
     extensions,
   );
-}
-
-function mapFetchNodeToVariableDefinitions(
-  node: FetchNode,
-): VariableDefinitionNode[] {
-  return node.variableUsages ? Object.values(node.variableUsages) : [];
-}
-
-function operationForRootFetch(
-  fetch: FetchNode,
-  operation: OperationTypeNode = 'query',
-): DocumentNode {
-  return {
-    kind: Kind.DOCUMENT,
-    definitions: [
-      {
-        kind: Kind.OPERATION_DEFINITION,
-        operation,
-        selectionSet: fetch.selectionSet,
-        variableDefinitions: mapFetchNodeToVariableDefinitions(fetch),
-      },
-      ...fetch.internalFragments,
-    ],
-  };
-}
-
-function operationForEntitiesFetch(fetch: FetchNode): DocumentNode {
-  const representationsVariable = {
-    kind: Kind.VARIABLE,
-    name: { kind: Kind.NAME, value: 'representations' },
-  };
-
-  return {
-    kind: Kind.DOCUMENT,
-    definitions: [
-      {
-        kind: Kind.OPERATION_DEFINITION,
-        operation: 'query',
-        variableDefinitions: ([
-          {
-            kind: Kind.VARIABLE_DEFINITION,
-            variable: representationsVariable,
-            type: {
-              kind: Kind.NON_NULL_TYPE,
-              type: {
-                kind: Kind.LIST_TYPE,
-                type: {
-                  kind: Kind.NON_NULL_TYPE,
-                  type: {
-                    kind: Kind.NAMED_TYPE,
-                    name: { kind: Kind.NAME, value: '_Any' },
-                  },
-                },
-              },
-            },
-          },
-        ] as VariableDefinitionNode[]).concat(
-          mapFetchNodeToVariableDefinitions(fetch),
-        ),
-        selectionSet: {
-          kind: Kind.SELECTION_SET,
-          selections: [
-            {
-              kind: Kind.FIELD,
-              name: { kind: Kind.NAME, value: '_entities' },
-              arguments: [
-                {
-                  kind: Kind.ARGUMENT,
-                  name: {
-                    kind: Kind.NAME,
-                    value: representationsVariable.name.value,
-                  },
-                  value: representationsVariable,
-                },
-              ],
-              selectionSet: fetch.selectionSet,
-            },
-          ],
-        },
-      },
-      ...fetch.internalFragments
-    ],
-  };
 }
 
 export const defaultFieldResolverWithAliasSupport: GraphQLFieldResolver<

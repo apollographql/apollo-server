@@ -62,11 +62,17 @@ new ApolloServer({
     | Google Cloud Functions  | <code>{ req: [`Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts), res: [`Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861) }</code> |
     | Cloudflare  | <code>{ req: [`Request`](https://github.com/apollographql/apollo-server/blob/04fe6aa1314ca84de26b4dc26e9b29dda16b81bc/packages/apollo-server-env/src/fetch.d.ts#L37-L45) }</code> |
     | Express | <code>{<br/>&nbsp;&nbsp;req: [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts),<br/>&nbsp;&nbsp;res: [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861)<br/>}</code> |
-    | Fastify  | <code>{}</code> |
+    | Fastify  | <code>{<br/>&nbsp;&nbsp;request: [`FastifyRequest`](https://github.com/fastify/fastify/blob/1d4dcf2bcde46256c72e96c2cafc843a461c721e/types/request.d.ts#L15),<br/>&nbsp;&nbsp;reply: [`FastifyReply`](https://github.com/fastify/fastify/blob/1d4dcf2bcde46256c72e96c2cafc843a461c721e/types/reply.d.ts#L10)</br>}</code> |
     | hapi  | <code>{<br/>&nbsp;&nbsp;request: [`hapi.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/hapi/index.d.ts#L396-L605),<br/>&nbsp;&nbsp;h: [`hapi.ResponseToolkit`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/hapi/index.d.ts#L979-L1100)<br/>}</code> |
     | Koa | <code>{ ctx: [`Koa.Context`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/koa/index.d.ts#L724-L731) }</code> |
     | AWS Lambda | <code>{<br/>&nbsp;&nbsp;event: [`APIGatewayProxyEvent`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L78-L92),<br/>&nbsp;&nbsp;context: [`LambdaContext`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L510-L534)<br/>}</code> |
     | Micro | <code>{ req: [`MicroRequest`](https://github.com/apollographql/apollo-server/blob/c356bcf3f2864b8d2fcca0add455071e0606ef46/packages/apollo-server-micro/src/types.ts#L3-L5), res: [`ServerResponse`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/node/v10/http.d.ts#L145-L158) }</code> |
+
+  * `logger`: `Logger`
+
+    A logging implementation to be used in place of `console`.  The implementation must provide the methods which satisfy the requirements of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/80a12d89ea1ae9a0892f4a81d9213eddf95ca965/packages/apollo-server-types/src/index.ts#L114-L121) (i.e. it must provide `debug`, `info`, `warn` and `error` methods).  When a custom logger is provided, it will receive all levels of logging and it is up to the logger itself to determine how it wishes to handle each level.  When a custom logger is _not_ provided, Apollo Server will default to outputting `warn` and `error` levels unless `debug: true` is specified,  in which case it will output all log levels (i.e. `debug` through `error`).
+
+    Additionally, this `logger` will be made available on the `GraphQLRequestContext` and available to plugins.  This allows a plugin to, e.g., augment the logger on a per-request basis within the `requestDidStart` life-cycle hook.
 
   * `rootValue`: <`Any`> | <`Function`>
 
@@ -134,7 +140,7 @@ new ApolloServer({
 
 * `engine`: <`EngineReportingOptions`> | boolean
 
-  Provided the `ENGINE_API_KEY` environment variable is set, the Graph Manager reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to include variable values and HTTP headers. When using the Engine proxy, this option should be set to `false`.
+  If the `APOLLO_KEY` environment variable is set, the Apollo Studio reporting agent starts automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See [EngineReportingOptions](#enginereportingoptions) for a full description of how to configure the reporting agent, including how to include variable values and HTTP headers.
 
 * `persistedQueries`: <`Object`> | false
 
@@ -144,7 +150,7 @@ new ApolloServer({
 
   Pass the integration-specific CORS options. `false` removes the CORS middleware and `true` uses the defaults. This option is only available to `apollo-server`. For other server integrations, place `cors` inside of `applyMiddleware`.
 
-* `experimental_approximateDocumentStoreSizeMiB`: `number`
+* `experimental_approximateDocumentStoreMiB`: `number`
 
   > **This property is experimental.**  It may be removed or change at any time, even within a patch release.
 
@@ -333,9 +339,13 @@ addMockFunctionsToSchema({
 *  `apiKey`: string __(required)__
 
   API key for the service. Obtain an API key from
-  [Graph Manager](https://engine.apollographql.com) by logging in and creating
-  a service. You can also specify an API key with the `ENGINE_API_KEY`
-  environment variable, although the `apiKey` option takes precedence.
+  [Apollo Studio](https://studio.apollographql.com) by logging in and creating
+  a service. You can also specify an API key with the `APOLLO_KEY`
+  environment variable. If you specify both, the `apiKey` option takes precedence.
+
+* `logger`: `Logger`
+
+  By default, this will inherit from the `logger` provided to `ApolloServer` which defaults to `console` when not provided.  If specified within the `EngineReportingOptions` it can be used to send engine reporting to a separate logger.  If provided, the implementation must provide the methods which satisfy the requirements of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/80a12d89ea1ae9a0892f4a81d9213eddf95ca965/packages/apollo-server-types/src/index.ts#L114-L121) (i.e. it must provide `debug`, `info`, `warn` and `error` methods).
 
 *  `calculateSignature`: (ast: DocumentNode, operationName: string) => string
 
@@ -346,24 +356,24 @@ addMockFunctionsToSchema({
 
 *  `reportIntervalMs`: number
 
-   How often to send reports to Graph Manager, in milliseconds. We'll also send reports
+   How often to send reports to Apollo Studio, in milliseconds. We'll also send reports
    when the report reaches a size threshold specified by `maxUncompressedReportSize`.
 
 *  `maxUncompressedReportSize`: number
 
    In addition to interval-based reporting, Apollo Server sends a report to
-   Graph Manager whenever the report's size exceeds this value in
+   Apollo Studio whenever the report's size exceeds this value in
    bytes (default: 4MB). Note that this is a rough limit. The size of the
    report's header and some other top-level bytes are ignored. The report size is
    limited to the sum of the lengths of serialized traces and signatures.
 
 *  `endpointUrl`: string
 
-   The URL of the Graph Manager report ingress server.
+   The URL of the Apollo Studio report ingress server.
 
 *  `requestAgent`: `http.Agent | https.Agent | false`
 
-   HTTP(s) agent to be used for Apollo Graph Manager metrics reporting.  This accepts either an [`http.Agent`](https://nodejs.org/docs/latest-v10.x/api/http.html#http_class_http_agent) or [`https.Agent`](https://nodejs.org/docs/latest-v10.x/api/https.html#https_class_https_agent) and behaves the same as the `agent` parameter to Node.js' [`http.request`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_http_request_options_callback).
+   HTTP(s) agent to be used for Apollo Studio metrics reporting.  This accepts either an [`http.Agent`](https://nodejs.org/docs/latest-v10.x/api/http.html#http_class_http_agent) or [`https.Agent`](https://nodejs.org/docs/latest-v10.x/api/https.html#https_class_https_agent) and behaves the same as the `agent` parameter to Node.js' [`http.request`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_http_request_options_callback).
 
 *  `debugPrintReports`: boolean
 
@@ -380,8 +390,7 @@ addMockFunctionsToSchema({
 
 *  `reportErrorFunction`: (err: Error) => void
 
-   By default, any errors encountered while sending reports to Graph Manager will be logged
-   to standard error. Specify this function to process errors in a different
+   By default, any errors encountered while sending reports to Apollo Studio are logged to standard error. Specify this function to process errors in a different
    way.
 
 * `sendVariableValues`: { transform: (options: { variables: Record<string, any>, operationString?: string } ) => Record<string, any> }
@@ -394,7 +403,7 @@ addMockFunctionsToSchema({
 
     - `{ none: true }`: Don't send any variable values. **(DEFAULT)**
     - `{ all: true }`: Send all variable values.
-    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.  For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`. 
+    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.  For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`.
     - `{ exceptNames: [...] }`: A case-sensitive list of names of variables whose values should not be sent to Apollo servers.
     - `{ onlyNames: [...] }`: A case-sensitive list of names of variables whose values will be sent to Apollo servers.
 
@@ -446,33 +455,33 @@ addMockFunctionsToSchema({
 
 *  `rewriteError`: (err: GraphQLError) => GraphQLError | null
 
-   By default, all errors are reported to Apollo Graph Manager.  This function
-   can be used to exclude specific errors from being reported.  This function
-   receives a copy of the `GraphQLError` and can manipulate it for the
-   purposes of Graph Manager reporting.  The modified error (e.g., after changing
-   the `err.message` property) should be returned or the function should return
-   an explicit `null` to avoid reporting the error entirely.  It is not
-   permissible to return `undefined`. Note that most `GraphQLError` fields,
-   like `path`, will be copied from the original error to the new error: this
-   way, you can just `return new GraphQLError("message")` without having to
-   explicitly keep it associated with the same node. Specifically, only the
-   `message` and `extensions` properties on the returned `GraphQLError` are
-   observed.  If `extensions` aren't specified, the original `extensions` are
-   used.
+   By default, all errors are reported to Apollo Studio.  This function can be used to exclude specific errors from being reported.  This function receives a copy of the `GraphQLError` and can manipulate it before it's reported.  The modified error (e.g., after changing the `err.message` property) should be returned, or the function can return `null` to avoid reporting the error entirely.  It is not permissible to return `undefined`. Note that most `GraphQLError` fields, like `path`, will be copied from the original error to the new error: this way, you can just `return new GraphQLError("message")` without having to explicitly keep it associated with the same node. Specifically, only the `message` and `extensions` properties on the returned `GraphQLError` are observed.  If `extensions` aren't specified, the original `extensions` are used.
 
 *  `schemaTag`: String
 
-   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
+   > Will be deprecated in 3.0. Use the option `graphVariant` instead.
+
+   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associated with the same string.
+
+*  `graphVariant`: String
+
+   A human-readable name for the variant of a schema (such as `staging` or `production`). Setting this value will cause metrics to be segmented in Apollo Studio. Additionally, schema validation with a graph variant only checks metrics associated with the same variant.
+
+* `reportTiming`: Boolean | async (GraphQLRequestContextDidResolveOperation | GraphQLRequestContextDidEncounterErrors) => Boolean
+
+    Specify whether to instrument an operation to send traces and metrics to Apollo.
+    This may resolve to a boolean or a async function returning a promise resolving to a boolean.
+    If the option resolves to false for an operation the operation will not be instrumented
+    and no metrics information will be sent to Apollo.
+
+    The function will receive a `GraphQLRequestContextDidResolveOperation` with client and operation
+    information or a `GraphQLRequestContextDiDEncounterErrors` in the case an operation failed
+    to resolve properly. This allows the choice of whether to include a given request in trace
+    and metric reporting to be made on a per-request basis. The default value is true.
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 
-   Creates a client context(ClientInfo) based on the request pipeline's
-   context, which contains values like the request, response, cache, and
-   context. This generated client information will be provided to
-   Graph Manager and can be used to filter metrics. Set `clientName` to identify a
-   particular client. Use `clientVersion` to specify a version for a client
-   name.  The default function will use the `clientInfo` field inside of
-   GraphQL Query `extensions`.
+   Creates a client context(ClientInfo) based on the request pipeline's context, which contains values like the request, response, cache, and context. This generated client information will be provided to Apollo Studio and can be used to filter metrics. Set `clientName` to identify a particular client. Use `clientVersion` to specify a version for a client name.  The default function will use the `clientInfo` field inside of GraphQL Query `extensions`.
 
    For advanced use cases when you already have an opaque string to identify
    your client (e.g. an API key, x509 certificate, or team codename), use the
@@ -481,6 +490,31 @@ addMockFunctionsToSchema({
    for cross-correspondence, so names and reference ids should have a one to
    one relationship.
 
-   > [WARNING] If you specify a `clientReferenceId`, Graph Manager will treat the
-   > `clientName` as a secondary lookup, so changing a `clientName` may result
-   > in an unwanted experience.
+   > **Warning:** If you specify a `clientReferenceId`, Apollo Studio treats the `clientName` as a secondary lookup, so changing a `clientName` may result in an unwanted experience.
+
+* `reportSchema`: boolean
+
+   Enables the automatic schema reporting feature of Apollo Server, which will
+   cause it to periodically report the server's schema (when changes are
+   detected) along with details about the runtime environment to Apollo Graph
+   Manager. This feature removes the need to register schemas manually via
+   `apollo service:push` in CI/CD pipelines.
+
+* `overrideReportedSchema`: string
+
+   By default, the schema reported to Apollo Studio will be normalized,
+   which might shift ordering and comments and remove whitespace. This option can
+   be used to override the default schema. Any schema provided will not undergo
+   normalization, which can be helpful to preserve details that normalization
+   removes.
+
+* `schemaReportingInitialDelayMaxMs`: number
+
+   By default, the schema reporter will wait a random amount of time between 0
+   and 10 seconds before making its first report at reporter startup. A longer
+   range of times leads to more staggered starts, which reduces bandwidth
+   since it makes it less likely that multiple servers will get asked to upload
+   the same schema. However, in certain constrained environments (e.g. AWS
+   Lambda), this wait time may be less desirable. This option can be used to
+   change the maximum amount of time that the reporter will wait until it starts
+   sending reports.

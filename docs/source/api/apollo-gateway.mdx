@@ -7,7 +7,7 @@ description: Apollo Gateway API reference
 ## `ApolloGateway`
 
 The core class of Apollo Server's federated gateway implementation. For an
-example of using `ApolloGateway`, see [Implementing a federated graph](/federation/implementing/).
+example of using `ApolloGateway`, see [The gateway](/federation/gateway/).
 
 ### `constructor(options)`: `ApolloGateway`
 
@@ -29,7 +29,7 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
     the `name` and `url` of an implementing service in your federated graph.
     You can specify any string value for the `name` field, which is used for
     identifying the service in log output and error messages, and for reporting
-    metrics to Apollo Graph Manager.
+    metrics to Apollo Studio.
 
     ```js{3-6}
     const gateway = new ApolloGateway({
@@ -61,7 +61,7 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
 
     If you provide this function, `ApolloGateway` calls it for every
     implementing service in your data graph. The function must return an object
-    that implements the [`GraphQLDataSource` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/src/datasources/types.ts), such as an instance of [RemoteGraphQLDataSource](#remotegraphqldatasource) or a subclass of it.
+    that implements the [`GraphQLDataSource` interface](https://github.com/apollographql/apollo-server/blob/570f548b88/packages/apollo-gateway/src/datasources/types.ts), such as an instance of [RemoteGraphQLDataSource](#remotegraphqldatasource) or a subclass of it.
 
     The example below demonstrates adding an `x-user-id`
     HTTP header to every request the gateway sends to an implementing service:
@@ -99,10 +99,48 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
     });
     ```
 
+  * `logger`: `Logger`
+
+    A logging implementation to be used in place of `console`.  The implementation must provide the methods which satisfy the requirements of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/80a12d89ea1ae9a0892f4a81d9213eddf95ca965/packages/apollo-server-types/src/index.ts#L114-L121) (i.e. it must provide `debug`, `info`, `warn` and `error` methods).  When a custom logger is provided, it will receive all levels of logging and it is up to the logger itself to determine how it wishes to handle each level.  When a custom logger is _not_ provided, Gateway will default to outputting `warn` and `error` levels unless `debug: true` is specified,  in which case it will output all log levels (i.e. `debug` through `error`).
+
+    Additionally, this `logger` will be made available on the `GraphQLRequestContext` and available to plugins.  This allows a plugin to, e.g., augment the logger on a per-request basis within the `requestDidStart` life-cycle hook.
+
   * `debug`: `Boolean`
 
     If `true`, the gateway logs startup messages, along with the query plan for
     each incoming request. The default value is `false`.
+
+  * `fetcher`: `typeof fetch`
+
+    When specified, overrides the default
+    [Fetch API](https://fetch.spec.whatwg.org/#fetch-api) implementation
+    which is used when communicating with downstream services.  By default,
+    [`make-fetch-happen`](https://npm.im/make-fetch-happen) is used with its
+    own defaults.  Another compliant implementation can be provided
+    (e.g. [`node-fetch`](https://npm.im/node-fetch) by setting
+    `fetcher: require('node-fetch')`) or different [default options for
+    `make-fetch-happen`](https://www.npmjs.com/package/make-fetch-happen#extra-options)
+    can be defined entirely. E.g.:
+
+    ```javascript
+    const gateway = new ApolloGateway({
+      /* ... */
+      fetcher: require('make-fetch-happen').defaults({
+        onRetry() {
+          console.log('we will retry!')
+        },
+      }),
+      /* ... */
+    });
+    ```
+
+  * `serviceHealthCheck`: `boolean`
+
+    When set to true, the gateway will issue a small query (`{ __typename }`) to
+    its downstream services on load and on schema update. On load, the gateway
+    will throw an error if any of the requests fail. On schema update, the
+    gateway will not roll over to the new schema or service configuration if any
+    of the requests fail, but it will try again at the next poll interval.
 
   * `experimental_approximateQueryPlanStoreMiB`: `number`
 
@@ -125,6 +163,20 @@ const server = new ApolloServer({
   gateway: new ApolloGateway({ serviceList: [...] }),
 });
 ```
+
+### `serviceHealthCheck`
+
+Calling this function on the gateway will issue a small query (`{ __typename }`)
+to each downstream service to ensure they are all responsive. This function
+`throw`s on failure and returns a `Promise` to be `await`ed.
+
+#### Parameters
+
+* `serviceMap`: `DataSourceMap`
+
+  A map of data sources can optionally be provided to this function in order to
+  modify where the health checks will be issued. By default, the gateway will
+  use the existing `this.serviceMap` for issuing the health check requests.
 
 ## `RemoteGraphQLDataSource`
 

@@ -17,12 +17,15 @@ import {
   ValueOrPromise,
   GraphQLResponse,
   GraphQLRequestContext,
+  Logger,
+  SchemaHash,
 } from 'apollo-server-types';
 
 /*
  * GraphQLServerOptions
  *
  * - schema: an executable GraphQL schema used to fulfill requests.
+ * - (optional) logger: a `Logger`-compatible implementation to be used for server-level messages.
  * - (optional) formatError: Formatting function applied to all errors before response is sent
  * - (optional) rootValue: rootValue passed to GraphQL execution, or a function to resolving the rootValue from the DocumentNode
  * - (optional) context: the context passed to GraphQL execution
@@ -40,6 +43,8 @@ export interface GraphQLServerOptions<
   TRootValue = any
 > {
   schema: GraphQLSchema;
+  schemaHash: SchemaHash;
+  logger?: Logger;
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
   context?: TContext | (() => never);
@@ -60,7 +65,6 @@ export interface GraphQLServerOptions<
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
   parseOptions?: GraphQLParseOptions;
-  reporting?: boolean;
 }
 
 export type DataSources<TContext> = {

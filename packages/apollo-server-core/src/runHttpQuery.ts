@@ -17,7 +17,6 @@ import {
   GraphQLRequestContext,
   GraphQLResponse,
 } from './requestPipeline';
-import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { WithRequired, GraphQLExecutionResult } from 'apollo-server-types';
 
@@ -127,10 +126,6 @@ export async function runHttpQuery(
     // the normal options provided by the user, such as: formatError,
     // debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
-    e.message = `Invalid options provided to ApolloServer: ${e.message}`;
-    if (!debugDefault) {
-      e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
-    }
     return throwHttpGraphQLError(500, [e], { debug: debugDefault });
   }
   if (options.debug === undefined) {
@@ -165,6 +160,8 @@ export async function runHttpQuery(
 
   const config = {
     schema: options.schema,
+    schemaHash: options.schemaHash,
+    logger: options.logger,
     rootValue: options.rootValue,
     context: options.context || {},
     validationRules: options.validationRules,
@@ -176,9 +173,6 @@ export async function runHttpQuery(
     // cacheControl defaults will also have been set if a boolean argument is
     // passed in.
     cache: options.cache!,
-    cacheControl: options.cacheControl as
-      | CacheControlExtensionOptions
-      | undefined,
     dataSources: options.dataSources,
     documentStore: options.documentStore,
 
@@ -192,8 +186,6 @@ export async function runHttpQuery(
     debug: options.debug,
 
     plugins: options.plugins || [],
-
-    reporting: options.reporting,
   };
 
   return processHTTPRequest(config, request);
@@ -252,8 +244,16 @@ export async function processHTTPRequest<TContext>(
     // We allow passing in a function for `context` to ApolloServer,
     // but this only runs once for a batched request (because this is resolved
     // in ApolloServer#graphQLServerOptions, before runHttpQuery is invoked).
+    // NOTE: THIS IS DUPLICATED IN ApolloServerBase.prototype.executeOperation.
     const context = cloneObject(options.context);
     return {
+      // While `logger` is guaranteed by internal Apollo Server usage of
+      // this `processHTTPRequest` method, this method has been publicly
+      // exported since perhaps as far back as Apollo Server 1.x.  Therefore,
+      // for compatibility reasons, we'll default to `console`.
+      logger: options.logger || console,
+      schema: options.schema,
+      schemaHash: options.schemaHash,
       request,
       response: {
         http: {
@@ -263,9 +263,7 @@ export async function processHTTPRequest<TContext>(
       context,
       cache: options.cache,
       debug: options.debug,
-      metrics: {
-        captureTraces: !!options.reporting,
-      },
+      metrics: {},
     };
   }
 
@@ -457,6 +455,6 @@ function prettyJSONStringify(value: any) {
   return JSON.stringify(value) + '\n';
 }
 
-function cloneObject<T extends Object>(object: T): T {
+export function cloneObject<T extends Object>(object: T): T {
   return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
 }

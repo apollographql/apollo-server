@@ -1,14 +1,15 @@
 {
   "name": "graphql-extensions",
-  "version": "0.11.0",
+  "version": "0.12.4",
   "description": "Add extensions to GraphQL servers",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "apollographql/graphql-extensions"
+    "url": "apollographql/apollo-server",
+    "directory": "packages/graphql-extensions"
   },
-  "author": "Martijn Walraven <martijn@martijnwalraven.com>",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "engines": {
     "node": ">=6.0"
@@ -19,6 +20,6 @@
     "apollo-server-types": "file:../apollo-server-types"
   },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0-rc.2"
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
   }
 }
