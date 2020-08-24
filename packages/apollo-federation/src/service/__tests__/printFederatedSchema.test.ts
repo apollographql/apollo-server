@@ -100,6 +100,11 @@ describe('printFederatedSchema', () => {
         deleteReview(id: ID!): Boolean
       }
 
+      type Name {
+        first: String
+        last: String
+      }
+
       type PasswordAccount @key(fields: \\"email\\") {
         email: String!
       }
@@ -171,9 +176,9 @@ describe('printFederatedSchema', () => {
         body: String
       }
 
-      type User @key(fields: \\"id\\") {
+      type User @key(fields: \\"id\\") @key(fields: \\"username name { first last }\\") {
         id: ID!
-        name: String
+        name: Name
         username: String
         birthDate(locale: String): String
         account: AccountType

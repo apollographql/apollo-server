@@ -104,7 +104,10 @@ it('supports named fragments (one level)', async () => {
 it('supports multiple named fragments (one level, mixed ordering)', async () => {
   const query = `#graphql
     fragment userInfo on User {
-      name
+      name {
+        first
+        last
+      }
     }
     query GetUser {
       me {
@@ -125,7 +128,10 @@ it('supports multiple named fragments (one level, mixed ordering)', async () => 
   expect(data).toEqual({
     me: {
       username: '@ada',
-      name: 'Ada Lovelace',
+      name: {
+        first: 'Ada',
+        last: 'Lovelace',
+      }
     },
   });
 
