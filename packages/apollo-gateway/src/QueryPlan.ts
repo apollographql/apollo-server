@@ -1,9 +1,9 @@
-  import {
+import {
   FragmentDefinitionNode,
   GraphQLSchema,
   OperationDefinitionNode,
   Kind,
-  SelectionNode as GraphQLJSSelectionNode
+  SelectionNode as GraphQLJSSelectionNode,
 } from 'graphql';
 import prettyFormat from 'pretty-format';
 import { queryPlanSerializer, astSerializer } from './snapshotSerializers';
@@ -74,27 +74,37 @@ export function getResponseName(node: FieldNode): string {
   return node.alias ? node.alias : node.name;
 }
 
-export const trimSelectionNodes = (selections: readonly GraphQLJSSelectionNode[]): SelectionNode[] => {
+/**
+ * Converts a GraphQL-js SelectionNode to our newly defined SelectionNode
+ *
+ * This function is used to remove the unneeded pieces of a SelectionSet's
+ * `.selections`. It is only ever called on a query plan's `requires` field,
+ * so we can guarantee there won't be any FragmentSpreads passed in. That's why
+ * we can ignore the case where `selection.kind === Kind.FRAGMENT_SPREAD`
+ */
+export const trimSelectionNodes = (
+  selections: readonly GraphQLJSSelectionNode[],
+): SelectionNode[] => {
   let remapped: SelectionNode[] = [];
 
-  // intentionally leaving out fragment spread from the input selections, because I don't
-  // THINK that's possible to see in the final query plan -- prove me wrong
-  selections.map(selection => {
-    if(selection.kind === Kind.FIELD){
+  selections.map((selection) => {
+    if (selection.kind === Kind.FIELD) {
       remapped.push({
         kind: Kind.FIELD,
         name: selection.name.value,
-        selections: selection.selectionSet ? trimSelectionNodes(selection.selectionSet?.selections) : undefined
+        selections:
+          selection.selectionSet &&
+          trimSelectionNodes(selection.selectionSet.selections),
       });
     }
-    if(selection.kind === Kind.INLINE_FRAGMENT){
+    if (selection.kind === Kind.INLINE_FRAGMENT) {
       remapped.push({
         kind: Kind.INLINE_FRAGMENT,
         typeCondition: selection.typeCondition?.name.value,
-        selections: trimSelectionNodes(selection.selectionSet?.selections)
+        selections: trimSelectionNodes(selection.selectionSet.selections),
       });
     }
-  })
+  });
 
   return remapped;
-}
+};
