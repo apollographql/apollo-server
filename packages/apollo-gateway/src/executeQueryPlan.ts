@@ -22,7 +22,7 @@ import {
   SelectionNode,
   FieldNode,
   getResponseName // todo: see note below
-} from './QueryPlanNew';
+} from './QueryPlan';
 import { deepMerge } from './utilities/deepMerge';
 
 // todo: once the query plan builder no longer needs the old graphql-js based

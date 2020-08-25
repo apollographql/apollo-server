@@ -100,7 +100,6 @@ describe('buildQueryPlan', () => {
     `;
 
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
-
     expect(queryPlan).toMatchInlineSnapshot(`
       QueryPlan {
         Parallel {
