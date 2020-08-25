@@ -76,7 +76,7 @@ import {
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { plugin as pluginTracing } from "apollo-tracing";
-import { Logger, SchemaHash, ValueOrPromise, ApolloConfig, WithRequired } from "apollo-server-types";
+import { Logger, SchemaHash, ValueOrPromise, ApolloConfig } from "apollo-server-types";
 import {
   plugin as pluginCacheControl,
   CacheControlExtensionOptions,
@@ -84,9 +84,18 @@ import {
 import { cloneObject } from "./runHttpQuery";
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';
-import { EngineReportingAgent } from 'apollo-engine-reporting';
-import { ApolloServerPluginSchemaReporting, ApolloServerPluginSchemaReportingOptions } from './plugin/schemaReporting';
-import { ApolloServerPluginInlineTrace, ApolloServerPluginInlineTraceOptions } from './plugin';
+import {
+  ApolloServerPluginSchemaReporting,
+  ApolloServerPluginSchemaReportingOptions,
+} from './plugin/schemaReporting';
+import {
+  ApolloServerPluginInlineTrace,
+  ApolloServerPluginInlineTraceOptions,
+} from './plugin/inlineTrace';
+import {
+  ApolloServerPluginUsageReporting,
+} from './plugin/usageReporting';
+import { legacyOptionsToPluginOptions } from './plugin/usageReporting/legacyOptions';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -125,7 +134,6 @@ export class ApolloServerBase {
   public requestOptions: Partial<GraphQLServerOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
-  private engineReportingAgent?: EngineReportingAgent;
   private apolloConfig: ApolloConfig;
   protected plugins: ApolloServerPlugin[] = [];
 
@@ -177,8 +185,6 @@ export class ApolloServerBase {
     } = config;
 
     if (engine !== undefined) {
-      // FIXME(no-engine): finish implementing backwards-compatibility `engine`
-      // mode and warn about deprecation
       if (apollo) {
         throw new Error("You cannot provide both `engine` and `apollo` to `new ApolloServer()`. " +
      "For details on how to migrate all of your options out of `engine`, see FIXME(no-engine) URL MISSING");
@@ -281,41 +287,6 @@ export class ApolloServerBase {
           'This implementation of ApolloServer does not support file uploads because the environment cannot accept multi-part forms',
         );
       }
-    }
-
-    if (engine && typeof engine === 'object') {
-      // Use the `ApolloServer` logger unless a more granular logger is set.
-      if (!engine.logger) {
-        engine.logger = this.logger;
-      }
-
-      // Normalize the legacy option maskErrorDetails.
-      if (engine.maskErrorDetails && engine.rewriteError) {
-        throw new Error("Can't set both maskErrorDetails and rewriteError!");
-      } else if (
-        engine.rewriteError &&
-        typeof engine.rewriteError !== 'function'
-      ) {
-        throw new Error('rewriteError must be a function');
-      } else if (engine.maskErrorDetails) {
-        engine.rewriteError = () => new GraphQLError('<masked>');
-        delete engine.maskErrorDetails;
-      }
-    }
-
-    if (this.apolloConfig.key) {
-      // FIXME(no-engine) Eliminate EngineReportingAgent entirely.
-      this.engineReportingAgent = new EngineReportingAgent(
-        typeof engine === 'object' ? engine : Object.create({
-          logger: this.logger,
-        }),
-        // This isn't part of EngineReportingOptions because it's generated
-        // internally by ApolloServer, not part of the end-user options... and
-        // hopefully EngineReportingAgent will be eliminated before this code
-        // is shipped anyway.
-        this.apolloConfig as WithRequired<ApolloConfig, 'key'>,
-      );
-      // Don't add the extension here (we want to add it later in generateSchemaDerivedData).
     }
 
     if (gateway && subscriptions !== false) {
@@ -625,10 +596,6 @@ export class ApolloServerBase {
   public async stop() {
     await Promise.all([...this.toDispose].map(dispose => dispose()));
     if (this.subscriptionServer) await this.subscriptionServer.close();
-    if (this.engineReportingAgent) {
-      this.engineReportingAgent.stop();
-      await this.engineReportingAgent.sendAllReportsAndReportErrors();
-    }
   }
 
   public installSubscriptionHandlers(server: HttpServer | HttpsServer | Http2Server | Http2SecureServer | WebSocket.Server) {
@@ -731,10 +698,13 @@ export class ApolloServerBase {
   // schema.
   //
   // This is used for two things:
-  // 1) determining whether traces should be added to responses if requested
-  //    with an HTTP header; if there's a false positive, that feature can be
-  //    disabled by specifying `engine: false`.
-  // 2) determining whether schema-reporting should be allowed; federated
+  // 1) Determining whether traces should be added to responses if requested
+  //    with an HTTP header. If you want to include these traces even for
+  //    non-federated schemas (when requested via header) you can use
+  //    ApolloServerPluginInlineTrace yourself; if you want to never
+  //    include these traces even for federated schemas you can use
+  //    ApolloServerPluginInlineTraceDisabled.
+  // 2) Determining whether schema-reporting should be allowed; federated
   //    services shouldn't be reporting schemas, and we accordingly throw if
   //    it's attempted.
   private schemaIsFederated(schema: GraphQLSchema): boolean {
@@ -760,7 +730,13 @@ export class ApolloServerBase {
     // User's plugins, provided as an argument to this method, will be added
     // at the end of that list so they take precedence.
 
-    // If the user has enabled it explicitly, add our tracing lugin.
+    // If the user has enabled it explicitly, add our tracing plugin.
+    // (This is the plugin which adds a verbose JSON trace to every GraphQL response;
+    // it was designed for use with the obsolete engineproxy, and also works
+    // with a graphql-playground trace viewer, but isn't generally recommended
+    // (eg, it really does send traces with every single request). The newer
+    // inline tracing plugin may be what you want, or just usage reporting if
+    // the goal is to get traces to Apollo's servers.)
     if (this.config.tracing) {
       pluginsToInit.push(pluginTracing())
     }
@@ -796,22 +772,6 @@ export class ApolloServerBase {
 
     const federatedSchema = this.schema && this.schemaIsFederated(this.schema);
     const { engine } = this.config;
-    // Keep this extension second so it wraps everything, except error formatting
-    if (this.engineReportingAgent) {
-      if (federatedSchema) {
-        // XXX users can configure a federated Apollo Server to send metrics, but the
-        // Gateway should be responsible for that. It's possible that users are running
-        // their own gateway or running a federated service on its own. Nonetheless, in
-        // the likely case it was accidental, we warn users that they should only report
-        // metrics from the Gateway.
-        this.logger.warn(
-          "It looks like you're running a federated schema and you've configured your service " +
-            'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
-            'to report metrics to Apollo Graph Manager.',
-        );
-      }
-      pluginsToInit.push(this.engineReportingAgent!.newPlugin());
-    }
 
     pluginsToInit.push(...plugins);
 
@@ -821,6 +781,38 @@ export class ApolloServerBase {
       }
       return plugin;
     });
+    // FIXME(no-engine): maybe pull these special cases into a separate file?
+
+    // Special case: usage reporting is on by default if you configure an API key.
+    {
+      const alreadyHavePlugin = this.plugins.some(
+        (p) => p.__internal_plugin_id__?.() === 'UsageReporting',
+      );
+      const { engine } = this.config;
+      const disabledViaLegacyOption =
+        engine === false ||
+        (typeof engine === 'object' && engine.reportTiming === false);
+      if (alreadyHavePlugin) {
+        if (engine !== undefined) {
+          throw Error(
+            "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
+              'creating an ApolloServerPluginUsageReporting plugin. See FIXME(no-engine) for details.',
+          );
+        }
+      } else if (this.apolloConfig.key && !disabledViaLegacyOption) {
+        // Keep this plugin first so it wraps everything. (Unfortunately despite
+        // the fact that the person who wrote this line also was the original
+        // author of the comment above in #1105, they don't quite understand why this was important.)
+        this.plugins.unshift(
+          ApolloServerPluginUsageReporting(
+            typeof engine === 'object'
+              ? legacyOptionsToPluginOptions(engine)
+              : {},
+          ),
+        );
+      }
+    }
+
 
     // Special case: schema reporting can be turned on via environment variable.
     {

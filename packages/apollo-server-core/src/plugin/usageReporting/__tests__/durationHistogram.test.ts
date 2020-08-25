@@ -1,13 +1,12 @@
-import { DurationHistogram } from "../durationHistogram";
+import { DurationHistogram } from '../durationHistogram';
 
-
-describe("Duration histogram tests", () => {
-  it("generateEmptyHistogram", () => {
+describe('Duration histogram tests', () => {
+  it('generateEmptyHistogram', () => {
     let emptyDurationHistogram = new DurationHistogram();
     expect([]).toEqual(emptyDurationHistogram.toArray());
   });
 
-  it("nonEmptyHistogram", () => {
+  it('nonEmptyHistogram', () => {
     let nonEmptyDurationHistogram = new DurationHistogram();
     nonEmptyDurationHistogram.incrementBucket(100);
     expect([-100, 1]).toEqual(nonEmptyDurationHistogram.toArray());
@@ -16,20 +15,31 @@ describe("Duration histogram tests", () => {
     expect([-100, 1, 0, 1]).toEqual(nonEmptyDurationHistogram.toArray());
 
     nonEmptyDurationHistogram.incrementBucket(382);
-    expect([-100, 1, 0, 1, -279, 1]).toEqual(nonEmptyDurationHistogram.toArray());
+    expect([-100, 1, 0, 1, -279, 1]).toEqual(
+      nonEmptyDurationHistogram.toArray(),
+    );
   });
 
-  it("testToArray", () => {
-    function assertInitArrayHelper(expected: number[], buckets: number[], initSize = 118) {
-      expect(new DurationHistogram({initSize, buckets}).toArray()).toEqual(expected);
+  it('testToArray', () => {
+    function assertInitArrayHelper(
+      expected: number[],
+      buckets: number[],
+      initSize = 118,
+    ) {
+      expect(new DurationHistogram({ initSize, buckets }).toArray()).toEqual(
+        expected,
+      );
     }
 
-    function assertInsertValueHelper(expected: number[], buckets: number[], initSize = 118) {
-      let histogram = new DurationHistogram({initSize});
+    function assertInsertValueHelper(
+      expected: number[],
+      buckets: number[],
+      initSize = 118,
+    ) {
+      let histogram = new DurationHistogram({ initSize });
       buckets.forEach((val, bucket) => {
-          histogram.incrementBucket(bucket, val);
-        }
-      );
+        histogram.incrementBucket(bucket, val);
+      });
       expect(histogram.toArray()).toEqual(expected);
     }
 
@@ -42,7 +52,11 @@ describe("Duration histogram tests", () => {
       assertToArrayHelper([1, 0, 5], [1, 0, 5], initSize);
       assertToArrayHelper([1, -2, 5], [1, 0, 0, 5], initSize);
       assertToArrayHelper([0, 5], [0, 5], initSize);
-      assertToArrayHelper([0, 1, -2, 2, -3, 3, -2, 4, 0, 5], [0, 1, 0, 0, 2, 0, 0, 0, 3, 0, 0, 4, 0, 5, 0], initSize);
+      assertToArrayHelper(
+        [0, 1, -2, 2, -3, 3, -2, 4, 0, 5],
+        [0, 1, 0, 0, 2, 0, 0, 0, 3, 0, 0, 4, 0, 5, 0],
+        initSize,
+      );
       assertToArrayHelper([-2, 5], [0, 0, 5], initSize);
       assertToArrayHelper([-3, 5], [0, 0, 0, 5], initSize);
       assertToArrayHelper([-2, 5, -3, 10], [0, 0, 5, 0, 0, 0, 10], initSize);
@@ -57,8 +71,8 @@ describe("Duration histogram tests", () => {
     metaToArrayFuzzer(assertInsertValueHelper, 5);
   });
 
-  it("combineHistogram", () => {
-    let firstHistogram = new DurationHistogram({initSize:0});
+  it('combineHistogram', () => {
+    let firstHistogram = new DurationHistogram({ initSize: 0 });
     firstHistogram.incrementBucket(20);
     let secondHistogram = new DurationHistogram();
     secondHistogram.incrementBucket(40);
@@ -69,7 +83,7 @@ describe("Duration histogram tests", () => {
     expect([-20, 1, -19, 1, -59, 10]).toEqual(firstHistogram.toArray());
   });
 
-  it("bucketZeroToOne", () => {
+  it('bucketZeroToOne', () => {
     expect(DurationHistogram.durationToBucket(-1)).toEqual(0);
     expect(DurationHistogram.durationToBucket(0)).toEqual(0);
     expect(DurationHistogram.durationToBucket(1)).toEqual(0);
@@ -78,24 +92,24 @@ describe("Duration histogram tests", () => {
     expect(DurationHistogram.durationToBucket(1001)).toEqual(1);
   });
 
-  it("bucketOneToTwo", () => {
+  it('bucketOneToTwo', () => {
     expect(DurationHistogram.durationToBucket(1100)).toEqual(1);
     expect(DurationHistogram.durationToBucket(1101)).toEqual(2);
   });
 
-  it("bucketToThreshold", () => {
+  it('bucketToThreshold', () => {
     expect(DurationHistogram.durationToBucket(10000)).toEqual(25);
     expect(DurationHistogram.durationToBucket(10834)).toEqual(25);
     expect(DurationHistogram.durationToBucket(10835)).toEqual(26);
   });
 
-  it("bucketForCommonTimes", () => {
+  it('bucketForCommonTimes', () => {
     expect(DurationHistogram.durationToBucket(1e5)).toEqual(49);
     expect(DurationHistogram.durationToBucket(1e6)).toEqual(73);
     expect(DurationHistogram.durationToBucket(1e9)).toEqual(145);
   });
 
-  it("testLastBucket", () => {
+  it('testLastBucket', () => {
     // Test an absurdly large number gets stuck in the last bucket
     expect(DurationHistogram.durationToBucket(1e64)).toEqual(383);
   });

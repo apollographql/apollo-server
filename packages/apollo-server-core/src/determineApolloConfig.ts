@@ -1,6 +1,6 @@
 import { ApolloConfig, ApolloConfigInput, Logger } from 'apollo-server-types';
-import { EngineReportingOptions } from 'apollo-engine-reporting';
 import createSHA from './utils/createSHA';
+import { EngineReportingOptions } from './plugin/usageReporting/legacyOptions';
 
 // This function combines the newer `apollo` constructor argument, the older
 // `engine` constructor argument, and some environment variables to come up

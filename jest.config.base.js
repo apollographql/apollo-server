@@ -21,7 +21,7 @@ module.exports = {
       // We don't want to match `apollo-server-env` and
       // `apollo-reporting-protobuf`, because these don't depend on
       // compilation but need to be initialized from as parto of `prepare`.
-      '^(?!apollo-server-env|apollo-reporting-protobuf)(apollo-(?:server|datasource|cache-control|tracing|engine)[^/]*|graphql-extensions)(?:/dist)?((?:/.*)|$)': '<rootDir>/../../packages/$1/src$2'
+      '^(?!apollo-server-env|apollo-reporting-protobuf)(apollo-(?:server|datasource|cache-control|tracing)[^/]*|graphql-extensions)(?:/dist)?((?:/.*)|$)': '<rootDir>/../../packages/$1/src$2'
     },
     clearMocks: true,
     globals: {

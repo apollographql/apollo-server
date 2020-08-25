@@ -20,8 +20,6 @@ import WebSocket = require('ws');
 import { GraphQLExtension } from 'graphql-extensions';
 export { GraphQLExtension } from 'graphql-extensions';
 
-import { EngineReportingOptions } from 'apollo-engine-reporting';
-
 import { PlaygroundConfig } from './playground';
 export { PlaygroundConfig, PlaygroundRenderPageOptions } from './playground';
 
@@ -33,6 +31,7 @@ import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
+import { EngineReportingOptions } from './plugin/usageReporting/legacyOptions';
 export { GraphQLSchemaModule };
 
 export { KeyValueCache } from 'apollo-server-caching';

@@ -20,11 +20,26 @@ export interface ApolloServerPluginSchemaReportingOptions {
    */
   initialDelayMaxMs?: number;
   /**
-   * Override the reported schema that is reported to the Apollo registry.
-   * This schema does not go through any normalizations and the string is
-   * directly sent to the Apollo registry.
-   * This would be useful for comments or other ordering and whitespace
-   *  changes that get stripped when generating a `GraphQLSchema`
+   * Override the reported schema that is reported to the Apollo registry. This
+   * schema does not go through any normalizations and the string is directly
+   * sent to the Apollo registry. This can be useful for comments or other
+   * ordering and whitespace changes that get stripped when generating a
+   * `GraphQLSchema`.
+   *
+   * **If you pass this option to this plugin, you should explicitly configure
+   * `ApolloServerPluginUsageReporting` and pass the same value to its
+   * `overrideReportedSchema` option.** This ensures that the schema ID
+   * associated with requests reported by the usage reporting plugin matches the
+   * schema ID that this plugin reports. For example:
+   *
+   * ```js
+   * new ApolloServer({
+   *   plugins: [
+   *     ApolloServerPluginSchemaReporting({overrideReportedSchema: schema}),
+   *     ApolloServerPluginUsageReporting({overrideReportedSchema: schema}),
+   *   ],
+   * })
+   * ```
    */
   overrideReportedSchema?: string;
   /**

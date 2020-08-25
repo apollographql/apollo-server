@@ -43,15 +43,14 @@ import {
   GraphQLService,
   GraphQLExecutor,
   ApolloServerPluginInlineTrace,
+  EngineReportingOptions,
 } from 'apollo-server-core';
-import { Headers } from 'apollo-server-env';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
 import { TracingFormat } from 'apollo-tracing';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
 import { GraphQLRequestContext } from 'apollo-server-types';
 
 import { mockDate, unmockDate, advanceTimeBy } from '../../../__mocks__/date';
-import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
@@ -2374,7 +2373,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
-    describe('apollo-engine-reporting', () => {
+    describe('usage reporting', () => {
       async function makeFakeTestableEngineServer({
         status,
         waitWriteResponse = false,

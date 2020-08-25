@@ -231,6 +231,7 @@ export type GraphQLRequestContextExecutionDidStart<TContext> =
     | 'operationName'
   >;
 export type GraphQLRequestContextWillSendResponse<TContext> =
+  GraphQLRequestContextDidResolveSource<TContext> &
   WithRequired<GraphQLRequestContext<TContext>,
     | 'metrics'
     | 'response'
