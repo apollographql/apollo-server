@@ -21,7 +21,7 @@ import {
   OperationContext,
   SelectionNode,
   FieldNode,
-  getResponseName // todo: see note below
+  getResponseName
 } from './QueryPlan';
 import { deepMerge } from './utilities/deepMerge';
 
