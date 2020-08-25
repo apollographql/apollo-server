@@ -25,11 +25,6 @@ import {
 } from './QueryPlan';
 import { deepMerge } from './utilities/deepMerge';
 
-// todo: once the query plan builder no longer needs the old graphql-js based
-// getResponseName, we can put the new one in here. For now, we need to use
-// a modified one that drops the NameNode
-// import { getResponseName } from './utilities/graphql';
-
 export type ServiceMap = {
   [serviceName: string]: GraphQLDataSource;
 };
