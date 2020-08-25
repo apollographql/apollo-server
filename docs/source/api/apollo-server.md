@@ -3,8 +3,6 @@ title: "API Reference: apollo-server"
 sidebar_title: apollo-server
 ---
 
-<div class="api-reference">
-
 This API reference documents the exports from the `apollo-server` package.
 
 ## `class ApolloServer`
@@ -314,5 +312,3 @@ You can provide an object with one of the following structures as the value of t
 | `{ onlyNames: ["apple", "orange"]}`| If you provide an object with this structure, only values of the GraphQL variables with names that appear in the array are sent to Apollo Studio. Case-sensitive. |
 | `{ exceptNames: ["apple", "orange"]}`| If you provide an object with this structure, all GraphQL variable values **except** values of variables with names that appear in the array are sent to Apollo Studio. Case-sensitive. |
 | `{ transform: ({ variables, operationString)} => { ... } }` | <p>The value of `transform` is a function that takes the values of all GraphQL variables for an operation. The function should modify or delete necessary values in the `variables` map and return the result. You cannot _add_ variables to the map.</p><p>For security reasons, if an error occurs in the `transform` function, **all** variable values are replaced with `[PREDICATE_FUNCTION_ERROR]`. |
-
-</div>
