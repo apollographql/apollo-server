@@ -122,13 +122,13 @@ const myPlugin = {
       // request to create its associated document AST.
       parsingDidStart(requestContext) {
         console.log('Parsing started!');
-      }
+      },
 
       // Fires whenever Apollo Server will validate a
       // request's document AST against your GraphQL schema.
       validationDidStart(requestContext) {
         console.log('Validation started!');
-      }
+      },
 
     }
   },

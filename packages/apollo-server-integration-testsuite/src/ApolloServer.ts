@@ -2041,6 +2041,87 @@ export function testApolloServer<AS extends ApolloServerBase>(
           })
           .catch(done.fail);
       });
+
+      it('takes websocket server subscriptions configuration', done => {
+        const onConnect = jest.fn(connectionParams => ({
+          ...connectionParams,
+        }));
+        const typeDefs = gql`
+          type Query {
+            hi: String
+          }
+
+          type Subscription {
+            num: Int
+          }
+        `;
+
+        const query = `
+        subscription {
+          num
+        }
+      `;
+
+        const resolvers = {
+          Query: {
+            hi: () => 'here to placate graphql-js',
+          },
+          Subscription: {
+            num: {
+              subscribe: () => {
+                createEvent(1);
+                createEvent(2);
+                createEvent(3);
+                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
+              },
+            },
+          },
+        };
+
+        const path = '/sub';
+        createApolloServer({
+          typeDefs,
+          resolvers,
+          subscriptions: { onConnect, path },
+        })
+          .then(({ port, server }) => {
+            const subPort = (typeof port === "number" ? port : parseInt(port)) + 1
+            const websocketServer = new WebSocket.Server({port: subPort})
+            server.installSubscriptionHandlers(websocketServer);
+            expect(onConnect).not.toBeCalled();
+
+            expect(server.subscriptionsPath).toEqual(path);
+            const client = new SubscriptionClient(
+              `ws://localhost:${subPort}${server.subscriptionsPath}`,
+              {},
+              WebSocket,
+            );
+
+            const observable = client.request({ query });
+
+            let i = 1;
+            subscription = observable.subscribe({
+              next: ({ data }) => {
+                try {
+                  expect(onConnect).toHaveBeenCalledTimes(1);
+                  expect(data.num).toEqual(i);
+                  if (i === 3) {
+                    done();
+                  }
+                  i++;
+                } catch (e) {
+                  done.fail(e);
+                }
+              },
+              error: done.fail,
+              complete: () => {
+                done.fail(new Error('should not complete'));
+              },
+            });
+          })
+          .catch(done.fail);
+      });
+
       it('allows introspection when introspection is enabled on ApolloServer', done => {
         const typeDefs = gql`
           type Query {
