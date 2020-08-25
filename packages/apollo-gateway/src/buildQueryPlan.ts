@@ -102,7 +102,7 @@ export function buildQueryPlan(
   return {
     kind: 'QueryPlan',
     node: nodes.length
-      // if an operation is a mutations, we run the root fields in sequence,
+      // if an operation is a mutation, we run the root fields in sequence,
       // otherwise we run them in parallel
       ? flatWrap(isMutation ? 'Sequence' : 'Parallel', nodes)
       : undefined,
