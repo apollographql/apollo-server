@@ -39,9 +39,8 @@ export const keysMatchBaseService: PostCompositionValidator = function ({
         }
 
         const availableKeys = keys[serviceName].map(printFieldSet);
-
-        // No need to validate that the owning service matches its specified keys
         Object.entries(keys)
+          // No need to validate that the owning service matches its specified keys
           .filter(([service]) => service !== serviceName)
           .forEach(([extendingService, keyFields]) => {
             // Extensions can't specify more than one key
@@ -56,6 +55,10 @@ export const keysMatchBaseService: PostCompositionValidator = function ({
               return;
             }
 
+            // This isn't representative of an invalid graph, but it is an existing
+            // limitation of the query planner that we want to validate against for now.
+            // In the future, `@key`s just need to be "reachable" through a number of
+            // services which can link one key to another via "joins".
             const extensionKey = printFieldSet(keyFields[0]);
             if (!availableKeys.includes(extensionKey)) {
               errors.push(
