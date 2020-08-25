@@ -45,7 +45,10 @@ it('does not load fields provided even when going to other service', async () =>
       topReviews {
         author {
           username
-          name
+          name {
+            first
+            last
+          }
         }
       }
     }
@@ -60,11 +63,11 @@ it('does not load fields provided even when going to other service', async () =>
 
   expect(data).toEqual({
     topReviews: [
-      { author: { username: '@ada', name: 'Ada Lovelace' } },
-      { author: { username: '@ada', name: 'Ada Lovelace' } },
-      { author: { username: '@complete', name: 'Alan Turing' } },
-      { author: { username: '@complete', name: 'Alan Turing' } },
-      { author: { username: '@complete', name: 'Alan Turing' } },
+      { author: { username: '@ada', name: { first: 'Ada', last: 'Lovelace' } } },
+      { author: { username: '@ada', name: { first: 'Ada', last: 'Lovelace' } } },
+      { author: { username: '@complete', name: { first: 'Alan', last: 'Turing' } } },
+      { author: { username: '@complete', name: { first: 'Alan', last: 'Turing' } } },
+      { author: { username: '@complete', name: { first: 'Alan', last: 'Turing' } } },
     ],
   });
 

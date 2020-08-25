@@ -14,6 +14,10 @@ describe('printComposedSdl', () => {
     expect(errors).toHaveLength(0);
   });
 
+  it('produces a parseable output', () => {
+    expect(() => parse(composedSdl)).not.toThrow();
+  })
+
   it('prints a fully composed schema correctly', () => {
     expect(composedSdl).toMatchInlineSnapshot(`
       "schema
@@ -152,6 +156,11 @@ describe('printComposedSdl', () => {
         deleteReview(id: ID!): Boolean @resolve(graph: \\"reviews\\")
       }
 
+      type Name {
+        first: String
+        last: String
+      }
+
       type PasswordAccount
         @owner(graph: \\"accounts\\")
         @key(fields: \\"{ email }\\", graph: \\"accounts\\")
@@ -235,12 +244,13 @@ describe('printComposedSdl', () => {
       type User
         @owner(graph: \\"accounts\\")
         @key(fields: \\"{ id }\\", graph: \\"accounts\\")
+        @key(fields: \\"{ username name { first last } }\\", graph: \\"accounts\\")
         @key(fields: \\"{ id }\\", graph: \\"inventory\\")
         @key(fields: \\"{ id }\\", graph: \\"product\\")
         @key(fields: \\"{ id }\\", graph: \\"reviews\\")
       {
         id: ID!
-        name: String
+        name: Name
         username: String
         birthDate(locale: String): String
         account: AccountType

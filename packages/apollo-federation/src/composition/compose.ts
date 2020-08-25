@@ -16,6 +16,8 @@ import {
   TypeDefinitionNode,
   DirectiveDefinitionNode,
   TypeExtensionNode,
+  ObjectTypeDefinitionNode,
+  NamedTypeNode,
 } from 'graphql';
 import { transformSchema } from 'apollo-graphql';
 import federationDirectives from '../directives';
@@ -348,11 +350,55 @@ export function buildSchemaFromDefinitionsAndExtensions({
     directives: [...specifiedDirectives, ...federationDirectives],
   });
 
+  // This interface and predicate is a TS / graphql-js workaround for now while
+  // we're using a local graphql version < v15. This predicate _could_ be:
+  // `node is ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode` in the
+  // future to be more semantic. However this gives us type safety and flexibility
+  // for now.
+  interface HasInterfaces {
+    interfaces?: ObjectTypeDefinitionNode['interfaces'];
+  }
+
+  function nodeHasInterfaces(node: any): node is HasInterfaces {
+    return 'interfaces' in node;
+  }
+
   // Extend the blank schema with the base type definitions (as an AST node)
   const definitionsDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
     definitions: [
-      ...Object.values(typeDefinitionsMap).flat(),
+      ...Object.values(typeDefinitionsMap).flatMap(typeDefinitions => {
+        // See if any of our Objects or Interfaces implement any interfaces at all.
+        // If not, we can return early.
+        if (!typeDefinitions.some(nodeHasInterfaces)) return typeDefinitions;
+
+        const uniqueInterfaces: Map<
+          string,
+          NamedTypeNode
+        > = (typeDefinitions as HasInterfaces[]).reduce(
+          (map, objectTypeDef) => {
+            objectTypeDef.interfaces?.forEach((iface) =>
+              map.set(iface.name.value, iface),
+            );
+            return map;
+          },
+          new Map(),
+        );
+
+        // No interfaces, no aggregation - just return what we got.
+        if (uniqueInterfaces.size === 0) return typeDefinitions;
+
+        const [first, ...rest] = typeDefinitions;
+
+        return [
+          ...rest,
+          {
+            ...first,
+            interfaces: Array.from(uniqueInterfaces.values()),
+          },
+        ];
+
+      }),
       ...Object.values(directiveDefinitionsMap).map(
         definitions => Object.values(definitions)[0],
       ),

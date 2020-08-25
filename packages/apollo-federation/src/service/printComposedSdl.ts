@@ -228,7 +228,7 @@ function printFederationTypeDirectives(type: GraphQLObjectType): string {
       keys
         .map(
           (selections) =>
-            `\n  @key(fields: "{ ${selections.map(print)} }", graph: "${service}")`,
+            `\n  @key(fields: "${printFieldSet(selections)}", graph: "${service}")`,
         )
         .join(''),
     )
@@ -318,6 +318,15 @@ export function printWithReducedWhitespace(ast: ASTNode): string {
 }
 
 /**
+ * Federation change: print fieldsets for @key, @requires, and @provides directives
+ *
+ * @param selections
+ */
+function printFieldSet(selections: readonly SelectionNode[]): string {
+  return `{ ${selections.map(printWithReducedWhitespace).join(' ')} }`;
+}
+
+/**
  * Federation change: print @resolve, @requires, and @provides directives
  *
  * @param field
@@ -346,11 +355,11 @@ function printFederationFieldDirectives(
   }
 
   if (requires.length > 0) {
-    printed += ` @requires(fields: "{ ${requires.map(printWithReducedWhitespace).join(' ')} }")`;
+    printed += ` @requires(fields: "${printFieldSet(requires)}")`;
   }
 
   if (provides.length > 0) {
-    printed += ` @provides(fields: "{ ${provides.map(printWithReducedWhitespace).join(' ')} }")`;
+    printed += ` @provides(fields: "${printFieldSet(provides)}")`;
   }
 
   return printed;

@@ -25,6 +25,14 @@ export const externalUnused: PostCompositionValidator = ({ schema }) => {
     // If externals is populated, we need to look at each one and confirm
     // it is used
     const typeFederationMetadata = getFederationMetadata(parentType);
+
+    // Escape a validation case that's falling through incorrectly. This case
+    // is handled by `keysMatchBaseService`.
+    if (typeFederationMetadata) {
+      const {serviceName, keys} = typeFederationMetadata;
+      if (serviceName && keys && !keys[serviceName]) continue;
+    }
+
     if (typeFederationMetadata?.externals) {
       // loop over every service that has extensions with @external
       for (const [serviceName, externalFieldsForService] of Object.entries(
