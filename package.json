@@ -28,7 +28,6 @@
     "apollo-cache-control": "file:packages/apollo-cache-control",
     "apollo-datasource": "file:packages/apollo-datasource",
     "apollo-datasource-rest": "file:packages/apollo-datasource-rest",
-    "apollo-engine-reporting": "file:packages/apollo-engine-reporting",
     "apollo-reporting-protobuf": "file:packages/apollo-reporting-protobuf",
     "apollo-server": "file:packages/apollo-server",
     "apollo-server-azure-functions": "file:packages/apollo-server-azure-functions",
