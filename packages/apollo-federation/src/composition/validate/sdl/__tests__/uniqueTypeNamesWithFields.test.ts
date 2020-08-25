@@ -336,12 +336,116 @@ describe('UniqueTypeNamesWithFields', () => {
       const errors = validateSDL(definitions, schema, [
         UniqueTypeNamesWithFields,
       ]);
+
+      expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-                Object {
-                  "code": "VALUE_TYPE_KIND_MISMATCH",
-                  "message": "[serviceA] Product -> Found kind mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`Product\` is defined as both a \`ObjectTypeDefinition\` and a \`InputObjectTypeDefinition\`. In order to define \`Product\` in multiple places, the kinds must be identical.",
-                }
-            `);
+        Object {
+          "code": "VALUE_TYPE_KIND_MISMATCH",
+          "message": "[serviceA] Product -> Found kind mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`Product\` is defined as both a \`ObjectTypeDefinition\` and a \`InputObjectTypeDefinition\`. In order to define \`Product\` in multiple places, the kinds must be identical.",
+        }
+      `);
+    });
+
+    it('value types must be of the same kind (scalar)', () => {
+      const [definitions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            scalar DateTime
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            type DateTime {
+              day: Int
+              formatted: String
+              # ...
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
+
+      const errors = validateSDL(definitions, schema, [
+        UniqueTypeNamesWithFields,
+      ]);
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchInlineSnapshot(`
+        Object {
+          "code": "VALUE_TYPE_KIND_MISMATCH",
+          "message": "[serviceA] DateTime -> Found kind mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`DateTime\` is defined as both a \`ObjectTypeDefinition\` and a \`ScalarTypeDefinition\`. In order to define \`DateTime\` in multiple places, the kinds must be identical.",
+        }
+      `);
+    });
+
+    it('value types must be of the same kind (union)', () => {
+      const [definitions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            union DateTime = Date | Time
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            type DateTime {
+              day: Int
+              formatted: String
+              # ...
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
+
+      const errors = validateSDL(definitions, schema, [
+        UniqueTypeNamesWithFields,
+      ]);
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchInlineSnapshot(`
+        Object {
+          "code": "VALUE_TYPE_KIND_MISMATCH",
+          "message": "[serviceA] DateTime -> Found kind mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`DateTime\` is defined as both a \`ObjectTypeDefinition\` and a \`UnionTypeDefinition\`. In order to define \`DateTime\` in multiple places, the kinds must be identical.",
+        }
+      `);
+    });
+
+    it('value types must be of the same kind (enum)', () => {
+      const [definitions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            enum DateTime {
+              DATE
+              TIME
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            type DateTime {
+              day: Int
+              formatted: String
+              # ...
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
+
+      const errors = validateSDL(definitions, schema, [
+        UniqueTypeNamesWithFields,
+      ]);
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchInlineSnapshot(`
+        Object {
+          "code": "VALUE_TYPE_KIND_MISMATCH",
+          "message": "[serviceA] DateTime -> Found kind mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`DateTime\` is defined as both a \`ObjectTypeDefinition\` and a \`EnumTypeDefinition\`. In order to define \`DateTime\` in multiple places, the kinds must be identical.",
+        }
+      `);
     });
 
     it('value types cannot be entities (part 1)', () => {
@@ -369,11 +473,11 @@ describe('UniqueTypeNamesWithFields', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-                Object {
-                  "code": "VALUE_TYPE_NO_ENTITY",
-                  "message": "[serviceA] Product -> Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`Product\` type is extended properly or remove the \`@key\` directive if this is not an entity.",
-                }
-            `);
+        Object {
+          "code": "VALUE_TYPE_NO_ENTITY",
+          "message": "[serviceA] Product -> Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`Product\` type is extended properly or remove the \`@key\` directive if this is not an entity.",
+        }
+      `);
     });
 
     it('value types cannot be entities (part 2)', () => {
@@ -401,11 +505,11 @@ describe('UniqueTypeNamesWithFields', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-                Object {
-                  "code": "VALUE_TYPE_NO_ENTITY",
-                  "message": "[serviceB] Product -> Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`Product\` type is extended properly or remove the \`@key\` directive if this is not an entity.",
-                }
-            `);
+        Object {
+          "code": "VALUE_TYPE_NO_ENTITY",
+          "message": "[serviceB] Product -> Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`Product\` type is extended properly or remove the \`@key\` directive if this is not an entity.",
+        }
+      `);
     });
 
     it('no false positives for properly formed entities (that look like value types)', () => {

@@ -88,7 +88,10 @@ it('works with default variables in the schema', async () => {
       library(id: $libraryId) {
         userAccount(id: $userId) {
           id
-          name
+          name {
+            first
+            last
+          }
         }
       }
     }
@@ -103,7 +106,10 @@ it('works with default variables in the schema', async () => {
     library: {
       userAccount: {
         id: '1',
-        name: 'Ada Lovelace',
+        name: {
+          first: 'Ada',
+          last: 'Lovelace',
+        }
       },
     },
   });

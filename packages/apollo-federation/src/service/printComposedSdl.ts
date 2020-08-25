@@ -31,6 +31,7 @@ import {
 import { Maybe, ServiceDefinition, FederationType, FederationField } from '../composition';
 import { isFederationType } from '../types';
 import { isFederationDirective } from '../composition/utils';
+import csdlDirectives from '../csdlDirectives';
 
 type Options = {
   /**
@@ -101,7 +102,11 @@ function printFilteredSchema(
   typeFilter: (type: GraphQLNamedType) => boolean,
   options?: Options,
 ): string {
-  const directives = schema.getDirectives().filter(directiveFilter);
+  // Federation change: include directive definitions for CSDL
+  const directives = [
+    ...csdlDirectives,
+    ...schema.getDirectives().filter(directiveFilter),
+  ];
   const types = Object.values(schema.getTypeMap())
     .sort((type1, type2) => type1.name.localeCompare(type2.name))
     .filter(typeFilter);
@@ -223,7 +228,7 @@ function printFederationTypeDirectives(type: GraphQLObjectType): string {
       keys
         .map(
           (selections) =>
-            `\n  @key(fields: "${selections.map(print)}", graph: "${service}")`,
+            `\n  @key(fields: "${printFieldSet(selections)}", graph: "${service}")`,
         )
         .join(''),
     )
@@ -313,6 +318,15 @@ export function printWithReducedWhitespace(ast: ASTNode): string {
 }
 
 /**
+ * Federation change: print fieldsets for @key, @requires, and @provides directives
+ *
+ * @param selections
+ */
+function printFieldSet(selections: readonly SelectionNode[]): string {
+  return selections.map(printWithReducedWhitespace).join(' ');
+}
+
+/**
  * Federation change: print @resolve, @requires, and @provides directives
  *
  * @param field
@@ -341,11 +355,11 @@ function printFederationFieldDirectives(
   }
 
   if (requires.length > 0) {
-    printed += ` @requires(fields: "${requires.map(printWithReducedWhitespace).join(' ')}")`;
+    printed += ` @requires(fields: "${printFieldSet(requires)}")`;
   }
 
   if (provides.length > 0) {
-    printed += ` @provides(fields: "${provides.map(printWithReducedWhitespace).join(' ')}")`;
+    printed += ` @provides(fields: "${printFieldSet(provides)}")`;
   }
 
   return printed;

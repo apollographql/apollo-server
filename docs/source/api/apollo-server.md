@@ -150,7 +150,7 @@ new ApolloServer({
 
   Pass the integration-specific CORS options. `false` removes the CORS middleware and `true` uses the defaults. This option is only available to `apollo-server`. For other server integrations, place `cors` inside of `applyMiddleware`.
 
-* `experimental_approximateDocumentStoreSizeMiB`: `number`
+* `experimental_approximateDocumentStoreMiB`: `number`
 
   > **This property is experimental.**  It may be removed or change at any time, even within a patch release.
 

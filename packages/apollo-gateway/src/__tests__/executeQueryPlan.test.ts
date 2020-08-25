@@ -1,8 +1,5 @@
 import { GraphQLSchema, GraphQLError, getIntrospectionQuery } from 'graphql';
-import {
-  addResolversToSchema,
-  GraphQLResolverMap,
-} from 'apollo-graphql';
+import { addResolversToSchema, GraphQLResolverMap } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { GraphQLRequestContext } from 'apollo-server-types';
 import { AuthenticationError } from 'apollo-server-core';
@@ -12,8 +9,7 @@ import { executeQueryPlan } from '../executeQueryPlan';
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
-import { getFederatedTestingSchema, buildLocalService } from './execution-utils';
-import { fixtures } from 'apollo-federation-integration-testsuite';
+import { getFederatedTestingSchema } from './execution-utils';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
@@ -53,7 +49,10 @@ describe('executeQueryPlan', () => {
       const query = gql`
         query {
           me {
-            name
+            name {
+              first
+              last
+            }
           }
         }
       `;
@@ -83,7 +82,10 @@ describe('executeQueryPlan', () => {
       const query = gql`
         query {
           me {
-            name
+            name {
+              first
+              last
+            }
           }
         }
       `;
@@ -113,7 +115,7 @@ describe('executeQueryPlan', () => {
       );
       expect(response).toHaveProperty(
         'errors.0.extensions.query',
-        '{me{name}}',
+        '{me{name{first last}}}',
       );
       expect(response).toHaveProperty('errors.0.extensions.variables', {});
     });
@@ -130,7 +132,10 @@ describe('executeQueryPlan', () => {
       const query = gql`
         query {
           me {
-            name
+            name {
+              first
+              last
+            }
           }
           topReviews {
             body
@@ -158,7 +163,10 @@ describe('executeQueryPlan', () => {
       const query = gql`
         query {
           me {
-            name
+            name {
+              first
+              last
+            }
           }
           topReviews {
             body
@@ -187,7 +195,10 @@ describe('executeQueryPlan', () => {
         topReviews {
           body
           author {
-            name
+            name {
+              first
+              last
+            }
           }
         }
       }
@@ -208,31 +219,46 @@ describe('executeQueryPlan', () => {
         "topReviews": Array [
           Object {
             "author": Object {
-              "name": "Ada Lovelace",
+              "name": Object {
+                "first": "Ada",
+                "last": "Lovelace",
+              },
             },
             "body": "Love it!",
           },
           Object {
             "author": Object {
-              "name": "Ada Lovelace",
+              "name": Object {
+                "first": "Ada",
+                "last": "Lovelace",
+              },
             },
             "body": "Too expensive.",
           },
           Object {
             "author": Object {
-              "name": "Alan Turing",
+              "name": Object {
+                "first": "Alan",
+                "last": "Turing",
+              },
             },
             "body": "Could be better.",
           },
           Object {
             "author": Object {
-              "name": "Alan Turing",
+              "name": Object {
+                "first": "Alan",
+                "last": "Turing",
+              },
             },
             "body": "Prefer something else.",
           },
           Object {
             "author": Object {
-              "name": "Alan Turing",
+              "name": Object {
+                "first": "Alan",
+                "last": "Turing",
+              },
             },
             "body": "Wish I had read this before.",
           },
@@ -247,13 +273,19 @@ describe('executeQueryPlan', () => {
         first: topReviews(first: $first) {
           body
           author {
-            name
+            name {
+              first
+              last
+            }
           }
         }
         second: topReviews(first: $first) {
           body
           author {
-            name
+            name {
+              first
+              last
+            }
           }
         }
       }
@@ -277,19 +309,28 @@ describe('executeQueryPlan', () => {
         "first": Array [
           Object {
             "author": Object {
-              "name": "Ada Lovelace",
+              "name": Object {
+                "first": "Ada",
+                "last": "Lovelace",
+              },
             },
             "body": "Love it!",
           },
           Object {
             "author": Object {
-              "name": "Ada Lovelace",
+              "name": Object {
+                "first": "Ada",
+                "last": "Lovelace",
+              },
             },
             "body": "Too expensive.",
           },
           Object {
             "author": Object {
-              "name": "Alan Turing",
+              "name": Object {
+                "first": "Alan",
+                "last": "Turing",
+              },
             },
             "body": "Could be better.",
           },
@@ -297,19 +338,28 @@ describe('executeQueryPlan', () => {
         "second": Array [
           Object {
             "author": Object {
-              "name": "Ada Lovelace",
+              "name": Object {
+                "first": "Ada",
+                "last": "Lovelace",
+              },
             },
             "body": "Love it!",
           },
           Object {
             "author": Object {
-              "name": "Ada Lovelace",
+              "name": Object {
+                "first": "Ada",
+                "last": "Lovelace",
+              },
             },
             "body": "Too expensive.",
           },
           Object {
             "author": Object {
-              "name": "Alan Turing",
+              "name": Object {
+                "first": "Alan",
+                "last": "Turing",
+              },
             },
             "body": "Could be better.",
           },
@@ -324,7 +374,10 @@ describe('executeQueryPlan', () => {
         topReviews {
           body
           author {
-            name
+            name {
+              first
+              last
+            }
             birthDate(locale: $locale)
           }
         }
@@ -350,35 +403,50 @@ describe('executeQueryPlan', () => {
           Object {
             "author": Object {
               "birthDate": "12/10/1815",
-              "name": "Ada Lovelace",
+              "name": Object {
+                "first": "Ada",
+                "last": "Lovelace",
+              },
             },
             "body": "Love it!",
           },
           Object {
             "author": Object {
               "birthDate": "12/10/1815",
-              "name": "Ada Lovelace",
+              "name": Object {
+                "first": "Ada",
+                "last": "Lovelace",
+              },
             },
             "body": "Too expensive.",
           },
           Object {
             "author": Object {
               "birthDate": "6/23/1912",
-              "name": "Alan Turing",
+              "name": Object {
+                "first": "Alan",
+                "last": "Turing",
+              },
             },
             "body": "Could be better.",
           },
           Object {
             "author": Object {
               "birthDate": "6/23/1912",
-              "name": "Alan Turing",
+              "name": Object {
+                "first": "Alan",
+                "last": "Turing",
+              },
             },
             "body": "Prefer something else.",
           },
           Object {
             "author": Object {
               "birthDate": "6/23/1912",
-              "name": "Alan Turing",
+              "name": Object {
+                "first": "Alan",
+                "last": "Turing",
+              },
             },
             "body": "Wish I had read this before.",
           },
@@ -443,7 +511,10 @@ describe('executeQueryPlan', () => {
     const query = gql`
       query {
         user(id: "1") {
-          name
+          name {
+            first
+            last
+          }
           vehicle {
             description
             price
@@ -466,7 +537,10 @@ describe('executeQueryPlan', () => {
     expect(response.data).toMatchInlineSnapshot(`
       Object {
         "user": Object {
-          "name": "Ada Lovelace",
+          "name": Object {
+            "first": "Ada",
+            "last": "Lovelace",
+          },
           "vehicle": Object {
             "description": "Humble Toyota",
             "price": "9990",
@@ -481,7 +555,10 @@ describe('executeQueryPlan', () => {
     const query = gql`
       query {
         user(id: "1") {
-          name
+          name {
+            first
+            last
+          }
           thing {
             ... on Vehicle {
               description
@@ -509,7 +586,10 @@ describe('executeQueryPlan', () => {
     expect(response.data).toMatchInlineSnapshot(`
       Object {
         "user": Object {
-          "name": "Ada Lovelace",
+          "name": Object {
+            "first": "Ada",
+            "last": "Lovelace",
+          },
           "thing": Object {
             "description": "Humble Toyota",
             "price": "9990",
