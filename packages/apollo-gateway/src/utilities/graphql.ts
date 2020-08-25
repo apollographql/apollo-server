@@ -1,5 +1,6 @@
 import {
   ASTNode,
+  FieldNode,
   GraphQLCompositeType,
   GraphQLField,
   GraphQLInterfaceType,
@@ -21,7 +22,6 @@ import {
   TypeMetaFieldDef,
   TypeNameMetaFieldDef,
   TypeNode,
-  FieldNode
 } from 'graphql';
 
 /**

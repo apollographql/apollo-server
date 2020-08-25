@@ -194,7 +194,7 @@ describe('executeQueryPlan', () => {
     `;
 
     const operationContext = buildOperationContext(schema, query);
-    const queryPlan = buildQueryPlan(operationContext)
+    const queryPlan = buildQueryPlan(operationContext);
 
     const response = await executeQueryPlan(
       queryPlan,
