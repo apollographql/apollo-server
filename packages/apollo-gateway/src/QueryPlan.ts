@@ -85,7 +85,7 @@ export function getResponseName(node: FieldNode): string {
 export const trimSelectionNodes = (
   selections: readonly GraphQLJSSelectionNode[],
 ): SelectionNode[] => {
-  let remapped: SelectionNode[] = [];
+  const remapped: SelectionNode[] = [];
 
   selections.map((selection) => {
     if (selection.kind === Kind.FIELD) {
