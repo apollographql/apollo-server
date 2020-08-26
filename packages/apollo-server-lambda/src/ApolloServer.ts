@@ -47,6 +47,8 @@ export class ApolloServer extends ApolloServerBase {
   // another place, since the documentation becomes much more complicated when
   // the constructor is not longer shared between all integration
   constructor(options: Config) {
+    // FIXME(no-engine): come up with a different way for the framework
+    // to indicate sendReportsImmediately
     if (process.env.ENGINE_API_KEY || options.engine) {
       options.engine = {
         sendReportsImmediately: true,

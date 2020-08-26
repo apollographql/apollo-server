@@ -64,10 +64,9 @@ export function createServerInfo<AS extends ApolloServerBase>(
 
   // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
   // corresponding loopback ip. Note that the url field we're setting is
-  // primarily for consumption by our test suite. If this heuristic is
-  // wrong for your use case, explicitly specify a frontend host (in the
-  // `frontends.host` field in your engine config, or in the `host`
-  // option to ApolloServer.listen).
+  // primarily for consumption by our test suite. If this heuristic is wrong for
+  // your use case, explicitly specify a frontend host (in the `host` option to
+  // ApolloServer.listen).
   let hostForUrl = serverInfo.address;
   if (serverInfo.address === '' || serverInfo.address === '::')
     hostForUrl = 'localhost';
@@ -848,9 +847,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
     describe('lifecycle', () => {
       describe('for Apollo Graph Manager', () => {
         let nodeEnv: string;
-        let engineServer: EngineMockServer;
+        let reportIngress: MockReportIngress;
 
-        class EngineMockServer {
+        class MockReportIngress {
           private app: express.Application;
           private server: http.Server;
           private reports: Report[] = [];
@@ -930,14 +929,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
         beforeEach(async () => {
           nodeEnv = process.env.NODE_ENV;
           delete process.env.NODE_ENV;
-          engineServer = new EngineMockServer();
-          return await engineServer.listen();
+          reportIngress = new MockReportIngress();
+          return await reportIngress.listen();
         });
 
         afterEach(done => {
           process.env.NODE_ENV = nodeEnv;
 
-          (engineServer.stop() || Promise.resolve()).then(done);
+          (reportIngress.stop() || Promise.resolve()).then(done);
         });
 
         describe('extensions', () => {
@@ -1002,7 +1001,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               extensions: [() => new Extension()],
               engine: {
                 graphVariant: 'current',
-                ...engineServer.engineOptions(),
+                ...reportIngress.engineOptions(),
                 apiKey: 'service:my-app:secret',
                 maxUncompressedReportSize: 1,
                 generateClientInfo: () => ({
@@ -1032,7 +1031,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(formatError).toHaveBeenCalledTimes(1);
             expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
 
-            const reports = await engineServer.promiseOfReports;
+            const reports = await reportIngress.promiseOfReports;
 
             expect(reports.length).toBe(1);
 
@@ -1078,7 +1077,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               },
               engine: {
                 graphVariant: 'current',
-                ...engineServer.engineOptions(),
+                ...reportIngress.engineOptions(),
                 apiKey: 'service:my-app:secret',
                 maxUncompressedReportSize: 1,
                 ...engineOptions,
@@ -1110,7 +1109,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(result.errors[0].message).toEqual('how do I stack up?');
             expect(throwError).toHaveBeenCalledTimes(1);
 
-            const reports = await engineServer.promiseOfReports;
+            const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
             const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0];
 
@@ -1138,7 +1137,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             });
             expect(result.errors).not.toBeDefined();
 
-            const reports = await engineServer.promiseOfReports;
+            const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
 
             expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(
@@ -1157,7 +1156,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             });
             expect(result.errors).not.toBeDefined();
 
-            const reports = await engineServer.promiseOfReports;
+            const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
 
             expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
@@ -1186,7 +1185,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(result.errors[0].extensions).toBeDefined();
             expect(result.errors[0].message).toEqual('known_error');
 
-            const reports = await engineServer.promiseOfReports;
+            const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
 
             expect(Object.keys(reports[0].tracesPerQuery)[0]).not.toEqual(
@@ -1267,7 +1266,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 expect(result.errors[0].message).toEqual('rewriteError nope');
                 expect(throwError).toHaveBeenCalledTimes(1);
 
-                const reports = await engineServer.promiseOfReports;
+                const reports = await reportIngress.promiseOfReports;
                 expect(reports.length).toBe(1);
                 const trace = Object.values(reports[0].tracesPerQuery)[0]
                   .trace[0];
@@ -1313,7 +1312,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 );
                 expect(throwError).toHaveBeenCalledTimes(1);
 
-                const reports = await engineServer.promiseOfReports;
+                const reports = await reportIngress.promiseOfReports;
                 expect(reports.length).toBe(1);
                 const trace = Object.values(reports[0].tracesPerQuery)[0]
                   .trace[0];
@@ -1356,7 +1355,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 );
                 expect(throwError).toHaveBeenCalledTimes(1);
 
-                const reports = await engineServer.promiseOfReports;
+                const reports = await reportIngress.promiseOfReports;
                 expect(reports.length).toBe(1);
                 const trace = Object.values(reports[0].tracesPerQuery)[0]
                   .trace[0];
@@ -1393,7 +1392,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               );
               expect(throwError).toHaveBeenCalledTimes(1);
 
-              const reports = await engineServer.promiseOfReports;
+              const reports = await reportIngress.promiseOfReports;
               expect(reports.length).toBe(1);
               const trace = Object.values(reports[0].tracesPerQuery)[0]
                 .trace[0];
@@ -1439,7 +1438,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
               expect(throwError).toHaveBeenCalledTimes(1);
 
-              const reports = await engineServer.promiseOfReports;
+              const reports = await reportIngress.promiseOfReports;
               expect(reports.length).toBe(1);
               const trace = Object.values(reports[0].tracesPerQuery)[0]
                 .trace[0];
@@ -2494,12 +2493,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(sendingError).toBeTruthy();
             if (networkError) {
               expect(sendingError.message).toContain(
-                'Error sending report to Apollo Engine servers',
+                'Error sending report to Apollo servers',
               );
               expect(sendingError.message).toContain('ECONNREFUSED');
             } else {
               expect(sendingError.message).toBe(
-                `Error sending report to Apollo Engine servers: HTTP status ${status}, Important text in the body`,
+                `Error sending report to Apollo servers: HTTP status ${status}, Important text in the body`,
               );
             }
             expect(requestCount).toBe(expectedRequestCount);
