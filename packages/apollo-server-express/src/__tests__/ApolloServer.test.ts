@@ -756,7 +756,7 @@ describe('apollo-server-express', () => {
         expect(result.extensions).toBeUndefined();
       });
 
-      it('contains no cacheControl Headers and keeps extension with engine proxy', async () => {
+      it('contains no cacheControl Headers and keeps deprecated extension', async () => {
         const { url: uri } = await createServer({
           typeDefs,
           resolvers,
