@@ -83,6 +83,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
     serverWillStart({
       logger: serverLogger,
       apollo,
+      serverlessFramework,
     }: GraphQLServiceContext): GraphQLServerListener {
       // Use the plugin-specific logger if one is provided; otherwise the general server one.
       const logger = options.logger ?? serverLogger;
@@ -101,6 +102,13 @@ export function ApolloServerPluginUsageReporting<TContext>(
             graphId,
           )}/?variant=${encodeURIComponent(apollo.graphVariant)}`,
       );
+
+      // If sendReportsImmediately is not specified, we default to true if we're running
+      // with the ApolloServer designed for Lambda or similar. That's because these
+      // environments aren't designed around letting us run a background task to
+      // send reports later or hook into container destruction to flush buffered reports.
+      const sendReportsImmediately =
+        options.sendReportsImmediately ?? serverlessFramework;
 
       // Since calculating the signature for usage reporting is potentially an
       // expensive operation, we'll cache the signatures we generate and re-use
@@ -123,7 +131,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
         | undefined;
 
       let reportTimer: NodeJS.Timer | undefined;
-      if (!options.sendReportsImmediately) {
+      if (!sendReportsImmediately) {
         reportTimer = setInterval(
           () => sendAllReportsAndReportErrors(),
           options.reportIntervalMs || 10 * 1000,
@@ -479,7 +487,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
             // If the buffer gets big (according to our estimate), send.
             if (
-              options.sendReportsImmediately ||
+              sendReportsImmediately ||
               reportData.size >=
                 (options.maxUncompressedReportSize || 4 * 1024 * 1024)
             ) {

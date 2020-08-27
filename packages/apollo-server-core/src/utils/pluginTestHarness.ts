@@ -105,6 +105,7 @@ export default async function pluginTestHarness<TContext>({
       logger: logger || console,
       schema,
       schemaHash,
+      serverlessFramework: false,
       apollo: {
         key: 'some-key',
         graphId: 'graph',
