@@ -6,6 +6,10 @@
 
 - _Nothing yet! Stay tuned!_
 
+## v0.20.0
+
+- Only changes in the similarly versioned `@apollo/federation` package.
+
 ## v0.19.1
 
 - Only changes in the similarly versioned `@apollo/federation` package.
