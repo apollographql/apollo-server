@@ -8,6 +8,7 @@
 - __FIX__: Value type validations - restrict unions, scalars, enums [PR #4496](https://github.com/apollographql/apollo-server/pull/4496)
 - __FIX__: Composition - aggregate interfaces for types and interfaces in composed schema [PR #4497](https://github.com/apollographql/apollo-server/pull/4497)
 - __FIX__: Create new `@key` validations to prevent invalid compositions [PR #4498](https://github.com/apollographql/apollo-server/pull/4498)
+- CSDL: make `fields` directive args parseable [PR #4489](https://github.com/apollographql/apollo-server/pull/4489)
 
 ## v0.19.1
 
