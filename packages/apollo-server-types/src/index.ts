@@ -76,6 +76,7 @@ export interface ApolloConfig {
   persistedQueries?: {
     cache: KeyValueCache;
   };
+  serverlessFramework: boolean;
   // For backwards compatibility only; prefer to use `apollo`.
   engine: {
     serviceID?: string;

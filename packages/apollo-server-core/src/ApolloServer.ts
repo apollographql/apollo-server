@@ -555,6 +555,7 @@ export class ApolloServerBase {
       schema: schema,
       schemaHash: schemaHash,
       apollo: this.apolloConfig,
+      serverlessFramework: this.serverlessFramework(),
       engine: {
         serviceID: this.apolloConfig.graphId,
         apiKeyHash: this.apolloConfig.keyHash,
@@ -688,6 +689,10 @@ export class ApolloServerBase {
   }
 
   protected supportsUploads(): boolean {
+    return false;
+  }
+
+  protected serverlessFramework(): boolean {
     return false;
   }
 

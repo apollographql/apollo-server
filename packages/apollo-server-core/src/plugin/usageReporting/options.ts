@@ -115,7 +115,11 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
   /**
    * Sends a usage report after every request. This options is useful for
    * stateless environments like Amazon Lambda where processes handle only a
-   * small number of requests before terminating.
+   * small number of requests before terminating. It defaults to true when
+   * used with an ApolloServer subclass for a serverless framework (Amazon
+   * Lambda, Google Cloud Functions, or Azure Functions), or false otherwise.
+   * (Note that "immediately" does not mean synchronously with completing the
+   * response, but "very soon", such as after a setImmediate call.)
    */
   sendReportsImmediately?: boolean;
   /**
