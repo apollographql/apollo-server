@@ -29,7 +29,7 @@ export default {
  * for the graphql-js printer to work with
  *
  * The arg type here SHOULD be (node: AstNode | SelectionNode (from ../QueryPlan)),
- * but that breaks the graphql-js visitor, as it won't allow our redefiend
+ * but that breaks the graphql-js visitor, as it won't allow our redefined
  * SelectionNode to be passed in.
  *
  * Since our SelectionNode still has a `kind`, this will still functionally work
