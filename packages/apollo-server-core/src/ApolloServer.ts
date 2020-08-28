@@ -86,16 +86,12 @@ import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';
 import {
   ApolloServerPluginSchemaReporting,
+  ApolloServerPluginUsageReportingFromLegacyOptions,
   ApolloServerPluginSchemaReportingOptions,
-} from './plugin/schemaReporting';
-import {
   ApolloServerPluginInlineTrace,
   ApolloServerPluginInlineTraceOptions,
-} from './plugin/inlineTrace';
-import {
   ApolloServerPluginUsageReporting,
-} from './plugin/usageReporting';
-import { legacyOptionsToPluginOptions } from './plugin/usageReporting/legacyOptions';
+} from './plugin';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -809,15 +805,12 @@ export class ApolloServerBase {
         // the fact that the person who wrote this line also was the original
         // author of the comment above in #1105, they don't quite understand why this was important.)
         this.plugins.unshift(
-          ApolloServerPluginUsageReporting(
-            typeof engine === 'object'
-              ? legacyOptionsToPluginOptions(engine)
-              : {},
-          ),
+          typeof engine === 'object'
+            ? ApolloServerPluginUsageReportingFromLegacyOptions(engine)
+            : ApolloServerPluginUsageReporting(),
         );
       }
     }
-
 
     // Special case: schema reporting can be turned on via environment variable.
     {

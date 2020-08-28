@@ -11,6 +11,8 @@ import {
   SendValuesBaseOptions,
   GenerateClientInfo,
 } from './options';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { ApolloServerPluginUsageReporting } from './plugin';
 
 /**
  * The type of the legacy `engine` option to `new ApolloServer`. Replaced by the
@@ -61,6 +63,14 @@ export type ReportTimingOptions<TContext> =
         | GraphQLRequestContextDidEncounterErrors<TContext>,
     ) => Promise<boolean>)
   | boolean;
+
+export function ApolloServerPluginUsageReportingFromLegacyOptions<TContext>(
+  options: EngineReportingOptions<TContext> = Object.create(null),
+): ApolloServerPlugin {
+  return ApolloServerPluginUsageReporting(
+    legacyOptionsToPluginOptions(options),
+  );
+}
 
 /**
  * Converts the usage-reporting-related options in EngineReportingOptions format

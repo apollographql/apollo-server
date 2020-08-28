@@ -2,5 +2,14 @@ export {
   ApolloServerPluginUsageReporting,
   ApolloServerPluginUsageReportingDisabled,
 } from './plugin';
-export * from './options';
-export { EngineReportingOptions } from './legacyOptions';
+export {
+  ApolloServerPluginUsageReportingOptions,
+  SendValuesBaseOptions,
+  VariableValueOptions,
+  ClientInfo,
+  GenerateClientInfo,
+} from './options';
+export {
+  ApolloServerPluginUsageReportingFromLegacyOptions,
+  EngineReportingOptions,
+} from './legacyOptions';

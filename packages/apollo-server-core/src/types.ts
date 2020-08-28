@@ -31,7 +31,7 @@ import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
-import { EngineReportingOptions } from './plugin/usageReporting/legacyOptions';
+import type { EngineReportingOptions } from './plugin';
 export { GraphQLSchemaModule };
 
 export { KeyValueCache } from 'apollo-server-caching';
