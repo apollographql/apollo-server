@@ -1,6 +1,6 @@
 import { ASTNode, print, Kind, visit } from 'graphql';
 import { Plugin, Config, Refs } from 'pretty-format';
-import { SelectionNode, InlineFragmentNode } from '../QueryPlan';
+import { QueryPlanSelectionNode, QueryPlanInlineFragmentNode } from '../QueryPlan';
 import { SelectionNode as GraphQLJSSelectionNode } from 'graphql';
 
 export default {
@@ -69,7 +69,7 @@ export function remapInlineFragmentNodes(node: ASTNode): ASTNode {
           kind: Kind.SELECTION_SET,
           // we have to recursively rebuild the selectionSet using selections
           selections: remapSelections(
-            ((fragmentNode as unknown) as InlineFragmentNode).selections,
+            ((fragmentNode as unknown) as QueryPlanInlineFragmentNode).selections,
           ),
         },
       };
@@ -78,7 +78,7 @@ export function remapInlineFragmentNodes(node: ASTNode): ASTNode {
 }
 
 function remapSelections(
-  selections: SelectionNode[],
+  selections: QueryPlanSelectionNode[],
 ): ReadonlyArray<GraphQLJSSelectionNode> {
   return selections.map((selection) => {
     switch (selection.kind) {

@@ -39,7 +39,7 @@ export interface FetchNode {
   kind: 'Fetch';
   serviceName: string;
   variableUsages?: string[];
-  requires?: SelectionNode[];
+  requires?: QueryPlanSelectionNode[];
   operation: string;
 }
 
@@ -55,19 +55,19 @@ export interface FlattenNode {
  * in a built query plan, where there can't be FragmentSpreadNodes
  * since that info is contained in the `FetchNode.operation`
  */
-export type SelectionNode = FieldNode | InlineFragmentNode;
+export type QueryPlanSelectionNode = QueryPlanFieldNode | QueryPlanInlineFragmentNode;
 
-export interface FieldNode {
+export interface QueryPlanFieldNode {
   readonly kind: 'Field';
   readonly alias?: string;
   readonly name: string;
-  readonly selections?: SelectionNode[];
+  readonly selections?: QueryPlanSelectionNode[];
 }
 
-export interface InlineFragmentNode {
+export interface QueryPlanInlineFragmentNode {
   readonly kind: 'InlineFragment';
   readonly typeCondition?: string;
-  readonly selections: SelectionNode[];
+  readonly selections: QueryPlanSelectionNode[];
 }
 
 export function serializeQueryPlan(queryPlan: QueryPlan) {
@@ -76,7 +76,7 @@ export function serializeQueryPlan(queryPlan: QueryPlan) {
   });
 }
 
-export function getResponseName(node: FieldNode): string {
+export function getResponseName(node: QueryPlanFieldNode): string {
   return node.alias ? node.alias : node.name;
 }
 
@@ -90,7 +90,7 @@ export function getResponseName(node: FieldNode): string {
  */
 export const trimSelectionNodes = (
   selections: readonly GraphQLJSSelectionNode[],
-): SelectionNode[] => {
+): QueryPlanSelectionNode[] => {
   /**
    * Using an array to push to instead of returning value from `selections.map`
    * because TypeScript thinks we can encounter a `Kind.FRAGMENT_SPREAD` here,
@@ -98,7 +98,7 @@ export const trimSelectionNodes = (
    * from one branch of the map and then `.filter(Boolean)` on that returned
    * array
    */
-  const remapped: SelectionNode[] = [];
+  const remapped: QueryPlanSelectionNode[] = [];
 
   selections.forEach((selection) => {
     if (selection.kind === Kind.FIELD) {

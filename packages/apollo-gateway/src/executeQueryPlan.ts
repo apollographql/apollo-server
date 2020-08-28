@@ -19,8 +19,8 @@ import {
   QueryPlan,
   ResponsePath,
   OperationContext,
-  SelectionNode,
-  FieldNode,
+  QueryPlanSelectionNode,
+  QueryPlanFieldNode,
   getResponseName
 } from './QueryPlan';
 import { deepMerge } from './utilities/deepMerge';
@@ -389,7 +389,7 @@ async function executeFetch<TContext>(
  */
 function executeSelectionSet(
   source: Record<string, any> | null,
-  selections: SelectionNode[],
+  selections: QueryPlanSelectionNode[],
 ): Record<string, any> | null {
 
   // If the underlying service has returned null for the parent (source)
@@ -403,8 +403,8 @@ function executeSelectionSet(
   for (const selection of selections) {
     switch (selection.kind) {
       case Kind.FIELD:
-        const responseName = getResponseName(selection as FieldNode);
-        const selections = (selection as FieldNode).selections;
+        const responseName = getResponseName(selection as QueryPlanFieldNode);
+        const selections = (selection as QueryPlanFieldNode).selections;
 
         if (typeof source[responseName] === 'undefined') {
           throw new Error(`Field "${responseName}" was not found in response.`);
