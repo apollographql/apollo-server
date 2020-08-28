@@ -35,9 +35,10 @@ export default {
  * Since our SelectionNode still has a `kind`, this will still functionally work
  * at runtime to call the InlineFragment visitor defined below
  *
- * We have to cast the `fragmentNode as undefined` and then at the bottom though, since there's
- * no way to cast it appropriately to an `InlineFragmentNode` as defined in
- * ../QueryPlan.ts. TypeScript will complain about there not being overlapping fields
+ * We have to cast the `fragmentNode as unknown` and then to an InlineFragmentNode
+ * at the bottom though, since there's no way to cast it appropriately to an
+ * `InlineFragmentNode` as defined in ../QueryPlan.ts. TypeScript will complain
+ * about there not being overlapping fields
  */
 export function remapInlineFragmentNodes(node: ASTNode): ASTNode {
   return visit(node, {
@@ -67,7 +68,6 @@ export function remapInlineFragmentNodes(node: ASTNode): ASTNode {
         selectionSet: {
           kind: Kind.SELECTION_SET,
           // we have to recursively rebuild the selectionSet using selections
-          // to print it back using the graphql printer
           selections: remapSelections(
             ((fragmentNode as unknown) as InlineFragmentNode).selections,
           ),

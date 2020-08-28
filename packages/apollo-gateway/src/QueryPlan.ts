@@ -49,6 +49,12 @@ export interface FlattenNode {
   node: PlanNode;
 }
 
+/**
+ * SelectionNodes from GraphQL-js _can_ have a FragmentSpreadNode
+ * but this SelectionNode is specifically typing the `requires` key
+ * in a built query plan, where there can't be FragmentSpreadNodes
+ * since that info is contained in the `FetchNode.operation`
+ */
 export type SelectionNode = FieldNode | InlineFragmentNode;
 
 export interface FieldNode {
@@ -85,9 +91,16 @@ export function getResponseName(node: FieldNode): string {
 export const trimSelectionNodes = (
   selections: readonly GraphQLJSSelectionNode[],
 ): SelectionNode[] => {
+  /**
+   * Using an array to push to instead of returning value from `selections.map`
+   * because TypeScript thinks we can encounter a `Kind.FRAGMENT_SPREAD` here,
+   * so if we mapped the array directly to the return, we'd have to `return undefined`
+   * from one branch of the map and then `.filter(Boolean)` on that returned
+   * array
+   */
   const remapped: SelectionNode[] = [];
 
-  selections.map((selection) => {
+  selections.forEach((selection) => {
     if (selection.kind === Kind.FIELD) {
       remapped.push({
         kind: Kind.FIELD,
