@@ -1,7 +1,7 @@
 import os from 'os';
 import { gzip } from 'zlib';
 import retry from 'async-retry';
-import { defaultEngineReportingSignature } from 'apollo-graphql';
+import { defaultUsageReportingSignature } from 'apollo-graphql';
 import {
   Report,
   ReportHeader,
@@ -526,7 +526,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
             }
 
             const generatedSignature = (
-              options.calculateSignature || defaultEngineReportingSignature
+              options.calculateSignature || defaultUsageReportingSignature
             )(requestContext.document, operationName);
 
             // Note that this cache is always an in-memory cache.
