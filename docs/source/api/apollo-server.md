@@ -1,6 +1,7 @@
 ---
 title: "API Reference: apollo-server"
 sidebar_title: apollo-server
+api_reference: true
 ---
 
 This API reference documents the exports from the `apollo-server` package.
@@ -11,7 +12,7 @@ The core of an Apollo Server implementation. For an example, see [Get started wi
 
 ### Methods
 
-#### `constructor(options)`: <`ApolloServer`>
+#### `constructor`
 
 Returns an initialized `ApolloServer` instance.
 
@@ -488,13 +489,13 @@ Instructs Apollo Server to begin listening for requests.
 
 > This method is provided only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package (such as `apollo-server-express`, instead see [`applyMiddleware`](#applymiddleware).
 
-### Parameters
+##### Parameters
 
 * `options`: <`Object`>
 
   When using the `apollo-server` package, calling `listen` on an instantiated `ApolloServer` will start the server by passing the specified (optional) `options` to a Node.js [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server).  For a full reference of the supported `options`, see the [documentation for `net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen_options_callback).
 
-### Returns
+##### Returns
 
 `Promise` that resolves to an object containing the following properties:
 
@@ -506,7 +507,7 @@ Instructs Apollo Server to begin listening for requests.
 
 The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This method connects `ApolloServer` to a specific HTTP framework.
 
-### Parameters
+##### Parameters
 
 * `options`: <`Object`>
 
@@ -526,7 +527,7 @@ The `applyMiddleware` method is provided by the `apollo-server-{integration}` pa
 
     Pass the body-parser options. False removes the body parser middleware and true uses the defaults.
 
-### Usage
+##### Usage
 
 The `applyMiddleware` method from `apollo-server-express` registration of middleware as shown in the example below:
 
@@ -597,7 +598,7 @@ The `makeExecutableSchema` method is re-exported from apollo-server as a conveni
   * `parseOptions` = {}
   * `inheritResolversFromInterfaces` = false
 
-## `addMockFunctionsToSchema(options)`
+## `addMockFunctionsToSchema`
 
 The `addMockFunctionsToSchema` method is re-exported from `apollo-server` as a convenience.
 
@@ -653,7 +654,7 @@ addMockFunctionsToSchema({
 
 ## `EngineReportingOptions`
 
-These are the supported fields of the `engine` object you provide to the [`ApolloServer` constructor](#constructoroptions-apolloserver) to configure communication with [Apollo Studio](https://www.apollographql.com/docs/studio/).
+These are the supported fields of the `engine` object you provide to the [`ApolloServer` constructor](#constructor) to configure communication with [Apollo Studio](https://www.apollographql.com/docs/studio/).
 
 | Name | Type | Description |
 |------|------|-------------|
