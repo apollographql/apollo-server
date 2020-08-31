@@ -41,7 +41,7 @@ describe('executeQueryPlan', () => {
       request: {
         variables: {},
       },
-    };
+    } as GraphQLRequestContext;
   }
 
   describe(`errors`, () => {

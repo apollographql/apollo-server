@@ -7,7 +7,6 @@ import {
   execute,
   GraphQLError,
   Kind,
-  SelectionSetNode,
   TypeNameMetaFieldDef,
   GraphQLFieldResolver,
 } from 'graphql';
@@ -20,9 +19,11 @@ import {
   QueryPlan,
   ResponsePath,
   OperationContext,
+  QueryPlanSelectionNode,
+  QueryPlanFieldNode,
+  getResponseName
 } from './QueryPlan';
 import { deepMerge } from './utilities/deepMerge';
-import { getResponseName } from './utilities/graphql';
 
 export type ServiceMap = {
   [serviceName: string]: GraphQLDataSource;
@@ -207,7 +208,7 @@ async function executeFetch<TContext>(
 
   let variables = Object.create(null);
   if (fetch.variableUsages) {
-    for (const variableName of Object.keys(fetch.variableUsages)) {
+    for (const variableName of fetch.variableUsages) {
       const providedVariables = context.requestContext.request.variables;
       if (
         providedVariables &&
@@ -221,7 +222,7 @@ async function executeFetch<TContext>(
   if (!fetch.requires) {
     const dataReceivedFromService = await sendOperation(
       context,
-      fetch.source,
+      fetch.operation,
       variables,
     );
 
@@ -248,7 +249,7 @@ async function executeFetch<TContext>(
 
     const dataReceivedFromService = await sendOperation(
       context,
-      fetch.source,
+      fetch.operation,
       { ...variables, representations },
     );
 
@@ -388,7 +389,7 @@ async function executeFetch<TContext>(
  */
 function executeSelectionSet(
   source: Record<string, any> | null,
-  selectionSet: SelectionSetNode,
+  selections: QueryPlanSelectionNode[],
 ): Record<string, any> | null {
 
   // If the underlying service has returned null for the parent (source)
@@ -399,23 +400,23 @@ function executeSelectionSet(
 
   const result: Record<string, any> = Object.create(null);
 
-  for (const selection of selectionSet.selections) {
+  for (const selection of selections) {
     switch (selection.kind) {
       case Kind.FIELD:
-        const responseName = getResponseName(selection);
-        const selectionSet = selection.selectionSet;
+        const responseName = getResponseName(selection as QueryPlanFieldNode);
+        const selections = (selection as QueryPlanFieldNode).selections;
 
         if (typeof source[responseName] === 'undefined') {
           throw new Error(`Field "${responseName}" was not found in response.`);
         }
         if (Array.isArray(source[responseName])) {
           result[responseName] = source[responseName].map((value: any) =>
-            selectionSet ? executeSelectionSet(value, selectionSet) : value,
+            selections ? executeSelectionSet(value, selections) : value,
           );
-        } else if (selectionSet) {
+        } else if (selections) {
           result[responseName] = executeSelectionSet(
             source[responseName],
-            selectionSet,
+            selections,
           );
         } else {
           result[responseName] = source[responseName];
@@ -427,10 +428,10 @@ function executeSelectionSet(
         const typename = source && source['__typename'];
         if (!typename) continue;
 
-        if (typename === selection.typeCondition.name.value) {
+        if (typename === selection.typeCondition) {
           deepMerge(
             result,
-            executeSelectionSet(source, selection.selectionSet),
+            executeSelectionSet(source, selection.selections),
           );
         }
         break;
