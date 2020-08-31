@@ -79,7 +79,7 @@ export async function executeQueryPlan<TContext>(
   // the original query.
   // It is also used to allow execution of introspection queries though.
   try {
-    ({ data } = await execute({
+    const executionResult = await execute({
       schema: operationContext.schema,
       document: {
         kind: Kind.DOCUMENT,
@@ -94,7 +94,11 @@ export async function executeQueryPlan<TContext>(
       // FIXME: It's _possible_ this will change after `graphql-extensions` is
       // deprecated, though not certain. See here, also: https://git.io/Jf8cS.
       fieldResolver: defaultFieldResolverWithAliasSupport,
-    }));
+    });
+    data = executionResult.data;
+    if (executionResult.errors?.length) {
+      errors.push(...executionResult.errors)
+    }
   } catch (error) {
     return { errors: [error] };
   }
