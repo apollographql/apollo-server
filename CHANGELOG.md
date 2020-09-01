@@ -11,7 +11,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## v2.18.0
 
-- _Nothing yet! Stay tuned!_
+- `apollo-engine-reporting`: Parse and validate any schema passed via `overrideReportedSchema`, and throw accordingly on unparsable or invalid schemas.
 
 ## v2.17.0
 
