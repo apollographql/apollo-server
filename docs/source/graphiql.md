@@ -79,7 +79,9 @@ server.register({
 If you are using Koa 2, GraphiQL can be configured as follows:
 
 ```js
-import { graphiqlKoa } from 'apollo-server-koa';
+import graphiql from 'koa-graphiql';
 
-router.get('/graphiql', graphiqlKoa({ endpointURL: '/graphql' }));
+router.get('/graphiql', graphiql(async (ctx) => ({
+  url: '/graphql',
+})));
 ```
