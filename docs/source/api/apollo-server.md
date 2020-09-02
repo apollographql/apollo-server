@@ -226,6 +226,7 @@ An object containing custom functions to use as additional [validation rules](ht
 An object containing configuration options for connecting Apollo Server to [Apollo Studio](https://www.apollographql.com/docs/studio/).
 
 Supported fields are described in [EngineReportingOptions](#enginereportingoptions).
+FIXME(no-engine) replace with a link to migration page
 </td>
 </tr>
 
@@ -285,6 +286,24 @@ Provide this function to transform the structure of error objects before they're
 Provide this function to transform the structure of GraphQL response objects before they're sent to a client. The function takes a [`GraphQLResponse`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L77-L82) object and a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L95-L130) object, and it should return a `GraphQLResponse` object.
 </td>
 </tr>
+
+<tr>
+<td>
+
+###### `apollo`
+
+`ApolloConfigInput`
+<td>
+
+An object containing configuration options for connecting Apollo Server to [Apollo Studio](https://www.apollographql.com/docs/studio/). Each field of this object can also be set with an environment variable, which is the recommended method of setting these parameters. All fields are optional. The fields are:
+
+- `key`: The [graph API key](https://www.apollographql.com/docs/studio/api-keys/#graph-api-keys) that Apollo Server should use to authenticate with Apollo Studio. You can set this with the `APOLLO_KEY` environment variable.
+- `graphId`: The ID of your graph in Apollo's registry. You can set this with the `APOLLO_GRAPH_ID` environment variable. Most users will not specify this explicitly and allow Apollo Server to infer the ID from your API key.
+- `graphVariant`: The [variant](https://www.apollographql.com/docs/studio/schema/registry/#managing-environments-with-variants) of your graph to associate this server's schema and metrics with. You can set this with the `APOLLO_GRAPH_VARIANT` environment variable. The default value is `current`.
+
+</td>
+</tr>
+
 
 <tr>
 <td colspan="2">
