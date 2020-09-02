@@ -43,7 +43,7 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    */
   sendHeaders?: SendValuesBaseOptions;
   /**
-   * By default, all errors get reported to Apollo servers. You can specify a
+   * By default, all errors get reported to Apollo servers. You can specify
    * a filter function to exclude specific errors from being reported by
    * returning an explicit `null`, or you can mask certain details of the error
    * by modifying it and returning the modified error.
@@ -111,7 +111,7 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
   overrideReportedSchema?: string;
   //#endregion
 
-  //#region Configure the mechanics of communicating with Apollo servers.
+  //#region Configure the mechanics of communicating with Apollo's servers.
   /**
    * Sends a usage report after every request. This options is useful for
    * stateless environments like Amazon Lambda where processes handle only a
