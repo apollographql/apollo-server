@@ -32,15 +32,14 @@ const server = new ApolloServer({
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
 
 <tbody>
 <tr>
-<td colspan="3">
+<td colspan="2">
 
 **Schema options**
 </td>
@@ -49,8 +48,6 @@ const server = new ApolloServer({
 <td>
 
 ###### `typeDefs`
-</td>
-<td>
 
 `DocumentNode` or `Array<DocumentNode>`
 </td>
@@ -67,10 +64,9 @@ For an example, see [Define your GraphQL schema](../getting-started/#step-3-defi
 <td>
 
 ###### `resolvers`
-</td>
-<td>
 
 `Object` or `Array`
+</td>
 <td>
 
 **Required.** A map of functions that populate data for individual schema fields. Can also be an array of multiple maps that are merged.
@@ -84,10 +80,9 @@ For details, see [Resolvers](../data/resolvers/).
 <td>
 
 ###### `context`
-</td>
-<td>
 
 `Object` or `Function`
+</td>
 <td>
 
 An object (or a function that _creates_ an object) that's passed to every resolver that executes for a particular operation. This enables resolvers to share helpful context, such as a database connection.
@@ -103,10 +98,10 @@ For more details, see [The `context` argument](../data/resolvers/#the-context-ar
 <td>
 
 ###### `introspection`
-</td>
-<td>
 
 `Boolean`
+</td>
+
 <td>
 
 If `true`, enables [schema introspection](https://graphql.org/learn/introspection/) by clients.
@@ -120,10 +115,10 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 <td>
 
 ###### `schemaDirectives`
-</td>
-<td>
 
 `Object`
+</td>
+
 <td>
 
 A map of all [custom schema directives](../schema/directives/#using-custom-schema-directives) used in your schema, if any.
@@ -134,10 +129,10 @@ A map of all [custom schema directives](../schema/directives/#using-custom-schem
 <td>
 
 ###### `schema`
-</td>
-<td>
 
 `Object`
+</td>
+
 <td>
 
 An executable GraphQL schema. You usually don't need to provide this value, because Apollo Server generates it from the `typeDefs` and `resolvers` you provide.
@@ -153,10 +148,10 @@ Note that if you are using [file uploads](../data/file-uploads/), you need to ad
 <td>
 
 ###### `persistedQueries`
-</td>
-<td>
 
 `Object` or `false`
+</td>
+
 <td>
 
 If you're using [automated persisted queries (APQ)](../performance/apq/), you can provide an object with a `cache` field as the value of this option to customize where Apolllo Server stores the mapping between operation hashes and query strings.
@@ -170,10 +165,10 @@ Provide `false` to disable APQ entirely.
 <td>
 
 ###### `subscriptions`
-</td>
-<td>
 
 `Object` or `String` or `false`
+</td>
+
 <td>
 
 Provide a `String` to specify the server's subscription-specific endpoint, or an `Object` to further [configure subscription behavior](#subscription-configuration-fields).
@@ -187,10 +182,9 @@ Provide `false` to disable subscription operations entirely.
 <td>
 
 ###### `rootValue`
-</td>
-<td>
 
 `Any` or `Function`
+</td>
 <td>
 
 A value or function called with the parsed `Document`, creating the root value passed to the GraphQL executor.
@@ -204,10 +198,9 @@ Providing a function is useful if you want to use a different root value dependi
 <td>
 
 ###### `validationRules`
-</td>
-<td>
 
 `Object`
+</td>
 <td>
 
 An object containing custom functions to use as additional [validation rules](https://github.com/graphql/graphql-js/tree/master/src/validation/rules) when validating the schema.
@@ -215,7 +208,7 @@ An object containing custom functions to use as additional [validation rules](ht
 </tr>
 
 <tr>
-<td colspan="3">
+<td colspan="2">
 
 **Networking options**
 </td>
@@ -225,10 +218,9 @@ An object containing custom functions to use as additional [validation rules](ht
 <td>
 
 ###### `engine`
-</td>
-<td>
 
 `EngineReportingOptions`
+</td>
 <td>
 
 An object containing configuration options for connecting Apollo Server to [Apollo Studio](https://www.apollographql.com/docs/studio/).
@@ -242,10 +234,9 @@ Supported fields are described in [EngineReportingOptions](#enginereportingoptio
 <td>
 
 ###### `cors`
-</td>
-<td>
 
 `Object` or `Boolean`
+</td>
 <td>
 
 An `Object` containing [configuration options](https://github.com/expressjs/cors#configuration-options) for the server's CORS behavior. Provide `false` to remove CORS middleware entirely.
@@ -259,10 +250,9 @@ This option is used only by the `apollo-server` package. If you're integrating w
 <td>
 
 ###### `formatError`
-</td>
-<td>
 
 `Function`
+</td>
 <td>
 
 Provide this function to transform the structure of error objects before they're sent to a client. The function takes a [`GraphQLError`](https://github.com/graphql/graphql-js/blob/master/src/error/GraphQLError.js) object and should return a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/master/src/error/formatError.js#L26) object.
@@ -273,10 +263,9 @@ Provide this function to transform the structure of error objects before they're
 <td>
 
 ###### `formatResponse`
-</td>
-<td>
 
 `Function`
+</td>
 <td>
 
 Provide this function to transform the structure of GraphQL response objects before they're sent to a client. The function takes a [`GraphQLResponse`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L77-L82) object and a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L95-L130) object, and it should return a `GraphQLResponse` object.
@@ -284,7 +273,7 @@ Provide this function to transform the structure of GraphQL response objects bef
 </tr>
 
 <tr>
-<td colspan="3">
+<td colspan="2">
 
 **Debugging options**
 </td>
@@ -294,10 +283,9 @@ Provide this function to transform the structure of GraphQL response objects bef
 <td>
 
 ###### `playground`
-</td>
-<td>
 
 `Boolean` or `Object`
+</td>
 <td>
 
 If truthy, the server hosts [GraphQL Playground](../testing/graphql-playground) from its URL. Can be an object to pass [configuration options](https://github.com/prismagraphql/graphql-playground/#usage) to the playground.
@@ -313,10 +301,10 @@ Note that [`introspection`](#introspection) must be enabled for GraphQL Playgrou
 <td>
 
 ###### `debug`
-</td>
-<td>
 
 `Boolean`
+</td>
+
 <td>
 
 If `true`, enables development mode helpers and logs messages of all severity levels (`debug` through `error`). If `false`, only `warn`- and `error`-level messages are logged.
@@ -330,10 +318,9 @@ Defaults to `true`.
 <td>
 
 ###### `logger`
-</td>
-<td>
 
 [`Logger`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L146-L152)
+</td>
 <td>
 
 An object to use for logging in place of `console`. If provided, this object must implement all methods of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L146-L152).
@@ -349,10 +336,9 @@ This logger is automatically added to the `GraphQLRequestContext` object that's 
 <td>
 
 ###### `mocks`
-</td>
-<td>
 
 `Boolean` or `Object`
+</td>
 <td>
 
 If `true`, enables [default mock resolvers](../testing/mocking/#default-mock-example) for schema fields. If an object, enables [_custom_ mock resolvers](../testing/mocking/#customizing-mocks) based on the object's fields.
@@ -364,10 +350,9 @@ If `true`, enables [default mock resolvers](../testing/mocking/#default-mock-exa
 <td>
 
 ###### `mockEntireSchema`
-</td>
-<td>
 
 `Boolean`
+</td>
 <td>
 
 If `true` and `mocks` is also specified, mock resolvers are enabled even for fields that you've defined a resolver for.
@@ -406,8 +391,7 @@ Apollo Server supports the following fields of an object you provide to the `sub
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -418,8 +402,6 @@ Apollo Server supports the following fields of an object you provide to the `sub
 <td>
 
 ###### `path`
-</td>
-<td>
 
 `String`
 </td>
@@ -434,8 +416,6 @@ Apollo Server supports the following fields of an object you provide to the `sub
 <td>
 
 ###### `keepAlive`
-</td>
-<td>
 
 `Number`
 </td>
@@ -452,11 +432,10 @@ If this value isn't provided, the subscription endpoint doesn't send keep-alive 
 <td>
 
 ###### `onConnect`
-</td>
-<td>
 
 `Function`
 </td>
+
 <td>
 
 A lifecycle hook that's called whenever a subscription connection is initiated by a client. [See an example](../data/subscriptions/#authentication-over-websocket)
@@ -468,11 +447,10 @@ A lifecycle hook that's called whenever a subscription connection is initiated b
 <td>
 
 ###### `onDisconnect`
-</td>
-<td>
 
 `Function`
 </td>
+
 <td>
 
 A lifecycle hook that's called whenever a subscription connection is terminated by a client.
