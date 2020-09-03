@@ -1357,6 +1357,34 @@ describe('composeServices', () => {
       expect(stream).toMatchInlineSnapshot(`"@stream"`);
     });
   });
+
+  it('extensions field on GraphQLSchema includes serviceList', () => {
+    const serviceA = {
+      typeDefs: gql`
+        type Product {
+          sku: String!
+          name: String!
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        type User {
+          name: String
+          email: String!
+        }
+      `,
+      name: 'serviceB',
+    };
+
+    const { schema, errors } = composeServices([serviceA, serviceB]);
+    expect(errors).toHaveLength(0);
+    expect(schema).toBeDefined();
+    expect(schema.extensions.serviceList).toBeDefined();
+    expect(schema.extensions.serviceList).toHaveLength(2);
+  });
 });
 
 // XXX Ignored/unimplemented spec tests

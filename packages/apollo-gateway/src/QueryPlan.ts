@@ -1,21 +1,25 @@
 import {
   FragmentDefinitionNode,
-  GraphQLSchema,
   OperationDefinitionNode,
   Kind,
   SelectionNode as GraphQLJSSelectionNode,
 } from 'graphql';
 import prettyFormat from 'pretty-format';
 import { queryPlanSerializer, astSerializer } from './snapshotSerializers';
+import { ComposedGraphQLSchema } from '@apollo/federation';
 
 export type ResponsePath = (string | number)[];
 
-export type FragmentMap = { [fragmentName: string]: FragmentDefinitionNode };
+export type WasmPointer = number;
+
+type FragmentMap = { [fragmentName: string]: FragmentDefinitionNode };
 
 export type OperationContext = {
-  schema: GraphQLSchema;
+  schema: ComposedGraphQLSchema;
   operation: OperationDefinitionNode;
   fragments: FragmentMap;
+  queryPlannerPointer: WasmPointer;
+  operationString: string;
 };
 
 export interface QueryPlan {

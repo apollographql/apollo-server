@@ -119,6 +119,10 @@ export interface KeyDirectivesMap {
  * shared across at least 2 services.
  */
 type ValueTypes = Set<string>;
+
+export type ComposedGraphQLSchema = GraphQLSchema & {
+  extensions: { serviceList: ServiceDefinition[] }
+};
 /**
  * Loop over each service and process its typeDefs (`definitions`)
  * - build up typeToServiceMap
@@ -617,6 +621,9 @@ export function composeServices(services: ServiceDefinition[]) {
         ? (schema.getType(typeName) as GraphQLObjectType<any, any>)
         : undefined,
     ),
+    extensions: {
+      serviceList: services
+    }
   });
 
   // If multiple type definitions and extensions for the same type implement the
@@ -648,5 +655,5 @@ export function composeServices(services: ServiceDefinition[]) {
    * and every field that was extended. Fields that were _not_ extended (added on the base type by the owner),
    * there is no `serviceName`, and we should refer to the type's `serviceName`
    */
-  return { schema, errors };
+  return { schema: schema as ComposedGraphQLSchema, errors };
 }
