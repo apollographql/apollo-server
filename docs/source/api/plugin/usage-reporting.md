@@ -44,7 +44,7 @@ const server = new ApolloServer({
 });
 ```
 
-This plugin was introduced in Apollo Server FIXME(no-engine). In previous versions, usage reporting was configured using the `engine` option to the `ApolloServer` constructor. That option continues to work; see migration guide FIXME(no-engine) for details.
+This plugin was introduced in Apollo Server FIXME(no-engine-version). In previous versions, usage reporting was configured using the `engine` option to the `ApolloServer` constructor. That option continues to work; see [the migration guide](../../migration-engine-plugins/) for details.
 
 ## Options
 

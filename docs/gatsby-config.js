@@ -74,6 +74,7 @@ module.exports = {
             'proxy-configuration',
             'migration-two-dot',
             'migration-file-uploads',
+            'migration-engine-plugins',
           ],
         },
       },

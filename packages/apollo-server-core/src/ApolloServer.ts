@@ -183,7 +183,8 @@ export class ApolloServerBase {
     if (engine !== undefined) {
       if (apollo) {
         throw new Error("You cannot provide both `engine` and `apollo` to `new ApolloServer()`. " +
-     "For details on how to migrate all of your options out of `engine`, see FIXME(no-engine) URL MISSING");
+                        "For details on how to migrate all of your options out of `engine`, see " +
+                        "https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/");
       }
     }
 
@@ -782,7 +783,6 @@ export class ApolloServerBase {
       }
       return plugin;
     });
-    // FIXME(no-engine): maybe pull these special cases into a separate file?
 
     // Special case: usage reporting is on by default if you configure an API key.
     {
@@ -797,7 +797,8 @@ export class ApolloServerBase {
         if (engine !== undefined) {
           throw Error(
             "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
-              'creating an ApolloServerPluginUsageReporting plugin. See FIXME(no-engine) for details.',
+              'creating an ApolloServerPluginUsageReporting plugin. See ' +
+              'https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/',
           );
         }
       } else if (this.apolloConfig.key && !disabledViaLegacyOption) {
@@ -846,7 +847,8 @@ export class ApolloServerBase {
         if (engine !== undefined) {
           throw Error(
             "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
-              'creating an ApolloServerPluginSchemaReporting plugin. See FIXME(no-engine) for details.',
+              'creating an ApolloServerPluginSchemaReporting plugin. See ' +
+              'https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/',
           );
         }
       } else if (!this.apolloConfig.key) {
@@ -888,7 +890,8 @@ export class ApolloServerBase {
         if (engine !== undefined) {
           throw Error(
             "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
-              'creating an ApolloServerPluginInlineTrace plugin. See FIXME(no-engine) for details.',
+              'creating an ApolloServerPluginInlineTrace plugin. See ' +
+              'https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/',
           );
         }
       } else if (federatedSchema && this.config.engine !== false) {

@@ -46,7 +46,7 @@ Note that when this plugin is installed in your app, any client can request a tr
 
 (Note: in addition to this plugin (which adds a base64-encoded trace to the `ftv1` extension of responses), Apollo Server also contains support for an older JSON-based format which is enabled if you pass `tracing: true` to the `ApolloServer` constructor. This format was designed for use with a no longer supported tool called `engineproxy`, and also is recognized by graphql-playground.  This format was more verbose due to its use of JSON and the way that it represented trace node IDs. Enabling it is not recommended.)
 
-This plugin was introduced in Apollo Server FIXME(no-engine). In previous versions, inline tracing was configured using the `engine` option to the `ApolloServer` constructor. That option continues to work; see migration guide FIXME(no-engine) for details.
+This plugin was introduced in Apollo Server FIXME(no-engine-version). In previous versions, inline tracing was configured using the `engine` option to the `ApolloServer` constructor. That option continues to work; see [the migration guide](../../migration-engine-plugins/) for details.
 
 ## Options
 
