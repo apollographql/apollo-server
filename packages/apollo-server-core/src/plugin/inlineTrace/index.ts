@@ -1,19 +1,16 @@
 import { Trace } from 'apollo-reporting-protobuf';
 import { TraceTreeBuilder } from '../traceTreeBuilder';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { GraphQLError } from 'graphql';
+import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
 
 export interface ApolloServerPluginInlineTraceOptions {
   /**
-   * By default, all errors get reported to Engine servers. You can specify a
-   * a filter function to exclude specific errors from being reported by
-   * returning an explicit `null`, or you can mask certain details of the error
-   * by modifying it and returning the modified error.
+   * By default, all errors from this service get included in the trace.  You
+   * can specify a filter function to exclude specific errors from being
+   * reported by returning an explicit `null`, or you can mask certain details
+   * of the error by modifying it and returning the modified error.
    */
-  // FIXME(no-engine): use Pick here to pull it off of the other one
-  // FIXME(no-engine): Fix this doc string to be appropriate for inline
-  //                   tracing
-  rewriteError?: (err: GraphQLError) => GraphQLError | null;
+  rewriteError?: ApolloServerPluginUsageReportingOptions<never>['rewriteError'];
 }
 
 // This ftv1 plugin produces a base64'd Trace protobuf containing only the
