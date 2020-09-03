@@ -20,7 +20,8 @@ import { ApolloServerPluginUsageReporting } from './plugin';
  * these options map directly to fields on `ApolloConfigInput`,
  * `ApolloServerPluginUsageReportingOptions`, or
  * `ApolloServerPluginSchemaReportingOptions`; the correspondance is documented
- * in the migration guide at FIXME(no-engine)
+ * in the migration guide at
+ * https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/
  */
 export interface EngineReportingOptions<TContext> {
   apiKey?: string;
