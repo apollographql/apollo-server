@@ -161,8 +161,8 @@ By default, this plugin associates client information such as name and version w
 </td>
 <td>
 
-If you are using the `overrideReportedSchema` option to the schema reporting plugin (`ApolloServerPluginSchemaReporting`), you should pass the same value here as well, so that the schema ID associated with requests in this plugin's usage reports matches the schema ID that the other plugin reports.
-FIXME(no-engine) link to the other one
+If you are using the `overrideReportedSchema` option to the [schema reporting plugin (`ApolloServerPluginSchemaReporting`)](./schema-reporting/#overridereportedschema), you should pass the same value here as well, so that the schema ID associated with requests in this plugin's usage reports matches the schema ID that the other plugin reports.
+
 </td>
 </tr>
 

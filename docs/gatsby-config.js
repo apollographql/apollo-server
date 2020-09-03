@@ -66,6 +66,7 @@ module.exports = {
             'api/apollo-federation',
             'api/apollo-gateway',
             'api/plugin/usage-reporting',
+            'api/plugin/schema-reporting',
             'api/graphql-tools',
           ],
           Appendices: [
