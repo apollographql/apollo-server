@@ -67,6 +67,7 @@ module.exports = {
             'api/apollo-gateway',
             'api/plugin/usage-reporting',
             'api/plugin/schema-reporting',
+            'api/plugin/inline-trace',
             'api/graphql-tools',
           ],
           Appendices: [
