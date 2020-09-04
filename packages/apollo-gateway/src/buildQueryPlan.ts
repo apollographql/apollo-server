@@ -52,6 +52,9 @@ import {
 import { getFieldDef, getResponseName } from './utilities/graphql';
 import { MultiMap } from './utilities/MultiMap';
 import { getFederationMetadata } from '@apollo/federation/dist/composition/utils';
+const _ = require('lodash')
+
+
 
 const typenameField = {
   kind: Kind.FIELD,
@@ -161,9 +164,12 @@ function executionNodeForGroup(
       : fetchNode;
 
   if (dependentGroups.length > 0) {
+    // Remove duplicate dependent groups, they get merged anyhow
+    dependentGroups = _.uniqWith(dependentGroups, _.isEqual);
+
     const dependentNodes = dependentGroups.map(dependentGroup =>
-      executionNodeForGroup(context, dependentGroup),
-    );
+        executionNodeForGroup(context, dependentGroup))
+
 
     return flatWrap('Sequence', [node, flatWrap('Parallel', dependentNodes)]);
   } else {

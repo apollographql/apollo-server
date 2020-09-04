@@ -11,9 +11,7 @@ import {
   TypeNameMetaFieldDef,
   GraphQLFieldResolver,
   stripIgnoredCharacters,
-  print,
-  FragmentDefinitionNode,
-  VariableDefinitionNode, DocumentNode, visit,
+  print
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import { defaultRootOperationNameLookup } from '@apollo/federation';
@@ -302,15 +300,22 @@ async function executeFetch<TContext>(
     // Remove Selections that do not match representations
     // We don't need them and queries can be very large
     // without any benefit
-    fetch.selectionSet.selections.filter(selection =>
-      representations.some(representation => representation.__typename ===
-        selection.typeCondition.name.value)
+    fetch.selectionSet.selections =
+      fetch.selectionSet.selections.filter(selection =>
+        representations.some(representation => {
+          if (("typeCondition" in selection) && selection.typeCondition) {
+            return representation.__typename ===
+              selection.typeCondition.name.value
+          } else {
+            return false
+          }
+        })
     )
 
     // So lets, re-generate the _entities query source based on
     // the optimised selectionSet
     const { selectionSet, internalFragments } = fetch
-    const variableUsages = getVariableUsages(selectionSet, internalFragments)
+    const variableUsages = fetch.variableUsages!
     const entitiesOp = operationForEntitiesFetch({
       selectionSet,
       variableUsages,
@@ -319,34 +324,6 @@ async function executeFetch<TContext>(
     fetch.source = stripIgnoredCharacters(print(entitiesOp))
     return fetch
   }
-
-  function getVariableUsages(
-    selectionSet: SelectionSetNode,
-    fragments: Set<FragmentDefinitionNode>,
-) {
-    const usages: {
-      [name: string]: VariableDefinitionNode;
-    } = Object.create(null);
-
-    // Construct a document of the selection set and fragment definitions so we
-    // can visit them, adding all variable usages to the `usages` object.
-    const document: DocumentNode = {
-      kind: Kind.DOCUMENT,
-      definitions: [
-        { kind: Kind.OPERATION_DEFINITION, selectionSet, operation: 'query' },
-        ...Array.from(fragments),
-      ],
-    };
-
-    visit(document, {
-      Variable: (node) => {
-        usages[node.name.value] = this.variableDefinitions[node.name.value];
-      },
-    });
-
-    return usages;
-  }
-
 
   async function sendOperation(
     context: ExecutionContext<TContext>,
