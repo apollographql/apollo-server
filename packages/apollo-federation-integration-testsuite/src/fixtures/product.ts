@@ -7,11 +7,15 @@ export const typeDefs = gql`
   directive @stream on FIELD
   directive @transform(from: String!) on FIELD
 
+
   extend type Query {
-    product(upc: String!): Product
+    product(upc: String): Product
     vehicle(id: String!): Vehicle
     topProducts(first: Int = 5): [Product]
     topCars(first: Int = 5): [Car]
+    footballs(upc: String, where: Football_Where): [Football]
+    outdoorFootballs(upc: String, where: Football_Where): [OutdoorFootball]
+    indoorFootballs(upc: String, where: Football_Where): [IndoorFootball]
   }
 
   type Ikea {
@@ -54,6 +58,44 @@ export const typeDefs = gql`
     brand: Brand
     metadata: [MetadataOrError]
     details: ProductDetailsFurniture
+  }
+
+  input Int_Where{
+    """
+    Greater than Int
+    """
+    GTE : Int
+  }
+
+  input Football_Where {
+    size: Int_Where
+  }
+
+  interface Football {
+    upc: String!
+    sku: String!
+    material: String
+    size: Int
+  }
+  type OutdoorFootball implements Product & Football @key(fields: "upc") @key(fields: "sku") {
+    upc: String!
+    sku: String!
+    name: String
+    price: String
+    weight: Int
+    details: ProductDetails
+    material: String
+    size: Int
+  }
+  type IndoorFootball implements Product & Football @key(fields: "upc") @key(fields: "sku") {
+    upc: String!
+    sku: String!
+    name: String
+    price: String
+    weight: Int
+    details: ProductDetails
+    material: String
+    size: Int
   }
 
   extend type Book implements Product @key(fields: "isbn") {
@@ -152,6 +194,38 @@ const products = [
   { __typename: 'Book', isbn: '1234567890', price: 59 },
   { __typename: 'Book', isbn: '404404404', price: 0 },
   { __typename: 'Book', isbn: '0987654321', price: 29 },
+  { __typename: 'OutdoorFootball',
+    upc: '100',
+    sku: 'FOOTBALL1',
+    name: 'Nike Pitch Team Soccer Ball Football Training',
+    price: 10,
+    weight: 5,
+    size: 5
+  },
+  { __typename: 'OutdoorFootball',
+    upc: '200',
+    sku: 'FOOTBALL2',
+    name: 'Mitre Delta Professional Football',
+    price: 15,
+    weight: 6,
+    size: 4
+  },
+  { __typename: 'IndoorFootball',
+    upc: '300',
+    sku: 'FOOTBALL3',
+    name: 'Cartasport Unisex\'s Solar\' Indoor 5-A-Side Football, Green, Size 4',
+    price: 5,
+    weight: 1,
+    size: 2
+  },
+  { __typename: 'IndoorFootball',
+    upc: '400',
+    sku: 'FOOTBALL4',
+    name: 'Prime Indoor Training Football Soccer Ball Tennis Cloth Sports Balls Size 4',
+    price: 5,
+    weight: 2,
+    size: 3
+  },
 ];
 
 const vehicles = [
@@ -230,7 +304,11 @@ export const resolvers: GraphQLResolverMap<any> = {
   },
   Query: {
     product(_, args) {
-      return products.find(product => product.upc === args.upc);
+      if (args.upc) {
+        return products.find(product => product.upc === args.upc)
+      } else {
+        return products
+      }
     },
     vehicle(_, args) {
       return vehicles.find(vehicles => vehicles.id === args.id);
@@ -238,6 +316,37 @@ export const resolvers: GraphQLResolverMap<any> = {
     topProducts(_, args) {
       return products.slice(0, args.first);
     },
+    footballs(_, args) {
+      if (args.upc) {
+        return [products.find(product => product.upc === args.upc)]
+      } else if (args.where.size.GTE) {
+        return products.filter(product => {
+          return ((product.__typename === 'OutdoorFootball' ||
+            product.__typename === 'IndoorFootball') &&
+            (product.size >= args.where.size.GTE))
+        })
+      } else {
+        return products.filter( product =>
+          product.__typename === 'OutdoorFootball' ||
+          product.__typename === 'IndoorFootball')
+      }
+    },
+    inDoorFootballs(_, args) {
+      if (args.upc) {
+        return [products.find(product => product.upc === args.upc)]
+      } else {
+        return products.filter(products =>
+          products.__typename === 'IndoorFootball')
+      }
+    },
+    outDoorFootballs(_, args) {
+      if (args.upc) {
+        return [products.find(product => product.upc === args.upc)]
+      } else {
+        return products.filter(products =>
+          products.__typename === 'OutdoorFootball')
+      }
+    }
   },
   MetadataOrError: {
     __resolveType(object) {

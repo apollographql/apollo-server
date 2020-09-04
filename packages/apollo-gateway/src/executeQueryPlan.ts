@@ -10,6 +10,10 @@ import {
   SelectionSetNode,
   TypeNameMetaFieldDef,
   GraphQLFieldResolver,
+  stripIgnoredCharacters,
+  print,
+  FragmentDefinitionNode,
+  VariableDefinitionNode, DocumentNode, visit,
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import { defaultRootOperationNameLookup } from '@apollo/federation';
@@ -21,6 +25,9 @@ import {
   ResponsePath,
   OperationContext,
 } from './QueryPlan';
+import {
+  operationForEntitiesFetch,
+} from './buildQueryPlan'
 import { deepMerge } from './utilities/deepMerge';
 import { getResponseName } from './utilities/graphql';
 
@@ -234,6 +241,8 @@ async function executeFetch<TContext>(
     const representations: ResultMap[] = [];
     const representationToEntity: number[] = [];
 
+    // forEach Entity??
+
     entities.forEach((entity, index) => {
       const representation = executeSelectionSet(entity, requires);
       if (representation && representation[TypeNameMetaFieldDef.name]) {
@@ -245,6 +254,9 @@ async function executeFetch<TContext>(
     if ('representations' in variables) {
       throw new Error(`Variables cannot contain key "representations"`);
     }
+
+    // Optimise entity fetch, removing unnecessary inline fragments
+    fetch = optimiseEntityFetchInlineFragments(representations, fetch)
 
     const dataReceivedFromService = await sendOperation(
       context,
@@ -277,6 +289,64 @@ async function executeFetch<TContext>(
       deepMerge(entities[representationToEntity[i]], receivedEntities[i]);
     }
   }
+
+  /*
+   Remove Inline fragments from _entities queries that
+   are never going to be evaluated as they are not contained within
+   the passed set of representations
+   */
+  function optimiseEntityFetchInlineFragments(
+    representations: ResultMap[],
+    fetch: FetchNode
+  ) : FetchNode {
+    // Remove Selections that do not match representations
+    // We don't need them and queries can be very large
+    // without any benefit
+    fetch.selectionSet.selections.filter(selection =>
+      representations.some(representation => representation.__typename ===
+        selection.typeCondition.name.value)
+    )
+
+    // So lets, re-generate the _entities query source based on
+    // the optimised selectionSet
+    const { selectionSet, internalFragments } = fetch
+    const variableUsages = getVariableUsages(selectionSet, internalFragments)
+    const entitiesOp = operationForEntitiesFetch({
+      selectionSet,
+      variableUsages,
+      internalFragments,
+    })
+    fetch.source = stripIgnoredCharacters(print(entitiesOp))
+    return fetch
+  }
+
+  function getVariableUsages(
+    selectionSet: SelectionSetNode,
+    fragments: Set<FragmentDefinitionNode>,
+) {
+    const usages: {
+      [name: string]: VariableDefinitionNode;
+    } = Object.create(null);
+
+    // Construct a document of the selection set and fragment definitions so we
+    // can visit them, adding all variable usages to the `usages` object.
+    const document: DocumentNode = {
+      kind: Kind.DOCUMENT,
+      definitions: [
+        { kind: Kind.OPERATION_DEFINITION, selectionSet, operation: 'query' },
+        ...Array.from(fragments),
+      ],
+    };
+
+    visit(document, {
+      Variable: (node) => {
+        usages[node.name.value] = this.variableDefinitions[node.name.value];
+      },
+    });
+
+    return usages;
+  }
+
 
   async function sendOperation(
     context: ExecutionContext<TContext>,
@@ -398,6 +468,9 @@ function executeSelectionSet(
   }
 
   const result: Record<string, any> = Object.create(null);
+
+  // Request per selection?
+  //
 
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {

@@ -206,7 +206,7 @@ function operationForRootFetch({
   };
 }
 
-function operationForEntitiesFetch({
+export function operationForEntitiesFetch({
   selectionSet,
   variableUsages,
   internalFragments,
