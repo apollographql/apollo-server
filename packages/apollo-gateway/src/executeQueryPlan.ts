@@ -202,13 +202,14 @@ async function executeNode<TContext>(
    */
 export function optimiseEntityFetchInlineFragments(
   representations: ResultMap[],
-  fetch: FetchNode
+  fetch: any
 ) : FetchNode {
   // Remove Selections that do not match representations
   // We don't need them and queries can be very large
   // without any benefit
+
   fetch.selectionSet.selections =
-    fetch.selectionSet.selections.filter(selection =>
+    fetch.selectionSet.selections.filter((selection: any) =>
       representations.some(representation => {
         if (("typeCondition" in selection) && selection.typeCondition) {
           return representation.__typename ===
