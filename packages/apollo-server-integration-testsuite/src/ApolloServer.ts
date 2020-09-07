@@ -3225,14 +3225,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('waits until gateway has resolved a schema to respond to queries', async () => {
-        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-        let resolveExecutor;
-        const executor = () =>
-          new Promise(resolve => {
-            resolveExecutor = () => {
-              resolve({ data: { testString: 'hi - but federated!' } });
-            };
-          });
+        let startPromiseResolver: any, endPromiseResolver: any;
+        const startPromise = new Promise(res => {
+          startPromiseResolver = res;
+        });
+        const endPromise = new Promise(res => {
+          endPromiseResolver = res;
+        });
+        const executor = async () => {
+          startPromiseResolver();
+          await endPromise;
+          return { data: { testString: 'hi - but federated!' } };
+        };
 
         const { gateway, triggers } = makeGatewayMock({ executor });
 
@@ -3248,9 +3252,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
           return result;
         });
         expect(fetchComplete).not.toHaveBeenCalled();
-        await wait(100); //some bogus value to make sure we aren't returning early
+        await startPromise;
         expect(fetchComplete).not.toHaveBeenCalled();
-        resolveExecutor();
+        endPromiseResolver();
         const resolved = await result;
         expect(fetchComplete).toHaveBeenCalled();
         expect(resolved.data).toEqual({ testString: 'hi - but federated!' });
@@ -3258,8 +3262,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('can serve multiple active schemas simultaneously during a schema rollover', async () => {
-        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-
         const makeQueryTypeWithField = fieldName =>
           new GraphQLSchema({
             query: new GraphQLObjectType({
@@ -3272,30 +3274,33 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }),
           });
 
-        const makeEventuallyResolvingPromise = val => {
-          let resolver;
-          const promise = new Promise(
-            resolve => (resolver = () => resolve(val)),
-          );
-          return { resolver, promise };
+        const executorData = {};
+        [1, 2, 3].forEach(i => {
+          const query = `{testString${i}}`;
+          let startPromiseResolver: any, endPromiseResolver: any;
+          const startPromise = new Promise(res => {
+            startPromiseResolver = res;
+          });
+          const endPromise = new Promise(res => {
+            endPromiseResolver = res;
+          });
+          executorData[query] = {
+            startPromiseResolver,
+            endPromiseResolver,
+            startPromise,
+            endPromise,
+            i,
+          }
+        });
+
+        const executor = async (req) => {
+          const source = req.source as string;
+          const {startPromiseResolver, endPromise, i} =
+            executorData[source];
+          startPromiseResolver();
+          await endPromise;
+          return { data: { [`testString${i}`]: `${i}` } };
         };
-
-        const { resolver: r1, promise: p1 } = makeEventuallyResolvingPromise({
-          data: { testString1: '1' },
-        });
-        const { resolver: r2, promise: p2 } = makeEventuallyResolvingPromise({
-          data: { testString2: '2' },
-        });
-        const { resolver: r3, promise: p3 } = makeEventuallyResolvingPromise({
-          data: { testString3: '3' },
-        });
-
-        const executor = req =>
-          (req.source as string).match(/1/)
-            ? p1
-            : (req.source as string).match(/2/)
-            ? p2
-            : p3;
 
         const { gateway, triggers } = makeGatewayMock({ executor });
 
@@ -3304,28 +3309,27 @@ export function testApolloServer<AS extends ApolloServerBase>(
           executor,
         });
 
-        const { url: uri } = await createApolloServer({
+        const { url: uri, server } = await createApolloServer({
           gateway,
           subscriptions: false,
         });
 
-        // TODO: Remove these awaits... I think it may require the `onSchemaChange` to block?
         const apolloFetch = createApolloFetch({ uri });
         const result1 = apolloFetch({ query: '{testString1}' });
-        await wait(100);
+        await executorData['{testString1}'].startPromise;
         triggers.triggerSchemaChange(makeQueryTypeWithField('testString2'));
-        await wait(100);
+        // Hacky, but: executeOperation awaits schemaDerivedData, so when it
+        // finishes we know the new schema is loaded.
+        await server.executeOperation({query: '{__typename}'});
         const result2 = apolloFetch({ query: '{testString2}' });
-        await wait(100);
+        await executorData['{testString2}'].startPromise;
         triggers.triggerSchemaChange(makeQueryTypeWithField('testString3'));
-        await wait(100);
+        await server.executeOperation({query: '{__typename}'});
         const result3 = apolloFetch({ query: '{testString3}' });
-        await wait(100);
-        r3();
-        await wait(100);
-        r1();
-        await wait(100);
-        r2();
+        await executorData['{testString3}'].startPromise;
+        executorData['{testString3}'].endPromiseResolver();
+        executorData['{testString1}'].endPromiseResolver();
+        executorData['{testString2}'].endPromiseResolver();
 
         await Promise.all([result1, result2, result3]).then(([v1, v2, v3]) => {
           expect(v1.errors).toBeUndefined();

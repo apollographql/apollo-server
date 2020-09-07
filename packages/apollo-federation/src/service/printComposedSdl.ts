@@ -323,7 +323,7 @@ export function printWithReducedWhitespace(ast: ASTNode): string {
  * @param selections
  */
 function printFieldSet(selections: readonly SelectionNode[]): string {
-  return selections.map(printWithReducedWhitespace).join(' ');
+  return `{ ${selections.map(printWithReducedWhitespace).join(' ')} }`;
 }
 
 /**

@@ -49,10 +49,9 @@ features.forEach((feature) => {
               options
             );
 
-            const serializedPlan = JSON.parse(JSON.stringify(queryPlan, serializeQueryPlanNode));
             const parsedExpectedPlan = JSON.parse(expectedQueryPlan);
 
-            expect(serializedPlan).toEqual(parsedExpectedPlan);
+            expect(queryPlan).toEqual(parsedExpectedPlan);
           })
         }
 
@@ -69,37 +68,3 @@ features.forEach((feature) => {
     });
   });
 });
-
-const serializeQueryPlanNode = (k: string , v: any) => {
-  switch(k){
-    case "selectionSet":
-    case "internalFragments":
-    case "loc":
-    case "arguments":
-    case "directives":
-    case "source":
-      return undefined;
-    case "kind":
-      if(v === Kind.SELECTION_SET) return undefined;
-      return v;
-    case "variableUsages":
-      // TODO check this
-      return Object.keys(v);
-    case "typeCondition":
-      return v.name.value;
-    case "name":
-      return v.value;
-    case "requires":
-      return v?.selections;
-    default:
-      // replace source with operation
-      if(v?.kind === "Fetch"){
-        return { ...v, operation: v.source };
-      }
-      // replace selectionSet with selections[]
-      if(v?.kind === Kind.INLINE_FRAGMENT){
-        return { ...v, selections: v.selectionSet.selections }
-      }
-      return v;
-  }
-}
