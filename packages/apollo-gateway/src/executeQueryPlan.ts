@@ -11,11 +11,6 @@ import {
   GraphQLFieldResolver,
   stripIgnoredCharacters,
   print,
-  SelectionSetNode,
-  FragmentDefinitionNode,
-  DocumentNode,
-  VariableDefinitionNode,
-  visit,
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import { defaultRootOperationNameLookup } from '@apollo/federation';
@@ -31,7 +26,6 @@ import {
   getResponseName
 } from './QueryPlan';
 import {
-  buildQueryPlanningContext,
   operationForEntitiesFetch, QueryPlanningContext,
 } from './buildQueryPlan'
 import { deepMerge } from './utilities/deepMerge';
@@ -213,9 +207,6 @@ export function optimiseEntityFetchInlineFragments(
   fetch: FetchNode
 ) : FetchNode {
 
-  const queryPlanContext: QueryPlanningContext =
-    buildQueryPlanningContext(operationContext, { autoFragmentization: false })
-
   // Remove Selections that do not match representations
   // We don't need them and queries can be very large
   // without any benefit
@@ -228,8 +219,7 @@ export function optimiseEntityFetchInlineFragments(
   // So lets, re-generate the _entities query source based on
   // the optimised selectionSet
   const { selectionSet, internalFragments, variableUsages  } = fetch
-  //const variableUsages = queryPlanContext.getVariableUsages(selectionSet,
-  //  internalFragments)
+
   const entitiesOp = operationForEntitiesFetch({
     selectionSet,
     variableUsages,

@@ -2,6 +2,7 @@ import {
   FragmentDefinitionNode,
   GraphQLSchema,
   OperationDefinitionNode,
+  VariableDefinitionNode,
   Kind,
   SelectionNode as GraphQLJSSelectionNode, SelectionSetNode,
 } from 'graphql';
@@ -38,7 +39,7 @@ export interface ParallelNode {
 export interface FetchNode {
   kind: 'Fetch';
   serviceName: string;
-  variableUsages?: string[];
+  variableUsages?: { [name: string]: VariableDefinitionNode };
   requires?: QueryPlanSelectionNode[];
   operation: string;
   selectionSet: SelectionSetNode;
