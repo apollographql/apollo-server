@@ -10,7 +10,7 @@ import {
   TypeNameMetaFieldDef,
   GraphQLFieldResolver,
   stripIgnoredCharacters,
-  print,
+  print, VariableDefinitionNode,
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import { defaultRootOperationNameLookup } from '@apollo/federation';
@@ -26,7 +26,7 @@ import {
   getResponseName
 } from './QueryPlan';
 import {
-  operationForEntitiesFetch, QueryPlanningContext,
+  operationForEntitiesFetch,
 } from './buildQueryPlan'
 import { deepMerge } from './utilities/deepMerge';
 
@@ -202,7 +202,6 @@ async function executeNode<TContext>(
    the passed set of representations
    */
 export function optimiseEntityFetchInlineFragments(
-  operationContext: OperationContext,
   representations: ResultMap[],
   fetch: FetchNode
 ) : FetchNode {
@@ -210,19 +209,28 @@ export function optimiseEntityFetchInlineFragments(
   // Remove Selections that do not match representations
   // We don't need them and queries can be very large
   // without any benefit
-  fetch.selectionSet.selections=
+  fetch.selectionSet.selections =
     fetch.selectionSet.selections.filter(selection =>
-      representations.some(representation => representation.__typename ===
-        selection.typeCondition.name.value)
+      representations.some(representation => {
+        if (("typeCondition" in selection) && (selection.typeCondition)) {
+          return representation.__typename ===
+            selection.typeCondition.name.value
+        } else {
+          return false
+        }
+      })
     )
 
   // So lets, re-generate the _entities query source based on
   // the optimised selectionSet
-  const { selectionSet, internalFragments, variableUsages  } = fetch
+  const { selectionSet, internalFragments  } = fetch
+  const usages: {
+    [name: string]: VariableDefinitionNode;
+  } = fetch.variableUsages!
 
   const entitiesOp = operationForEntitiesFetch({
     selectionSet,
-    variableUsages,
+    variableUsages: usages,
     internalFragments
   })
   fetch.operation = stripIgnoredCharacters(print(entitiesOp))
@@ -288,8 +296,7 @@ async function executeFetch<TContext>(
     }
 
     // Optimise entity fetch, removing unnecessary inline fragments
-    fetch = optimiseEntityFetchInlineFragments(context,
-      representations, fetch)
+    fetch = optimiseEntityFetchInlineFragments(representations, fetch)
 
     const dataReceivedFromService = await sendOperation(
       context,
@@ -396,8 +403,7 @@ async function executeFetch<TContext>(
 
         if (traceBuffer) {
           try {
-            const trace = Trace.decode(traceBuffer);
-            traceNode.trace = trace;
+            traceNode.trace = Trace.decode(traceBuffer);
           } catch (err) {
             logger.error(
               `error decoding protobuf for federated trace from ${fetch.serviceName}: ${err}`,
@@ -429,7 +435,7 @@ async function executeFetch<TContext>(
 /**
  *
  * @param source Result of GraphQL execution.
- * @param selectionSet
+ * @param selections
  */
 function executeSelectionSet(
   source: Record<string, any> | null,

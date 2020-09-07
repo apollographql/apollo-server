@@ -3,10 +3,6 @@ import {buildOperationContext, buildQueryPlan, QueryPlan} from '../../';
 import { GraphQLError, GraphQLSchema } from "graphql";
 import { getFederatedTestingSchema } from "../execution-utils";
 import {optimiseEntityFetchInlineFragments} from "../../executeQueryPlan";
-import {
-  buildQueryPlanningContext,
-  QueryPlanningContext
-} from "../../buildQueryPlan";
 import {OperationContext} from "../../QueryPlan";
 
 describe('ApolloGateway _entities optimisation', () => {
@@ -36,8 +32,8 @@ describe('ApolloGateway _entities optimisation', () => {
     const context: OperationContext =
       buildOperationContext(schema, query, undefined);
     const queryPlan: QueryPlan = buildQueryPlan(context);
-    const queryPlanContext: QueryPlanningContext =
-      buildQueryPlanningContext(context, { autoFragmentization: false });
+
+    // @ts-ignore
     const _entitiesFetch = queryPlan.node.nodes[1].node
     const representations = [
       {__typename: 'OutdoorFootball', upc: '200'}
@@ -57,9 +53,9 @@ describe('ApolloGateway _entities optimisation', () => {
       "_entities(representations:$representations){" +
       "...on OutdoorFootball{colour}}}"
 
-    expect(optimiseEntityFetchInlineFragments(queryPlanContext, representations,
+    expect(optimiseEntityFetchInlineFragments(representations,
       _entitiesFetch).operation).toMatch(optimisedQuery)
 
-  }
+  })
 
-}
+})
