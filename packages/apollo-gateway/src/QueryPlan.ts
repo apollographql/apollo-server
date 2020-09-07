@@ -3,7 +3,7 @@ import {
   GraphQLSchema,
   OperationDefinitionNode,
   Kind,
-  SelectionNode as GraphQLJSSelectionNode,
+  SelectionNode as GraphQLJSSelectionNode, SelectionSetNode,
 } from 'graphql';
 import prettyFormat from 'pretty-format';
 import { queryPlanSerializer, astSerializer } from './snapshotSerializers';
@@ -41,6 +41,8 @@ export interface FetchNode {
   variableUsages?: string[];
   requires?: QueryPlanSelectionNode[];
   operation: string;
+  selectionSet: SelectionSetNode;
+  internalFragments: Set<FragmentDefinitionNode>;
 }
 
 export interface FlattenNode {

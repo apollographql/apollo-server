@@ -145,11 +145,17 @@ function executionNodeForGroup(
         operation: context.operation.operation,
       });
 
+  // Putting Selection Set back. There is not enough context provided without it
+  // to regenerate the Fetch.operation at runtime without it
+  // https://github.com/jazzyray/apollo-server/pull/2/commits/f515e89055b2a462de2d96a9c1531f56f548aa83
+  // JakeDawkins^
   const fetchNode: FetchNode = {
     kind: 'Fetch',
     serviceName,
+    selectionSet,
+    variableUsages,
+    internalFragments,
     requires: requires ? trimSelectionNodes(requires?.selections) : undefined,
-    variableUsages: Object.keys(variableUsages),
     operation: stripIgnoredCharacters(print(operation)),
   };
 

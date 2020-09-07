@@ -10,7 +10,12 @@ import {
   TypeNameMetaFieldDef,
   GraphQLFieldResolver,
   stripIgnoredCharacters,
-  print
+  print,
+  SelectionSetNode,
+  FragmentDefinitionNode,
+  DocumentNode,
+  VariableDefinitionNode,
+  visit,
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import { defaultRootOperationNameLookup } from '@apollo/federation';
@@ -26,9 +31,11 @@ import {
   getResponseName
 } from './QueryPlan';
 import {
-  operationForEntitiesFetch,
+  buildQueryPlanningContext,
+  operationForEntitiesFetch, QueryPlanningContext,
 } from './buildQueryPlan'
 import { deepMerge } from './utilities/deepMerge';
+
 
 export type ServiceMap = {
   [serviceName: string]: GraphQLDataSource;
@@ -201,35 +208,34 @@ async function executeNode<TContext>(
    the passed set of representations
    */
 export function optimiseEntityFetchInlineFragments(
+  operationContext: OperationContext,
   representations: ResultMap[],
-  fetch: any
+  fetch: FetchNode
 ) : FetchNode {
+
+  const queryPlanContext: QueryPlanningContext =
+    buildQueryPlanningContext(operationContext, { autoFragmentization: false })
+
   // Remove Selections that do not match representations
   // We don't need them and queries can be very large
   // without any benefit
-
-  fetch.selectionSet.selections =
-    fetch.selectionSet.selections.filter((selection: any) =>
-      representations.some(representation => {
-        if (("typeCondition" in selection) && selection.typeCondition) {
-          return representation.__typename ===
-            selection.typeCondition.name.value
-        } else {
-          return false
-        }
-      })
+  fetch.selectionSet.selections=
+    fetch.selectionSet.selections.filter(selection =>
+      representations.some(representation => representation.__typename ===
+        selection.typeCondition.name.value)
     )
 
   // So lets, re-generate the _entities query source based on
   // the optimised selectionSet
-  const { selectionSet, internalFragments } = fetch
-  const variableUsages = fetch.variableUsages!
+  const { selectionSet, internalFragments, variableUsages  } = fetch
+  //const variableUsages = queryPlanContext.getVariableUsages(selectionSet,
+  //  internalFragments)
   const entitiesOp = operationForEntitiesFetch({
     selectionSet,
     variableUsages,
-    internalFragments,
+    internalFragments
   })
-  fetch.source = stripIgnoredCharacters(print(entitiesOp))
+  fetch.operation = stripIgnoredCharacters(print(entitiesOp))
   return fetch
 }
 
@@ -251,14 +257,15 @@ async function executeFetch<TContext>(
 
   let variables = Object.create(null);
   if (fetch.variableUsages) {
-    for (const variableName of fetch.variableUsages) {
-      const providedVariables = context.requestContext.request.variables;
-      if (
-        providedVariables &&
-        typeof providedVariables[variableName] !== 'undefined'
-      ) {
-        variables[variableName] = providedVariables[variableName];
-      }
+    //for (const variableName of fetch.variableUsages) {
+    for (const variableName of Object.keys(fetch.variableUsages)) {
+        const providedVariables = context.requestContext.request.variables;
+        if (
+          providedVariables &&
+          typeof providedVariables[variableName] !== 'undefined'
+        ) {
+          variables[variableName] = providedVariables[variableName];
+        }
     }
   }
 
@@ -291,7 +298,8 @@ async function executeFetch<TContext>(
     }
 
     // Optimise entity fetch, removing unnecessary inline fragments
-    fetch = optimiseEntityFetchInlineFragments(representations, fetch)
+    fetch = optimiseEntityFetchInlineFragments(context,
+      representations, fetch)
 
     const dataReceivedFromService = await sendOperation(
       context,

@@ -8,17 +8,17 @@ export const typeDefs = gql`
   directive @stream on FIELD
   directive @transform(from: String!) on FIELD
 
-  extend interface Football @key(fields: "upc") @key(fields: "sku") {
+  extend interface Football @key(fields: "upc")  {
     colour: String
   }
 
-  extend type IndoorFootball @key(fields: "upc") @key(fields: "sku") {
+  extend type IndoorFootball @key(fields: "upc")  {
     upc: String! @external
     sku: String! @external
     colour: String
   }
 
-  extend type OutdoorFootball @key(fields: "upc") @key(fields: "sku") {
+  extend type OutdoorFootball @key(fields: "upc")  {
     upc: String! @external
     sku: String! @external
     weight: Int @external
@@ -26,13 +26,13 @@ export const typeDefs = gql`
     heavy: Boolean @requires(fields: "weight")
   }
 
-  extend type NightFootball @key(fields: "upc") @key(fields: "sku") {
+  extend type NightFootball @key(fields: "upc")  {
     upc: String! @external
     sku: String! @external
     colour: String
   }
 
-  extend type VisuallyImpairedFootball @key(fields: "upc") @key(fields: "sku") {
+  extend type VisuallyImpairedFootball @key(fields: "upc")  {
     upc: String! @external
     sku: String! @external
     colour: String

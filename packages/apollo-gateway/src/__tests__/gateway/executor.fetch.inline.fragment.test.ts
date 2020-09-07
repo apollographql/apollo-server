@@ -1,8 +1,13 @@
 import gql from 'graphql-tag';
-import { buildOperationContext, buildQueryPlan } from '../../';
+import {buildOperationContext, buildQueryPlan, QueryPlan} from '../../';
 import { GraphQLError, GraphQLSchema } from "graphql";
 import { getFederatedTestingSchema } from "../execution-utils";
 import {optimiseEntityFetchInlineFragments} from "../../executeQueryPlan";
+import {
+  buildQueryPlanningContext,
+  QueryPlanningContext
+} from "../../buildQueryPlan";
+import {OperationContext} from "../../QueryPlan";
 
 describe('ApolloGateway _entities optimisation', () => {
   let schema: GraphQLSchema;
@@ -12,6 +17,7 @@ describe('ApolloGateway _entities optimisation', () => {
     ({ schema, errors } = getFederatedTestingSchema());
     expect(errors).toHaveLength(0);
   });
+
 
   it('removes unnecessary inline fragments', async () => {
 
@@ -27,8 +33,11 @@ describe('ApolloGateway _entities optimisation', () => {
       }
     `;
 
-    const context = buildOperationContext(schema, query, undefined);
-    const queryPlan = buildQueryPlan(context);
+    const context: OperationContext =
+      buildOperationContext(schema, query, undefined);
+    const queryPlan: QueryPlan = buildQueryPlan(context);
+    const queryPlanContext: QueryPlanningContext =
+      buildQueryPlanningContext(context, { autoFragmentization: false });
     const _entitiesFetch = queryPlan.node.nodes[1].node
     const representations = [
       {__typename: 'OutdoorFootball', upc: '200'}
@@ -41,15 +50,16 @@ describe('ApolloGateway _entities optimisation', () => {
     "...on NightFootball{colour}" +
     "...on VisuallyImpairedFootball{colour}}}"
 
-    expect(_entitiesFetch.source).toMatch(unoptimisedEntitiesQuery)
+    expect(_entitiesFetch.operation).toMatch(unoptimisedEntitiesQuery)
 
     // After optimisation
     const optimisedQuery: string = "query($representations:[_Any!]!){" +
       "_entities(representations:$representations){" +
       "...on OutdoorFootball{colour}}}"
 
-    expect(optimiseEntityFetchInlineFragments(representations, _entitiesFetch)
-      .source).toMatch(optimisedQuery)
+    expect(optimiseEntityFetchInlineFragments(queryPlanContext, representations,
+      _entitiesFetch).operation).toMatch(optimisedQuery)
 
   }
+
 }
