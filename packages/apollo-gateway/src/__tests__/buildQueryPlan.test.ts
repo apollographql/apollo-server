@@ -4,8 +4,6 @@ import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
 import { getFederatedTestingSchema } from './execution-utils';
 
-import { serializeQueryPlan } from '../QueryPlan';
-
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
@@ -32,8 +30,6 @@ describe('buildQueryPlan', () => {
     const context = buildOperationContext(schema, query, undefined);
     const queryPlan = buildQueryPlan(context);
 
-    console.log(serializeQueryPlan(queryPlan));
-
     expect(queryPlan).toMatchInlineSnapshot(`
       QueryPlan {
         Sequence {
@@ -51,6 +47,14 @@ describe('buildQueryPlan', () => {
                   __typename
                   upc
                 }
+                ... on NightFootball {
+                  __typename
+                  upc
+                }
+                ... on VisuallyImpairedFootball {
+                  __typename
+                  upc
+                }
               }
             }
           },
@@ -65,12 +69,26 @@ describe('buildQueryPlan', () => {
                   __typename
                   upc
                 }
+                ... on NightFootball {
+                  __typename
+                  upc
+                }
+                ... on VisuallyImpairedFootball {
+                  __typename
+                  upc
+                }
               } =>
               {
                 ... on OutdoorFootball {
                   colour
                 }
                 ... on IndoorFootball {
+                  colour
+                }
+                ... on NightFootball {
+                  colour
+                }
+                ... on VisuallyImpairedFootball {
                   colour
                 }
               }
@@ -194,6 +212,12 @@ describe('buildQueryPlan', () => {
                   ... on Furniture {
                     name
                   }
+                  ... on NightFootball {
+                    name
+                  }
+                  ... on VisuallyImpairedFootball {
+                    name
+                  }
                 }
               }
             },
@@ -272,6 +296,12 @@ describe('buildQueryPlan', () => {
                 ... on Furniture {
                   name
                 }
+                ... on NightFootball {
+                  name
+                }
+                ... on VisuallyImpairedFootball {
+                  name
+                }
               }
               product(upc: "1") {
                 __typename
@@ -286,6 +316,12 @@ describe('buildQueryPlan', () => {
                   name
                 }
                 ... on Furniture {
+                  name
+                }
+                ... on NightFootball {
+                  name
+                }
+                ... on VisuallyImpairedFootball {
                   name
                 }
               }
@@ -813,6 +849,12 @@ describe('buildQueryPlan', () => {
                 ... on Furniture {
                   price
                 }
+                ... on NightFootball {
+                  price
+                }
+                ... on VisuallyImpairedFootball {
+                  price
+                }
               }
             }
           },
@@ -865,6 +907,16 @@ describe('buildQueryPlan', () => {
                   __typename
                   upc
                 }
+                ... on NightFootball {
+                  price
+                  __typename
+                  upc
+                }
+                ... on VisuallyImpairedFootball {
+                  price
+                  __typename
+                  upc
+                }
               }
             }
           },
@@ -887,6 +939,14 @@ describe('buildQueryPlan', () => {
                   __typename
                   upc
                 }
+                ... on NightFootball {
+                  __typename
+                  upc
+                }
+                ... on VisuallyImpairedFootball {
+                  __typename
+                  upc
+                }
               } =>
               {
                 ... on Book {
@@ -905,6 +965,16 @@ describe('buildQueryPlan', () => {
                   }
                 }
                 ... on Furniture {
+                  reviews {
+                    body
+                  }
+                }
+                ... on NightFootball {
+                  reviews {
+                    body
+                  }
+                }
+                ... on VisuallyImpairedFootball {
                   reviews {
                     body
                   }
@@ -1009,6 +1079,18 @@ describe('buildQueryPlan', () => {
                   country
                 }
               }
+              ... on NightFootball {
+                details {
+                  __typename
+                  country
+                }
+              }
+              ... on VisuallyImpairedFootball {
+                details {
+                  __typename
+                  country
+                }
+              }
             }
           }
         },
@@ -1073,6 +1155,14 @@ describe('buildQueryPlan', () => {
                   __typename
                   upc
                 }
+                ... on NightFootball {
+                  __typename
+                  upc
+                }
+                ... on VisuallyImpairedFootball {
+                  __typename
+                  upc
+                }
               }
             },
             Parallel {
@@ -1128,6 +1218,14 @@ describe('buildQueryPlan', () => {
                       __typename
                       upc
                     }
+                    ... on NightFootball {
+                      __typename
+                      upc
+                    }
+                    ... on VisuallyImpairedFootball {
+                      __typename
+                      upc
+                    }
                     ... on Book {
                       __typename
                       isbn
@@ -1154,6 +1252,22 @@ describe('buildQueryPlan', () => {
                       name
                       price
                       details {
+                        country
+                      }
+                    }
+                    ... on NightFootball {
+                      name
+                      price
+                      details {
+                        __typename
+                        country
+                      }
+                    }
+                    ... on VisuallyImpairedFootball {
+                      name
+                      price
+                      details {
+                        __typename
                         country
                       }
                     }
@@ -1291,6 +1405,14 @@ describe('buildQueryPlan', () => {
                   __typename
                   upc
                 }
+                ... on NightFootball {
+                  __typename
+                  upc
+                }
+                ... on VisuallyImpairedFootball {
+                  __typename
+                  upc
+                }
               }
             },
             Parallel {
@@ -1346,6 +1468,14 @@ describe('buildQueryPlan', () => {
                       __typename
                       upc
                     }
+                    ... on NightFootball {
+                      __typename
+                      upc
+                    }
+                    ... on VisuallyImpairedFootball {
+                      __typename
+                      upc
+                    }
                     ... on Book {
                       __typename
                       isbn
@@ -1372,6 +1502,22 @@ describe('buildQueryPlan', () => {
                       name
                       cost: price
                       details {
+                        origin: country
+                      }
+                    }
+                    ... on NightFootball {
+                      name
+                      cost: price
+                      details {
+                        __typename
+                        origin: country
+                      }
+                    }
+                    ... on VisuallyImpairedFootball {
+                      name
+                      cost: price
+                      details {
+                        __typename
                         origin: country
                       }
                     }

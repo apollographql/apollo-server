@@ -194,6 +194,43 @@ async function executeNode<TContext>(
   }
 }
 
+/*
+   Remove Inline fragments from _entities queries that
+   are never going to be evaluated as they are not contained within
+   the passed set of representations
+   */
+export function optimiseEntityFetchInlineFragments(
+  representations: ResultMap[],
+  fetch: FetchNode
+) : FetchNode {
+  // Remove Selections that do not match representations
+  // We don't need them and queries can be very large
+  // without any benefit
+  fetch.selectionSet.selections =
+    fetch.selectionSet.selections.filter(selection =>
+      representations.some(representation => {
+        if (("typeCondition" in selection) && selection.typeCondition) {
+          return representation.__typename ===
+            selection.typeCondition.name.value
+        } else {
+          return false
+        }
+      })
+    )
+
+  // So lets, re-generate the _entities query source based on
+  // the optimised selectionSet
+  const { selectionSet, internalFragments } = fetch
+  const variableUsages = fetch.variableUsages!
+  const entitiesOp = operationForEntitiesFetch({
+    selectionSet,
+    variableUsages,
+    internalFragments,
+  })
+  fetch.source = stripIgnoredCharacters(print(entitiesOp))
+  return fetch
+}
+
 async function executeFetch<TContext>(
   context: ExecutionContext<TContext>,
   fetch: FetchNode,
@@ -238,8 +275,6 @@ async function executeFetch<TContext>(
 
     const representations: ResultMap[] = [];
     const representationToEntity: number[] = [];
-
-    // forEach Entity??
 
     entities.forEach((entity, index) => {
       const representation = executeSelectionSet(entity, requires);
@@ -286,43 +321,6 @@ async function executeFetch<TContext>(
     for (let i = 0; i < entities.length; i++) {
       deepMerge(entities[representationToEntity[i]], receivedEntities[i]);
     }
-  }
-
-  /*
-   Remove Inline fragments from _entities queries that
-   are never going to be evaluated as they are not contained within
-   the passed set of representations
-   */
-  function optimiseEntityFetchInlineFragments(
-    representations: ResultMap[],
-    fetch: FetchNode
-  ) : FetchNode {
-    // Remove Selections that do not match representations
-    // We don't need them and queries can be very large
-    // without any benefit
-    fetch.selectionSet.selections =
-      fetch.selectionSet.selections.filter(selection =>
-        representations.some(representation => {
-          if (("typeCondition" in selection) && selection.typeCondition) {
-            return representation.__typename ===
-              selection.typeCondition.name.value
-          } else {
-            return false
-          }
-        })
-    )
-
-    // So lets, re-generate the _entities query source based on
-    // the optimised selectionSet
-    const { selectionSet, internalFragments } = fetch
-    const variableUsages = fetch.variableUsages!
-    const entitiesOp = operationForEntitiesFetch({
-      selectionSet,
-      variableUsages,
-      internalFragments,
-    })
-    fetch.source = stripIgnoredCharacters(print(entitiesOp))
-    return fetch
   }
 
   async function sendOperation(
@@ -445,9 +443,6 @@ function executeSelectionSet(
   }
 
   const result: Record<string, any> = Object.create(null);
-
-  // Request per selection?
-  //
 
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {

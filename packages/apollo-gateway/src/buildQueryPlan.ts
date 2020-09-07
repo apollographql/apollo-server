@@ -54,8 +54,6 @@ import { MultiMap } from './utilities/MultiMap';
 import { getFederationMetadata } from '@apollo/federation/dist/composition/utils';
 const _ = require('lodash')
 
-
-
 const typenameField = {
   kind: Kind.FIELD,
   name: {

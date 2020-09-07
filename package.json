@@ -26,9 +26,11 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "0.4.8",
     "@apollo/federation": "file:packages/apollo-federation",
     "@apollo/gateway": "file:packages/apollo-gateway",
+    "@apollographql/apollo-tools": "0.4.8",
+    "@types/lodash.isequal": "^4.5.5",
+    "@types/lodash.uniqwith": "^4.5.6",
     "apollo-cache-control": "file:packages/apollo-cache-control",
     "apollo-datasource": "file:packages/apollo-datasource",
     "apollo-datasource-rest": "file:packages/apollo-datasource-rest",

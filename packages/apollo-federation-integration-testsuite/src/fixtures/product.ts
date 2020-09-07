@@ -77,6 +77,7 @@ export const typeDefs = gql`
     material: String
     size: Int
   }
+
   type OutdoorFootball implements Product & Football @key(fields: "upc") @key(fields: "sku") {
     upc: String!
     sku: String!
@@ -87,7 +88,31 @@ export const typeDefs = gql`
     material: String
     size: Int
   }
+
   type IndoorFootball implements Product & Football @key(fields: "upc") @key(fields: "sku") {
+    upc: String!
+    sku: String!
+    name: String
+    price: String
+    weight: Int
+    details: ProductDetails
+    material: String
+    size: Int
+  }
+
+  type NightFootball implements Product & Football @key(fields: "upc") @key(fields: "sku") {
+    upc: String!
+    sku: String!
+    name: String
+    price: String
+    weight: Int
+    details: ProductDetails
+    material: String
+    size: Int
+    batteries: String
+  }
+
+  type VisuallyImpairedFootball implements Product & Football @key(fields: "upc") @key(fields: "sku") {
     upc: String!
     sku: String!
     name: String
@@ -226,6 +251,20 @@ const products = [
     weight: 2,
     size: 3
   },
+  { __typename: 'NightFootball',
+    upc: '500',
+    sku: 'FOOTBALL5',
+    name: 'Nightmatch Light Up Football (LED lights',
+    price: 30,
+    size: 3,
+    batteries: "12 * LR44"
+  },
+  { __typename: 'VisuallyImpairedFootball',
+    upc: '600',
+    sku: 'FOOTBALL6',
+    name: 'Wv German Sound Balls for the visually impaired',
+    price: 32
+  }
 ];
 
 const vehicles = [

@@ -25,6 +25,18 @@ export const typeDefs = gql`
     colour: String
     heavy: Boolean @requires(fields: "weight")
   }
+
+  extend type NightFootball @key(fields: "upc") @key(fields: "sku") {
+    upc: String! @external
+    sku: String! @external
+    colour: String
+  }
+
+  extend type VisuallyImpairedFootball @key(fields: "upc") @key(fields: "sku") {
+    upc: String! @external
+    sku: String! @external
+    colour: String
+  }
 `
 
 export const resolvers: GraphQLResolverMap<any> = {
@@ -81,5 +93,17 @@ const colouredFootballs = [
     upc: '400',
     sku: 'FOOTBALL4',
     colour: 'yellow'
+  },
+  { __typename: 'NightFootball',
+    upc: '500',
+    sku: 'FOOTBALL5',
+    colour: 'Black & Orange'
+  },
+  { __typename: 'VisuallyImpairedFootball',
+    upc: '600',
+    sku: 'FOOTBALL6',
+    name: 'Wv German Sound Balls for the visually impaired',
+    price: 32,
+    colour: 'Red'
   }
 ]

@@ -21,7 +21,18 @@ export const typeDefs = gql`
     sku: String! @external
     inStock: Boolean
   }
+
   extend type OutdoorFootball implements Product @key(fields: "sku") {
+    sku: String! @external
+    inStock: Boolean
+  }
+
+  extend type NightFootball implements Product @key(fields: "sku") {
+    sku: String! @external
+    inStock: Boolean
+  }
+
+  extend type VisuallyImpairedFootball implements Product @key(fields: "sku") {
     sku: String! @external
     inStock: Boolean
   }
