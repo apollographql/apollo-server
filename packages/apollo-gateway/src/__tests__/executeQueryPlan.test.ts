@@ -42,10 +42,7 @@ describe('executeQueryPlan', () => {
       request: {
         variables: {},
       },
-      metrics: {
-        captureTraces: true,
-      },
-    };
+    }
   }
 
   describe(`errors`, () => {
