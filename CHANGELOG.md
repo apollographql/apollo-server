@@ -9,6 +9,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+- Updated `graphql-playground-react` to 1.7.33 to include [an upstream fix](https://github.com/apollographql/graphql-playground/commit/1c102692bfbb717688827204186c15cb92629b3a). [PR #4550](https://github.com/apollographql/apollo-server/pull/4550)
+
 ## v2.17.0
 
 - subscriptions: Fix bug which prevented `installSubscriptionHandlers` from accepting a `websocket.Server` (as intended in [PR #1966](https://github.com/apollographql/apollo-server/pull/1966)) and also added support for other `http.Server` variations (e.g., Tls). [Issue #4198](https://github.com/apollographql/apollo-server/issues/4198) [PR #4200](https://github.com/apollographql/apollo-server/pull/4200)
