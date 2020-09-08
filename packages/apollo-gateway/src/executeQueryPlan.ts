@@ -206,6 +206,10 @@ export function optimiseEntityFetchInlineFragments(
   fetch: FetchNode
 ) : FetchNode {
 
+  if (representations.length === 0 ) {
+    return fetch
+  }
+
   // Remove Selections that do not match representations
   // We don't need them and queries can be very large
   // without any benefit

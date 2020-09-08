@@ -45,7 +45,27 @@ it('handles an abstract type from the base service', async () => {
                 isbn
                 price
               }
+              ... on OutdoorFootball {
+                upc
+                name
+                price
+              }
+              ... on IndoorFootball {
+                upc
+                name
+                price
+              }
               ... on Furniture {
+                upc
+                name
+                price
+              }
+              ... on NightFootball {
+                upc
+                name
+                price
+              }
+              ... on VisuallyImpairedFootball {
                 upc
                 name
                 price
@@ -61,13 +81,8 @@ it('handles an abstract type from the base service', async () => {
                 isbn
               }
             } =>
-            {
-              ... on Book {
-                __typename
-                isbn
-                title
-                year
-              }
+            query ($representations: [_Any!]!) {
+              _entities(representations: $representations)
             }
           },
         },
@@ -81,10 +96,8 @@ it('handles an abstract type from the base service', async () => {
                 year
               }
             } =>
-            {
-              ... on Book {
-                name
-              }
+            query ($representations: [_Any!]!) {
+              _entities(representations: $representations)
             }
           },
         },
