@@ -84,12 +84,7 @@ export function buildQueryPlan(
 
   const isMutation = context.operation.operation === 'mutation';
 
-  /**
-   * TODO: what does collectFields do?
-   * -- looks like it just gathers fields at a certain level of a query
-   * pass the root selection set and scope based off root type
-   * => `fields` is the root level fieldNodes
-   */
+  // root field nodes
   const fields = collectFields(
     context,
     context.newScope(rootType),
@@ -99,11 +94,8 @@ export function buildQueryPlan(
 
   // Mutations are a bit more specific in how FetchGroups can be built, as some
   // calls to the same service may need to be executed serially.
-  /**
-   * TODO: what does splitRootFields do?
-   * -- looks like it creates fetch groups based off service for the top level fields
-   *
-   */
+  // `groups` here is a list of fetch groups, split up by service, either
+  // serially or in parallel
   const groups = isMutation
     ? splitRootFieldsSerially(context, fields)
     : splitRootFields(context, fields);
@@ -414,7 +406,7 @@ function splitSubfields(
     let baseService, owningService;
 
     const parentTypeFederationMetadata = getFederationMetadata(parentType);
-    if (parentTypeFederationMetadata!.isValueType) {
+    if (parentTypeFederationMetadata?.isValueType) {
       baseService = parentGroup.serviceName;
       owningService = parentGroup.serviceName;
     } else {
@@ -523,10 +515,6 @@ function splitSubfields(
   });
 }
 
-/**
- * wtf does this function do?!
- * split into what
- */
 function splitFields(
   context: QueryPlanningContext,
   path: ResponsePath,
@@ -537,22 +525,17 @@ function splitFields(
   // service togethere, whereas in mutations, we have to look at the last group
   // that was constructed. If it was of the same service as the field in question,
   // we can use that group but otherwise we need to create a new group.
-  getGroupForField: (field: Field<GraphQLObjectType>) => FetchGroup,
+  groupForField: (field: Field<GraphQLObjectType>) => FetchGroup,
 ) {
   // group by the name the client will see -- alias or name, whichever is there
   // Each iteration of the loop contains a set of fields with the same response name
   // [FieldDef, FieldDef]
   for (const fieldsForResponseName of groupByResponseName(fields).values()) {
-    // TODO: How can fields in a single selection have different parent types??
-    // is `fields` used across multiple selectionSets?
     for (const [parentType, fieldsForParentType] of groupByParentType(fieldsForResponseName)) {
       // Field nodes that share the same response name and parent type are guaranteed
       // to have the same field name and arguments. We only need the other nodes when
       // merging selection sets, to take node-specific subfields and directives
       // into account.
-
-      // TODO: how is the above statement true, when aliases could be anything?
-      // Is this only after deduping?
 
       const field = fieldsForParentType[0];
       const { scope, fieldDef } = field;
@@ -578,9 +561,8 @@ function splitFields(
       if (isObjectType(parentType) && scope.possibleTypes.includes(parentType)) {
         // If parent type is an object type, we can directly look for the right
         // group.
-        const group = getGroupForField(field as Field<GraphQLObjectType>);
+        const group = groupForField(field as Field<GraphQLObjectType>);
         group.fields.push(
-          // TODO: what is completeField?
           completeField(
             context,
             scope as Scope<typeof parentType>,
@@ -612,7 +594,7 @@ function splitFields(
 
         // With no extending field definitions, we can engage the optimization
         if (hasNoExtendingFieldDefs) {
-          const group = getGroupForField(field as Field<GraphQLObjectType>);
+          const group = groupForField(field as Field<GraphQLObjectType>);
           group.fields.push(
             completeField(context, scope, group, path, fieldsForResponseName)
           );
@@ -632,7 +614,7 @@ function splitFields(
             field.fieldNode,
           );
           groupsByRuntimeParentTypes.add(
-            getGroupForField({
+            groupForField({
               scope: context.newScope(runtimeParentType, scope),
               fieldNode: field.fieldNode,
               fieldDef,
@@ -683,7 +665,6 @@ function completeField(
   path: ResponsePath,
   fields: FieldSet,
 ): Field {
-  // TODO: why even pass in a FieldSet?
   const { fieldNode, fieldDef } = fields[0];
   const returnType = getNamedType(fieldDef.type);
 
@@ -695,7 +676,6 @@ function completeField(
   } else {
     // For composite types, we need to recurse.
 
-    debugger;
     // if the fieldtype is a listtype, it also appends @
     const fieldPath = addPath(path, getResponseName(fieldNode), fieldDef.type);
 
@@ -1112,7 +1092,7 @@ export class QueryPlanningContext {
   }
 
   getBaseService(parentType: GraphQLObjectType): string | null {
-    return (getFederationMetadata(parentType)!.serviceName) || null;
+    return (getFederationMetadata(parentType)?.serviceName) || null;
   }
 
   getOwningService(
@@ -1122,7 +1102,7 @@ export class QueryPlanningContext {
     const fieldFederationMetadata = getFederationMetadata(fieldDef);
     if (
       fieldFederationMetadata?.serviceName &&
-      !fieldFederationMetadata.belongsToValueType
+      !fieldFederationMetadata?.belongsToValueType
     ) {
       return fieldFederationMetadata.serviceName;
     } else {
@@ -1151,7 +1131,7 @@ export class QueryPlanningContext {
     });
 
     for (const possibleType of this.getPossibleTypes(parentType)) {
-      const keys = getFederationMetadata(possibleType)!.keys?.[serviceName];
+      const keys = getFederationMetadata(possibleType)?.keys?.[serviceName];
 
       if (!(keys && keys.length > 0)) continue;
 
