@@ -2,9 +2,9 @@
 
 ## Introduction
 
-There are two files used to test the query plan builder:
+There two kinds of files used to test the query plan builder:
 
-1. [build-query-plan.feature](./build-query-plan.feature): Programming-language agnostic files written in a format called [Gherkin](https://cucumber.io/docs/gherkin/reference/) for [Cucumber](https://cucumber.io/).
+1. `.feature` files written in a programming-language agnostic format called [Gherkin](https://cucumber.io/docs/gherkin/reference/) for [Cucumber](https://cucumber.io/).
 2. [queryPlanCucumber.test.ts](./queryPlanCucumber.test.ts): The implementation which provides coverage for the Gherkin-specified behavior.
 
 > If you're not familiar with Cucumber or BDD, check out [this video](https://youtu.be/lC0jzd8sGIA) for a great introduction to the concepts involved. Cucumber has test runners in multiple languages, allowing a test spec to be written in plain English and then individual implementations of the test suite can describe how they would like tests to be run for their specific implementation. For Java, Kotlin, Ruby, and JavaScript, Cucumber even has a [10-minute tutorial](https://cucumber.io/docs/guides/10-minute-tutorial/) to help get started.
@@ -51,6 +51,9 @@ Scenario: should not confuse union types with overlapping field names
     }
     """
 ```
+
+Currently, this is the format of all of the tests contained in this test suite,
+but future tests will add more complicated behavior.
 
 There can be multiple of any kind of step using the `And` keyword. In the following example, there are 2 `Given` steps. One represented by the `Given` keyword itself, and another represented with the `And` keyword.
 
