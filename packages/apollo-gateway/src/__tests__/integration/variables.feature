@@ -242,13 +242,4 @@ Scenario: passes variables to nested services
 #   }
 #   """
 
-# Scenario:
-#   Given query
-#   """
-
-#   """
-#   Then query plan
-#   """
-#     {}
-#   """
 

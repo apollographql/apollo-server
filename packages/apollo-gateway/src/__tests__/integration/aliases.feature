@@ -302,13 +302,3 @@ Scenario: supports aliases of nested fields on subservices
     }
   }
   """
-
-# Scenario:
-#   Given query:
-#   """
-
-#   """
-#   Then query plan:
-#   """
-#   {}
-#   """

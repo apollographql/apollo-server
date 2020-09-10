@@ -71,13 +71,3 @@ Scenario: successfully passes directives and their variables along in requests t
     }
   }
   """
-
-# Scenario:
-#   Given query
-#   """
-
-#   """
-#   Then query plan
-#   """
-#   {}
-#   """

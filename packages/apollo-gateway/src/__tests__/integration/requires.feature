@@ -122,14 +122,3 @@ Scenario: supports passing additional fields defined by a requires
 #   """
     # {}
 #   """
-
-# I don't think we need to port this one. There aren't any query plan tests here
-# Scenario: passes null values correctly
-#   Given query
-#   """
-
-#   """
-#   Then query plan
-#   """
-    # {}
-#   """
