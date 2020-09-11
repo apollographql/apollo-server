@@ -114,7 +114,7 @@ Unlike with `sendVariableValues`, names of dropped headers are not reported. The
 </td>
 <td>
 
-By default, all errors get reported to Apollo servers. You can specify a filter function to exclude specific errors from being reported by returning an explicit `null`, or you can mask certain details of the error by modifying it and returning the modified error. This function has type `(GraphQLError) => GraphQLError | null`.
+By default, all errors get reported to Apollo servers. You can specify a filter function to exclude specific errors from being reported by returning an explicit `null`, or you can mask certain details of the error by modifying it and returning the modified error. This function has type `(GraphQLError) => GraphQLError | null`. (Note that if this server is an Apollo Gateway, this will not affect errors from federated implementing services; to rewrite these errors, configure the [option of the same name in the inline trace plugin](./inline-trace/#rewriteerror) in the implementing service's Apollo Server).)
 </td>
 </tr>
 
