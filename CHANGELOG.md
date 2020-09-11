@@ -1,9 +1,11 @@
 # CHANGELOG
 
-The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g. which are not actual HTTP integrations; packages not prefixed with `apollo-server`) may use different versions.  For more details, check the publish commit for that version in the Git history, or check the individual CHANGELOGs for specific packages which are maintained separately:
+The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g., those which are not actual HTTP integrations; packages not prefixed with "`apollo-server`", or just supporting packages) may use different versions.
 
-- [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-gateway/CHANGELOG.md)
-- [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-federation/CHANGELOG.md)
+🆕 **Please Note!**: 🆕 **The `@apollo/federation` and `@apollo/gateway` packages now live in the [`apollographql/federation`](https://github.com/apollographql/federation) repository.**
+
+- [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
+- [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
 ## vNEXT
 
