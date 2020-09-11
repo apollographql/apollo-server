@@ -313,6 +313,23 @@ This deprecated option is how you configured connecting Apollo Server to [Apollo
 <tr>
 <td>
 
+###### `plugins`
+
+`Array<PluginDefinition>`
+</td>
+<td>
+
+An array of plugins to install in your server. Each plugin definition is either an object with methods like `requestDidStart` and `serverWillStart`, or zero-argument function returning an object of that form. See [the full plugin documentation](../integrations/plugins/) for more details.
+
+In addition to the plugins you explicitly install, Apollo Server ships with a few plugins that it enables in certain contexts (like when you specify an Apollo API key with `$APOLLO_KEY`, or if the server is a federated implementing service). See the API references for the [usage reporting](./plugin/usage-reporting/), [schema reporting](./plugin/schema-reporting/), and [inline trace](./plugin/inline-trace/) plugins for details.
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
 ###### `stopOnTerminationSignals`
 
 `Boolean`
