@@ -24,22 +24,6 @@ You can set environment variable values on the command line as seen below, or wi
 APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_VARIANT=development node start-server.js
 ```
 
-### Debugging Apollo Studio reporting
-
-You can set the [`debugPrintReports` option](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-engine-reporting/src/agent.ts#L429-L433) in the `engine` section of the `ApolloServer` constructor to automatically log debugging information for all reporting requests sent to Apollo Studio.  For example:
-
-```js{8}
-const { ApolloServer } = require("apollo-server");
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  engine: {
-    debugPrintReports: true,
-  }
-});
-```
-
 ### Identifying distinct clients
 
 Apollo Studio's [client awareness feature](https://www.apollographql.com/docs/graph-manager/client-awareness) enables you to view metrics for distinct versions
@@ -62,43 +46,41 @@ version in the [`ApolloClient` constructor](https://www.apollographql.com/docs/r
 
 #### Using custom headers
 
-For more advanced cases, or to use headers other than the default headers, pass a `generateClientInfo` function into the `ApolloServer` constructor:
+For more advanced cases, or to use headers other than the default headers, pass a `generateClientInfo` function into the [usage reporting plugin](../api/plugin/usage-reporting/):
 
 ```js{9-24}
 const { ApolloServer } = require("apollo-server");
+const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  engine: {
-    /* Other, existing `engine` configuration should remain the same. */
-
-    generateClientInfo: ({
-      request
-    }) => {
-      const headers = request.http && request.http.headers;
-      if(headers) {
-        return {
-          clientName: headers['apollographql-client-name'],
-          clientVersion: headers['apollographql-client-version'],
-        };
-      } else {
-        return {
-          clientName: "Unknown Client",
-          clientVersion: "Unversioned",
-        };
-      }
-    },
-
-  }
+  plugins: [
+    ApolloServerPluginUsageReporting({
+      generateClientInfo: ({
+        request
+      }) => {
+        const headers = request.http && request.http.headers;
+        if(headers) {
+          return {
+            clientName: headers['apollographql-client-name'],
+            clientVersion: headers['apollographql-client-version'],
+          };
+        } else {
+          return {
+            clientName: "Unknown Client",
+            clientVersion: "Unversioned",
+          };
+        }
+      },
+    }),
+  ],
 });
 
 server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
 ```
-
-Specifying this function overrides the [`defaultGenerateClientInfo` function](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-engine-reporting/src/extension.ts#L205-L228) that Apollo Server calls otherwise.
 
 ## Logging
 
