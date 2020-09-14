@@ -184,7 +184,7 @@ export class ApolloServerBase {
       throw new Error(
         'You cannot provide both `engine` and `apollo` to `new ApolloServer()`. ' +
           'For details on how to migrate all of your options out of `engine`, see ' +
-          'https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/',
+          'https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/',
       );
     }
 
@@ -773,7 +773,6 @@ export class ApolloServerBase {
     }
 
     const federatedSchema = this.schema && this.schemaIsFederated(this.schema);
-    const { engine } = this.config;
 
     pluginsToInit.push(...plugins);
 
@@ -798,7 +797,7 @@ export class ApolloServerBase {
           throw Error(
             "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
               'creating an ApolloServerPluginUsageReporting plugin. See ' +
-              'https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/',
+              'https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/',
           );
         }
       } else if (this.apolloConfig.key && !disabledViaLegacyOption) {
@@ -848,7 +847,7 @@ export class ApolloServerBase {
           throw Error(
             "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
               'creating an ApolloServerPluginSchemaReporting plugin. See ' +
-              'https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/',
+              'https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/',
           );
         }
       } else if (!this.apolloConfig.key) {
@@ -886,12 +885,13 @@ export class ApolloServerBase {
       const alreadyHavePlugin = this.plugins.some(
         (p) => p.__internal_plugin_id__?.() === 'InlineTrace',
       );
+      const { engine } = this.config;
       if (alreadyHavePlugin) {
         if (engine !== undefined) {
           throw Error(
             "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
               'creating an ApolloServerPluginInlineTrace plugin. See ' +
-              'https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/',
+              'https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/',
           );
         }
       } else if (federatedSchema && this.config.engine !== false) {

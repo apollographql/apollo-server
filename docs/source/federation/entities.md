@@ -217,7 +217,7 @@ Apollo Gateway helps you perform this migration much like you perform a database
 
 3. Push the updated `inventory` service to your environment.
 
-    _Again, this technically deploys a composition error. **However**, this error is handled gracefully in one of two ways, depending on whether you are using [managed federation](https://www.apollographql.com/docs/graph-manager/federation/):_
+    _Again, this technically deploys a composition error. **However**, this error is handled gracefully in one of two ways, depending on whether you are using [managed federation](https://www.apollographql.com/docs/studio/managed-federation/overview/):_
 
     * _If you **are** using managed federation, Apollo Studio does **not** push an updated schema to your gateway, and the gateway continues to resolve the `inStock` field in the `products` service._
 
