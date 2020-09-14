@@ -43,7 +43,8 @@ import {
   GraphQLService,
   GraphQLExecutor,
   ApolloServerPluginInlineTrace,
-  EngineReportingOptions,
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginUsageReportingOptions,
 } from 'apollo-server-core';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
 import { TracingFormat } from 'apollo-tracing';
@@ -907,13 +908,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             });
           }
 
-          public engineOptions(): Partial<EngineReportingOptions<any>> {
-            return {
-              tracesEndpointUrl: this.getUrl(),
-            };
-          }
-
-          private getUrl(): string {
+          getUrl(): string {
             if (!this.server) {
               throw new Error('must listen before getting URL');
             }
@@ -999,17 +994,21 @@ export function testApolloServer<AS extends ApolloServerBase>(
               },
               validationRules: [validationRule],
               extensions: [() => new Extension()],
-              engine: {
+              apollo: {
+                key: 'service:my-app:secret',
                 graphVariant: 'current',
-                ...reportIngress.engineOptions(),
-                apiKey: 'service:my-app:secret',
-                maxUncompressedReportSize: 1,
-                generateClientInfo: () => ({
-                  clientName: 'testing',
-                  clientReferenceId: '1234',
-                  clientVersion: 'v1.0.1',
-                }),
               },
+              plugins: [
+                ApolloServerPluginUsageReporting({
+                  endpointUrl: reportIngress.getUrl(),
+                  maxUncompressedReportSize: 1,
+                  generateClientInfo: () => ({
+                    clientName: 'testing',
+                    clientReferenceId: '1234',
+                    clientVersion: 'v1.0.1',
+                  }),
+                }),
+              ],
               formatError,
               debug: true,
               stopOnTerminationSignals: false,
@@ -1057,8 +1056,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
 
           const setupApolloServerAndFetchPair = async (
-            engineOptions: Partial<EngineReportingOptions<any>> = {},
+            usageReportingOptions: Partial<ApolloServerPluginUsageReportingOptions<any>> = {},
             constructorOptions: Partial<CreateServerFunc<AS>> = {},
+            plugins: PluginDefinition[] = [],
           ) => {
             const { url: uri } = await createApolloServer({
               typeDefs: gql`
@@ -1075,13 +1075,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
                   justAField: () => 'a string',
                 },
               },
-              engine: {
+              apollo: {
+                key: 'service:my-app:secret',
                 graphVariant: 'current',
-                ...reportIngress.engineOptions(),
-                apiKey: 'service:my-app:secret',
-                maxUncompressedReportSize: 1,
-                ...engineOptions,
               },
+              plugins: [
+                ApolloServerPluginUsageReporting({
+                  endpointUrl: reportIngress.getUrl(),
+                  maxUncompressedReportSize: 1,
+                  ...usageReportingOptions,
+                }),
+                ...plugins,
+              ],
               debug: true,
               stopOnTerminationSignals: false,
               ...constructorOptions,
@@ -1163,19 +1168,17 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
 
           it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
-            await setupApolloServerAndFetchPair(Object.create(null), {
-              plugins: [
-                {
-                  requestDidStart() {
-                    return {
-                      didResolveOperation() {
-                        throw new Error('known_error');
-                      },
-                    };
-                  },
+            await setupApolloServerAndFetchPair({}, {}, [
+              {
+                requestDidStart() {
+                  return {
+                    didResolveOperation() {
+                      throw new Error('known_error');
+                    },
+                  };
                 },
-              ],
-            });
+              },
+            ]);
 
             const result = await apolloFetch({
               query: `{ aliasedField: justAField }`,
@@ -1411,44 +1414,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
                     '{"message":"rewriteError undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
                   message: 'rewriteError undefined whoops',
                   location: [{ column: 2, line: 1 }],
-                },
-              ]);
-            });
-
-            // This is deprecated, but we'll test it until it's removed in
-            // Apollo Server 3.x.
-            it('maskErrorDetails (legacy)', async () => {
-              throwError.mockImplementationOnce(() => {
-                throw new Error('maskErrorDetails nope');
-              });
-
-              await setupApolloServerAndFetchPair({
-                maskErrorDetails: true,
-              });
-
-              const result = await apolloFetch({
-                query: `{fieldWhichWillError}`,
-              });
-
-              expect(result.data).toEqual({
-                fieldWhichWillError: null,
-              });
-              expect(result.errors).toBeDefined();
-              expect(result.errors[0].message).toEqual('maskErrorDetails nope');
-
-              expect(throwError).toHaveBeenCalledTimes(1);
-
-              const reports = await reportIngress.promiseOfReports;
-              expect(reports.length).toBe(1);
-              const trace = Object.values(reports[0].tracesPerQuery)[0]
-                .trace[0];
-
-              expect(trace.root.child[0].error).toMatchObject([
-                {
-                  json:
-                    '{"message":"<masked>","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
-                  message: '<masked>',
-                  location: [{ line: 1, column: 2 }],
                 },
               ]);
             });
@@ -2459,17 +2424,21 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 }
               `,
               resolvers: { Query: { something: () => 'hello' } },
-              engine: {
-                apiKey: 'service:my-app:secret',
+              apollo: {
+                key: 'service:my-app:secret',
                 graphVariant: 'current',
-                tracesEndpointUrl: fakeEngineUrl,
-                reportIntervalMs: 1,
-                maxAttempts: 3,
-                requestAgent,
-                reportErrorFunction(error: Error) {
-                  reportErrorPromiseResolve(error);
-                },
               },
+              plugins: [
+                ApolloServerPluginUsageReporting({
+                  endpointUrl: fakeEngineUrl,
+                  reportIntervalMs: 1,
+                  maxAttempts: 3,
+                  requestAgent,
+                  reportErrorFunction(error: Error) {
+                    reportErrorPromiseResolve(error);
+                  },
+                }),
+              ],
             });
 
             const apolloFetch = createApolloFetch({ uri });
@@ -3203,7 +3172,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result2.errors).toBeUndefined();
       });
 
-      it('passes engine data to the gateway', async () => {
+      it('passes apollo and engine data to the gateway', async () => {
         const optionsSpy = jest.fn();
 
         const { gateway, triggers } = makeGatewayMock({ optionsSpy });
@@ -3211,7 +3180,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         await createApolloServer({
           gateway,
           subscriptions: false,
-          engine: { apiKey: 'service:tester:1234abc', schemaTag: 'staging' },
+          apollo: { key: 'service:tester:1234abc', graphVariant: 'staging' },
         });
 
         expect(optionsSpy).toHaveBeenLastCalledWith({

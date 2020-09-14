@@ -3,6 +3,7 @@ import {
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextDidEncounterErrors,
 } from 'apollo-server-types';
+import { GraphQLError } from 'graphql';
 
 describe('doubly-legacy privateVariables and privateHeaders options', () => {
   it('privateVariables/privateHeaders == false; same as all', () => {
@@ -83,4 +84,12 @@ it('reportTiming', () => {
   expect(legacyOptionsToPluginOptions({ reportTiming: f })).toEqual({
     includeRequest: f,
   });
+});
+
+it('maskErrorDetails', () => {
+  const newOptions = legacyOptionsToPluginOptions({ maskErrorDetails: true });
+  expect(newOptions.rewriteError).toBeTruthy();
+  expect(newOptions.rewriteError!(new GraphQLError('foo'))?.message).toBe(
+    '<masked>',
+  );
 });
