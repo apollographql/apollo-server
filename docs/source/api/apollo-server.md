@@ -378,9 +378,34 @@ The default value is `true`. Set this to `false` to use mocked resolvers only fo
 </tbody>
 </table>
 
-*  `experimental_approximateDocumentStoreSizeMiB`
-    * `number`
-    * **This option is experimental.**  It might be removed or change at any time, even within a patch release.</p><p>Sets the approximate size (in MiB) of the server's `DocumentNode` cache. The server checks the SHA-256 hash of each incoming operation against cached `DocumentNode`s, and skips unnecessary parsing and validation if a match is found.</p><p>The cache's default size is 30MiB, which is usually sufficient unless the server processes a large number of unique operations.</p>
+##### Experimental options
+
+**These options are experimental.**  They might be removed or change at any time, even within a patch release.
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+<td>
+
+###### `experimental_approximateDocumentStoreSizeMiB`
+
+`number`
+</td>
+<td>
+
+Sets the approximate size (in MiB) of the server's `DocumentNode` cache. The server checks the SHA-256 hash of each incoming operation against cached `DocumentNode`s, and skips unnecessary parsing and validation if a match is found.
+
+The cache's default size is 30MiB, which is usually sufficient unless the server processes a large number of unique operations.
+</td>
+</tr>
+</tbody>
+</table>
 
 ##### Middleware-specific `context` fields
 
