@@ -845,7 +845,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('lifecycle', () => {
-      describe('for Apollo Graph Manager', () => {
+      describe('for Apollo usage reporting', () => {
         let nodeEnv: string;
         let reportIngress: MockReportIngress;
 

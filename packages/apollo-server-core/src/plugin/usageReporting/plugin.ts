@@ -422,7 +422,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
           // but operation resolution failed (due to parse or validation errors or
           // because there is no operation with that name in the document), we
           // still put _that_ user-supplied `operationName` in the trace. This
-          // allows the error to be better understood in Graph Manager. (We are
+          // allows the error to be better understood in Studio. (We are
           // considering changing the behavior of `operationName` in these 3 error
           // cases; https://github.com/apollographql/apollo-server/pull/3465)
           const operationName =

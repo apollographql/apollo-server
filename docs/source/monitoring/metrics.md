@@ -9,13 +9,13 @@ Apollo Server integrates seamlessly with Apollo Studio to help you monitor the e
 
 ## Sending metrics to Apollo Studio
 
-[Apollo Studio](https://www.apollographql.com/docs/graph-manager/graph-manager-overview/) provides an integrated hub for all of your GraphQL performance data. It [aggregates and displays information](https://www.apollographql.com/docs/graph-manager/performance/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack](https://www.apollographql.com/docs/graph-manager/slack-integration/) and [Datadog](https://www.apollographql.com/docs/graph-manager/datadog-integration/) integrations.
+[Apollo Studio](https://www.apollographql.com/docs/studio/) provides an integrated hub for all of your GraphQL performance data. It [aggregates and displays information](https://www.apollographql.com/docs/studio/performance/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack](https://www.apollographql.com/docs/studio/slack-integration/) and [Datadog](https://www.apollographql.com/docs/studio/datadog-integration/) integrations.
 
 ### Connecting to Apollo Studio
 
-To connect Apollo Server to Apollo Studio, first [obtain a graph API key](https://www.apollographql.com/docs/graph-manager/setup-analytics/#pushing-traces-from-apollo-server). To provide this key to Apollo Server, assign it to the `APOLLO_KEY` environment variable in your server's environment.
+To connect Apollo Server to Apollo Studio, first [obtain a graph API key](https://www.apollographql.com/docs/studio/setup-analytics/#pushing-traces-from-apollo-server). To provide this key to Apollo Server, assign it to the `APOLLO_KEY` environment variable in your server's environment.
 
-Similarly, you can associate your server instance with a particular [graph variant](https://www.apollographql.com/docs/platform/schema-registry/#managing-environments) by  setting the `APOLLO_GRAPH_VARIANT` environment variable.
+Similarly, you can associate your server instance with a particular [graph variant](https://www.apollographql.com/docs/studio/schema/registry/#managing-environments-with-variants) by  setting the `APOLLO_GRAPH_VARIANT` environment variable.
 
 You can set environment variable values on the command line as seen below, or with the [`dotenv` npm package](https://www.npmjs.com/package/dotenv) (or similar).
 
@@ -26,7 +26,7 @@ APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_VARIANT=development node start-server.js
 
 ### Identifying distinct clients
 
-Apollo Studio's [client awareness feature](https://www.apollographql.com/docs/graph-manager/client-awareness) enables you to view metrics for distinct versions
+Apollo Studio's [client awareness feature](https://www.apollographql.com/docs/studio/client-awareness/) enables you to view metrics for distinct versions
 of your clients. To enable this, your clients need to include some or all of the following identifying information in the headers of GraphQL requests they
 send to Apollo Server:
 
