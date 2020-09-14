@@ -249,9 +249,9 @@ export function ApolloServerPluginUsageReporting<TContext>(
           // Retry on network errors and 5xx HTTP
           // responses.
           async () => {
-            // FIXME(no-engine): move to new URL
             const curResponse = await fetch(
-              (options.endpointUrl || 'https://engine-report.apollodata.com') +
+              (options.endpointUrl ||
+                'https://usage-reporting.api.apollographql.com') +
                 '/api/ingress/traces',
               {
                 method: 'POST',

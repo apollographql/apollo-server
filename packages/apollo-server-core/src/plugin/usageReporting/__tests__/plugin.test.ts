@@ -60,7 +60,7 @@ describe('end-to-end', () => {
       reportResolver = resolve;
     });
 
-    const nockScope = nock('https://engine-report.apollodata.com');
+    const nockScope = nock('https://usage-reporting.api.apollographql.com');
     if (expectReport) {
       nockScope
         .post('/api/ingress/traces')

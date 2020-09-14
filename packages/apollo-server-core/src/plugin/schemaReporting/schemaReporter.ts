@@ -77,7 +77,7 @@ export class SchemaReporter {
 
     this.endpointUrl =
       options.endpointUrl ||
-      'https://edge-server-reporting.api.apollographql.com/api/graphql';
+      'https://schema-reporting.api.apollographql.com/api/graphql';
 
     this.serverInfo = options.serverInfo;
     this.executableSchemaDocument = options.schemaSdl;
