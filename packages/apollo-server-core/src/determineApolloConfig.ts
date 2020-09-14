@@ -83,8 +83,10 @@ export function determineApolloConfig(
     }
     apolloConfig.graphVariant = engine.graphVariant;
   } else if (typeof engine === 'object' && engine.schemaTag) {
-    // No need to warn here, because ApolloServer's constructor should warn about
-    // the existence of `engine` at all.
+    logger.warn(
+      '[deprecated] The `engine.schemaTag` option has been renamed to `apollo.graphVariant` ' +
+        '(or you may set it with the `APOLLO_GRAPH_VARIANT` environment variable).',
+    );
     apolloConfig.graphVariant = engine.schemaTag;
   } else if (APOLLO_GRAPH_VARIANT) {
     if (ENGINE_SCHEMA_TAG) {
