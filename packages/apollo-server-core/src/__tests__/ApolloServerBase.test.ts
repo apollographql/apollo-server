@@ -46,23 +46,21 @@ describe('ApolloServerBase construction', () => {
     ).not.toThrow();
   });
 
-  // FIXME(no-engine): This should be changed to check for a deprecation
-  // warning for any use of `engine` (which we can't really do until splitting
-  // out the plugins).
-  it.skip('spits out a deprecation warning when passed a schemaTag in construction', () => {
+  it('spits out a deprecation warning when passed a schemaTag in construction', () => {
     const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
-    expect(
-      () =>
-        new ApolloServerBase({
-          typeDefs,
-          resolvers,
-          engine: {
-            schemaTag: 'foo',
-            apiKey: 'not:real:key',
-          },
-        }).stop()
+    expect(() =>
+      new ApolloServerBase({
+        typeDefs,
+        resolvers,
+        engine: {
+          schemaTag: 'foo',
+          apiKey: 'not:real:key',
+        },
+      }).stop(),
     ).not.toThrow();
-    expect(spyConsoleWarn).toBeCalled();
+    expect(spyConsoleWarn).toBeCalledWith(
+      expect.stringMatching(/schemaTag.*graphVariant/),
+    );
     spyConsoleWarn.mockRestore();
   });
 

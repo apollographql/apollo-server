@@ -180,12 +180,12 @@ export class ApolloServerBase {
       ...requestOptions
     } = config;
 
-    if (engine !== undefined) {
-      if (apollo) {
-        throw new Error("You cannot provide both `engine` and `apollo` to `new ApolloServer()`. " +
-                        "For details on how to migrate all of your options out of `engine`, see " +
-                        "https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/");
-      }
+    if (engine !== undefined && apollo) {
+      throw new Error(
+        'You cannot provide both `engine` and `apollo` to `new ApolloServer()`. ' +
+          'For details on how to migrate all of your options out of `engine`, see ' +
+          'https://www.apollographql.com/docs/apollo-server/getting-started/migration-engine-plugins/',
+      );
     }
 
     // Setup logging facilities
