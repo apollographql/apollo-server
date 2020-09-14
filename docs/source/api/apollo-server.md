@@ -296,7 +296,7 @@ An object containing configuration options for connecting Apollo Server to [Apol
 </td>
 <td>
 
-This deprecated option is how you configured connecting Apollo Server to [Apollo Studio](https://www.apollographql.com/docs/studio/) before Apollo Server FIXME(no-engine-version). New code should configure the Studio connection plugins directly instead. See [the migration docs](../migration-engine-plugins/) for details.
+This deprecated option is how you configured connecting Apollo Server to [Apollo Studio](https://www.apollographql.com/docs/studio/) before Apollo Server 2.18. New code should configure the Studio connection plugins directly instead. See [the migration docs](../migration-engine-plugins/) for details.
 
 </td>
 </tr>
