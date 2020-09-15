@@ -393,7 +393,7 @@ The default value is `true`. Set this to `false` to use mocked resolvers only fo
 <tr>
 <td>
 
-###### `experimental_approximateDocumentStoreSizeMiB`
+###### `experimental_approximateDocumentStoreMiB`
 
 `number`
 </td>
