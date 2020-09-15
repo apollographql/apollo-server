@@ -6,23 +6,11 @@ description: Implement a single data graph across multiple services
 
 import FederationArchitecture from '../../shared/diagrams/federation-architecture.mdx';
 
-To get the most out of GraphQL, your organization should expose a [single data
-graph](https://principledgraphql.com/integrity#1-one-graph) that provides a
-unified interface for querying all of your backing data sources. This
-allows clients to fetch data from any number of sources simultaneously,
-_without_ needing to know which data comes from which source.
+To get the most out of GraphQL, your organization should expose a [single data graph](https://principledgraphql.com/integrity#1-one-graph) that provides a unified interface for querying any combination of your backing data sources. However, it can be challenging to represent an enterprise-scale data graph with a single, monolithic GraphQL server. To remedy this, you can divide your graph's implementation across multiple composable services with **Apollo Federation**.
 
-As your data graph grows, however, it can become inefficient or even difficult
-to represent the graph with a single, monolithic GraphQL server. To remedy this,
-you can divide your data graph's implementation across multiple composable
-services with **Apollo Federation**.
+Unlike other distributed GraphQL architectures (such as schema stitching), Apollo Federation uses a declarative programming model that enables each **implementing service** to implement _only_ the part of your graph that it's responsible for.
 
-Unlike other distributed GraphQL
-architectures (such as schema stitching), Apollo Federation uses a declarative
-programming model that enables each **implementing service** to
-implement _only_ the part of your data graph that it should be responsible for.
-This way, your organization can represent an enterprise-scale data graph as a
-collection of separately maintained GraphQL services.
+Apollo Federation also supports a free [managed mode with Apollo Studio](https://www.apollographql.com/docs/studio/managed-federation/overview/), which enables you to add, remove, and refactor your implementing services without requiring any downtime for your production graph.
 
 ## Architecture
 
@@ -67,7 +55,7 @@ When considering how to split a single GraphQL schema across multiple services, 
 
 Although this separation looks clean, it quickly causes issues. Specifically, a particular feature (or concern) usually spans multiple types.
 
-Consider the `recentPurchases` field of the `User` type in the above schema. Even though this field is a member of the `User` type, a list of `Product`s should nevertheless be populated by the `products` service, _not_ the `users` service.
+Consider the `recentPurchases` field of the `User` type in the above schema. Even though this field is a member of the `User` type, a list of `Product`s should probably be populated by the `products` service, _not_ the `users` service.
 
 By defining the `recentPurchases` field in the `products` service instead:
 
