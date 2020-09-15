@@ -120,7 +120,7 @@ server.listen().then(({ url }) => {
 
 </ExpansionPanel>
 
-> The fields of the object passed to your `context` function differ if you're using middleware besides Express. [See the API reference for details.](/api/apollo-server/#apolloserver)
+> The fields of the object passed to your `context` function differ if you're using middleware besides Express. [See the API reference for details.](/api/apollo-server/#middleware-specific-context-fields)
 
 The `buildService` function enables us to customize the requests that are sent to our implementing services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we add the `user-id` header to pass an authenticated user ID to downstream services.
 
