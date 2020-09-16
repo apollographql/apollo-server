@@ -6,8 +6,9 @@
 [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/apollo)
 [![Read CHANGELOG](https://img.shields.io/badge/read-changelog-blue)](https://github.com/apollographql/apollo-server/blob/HEAD/CHANGELOG.md)
 
+Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs to add more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js)--or define a schema's type definitions using schema definition language (SDL).
 
-Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs to add more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js)--so you may build your schema with that or a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/).
+[Read the documentation](https://www.apollographql.com/docs/apollo-server/) for information on getting started and many other use cases and [follow the CHANGELOG](https://github.com/apollographql/apollo-server/blob/HEAD/CHANGELOG.md) for updates.
 
 ## Principles
 
