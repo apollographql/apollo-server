@@ -828,7 +828,8 @@ export class ApolloServerBase {
             [
               'Schema reporting is not yet compatible with federated services.',
               "If you're interested in using schema reporting with federated",
-              'services, please contact Apollo support.',
+              'services, please contact Apollo support. To set up managed federation, see',
+              'https://www.apollographql.com/docs/studio/managed-federation/setup/'
             ].join(' '),
           );
         }
@@ -837,7 +838,8 @@ export class ApolloServerBase {
             [
               "Schema reporting is not yet compatible with the gateway. If you're",
               'interested in using schema reporting with the gateway, please',
-              'contact Apollo support.',
+              'contact Apollo support. To set up managed federation, see',
+              'https://www.apollographql.com/docs/studio/managed-federation/setup/'
             ].join(' '),
           );
         }
