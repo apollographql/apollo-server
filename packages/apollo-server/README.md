@@ -160,5 +160,4 @@ Are you stuck? Want to contribute? Come visit us in the [Apollo community on Spe
 
 ## Maintainers
 
-- [@martijnwalraven](https://github.com/martijnwalraven) (Apollo)
 - [@abernix](https://github.com/abernix) (Apollo)
