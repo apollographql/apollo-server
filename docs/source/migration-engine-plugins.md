@@ -286,6 +286,8 @@ const server = new ApolloServer({
 });
 ```
 
+Note that the default behavior of whether inline tracing is enabled changed in v2.18.  In v2.18, inline tracing is enabled for any federated implementing service, unless explicitly disabled with `ApolloServerPluginInlineTraceDisabled`. In previous versions, inline tracing was enabled for any federated implementing service *unless an Apollo API key was provided*; this special case is removed in v2.18, which means that the same graph can both report usage to Apollo's servers and include inline traces in responses. These functionalities also both now log at startup, so it should be easy to see if they are unintentionally simultaneously enabled.
+
 
 ## Migrating from `engine: false`
 
@@ -330,4 +332,3 @@ const server = new ApolloServer({
 
 
 Passing `engine: true` to the `ApolloServer` constructor was allowed but did not have a different effect from not passing `engine` at all.
-
