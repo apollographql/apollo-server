@@ -1,7 +1,7 @@
 import os from 'os';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 import { v4 as uuidv4 } from 'uuid';
-import { printSchema } from 'graphql';
+import { printSchema, validateSchema, buildSchema } from 'graphql';
 import { SchemaReporter } from './schemaReporter';
 import createSHA from '../../utils/createSHA';
 
@@ -76,6 +76,25 @@ export function ApolloServerPluginSchemaReporting(
             "either by using an API key starting with 'service:',  or by providing it explicitly via " +
             'the APOLLO_GRAPH_ID environment variable or via `new ApolloServer({apollo: {graphId}})`',
         );
+      }
+
+      // Ensure a provided override schema can be parsed and validated
+      if (overrideReportedSchema) {
+        try {
+          const validationErrors = validateSchema(
+            buildSchema(overrideReportedSchema, { noLocation: true }),
+          );
+          if (validationErrors.length) {
+            throw new Error(
+              validationErrors.map((error) => error.message).join('\n'),
+            );
+          }
+        } catch (err) {
+          throw new Error(
+            'The schema provided to overrideReportedSchema failed to parse or' +
+              `validate: ${err.message}`,
+          );
+        }
       }
 
       const executableSchema = overrideReportedSchema ?? printSchema(schema);
