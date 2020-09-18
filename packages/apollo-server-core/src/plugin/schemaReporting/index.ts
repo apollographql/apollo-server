@@ -1,5 +1,5 @@
 import os from 'os';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import type { InternalApolloServerPlugin } from '../internalPlugin';
 import { v4 as uuidv4 } from 'uuid';
 import { printSchema } from 'graphql';
 import { SchemaReporter } from './schemaReporter';
@@ -55,7 +55,7 @@ export function ApolloServerPluginSchemaReporting(
     overrideReportedSchema,
     endpointUrl,
   }: ApolloServerPluginSchemaReportingOptions = Object.create(null),
-): ApolloServerPlugin {
+): InternalApolloServerPlugin {
   const bootId = uuidv4();
 
   return {

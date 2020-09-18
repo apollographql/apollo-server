@@ -10,7 +10,6 @@ import {
 } from 'apollo-reporting-protobuf';
 import { Response, fetch, Headers } from 'apollo-server-env';
 import {
-  ApolloServerPlugin,
   GraphQLRequestListener,
   GraphQLServerListener,
 } from 'apollo-server-plugin-base';
@@ -31,6 +30,7 @@ import { TraceTreeBuilder } from '../traceTreeBuilder';
 import { makeTraceDetails } from './traceDetails';
 import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
+import type { InternalApolloServerPlugin } from '../internalPlugin';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -64,7 +64,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
   options: ApolloServerPluginUsageReportingOptions<TContext> = Object.create(
     null,
   ),
-): ApolloServerPlugin {
+): InternalApolloServerPlugin {
   let requestDidStartHandler: (
     requestContext: GraphQLRequestContext<TContext>,
   ) => GraphQLRequestListener<TContext>;
@@ -723,7 +723,7 @@ function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
 
 // This plugin does nothing, but it ensures that ApolloServer won't try
 // to add a default ApolloServerPluginUsageReporting.
-export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin {
+export function ApolloServerPluginUsageReportingDisabled(): InternalApolloServerPlugin {
   return {
     __internal_plugin_id__() {
       return 'UsageReporting';

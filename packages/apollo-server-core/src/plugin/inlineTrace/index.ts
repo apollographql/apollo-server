@@ -1,7 +1,7 @@
 import { Trace } from 'apollo-reporting-protobuf';
 import { TraceTreeBuilder } from '../traceTreeBuilder';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
+import type { InternalApolloServerPlugin } from '../internalPlugin';
 
 export interface ApolloServerPluginInlineTraceOptions {
   /**
@@ -20,7 +20,7 @@ export interface ApolloServerPluginInlineTraceOptions {
 // usage reporting ingress.
 export function ApolloServerPluginInlineTrace(
   options: ApolloServerPluginInlineTraceOptions = Object.create(null),
-): ApolloServerPlugin {
+): InternalApolloServerPlugin {
   return {
     __internal_plugin_id__() {
       return 'InlineTrace';
@@ -78,7 +78,7 @@ export function ApolloServerPluginInlineTrace(
 
 // This plugin does nothing, but it ensures that ApolloServer won't try
 // to add a default ApolloServerPluginInlineTrace.
-export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin {
+export function ApolloServerPluginInlineTraceDisabled(): InternalApolloServerPlugin {
   return {
     __internal_plugin_id__() {
       return 'InlineTrace';

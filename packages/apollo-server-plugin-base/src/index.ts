@@ -62,9 +62,6 @@ export interface ApolloServerPlugin<
   requestDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
   ): GraphQLRequestListener<TContext> | void;
-  // Used to identify a few specific plugins that are instantiated
-  // by default if not explicitly used or disabled.
-  __internal_plugin_id__?(): 'SchemaReporting' | 'InlineTrace' | 'UsageReporting';
 }
 
 export interface GraphQLServerListener {

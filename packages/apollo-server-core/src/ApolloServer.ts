@@ -92,6 +92,7 @@ import {
   ApolloServerPluginInlineTraceOptions,
   ApolloServerPluginUsageReporting,
 } from './plugin';
+import { InternalPluginId, pluginIsInternal } from './plugin/internalPlugin';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -783,10 +784,15 @@ export class ApolloServerBase {
       return plugin;
     });
 
+    const alreadyHavePluginWithInternalId = (id: InternalPluginId) =>
+      this.plugins.some(
+        (p) => pluginIsInternal(p) && p.__internal_plugin_id__() === id,
+      );
+
     // Special case: usage reporting is on by default if you configure an API key.
     {
-      const alreadyHavePlugin = this.plugins.some(
-        (p) => p.__internal_plugin_id__?.() === 'UsageReporting',
+      const alreadyHavePlugin = alreadyHavePluginWithInternalId(
+        'UsageReporting',
       );
       const { engine } = this.config;
       const disabledViaLegacyOption =
@@ -814,8 +820,8 @@ export class ApolloServerBase {
 
     // Special case: schema reporting can be turned on via environment variable.
     {
-      const alreadyHavePlugin = this.plugins.some(
-        (p) => p.__internal_plugin_id__?.() === 'SchemaReporting',
+      const alreadyHavePlugin = alreadyHavePluginWithInternalId(
+        'SchemaReporting',
       );
       const enabledViaEnvVar = process.env.APOLLO_SCHEMA_REPORTING === 'true';
       const { engine } = this.config;
@@ -885,9 +891,7 @@ export class ApolloServerBase {
 
     // Special case: inline tracing is on by default for federated schemas.
     {
-      const alreadyHavePlugin = this.plugins.some(
-        (p) => p.__internal_plugin_id__?.() === 'InlineTrace',
-      );
+      const alreadyHavePlugin = alreadyHavePluginWithInternalId('InlineTrace');
       const { engine } = this.config;
       if (alreadyHavePlugin) {
         if (engine !== undefined) {
