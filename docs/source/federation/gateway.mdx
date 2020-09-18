@@ -54,7 +54,7 @@ In the above example, we provide the `serviceList` configuration option to the
 of our implementing services. You can specify any string value for `name`, which
 is used primarily for query planner output, error messages, and logging.
 
-> In production, we recommend running the gateway in a **managed mode**, which relies on static files rather than introspection. For details, see the [Apollo Studio documentation](https://www.apollographql.com/docs/graph-manager/managed-federation/setup/).
+> In production, we recommend running the gateway in a **managed mode** with Apollo Studio, which relies on static files rather than introspection. For details, see [Setting up managed federation](https://www.apollographql.com/docs/graph-manager/managed-federation/setup/).
 
 On startup, the gateway fetches each implementing service's schema from its `url` and composes those schemas into a single federated data graph. It then begins accepting incoming requests and creates query plans for them that execute across one or more services.
 
@@ -120,7 +120,7 @@ server.listen().then(({ url }) => {
 
 </ExpansionPanel>
 
-> The fields of the object passed to your `context` function differ if you're using middleware besides Express. [See the API reference for details.](/api/apollo-server/#apolloserver)
+> The fields of the object passed to your `context` function differ if you're using middleware besides Express. [See the API reference for details.](/api/apollo-server/#middleware-specific-context-fields)
 
 The `buildService` function enables us to customize the requests that are sent to our implementing services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we add the `user-id` header to pass an authenticated user ID to downstream services.
 
