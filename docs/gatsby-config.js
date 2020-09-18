@@ -65,7 +65,6 @@ module.exports = {
             'api/apollo-server',
             'api/apollo-federation',
             'api/apollo-gateway',
-            'api/graphql-tools',
           ],
           Appendices: [
             'proxy-configuration',

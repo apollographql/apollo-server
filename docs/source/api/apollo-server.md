@@ -16,7 +16,7 @@ The core of an Apollo Server implementation. For an example, see [Get started wi
 
 Returns an initialized `ApolloServer` instance.
 
-Takes an `options` object as a parameter. Supported fields of this object are described in [Options](#options).
+Takes an `options` object as a parameter. Supported fields of this object are described below.
 
 ##### Example
 
@@ -502,51 +502,95 @@ A lifecycle hook that's called whenever a subscription connection is terminated 
 
 #### `listen`
 
-Instructs Apollo Server to begin listening for requests.
+> This method is provided only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package (such as `apollo-server-express`), instead see [`applyMiddleware`](#applymiddleware).
 
-> This method is provided only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package (such as `apollo-server-express`, instead see [`applyMiddleware`](#applymiddleware).
+Instructs Apollo Server to begin listening for incoming requests:
 
-##### Parameters
+```js
+server.listen({
+  port: 4001,
+});
+```
 
-* `options`: <`Object`>
+Takes an `options` object as a parameter, which is passed to the `listen` method of `http.Server`. Supported options are listed in the [documentation for `net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen_options_callback).
 
-  When using the `apollo-server` package, calling `listen` on an instantiated `ApolloServer` will start the server by passing the specified (optional) `options` to a Node.js [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server).  For a full reference of the supported `options`, see the [documentation for `net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen_options_callback).
+Returns a `Promise` that resolves to an object containing the following properties:
 
-##### Returns
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
 
-`Promise` that resolves to an object containing the following properties:
+<tbody>
+<tr>
+<td>
 
-  * `url`: <`String`>
-  * `subscriptionsPath`: <`String`>
-  * `server`: &lt;[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)&gt;
+###### `url`
+
+`String`
+</td>
+<td>
+
+The URL that the server is listening on.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `server`
+
+[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)
+</td>
+<td>
+
+The server instance that's listening at `url`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `subscriptionsPath`
+
+`String`
+</td>
+<td>
+
+The path of the server's subscriptions endpoint.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `subscriptionsUrl`
+
+`String`
+</td>
+<td>
+
+The full URL of the server's subscriptions endpoint.
+</td>
+</tr>
+</tbody>
+</table>
 
 #### `applyMiddleware`
 
-The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This method connects `ApolloServer` to a specific HTTP framework.
+Connects Apollo Server to the HTTP framework of a Node.js middleware library, such as hapi or express.
 
-##### Parameters
+You call this method instead of [`listen`](#listen) if you're using an `apollo-server-{integration}` package.
 
-* `options`: <`Object`>
+Takes an `options` object as a parameter. Supported fields of this object are described below.
 
-  * `app`: <`HttpServer`> _(required)_
-
-    Pass an instance of the server integration here.
-
-  * `path` : <`String`>
-
-    Specify a custom path. It defaults to `/graphql` if no path is specified.
-
-  * `cors`: <`Object` | `boolean`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapijs.com/api#-routeoptionscors), [koa](https://github.com/koajs/cors/))
-
-    Pass the integration-specific cors options. False removes the cors middleware and true uses the defaults.
-
-  * `bodyParserConfig`: <`Object` | `boolean`> ([express](https://github.com/expressjs/body-parser#body-parser), [koa](https://github.com/koajs/bodyparser))
-
-    Pass the body-parser options. False removes the body parser middleware and true uses the defaults.
-
-##### Usage
-
-The `applyMiddleware` method from `apollo-server-express` registration of middleware as shown in the example below:
+##### Example
 
 ```js
 const express = require('express');
@@ -554,21 +598,101 @@ const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
 const server = new ApolloServer({
-  // These will be defined for both new or existing servers
   typeDefs,
   resolvers,
 });
 
 const app = express();
+
 // Additional middleware can be mounted at this point to run before Apollo.
 app.use('*', jwtCheck, requireAuth, checkScope);
 
-server.applyMiddleware({ app, path: '/specialUrl' }); // app is from an existing express app. Mount Apollo middleware here. If no path is specified, it defaults to `/graphql`.
+// Mount Apollo middleware here.
+server.applyMiddleware({ app, path: '/specialUrl' });
 ```
+
+##### Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr class="required">
+<td>
+
+###### `app`
+
+`HttpServer`
+</td>
+<td>
+
+**Required.** The server middleware instance to integrate with Apollo Server.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `path`
+
+`String`
+</td>
+<td>
+
+The path for Apollo Server to listen on.
+
+The default value is `/graphql`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `cors`
+
+`Object` or `Boolean`
+</td>
+<td>
+
+Middleware-specific configuration options for CORS. See available options for your middleware: [express](https://github.com/expressjs/cors#cors) | [hapi](https://hapi.dev/api/?v=20.0.0#-routeoptionscors) | [koa](https://github.com/koajs/cors/)
+
+Provide `false` to remove CORS middleware entirely, or `true` to use your middleware's default configuration.
+
+The default value is `true`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `bodyParserConfig`
+
+`Object` or `Boolean`
+</td>
+<td>
+
+Middleware-specific configuration options for body parsing. See available options for your middleware: [express](https://github.com/expressjs/body-parser#body-parser) | [koa](https://github.com/koajs/bodyparser)
+
+Provide `false` to remove body parsing middleware entirely, or `true` to use your middleware's default configuration.
+
+The default value is `true`.
+</td>
+</tr>
+
+</tbody>
+</table>
 
 #### `getMiddleware`
 
-Similar to the `applyMiddleware` method above, though rather than applying the composition of the various Apollo Server middlewares which comprise a full-featured Apollo Server deployment (e.g. middleware for HTTP body parsing, GraphQL Playground, uploads and subscriptions) the `getMiddleware` simply returns the middleware.
+Similar to [`applyMiddleware`](#applyMiddleware), though rather than applying the composition of the various Apollo Server middlewares which comprise a full-featured Apollo Server deployment (e.g. middleware for HTTP body parsing, GraphQL Playground, uploads and subscriptions) the `getMiddleware` simply returns the middleware.
 
 The `getMiddleware` method takes the same arguments as `applyMiddleware` **except** `app` should not be passed.  Instead, the result of `getMiddleware` must be added as a middleware directly to an existing application (e.g. with `app.use(...)`).
 
@@ -576,21 +700,11 @@ For example, for `apollo-server-express`, this means that rather than passing `a
 
 ## `gql`
 
-The `gql` is a [template literal tag](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates). Template literals were introduced in recent versions of ECMAScript to provide embedded expressions (i.e. `` `A string with interpolated ${variables}` ``) and template literal tags exist to provide additional functionality for what would otherwise be a normal template literal.
-
-In the case of GraphQL, the `gql` tag is used to surround GraphQL operation and schema language (which are represented as `String`s), and makes it easier to differentiate from ordinary strings. This is particularly useful when performing static analysis on GraphQL language (e.g. to enable syntax highlighting, code generation, etc.) and avoids need for tools to "guess" if a string contains GraphQL language.
-
-### Usage
-
-Import the `gql` template literal tag into the current context from the `apollo-server` or `apollo-server-{integration}` modules:
+A [template literal tag](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) for wrapping GraphQL strings, such as schema definitions:
 
 ```js
 const { gql } = require('apollo-server');
-```
 
-Then, place GraphQL schema definitions (SDL), queries or other operations into the `gql` template literal tag. Keep in mind that template literals use the grave accent (`` ` ``) and not normal quotation marks (e.g. not `"` or `'`):
-
-```js
 const typeDefs = gql`
   type Author {
     name
@@ -598,22 +712,16 @@ const typeDefs = gql`
 `;
 ```
 
+This converts GraphQL strings into the format that Apollo libraries expect when working with operations and schemas. It also helps tools identify when a string contains GraphQL language (such as to enable syntax highlighting).
+
+
 ## `makeExecutableSchema`
 
-The `makeExecutableSchema` method is re-exported from apollo-server as a convenience.
+Builds a schema from provided type definitions and resolvers.
 
-### Parameters
+The [`ApolloServer` constructor](#constructor) automatically calls this method using the `typeDefs` and `resolvers` options you provide, so in most cases you don't need to call it yourself.
 
-* `options` : <`Object`>
-  * `typeDefs`: <`GraphQLSchema`> _(required)_
-  * `resolvers` : <`Object`> : <`Array<Object>`>
-  * `logger` : <`Object`>
-  * `allowUndefinedInResolve` = false
-  * `resolverValidationOptions` = {}
-  * `directiveResolvers` = null
-  * `schemaDirectives` = null
-  * `parseOptions` = {}
-  * `inheritResolversFromInterfaces` = false
+This method is defined in the `graphql-tools` library and is re-exported from `apollo-server` as a convenience. [See its full documentation here.](https://www.graphql-tools.com/docs/api/modules/schema#makeexecutableschema)
 
 ## `addMockFunctionsToSchema`
 
@@ -668,6 +776,12 @@ addMockFunctionsToSchema({
   preserveResolvers: false,
 });
 ```
+
+## `graphql-tools` exports
+
+The `graphql-tools` library provides helpful functions (such as [`makeExecutableSchema`](#makeexecutableschema) above) for creating and manipulating GraphQL schemas. Apollo Server uses many of these functions internally, and it re-exports all of them to support advanced use cases.
+
+[See the official `graphql-tools` documentation.](https://www.graphql-tools.com/docs/introduction)
 
 ## `EngineReportingOptions`
 
