@@ -197,15 +197,14 @@ export class ApolloServerBase {
       const loglevelLogger = loglevel.getLogger("apollo-server");
 
       // We don't do much logging in Apollo Server right now.  There's a notion
-      // of a `debug` flag, but it doesn't do much besides change stack traces
-      // in some error messages, but it would be odd for it to not introduce
-      // debug or higher level errors (which includes `info`, if we happen to
-      // start introducing those.  We'll default to `warn` as a sensible default
-      // of things you'd probably want to be alerted to.
+      // of a `debug` flag, which changes stack traces in some error messages,
+      // and adds a bit of debug logging to some plugins. `info` is primarily
+      // used for startup logging in plugins. We'll default to `info` so you
+      // get to see that startup logging.
       if (this.config.debug === true) {
         loglevelLogger.setLevel(loglevel.levels.DEBUG);
       } else {
-        loglevelLogger.setLevel(loglevel.levels.WARN);
+        loglevelLogger.setLevel(loglevel.levels.INFO);
       }
 
       this.logger = loglevelLogger;
