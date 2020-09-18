@@ -184,7 +184,7 @@ export class ApolloServerBase {
       throw new Error(
         'You cannot provide both `engine` and `apollo` to `new ApolloServer()`. ' +
           'For details on how to migrate all of your options out of `engine`, see ' +
-          'https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/',
+          'https://go.apollo.dev/s/migration-engine-plugins',
       );
     }
 
@@ -797,7 +797,7 @@ export class ApolloServerBase {
           throw Error(
             "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
               'creating an ApolloServerPluginUsageReporting plugin. See ' +
-              'https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/',
+              'https://go.apollo.dev/s/migration-engine-plugins',
           );
         }
       } else if (this.apolloConfig.key && !disabledViaLegacyOption) {
@@ -829,7 +829,7 @@ export class ApolloServerBase {
               'Schema reporting is not yet compatible with federated services.',
               "If you're interested in using schema reporting with federated",
               'services, please contact Apollo support. To set up managed federation, see',
-              'https://www.apollographql.com/docs/studio/managed-federation/setup/'
+              'https://go.apollo.dev/s/managed-federation'
             ].join(' '),
           );
         }
@@ -839,7 +839,7 @@ export class ApolloServerBase {
               "Schema reporting is not yet compatible with the gateway. If you're",
               'interested in using schema reporting with the gateway, please',
               'contact Apollo support. To set up managed federation, see',
-              'https://www.apollographql.com/docs/studio/managed-federation/setup/'
+              'https://go.apollo.dev/s/managed-federation'
             ].join(' '),
           );
         }
@@ -849,7 +849,7 @@ export class ApolloServerBase {
           throw Error(
             "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
               'creating an ApolloServerPluginSchemaReporting plugin. See ' +
-              'https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/',
+              'https://go.apollo.dev/s/migration-engine-plugins',
           );
         }
       } else if (!this.apolloConfig.key) {
@@ -893,7 +893,7 @@ export class ApolloServerBase {
           throw Error(
             "You can't combine the legacy `new ApolloServer({engine})` option with directly " +
               'creating an ApolloServerPluginInlineTrace plugin. See ' +
-              'https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/',
+              'https://go.apollo.dev/s/migration-engine-plugins',
           );
         }
       } else if (federatedSchema && this.config.engine !== false) {

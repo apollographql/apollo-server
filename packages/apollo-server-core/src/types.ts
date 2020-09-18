@@ -126,7 +126,7 @@ export interface Config extends BaseConfig {
   experimental_approximateDocumentStoreMiB?: number;
   stopOnTerminationSignals?: boolean;
   apollo?: ApolloConfigInput;
-  // deprecated; see https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/
+  // deprecated; see https://go.apollo.dev/s/migration-engine-plugins
   engine?: boolean | EngineReportingOptions<Context>;
 }
 

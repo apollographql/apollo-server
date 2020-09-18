@@ -21,7 +21,7 @@ import { ApolloServerPluginUsageReporting } from './plugin';
  * `ApolloServerPluginUsageReportingOptions`, or
  * `ApolloServerPluginSchemaReportingOptions`; the correspondance is documented
  * in the migration guide at
- * https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/
+ * https://go.apollo.dev/s/migration-engine-plugins
  */
 export interface EngineReportingOptions<TContext> {
   apiKey?: string;
