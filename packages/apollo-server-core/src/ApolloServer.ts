@@ -855,15 +855,16 @@ export class ApolloServerBase {
       } else if (!this.apolloConfig.key) {
         if (enabledViaEnvVar) {
           throw new Error(
-            "You've enabled schema reporting by setting $APOLLO_SCHEMA_REPORTING to true, " +
-              'but you also need to provide your Apollo API key, via the $APOLLO_KEY environment ' +
+            "You've enabled schema reporting by setting the APOLLO_SCHEMA_REPORTING " +
+              'environment variable to true, but you also need to provide your ' +
+              'Apollo API key, via the APOLLO_KEY environment ' +
               'variable or via `new ApolloServer({apollo: {key})',
           );
         }
         if (enabledViaLegacyOption) {
           throw new Error(
             "You've enabled schema reporting in the `engine` argument to `new ApolloServer()`, " +
-              'but you also need to provide your Apollo API key, via the $APOLLO_KEY environment ' +
+              'but you also need to provide your Apollo API key, via the APOLLO_KEY environment ' +
               'variable or via `new ApolloServer({apollo: {key})',
           );
         }

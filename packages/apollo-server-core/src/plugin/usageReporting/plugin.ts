@@ -91,7 +91,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
       if (!(key && graphId)) {
         throw new Error(
           "You've enabled usage reporting via ApolloServerPluginUsageReporting, " +
-            'but you also need to provide your Apollo API key, via the $APOLLO_KEY environment ' +
+            'but you also need to provide your Apollo API key, via the APOLLO_KEY environment ' +
             'variable or via `new ApolloServer({apollo: {key})',
         );
       }

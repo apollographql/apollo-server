@@ -67,14 +67,14 @@ export function ApolloServerPluginSchemaReporting(
       if (!key) {
         throw Error(
           'To use ApolloServerPluginSchemaReporting, you must provide an Apollo API ' +
-            'key, via the $APOLLO_KEY environment variable or via `new ApolloServer({apollo: {key})`',
+            'key, via the APOLLO_KEY environment variable or via `new ApolloServer({apollo: {key})`',
         );
       }
       if (!graphId) {
         throw Error(
           "To use ApolloServerPluginSchemaReporting, you must provide your graph's ID, " +
             "either by using an API key starting with 'service:',  or by providing it explicitly via " +
-            'the $APOLLO_GRAPH_ID environment variable or via `new ApolloServer({apollo: {graphId}})`',
+            'the APOLLO_GRAPH_ID environment variable or via `new ApolloServer({apollo: {graphId}})`',
         );
       }
 
