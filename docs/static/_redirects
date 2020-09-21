@@ -11,7 +11,6 @@
 /docs/apollo-server/features/remote-schemas/ /docs/apollo-server/
 /docs/apollo-server/features/schema-transforms/ /docs/apollo-server/
 
-/docs/apollo-server/api/graphql-tools/ /docs/apollo-server/api/apollo-server/#graphql-tools-exports
 /docs/apollo-server/data/data/ /docs/apollo-server/data/resolvers/
 
 /docs/apollo-server/federation/implementing/ /docs/apollo-server/federation/implementing-services/

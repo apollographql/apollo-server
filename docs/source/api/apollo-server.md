@@ -781,7 +781,9 @@ addMockFunctionsToSchema({
 
 The `graphql-tools` library provides helpful functions (such as [`makeExecutableSchema`](#makeexecutableschema) above) for creating and manipulating GraphQL schemas. Apollo Server uses many of these functions internally, and it re-exports all of them to support advanced use cases.
 
-[See the official `graphql-tools` documentation.](https://www.graphql-tools.com/docs/introduction)
+Apollo Server uses `graphql-tools` version 4. For documentation of version 4 functions, see [graphql-tools](./graphql-tools).
+
+> For documentation of the _latest_ version of `graphql-tools`, see the [official `graphql-tools` documentation](https://www.graphql-tools.com/docs/introduction).
 
 ## `EngineReportingOptions`
 
