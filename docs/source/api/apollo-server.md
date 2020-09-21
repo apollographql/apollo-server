@@ -721,7 +721,7 @@ Builds a schema from provided type definitions and resolvers.
 
 The [`ApolloServer` constructor](#constructor) automatically calls this method using the `typeDefs` and `resolvers` options you provide, so in most cases you don't need to call it yourself.
 
-This method is defined in the `graphql-tools` library and is re-exported from `apollo-server` as a convenience. [See its full documentation here.](https://www.graphql-tools.com/docs/api/modules/schema#makeexecutableschema)
+This method is defined in the `graphql-tools` library and is re-exported from `apollo-server` as a convenience. [See its documentation here.](./graphql-tools/#makeexecutableschemaoptions)
 
 ## `addMockFunctionsToSchema`
 
