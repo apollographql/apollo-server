@@ -692,11 +692,11 @@ The default value is `true`.
 
 #### `getMiddleware`
 
-Similar to [`applyMiddleware`](#applymiddleware), though rather than applying the composition of the various Apollo Server middlewares which comprise a full-featured Apollo Server deployment (e.g. middleware for HTTP body parsing, GraphQL Playground, uploads and subscriptions) the `getMiddleware` simply returns the middleware.
+Returns an array of the middlewares that together form a complete instance of Apollo Server. Includes middleware for HTTP body parsing, GraphQL Playground, file uploads, and subscriptions.
 
-The `getMiddleware` method takes the same arguments as `applyMiddleware` **except** `app` should not be passed.  Instead, the result of `getMiddleware` must be added as a middleware directly to an existing application (e.g. with `app.use(...)`).
+Unlike [`applyMiddleware`](#applymiddleware), `getMiddleware` does _not_ automatically apply Apollo Server middlewares to your application. Instead, this method enables you to apply or omit individual middlewares according to your use case. For an Express or Koa application, you can apply a particular middleware by calling `app.use`.
 
-For example, for `apollo-server-express`, this means that rather than passing `applyMiddleware` an `app` which was already initiated from calling `express()`, and `applyMiddleware` "using" (i.e. `app.use`), the implementor will instead call `app.use(...)` on the result of `getMiddleware` with the same arguments.
+The `getMiddleware` method takes the same options as [`applyMiddleware`](#applymiddleware), **except** the `app` option.
 
 ## `gql`
 
