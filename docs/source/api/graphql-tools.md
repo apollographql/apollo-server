@@ -84,7 +84,7 @@ const jsSchema = makeExecutableSchema({
 
 - `inheritResolversFromInterfaces` GraphQL Objects that implement interfaces will inherit missing resolvers from their interface types defined in the `resolvers` object.
 
-## addMockFunctionToSchema(options)
+## addMockFunctionsToSchema(options)
 
 ```js
 const { addMockFunctionsToSchema } = require('apollo-server');
@@ -235,7 +235,7 @@ Also provides the `info.mergeInfo.delegateToSchema` function discussed above.
 
 ### transforms: Array<Transform>
 
-[Transforms](/features/schema-transforms/) to apply to the query and results. Should be the same transforms that were used to transform the schema, if any. After transformation, `transformedSchema.transforms` contains the transforms that were applied.
+Transforms to apply to the query and results. Should be the same transforms that were used to transform the schema, if any. After transformation, `transformedSchema.transforms` contains the transforms that were applied.
 
 ### Additional considerations - Aliases
 
@@ -319,7 +319,7 @@ interface IDelegateToSchemaOptions<TContext = {
 }
 ```
 
-As described in the documentation above, `info.mergeInfo.delegateToSchema` allows delegating to any `GraphQLSchema` object, optionally applying transforms in the process. See [Schema Delegation](/features/schema-delegation/) and the [*Using with transforms*](#built-in-transforms) section of this document.
+As described in the documentation above, `info.mergeInfo.delegateToSchema` allows delegating to any `GraphQLSchema` object, optionally applying transforms in the process. See [Built-in transforms](#built-in-transforms).
 
 ### onTypeConflict
 
