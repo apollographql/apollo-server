@@ -19,7 +19,7 @@
       "noUnusedLocals": false,
       "forceConsistentCasingInFileNames": true,
       "lib": ["es2017", "esnext.asynciterable", "dom"],
-      "types": ["node", "apollo-env"],
+      "types": ["node"],
       "jsx": "react",
       "baseUrl": "."
     },
