@@ -1,12 +1,14 @@
+// This class is a helper for ApolloServerPluginUsageReporting and
+// ApolloServerPluginInlineTrace.
 import { GraphQLError, GraphQLResolveInfo, ResponsePath } from 'graphql';
-import { Trace, google } from 'apollo-engine-reporting-protobuf';
+import { Trace, google } from 'apollo-reporting-protobuf';
 import { Logger } from 'apollo-server-types';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
 }
 
-export class EngineReportingTreeBuilder {
+export class TraceTreeBuilder {
   private rootNode = new Trace.Node();
   private logger: Logger = console;
   public trace = new Trace({ root: this.rootNode });
@@ -75,7 +77,7 @@ export class EngineReportingTreeBuilder {
   }
 
   public didEncounterErrors(errors: readonly GraphQLError[]) {
-    errors.forEach(err => {
+    errors.forEach((err) => {
       // This is an error from a federated service. We will already be reporting
       // it in the nested Trace in the query plan.
       //
@@ -179,8 +181,8 @@ export class EngineReportingTreeBuilder {
 
       const rewrittenError = this.rewriteError(clonedError);
 
-      // Returning an explicit `null` means the user is requesting that, in
-      // terms of Engine reporting, the error be buried.
+      // Returning an explicit `null` means the user is requesting that the error
+      // not be reported to Apollo.
       if (rewrittenError === null) {
         return null;
       }

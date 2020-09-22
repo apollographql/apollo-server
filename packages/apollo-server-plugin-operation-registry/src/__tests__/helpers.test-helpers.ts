@@ -20,10 +20,13 @@ export const genericApiKeyHash = 'someapikeyhash123';
 export const defaultTestAgentPollSeconds = 60;
 
 export const defaultAgentOptions: AgentOptions = {
-  engine: { serviceID: genericServiceID, apiKeyHash: genericApiKeyHash },
+  apollo: {
+    graphId: genericServiceID,
+    keyHash: genericApiKeyHash,
+    graphVariant: 'current',
+  },
   store: defaultStore(),
   pollSeconds: defaultTestAgentPollSeconds,
-  graphVariant: 'current',
 };
 
 // Each nock is good for exactly one request!
@@ -69,6 +72,7 @@ export function getOperationManifestPath(
   return getOperationManifestUrl(
     graphId,
     storageSecret,
+    'current',
   ).replace(new RegExp(`^${urlOperationManifestBase}`), '');
 }
 

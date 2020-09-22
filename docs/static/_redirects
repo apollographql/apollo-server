@@ -44,4 +44,4 @@
 /docs/apollo-server/features/testing/ /docs/apollo-server/testing/testing/
 /docs/apollo-server/features/unions-interfaces/ /docs/apollo-server/schema/unions-interfaces/
 
-/docs/apollo-server/federation/managed-federation /docs/graph-manager/federation/#connecting-apollo-server-to-the-graph-manager
+/docs/apollo-server/federation/managed-federation /docs/studio/managed-federation/overview/

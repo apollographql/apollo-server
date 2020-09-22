@@ -446,7 +446,7 @@ If the resolver for the `books` field returns an array of objects that each cont
 
 As with all code, a resolver's performance depends on its logic. It's important to understand which of your schema's fields are computationally expensive or otherwise slow to resolve, so that you can either improve their performance or make sure you only query them when necessary.
 
-[Apollo Studio](https://www.apollographql.com/docs/graph-manager/) integrates directly with Apollo Server to provide field-level metrics that help you understand the performance of your data graph over time. For more information, see [Analyzing performance](https://www.apollographql.com/docs/graph-manager/performance/).
+[Apollo Studio](https://www.apollographql.com/docs/studio/) integrates directly with Apollo Server to provide field-level metrics that help you understand the performance of your data graph over time. For more information, see [Analyzing performance](https://www.apollographql.com/docs/studio/performance/).
 
 While developing locally, you can provide `tracing: true` to the `ApolloServer` constructor to enable a tracing panel:
 

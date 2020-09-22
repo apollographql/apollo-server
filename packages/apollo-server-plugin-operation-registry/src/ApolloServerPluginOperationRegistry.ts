@@ -4,6 +4,7 @@ import {
   GraphQLServiceContext,
   GraphQLRequestListener,
   GraphQLRequestContext,
+  GraphQLServerListener,
 } from 'apollo-server-plugin-base';
 import {
   /**
@@ -48,6 +49,8 @@ export interface Options {
     | boolean
     | ForbidUnregisteredOperationsPredicate;
   dryRun?: boolean;
+  // Deprecated; configure via `new ApolloServer({apollo: {graphVariant}})`
+  // or $APOLLO_GRAPH_VARIANT instead.
   graphVariant?: string;
   onUnregisteredOperation?: (
     requestContext: GraphQLRequestContext,
@@ -62,8 +65,6 @@ export interface Options {
 export default function plugin(options: Options = Object.create(null)) {
   let agent: Agent;
   let store: InMemoryLRUCache;
-  const graphVariant =
-    options.graphVariant || process.env.APOLLO_GRAPH_VARIANT || 'current';
 
   // Setup logging facilities, scoped under the appropriate name.
   const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
@@ -94,20 +95,46 @@ for observability purposes, but all operations will be permitted.`,
   // time depending on the usecase.
   Object.freeze(options);
 
+  let graphVariant: string;
+
   return (): ApolloServerPlugin => ({
     async serverWillStart({
+      apollo,
       engine,
-    }: GraphQLServiceContext): Promise<void> {
+    }: GraphQLServiceContext): Promise<GraphQLServerListener> {
+      if (!apollo) {
+        // Older version of apollo-server-core that isn't passing 'apollo' yet.
+        apollo = {
+          graphId: engine.serviceID,
+          // no 'key' because it's not on this part of the API, but
+          // this plugin doesn't need it.
+          keyHash: engine.apiKeyHash,
+          graphVariant: process.env.APOLLO_GRAPH_VARIANT || 'current',
+        };
+      }
+      // Deprecated way of passing variant directly to the plugin instead of
+      // just getting it from serverWillStart.
+      if (options.graphVariant) {
+        apollo = {
+          ...apollo,
+          graphVariant: options.graphVariant,
+        };
+      }
+
+      // Make available to requestDidStart.
+      graphVariant = apollo.graphVariant;
       logger.debug('Initializing operation registry plugin.');
 
-      if (!engine || !engine.serviceID) {
-        const messageEngineConfigurationRequired =
+      const {graphId, keyHash} = apollo;
+
+      if (!(graphId && keyHash)) {
+        const messageApolloConfigurationRequired =
           'The Apollo API key must be set to use the operation registry.';
-        throw new Error(`${pluginName}: ${messageEngineConfigurationRequired}`);
+        throw new Error(`${pluginName}: ${messageApolloConfigurationRequired}`);
       }
 
       logger.debug(
-        `Operation registry is configured for '${engine.serviceID}'.`);
+        `Operation registry is configured for '${apollo.graphId}'.`);
 
       // An LRU store with no `maxSize` is effectively an InMemoryStore and
       // exactly what we want for this purpose.
@@ -116,14 +143,24 @@ for observability purposes, but all operations will be permitted.`,
       logger.debug('Initializing operation registry agent...');
 
       agent = new Agent({
-        graphVariant,
-        engine,
+        apollo: {
+          ...apollo,
+          // Convince TypeScript that these fields are not undefined.
+          graphId,
+          keyHash
+        },
         store,
         logger,
         fetcher: options.fetcher,
       });
 
       await agent.start();
+
+      return {
+        serverWillStop() {
+          agent.stop();
+        },
+      };
     },
 
     requestDidStart(): GraphQLRequestListener<any> {
@@ -291,7 +328,7 @@ for observability purposes, but all operations will be permitted.`,
           Object.assign(error.extensions, {
             operationSignature: signature,
             exception: {
-              message: `Please register your operation with \`npx apollo client:push --tag="${graphVariant}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
+              message: `Please register your operation with \`npx apollo client:push --variant="${graphVariant}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
             },
           });
           throw error;
