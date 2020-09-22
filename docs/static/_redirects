@@ -5,6 +5,12 @@
 /docs/apollo-server/v2 /docs/apollo-server/
 /docs/apollo-server/v2/* /docs/apollo-server/:splat
 
+# Removing old hidden documentation
+/docs/apollo-server/features/schema-stitching/ /docs/apollo-server/
+/docs/apollo-server/features/schema-delegation/ /docs/apollo-server/
+/docs/apollo-server/features/remote-schemas/ /docs/apollo-server/
+/docs/apollo-server/features/schema-transforms/ /docs/apollo-server/
+
 /docs/apollo-server/data/data/ /docs/apollo-server/data/resolvers/
 
 /docs/apollo-server/federation/implementing/ /docs/apollo-server/federation/implementing-services/
