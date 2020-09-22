@@ -11,6 +11,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+- `apollo-server-core`: Fix typo in error message for unparsable/invalid schemas provided via `overrideReportedSchema`. [PR #4581](https://github.com/apollographql/apollo-server/pull/4581)
+
 ## v2.18.0
 
 - `apollo-server-core`: When Apollo Server is configured with an Apollo API key, the URLs it uses to connect to Apollo's servers have changed. If the environment in which you run your servers requires you to explicitly allow connections by domain, you will need to add the new domain names. Usage reporting previously connected to https://engine-report.apollodata.com/ and now connects to https://usage-reporting.api.apollographql.com/; schema reporting previously connected to https://edge-server-reporting.api.apollographql.com/ and now connects to https://schema-reporting.api.apollographql.com/ . [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)

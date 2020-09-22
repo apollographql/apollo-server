@@ -91,7 +91,7 @@ export function ApolloServerPluginSchemaReporting(
           }
         } catch (err) {
           throw new Error(
-            'The schema provided to overrideReportedSchema failed to parse or' +
+            'The schema provided to overrideReportedSchema failed to parse or ' +
               `validate: ${err.message}`,
           );
         }
