@@ -87,7 +87,7 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * },
    * ```
    *
-   */
+send   */
   includeRequest?: (
     request:
       | GraphQLRequestContextDidResolveOperation<TContext>
@@ -109,6 +109,16 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * ID that the other plugin reports.
    */
   overrideReportedSchema?: string;
+  // FIXME Add to the API reference docs
+  /**
+   * Whether to include the entire document in the trace if the operation
+   * was a GraphQL parse or validation error (i.e. failed the GraphQL parse or
+   * validation phases). This will be included as a separate field on the trace
+   * and the operation name and signature will always be reported with a cosntant
+   * identifier. Whether the operation was a parse failure or a validation
+   * failure will be embedded within the stats report key itself
+   */
+  sendOperationDocumentsOnUnexecutableOperation?: boolean;
   //#endregion
 
   //#region Configure the mechanics of communicating with Apollo's servers.

@@ -17,7 +17,7 @@ export class TraceTreeBuilder {
   private nodes = new Map<string, Trace.Node>([
     [responsePathAsString(), this.rootNode],
   ]);
-  private rewriteError?: (err: GraphQLError) => GraphQLError | null;
+  private readonly rewriteError?: (err: GraphQLError) => GraphQLError | null;
 
   public constructor(options: {
     logger?: Logger;

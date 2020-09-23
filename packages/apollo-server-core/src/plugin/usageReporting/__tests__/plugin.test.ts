@@ -16,9 +16,11 @@ describe('end-to-end', () => {
   async function runTest({
     pluginOptions = {},
     expectReport = true,
+    query,
   }: {
     pluginOptions?: ApolloServerPluginUsageReportingOptions<any>;
     expectReport?: boolean;
+    query?: string;
   }) {
     const typeDefs = `
       type User {
@@ -43,7 +45,7 @@ describe('end-to-end', () => {
       }
       `;
 
-    const query = `
+    const defaultQuery = `
       query q {
         author(id: 5) {
           name
@@ -81,7 +83,7 @@ describe('end-to-end', () => {
       pluginInstance,
       schema,
       graphqlRequest: {
-        query,
+        query: query ?? defaultQuery,
         operationName: 'q',
         extensions: {
           clientName: 'testing suite',
@@ -122,6 +124,36 @@ describe('end-to-end', () => {
         ({ responseName }) => responseName === 'aBoolean',
       ),
     ).toBeTruthy();
+  });
+
+  it('fails parse for invalid gql', async () => {
+    const { report } = await runTest({ query: 'random text' });
+    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+    expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
+      '# GraphQLParseFailure\n',
+    );
+    const traces = Object.values(report!.tracesPerQuery)[0].trace;
+    expect(traces).toHaveLength(1);
+  });
+
+  it('validation fails for invalid operation', async () => {
+    const { report } = await runTest({ query: 'query q { nonExistentField }' });
+    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+    expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
+      '# GraphQLValidationFailure\n',
+    );
+    const traces = Object.values(report!.tracesPerQuery)[0].trace;
+    expect(traces).toHaveLength(1);
+  });
+
+  it('is unknown for missing operation', async () => {
+    const { report } = await runTest({ query: 'query notQ { aString }' });
+    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+    expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
+      '# GraphQLUnknownOperationName\n',
+    );
+    const traces = Object.values(report!.tracesPerQuery)[0].trace;
+    expect(traces).toHaveLength(1);
   });
 
   describe('includeRequest', () => {
