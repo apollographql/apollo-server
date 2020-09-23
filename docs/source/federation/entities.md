@@ -269,13 +269,13 @@ When you [extend an entity](#extending) in this case, you can specify that the e
 ```graphql{2,8-9}:title=inventory
 type InStockCount {
   product: Product! @provides(fields: "name price")
-  quantity: Integer!
+  quantity: Int!
 }
 
 extend type Product @key(fields: "sku") {
   sku: String! @external
   name: String @external
-  price: Integer @external
+  price: Int @external
 }
 ```
 
