@@ -115,6 +115,7 @@ export function legacyOptionsToPluginOptions(
     pluginOptions.rewriteError = engine.rewriteError;
   }
   pluginOptions.generateClientInfo = engine.generateClientInfo;
+  pluginOptions.logger = engine.logger;
 
   // Handle the legacy option: privateVariables
   if (
