@@ -130,7 +130,7 @@ describe('end-to-end', () => {
     const { report } = await runTest({ query: 'random text' });
     expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
     expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
-      '# GraphQLParseFailure\n',
+      '## GraphQLParseFailure\n',
     );
     const traces = Object.values(report!.tracesPerQuery)[0].trace;
     expect(traces).toHaveLength(1);
@@ -140,7 +140,7 @@ describe('end-to-end', () => {
     const { report } = await runTest({ query: 'query q { nonExistentField }' });
     expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
     expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
-      '# GraphQLValidationFailure\n',
+      '## GraphQLValidationFailure\n',
     );
     const traces = Object.values(report!.tracesPerQuery)[0].trace;
     expect(traces).toHaveLength(1);
@@ -150,7 +150,7 @@ describe('end-to-end', () => {
     const { report } = await runTest({ query: 'query notQ { aString }' });
     expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
     expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
-      '# GraphQLUnknownOperationName\n',
+      '## GraphQLUnknownOperationName\n',
     );
     const traces = Object.values(report!.tracesPerQuery)[0].trace;
     expect(traces).toHaveLength(1);

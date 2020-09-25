@@ -468,7 +468,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
             let statsReportKey: string;
             if (!requestContext.document) {
-              statsReportKey = `# GraphQLParseFailure\n`;
+              statsReportKey = `## GraphQLParseFailure\n`;
               if (
                 options.sendOperationDocumentsOnUnexecutableOperation &&
                 requestContext.source
@@ -478,7 +478,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
                 treeBuilder.trace.unexecutedOperationName = operationName;
               }
             } else if (graphqlValidationFailure) {
-              statsReportKey = `# GraphQLValidationFailure\n`;
+              statsReportKey = `## GraphQLValidationFailure\n`;
               if (
                 options.sendOperationDocumentsOnUnexecutableOperation &&
                 requestContext.source
@@ -488,7 +488,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
                 treeBuilder.trace.unexecutedOperationName = operationName;
               }
             } else if (graphqlUnknownOperationName) {
-              statsReportKey = `# GraphQLUnknownOperationName\n`;
+              statsReportKey = `## GraphQLUnknownOperationName\n`;
               if (
                 options.sendOperationDocumentsOnUnexecutableOperation &&
                 requestContext.source
