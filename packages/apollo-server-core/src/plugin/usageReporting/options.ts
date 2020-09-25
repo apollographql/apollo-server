@@ -116,7 +116,7 @@ send   */
    * validation phases). This will be included as a separate field on the trace
    * and the operation name and signature will always be reported with a cosntant
    * identifier. Whether the operation was a parse failure or a validation
-   * failure will be embedded within the stats report key itself
+   * failure will be embedded within the stats report key itself.
    */
   sendOperationDocumentsOnUnexecutableOperation?: boolean;
   //#endregion

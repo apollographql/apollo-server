@@ -126,7 +126,7 @@ describe('end-to-end', () => {
     ).toBeTruthy();
   });
 
-  it('fails parse for invalid gql', async () => {
+  it('fails parse for non-parseable gql', async () => {
     const { report } = await runTest({ query: 'random text' });
     expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
     expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
