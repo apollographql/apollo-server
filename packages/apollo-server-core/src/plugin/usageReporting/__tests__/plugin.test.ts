@@ -17,10 +17,12 @@ describe('end-to-end', () => {
     pluginOptions = {},
     expectReport = true,
     query,
+    operationName,
   }: {
     pluginOptions?: ApolloServerPluginUsageReportingOptions<any>;
     expectReport?: boolean;
     query?: string;
+    operationName?: string | null;
   }) {
     const typeDefs = `
       type User {
@@ -84,7 +86,9 @@ describe('end-to-end', () => {
       schema,
       graphqlRequest: {
         query: query ?? defaultQuery,
-        operationName: 'q',
+        // If operation name is specified use it. If it is specified as null convert it to
+        // undefined because graphqlRequest expects string | undefined
+        operationName: operationName === undefined ? 'q' : (operationName || undefined),
         extensions: {
           clientName: 'testing suite',
         },
@@ -152,6 +156,17 @@ describe('end-to-end', () => {
     expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
       '## GraphQLUnknownOperationName\n',
     );
+    const traces = Object.values(report!.tracesPerQuery)[0].trace;
+    expect(traces).toHaveLength(1);
+  });
+
+  it('is unknown for missing operation', async () => {
+    const { report } = await runTest({
+      query: 'query { aString }',
+      operationName: null,
+    });
+    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+    expect(Object.keys(report!.tracesPerQuery)[0]).toBe('# -\n{aString}');
     const traces = Object.values(report!.tracesPerQuery)[0].trace;
     expect(traces).toHaveLength(1);
   });
