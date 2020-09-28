@@ -466,32 +466,18 @@ export function ApolloServerPluginUsageReporting<TContext>(
             const reportData = getReportData(executableSchemaId);
             const { report } = reportData;
 
-            let statsReportKey: string;
+            let statsReportKey: string | undefined = undefined;
             if (!requestContext.document) {
               statsReportKey = `## GraphQLParseFailure\n`;
-              if (
-                options.sendOperationDocumentsOnUnexecutableOperation &&
-                requestContext.source
-              ) {
-                treeBuilder.trace.unexecutedOperationBody =
-                  requestContext.source;
-                treeBuilder.trace.unexecutedOperationName = operationName;
-              }
             } else if (graphqlValidationFailure) {
               statsReportKey = `## GraphQLValidationFailure\n`;
-              if (
-                options.sendOperationDocumentsOnUnexecutableOperation &&
-                requestContext.source
-              ) {
-                treeBuilder.trace.unexecutedOperationBody =
-                  requestContext.source;
-                treeBuilder.trace.unexecutedOperationName = operationName;
-              }
             } else if (graphqlUnknownOperationName) {
               statsReportKey = `## GraphQLUnknownOperationName\n`;
+            }
+
+            if (statsReportKey) {
               if (
-                options.sendOperationDocumentsOnUnexecutableOperation &&
-                requestContext.source
+                options.sendOperationDocumentsOnUnexecutableOperation
               ) {
                 treeBuilder.trace.unexecutedOperationBody =
                   requestContext.source;
