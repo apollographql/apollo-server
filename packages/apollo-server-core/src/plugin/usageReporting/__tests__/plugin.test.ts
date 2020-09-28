@@ -166,7 +166,7 @@ describe('end-to-end', () => {
       operationName: null,
     });
     expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
-    expect(Object.keys(report!.tracesPerQuery)[0]).toBe('# -\n{aString}');
+    expect(Object.keys(report!.tracesPerQuery)[0]).toMatch(/^# -\n/);
     const traces = Object.values(report!.tracesPerQuery)[0].trace;
     expect(traces).toHaveLength(1);
   });

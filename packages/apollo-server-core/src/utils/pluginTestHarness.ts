@@ -220,7 +220,7 @@ export default async function pluginTestHarness<TContext>({
     (operation && operation.name && operation.name.value) || null;
 
   // This logic is duplicated in the request pipeline right now.
-  dispatcher.invokeHookAsync(
+  await dispatcher.invokeHookAsync(
     'didResolveOperation',
     requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
   );

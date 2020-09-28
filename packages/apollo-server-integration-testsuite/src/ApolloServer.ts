@@ -1150,6 +1150,46 @@ export function testApolloServer<AS extends ApolloServerBase>(
             );
           });
 
+          it('sets the trace key to unknown operation for missing operation', async () => {
+            await setupApolloServerAndFetchPair();
+
+            await apolloFetch({
+              query: `notQ {justAField}`,
+            });
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe('## GraphQLUnknownOperationName\n',);
+          });
+
+          it('sets the trace key to parse failure when non-parseable gql', async () => {
+            await setupApolloServerAndFetchPair();
+
+            await apolloFetch({
+              query: `{nonExistentField`,
+            });
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe('## GraphQLParseFailure\n',);
+          });
+
+          it('sets the trace key to validation failure when invalid operation', async () => {
+            await setupApolloServerAndFetchPair();
+
+            await apolloFetch({
+              query: `{nonExistentField}`,
+            });
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe('## GraphQLValidationFailure\n',);
+          });
+
+
           it('sets the trace key to "-" when operationName is undefined', async () => {
             await setupApolloServerAndFetchPair();
 
