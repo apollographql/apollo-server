@@ -87,7 +87,7 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * },
    * ```
    *
-send   */
+   */
   includeRequest?: (
     request:
       | GraphQLRequestContextDidResolveOperation<TContext>
@@ -109,7 +109,6 @@ send   */
    * ID that the other plugin reports.
    */
   overrideReportedSchema?: string;
-  // FIXME Add to the API reference docs
   /**
    * Whether to include the entire document in the trace if the operation
    * was a GraphQL parse or validation error (i.e. failed the GraphQL parse or

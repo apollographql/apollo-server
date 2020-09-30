@@ -150,7 +150,7 @@ describe('end-to-end', () => {
     expect(traces).toHaveLength(1);
   });
 
-  it('is unknown for missing operation', async () => {
+  it('unknown operation error if not specified', async () => {
     const { report } = await runTest({ query: 'query notQ { aString }' });
     expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
     expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
@@ -160,7 +160,7 @@ describe('end-to-end', () => {
     expect(traces).toHaveLength(1);
   });
 
-  it('is unknown for missing operation', async () => {
+  it('handles anonymous operation', async () => {
     const { report } = await runTest({
       query: 'query { aString }',
       operationName: null,
