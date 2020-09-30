@@ -1154,7 +1154,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
             await setupApolloServerAndFetchPair();
 
             await apolloFetch({
-              query: `notQ {justAField}`,
+              query: `query notQ {justAField}`,
+              operationName: 'q'
             });
 
             const reports = await reportIngress.promiseOfReports;
