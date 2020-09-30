@@ -332,7 +332,8 @@ Specify the function for creating a signature for a query. This option is not re
 </td>
 <td>
 
-Whether to include the entire document in the trace if the operation was a GraphQL parse or validation error (i.e. failed the GraphQL parse or validation phases). This will be included as a separate field on the trace and the operation name and signature will always be reported with a cosntant identifier. Whether the operation was a parse failure or a validation failure will be embedded within the stats report key itself.
+Statistics about operations that your server cannot execute are not reported under each document separately to Apollo Studio, but are grouped together as "parse failure", "validation failure", or "unknown operation name". By default, the usage reporting plugin does not include the full operation document in reported traces, because it is challenging to strip potential private information (like string constants) from invalid operations. If you'd like the usage reporting plugin to send the full operation document and operation name so you can view it in Apollo Studio's trace view, set this to true.
+
 </td>
 </tr>
 
