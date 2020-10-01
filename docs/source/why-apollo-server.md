@@ -52,7 +52,7 @@ Learning and implementing a new way to manage your data can be scary and risky. 
 
 ## Case Studies
 
-Companies ranging from enterprise to startups trust Apollo Server to power their most critical applications. If you'd like to learn more about how transitioning to GraphQL And Apollo improved their engineer's workflows and improved their products, check out these case studies:
+Companies ranging from enterprise to startups trust Apollo Server to power their most critical applications. If you'd like to learn more about how transitioning to GraphQL And Apollo improved their engineers' workflows and improved their products, check out these case studies:
 
 [Implementing GraphQL at Major League Soccer](https://labs.mlssoccer.com/implementing-graphql-at-major-league-soccer-ff0a002b20ca)
 [The New York Times Now on Apollo](https://open.nytimes.com/the-new-york-times-now-on-apollo-b9a78a5038c).

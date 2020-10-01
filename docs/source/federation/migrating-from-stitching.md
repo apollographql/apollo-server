@@ -72,13 +72,13 @@ There are [several community-contributed packages](/federation/other-servers/) t
 
 We strongly recommend that you register all of your GraphQL schemas with an [external registry](https://principledgraphql.com/integrity#3-track-the-schema-in-a-registry). This registry supports running the gateway with the implementing services' partial schemas. Additionally, it enables tracking changes at the service level and protecting the graph from changes that break composition.
 
-[Apollo Studio](https://www.apollographql.com/docs/graph-manager/) provides a free schema registry that helps you manage your federated gateway's configuration. You provide your gateway a Studio API key on startup, which directs the gateway to download your schemas automatically in a fault-tolerant way.
+[Apollo Studio](https://www.apollographql.com/docs/studio/) provides a free schema registry that helps you manage your federated gateway's configuration. You provide your gateway a Studio API key on startup, which directs the gateway to download your schemas automatically in a fault-tolerant way.
 
-Studio can also provide [schema validation](https://www.apollographql.com/docs/graph-manager/federation/#validating-changes-to-the-graph) to ensure that all
+Studio can also provide [schema validation](https://www.apollographql.com/docs/studio/managed-federation/overview/#validating-changes-to-the-graph) to ensure that all
 changes you
 make to your implementing services are compatible with your complete data graph.
 
-> [Learn more about managed configuration](https://www.apollographql.com/docs/graph-manager/federation/#registering-federated-services)
+> [Learn more about managed configuration](https://www.apollographql.com/docs/studio/managed-federation/overview/)
 
 ## Step 3: Start up an Apollo Server gateway
 
@@ -86,7 +86,7 @@ After you've registered your schemas, you can start exposing your implementing s
 
 We recommend setting up the Apollo Server gateway _alongside_ your existing schema-stitching gateway. Depending on your infrastructure, you might even want to run both in the same _process_ to support dynamically routing traffic through one gateway or the other.
 
-To enable managed configuration with Apollo Studio, set the `APOLLO_KEY` and `APOLLO_GRAPH_VARIANT` environment variables when you start up your Apollo Server gateway, and **do not provide the `serviceList` constructor option to `ApolloGateway`**. For details, see the [Apollo Studio documentation](https://www.apollographql.com/docs/graph-manager/managed-federation/setup/).
+To enable managed configuration with Apollo Studio, set the `APOLLO_KEY` and `APOLLO_GRAPH_VARIANT` environment variables when you start up your Apollo Server gateway, and **do not provide the `serviceList` constructor option to `ApolloGateway`**. For details, see the [Apollo Studio documentation](https://www.apollographql.com/docs/studio/managed-federation/setup/).
 
 After your gateway is set up, you can make direct queries to it that are routed to the correct implementing services.
 
@@ -194,6 +194,6 @@ You can now begin to modify your existing schema to take full advantage of the
 features that federation provides. These features include:
 
 * Greater flexibility with [federation core concepts](https://www.apollographql.com/docs/apollo-server/federation/core-concepts/)
-* [Metrics and analysis of query plans](https://www.apollographql.com/docs/graph-manager/federation/#metrics-and-observability)
-* [Gateway support for live schema updates from implementing services](https://www.apollographql.com/docs/graph-manager/federation/#diving-into-servicepush)
-* [Validation of composition logic and usage traffic](https://www.apollographql.com/docs/graph-manager/federation/#validating-changes-to-the-graph) (with paid subscription)
+* [Metrics and analysis of query plans](https://www.apollographql.com/docs/studio/managed-federation/advanced-topics/#metrics-and-observability)
+* [Gateway support for live schema updates from implementing services](https://www.apollographql.com/docs/studio/managed-federation/advanced-topics/#diving-into-servicepush)
+* [Validation of composition logic and usage traffic](https://www.apollographql.com/docs/studio/managed-federation/advanced-topics/#checking-changes-to-a-federated-graph) (with paid subscription)

@@ -336,10 +336,7 @@ export async function processGraphQLRequest<TContext>(
     );
 
     requestContext.operation = operation || undefined;
-    // We'll set `operationName` to `null` for anonymous operations.  Note that
-    // apollo-engine-reporting relies on the fact that the requestContext passed
-    // to requestDidStart is mutated to add this field before requestDidEnd is
-    // called
+    // We'll set `operationName` to `null` for anonymous operations.
     requestContext.operationName =
       (operation && operation.name && operation.name.value) || null;
 
@@ -542,7 +539,7 @@ export async function processGraphQLRequest<TContext>(
       if (config.executor) {
         // XXX Nothing guarantees that the only errors thrown or returned
         // in result.errors are GraphQLErrors, even though other code
-        // (eg apollo-engine-reporting) assumes that.
+        // (eg ApolloServerPluginUsageReporting) assumes that.
         return await config.executor(requestContext);
       } else {
         return await graphqlExecute(executionArgs);
