@@ -45,4 +45,5 @@
 /docs/apollo-server/features/unions-interfaces/ /docs/apollo-server/schema/unions-interfaces/
 
 /docs/apollo-server/federation/managed-federation /docs/studio/managed-federation/overview/
+/docs/apollo-server/federation/introduction https://www.apollographql.com/docs/federation/ 302!
 /docs/apollo-server/federation/* https://www.apollographql.com/docs/federation/:splat 302!
