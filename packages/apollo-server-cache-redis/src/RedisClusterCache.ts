@@ -21,7 +21,7 @@ export class RedisClusterCache implements KeyValueCache {
       this.client = new Redis.Cluster(value, options);
     }
 
-    this.loader = new DataLoader(
+    this.loader = new DataLoader<string, string | null>(
       (keys = []) =>
         Promise.all(keys.map(key => this.client.get(key).catch(() => null))),
       { cache: false },
