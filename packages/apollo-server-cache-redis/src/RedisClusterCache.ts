@@ -53,7 +53,7 @@ export class RedisClusterCache implements KeyValueCache {
   }
 
   async delete(key: string): Promise<boolean> {
-    return await this.client.del(key);
+    return await this.client.del(key) > 0;
   }
 
   async flush(): Promise<void> {
