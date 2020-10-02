@@ -77,6 +77,13 @@ export function ApolloServerPluginUsageReporting<TContext>(
     // this little hack. (Perhaps we should also allow GraphQLServerListener to contain
     // a requestDidStart?)
     requestDidStart(requestContext: GraphQLRequestContext<TContext>) {
+      if (!requestDidStartHandler) {
+        throw Error(
+          'The usage reporting plugin has been asked to handle a request before the ' +
+            'server has started. See https://github.com/apollographql/apollo-server/issues/4588 ' +
+            'for more details.',
+        );
+      }
       return requestDidStartHandler(requestContext);
     },
 

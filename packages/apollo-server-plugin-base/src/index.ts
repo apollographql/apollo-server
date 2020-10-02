@@ -55,7 +55,7 @@ export {
 
 export interface ApolloServerPlugin<
   TContext extends BaseContext = BaseContext
-> extends AnyFunctionMap {
+> {
   serverWillStart?(
     service: GraphQLServiceContext,
   ): ValueOrPromise<GraphQLServerListener | void>;
