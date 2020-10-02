@@ -1,5 +1,6 @@
 import { KeyValueCache, KeyValueCacheSetOptions } from 'apollo-server-caching';
-import Redis, {
+import {
+  Cluster,
   ClusterOptions,
   ClusterNode,
   Redis as RedisInstance,
@@ -7,19 +8,20 @@ import Redis, {
 import DataLoader from 'dataloader';
 
 export class RedisClusterCache implements KeyValueCache {
-  readonly client: Redis.Cluster;
+  readonly client: Cluster;
   readonly defaultSetOptions: KeyValueCacheSetOptions = {
     ttl: 300,
   };
 
   private loader: DataLoader<string, string | null>;
 
-  constructor(value: ClusterNode[] | Redis.Cluster, options?: ClusterOptions) {
-    if (value instanceof Redis.Cluster) {
+  constructor(value: ClusterNode[] | Cluster, options?: ClusterOptions) {
+    if (value instanceof Cluster) {
       this.client = value;
     } else {
-      this.client = new Redis.Cluster(value, options);
+      this.client = new Cluster(value as ClusterNode[], options);
     }
+    this.client.mget
 
     this.loader = new DataLoader<string, string | null>(
       (keys = []) =>

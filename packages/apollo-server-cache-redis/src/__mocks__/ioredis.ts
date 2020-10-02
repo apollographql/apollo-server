@@ -1,13 +1,13 @@
 const IORedis = jest.genMockFromModule('ioredis');
 
-const keyValue = {};
+const keyValue: Record<string, { value: string, ttl: number | undefined | null }> = {};
 
-const deleteKey = key => {
+const deleteKey = (key: string) => {
   delete keyValue[key];
   return Promise.resolve(true);
 };
 
-const getKey = key => {
+const getKey = (key: string): Promise<string | null | undefined> => {
   if (keyValue[key]) {
     return Promise.resolve(keyValue[key].value);
   }
@@ -15,9 +15,9 @@ const getKey = key => {
   return Promise.resolve(undefined);
 };
 
-const mGetKey = (key, cb) => getKey(key).then(val => [val]);
+const mGetKey = (key: string, cb: (result: Array<string | null>) => void) : Promise<Array<string | null>> => getKey(key).then(val => [val]);
 
-const setKey = (key, value, type, ttl) => {
+const setKey = (key: string, value: string, type?: string, ttl?: number | null | undefined): Promise<true> => {
   keyValue[key] = {
     value,
     ttl,
