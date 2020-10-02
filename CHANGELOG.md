@@ -12,6 +12,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
 - `apollo-server-core`: Fix typo in error message for unparsable/invalid schemas provided via `overrideReportedSchema`. [PR #4581](https://github.com/apollographql/apollo-server/pull/4581)
+- `apollo-server-core`: Do not send  operation documents that cannot be executed to Apollo Studio. Instead, a constant identifier will be sent; it will be for parse failure, validation failure, operation name not found. `sendUnexecutableOperationDocuments` added to send the operation document as part of a trace so the unexecutable operation document can be viewed in on a trace in Apollo Studio.
 
 ## v2.18.0
 

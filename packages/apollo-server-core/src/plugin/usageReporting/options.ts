@@ -117,7 +117,7 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * identifier. Whether the operation was a parse failure or a validation
    * failure will be embedded within the stats report key itself.
    */
-  sendOperationWhenUnexecutable?: boolean;
+  sendUnexecutableOperationDocuments?: boolean;
   //#endregion
 
   //#region Configure the mechanics of communicating with Apollo's servers.

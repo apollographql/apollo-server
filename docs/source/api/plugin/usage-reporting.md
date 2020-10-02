@@ -169,7 +169,7 @@ If you are using the `overrideReportedSchema` option to the [schema reporting pl
 <tr>
 <td>
 
-###### `sendOperationWhenUnexecutable`
+###### `sendUnexecutableOperationDocuments`
 
 `Boolean`
 </td>

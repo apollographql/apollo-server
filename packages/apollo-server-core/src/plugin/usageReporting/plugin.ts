@@ -477,7 +477,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
             if (statsReportKey) {
               if (
-                options.sendOperationWhenUnexecutable
+                options.sendUnexecutableOperationDocuments
               ) {
                 treeBuilder.trace.unexecutedOperationBody =
                   requestContext.source;
