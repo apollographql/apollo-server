@@ -13,6 +13,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## v2.19.0
 
+- `apollo-server-core`: Update dependency for `@apollographql/graphql-playground-react` to `v1.7.34` to incorporate [`33c48183`](https://github.com/apollographql/graphql-playground/commit/33c48183229e59f0d21f7f4fdd57bed5a973a5cf) which, as an upstream change, should improve support for `graphql@15` features, like interfaces implementing interfaces.
+
 ## v2.18.1
 
 - `apollo-server-core`: Fix support for legacy option `engine: {logger}`, broken in v2.18.0. [PR #4588](https://github.com/apollographql/apollo-server/pull/4588)
