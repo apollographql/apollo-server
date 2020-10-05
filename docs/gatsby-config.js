@@ -52,12 +52,12 @@ module.exports = {
           Monitoring: ['monitoring/metrics', 'monitoring/health-checks'],
           'API Reference': [
             'api/apollo-server',
-            'api/apollo-federation',
-            'api/apollo-gateway',
             'api/plugin/usage-reporting',
             'api/plugin/schema-reporting',
             'api/plugin/inline-trace',
             'api/graphql-tools',
+            '[@apollo/federation](https://www.apollographql.com/docs/federation/api/apollo-federation/)',
+            '[@apollo/gateway](https://www.apollographql.com/docs/federation/api/apollo-gateway/)',
           ],
           Appendices: [
             'proxy-configuration',
