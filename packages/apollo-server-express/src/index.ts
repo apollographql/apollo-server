@@ -25,6 +25,7 @@ export * from 'graphql-subscriptions';
 export {
   ApolloServer,
   ServerRegistration,
+  GetMiddlewareOptions,
   ApolloServerExpressConfig,
 } from './ApolloServer';
 
