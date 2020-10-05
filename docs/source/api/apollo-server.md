@@ -137,7 +137,7 @@ A map of all [custom schema directives](../schema/directives/#using-custom-schem
 
 An executable GraphQL schema. You usually don't need to provide this value, because Apollo Server generates it from the `typeDefs` and `resolvers` you provide.
 
-This field is most commonly used with [Apollo Federation](/federation/implementing-services/#generating-a-federated-schema), which uses a special `buildFederatedSchema` function to generate its schema.
+This field is most commonly used with [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses a special `buildFederatedSchema` function to generate its schema.
 
 Note that if you are using [file uploads](../data/file-uploads/), you need to add the `Upload` scalar to your schema manually before providing it here.
 </td>
