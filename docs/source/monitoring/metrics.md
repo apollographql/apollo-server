@@ -5,7 +5,7 @@ description: How to monitor Apollo Server's performance
 
 Apollo Server integrates seamlessly with Apollo Studio to help you monitor the execution of your GraphQL operations. It also provides configurable mechanisms for logging each phase of a GraphQL operation.
 
-> Using Federation? Check out the documentation for [federated tracing](/federation/metrics/).
+> Using Federation? Check out the documentation for [federated tracing](https://www.apollographql.com/docs/federation/metrics/).
 
 ## Sending metrics to Apollo Studio
 

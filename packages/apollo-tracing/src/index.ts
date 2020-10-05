@@ -5,7 +5,7 @@ import {
 } from 'graphql';
 import { ApolloServerPlugin } from "apollo-server-plugin-base";
 
-const { PACKAGE_NAME } = require("../package.json").name;
+const { name: PACKAGE_NAME } = require("../package.json");
 
 export interface TracingFormat {
   version: 1;
