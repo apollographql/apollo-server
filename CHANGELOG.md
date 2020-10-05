@@ -14,9 +14,12 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## v2.19.0
 
 - `apollo-server-testing`: types: Allow generic `variables` usage of `query` and `mutate` functions. [PR #4383](https://github.com/apollograpqh/apollo-server/pull/4383)
-- `apollo-server-core`: Explicitly include `lru-cache` dependency in `apollo-server-core`'s dependencies. [PR #4600](https://github.com/apollographql/apollo-server/pull/4600)
 - `apollo-server-core`: Update dependency for `@apollographql/graphql-playground-react` to `v1.7.34` to incorporate [`33c48183`](https://github.com/apollographql/graphql-playground/commit/33c48183229e59f0d21f7f4fdd57bed5a973a5cf) which, as an upstream change, should improve support for `graphql@15` features, like interfaces implementing interfaces.
 - `apollo-server-express`: Export the `GetMiddlewareOptions` type. [PR #4599](https://github.com/apollograpqh/apollo-server/pull/4599)
+
+## v2.18.2
+
+- `apollo-server-core`: Explicitly include `lru-cache` dependency in `apollo-server-core`'s dependencies. [PR #4600](https://github.com/apollographql/apollo-server/pull/4600)
 
 ## v2.18.1
 
