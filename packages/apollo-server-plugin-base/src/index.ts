@@ -56,10 +56,16 @@ export {
 export interface ApolloServerPlugin<
   TContext extends BaseContext = BaseContext
 > {
-  serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
+  serverWillStart?(
+    service: GraphQLServiceContext,
+  ): ValueOrPromise<GraphQLServerListener | void>;
   requestDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
   ): GraphQLRequestListener<TContext> | void;
+}
+
+export interface GraphQLServerListener {
+  serverWillStop?(): ValueOrPromise<void>;
 }
 
 export type GraphQLRequestListenerParsingDidEnd = (err?: Error) => void;
