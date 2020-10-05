@@ -157,7 +157,7 @@ describe('Agent', () => {
         expect(relevantLogs[0][0]).toBe(
           `Checking for manifest changes at ${urlResolve(
             fakeTestBaseUrl,
-            getOperationManifestUrl(genericServiceID, genericStorageSecret),
+            getOperationManifestUrl(genericServiceID, genericStorageSecret, 'current'),
           )}`,
         );
 
@@ -312,7 +312,7 @@ describe('Agent', () => {
       });
 
       describe('When given a graphVariant', () => {
-        const graphVariant = 'main';
+        const graphVariant = 'different';
         const getOperationManifestRelativeUrl = (
           ...args: Parameters<typeof getOperationManifestUrl>
         ) =>
@@ -321,9 +321,11 @@ describe('Agent', () => {
             '',
           );
 
-        it('fetches manifests for the corresponding schema tag', async () => {
+        it('fetches manifests for the corresponding variant', async () => {
           nockStorageSecret(genericServiceID, genericApiKeyHash);
-          const agent = createAgent({ graphVariant: graphVariant });
+          const agent = createAgent({
+            apollo: { ...defaultAgentOptions.apollo, graphVariant },
+          });
           const nockedManifest = nockBase()
             .get(
               getOperationManifestRelativeUrl(

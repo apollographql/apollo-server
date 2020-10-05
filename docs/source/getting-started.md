@@ -105,12 +105,12 @@ Add the following to the bottom of `index.js`:
 ```js:title=index.js
 const books = [
   {
-    title: 'Harry Potter and the Chamber of Secrets',
-    author: 'J.K. Rowling',
+    title: 'The Awakening',
+    author: 'Kate Chopin',
   },
   {
-    title: 'Jurassic Park',
-    author: 'Michael Crichton',
+    title: 'City of Glass',
+    author: 'Paul Auster',
   },
 ];
 ```

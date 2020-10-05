@@ -1,4 +1,5 @@
 import { ApolloServer, gql, AuthenticationError } from "apollo-server";
+import { ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
 import { buildFederatedSchema } from "@apollo/federation";
 import { readFileSync } from "fs";
 import { resolve } from "path";
@@ -48,9 +49,11 @@ interface Context {
 
 const server = new ApolloServer({
   schema: buildFederatedSchema([{ typeDefs, resolvers }]),
-  engine: true,
   context: ({ req }) => ({ userID: req.headers.userid }),
-  dataSources: () => ({ users: new UsersDataSource() })
+  dataSources: () => ({ users: new UsersDataSource() }),
+  // $APOLLO_KEY may be set in this process but that's for the gateway to report,
+  // not this implementing service.
+  plugins: [ApolloServerPluginUsageReportingDisabled()],
 });
 
 const port = process.env.PORT || 4001;

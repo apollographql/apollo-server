@@ -25,6 +25,35 @@ describe('apollo-server', () => {
       expect(() => new ApolloServer({ typeDefs, mocks: true })).not.toThrow;
     });
 
+    it('runs serverWillStart and serverWillStop', async () => {
+      const fn = jest.fn();
+      const beAsync = () => new Promise((res) => res());
+      const server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        plugins: [
+          {
+            async serverWillStart() {
+              fn('a');
+              await beAsync();
+              fn('b');
+              return {
+                async serverWillStop() {
+                  fn('c');
+                  await beAsync();
+                  fn('d');
+                },
+              };
+            },
+          },
+        ],
+      });
+      await server.listen();
+      expect(fn.mock.calls).toEqual([['a'], ['b']]);
+      await server.stop();
+      expect(fn.mock.calls).toEqual([['a'], ['b'], ['c'], ['d']]);
+    });
+
     // These tests are duplicates of ones in apollo-server-integration-testsuite
     // We don't actually expect Jest to do much here, the purpose of these
     // tests is to make sure our typings are correct, and to trigger a
@@ -102,6 +131,7 @@ describe('apollo-server', () => {
       server = new ApolloServer({
         typeDefs,
         resolvers,
+        stopOnTerminationSignals: false,
       });
 
       const { url } = await server.listen({ port: 0 });
