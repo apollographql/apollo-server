@@ -11,6 +11,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+## v2.18.2
+
+- `apollo-server-core`: Explicitly include `lru-cache` dependency in `apollo-server-core`'s dependencies. [PR #4600](https://github.com/apollographql/apollo-server/pull/4600)
+
 ## v2.18.1
 
 - `apollo-server-core`: Fix support for legacy option `engine: {logger}`, broken in v2.18.0. [PR #4588](https://github.com/apollographql/apollo-server/pull/4588)
