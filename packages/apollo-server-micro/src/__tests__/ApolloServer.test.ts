@@ -22,7 +22,11 @@ const resolvers = {
 };
 
 async function createServer(options: object = {}): Promise<any> {
-  const apolloServer = new ApolloServer({ typeDefs, resolvers });
+  const apolloServer = new ApolloServer({
+    typeDefs,
+    resolvers,
+    stopOnTerminationSignals: false,
+  });
   const service = micro(apolloServer.createHandler(options));
   const uri = await listen(service);
   return {
@@ -146,10 +150,10 @@ describe('apollo-server-micro', function() {
       });
     });
 
-    // NODE: Intentionally skip file upload tests on Node.js 10.
-    // Also skip Node.js 6, but only because `graphql-upload`
-    // doesn't support it.
-    (NODE_MAJOR_VERSION === 6 ? describe.skip : describe)(
+
+    // NODE: Skip Node.js 6 and 14, but only because `graphql-upload`
+    // doesn't support them on the version we use.
+    ([6, 14].includes(NODE_MAJOR_VERSION) ? describe.skip : describe)(
       'file uploads',
       function() {
         it('should handle file uploads', async function() {

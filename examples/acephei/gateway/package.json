@@ -19,6 +19,6 @@
     "node": "12.x"
   },
   "devDependencies": {
-    "typescript": "3.9.6"
+    "typescript": "3.9.7"
   }
 }

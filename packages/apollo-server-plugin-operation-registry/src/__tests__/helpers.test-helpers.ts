@@ -18,28 +18,18 @@ export const genericStorageSecret = 'someStorageSecret';
 export const genericServiceID = 'test-service';
 export const genericApiKeyHash = 'someapikeyhash123';
 export const defaultTestAgentPollSeconds = 60;
-export const genericLegacyOperationManifestUrl = pathForServiceAndSchema(
-  genericServiceID,
-  genericSchemaHash,
-);
 
 export const defaultAgentOptions: AgentOptions = {
-  schemaHash: genericSchemaHash,
-  engine: { serviceID: genericServiceID, apiKeyHash: genericApiKeyHash },
+  apollo: {
+    graphId: genericServiceID,
+    keyHash: genericApiKeyHash,
+    graphVariant: 'current',
+  },
   store: defaultStore(),
   pollSeconds: defaultTestAgentPollSeconds,
-  graphVariant: 'current',
 };
 
 // Each nock is good for exactly one request!
-export function nockLegacyGoodManifest(operations: Operation[]): nock.Scope {
-  return nockBase()
-    .get(genericLegacyOperationManifestUrl)
-    .reply(200, {
-      version: 2,
-      operations,
-    });
-}
 
 export function nockGoodManifestsUnderStorageSecret(
   graphId: string,
@@ -82,6 +72,7 @@ export function getOperationManifestPath(
   return getOperationManifestUrl(
     graphId,
     storageSecret,
+    'current',
   ).replace(new RegExp(`^${urlOperationManifestBase}`), '');
 }
 

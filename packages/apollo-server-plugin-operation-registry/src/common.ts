@@ -1,5 +1,4 @@
 export const pluginName: string = require('../package.json').name;
-import { createHash } from 'crypto';
 
 export const envOverrideOperationManifest =
   'APOLLO_OPERATION_MANIFEST_BASE_URL';
@@ -28,12 +27,6 @@ export const urlStorageSecretBase: string =
 
 export const getStoreKey = (signature: string) => `${signature}`;
 
-export function generateServiceIdHash(serviceId: string): string {
-  return createHash('sha512')
-    .update(serviceId)
-    .digest('hex');
-}
-
 export function getStorageSecretUrl(
   graphId: string,
   apiKeyHash: string,
@@ -44,18 +37,9 @@ export function getStorageSecretUrl(
 export function getOperationManifestUrl(
   graphId: string,
   storageSecret: string,
-  graphVariant: string = 'current',
+  graphVariant: string,
 ): string {
   return `${urlOperationManifestBase}/${graphId}/${storageSecret}/${graphVariant}/manifest.v2.json`;
-}
-
-export function getLegacyOperationManifestUrl(
-  hashedGraphId: string,
-  schemaHash: string,
-): string {
-  return (
-    [urlOperationManifestBase, hashedGraphId, schemaHash].join('/') + '.v2.json'
-  );
 }
 
 export function signatureForLogging(signature: string): string {
