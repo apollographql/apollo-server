@@ -1,20 +1,22 @@
 ---
-title: "API Reference: ApolloServerPluginUsageReporting"
-sidebar_title: ApolloServerPluginUsageReporting
+title: "API Reference: Usage reporting plugin"
+sidebar_title: "Usage reporting plugin"
 api_reference: true
 ---
 
-## Using the plugin
+Apollo Server has a built-in usage reporting plugin that gathers metrics on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing these metrics to [Apollo Studio](https://www.apollographql.com/docs/studio/), as described in [Metrics and logging](../../monitoring/metrics/).
 
-This API reference documents the `ApolloServerPluginUsageReporting` plugin.
+> This plugin was introduced in Apollo Server 2.18. In previous versions, usage reporting is configured by providing the `engine` option to the `ApolloServer` constructor. That option continues to work (but is now deprecated). See [the migration guide](../../migration-engine-plugins/) for details.
 
-This plugin instruments your server to keep track of how your clients use your GraphQL schema. It tracks per-field and per-operation usage and sends reports of summarized statistics and full performance traces to Apollo's servers. You can explore your graph's usage in [Apollo Studio](https://www.apollographql.com/docs/studio/). More information on this feature along with common patterns can be found under [metrics and logging](../../monitoring/metrics/).
+## Default installation
 
-In order to use this plugin, you must [configure your server with a graph API key](https://www.apollographql.com/docs/apollo-server/monitoring/metrics/#connecting-to-apollo-studio), either with the `APOLLO_KEY` environment variable or by passing it directly to your `ApolloServer` with `new ApolloServer({apollo: {key: KEY}})`.
+Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key to Apollo Server](https://www.apollographql.com/docs/apollo-server/monitoring/metrics/#connecting-to-apollo-studio) (usually by setting the value of the `APOLLO_KEY` environment variable). No other action is required.
 
-If you do provide an API key to `ApolloServer`, then by default it will enable usage reporting and install an instance of this plugin with its default configuration.  So if you do not want to further configure your `ApolloServer`, all you need to do is set `APOLLO_KEY` and usage reporting will work.
+If you don't provide an API key, this plugin is not installed.
 
-If you want to configure the usage reporting plugin, import it from the `apollo-server-core` package and pass it to your `ApolloServer` in the `plugins` array:
+## Custom installation
+
+You can configure the usage reporting plugin's behavior by including it in the `plugins` array you pass to the `ApolloServer` constructor:
 
 ```js
 import { ApolloServer } from "apollo-server";
@@ -31,22 +33,9 @@ const server = new ApolloServer({
 });
 ```
 
-If you don't want to use the usage reporting plugin even though you've provided an API key, you can explicitly disable it with the `ApolloServerPluginUsageReportingDisabled` plugin:
+Supported configuration options are listed below.
 
-```js
-import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  plugins: [ApolloServerPluginUsageReportingDisabled()],
-});
-```
-
-This plugin was introduced in Apollo Server 2.18. In previous versions, usage reporting was configured using the `engine` option to the `ApolloServer` constructor. That option continues to work; see [the migration guide](../../migration-engine-plugins/) for details.
-
-## Options
+#### Options
 
 <table class="field-table">
   <thead>
@@ -60,7 +49,7 @@ This plugin was introduced in Apollo Server 2.18. In previous versions, usage re
 <tr>
 <td colspan="2">
 
-**Configure exactly which data should be sent to Apollo**
+**Configuring which data is sent to Apollo Studio**
 </td>
 </tr>
 
@@ -73,15 +62,10 @@ This plugin was introduced in Apollo Server 2.18. In previous versions, usage re
 </td>
 <td>
 
-By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option. This option can take several forms:
+Provide this object to configure which GraphQL variable values are included in trace data that's sent to Apollo Studio. Valid options are described in [Valid `sendVariableValues` object signatures](#valid-sendvariablevalues-object-signatures).
 
-- `{ none: true }`: don't send any variable values (default)
-- `{ all: true }`: send all variable values
-- `{ transform: ... }`: a custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value. For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`.
-- `{ exceptNames: [...] }`: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
-- `{ onlyNames: [...] }`: A case-sensitive list of names of variables whose values will be sent to Apollo servers
+The default value is `{ none: true }`, which means **no** variable values are sent to Studio. This is a security measure to prevent sensitive data from potentially reaching Apollo servers.
 
-The report will indicate each private variable key whose value was redacted by `{ none: true }` or `{ exceptNames: [...] }`.
 </td>
 </tr>
 
@@ -94,14 +78,10 @@ The report will indicate each private variable key whose value was redacted by `
 </td>
 <td>
 
-By default, Apollo Server does not send the list of HTTP headers and values to Apollo's servers, as these headers may contain your users' private data. If you'd like this information included in traces, set this option. This option can take several forms:
+Provide this object to configure which request header names and values are included in trace data that's sent to Apollo Studio. Valid options are described in [Valid `sendHeaders` object signatures](#valid-sendheaders-object-signatures).
 
-- `{ none: true }`: drop all HTTP request headers (default)
-- `{ all: true }`: send the values of all HTTP request headers
-- `{ exceptNames: [...] }`: case-insensitive list of names of HTTP headers whose values should not be sent to Apollo servers
-- `{ onlyNames: [...] }`: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers
+The default value is `{ none: true }`, which means **no** header names or values are sent to Studio. This is a security measure to prevent sensitive data from potentially reaching Apollo servers.
 
-Unlike with `sendVariableValues`, names of dropped headers are not reported. The headers `authorization`, `cookie`, and `set-cookie` are never reported.
 </td>
 </tr>
 
@@ -114,9 +94,11 @@ Unlike with `sendVariableValues`, names of dropped headers are not reported. The
 </td>
 <td>
 
-By default, all errors get reported to Apollo servers. You can specify a filter function to exclude specific errors from being reported by returning an explicit `null`, or you can mask certain details of the error by modifying it and returning the modified error. This function has type `(GraphQLError) => GraphQLError | null`.
+Specify this function to modify GraphQL operation errors before Apollo Server reports those errors to Apollo Studio. The function takes a [`GraphQLError`](https://github.com/graphql/graphql-js/blob/master/src/error/GraphQLError.js) object and must also return one (or `null` to prevent Apollo Server from reporting a particular error entirely).
 
-(**Note:** If this server is an Apollo Gateway, this will not affect errors from federated implementing services; to rewrite these errors, configure the [option of the same name in the inline trace plugin](./inline-trace/#rewriteerror) in the implementing service's Apollo Server).
+The only properties of the reported error you can modify are its `message` and its `extensions`.
+
+**Note:** If this `ApolloServer` instance is acting as the gateway in an [Apollo Federation](https://www.apollographql.com/docs/federation/#architecture) architecture, this option does **not** modify errors that originate in implementing services. To modify those errors, instead configure the [`rewriteError` option in the inline trace plugin](./inline-trace/#rewriteerror), which you install in the implementing service's `ApolloServer` instance.
 </td>
 </tr>
 
@@ -125,18 +107,15 @@ By default, all errors get reported to Apollo servers. You can specify a filter 
 
 ###### `includeRequest`
 
-`Function`
+`async Function`
 </td>
 <td>
 
-This option allows you to choose if a particular request should be represented in the usage reporting sent to Apollo servers. By default, all requests are included. If this *async* predicate function is specified, its return value will determine whether a given request is included.
+Specify this asynchronous function to configure which requests are included in usage reports sent to Apollo Studio. For example, you can omit requests that execute a particular operation or requests that include a particular HTTP header.
 
-The predicate function receives the request context. If validation and parsing of the request succeeds, the function will receive the request context in the [`GraphQLRequestContextDidResolveOperation`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation) phase, which permits tracing based on dynamic properties, e.g., HTTP headers or the `operationName` (when available). Otherwise it will receive the request context in the [`GraphQLRequestContextDidEncounterError`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didencountererrors) phase. In either case, it should return a `Promise<Boolean>`.
+This function is called for each received request. It takes a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L115-L150) object and must return a `Promise<Boolean>` that indicates whether to include the request. It's called either after the request is successfully resolved, or after it generates an error.
 
-For example, you can look at the GraphQL operation's name in `requestContext.operationName` or at the HTTP headers in `requestContext.request.http?.headers`.
-
-(If you don't want any usage reporting for any request, don't use this plugin; if you are using other plugins that require you to configure an Apollo API key, use `ApolloServerPluginUsageReportingDisabled` to prevent this plugin from being installed by default.)
-
+By default, all requests are included in usage reports.
 
 </td>
 </tr>
@@ -150,7 +129,12 @@ For example, you can look at the GraphQL operation's name in `requestContext.ope
 </td>
 <td>
 
-By default, this plugin associates client information such as name and version with user requests based on HTTP headers starting with `apollographql-client-`. If you have another way of communicating client information to your server, tell the plugin how it works with this option. This option has type `(GraphQLRequestContext) => { clientName?: string, clientVersion?: string, clientReferenceId?: string }`.
+Specify this function to provide Apollo Studio with client details for each processed request. Apollo Studio uses this information to [segment metrics by client](https://www.apollographql.com/docs/studio/client-awareness/).
+
+This function is passed a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L115-L150) object containing all available information about the request. It should return an object with `clientName` and `clientVersion` fields that identify the associated client.
+
+By default, the plugin attempts to obtain these values from the incoming request's HTTP headers (specifically, `apollographql-client-name` and `apollographql-client-version`).
+
 </td>
 </tr>
 
@@ -163,7 +147,7 @@ By default, this plugin associates client information such as name and version w
 </td>
 <td>
 
-If you are using the `overrideReportedSchema` option to the [schema reporting plugin (`ApolloServerPluginSchemaReporting`)](./schema-reporting/#overridereportedschema), you should pass the same value here as well, so that the schema ID associated with requests in this plugin's usage reports matches the schema ID that the other plugin reports.
+If you're using the `overrideReportedSchema` option with the [schema reporting plugin (`ApolloServerPluginSchemaReporting`)](./schema-reporting/#overridereportedschema), you should provide the same value for this option. This ensures that the schema ID associated with a request in this plugin's usage reports matches the schema ID that the other plugin reports.
 
 </td>
 </tr>
@@ -171,7 +155,7 @@ If you are using the `overrideReportedSchema` option to the [schema reporting pl
 <tr>
 <td colspan="2">
 
-**Configure the mechanics of communicating with Apollo's servers**
+**Configuring communication protocol**
 </td>
 </tr>
 
@@ -184,7 +168,14 @@ If you are using the `overrideReportedSchema` option to the [schema reporting pl
 </td>
 <td>
 
-Sends a usage report after every request. This options is useful for stateless environments like Amazon Lambda where processes handle only a small number of requests before terminating. It defaults to true when used with an ApolloServer subclass for a serverless framework (Amazon Lambda, Google Cloud Functions, or Azure Functions), or false otherwise. (Note that "immediately" does not mean synchronously with completing the response, but "very soon", such as after a setImmediate call.)
+If `true`, the plugin sends a usage report to Apollo Studio after every request instead of sending batched reports.
+
+This option is useful for stateless environments like Amazon Lambda where processes terminate after handling a small number of requests.
+
+The default value is `true` when using an `ApolloServer` subclass for a serverless framework (Amazon Lambda, Google Cloud Functions, or Azure Functions) and `false` otherwise.
+
+Note that "immediately" does not mean _synchronously_ with completing the response, but rather "very soon", such as after a `setImmediate` call.
+
 </td>
 </tr>
 
@@ -193,11 +184,11 @@ Sends a usage report after every request. This options is useful for stateless e
 
 ###### `requestAgent`
 
-`RequestAgent | false`
+`http.Agent` or `https.Agent` or `false`
 </td>
 <td>
 
-Node HTTP(s) agent to be used on the `fetch` call when sending reports to Apollo.
+An HTTP(S) agent to use for metrics reporting. Can be either an [`http.Agent`](https://nodejs.org/docs/latest-v10.x/api/http.html#http_class_http_agent) or an [`https.Agent`](https://nodejs.org/docs/latest-v10.x/api/https.html#https_class_https_agent). It behaves the same as the `agent` parameter to [`http.request`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_http_request_options_callback).
 </td>
 </tr>
 
@@ -210,7 +201,10 @@ Node HTTP(s) agent to be used on the `fetch` call when sending reports to Apollo
 </td>
 <td>
 
-How often to send reports to Apollo. We'll also send reports when the report gets big; see `maxUncompressedReportSize`.
+The interval at which Apollo Server should send batched trace reports to Studio, in milliseconds.
+
+Regardless of this value, Apollo Server sends a trace report whenever the size of a pending batch exceeds the value of `maxUncompressedReportSize` (default 4MB).
+
 </td>
 </tr>
 
@@ -223,7 +217,9 @@ How often to send reports to Apollo. We'll also send reports when the report get
 </td>
 <td>
 
-We send a report when the report size will become bigger than this size in bytes (default: 4MB).  (This is a rough limit --- we ignore the size of the report header and some other top level bytes. We just add up the lengths of the serialized traces and signatures.)
+Apollo Server sends a trace report whenever the size of a pending batched trace report roughly exceeds this value (in bytes), regardless of its standard reporting interval.
+
+The default value is 4MB (`4194304`).
 </td>
 </tr>
 
@@ -236,7 +232,9 @@ We send a report when the report size will become bigger than this size in bytes
 </td>
 <td>
 
-Reporting is retried with exponential backoff up to this many times (including the original request). Defaults to 5.
+The maximum number of times Apollo Server should attempt to report each trace report, performing exponential backoff between attempts.
+
+The default value is `5`.
 </td>
 </tr>
 
@@ -249,7 +247,9 @@ Reporting is retried with exponential backoff up to this many times (including t
 </td>
 <td>
 
-Minimum back-off for retries. Defaults to 100ms.
+The minimum amount of backoff (in milliseconds) Apollo Server should perform before retrying a failed trace report.
+
+The default value is `100`.
 </td>
 </tr>
 
@@ -258,11 +258,12 @@ Minimum back-off for retries. Defaults to 100ms.
 
 ###### `logger`
 
-`Logger`
+[`Logger`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L166-L172)
 </td>
 <td>
 
-A logger interface to be used for output and errors.  When not provided it will default to the server's own `logger` implementation and use `console` when that is not available.
+If you provide this object, the plugin sends it all log messages related to Apollo Studio communication, instead of sending them to the default logger. The object must implement all methods of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L166-L172).
+
 </td>
 </tr>
 
@@ -275,7 +276,10 @@ A logger interface to be used for output and errors.  When not provided it will 
 </td>
 <td>
 
-By default, if an error occurs when sending trace reports to Apollo servers, its message will be sent to the `error` method on the logger specified with the `logger` option to this plugin or to ApolloServer (or to `console.error` by default). Specify this function to process errors in a different way. (The difference between using this option and using a logger is that this option receives the actual `Error` object whereas `logger.error` only receives its message.)
+If you provide this function, the plugin calls it whenever it encounters an error while reporting metrics. The details of the error are passed to the function.
+
+By default, the plugin logs these errors to its specified `logger`. _Unlike_ the `logger`, this function receives the actual `Error` object instead of only an error message.
+
 </td>
 </tr>
 
@@ -295,7 +299,7 @@ By default, if an error occurs when sending trace reports to Apollo servers, its
 </td>
 <td>
 
-The URL base that we send reports to (not including the path). This option only needs to be set for testing and Apollo-internal uses.
+The URL base that the plugin sends reports to (not including the path). This option only needs to be set for testing and Apollo-internal uses.
 </td>
 </tr>
 
@@ -308,7 +312,7 @@ The URL base that we send reports to (not including the path). This option only 
 </td>
 <td>
 
-If set, prints all reports as JSON when they are sent. (Note that this feature is not as useful as it may sound because for technical reasons it currently does not include the actual traces.)
+If set, prints all reports as JSON when they are sent. (Note that this feature is not as useful as it might sound, because for technical reasons it currently does not include the actual traces.)
 </td>
 </tr>
 
@@ -321,9 +325,49 @@ If set, prints all reports as JSON when they are sent. (Note that this feature i
 </td>
 <td>
 
-Specify the function for creating a signature for a query. This option is not recommended, as Apollo's servers make assumptions about how the signature relates to the operation you executed.
+Specify this function to create a signature for a query. This option is not recommended, because Apollo's servers make assumptions about how the signature relates to the operation you executed.
 </td>
 </tr>
 
 </tbody>
 </table>
+
+#### Valid `sendHeaders` object signatures
+
+| Object | Description |
+|--------|-------------|
+| `{ none: true }` | If you provide this object, no request header names or values are sent to Apollo Studio. This is the default behavior. |
+| `{ all: true }` |  If you provide this object, **all** GraphQL header names and values are sent to Apollo Studio, except for the protected headers listed above. |
+| `{ onlyNames: ["apple", "orange"]}`| If you provide an object with this structure, only names and values of the request headers with names that appear in the array are sent to Apollo Studio. Case-insensitive. |
+| `{ exceptNames: ["apple", "orange"]}`| If you provide an object with this structure, all GraphQL header values **except** values of headers with names that appear in the array are sent to Apollo Studio. Case-insensitive. |
+
+**Note:** Regardless of your configuration, Apollo Server **never** sends the values of the following headers to Apollo Studio:
+
+ * `authorization`
+ * `cookie`
+ * `set-cookie`
+
+#### Valid `sendVariableValues` object signatures
+
+| Object | Description |
+|--------|-------------|
+| `{ none: true }` | If you provide this object, no GraphQL variable values are sent to Apollo Studio. This is the default behavior. |
+| `{ all: true }` |  If you provide this object, **all** GraphQL variable values are sent to Apollo Studio. |
+| `{ onlyNames: ["apple", "orange"]}`| If you provide an object with this structure, only values of the GraphQL variables with names that appear in the array are sent to Apollo Studio. Case-sensitive. |
+| `{ exceptNames: ["apple", "orange"]}`| If you provide an object with this structure, all GraphQL variable values **except** values of variables with names that appear in the array are sent to Apollo Studio. Case-sensitive. |
+| `{ transform: ({ variables, operationString)} => { ... } }` | <p>The value of `transform` is a function that takes the values of all GraphQL variables for an operation. The function should modify or delete necessary values in the `variables` map and return the result. You cannot _add_ variables to the map.</p><p>For security reasons, if an error occurs in the `transform` function, **all** variable values are replaced with `[PREDICATE_FUNCTION_ERROR]`. |
+
+## Disabling the plugin
+
+If you _don't_ want to install the usage reporting plugin and you _are_ providing an API key to Apollo Server for other purposes, you can disable usage reporting by installing the `ApolloServerPluginUsageReportingDisabled` plugin, like so:
+
+```js
+import { ApolloServer } from "apollo-server";
+import { ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [ApolloServerPluginUsageReportingDisabled()],
+});
+```

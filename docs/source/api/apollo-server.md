@@ -275,7 +275,7 @@ Provide this function to transform the structure of GraphQL response objects bef
 
 ###### `apollo`
 
-`ApolloConfigInput`
+`Object`
 <td>
 
 An object containing configuration options for connecting Apollo Server to [Apollo Studio](https://www.apollographql.com/docs/studio/). Each field of this object can also be set with an environment variable, which is the recommended method of setting these parameters. All fields are optional. The fields are:
@@ -296,7 +296,9 @@ An object containing configuration options for connecting Apollo Server to [Apol
 </td>
 <td>
 
-This deprecated option is how you configured connecting Apollo Server to [Apollo Studio](https://www.apollographql.com/docs/studio/) before Apollo Server 2.18. New code should configure the Studio connection plugins directly instead. See [the migration docs](../migration-engine-plugins/) for details.
+**Deprecated as of Apollo Server v2.18.** New projects should instead use Apollo Server's Studio connection plugins. For details, see [the migration docs](../migration-engine-plugins/).
+
+An object containing configuration options for connecting Apollo Server to [Apollo Studio](https://www.apollographql.com/docs/studio/).
 
 </td>
 </tr>
@@ -315,13 +317,13 @@ This deprecated option is how you configured connecting Apollo Server to [Apollo
 
 ###### `plugins`
 
-`Array<PluginDefinition>`
+`Array`
 </td>
 <td>
 
-An array of plugins to install in your server. Each plugin definition is either an object with methods like `requestDidStart` and `serverWillStart`, or zero-argument function returning an object of that form. See [the full plugin documentation](../integrations/plugins/) for more details.
+An array of objects representing [plugins](../integrations/plugins) to install in your server instance.
 
-In addition to the plugins you explicitly install, Apollo Server ships with a few plugins that it enables in certain contexts (like when you specify an Apollo API key with `$APOLLO_KEY`, or if the server is a federated implementing service). See the API references for the [usage reporting](./plugin/usage-reporting/), [schema reporting](./plugin/schema-reporting/), and [inline trace](./plugin/inline-trace/) plugins for details.
+In certain cases, Apollo Server installs one of its built-in plugins automatically (for example, when you provide an Apollo Studio API key with the `APOLLO_KEY` environment variable). For details, see the API references for these plugins: [usage reporting](./plugin/usage-reporting/), [schema reporting](./plugin/schema-reporting/), and [inline trace](./plugin/inline-trace/).
 
 </td>
 </tr>
@@ -336,7 +338,11 @@ In addition to the plugins you explicitly install, Apollo Server ships with a fe
 </td>
 <td>
 
-By default (when running in Node and when the `NODE_ENV` environment variable does not equal `test`), ApolloServer listens for the `SIGINT` and `SIGTERM` signals and calls `await this.stop()` on itself when it is received, and then re-sends the signal to itself so that process shutdown can continue. Set this to false to disable this behavior, or to true to enable this behavior even when `NODE_ENV` is `test`. You can manually invoke `stop()` in other contexts if you'd like. Note that `stop()` does not run synchronously so it cannot work usefully in an `process.on('exit')` handler.
+By default (when running in Node and when the `NODE_ENV` environment variable does not equal `test`), whenever Apollo Server receives a `SIGINT` or `SIGTERM` signal, it calls `await this.stop()` on itself. It then sends that same signal to itself to continue process shutdown.
+
+Set this option to `false` to disable this default behavior, or to `true` to enable the behavior even when `NODE_ENV` _does_ equal `test`.
+
+You can also manually call `stop()` in other contexts. Note that `stop()` is asynchronous, so it isn't useful in a `process.on('exit')` handler.
 
 </td>
 </tr>
