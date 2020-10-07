@@ -95,7 +95,7 @@ type Author @cacheControl(maxAge: 60) {
 }
 ```
 
-See [the cache control documentation](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-cache-control#add-cache-hints-to-your-schema) for more details, including how to specify hints dynamically inside resolvers, how to set a default `maxAge` for all fields, and how to specify that a field should be cached for specific users only (in which case CDNs should ignore it). For example, to set a default max age other than `0` modify the Apollo Server constructor to include `cacheControl`:
+See [the cache control documentation](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-cache-control#add-cache-hints-to-your-schema) for more details, including how to specify hints dynamically inside resolvers, how to set a default `maxAge` for all fields, and how to specify that a field should be cached for specific users only (in which case CDNs should ignore it). For example, to set a default max age other than `0` modify the Apollo Server constructor to include `cacheControl`:
 
 ```js
 const server = new ApolloServer({
@@ -144,9 +144,9 @@ If configured correctly, browser's dev tools should verify that queries are now 
 
 ### Step 3: Set up a CDN
 
-How exactly this works depends on exactly which CDN you chose. Configure your CDN to send requests to Apollo Server. Some CDNs may need to be specially configured to honor origin Cache-Control headers; for example, here is [Akamai's documentation on that setting](https://learn.akamai.com/en-us/webhelp/ion/oca/GUID-57C31126-F745-4FFB-AA92-6A5AAC36A8DA.html). If all is well, cacheable queries should now be saved by the CDN.
+How exactly this works depends on exactly which CDN you chose. Configure your CDN to send requests to Apollo Server. Some CDNs may need to be specially configured to honor origin Cache-Control headers; for example, here is [Akamai's documentation on that setting](https://learn.akamai.com/en-us/webhelp/api-gateway/api-gateway-user-guide/GUID-7019E774-7A4D-44F9-A731-330F9780C34B.html). If all is well, cacheable queries should now be saved by the CDN.
 
-> Note that requests served directly by a CDN will not show up in the Engine dashboard.
+> Note that requests served directly by a CDN will not show up in the Studio dashboard.
 
 ## Cache configuration
 

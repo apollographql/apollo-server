@@ -122,10 +122,7 @@ new ApolloError(message, code, additionalProperties);
 
 The Apollo Server constructor accepts a `formatError` function that is run on each error passed back to the client. This can be used to mask errors as well as for logging.
 
-> Note that while this changes the error which is sent to the client, it
-> doesn't change the error that is sent to Apollo Graph Manager.  See the
-> `rewriteError` function in the _For Apollo Graph Manager reporting_ section below
-> if this behavior is desired.
+> Note that while this changes the error which is sent to the client, it doesn't change the error that is sent to Apollo Studio.  See the `rewriteError` function in [For Apollo Studio reporting](#for-apollo-studio-reporting) below if this behavior is desired.
 
 This example demonstrates throwing a different error when the error's message starts with `Database Error: `:
 
@@ -138,7 +135,7 @@ const server = new ApolloServer({
     if (err.message.startsWith("Database Error: ")) {
       return new Error('Internal server error');
     }
-    
+
     // Otherwise return the original error.  The error can also
     // be manipulated in other ways, so long as it's returned.
     return err;
@@ -164,93 +161,81 @@ The error instance received by `formatError` (a `GraphQLError`) contains an `ori
 
 > To make context-specific adjustments to the error received by `formatError` (e.g. localization or personalization), consider using the `didEncounterErrors` lifecycle hook to attach additional properties to the error, which can be accessed and utilized within `formatError`.
 
-### For Apollo Graph Manager reporting
+### For Apollo Studio reporting
 
-You can use Apollo Graph Manager to analyze error rates instead of simply logging
-errors to the console. If you connect Apollo Server to Graph Manager, all errors are 
-sent to Graph Manager by default. If you _don't_ want certain error information to be 
-sent to Graph Manager (either because the error is unimportant or because certain information is confidential), you can modify or redact errors entirely
-before they're transmitted.
+You can use Apollo Studio to analyze error rates instead of simply logging errors to the console. If you connect Apollo Server to Studio, all errors are sent to Studio by default. If you _don't_ want certain error information to be sent to Studio (either because the error is unimportant or because certain information is confidential), you can modify or redact errors entirely before they're transmitted.
 
-To account for these needs, a `rewriteError` function can be provided within
-the `engine` settings to Apollo Server. At a high-level, the function will
-receive the error to be reported (i.e., a `GraphQLError` or an `ApolloError`)
-as the first argument. The function should then return a modified form of
-that error (e.g., after changing the `err.message` to remove potentially
-sensitive information), or should return an explicit `null` in order to avoid
-reporting the error entirely.
+To account for these needs, a `rewriteError` function can be passed to the [usage reporting plugin](../api/plugin/usage-reporting/). (The usage reporting plugin is installed automatically with its default configuration when you specify an Apollo API key; you will need to install it explicitly in your `ApolloServer` in order to configure `rewriteError`, as shown below.) At a high-level, the function will receive the error to be reported (i.e., a `GraphQLError` or an `ApolloError`) as the first argument. The function should then return a modified form of that error (e.g., after changing the `err.message` to remove potentially sensitive information), or should return an explicit `null` in order to avoid reporting the error entirely.
+
+(For federated services, instead of setting `rewriteError` in the usage reporting plugin in the gateway's `ApolloServer`, set [`rewriteError` in the inline trace plugin](../api/plugin/inline-trace/#rewriteerror) in the implementing service's `ApolloServer`.)
 
 The following sections give some examples of various use-cases for `rewriteError`.
 
 #### Avoid reporting lower-severity, predefined errors
 
-If an application is using the predefined errors noted above (`AuthenticationError`, `ForbiddenError`, `UserInputError`, etc.), these can
-be used with `rewriteError`.
+If an application is using the predefined errors noted above (`AuthenticationError`, `ForbiddenError`, `UserInputError`, etc.), these can be used with `rewriteError`.
 
 For example, if the current server is `throw`ing the `AuthenticationError`
-when a mis-typed password is supplied, an implementor can avoid reporting
-this to Apollo Graph Manager by defining `rewriteError` as follows:
+when an incorrect password is supplied, an implementor can avoid reporting
+this to Apollo Studio by defining `rewriteError` as follows:
 
-```js{5-15}
+```js{7-17}
 const { ApolloServer, AuthenticationError } = require("apollo-server");
+const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  engine: {
-    rewriteError(err) {
-      // Return `null` to avoid reporting `AuthenticationError`s
-      if (err instanceof AuthenticationError) {
-        return null;
-      }
+  plugins: [
+    ApolloServerPluginUsageReporting({
+      rewriteError(err) {
+        // Return `null` to avoid reporting `AuthenticationError`s
+        if (err instanceof AuthenticationError) {
+          return null;
+        }
 
-      // All other errors will be reported.
-      return err;
-    }
-  },
+        // All other errors will be reported.
+        return err;
+      }
+    }),
+  ],
 });
 ```
 
-This example configuration ensures that any `AuthenticationError` that's
- thrown within a resolver is only reported to the client, and never
-sent to Apollo Graph Manager. All other errors are transmitted to Graph Manager
-normally.
+This example configuration ensures that any `AuthenticationError` that's thrown within a resolver is only reported to the client, and never sent to Apollo Studio. All other errors are transmitted to Studio normally.
 
 #### Avoid reporting an error based on other properties
 
 When generating an error (e.g., `new ApolloError("Failure!")`), the `message`
-is the most common property (in this case it's `Failure!`). However, any number of properties can be attached to the error (such as a `code` property). These properties can be checked when determining
-whether an error should be reported to Apollo Graph Manager using the `rewriteError`
-function as follows:
+is the most common property (in this case it's `Failure!`). However, any number of properties can be attached to the error (such as a `code` property). These properties can be checked when determining whether an error should be reported to Apollo Studio using the `rewriteError` function as follows:
 
-```js{5-16}
+```js{7-17}
 const { ApolloServer } = require("apollo-server");
+const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  engine: {
-    rewriteError(err) {
-      // Using a more stable, known error property (e.g. `err.code`) would be
-      // more defensive, however checking the `message` might serve most needs!
-      if (err.message && err.message.startsWith("Known error message")) {
-        return null;
-      }
+  plugins: [
+    ApolloServerPluginUsageReporting({
+      rewriteError(err) {
+        // Using a more stable, known error property (e.g. `err.code`) would be
+        // more defensive, however checking the `message` might serve most needs!
+        if (err.message && err.message.startsWith("Known error message")) {
+          return null;
+        }
 
-      // All other errors should still be reported!
-      return err;
-    }
-  },
+        // All other errors should still be reported!
+        return err;
+      }
+    }),
+  ],
 });
 ```
 
-This example configuration ensures that any error that starts with
-`Known error message` is not transmitted to Apollo Graph Manager, but all other
-errors are sent as normal.
+This example configuration ensures that any error that starts with `Known error message` is not transmitted to Apollo Studio, but all other errors are sent as normal.
 
 #### Redacting the error message
 
-If it is necessary to change an error prior to reporting it to Apollo Graph Manager
-(for example, if there is personally identifiable information in the error
-`message`), the `rewriteError` function can also help.
+If it is necessary to change an error prior to reporting it to Apollo Studio (for example, if there is personally identifiable information in the error `message`), the `rewriteError` function can also help.
 
 Consider an example where the error contains a piece of information like
 an API key:
@@ -260,25 +245,28 @@ throw new ApolloError("The x-api-key:12345 doesn't have sufficient privileges.")
 ```
 
 The `rewriteError` function can be used to ensure
-such information is not sent to Apollo Graph Manager and potentially revealed outside
+such information is not sent to Apollo Studio and potentially revealed outside
 its intended scope:
 
-```js{5-11}
+```js{7-13}
 const { ApolloServer } = require("apollo-server");
+const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  engine: {
-    rewriteError(err) {
-      // Make sure that a specific pattern is removed from all error messages.
-      err.message = err.message.replace(/x-api-key:[A-Z0-9-]+/, "REDACTED");
-      return err;
-    }
-  },
+  plugins: [
+    ApolloServerPluginUsageReporting({
+      rewriteError(err) {
+        // Make sure that a specific pattern is removed from all error messages.
+        err.message = err.message.replace(/x-api-key:[A-Z0-9-]+/, "REDACTED");
+        return err;
+      }
+    }),
+  ],
 });
 ```
 
-In this case, the error above is reported to Apollo Graph Manager as:
+In this case, the error above is reported to Apollo Studio as:
 
 ```
 The REDACTED doesn't have sufficient privileges.

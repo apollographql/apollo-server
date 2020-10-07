@@ -1,12 +1,13 @@
 {
   "name": "apollo-server-core",
-  "version": "2.14.4",
+  "version": "2.18.2",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-core"
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/apollo-server-core"
   },
   "keywords": [
     "GraphQL",
@@ -14,7 +15,7 @@
     "Server",
     "Javascript"
   ],
-  "author": "Jonas Helfer <jonas@helfer.email>",
+  "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
@@ -30,21 +31,25 @@
     "@types/ws": "^7.0.0",
     "apollo-cache-control": "file:../apollo-cache-control",
     "apollo-datasource": "file:../apollo-datasource",
-    "apollo-engine-reporting": "file:../apollo-engine-reporting",
+    "apollo-graphql": "^0.6.0",
+    "apollo-reporting-protobuf": "file:../apollo-reporting-protobuf",
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-server-types": "file:../apollo-server-types",
     "apollo-tracing": "file:../apollo-tracing",
+    "async-retry": "^1.2.1",
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-extensions": "file:../graphql-extensions",
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^4.0.0",
     "graphql-upload": "^8.0.2",
     "loglevel": "^1.6.7",
+    "lru-cache": "^5.0.0",
     "sha.js": "^2.4.11",
     "subscriptions-transport-ws": "^0.9.11",
+    "uuid": "^8.0.0",
     "ws": "^6.0.0"
   },
   "peerDependencies": {

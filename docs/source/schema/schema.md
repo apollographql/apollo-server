@@ -40,7 +40,7 @@ Every type definition in a GraphQL schema belongs to one of the following catego
 
 Each of these is defined in detail below.
 
-And finally, the performance and usage of each field within these declarations can be individually monitored by [Apollo Graph Manager](https://engine.apollographql.com/), providing you with data that will inform decisions about changes to your graph.
+And finally, the performance and usage of each field within these declarations can be individually monitored by [Apollo Studio](https://studio.apollographql.com/), providing you with data that will inform decisions about changes to your graph.
 
 ### Scalar types
 
@@ -116,13 +116,13 @@ Our server would then respond to the query with results that match the query's s
   "data": {
     "books": [
       {
-        "title": "Jurassic Park"
+        "title": "City of Glass"
       },
       ...
     ],
     "authors": [
       {
-        "name": "Michael Crichton"
+        "name": "Paul Auster"
       },
       ...
     ]
@@ -152,9 +152,9 @@ And once again, our server would respond with results that match the query's str
   "data": {
     "books": [
       {
-        "title": "Jurassic Park",
+        "title": "City of Glass",
         "author": {
-          "name": "Michael Crichton"
+          "name": "Paul Auster"
         }
       },
       ...
@@ -267,7 +267,7 @@ Most _additive_ changes to a schema are safe and backward compatible. However, c
 * Adding nullability to a field
 * Removing a field's arguments
 
-A graph management tool such as [Apollo Graph Manager](https://engine.apollographql.com/) helps you understand whether a potential schema change will impact any of your active clients. Graph Manager also provides field-level performance metrics, schema history tracking, and advanced security via operation safelisting.
+A graph management tool such as [Apollo Studio](https://studio.apollographql.com/) helps you understand whether a potential schema change will impact any of your active clients. Studio also provides field-level performance metrics, schema history tracking, and advanced security via operation safelisting.
 
 ## Documentation strings
 
@@ -293,7 +293,7 @@ type MyObjectType {
 
 A well-documented schema offers an enhanced development experience since GraphQL development tools (such as the
 [Apollo VS Code extension](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo)
-and GraphQL Playground) auto-complete field names along with descriptions when they're provided.  Furthermore, [Apollo Graph Manager](https://engine.apollographql.com/) displays descriptions alongside field-usage and performance details when using its metrics reporting and client-awareness features.
+and GraphQL Playground) auto-complete field names along with descriptions when they're provided. Furthermore, [Apollo Studio](https://studio.apollographql.com/) displays descriptions alongside field-usage and performance details when using its metrics reporting and client-awareness features.
 
 ## Naming conventions
 

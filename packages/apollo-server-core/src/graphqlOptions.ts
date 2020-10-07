@@ -35,7 +35,6 @@ import {
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  * - (optional) extensions: an array of functions which create GraphQLExtensions (each GraphQLExtension object is used for one request)
  * - (optional) parseOptions: options to pass when parsing schemas and queries
- * - (optional) reporting: set if we are directly reporting to Engine
  *
  */
 export interface GraphQLServerOptions<
@@ -65,7 +64,6 @@ export interface GraphQLServerOptions<
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
   parseOptions?: GraphQLParseOptions;
-  reporting?: boolean;
 }
 
 export type DataSources<TContext> = {

@@ -1,7 +1,7 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { HttpResponse } from 'azure-functions-ts-essentials';
 import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLOptions, Config } from 'apollo-server-core';
+import { GraphQLOptions } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -21,17 +21,8 @@ export interface CreateHandlerOptions {
 }
 
 export class ApolloServer extends ApolloServerBase {
-  // If you feel tempted to add an option to this constructor. Please consider
-  // another place, since the documentation becomes much more complicated when
-  // the constructor is not longer shared between all integration
-  constructor(options: Config) {
-    if (process.env.ENGINE_API_KEY || options.engine) {
-      options.engine = {
-        sendReportsImmediately: true,
-        ...(typeof options.engine !== 'boolean' ? options.engine : {}),
-      };
-    }
-    super(options);
+  protected serverlessFramework(): boolean {
+    return true;
   }
 
   // This translates the arguments from the middleware into graphQL options It

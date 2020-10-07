@@ -4,7 +4,11 @@ This package is used to collect and expose cache control data in the [Apollo Cac
 
 It relies on instrumenting a GraphQL schema to collect cache control hints, and exposes cache control data for an individual request under `extensions` as part of the GraphQL response.
 
-This data can be consumed by [Apollo Engine](https://www.apollographql.com/engine/) or any other tool to inform caching and visualize the cache policies that are in effect for a particular request.
+This data can be consumed by any tool to inform caching and visualize the cache policies that are in effect for a particular request.
+
+Uses for this data include apollo-server-plugin-response-cache (which implements a full response cache) and setting cache-control HTTP headers.
+
+See https://www.apollographql.com/docs/apollo-server/performance/caching/ for more details.
 
 ## Usage
 
@@ -27,7 +31,7 @@ app.use('/graphql', bodyParser.json(), graphqlExpress({
 
 ### Add cache hints to your schema
 
-Cache hints can be added to your schema using directives on your types and fields. When executing your query, these hints will be added to the response and interpreted by Engine to compute a cache policy for the response. Hints on fields override hints specified on the target type.
+Cache hints can be added to your schema using directives on your types and fields. When executing your query, these hints will be used to compute an overall cache policy for the response. Hints on fields override hints specified on the target type.
 
 ```graphql
 type Post @cacheControl(maxAge: 240) {

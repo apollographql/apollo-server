@@ -131,12 +131,7 @@ export async function processGraphQLRequest<TContext>(
   const logger = requestContext.logger || console;
 
   // If request context's `metrics` already exists, preserve it, but _ensure_ it
-  // exists there and shorthand it for use throughout this function. As of this
-  // comment, the sole known case where `metrics` already exists is when the
-  // `captureTraces` property is present and set to the result of the boolean
-  // `reporting` option on the legacy (V1) server options, here:
-  // https://git.io/Jfmsb. I suspect this disappears when this is the direct
-  // entry into request processing, rather than through, e.g. `runHttpQuery`.
+  // exists there and shorthand it for use throughout this function.
   const metrics = requestContext.metrics =
     requestContext.metrics || Object.create(null);
 
@@ -341,10 +336,7 @@ export async function processGraphQLRequest<TContext>(
     );
 
     requestContext.operation = operation || undefined;
-    // We'll set `operationName` to `null` for anonymous operations.  Note that
-    // apollo-engine-reporting relies on the fact that the requestContext passed
-    // to requestDidStart is mutated to add this field before requestDidEnd is
-    // called
+    // We'll set `operationName` to `null` for anonymous operations.
     requestContext.operationName =
       (operation && operation.name && operation.name.value) || null;
 
@@ -547,7 +539,7 @@ export async function processGraphQLRequest<TContext>(
       if (config.executor) {
         // XXX Nothing guarantees that the only errors thrown or returned
         // in result.errors are GraphQLErrors, even though other code
-        // (eg apollo-engine-reporting) assumes that.
+        // (eg ApolloServerPluginUsageReporting) assumes that.
         return await config.executor(requestContext);
       } else {
         return await graphqlExecute(executionArgs);

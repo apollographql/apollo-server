@@ -5,7 +5,7 @@ import {
 } from 'graphql';
 import { ApolloServerPlugin } from "apollo-server-plugin-base";
 
-const { PACKAGE_NAME } = require("../package.json").name;
+const { name: PACKAGE_NAME } = require("../package.json");
 
 export interface TracingFormat {
   version: 1;
@@ -35,14 +35,12 @@ interface ResolverCall {
 
 export const plugin = (_futureOptions = {}) => (): ApolloServerPlugin => ({
   requestDidStart() {
-    let startWallTime: Date | undefined;
+    const startWallTime: Date = new Date();
     let endWallTime: Date | undefined;
-    let startHrTime: HighResolutionTime | undefined;
+    const startHrTime: HighResolutionTime = process.hrtime();
     let duration: HighResolutionTime | undefined;
     const resolverCalls: ResolverCall[] = [];
 
-    startWallTime = new Date();
-    startHrTime = process.hrtime();
 
     return {
       executionDidStart: () => ({
@@ -85,7 +83,6 @@ export const plugin = (_futureOptions = {}) => (): ApolloServerPlugin => ({
         // extension did not format properly. Any undefined extension
         // results are simply purged by the graphql-extensions module.
         if (
-          typeof startWallTime === 'undefined' ||
           typeof endWallTime === 'undefined' ||
           typeof duration === 'undefined'
         ) {

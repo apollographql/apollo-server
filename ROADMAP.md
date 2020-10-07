@@ -30,7 +30,7 @@ The next version of Apollo Server is a principled implementation of a production
     * Supports enterprise-scale traffic through integrated caching layers and efficient execution.
 * Production teams have **tools and hooks for confidently running and monitoring their graph** in production.
     * Graph and request lifecycles are well-documented and include detailed observability hooks for teams to set up monitoring.
-    * Apollo Server includes built-in support for Apollo Graph Manager.
+    * Apollo Server includes built-in support for Apollo Studio.
     * A new request pipeline gives teams more control over request lifecycles, including validation, parsing, and error handling.
 
 ## How we get there
@@ -80,7 +80,7 @@ The work to accomplish these goals is grouped into the following work:
 * **First-class support for subscriptions, `@defer`, and `@stream`:**
     * Subscriptions
         * Implement a WebSocket transport using the new transport interface described above.
-        * Support subscriptions in tracing data sent to Apollo Graph Manager.
+        * Support subscriptions in tracing data sent to Apollo Studio.
         * Query planner support.
     * `@defer` and `@stream`
         * Support response streams in the HTTP transport.
