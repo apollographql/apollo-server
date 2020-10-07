@@ -321,9 +321,9 @@ An object containing configuration options for connecting Apollo Server to [Apol
 </td>
 <td>
 
-An array of objects representing [plugins](../integrations/plugins) to install in your server instance.
+An array of [plugins](../integrations/plugins) to install in your server instance. Each array element can be either a valid plugin object or a zero-argument function that _returns_ a valid plugin object.
 
-In certain cases, Apollo Server installs one of its built-in plugins automatically (for example, when you provide an Apollo Studio API key with the `APOLLO_KEY` environment variable). For details, see the API references for these plugins: [usage reporting](./plugin/usage-reporting/), [schema reporting](./plugin/schema-reporting/), and [inline trace](./plugin/inline-trace/).
+In certain cases, Apollo Server installs some of its built-in plugins automatically (for example, when you provide an Apollo Studio API key with the `APOLLO_KEY` environment variable). For details, see the API references for these plugins: [usage reporting](./plugin/usage-reporting/), [schema reporting](./plugin/schema-reporting/), and [inline trace](./plugin/inline-trace/).
 
 </td>
 </tr>

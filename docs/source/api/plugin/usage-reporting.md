@@ -1,10 +1,10 @@
 ---
 title: "API Reference: Usage reporting plugin"
-sidebar_title: "Usage reporting plugin"
+sidebar_title: Usage reporting plugin
 api_reference: true
 ---
 
-Apollo Server has a built-in usage reporting plugin that gathers metrics on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing these metrics to [Apollo Studio](https://www.apollographql.com/docs/studio/), as described in [Metrics and logging](../../monitoring/metrics/).
+Apollo Server has a built-in usage reporting plugin that gathers data on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing this usage data to [Apollo Studio](https://www.apollographql.com/docs/studio/), as described in [Metrics and logging](../../monitoring/metrics/).
 
 > This plugin was introduced in Apollo Server 2.18. In previous versions, usage reporting is configured by providing the `engine` option to the `ApolloServer` constructor. That option continues to work (but is now deprecated). See [the migration guide](../../migration-engine-plugins/) for details.
 
@@ -113,7 +113,7 @@ The only properties of the reported error you can modify are its `message` and i
 
 Specify this asynchronous function to configure which requests are included in usage reports sent to Apollo Studio. For example, you can omit requests that execute a particular operation or requests that include a particular HTTP header.
 
-This function is called for each received request. It takes a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L115-L150) object and must return a `Promise<Boolean>` that indicates whether to include the request. It's called either after the request is successfully resolved, or after it generates an error.
+This function is called for each received request. It takes a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L115-L150) object and must return a `Promise<Boolean>` that indicates whether to include the request. It's called either after the operation is successfully resolved (via [the `didResolveOperation` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)), or after it generates an error (via [the `didEncounterErrors` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didencountererrors)).
 
 By default, all requests are included in usage reports.
 
@@ -188,7 +188,7 @@ Note that "immediately" does not mean _synchronously_ with completing the respon
 </td>
 <td>
 
-An HTTP(S) agent to use for metrics reporting. Can be either an [`http.Agent`](https://nodejs.org/docs/latest-v10.x/api/http.html#http_class_http_agent) or an [`https.Agent`](https://nodejs.org/docs/latest-v10.x/api/https.html#https_class_https_agent). It behaves the same as the `agent` parameter to [`http.request`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_http_request_options_callback).
+An HTTP(S) agent to use for reporting. Can be either an [`http.Agent`](https://nodejs.org/docs/latest-v10.x/api/http.html#http_class_http_agent) or an [`https.Agent`](https://nodejs.org/docs/latest-v10.x/api/https.html#https_class_https_agent). It behaves the same as the `agent` parameter to [`http.request`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_http_request_options_callback).
 </td>
 </tr>
 
@@ -217,7 +217,9 @@ Regardless of this value, Apollo Server sends a trace report whenever the size o
 </td>
 <td>
 
-Apollo Server sends a trace report whenever the size of a pending batched trace report roughly exceeds this value (in bytes), regardless of its standard reporting interval.
+Apollo Server sends a trace report whenever the size of a pending batched trace report exceeds this value (in bytes), regardless of its standard reporting interval.
+
+Note that this is a rough limit that includes the size of serialized traces and signatures. It ignores the size of the report's header and some other top-level bytes.
 
 The default value is 4MB (`4194304`).
 </td>
@@ -276,7 +278,7 @@ If you provide this object, the plugin sends it all log messages related to Apol
 </td>
 <td>
 
-If you provide this function, the plugin calls it whenever it encounters an error while reporting metrics. The details of the error are passed to the function.
+If you provide this function, the plugin calls it whenever it encounters an error while reporting usage data. The details of the error are passed to the function.
 
 By default, the plugin logs these errors to its specified `logger`. _Unlike_ the `logger`, this function receives the actual `Error` object instead of only an error message.
 
@@ -332,6 +334,16 @@ Specify this function to create a signature for a query. This option is not reco
 </tbody>
 </table>
 
+#### Valid `sendVariableValues` object signatures
+
+| Object | Description |
+|--------|-------------|
+| `{ none: true }` | If you provide this object, no GraphQL variable values are sent to Apollo Studio. This is the default behavior. |
+| `{ all: true }` |  If you provide this object, **all** GraphQL variable values are sent to Apollo Studio. |
+| `{ onlyNames: ["apple", "orange"]}`| If you provide an object with this structure, only values of the GraphQL variables with names that appear in the array are sent to Apollo Studio. Case-sensitive. |
+| `{ exceptNames: ["apple", "orange"]}`| If you provide an object with this structure, all GraphQL variable values **except** values of variables with names that appear in the array are sent to Apollo Studio. Case-sensitive. |
+| `{ transform: ({ variables, operationString)} => { ... } }` | <p>The value of `transform` is a function that takes the values of all GraphQL variables for an operation. The function should modify or delete necessary values in the `variables` map and return the result. You cannot _add_ variables to the map.</p><p>For security reasons, if an error occurs in the `transform` function, **all** variable values are replaced with `[PREDICATE_FUNCTION_ERROR]`. |
+
 #### Valid `sendHeaders` object signatures
 
 | Object | Description |
@@ -346,16 +358,6 @@ Specify this function to create a signature for a query. This option is not reco
  * `authorization`
  * `cookie`
  * `set-cookie`
-
-#### Valid `sendVariableValues` object signatures
-
-| Object | Description |
-|--------|-------------|
-| `{ none: true }` | If you provide this object, no GraphQL variable values are sent to Apollo Studio. This is the default behavior. |
-| `{ all: true }` |  If you provide this object, **all** GraphQL variable values are sent to Apollo Studio. |
-| `{ onlyNames: ["apple", "orange"]}`| If you provide an object with this structure, only values of the GraphQL variables with names that appear in the array are sent to Apollo Studio. Case-sensitive. |
-| `{ exceptNames: ["apple", "orange"]}`| If you provide an object with this structure, all GraphQL variable values **except** values of variables with names that appear in the array are sent to Apollo Studio. Case-sensitive. |
-| `{ transform: ({ variables, operationString)} => { ... } }` | <p>The value of `transform` is a function that takes the values of all GraphQL variables for an operation. The function should modify or delete necessary values in the `variables` map and return the result. You cannot _add_ variables to the map.</p><p>For security reasons, if an error occurs in the `transform` function, **all** variable values are replaced with `[PREDICATE_FUNCTION_ERROR]`. |
 
 ## Disabling the plugin
 
