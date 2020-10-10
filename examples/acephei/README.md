@@ -24,7 +24,7 @@ cd examples/acephei
 npm install
 ```
 
-* *(Optional)*: Setup [Apollo Studio](https://studio.apollographql.com/) account and create your first graph. You'll need to copy the service API key for later on.
+* *(Optional)*: Set up [Apollo Studio](https://studio.apollographql.com/) account and create your first graph. You'll need to copy the service API key for later on.
 
 ### Quick start script
 
@@ -57,7 +57,7 @@ The launch configurations are defined in the `.vscode/launch.json` folders withi
 
 ## Apollo Studio - Setting up your graph
 
-If you would like to setup this example with the graph you created in your [Apollo Studio](https://studio.apollographql.com/) account, you'll need to register each downstream service using the [Apollo CLI](https://github.com/apollographql/apollo-tooling):
+If you would like to set up this example with the graph you created in your [Apollo Studio](https://studio.apollographql.com/) account, you'll need to register each downstream service using the [Apollo CLI](https://github.com/apollographql/apollo-tooling):
 
 ```
 apollo service:push --key={service:michael-watson:key_1234} --localSchemaFile=./services/accounts/schema.graphql --serviceName=accounts --serviceURL=http://localhost:4001
