@@ -83,6 +83,45 @@ app.listen({ port: 4000 }, () =>
 
 > Note: `qs-middleware` is only required if running outside of Meteor
 
+### Integration with other middlewares
+#### [Helmet](https://helmetjs.github.io/)
+When using Helmet the default CSP of helmet blocks graphiql's inline scripts support. To enable graphiql with helmet you need to update the contentSecurityPolicies with graphiql's needs.
+The code snippet below makes use of Helmet's default CSP and adds what graphiql needs.
+```js
+app.use(
+  helmet({
+    /**
+     * Default helmet policy + own customizations - graphiql support
+     * - https://helmetjs.github.io/
+     */
+    contentSecurityPolicy: helmet.contentSecurityPolicy({
+      directives: {
+        defaultSrc: [
+          "'self'",
+          /** @by-us - adds graphiql support over helmet's default CSP */
+          "'unsafe-inline'",
+        ],
+        baseUri: ["'self'"],
+        blockAllMixedContent: [],
+        fontSrc: ["'self'", 'https:', 'data:'],
+        frameAncestors: ["'self'"],
+        imgSrc: ["'self'", 'data:'],
+        objectSrc: ["'none'"],
+        scriptSrc: [
+          "'self'",
+          /** @by-us - adds graphiql support over helmet's default CSP */
+          "'unsafe-inline'",
+          /** @by-us - adds graphiql support over helmet's default CSP */
+          "'unsafe-eval'",
+        ],
+        upgradeInsecureRequests: [],
+      },
+    }),
+  }),
+);
+```
+
+
 ## Principles
 
 GraphQL Server is built with the following principles in mind:
