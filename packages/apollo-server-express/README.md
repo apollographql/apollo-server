@@ -94,7 +94,7 @@ app.use(
      * Default helmet policy + own customizations - graphiql support
      * - https://helmetjs.github.io/
      */
-    contentSecurityPolicy: helmet.contentSecurityPolicy({
+    contentSecurityPolicy: {
       directives: {
         defaultSrc: [
           "'self'",
@@ -116,7 +116,7 @@ app.use(
         ],
         upgradeInsecureRequests: [],
       },
-    }),
+    },
   }),
 );
 ```
