@@ -278,7 +278,7 @@ const resolvers = {
   Query: {
     favoriteColor: () => 'RED',
     avatar: (parent, args) => {
-      // args.borderColor is 'RED', 'GREEN', or 'BLUE'
+      // args.favoriteColor is 'RED', 'GREEN', or 'BLUE'
     },
   }
 };
@@ -292,7 +292,7 @@ server.listen().then(({ url }) => {
 
 ### Internal values
 
-Sometimes a backend forces a different value for an enum internally than in the public API. In this example the API contains `RED`, however in resolvers we use `#f00` instead. The `resolvers` argument to `ApolloServer` allows the addition of custom values to enums that only exist internally:
+Sometimes a backend forces a different value for an enum internally than in the public API. In this example the API contains `RED`, however in resolvers we use `#f00` instead. The `resolvers` argument to `ApolloServer` allows enums to map values that only exist internally:
 
 ```js
 const resolvers = {
@@ -304,7 +304,7 @@ const resolvers = {
 };
 ```
 
-These don't change the public API at all and the resolvers accept these value instead of the schema value, like so:
+These don't change the public API at all and the resolvers accept these values instead of the schema value, like so:
 
 ```js
 const resolvers = {
@@ -316,7 +316,7 @@ const resolvers = {
   Query: {
     favoriteColor: () => '#f00',
     avatar: (parent, args) => {
-      // args.borderColor is '#f00', '#0f0', or '#00f'
+      // args.favoriteColor is a map value of '#f00', '#0f0', or '#00f'
     },
   }
 };
