@@ -77,7 +77,7 @@
     "@types/memcached": "2.2.6",
     "@types/micro": "7.3.3",
     "@types/nock": "10.0.3",
-    "@types/node": "8.10.64",
+    "@types/node": "8.10.65",
     "@types/node-fetch": "2.5.7",
     "@types/qs": "6.9.5",
     "@types/qs-middleware": "1.0.1",
