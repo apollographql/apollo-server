@@ -25,10 +25,10 @@
     "reviews": "file:services/reviews"
   },
   "devDependencies": {
-    "@types/react": "16.9.50",
+    "@types/react": "16.9.53",
     "concurrently": "4.1.2",
-    "nodemon": "2.0.4",
-    "react": "16.13.1",
+    "nodemon": "2.0.5",
+    "react": "16.14.0",
     "typescript": "3.9.7"
   },
   "nodemonConfig": {
