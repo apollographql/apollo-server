@@ -9,6 +9,6 @@
     "gatsby": "2.24.73",
     "gatsby-theme-apollo-docs": "4.5.3",
     "react": "16.13.1",
-    "react-dom": "16.13.1"
+    "react-dom": "16.14.0"
   }
 }
