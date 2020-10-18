@@ -31,6 +31,7 @@ import { makeTraceDetails } from './traceDetails';
 import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
+import { addTraceRequestStats } from './addTraceRequestStats';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -598,6 +599,14 @@ export function ApolloServerPluginUsageReporting<TContext>(
               // End early if we aren't going to send the trace so we continue to
               // run the tree builder.
               didEnd(requestContext);
+            } else {
+              addTraceRequestStats({
+                trace: treeBuilder.trace,
+                schema,
+                document: requestContext.document,
+                operation: requestContext.operation,
+                variables,
+              });
             }
           },
           executionDidStart() {
