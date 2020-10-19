@@ -426,9 +426,10 @@ export class ApolloServerBase {
             `Unable to find managed federation configuration for graph ${engineConfig?.graphId}@${engineConfig?.graphVariant}.`,
             'Please check that this graph has implementing services published to it.',
             'For more information on setting up managed federation, see here:',
-            'https://www.apollographql.com/docs/studio/managed-federation/setup/'
+            'https://www.apollographql.com/docs/studio/managed-federation/setup/.',
+            'To see the original error message, turn on DEBUG level logging.'
           ].join('\n');
-          this.logger.error(message + " " + (err && err.message || err));
+          this.logger.debug(message + " " + (err && err.message || err));
           throw new Error(
             message + " More details may be available in the server logs.");
         });
