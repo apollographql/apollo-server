@@ -420,8 +420,9 @@ export class ApolloServerBase {
         .catch(err => {
           // We intentionally do not re-throw the exact error from the gateway
           // configuration as it may contain implementation details and this
-          // error will propagate to the client. We will, however, log the error
-          // for observation in the logs.
+          // error will propagate to the client. We will, however, debug log
+          // the error for observation in the logs. This error is most often
+          // a red herring, which is why we log at a low level.
           const message = [
             `Unable to find managed federation configuration for graph ${engineConfig?.graphId}@${engineConfig?.graphVariant}.`,
             'Please check that this graph has implementing services published to it.',
@@ -429,9 +430,9 @@ export class ApolloServerBase {
             'https://www.apollographql.com/docs/studio/managed-federation/setup/.',
             'To see the original error message, turn on DEBUG level logging.'
           ].join('\n');
-          this.logger.debug(message + " " + (err && err.message || err));
+          this.logger.debug(err && err.message || err);
           throw new Error(
-            message + " More details may be available in the server logs.");
+            message + "\nMore details may be available in the server logs.");
         });
     }
 
