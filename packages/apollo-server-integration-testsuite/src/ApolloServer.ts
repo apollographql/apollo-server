@@ -397,8 +397,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
             { errors: [{errorWhichShouldNot: "ever be triggered"}] }
           );
 
-          const consoleErrorSpy =
-            jest.spyOn(console, 'error').mockImplementation();
+          const consoleDebugSpy =
+            jest.spyOn(console, 'debug').mockImplementation();
 
           const { gateway, triggers } = makeGatewayMock({ executor });
 
@@ -418,13 +418,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
               extensions: expect.objectContaining({
                 code: "INTERNAL_SERVER_ERROR",
               }),
-              message: "This data graph is missing a valid configuration. " +
-                "More details may be available in the server logs."
+              message: expect.stringMatching(/Unable to find managed federation configuration/),
             })
           );
-          expect(consoleErrorSpy).toHaveBeenCalledWith(
-            "This data graph is missing a valid configuration. " +
-              "load error which should be masked");
+          expect(consoleDebugSpy).toHaveBeenCalledWith(
+            expect.stringMatching(/load error which should be masked/));
           expect(executor).not.toHaveBeenCalled();
         });
 
