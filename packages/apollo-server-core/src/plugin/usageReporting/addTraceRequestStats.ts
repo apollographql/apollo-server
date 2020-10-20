@@ -99,22 +99,21 @@ export function addTraceRequestStats({
         } else if (varDefinition.defaultValue.kind === 'NullValue') {
           nullVariableNames.add(varName);
         }
-        continue;
-      }
-
-      const value = variables[varName];
-      if (value === null) {
-        if (isNonNullType(varType)) {
-          throw Error('Non-null variable cannot be provided null value.');
+      } else {
+        const value = variables[varName];
+        if (value === null) {
+          if (isNonNullType(varType)) {
+            throw Error('Non-null variable cannot be provided null value.');
+          }
+          nullVariableNames.add(varName);
         }
-        nullVariableNames.add(varName);
-      }
 
-      addTraceInputValueStats({
-        trace,
-        inputValue: value,
-        inputType: varType,
-      });
+        addTraceInputValueStats({
+          trace,
+          inputValue: value,
+          inputType: varType,
+        });
+      }
     }
 
     // Search the operation body for input object fields and enum values. Note
@@ -281,10 +280,7 @@ function addTraceInputValueStats({
         inputType: itemType,
       });
     }
-    return;
-  }
-
-  if (isInputObjectType(inputType)) {
+  } else if (isInputObjectType(inputType)) {
     if (typeof inputValue !== 'object') {
       throw Error('Input object type must be provided object value.');
     }
@@ -306,24 +302,23 @@ function addTraceInputValueStats({
           isNull: false,
           isUndefined: true,
         });
-        continue;
+      } else {
+        inputFieldIsUsedByRequest({
+          trace,
+          inputObjectTypeName: inputType.name,
+          inputFieldName: inputField.name,
+          inputFieldTypeName: inputField.type.toString(),
+          isPresent: true,
+          isNull: inputFieldValue === null,
+          isUndefined: false,
+        });
+
+        addTraceInputValueStats({
+          trace,
+          inputValue: inputFieldValue,
+          inputType: inputField.type,
+        });
       }
-
-      inputFieldIsUsedByRequest({
-        trace,
-        inputObjectTypeName: inputType.name,
-        inputFieldName: inputField.name,
-        inputFieldTypeName: inputField.type.toString(),
-        isPresent: true,
-        isNull: inputFieldValue === null,
-        isUndefined: false,
-      });
-
-      addTraceInputValueStats({
-        trace,
-        inputValue: inputFieldValue,
-        inputType: inputField.type,
-      });
     }
 
     // Ensure every provided field is defined.
@@ -332,10 +327,7 @@ function addTraceInputValueStats({
         throw Error('Input object type does not have provided field name.');
       }
     }
-    return;
-  }
-
-  if (isScalarType(inputType)) {
+  } else if (isScalarType(inputType)) {
     let parseResult;
 
     // Scalars determine if an input value is valid via parseValue(), which can
@@ -348,10 +340,7 @@ function addTraceInputValueStats({
     if (parseResult === undefined) {
       throw Error('Scalar type returned undefined when parsing provided value.');
     }
-    return;
-  }
-
-  if (isEnumType(inputType)) {
+  } else if (isEnumType(inputType)) {
     if (typeof inputValue === 'string') {
       const enumValue = inputType.getValue(inputValue);
       if (enumValue) {
@@ -364,10 +353,10 @@ function addTraceInputValueStats({
       }
     }
     throw Error('Enum type does not have provided enum value.');
+  } else {
+    // Not reachable. All possible input types have been considered.
+    throw Error('Unexpected input type.');
   }
-
-  // Not reachable. All possible input types have been considered.
-  throw Error('Unexpected input type.');
 }
 
 function inputFieldIsUsedByRequest({
