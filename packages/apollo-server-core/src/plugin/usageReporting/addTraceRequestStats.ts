@@ -124,6 +124,9 @@ export function addTraceRequestStats({
     ];
     const typeInfo = new TypeInfo(schema);
     visit(operationDocument, visitWithTypeInfo(typeInfo, {
+      // We handle ObjectValue here specifically so we can track undefined input
+      // object fields (i.e. input object fields that are not present in the
+      // ObjectValue).
       ObjectValue(node: ObjectValueNode): void {
         // The operation has been successfully validated by this stage, so the
         // non-null assertions here are fine. Look at the Kind.OBJECT_FIELD case
