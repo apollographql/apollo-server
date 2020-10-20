@@ -53,7 +53,7 @@ export function addTraceRequestStats({
   operation,
   variables,
 }: {
-  trace: Trace;
+  trace: Pick<Trace, 'perEnumTypeStat' | 'perInputTypeStat'>;
   schema: GraphQLSchema;
   document: DocumentNode;
   operation: OperationDefinitionNode;
@@ -237,7 +237,7 @@ function addTraceInputValueStats({
   inputValue,
   inputType,
 }: {
-  trace: Trace;
+  trace: Pick<Trace, 'perEnumTypeStat' | 'perInputTypeStat'>;
   inputValue: any;
   inputType: GraphQLInputType;
 }): void {
@@ -379,7 +379,7 @@ function inputFieldIsUsedByRequest({
   isNull,
   isUndefined,
 }: {
-  trace: Trace;
+  trace: Pick<Trace, 'perInputTypeStat'>;
   inputObjectTypeName: string;
   inputFieldName: string;
   inputFieldTypeName: string;
@@ -408,7 +408,7 @@ function enumValueIsPresentInRequest({
   enumTypeName,
   enumValueName,
 }: {
-  trace: Trace;
+  trace: Pick<Trace, 'perEnumTypeStat'>;
   enumTypeName: string;
   enumValueName: string;
 }): void {
