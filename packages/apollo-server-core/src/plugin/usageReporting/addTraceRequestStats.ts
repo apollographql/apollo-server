@@ -1,14 +1,12 @@
 import {
+  EnumTypeStat,
+  EnumValueStat,
+  IEnumValueStat,
+  IInputFieldStat,
   InputFieldStat,
   InputTypeStat,
   Trace
 } from 'apollo-reporting-protobuf';
-import {
-  EnumTypeStat,
-  EnumValueStat,
-  IEnumValueStat,
-  IInputFieldStat
-} from "apollo-reporting-protobuf/dist/protobuf";
 import { VariableValues } from 'apollo-server-types';
 import {
   DocumentNode,
