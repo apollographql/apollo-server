@@ -1,4 +1,6 @@
 import { ApolloServer } from "apollo-server";
+import { ApolloServerPluginUsageReporting,
+         ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
 import { ApolloGateway, RemoteGraphQLDataSource, GatewayConfig } from "@apollo/gateway";
 import DepthLimitingPlugin from "./plugins/ApolloServerPluginDepthLimiting";
 import StrictOperationsPlugin from "./plugins/ApolloServerPluginStrictOperations";
@@ -6,7 +8,9 @@ import ReportForbiddenOperationsPlugin from "./plugins/ApolloServerPluginReportF
 
 const isProd = process.env.NODE_ENV === "production";
 const apolloKey = process.env.APOLLO_KEY;
-const graphVariant = process.env.APOLLO_GRAPH_VARIANT || "development";
+if (!process.env.APOLLO_GRAPH_VARIANT) {
+  process.env.APOLLO_GRAPH_VARIANT = "development";
+}
 
 class AuthenticatedDataSource extends RemoteGraphQLDataSource {
   willSendRequest({ request, context }) {
@@ -39,7 +43,6 @@ if (!apolloKey) {
 }
 
 const apolloOperationRegistryPlugin = apolloKey ? require("apollo-server-plugin-operation-registry")({
-  graphVariant,
   forbidUnregisteredOperations({
     context, // Destructure the shared request `context`.
     request: {
@@ -53,20 +56,19 @@ const apolloOperationRegistryPlugin = apolloKey ? require("apollo-server-plugin-
   }
 }) : {};
 
+const apolloUsageReportingPlugin = apolloKey ? ApolloServerPluginUsageReporting({
+  sendVariableValues: {
+    all: true
+  },
+  sendHeaders: {
+    all: true
+  }
+}) : ApolloServerPluginUsageReportingDisabled();
+
 const gateway = new ApolloGateway(gatewayOptions);
 const server = new ApolloServer({
   gateway,
   subscriptions: false, // Must be disabled with the gateway; see above.
-  engine: {
-    apiKey: apolloKey,   //We set the APOLLO_KEY environment variable
-    graphVariant,                           //We set the APOLLO_GRAPH_VARIANT environment variable
-    sendVariableValues: {
-      all: true
-    },
-    sendHeaders: {
-      all: true
-    }
-  },
   context: ({ req }) => {
     // get the user token from the headers
     const token = req.headers.authorization || "";
@@ -82,7 +84,8 @@ const server = new ApolloServer({
     DepthLimitingPlugin({ maxDepth: 10 }),
     StrictOperationsPlugin(),
     ReportForbiddenOperationsPlugin({ debug: true }),
-    apolloOperationRegistryPlugin
+    apolloOperationRegistryPlugin,
+    apolloUsageReportingPlugin,
   ]
 });
 
