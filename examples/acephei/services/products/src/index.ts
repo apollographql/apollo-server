@@ -1,4 +1,5 @@
 import { ApolloServer, gql } from "apollo-server";
+import { ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
 import { buildFederatedSchema } from "@apollo/federation";
 import { readFileSync } from "fs";
 import { resolve } from "path";
@@ -81,10 +82,12 @@ interface Context {
 
 const server = new ApolloServer({
   schema: buildFederatedSchema([{ typeDefs, resolvers }]),
-  engine: true,
   dataSources: () => ({
     products: new ProductsDataSource()
-  })
+  }),
+  // $APOLLO_KEY may be set in this process but that's for the gateway to report,
+  // not this implementing service.
+  plugins: [ApolloServerPluginUsageReportingDisabled()],
 });
 
 const port = process.env.PORT || 4003;

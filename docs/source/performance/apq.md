@@ -146,7 +146,7 @@ If configured correctly, browser's dev tools should verify that queries are now 
 
 How exactly this works depends on exactly which CDN you chose. Configure your CDN to send requests to Apollo Server. Some CDNs may need to be specially configured to honor origin Cache-Control headers; for example, here is [Akamai's documentation on that setting](https://learn.akamai.com/en-us/webhelp/api-gateway/api-gateway-user-guide/GUID-7019E774-7A4D-44F9-A731-330F9780C34B.html). If all is well, cacheable queries should now be saved by the CDN.
 
-> Note that requests served directly by a CDN will not show up in the Engine dashboard.
+> Note that requests served directly by a CDN will not show up in the Studio dashboard.
 
 ## Cache configuration
 

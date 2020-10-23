@@ -62,7 +62,7 @@ describe('apollo-server-express', () => {
     serverOptions: ApolloServerExpressConfig,
     options: Partial<ServerRegistration> = {},
   ) {
-    server = new ApolloServer(serverOptions);
+    server = new ApolloServer({stopOnTerminationSignals: false, ...serverOptions});
     app = express();
 
     server.applyMiddleware({ ...options, app });
@@ -184,13 +184,12 @@ describe('apollo-server-express', () => {
     });
 
     it('renders GraphQL playground using request original url', async () => {
-      const nodeEnv = process.env.NODE_ENV;
-      delete process.env.NODE_ENV;
       const samplePath = '/innerSamplePath';
 
       const rewiredServer = new ApolloServer({
         typeDefs,
         resolvers,
+        playground: true,
       });
       const innerApp = express();
       rewiredServer.applyMiddleware({ app: innerApp });
@@ -218,7 +217,6 @@ describe('apollo-server-express', () => {
             },
           },
           (error, response, body) => {
-            process.env.NODE_ENV = nodeEnv;
             if (error) {
               reject(error);
             } else {
@@ -758,7 +756,7 @@ describe('apollo-server-express', () => {
         expect(result.extensions).toBeUndefined();
       });
 
-      it('contains no cacheControl Headers and keeps extension with engine proxy', async () => {
+      it('contains no cacheControl Headers and keeps deprecated extension', async () => {
         const { url: uri } = await createServer({
           typeDefs,
           resolvers,
