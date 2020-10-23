@@ -34,8 +34,10 @@ export function graphqlLambda(
     context.callbackWaitsForEmptyEventLoop = false;
     let { body, headers, isBase64Encoded } = event;
     let query: Record<string, any> | Record<string, any>[];
-    const contentType = headers["content-type"] || headers["Content-Type"];
-    const isMultipart = (contentType || "").startsWith("multipart/form-data");
+    const contentType = (
+      headers['content-type'] || headers['Content-Type'] || ''
+    ).toLowerCase();
+    const isMultipart = contentType.startsWith('multipart/form-data');
 
     if (body && isBase64Encoded && !isMultipart) {
       body = Buffer.from(body, 'base64').toString();

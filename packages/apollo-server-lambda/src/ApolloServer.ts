@@ -252,15 +252,16 @@ export class ApolloServer extends ApolloServerBase {
       };
 
       const fileUploadHandler = (next: Function) => {
-        const contentType =
-          event.headers["content-type"] || event.headers["Content-Type"];
-        if (contentType && contentType.startsWith("multipart/form-data")
-          && typeof processFileUploads === "function") {
+        const contentType = (
+          event.headers['content-type'] || event.headers['Content-Type'] || ''
+        ).toLowerCase();
+        if (contentType.startsWith('multipart/form-data')
+          && typeof processFileUploads === 'function') {
           const request = new FileUploadRequest() as IncomingMessage;
           request.push(
             Buffer.from(
               <any>event.body,
-              event.isBase64Encoded ? "base64" : "ascii"
+              event.isBase64Encoded ? 'base64' : 'ascii'
             )
           );
           request.push(null);
