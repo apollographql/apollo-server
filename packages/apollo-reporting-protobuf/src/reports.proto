@@ -232,6 +232,11 @@ message Trace {
 	// Was this operation forbidden due to lack of safelisting?
 	bool forbidden_operation = 25;
 
+	// These statistics depend on the query's variables and response, and thus
+	// cannot be computed from the trace alone, so we must append them to traces.
+	map<string, InputTypeStat> per_input_type_stat = 29;
+	map<string, EnumTypeStat> per_enum_type_stat = 30;
+
 	// --------------------------------------------------------------
 	// Fields below this line are only set by the old Go engineproxy.
 
@@ -329,6 +334,45 @@ message TypeStat {
 	reserved 1, 2;
 }
 
+message InputFieldStat {
+	// Required. The field's type (e.g. "String!" for User.email:String!).
+	string field_type = 1;
+	// Number of requests where the field is present (either in the operation body
+	// or variables).
+	uint64 request_count = 2;
+	// Number of requests where the field is present (either in the operation body
+	// or variables) and the field is provided null at least once. Note that we
+	// do not count a field with default value null that is provided undefined as
+	// being provided null. Also note that a GraphQL request may encounter no
+	// errors while providing null to a non-nullable input field due to an edge
+	// case in spec (see the usage reporting plugin source for details).
+	uint64 request_count_null = 3;
+	// Number of requests where the field is undefined at least once (either in
+	// the operation body or variables). A field is undefined if either an
+	// ObjectValue of the parent input object type does not have the field
+	// present, or if the field is present with variable value and the variable
+	// is undefined.
+	uint64 request_count_undefined = 4;
+}
+
+message InputTypeStat {
+	// Key is the field's name (e.g. "email" for User.email:String!).
+	map<string, InputFieldStat> per_input_field_stat = 1;
+}
+
+message EnumValueStat {
+	// Number of requests containing the enum value (either in the operation body
+	// or variables).
+	uint64 request_count = 1;
+	// Number of responses containing the enum value.
+	uint64 response_count = 2;
+}
+
+message EnumTypeStat {
+	// Key is the enum value (e.g. "GREEN" for Colors.GREEN).
+	map<string, EnumValueStat> per_enum_value_stat = 1;
+}
+
 message Field {
 	string name = 2; // required; eg "email" for User.email:String!
 	string return_type = 3; // required; eg "String!" for User.email:String!
@@ -372,6 +416,8 @@ message ContextualizedStats {
 	QueryLatencyStats query_latency_stats = 2;
 	// Key is type name.
 	map<string, TypeStat> per_type_stat = 3;
+	map<string, InputTypeStat> per_input_type_stat = 4;
+	map<string, EnumTypeStat> per_enum_type_stat = 5;
 }
 
 // A sequence of traces and stats. An individual trace should either be counted as a stat or trace
