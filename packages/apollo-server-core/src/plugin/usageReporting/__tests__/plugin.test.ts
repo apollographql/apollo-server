@@ -40,29 +40,11 @@ describe('end-to-end', () => {
         anInt: Int
         author(id: Int): User
         topPosts(limit: Int): [Post]
-        searchUsers(filter: UserFilter): [User!]!
       }
-
-      input UserFilter {
-        id: Int
-        name: String
-        kind: UserKind
-        not: UserFilter
-        and: [UserFilter!]
-        or: [UserFilter!]
-      }
-
-      enum UserKind {
-        ADMIN
-        STANDARD
-        GUEST
-      }
-
-      directive @WithRole(kind: UserKind!) on FIELD
       `;
 
     const query = `
-      query q($userKind: UserKind, $orFilter: [UserFilter!]) {
+      query q {
         author(id: 5) {
           name
           posts(limit: 2) {
@@ -70,28 +52,8 @@ describe('end-to-end', () => {
           }
         }
         aBoolean
-        searchUsers(filter: {
-          id: null
-          name: "Foo Bar"
-          kind: $userKind
-          or: $orFilter
-        }) @WithRole(kind: STANDARD) {
-          id
-        }
       }
       `;
-    const variables = {
-      userKind: 'ADMIN',
-      orFilter: [
-        { name: 'null' },
-        {
-          and: [
-            { kind: null },
-            { kind: 'GUEST' },
-          ],
-        },
-      ]
-    };
 
     let reportResolver: (report: string) => void;
     const reportPromise = new Promise<string>((resolve) => {
@@ -120,7 +82,6 @@ describe('end-to-end', () => {
       schema,
       graphqlRequest: {
         query,
-        variables,
         operationName: 'q',
         extensions: {
           clientName: 'testing suite',
@@ -161,58 +122,6 @@ describe('end-to-end', () => {
         ({ responseName }) => responseName === 'aBoolean',
       ),
     ).toBeTruthy();
-    expect(traces![0].perEnumTypeStat).toEqual({
-      UserKind: {
-        perEnumValueStat: {
-          ADMIN: {
-            requestCount: 1
-          },
-          STANDARD: {
-            requestCount: 1
-          },
-          GUEST: {
-            requestCount: 1
-          }
-        }
-      }
-    });
-    expect(traces![0].perInputTypeStat).toEqual({
-      UserFilter: {
-        perInputFieldStat: {
-          id: {
-            fieldType: "Int",
-            requestCount: 1,
-            requestCountNull: 1,
-            requestCountUndefined: 1,
-          },
-          name: {
-            fieldType: "String",
-            requestCount: 1,
-            requestCountUndefined: 1,
-          },
-          kind: {
-            fieldType: "UserKind",
-            requestCount: 1,
-            requestCountNull: 1,
-            requestCountUndefined: 1,
-          },
-          and: {
-            fieldType: "[UserFilter!]",
-            requestCount: 1,
-            requestCountUndefined: 1,
-          },
-          or: {
-            fieldType: "[UserFilter!]",
-            requestCount: 1,
-            requestCountUndefined: 1,
-          },
-          not: {
-            fieldType: "UserFilter",
-            requestCountUndefined: 1,
-          }
-        },
-      },
-    });
   });
 
   describe('includeRequest', () => {

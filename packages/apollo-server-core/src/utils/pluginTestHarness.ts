@@ -22,7 +22,6 @@ import {
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { Dispatcher } from './dispatcher';
 import { generateSchemaHash } from "./schemaHash";
-import { getOperationAST, parse } from 'graphql';
 
 // This test harness guarantees the presence of `query`.
 type IPluginTestHarnessGraphqlRequest = WithRequired<GraphQLRequest, 'query'>;
@@ -119,17 +118,11 @@ export default async function pluginTestHarness<TContext>({
     }
   }
 
-  const document = parse(graphqlRequest.query);
-  const operation = getOperationAST(document, graphqlRequest.operationName);
-  const operationName = operation?.name?.value;
   const requestContext: GraphQLRequestContext<TContext> = {
     logger: logger || console,
     schema,
     schemaHash: generateSchemaHash(schema),
     request: graphqlRequest,
-    document,
-    operation: operation ?? undefined,
-    operationName,
     metrics: Object.create(null),
     source: graphqlRequest.query,
     cache: new InMemoryLRUCache(),
