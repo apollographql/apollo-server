@@ -30,7 +30,7 @@ describe('plugin', () => {
       return pluginTestHarness({
         pluginInstance,
         overallCachePolicy,
-        graphqlRequest: { query: '{ __typename }' }, // query doesn't matter
+        graphqlRequest: { query: 'does not matter' },
         executor: () => {
           const response: GraphQLResponse = {
             http: {
