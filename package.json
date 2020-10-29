@@ -55,8 +55,8 @@
     "graphql-extensions": "file:packages/graphql-extensions"
   },
   "devDependencies": {
-    "@apollo/federation": "^0.20.2",
-    "@apollo/gateway": "^0.20.2",
+    "@apollo/federation": "0.20.2",
+    "@apollo/gateway": "0.20.2",
     "@types/async-retry": "1.4.2",
     "@types/aws-lambda": "8.10.64",
     "@types/body-parser": "1.19.0",
