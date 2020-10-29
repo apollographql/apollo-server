@@ -2,6 +2,10 @@
 title: Get started with Apollo Server
 ---
 
+import {
+  ExpansionPanel,
+} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
+
 > This tutorial walks you through installing and configuring Apollo Server.
 > If you're just getting started with GraphQL or the Apollo
 > platform, we recommend first completing the [full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/).
@@ -20,17 +24,17 @@ JavaScript, and that you have a recent version of Node.js (8+) installed.
 1. From your preferred development directory, create a directory for a new project
 and `cd` into it:
 
-    ```bash
-    mkdir graphql-server-example
-    cd graphql-server-example
-    ```
+  ```bash
+  mkdir graphql-server-example
+  cd graphql-server-example
+  ```
 
 2. Initialize a new Node.js project with `npm` (or another package manager you
 prefer, such as Yarn):
 
-    ```bash
-    npm init --yes
-    ```
+  ```bash
+  npm init --yes
+  ```
 
 Your project directory now contains a `package.json` file.
 
@@ -178,17 +182,23 @@ We're up and running!
 ## Step 8: Execute your first query
 
 We can now execute GraphQL queries on our server. To execute our first query,
-we'll use a tool called **GraphQL Playground**.
+we can use a tool called **GraphQL Playground**.
 
-> **Note:** If your server is deployed to an environment where `NODE_ENV` is
-> set to `production`, GraphQL Playground and introspection will be disabled by
-> default. To enable them, you'll need to explicitly set `playground: true` and
-> `introspection: true` within [the options to `ApolloServer`'s
-> constructor](https://www.apollographql.com/docs/apollo-server/api/apollo-server/#apolloserver).
+<ExpansionPanel title="📣 Interested in alpha-testing a new local querying tool from Apollo?">
 
-With your server still running, visit `http://localhost:4000` in your browser
-to open GraphQL Playground. (Apollo Server hosts GraphQL Playground automatically
-when you run it in development.)
+We're testing a new feature in Apollo Studio called **dev graphs**. Dev graphs enable you to query your locally running server with Studio's powerful Explorer.
+
+To try out dev graphs:
+
+1. If you don't have a (free) Apollo account, visit [studio.apollographql.com](https://studio.apollographql.com) to create one.
+2. Make sure your server is running locally.
+3. Visit [studio.apollographql.com/dev](https://studio.apollographql.com/dev). Specify a name, endpoint (e.g., `http://localhost:4000`), and organization for your dev graph.
+4. Try running operations on your local server using the Explorer. For an overview of Explorer features, see [this video](https://www.youtube.com/watch?v=j8b0Bda_TIw).
+5. Please share your feedback with us at **feedback@apollographql.com**. Thank you!
+
+</ExpansionPanel>
+
+With your server still running, visit `http://localhost:4000` in your browser to open GraphQL Playground. (Apollo Server hosts GraphQL Playground automatically when you run it in a non-production environment.)
 
 ![GraphQL Playground](./images/getting-started/graphql-playground.png)
 
@@ -203,7 +213,7 @@ Our server supports a single query named `books`. Let's execute it!
 
 Here's a GraphQL **query string** for executing the `books` query:
 
-```
+```graphql
 {
   books {
     title
@@ -220,6 +230,8 @@ results (from our hardcoded data set) appear on the right:
 One of the most important concepts of GraphQL is that clients can choose to query
 _only for the fields they need_. Delete `author` from the query string and execute
 it again. The response updates to include only the `title` field for each book!
+
+> **Note:** If your server is deployed to an environment where `NODE_ENV` is set to `production`, GraphQL Playground and introspection are **disabled** by default. To enable them, set `playground: true` and `introspection: true` in [the options to `ApolloServer`'s constructor](./api/apollo-server/#constructor).
 
 ## Next steps
 

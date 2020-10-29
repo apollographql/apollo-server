@@ -44,6 +44,8 @@
 /docs/apollo-server/features/testing/ /docs/apollo-server/testing/testing/
 /docs/apollo-server/features/unions-interfaces/ /docs/apollo-server/schema/unions-interfaces/
 
+/docs/apollo-server/api/apollo-federation/ https://www.apollographql.com/docs/federation/api/apollo-federation/ 302!
+/docs/apollo-server/api/apollo-gateway/ https://www.apollographql.com/docs/federation/api/apollo-gateway/ 302!
 /docs/apollo-server/federation/managed-federation /docs/studio/managed-federation/overview/
 /docs/apollo-server/federation/introduction https://www.apollographql.com/docs/federation/ 302!
 /docs/apollo-server/federation/* https://www.apollographql.com/docs/federation/:splat 302!

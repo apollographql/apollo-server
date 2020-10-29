@@ -3,7 +3,25 @@ title: GraphQL Playground
 description: Visually explore Apollo Server
 ---
 
+import {
+  ExpansionPanel,
+} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
+
 [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) is a graphical, interactive, in-browser GraphQL IDE, created by [Prisma](https://www.prisma.io/) and based on [GraphiQL](https://github.com/graphql/graphiql).
+
+<ExpansionPanel title="📣 Interested in alpha-testing a new local querying tool from Apollo?">
+
+We're testing a new feature in Apollo Studio called **dev graphs**. Dev graphs enable you to query your locally running server with Studio's powerful Explorer.
+
+To try out dev graphs:
+
+1. If you don't have a (free) Apollo account, visit [studio.apollographql.com](https://studio.apollographql.com) to create one.
+2. Make sure your server is running locally.
+3. Visit [studio.apollographql.com/dev](https://studio.apollographql.com/dev). Specify a name, endpoint (e.g., `http://localhost:4000`), and organization for your dev graph.
+4. Try running operations on your local server using the Explorer. For an overview of Explorer features, see [this video](https://www.youtube.com/watch?v=j8b0Bda_TIw).
+5. Please share your feedback with us at **feedback@apollographql.com**. Thank you!
+
+</ExpansionPanel>
 
 In development, Apollo Server enables GraphQL Playground on the same URL as the GraphQL server itself (e.g. `http://localhost:4000/graphql`) and automatically serves the GUI to web browsers.  When `NODE_ENV` is set to `production`, GraphQL Playground (as well as introspection) is disabled as a production best-practice.
 

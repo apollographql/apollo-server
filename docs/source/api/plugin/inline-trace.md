@@ -1,6 +1,6 @@
 ---
-title: "API Reference: ApolloServerPluginInlineTrace"
-sidebar_title: ApolloServerPluginInlineTrace
+title: "API Reference: Inline trace plugin"
+sidebar_title: Inline trace plugin
 api_reference: true
 ---
 
