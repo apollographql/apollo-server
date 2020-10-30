@@ -16,7 +16,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-testing`: types: Allow generic `variables` usage of `query` and `mutate` functions. [PR #4383](https://github.com/apollograpqh/apollo-server/pull/4383)
 - `apollo-server-express`: Export the `GetMiddlewareOptions` type. [PR #4599](https://github.com/apollograpqh/apollo-server/pull/4599)
-
+- `apollo-server-lambda`: Fix file uploads - ignore base64 decoding for multipart queries. [PR #4506](https://github.com/apollographql/apollo-server/pull/4506)
 ## v2.18.2
 
 - `apollo-server-core`: Explicitly include `lru-cache` dependency in `apollo-server-core`'s dependencies. [PR #4600](https://github.com/apollographql/apollo-server/pull/4600)
