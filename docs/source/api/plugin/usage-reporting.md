@@ -153,6 +153,20 @@ If you're using the `overrideReportedSchema` option with the [schema reporting p
 </tr>
 
 <tr>
+<td>
+
+###### `sendUnexecutableOperationDocuments`
+
+`Boolean`
+</td>
+<td>
+
+Statistics about operations that your server cannot execute are not reported under each document separately to Apollo Studio, but are grouped together as "parse failure", "validation failure", or "unknown operation name". By default, the usage reporting plugin does not include the full operation document in reported traces, because it is challenging to strip potential private information (like string constants) from invalid operations. If you'd like the usage reporting plugin to send the full operation document and operation name so you can view it in Apollo Studio's trace view, set this to true.
+
+</td>
+</tr>
+
+<tr>
 <td colspan="2">
 
 **Configuring communication protocol**
