@@ -16,9 +16,13 @@ describe('end-to-end', () => {
   async function runTest({
     pluginOptions = {},
     expectReport = true,
+    query,
+    operationName,
   }: {
     pluginOptions?: ApolloServerPluginUsageReportingOptions<any>;
     expectReport?: boolean;
+    query?: string;
+    operationName?: string | null;
   }) {
     const typeDefs = `
       type User {
@@ -43,7 +47,7 @@ describe('end-to-end', () => {
       }
       `;
 
-    const query = `
+    const defaultQuery = `
       query q {
         author(id: 5) {
           name
@@ -81,8 +85,10 @@ describe('end-to-end', () => {
       pluginInstance,
       schema,
       graphqlRequest: {
-        query,
-        operationName: 'q',
+        query: query ?? defaultQuery,
+        // If operation name is specified use it. If it is specified as null convert it to
+        // undefined because graphqlRequest expects string | undefined
+        operationName: operationName === undefined ? 'q' : (operationName || undefined),
         extensions: {
           clientName: 'testing suite',
         },
@@ -122,6 +128,47 @@ describe('end-to-end', () => {
         ({ responseName }) => responseName === 'aBoolean',
       ),
     ).toBeTruthy();
+  });
+
+  it('fails parse for non-parseable gql', async () => {
+    const { report } = await runTest({ query: 'random text' });
+    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+    expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
+      '## GraphQLParseFailure\n',
+    );
+    const traces = Object.values(report!.tracesPerQuery)[0].trace;
+    expect(traces).toHaveLength(1);
+  });
+
+  it('validation fails for invalid operation', async () => {
+    const { report } = await runTest({ query: 'query q { nonExistentField }' });
+    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+    expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
+      '## GraphQLValidationFailure\n',
+    );
+    const traces = Object.values(report!.tracesPerQuery)[0].trace;
+    expect(traces).toHaveLength(1);
+  });
+
+  it('unknown operation error if not specified', async () => {
+    const { report } = await runTest({ query: 'query notQ { aString }' });
+    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+    expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
+      '## GraphQLUnknownOperationName\n',
+    );
+    const traces = Object.values(report!.tracesPerQuery)[0].trace;
+    expect(traces).toHaveLength(1);
+  });
+
+  it('handles anonymous operation', async () => {
+    const { report } = await runTest({
+      query: 'query { aString }',
+      operationName: null,
+    });
+    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+    expect(Object.keys(report!.tracesPerQuery)[0]).toMatch(/^# -\n/);
+    const traces = Object.values(report!.tracesPerQuery)[0].trace;
+    expect(traces).toHaveLength(1);
   });
 
   describe('includeRequest', () => {

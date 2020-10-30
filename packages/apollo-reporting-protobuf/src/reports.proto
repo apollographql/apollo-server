@@ -196,6 +196,12 @@ message Trace {
 	// instead.
 	string signature = 19;
 
+	// Optional: when GraphQL parsing or validation against the GraphQL schema fails, these fields
+	// can include reference to the operation being sent for users to dig into the set of operations
+	// that are failing validation.
+	string unexecutedOperationBody = 27;
+	string unexecutedOperationName = 28;
+
 	Details details = 6;
 
 	// Note: engineproxy always sets client_name, client_version, and client_address to "none".

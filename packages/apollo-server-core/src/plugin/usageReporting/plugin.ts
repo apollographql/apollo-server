@@ -330,6 +330,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
         });
         treeBuilder.startTiming();
         metrics.startHrTime = treeBuilder.startHrTime;
+        let graphqlValidationFailure = false;
+        let graphqlUnknownOperationName = false;
 
         if (http) {
           treeBuilder.trace.http = new Trace.HTTP({
@@ -471,15 +473,35 @@ export function ApolloServerPluginUsageReporting<TContext>(
             const reportData = getReportData(executableSchemaId);
             const { report } = reportData;
 
+            let statsReportKey: string | undefined = undefined;
+            if (!requestContext.document) {
+              statsReportKey = `## GraphQLParseFailure\n`;
+            } else if (graphqlValidationFailure) {
+              statsReportKey = `## GraphQLValidationFailure\n`;
+            } else if (graphqlUnknownOperationName) {
+              statsReportKey = `## GraphQLUnknownOperationName\n`;
+            }
+
+            if (statsReportKey) {
+              if (
+                options.sendUnexecutableOperationDocuments
+              ) {
+                treeBuilder.trace.unexecutedOperationBody =
+                  requestContext.source;
+                treeBuilder.trace.unexecutedOperationName = operationName;
+              }
+            } else {
+              const signature = getTraceSignature();
+              statsReportKey = `# ${operationName || '-'}\n${signature}`;
+            }
+
             const protobufError = Trace.verify(treeBuilder.trace);
             if (protobufError) {
               throw new Error(`Error encoding trace: ${protobufError}`);
             }
+
             const encodedTrace = Trace.encode(treeBuilder.trace).finish();
 
-            const signature = getTraceSignature();
-
-            const statsReportKey = `# ${operationName || '-'}\n${signature}`;
             if (!report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
               report.tracesPerQuery[statsReportKey] = new TracesAndStats();
               (report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
@@ -489,6 +511,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
             (report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
               encodedTrace,
             );
+
             reportData.size +=
               encodedTrace.length + Buffer.byteLength(statsReportKey);
 
@@ -503,9 +526,10 @@ export function ApolloServerPluginUsageReporting<TContext>(
           }
 
           function getTraceSignature(): string {
-            if (!requestContext.document && !requestContext.source) {
-              // This shouldn't happen: one of those options must be passed to runQuery.
-              throw new Error('No document or source?');
+            if (!requestContext.document) {
+              // This shouldn't happen: no document means parse failure, which
+              // uses its own special statsReportKey.
+              throw new Error('No document?');
             }
 
             const cacheKey = signatureCacheKey(
@@ -519,17 +543,6 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
             if (cachedSignature) {
               return cachedSignature;
-            }
-
-            if (!requestContext.document) {
-              // We didn't get an AST, possibly because of a parse failure. Let's just
-              // use the full query string.
-              //
-              // XXX This does mean that even if you use a calculateSignature which
-              //     hides literals, you might end up sending literals for queries
-              //     that fail parsing or validation. Provide some way to mask them
-              //     anyway?
-              return requestContext.source as string;
             }
 
             const generatedSignature = (
@@ -591,7 +604,18 @@ export function ApolloServerPluginUsageReporting<TContext>(
               treeBuilder.trace.clientName = clientName || '';
             }
           },
+          validationDidStart() {
+            return (validationErrors?: ReadonlyArray<Error>) => {
+              graphqlValidationFailure = validationErrors
+                ? validationErrors.length !== 0
+                : false;
+            };
+          },
           async didResolveOperation(requestContext) {
+            // If operation is undefined then `getOperationAST` returned null
+            // and an unknown operation was specified.
+            graphqlUnknownOperationName =
+              requestContext.operation === undefined;
             await shouldIncludeRequest(requestContext);
 
             if (metrics.captureTraces === false) {

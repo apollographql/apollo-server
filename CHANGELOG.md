@@ -10,6 +10,13 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## vNEXT
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
+- `apollo-server-core`: Do not send  operation documents that cannot be executed to Apollo Studio. Instead, information about these operations will be combined into one "operation" for parse failures, one for validation failures, and one for unknown operation names.
+
+## v2.19.0
+
+- `apollo-server-testing`: types: Allow generic `variables` usage of `query` and `mutate` functions. [PR #4383](https://github.com/apollograpqh/apollo-server/pull/4383)
+- `apollo-server-core`: Update dependency for `@apollographql/graphql-playground-react` to `v1.7.34` to incorporate [`33c48183`](https://github.com/apollographql/graphql-playground/commit/33c48183229e59f0d21f7f4fdd57bed5a973a5cf) which, as an upstream change, should improve support for `graphql@15` features, like interfaces implementing interfaces.
+- `apollo-server-express`: Export the `GetMiddlewareOptions` type. [PR #4599](https://github.com/apollograpqh/apollo-server/pull/4599)
 
 ## v2.18.2
 
