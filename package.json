@@ -65,7 +65,7 @@
     "@types/cors": "2.8.8",
     "@types/express": "4.17.7",
     "@types/fast-json-stable-stringify": "2.0.0",
-    "@types/hapi": "17.8.8",
+    "@types/hapi": "17.8.9",
     "@types/ioredis": "4.17.6",
     "@types/jest": "25.2.3",
     "@types/koa-router": "7.4.1",
