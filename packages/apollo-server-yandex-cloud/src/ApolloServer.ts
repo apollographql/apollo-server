@@ -232,7 +232,7 @@ export class ApolloServer extends ApolloServerBase {
                     );
                     request.push(null);
                     request.headers = event.headers;
-                    processFileUploads(request, response, this.uploadsConfig || {})
+                    return processFileUploads(request, response, this.uploadsConfig || {})
                         .then(body => {
                             event.body = body as any;
                             return next();
