@@ -63,7 +63,7 @@ export function ApolloServerPluginSchemaReporting(
       return 'SchemaReporting';
     },
     async serverWillStart({ apollo, schema, logger }) {
-      const { key, graphId } = apollo;
+      const { key, graphId } = apollo || {};
       if (!key) {
         throw Error(
           'To use ApolloServerPluginSchemaReporting, you must provide an Apollo API ' +
