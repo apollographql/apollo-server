@@ -82,7 +82,7 @@ NPM_CONFIG_USERCONFIG="$HOME/.npmrc-apollo-bot" npm login
 DEBUG=lerna NPM_CONFIG_USERCONFIG="$HOME/.npmrc-apollo-bot" npx lerna publish from-git
 ```
 
-#### Step 4: Add the "Complete versioning details" links
+### Step 4: Add the "Complete versioning details" links
 
 While it would be ideal to have this baked into the Git tag, it's not possible to do this in previous steps since we need to reference the commit hash that is created in Step 2's version bumping.
 
@@ -92,7 +92,7 @@ Therefore, after publishing, add an entry to the CHANGELOG that was published wh
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/COMMIT_HASH)
 ```
 
-#### Step 5: Update GitHub Milestones
+### Step 5: Update GitHub Milestones
 
 The milestone for the release should be finalized.  If it didn't have a concrete version as its name, it should be renamed to the version that was finally released.
 
