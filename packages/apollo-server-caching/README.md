@@ -29,7 +29,7 @@ You can export and run a jest test suite from `apollo-server-caching` to test yo
 
 import YourKeyValueCache from '../src/YourKeyValueCache';
 import { testKeyValueCache } from 'apollo-server-caching';
-testKeyValueCache(new MemcachedCache('localhost'));
+testKeyValueCache(new YourKeyValueCache('localhost'));
 ```
 
 The default `testKeyValueCache` helper will run all key-value store tests on the specified store, including basic `get` and `set` functionality, along with time-based expunging rules.
