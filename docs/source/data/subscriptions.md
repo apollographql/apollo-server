@@ -220,7 +220,7 @@ httpServer.listen(PORT, () => {
 * `onDisconnect` - called when the client disconnects.
 
 ```js
-const server = new ApolloServer(
+const server = new ApolloServer({
   subscriptions: {
     onConnect: (connectionParams, webSocket, context) => {
       // ...
@@ -229,7 +229,7 @@ const server = new ApolloServer(
       // ...
     },
   },
-);
+});
 ```
 
 ## `PubSub` Implementations
