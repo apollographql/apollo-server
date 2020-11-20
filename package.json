@@ -56,7 +56,7 @@
   },
   "devDependencies": {
     "@apollo/federation": "0.20.5",
-    "@apollo/gateway": "0.21.1",
+    "@apollo/gateway": "0.21.2",
     "@types/async-retry": "1.4.2",
     "@types/aws-lambda": "8.10.64",
     "@types/body-parser": "1.19.0",
