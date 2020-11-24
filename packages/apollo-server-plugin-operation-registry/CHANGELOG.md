@@ -4,6 +4,12 @@
 
 - _Nothing yet! Stay tuned!_
 
+## 0.6.0
+
+- __BREAKING__: Drop support for checking for "legacy" manifest locations.  These legacy manifests were deprecated when `v0.2.0` of the operation registry plugin was released.  In order to provide support for both manifests, the plugin has continued to poll for legacy operation manifests in the event that the new format could not be located.  With this change, this legacy probing will cease.  **We will continue to host the legacy manifests until September 30, 2020.**  Users are encouraged to update to this version to ensure that they are not inadvertently leveraging legacy manifests any longer. [PR #4330](https://github.com/apollographql/apollo-server/pull/4330)
+- __BREAKING__: Drop use of `loglevel-debug`.  This removes the very long date and time prefix in front of each log line and also the support for the `DEBUG=apollo-server:apollo-server-plugin-operation-registry:*` environment variable.  Both of these were uncommonly necessary or seldom used (with the environment variable also being undocumented).  The existing behavior can be preserved by providing a `logger` that uses [`loglevel-debug`](https://npm.im/loglevel-debug), if desired.  [PR #4327](https://github.com/apollographql/apollo-server/pull/4327)
+- __BREAKING__: Drop support for `schemaTag` with `graphVariant` being its successor.  As noted below, `schemaTag` was deprecated in v0.3.1 and a deprecation warning has been shown since.  The `graphVariant` replaces the functionality that `schemaTag` offered and, aside from the name change, its behavior is identical. [PR #4328](https://github.com/apollographql/apollo-server/pull/4328)
+
 ## 0.4.4
 
 - Reinstate typings for `make-fetch-happen` at the `apollo-gateway` project level (and now, additionally, `apollo-server-plugin-operation-registry`) [PR #4333](https://github.com/apollographql/apollo-server/pull/4333)
@@ -45,7 +51,7 @@
 ## 0.2.0
 
 - Per-tag operation manifests can now be fetched for each tag that has a schema and registered operations.
-- Manifest storage path structure updated to `/${graphId}/${storageSecret}/${schemaTag}/manifest.v2.json`. The storage secret is fetched automatically using your API key. No longer uses schema hash.
+- Manifest storage path structure updated to `/${graphId}/${storageSecret}/${graphVariant}/manifest.v2.json`. The storage secret is fetched automatically using your API key. No longer uses schema hash.
 - Metrics on forbidden and registered operations are now reported to Engine
 
 ## 0.1.0

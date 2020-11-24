@@ -9,7 +9,6 @@ import {
   FileUploadOptions,
   ApolloServerBase,
   GraphQLOptions,
-  Config,
 } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
@@ -43,17 +42,8 @@ export class FileUploadRequest extends Readable {
 }
 
 export class ApolloServer extends ApolloServerBase {
-  // If you feel tempted to add an option to this constructor. Please consider
-  // another place, since the documentation becomes much more complicated when
-  // the constructor is not longer shared between all integration
-  constructor(options: Config) {
-    if (process.env.ENGINE_API_KEY || options.engine) {
-      options.engine = {
-        sendReportsImmediately: true,
-        ...(typeof options.engine !== 'boolean' ? options.engine : {}),
-      };
-    }
-    super(options);
+  protected serverlessFramework(): boolean {
+    return true;
   }
 
   // Uploads are supported in this integration
@@ -252,15 +242,16 @@ export class ApolloServer extends ApolloServerBase {
       };
 
       const fileUploadHandler = (next: Function) => {
-        const contentType =
-          event.headers["content-type"] || event.headers["Content-Type"];
-        if (contentType && contentType.startsWith("multipart/form-data")
-          && typeof processFileUploads === "function") {
+        const contentType = (
+          event.headers['content-type'] || event.headers['Content-Type'] || ''
+        ).toLowerCase();
+        if (contentType.startsWith('multipart/form-data')
+          && typeof processFileUploads === 'function') {
           const request = new FileUploadRequest() as IncomingMessage;
           request.push(
             Buffer.from(
               <any>event.body,
-              event.isBase64Encoded ? "base64" : "ascii"
+              event.isBase64Encoded ? 'base64' : 'ascii'
             )
           );
           request.push(null);

@@ -116,13 +116,13 @@ Our server would then respond to the query with results that match the query's s
   "data": {
     "books": [
       {
-        "title": "Jurassic Park"
+        "title": "City of Glass"
       },
       ...
     ],
     "authors": [
       {
-        "name": "Michael Crichton"
+        "name": "Paul Auster"
       },
       ...
     ]
@@ -152,9 +152,9 @@ And once again, our server would respond with results that match the query's str
   "data": {
     "books": [
       {
-        "title": "Jurassic Park",
+        "title": "City of Glass",
         "author": {
-          "name": "Michael Crichton"
+          "name": "Paul Auster"
         }
       },
       ...

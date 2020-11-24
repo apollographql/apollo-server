@@ -6,10 +6,12 @@ import {
   GraphQLParseOptions,
 } from 'graphql-tools';
 import {
+  ApolloConfig,
   ValueOrPromise,
   GraphQLExecutor,
   GraphQLExecutionResult,
   GraphQLRequestContextExecutionDidStart,
+  ApolloConfigInput,
 } from 'apollo-server-types';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 // The types for `ws` use `export = WebSocket`, so we'll use the
@@ -17,8 +19,6 @@ import { ConnectionContext } from 'subscriptions-transport-ws';
 import WebSocket = require('ws');
 import { GraphQLExtension } from 'graphql-extensions';
 export { GraphQLExtension } from 'graphql-extensions';
-
-import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 import { PlaygroundConfig } from './playground';
 export { PlaygroundConfig, PlaygroundRenderPageOptions } from './playground';
@@ -31,6 +31,7 @@ import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
+import type { EngineReportingOptions } from './plugin';
 export { GraphQLSchemaModule };
 
 export { KeyValueCache } from 'apollo-server-caching';
@@ -79,8 +80,7 @@ export type GraphQLServiceConfig = {
 };
 
 /**
- * This is a restricted view of an engine configuration which only supplies the
- * necessary info for accessing things like cloud storage.
+ * This is an older format for the data that now lives in ApolloConfig.
  */
 export type GraphQLServiceEngineConfig = {
   apiKeyHash: string;
@@ -90,7 +90,8 @@ export type GraphQLServiceEngineConfig = {
 
 export interface GraphQLService {
   load(options: {
-    engine?: GraphQLServiceEngineConfig;
+    apollo?: ApolloConfig,
+    engine?: GraphQLServiceEngineConfig;  // deprecated; use `apollo` instead
   }): Promise<GraphQLServiceConfig>;
   onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
   // Note: The `TContext` typing here is not conclusively behaving as we expect:
@@ -113,7 +114,6 @@ export interface Config extends BaseConfig {
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
-  engine?: boolean | EngineReportingOptions<Context>;
   extensions?: Array<() => GraphQLExtension>;
   cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];
@@ -124,8 +124,13 @@ export interface Config extends BaseConfig {
   playground?: PlaygroundConfig;
   gateway?: GraphQLService;
   experimental_approximateDocumentStoreMiB?: number;
+  stopOnTerminationSignals?: boolean;
+  apollo?: ApolloConfigInput;
+  // deprecated; see https://go.apollo.dev/s/migration-engine-plugins
+  engine?: boolean | EngineReportingOptions<Context>;
 }
 
+// Configuration for how Apollo Server talks to the Apollo registry.
 export interface FileUploadOptions {
   //Max allowed non-file multipart form field size in bytes; enough for your queries (default: 1 MB).
   maxFieldSize?: number;

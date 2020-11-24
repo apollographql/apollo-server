@@ -5,6 +5,12 @@
 /docs/apollo-server/v2 /docs/apollo-server/
 /docs/apollo-server/v2/* /docs/apollo-server/:splat
 
+# Removing old hidden documentation
+/docs/apollo-server/features/schema-stitching/ /docs/apollo-server/
+/docs/apollo-server/features/schema-delegation/ /docs/apollo-server/
+/docs/apollo-server/features/remote-schemas/ /docs/apollo-server/
+/docs/apollo-server/features/schema-transforms/ /docs/apollo-server/
+
 /docs/apollo-server/data/data/ /docs/apollo-server/data/resolvers/
 
 /docs/apollo-server/federation/implementing/ /docs/apollo-server/federation/implementing-services/
@@ -38,4 +44,9 @@
 /docs/apollo-server/features/testing/ /docs/apollo-server/testing/testing/
 /docs/apollo-server/features/unions-interfaces/ /docs/apollo-server/schema/unions-interfaces/
 
-/docs/apollo-server/federation/managed-federation /docs/graph-manager/federation/#connecting-apollo-server-to-the-graph-manager
+# Move federation docs into their own docset
+/docs/apollo-server/api/apollo-federation/ /docs/federation/api/apollo-federation/ 302!
+/docs/apollo-server/api/apollo-gateway/ /docs/federation/api/apollo-gateway/ 302!
+/docs/apollo-server/federation/managed-federation /docs/studio/managed-federation/overview/
+/docs/apollo-server/federation/introduction /docs/federation/ 302!
+/docs/apollo-server/federation/* /docs/federation/:splat 302!
