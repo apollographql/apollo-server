@@ -33,7 +33,6 @@ import {
  * - (optional) fieldResolver: a custom default field resolver
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  * - (optional) parseOptions: options to pass when parsing schemas and queries
- * - (optional) reporting: set if we are directly reporting to Engine
  *
  */
 export interface GraphQLServerOptions<

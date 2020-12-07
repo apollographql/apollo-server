@@ -12,7 +12,7 @@ import {
 
 // This seems like it could live in this package too.
 import { KeyValueCache } from 'apollo-server-caching';
-import { Trace } from 'apollo-engine-reporting-protobuf';
+import { Trace } from 'apollo-reporting-protobuf';
 
 export type BaseContext = Record<string, any>;
 
@@ -51,17 +51,32 @@ type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
  export type SchemaHash = Fauxpaque<string, 'SchemaHash'>;
 
-export interface GraphQLServiceContext {
+// Configuration for how Apollo Server talks to the Apollo registry, as
+// passed to the ApolloServer constructor.
+export interface ApolloConfigInput {
+  key?: string;
+  graphId?: string;
+  graphVariant?: string;
+}
+
+// Configuration for how Apollo Server talks to the Apollo registry, with
+// some defaults filled in from the ApolloConfigInput passed to the constructor.
+export interface ApolloConfig {
+  key?: string;
+  keyHash?: string;
+  graphId?: string;
+  graphVariant: string;
+}
+
+ export interface GraphQLServiceContext {
   logger: Logger;
   schema: GraphQLSchema;
   schemaHash: SchemaHash;
-  engine: {
-    serviceID?: string;
-    apiKeyHash?: string;
-  };
+  apollo: ApolloConfig;
   persistedQueries?: {
     cache: KeyValueCache;
   };
+  serverlessFramework: boolean;
 }
 
 export interface GraphQLRequest {
@@ -212,6 +227,7 @@ export type GraphQLRequestContextExecutionDidStart<TContext> =
     | 'operationName'
   >;
 export type GraphQLRequestContextWillSendResponse<TContext> =
+  GraphQLRequestContextDidResolveSource<TContext> &
   WithRequired<GraphQLRequestContext<TContext>,
     | 'metrics'
     | 'response'

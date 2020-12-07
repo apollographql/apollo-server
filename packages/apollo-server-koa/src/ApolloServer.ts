@@ -1,4 +1,4 @@
-import Koa, { Middleware } from 'koa';
+import Koa, { ParameterizedContext, Middleware } from 'koa';
 import corsMiddleware from '@koa/cors';
 import bodyParser from 'koa-bodyparser';
 import compose from 'koa-compose';
@@ -28,10 +28,10 @@ export interface ServerRegistration extends GetMiddlewareOptions {
   app: Koa;
 }
 
-const middlewareFromPath = (
+const middlewareFromPath = <StateT, CustomT>(
   path: string,
-  middleware: compose.Middleware<Koa.Context>,
-) => (ctx: Koa.Context, next: () => Promise<any>) => {
+  middleware: compose.Middleware<ParameterizedContext<StateT, CustomT>>,
+) => (ctx: ParameterizedContext<StateT, CustomT>, next: () => Promise<any>) => {
   if (ctx.path === path) {
     return middleware(ctx, next);
   } else {

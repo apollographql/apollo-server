@@ -30,7 +30,8 @@ describe('plugin', () => {
       return pluginTestHarness({
         pluginInstance,
         overallCachePolicy,
-        graphqlRequest: { query: 'does not matter' },
+        // This query needs to pass graphql validation
+        graphqlRequest: { query: 'query { hello }' },
         executor: () => {
           const response: GraphQLResponse = {
             http: {

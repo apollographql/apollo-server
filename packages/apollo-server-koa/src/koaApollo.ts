@@ -36,7 +36,7 @@ export function graphqlKoa(
       query:
         ctx.request.method === 'POST'
           ? // fallback to ctx.req.body for koa-multer support
-            ctx.request.body || (ctx.req as any).body
+            (ctx.request as any).body || (ctx.req as any).body
           : ctx.request.query,
       request: convertNodeHttpToRequest(ctx.req),
     }).then(

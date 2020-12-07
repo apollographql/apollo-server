@@ -151,6 +151,7 @@ describe(
         server = new ApolloServer({
           typeDefs,
           resolvers,
+          stopOnTerminationSignals: false,
         });
         app = new Server({ port });
 
@@ -424,6 +425,7 @@ describe(
           server = new ApolloServer({
             typeDefs,
             resolvers,
+            stopOnTerminationSignals: false,
             context: () => {
               throw new AuthenticationError('valid result');
             },
@@ -472,6 +474,7 @@ describe(
                 },
               },
             },
+            stopOnTerminationSignals: false,
           });
 
           app = new Server({ port });
@@ -519,6 +522,7 @@ describe(
                 },
               },
             },
+            stopOnTerminationSignals: false,
           });
 
           app = new Server({ port });
@@ -563,6 +567,7 @@ describe(
                 },
               },
             },
+            stopOnTerminationSignals: false,
           });
 
           app = new Server({ port });

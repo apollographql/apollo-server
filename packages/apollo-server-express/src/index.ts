@@ -20,6 +20,7 @@ export {
 export {
   ApolloServer,
   ServerRegistration,
+  GetMiddlewareOptions,
   ApolloServerExpressConfig,
 } from './ApolloServer';
 

@@ -1,9 +1,11 @@
 # CHANGELOG
 
-The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g. which are not actual HTTP integrations; packages not prefixed with `apollo-server`) may use different versions.  For more details, check the publish commit for that version in the Git history, or check the individual CHANGELOGs for specific packages which are maintained separately:
+The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g., those which are not actual HTTP integrations; packages not prefixed with "`apollo-server`", or just supporting packages) may use different versions.
 
-- [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-gateway/CHANGELOG.md)
-- [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-federation/CHANGELOG.md)
+🆕 **Please Note!**: 🆕 **The `@apollo/federation` and `@apollo/gateway` packages now live in the [`apollographql/federation`](https://github.com/apollographql/federation) repository.**
+
+- [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
+- [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
 ## v3.0.0 (PRERELEASE)
 
@@ -20,6 +22,59 @@ The version headers in this history reflect the versions of Apollo Server itself
 
   - We no longer re-export the entirety of `graphql-tools` (including `makeExecutableSchema`) from all Apollo Server packages.
   - The `Upload` scalar is no longer exported. (See above as to why.)
+
+## v2.19.0
+
+- `apollo-server-testing`: types: Allow generic `variables` usage of `query` and `mutate` functions. [PR #4383](https://github.com/apollograpqh/apollo-server/pull/4383)
+- `apollo-server-express`: Export the `GetMiddlewareOptions` type. [PR #4599](https://github.com/apollograpqh/apollo-server/pull/4599)
+- `apollo-server-lambda`: Fix file uploads - ignore base64 decoding for multipart queries. [PR #4506](https://github.com/apollographql/apollo-server/pull/4506)
+- `apollo-server-core`: Do not send  operation documents that cannot be executed to Apollo Studio. Instead, information about these operations will be combined into one "operation" for parse failures, one for validation failures, and one for unknown operation names.
+
+## v2.18.2
+
+- `apollo-server-core`: Explicitly include `lru-cache` dependency in `apollo-server-core`'s dependencies. [PR #4600](https://github.com/apollographql/apollo-server/pull/4600)
+
+## v2.18.1
+
+- `apollo-server-core`: Fix support for legacy option `engine: {logger}`, broken in v2.18.0. [PR #4588](https://github.com/apollographql/apollo-server/pull/4588)
+
+- `apollo-server-plugin-base`: The `ApolloServerPlugin` TypeScript type does not need to extend `AnyFunctionMap`, which was an unnecessary change in v2.18.0. [PR #4588](https://github.com/apollographql/apollo-server/pull/4588)
+
+- `apollo-server-core`: Improve a usage reporting error which occurs when you use Apollo Server in an unsupported way. [PR #4588](https://github.com/apollographql/apollo-server/pull/4588)
+
+- `apollo-server-core`: Fix typo in error message for unparsable/invalid schemas provided via `overrideReportedSchema`. [PR #4581](https://github.com/apollographql/apollo-server/pull/4581)
+
+## v2.18.0
+
+- `apollo-server-core`: When Apollo Server is configured with an Apollo API key, the URLs it uses to connect to Apollo's servers have changed. If the environment in which you run your servers requires you to explicitly allow connections by domain, you will need to add the new domain names. Usage reporting previously connected to https://engine-report.apollodata.com/ and now connects to https://usage-reporting.api.apollographql.com/; schema reporting previously connected to https://edge-server-reporting.api.apollographql.com/ and now connects to https://schema-reporting.api.apollographql.com/ . [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- Apollo Server's support for communicating with Apollo’s commercial products has been refactored into three separate plugins exported from `apollo-server-core` (for usage reporting, schema reporting, and inline tracing), configured using the standard `plugins` option. The `engine` option continues to work for backwards compatibility in the 2.x series; support for `engine` will be deprecated in Apollo Server 3.x. Full details are available in [the migration guide](https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/). [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- To consistently support tracing, inline tracing is enabled by default on federated implementing services, even when an Apollo API key is provided.  Previously it was not enabled when an API key was provided. You can disable it with `ApolloServerPluginInlineTraceDisabled`. [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- The `apollo-engine-reporting` npm package has been obsoleted and will no longer receive updates. [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- The `apollo-engine-reporting-protobuf` package has been renamed to `apollo-reporting-protobuf`.  No new versions of the old package will be published. [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- Implementations of `ApolloServer` for serverless frameworks such as Lambda now override the `serverlessFramework()` method to return true.  We have changed our own integrations, but other implementations that extend `ApolloServer` which need this behavior should do the same.  Support for `engine.sendReportsImmediately` will be dropped in Apollo Server 3.x. [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- The `GraphQLServiceContext` type passed to the plugin serverWillStart method now contains `apollo` and `serverlessFramework` values. [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- `apollo-server-core` / `apollo-server-plugin-base`: The request pipeline plugin API now supports a `serverWillStop` lifecycle hook. [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- `apollo-server-core`: Previously, the usage reporting functionality registered one-shot handlers for the `SIGINT` and `SIGTERM` signals, which it used to send one final usage report before re-sending the signal to itself to continue shutdown. These signals handlers were installed by default if you enabled usage or schema reporting, and could be disabled by passing `engine.handleSignals: false`. Now, termination signal handling is the responsibility of Apollo Server as a whole rather than something specific to usage reporting. Apollo Server itself now registers these one-shot signal handlers, which trigger `ApolloServer.stop()`. This allows any plugin that implements the new `serverWillStop` callback to hook into shutdown logic, not just the usage reporting code. Similarly to before, these signal handlers are registered by default but can be disabled by via an option. We've changed the option name to `stopOnTerminationSignals: false` as it is more explicit about the behavior. [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- `apollo-server-core`: The default logger implementation (if you don't specify your own `logger` or specify `debug`) now logs at the INFO level instead of the WARN level. The main effect is on a few built-in plugins which log one INFO message at startup; if a custom plugin logs at the INFO level then those messages will be visible by default as well. [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- `apollo-server-core`: Parse and validate any schema passed via `overrideReportedSchema` to the schema reporting plugin, and throw accordingly on unparsable or invalid schemas.
+
+- Using Apollo Server from TypeScript now requires TypeScript 3.8 due to the use of the `import type` and `export type` directives. (If this proves to be a major problem we can revert this choice, but it makes it easier for us to ensure that certain large dependencies are only loaded when needed.) [PR #4453](https://github.com/apollographql/apollo-server/pull/4453)
+
+- Updated `@apollographql/graphql-playground-react` to 1.7.33 to include [an upstream fix](https://github.com/apollographql/graphql-playground/commit/1c102692bfbb717688827204186c15cb92629b3a). [PR #4550](https://github.com/apollographql/apollo-server/pull/4550)
+
+## v2.17.0
+
+- subscriptions: Fix bug which prevented `installSubscriptionHandlers` from accepting a `websocket.Server` (as intended in [PR #1966](https://github.com/apollographql/apollo-server/pull/1966)) and also added support for other `http.Server` variations (e.g., Tls). [Issue #4198](https://github.com/apollographql/apollo-server/issues/4198) [PR #4200](https://github.com/apollographql/apollo-server/pull/4200)
 
 ## v2.16.1
 

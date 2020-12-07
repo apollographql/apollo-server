@@ -220,16 +220,20 @@ export class ApolloServer {
             schema: schema,
             schemaHash: 'TODO' as SchemaHash,
             logger: console, // TODO FIXME AS3
-            engine: {
+            serverlessFramework: this.serverlessFramework(),
             // TODO(AS3)
-            //   serviceID: this.engineServiceId,
-            //   apiKeyHash: this.engineApiKeyHash,
+            apollo: {
+              graphVariant: 'current',
             },
             // TODO(AS3)
             // persistedQueries: this.requestOptions.persistedQueries,
           }),
       ),
     );
+  }
+
+  protected serverlessFramework(): boolean {
+    return false;
   }
 
   public async stop() {

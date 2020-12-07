@@ -11,7 +11,7 @@ import { HttpRequestCache } from './cache';
 
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { OperationManifest } from "./ApolloServerPluginOperationRegistry";
-import { Logger } from "apollo-server-types";
+import { Logger, ApolloConfig, WithRequired } from "apollo-server-types";
 import { Response, RequestInit, fetch } from "apollo-server-env";
 
 const DEFAULT_POLL_SECONDS: number = 30;
@@ -21,9 +21,8 @@ export interface AgentOptions {
   logger?: Logger;
   fetcher?: typeof fetch;
   pollSeconds?: number;
-  engine: any;
+  apollo: WithRequired<ApolloConfig, 'keyHash' | 'graphId'>;
   store: InMemoryLRUCache;
-  graphVariant: string;
 }
 
 type SignatureStore = Set<string>;
@@ -49,20 +48,6 @@ export default class Agent {
 
     this.logger = this.options.logger || loglevel.getLogger(pluginName);
     this.fetcher = this.options.fetcher || getDefaultGcsFetcher();
-
-    if (
-      typeof this.options.engine !== 'object' ||
-      typeof this.options.engine.serviceID !== 'string'
-    ) {
-      throw new Error('`engine.serviceID` must be passed to the Agent.');
-    }
-
-    if (
-      typeof this.options.engine !== 'object' ||
-      typeof this.options.engine.apiKeyHash !== 'string'
-    ) {
-      throw new Error('`engine.apiKeyHash` must be passed to the Agent.');
-    }
   }
 
   async requestPending() {
@@ -132,8 +117,8 @@ export default class Agent {
 
   private async fetchAndUpdateStorageSecret(): Promise<string | undefined> {
     const storageSecretUrl = getStorageSecretUrl(
-      this.options.engine.serviceID,
-      this.options.engine.apiKeyHash,
+      this.options.apollo.graphId,
+      this.options.apollo.keyHash,
     );
 
     const response = await this.fetcher(storageSecretUrl, this.fetchOptions);
@@ -170,9 +155,9 @@ export default class Agent {
     }
 
     const storageSecretManifestUrl = getOperationManifestUrl(
-      this.options.engine.serviceID,
+      this.options.apollo.graphId,
       storageSecret,
-      this.options.graphVariant,
+      this.options.apollo.graphVariant,
     );
 
     this.logger.debug(
@@ -183,7 +168,7 @@ export default class Agent {
 
     if (response.status === 404 || response.status === 403) {
       throw new Error(
-        `No manifest found for tag "${this.options.graphVariant}" at ` +
+        `No manifest found for tag "${this.options.apollo.graphVariant}" at ` +
         `${storageSecretManifestUrl}. ${callToAction}`);
     }
     return response;
@@ -218,7 +203,7 @@ export default class Agent {
         throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
       }
     } catch (err) {
-      const ourErrorPrefix = `Unable to fetch operation manifest for graph ID '${this.options.engine.serviceID}': ${err}`;
+      const ourErrorPrefix = `Unable to fetch operation manifest for graph ID '${this.options.apollo.graphId}': ${err}`;
 
       err.message = `${ourErrorPrefix}: ${err}`;
 

@@ -5,13 +5,13 @@ import {
   IMocks,
 } from 'graphql-tools';
 import {
+  ApolloConfig,
   ValueOrPromise,
   GraphQLExecutor,
   GraphQLExecutionResult,
   GraphQLRequestContextExecutionDidStart,
+  ApolloConfigInput,
 } from 'apollo-server-types';
-
-import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 import { PlaygroundConfig } from './playground';
 export { PlaygroundConfig, PlaygroundRenderPageOptions } from './playground';
@@ -61,8 +61,7 @@ export type GraphQLServiceConfig = {
 };
 
 /**
- * This is a restricted view of an engine configuration which only supplies the
- * necessary info for accessing things like cloud storage.
+ * This is an older format for the data that now lives in ApolloConfig.
  */
 export type GraphQLServiceEngineConfig = {
   apiKeyHash: string;
@@ -72,7 +71,8 @@ export type GraphQLServiceEngineConfig = {
 
 export interface GraphQLService {
   load(options: {
-    engine?: GraphQLServiceEngineConfig;
+    apollo?: ApolloConfig,
+    engine?: GraphQLServiceEngineConfig;  // deprecated; use `apollo` instead
   }): Promise<GraphQLServiceConfig>;
   onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
   // Note: The `TContext` typing here is not conclusively behaving as we expect:
@@ -95,7 +95,6 @@ export interface Config extends BaseConfig {
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
-  engine?: boolean | EngineReportingOptions<Context>;
   cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
@@ -103,4 +102,6 @@ export interface Config extends BaseConfig {
   playground?: PlaygroundConfig;
   gateway?: GraphQLService;
   experimental_approximateDocumentStoreMiB?: number;
+  stopOnTerminationSignals?: boolean;
+  apollo?: ApolloConfigInput;
 }

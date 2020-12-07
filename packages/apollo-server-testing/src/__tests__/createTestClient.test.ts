@@ -53,6 +53,17 @@ describe('createTestClient', () => {
     expect(res.data).toEqual({ test: 'wow' });
   });
 
+  it('works with generic types', async () => {
+    const query = `query test($echo: String){ test(echo: $echo) }`;
+    type Data = { test?: string | null; };
+    type Variables = { echo: string; };
+    const client = createTestClient(myTestServer);
+    const res1 = await client.query<Data>({ query, variables: { echo: 'onlydata' } });
+    expect(res1.data).toEqual({ test: 'onlydata' });
+    const res2 = await client.query<Data, Variables>({ query, variables: { echo: 'data and variables' } });
+    expect(res2.data).toEqual({ test: 'data and variables' });
+  })
+
   it('resolves with context', async () => {
     const query = `{ hello }`;
     const client = createTestClient(myTestServer);

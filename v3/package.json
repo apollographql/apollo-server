@@ -39,7 +39,6 @@
   "dependencies": {
     "apollo-cache-control": "file:../packages/apollo-cache-control",
     "apollo-datasource-rest": "file:../packages/apollo-datasource-rest",
-    "apollo-engine-reporting": "file:../packages/apollo-engine-reporting",
     "apollo-graphql": "^0.5.0",
     "apollo-server-caching": "file:../packages/apollo-server-caching",
     "apollo-server-core": "file:../packages/apollo-server-core",

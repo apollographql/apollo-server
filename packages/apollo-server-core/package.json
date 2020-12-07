@@ -30,18 +30,22 @@
     "@types/ws": "^7.2.6",
     "apollo-cache-control": "file:../apollo-cache-control",
     "apollo-datasource": "file:../apollo-datasource",
-    "apollo-engine-reporting": "file:../apollo-engine-reporting",
+    "apollo-graphql": "^0.6.0",
+    "apollo-reporting-protobuf": "file:../apollo-reporting-protobuf",
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-server-types": "file:../apollo-server-types",
     "apollo-tracing": "file:../apollo-tracing",
+    "async-retry": "^1.2.1",
     "fast-json-stable-stringify": "^2.1.0",
     "graphql-tag": "^2.11.0",
     "graphql-tools": "^4.0.0",
     "loglevel": "^1.6.8",
-    "sha.js": "^2.4.11"
+    "lru-cache": "^5.0.0",
+    "sha.js": "^2.4.11",
+    "uuid": "^8.0.0"
   },
   "peerDependencies": {
     "graphql": "^15.3.0"

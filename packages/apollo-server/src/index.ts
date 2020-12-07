@@ -55,9 +55,8 @@ export class ApolloServer extends ApolloServerBase {
 
     // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
     // corresponding loopback ip. Note that the url field we're setting is
-    // primarily for consumption by our test suite. If this heuristic is
-    // wrong for your use case, explicitly specify a frontend host (in the
-    // `frontends.host` field in your engine config, or in the `host`
+    // primarily for consumption by our test suite. If this heuristic is wrong
+    // for your use case, explicitly specify a frontend host (in the `host`
     // option to ApolloServer.listen).
     let hostForUrl = serverInfo.address;
     if (serverInfo.address === '' || serverInfo.address === '::')
