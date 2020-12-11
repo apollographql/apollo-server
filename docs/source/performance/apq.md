@@ -27,7 +27,7 @@ const client = new ApolloClient({
 });
 ```
 
-> Note: Users of `apollo-boost` should [migrate to `apollo-client`](https://www.apollographql.com/docs/react/advanced/boost-migration/) in order to use the `apollo-link-persisted-queries` package.
+> Note: Users of `apollo-boost` should [migrate to `apollo-client`](https://www.apollographql.com/docs/react/migrating/apollo-client-3-migration/#apollo-boost) in order to use the `apollo-link-persisted-queries` package.
 
 ## Verify
 
