@@ -58,7 +58,7 @@
     "@apollo/federation": "0.20.2",
     "@apollo/gateway": "0.20.2",
     "@types/async-retry": "1.4.2",
-    "@types/aws-lambda": "8.10.64",
+    "@types/aws-lambda": "8.10.66",
     "@types/body-parser": "1.19.0",
     "@types/bunyan": "1.8.6",
     "@types/connect": "3.4.33",
