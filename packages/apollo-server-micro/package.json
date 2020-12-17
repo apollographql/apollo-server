@@ -24,7 +24,6 @@
   },
   "homepage": "https://github.com/apollograph../apollo-server#readme",
   "dependencies": {
-    "@apollographql/graphql-playground-html": "1.6.26",
     "accept": "^3.0.2",
     "@landingexp/apollo-server-core": "file:../apollo-server-core",
     "@landingexp/apollo-server-types": "file:../apollo-server-types",

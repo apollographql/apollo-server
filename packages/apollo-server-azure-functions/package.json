@@ -26,7 +26,6 @@
 		"node": ">=6"
 	},
 	"dependencies": {
-		"@apollographql/graphql-playground-html": "1.6.26",
 		"@azure/functions": "1.2.2",
 		"@landingexp/apollo-server-core": "file:../apollo-server-core",
 		"@landingexp/apollo-server-env": "file:../apollo-server-env",

@@ -1,8 +1,4 @@
 import { ApolloServerBase, GraphQLOptions } from '@landingexp/apollo-server-core';
-import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
 import { Request, Response } from 'express';
 
 import { graphqlCloudFunction } from './googleCloudApollo';
@@ -114,16 +110,16 @@ export class ApolloServer extends ApolloServerBase {
       }
 
       if (this.playgroundOptions && req.method === 'GET') {
-        const acceptHeader = req.headers['accept'] as string;
+        const acceptHeader = req.headers['accept'];
         if (acceptHeader && acceptHeader.includes('text/html')) {
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: req.get('referer'),
-            ...this.playgroundOptions,
-          };
-
           res
             .status(200)
-            .send(renderPlaygroundPage(playgroundRenderPageOptions));
+            .send(this.renderHTML({
+              playground: {
+                endpoint: req.get('referer'),
+                ...this.playgroundOptions,
+              },
+            }));
           return;
         }
       }

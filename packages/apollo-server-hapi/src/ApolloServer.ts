@@ -1,9 +1,5 @@
 import hapi from 'hapi';
 import { parseAll } from 'accept';
-import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
 
 import { graphqlHapi } from './hapiApollo';
 
@@ -85,15 +81,15 @@ export class ApolloServer extends ApolloServerBase {
             ) === 'text/html';
 
           if (prefersHTML) {
-            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-              endpoint: path,
-              subscriptionEndpoint: this.subscriptionsPath,
-              version: this.playgroundVersion,
-              ...this.playgroundOptions,
-            };
-
             return h
-              .response(renderPlaygroundPage(playgroundRenderPageOptions))
+              .response(this.renderHTML({
+                playground: {
+                  endpoint: path,
+                  subscriptionEndpoint: this.subscriptionsPath,
+                  version: this.playgroundVersion,
+                  ...this.playgroundOptions,
+                },
+              }))
               .type('text/html')
               .takeover();
           }
