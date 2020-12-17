@@ -38,9 +38,7 @@ export function graphqlExpress(
     }).then(
       ({ graphqlResponse, responseInit }) => {
         if (responseInit.headers) {
-          for (const [name, value] of Object.entries(responseInit.headers)) {
-            res.setHeader(name, value);
-          }
+          res.set(responseInit.headers);
         }
 
         // Using `.send` is a best practice for Express, but we also just use
@@ -57,9 +55,7 @@ export function graphqlExpress(
         }
 
         if (error.headers) {
-          for (const [name, value] of Object.entries(error.headers)) {
-            res.setHeader(name, value);
-          }
+          res.set(error.headers);
         }
 
         res.statusCode = error.statusCode;
