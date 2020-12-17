@@ -6,11 +6,11 @@ import {
   GraphQLError,
   GraphQLFormattedError,
 } from 'graphql';
-import { GraphQLExtension } from 'graphql-extensions';
-import { CacheControlExtensionOptions } from 'apollo-cache-control';
-import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
-import { DataSource } from 'apollo-datasource';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { GraphQLExtension } from '@landingexp/graphql-extensions';
+import { CacheControlExtensionOptions } from '@landingexp/apollo-cache-control';
+import { KeyValueCache, InMemoryLRUCache } from '@landingexp/apollo-server-caching';
+import { DataSource } from '@landingexp/apollo-datasource';
+import { ApolloServerPlugin } from '@landingexp/apollo-server-plugin-base';
 import { GraphQLParseOptions } from 'graphql-tools';
 import {
   GraphQLExecutor,
@@ -19,7 +19,7 @@ import {
   GraphQLRequestContext,
   Logger,
   SchemaHash,
-} from 'apollo-server-types';
+} from '@landingexp/apollo-server-types';
 
 /*
  * GraphQLServerOptions

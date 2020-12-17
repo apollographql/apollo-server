@@ -4,8 +4,8 @@ import { graphqlExpress } from '../expressApollo';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
-} from 'apollo-server-integration-testsuite';
-import { GraphQLOptions } from 'apollo-server-core';
+} from '@landingexp/apollo-server-integration-testsuite';
+import { GraphQLOptions } from '@landingexp/apollo-server-core';
 
 function createApp(options: CreateAppOptions = {}) {
   const app = express();

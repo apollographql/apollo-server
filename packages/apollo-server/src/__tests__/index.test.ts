@@ -15,7 +15,7 @@ const resolvers = {
   },
 };
 
-describe('apollo-server', () => {
+describe('@landingexp/apollo-server', () => {
   describe('constructor', () => {
     it('accepts typeDefs and resolvers', () => {
       expect(() => new ApolloServer({ typeDefs, resolvers })).not.toThrow;

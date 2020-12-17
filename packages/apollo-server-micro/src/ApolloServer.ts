@@ -2,7 +2,7 @@ import {
   ApolloServerBase,
   GraphQLOptions,
   processFileUploads,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';

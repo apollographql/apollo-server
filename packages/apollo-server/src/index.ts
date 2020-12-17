@@ -8,7 +8,7 @@ import {
   ApolloServer as ApolloServerBase,
   CorsOptions,
   ApolloServerExpressConfig,
-} from 'apollo-server-express';
+} from '@landingexp/apollo-server-express';
 
 export * from './exports';
 

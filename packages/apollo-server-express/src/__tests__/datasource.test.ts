@@ -2,12 +2,12 @@ import express from 'express';
 
 import http, { Server } from 'http';
 
-import { RESTDataSource } from 'apollo-datasource-rest';
+import { RESTDataSource } from '@landingexp/apollo-datasource-rest';
 
 import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServer } from '../ApolloServer';
 
-import { createServerInfo } from 'apollo-server-integration-testsuite';
+import { createServerInfo } from '@landingexp/apollo-server-integration-testsuite';
 import { gql } from '../index';
 
 export class IdAPI extends RESTDataSource {
@@ -61,7 +61,7 @@ restAPI.use('/str/:id', (req, res) => {
   res.end();
 });
 
-describe('apollo-server-express', () => {
+describe('@landingexp/apollo-server-express', () => {
   let restServer: Server;
   let restUrl: string;
 

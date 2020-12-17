@@ -7,13 +7,13 @@ import {
 
 import { graphqlHapi } from './hapiApollo';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions, GraphQLExtension } from '@landingexp/apollo-server-core';
 import {
   ApolloServerBase,
   GraphQLOptions,
   FileUploadOptions,
   processFileUploads,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 
 function handleFileUploads(uploadsConfig: FileUploadOptions) {
   return async (request: hapi.Request, _h?: hapi.ResponseToolkit) => {

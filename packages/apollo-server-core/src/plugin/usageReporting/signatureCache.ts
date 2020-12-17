@@ -1,5 +1,5 @@
 import LRUCache from 'lru-cache';
-import { Logger } from 'apollo-server-types';
+import { Logger } from '@landingexp/apollo-server-types';
 
 export function createSignatureCache({
   logger,

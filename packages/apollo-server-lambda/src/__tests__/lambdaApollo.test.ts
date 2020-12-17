@@ -3,8 +3,8 @@ import testSuite, {
   schema as Schema,
   CreateAppOptions,
   NODE_MAJOR_VERSION,
-} from 'apollo-server-integration-testsuite';
-import { Config } from 'apollo-server-core';
+} from '@landingexp/apollo-server-integration-testsuite';
+import { Config } from '@landingexp/apollo-server-core';
 import { IncomingMessage, ServerResponse } from 'http';
 
 import url from 'url';

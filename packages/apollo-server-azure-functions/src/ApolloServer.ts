@@ -1,7 +1,7 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { HttpResponse } from 'azure-functions-ts-essentials';
-import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLOptions } from 'apollo-server-core';
+import { ApolloServerBase } from '@landingexp/apollo-server-core';
+import { GraphQLOptions } from '@landingexp/apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,

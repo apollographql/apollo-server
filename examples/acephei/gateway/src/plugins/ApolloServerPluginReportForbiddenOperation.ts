@@ -1,8 +1,8 @@
 import {
   ApolloServerPlugin,
   GraphQLRequestListener
-} from "apollo-server-plugin-base";
-import { ForbiddenError } from "apollo-server-errors";
+} from "@landingexp/apollo-server-plugin-base";
+import { ForbiddenError } from "@landingexp/apollo-server-errors";
 import loglevel from "loglevel";
 
 interface Options {

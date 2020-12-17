@@ -1,4 +1,4 @@
-import { Request, Headers } from 'apollo-server-env';
+import { Request, Headers } from '@landingexp/apollo-server-env';
 
 declare class MockReq implements Pick<Request, 'method' | 'url' | 'headers'> {
   constructor();

@@ -4,7 +4,7 @@ import {
   ApolloError,
   AuthenticationError,
   ForbiddenError,
-} from 'apollo-server-errors';
+} from '@landingexp/apollo-server-errors';
 import { RESTDataSource, RequestOptions } from '../RESTDataSource';
 
 import { HTTPCache } from '../HTTPCache';

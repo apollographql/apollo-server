@@ -4,8 +4,8 @@ import {
   HttpQueryError,
   runHttpQuery,
   convertNodeHttpToRequest,
-} from 'apollo-server-core';
-import { ValueOrPromise } from 'apollo-server-types';
+} from '@landingexp/apollo-server-core';
+import { ValueOrPromise } from '@landingexp/apollo-server-types';
 
 export interface KoaGraphQLOptionsFunction {
   (ctx: Koa.Context): ValueOrPromise<GraphQLOptions>;

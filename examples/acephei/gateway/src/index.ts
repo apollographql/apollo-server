@@ -1,6 +1,6 @@
-import { ApolloServer } from "apollo-server";
+import { ApolloServer } from "@landingexp/apollo-server";
 import { ApolloServerPluginUsageReporting,
-         ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
+         ApolloServerPluginUsageReportingDisabled } from "@landingexp/apollo-server-core";
 import { ApolloGateway, RemoteGraphQLDataSource, GatewayConfig } from "@apollo/gateway";
 import DepthLimitingPlugin from "./plugins/ApolloServerPluginDepthLimiting";
 import StrictOperationsPlugin from "./plugins/ApolloServerPluginStrictOperations";
@@ -42,7 +42,7 @@ if (!apolloKey) {
   }
 }
 
-const apolloOperationRegistryPlugin = apolloKey ? require("apollo-server-plugin-operation-registry")({
+const apolloOperationRegistryPlugin = apolloKey ? require("@landingexp/apollo-server-plugin-operation-registry")({
   forbidUnregisteredOperations({
     context, // Destructure the shared request `context`.
     request: {

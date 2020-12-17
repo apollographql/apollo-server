@@ -1,8 +1,8 @@
 import micro from 'micro';
 import listen from 'test-listen';
 import { createApolloFetch } from 'apollo-fetch';
-import { NODE_MAJOR_VERSION } from 'apollo-server-integration-testsuite';
-import { gql } from 'apollo-server-core';
+import { NODE_MAJOR_VERSION } from '@landingexp/apollo-server-integration-testsuite';
+import { gql } from '@landingexp/apollo-server-core';
 import FormData from 'form-data';
 import fs from 'fs';
 import rp from 'request-promise';
@@ -35,7 +35,7 @@ async function createServer(options: object = {}): Promise<any> {
   };
 }
 
-describe('apollo-server-micro', function() {
+describe('@landingexp/apollo-server-micro', function() {
   describe('constructor', function() {
     it('should accepts typeDefs and resolvers', function() {
       const apolloServer = new ApolloServer({ typeDefs, resolvers });

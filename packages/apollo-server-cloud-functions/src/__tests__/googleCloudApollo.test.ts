@@ -2,8 +2,8 @@ import { ApolloServer } from '../ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
-} from 'apollo-server-integration-testsuite';
-import { Config } from 'apollo-server-core';
+} from '@landingexp/apollo-server-integration-testsuite';
+import { Config } from '@landingexp/apollo-server-core';
 import express = require('express');
 import bodyParser = require('body-parser');
 import request from 'supertest';

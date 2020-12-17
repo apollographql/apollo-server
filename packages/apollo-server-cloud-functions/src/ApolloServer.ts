@@ -1,4 +1,4 @@
-import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
+import { ApolloServerBase, GraphQLOptions } from '@landingexp/apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,

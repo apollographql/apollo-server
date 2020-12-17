@@ -1,5 +1,5 @@
 import nock from 'nock';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from '@landingexp/apollo-server-caching';
 import { resolve as urlResolve } from 'url';
 import {
   defaultAgentOptions,
@@ -16,7 +16,7 @@ import {
 import Agent, { AgentOptions } from "../agent";
 import { Operation } from "../ApolloServerPluginOperationRegistry";
 import { fakeTestBaseUrl, getStoreKey, getOperationManifestUrl, urlOperationManifestBase } from "../common";
-import { Logger } from "apollo-server-types";
+import { Logger } from "@landingexp/apollo-server-types";
 
 // These get a bit verbose within the tests below, so we use this as a
 // sample store to pick and grab from.

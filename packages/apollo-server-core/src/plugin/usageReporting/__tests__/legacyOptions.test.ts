@@ -2,7 +2,7 @@ import { legacyOptionsToPluginOptions } from '../legacyOptions';
 import {
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextDidEncounterErrors,
-} from 'apollo-server-types';
+} from '@landingexp/apollo-server-types';
 import { GraphQLError } from 'graphql';
 
 describe('doubly-legacy privateVariables and privateHeaders options', () => {

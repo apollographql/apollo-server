@@ -9,7 +9,7 @@ import {
   FileUploadOptions,
   ApolloServerBase,
   GraphQLOptions,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -21,7 +21,7 @@ import {
 } from 'http';
 
 import { graphqlLambda } from './lambdaApollo';
-import { Headers } from 'apollo-server-env';
+import { Headers } from '@landingexp/apollo-server-env';
 import { Readable, Writable } from 'stream';
 
 export interface CreateHandlerOptions {

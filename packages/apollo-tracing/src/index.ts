@@ -3,7 +3,7 @@ import {
   responsePathAsArray,
   GraphQLType,
 } from 'graphql';
-import { ApolloServerPlugin } from "apollo-server-plugin-base";
+import { ApolloServerPlugin } from "@landingexp/apollo-server-plugin-base";
 
 const { name: PACKAGE_NAME } = require("../package.json");
 

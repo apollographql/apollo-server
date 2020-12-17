@@ -1,5 +1,5 @@
-import type { BaseContext } from 'apollo-server-types';
-import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import type { BaseContext } from '@landingexp/apollo-server-types';
+import type { ApolloServerPlugin } from '@landingexp/apollo-server-plugin-base';
 
 // This file's exports should not be exported from the overall
 // apollo-server-core module.

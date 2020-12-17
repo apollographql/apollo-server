@@ -1,4 +1,4 @@
-import { ApolloServerBase, gql } from 'apollo-server-core';
+import { ApolloServerBase, gql } from '@landingexp/apollo-server-core';
 import createTestClient from '../createTestClient';
 
 describe('createTestClient', () => {

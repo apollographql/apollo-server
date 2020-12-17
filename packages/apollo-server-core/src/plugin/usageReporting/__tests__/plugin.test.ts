@@ -5,9 +5,9 @@ import {
   makeHTTPRequestHeaders,
   ApolloServerPluginUsageReporting,
 } from '../plugin';
-import { Headers } from 'apollo-server-env';
-import { Trace, Report } from 'apollo-reporting-protobuf';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
+import { Headers } from '@landingexp/apollo-server-env';
+import { Trace, Report } from '@landingexp/apollo-reporting-protobuf';
+import pluginTestHarness from '@landingexp/apollo-server-core/dist/utils/pluginTestHarness';
 import nock from 'nock';
 import { gunzipSync } from 'zlib';
 import { ApolloServerPluginUsageReportingOptions } from '../options';

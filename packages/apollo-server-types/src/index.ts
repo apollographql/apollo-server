@@ -1,4 +1,4 @@
-import { Request, Response } from 'apollo-server-env';
+import { Request, Response } from '@landingexp/apollo-server-env';
 import {
   GraphQLSchema,
   ValidationContext,
@@ -11,8 +11,8 @@ import {
 } from 'graphql';
 
 // This seems like it could live in this package too.
-import { KeyValueCache } from 'apollo-server-caching';
-import { Trace } from 'apollo-reporting-protobuf';
+import { KeyValueCache } from '@landingexp/apollo-server-caching';
+import { Trace } from '@landingexp/apollo-reporting-protobuf';
 
 export type BaseContext = Record<string, any>;
 

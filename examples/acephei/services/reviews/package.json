@@ -8,8 +8,8 @@
   "types": "dist/index.d.ts",
   "peerDependencies": {
     "@apollo/federation": "*",
-    "apollo-datasource": "*",
-    "apollo-server": "*"
+    "@landingexp/apollo-datasource": "*",
+    "@landingexp/apollo-server": "*"
   },
   "dependencies": {
     "dataloader": "^1.4.0"

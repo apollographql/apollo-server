@@ -20,6 +20,6 @@ export {
   defaultPlaygroundOptions,
   PlaygroundConfig,
   PlaygroundRenderPageOptions,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 
-export { CorsOptions } from 'apollo-server-express';
+export { CorsOptions } from '@landingexp/apollo-server-express';

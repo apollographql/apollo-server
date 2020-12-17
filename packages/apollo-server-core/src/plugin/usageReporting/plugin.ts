@@ -7,12 +7,12 @@ import {
   ReportHeader,
   Trace,
   TracesAndStats,
-} from 'apollo-reporting-protobuf';
-import { Response, fetch, Headers } from 'apollo-server-env';
+} from '@landingexp/apollo-reporting-protobuf';
+import { Response, fetch, Headers } from '@landingexp/apollo-server-env';
 import {
   GraphQLRequestListener,
   GraphQLServerListener,
-} from 'apollo-server-plugin-base';
+} from '@landingexp/apollo-server-plugin-base';
 import {
   GraphQLRequestContext,
   GraphQLServiceContext,
@@ -20,7 +20,7 @@ import {
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContextDidResolveSource,
-} from 'apollo-server-types';
+} from '@landingexp/apollo-server-types';
 import { createSignatureCache, signatureCacheKey } from './signatureCache';
 import {
   ApolloServerPluginUsageReportingOptions,

@@ -23,16 +23,16 @@ import {
   isScalarType,
   isSchema,
 } from 'graphql';
-import { GraphQLExtension } from 'graphql-extensions';
+import { GraphQLExtension } from '@landingexp/graphql-extensions';
 import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
-} from 'apollo-server-caching';
+} from '@landingexp/apollo-server-caching';
 import {
   ApolloServerPlugin,
   GraphQLServiceContext,
   GraphQLServerListener,
-} from 'apollo-server-plugin-base';
+} from '@landingexp/apollo-server-plugin-base';
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 import {
@@ -42,7 +42,7 @@ import {
 
 import WebSocket from 'ws';
 
-import { formatApolloErrors } from 'apollo-server-errors';
+import { formatApolloErrors } from '@landingexp/apollo-server-errors';
 import {
   GraphQLServerOptions,
   PersistedQueryOptions,
@@ -73,14 +73,14 @@ import {
   APQ_CACHE_PREFIX,
 } from './requestPipeline';
 
-import { Headers } from 'apollo-server-env';
+import { Headers } from '@landingexp/apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { plugin as pluginTracing } from "apollo-tracing";
-import { Logger, SchemaHash, ValueOrPromise, ApolloConfig } from "apollo-server-types";
+import { plugin as pluginTracing } from "@landingexp/apollo-tracing";
+import { Logger, SchemaHash, ValueOrPromise, ApolloConfig } from "@landingexp/apollo-server-types";
 import {
   plugin as pluginCacheControl,
   CacheControlExtensionOptions,
-} from 'apollo-cache-control';
+} from '@landingexp/apollo-cache-control';
 import { cloneObject } from "./runHttpQuery";
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';
@@ -194,7 +194,7 @@ export class ApolloServerBase {
       this.logger = config.logger;
     } else {
       // If the user didn't provide their own logger, we'll initialize one.
-      const loglevelLogger = loglevel.getLogger("apollo-server");
+      const loglevelLogger = loglevel.getLogger("@landingexp/apollo-server");
 
       // We don't do much logging in Apollo Server right now.  There's a notion
       // of a `debug` flag, which changes stack traces in some error messages,

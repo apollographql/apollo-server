@@ -2,7 +2,7 @@ import {
   ApolloServerPluginSchemaReporting,
   ApolloServerPluginSchemaReportingOptions,
 } from '..';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
+import pluginTestHarness from '@landingexp/apollo-server-core/dist/utils/pluginTestHarness';
 import { makeExecutableSchema } from 'graphql-tools';
 import { graphql } from 'graphql';
 

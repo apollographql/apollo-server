@@ -1,4 +1,4 @@
-import { DataSource } from "apollo-datasource";
+import { DataSource } from "@landingexp/apollo-datasource";
 import DataLoader from "dataloader";
 
 export interface Book {

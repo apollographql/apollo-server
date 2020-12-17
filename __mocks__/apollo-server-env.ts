@@ -56,6 +56,6 @@ const env = {
   URLSearchParams,
 };
 
-jest.doMock('apollo-server-env', () => env);
+jest.doMock('@landingexp/apollo-server-env', () => env);
 
 export = env;

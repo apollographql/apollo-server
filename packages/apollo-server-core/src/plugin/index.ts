@@ -15,7 +15,7 @@
 //
 // The goal is that the generated `dist/plugin/index.js` file has no top-level
 // require calls.
-import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import type { ApolloServerPlugin } from '@landingexp/apollo-server-plugin-base';
 
 import type {
   ApolloServerPluginUsageReportingOptions,

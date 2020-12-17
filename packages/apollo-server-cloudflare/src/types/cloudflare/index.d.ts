@@ -1,4 +1,4 @@
-import { Request, Response } from 'apollo-server-env';
+import { Request, Response } from '@landingexp/apollo-server-env';
 
 declare global {
   interface FetchEvent {

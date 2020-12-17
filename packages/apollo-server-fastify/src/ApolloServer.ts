@@ -7,7 +7,7 @@ import {
   PlaygroundRenderPageOptions,
   processFileUploads,
   GraphQLOptions,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { IncomingMessage, OutgoingMessage, ServerResponse, Server } from 'http';
 import { graphqlFastify } from './fastifyApollo';

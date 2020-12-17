@@ -11,8 +11,8 @@
   "types": "dist/index.d.ts",
   "peerDependencies": {
     "@apollo/gateway": "*",
-    "apollo-server": "*",
-    "apollo-server-plugin-operation-registry": "*"
+    "@landingexp/apollo-server": "*",
+    "@landingexp/apollo-server-plugin-operation-registry": "*"
   },
   "dependencies": {},
   "engines": {

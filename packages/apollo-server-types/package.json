@@ -1,5 +1,5 @@
 {
-  "name": "apollo-server-types",
+  "name": "@landingexp/apollo-server-types",
   "version": "0.6.1",
   "description": "Apollo Server shared types",
   "main": "dist/index.js",
@@ -11,9 +11,9 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-reporting-protobuf": "file:../apollo-reporting-protobuf",
-    "apollo-server-caching": "file:../apollo-server-caching",
-    "apollo-server-env": "file:../apollo-server-env"
+    "@landingexp/apollo-reporting-protobuf": "file:../apollo-reporting-protobuf",
+    "@landingexp/apollo-server-caching": "file:../apollo-server-caching",
+    "@landingexp/apollo-server-env": "file:../apollo-server-env"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"

@@ -1,15 +1,15 @@
 import http, { Server } from 'http';
 
-import { RESTDataSource } from 'apollo-datasource-rest';
+import { RESTDataSource } from '@landingexp/apollo-datasource-rest';
 
 import { createApolloFetch } from 'apollo-fetch';
 
 import {
   NODE_MAJOR_VERSION,
   createServerInfo,
-} from 'apollo-server-integration-testsuite';
+} from '@landingexp/apollo-server-integration-testsuite';
 
-import { gql } from 'apollo-server-core';
+import { gql } from '@landingexp/apollo-server-core';
 
 export class IdAPI extends RESTDataSource {
   // We will set this inside tests.
@@ -51,7 +51,7 @@ const resolvers = {
   NODE_MAJOR_VERSION === 6 ?
   describe.skip :
   describe
-)('apollo-server-koa', () => {
+)('@landingexp/apollo-server-koa', () => {
   const { ApolloServer } = require('../ApolloServer');
   const Koa = require('koa');
   const KoaRouter = require('koa-router');

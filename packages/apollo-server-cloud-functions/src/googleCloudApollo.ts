@@ -2,10 +2,10 @@ import {
   GraphQLOptions,
   HttpQueryError,
   runHttpQuery,
-} from 'apollo-server-core';
-import { Headers } from 'apollo-server-env';
+} from '@landingexp/apollo-server-core';
+import { Headers } from '@landingexp/apollo-server-env';
 import { Request, Response } from 'express';
-import { ValueOrPromise } from 'apollo-server-types';
+import { ValueOrPromise } from '@landingexp/apollo-server-types';
 
 export interface CloudFunctionGraphQLOptionsFunction {
   (req?: Request, res?: Response): ValueOrPromise<GraphQLOptions>;

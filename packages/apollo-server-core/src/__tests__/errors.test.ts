@@ -11,7 +11,7 @@ import {
   hasPersistedQueryError,
   PersistedQueryNotFoundError,
   PersistedQueryNotSupportedError,
-} from 'apollo-server-errors';
+} from '@landingexp/apollo-server-errors';
 
 describe('Errors', () => {
   describe('ApolloError', () => {

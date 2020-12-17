@@ -12,13 +12,13 @@ import {
   GraphQLOptions,
   formatApolloErrors,
   processFileUploads,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
 
 import { graphqlKoa } from './koaApollo';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions, GraphQLExtension } from '@landingexp/apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;

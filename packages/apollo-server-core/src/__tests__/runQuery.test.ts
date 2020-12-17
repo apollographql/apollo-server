@@ -14,11 +14,11 @@ import {
   GraphQLExtensionStack,
   GraphQLExtension,
   GraphQLResponse,
-} from 'graphql-extensions';
+} from '@landingexp/graphql-extensions';
 
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
-import { Request } from 'apollo-server-env';
-import { GraphQLOptions, Context as GraphQLContext } from 'apollo-server-core';
+import { Request } from '@landingexp/apollo-server-env';
+import { GraphQLOptions, Context as GraphQLContext } from '@landingexp/apollo-server-core';
 import {
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
@@ -28,10 +28,10 @@ import {
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
   GraphQLRequestContext,
-} from 'apollo-server-plugin-base';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+} from '@landingexp/apollo-server-plugin-base';
+import { InMemoryLRUCache } from '@landingexp/apollo-server-caching';
 import { generateSchemaHash } from "../utils/schemaHash";
-import { Logger } from "apollo-server-types";
+import { Logger } from "@landingexp/apollo-server-types";
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
 // GraphQLRequestProcessor refactoring.
