@@ -1,6 +1,6 @@
 {
   "name": "@landingexp/apollo-server-caching",
-  "version": "0.5.2",
+  "version": "1.0.3",
   "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "repository": {

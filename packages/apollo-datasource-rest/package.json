@@ -1,6 +1,6 @@
 {
   "name": "@landingexp/apollo-datasource-rest",
-  "version": "0.9.5",
+  "version": "1.0.3",
   "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "repository": {

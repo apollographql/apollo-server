@@ -1,6 +1,6 @@
 {
   "name": "@landingexp/apollo-server-plugin-operation-registry",
-  "version": "0.7.2",
+  "version": "1.0.3",
   "description": "Apollo Server operation registry",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,11 +16,11 @@
     "node": ">=8"
   },
   "dependencies": {
-    "apollo-graphql": "0.6.0",
     "@landingexp/apollo-server-caching": "file:../apollo-server-caching",
     "@landingexp/apollo-server-env": "file:../apollo-server-env",
     "@landingexp/apollo-server-errors": "file:../apollo-server-errors",
     "@landingexp/apollo-server-plugin-base": "file:../apollo-server-plugin-base",
+    "apollo-graphql": "0.6.0",
     "fast-json-stable-stringify": "^2.0.0",
     "loglevel": "^1.6.1",
     "make-fetch-happen": "^8.0.7"

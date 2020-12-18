@@ -1,6 +1,6 @@
 {
   "name": "@landingexp/apollo-server-types",
-  "version": "0.6.1",
+  "version": "1.0.3",
   "description": "Apollo Server shared types",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
