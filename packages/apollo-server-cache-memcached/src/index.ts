@@ -1,7 +1,7 @@
 import {
   TestableKeyValueCache,
   KeyValueCacheSetOptions,
-} from 'apollo-server-caching';
+} from '@landingexp/apollo-server-caching';
 import Memcached from 'memcached';
 import { promisify } from 'util';
 

@@ -1,11 +1,11 @@
 import { ApolloServer } from '../ApolloServer';
-import { Config } from 'apollo-server-core';
+import { Config } from '@landingexp/apollo-server-core';
 
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
   NODE_MAJOR_VERSION,
-} from 'apollo-server-integration-testsuite';
+} from '@landingexp/apollo-server-integration-testsuite';
 
 // NODE: Intentionally skip on Node.js < 8 since Hapi 17 doesn't support less
 (NODE_MAJOR_VERSION < 8 ? describe.skip : describe)('integration:Hapi', () => {

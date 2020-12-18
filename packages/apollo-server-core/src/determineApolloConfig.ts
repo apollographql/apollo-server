@@ -1,4 +1,4 @@
-import { ApolloConfig, ApolloConfigInput, Logger } from 'apollo-server-types';
+import { ApolloConfig, ApolloConfigInput, Logger } from '@landingexp/apollo-server-types';
 import createSHA from './utils/createSHA';
 import type { EngineReportingOptions } from './plugin';
 

@@ -10,7 +10,7 @@ declare module 'make-fetch-happen' {
     Request,
     RequestInfo,
     RequestInit,
-  } from 'apollo-server-env';
+  } from '@landingexp/apollo-server-env';
 
   // If adding to these options, they should mirror those from `make-fetch-happen`
   // @see: https://github.com/npm/make-fetch-happen/#extra-options

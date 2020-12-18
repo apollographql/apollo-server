@@ -12,13 +12,13 @@ import {
   GraphQLExecutionResult,
   GraphQLRequestContextExecutionDidStart,
   ApolloConfigInput,
-} from 'apollo-server-types';
+} from '@landingexp/apollo-server-types';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 // The types for `ws` use `export = WebSocket`, so we'll use the
 // matching `import =` to bring in its sole export.
 import WebSocket = require('ws');
-import { GraphQLExtension } from 'graphql-extensions';
-export { GraphQLExtension } from 'graphql-extensions';
+import { GraphQLExtension } from '@landingexp/graphql-extensions';
+export { GraphQLExtension } from '@landingexp/graphql-extensions';
 
 import { PlaygroundConfig } from './playground';
 export { PlaygroundConfig, PlaygroundRenderPageOptions } from './playground';
@@ -27,14 +27,14 @@ import {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
-import { CacheControlExtensionOptions } from 'apollo-cache-control';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { CacheControlExtensionOptions } from '@landingexp/apollo-cache-control';
+import { ApolloServerPlugin } from '@landingexp/apollo-server-plugin-base';
 
 import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
 import type { EngineReportingOptions } from './plugin';
 export { GraphQLSchemaModule };
 
-export { KeyValueCache } from 'apollo-server-caching';
+export { KeyValueCache } from '@landingexp/apollo-server-caching';
 
 export type Context<T = object> = T;
 export type ContextFunction<FunctionParams = any, ProducedContext = object> = (

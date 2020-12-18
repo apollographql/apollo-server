@@ -42,14 +42,14 @@ Your project directory now contains a `package.json` file.
 
 Applications that run Apollo Server require two top-level dependencies:
 
-* [`apollo-server`](https://npm.im/apollo-server) is the core library for Apollo Server itself, which helps you define the shape of your data and how to fetch it.
+* [`@landingexp/apollo-server`](https://npm.im/apollo-server) is the core library for Apollo Server itself, which helps you define the shape of your data and how to fetch it.
 * [`graphql`](https://npm.im/graphql) is the library used to build a GraphQL schema and execute queries against it.
 
 Run the following command to install both of these dependencies and save them in
 your project's `node_modules` directory:
 
 ```bash
-npm install apollo-server graphql
+npm install @landingexp/apollo-server graphql
 ```
 
 Also create an empty `index.js` file in your project's root directory:
@@ -71,7 +71,7 @@ of books by title and author.
 Open `index.js` in your preferred editor and paste the following into it:
 
 ```js:title=index.js
-const { ApolloServer, gql } = require('apollo-server');
+const { ApolloServer, gql } = require('@landingexp/apollo-server');
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against

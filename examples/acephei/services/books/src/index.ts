@@ -1,5 +1,5 @@
-import { ApolloServer, gql, AuthenticationError } from "apollo-server";
-import { ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
+import { ApolloServer, gql, AuthenticationError } from "@landingexp/apollo-server";
+import { ApolloServerPluginUsageReportingDisabled } from "@landingexp/apollo-server-core";
 import { buildFederatedSchema } from "@apollo/federation";
 import { readFileSync } from "fs";
 import { resolve } from "path";

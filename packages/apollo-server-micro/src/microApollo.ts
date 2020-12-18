@@ -2,13 +2,13 @@ import {
   GraphQLOptions,
   runHttpQuery,
   convertNodeHttpToRequest,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 import { send, json, RequestHandler } from 'micro';
 import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 
 import { MicroRequest } from './types';
-import { ValueOrPromise } from 'apollo-server-types';
+import { ValueOrPromise } from '@landingexp/apollo-server-types';
 
 // Allowed Micro Apollo Server options.
 export interface MicroGraphQLOptionsFunction {

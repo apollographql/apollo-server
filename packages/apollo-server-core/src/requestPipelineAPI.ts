@@ -9,4 +9,4 @@ export {
   InvalidGraphQLRequestError,
   GraphQLExecutor,
   GraphQLExecutionResult,
-} from 'apollo-server-types';
+} from '@landingexp/apollo-server-types';

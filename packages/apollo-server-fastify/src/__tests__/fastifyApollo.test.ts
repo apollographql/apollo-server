@@ -4,8 +4,8 @@ import { ApolloServer } from '../ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
-} from 'apollo-server-integration-testsuite';
-import { GraphQLOptions, Config } from 'apollo-server-core';
+} from '@landingexp/apollo-server-integration-testsuite';
+import { GraphQLOptions, Config } from '@landingexp/apollo-server-core';
 
 async function createApp(options: CreateAppOptions = {}) {
   const app = fastify();

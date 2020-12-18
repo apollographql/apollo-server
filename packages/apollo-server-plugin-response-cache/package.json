@@ -1,31 +1,31 @@
 {
-  "name": "apollo-server-plugin-response-cache",
-  "version": "0.5.6",
+  "name": "@landingexp/apollo-server-plugin-response-cache",
+  "version": "1.0.3",
   "description": "Apollo Server full query response cache",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server",
+    "url": "https://github.com/apollograph../apollo-server",
     "directory": "packages/apollo-server-plugin-response-cache"
   },
   "keywords": [],
   "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/apollographql/apollo-server/issues"
+    "url": "https://github.com/apollograph../apollo-server/issues"
   },
-  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "homepage": "https://github.com/apollograph../apollo-server#readme",
   "engines": {
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-cache-control": "file:../apollo-cache-control",
-    "apollo-server-caching": "file:../apollo-server-caching",
-    "apollo-server-plugin-base": "file:../apollo-server-plugin-base"
+    "@landingexp/apollo-cache-control": "file:../apollo-cache-control",
+    "@landingexp/apollo-server-caching": "file:../apollo-server-caching",
+    "@landingexp/apollo-server-plugin-base": "file:../apollo-server-plugin-base"
   },
   "devDependencies": {
-    "apollo-server-types": "file:../apollo-server-types"
+    "@landingexp/apollo-server-types": "file:../apollo-server-types"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"

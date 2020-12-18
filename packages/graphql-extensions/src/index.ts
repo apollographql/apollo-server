@@ -13,9 +13,9 @@ import {
   GraphQLError,
 } from 'graphql';
 
-import { Request } from 'apollo-server-env';
+import { Request } from '@landingexp/apollo-server-env';
 
-import { GraphQLResponse, GraphQLRequestContext } from 'apollo-server-types';
+import { GraphQLResponse, GraphQLRequestContext } from '@landingexp/apollo-server-types';
 export { GraphQLResponse };
 
 import { GraphQLObjectResolver } from '@apollographql/apollo-tools';

@@ -5,7 +5,7 @@ import {
   GraphQLRequestListener,
   GraphQLRequestContext,
   GraphQLServerListener,
-} from 'apollo-server-plugin-base';
+} from '@landingexp/apollo-server-plugin-base';
 import {
   /**
    * We alias these to different names entirely since the user-facing values
@@ -17,11 +17,11 @@ import {
   operationHash as operationSignature,
   defaultOperationRegistrySignature as defaultOperationRegistryNormalization,
 } from 'apollo-graphql';
-import { ForbiddenError, ApolloError } from 'apollo-server-errors';
+import { ForbiddenError, ApolloError } from '@landingexp/apollo-server-errors';
 import Agent from './agent';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from '@landingexp/apollo-server-caching';
 import loglevel from 'loglevel';
-import { fetch } from "apollo-server-env";
+import { fetch } from "@landingexp/apollo-server-env";
 
 type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,

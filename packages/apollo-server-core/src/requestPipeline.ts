@@ -15,8 +15,8 @@ import {
   GraphQLExtension,
   GraphQLExtensionStack,
   enableGraphQLExtensions,
-} from 'graphql-extensions';
-import { DataSource } from 'apollo-datasource';
+} from '@landingexp/graphql-extensions';
+import { DataSource } from '@landingexp/apollo-datasource';
 import { PersistedQueryOptions } from './graphqlOptions';
 import {
   symbolExecutionDispatcherWillResolveField,
@@ -31,7 +31,7 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
   formatApolloErrors,
-} from 'apollo-server-errors';
+} from '@landingexp/apollo-server-errors';
 import {
   GraphQLRequest,
   GraphQLResponse,
@@ -41,7 +41,7 @@ import {
   InvalidGraphQLRequestError,
   ValidationRule,
   WithRequired,
-} from 'apollo-server-types';
+} from '@landingexp/apollo-server-types';
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
@@ -54,14 +54,14 @@ import {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
-} from 'apollo-server-plugin-base';
+} from '@landingexp/apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
 import {
   InMemoryLRUCache,
   KeyValueCache,
   PrefixingKeyValueCache,
-} from 'apollo-server-caching';
+} from '@landingexp/apollo-server-caching';
 import { GraphQLParseOptions } from 'graphql-tools';
 
 export {
@@ -696,7 +696,7 @@ export async function processGraphQLRequest<TContext>(
             : 'An anonymous extension ') +
           'was defined within the "extensions" configuration for ' +
           'Apollo Server.  The API on which this extension is built ' +
-          '("graphql-extensions") is being deprecated in the next major ' +
+          '("@landingexp/graphql-extensions") is being deprecated in the next major ' +
           'version of Apollo Server in favor of the new plugin API.  See ' +
           'https://go.apollo.dev/s/plugins for the documentation on how ' +
           'these plugins are to be defined and used.',

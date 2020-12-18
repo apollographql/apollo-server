@@ -8,11 +8,11 @@ import {
   URLSearchParams,
   URLSearchParamsInit,
   fetch,
-} from 'apollo-server-env';
+} from '@landingexp/apollo-server-env';
 
-import { ValueOrPromise } from 'apollo-server-types';
+import { ValueOrPromise } from '@landingexp/apollo-server-types';
 
-import { DataSource, DataSourceConfig } from 'apollo-datasource';
+import { DataSource, DataSourceConfig } from '@landingexp/apollo-datasource';
 
 import { HTTPCache } from './HTTPCache';
 
@@ -20,9 +20,9 @@ import {
   ApolloError,
   AuthenticationError,
   ForbiddenError,
-} from 'apollo-server-errors';
+} from '@landingexp/apollo-server-errors';
 
-declare module 'apollo-server-env/dist/fetch' {
+declare module '@landingexp/apollo-server-env/dist/fetch' {
   interface RequestInit {
     cacheOptions?:
       | CacheOptions

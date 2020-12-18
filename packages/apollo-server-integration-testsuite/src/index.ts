@@ -23,11 +23,11 @@ import {
   Config,
   PersistedQueryOptions,
   KeyValueCache,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 import gql from 'graphql-tag';
-import { ValueOrPromise } from 'apollo-server-types';
-import { GraphQLRequestListener } from "apollo-server-plugin-base";
-import { PersistedQueryNotFoundError } from "apollo-server-errors";
+import { ValueOrPromise } from '@landingexp/apollo-server-types';
+import { GraphQLRequestListener } from "@landingexp/apollo-server-plugin-base";
+import { PersistedQueryNotFoundError } from "@landingexp/apollo-server-errors";
 
 export * from './ApolloServer';
 

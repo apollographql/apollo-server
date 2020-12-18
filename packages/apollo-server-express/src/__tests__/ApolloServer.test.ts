@@ -7,7 +7,7 @@ import FormData from 'form-data';
 import fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, AuthenticationError } from 'apollo-server-core';
+import { gql, AuthenticationError } from '@landingexp/apollo-server-core';
 import {
   ApolloServer,
   ApolloServerExpressConfig,
@@ -18,7 +18,7 @@ import {
   NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
-} from 'apollo-server-integration-testsuite';
+} from '@landingexp/apollo-server-integration-testsuite';
 
 const typeDefs = gql`
   type Query {
@@ -32,7 +32,7 @@ const resolvers = {
   },
 };
 
-describe('apollo-server-express', () => {
+describe('@landingexp/apollo-server-express', () => {
   let server;
   let httpServer;
   testApolloServer(
@@ -52,7 +52,7 @@ describe('apollo-server-express', () => {
   );
 });
 
-describe('apollo-server-express', () => {
+describe('@landingexp/apollo-server-express', () => {
   let server: ApolloServer;
 
   let app: express.Application;

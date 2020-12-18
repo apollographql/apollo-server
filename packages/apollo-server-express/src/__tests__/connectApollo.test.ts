@@ -5,7 +5,7 @@ import { ApolloServer, ApolloServerExpressConfig } from '../ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
-} from 'apollo-server-integration-testsuite';
+} from '@landingexp/apollo-server-integration-testsuite';
 
 function createConnectApp(options: CreateAppOptions = {}) {
   const app = connect();

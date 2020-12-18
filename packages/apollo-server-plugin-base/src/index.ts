@@ -16,7 +16,7 @@ import {
   GraphQLRequestContextResponseForOperation,
   GraphQLRequestContextExecutionDidStart,
   GraphQLRequestContextWillSendResponse,
-} from 'apollo-server-types';
+} from '@landingexp/apollo-server-types';
 
 // We re-export all of these so plugin authors only need to depend on a single
 // package.  The overall concept of `apollo-server-types` and this package

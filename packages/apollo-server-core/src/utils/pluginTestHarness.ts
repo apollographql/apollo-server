@@ -11,9 +11,9 @@ import {
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
-} from 'apollo-server-types';
+} from '@landingexp/apollo-server-types';
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
-import { CacheHint } from 'apollo-cache-control';
+import { CacheHint } from '@landingexp/apollo-cache-control';
 import {
   enablePluginsForSchemaResolvers,
   symbolExecutionDispatcherWillResolveField,
@@ -22,8 +22,8 @@ import {
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
   GraphQLServerListener,
-} from 'apollo-server-plugin-base';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+} from '@landingexp/apollo-server-plugin-base';
+import { InMemoryLRUCache } from '@landingexp/apollo-server-caching';
 import { Dispatcher } from './dispatcher';
 import { generateSchemaHash } from './schemaHash';
 import { getOperationAST, parse, validate as graphqlValidate } from 'graphql';

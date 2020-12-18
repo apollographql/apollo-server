@@ -1,5 +1,5 @@
 import { ResponsePath, GraphQLError } from 'graphql';
-import { Headers } from 'apollo-server-env';
+import { Headers } from '@landingexp/apollo-server-env';
 import {
   CacheScope,
   CacheControlExtensionOptions,
@@ -11,8 +11,8 @@ const { addHint, computeOverallCachePolicy } = __testing__;
 import {
   GraphQLRequestContextWillSendResponse,
   GraphQLResponse,
-} from 'apollo-server-plugin-base';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
+} from '@landingexp/apollo-server-plugin-base';
+import pluginTestHarness from '@landingexp/apollo-server-core/dist/utils/pluginTestHarness';
 
 describe('plugin', () => {
   describe('willSendResponse', () => {

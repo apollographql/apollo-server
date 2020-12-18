@@ -3,8 +3,8 @@ import {
   EdgeServerInfo,
   SchemaReportingServerInfoResult,
 } from './reportingOperationTypes';
-import { fetch, Headers, Request } from 'apollo-server-env';
-import { GraphQLRequest, Logger } from 'apollo-server-types';
+import { fetch, Headers, Request } from '@landingexp/apollo-server-env';
+import { GraphQLRequest, Logger } from '@landingexp/apollo-server-types';
 
 export const reportServerInfoGql = `
   mutation ReportServerInfo($info: EdgeServerInfo!, $executableSchema: String) {

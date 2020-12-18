@@ -2,7 +2,7 @@ import plugin, { Options } from '../ApolloServerPluginOperationRegistry';
 import {
   ApolloServerBase,
   ApolloServerPluginUsageReportingDisabled,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 import {
   /**
    * We alias these to different names entirely since the user-facing values
@@ -22,8 +22,8 @@ import {
   nockGoodManifestsUnderStorageSecret,
   genericStorageSecret,
 } from './helpers.test-helpers';
-import { Headers } from 'apollo-server-env';
-import { GraphQLRequest } from 'apollo-server-plugin-base';
+import { Headers } from '@landingexp/apollo-server-env';
+import { GraphQLRequest } from '@landingexp/apollo-server-plugin-base';
 
 // While not ideal, today, Apollo Server has a very real expectation of an HTTP
 // request context.  That will change in the future.  While we can sometimes

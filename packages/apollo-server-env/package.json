@@ -1,16 +1,16 @@
 {
-  "name": "apollo-server-env",
-  "version": "2.4.5",
+  "name": "@landingexp/apollo-server-env",
+  "version": "3.0.3",
   "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server",
+    "url": "https://github.com/apollograph../apollo-server",
     "directory": "packages/apollo-server-env"
   },
-  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "homepage": "https://github.com/apollograph../apollo-server#readme",
   "bugs": {
-    "url": "https://github.com/apollographql/apollo-server/issues"
+    "url": "https://github.com/apollograph../apollo-server/issues"
   },
   "main": "dist/index.js",
   "browser": "dist/index.browser.js",

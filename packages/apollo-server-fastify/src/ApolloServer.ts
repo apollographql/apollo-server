@@ -1,15 +1,13 @@
-import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import { Accepts } from 'accepts';
 import {
   ApolloServerBase,
   FileUploadOptions,
   formatApolloErrors,
-  PlaygroundRenderPageOptions,
-  processFileUploads,
   GraphQLOptions,
-} from 'apollo-server-core';
+  processFileUploads,
+} from '@landingexp/apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { IncomingMessage, OutgoingMessage, ServerResponse, Server } from 'http';
+import { IncomingMessage, OutgoingMessage, Server, ServerResponse } from 'http';
 import { graphqlFastify } from './fastifyApollo';
 import { GraphQLOperation } from 'graphql-upload';
 
@@ -147,16 +145,14 @@ export class ApolloServer extends ApolloServerBase {
                   ) === 'text/html';
 
                 if (prefersHTML) {
-                  const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-                    endpoint: this.graphqlPath,
-                    subscriptionEndpoint: this.subscriptionsPath,
-                    ...this.playgroundOptions,
-                  };
                   reply.type('text/html');
-                  const playground = renderPlaygroundPage(
-                    playgroundRenderPageOptions,
-                  );
-                  reply.send(playground);
+                  reply.send(this.renderHTML({
+                    playground: {
+                      endpoint: this.graphqlPath,
+                      subscriptionEndpoint: this.subscriptionsPath,
+                      ...this.playgroundOptions,
+                    },
+                  }));
                   return;
                 }
               }

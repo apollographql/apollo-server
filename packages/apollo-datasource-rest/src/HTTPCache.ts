@@ -1,4 +1,4 @@
-import { fetch, Request, Response, Headers } from 'apollo-server-env';
+import { fetch, Request, Response, Headers } from '@landingexp/apollo-server-env';
 
 import CachePolicy = require('http-cache-semantics');
 
@@ -6,7 +6,7 @@ import {
   KeyValueCache,
   InMemoryLRUCache,
   PrefixingKeyValueCache,
-} from 'apollo-server-caching';
+} from '@landingexp/apollo-server-caching';
 import { CacheOptions } from './RESTDataSource';
 
 export class HTTPCache {

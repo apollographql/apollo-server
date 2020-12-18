@@ -8,7 +8,7 @@ import {
   fakeTestBaseUrl,
 } from '../common';
 import nock from 'nock';
-import { InMemoryLRUCache } from "apollo-server-caching";
+import { InMemoryLRUCache } from "@landingexp/apollo-server-caching";
 import { Operation, OperationManifest } from "../ApolloServerPluginOperationRegistry";
 
 export const defaultStore = () => new InMemoryLRUCache();

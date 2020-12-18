@@ -1,4 +1,4 @@
-import { Trace } from 'apollo-reporting-protobuf';
+import { Trace } from '@landingexp/apollo-reporting-protobuf';
 import { VariableValueOptions } from './options';
 
 // Creates trace details from request variables, given a specification for modifying

@@ -2,10 +2,10 @@ import {
   ApolloServerPlugin,
   GraphQLRequestListener,
   GraphQLRequestContext
-} from "apollo-server-plugin-base";
-import { ApolloError } from "apollo-server-errors";
+} from "@landingexp/apollo-server-plugin-base";
+import { ApolloError } from "@landingexp/apollo-server-errors";
 import loglevel from "loglevel";
-import { PluginDefinition } from "apollo-server-core";
+import { PluginDefinition } from "@landingexp/apollo-server-core";
 
 interface Options {
   debug?: boolean;

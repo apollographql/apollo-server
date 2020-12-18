@@ -2,10 +2,10 @@ import {
   GraphQLOptions,
   HttpQueryError,
   runHttpQuery,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 
-import { Request, Response, URL } from 'apollo-server-env';
-import { ValueOrPromise } from 'apollo-server-types';
+import { Request, Response, URL } from '@landingexp/apollo-server-env';
+import { ValueOrPromise } from '@landingexp/apollo-server-types';
 
 // Design principles:
 // - You can issue a GET or POST with your query.

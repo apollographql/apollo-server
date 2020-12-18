@@ -2,25 +2,21 @@ import express from 'express';
 import corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
-import {
-  GraphQLOptions,
-  FileUploadOptions,
   ApolloServerBase,
-  formatApolloErrors,
-  processFileUploads,
-  ContextFunction,
-  Context,
   Config,
-} from 'apollo-server-core';
+  Context,
+  ContextFunction,
+  FileUploadOptions,
+  formatApolloErrors,
+  GraphQLOptions,
+  processFileUploads,
+} from '@landingexp/apollo-server-core';
 import { ExecutionParams } from 'subscriptions-transport-ws';
 import accepts from 'accepts';
 import typeis from 'type-is';
 import { graphqlExpress } from './expressApollo';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions, GraphQLExtension } from '@landingexp/apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;
@@ -204,14 +200,14 @@ export class ApolloServer extends ApolloServerBase {
           ) === 'text/html';
 
         if (prefersHTML) {
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: req.originalUrl,
-            subscriptionEndpoint: this.subscriptionsPath,
-            ...this.playgroundOptions,
-          };
           res.setHeader('Content-Type', 'text/html');
-          const playground = renderPlaygroundPage(playgroundRenderPageOptions);
-          res.write(playground);
+          res.write(this.renderHTML({
+            playground: {
+              endpoint: req.originalUrl,
+              subscriptionEndpoint: this.subscriptionsPath,
+              ...this.playgroundOptions,
+            },
+          }));
           res.end();
           return;
         }

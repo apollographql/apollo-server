@@ -2,10 +2,10 @@ import {
   convertNodeHttpToRequest,
   GraphQLOptions,
   runHttpQuery,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 import { FastifyReply, FastifyRequest, RequestHandler } from 'fastify';
 import { IncomingMessage, OutgoingMessage } from 'http';
-import { ValueOrPromise } from 'apollo-server-types';
+import { ValueOrPromise } from '@landingexp/apollo-server-types';
 
 export async function graphqlFastify(
   options: (

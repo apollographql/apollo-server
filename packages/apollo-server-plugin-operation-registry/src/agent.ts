@@ -9,10 +9,10 @@ import loglevel from 'loglevel';
 import fetcher from 'make-fetch-happen';
 import { HttpRequestCache } from './cache';
 
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from '@landingexp/apollo-server-caching';
 import { OperationManifest } from "./ApolloServerPluginOperationRegistry";
-import { Logger, ApolloConfig, WithRequired } from "apollo-server-types";
-import { Response, RequestInit, fetch } from "apollo-server-env";
+import { Logger, ApolloConfig, WithRequired } from "@landingexp/apollo-server-types";
+import { Response, RequestInit, fetch } from "@landingexp/apollo-server-env";
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;

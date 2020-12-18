@@ -4,24 +4,16 @@ import {
   Context as LambdaContext,
 } from 'aws-lambda';
 import {
-  formatApolloErrors,
-  processFileUploads,
-  FileUploadOptions,
   ApolloServerBase,
+  FileUploadOptions,
+  formatApolloErrors,
   GraphQLOptions,
-} from 'apollo-server-core';
-import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
-import {
-  ServerResponse,
-  IncomingHttpHeaders,
-  IncomingMessage,
-} from 'http';
+  processFileUploads,
+} from '@landingexp/apollo-server-core';
+import { IncomingHttpHeaders, IncomingMessage, ServerResponse, } from 'http';
 
 import { graphqlLambda } from './lambdaApollo';
-import { Headers } from 'apollo-server-env';
+import { Headers } from '@landingexp/apollo-server-env';
 import { Readable, Writable } from 'stream';
 
 export interface CreateHandlerOptions {
@@ -210,13 +202,13 @@ export class ApolloServer extends ApolloServerBase {
             (event.requestContext && event.requestContext.path) ||
             '/';
 
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: path,
-            ...this.playgroundOptions,
-          };
-
           return callback(null, {
-            body: renderPlaygroundPage(playgroundRenderPageOptions),
+            body: this.renderHTML({
+              playground: {
+                endpoint: path,
+                ...this.playgroundOptions,
+              },
+            }),
             statusCode: 200,
             headers: {
               'Content-Type': 'text/html',

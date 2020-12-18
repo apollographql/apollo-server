@@ -1,8 +1,8 @@
 import {
   ApolloServerPlugin,
   GraphQLRequestListener
-} from "apollo-server-plugin-base";
-import { ApolloError } from "apollo-server-errors";
+} from "@landingexp/apollo-server-plugin-base";
+import { ApolloError } from "@landingexp/apollo-server-errors";
 import { Kind, DefinitionNode, FieldNode, FragmentSpreadNode, InlineFragmentNode } from "graphql";
 import { getLogger } from "loglevel";
 

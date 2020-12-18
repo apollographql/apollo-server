@@ -1,6 +1,6 @@
 import { CacheManager } from 'make-fetch-happen';
-import { Request, Response, Headers } from 'apollo-server-env';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { Request, Response, Headers } from '@landingexp/apollo-server-env';
+import { InMemoryLRUCache } from '@landingexp/apollo-server-caching';
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 

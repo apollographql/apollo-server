@@ -2,8 +2,8 @@ import testSuite, {
   NODE_MAJOR_VERSION,
   schema as Schema,
   CreateAppOptions,
-} from 'apollo-server-integration-testsuite';
-import { GraphQLOptions, Config } from 'apollo-server-core';
+} from '@landingexp/apollo-server-integration-testsuite';
+import { GraphQLOptions, Config } from '@landingexp/apollo-server-core';
 
 function createApp(options: CreateAppOptions = {}) {
   const Koa = require('koa');

@@ -1,4 +1,4 @@
-import 'apollo-server-env';
+import '@landingexp/apollo-server-env';
 
 export { runHttpQuery, HttpQueryRequest, HttpQueryError } from './runHttpQuery';
 
@@ -17,7 +17,7 @@ export {
   ForbiddenError,
   UserInputError,
   formatApolloErrors,
-} from 'apollo-server-errors';
+} from '@landingexp/apollo-server-errors';
 
 export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 

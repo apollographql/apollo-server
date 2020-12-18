@@ -1,17 +1,17 @@
 import { DocumentNode, GraphQLError } from 'graphql';
-import { RequestAgent } from 'apollo-server-env';
+import { RequestAgent } from '@landingexp/apollo-server-env';
 import {
   Logger,
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextDidEncounterErrors,
-} from 'apollo-server-types';
+} from '@landingexp/apollo-server-types';
 import {
   ApolloServerPluginUsageReportingOptions,
   VariableValueOptions,
   SendValuesBaseOptions,
   GenerateClientInfo,
 } from './options';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { ApolloServerPlugin } from '@landingexp/apollo-server-plugin-base';
 import { ApolloServerPluginUsageReporting } from './plugin';
 
 /**

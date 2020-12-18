@@ -2,10 +2,9 @@ import {
   ApolloServerBase,
   GraphQLOptions,
   processFileUploads,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
-import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import { parseAll } from 'accept';
 
 import { graphqlMicro } from './microApollo';
@@ -130,13 +129,14 @@ export class ApolloServer extends ApolloServerBase {
         ) === 'text/html';
 
       if (prefersHTML) {
-        const middlewareOptions = {
-          endpoint: this.graphqlPath,
-          subscriptionEndpoint: this.subscriptionsPath,
-          ...this.playgroundOptions,
-        };
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        send(res, 200, renderPlaygroundPage(middlewareOptions));
+        send(res, 200, this.renderHTML({
+          playground: {
+            endpoint: this.graphqlPath,
+            subscriptionEndpoint: this.subscriptionsPath,
+            ...this.playgroundOptions,
+          },
+        }));
         handled = true;
       }
     }

@@ -4,7 +4,7 @@ import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
 
-import { Report, Trace } from 'apollo-reporting-protobuf';
+import { Report, Trace } from '@landingexp/apollo-reporting-protobuf';
 
 import {
   GraphQLSchema,
@@ -45,11 +45,11 @@ import {
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
   ApolloServerPluginUsageReportingOptions,
-} from 'apollo-server-core';
-import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
-import { TracingFormat } from 'apollo-tracing';
-import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
-import { GraphQLRequestContext } from 'apollo-server-types';
+} from '@landingexp/apollo-server-core';
+import { GraphQLExtension, GraphQLResponse } from '@landingexp/graphql-extensions';
+import { TracingFormat } from '@landingexp/apollo-tracing';
+import ApolloServerPluginResponseCache from '@landingexp/apollo-server-plugin-response-cache';
+import { GraphQLRequestContext } from '@landingexp/apollo-server-types';
 
 import { mockDate, unmockDate, advanceTimeBy } from '../../../__mocks__/date';
 

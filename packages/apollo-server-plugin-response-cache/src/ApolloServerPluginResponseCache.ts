@@ -1,11 +1,11 @@
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
-} from 'apollo-server-plugin-base';
-import { GraphQLRequestContext, GraphQLResponse } from 'apollo-server-types';
-import { KeyValueCache, PrefixingKeyValueCache } from 'apollo-server-caching';
-import { ValueOrPromise } from 'apollo-server-types';
-import { CacheHint, CacheScope } from 'apollo-cache-control';
+} from '@landingexp/apollo-server-plugin-base';
+import { GraphQLRequestContext, GraphQLResponse } from '@landingexp/apollo-server-types';
+import { KeyValueCache, PrefixingKeyValueCache } from '@landingexp/apollo-server-caching';
+import { ValueOrPromise } from '@landingexp/apollo-server-types';
+import { CacheHint, CacheScope } from '@landingexp/apollo-cache-control';
 
 // XXX This should use createSHA from apollo-server-core in order to work on
 // non-Node environments. I'm not sure where that should end up ---
@@ -306,7 +306,7 @@ export default function plugin(
               logger.warn(
                 'A GraphQL response used @cacheControl or setCacheHint to set cache hints with scope ' +
                   "Private, but you didn't define the sessionId hook for " +
-                  'apollo-server-plugin-response-cache. Not caching.',
+                  '@landingexp/apollo-server-plugin-response-cache. Not caching.',
               );
               return;
             }

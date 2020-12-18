@@ -4,8 +4,8 @@ import {
   GraphQLRequestContextDidEncounterErrors,
   Logger,
   GraphQLRequestContext,
-} from 'apollo-server-types';
-import { RequestAgent } from 'apollo-server-env';
+} from '@landingexp/apollo-server-types';
+import { RequestAgent } from '@landingexp/apollo-server-env';
 
 export interface ApolloServerPluginUsageReportingOptions<TContext> {
   //#region Configure exactly which data should be sent to Apollo.

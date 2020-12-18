@@ -3,22 +3,18 @@ import corsMiddleware from '@koa/cors';
 import bodyParser from 'koa-bodyparser';
 import compose from 'koa-compose';
 import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
-import {
   ApolloServerBase,
   FileUploadOptions,
-  GraphQLOptions,
   formatApolloErrors,
+  GraphQLOptions,
   processFileUploads,
-} from 'apollo-server-core';
+} from '@landingexp/apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
 
 import { graphqlKoa } from './koaApollo';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions, GraphQLExtension } from '@landingexp/apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;
@@ -188,16 +184,14 @@ export class ApolloServer extends ApolloServerBase {
             ) === 'text/html';
 
           if (prefersHTML) {
-            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-              endpoint: path,
-              subscriptionEndpoint: this.subscriptionsPath,
-              ...this.playgroundOptions,
-            };
             ctx.set('Content-Type', 'text/html');
-            const playground = renderPlaygroundPage(
-              playgroundRenderPageOptions,
-            );
-            ctx.body = playground;
+            ctx.body = this.renderHTML({
+              playground: {
+                endpoint: path,
+                subscriptionEndpoint: this.subscriptionsPath,
+                ...this.playgroundOptions,
+              }
+            });
             return;
           }
         }

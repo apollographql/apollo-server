@@ -1,11 +1,11 @@
 import fastify, { FastifyInstance } from 'fastify';
 
-import { RESTDataSource } from 'apollo-datasource-rest';
+import { RESTDataSource } from '@landingexp/apollo-datasource-rest';
 
 import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServer } from '../ApolloServer';
 
-import { createServerInfo } from 'apollo-server-integration-testsuite';
+import { createServerInfo } from '@landingexp/apollo-server-integration-testsuite';
 import { gql } from '../index';
 
 const restPort = 4003;
@@ -59,7 +59,7 @@ restAPI.get('/str/:id', (req, res) => {
   res.send(id);
 });
 
-describe('apollo-server-fastify', () => {
+describe('@landingexp/apollo-server-fastify', () => {
   let restServer: FastifyInstance;
   let app: FastifyInstance;
 

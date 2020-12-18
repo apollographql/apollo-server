@@ -2,8 +2,8 @@ import micro from 'micro';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
-} from 'apollo-server-integration-testsuite';
-import { GraphQLOptions, Config } from 'apollo-server-core';
+} from '@landingexp/apollo-server-integration-testsuite';
+import { GraphQLOptions, Config } from '@landingexp/apollo-server-core';
 
 import { ApolloServer } from '../ApolloServer';
 

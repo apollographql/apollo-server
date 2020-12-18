@@ -1,11 +1,9 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { HttpResponse } from 'azure-functions-ts-essentials';
-import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLOptions } from 'apollo-server-core';
 import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
+  ApolloServerBase,
+  GraphQLOptions
+} from '@landingexp/apollo-server-core';
 
 import { graphqlAzureFunction } from './azureFunctionApollo';
 
@@ -115,13 +113,13 @@ export class ApolloServer extends ApolloServerBase {
         if (acceptHeader && acceptHeader.includes('text/html')) {
           const path = req.url || '/';
 
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: path,
-            ...this.playgroundOptions,
-          };
-          const body = renderPlaygroundPage(playgroundRenderPageOptions);
           context.done(null, {
-            body: body,
+            body: this.renderHTML({
+              playground: {
+                endpoint: path,
+                ...this.playgroundOptions,
+              },
+            }),
             status: 200,
             headers: {
               'Content-Type': 'text/html',

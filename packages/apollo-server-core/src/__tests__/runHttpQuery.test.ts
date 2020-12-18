@@ -11,7 +11,7 @@ import {
   PersistedQueryNotFoundError,
   PersistedQueryNotSupportedError,
   ForbiddenError,
-} from 'apollo-server-errors';
+} from '@landingexp/apollo-server-errors';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',

@@ -1,4 +1,4 @@
-import { Request, Headers, ValueOrPromise } from 'apollo-server-env';
+import { Request, Headers, ValueOrPromise } from '@landingexp/apollo-server-env';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
@@ -9,7 +9,7 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
   hasPersistedQueryError,
-} from 'apollo-server-errors';
+} from '@landingexp/apollo-server-errors';
 import {
   processGraphQLRequest,
   GraphQLRequest,
@@ -17,8 +17,8 @@ import {
   GraphQLRequestContext,
   GraphQLResponse,
 } from './requestPipeline';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { WithRequired, GraphQLExecutionResult } from 'apollo-server-types';
+import { ApolloServerPlugin } from '@landingexp/apollo-server-plugin-base';
+import { WithRequired, GraphQLExecutionResult } from '@landingexp/apollo-server-types';
 
 export interface HttpQueryRequest {
   method: string;

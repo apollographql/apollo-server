@@ -4,7 +4,7 @@ import {
   CacheControlExtensionOptions,
   plugin,
 } from '../';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
+import pluginTestHarness from '@landingexp/apollo-server-core/dist/utils/pluginTestHarness';
 
 export async function collectCacheControlHints(
   schema: GraphQLSchema,

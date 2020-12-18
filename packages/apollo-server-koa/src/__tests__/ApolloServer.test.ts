@@ -5,14 +5,14 @@ import FormData from 'form-data';
 import fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, AuthenticationError, Config } from 'apollo-server-core';
+import { gql, AuthenticationError, Config } from '@landingexp/apollo-server-core';
 import { ServerRegistration } from '../ApolloServer';
 
 import {
   NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
-} from 'apollo-server-integration-testsuite';
+} from '@landingexp/apollo-server-integration-testsuite';
 
 const typeDefs = gql`
   type Query {
@@ -35,7 +35,7 @@ const resolvers = {
   NODE_MAJOR_VERSION === 6 ?
   describe.skip :
   describe
-)('apollo-server-koa', () => {
+)('@landingexp/apollo-server-koa', () => {
   const { ApolloServer } = require('../ApolloServer');
   const Koa = require('koa');
   let server: ApolloServer;
@@ -66,7 +66,7 @@ const resolvers = {
   NODE_MAJOR_VERSION === 6 ?
   describe.skip :
   describe
-)('apollo-server-koa', () => {
+)('@landingexp/apollo-server-koa', () => {
   const Koa = require('koa');
   const { ApolloServer } = require('../ApolloServer');
   let server: import('../ApolloServer').ApolloServer;

@@ -8,14 +8,14 @@ import FormData from 'form-data';
 import fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, AuthenticationError, Config } from 'apollo-server-core';
+import { gql, AuthenticationError, Config } from '@landingexp/apollo-server-core';
 import { ApolloServer, ServerRegistration } from '../ApolloServer';
 
 import {
   NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
-} from 'apollo-server-integration-testsuite';
+} from '@landingexp/apollo-server-integration-testsuite';
 
 const typeDefs = gql`
   type Query {
@@ -31,7 +31,7 @@ const resolvers = {
 
 const port = 9999;
 
-describe('apollo-server-fastify', () => {
+describe('@landingexp/apollo-server-fastify', () => {
   let server: ApolloServer;
   let httpServer: http.Server;
   let app: FastifyInstance;
@@ -52,7 +52,7 @@ describe('apollo-server-fastify', () => {
   );
 });
 
-describe('apollo-server-fastify', () => {
+describe('@landingexp/apollo-server-fastify', () => {
   let server: ApolloServer;
   let app: FastifyInstance;
   let httpServer: http.Server;

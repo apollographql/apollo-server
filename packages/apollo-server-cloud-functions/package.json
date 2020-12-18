@@ -1,6 +1,6 @@
 {
-  "name": "apollo-server-cloud-functions",
-  "version": "2.19.0",
+  "name": "@landingexp/apollo-server-cloud-functions",
+  "version": "3.0.4",
   "description": "Production-ready Node.js GraphQL server for Google Cloud Functions",
   "keywords": [
     "GraphQL",
@@ -13,12 +13,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server",
+    "url": "https://github.com/apollograph../apollo-server",
     "directory": "packages/apollo-server-cloud-functions"
   },
-  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "homepage": "https://github.com/apollograph../apollo-server#readme",
   "bugs": {
-    "url": "https://github.com/apollographql/apollo-server/issues"
+    "url": "https://github.com/apollograph../apollo-server/issues"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,14 +26,13 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/graphql-playground-html": "1.6.26",
-    "apollo-server-core": "file:../apollo-server-core",
-    "apollo-server-env": "file:../apollo-server-env",
-    "apollo-server-types": "file:../apollo-server-types",
+    "@landingexp/apollo-server-core": "file:../apollo-server-core",
+    "@landingexp/apollo-server-env": "file:../apollo-server-env",
+    "@landingexp/apollo-server-types": "file:../apollo-server-types",
     "graphql-tools": "^4.0.0"
   },
   "devDependencies": {
-    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
+    "@landingexp/apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"

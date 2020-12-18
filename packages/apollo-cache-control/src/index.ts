@@ -6,7 +6,7 @@ import {
   ResponsePath,
   responsePathAsArray,
 } from 'graphql';
-import { ApolloServerPlugin } from "apollo-server-plugin-base";
+import { ApolloServerPlugin } from "@landingexp/apollo-server-plugin-base";
 
 export interface CacheControlFormat {
   version: 1;
@@ -40,7 +40,7 @@ declare module 'graphql/type/definition' {
   }
 }
 
-declare module 'apollo-server-types' {
+declare module '@landingexp/apollo-server-types' {
   interface GraphQLRequestContext<TContext> {
     // Not readonly: plugins can set it.
     overallCachePolicy?: Required<CacheHint> | undefined;

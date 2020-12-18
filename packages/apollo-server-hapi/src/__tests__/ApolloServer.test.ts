@@ -2,7 +2,7 @@ import {
   NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
-} from 'apollo-server-integration-testsuite';
+} from '@landingexp/apollo-server-integration-testsuite';
 
 import http = require('http');
 import request = require('request');
@@ -10,14 +10,14 @@ import FormData = require('form-data');
 import fs = require('fs');
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, AuthenticationError } from 'apollo-server-core';
+import { gql, AuthenticationError } from '@landingexp/apollo-server-core';
 import { ApolloServer } from '../ApolloServer';
 
 const port = 0;
 
 // NODE: Intentionally skip for Node.js < 8 since Hapi 17 doesn't support those.
 (NODE_MAJOR_VERSION < 8 ? describe.skip : describe)(
-  'apollo-server-hapi',
+  '@landingexp/apollo-server-hapi',
   () => {
     let server: ApolloServer;
 

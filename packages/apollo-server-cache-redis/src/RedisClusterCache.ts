@@ -1,4 +1,4 @@
-import { KeyValueCache, KeyValueCacheSetOptions } from 'apollo-server-caching';
+import { KeyValueCache, KeyValueCacheSetOptions } from '@landingexp/apollo-server-caching';
 import Redis, {
   ClusterOptions,
   ClusterNode,
