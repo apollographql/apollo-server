@@ -94,6 +94,7 @@ import {
 } from './plugin';
 import { InternalPluginId, pluginIsInternal } from './plugin/internalPlugin';
 import { renderPlaygroundPage } from "@apollographql/graphql-playground-html";
+import { indexHTML } from "./html";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -1022,22 +1023,7 @@ export class ApolloServerBase {
   }: {
     playground: PlaygroundRenderPageOptions;
   }): string {
-    return `
-      <html>
-        <body>
-        <h1>Demo</h1>
-        <a href="#" id="go">Go!</a>
-        <script>
-          document.getElementById("go").onclick = function() {
-            const src = decodeURI("${encodeURI(renderPlaygroundPage(playground))}");
-            const dom = new DOMParser().parseFromString(src, 'text/html');
-            document.documentElement.replaceWith(dom.documentElement);
-            setTimeout(() => dispatchEvent(new Event('load')), 1000);
-          };
-        </script>
-        </body>
-      </html>
-    `;
+    return indexHTML(renderPlaygroundPage(playground));
   }
 }
 
