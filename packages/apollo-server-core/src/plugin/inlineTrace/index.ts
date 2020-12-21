@@ -1,5 +1,6 @@
 import { Trace } from 'apollo-reporting-protobuf';
 import { TraceTreeBuilder } from '../traceTreeBuilder';
+import { GraphQLRequestContext } from 'apollo-server-plugin-base';
 import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 
@@ -11,6 +12,13 @@ export interface ApolloServerPluginInlineTraceOptions {
    * of the error by modifying it and returning the modified error.
    */
   rewriteError?: ApolloServerPluginUsageReportingOptions<never>['rewriteError'];
+  /**
+   * By default, all requests are traced; however, if you would like to
+   * customize tracing behavior (such as disabling it for certain request
+   * headers), a function can be passed to `shouldTraceRequest` which
+   * can determine per-request how tracing should be applied.
+   */
+  shouldTraceRequest?: (info: GraphQLRequestContext) => boolean;
 }
 
 // This ftv1 plugin produces a base64'd Trace protobuf containing only the
@@ -25,13 +33,19 @@ export function ApolloServerPluginInlineTrace(
     __internal_plugin_id__() {
       return 'InlineTrace';
     },
-    requestDidStart({ request: { http } }) {
+    requestDidStart(requestContext) {
+      const requestHttp = requestContext.request.http;
+
       const treeBuilder = new TraceTreeBuilder({
         rewriteError: options.rewriteError,
       });
 
       // XXX Provide a mechanism to customize this logic.
-      if (http?.headers.get('apollo-federation-include-trace') !== 'ftv1') {
+      if (requestHttp?.headers.get('apollo-federation-include-trace') !== 'ftv1') {
+        return;
+      }
+
+      if (options.shouldTraceRequest && !options.shouldTraceRequest(requestContext)) {
         return;
       }
 
