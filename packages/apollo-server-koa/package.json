@@ -33,7 +33,7 @@
     "@types/koa": "^2.0.46",
     "@types/koa-bodyparser": "^4.2.1",
     "@types/koa-compose": "^3.2.2",
-    "@types/koa__cors": "^2.2.1",
+    "@types/koa__cors": "^3.0.0",
     "accepts": "^1.3.5",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-types": "file:../apollo-server-types",
