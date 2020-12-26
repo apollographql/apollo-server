@@ -46,7 +46,7 @@
     "graphql-tools": "^4.0.0",
     "graphql-upload": "^8.0.2",
     "loglevel": "^1.6.7",
-    "lru-cache": "^5.0.0",
+    "lru-cache": "^6.0.0",
     "sha.js": "^2.4.11",
     "subscriptions-transport-ws": "^0.9.11",
     "uuid": "^8.0.0",
