@@ -182,9 +182,9 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    */
   endpointUrl?: string;
   /**
-   * If set, prints all reports as JSON when they are sent. (Note that this
-   * feature is not as useful as it may sound because for technical reasons
-   * it currently does not include the actual traces.)
+   * If set, prints all reports as JSON when they are sent. (Note that for
+   * technical reasons, traces embedded in a report are printed separately when
+   * they are added to a report.)
    */
   debugPrintReports?: boolean;
   /**

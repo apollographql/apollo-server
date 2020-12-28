@@ -219,9 +219,9 @@ export function ApolloServerPluginUsageReporting<TContext>(
           // `debugPrintReports`) just to reach the level of verbosity to
           // produce the output would be a breaking change.  The "warn" level is
           // on by default.  There is a similar theory and comment applied
-          // below. (Note that this feature is not as useful as it may sound
-          // because it currently does not include the actual traces which are
-          // "pre-encoded" and not accessible to `toJSON`.)
+          // below. (Note that the actual traces are "pre-encoded" and not
+          // accessible to `toJSON` but we do print them separately when we
+          // encode them.)
           logger.warn(
             `Apollo usage report: ${JSON.stringify(report.toJSON())}`,
           );
@@ -483,9 +483,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
             }
 
             if (statsReportKey) {
-              if (
-                options.sendUnexecutableOperationDocuments
-              ) {
+              if (options.sendUnexecutableOperationDocuments) {
                 treeBuilder.trace.unexecutedOperationBody =
                   requestContext.source;
                 treeBuilder.trace.unexecutedOperationName = operationName;
@@ -514,6 +512,14 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
             reportData.size +=
               encodedTrace.length + Buffer.byteLength(statsReportKey);
+
+            if (options.debugPrintReports) {
+              logger.warn(
+                `Apollo usage report trace: ${JSON.stringify(
+                  treeBuilder.trace.toJSON(),
+                )}`,
+              );
+            }
 
             // If the buffer gets big (according to our estimate), send.
             if (

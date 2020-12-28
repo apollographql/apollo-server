@@ -328,7 +328,7 @@ The URL base that the plugin sends reports to (not including the path). This opt
 </td>
 <td>
 
-If set, prints all reports as JSON when they are sent. (Note that this feature is not as useful as it might sound, because for technical reasons it currently does not include the actual traces.)
+If set, prints all reports as JSON when they are sent. (Note that for technical reasons, traces embedded in a report are printed separately when they are added to a report.)
 </td>
 </tr>
 
