@@ -381,7 +381,7 @@ const server = new ApolloServer({
 
 // Example resolver
 (parent, args, context, info) => {
-  if(context.authScope !== ADMIN) throw AuthenticationError('not admin');
+  if(context.authScope !== ADMIN) throw new AuthenticationError('not admin');
   // Proceed
 }
 ```
