@@ -138,7 +138,7 @@ const client = new ApolloClient({
 });
 ```
 
-> If you are testing locally, make sure to include the full uri including the port number. For example:  ` uri: "http://localhost:4000/graphql"`. 
+> If you are testing locally, make sure to include the full [URI](https://developer.mozilla.org/en-US/docs/Glossary/URI) including the port number. For example:  ` uri: "http://localhost:4000/graphql"`. 
 
 Make sure to include `useGETForHashedQueries: true`. Note that the client will still use POSTs for mutations because it's generally best to avoid GETs for non-idempotent requests.
 
