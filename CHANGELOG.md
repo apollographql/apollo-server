@@ -23,6 +23,10 @@ The version headers in this history reflect the versions of Apollo Server itself
   - We no longer re-export the entirety of `graphql-tools` (including `makeExecutableSchema`) from all Apollo Server packages.
   - The `Upload` scalar is no longer exported. (See above as to why.)
 
+## v2.19.1
+
+- `apollo-server-core`: The `debugPrintReports` option to `ApolloServerPluginUsageReporting` now prints traces as well. [PR #4805](https://github.com/apollographql/apollo-server/pull/4805)
+
 ## v2.19.0
 
 - `apollo-server-testing`: types: Allow generic `variables` usage of `query` and `mutate` functions. [PR #4383](https://github.com/apollograpqh/apollo-server/pull/4383)

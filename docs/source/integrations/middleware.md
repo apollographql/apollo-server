@@ -27,12 +27,16 @@ it after installing an integration package.
 ## Applying middleware
 
 When integrating with middleware, first you initialize Apollo Server just like you
-always do, and then you call `applyMiddleware`, like so:
+always do, and then you call `applyMiddleware`.
+
+Here's a basic Express example that serves `Hello!` from every path _except_ `/graphql`, which serves a GraphQL endpoint with Apollo Server:
 
 ```js
-const { ApolloServer, gql } = require('apollo-server-express');
+const express = require('express');
+const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
+const app = express();
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -40,14 +44,19 @@ const server = new ApolloServer({
 
 server.applyMiddleware({ app });
 
+app.use((req, res) => {
+  res.status(200);
+  res.send('Hello!');
+  res.end();
+});
+
 app.listen({ port: 4000 }, () =>
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
 )
 ```
 
-In the above example, the `app` parameter you provide to `applyMiddleware`
-is your middleware's top-level representation of your application. In Express applications, for example, this variable is commonly named `app`.
+The parameter you provide to `applyMiddleware` is your middleware's top-level representation of your application. In Express applications, this variable is commonly named `app`.
 
-By passing the existing `app` into `applyMiddleware`, Apollo Server can internally configure various middleware (including body parsing, the GraphQL Playground frontend, CORS support, etc.) without needing to separately apply those to the `app` with middleware mechanisms like Express.js' `app.use`.
+When you pass your app to `applyMiddleware`, Apollo Server automatically configures various middleware (including body parsing, the GraphQL Playground frontend, and CORS support), so you don't need to apply them with a mechanism like `app.use`.
 
 > **Note:** When integrating with hapi, call `applyMiddleware` with `await`.
