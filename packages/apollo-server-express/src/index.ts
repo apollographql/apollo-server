@@ -27,6 +27,7 @@ export {
   ServerRegistration,
   GetMiddlewareOptions,
   ApolloServerExpressConfig,
+  ExpressContext,
 } from './ApolloServer';
 
 export { CorsOptions } from 'cors';
