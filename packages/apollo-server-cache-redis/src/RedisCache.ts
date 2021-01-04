@@ -17,7 +17,7 @@ export class RedisCache implements TestableKeyValueCache<string> {
   constructor(path: string, options: RedisOptions);
   constructor(port: number, options: RedisOptions);
   constructor(port: number, host: string);
-  constructor(options: RedisOptions);
+  constructor(options?: RedisOptions);
   constructor(port: number);
   constructor(path: string);
   constructor() {
