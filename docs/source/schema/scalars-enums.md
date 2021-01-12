@@ -1,114 +1,108 @@
 ---
-title: Custom scalars and enums
-description: Add custom scalar and enum types to a schema.
+title: Custom scalars
 ---
 
-The GraphQL specification includes the following default scalar types: `Int`, `Float`, `String`, `Boolean` and `ID`. While this covers most of the use cases, some need to support custom atomic data types (e.g. `Date`), or add validation to an existing type. To enable this, GraphQL allows custom scalar types. Enumerations are similar to custom scalars with the limitation that their values can only be one of a pre-defined list of strings.
+The GraphQL specification includes default scalar types `Int`, `Float`, `String`, `Boolean`, and `ID`. Although these scalars cover the majority of use cases, some applications need to support another atomic data type (such as `Date`) or add validation to an existing type. To enable this, you can define custom scalar types.
 
-## Custom scalars
+> For more information about the `graphql` library's type system, see the [official documentation](http://graphql.org/graphql-js/type/).
 
-To define a custom scalar, add it to the schema string with the following notation:
 
-```js
+## Defining a custom scalar
+
+To define a custom scalar, add it to your schema like so:
+
+```graphql
 scalar MyCustomScalar
 ```
 
-Afterwards, define the behavior of a `MyCustomScalar` custom scalar by passing an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class in the [resolver map](https://www.apollographql.com/docs/graphql-tools/resolvers.html#Resolver-map). This instance can be defined with a [dependency](#using-a-package) or in [source code](#custom-graphqlscalartype-instance).
+Object types in your schema can now contain fields of type `MyCustomScalar`. However, Apollo Server still needs to know how to interact with values of this new scalar type.
 
-For more information about GraphQL's type system, please refer to the [official documentation](http://graphql.org/graphql-js/type/) or to the [Learning GraphQL](https://github.com/mugli/learning-graphql/blob/master/7.%20Deep%20Dive%20into%20GraphQL%20Type%20System.md) tutorial.
+## Defining custom scalar logic
 
-Note that [Apollo Client does not currently have a way to automatically interpret custom scalars](https://github.com/apollostack/apollo-client/issues/585), so there's no way to automatically reverse the serialization on the client.
+After you define a custom scalar type, you need to define how Apollo Server interacts with it. Specifically, Apollo Server needs to know how to transform the scalar's value when sending and receiving it from clients. You define these interactions in an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class.
 
-### Using a package
-
-Here, we'll take the [graphql-type-json](https://github.com/taion/graphql-type-json) package as an example to demonstrate what can be done. This npm package defines a JSON GraphQL scalar type.
-
-Add the `graphql-type-json` package to the project's dependencies :
-
-```shell
-$ npm install graphql-type-json
-```
-
-In code, require the type defined by in the npm package and use it :
+The following `GraphQLScalarType` object defines placeholder functions for interacting with a custom scalar named `Date`:
 
 ```js
-const { ApolloServer, gql } = require('apollo-server');
-const GraphQLJSON = require('graphql-type-json');
-
-const schemaString = gql`
-  scalar JSON
-
-  type Foo {
-    aField: JSON
-  }
-
-  type Query {
-    foo: Foo
-  }
-`;
-
-const resolveFunctions = {
-  JSON: GraphQLJSON
-};
-
-const server = new ApolloServer({ typeDefs: schemaString, resolvers: resolveFunctions });
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
-```
-
-Remark : `GraphQLJSON` is a [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) instance.
-
-### Custom `GraphQLScalarType` instance
-
-Defining a [GraphQLScalarType](http://graphql.org/graphql-js/type/#graphqlscalartype) instance provides more control over the custom scalar and can be added to Apollo server in the following way:
-
-```js
-const { ApolloServer, gql } = require('apollo-server');
 const { GraphQLScalarType, Kind } = require('graphql');
 
-const myCustomScalarType = new GraphQLScalarType({
-  name: 'MyCustomScalar',
-  description: 'Description of my custom scalar type',
+const dateScalar = new GraphQLScalarType({
+  name: 'Date',
+  description: 'Date custom scalar type',
   serialize(value) {
-    let result;
-    // Implement custom behavior by setting the 'result' variable
-    return result;
+    return value.getTime(); // Transform value returned to client
   },
   parseValue(value) {
-    let result;
-    // Implement custom behavior here by setting the 'result' variable
-    return result;
+    return new Date(value); // Transform JSON value sent by client
   },
   parseLiteral(ast) {
-    switch (ast.kind) {
-      case Kind.Int:
-      // return a literal value, such as 1 or 'static string'
+    if (ast.kind === Kind.INT) {
+      return parseInt(ast.value, 10); // Transform AST value to type expected by parseValue
     }
-  }
+    return null; // Invalid hard-coded value
+  },
 });
+```
 
-const schemaString = gql`
-  scalar MyCustomScalar
+This initialization defines the following methods:
 
-  type Foo {
-    aField: MyCustomScalar
+* `serialize`
+* `parseValue`
+* `parseLiteral`
+
+Together, these methods describe how Apollo Server interacts with the scalar in every scenario.
+
+### `serialize`
+
+The `serialize` method converts the scalar's back-end representation to the format expected by the requesting client (this is almost always JSON.)
+
+In the example above, the `Date` scalar is represented on the backend by the `Date` JavaScript object. When we send a `Date` scalar in a GraphQL response, we serialize it as the integer value returned by the [`getTime` function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTime) of a JavaScript `Date` object.
+
+> Note that Apollo Client cannot automatically interpret custom scalars ([see issue](https://github.com/apollographql/apollo-feature-requests/issues/2)), so your client must define custom logic to deserialize this value as needed.
+
+### `parseValue`
+
+The `parseValue` method converts the scalar's `serialize`d value to its back-end representation.
+
+Apollo Server calls this method when the scalar appears in an incoming query (such as in a field argument).
+
+### `parseLiteral`
+
+When an incoming query string includes a hard-coded value for the scalar, that value is part of the query document's abstract syntax tree (AST). Apollo Server calls the `parseLiteral` method to convert the value's AST representation (which is always a string) to the format expected by the `parseValue` method (the example above expects an integer).
+
+## Providing custom scalars to Apollo Server
+
+After you define your `GraphQLScalarType` instance, you include it in the same [resolver map](../data/resolvers/#defining-a-resolver) that contains resolvers for your schema's other types and fields:
+
+```js
+const { ApolloServer, gql } = require('apollo-server');
+
+const typeDefs = gql`
+  scalar Date
+
+  type Event {
+    id: ID!
+    date: Date!
   }
 
   type Query {
-    foo: Foo
+    events: [Event!]
   }
 `;
 
-const resolverFunctions = {
-  MyCustomScalar: myCustomScalarType
+const dateScalar = new GraphQLScalarType({
+  // See definition above
+});
+
+const resolvers = {
+  Date: dateScalar
+
+  // ...other resolver definitions...
 };
 
-const server = new ApolloServer({ typeDefs: schemaString, resolvers: resolverFunctions });
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
+const server = new ApolloServer({
+  typeDefs,
+  resolvers
 });
 ```
 
@@ -211,115 +205,43 @@ server.listen().then(({ url }) => {
 });
 ```
 
-## Enums
+## Importing a third-party custom scalar
 
-An Enum is similar to a scalar type, but it can only be one of several values defined in the schema. Enums are most useful in a situation where the user must pick from a prescribed list of options. Additionally enums improve development velocity, since they will auto-complete in tools like GraphQL Playground.
+Here, we'll take the [graphql-type-json](https://github.com/taion/graphql-type-json) package as an example to demonstrate what can be done. This npm package defines a JSON GraphQL scalar type.
 
-In the schema language, an enum looks like this:
+Remark : `GraphQLJSON` is a [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) instance.
 
-```graphql
-enum AllowedColor {
-  RED
-  GREEN
-  BLUE
-}
+Add the `graphql-type-json` package to the project's dependencies :
+
+```shell
+$ npm install graphql-type-json
 ```
 
-An enum can be used anywhere a scalar can be:
-
-```graphql
-type Query {
-  favoriteColor: AllowedColor # As a return value
-  avatar(borderColor: AllowedColor): String # As an argument
-}
-```
-
-A query might look like this:
-
-```graphql
-query GetAvatar {
-  avatar(borderColor: RED)
-}
-```
-
-To pass the enum value as a variable, use a string of JSON, like so:
-
-```graphql
-query GetAvatar($color: AllowedColor) {
-  avatar(borderColor: $color)
-}
-```
-
-```js
-{
-  "color": "RED"
-}
-```
-
-Putting it all together:
+In code, require the type defined by in the npm package and use it :
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
+const GraphQLJSON = require('graphql-type-json');
 
-const typeDefs = gql`
-  enum AllowedColor {
-    RED
-    GREEN
-    BLUE
+const schemaString = gql`
+  scalar JSON
+
+  type Foo {
+    aField: JSON
   }
 
   type Query {
-    favoriteColor: AllowedColor # As a return value
-    avatar(borderColor: AllowedColor): String # As an argument
+    foo: Foo
   }
 `;
 
-const resolvers = {
-  Query: {
-    favoriteColor: () => 'RED',
-    avatar: (parent, args) => {
-      // args.borderColor is 'RED', 'GREEN', or 'BLUE'
-    },
-  }
+const resolveFunctions = {
+  JSON: GraphQLJSON
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs: schemaString, resolvers: resolveFunctions });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
 });
 ```
-
-### Internal values
-
-Sometimes a backend forces a different value for an enum internally than in the public API. In this example the API contains `RED`, however in resolvers we use `#f00` instead. The `resolvers` argument to `ApolloServer` allows the addition of custom values to enums that only exist internally:
-
-```js
-const resolvers = {
-  AllowedColor: {
-    RED: '#f00',
-    GREEN: '#0f0',
-    BLUE: '#00f',
-  }
-};
-```
-
-These don't change the public API at all and the resolvers accept these value instead of the schema value, like so:
-
-```js
-const resolvers = {
-  AllowedColor: {
-    RED: '#f00',
-    GREEN: '#0f0',
-    BLUE: '#00f',
-  },
-  Query: {
-    favoriteColor: () => '#f00',
-    avatar: (parent, args) => {
-      // args.borderColor is '#f00', '#0f0', or '#00f'
-    },
-  }
-};
-```
-
-Most of the time, this feature of enums isn't used unless interoperating with another library that expects its values in a different form.
