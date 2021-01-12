@@ -2,10 +2,7 @@
 title: Custom scalars
 ---
 
-The GraphQL specification includes default scalar types `Int`, `Float`, `String`, `Boolean`, and `ID`. Although these scalars cover the majority of use cases, some applications need to support another atomic data type (such as `Date`) or add validation to an existing type. To enable this, you can define custom scalar types.
-
-> For more information about the `graphql` library's type system, see the [official documentation](http://graphql.org/graphql-js/type/).
-
+The GraphQL specification includes default scalar types `Int`, `Float`, `String`, `Boolean`, and `ID`. Although these scalars cover the majority of use cases, some applications need to support other atomic data types (such as `Date`) or add validation to an existing type. To enable this, you can define custom scalar types.
 
 ## Defining a custom scalar
 
@@ -19,9 +16,20 @@ Object types in your schema can now contain fields of type `MyCustomScalar`. How
 
 ## Defining custom scalar logic
 
-After you define a custom scalar type, you need to define how Apollo Server interacts with it. Specifically, Apollo Server needs to know how to transform the scalar's value when sending and receiving it from clients. You define these interactions in an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class.
+After you define a custom scalar type, you need to define how Apollo Server interacts with it. In particular, you need to define:
 
-The following `GraphQLScalarType` object defines placeholder functions for interacting with a custom scalar named `Date`:
+* How the scalar's value is represented in your backend
+    * _This is often the representation used by the driver for your backing data store._
+* How the value's back-end representation is **serialized** to a JSON-compatible type
+* How the JSON-compatible representation is **deserialized** to the back-end representation
+
+You define these interactions in an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class.
+
+> For more information about the `graphql` library's type system, see the [official documentation](http://graphql.org/graphql-js/type/).
+
+## Example: The `Date` scalar
+
+The following `GraphQLScalarType` object defines interactions for a custom scalar that represents a date (this is one of the most commonly implemented custom scalars). It assumes that our backend represents a date with the `Date` JavaScript object.
 
 ```js
 const { GraphQLScalarType, Kind } = require('graphql');
@@ -30,16 +38,16 @@ const dateScalar = new GraphQLScalarType({
   name: 'Date',
   description: 'Date custom scalar type',
   serialize(value) {
-    return value.getTime(); // Transform value returned to client
+    return value.getTime(); // Convert outgoing Date to integer for JSON
   },
   parseValue(value) {
-    return new Date(value); // Transform JSON value sent by client
+    return new Date(value); // Convert incoming integer to Date
   },
   parseLiteral(ast) {
     if (ast.kind === Kind.INT) {
-      return parseInt(ast.value, 10); // Transform AST value to type expected by parseValue
+      return parseInt(ast.value, 10); // Convert hard-coded AST string to type expected by parseValue
     }
-    return null; // Invalid hard-coded value
+    return null; // Invalid hard-coded value (not an integer)
   },
 });
 ```
@@ -54,7 +62,7 @@ Together, these methods describe how Apollo Server interacts with the scalar in 
 
 ### `serialize`
 
-The `serialize` method converts the scalar's back-end representation to the format expected by the requesting client (this is almost always JSON.)
+The `serialize` method converts the scalar's back-end representation to a JSON-compatible format so Apollo Server can include it in an operation response.
 
 In the example above, the `Date` scalar is represented on the backend by the `Date` JavaScript object. When we send a `Date` scalar in a GraphQL response, we serialize it as the integer value returned by the [`getTime` function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTime) of a JavaScript `Date` object.
 
@@ -62,20 +70,21 @@ In the example above, the `Date` scalar is represented on the backend by the `Da
 
 ### `parseValue`
 
-The `parseValue` method converts the scalar's `serialize`d value to its back-end representation.
+The `parseValue` method converts the scalar's `serialize`d JSON value to its back-end representation.
 
 Apollo Server calls this method when the scalar appears in an incoming query (such as in a field argument).
 
 ### `parseLiteral`
 
-When an incoming query string includes a hard-coded value for the scalar, that value is part of the query document's abstract syntax tree (AST). Apollo Server calls the `parseLiteral` method to convert the value's AST representation (which is always a string) to the format expected by the `parseValue` method (the example above expects an integer).
+When an incoming query string includes a hard-coded value for the scalar, that value is part of the query document's abstract syntax tree (AST). Apollo Server calls the `parseLiteral` method to convert the value's AST representation (which is always a string) to the JSON-compatible format expected by the `parseValue` method (the example above expects an integer).
 
 ## Providing custom scalars to Apollo Server
 
 After you define your `GraphQLScalarType` instance, you include it in the same [resolver map](../data/resolvers/#defining-a-resolver) that contains resolvers for your schema's other types and fields:
 
-```js
+```js{21-24}
 const { ApolloServer, gql } = require('apollo-server');
+const { GraphQLScalarType, Kind } = require('graphql');
 
 const typeDefs = gql`
   scalar Date
@@ -96,7 +105,6 @@ const dateScalar = new GraphQLScalarType({
 
 const resolvers = {
   Date: dateScalar
-
   // ...other resolver definitions...
 };
 
@@ -106,79 +114,25 @@ const server = new ApolloServer({
 });
 ```
 
-## Custom scalar examples
+## Example: Restricting integers to odd values
 
-Let's look at a couple of examples to demonstrate how a custom scalar type can be defined.
+In this example, we create a custom scalar called `Odd` that can only contain odd integers:
 
-### Date as a scalar
-
-The goal is to define a `Date` data type for returning `Date` values from the database. Let's say we're using a MongoDB driver that uses the native JavaScript `Date` data type. The `Date` data type can be easily serialized as a number using the [`getTime()` method](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTime). Therefore, we would like our GraphQL server to send and receive `Date`s as numbers when serializing to JSON. This number will be resolved to a `Date` on the server representing the date value. On the client, the user can simply create a new date from the received numeric value.
-
-The following is the implementation of the `Date` data type. First, the schema:
-
-```js
-const typeDefs = gql`
-  scalar Date
-
-  type MyType {
-    created: Date
-  }
-`
-```
-
-Next, the resolver:
-
-```js
+```js{20-31}
+const { ApolloServer, gql } = require('apollo-server');
 const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
 
-const resolvers = {
-  Date: new GraphQLScalarType({
-    name: 'Date',
-    description: 'Date custom scalar type',
-    parseValue(value) {
-      return new Date(value); // value from the client
-    },
-    serialize(value) {
-      return value.getTime(); // value sent to the client
-    },
-    parseLiteral(ast) {
-      if (ast.kind === Kind.INT) {
-        return parseInt(ast.value, 10); // ast value is always in string format
-      }
-      return null;
-    },
-  }),
-};
-
-const server = new ApolloServer({ typeDefs, resolvers });
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
-```
-
-### Validations
-
-In this example, we follow the [official GraphQL documentation](http://graphql.org/docs/api-reference-type-system/) for the scalar datatype, which demonstrates how to validate a database field that should only contain odd numbers in GraphQL. First, the schema:
-
-```js
+// Basic schema
 const typeDefs = gql`
   scalar Odd
 
   type MyType {
     oddValue: Odd
   }
-`
-```
+`;
 
-Next, the resolver:
-
-```js
-const { ApolloServer, gql } = require('apollo-server');
-const { GraphQLScalarType } = require('graphql');
-const { Kind } = require('graphql/language');
-
+// Validation function
 function oddValue(value) {
   return value % 2 === 1 ? value : null;
 }
@@ -207,39 +161,40 @@ server.listen().then(({ url }) => {
 
 ## Importing a third-party custom scalar
 
-Here, we'll take the [graphql-type-json](https://github.com/taion/graphql-type-json) package as an example to demonstrate what can be done. This npm package defines a JSON GraphQL scalar type.
+If another library defines a custom scalar, you can import it and use it just like any other symbol.
 
-Remark : `GraphQLJSON` is a [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) instance.
+For example, the [`graphql-type-json`](https://github.com/taion/graphql-type-json) package defines the `GraphQLJSON` object, which is an instance of `GraphQLScalarType`. You can use this object to define a `JSON` scalar that accepts any value that is valid JSON.
 
-Add the `graphql-type-json` package to the project's dependencies :
+First, install the library:
 
 ```shell
 $ npm install graphql-type-json
 ```
 
-In code, require the type defined by in the npm package and use it :
+Then `require` the `GraphQLJSON` object and add it to the resolver map as usual:
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
 const GraphQLJSON = require('graphql-type-json');
 
-const schemaString = gql`
+const typeDefs = gql`
   scalar JSON
 
-  type Foo {
-    aField: JSON
+  type MyObject {
+    myField: JSON
   }
 
   type Query {
-    foo: Foo
+    objects: [MyObject]
   }
 `;
 
-const resolveFunctions = {
+const resolvers = {
   JSON: GraphQLJSON
+  // ...other resolvers...
 };
 
-const server = new ApolloServer({ typeDefs: schemaString, resolvers: resolveFunctions });
+const server = new ApolloServer({ typeDefs, resolvers });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
