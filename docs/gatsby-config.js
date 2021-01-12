@@ -24,8 +24,8 @@ module.exports = {
           ],
           'Defining a Schema': [
             'schema/schema',
-            'schema/scalars-enums',
             'schema/unions-interfaces',
+            'schema/custom-scalars',
             'schema/directives',
             'schema/creating-directives',
           ],
