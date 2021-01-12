@@ -255,7 +255,7 @@ input PostAndMediaInput {
 
 Input types can sometimes be useful when multiple operations require the exact same set of information, but you should reuse them sparingly. Operations might eventually diverge in their sets of required arguments.
 
-**Do not use the same input type for both queries and mutations**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query.
+> **Do not use the same input type for both queries and mutations**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query.
 
 ### Enum types
 
