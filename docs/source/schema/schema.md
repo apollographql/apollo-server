@@ -55,7 +55,7 @@ GraphQL's default scalar types are:
 * `Boolean`: `true` or `false`
 * `ID` (serialized as a `String`): A unique identifier that's often used to refetch an object or as the key for a cache. Although it's serialized as a `String`, an `ID`  is not intended to be human‐readable.
 
-These primitive types cover the majority of use cases. For more specific use cases, you can create [custom scalar types](/schema/scalars-enums/).
+These primitive types cover the majority of use cases. For more specific use cases, you can create [custom scalar types](/schema/custom-scalars/).
 
 ### Object types
 
