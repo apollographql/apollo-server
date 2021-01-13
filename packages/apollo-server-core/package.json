@@ -42,7 +42,7 @@
     "async-retry": "^1.2.1",
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-extensions": "file:../graphql-extensions",
-    "graphql-tag": "^2.9.2",
+    "graphql-tag": "^2.11.0",
     "graphql-tools": "^4.0.0",
     "graphql-upload": "^8.0.2",
     "loglevel": "^1.6.7",
