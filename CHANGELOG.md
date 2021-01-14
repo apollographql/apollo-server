@@ -13,6 +13,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-express`: types: Export `ExpressContext` from main module. [PR #4821](https://github.com/apollographql/apollo-server/pull/4821) [Issue #3699](https://github.com/apollographql/apollo-server/issues/3699)
 - `apollo-server-env`: types: The first parameter to `fetch` is now marked as required, as intended and in accordance with the Fetch API specification. [PR #4822](https://github.com/apollographql/apollo-server/pull/4822) [Issue #4741](https://github.com/apollographql/apollo-server/issues/4741)
+- `apollo-server-core`: Update `graphql-tag` package to `latest`, now with its `graphql-js` `peerDependencies` expanded to include `^15.0.0` [PR #4833](https://github.com/apollographql/apollo-server/pull/4833)
 
 ## v2.19.1
 
