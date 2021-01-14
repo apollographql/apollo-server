@@ -118,7 +118,7 @@ const { addResolveFunctionsToSchema } = require('apollo-server');
 
 const resolvers = {
   RootQuery: {
-    author(obj, { name }, context){
+    author(obj, { name }, context) {
       console.log("RootQuery called with context " +
         context + " to find " + name);
       return Author.find({ name });
