@@ -14,7 +14,7 @@
     "apollo-server-plugin-operation-registry": "*"
   },
   "dependencies": {
-    "@apollo/gateway": "^0.21.4"
+    "@apollo/gateway": "^0.22.0"
   },
   "engines": {
     "node": "12.x"
