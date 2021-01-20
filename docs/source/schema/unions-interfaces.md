@@ -1,48 +1,84 @@
 ---
 title: Unions and interfaces
-description: How to add unions and interfaces to a schema
+description: Polymorphic schema types
 ---
 
-Unions and interfaces are great when you have fields that are in common between two types.
+**Unions** and **interfaces** are polymorphic GraphQL types that enable a schema field to contain one of multiple object types.
+
+> **Tip:** If a field can contain object types that **all share relevant subfields**, use an interface. Otherwise, use a union.
 
 ## Union type
 
-The `Union` type indicates that a field can return more than one object type, but doesn't define specific fields itself.  Unions are useful for returning disjoint data types from a single field. The type definitions appear as follows:
+A union type indicates that a field's value might be one of multiple distinct object types. Those object types are _not_ required to share any fields (but they can).
 
-```js
-const { gql } = require('apollo-server');
+### Syntax
 
-const typeDefs = gql`
-  union Result = Book | Author
+The following schema defines a `Result` union type that can contain either a `Book` or an `Author`:
 
-  type Book {
-    title: String
-  }
+```graphql
+union Result = Book | Author
 
-  type Author {
-    name: String
-  }
+type Book {
+  title: String
+}
 
-  type Query {
-    search: [Result]
-  }
-`;
+type Author {
+  name: String
+}
+
+type Query {
+  search(contains: String): [Result]
+}
 ```
 
-Since a query requesting a union field, a query being made on a field which is union-typed must specify the object types containing the fields it wants. This ambiguity is solved by an extra `__resolveType` field in the resolver map. `__resolveType` defines the type of the result is out of the available options to GraphQL execution environment.
+In this schema, the `Result` union enables `Query.search` to return a list that includes both `Book`s and `Author`s.
 
-```js
+> All possible values of a union type must be [object types](./schema/#object-types) (not scalar types, input types, etc.).
+
+### Querying a union field
+
+A union's subfields differ depending on which object type the union contains. For example, in the schema above, a `Result` has a `title` if it's a `Book`, and it has a `name` if it's an `Author`.
+
+GraphQL clients don't know which object type a union will return for a particular query, so a query can include the subfields of _multiple possible types_.
+
+Here's a valid query for the schema above:
+
+```graphql
+query GetSearchResults {
+  search(contains: "Shakespeare") {
+    ... on Book {
+      title
+    }
+    ... on Author {
+      name
+    }
+  }
+}
+```
+
+This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Result`'s `title` (if it's a `Book`) or its `name` (if it's an `Author`).
+
+For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
+
+
+### Resolving a union field
+
+To fully resolve a union field for client queries, Apollo Server needs to specify which valid object type the field contains. To achieve this, you define a `__resolveType` function for the union type in your resolver map.
+
+ The `__resolveType` function uses a returned object's fields to determine its type and returns the name of that type as a string.
+
+ Here's an example `__resolveType` function for the `Result` union type defined above:
+
+```js{3-11}
 const resolvers = {
   Result: {
     __resolveType(obj, context, info){
       if(obj.name){
         return 'Author';
       }
-
       if(obj.title){
         return 'Book';
       }
-
       return null;
     },
   },
@@ -61,26 +97,9 @@ server.listen().then(({ url }) => {
 });
 ```
 
-A possible query for these results could appear as follows. This query demonstrates the need for the `__resolveType`, since it requests different data depending on the types,
-
-```graphql
-{
-  search(contains: "") {
-    ... on Book {
-      title
-    }
-    ... on Author {
-      name
-    }
-  }
-}
-```
-
 ## Interface type
 
-Interfaces are a powerful way to build and use GraphQL schemas through the use of _abstract types_. Abstract types can't be used directly in schema, but can be used as building blocks for creating explicit types.
-
-Consider an example where different types of books share a common set of attributes, such as _text books_ and _coloring books_. A simple foundation for these books might be represented as the following `interface`:
+An interface specifies a set of fields that multiple object types can include:
 
 ```graphql
 interface Book {
@@ -89,13 +108,38 @@ interface Book {
 }
 ```
 
-We won't be able to directly use this interface to query for a book, but we can use it to implement concrete types. Imagine a screen within an application which needs to display a feed of all books, without regard to their (more specific) type. To create such functionality, we could define the following:
+If an object type `implement`s an interface, it _must_ include _all_ of that interface's fields:
 
 ```graphql
-type TextBook implements Book {
+type Textbook implements Book {
+  title: String # Must be present
+  author: Author # Must be present
+  courses: [Course]
+}
+```
+
+A schema field can have an interface as its type. If it does, the field can contain any object type that implements that interface:
+
+```graphql
+ type Query {
+  schoolBooks: [Book] # Can contain Textbooks
+}
+```
+
+### Example
+
+The following schema defines a `Book` interface, along with two object types that implement it:
+
+```graphql
+interface Book {
   title: String
   author: Author
-  classes: [Class]
+}
+
+type Textbook implements Book {
+  title: String
+  author: Author
+  courses: [Course]
 }
 
 type ColoringBook implements Book {
@@ -109,32 +153,11 @@ type Query {
 }
 ```
 
-In this example, we've used the `Book` interface as the foundation for the `TextBook` and `ColoringBook` types. Then, a `schoolBooks` field simply expresses that it returns a list of books (i.e. `[Book]`).
+In this schema, `Query.schoolBooks` can return a list that includes both `Textbook`s and `ColoringBook`s.
 
-Similarly to the `Union`, `Interface` requires an extra `__resolveType` field in the resolver map to determine which type the interface should resolve to.
+### Querying an interface field
 
-```js
-const resolvers = {
-  Book: {
-    __resolveType(book, context, info){
-      if(book.classes){
-        return 'TextBook';
-      }
-
-      if(book.colors){
-        return 'ColoringBook';
-      }
-
-      return null;
-    },
-  },
-  Query: {
-    schoolBooks: () => { ... }
-  },
-};
-```
-
-Implementing the book feed example is now simplified since we've removed the need to worry about what kind of `Book`s will be returned. A query against this schema, which could return _text books_ and _coloring_ books, might look like:
+As you might expect, clients can query an interface field for any subfields included in the interface:
 
 ```graphql
 query GetBooks {
@@ -145,16 +168,16 @@ query GetBooks {
 }
 ```
 
-This is really helpful for feeds of common content, user role systems, and more!
+As you might _not_ expect, clients can _also_ query an interface field for subfields that only belong to a _particular implementing object type_.
 
-Furthermore, if we need to return fields which are only provided by either `TextBook`s or `ColoringBook`s (not both) we can request fragments from the abstract types in the query. Those fragments will be filled in only as appropriate; in the case of the example, only coloring books will be returned with `colors`, and only textbooks will have `classes`:
+Here's another valid query for the schema above:
 
 ```graphql
 query GetBooks {
   schoolBooks {
     title
-    ... on TextBook {
-      classes {
+    ... on Textbook {
+      courses {
         name
       }
     }
@@ -165,4 +188,34 @@ query GetBooks {
     }
   }
 }
+```
+
+This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Book`'s `courses` (if it's a `Textbook`) or its `colors` (if it's a `ColoringBook`).
+
+For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
+
+
+### Resolving an interface field
+
+[As with union types](#resolving-a-union-field), Apollo Server requires interfaces to define a `__resolveType` function to determine which valid object type an interface field contains.
+
+Here's an example `__resolveType` function for the `Book` interface defined above:
+
+```js{3-11}
+const resolvers = {
+  Book: {
+    __resolveType(book, context, info){
+      if(book.courses){
+        return 'Textbook';
+      }
+      if(book.colors){
+        return 'ColoringBook';
+      }
+      return null;
+    },
+  },
+  Query: {
+    schoolBooks: () => { ... }
+  },
+};
 ```
