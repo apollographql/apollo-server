@@ -9,13 +9,13 @@ description: Abstract schema types
 
 When you define a union type, you declare which object types are included in the union:
 
-```graphql:title=schema.graphql
+```graphql
 union Media = Book | Movie
 ```
 
 A field can have a union as its return type. In this case, it can return any object type that's included in the union:
 
-```graphql:title=schema.graphql
+```graphql
  type Query {
   allMedia: [Media] # This list can include both Books and Movies
 }
@@ -45,9 +45,9 @@ type Query {
 
 The `Result` union enables `Query.search` to return a list that includes both `Book`s and `Author`s.
 
-### Querying a union field
+### Querying a union
 
-GraphQL clients don't know which object type a union field will return for a particular query. To account for this, a query can include the subfields of _multiple possible types_.
+GraphQL clients don't know which object type a field will return if the field's return type is a union. To account for this, a query can include the subfields of _multiple possible types_.
 
 Here's a valid query for the schema above:
 
@@ -69,9 +69,9 @@ This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fra
 For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
 
 
-### Resolving a union field
+### Resolving a union
 
-To fully resolve a query that includes a union field, Apollo Server needs to specify _which_ of the union's types the field is returning. To achieve this, you define a `__resolveType` function for the union in your resolver map.
+To fully resolve a union, Apollo Server needs to specify _which_ of the union's types is being returned. To achieve this, you define a `__resolveType` function for the union in your resolver map.
 
 The `__resolveType` function uses a returned object's fields to determine its type. It then returns the name of that type as a string.
 
@@ -165,9 +165,9 @@ type Query {
 
 In this schema, `Query.schoolBooks` returns a list that can include both `Textbook`s and `ColoringBook`s.
 
-### Querying an interface field
+### Querying an interface
 
-As you might expect, clients can query an interface field for any subfields included in the interface:
+If a field's return type is an interface, clients can query that field for any subfields included in the interface:
 
 ```graphql
 query GetBooks {
@@ -178,7 +178,7 @@ query GetBooks {
 }
 ```
 
-As you might _not_ expect, clients can _also_ query an interface field for subfields that _aren't_ included in the interface:
+Clients can _also_ query for subfields that _aren't_ included in the interface:
 
 ```graphql
 query GetBooks {
@@ -203,9 +203,9 @@ This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fra
 For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
 
 
-### Resolving an interface field
+### Resolving an interface
 
-[As with union types](#resolving-a-union-field), Apollo Server requires interfaces to define a `__resolveType` function to determine which implementing object type an interface field is returning.
+[As with union types](#resolving-a-union), Apollo Server requires interfaces to define a `__resolveType` function to determine which implementing object type is being returned.
 
 Here's an example `__resolveType` function for the `Book` interface defined above:
 
