@@ -13,7 +13,7 @@ export class RedisCache implements TestableKeyValueCache<string> {
 
   private loader: DataLoader<string, string | null>;
 
-  constructor(options?: RedisOptions, redisClient?: Redis) {
+  constructor(options?: RedisOptions, redisClient?: Redis.Redis) {
     if(redisClient){
       this.client = redisClient;
     } else {
