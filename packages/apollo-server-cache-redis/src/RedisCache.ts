@@ -13,9 +13,13 @@ export class RedisCache implements TestableKeyValueCache<string> {
 
   private loader: DataLoader<string, string | null>;
 
-  constructor(options?: RedisOptions) {
-    const client = new Redis(options);
-    this.client = client;
+  constructor(options?: RedisOptions, redisClient?: Redis) {
+    if(redisClient){
+      this.client = redisClient;
+    } else {
+      const client = new Redis(options);
+      this.client = client;
+    }
 
     this.loader = new DataLoader(keys => client.mget(...keys), {
       cache: false,
