@@ -1,15 +1,64 @@
 ---
 title: Subscriptions
-subtitle: Adding subscriptions to Apollo Server
+description: Persistent GraphQL operations
 ---
 
-Subscriptions are GraphQL operations that watch events emitted from Apollo Server.
-The native Apollo Server supports GraphQL subscriptions without additional configuration.
-All integrations that allow HTTP servers, such as express and Hapi, also provide GraphQL subscriptions.
+import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
-## Subscriptions Example
+> **Subscriptions are not supported in [Apollo Federation](https://www.apollographql.com/docs/federation/).**
 
-Subscriptions depend on use of a publish and subscribe primitive to generate the events that notify a subscription. `PubSub` is a factory that creates event generators that is provided by all supported packages. `PubSub` is an implementation of the `PubSubEngine` interface, which has been adopted by a variety of additional [event-generating backends](#pubsub-implementations).
+**Subscriptions** are GraphQL operations that maintain an active connection between client and server. This enables your server to _push_ updates to a subscription's result as they occur, instead of requiring your client to _poll_ for updates.
+
+Because subscriptions use persistent two-way communication, they usually use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP. To help support this, Apollo Server lets you create a subscription-specific endpoint that's separate from the default endpoint for queries and mutations.
+
+> **Important:** Compared to queries and mutations, subscriptions are significantly more complex to implement correctly. Before you begin, [confirm that your use case requires subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/#when-to-use-subscriptions).
+
+## Schema definition
+
+You define your schema's supported subscriptions as fields of the `Subscription` type:
+
+```graphql
+type Subscription {
+  postCreated: Post
+}
+```
+
+The `postCreated` subscription will update its value whenever a post is created on the backend, thus pushing the new post to subscribing clients.
+
+Clients can execute this subscription with a GraphQL string like this:
+
+```graphql
+subscription PostFeed {
+  postCreated {
+    author
+    comment
+  }
+}
+```
+
+## Resolving a subscription
+
+Because subscriptions are continuous instead of transactional, their resolvers differ from those of queries and mutations. Specifically, subscription resolvers are _objects_ that define a `subscribe` function:
+
+```js:title=index.js
+const resolvers = {
+  Subscription: {
+    postCreated: {
+      // More on pubsub below
+      subscribe: () => pubsub.asyncIterator(['POST_CREATED']),
+    },
+  },
+  // ...other resolvers...
+};
+```
+
+The `subscribe` function must return an object of type `AsyncIterable`, part of Apollo Server's pub/sub API (described below).
+
+### The `PubSub` class (development only)
+
+> The `PubSub` class is **not** recommended for production environments. After you get subscriptions working in development, we strongly recommend switching it out for a different subclass of the abstract [`PubSubEngine` class](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-engine.ts). Recommended subclasses are listed in [PubSub implementations](#pubsub-implementations).
+
+Apollo Server uses a **publish-subscribe** (**pub/sub**) model to track events that update active subscriptions. The [`graphql-subscriptions` library](https://github.com/apollographql/graphql-subscriptions) (included in every `apollo-server` package) provides the `PubSub` class to help you get started:
 
 ```js
 const { PubSub } = require('apollo-server');
@@ -17,12 +66,101 @@ const { PubSub } = require('apollo-server');
 const pubsub = new PubSub();
 ```
 
-Subscriptions are another root level type, similar to Query and Mutation. To start, we need to add the `Subscription` type to our schema:
+A `PubSub` instance enables your server code to both `publish` events to a particular label and listen for events associated with a particular label.
 
-```js{2-4}
+### Publishing an event
+
+You publish an event with the `publish` method of a `PubSub` instance:
+
+```js
+pubsub.publish('POST_CREATED', {
+  postCreated: {
+    author: 'Ali Baba',
+    comment: 'Open sesame'
+  }
+});
+```
+
+* The first parameter is the name of the event label you're publishing to, as a string.
+    * _You don't need to register a label name before publishing to it._
+* The second parameter is the payload associated with the event.
+    * _This should match the structure of the associated subscription's return type._
+
+When working with GraphQL subscriptions, you should `publish` an event whenever a subscription's return value changes. One of the most common causes of such a change is a mutation.
+
+For example, let's say our GraphQL API supports a `createPost` mutation:
+
+```graphql
+type Mutation {
+  createPost(author: String, comment: String): Post
+}
+```
+
+A basic resolver for `createPost` might look like this:
+
+```js{3-6}
+const resolvers = {
+  Mutation: {
+    createPost(parent, args, context) {
+      // Datastore logic lives in postController
+      return postController.createPost(args);
+    },
+  },
+  // ...other resolvers...
+};
+```
+
+Before we persist the new post's details in our datastore, we can `publish` an event that _also_ includes those details:
+
+```js
+const resolvers = {
+  Mutation: {
+    createPost(parent, args, context) {
+      pubsub.publish('POST_CREATED', { postCreated: args }); // highlight-line
+      return postController.createPost(args);
+    },
+  },
+  // ...other resolvers...
+};
+```
+
+Next, we can listen for this event in our subscription's resolver.
+
+### Listening for events
+
+An [`AsyncIterable`](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-async-iterator.ts) object listens for events that are associated with a particular label (or set of labels) and adds them to a queue for processing. You create an `AsyncIterable` by calling the `asyncIterator` method of `PubSub`:
+
+```js
+pubsub.asyncIterator(['POST_CREATED']);
+```
+
+You pass this method an array containing the names of all event labels that the `AsyncIterable` should listen for.
+
+Every subscription resolver's `subscribe` function must return an `AsyncIterable` object. This brings us back to the code sample at the top of [Resolving a subscription](#resolving-a-subscription):
+
+```js:title=index.js
+const resolvers = {
+  Subscription: {
+    postCreated: {
+      subscribe: () => pubsub.asyncIterator(['POST_CREATED']),
+    },
+  },
+  // ...other resolvers...
+};
+```
+
+With this `subscribe` function set, Apollo Server uses the payloads of `POST_CREATED` events to push updated field values for the `postCreated` subscription.
+
+### Combined example
+
+This example combines the snippets from the sections above:
+
+<ExpansionPanel title="Click to expand">
+
+```js:title=index.js
 const typeDefs = gql`
   type Subscription {
-    postAdded: Post
+    postCreated: Post
   }
 
   type Query {
@@ -30,7 +168,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    addPost(author: String, comment: String): Post
+    createPost(author: String, comment: String): Post
   }
 
   type Post {
@@ -38,33 +176,28 @@ const typeDefs = gql`
     comment: String
   }
 `
-```
-
-Inside our resolver map, we add a Subscription resolver that returns an `AsyncIterator`, which listens to the events asynchronously. To generate events in the example, we notified the `pubsub` implementation inside of our Mutation resolver with `publish`. This `publish` call can occur outside of a resolver if required.
-
-```js{4-9,17}
-const POST_ADDED = 'POST_ADDED';
 
 const resolvers = {
   Subscription: {
-    postAdded: {
-      // Additional event labels can be passed to asyncIterator creation
-      subscribe: () => pubsub.asyncIterator([POST_ADDED]),
+    postCreated: {
+      subscribe: () => pubsub.asyncIterator(['POST_CREATED']),
     },
   },
   Query: {
-    posts(root, args, context) {
+    posts(parent, args, context) {
       return postController.posts();
     },
   },
   Mutation: {
-    addPost(root, args, context) {
-      pubsub.publish(POST_ADDED, { postAdded: args });
+    addPost(parent, args, context) {
+      pubsub.publish('POST_CREATED', { postCreated: args });
       return postController.addPost(args);
     },
   },
 };
 ```
+
+</ExpansionPanel>
 
 ## Context with Subscriptions
 
@@ -232,7 +365,7 @@ const server = new ApolloServer(
 );
 ```
 
-## `PubSub` Implementations
+## `PubSub` implementations
 
 > **Please note**: By default `graphql-subscriptions` exports an in-memory (`EventEmitter`) event system to re-run subscriptions. This is not suitable for running in a serious production app, because there is no way to share subscriptions and publishes across many running servers.
 >
