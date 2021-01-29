@@ -538,7 +538,7 @@ If this value isn't provided, the subscription endpoint doesn't send keep-alive 
 
 <td>
 
-A lifecycle hook that's called whenever a subscription connection is initiated by a client. [See an example](../data/subscriptions/#authentication-over-websocket)
+A lifecycle hook that's called whenever a subscription connection is initiated by a client. [See an example](../data/subscriptions/#example-authentication-with-onconnect)
 </td>
 </tr>
 
