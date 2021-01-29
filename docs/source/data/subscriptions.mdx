@@ -9,7 +9,9 @@ import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 **Subscriptions** are GraphQL operations that maintain an active connection between client and server. This enables your server to _push_ updates to a subscription's result as they occur, instead of requiring your client to _poll_ for updates.
 
-Because subscriptions use persistent two-way communication, they usually use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP. To support this, Apollo Server lets you create a subscription-specific endpoint that's separate from the default endpoint for queries and mutations.
+Because subscriptions use persistent two-way communication, they usually use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP. To support this, Apollo Server lets you [set a subscription-specific endpoint](#setting-a-subscription-endpoint) that's separate from the default endpoint for queries and mutations.
+
+You can use subscriptions with the core `apollo-server` library, or with any of Apollo Server's supported [middleware integrations](#using-with-middleware-integrations).
 
 > **Important:** Compared to queries and mutations, subscriptions are significantly more complex to implement. Before you begin, [confirm that your use case requires subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/#when-to-use-subscriptions).
 
@@ -36,9 +38,24 @@ subscription PostFeed {
 }
 ```
 
+## Setting a subscription endpoint
+
+Because subscriptions use WebSocket instead of HTTP, Apollo Server uses a _second_ GraphQL endpoint specifically for subscriptions. This endpoint uses the `ws` protocol instead of `http`.
+
+By default, the subscription endpoint's path matches the path of your primary GraphQL endpoint (`/graphql` if not set). You can specify a different path for your subscription endpoint like so:
+
+```js
+const server = new ApolloServer({
+  subscriptions: {
+    path: '/subscriptions'
+  },
+  // ...other options...
+}));
+```
+
 ## Resolving a subscription
 
-Because subscriptions are continuous instead of transactional, their resolvers differ from those of queries and mutations. Specifically, subscription resolvers are _objects_ that define a `subscribe` function:
+Resolvers for subscriptions differ from those for queries and mutations. Specifically, subscription resolvers are _objects_ that define a `subscribe` function:
 
 ```js:title=index.js
 const resolvers = {
@@ -56,7 +73,7 @@ The `subscribe` function must return an object of type `AsyncIterable`, part of 
 
 ### The `PubSub` class
 
-> The `PubSub` class is **not** recommended for production environments. After you get subscriptions working in development, we strongly recommend switching it out for a different subclass of the abstract [`PubSubEngine` class](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-engine.ts). Recommended subclasses are listed in [PubSub implementations](#pubsub-implementations).
+> The `PubSub` class is **not** recommended for production environments, because it's an in-memory event system that only supports a single server instance. After you get subscriptions working in development, we strongly recommend switching it out for a different subclass of the abstract [`PubSubEngine` class](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-engine.ts). Recommended subclasses are listed in [Production `PubSub` libraries](#production-pubsub-libraries).
 
 Apollo Server uses a **publish-subscribe** (**pub/sub**) model to track events that update active subscriptions. The [`graphql-subscriptions` library](https://github.com/apollographql/graphql-subscriptions) (included in every `apollo-server` package) provides the `PubSub` class to help you get started:
 
@@ -84,9 +101,9 @@ pubsub.publish('POST_CREATED', {
 * The first parameter is the name of the event label you're publishing to, as a string.
     * _You don't need to register a label name before publishing to it._
 * The second parameter is the payload associated with the event.
-    * _The payload's structure should match the structure of the associated subscription's return type._
+    * _The payload's structure should match the structure that clients expect from the associated subscription's return type._
 
-When working with GraphQL subscriptions, you should `publish` an event whenever a subscription's return value changes. One of the most common causes of such a change is a mutation.
+When working with GraphQL subscriptions, you `publish` an event whenever a subscription's return value should be updated. One of the most common causes of such an update is a mutation.
 
 For example, let's say our GraphQL API supports a `createPost` mutation:
 
@@ -153,7 +170,7 @@ With this `subscribe` function set, Apollo Server uses the payloads of `POST_CRE
 
 ### Filtering events
 
-Sometimes, a client should only receive updated subscription data if it meets certain criteria. To support this, you can call the `withFilter` helper function in your subscription's resolver.
+Sometimes, a client should only receive updated subscription data if that data meets certain criteria. To support this, you can call the `withFilter` helper function in your subscription's resolver.
 
 #### Example
 
@@ -168,9 +185,9 @@ subscription($repoName: String!){
 }
 ```
 
-This presents a potential issue: our server probably [publishes a `COMMENT_ADDED` event](#publishing-an-event) whenever a comment is added to _any_ repository. This means that the `commentAdded` resolver executes for _every_ new comment, regardless of which repository it's added to. As a result, subscribing clients might receive data they don't want (or shouldn't even have access to).
+This presents a potential issue: our server probably [publishes](#publishing-an-event)  a `COMMENT_ADDED` event whenever a comment is added to _any_ repository. This means that the `commentAdded` resolver executes for _every_ new comment, regardless of which repository it's added to. As a result, subscribing clients might receive data they don't want (or shouldn't even have access to).
 
-To fix this, we can use the `withFilter` helper function to control updates on a per-subscription basis.
+To fix this, we can use the `withFilter` helper function to control updates on a per-client basis.
 
 Here's an example resolver for `commentAdded` that uses the `withFilter` function:
 
@@ -204,70 +221,83 @@ The `withFilter` function takes two parameters:
 Use `withFilter` to make sure clients get exactly the subscription updates they want (and are allowed to receive).
 
 
-### Combined example
+## Basic runnable example
 
-This example combines the snippets from the sections above:
+This example server exposes one subscription (`numberIncremented`) that returns an integer that's incremented on the server every second. The example requires only the `apollo-server` library.
+
+After you start up this server, you can test out running a subscription with the Apollo Studio Explorer or GraphQL Playground, as described in the [full-stack tutorial](https://www.apollographql.com/docs/tutorial/schema/#explore-your-schema). You'll see the subscription's value update every second.
+
+> In the Apollo Studio Explorer, you must specify your server's subscription endpoint (`ws://localhost:4000/graphql`) in the **Explorer Settings** tab.
 
 <ExpansionPanel title="Click to expand">
 
 ```js:title=index.js
+const { ApolloServer, PubSub, gql } = require('apollo-server');
+const pubsub = new PubSub();
+const PORT = 4000;
+
+// Schema definition
 const typeDefs = gql`
-  type Subscription {
-    postCreated: Post
-  }
-
   type Query {
-    posts: [Post]
+    currentNumber: Int
   }
 
-  type Mutation {
-    createPost(author: String, comment: String): Post
+  type Subscription {
+    numberIncremented: Int
   }
+`;
 
-  type Post {
-    author: String
-    comment: String
-  }
-`
-
+// Resolver map
 const resolvers = {
-  Subscription: {
-    postCreated: {
-      subscribe: () => pubsub.asyncIterator(['POST_CREATED']),
-    },
-  },
   Query: {
-    posts(parent, args, context) {
-      return postController.posts();
-    },
+    currentNumber() {
+      return currentNumber;
+    }
   },
-  Mutation: {
-    addPost(parent, args, context) {
-      pubsub.publish('POST_CREATED', { postCreated: args });
-      return postController.addPost(args);
+  Subscription: {
+    numberIncremented: {
+      subscribe: () => pubsub.asyncIterator(['NUMBER_INCREMENTED']),
     },
-  },
+  }
 };
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  subscriptions: {
+    path: '/subscriptions',
+    onConnect: (connectionParams, webSocket, context) => {
+      console.log('Client connected');
+    },
+    onDisconnect: (webSocket, context) => {
+      console.log('Client disconnected')
+    },
+  },
+});
+
+let currentNumber = 0;
+function incrementNumber() {
+  currentNumber++;
+  pubsub.publish('NUMBER_INCREMENTED', { numberIncremented: currentNumber });
+  setTimeout(incrementNumber, 1000);
+}
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Subscription endpoint ready at ws://localhost:${PORT}${server.subscriptionsPath}`)
+  console.log('Query at studio.apollographql.com/dev')
+});
+
+// Start incrementing
+incrementNumber();
 ```
 
 </ExpansionPanel>
 
-## Initializing subscription context
+## Operation context
 
-When [initializing context](../data/resolvers/#the-context-argument) for a query or mutation operation, you usually extract HTTP headers and other request metadata from the `req` object provided to the `context` function:
+When [initializing context](../data/resolvers/#the-context-argument) for a query or mutation, you usually extract HTTP headers and other request metadata from the `req` object provided to the `context` function.
 
-```js{2-4}
-const server = new ApolloServer({
-  context: ({ req }) => ({
-    authScope: getScope(req.headers.authorization)
-  }),
-  // ...other options...
-}));
-```
-
-> Certain Apollo Server middleware integrations _don't_ use `req`. See [Middleware-specific context fields](../api/apollo-server/#middleware-specific-context-fields).
-
-**For subscriptions,** you extract this metadata from the `connection` object instead. This object has the structure of [`ExecutionParams`](https://github.com/apollographql/subscriptions-transport-ws/blob/817e7de3a23db2b4d64eb846724175dba74025d0/src/server.ts#L24-L33) (which is different in structure to `req`).
+**For subscriptions,** you extract this metadata from the `connection` object instead. This object adheres to the [`ExecutionParams` interface](https://github.com/apollographql/subscriptions-transport-ws/blob/817e7de3a23db2b4d64eb846724175dba74025d0/src/server.ts#L24-L33).
 
 Because all operation types use the same `context` initialization function, you should check which of `req` or `connection` is present for each incoming request:
 
@@ -296,8 +326,9 @@ You can define functions that Apollo Server executes whenever a subscription req
 Defining an `onConnect` function provides the following benefits:
 
 * You can reject a particular incoming connection by throwing an exception or returning `false` in `onConnect`.
-    * This is especially useful for [authentication](#example-authentication-with-onconnect).
-* The return value of `onConnect` is automatically added to the associated subscription operation's [context object](#initializing-subscription-context).
+  * This is especially useful for [authentication](#example-authentication-with-onconnect).
+* If `onConnect` returns an object, that object's fields are added to the WebSocket connection's `context` object.
+  * This is _not_ the _operation_ `context` that's passed between resolvers. However, you can transfer these values from the `connection`'s `context` when you [initialize operation context](#operation-context).
 
 You provide these function definitions to the constructor of `ApolloServer`, like so:
 
@@ -310,6 +341,7 @@ const server = new ApolloServer(
     onDisconnect: (webSocket, context) => {
       console.log('Disconnected!')
     },
+    // ...other options...
   },
 );
 ```
@@ -429,11 +461,12 @@ The example above validates the user's token that is sent with the first initial
 In case of an authentication error, the Promise will be rejected, which prevents the client's connection.
 
 
-## Subscriptions with additional middleware
+## Using with middleware integrations
 
-With an existing HTTP server (created with `createServer`), we can add subscriptions using the `installSubscriptionHandlers`. Additionally, the subscription-capable integrations export `PubSub` and other subscription functionality.
+You can use subscriptions with any of Apollo Server's supported [middleware integrations](../integrations/middleware/). To do so, you call `installSubscriptionHandlers` on your `ApolloServer` instance.
 
-For example: with an Express server already running on port 4000 that accepts GraphQL HTTP connections (POST) we can expose the subscriptions:
+
+This example enables subscriptions for an Express server that uses `apollo-server-express`:
 
 ```js
 const http = require('http');
@@ -449,22 +482,20 @@ server.applyMiddleware({app})
 const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer); // highlight-line
 
-// ⚠️ Pay attention to the fact that we are calling `listen` on the http server variable, and not on `app`.
+// Make sure to call listen on httpServer, NOT on app.
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`)
   console.log(`🚀 Subscriptions ready at ws://localhost:${PORT}${server.subscriptionsPath}`)
 })
 ```
 
+## Production `PubSub` libraries
 
+[As mentioned above](#the-pubsub-class), the `PubSub` class is _not_ recommended for production environments, because its event-publishing system is in-memory. This means that events published by _one_ instance of your GraphQL server are not received by subscriptions that are handled by _other_ instances.
 
-## `PubSub` implementations
+Instead, you should use a subclass of the [`PubSubEngine` abstract class](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-engine.ts) that you can back with an external datastore such as Redis or Kafka.
 
-> **Please note**: By default `graphql-subscriptions` exports an in-memory (`EventEmitter`) event system to re-run subscriptions. This is not suitable for running in a serious production app, because there is no way to share subscriptions and publishes across many running servers.
->
-> We recommend using one of the external `PubSub` implementations listed below for production environments.
-
-The Apollo Server implementation of `PubSub` can be replaced by another implementations of [PubSubEngine interface](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-engine.ts). The community has created the following integrations:
+The following are community-created `PubSub` libraries for popular event-publishing systems:
 
 - [Redis](https://github.com/davidyaha/graphql-redis-subscriptions)
 - [Google PubSub](https://github.com/axelspringer/graphql-google-pubsub)
@@ -473,6 +504,5 @@ The Apollo Server implementation of `PubSub` can be replaced by another implemen
 - [Kafka](https://github.com/ancashoria/graphql-kafka-subscriptions)
 - [Postgres](https://github.com/GraphQLCollege/graphql-postgres-subscriptions)
 - [Google Cloud Firestore](https://github.com/MrBoolean/graphql-firestore-subscriptions)
-- [Add your implementation...](https://github.com/apollographql/apollo-server/pull/new/main)
 
-You can implement a `PubSub` of your own, using the exported `PubSubEngine` interface from `apollo-server` or another integration. If you want to set up a GraphQL server using the `graphql-subscriptions` package (not recommended for production), follow [this guide](https://www.apollographql.com/docs/graphql-subscriptions/).
+If none of these libraries fits your use case, you can also create your own `PubSubEngine` subclass. If you create a new open-source library, click **Edit on GitHub** to let us know about it!
