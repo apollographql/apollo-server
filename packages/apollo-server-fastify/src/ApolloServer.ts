@@ -9,7 +9,6 @@ import {
   GraphQLOptions,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { IncomingMessage, OutgoingMessage, ServerResponse, Server } from 'http';
 import { graphqlFastify } from './fastifyApollo';
 import { GraphQLOperation } from 'graphql-upload';
 
@@ -19,7 +18,7 @@ const fastJson = require('fast-json-stringify');
 export interface ServerRegistration {
   path?: string;
   cors?: object | boolean;
-  onHealthCheck?: (req: FastifyRequest<IncomingMessage>) => Promise<any>;
+  onHealthCheck?: (req: FastifyRequest) => Promise<any>;
   disableHealthCheck?: boolean;
 }
 
@@ -36,15 +35,15 @@ const fileUploadMiddleware = (
   uploadsConfig: FileUploadOptions,
   server: ApolloServerBase,
 ) => (
-  req: FastifyRequest<IncomingMessage>,
-  reply: FastifyReply<ServerResponse>,
+  req: FastifyRequest,
+  reply: FastifyReply,
   done: (err: Error | null, body?: any) => void,
 ) => {
   if (
     (req.req as any)[kMultipart] &&
     typeof processFileUploads === 'function'
   ) {
-    processFileUploads(req.req, reply.res, uploadsConfig)
+    processFileUploads(req.raw, reply.raw, uploadsConfig)
       .then((body: GraphQLOperation | GraphQLOperation[]) => {
         req.body = body;
         done(null);
@@ -72,10 +71,10 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   async createGraphQLServerOptions(
-    request?: FastifyRequest<IncomingMessage>,
-    reply?: FastifyReply<OutgoingMessage>,
+    request?: FastifyRequest,
+    reply?: FastifyReply,
   ): Promise<GraphQLOptions> {
-     return this.graphQLServerOptions({ request, reply });
+    return this.graphQLServerOptions({ request, reply });
   }
 
   public createHandler({
@@ -87,9 +86,7 @@ export class ApolloServer extends ApolloServerBase {
     this.graphqlPath = path ? path : '/graphql';
     const promiseWillStart = this.willStart();
 
-    return async (
-      app: FastifyInstance<Server, IncomingMessage, ServerResponse>,
-    ) => {
+    return async (app: FastifyInstance) => {
       await promiseWillStart;
 
       if (!disableHealthCheck) {
@@ -111,7 +108,7 @@ export class ApolloServer extends ApolloServerBase {
       }
 
       app.register(
-        async instance => {
+        async (instance) => {
           instance.register(require('fastify-accepts'));
 
           if (cors === true) {
@@ -127,11 +124,7 @@ export class ApolloServer extends ApolloServerBase {
           });
 
           const preHandlers = [
-            (
-              req: FastifyRequest<IncomingMessage>,
-              reply: FastifyReply<ServerResponse>,
-              done: () => void,
-            ) => {
+            (req: FastifyRequest, reply: FastifyReply, done: () => void) => {
               // Note: if you enable playground in production and expect to be able to see your
               // schema, you'll need to manually specify `introspection: true` in the
               // ApolloServer constructor; by default, the introspection query is only
@@ -168,7 +161,8 @@ export class ApolloServer extends ApolloServerBase {
             instance.addContentTypeParser(
               'multipart',
               (
-                request: IncomingMessage,
+                request,
+                _payload,
                 done: (err: Error | null, body?: any) => void,
               ) => {
                 (request as any)[kMultipart] = true;
@@ -182,7 +176,9 @@ export class ApolloServer extends ApolloServerBase {
             method: ['GET', 'POST'],
             url: '/',
             preHandler: preHandlers,
-            handler: await graphqlFastify(this.createGraphQLServerOptions.bind(this)),
+            handler: await graphqlFastify(
+              this.createGraphQLServerOptions.bind(this),
+            ),
           });
         },
         {
