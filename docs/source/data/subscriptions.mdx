@@ -9,9 +9,9 @@ import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 **Subscriptions** are GraphQL operations that maintain an active connection between client and server. This enables your server to _push_ updates to a subscription's result as they occur, instead of requiring your client to _poll_ for updates.
 
-Because subscriptions use persistent two-way communication, they usually use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP. To help support this, Apollo Server lets you create a subscription-specific endpoint that's separate from the default endpoint for queries and mutations.
+Because subscriptions use persistent two-way communication, they usually use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP. To support this, Apollo Server lets you create a subscription-specific endpoint that's separate from the default endpoint for queries and mutations.
 
-> **Important:** Compared to queries and mutations, subscriptions are significantly more complex to implement correctly. Before you begin, [confirm that your use case requires subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/#when-to-use-subscriptions).
+> **Important:** Compared to queries and mutations, subscriptions are significantly more complex to implement. Before you begin, [confirm that your use case requires subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/#when-to-use-subscriptions).
 
 ## Schema definition
 
@@ -23,7 +23,7 @@ type Subscription {
 }
 ```
 
-The `postCreated` subscription will update its value whenever a post is created on the backend, thus pushing the new post to subscribing clients.
+The `postCreated` subscription will update its value whenever a new `Post` is created on the backend, thus pushing the `Post` to subscribing clients.
 
 Clients can execute this subscription with a GraphQL string like this:
 
@@ -54,7 +54,7 @@ const resolvers = {
 
 The `subscribe` function must return an object of type `AsyncIterable`, part of Apollo Server's pub/sub API (described below).
 
-### The `PubSub` class (development only)
+### The `PubSub` class
 
 > The `PubSub` class is **not** recommended for production environments. After you get subscriptions working in development, we strongly recommend switching it out for a different subclass of the abstract [`PubSubEngine` class](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-engine.ts). Recommended subclasses are listed in [PubSub implementations](#pubsub-implementations).
 
@@ -84,7 +84,7 @@ pubsub.publish('POST_CREATED', {
 * The first parameter is the name of the event label you're publishing to, as a string.
     * _You don't need to register a label name before publishing to it._
 * The second parameter is the payload associated with the event.
-    * _This should match the structure of the associated subscription's return type._
+    * _The payload's structure should match the structure of the associated subscription's return type._
 
 When working with GraphQL subscriptions, you should `publish` an event whenever a subscription's return value changes. One of the most common causes of such a change is a mutation.
 
@@ -151,6 +151,59 @@ const resolvers = {
 
 With this `subscribe` function set, Apollo Server uses the payloads of `POST_CREATED` events to push updated field values for the `postCreated` subscription.
 
+### Filtering events
+
+Sometimes, a client should only receive updated subscription data if it meets certain criteria. To support this, you can call the `withFilter` helper function in your subscription's resolver.
+
+#### Example
+
+Let's say our server provides a `commentAdded` subscription, which should notify clients whenever a comment is added to a specified code repository. A client can execute a subscription that looks like this:
+
+```graphql
+subscription($repoName: String!){
+  commentAdded(repoFullName: $repoName) {
+    id
+    content
+  }
+}
+```
+
+This presents a potential issue: our server probably [publishes a `COMMENT_ADDED` event](#publishing-an-event) whenever a comment is added to _any_ repository. This means that the `commentAdded` resolver executes for _every_ new comment, regardless of which repository it's added to. As a result, subscribing clients might receive data they don't want (or shouldn't even have access to).
+
+To fix this, we can use the `withFilter` helper function to control updates on a per-subscription basis.
+
+Here's an example resolver for `commentAdded` that uses the `withFilter` function:
+
+```js{5-12}
+const { withFilter } = require('apollo-server');
+
+const resolvers = {
+  Subscription: {
+    commentAdded: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('COMMENT_ADDED'),
+        (payload, variables) => {
+          // Only push an update if the comment is on
+          // the correct repository for this operation
+          return (payload.commentAdded.repository_name === variables.repoFullName);
+        },
+      ),
+    }
+  },
+    // ...other resolvers...
+};
+```
+
+The `withFilter` function takes two parameters:
+
+* The first parameter is exactly the function you would use for `subscribe` if you _weren't_ applying a filter.
+* The second parameter is a **filter function** that returns `true` if a subscription update _should_ be sent to a particular client, and `false` otherwise (`Promise<boolean>` is also allowed). This function takes two parameters of its own:
+    * `payload` is the payload of the event that was published.
+    * `variables` is an object containing all arguments the client provided when initiating their subscription.
+
+Use `withFilter` to make sure clients get exactly the subscription updates they want (and are allowed to receive).
+
+
 ### Combined example
 
 This example combines the snippets from the sections above:
@@ -199,35 +252,132 @@ const resolvers = {
 
 </ExpansionPanel>
 
-## Context with Subscriptions
+## Initializing subscription context
 
-The function to create a context for subscriptions includes `connection`, while the function for Queries and Mutations contains the arguments for the integration, in express's case `req` and `res`. This means that the context creation function needs to check the input. This is especially important, since the auth tokens are handled differently depending on the transport:
+When [initializing context](../data/resolvers/#the-context-argument) for a query or mutation operation, you usually extract HTTP headers and other request metadata from the `req` object provided to the `context` function:
+
+```js{2-4}
+const server = new ApolloServer({
+  context: ({ req }) => ({
+    authScope: getScope(req.headers.authorization)
+  }),
+  // ...other options...
+}));
+```
+
+> Certain Apollo Server middleware integrations _don't_ use `req`. See [Middleware-specific context fields](../api/apollo-server/#middleware-specific-context-fields).
+
+**For subscriptions,** you extract this metadata from the `connection` object instead. This object has the structure of [`ExecutionParams`](https://github.com/apollographql/subscriptions-transport-ws/blob/817e7de3a23db2b4d64eb846724175dba74025d0/src/server.ts#L24-L33) (which is different in structure to `req`).
+
+Because all operation types use the same `context` initialization function, you should check which of `req` or `connection` is present for each incoming request:
 
 ```js
 const server = new ApolloServer({
-  schema,
-  context: async ({ req, connection }) => {
-    if (connection) {
-      // check connection for metadata
-      return connection.context;
-    } else {
-      // check from req
+  context: ({ req, connection }) => {
+    if (connection) { // Operation is a Subscription
+      // Obtain connectionParams-provided token from connection.context
+      const token = connection.context.authorization || "";
+      return { token };
+    } else { // Operation is a Query/Mutation
+      // Obtain header-provided token from req.headers
       const token = req.headers.authorization || "";
-
       return { token };
     }
   },
 });
 ```
 
-> `connection` contains various metadata, found [here](https://github.com/apollographql/subscriptions-transport-ws/blob/88970eaf6d2e3f68f98696de00631acf4062c088/src/server.ts#L312-L321).
+This is especially important because metadata like auth tokens are sent differently depending on the transport.
 
-As you can see Apollo Server 2.0 allows realtime data without invasive changes to existing code.
-For a full working example please have a look to [this repo](https://github.com/daniele-zurico/apollo2-subscriptions-how-to) provided by [Daniele Zurico](https://github.com/daniele-zurico/apollo2-subscriptions-how-to)
+## `onConnect` and `onDisconnect`
 
-## Authentication Over WebSocket
+You can define functions that Apollo Server executes whenever a subscription request connects (`onConnect`) or disconnects (`onDisconnect`).
 
-To support an authenticated transport, Apollo Server provides lifecycle hooks, including `onConnect` to validate the connection.
+Defining an `onConnect` function provides the following benefits:
+
+* You can reject a particular incoming connection by throwing an exception or returning `false` in `onConnect`.
+    * This is especially useful for [authentication](#example-authentication-with-onconnect).
+* The return value of `onConnect` is automatically added to the associated subscription operation's [context object](#initializing-subscription-context).
+
+You provide these function definitions to the constructor of `ApolloServer`, like so:
+
+```js
+const server = new ApolloServer(
+  subscriptions: {
+    onConnect: (connectionParams, webSocket, context) => {
+      console.log('Connected!')
+    },
+    onDisconnect: (webSocket, context) => {
+      console.log('Disconnected!')
+    },
+  },
+);
+```
+
+These functions are passed the following parameters:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+###### `connectionParams`
+
+`Object`
+
+</td>
+<td>
+
+**Passed to `onConnect` only.**
+
+An object containing parameters included in the request, such as an [authentication token](#example-authentication-with-onconnect).
+
+For details, see [Authenticate over WebSocket](https://www.apollographql.com/docs/react/data/subscriptions/#4-authenticate-over-websocket-optional) in the Apollo Client documentation.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `webSocket`
+
+`WebSocket`
+</td>
+<td>
+
+The connecting or disconnecting [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `context`
+
+`ConnectionContext`
+</td>
+<td>
+
+Context object for the WebSocket connection. This is _not_ the `context` object for the associated subscription operation.
+
+[See fields](https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/server.ts#L35-L43)
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Example: Authentication with `onConnect`
 
 On the client, `SubscriptionsClient` supports adding token information to `connectionParams` ([example](https://www.apollographql.com/docs/react/advanced/subscriptions/#authentication-over-websocket)) that will be sent with the first WebSocket message. In the server, all GraphQL subscriptions are delayed until the connection has been fully authenticated and the `onConnect` callback returns a truthy value.
 
@@ -278,47 +428,8 @@ The example above validates the user's token that is sent with the first initial
 
 In case of an authentication error, the Promise will be rejected, which prevents the client's connection.
 
-## Subscription Filters
 
-Sometimes a client will want to filter out specific events based on context and arguments.
-
-To do so, we can use the `withFilter` helper from the `apollo-server` or `apollo-server-{integration}` package to control each publication for each user. Inside of `withFilter`,  the `AsyncIterator` created by `PubSub` is wrapped with a filter function.
-
-Let's see an example - for the `commentAdded` server-side subscription, the client want to subscribe only to comments added to a specific repo:
-
-```
-subscription($repoName: String!){
-  commentAdded(repoFullName: $repoName) {
-    id
-    content
-  }
-}
-```
-
-When using `withFilter`, provide a filter function. The filter is executed with the payload (a published value), variables, context and operation info. This function must return a `boolean` or `Promise<boolean>` indicating if the payload should be passed to the subscriber.
-
-The following definition of the subscription resolver will filter out all of the `commentAdded` events that are not associated with the requested repository:
-
-```js{8,10-12}
-const { withFilter } = require('apollo-server');
-
-const resolvers = {
-    Query: () => { ... },
-    Mutation: () => { ... },
-    Subscription: {
-        commentAdded: {
-          subscribe: withFilter(
-            () => pubsub.asyncIterator('COMMENT_ADDED'),
-            (payload, variables) => {
-             return payload.commentAdded.repository_name === variables.repoFullName;
-            },
-          ),
-        }
-    },
-};
-```
-
-## Subscriptions with Additional Middleware
+## Subscriptions with additional middleware
 
 With an existing HTTP server (created with `createServer`), we can add subscriptions using the `installSubscriptionHandlers`. Additionally, the subscription-capable integrations export `PubSub` and other subscription functionality.
 
@@ -345,25 +456,7 @@ httpServer.listen(PORT, () => {
 })
 ```
 
-## Lifecycle Events
 
-`ApolloServer` exposes lifecycle hooks you can use to manage subscriptions and clients:
-
-* `onConnect` - called upon client connection, with the `connectionParams` passed to `SubscriptionsClient` - you can return a Promise and reject the connection by throwing an exception. The resolved return value will be appended to the GraphQL `context` of your subscriptions.
-* `onDisconnect` - called when the client disconnects.
-
-```js
-const server = new ApolloServer(
-  subscriptions: {
-    onConnect: (connectionParams, webSocket, context) => {
-      // ...
-    },
-    onDisconnect: (webSocket, context) => {
-      // ...
-    },
-  },
-);
-```
 
 ## `PubSub` implementations
 
