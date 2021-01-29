@@ -39,10 +39,7 @@ const fileUploadMiddleware = (
   reply: FastifyReply,
   done: (err: Error | null, body?: any) => void,
 ) => {
-  if (
-    (req.req as any)[kMultipart] &&
-    typeof processFileUploads === 'function'
-  ) {
+  if ((req as any)[kMultipart] && typeof processFileUploads === 'function') {
     processFileUploads(req.raw, reply.raw, uploadsConfig)
       .then((body: GraphQLOperation | GraphQLOperation[]) => {
         req.body = body;
