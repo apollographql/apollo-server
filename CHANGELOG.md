@@ -11,7 +11,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned!_
+- `apollo-server-core`: Avoid instrumenting schemas for the old `graphql-extensions` library unless extensions are provided. [PR #4893](https://github.com/apollographql/apollo-server/pull/4893) [Issue #4889](https://github.com/apollographql/apollo-server/issues/4889)
 
 ## v2.19.2
 
