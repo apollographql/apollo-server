@@ -2,7 +2,7 @@ import { Agent as HttpAgent } from 'http';
 import { Agent as HttpsAgent } from 'https';
 
 export declare function fetch(
-  input?: RequestInfo,
+  input: RequestInfo,
   init?: RequestInit,
 ): Promise<Response>;
 

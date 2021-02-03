@@ -10,11 +10,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "peerDependencies": {
-    "@apollo/gateway": "*",
     "apollo-server": "*",
     "apollo-server-plugin-operation-registry": "*"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@apollo/gateway": "^0.22.0"
+  },
   "engines": {
     "node": ">=12.0 <15.0"
   },
