@@ -88,6 +88,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## v2.15.1
 
 - The default branch of the repository has been changed to `main`.  As this changed a number of references in the repository's `package.json` and `README.md` files (e.g., for badges, links, etc.), this necessitates a release to publish those changes to npm. [PR #4302](https://github.com/apollographql/apollo-server/pull/4302)
+- `apollo-datasource-rest`: changed `trace` method in `RESTDataSource` to `protected` to allow implementation of custom metrics.
 
 ## v2.15.0
 
