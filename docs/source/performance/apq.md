@@ -3,23 +3,49 @@ title: Automatic persisted queries
 description: Improve network performance by sending smaller requests
 ---
 
-The size of individual GraphQL query strings can be a major pain point. Apollo Server implements Automatic Persisted Queries (APQ), a technique that greatly improves network performance for GraphQL with zero build-time configuration. A persisted query is an ID or hash that can be sent to the server instead of the entire GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Persisted queries are especially nice paired with `GET` requests, enabling the browser cache and [integration with a CDN](#using-get-requests-with-apq-on-a-cdn).
+Clients send queries to Apollo Server as HTTP requests that include the GraphQL string of the query to execute. Depending on your graph's schema, the size of a valid query string might be arbitrarily large. As query strings become larger, increased latency and network usage can noticeably degrade client performance.
 
-With Automatic Persisted Queries, the ID is a deterministic hash of the input query, so we don't need a complex build step to share the ID between clients and servers. If a server doesn't know about a given hash, the client can expand the query for it; Apollo Server caches that mapping.
+To improve network performance for large query strings, Apollo Server supports **Automatic Persisted Queries** (**APQ**). A persisted query is a query string that's stored on the server side, along with its unique identifier (always its SHA-256 hash). Clients can send this identifier _instead of_ the corresponding query string, thus reducing request sizes dramatically (response sizes are unaffected).
 
-## Setup
+To persist a query string, Apollo Server must first receive it from a requesting client. Consequently, the _first_ execution of each unique query does _not_ benefit from APQ.
 
-Apollo Server supports automatic persisted queries without any additional configuration and only requires changes to Apollo Client.
+```mermaid
+sequenceDiagram;
+  Client app->>Apollo Server: Sends SHA-256 hash of query string to execute
+  Note over Apollo Server: Fails to find persisted query string
+  Apollo Server->>Client app: Responds with error
+  Client app->>Apollo Server: Sends both query string AND hash
+  Note over Apollo Server: Persists query string and hash
+  Apollo Server->>Client app: Executes query and returns result
+  Note over Client app: Time passes
+  Client app->>Apollo Server: Sends SHA-256 hash of query string to execute
+  Note over Apollo Server: Finds persisted query string
+  Apollo Server->>Client app: Executes query and returns result
+```
 
-To get started with APQ, add the [Automatic Persisted Queries Link](https://github.com/apollographql/apollo-link-persisted-queries) to the **client** codebase with `npm install apollo-link-persisted-queries`.  Next incorporate the APQ link with Apollo Client's link chain before the HTTP link:
+Persisted queries are especially effective when clients send queries as `GET` requests. This enables clients to take advantage of the browser cache and [integrate with a CDN](#using-get-requests-with-apq-on-a-cdn).
+
+Because query identifiers are deterministic hashes, clients can generate them at runtime. No additional build steps are required.
+
+## Apollo Client setup
+
+Apollo Server supports APQ without any additional configuration. However, some _client-side_ configuration is required.
+
+To set up APQ in Apollo Client, first import the `createPersistedQueryLink` function in the same file where you initialize `ApolloClient`:
+
+```js:title=index.js
+import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+```
+
+This function creates a link that you can add to your client's [Apollo Link chain](https://www.apollographql.com/docs/react/api/link/introduction/). The link takes care of generating APQ identifiers, using `GET` requests for hashed queries, and retrying requests with query strings when necessary.
+
+Add the persisted query link anywhere in the chain before the terminating link. This example shows a basic two-link chain:
 
 ```js
-import { createPersistedQueryLink } from "apollo-link-persisted-queries";
-import { createHttpLink } from "apollo-link-http";
-import { InMemoryCache } from "apollo-cache-inmemory";
-import ApolloClient from "apollo-client";
+import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
 
-const link = createPersistedQueryLink().concat(createHttpLink({ uri: "/graphql" }));
+const linkChain = createPersistedQueryLink().concat(new HttpLink({ uri: "http://localhost:4000/graphql" }));
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -27,54 +53,53 @@ const client = new ApolloClient({
 });
 ```
 
-> Note: Users of `apollo-boost` should [migrate to `apollo-client`](https://www.apollographql.com/docs/react/advanced/boost-migration/) in order to use the `apollo-link-persisted-queries` package.
+## Command-line testing
 
-## Verify
+You can test out APQ directly from the command line. This section also helps illustrate the shape of APQ requests, so you can use it to add APQ support to GraphQL clients besides Apollo Client.
 
-Apollo Server's persisted queries configuration can be tested from the command-line. The following examples assume Apollo Server is running at `localhost:4000/`.
-This example persists a dummy query of `{__typename}`, using its sha256 hash: `ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38`.
+> This section assumes your server is running locally at `http://localhost:4000/graphql`.
 
+Almost every GraphQL server supports the following query (which requests the `__typename` field from the `Query` type):
 
-1. Request a persisted query:
+```graphql
+{__typename}
+```
 
-   ```bash
-   curl -g 'http://localhost:4000/?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
-   ```
+The SHA-256 hash of this query string is the following:
 
-   Expect a response of: `{"errors": [{"message": "PersistedQueryNotFound", "extensions": {...}}]}`.
+```none
+ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38
+```
 
-2. Store the query to the cache:
+1. Attempt to execute this query on your running server by providing its hash in a `curl` command, like so:
 
-   ```bash
-   curl -g 'http://localhost:4000/?query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
-   ```
+    ```shell
+    curl -g 'http://localhost:4000/graphql?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+    ```
 
-   Expect a response of `{"data": {"__typename": "Query"}}"`.
+    The first time you try this, Apollo Server responds with an error with the code `PERSISTED_QUERY_NOT_FOUND`. This tells us that Apollo Server hasn't yet received the associated query string.
 
-3. Request the persisted query again:
+2. Send a followup request that includes both the query string _and_ its hash, like so:
 
-   ```bash
-   curl -g 'http://localhost:4000/?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
-   ```
+    ```shell
+    curl -g 'http://localhost:4000/?query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+    ```
 
-   Expect a response of `{"data": {"__typename": "Query"}}"`, as the query string is loaded from the cache.
+    This time, the server persists the query string and then responds with the query result as we'd expect.
+
+    > The hash you provide _must_ be the exact SHA-256 hash of the query string. If it isn't, Apollo Server returns an error.
+
+3. Finally, attempt the request from step 1 again:
+
+    ```shell
+    curl -g 'http://localhost:4000/graphql?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+    ```
+
+   This time, the server responds with the query result because it successfully located the associated query string in its cache.
 
 ## Using `GET` requests with APQ on a CDN
 
 A great application for APQ is running Apollo Server behind a CDN. Many CDNs only cache GET requests, but many GraphQL queries are too long to fit comfortably in a cacheable GET request.  When the APQ link is created with `createPersistedQueryLink({useGETForHashedQueries: true})`, Apollo Client automatically sends the short hashed queries as GET requests allowing a CDN to serve those request. For full-length queries and for all mutations, Apollo Client will continue to use POST requests.
-
-### How it works
-
-The mechanism is based on a lightweight protocol extension between Apollo Client and Apollo Server. It works as follows:
-
-- When the client makes a query, it will optimistically send a short (64-byte) cryptographic hash instead of the full query text.
-- **Optimized Path:** If a request containing a persisted query hash is detected, Apollo Server will look it up to find a corresponding query in its registry. Upon finding a match, Apollo Server will expand the request with the full text of the query and execute it.
-
-<img src="../images/persistedQueries.optPath.png" width="80%" style="margin: 5%" alt="Optimized Path">
-
-- **New Query Path:** In the unlikely event that the query is not already in the Apollo Server registry (this only happens the very first time that Apollo Server sees a query), it will ask the client to resend the request using the full text of the query. At that point, Apollo Server will store the query / hash mapping in the registry for all subsequent requests to benefit from.
-
-<img src="../images/persistedQueries.newPath.png" width="80%" style="margin: 5%;" alt="New Query Path">
 
 ## CDN Integration
 
@@ -138,7 +163,7 @@ const client = new ApolloClient({
 });
 ```
 
-> If you are testing locally, make sure to include the full [URI](https://developer.mozilla.org/en-US/docs/Glossary/URI) including the port number. For example:  ` uri: "http://localhost:4000/graphql"`. 
+> If you are testing locally, make sure to include the full [URI](https://developer.mozilla.org/en-US/docs/Glossary/URI) including the port number. For example:  ` uri: "http://localhost:4000/graphql"`.
 
 Make sure to include `useGETForHashedQueries: true`. Note that the client will still use POSTs for mutations because it's generally best to avoid GETs for non-idempotent requests.
 
