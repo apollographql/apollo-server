@@ -195,4 +195,4 @@ From our resolvers, we can access the data source and return the result:
 
 By overriding `trace` method, it's possible to implement custom metrics for request timing.
 
-See the original method [implementation](/packages/apollo-datasource-rest/src/RESTDataSource.ts) or the reference.
+See the original method [implementation](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest/src/RESTDataSource.ts) or the reference.
