@@ -11,7 +11,13 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+- `apollo-server-core`: Avoid instrumenting schemas for the old `graphql-extensions` library unless extensions are provided. [PR #4893](https://github.com/apollographql/apollo-server/pull/4893) [Issue #4889](https://github.com/apollographql/apollo-server/issues/4889)
+
+## v2.19.2
+
 - `apollo-server-express`: types: Export `ExpressContext` from main module. [PR #4821](https://github.com/apollographql/apollo-server/pull/4821) [Issue #3699](https://github.com/apollographql/apollo-server/issues/3699)
+- `apollo-server-env`: types: The first parameter to `fetch` is now marked as required, as intended and in accordance with the Fetch API specification. [PR #4822](https://github.com/apollographql/apollo-server/pull/4822) [Issue #4741](https://github.com/apollographql/apollo-server/issues/4741)
+- `apollo-server-core`: Update `graphql-tag` package to `latest`, now with its `graphql-js` `peerDependencies` expanded to include `^15.0.0` [PR #4833](https://github.com/apollographql/apollo-server/pull/4833)
 
 ## v2.19.1
 

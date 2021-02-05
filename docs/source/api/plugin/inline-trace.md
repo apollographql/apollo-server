@@ -29,7 +29,7 @@ const server = new ApolloServer({
 });
 ```
 
-If you don't want to use the inline trace plugin even though you've provided an API key, you can explicitly disable it with the `ApolloServerPluginInlineTraceDisabled` plugin:
+If you don't want to use the inline trace plugin even though your schema defines `_Service.sdl: String`, you can explicitly disable it with the `ApolloServerPluginInlineTraceDisabled` plugin:
 
 ```js
 import { ApolloServer } from "apollo-server";

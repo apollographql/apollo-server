@@ -659,7 +659,11 @@ export async function processGraphQLRequest<TContext>(
   }
 
   function initializeExtensionStack(): GraphQLExtensionStack<TContext> {
-    enableGraphQLExtensions(config.schema);
+    if (config.extensions?.length) {
+      // graphql-extensions adds some overhead to field resolvers.
+      // Only enable extensions when at least 1 extension has been provided
+      enableGraphQLExtensions(config.schema);
+    }
 
     // If custom extension factories were provided, create per-request extension
     // objects.
