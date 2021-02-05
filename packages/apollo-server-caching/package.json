@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-caching",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "repository": {
@@ -18,6 +18,6 @@
     "node": ">=6"
   },
   "dependencies": {
-    "lru-cache": "^5.0.0"
+    "lru-cache": "^6.0.0"
   }
 }

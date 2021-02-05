@@ -22,7 +22,11 @@ const resolvers = {
 };
 
 async function createServer(options: object = {}): Promise<any> {
-  const apolloServer = new ApolloServer({ typeDefs, resolvers });
+  const apolloServer = new ApolloServer({
+    typeDefs,
+    resolvers,
+    stopOnTerminationSignals: false,
+  });
   const service = micro(apolloServer.createHandler(options));
   const uri = await listen(service);
   return {

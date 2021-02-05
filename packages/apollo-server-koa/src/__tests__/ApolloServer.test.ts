@@ -77,7 +77,7 @@ const resolvers = {
     serverOptions: Config,
     options: Partial<import('../ApolloServer').ServerRegistration> = {},
   ) {
-    server = new ApolloServer(serverOptions);
+    server = new ApolloServer({ stopOnTerminationSignals: false, ...serverOptions });
     app = new Koa();
 
     server.applyMiddleware({ ...options, app });
