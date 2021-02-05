@@ -5,9 +5,9 @@ description: Improve network performance by sending smaller requests
 
 Clients send queries to Apollo Server as HTTP requests that include the GraphQL string of the query to execute. Depending on your graph's schema, the size of a valid query string might be arbitrarily large. As query strings become larger, increased latency and network usage can noticeably degrade client performance.
 
-To improve network performance for large query strings, Apollo Server supports **Automatic Persisted Queries** (**APQ**). A persisted query is a query string that's stored on the server side, along with its unique identifier (always its SHA-256 hash). Clients can send this identifier _instead of_ the corresponding query string, thus reducing request sizes dramatically (response sizes are unaffected).
+To improve network performance for large query strings, Apollo Server supports **Automatic Persisted Queries** (**APQ**). A persisted query is a query string that's cached on the server side, along with its unique identifier (always its SHA-256 hash). Clients can send this identifier _instead of_ the corresponding query string, thus reducing request sizes dramatically (response sizes are unaffected).
 
-To persist a query string, Apollo Server must first receive it from a requesting client. Consequently, the _first_ execution of each unique query does _not_ benefit from APQ.
+To persist a query string, Apollo Server must first receive it from a requesting client. Consequently, each unique query string must be sent to Apollo Server at least once. After _any_ client sends a query string to persist, _every_ client that executes that query can then benefit from APQ.
 
 ```mermaid
 sequenceDiagram;
@@ -49,7 +49,7 @@ const linkChain = createPersistedQueryLink().concat(new HttpLink({ uri: "http://
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: link,
+  link: linkChain,
 });
 ```
 
@@ -59,7 +59,7 @@ You can test out APQ directly from the command line. This section also helps ill
 
 > This section assumes your server is running locally at `http://localhost:4000/graphql`.
 
-Almost every GraphQL server supports the following query (which requests the `__typename` field from the `Query` type):
+Every GraphQL server supports the following query (which requests the `__typename` field from the `Query` type):
 
 ```graphql
 {__typename}
