@@ -1,1 +1,0 @@
-export { rootFieldUsed } from './rootFieldUsed';

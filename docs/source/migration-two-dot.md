@@ -225,7 +225,7 @@ server.listen().then(({ url }) => {
 
 ### Constructing an Executable Schema Manually
 
-While we recommend the use [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) for defining a GraphQL schema since we feel it's more human-readable and language-agnostic, Apollo Server 2 also supports schemas which are built with the [`graphql-js`'s `graphql/type` notation](https://graphql.org/graphql-js/type/) by passing a `GraphQLSchema` to the `schema` option of the `ApolloServer` constructor.
+While we recommend the use [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/schema/schema/#the-schema-definition-language) for defining a GraphQL schema since we feel it's more human-readable and language-agnostic, Apollo Server 2 also supports schemas which are built with the [`graphql-js`'s `graphql/type` notation](https://graphql.org/graphql-js/type/) by passing a `GraphQLSchema` to the `schema` option of the `ApolloServer` constructor.
 
 For example, using this technique the above schema might be represented and used as:
 

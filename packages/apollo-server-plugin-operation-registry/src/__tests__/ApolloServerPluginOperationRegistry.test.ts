@@ -1,5 +1,8 @@
 import plugin, { Options } from '../ApolloServerPluginOperationRegistry';
-import { ApolloServerBase } from 'apollo-server-core';
+import {
+  ApolloServerBase,
+  ApolloServerPluginUsageReportingDisabled,
+} from 'apollo-server-core';
 import {
   /**
    * We alias these to different names entirely since the user-facing values
@@ -51,6 +54,10 @@ describe('Operation registry plugin', () => {
     const graphId = 'test-service';
     const apiKey = `service:${graphId}:not-an-api-key`;
     const hashedApiKey = hashApiKey(apiKey);
+    const apollo: ApolloConfigInput = {
+      key: apiKey,
+      variant: 'current',
+    };
     const typeDefs = gql`
       type Query {
         hello: String
@@ -88,11 +95,9 @@ describe('Operation registry plugin', () => {
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
-          engine: {
-            apiKey,
-            sendReportsImmediately: true,
-          },
+          apollo,
           plugins: [
+            ApolloServerPluginUsageReportingDisabled(),
             plugin({
               onUnregisteredOperation,
             })(),
@@ -141,11 +146,9 @@ describe('Operation registry plugin', () => {
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
-          engine: {
-            apiKey,
-            sendReportsImmediately: true,
-          },
+          apollo,
           plugins: [
+            ApolloServerPluginUsageReportingDisabled(),
             plugin({
               onUnregisteredOperation,
             })(),
@@ -180,11 +183,9 @@ describe('Operation registry plugin', () => {
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
-          engine: {
-            apiKey,
-            sendReportsImmediately: true,
-          },
+          apollo,
           plugins: [
+            ApolloServerPluginUsageReportingDisabled(),
             plugin({
               forbidUnregisteredOperations,
               onForbiddenOperation,
@@ -236,11 +237,9 @@ describe('Operation registry plugin', () => {
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
-          engine: {
-            apiKey,
-            sendReportsImmediately: true,
-          },
+          apollo,
           plugins: [
+            ApolloServerPluginUsageReportingDisabled(),
             plugin({
               forbidUnregisteredOperations,
               onForbiddenOperation,
@@ -277,11 +276,9 @@ describe('Operation registry plugin', () => {
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
-          engine: {
-            apiKey,
-            sendReportsImmediately: true,
-          },
+          apollo,
           plugins: [
+            ApolloServerPluginUsageReportingDisabled(),
             plugin({
               onForbiddenOperation,
             })(),

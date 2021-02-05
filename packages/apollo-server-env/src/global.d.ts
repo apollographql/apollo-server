@@ -1,5 +1,5 @@
 declare function fetch(
-  input?: RequestInfo,
+  input: RequestInfo,
   init?: RequestInit,
 ): Promise<Response>;
 

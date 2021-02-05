@@ -77,7 +77,7 @@ const resolvers = {
     serverOptions: Config,
     options: Partial<import('../ApolloServer').ServerRegistration> = {},
   ) {
-    server = new ApolloServer(serverOptions);
+    server = new ApolloServer({ stopOnTerminationSignals: false, ...serverOptions });
     app = new Koa();
 
     server.applyMiddleware({ ...options, app });
@@ -342,9 +342,9 @@ const resolvers = {
         });
       });
     });
-    // NODE: Skip Node.js 6, but only because `graphql-upload`
-    // doesn't support it anymore.
-    (NODE_MAJOR_VERSION === 6 ? describe.skip : describe)(
+    // NODE: Skip Node.js 6 and 14, but only because `graphql-upload`
+    // doesn't support them on the version we use.
+    ([6, 14].includes(NODE_MAJOR_VERSION) ? describe.skip : describe)(
       'file uploads',
       () => {
         it('enabled uploads', async () => {

@@ -1,6 +1,4 @@
 import {
-  getLegacyOperationManifestUrl,
-  generateServiceIdHash,
   getStoreKey,
   pluginName,
   getStorageSecretUrl,
@@ -8,22 +6,23 @@ import {
 } from './common';
 
 import loglevel from 'loglevel';
+import fetcher from 'make-fetch-happen';
+import { HttpRequestCache } from './cache';
 
-import { Response } from 'node-fetch';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import { fetchIfNoneMatch } from './fetchIfNoneMatch';
 import { OperationManifest } from "./ApolloServerPluginOperationRegistry";
+import { Logger, ApolloConfig, WithRequired } from "apollo-server-types";
+import { Response, RequestInit, fetch } from "apollo-server-env";
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
 
 export interface AgentOptions {
-  logger?: loglevel.Logger;
+  logger?: Logger;
+  fetcher?: typeof fetch;
   pollSeconds?: number;
-  schemaHash: string;
-  engine: any;
+  apollo: WithRequired<ApolloConfig, 'keyHash' | 'graphId'>;
   store: InMemoryLRUCache;
-  graphVariant: string;
 }
 
 type SignatureStore = Set<string>;
@@ -31,9 +30,9 @@ type SignatureStore = Set<string>;
 const callToAction = `Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`;
 
 export default class Agent {
+  private fetcher: typeof fetch;
   private timer?: NodeJS.Timer;
-  private logger: loglevel.Logger;
-  private hashedServiceId?: string;
+  private logger: Logger;
   private requestInFlight: Promise<any> | null = null;
   private lastSuccessfulCheck?: Date;
   private storageSecret?: string;
@@ -48,34 +47,11 @@ export default class Agent {
     Object.assign(this.options, options);
 
     this.logger = this.options.logger || loglevel.getLogger(pluginName);
-
-    if (!this.options.schemaHash) {
-      throw new Error('`schemaHash` must be passed to the Agent.');
-    }
-
-    if (
-      typeof this.options.engine !== 'object' ||
-      typeof this.options.engine.serviceID !== 'string'
-    ) {
-      throw new Error('`engine.serviceID` must be passed to the Agent.');
-    }
-
-    if (
-      typeof this.options.engine !== 'object' ||
-      typeof this.options.engine.apiKeyHash !== 'string'
-    ) {
-      throw new Error('`engine.apiKeyHash` must be passed to the Agent.');
-    }
+    this.fetcher = this.options.fetcher || getDefaultGcsFetcher();
   }
 
   async requestPending() {
     return this.requestInFlight;
-  }
-
-  private getHashedServiceId(): string {
-    return (this.hashedServiceId =
-      this.hashedServiceId ||
-      generateServiceIdHash(this.options.engine.serviceID));
   }
 
   private pollSeconds() {
@@ -141,15 +117,11 @@ export default class Agent {
 
   private async fetchAndUpdateStorageSecret(): Promise<string | undefined> {
     const storageSecretUrl = getStorageSecretUrl(
-      this.options.engine.serviceID,
-      this.options.engine.apiKeyHash,
+      this.options.apollo.graphId,
+      this.options.apollo.keyHash,
     );
 
-    const response = await fetchIfNoneMatch(storageSecretUrl, {
-      method: 'GET',
-      // More than three times our polling interval should be long enough to wait.
-      timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
-    });
+    const response = await this.fetcher(storageSecretUrl, this.fetchOptions);
 
     if (response.status === 304) {
       this.logger.debug(
@@ -169,59 +141,35 @@ export default class Agent {
     return this.storageSecret;
   }
 
-  private fetchOptions = {
-    // GET is what we request, but keep in mind that, when we include and get
-    // a match on the `If-None-Match` header we'll get an early return with a
-    // status code 304.
-    method: 'GET',
-
+  private fetchOptions: RequestInit = {
     // More than three times our polling interval should be long enough to wait.
     timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
   };
-
-  private async fetchLegacyManifest(): Promise<Response> {
-    this.logger.debug(`Fetching legacy manifest.`);
-    if (this.options.graphVariant !== 'current') {
-      this.logger.warn(
-        `The legacy manifest contains operations registered for the "current" variant, but the specified variant is "${this.options.graphVariant}".`,
-      );
-    }
-    const legacyManifestUrl = getLegacyOperationManifestUrl(
-      this.getHashedServiceId(),
-      this.options.schemaHash,
-    );
-    this.logger.debug(`Checking for manifest changes at ${legacyManifestUrl}`);
-    return fetchIfNoneMatch(legacyManifestUrl, this.fetchOptions);
-  }
 
   private async fetchManifest(): Promise<Response> {
     this.logger.debug(`Checking for storageSecret`);
     const storageSecret = await this.fetchAndUpdateStorageSecret();
 
     if (!storageSecret) {
-      this.logger.warn(`No storage secret found`);
-      return this.fetchLegacyManifest();
+      throw new Error("No storage secret found");
     }
 
     const storageSecretManifestUrl = getOperationManifestUrl(
-      this.options.engine.serviceID,
+      this.options.apollo.graphId,
       storageSecret,
-      this.options.graphVariant,
+      this.options.apollo.graphVariant,
     );
 
     this.logger.debug(
       `Checking for manifest changes at ${storageSecretManifestUrl}`,
     );
-    const response = await fetchIfNoneMatch(
-      storageSecretManifestUrl,
-      this.fetchOptions,
-    );
+    const response =
+      await this.fetcher(storageSecretManifestUrl, this.fetchOptions);
 
     if (response.status === 404 || response.status === 403) {
-      this.logger.warn(
-        `No manifest found for tag "${this.options.graphVariant}" at ${storageSecretManifestUrl}. ${callToAction}`,
-      );
-      return this.fetchLegacyManifest();
+      throw new Error(
+        `No manifest found for tag "${this.options.apollo.graphVariant}" at ` +
+        `${storageSecretManifestUrl}. ${callToAction}`);
     }
     return response;
   }
@@ -255,7 +203,7 @@ export default class Agent {
         throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
       }
     } catch (err) {
-      const ourErrorPrefix = `Unable to fetch operation manifest for ${this.options.schemaHash} in '${this.options.engine.serviceID}': ${err}`;
+      const ourErrorPrefix = `Unable to fetch operation manifest for graph ID '${this.options.apollo.graphId}': ${err}`;
 
       err.message = `${ourErrorPrefix}: ${err}`;
 
@@ -339,4 +287,29 @@ export default class Agent {
     // store might not actually let us look this up again.
     this.lastOperationSignatures = replacementSignatures;
   }
+}
+
+const GCS_RETRY_COUNT = 5;
+
+function getDefaultGcsFetcher() {
+  return fetcher.defaults({
+    cacheManager: new HttpRequestCache(),
+    // All headers should be lower-cased here, as `make-fetch-happen`
+    // treats differently cased headers as unique (unlike the `Headers` object).
+    // @see: https://git.io/JvRUa
+    headers: {
+      'user-agent': [
+        require('../package.json').name,
+        require('../package.json').version
+      ].join('/'),
+    },
+    retry: {
+      retries: GCS_RETRY_COUNT,
+      // The default factor: expected attempts at 0, 1, 3, 7, 15, and 31 seconds elapsed
+      factor: 2,
+      // 1 second
+      minTimeout: 1000,
+      randomize: true,
+    },
+  });
 }

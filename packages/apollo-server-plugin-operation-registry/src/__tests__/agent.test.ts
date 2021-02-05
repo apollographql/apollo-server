@@ -7,19 +7,16 @@ import {
   genericStorageSecret,
   nockStorageSecret,
   nockBase,
-  nockLegacyGoodManifest,
-  genericSchemaHash,
-  hashedServiceId,
   nockGoodManifestsUnderStorageSecret,
   defaultStore,
   defaultTestAgentPollSeconds,
   nockStorageSecretOperationManifest,
   genericApiKeyHash,
-  genericLegacyOperationManifestUrl,
 } from './helpers.test-helpers';
 import Agent, { AgentOptions } from "../agent";
-import { Operation, OperationManifest } from "../ApolloServerPluginOperationRegistry";
-import { fakeTestBaseUrl, getLegacyOperationManifestUrl, getStoreKey, getOperationManifestUrl, urlOperationManifestBase } from "../common";
+import { Operation } from "../ApolloServerPluginOperationRegistry";
+import { fakeTestBaseUrl, getStoreKey, getOperationManifestUrl, urlOperationManifestBase } from "../common";
+import { Logger } from "apollo-server-types";
 
 // These get a bit verbose within the tests below, so we use this as a
 // sample store to pick and grab from.
@@ -58,14 +55,6 @@ describe('Agent', () => {
       expect(new Agent({ ...defaultAgentOptions, debug: true })).toBeInstanceOf(
         Agent,
       );
-    });
-
-    it('fails to instantiate when `schemaHash` is not passed', () => {
-      const { schemaHash, ...remainingOptions } = defaultAgentOptions;
-      expect(() => {
-        // @ts-ignore: Intentionally not passing the parameter we need.
-        new Agent(remainingOptions);
-      }).toThrow(/`schemaHash` must be/);
     });
   });
 
@@ -106,12 +95,6 @@ describe('Agent', () => {
       }
     });
 
-    it('correctly prepared the test environment', () => {
-      expect(getLegacyOperationManifestUrl('abc123', 'def456')).toStrictEqual(
-        urlResolve(fakeTestBaseUrl, '/abc123/def456.v2.json'),
-      );
-    });
-
     describe('manifest checking and store populating', () => {
       function expectStoreSpyOperationEach(
         spy: jest.SpyInstance,
@@ -137,18 +120,17 @@ describe('Agent', () => {
 
       it('logs debug updates to the manifest on startup', async () => {
         nockStorageSecret(genericServiceID, genericApiKeyHash);
-        nockStorageSecretOperationManifest(
+        nockGoodManifestsUnderStorageSecret(
           genericServiceID,
           genericStorageSecret,
-          404,
+          [
+            sampleManifestRecords.a,
+            sampleManifestRecords.b,
+            sampleManifestRecords.c,
+          ],
         );
-        nockLegacyGoodManifest([
-          sampleManifestRecords.a,
-          sampleManifestRecords.b,
-          sampleManifestRecords.c,
-        ]);
         const relevantLogs: any = [];
-        const logger = {
+        const logger: Logger = {
           debug: jest.fn().mockImplementation((...args: any[]) => {
             if (
               typeof args[0] === 'string' &&
@@ -167,40 +149,30 @@ describe('Agent', () => {
               relevantLogs.push(args);
             }
           }),
+          info: () => {},
+          error: () => {},
         };
         await createAgent({ logger }).start();
 
         expect(relevantLogs[0][0]).toBe(
           `Checking for manifest changes at ${urlResolve(
             fakeTestBaseUrl,
-            getOperationManifestUrl(genericServiceID, genericStorageSecret),
-          )}`,
-        );
-
-        expect(relevantLogs[1][0]).toBe(
-          `Checking for manifest changes at ${urlResolve(
-            fakeTestBaseUrl,
-            getLegacyOperationManifestUrl(
-              hashedServiceId(genericServiceID),
-              genericSchemaHash,
-            ),
+            getOperationManifestUrl(genericServiceID, genericStorageSecret, 'current'),
           )}`,
         );
 
         // Console should indicate the records have been added in order.
-        expect(relevantLogs[2][0]).toBe(
+        expect(relevantLogs[1][0]).toBe(
           `Incoming manifest ADDs: ${sampleManifestRecords.a.signature}`,
         );
-        expect(relevantLogs[3][0]).toBe(
+        expect(relevantLogs[2][0]).toBe(
           `Incoming manifest ADDs: ${sampleManifestRecords.b.signature}`,
         );
-        expect(relevantLogs[4][0]).toBe(
+        expect(relevantLogs[3][0]).toBe(
           `Incoming manifest ADDs: ${sampleManifestRecords.c.signature}`,
         );
 
-        expect(relevantLogs.length).toBe(5);
-
-        logger.debug.mockRestore();
+        expect(relevantLogs.length).toBe(4);
       });
 
       it('populates the manifest store after starting', async () => {
@@ -283,60 +255,6 @@ describe('Agent', () => {
         expect(storeDeleteSpy).toBeCalledTimes(0);
       });
 
-      it('continues polling even after initial failure', async () => {
-        nockStorageSecret(genericServiceID, genericApiKeyHash);
-        nockStorageSecretOperationManifest(
-          genericServiceID,
-          genericStorageSecret,
-          500,
-        );
-        const store = defaultStore();
-        const storeSetSpy = jest.spyOn(store, 'set');
-        const storeDeleteSpy = jest.spyOn(store, 'delete');
-        const agent = createAgent({ store });
-        jest.useFakeTimers();
-        await agent.start();
-
-        expect(storeSetSpy).toBeCalledTimes(0);
-        expect(storeDeleteSpy).toBeCalledTimes(0);
-
-        // Only the initial start-up check should have happened by now.
-        expect(agent._timesChecked).toBe(1);
-
-        // If it's one millisecond short of our next poll interval, nothing
-        // should have changed yet.
-        jest.advanceTimersByTime(defaultTestAgentPollSeconds * 1000 - 1);
-
-        // Still only one check.
-        expect(agent._timesChecked).toBe(1);
-        expect(storeSetSpy).toBeCalledTimes(0);
-
-        // Now, we'll expect another GOOD request to fulfill, so we'll nock it.
-        nockStorageSecret(genericServiceID, genericApiKeyHash);
-        nockGoodManifestsUnderStorageSecret(
-          genericServiceID,
-          genericStorageSecret,
-          [
-            sampleManifestRecords.a,
-            sampleManifestRecords.b,
-            sampleManifestRecords.c,
-          ],
-        );
-
-        // If we move forward the last remaining millisecond, we should trigger
-        // and end up with a successful sync.
-        jest.advanceTimersByTime(1);
-
-        // While that timer will fire, it will do work async, and we need to
-        // wait on that work itself.
-        await agent.requestPending();
-
-        // Now the times checked should have gone up.
-        expect(agent._timesChecked).toBe(2);
-        // And store should have been called with operations ABC
-        expect(storeSetSpy).toBeCalledTimes(3);
-      });
-
       it('purges operations which are removed from the manifest', async () => {
         const store = defaultStore();
         const storeSetSpy = jest.spyOn(store, 'set');
@@ -393,57 +311,8 @@ describe('Agent', () => {
         ).resolves.toBeUndefined();
       });
 
-      describe('when fetching the storage secret fails', () => {
-        it('will fetch the manifest using the legacy url', async () => {
-          nockStorageSecret(genericServiceID, genericApiKeyHash, 404);
-          nockLegacyGoodManifest([
-            sampleManifestRecords.a,
-            sampleManifestRecords.b,
-            sampleManifestRecords.c,
-          ]);
-
-          const store = defaultStore();
-          const storeSetSpy = jest.spyOn(store, 'set');
-          const storeDeleteSpy = jest.spyOn(store, 'delete');
-          const agent = createAgent({ store });
-          await agent.checkForUpdate();
-
-          // Three additions, no deletions.
-          expect(storeSetSpy).toBeCalledTimes(3);
-          expect(storeDeleteSpy).toBeCalledTimes(0);
-
-          // Only the initial start-up check should have happened by now.
-          expect(agent._timesChecked).toBe(1);
-        });
-      });
-
-      describe('when fetching the manifest using the storage secret fails', () => {
-        it('will fallback to fetching the manifest using the legacy url', async () => {
-          nockStorageSecret(genericServiceID, genericApiKeyHash);
-          nockStorageSecretOperationManifest(genericServiceID, genericStorageSecret, 404)
-          nockLegacyGoodManifest([
-            sampleManifestRecords.a,
-            sampleManifestRecords.b,
-            sampleManifestRecords.c,
-          ]);
-
-          const store = defaultStore();
-          const storeSetSpy = jest.spyOn(store, 'set');
-          const storeDeleteSpy = jest.spyOn(store, 'delete');
-          const agent = createAgent({ store });
-          await agent.checkForUpdate();
-
-          // Three additions, no deletions.
-          expect(storeSetSpy).toBeCalledTimes(3);
-          expect(storeDeleteSpy).toBeCalledTimes(0);
-
-          // Only the initial start-up check should have happened by now.
-          expect(agent._timesChecked).toBe(1);
-        });
-      });
-
       describe('When given a graphVariant', () => {
-        const graphVariant = 'main';
+        const graphVariant = 'different';
         const getOperationManifestRelativeUrl = (
           ...args: Parameters<typeof getOperationManifestUrl>
         ) =>
@@ -452,9 +321,11 @@ describe('Agent', () => {
             '',
           );
 
-        it('fetches manifests for the corresponding schema tag', async () => {
+        it('fetches manifests for the corresponding variant', async () => {
           nockStorageSecret(genericServiceID, genericApiKeyHash);
-          const agent = createAgent({ graphVariant: graphVariant });
+          const agent = createAgent({
+            apollo: { ...defaultAgentOptions.apollo, graphVariant },
+          });
           const nockedManifest = nockBase()
             .get(
               getOperationManifestRelativeUrl(

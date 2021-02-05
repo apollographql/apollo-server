@@ -7,7 +7,6 @@
   "references": [
     { "path": "./packages/apollo-cache-control/src/__tests__/" },
     { "path": "./packages/apollo-datasource-rest/src/__tests__/" },
-    { "path": "./packages/apollo-engine-reporting/src/__tests__/" },
     { "path": "./packages/apollo-server/src/__tests__/" },
     { "path": "./packages/apollo-server-azure-functions/src/__tests__/" },
     { "path": "./packages/apollo-server-cache-memcached/src/__tests__/" },

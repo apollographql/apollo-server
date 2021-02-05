@@ -1,30 +1,30 @@
 import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLResponse } from 'apollo-server-types';
+import { GraphQLResponse as GraphQLResponseType } from 'apollo-server-types';
 import { print, DocumentNode } from 'graphql';
 
 type StringOrAst = string | DocumentNode;
 
 // A query must not come with a mutation (and vice versa).
-type Query = {
+type Query<TVariables = Record<string, any>> = {
   query: StringOrAst;
   mutation?: undefined;
-  variables?: {
-    [name: string]: any;
-  };
+  variables?: TVariables;
   operationName?: string;
 };
-type Mutation = {
+type Mutation<TVariables = Record<string, any>> = {
   mutation: StringOrAst;
   query?: undefined;
-  variables?: {
-    [name: string]: any;
-  };
+  variables?: TVariables;
   operationName?: string;
 };
 
+type GraphQLResponse<TData> = Omit<GraphQLResponseType, 'data'> & {
+  data?: TData;
+};
+
 export interface ApolloServerTestClient {
-  query: (query: Query) => Promise<GraphQLResponse>;
-  mutate: (mutation: Mutation) => Promise<GraphQLResponse>;
+  query<TData = any, TVariables = Record<string, any>>(query: Query<TVariables>): Promise<GraphQLResponse<TData>>;
+  mutate<TData = any, TVariables = Record<string, any>>(mutation: Mutation<TVariables>): Promise<GraphQLResponse<TData>>;
 }
 
 export default (server: ApolloServerBase): ApolloServerTestClient => {
@@ -46,5 +46,5 @@ export default (server: ApolloServerBase): ApolloServerTestClient => {
     });
   };
 
-  return { query: test, mutate: test };
+  return { query: test, mutate: test } as ApolloServerTestClient;
 };

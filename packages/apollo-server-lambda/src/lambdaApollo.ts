@@ -32,23 +32,28 @@ export function graphqlLambda(
     callback,
   ): void => {
     context.callbackWaitsForEmptyEventLoop = false;
+    let { body, headers, isBase64Encoded } = event;
+    let query: Record<string, any> | Record<string, any>[];
+    const contentType = (
+      headers['content-type'] || headers['Content-Type'] || ''
+    ).toLowerCase();
+    const isMultipart = contentType.startsWith('multipart/form-data');
 
-    if (event.httpMethod === 'POST' && !event.body) {
+    if (body && isBase64Encoded && !isMultipart) {
+      body = Buffer.from(body, 'base64').toString();
+    }
+
+    if (event.httpMethod === 'POST' && !body) {
       return callback(null, {
         body: 'POST body missing.',
         statusCode: 500,
       });
     }
 
-    const contentType = event.headers["content-type"] || event.headers["Content-Type"];
-    let query: Record<string, any> | Record<string, any>[];
-
-    if (event.body && event.httpMethod === 'POST' &&
-      contentType && contentType.startsWith("multipart/form-data")
-    ) {
-      query = event.body as any;
-    } else if (event.body && event.httpMethod === 'POST') {
-      query = JSON.parse(event.body);
+    if (body && event.httpMethod === 'POST' && isMultipart) {
+      query = body as any;
+    } else if (body && event.httpMethod === 'POST') {
+      query = JSON.parse(body);
     } else {
       query = event.queryStringParameters || {};
     }
