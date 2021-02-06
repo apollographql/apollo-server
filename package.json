@@ -104,7 +104,7 @@
     "graphql-tag": "2.11.0",
     "graphql-tools": "4.0.8",
     "hapi": "17.8.5",
-    "ioredis": "4.19.4",
+    "ioredis": "4.22.0",
     "jest": "25.5.4",
     "jest-config": "25.5.4",
     "jest-cucumber": "2.0.13",
