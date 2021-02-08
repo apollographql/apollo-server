@@ -78,12 +78,12 @@ describe('apollo-server', () => {
           // pass if the fast graceful close of the idle connection works.
           stopGracePeriodMillis: Infinity,
         });
-        const { address, port } = await server.listen({ port: 0 });
+        const { port } = await server.listen({ port: 0 });
 
         // Open a TCP connection to the server, and let it dangle idle
         // without starting a request.
         const connectionBarrier = new Barrier();
-        createConnection({ host: address, port: port as number }, () =>
+        createConnection({ host: 'localhost', port: port as number }, () =>
           connectionBarrier.unblock(),
         );
         await connectionBarrier.wait();
