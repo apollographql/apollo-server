@@ -148,7 +148,7 @@ export class ApolloServerBase {
   private config: Config;
   /** @deprecated: This is undefined for servers operating as gateways, and will be removed in a future release **/
   protected schema?: GraphQLSchema;
-  private toDispose = new Set<() => ValueOrPromise<void>>();
+  private toDispose = new Set<() => Promise<void>>();
   private experimental_approximateDocumentStoreMiB:
     Config['experimental_approximateDocumentStoreMiB'];
 
@@ -364,7 +364,7 @@ export class ApolloServerBase {
           process.kill(process.pid, signal);
         };
         process.once(signal, handler);
-        this.toDispose.add(() => {
+        this.toDispose.add(async () => {
           process.removeListener(signal, handler);
         });
       });
@@ -388,16 +388,15 @@ export class ApolloServerBase {
       parseOptions,
     } = this.config;
     if (gateway) {
-      this.toDispose.add(
-        // Store the unsubscribe handles, which are returned from
-        // `onSchemaChange`, for later disposal when the server stops
-        gateway.onSchemaChange(
-          (schema) =>
-            (this.schemaDerivedData = Promise.resolve(
-              this.generateSchemaDerivedData(schema),
-            )),
-        ),
+      // Store the unsubscribe handles, which are returned from
+      // `onSchemaChange`, for later disposal when the server stops
+      const unsubscriber = gateway.onSchemaChange(
+        (schema) =>
+          (this.schemaDerivedData = Promise.resolve(
+            this.generateSchemaDerivedData(schema),
+          )),
       );
+      this.toDispose.add(async () => unsubscriber());
 
       // For backwards compatibility with old versions of @apollo/gateway.
       const engineConfig =
@@ -418,9 +417,7 @@ export class ApolloServerBase {
       return gateway
         .load({ apollo: this.apolloConfig, engine: engineConfig })
         .then((config) => {
-          this.toDispose.add(
-            async () => gateway.stop && (await gateway.stop()),
-          );
+          this.toDispose.add(async () => await gateway.stop?.());
           return config.schema;
         })
         .catch((err) => {
@@ -600,7 +597,7 @@ export class ApolloServerBase {
 
   public async stop() {
     await Promise.all([...this.toDispose].map(dispose => dispose()));
-    if (this.subscriptionServer) await this.subscriptionServer.close();
+    if (this.subscriptionServer) this.subscriptionServer.close();
   }
 
   public installSubscriptionHandlers(server: HttpServer | HttpsServer | Http2Server | Http2SecureServer | WebSocket.Server) {
