@@ -392,7 +392,7 @@ export class ApolloServerBase {
         // Store the unsubscribe handles, which are returned from
         // `onSchemaChange`, for later disposal when the server stops
         gateway.onSchemaChange(
-          schema =>
+          (schema) =>
             (this.schemaDerivedData = Promise.resolve(
               this.generateSchemaDerivedData(schema),
             )),
@@ -415,17 +415,24 @@ export class ApolloServerBase {
       // a federated schema!
       this.requestOptions.executor = gateway.executor;
 
-      return gateway.load({ apollo: this.apolloConfig, engine: engineConfig })
-        .then(config => config.schema)
-        .catch(err => {
+      return gateway
+        .load({ apollo: this.apolloConfig, engine: engineConfig })
+        .then((config) => {
+          this.toDispose.add(
+            async () => gateway.stop && (await gateway.stop()),
+          );
+          return config.schema;
+        })
+        .catch((err) => {
           // We intentionally do not re-throw the exact error from the gateway
           // configuration as it may contain implementation details and this
           // error will propagate to the client. We will, however, log the error
           // for observation in the logs.
-          const message = "This data graph is missing a valid configuration.";
-          this.logger.error(message + " " + (err && err.message || err));
+          const message = 'This data graph is missing a valid configuration.';
+          this.logger.error(message + ' ' + ((err && err.message) || err));
           throw new Error(
-            message + " More details may be available in the server logs.");
+            message + ' More details may be available in the server logs.',
+          );
         });
     }
 
