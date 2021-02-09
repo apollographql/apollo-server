@@ -40,7 +40,7 @@ export class ApolloServer extends ApolloServerBase {
     super(config);
     this.cors = config && config.cors;
     this.onHealthCheck = config && config.onHealthCheck;
-    this.stopGracePeriodMillis = config?.stopGracePeriodMillis ?? 10000;
+    this.stopGracePeriodMillis = config?.stopGracePeriodMillis ?? 10_000;
   }
 
   private createServerInfo(

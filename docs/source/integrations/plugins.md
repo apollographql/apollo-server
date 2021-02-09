@@ -459,7 +459,7 @@ The `willResolveField` event fires whenever Apollo Server is about to resolve a 
 
 You provide your `willResolveField` handler in the object returned by your [`executionDidStart`](#executiondidstart) handler.
 
-Your `willResolveField` handler can optionally return an ["end hook"](#end-hooks) function that's invoked with the resolver's result (or the error that it throws). The end hook is called when your resolver has _fully_ resolved (i.e., if the resolver returns a Promise, the hook is called with the Promise's eventual resolved result).
+Your `willResolveField` handler can optionally return an ["end hook"](#end-hooks) function that's invoked with the resolver's result (or the error that it throws). The end hook is called when your resolver has _fully_ resolved (e.g., if the resolver returns a Promise, the hook is called with the Promise's eventual resolved result).
 
 #### Example
 

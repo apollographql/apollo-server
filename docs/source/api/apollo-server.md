@@ -360,7 +360,7 @@ The amount of time to wait after [`ApolloServer.stop()`](#stop) is called (inclu
 
 **This option is used only by the `apollo-server` package.** If you're integrating with [Node.js middleware](../integrations/middleware/) via a different package, it's your responsibility to stop your HTTP server in whatever way is appropriate.
 
-The default value is `10000` (10 seconds).
+The default value is `10_000` (10 seconds).
 
 </td>
 </tr>
