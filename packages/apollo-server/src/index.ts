@@ -123,7 +123,7 @@ export class ApolloServer extends ApolloServerBase {
     // - closes all connections with no active requests
     // - continues to close connections when their active request count drops to
     //   zero
-    // - in 3 seconds (configurable), closes all remaining active connections
+    // - in 10 seconds (configurable), closes all remaining active connections
     // - calls its callback once there are no remaining active connections
     //
     // If you don't like this behavior, use apollo-server-express instead of

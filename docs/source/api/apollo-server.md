@@ -348,6 +348,23 @@ You can also manually call `stop()` in other contexts. Note that `stop()` is asy
 </tr>
 
 <tr>
+<td>
+
+###### `stopGracePeriodMillis`
+
+`number`
+</td>
+<td>
+
+When using the `apollo-server` package and `ApolloServer.stop()` is called (including via a [termination signal](#stoponterminationsignals)), Apollo Server waits 10 seconds by default before forcefully closing all active connections. You can change that grace period by passing a different value here. You may also pass `stopGracePeriodMillis: Infinity`, in which case Apollo Server will wait as long as is needed for all connections to go idle without ever forcefully closing them.
+
+This option is used only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package, it's your responsibility to stop your HTTP server in whatever way is appropriate.
+
+</td>
+</tr>
+
+
+<tr>
 <td colspan="2">
 
 **Debugging options**
@@ -758,6 +775,16 @@ Returns an array of the middlewares that together form a complete instance of Ap
 Unlike [`applyMiddleware`](#applymiddleware), `getMiddleware` does _not_ automatically apply Apollo Server middlewares to your application. Instead, this method enables you to apply or omit individual middlewares according to your use case. For an Express or Koa application, you can apply a particular middleware by calling `app.use`.
 
 The `getMiddleware` method takes the same options as [`applyMiddleware`](#applymiddleware), **except** the `app` option.
+
+#### `stop`
+
+`ApolloServer.stop()` is an async method that tells all background tasks associated with the `ApolloServer` to complete. This includes calling and awaiting all [`serverWillStop` plugin handlers](../integrations/plugins/#serverwillstop), such as the [usage reporting plugin](./plugin/usage-reporting/)'s `serverWillStop` handler which sends a final usage report to Apollo's servers. If your server is an Apollo Gateway, this will also stop Gateway's background activities, such as checking to see if its schema has updated.
+
+In some circumstances, Apollo Server calls this automatically for you when the process receives a `SIGINT` or `SIGTERM` signal; see the [`stopOnTerminationSignals` constructor option](#stoponterminationsignals) for more details.
+
+If you are using the `apollo-server` package (which handles setting up an HTTP server for you), this method will first stop the HTTP server. Specifically, it stops listening for new connections, closes idle connections (ie, connections with no current HTTP request), starts closing active connections when they become idle, and waits for all connections to be closed. If any connections remain active 10 seconds later, it will forcefully close the remaining active connections. You can configure this timeout (or disable the forceful close) with the [`stopGracePeriodMillis` constructor option](#stopgraceperiodmillis).
+
+If instead of using the `apollo-server` package you are using a different integration, you should stop your HTTP server before calling `ApolloServer.stop()`.
 
 ## `gql`
 

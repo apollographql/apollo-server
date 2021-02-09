@@ -139,14 +139,15 @@ graph TB;
 
 <sup>*The indicated events also support <a href="#end-hooks">end hooks</a> that fire when their associated step <em>completes</em>.</sup>
 
-#### End hooks
+### End hooks
 
 Event handlers for the following events can optionally return a function
 that is invoked after the corresponding lifecycle phase _ends_:
 
 * [`parsingDidStart`](#parsingdidstart)
 * [`validationDidStart`](#validationdidstart)
-* [`executionDidStart`](#executiondidstart)
+* [`executionDidStart`](#executiondidstart) (though this can also return an object with an end hook method named `executionDidEnd`)
+* [`willResolveField`](#willresolvefield)
 
 These **end hooks** are passed any errors that occurred during the
 execution of that lifecycle phase. For example, the following plugin logs
@@ -185,7 +186,7 @@ const myPlugin = {
 ```
 
 Note that the `validationDidStart` end hook receives an _array_ of errors that
-contains every validation error that occurred (if any). The arguments to each
+contains every validation error that occurred (if any). The `willResolveField` end hook receives the error thrown by the resolver as the first argument and the result of the resolver as the second argument. The arguments to each
 end hook are documented in the type definitions in [Request lifecycle events](#request-lifecycle-events).
 
 ### Inspecting request and response details
@@ -260,6 +261,31 @@ const server = new ApolloServer({
     {
       serverWillStart() {
         console.log('Server starting!');
+      }
+    }
+  ]
+})
+```
+
+### `serverWillStop`
+
+The `serverWillStop` event fires when Apollo Server is starting to shut down because `ApolloServer.stop()` has been invoked (either explicitly by your code, or by one of the [termination signal handlers](../api/apollo-server/#stoponterminationsignals)). If your plugin is running any background tasks, this is a good place to shut them down. Because `serverWillStop` handlers tend to refer to things set up in `serverWillStart` handlers, you put the `serverWillStop` handler on an object returned from your `serverWillStop` handler. `serverWillStart` handlers may be async. Currently, `serverWillStop` handlers do not take arguments, though you should not rely on that fact.
+
+#### Example
+
+```js
+const server = new ApolloServer({
+  /* ... other necessary configuration ... */
+
+  plugins: [
+    {
+      serverWillStart() {
+        const interval = setInterval(doSomethingPeriodically, 1000);
+        return {
+          serverWillStop() {
+            clearInterval(interval);
+          }
+        }
       }
     }
   ]
@@ -415,6 +441,45 @@ executionDidStart?(
     'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
   >,
 ): (err?: Error) => void | void;
+```
+
+`executionDidStart` may return an ["end hook"](#end-hooks) function. Alternatively, it may return an object with one or both of the methods `executionDidEnd` and `willResolveField`.  `executionDidEnd` is treated identically to an end hook: it is called after execution with any errors that occurred. `willResolveField` is documented in the next section.
+
+### `willResolveField`
+
+The `willResolveField` event fires whenever Apollo Server is about to resolve a single field during the execution of an operation. It is passed an object with four fields `source`, `args`, `context`, and `info`, corresponding to the [four positional arguments passed to resolvers](../data/resolvers/#resolver-arguments). (Note that the `source` field goes with the argument we often called `parent` in our docs.) The `willResolveField` handler is called on the object returned from your `executionDidStart` handler. It may return an ["end hook"](#end-hooks) function that is invoked with the result returned by your resolver or the error that it throws. The end hook is called once your resolver has fully resolved: for example, if it returns a Promise, the end hook is called with the Promise's eventual resolved result.
+
+#### Example
+
+```js
+const server = new ApolloServer({
+  /* ... other necessary configuration ... */
+
+  plugins: [
+    {
+      requestDidStart(initialRequestContext) {
+        return {
+          executionDidStart(executionRequestContext) {
+            return {
+              willResolveField({source, args, context, info}) {
+                const start = process.hrtime.bigint();
+                return (error, result) => {
+                  const end = process.hrtime.bigint();
+                  console.log(`Field ${info.parentType.name}.${info.fieldName} took ${end - start}ns`);
+                  if (error) {
+                    console.log(`It failed with ${error}`);
+                  } else {
+                    console.log(`It returned ${result}`);
+                  }
+                };
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+})
 ```
 
 ### `didEncounterErrors`
