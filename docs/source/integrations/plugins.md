@@ -115,9 +115,11 @@ defines functions that respond to request lifecycle events. This structure
 organizes and encapsulates all of your plugin's request lifecycle logic, making it
 easier to reason about.
 
-#### Request lifecycle event flow
+### Request lifecycle event flow
 
 The following diagram illustrates the sequence of events that fire for each request. Each of these events is documented [below](#request-lifecycle-events).
+
+> Any event below that can result in "Success" can also result in an error. Whenever an error occurs, the `didEncounterErrors` event fires and the remainder of the "Success" path does _not_.
 
 ```mermaid
 graph TB;
@@ -127,17 +129,19 @@ graph TB;
   validation --"Success"--> resolveOperation(didResolveOperation);
   resolveOperation --"Success"--> response(responseForOperation);
   execution(executionDidStart*);
+  resolveField(willResolveField*);
   errors(didEncounterErrors);
+  errors --> send;
   response --"Response provided"--> send;
   response --"No response provided"--> execution;
-  execution --"Success"--> send(willSendResponse);
+  execution ---->|"Success"| send(willSendResponse);
+  execution --"(Fires once per resolver)"-->resolveField;
 
-  execution & resolveSource & resolveOperation & parsing & validation --"Failure"--> errors;
-  errors --> send;
-  class server,request secondary;
+
+  class errors secondary;
 ```
 
-<sup>*The indicated events also support <a href="#end-hooks">end hooks</a> that fire when their associated step <em>completes</em>.</sup>
+<sup>*The indicated events also support <a href="#end-hooks">end hooks</a> that are called when their associated step <em>completes</em>.</sup>
 
 ### End hooks
 
@@ -146,7 +150,7 @@ that is invoked after the corresponding lifecycle phase _ends_:
 
 * [`parsingDidStart`](#parsingdidstart)
 * [`validationDidStart`](#validationdidstart)
-* [`executionDidStart`](#executiondidstart) (though this can also return an object with an end hook method named `executionDidEnd`)
+* [`executionDidStart`](#executiondidstart) (this handler can alternatively return an _object_ containing an `executionDidEnd` function)
 * [`willResolveField`](#willresolvefield)
 
 These **end hooks** are passed any errors that occurred during the
@@ -269,7 +273,9 @@ const server = new ApolloServer({
 
 ### `serverWillStop`
 
-The `serverWillStop` event fires when Apollo Server is starting to shut down because `ApolloServer.stop()` has been invoked (either explicitly by your code, or by one of the [termination signal handlers](../api/apollo-server/#stoponterminationsignals)). If your plugin is running any background tasks, this is a good place to shut them down. Because `serverWillStop` handlers tend to refer to things set up in `serverWillStart` handlers, you put the `serverWillStop` handler on an object returned from your `serverWillStop` handler. `serverWillStart` handlers may be async. Currently, `serverWillStop` handlers do not take arguments, though you should not rely on that fact.
+The `serverWillStop` event fires when Apollo Server is starting to shut down because [`ApolloServer.stop()`](../api/apollo-server/#stop) has been invoked (either explicitly by your code, or by one of the [termination signal handlers](../api/apollo-server/#stoponterminationsignals)). If your plugin is running any background tasks, this is a good place to shut them down.
+
+You define your `serverWillStop` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, because the two handlers usually interact with the same data. Currently, `serverWillStop` handlers do not take arguments (this might change in the future).
 
 #### Example
 
@@ -402,6 +408,8 @@ The `didResolveOperation` event fires after the `graphql` library successfully
 determines the operation to execute from a request's `document` AST. At this stage,
 both the `operationName` string and `operation` AST are available.
 
+This event is _not_ associated with your GraphQL server's _resolvers_. When this event fires, your resolvers have not yet executed (they execute after [`executionDidStart`](#executiondidstart)).
+
 > If the operation is anonymous (i.e., the operation is `query { ... }` instead of `query NamedQuery { ... }`), then `operationName` is `null`.
 
 ```typescript
@@ -447,7 +455,11 @@ executionDidStart?(
 
 ### `willResolveField`
 
-The `willResolveField` event fires whenever Apollo Server is about to resolve a single field during the execution of an operation. It is passed an object with four fields `source`, `args`, `context`, and `info`, corresponding to the [four positional arguments passed to resolvers](../data/resolvers/#resolver-arguments). (Note that the `source` field goes with the argument we often called `parent` in our docs.) The `willResolveField` handler is called on the object returned from your `executionDidStart` handler. It may return an ["end hook"](#end-hooks) function that is invoked with the result returned by your resolver or the error that it throws. The end hook is called once your resolver has fully resolved: for example, if it returns a Promise, the end hook is called with the Promise's eventual resolved result.
+The `willResolveField` event fires whenever Apollo Server is about to resolve a single field during the execution of an operation. The handler is passed an object with four fields (`source`, `args`, `context`, and `info`) that correspond to the [four positional arguments passed to resolvers](../data/resolvers/#resolver-arguments). (Note that `source` corresponds to the argument often called `parent` in these docs.)
+
+You provide your `willResolveField` handler in the object returned by your [`executionDidStart`](#executiondidstart) handler.
+
+Your `willResolveField` handler can optionally return an ["end hook"](#end-hooks) function that's invoked with the resolver's result (or the error that it throws). The end hook is called when your resolver has _fully_ resolved (i.e., if the resolver returns a Promise, the hook is called with the Promise's eventual resolved result).
 
 #### Example
 
