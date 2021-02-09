@@ -351,7 +351,9 @@ When a chain "diverges" like this, each subchain executes in parallel.
 
 ## Resolver arguments
 
-Resolver functions take the following positional arguments, in order:
+Resolver functions are passed four arguments: `parent`, `args`, `context`, and `info` (in that order).
+
+> You can use any name for each argument in your code, but the Apollo docs use these names as a convention. Instead of `parent`, it's also common to use the parent type's name or `source`.
 
 | Argument  | Description  |
 |---|---|
