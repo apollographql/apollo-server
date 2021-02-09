@@ -40,7 +40,7 @@ export class ApolloServer extends ApolloServerBase {
     super(config);
     this.cors = config && config.cors;
     this.onHealthCheck = config && config.onHealthCheck;
-    this.stopGracePeriodMillis = config?.stopGracePeriodMillis ?? 10000;
+    this.stopGracePeriodMillis = config?.stopGracePeriodMillis ?? 10_000;
   }
 
   private createServerInfo(
@@ -123,7 +123,7 @@ export class ApolloServer extends ApolloServerBase {
     // - closes all connections with no active requests
     // - continues to close connections when their active request count drops to
     //   zero
-    // - in 3 seconds (configurable), closes all remaining active connections
+    // - in 10 seconds (configurable), closes all remaining active connections
     // - calls its callback once there are no remaining active connections
     //
     // If you don't like this behavior, use apollo-server-express instead of
