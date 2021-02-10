@@ -200,11 +200,9 @@ export default function plugin(
           // Note that we set up sessionId and baseCacheKey before doing this
           // check, so that we can still write the result to the cache even if
           // we are told not to read from the cache.
-          if (
-            options.shouldReadFromCache &&
-            !options.shouldReadFromCache(requestContext)
-          ) {
-            return null;
+          if (options.shouldReadFromCache) {
+            const shouldReadFromCache = await options.shouldReadFromCache(requestContext);
+            if (!shouldReadFromCache) return null;
           }
 
           if (sessionId === null) {
@@ -235,11 +233,10 @@ export default function plugin(
             }
             return;
           }
-          if (
-            options.shouldWriteToCache &&
-            !options.shouldWriteToCache(requestContext)
-          ) {
-            return;
+
+          if (options.shouldWriteToCache) {
+            const shouldWriteToCache = await options.shouldWriteToCache(requestContext);
+            if(!shouldWriteToCache) return;
           }
 
           const { response, overallCachePolicy } = requestContext;

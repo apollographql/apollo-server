@@ -45,7 +45,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.getFoo();
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
     });
 
@@ -64,7 +64,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.getFoo();
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual(
         'https://api.example.com/bar/foo',
       );
@@ -85,7 +85,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.getFoo();
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://example.com/api/foo');
     });
 
@@ -110,7 +110,7 @@ describe('RESTDataSource', () => {
       fetch.mockJSONResponseOnce();
       await dataSource.getFoo();
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual(
         'https://api-dev.example.com/foo',
       );
@@ -135,7 +135,7 @@ describe('RESTDataSource', () => {
       fetch.mockJSONResponseOnce();
       await dataSource.getFoo();
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
     });
 
@@ -161,7 +161,7 @@ describe('RESTDataSource', () => {
         offset: 20,
       });
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual(
         'https://api.example.com/posts?username=beyonc%C3%A9&filter=jalape%C3%B1o&limit=10&offset=20',
       );
@@ -187,7 +187,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.getFoo();
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual(
         'https://api.example.com/foo?a=1&api_key=secret',
       );
@@ -212,7 +212,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.getFoo();
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       // FIXME: request.credentials is not supported by node-fetch
       // expect(fetch.mock.calls[0][0].credentials).toEqual('include');
     });
@@ -237,7 +237,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.getFoo();
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].headers.get('Authorization')).toEqual(
         'secret',
       );
@@ -258,7 +258,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.postFoo({ foo: 'bar' });
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
       expect(fetch.mock.calls[0][0].body.toString()).toEqual(
         JSON.stringify({ foo: 'bar' }),
@@ -283,7 +283,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.postFoo(['foo', 'bar']);
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
       expect(fetch.mock.calls[0][0].body.toString()).toEqual(
         JSON.stringify(['foo', 'bar']),
@@ -319,7 +319,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.postFoo(model);
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
       expect(fetch.mock.calls[0][0].body.toString()).toEqual(
         JSON.stringify({ foo: 'bar' }),
@@ -347,7 +347,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.postFoo(form);
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
       expect(fetch.mock.calls[0][0].body.toString()).not.toEqual('{}');
       expect(fetch.mock.calls[0][0].headers.get('Content-Type')).not.toEqual(
@@ -389,7 +389,7 @@ describe('RESTDataSource', () => {
 
         expect(data).toEqual({ foo: 'bar' });
 
-        expect(fetch.mock.calls.length).toEqual(1);
+        expect(fetch).toBeCalledTimes(1);
         expect(fetch.mock.calls[0][0].method).toEqual(method);
       });
     }
@@ -530,7 +530,7 @@ describe('RESTDataSource', () => {
 
       await Promise.all([dataSource.getFoo(1), dataSource.getFoo(1)]);
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual(
         'https://api.example.com/foo/1',
       );
@@ -638,7 +638,7 @@ describe('RESTDataSource', () => {
         dataSource.getFoo(1, 'anotherSecret'),
       ]);
 
-      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual(
         'https://api.example.com/foo/1?api_key=secret',
       );
@@ -764,4 +764,28 @@ describe('RESTDataSource', () => {
       });
     });
   });
+
+  describe('trace', () => {
+    it('is called once per request', async () => {
+      const traceMock = jest.fn()
+      const dataSource = new (class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        getFoo() {
+          return this.get('foo');
+        }
+
+        trace = traceMock;
+      })();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+
+      await dataSource.getFoo();
+
+      expect(traceMock).toBeCalledTimes(1);
+      expect(traceMock).toBeCalledWith(expect.any(Object),expect.any(Function));
+    });
+  })
 });

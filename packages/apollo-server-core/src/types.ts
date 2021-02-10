@@ -80,6 +80,7 @@ export interface GraphQLService {
   executor<TContext>(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
   ): ValueOrPromise<GraphQLExecutionResult>;
+  stop?(): Promise<void>;
 }
 
 // This configuration is shared between all integrations and should include

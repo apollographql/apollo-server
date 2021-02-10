@@ -56,7 +56,7 @@ import {
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { plugin as pluginTracing } from "apollo-tracing";
-import { Logger, SchemaHash, ValueOrPromise, ApolloConfig } from "apollo-server-types";
+import { Logger, SchemaHash, ApolloConfig } from "apollo-server-types";
 import {
   plugin as pluginCacheControl,
   CacheControlExtensionOptions,
@@ -115,7 +115,7 @@ export class ApolloServerBase {
   private config: Config;
   /** @deprecated: This is undefined for servers operating as gateways, and will be removed in a future release **/
   protected schema?: GraphQLSchema;
-  private toDispose = new Set<() => ValueOrPromise<void>>();
+  private toDispose = new Set<() => Promise<void>>();
   private experimental_approximateDocumentStoreMiB:
     Config['experimental_approximateDocumentStoreMiB'];
 
@@ -256,7 +256,7 @@ export class ApolloServerBase {
           process.kill(process.pid, signal);
         };
         process.once(signal, handler);
-        this.toDispose.add(() => {
+        this.toDispose.add(async () => {
           process.removeListener(signal, handler);
         });
       });
@@ -280,16 +280,15 @@ export class ApolloServerBase {
       parseOptions,
     } = this.config;
     if (gateway) {
-      this.toDispose.add(
-        // Store the unsubscribe handles, which are returned from
-        // `onSchemaChange`, for later disposal when the server stops
-        gateway.onSchemaChange(
-          schema =>
-            (this.schemaDerivedData = Promise.resolve(
-              this.generateSchemaDerivedData(schema),
-            )),
-        ),
+      // Store the unsubscribe handles, which are returned from
+      // `onSchemaChange`, for later disposal when the server stops
+      const unsubscriber = gateway.onSchemaChange(
+        (schema) =>
+          (this.schemaDerivedData = Promise.resolve(
+            this.generateSchemaDerivedData(schema),
+          )),
       );
+      this.toDispose.add(async () => unsubscriber());
 
       // Set the executor whether the gateway 'load' call succeeds or not.
       // If the schema becomes available eventually (after a setInterval retry)
@@ -297,17 +296,22 @@ export class ApolloServerBase {
       // a federated schema!
       this.requestOptions.executor = gateway.executor;
 
-      return gateway.load({ apollo: this.apolloConfig })
-        .then(config => config.schema)
-        .catch(err => {
+      return gateway
+        .load({ apollo: this.apolloConfig })
+        .then((config) => {
+          this.toDispose.add(async () => await gateway.stop?.());
+          return config.schema;
+        })
+        .catch((err) => {
           // We intentionally do not re-throw the exact error from the gateway
           // configuration as it may contain implementation details and this
           // error will propagate to the client. We will, however, log the error
           // for observation in the logs.
-          const message = "This data graph is missing a valid configuration.";
-          this.logger.error(message + " " + (err && err.message || err));
+          const message = 'This data graph is missing a valid configuration.';
+          this.logger.error(message + ' ' + ((err && err.message) || err));
           throw new Error(
-            message + " More details may be available in the server logs.");
+            message + ' More details may be available in the server logs.',
+          );
         });
     }
 

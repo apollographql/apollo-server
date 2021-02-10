@@ -11,7 +11,7 @@
   "baseBranches": ["main", "release-3.0"],
   "packageRules": [
     {
-      "packageNames": ["@types/node"],
+      "matchPackageNames": ["@types/node"],
       "allowedVersions": "12.x"
     },
     /*
@@ -21,15 +21,17 @@
      *
      */
     {
-      "paths": [
+      "matchPaths": [
         "v3/package.json"
       ],
       "packageRules": [
-        "packagePatterns": ["^apollo-"],
-        "schedule": ["at any time"],
-        "automerge": true,
-        "automergeType": "branch",
-        "groupName": "v3"
+        {
+          "matchPackagePatterns": ["^apollo-"],
+          "schedule": ["at any time"],
+          "automerge": true,
+          "automergeType": "branch",
+          "groupName": "v3"
+        },
       ],
     },
 
@@ -43,7 +45,7 @@
       the `apollo-docs` suffix).
     */
     {
-      "paths": [
+      "matchPaths": [
         "docs/package.json"
       ],
       "extends": [

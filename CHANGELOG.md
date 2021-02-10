@@ -23,7 +23,13 @@ The version headers in this history reflect the versions of Apollo Server itself
   - We no longer re-export the entirety of `graphql-tools` (including `makeExecutableSchema`) from all Apollo Server packages.
   - The `Upload` scalar is no longer exported. (See above as to why.)
 
-- _Nothing yet! Stay tuned!_
+## v2.20.0
+
+- `apollo-server`: Previously, `ApolloServer.stop()` functioned like `net.Server.close()` in that it did not close idle connections or close active connections after a grace period. This meant that trying to `await ApolloServer.stop()` could hang indefinitely if there are open connections. Now, this method closes idle connections, and closes active connections after 10 seconds. The grace period can be adjusted by passing the new `stopGracePeriodMillis` option to `new ApolloServer`, or disabled by passing `Infinity` (though it will still close idle connections). Note that this only applies to the "batteries-included" `ApolloServer` in the `apollo-server` package with its own built-in Express and HTTP servers. [PR #4908](https://github.com/apollographql/apollo-server/pull/4908) [Issue #4097](https://github.com/apollographql/apollo-server/issues/4097)
+- `apollo-server-core`: When used with `ApolloGateway`, `ApolloServer.stop` now invokes `ApolloGateway.stop`. (This makes sense because `ApolloServer` already invokes `ApolloGateway.load` which is what starts the behavior stopped by `ApolloGateway.stop`.) Note that `@apollo/gateway` 0.23 will expect to be stopped in order for natural program shutdown to occur. [PR #4907](https://github.com/apollographql/apollo-server/pull/4907) [Issue #4428](https://github.com/apollographql/apollo-server/issues/4428)
+- `apollo-server-core`: Avoid instrumenting schemas for the old `graphql-extensions` library unless extensions are provided. [PR #4893](https://github.com/apollographql/apollo-server/pull/4893) [Issue #4889](https://github.com/apollographql/apollo-server/issues/4889)
+- `apollo-server-plugin-response-cache@0.6.0`: The `shouldReadFromCache` and `shouldWriteToCache` hooks were always documented as returning `ValueOrPromise<boolean>` (ie, that they could be either sync or async), but they actually only worked if they returned a bool. Now they can be either sync or async as intended. [PR #4890](https://github.com/apollographql/apollo-server/pull/4890) [Issue #4886](https://github.com/apollographql/apollo-server/issues/4886)
+- `apollo-datasource-rest@0.10.0`: The `RESTDataSource.trace` method is now `protected` instead of `private` to allow more control over logging and metrics. [PR #3940](https://github.com/apollographql/apollo-server/pull/3940)
 
 ## v2.19.2
 
