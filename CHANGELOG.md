@@ -13,7 +13,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## v2.21.0
 
-- Apollo Server can now be installed with `graphql@15` without causing peer dependency errors or warnings. (Apollo Server has a [file upload](https://www.apollographql.com/docs/apollo-server/data/file-uploads/) feature which was implemented as a wrapper around the `graphql-upload` package. We have been unable to upgrade our dependency on that package due to backwards-incompatible changes in later versions, and the version we were stuck on did not allow `graphql@15` as a peer dependency. We have now switched to a fork of that old version called `@apollographql/graphql-upload-8-fork` that allows `graphql@15`.) [Issue #4865](https://github.com/apollographql/apollo-server/issues/4865)
+- Apollo Server can now be installed with `graphql@15` without causing peer dependency errors or warnings. (Apollo Server has a [file upload](https://www.apollographql.com/docs/apollo-server/data/file-uploads/) feature which was implemented as a wrapper around the `graphql-upload` package. We have been unable to upgrade our dependency on that package due to backwards-incompatible changes in later versions, and the version we were stuck on did not allow `graphql@15` as a peer dependency. We have now switched to a fork of that old version called `@apollographql/graphql-upload-8-fork` that allows `graphql@15`.) Also bump the `graphql-tools` dependency from 4.0.0 to 4.0.8 for `graphql@15` support. [Issue #4865](https://github.com/apollographql/apollo-server/issues/4865)
 
 ## v2.20.0
 
