@@ -348,6 +348,25 @@ You can also manually call `stop()` in other contexts. Note that `stop()` is asy
 </tr>
 
 <tr>
+<td>
+
+###### `stopGracePeriodMillis`
+
+`number`
+</td>
+<td>
+
+The amount of time to wait after [`ApolloServer.stop()`](#stop) is called (including via a [termination signal](#stoponterminationsignals)) before forcefully closing all active connections. If you pass `Infinity`, Apollo Server waits indefinitely for all active connections to go idle.
+
+**This option is used only by the `apollo-server` package.** If you're integrating with [Node.js middleware](../integrations/middleware/) via a different package, it's your responsibility to stop your HTTP server in whatever way is appropriate.
+
+The default value is `10_000` (10 seconds).
+
+</td>
+</tr>
+
+
+<tr>
 <td colspan="2">
 
 **Debugging options**
@@ -538,7 +557,7 @@ If this value isn't provided, the subscription endpoint doesn't send keep-alive 
 
 <td>
 
-A lifecycle hook that's called whenever a subscription connection is initiated by a client. [See an example](../data/subscriptions/#authentication-over-websocket)
+A lifecycle hook that's called whenever a subscription connection is initiated by a client. [See an example](../data/subscriptions/#example-authentication-with-onconnect)
 </td>
 </tr>
 
@@ -759,6 +778,27 @@ Unlike [`applyMiddleware`](#applymiddleware), `getMiddleware` does _not_ automat
 
 The `getMiddleware` method takes the same options as [`applyMiddleware`](#applymiddleware), **except** the `app` option.
 
+#### `stop`
+
+`ApolloServer.stop()` is an async method that tells all of Apollo Server's background tasks to complete. It calls and awaits all [`serverWillStop` plugin handlers](../integrations/plugins/#serverwillstop) (including the [usage reporting plugin](./plugin/usage-reporting/)'s handler, which sends a final usage report to Apollo Studio). This method takes no arguments.
+
+If your server is a [federated gateway](https://www.apollographql.com/docs/federation/gateway/), `stop` also stops gateway-specific background activities, such as polling for updated service configuration.
+
+In some circumstances, Apollo Server calls `stop` automatically when the process receives a `SIGINT` or `SIGTERM` signal. See the [`stopOnTerminationSignals` constructor option](#stoponterminationsignals) for details.
+
+If you're using the `apollo-server` package (which handles setting up an HTTP server for you), this method first stops the HTTP server. Specifically, it:
+
+* Stops listening for new connections
+* Closes idle connections (i.e., connections with no current HTTP request)
+* Closes active connections whenever they become idle
+* Waits for all connections to be closed
+
+If any connections remain active after a grace period (10 seconds by default), Apollo Server forcefully closes those connections. You can configure this grace period with the [`stopGracePeriodMillis` constructor option](#stopgraceperiodmillis).
+
+If you're using a [middleware package](../integrations/middleware/) instead of `apollo-server`, you should stop your HTTP server before calling `ApolloServer.stop()`.
+
+---
+
 ## `gql`
 
 A [template literal tag](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) for wrapping GraphQL strings, such as schema definitions:
@@ -775,6 +815,7 @@ const typeDefs = gql`
 
 This converts GraphQL strings into the format that Apollo libraries expect when working with operations and schemas. It also helps tools identify when a string contains GraphQL language (such as to enable syntax highlighting).
 
+---
 
 ## `makeExecutableSchema`
 
@@ -783,6 +824,8 @@ Builds a schema from provided type definitions and resolvers.
 The [`ApolloServer` constructor](#constructor) automatically calls this method using the `typeDefs` and `resolvers` options you provide, so in most cases you don't need to call it yourself.
 
 This method is defined in the `graphql-tools` library and is re-exported from `apollo-server` as a convenience. [See its documentation here.](./graphql-tools/#makeexecutableschemaoptions)
+
+---
 
 ## `addMockFunctionsToSchema`
 
@@ -837,6 +880,7 @@ addMockFunctionsToSchema({
   preserveResolvers: false,
 });
 ```
+---
 
 ## `graphql-tools` exports
 

@@ -1,9 +1,11 @@
-// Note: express is only used if you use the ApolloServer.listen API to create
-// an express app for you instead of applyMiddleware (which you might not even
-// use with express). The dependency is unused otherwise, so don't worry if
-// you're not using express or your version doesn't quite match up.
+// This is the "batteries-included" version of `apollo-server-express`. It
+// handles creating the Express app and HTTP server for you (using whatever
+// version of `express` its dependency pulls in). If you need to customize the
+// Express app or HTTP server at all, you just use `apollo-server-express`
+// instead.
 import express from 'express';
 import http from 'http';
+import stoppable from 'stoppable';
 import {
   ApolloServer as ApolloServerBase,
   CorsOptions,
@@ -23,19 +25,22 @@ export interface ServerInfo {
 }
 
 export class ApolloServer extends ApolloServerBase {
-  private httpServer?: http.Server;
+  private httpServer?: stoppable.StoppableServer;
   private cors?: CorsOptions | boolean;
   private onHealthCheck?: (req: express.Request) => Promise<any>;
+  private stopGracePeriodMillis: number;
 
   constructor(
     config: ApolloServerExpressConfig & {
       cors?: CorsOptions | boolean;
       onHealthCheck?: (req: express.Request) => Promise<any>;
+      stopGracePeriodMillis?: number;
     },
   ) {
     super(config);
     this.cors = config && config.cors;
     this.onHealthCheck = config && config.onHealthCheck;
+    this.stopGracePeriodMillis = config?.stopGracePeriodMillis ?? 10_000;
   }
 
   private createServerInfo(
@@ -113,13 +118,23 @@ export class ApolloServer extends ApolloServerBase {
     });
 
     const httpServer = http.createServer(app);
-    this.httpServer = httpServer;
+    // `stoppable` adds a `.stop()` method which:
+    // - closes the server (ie, stops listening)
+    // - closes all connections with no active requests
+    // - continues to close connections when their active request count drops to
+    //   zero
+    // - in 10 seconds (configurable), closes all remaining active connections
+    // - calls its callback once there are no remaining active connections
+    //
+    // If you don't like this behavior, use apollo-server-express instead of
+    // apollo-server.
+    this.httpServer = stoppable(httpServer, this.stopGracePeriodMillis);
 
     if (this.subscriptionServerOptions) {
       this.installSubscriptionHandlers(httpServer);
     }
 
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       httpServer.once('listening', resolve);
       // If the user passed a callback to listen, it'll get called in addition
       // to our resolver. They won't have the ability to get the ServerInfo
@@ -133,7 +148,7 @@ export class ApolloServer extends ApolloServerBase {
   public async stop() {
     if (this.httpServer) {
       const httpServer = this.httpServer;
-      await new Promise(resolve => httpServer.close(resolve));
+      await new Promise<void>((resolve) => httpServer.stop(() => resolve()));
       this.httpServer = undefined;
     }
     await super.stop();
