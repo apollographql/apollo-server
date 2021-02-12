@@ -55,7 +55,7 @@
     "graphql-extensions": "file:packages/graphql-extensions"
   },
   "devDependencies": {
-    "@apollographql/graphql-upload-8-fork": "^8.1.3",
+    "@apollographql/graphql-upload-8-fork": "8.1.3",
     "@types/async-retry": "1.4.2",
     "@types/aws-lambda": "8.10.66",
     "@types/body-parser": "1.19.0",
