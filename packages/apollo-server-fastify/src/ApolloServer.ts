@@ -11,7 +11,7 @@ import {
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { IncomingMessage, OutgoingMessage, ServerResponse, Server } from 'http';
 import { graphqlFastify } from './fastifyApollo';
-import { GraphQLOperation } from 'graphql-upload';
+import type { GraphQLOperation } from '@apollographql/graphql-upload-8-fork';
 
 const kMultipart = Symbol('multipart');
 const fastJson = require('fast-json-stringify');
