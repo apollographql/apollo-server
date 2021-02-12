@@ -1,0 +1,474 @@
+---
+title: Error handling
+description: Making errors actionable on the client and server
+---
+
+import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
+
+Whenever Apollo Server encounters errors while processing a GraphQL operation, its response to the client includes an `errors` array that contains each error that occurred. Each error in the array has an `extensions` field that provides additional useful information, including an error `code` and an `exception.stacktrace`.
+
+Here's an example error response caused by misspelling the `__typename` field in a query:
+
+
+<ExpansionPanel title="Click to expand">
+
+```json
+{
+  "errors":[
+    {
+      "message":"Cannot query field \"__typenam\" on type \"Query\".",
+      "locations":[
+        {
+          "line":1,
+          "column":2
+        }
+      ],
+      "extensions":{
+        "code":"GRAPHQL_VALIDATION_FAILED",
+        "exception":{
+          "stacktrace":[
+            "GraphQLError: Cannot query field \"__typenam\" on type \"Query\".",
+            "    at Object.Field (/my_project/node_modules/graphql/validation/rules/FieldsOnCorrectTypeRule.js:48:31)",
+            "    ...additional lines...",
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+</ExpansionPanel>
+
+To help with debugging, Apollo Server defines error subclasses that represent different types of errors that can occur while handling a GraphQL operation (such as `SyntaxError` and `ValidationError`). These subclasses each return a different [error code](#error-codes), which enables requesting clients to respond differently to different error types.
+
+These built-in error subclasses inherit from the generic `ApolloError` class, and they're all defined in [the `apollo-server-errors` package](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-errors/src/index.ts). You can also [create your own custom errors and codes](#custom-errors).
+
+## Error codes
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Code /<br/>Subclass</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `GRAPHQL_PARSE_FAILED`
+
+`SyntaxError`
+</td>
+<td>
+
+The GraphQL operation string contains a syntax error.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `GRAPHQL_VALIDATION_FAILED`
+
+`ValidationError`
+</td>
+<td>
+
+The GraphQL operation is not valid against the server's schema.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `BAD_USER_INPUT`
+
+`UserInputError`
+</td>
+<td>
+
+The GraphQL operation includes an invalid value for a field argument.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `UNAUTHENTICATED`
+
+`AuthenticationError`
+</td>
+<td>
+
+The server failed to authenticate with a required data source, such as a REST API.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `FORBIDDEN`
+
+`ForbiddenError`
+</td>
+<td>
+
+The server was unauthorized to access a required data source, such as a REST API.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `PERSISTED_QUERY_NOT_FOUND`
+
+`PersistedQueryNotFoundError`
+</td>
+<td>
+
+A client sent the hash of a query string to execute via [automatic persisted queries](../performance/apq/), but the query was not in the APQ cache.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `PERSISTED_QUERY_NOT_SUPPORTED`
+
+`PersistedQueryNotSupportedError`
+</td>
+<td>
+
+A client sent the hash of a query string to execute via [automatic persisted queries](../performance/apq/), but the server has disabled APQ.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `INTERNAL_SERVER_ERROR`
+
+None
+</td>
+<td>
+
+An unspecified error occurred.
+
+This is the default error code returned by any `ApolloError` instance that doesn't specify a different code.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+
+## Throwing errors
+
+Apollo Server throws errors of most built-in types automatically when applicable. For example, it throws a `ValidationError` whenever an incoming operation isn't valid against the server's schema.
+
+Your resolvers can also throw errors in situations where Apollo Server doesn't do so automatically.
+
+For example, this resolver throws a [`UserInputError`](#bad_user_input) if the integer value provided for a user's ID is less than `1`:
+
+<ExpansionPanel title="Click to expand">
+
+```js{20-25}
+const {
+  ApolloServer,
+  gql,
+  UserInputError
+} = require('apollo-server');
+
+const typeDefs = gql`
+  type Query {
+    userWithID(id: ID!): User
+  }
+
+  type User {
+    id: ID!
+    name: String!
+  }
+`;
+
+const resolvers = {
+  Query: {
+    userWithID: (parent, args, context) => {
+      if (args.id <ExpansionPanel 1) {
+        throw new UserInputError('Invalid argument value');
+      }
+      // ...fetch correct user...
+    },
+  },
+};
+```
+
+</ExpansionPanel>
+
+If a resolver throws an error that is _not_ an `ApolloError` instance, that error is converted to a generic `ApolloError` with an `extensions` field that includes a `stacktrace` and `code` (specifically [`INTERNAL_SERVER_ERROR`](#internal_server_error)), along with other relevant error details.
+
+### Including custom error details
+
+Whenever you throw an `ApolloError`, you can add arbitrary fields to the error's `extensions` object to provide additional context to the client. You specify these fields in an object you provide to the error's constructor.
+
+This example builds on the one above by adding the name of the GraphQL argument that was invalid:
+
+<ExpansionPanel title="Click to expand">
+
+```js{22-24}
+const {
+  ApolloServer,
+  gql,
+  UserInputError
+} = require('apollo-server');
+
+const typeDefs = gql`
+  type Query {
+    userWithID(id: ID!): User
+  }
+
+  type User {
+    id: ID!
+    name: String!
+  }
+`;
+
+const resolvers = {
+  Query: {
+    userWithID: (parent, args, context) => {
+      if (args.id <ExpansionPanel 1) {
+        throw new UserInputError('Invalid argument value', {
+          argumentName: 'id'
+        });
+      }
+      // ...fetch correct user...
+    },
+  },
+};
+```
+
+</ExpansionPanel>
+
+This results in a response like the following:
+
+<ExpansionPanel title="Click to expand">
+
+```json{15}
+{
+  "errors": [
+    {
+      "message": "Invalid argument value",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "userWithID"
+      ],
+      "extensions": {
+        "argumentName": "id",
+        "code": "BAD_USER_INPUT",
+        "exception": {
+          "argumentName": "id",
+          "stacktrace": [
+            "UserInputError: Invalid argument value",
+            "    at userWithID (/my-project/index.js:25:13)",
+            "    ...more lines...",
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+</ExpansionPanel>
+
+## Custom errors
+
+You can create a custom error by defining your own subclass of `ApolloError`, or by initializing an `ApolloError` object directly:
+
+#### Subclass with custom error code
+
+```ts
+import { ApolloError } from 'apollo-server-errors';
+
+export class MyError extends ApolloError {
+  constructor(message: string) {
+    super(message, 'MY_ERROR_CODE');
+
+    Object.defineProperty(this, 'name', { value: 'MyError' });
+  }
+}
+
+throw new MyError('My error message')
+```
+
+#### Direct initialization
+
+```ts
+import { ApolloError } from 'apollo-server-errors';
+
+throw new ApolloError('My error message', 'MY_ERROR_CODE', myCustomDetailsObject);
+```
+
+
+## Masking and logging errors
+
+> To disable stacktraces for production, pass `debug: false` to the Apollo Server constructor or set the `NODE_ENV` environment variable to 'production' or 'test'. Note that this will make the stacktrace unavailable to your application. If you want to log the stacktrace, but not send it in the response to the client, see [Masking and logging errors](#masking-and-logging-errors) below.
+
+### For client responses
+
+The `ApolloServer` constructor accepts a `formatError` function that is run on each error before it's passed back to the client. You can use this function to mask particular errors, as well as for logging.
+
+> The `formatError` function does _not_ modify errors that are sent to Apollo Studio as part of metrics reporting. See [For Apollo Studio reporting](#for-apollo-studio-reporting).
+
+This example returns a more generic error whenever the original error's message begins with `Database Error: `:
+
+```js{4-12}
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  formatError: (err) => {
+    // Don't give the specific errors to the client.
+    if (err.message.startsWith("Database Error: ")) {
+      return new Error('Internal server error');
+    }
+
+    // Otherwise return the original error. The error can also
+    // be manipulated in other ways, as long as it's returned.
+    return err;
+  },
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
+
+The error instance received by `formatError` (a `GraphQLError`) contains an `originalError` property, which represents the original error thrown in the resolver. You can use this property to obtain the `instanceof` the error class, such as `AuthenticationError` or `ValidationError`:
+
+```js
+  formatError(err) {
+    if (err.originalError instanceof AuthenticationError) {
+      return new Error('Different authentication error message!');
+    }
+  },
+```
+
+> To make context-specific adjustments to the error received by `formatError` (such as localization or personalization), consider [creating a plugin](../integrations/plugins/) that uses the `didEncounterErrors` lifecycle event to attach additional properties to the error. These properties can be accessed from `formatError`.
+
+### For Apollo Studio reporting
+
+You can use Apollo Studio to analyze your server's error rates. If you connect Apollo Server to Studio, all errors are sent to Studio by default. If you _don't_ want certain error information to be sent to Studio (either because the error is unimportant or because certain information is confidential), you can modify or redact errors entirely before they're transmitted.
+
+To accomplish this, you can provide a `rewriteError` function to the [usage reporting plugin](../api/plugin/usage-reporting/).
+
+> The usage reporting plugin is installed automatically with its default configuration if you provide an Apollo API key to Apollo Server. To define a custom `rewriteError` function, you need to install the plugin explicitly with a custom configuration, as shown in examples below.
+
+Your `rewriteError` function is called for each error (a `GraphQLError` or an `ApolloError`) to be reported to Studio. The error is provided as the function's first argument. The function can either:
+
+* Return a modified form of the error (e.g., by changing the `err.message` to remove potentially sensitive information)
+* Return `null` to prevent the error from being reported entirely
+
+>**For federated graphs**, instead define `rewriteError` in each implementing service's [inline trace plugin](../api/plugin/inline-trace/#rewriteerror). Do not define it in the gateway.
+
+#### Example: Ignoring common low-severity errors
+
+Let's say our server is `throw`ing an `AuthenticationError` whenever an incorrect password is provided. We can avoid reporting these errors to Apollo Studio by defining `rewriteError`, like so:
+
+```js{7-17}
+const { ApolloServer, AuthenticationError } = require("apollo-server");
+const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [
+    ApolloServerPluginUsageReporting({
+      rewriteError(err) {
+        // Return `null` to avoid reporting `AuthenticationError`s
+        if (err instanceof AuthenticationError) {
+          return null;
+        }
+
+        // All other errors will be reported.
+        return err;
+      }
+    }),
+  ],
+});
+```
+
+This example configuration ensures that any `AuthenticationError` that's thrown within a resolver is only reported to the client, and never sent to Apollo Studio. All other errors are transmitted to Studio normally.
+
+#### Example: Filtering errors based on other properties
+
+When generating an error (e.g., `new ApolloError("Failure!")`), the error's `message` is the most common property (in this case it's `Failure!`). However, any number of properties can be attached to the error (such as a `code` property).
+
+We can check these properties when determining whether an error should be reported to Apollo Studio using the `rewriteError` function as follows:
+
+```js{7-17}
+const { ApolloServer } = require("apollo-server");
+const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [
+    ApolloServerPluginUsageReporting({
+      rewriteError(err) {
+        // Using a more stable, known error property (e.g. `err.code`) would be
+        // more defensive, however checking the `message` might serve most needs!
+        if (err.message && err.message.startsWith("Known error message")) {
+          return null;
+        }
+
+        // All other errors should still be reported!
+        return err;
+      }
+    }),
+  ],
+});
+```
+
+This example configuration ensures that any error that starts with `Known error message` is not transmitted to Apollo Studio, but all other errors are sent as normal.
+
+#### Example: Redacting the error message
+
+If it is necessary to change an error prior to reporting it to Apollo Studio (for example, if there is personally identifiable information in the error `message`), the `rewriteError` function can also help.
+
+Consider an example where the error contains a piece of information like an API key:
+
+```js
+throw new ApolloError("The x-api-key:12345 doesn't have sufficient privileges.");
+```
+
+The `rewriteError` function can ensure that such information is not sent to Apollo Studio and potentially revealed outside its intended scope:
+
+```js{7-13}
+const { ApolloServer } = require("apollo-server");
+const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [
+    ApolloServerPluginUsageReporting({
+      rewriteError(err) {
+        // Make sure that a specific pattern is removed from all error messages.
+        err.message = err.message.replace(/x-api-key:[A-Z0-9-]+/, "REDACTED");
+        return err;
+      }
+    }),
+  ],
+});
+```
+
+In this case, the error above is reported to Apollo Studio as:
+
+```
+The REDACTED doesn't have sufficient privileges.
+```
