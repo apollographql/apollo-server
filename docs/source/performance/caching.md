@@ -1,61 +1,97 @@
 ---
 title: Caching
-description: Automatically set HTTP cache headers and save full responses in a cache.
+description: Control server-side caching behavior on a per-field basis
 ---
 
-Production apps often rely on caching for scalability.
+Caching query results in Apollo Server can significantly improve response times for commonly executed queries.
 
-A single GraphQL request consists of running many different resolvers, each of which can have different caching semantics. Some fields may be uncacheable. Some fields may be cacheable for a few seconds, and others for a few hours. Some fields may have values that are the same for all users of your app, and other fields may vary based on the current session.
+However, when caching results, it's important to understand:
 
-Apollo Server provides a mechanism for server authors to declare fine-grained cache control parameters on individual GraphQL types and fields, both statically inside your schema using the `@cacheControl` directive and dynamically within your resolvers using the `info.cacheControl.setCacheHint` API.
+* Which fields of your schema can be cached
+* How long a cached value should remain valid
+* Whether a cached value is global or user-specific
 
-For each request, Apollo Server combines all the cache hints from all the queried fields and uses it to power several caching features. These features include **HTTP caching headers** for CDNs and browsers, and a GraphQL **full response cache**.
+These details can vary significantly, even between fields of a single type.
 
-## Defining cache hints
+Apollo Server enables you to define cache control settings _per schema field_. You can do this [statically in your schema definition](#in-your-schema-static), or [dynamically in your resolvers](#in-your-resolvers-dynamic). Apollo Server combines _all_ of your defined settings to power its caching features, including:
 
-You can define cache hints *statically* in your schema and *dynamically* in your resolvers.
+* HTTP caching headers for CDNs and browsers
+* A GraphQL full responses cache
 
-> **Important note on compatibility:** Setting cache hints is currently incompatible with the `graphql-tools` implementation of schema stitching, because cache hints are not appropriately communicated from one service to the other.
+## Control settings
 
-### Adding cache hints statically in your schema
+### In your schema (static)
 
-The easiest way to add cache hints is directly in your schema using the `@cacheControl` directive. Apollo Server automatically adds the definition of the `@cacheControl` directive to your schema when you create a new `ApolloServer` object with `typeDefs` and `resolvers`. Hints look like this:
+Apollo Server defines the `@cacheControl` directive, which you can use in your schema to define caching behavior for a single field, or for _all_ fields that return a particular _type_.
 
-```graphql
-type Post @cacheControl(maxAge: 240) {
-  id: Int!
+This directive accepts the following arguments:
+
+| Name | Description |
+|------|-------------|
+| `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-a-default-maxage). |
+| `scope` | If `PRIVATE`, cached values are specific to a single user. The default value is `PUBLIC`. |
+
+Use `@cacheControl` for fields that should always be cached with the same settings. If caching settings might change at runtime, instead use the [dynamic method](#in-your-resolvers-dynamic).
+
+#### Field-level settings
+
+This example defines cache control settings for two fields of the `Post` type: `votes` and `readByCurrentUser`:
+
+```graphql{5,7}:title=schema.graphql
+type Post {
+  id: ID!
   title: String
   author: Author
   votes: Int @cacheControl(maxAge: 30)
   comments: [Comment]
   readByCurrentUser: Boolean! @cacheControl(scope: PRIVATE)
 }
+```
 
-type Comment @cacheControl(maxAge: 1000) {
-  post: Post!
-}
+In this example:
 
-type Query {
-  latestPost: Post @cacheControl(maxAge: 10)
+* The value of a `Post`'s `votes` field is cached for a maximum of 30 seconds.
+* The value of a `Post`'s `readByCurrentUser` field can be cached _indefinitely_, but its visibility is limited to a single user.
+
+#### Type-level settings
+
+This example defines cache control settings for _all_ schema fields that return a `Post` object:
+
+```graphql:title=schema.graphql
+type Post @cacheControl(maxAge: 240) {
+  id: Int!
+  title: String
+  author: Author
+  votes: Int
+  comments: [Comment]
+  readByCurrentUser: Boolean!
 }
 ```
 
-You can apply `@cacheControl` to an individual field or to a type.
+If this schema also defines a type with a field that returns a `Post` (or a list of `Post`s), that field's value is cached for a maximum of 240 seconds:
 
-Hints on a field describe the cache policy for that field itself; for example, `Post.votes` can be cached for 30 seconds.
+```graphql:title=schema.graphql
+type Comment {
+  post: Post! # Cached for up to 240 seconds
+  body: String!
+}
+```
 
-Hints on a type apply to all fields that *return* objects of that type (possibly wrapped in lists and non-null specifiers). For example, the hint `@cacheControl(maxAge: 240)` on `Post` applies to the field `Comment.post`, and the hint `@cacheControl(maxAge:1000)` on `Comment` applies to the field `Post.comments`.
+**Note that [field-level settings](#field-level-settings) override type-level settings.** In the following case, `Comment.post` is cached for 120 seconds, _not_ 240 seconds:
 
-Hints on fields override hints specified on the target type. For example, the hint `@cacheControl(maxAge: 10)` on `Query.latestPost` takes precedence over the hint `@cacheControl(maxAge: 240)` on `Post`.
+```graphql:title=schema.graphql
+type Comment {
+  post: Post! @cacheControl(maxAge: 120)
+  body: String!
+}
+```
 
-See [below](#setting-a-default-maxage) for the semantics of fields which don't have `maxAge` set on them (statically or dynamically).
+### In your resolvers (dynamic)
 
-`@cacheControl` can specify `maxAge` (in seconds, like in an HTTP `Cache-Control` header) and `scope`, which can be `PUBLIC` (the default) or `PRIVATE`.
+You can decide how to cache a particular field's result _while_ you're resolving it. To support this, Apollo Server provides a `cacheControl` object in the [`info` parameter](../data/resolvers/#resolver-arguments) that's passed to every resolver.
 
+The `cacheControl` object includes a `setCacheHint` method, which you call like so:
 
-### Adding cache hints dynamically in your resolvers
-
-If you won't know if a field is cacheable until you've actually resolved it, you can use the dynamic API to set hints in your resolvers:
 
 ```javascript
 const resolvers = {
@@ -68,14 +104,24 @@ const resolvers = {
 }
 ```
 
-If you're using TypeScript, you need the following to teach TypeScript that the GraphQL `info` object has a `cacheControl` field:
-```javascript
-import 'apollo-cache-control';
-```
+The `setCacheHint` method accepts an object with the same fields as [the `@cacheControl` directive](#in-your-schema-static).
 
-### Setting a default `maxAge`
+> **If you're using TypeScript,** you need to add the following `import` statement to indicate that the `info` parameter includes a `cacheControl` field:
+>
+> ```javascript
+> import 'apollo-cache-control';
+> ```
 
-By default, root fields (ie, fields on `Query` and `Mutation`) and fields returning object and interface types are considered to have a `maxAge` of 0 (ie, uncacheable) if they don't have a static or dynamic cache hint. (Non-root scalar fields inherit their cacheability from their parent, so that in the common case of an object type with a bunch of strings and numbers which all have the same cacheability, you just need to declare the hint on the object type.)
+### Default behavior
+
+By default, the following schema fields have a `maxAge` of `0` (meaning they are _not_ cached unless you specify otherwise):
+
+* All root fields (i.e., the fields of the `Query` and `Mutation` objects)
+* Fields that return an object or interface type
+
+Scalar fields inherit their default cache behavior (including `maxAge`) from their parent object type. This enables you to define cache behavior for _most_ scalars at the [type level](#type-level-settings), while overriding that behavior in individual cases at the [field level](#field-level-settings).
+
+#### Setting a default `maxAge`
 
 The power of cache hints comes from being able to set them precisely to different values on different types and fields based on your understanding of your implementation's semantics. But when getting started with the cache control API, you might just want to apply the same `maxAge` to most of your resolvers.
 
