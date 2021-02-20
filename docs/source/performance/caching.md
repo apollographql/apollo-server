@@ -16,8 +16,6 @@ These details can vary significantly, even among the fields of a single object t
 
 Apollo Server enables you to define cache control settings _per schema field_. You can do this [statically in your schema definition](#in-your-schema-static), or [dynamically in your resolvers](#in-your-resolvers-dynamic).
 
-After you define these settings, Apollo Server can use them to [cache results in stores](#caching-a-response) like Redis or Memcached, or to [provide `Cache-Control` headers to your CDN](#serving-http-cache-headers-for-cdns).
-
 > Apollo Server never caches empty responses or responses that contain GraphQL errors.
 
 
@@ -38,7 +36,7 @@ Use `@cacheControl` for fields that should always be cached with the same settin
 
 > **Important:** Apollo Server assigns each GraphQL response a `maxAge` according to the _lowest_ `maxAge` among included fields. For details, see [Response-level caching](#response-level-caching).
 
-#### Field-level
+#### Field-level definitions
 
 This example defines cache control settings for two fields of the `Post` type: `votes` and `readByCurrentUser`:
 
@@ -58,7 +56,7 @@ In this example:
 * The value of a `Post`'s `votes` field is cached for a maximum of 30 seconds.
 * The value of a `Post`'s `readByCurrentUser` field is cached for a maximum of 10 seconds, and its visibility is restricted to a single user.
 
-#### Type-level
+#### Type-level definitions
 
 This example defines cache control settings for _all_ schema fields that return a `Post` object:
 
@@ -82,7 +80,7 @@ type Comment {
 }
 ```
 
-**Note that [field-level settings](#field-level-settings) override type-level settings.** In the following case, `Comment.post` is cached for a maximum of 120 seconds, _not_ 240 seconds:
+**Note that [field-level settings](#field-level-definitions) override type-level settings.** In the following case, `Comment.post` is cached for a maximum of 120 seconds, _not_ 240 seconds:
 
 ```graphql:title=schema.graphql
 type Comment {
@@ -124,7 +122,7 @@ By default, the following schema fields have a `maxAge` of `0` (meaning their va
 * All **root fields** (i.e., the fields of the `Query` and `Mutation` objects)
 * Fields that return an object or interface type
 
-Scalar fields inherit their default cache behavior (including `maxAge`) from their parent object type. This enables you to define cache behavior for _most_ scalars at the [type level](#type-level-settings), while overriding that behavior in individual cases at the [field level](#field-level-settings).
+Scalar fields inherit their default cache behavior (including `maxAge`) from their parent object type. This enables you to define cache behavior for _most_ scalars at the [type level](#type-level-definitions), while overriding that behavior in individual cases at the [field level](#field-level-definitions).
 
 As a result of these defaults, **no schema fields are cached by default**.
 
@@ -214,7 +212,7 @@ In addition to [the `sessionId` function](#identifying-users-for-private-respons
 | `shouldReadFromCache` | If this function returns `false`, Apollo Server _skips_ the cache for the incoming operation, even if a valid response is available. |
 | `shouldWriteToCache` | If this function returns `false`, Apollo Server doesn't cache its response for the incoming operation, even if the response's `maxAge` is greater than `0`. |
 
-In addition to the [`Cache-Control` HTTP header](#serving-http-cache-headers), the response cache plugin will also set the `Age` HTTP header to the number of seconds the value has been sitting in the cache.
+In addition to the [`Cache-Control` HTTP header](#cache-control-for-cdns), the response cache plugin will also set the `Age` HTTP header to the number of seconds the value has been sitting in the cache.
 
 
 ## HTTP response headers
@@ -233,7 +231,7 @@ Cache-Control: max-age=60, private
 
 If you run Apollo Server behind a CDN or another caching proxy, it can use this header's value to cache responses appropriately.
 
-> Because CDNs and caching proxies only cache GET requests (not POST requests), we recommend using [automatic persisted queries](./apq/) with the [`useGETForHashedQueries` option](./apq/#) enabled.
+> Because CDNs and caching proxies only cache GET requests (not POST requests), we recommend using [automatic persisted queries](./apq/) with the [`useGETForHashedQueries` option](./apq/) enabled.
 
 #### Disabling `Cache-Control`
 
