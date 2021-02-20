@@ -109,7 +109,7 @@
     "ioredis": "4.22.0",
     "jest": "25.5.4",
     "jest-config": "25.5.4",
-    "jest-cucumber": "2.0.13",
+    "jest-cucumber": "3.0.1",
     "jest-junit": "10.0.0",
     "js-sha256": "0.9.0",
     "koa": "2.13.1",
