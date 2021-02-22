@@ -1,5 +1,6 @@
 import hapi from 'hapi';
 import { parseAll } from 'accept';
+import typeis from 'type-is';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -19,9 +20,9 @@ function handleFileUploads(uploadsConfig: FileUploadOptions) {
   return async (request: hapi.Request, _h?: hapi.ResponseToolkit) => {
     if (
       typeof processFileUploads === 'function' &&
-      request.mime === 'multipart/form-data'
+      typeis(request.raw.req, ['multipart/form-data'])
     ) {
-      Object.defineProperty(request, 'payload', {
+      Object.defineProperty(request, 'fileUploads', {
         value: await processFileUploads(
           request.raw.req,
           request.raw.res,

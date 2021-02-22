@@ -49,7 +49,7 @@ const graphqlHapi: IPlugin = {
               query:
                 request.method === 'post'
                   ? // TODO type payload as string or Record
-                    (request.payload as any)
+                    ((request as any).fileUploads ?? request.payload as any)
                   : request.query,
               request: convertNodeHttpToRequest(request.raw.req),
             },
