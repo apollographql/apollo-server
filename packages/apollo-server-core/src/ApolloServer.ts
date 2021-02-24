@@ -1015,6 +1015,7 @@ export class ApolloServerBase {
           headers: new Headers(),
         },
       },
+      debug: options.debug,
     };
 
     return processGraphQLRequest(options, requestCtx);
