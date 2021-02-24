@@ -11,8 +11,19 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+- The `debug` option to `new ApolloServer` (which adds stack traces to errors) now affects errors that come from requests executed with `server.executeOperation` (and its wrapper `apollo-server-testing`), instead of just errors that come from requests executed over HTTP. [Issue #4107](https://github.com/apollographql/apollo-server/issues/4107) [PR #4948](https://github.com/apollographql/apollo-server/pull/4948)
+
+## v2.21.0
+
+- Apollo Server can now be installed with `graphql@15` without causing peer dependency errors or warnings. (Apollo Server has a [file upload](https://www.apollographql.com/docs/apollo-server/data/file-uploads/) feature which was implemented as a wrapper around the `graphql-upload` package. We have been unable to upgrade our dependency on that package due to backwards-incompatible changes in later versions, and the version we were stuck on did not allow `graphql@15` as a peer dependency. We have now switched to a fork of that old version called `@apollographql/graphql-upload-8-fork` that allows `graphql@15`.) Also bump the `graphql-tools` dependency from 4.0.0 to 4.0.8 for `graphql@15` support. [Issue #4865](https://github.com/apollographql/apollo-server/issues/4865)
+
+## v2.20.0
+
+- `apollo-server`: Previously, `ApolloServer.stop()` functioned like `net.Server.close()` in that it did not close idle connections or close active connections after a grace period. This meant that trying to `await ApolloServer.stop()` could hang indefinitely if there are open connections. Now, this method closes idle connections, and closes active connections after 10 seconds. The grace period can be adjusted by passing the new `stopGracePeriodMillis` option to `new ApolloServer`, or disabled by passing `Infinity` (though it will still close idle connections). Note that this only applies to the "batteries-included" `ApolloServer` in the `apollo-server` package with its own built-in Express and HTTP servers. [PR #4908](https://github.com/apollographql/apollo-server/pull/4908) [Issue #4097](https://github.com/apollographql/apollo-server/issues/4097)
+- `apollo-server-core`: When used with `ApolloGateway`, `ApolloServer.stop` now invokes `ApolloGateway.stop`. (This makes sense because `ApolloServer` already invokes `ApolloGateway.load` which is what starts the behavior stopped by `ApolloGateway.stop`.) Note that `@apollo/gateway` 0.23 will expect to be stopped in order for natural program shutdown to occur. [PR #4907](https://github.com/apollographql/apollo-server/pull/4907) [Issue #4428](https://github.com/apollographql/apollo-server/issues/4428)
 - `apollo-server-core`: Avoid instrumenting schemas for the old `graphql-extensions` library unless extensions are provided. [PR #4893](https://github.com/apollographql/apollo-server/pull/4893) [Issue #4889](https://github.com/apollographql/apollo-server/issues/4889)
-- `apollo-server-plugin-response-cache`: The `shouldReadFromCache` and `shouldWriteToCache` hooks were always documented as returning `ValueOrPromise<boolean>` (ie, that they could be either sync or async), but they actually only worked if they returned a bool. Now they can be either sync or async as intended. [PR #4890](http://github.com/apollographql/apollo-server/pull/4890) [Issue #4886](https://github.com/apollographql/apollo-server/issues/4886)
+- `apollo-server-plugin-response-cache@0.6.0`: The `shouldReadFromCache` and `shouldWriteToCache` hooks were always documented as returning `ValueOrPromise<boolean>` (ie, that they could be either sync or async), but they actually only worked if they returned a bool. Now they can be either sync or async as intended. [PR #4890](https://github.com/apollographql/apollo-server/pull/4890) [Issue #4886](https://github.com/apollographql/apollo-server/issues/4886)
+- `apollo-datasource-rest@0.10.0`: The `RESTDataSource.trace` method is now `protected` instead of `private` to allow more control over logging and metrics. [PR #3940](https://github.com/apollographql/apollo-server/pull/3940)
 
 ## v2.19.2
 
@@ -89,7 +100,6 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## v2.15.1
 
 - The default branch of the repository has been changed to `main`.  As this changed a number of references in the repository's `package.json` and `README.md` files (e.g., for badges, links, etc.), this necessitates a release to publish those changes to npm. [PR #4302](https://github.com/apollographql/apollo-server/pull/4302)
-- `apollo-datasource-rest`: changed `trace` method in `RESTDataSource` to `protected` to allow implementation of custom metrics.
 
 ## v2.15.0
 
