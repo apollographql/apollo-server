@@ -4,11 +4,11 @@ import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 // change during runtime.  In the event that we're using a version of Node.js
 // less than 8.5.0, we'll
 const processFileUploads:
-  | typeof import('graphql-upload').processRequest
+  | typeof import('@apollographql/graphql-upload-8-fork').processRequest
   | undefined = (() => {
   if (runtimeSupportsUploads) {
-    return require('graphql-upload')
-      .processRequest as typeof import('graphql-upload').processRequest;
+    return require('@apollographql/graphql-upload-8-fork')
+      .processRequest as typeof import('@apollographql/graphql-upload-8-fork').processRequest;
   }
   return undefined;
 })();

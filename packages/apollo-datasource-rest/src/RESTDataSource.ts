@@ -249,7 +249,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     const cacheKey = this.cacheKeyFor(request);
 
     const performRequest = async () => {
-      return this.trace(`${options.method || 'GET'} ${url}`, async () => {
+      return this.trace(request, async () => {
         const cacheOptions = options.cacheOptions
           ? options.cacheOptions
           : this.cacheOptionsFor && this.cacheOptionsFor.bind(this);
@@ -278,10 +278,11 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     }
   }
 
-  private async trace<TResult>(
-    label: string,
+  protected async trace<TResult>(
+    request: Request,
     fn: () => Promise<TResult>,
   ): Promise<TResult> {
+
     if (process && process.env && process.env.NODE_ENV === 'development') {
       // We're not using console.time because that isn't supported on Cloudflare
       const startTime = Date.now();
@@ -289,6 +290,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
         return await fn();
       } finally {
         const duration = Date.now() - startTime;
+        const label = `${request.method || 'GET'} ${request.url}`;
         console.log(`${label} (${duration}ms)`);
       }
     } else {
