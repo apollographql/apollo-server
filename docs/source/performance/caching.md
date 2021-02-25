@@ -4,28 +4,38 @@ sidebar_title: Caching
 description: Configure caching behavior on a per-field basis
 ---
 
-You can cache Apollo Server query results in stores like Redis, Memcached, or an in-process cache. This can significantly improve response times for commonly executed queries.
+Apollo Server enables you to define cache control settings (`maxAge` and `scope`) for each field in your schema:
 
-However, when caching results, it's important to understand:
+```graphql{5,7}
+type Post {
+  id: ID!
+  title: String
+  author: Author
+  votes: Int @cacheControl(maxAge: 30)
+  comments: [Comment]
+  readByCurrentUser: Boolean! @cacheControl(maxAge: 10, scope: PRIVATE)
+}
+```
+
+ When Apollo Server resolves an operation, it calculates the result's correct cache behavior based on the _most restrictive_ settings among the result's fields. You can then use this calculation to support any form of cache implementation you want, such as by providing it to your CDN via a `Cache-Control` header.
+
+You can define field-level cache settings [statically in your schema definition](#in-your-schema-static) (as shown above) or [dynamically in your resolvers](#in-your-resolvers-dynamic).
+
+## Field settings
+
+When caching operation results, it's important to understand:
 
 * Which fields of your schema can be cached safely
 * How long a cached value should remain valid
 * Whether a cached value is global or user-specific
 
-These details can vary significantly, even among the fields of a single object type.
-
-Apollo Server enables you to define cache control settings _per schema field_. You can do this [statically in your schema definition](#in-your-schema-static), or [dynamically in your resolvers](#in-your-resolvers-dynamic).
-
-> Apollo Server never caches empty responses or responses that contain GraphQL errors.
-
-
-## Field settings
+These details can vary significantly, even among the fields of a single object type. You can specify these details statically in your schema definition or dynamically in your resolvers.
 
 ### In your schema (static)
 
-Apollo Server defines the `@cacheControl` directive, which you can use in your schema to define caching behavior either for a single field, or for _all_ fields that return a particular type.
+Apollo Server defines the `@cacheControl` directive, which you can use in your schema to define caching behavior either for a [single field](#field-level-definitions), or for _all_ fields that return a particular [type](#type-level-definitions).
 
-This directive accepts the following arguments:
+The `@cacheControl` directive accepts the following arguments:
 
 | Name | Description |
 |------|-------------|
@@ -34,7 +44,9 @@ This directive accepts the following arguments:
 
 Use `@cacheControl` for fields that should always be cached with the same settings. If caching settings might change at runtime, instead use the [dynamic method](#in-your-resolvers-dynamic).
 
-> **Important:** Apollo Server assigns each GraphQL response a `maxAge` according to the _lowest_ `maxAge` among included fields. For details, see [Response-level caching](#response-level-caching).
+> **Important:** Apollo Server assigns each GraphQL response a `maxAge` equal to the _lowest_ `maxAge` among included fields. If any field has a `maxAge` of `0`, the response will not be cached at all.
+>
+> Similarly, Apollo Server sets a response's `scope` to `PRIVATE` if _any_ included field is `PRIVATE`.
 
 #### Field-level definitions
 
@@ -143,19 +155,46 @@ const server = new ApolloServer({
 }));
 ```
 
-## Response-level caching
+## Caching with a CDN
 
-Although you configure caching behavior per _schema field_, Apollo Server caches data per _operation response_. In other words, the entirety of a GraphQL operation's response is cached as a single entity.
+Whenever Apollo Server sends an operation response that has a non-zero `maxAge`, it includes a `Cache-Control` HTTP header that describes the response's cache policy.
 
-Because of this, Apollo Server uses the following logic to calculate a response's cache behavior:
+The header has this format:
 
-* The response's `maxAge` is equal to the _lowest_ `maxAge` among _all_ fields included in the response.
-    * Consequently, if _any_ queried field has a `maxAge` of `0`, the entire response is _not cached_.
-* If _any_ queried field has a `scope` of `PRIVATE`, the _entire response_ is considered `PRIVATE` (i.e., restricted to a single user). Otherwise, it's considered `PUBLIC`.
+```
+Cache-Control: max-age=60, private
+```
 
-## Setting up the cache
+If you run Apollo Server behind a CDN or another caching proxy, you can configure it to use this header's value to cache responses appropriately. See your CDN's documentation for details (for example, here's the [documentation for Amazon CloudFront](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html#expiration-individual-objects)).
 
-To set up your cache, you first import the `responseCachePlugin` and provide it to the `ApolloServer` constructor:
+### Using GET requests
+
+Because CDNs and caching proxies only cache GET requests (not POST requests, which Apollo Client sends for all operations by default), we recommend enabling [automatic persisted queries](./apq/) and the [`useGETForHashedQueries` option](./apq/) in Apollo Client.
+
+Alternatively, you can set the `useGETForQueries` option of [HttpLink](https://www.apollographql.com/docs/react/api/link/apollo-link-http) in your `ApolloClient` instance, but **this is less secure** because your query string and GraphQL variables are sent as plaintext URL query parameters.
+
+### Disabling `Cache-Control`
+
+You can prevent Apollo Server from setting `Cache-Control` headers by setting `calculateHttpHeaders` to `false` in the `ApolloServer` constructor:
+
+```js
+const server = new ApolloServer({
+  // ...other options...
+  cacheControl: {
+    calculateHttpHeaders: false,
+  },
+}));
+```
+
+
+
+## Caching with `responseCachePlugin` (advanced)
+
+You can cache Apollo Server query responses in stores like Redis, Memcached, or Apollo Server's in-memory cache.
+
+### In-memory cache setup
+
+To set up your in-memory response cache, you first import the `responseCachePlugin` and provide it to the `ApolloServer` constructor:
 
 ```javascript
 import responseCachePlugin from 'apollo-server-plugin-response-cache';
@@ -166,7 +205,15 @@ const server = new ApolloServer({
 });
 ```
 
-This plugin uses the same in-memory LRU cache as Apollo Server's other features. For environments with multiple server instances, you should instead use a shared cache backend, such as Memcached or Redis. For details, see [Using Memcached/Redis as a cache storage backend](../data/data-sources/#using-memcachedredis-as-a-cache-storage-backend).
+On initialization, this plugin automatically begins caching responses according to [field settings](#in-your-schema-static).
+
+The plugin uses the same in-memory LRU cache as Apollo Server's other features. For environments with multiple server instances, you should instead use a shared cache backend, such as [Memcached or Redis](#memcachedredis-setup).
+
+>In addition to the [`Cache-Control` HTTP header](#caching-with-a-cdn), the `responseCachePlugin` also sets the `Age` HTTP header to the number of seconds the returned value has been in the cache.
+
+### Memcached/Redis setup
+
+See [Using Memcached/Redis as a cache storage backend](../data/data-sources/#using-memcachedredis-as-a-cache-storage-backend).
 
 > You can also [implement your own cache backend](../data/data-sources/#implementing-your-own-cache-backend).
 
@@ -211,37 +258,3 @@ In addition to [the `sessionId` function](#identifying-users-for-private-respons
 | `extraCacheKeyData` | This function's return value (any JSON-stringifiable object) is added to the key for the cached response. For example, if your API includes translatable text, this function can return a string derived from `requestContext.request.http.headers.get('Accept-Language')`. |
 | `shouldReadFromCache` | If this function returns `false`, Apollo Server _skips_ the cache for the incoming operation, even if a valid response is available. |
 | `shouldWriteToCache` | If this function returns `false`, Apollo Server doesn't cache its response for the incoming operation, even if the response's `maxAge` is greater than `0`. |
-
-In addition to the [`Cache-Control` HTTP header](#cache-control-for-cdns), the response cache plugin will also set the `Age` HTTP header to the number of seconds the value has been sitting in the cache.
-
-
-## HTTP response headers
-
-### `Age`
-
-When Apollo Server returns a cached response to a client, the `responseCachePlugin` adds an `Age` header to the response. The header's value is the number of seconds the response has been in the cache.
-
-### `Cache-Control` (for CDNs)
-
-Whenever Apollo Server sends an operation response that has a non-zero `maxAge`, it includes a `Cache-Control` HTTP header that describes the response's cache policy. For example:
-
-```
-Cache-Control: max-age=60, private
-```
-
-If you run Apollo Server behind a CDN or another caching proxy, it can use this header's value to cache responses appropriately.
-
-> Because CDNs and caching proxies only cache GET requests (not POST requests), we recommend using [automatic persisted queries](./apq/) with the [`useGETForHashedQueries` option](./apq/) enabled.
-
-#### Disabling `Cache-Control`
-
-You can prevent Apollo Server from setting `Cache-Control` headers by setting `calculateHttpHeaders` to `false` in the `ApolloServer` constructor:
-
-```js
-const server = new ApolloServer({
-  // ...other options...
-  cacheControl: {
-    calculateHttpHeaders: false,
-  },
-}));
-```
