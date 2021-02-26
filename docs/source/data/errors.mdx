@@ -5,7 +5,7 @@ description: Making errors actionable on the client and server
 
 import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
-Whenever Apollo Server encounters errors while processing a GraphQL operation, its response to the client includes an `errors` array that contains each error that occurred. Each error in the array has an `extensions` field that provides additional useful information, including an error `code` and an `exception.stacktrace`.
+Whenever Apollo Server encounters errors while processing a GraphQL operation, its response to the client includes an `errors` array that contains each error that occurred. Each error in the array has an `extensions` field that provides additional useful information, including an error `code` and (while in development mode) an `exception.stacktrace`.
 
 Here's an example error response caused by misspelling the `__typename` field in a query:
 
@@ -317,10 +317,19 @@ import { ApolloError } from 'apollo-server-errors';
 throw new ApolloError('My error message', 'MY_ERROR_CODE', myCustomDetailsObject);
 ```
 
+## Omitting or including `stacktrace`
+
+The `exception.stacktrace` error field is useful while developing and debugging your server, but you probably don't want to expose it to clients in production.
+
+By default, Apollo Server _omits_ the `exception.stacktrace` field if the `NODE_ENV` environment variable is set to either `production` or `test`.
+
+You can override this default behavior by passing the `debug` option to [the constructor of `ApolloServer`](../api/apollo-server/#constructor). If `debug` is `true`, `exception.stacktrace` is always included. If it's `false`, `exception.stacktrace` is always omitted.
+
+Note that when `exception.stacktrace` is omitted, it's also unavailable to your application. To log error `stacktrace`s without including them in responses to clients, see [Masking and logging errors](#masking-and-logging-errors).
 
 ## Masking and logging errors
 
-> To disable stacktraces for production, pass `debug: false` to the Apollo Server constructor or set the `NODE_ENV` environment variable to 'production' or 'test'. Note that this will make the stacktrace unavailable to your application. If you want to log the stacktrace, but not send it in the response to the client, see [Masking and logging errors](#masking-and-logging-errors) below.
+You can edit Apollo Server error details before they're passed to a client or reported to Apollo Studio. This enables you to omit sensitive or irrelevant data.
 
 ### For client responses
 
