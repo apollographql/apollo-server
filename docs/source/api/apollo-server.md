@@ -716,6 +716,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
+// FIXME add start here
 
 const app = express();
 

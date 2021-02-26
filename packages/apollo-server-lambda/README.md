@@ -36,7 +36,7 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  
+
   // By default, the GraphQL Playground interface and GraphQL introspection
   // is disabled in "production" (i.e. when `process.env.NODE_ENV` is `production`).
   //
@@ -45,6 +45,7 @@ const server = new ApolloServer({
   playground: true,
   introspection: true,
 });
+// FIXME start
 
 exports.handler = server.createHandler();
 ```
@@ -135,6 +136,7 @@ const server = new ApolloServer({
     context,
   }),
 });
+// FIXME start
 
 exports.handler = server.createHandler();
 ```
@@ -164,6 +166,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
+// FIXME start
 
 exports.handler = server.createHandler({
   cors: {
@@ -196,6 +199,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
+// FIXME start
 
 exports.handler = server.createHandler({
   cors: {

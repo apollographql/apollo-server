@@ -422,7 +422,7 @@ const express = require('express');
 const PORT = 4000;
 const app = express();
 const server = new ApolloServer({ typeDefs, resolvers });
-
+// FIXME start
 server.applyMiddleware({app})
 
 const httpServer = http.createServer(app);

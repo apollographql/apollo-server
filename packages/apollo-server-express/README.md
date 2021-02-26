@@ -29,6 +29,7 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
+// FIXME start
 
 const app = express();
 server.applyMiddleware({ app });
@@ -69,6 +70,7 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
+// FIXME start
 
 const app = connect();
 const path = '/graphql';
