@@ -19,10 +19,6 @@
 /docs/apollo-server/federation/advanced-features/ /docs/apollo-server/federation/entities/
 /docs/apollo-server/federation/concerns/ /docs/apollo-server/federation/introduction/#separation-of-concerns
 
-# The test-utils lived at its current home for about 5 days.
-# It at least exists on some slides and Tweets.
-/docs/apollo-server/features/test-utils.html /docs/apollo-server/features/testing.html
-
 # Redirects associated with revamp of Apollo Server information architecture
 /docs/apollo-server/whats-new https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md
 /docs/apollo-server/essentials/data/ /docs/apollo-server/data/data/
@@ -33,6 +29,7 @@
 /docs/apollo-server/features/caching/ /docs/apollo-server/performance/caching/
 /docs/apollo-server/features/creating-directives/ /docs/apollo-server/schema/creating-directives/
 /docs/apollo-server/features/data-sources/ /docs/apollo-server/data/data-sources/
+/docs/apollo-server/features/data-sources.html /docs/apollo-server/data/data-sources/
 /docs/apollo-server/features/directives/ /docs/apollo-server/schema/directives/
 /docs/apollo-server/features/errors/ /docs/apollo-server/data/errors/
 /docs/apollo-server/features/file-uploads/ /docs/apollo-server/data/file-uploads/
