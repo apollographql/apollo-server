@@ -30,6 +30,7 @@ const environment = process.env.NODE_ENV || 'production'
 const config = configurations[environment]
 
 const apollo = new ApolloServer({ typeDefs, resolvers })
+// FIXME start
 
 const app = express()
 apollo.applyMiddleware({ app })
@@ -37,7 +38,7 @@ apollo.applyMiddleware({ app })
 // Create the HTTPS or HTTP server, per configuration
 var server
 if (config.ssl) {
-  // Assumes certificates are in a .ssl folder off of the package root. Make sure 
+  // Assumes certificates are in a .ssl folder off of the package root. Make sure
   // these files are secured.
   server = https.createServer(
     {

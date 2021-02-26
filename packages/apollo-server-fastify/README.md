@@ -18,6 +18,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
+// FIXME start
 
 const app = require('fastify')();
 

@@ -18,6 +18,7 @@ const Hapi = require('hapi');
 
 async function StartServer() {
   const server = new ApolloServer({ typeDefs, resolvers });
+  // FIXME start
 
   const app = new Hapi.server({
     port: 4000
