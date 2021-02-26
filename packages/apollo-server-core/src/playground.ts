@@ -7,10 +7,17 @@ export {
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html/dist/render-playground-page';
 
-// This specifies the version of `graphql-playground-react` that will be served
-// from `graphql-playground-html`.  It's passed to ``graphql-playground-html`'s
-// renderPlaygroundPage` via the integration packages' playground configuration.
-const playgroundVersion = '1.7.33';
+// This specifies the React version of our fork of GraphQL Playground,
+// `@apollographql/graphql-playground-react`.  It is related to, but not to
+// be confused with, the `@apollographql/graphql-playground-html` package which
+// is a dependency of Apollo Server's various integration `package.json`s files.
+//
+// The HTML (stub) file renders a `<script>` tag that loads the React (guts)
+// from a CDN URL on jsdelivr.com, which allows serving of files from npm packages.
+// 
+// The version is passed to `@apollographql/graphql-playground-html`'s
+// `renderPlaygroundPage` via the integration packages' `playground` config.
+const playgroundVersion = '1.7.39';
 
 // https://stackoverflow.com/a/51365037
 type RecursivePartial<T> = {
