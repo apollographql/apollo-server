@@ -12,6 +12,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
 - The `debug` option to `new ApolloServer` (which adds stack traces to errors) now affects errors that come from requests executed with `server.executeOperation` (and its wrapper `apollo-server-testing`), instead of just errors that come from requests executed over HTTP. [Issue #4107](https://github.com/apollographql/apollo-server/issues/4107) [PR #4948](https://github.com/apollographql/apollo-server/pull/4948)
+- Bump version of `@apollographql/graphql-playground-html` to v1.6.27 and `@apollographql/graphql-playground-react` to v1.7.39 to resolve incorrectly rendered CDN URL when Playground `version` was `false`-y.  [PR #4932](https://github.com/apollographql/apollo-server/pull/4932) [PR #4955](https://github.com/apollographql/apollo-server/pull/4955) [Issue #4937](https://github.com/apollographql/apollo-server/issues/4937)
 
 ## v2.21.0
 
