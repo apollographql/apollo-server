@@ -1,6 +1,3 @@
-export * from 'graphql-tools';
-export * from 'graphql-subscriptions';
-
 export {
   gql,
   GraphQLUpload,
@@ -23,3 +20,6 @@ export {
 } from 'apollo-server-core';
 
 export { CorsOptions } from 'apollo-server-express';
+
+export * from 'graphql-tools';
+export * from 'graphql-subscriptions';
