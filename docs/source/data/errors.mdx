@@ -197,7 +197,7 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     userWithID: (parent, args, context) => {
-      if (args.id <ExpansionPanel 1) {
+      if (args.id < 1) {
         throw new UserInputError('Invalid argument value');
       }
       // ...fetch correct user...
@@ -239,7 +239,7 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     userWithID: (parent, args, context) => {
-      if (args.id <ExpansionPanel 1) {
+      if (args.id < 1) {
         throw new UserInputError('Invalid argument value', {
           argumentName: 'id'
         });
@@ -345,7 +345,7 @@ const server = new ApolloServer({
   resolvers,
   formatError: (err) => {
     // Don't give the specific errors to the client.
-    if (err.message.startsWith("Database Error: ")) {
+    if (err.message.startsWith('Database Error: ')) {
       return new Error('Internal server error');
     }
 
@@ -370,7 +370,7 @@ The error instance received by `formatError` (a `GraphQLError`) contains an `ori
   },
 ```
 
-> To make context-specific adjustments to the error received by `formatError` (such as localization or personalization), consider [creating a plugin](../integrations/plugins/) that uses the `didEncounterErrors` lifecycle event to attach additional properties to the error. These properties can be accessed from `formatError`.
+> To make context-specific adjustments to the error received by `formatError` (such as localization or personalization), consider [creating a plugin](../integrations/plugins/) that uses the [`didEncounterErrors` lifecycle event](../integrations/plugins/#didencountererrors) to attach additional properties to the error. These properties can be accessed from `formatError`.
 
 ### For Apollo Studio reporting
 
