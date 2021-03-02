@@ -99,6 +99,7 @@ export interface GraphQLService {
   executor<TContext>(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
   ): ValueOrPromise<GraphQLExecutionResult>;
+  stop?(): Promise<void>;
 }
 
 // This configuration is shared between all integrations and should include
@@ -130,7 +131,7 @@ export interface Config extends BaseConfig {
   engine?: boolean | EngineReportingOptions<Context>;
 }
 
-// Configuration for how Apollo Server talks to the Apollo registry.
+// Configuration for the built-in graphql-upload integration.
 export interface FileUploadOptions {
   //Max allowed non-file multipart form field size in bytes; enough for your queries (default: 1 MB).
   maxFieldSize?: number;

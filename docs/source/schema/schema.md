@@ -37,10 +37,11 @@ Every type definition in a GraphQL schema belongs to one of the following catego
 * [The `Query` type](#the-query-type)
 * [The `Mutation` type](#the-mutation-type)
 * [Input types](#input-types)
+* [Enum types](#enum-types)
 
 Each of these is defined in detail below.
 
-And finally, the performance and usage of each field within these declarations can be individually monitored by [Apollo Studio](https://studio.apollographql.com/), providing you with data that will inform decisions about changes to your graph.
+You can monitor the performance and usage of each field within these declarations with [Apollo Studio](https://studio.apollographql.com/), providing you with data that helps inform decisions about changes to your graph.
 
 ### Scalar types
 
@@ -54,7 +55,7 @@ GraphQL's default scalar types are:
 * `Boolean`: `true` or `false`
 * `ID` (serialized as a `String`): A unique identifier that's often used to refetch an object or as the key for a cache. Although it's serialized as a `String`, an `ID`  is not intended to be human‐readable.
 
-These primitive types cover the majority of use cases. For more specific use cases, you can create [custom scalar types](/schema/scalars-enums/).
+These primitive types cover the majority of use cases. For more specific use cases, you can create [custom scalar types](/schema/custom-scalars/).
 
 ### Object types
 
@@ -211,6 +212,10 @@ A single client request can include multiple mutations to execute. To prevent ra
 
 [Learn more about designing mutations](#designing-mutations)
 
+### The `Subscription` type
+
+See [Subscriptions](../data/subscriptions).
+
 ### Input types
 
 Input types are special object types that allow you to pass objects as arguments to queries and mutations (as opposed to passing only scalar types). Input types help keep operation signatures clean, much like how accepting a single `options` object in a JavaScript function can be cleaner than repeatedly adding arguments to the function's signature.
@@ -254,7 +259,79 @@ input PostAndMediaInput {
 
 Input types can sometimes be useful when multiple operations require the exact same set of information, but you should reuse them sparingly. Operations might eventually diverge in their sets of required arguments.
 
-**Do not use the same input type for both queries and mutations**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query.
+> **Do not use the same input type for both queries and mutations**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query.
+
+### Enum types
+
+An enum is similar to a scalar type, but its legal values are defined in the schema. Here's an example definition:
+
+```graphql
+enum AllowedColor {
+  RED
+  GREEN
+  BLUE
+}
+```
+
+Enums are most useful in situations where the user must pick from a prescribed list of options. As an additional benefit, enum values autocomplete in tools like the Apollo Studio Explorer.
+
+An enum can appear anywhere a scalar is valid (including as a field argument), because they serialize as strings:
+
+```graphql
+type Query {
+  favoriteColor: AllowedColor # enum return value
+  avatar(borderColor: AllowedColor): String # enum argument
+}
+```
+
+A query might then look like this:
+
+```graphql
+query GetAvatar {
+  avatar(borderColor: RED)
+}
+```
+
+#### Internal values (advanced)
+
+Sometimes, a backend forces a different value for an enum internally than in the public API. You can set each enum value's corresponding _internal_ value in the [resolver map](../data/resolvers/#defining-a-resolver) you provide to Apollo Server.
+
+> This feature usually isn't required unless another library in your application expects enum values in a different form.
+
+The following example uses color hex codes for each `AllowedColor`'s internal value:
+
+```js
+const resolvers = {
+  AllowedColor: {
+    RED: '#f00',
+    GREEN: '#0f0',
+    BLUE: '#00f',
+  }
+  // ...other resolver definitions...
+};
+```
+
+These internal values don't change the public API at all. Apollo Server resolvers accept these values instead of the schema values, as shown:
+
+```js
+const resolvers = {
+  AllowedColor: {
+    RED: '#f00',
+    GREEN: '#0f0',
+    BLUE: '#00f',
+  },
+  Query: {
+    favoriteColor: () => '#f00',
+    avatar: (parent, args) => {
+      // args.borderColor is '#f00', '#0f0', or '#00f'
+    },
+  }
+};
+```
+
+### Union and interface types
+
+See [Unions and interfaces](./unions-interfaces/).
 
 ## Growing with a schema
 

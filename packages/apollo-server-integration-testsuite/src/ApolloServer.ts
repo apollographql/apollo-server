@@ -2767,13 +2767,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const typeDefs = gql`
           type Query {
             cached: String @cacheControl(maxAge: 10)
+            asynccached: String @cacheControl(maxAge: 10)
+            asyncuncached: String @cacheControl(maxAge: 10)
+            asyncnowrite: String @cacheControl(maxAge: 10)
             uncached: String
             private: String @cacheControl(maxAge: 9, scope: PRIVATE)
           }
         `;
 
-        type FieldName = 'cached' | 'uncached' | 'private';
-        const fieldNames: FieldName[] = ['cached', 'uncached', 'private'];
+        type FieldName = 'cached'| 'asynccached' | 'asyncuncached' | 'asyncnowrite' | 'uncached' | 'private';
+        const fieldNames: FieldName[] = ['cached', 'asynccached', 'asyncuncached', 'asyncnowrite', 'uncached', 'private'];
         const resolverCallCount: Partial<Record<FieldName, number>> = {};
         const expectedResolverCallCount: Partial<
           Record<FieldName, number>
@@ -2817,16 +2820,31 @@ export function testApolloServer<AS extends ApolloServerBase>(
               shouldReadFromCache: (
                 requestContext: GraphQLRequestContext<any>,
               ) => {
-                return !requestContext.request.http.headers.get(
-                  'no-read-from-cache',
-                );
+                console.debug('shouldReadFromCache', requestContext.request.query);
+                if (requestContext.request.http.headers.get('no-read-from-cache'))
+                  return false;
+
+                if (requestContext.request.query.indexOf('asynccached') >= 0) {
+                  return new Promise((resolve) => resolve(true));
+                }
+
+                if (requestContext.request.query.indexOf('asyncuncached') >= 0) {
+                  return new Promise((resolve) => resolve(false));
+                }
+
+                return true;
               },
               shouldWriteToCache: (
                 requestContext: GraphQLRequestContext<any>,
               ) => {
-                return !requestContext.request.http.headers.get(
-                  'no-write-to-cache',
-                );
+                if (requestContext.request.http.headers.get('no-write-to-cache'))
+                  return false;
+
+                if (requestContext.request.query.indexOf('asyncnowrite') >= 0) {
+                  return new Promise((resolve) => resolve(false));
+                }
+
+                return true;
               },
             }),
           ],
@@ -2916,6 +2934,49 @@ export function testApolloServer<AS extends ApolloServerBase>(
             'max-age=10, public',
           );
           expect(httpHeader(result, 'age')).toBe(null);
+        }
+
+        // Cache hit async
+        {
+          await doFetch({
+            query: '{asynccached}',
+          });
+          expectCacheMiss('asynccached');
+
+          await doFetch({
+            query: '{asynccached}',
+          });
+          expectCacheHit('asynccached');
+        }
+
+        // Cache Miss async
+        {
+          await doFetch({
+            query: '{asyncuncached}',
+          });
+          expectCacheMiss('asyncuncached');
+
+          await doFetch({
+            query: '{asyncuncached}',
+          });
+          expectCacheMiss('asyncuncached');
+        }
+
+        // Even we cache read, we did not write (async)
+        {
+          const asyncNoWriteQuery = '{asyncnowrite}'
+          await doFetch({
+            query: asyncNoWriteQuery,
+          });
+          expectCacheMiss('asyncnowrite');
+
+          const result = await doFetch({
+            query: asyncNoWriteQuery,
+          });
+          expectCacheMiss('asyncnowrite');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
         }
 
         // Cache hit.

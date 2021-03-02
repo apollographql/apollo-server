@@ -200,6 +200,10 @@ export async function processGraphQLRequest<TContext>(
     } else {
       const computedQueryHash = computeQueryHash(query);
 
+      // The provided hash must exactly match the SHA-256 hash of
+      // the query string. This prevents hash hijacking, where a
+      // new and potentially malicious query is associated with
+      // an existing hash.
       if (queryHash !== computedQueryHash) {
         // We are returning to `runHttpQuery` to preserve legacy behavior while
         // still delivering observability to the `didEncounterErrors` hook.
@@ -659,7 +663,11 @@ export async function processGraphQLRequest<TContext>(
   }
 
   function initializeExtensionStack(): GraphQLExtensionStack<TContext> {
-    enableGraphQLExtensions(config.schema);
+    if (config.extensions?.length) {
+      // graphql-extensions adds some overhead to field resolvers.
+      // Only enable extensions when at least 1 extension has been provided
+      enableGraphQLExtensions(config.schema);
+    }
 
     // If custom extension factories were provided, create per-request extension
     // objects.
