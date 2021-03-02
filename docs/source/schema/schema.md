@@ -212,6 +212,10 @@ A single client request can include multiple mutations to execute. To prevent ra
 
 [Learn more about designing mutations](#designing-mutations)
 
+### The `Subscription` type
+
+See [Subscriptions](../data/subscriptions).
+
 ### Input types
 
 Input types are special object types that allow you to pass objects as arguments to queries and mutations (as opposed to passing only scalar types). Input types help keep operation signatures clean, much like how accepting a single `options` object in a JavaScript function can be cleaner than repeatedly adding arguments to the function's signature.

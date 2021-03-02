@@ -7,10 +7,11 @@
       "node": "< 15.0.0"
     }
   },
+  "dependencyDashboard": true,
   "automerge": false,
   "packageRules": [
     {
-      "packageNames": ["@types/node"],
+      "matchPackageNames": ["@types/node"],
       "allowedVersions": "8.x"
     },
     /*
@@ -22,36 +23,36 @@
       these threshholds via `git blame`.
     */
     {
-      "packageNames": ["fastify"],
+      "matchPackageNames": ["fastify"],
       "allowedVersions": "<2"
     },
     {
-      "packageNames": ["fastify-cors"],
+      "matchPackageNames": ["fastify-cors"],
       "allowedVersions": "<1"
     },
     {
-      "packageNames": ["koa-bodyparser"],
+      "matchPackageNames": ["koa-bodyparser"],
       "allowedVersions": "<4"
     },
     {
-      "packageNames": ["@koa/cors"],
+      "matchPackageNames": ["@koa/cors"],
       "allowedVersions": "<3"
     },
     {
-      "packageNames": ["log4js"],
+      "matchPackageNames": ["log4js"],
       "allowedVersions": "<5"
     },
     {
-      "packageNames": ["hapi", "@types/hapi"],
+      "matchPackageNames": ["hapi", "@types/hapi"],
       "allowedVersions": "<18"
     },
     {
-      "packageNames": ["ws"],
+      "matchPackageNames": ["ws"],
       "allowedVersions": "<7"
     },
     // Remove when we're no longer supporting Node.js v6
     {
-      "packageNames": ["nock"],
+      "matchPackageNames": ["nock"],
       "allowedVersions": "<11"
     },
     /*
@@ -64,7 +65,7 @@
       the `apollo-docs` suffix).
     */
     {
-      "paths": [
+      "matchPaths": [
         "docs/package.json"
       ],
       "extends": [
