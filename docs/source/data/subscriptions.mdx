@@ -336,7 +336,7 @@ Defining an `onConnect` function provides the following benefits:
 You provide these function definitions to the constructor of `ApolloServer`, like so:
 
 ```js
-const server = new ApolloServer(
+const server = new ApolloServer({
   subscriptions: {
     onConnect: (connectionParams, webSocket, context) => {
       console.log('Connected!')
@@ -346,7 +346,7 @@ const server = new ApolloServer(
     },
     // ...other options...
   },
-);
+});
 ```
 
 These functions are passed the following parameters:
