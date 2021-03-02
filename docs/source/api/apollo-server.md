@@ -141,7 +141,7 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 
 <td>
 
-A map of all [custom schema directives](../schema/directives/#using-custom-schema-directives) used in your schema, if any.
+A map of all [custom schema directives](../schema/directives/#custom-directives) used in your schema, if any.
 </td>
 </tr>
 
