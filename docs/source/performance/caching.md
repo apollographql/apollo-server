@@ -207,7 +207,7 @@ const server = new ApolloServer({
 
 On initialization, this plugin automatically begins caching responses according to [field settings](#in-your-schema-static).
 
-The plugin uses the same in-memory LRU cache as Apollo Server's other features. For environments with multiple server instances, you should instead use a shared cache backend, such as [Memcached or Redis](#memcachedredis-setup).
+The plugin uses the same in-memory LRU cache as Apollo Server's other features. For environments with multiple server instances, you might instead want to use a shared cache backend, such as [Memcached or Redis](#memcachedredis-setup).
 
 >In addition to the [`Cache-Control` HTTP header](#caching-with-a-cdn), the `responseCachePlugin` also sets the `Age` HTTP header to the number of seconds the returned value has been in the cache.
 
