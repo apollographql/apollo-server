@@ -175,6 +175,7 @@ export class ApolloServer extends ApolloServerBase {
                 },
               });
             });
+            return;
           } else {
             return callback(null, successfulResponse);
           }
