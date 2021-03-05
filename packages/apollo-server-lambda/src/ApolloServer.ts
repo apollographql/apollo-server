@@ -173,7 +173,7 @@ export class ApolloServer extends ApolloServerBase {
         });
       }
 
-      if (event.path === '/.well-known/apollo/server-health') {
+      if (event.path.endsWith('/.well-known/apollo/server-health')) {
         const successfulResponse = {
           body: JSON.stringify({ status: 'pass' }),
           statusCode: 200,
