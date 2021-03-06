@@ -27,7 +27,7 @@
 	},
 	"dependencies": {
 		"@apollographql/graphql-playground-html": "1.6.27",
-		"@azure/functions": "1.2.2",
+		"@azure/functions": "1.2.3",
 		"apollo-server-core": "file:../apollo-server-core",
 		"apollo-server-env": "file:../apollo-server-env",
 		"apollo-server-types": "file:../apollo-server-types",
