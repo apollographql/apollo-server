@@ -116,6 +116,17 @@ export class ApolloServer extends ApolloServerBase {
       context: LambdaContext,
       callback: APIGatewayProxyCallback,
     ) => {
+
+      const callbackOverride: APIGatewayProxyCallback = (error, result) => {
+        if (error === null) {
+          return result;
+        }
+
+        throw error;
+      };
+
+      callback = callback || callbackOverride;
+
       // We re-load the headers into a Fetch API-compatible `Headers`
       // interface within `graphqlLambda`, but we still need to respect the
       // case-insensitivity within this logic here, so we'll need to do it
@@ -183,7 +194,7 @@ export class ApolloServer extends ApolloServerBase {
           },
         };
         if (onHealthCheck) {
-          onHealthCheck(event)
+          return onHealthCheck(event)
             .then(() => {
               return callback(null, successfulResponse);
             })
@@ -197,7 +208,6 @@ export class ApolloServer extends ApolloServerBase {
                 },
               });
             });
-          return;
         } else {
           return callback(null, successfulResponse);
         }
@@ -230,7 +240,7 @@ export class ApolloServer extends ApolloServerBase {
       const response = new Writable() as ServerResponse;
       const callbackFilter: APIGatewayProxyCallback = (error, result) => {
         response.end();
-        callback(
+        return callback(
           error,
           result && {
             ...result,
@@ -273,7 +283,7 @@ export class ApolloServer extends ApolloServerBase {
         }
       };
 
-      fileUploadHandler(() => graphqlLambda(async () => {
+      return fileUploadHandler(() => graphqlLambda(async () => {
         // In a world where this `createHandler` was async, we might avoid this
         // but since we don't want to introduce a breaking change to this API
         // (by switching it to `async`), we'll leverage the

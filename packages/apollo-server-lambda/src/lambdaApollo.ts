@@ -30,7 +30,7 @@ export function graphqlLambda(
     event,
     context,
     callback,
-  ): void => {
+  ): any => {
     context.callbackWaitsForEmptyEventLoop = false;
     let { body, headers, isBase64Encoded } = event;
     let query: Record<string, any> | Record<string, any>[];
@@ -58,7 +58,7 @@ export function graphqlLambda(
       query = event.queryStringParameters || {};
     }
 
-    runHttpQuery([event, context], {
+    return runHttpQuery([event, context], {
       method: event.httpMethod,
       options: options,
       query,
@@ -69,7 +69,7 @@ export function graphqlLambda(
       },
     }).then(
       ({ graphqlResponse, responseInit }) => {
-        callback(null, {
+        return callback(null, {
           body: graphqlResponse,
           statusCode: 200,
           headers: responseInit.headers,
@@ -77,7 +77,7 @@ export function graphqlLambda(
       },
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) return callback(error);
-        callback(null, {
+        return callback(null, {
           body: error.message,
           statusCode: error.statusCode,
           headers: error.headers,
