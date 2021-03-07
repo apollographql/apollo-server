@@ -81,18 +81,17 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     return (context: Context, req: HttpRequest) => {
+      const originHeader = req.headers['Origin'] || req.headers['origin'];
       if (cors && cors.origin) {
         if (typeof cors.origin === 'string') {
           corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
         } else if (
           typeof cors.origin === 'boolean' ||
           (Array.isArray(cors.origin) &&
-            cors.origin.includes(
-              req.headers['Origin'] || req.headers['origin'],
-            ))
+            originHeader !== undefined &&
+            cors.origin.includes(originHeader))
         ) {
-          corsHeaders['Access-Control-Allow-Origin'] =
-            req.headers['Origin'] || req.headers['origin'];
+          corsHeaders['Access-Control-Allow-Origin'] = originHeader;
         }
 
         if (!cors.allowedHeaders) {
