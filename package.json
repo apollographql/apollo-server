@@ -21,7 +21,8 @@
     "coverage:upload": "codecov"
   },
   "engines": {
-    "node": ">=6 <15"
+    "node": ">=6 <15",
+    "npm": "6.x"
   },
   "dependencies": {
     "@apollographql/apollo-tools": "0.4.9",
