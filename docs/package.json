@@ -1,6 +1,7 @@
 {
   "engines": {
-    "node": ">=14 <15"
+    "node": ">=14 <15",
+    "npm": "6.x"
   },
   "scripts": {
     "prestart": "gatsby clean",
