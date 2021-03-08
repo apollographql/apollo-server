@@ -226,75 +226,18 @@ Use `withFilter` to make sure clients get exactly the subscription updates they 
 
 ## Basic runnable example
 
-This example server exposes one subscription (`numberIncremented`) that returns an integer that's incremented on the server every second. The example requires only the `apollo-server` library.
+An example server is available on [GitHub](https://github.com/apollographql/docs-examples/blob/main/server-subscriptions/index.js) and CodeSandbox:
+
+<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/server-subscriptions?fontsize=14&hidenavigation=1&theme=dark">
+  <img alt="Edit server-subscriptions" src="https://codesandbox.io/static/img/play-codesandbox.svg"></img>
+</a>
+
+
+The server exposes one subscription (`numberIncremented`) that returns an integer that's incremented on the server every second. The example requires only the `apollo-server` library.
 
 After you start up this server, you can test out running a subscription with the Apollo Studio Explorer or GraphQL Playground, as described in the [full-stack tutorial](https://www.apollographql.com/docs/tutorial/schema/#explore-your-schema). You'll see the subscription's value update every second.
 
 > In the Apollo Studio Explorer, you must specify your server's subscription endpoint (`ws://localhost:4000/subscriptions`) in the **Explorer Settings** tab.
-
-<ExpansionPanel title="Click to expand">
-
-```js:title=index.js
-const { ApolloServer, PubSub, gql } = require('apollo-server');
-const pubsub = new PubSub();
-const PORT = 4000;
-
-// Schema definition
-const typeDefs = gql`
-  type Query {
-    currentNumber: Int
-  }
-
-  type Subscription {
-    numberIncremented: Int
-  }
-`;
-
-// Resolver map
-const resolvers = {
-  Query: {
-    currentNumber() {
-      return currentNumber;
-    }
-  },
-  Subscription: {
-    numberIncremented: {
-      subscribe: () => pubsub.asyncIterator(['NUMBER_INCREMENTED']),
-    },
-  }
-};
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  subscriptions: {
-    path: '/subscriptions',
-    onConnect: (connectionParams, webSocket, context) => {
-      console.log('Client connected');
-    },
-    onDisconnect: (webSocket, context) => {
-      console.log('Client disconnected')
-    },
-  },
-});
-
-let currentNumber = 0;
-function incrementNumber() {
-  currentNumber++;
-  pubsub.publish('NUMBER_INCREMENTED', { numberIncremented: currentNumber });
-  setTimeout(incrementNumber, 1000);
-}
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Subscription endpoint ready at ws://localhost:${PORT}${server.subscriptionsPath}`)
-  console.log('Query at studio.apollographql.com/dev')
-});
-
-// Start incrementing
-incrementNumber();
-```
-
-</ExpansionPanel>
 
 ## Operation context
 
