@@ -32,7 +32,7 @@ directive @deprecated(
 ) on FIELD_DEFINITION | ENUM_VALUE
 ```
 
-This indicates that `@deprecated` can decorate either a `SCHEMA_FIELD` definition (as shown at the top of the article) or a schema `ENUM_VALUE` definition (as shown here):
+This indicates that `@deprecated` can decorate either a schema  `FIELD_DEFINITION` (as shown at the top of the article) or a schema `ENUM_VALUE` definition (as shown here):
 
 ```graphql:title=schema.graphql
 enum MyEnum {
@@ -43,7 +43,7 @@ enum MyEnum {
 
 If `@deprecated` appears elsewhere in a GraphQL document, it produces an error.
 
-> If you [create a custom directive](#creating), you need to define it (and its valid locations) in your schema. You don't need to define [default directives](#default-directives) like `@deprecated`.
+> If you [create a custom directive](#custom-schema-directives), you need to define it (and its valid locations) in your schema. You don't need to define [default directives](#default-directives) like `@deprecated`.
 
 ### Schema directives vs. operation directives
 
@@ -63,25 +63,26 @@ The [GraphQL specification](http://spec.graphql.org/June2018/#sec-Type-System.Di
 | `@skip(if: Boolean!)` | If `true`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
 | `@include(if: Boolean!)` | If `false`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
 
-## Custom directives
-
-### Creating
-
-See [Implementing directives](/schema/creating-directives/).
-
-### Using
+## Custom schema directives
 
 You can extend Apollo Server with custom schema directives created by you or a third party.
 
-To use a custom directive, pass its associated `SchemaDirectiveVisitor` subclass to Apollo Server via the `schemaDirectives` argument. This object maps the name of a directive (e.g., `upper`) to the class that implements its behavior (e.g., `UpperCaseDirective`).
+> To learn how to create custom directives, see [implementing directives](./creating-directives/).
 
-Also make sure the directive is defined in your schema with all valid locations listed.
+To use a custom directive:
+
+1. Make sure the directive is defined in your schema with all valid locations listed.
+2. If the directive uses a `SchemaDirectiveVisitor` subclass to perform custom logic, provide it to the `ApolloServer` constructor via the `schemaDirectives` object.
+
+    _The `schemaDirectives` object maps the name of a directive (e.g., `upper`) to the subclass that implements its behavior (e.g., `UpperCaseDirective`)._
+
+The following example defines an `UpperCaseDirective` subclass for use with the `@upper` custom directive. Because it's decorated with `@upper`, the `Query.hello` field returns `HELLO WORLD!` instead of `Hello world!`.
 
 ```js{20,40-42}
 const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
 const { defaultFieldResolver } = require('graphql');
 
-// Class definition for an @upper directive
+// Subclass definition for @upper directive logic
 class UpperCaseDirective extends SchemaDirectiveVisitor {
   visitFieldDefinition(field) {
     const { resolve = defaultFieldResolver } = field;
