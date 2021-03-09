@@ -1,45 +1,222 @@
 ---
-title: Implementing directives
-description: Implementing custom directives to transform schema types, fields, and arguments
+title: Creating schema directives
+description: Apply custom logic to GraphQL types, fields, and arguments
 ---
 
-Before learning how to implement schema directives, [this section](/schema/directives/) will provide the necessary background on schema directives and their use.
+> Before you create a custom schema directive, [learn the basics about directives](./directives).
 
-## Implementing schema directives
+Your schema can define custom directives that can then decorate _other_ parts of your schema. Apollo Server can execute custom logic whenever it encounters a particular directive in your schema.
 
-Since the GraphQL specification does not discuss any specific implementation strategy for directives, it's up to each GraphQL server framework to expose an API for implementing new directives.
+## Defining
 
-If you're using Apollo Server, you are using the [`graphql-tools`](https://github.com/apollographql/graphql-tools) npm package, which provides a convenient yet powerful tool for implementing directive syntax: the [`SchemaDirectiveVisitor`](https://github.com/ardatan/graphql-tools/blob/master/packages/utils/src/SchemaDirectiveVisitor.ts) class.
+A directive definition looks like this:
 
-To implement a schema directive using `SchemaDirectiveVisitor`, simply create a subclass of `SchemaDirectiveVisitor` that overrides one or more of the following visitor methods:
+```graphql:title=schema.graphql
+directive @deprecated(
+  reason: String = "No longer supported"
+) on FIELD_DEFINITION | ENUM_VALUE
+```
 
-* `visitSchema(schema: GraphQLSchema)`
-* `visitScalar(scalar: GraphQLScalarType)`
-* `visitObject(object: GraphQLObjectType)`
-* `visitFieldDefinition(field: GraphQLField<any, any>)`
-* `visitArgumentDefinition(argument: GraphQLArgument)`
-* `visitInterface(iface: GraphQLInterfaceType)`
-* `visitUnion(union: GraphQLUnionType)`
-* `visitEnum(type: GraphQLEnumType)`
-* `visitEnumValue(value: GraphQLEnumValue)`
-* `visitInputObject(object: GraphQLInputObjectType)`
-* `visitInputFieldDefinition(field: GraphQLInputField)`
+* This defines a directive named `@deprecated`.
+* The directive takes one optional argument (`reason`) with a default value (`"No longer supported"`).
+* The directive can decorate any number of `FIELD_DEFINITION`s and `ENUM_VALUE`s within your schema.
 
-By overriding methods like `visitObject`, a subclass of `SchemaDirectiveVisitor` expresses interest in certain schema types such as `GraphQLObjectType` (the first parameter type of `visitObject`).
+### Supported locations
 
-These method names correspond to all possible [locations](https://github.com/graphql/graphql-js/blob/a62eea88d5844a3bd9725c0f3c30950a78727f3e/src/language/directiveLocation.js#L22-L33) where a directive may be used in a schema. For example, the location `INPUT_FIELD_DEFINITION` is handled by `visitInputFieldDefinition`.
+Your custom directive can appear only in the schema locations you list after the `on` keyword in the directive's definition.
 
-Here is one possible implementation of the `@deprecated` directive we saw above:
+The table below lists all available locations in a GraphQL schema. Your directive can support any combination of these locations.
 
-```js
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Visitor Method</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+###### `SCALAR`
+
+`visitScalar(scalar: GraphQLScalarType)`
+</td>
+<td>
+
+The definition of a [custom scalar](./custom-scalars/)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `OBJECT`
+
+`visitObject(object: GraphQLObjectType)`
+</td>
+<td>
+
+The definition of an [object type](./schema/#object-types/)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `FIELD_DEFINITION`
+
+`visitFieldDefinition(field: GraphQLField<any, any>)`
+</td>
+<td>
+
+The definition of a field within any defined type _except_ an [input type](./schema/#input-types) (see `INPUT_FIELD_DEFINITION`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `ARGUMENT_DEFINITION`
+
+`visitArgumentDefinition(argument: GraphQLArgument)`
+</td>
+<td>
+
+The definition of a field argument
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `INTERFACE`
+
+`visitInterface(iface: GraphQLInterfaceType)`
+</td>
+<td>
+
+The definition of an [interface](unions-interfaces/#interface-type)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `UNION`
+
+`visitUnion(union: GraphQLUnionType)`
+</td>
+<td>
+
+The definition of a [union](./unions-interfaces/#union-type)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `ENUM`
+
+`visitEnum(type: GraphQLEnumType)`
+</td>
+<td>
+
+The definition of an [enum](./schema/#enum-types)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `ENUM_VALUE`
+
+`visitEnumValue(value: GraphQLEnumValue)`
+</td>
+<td>
+
+The definition of one value within an [enum](./schema/#enum-types)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `INPUT_OBJECT`
+
+`visitInputObject(object: GraphQLInputObjectType)`
+</td>
+<td>
+
+The definition of an [input type](./schema/#input-types)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `INPUT_FIELD_DEFINITION`
+
+`visitInputFieldDefinition(field: GraphQLInputField)`
+</td>
+<td>
+
+The definition of a field within an [input type](./schema/#input-types)
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `SCHEMA`
+
+`visitSchema(schema: GraphQLSchema)`
+</td>
+<td>
+
+The top-level `schema` object declaration with `query`, `mutation`, and/or `subscription` fields ([this declaration is usually omitted](https://spec.graphql.org/June2018/#example-e2969))
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## Implementing
+
+After you define your directive and its valid locations, you still need to define the logic that Apollo Server executes whenever it _encounters_ the directive in your schema.
+
+To accomplish this, you create a subclass of `SchemaDirectiveVisitor`, a class that's included in Apollo Server as part of the [`graphql-tools` package](https://github.com/apollographql/graphql-tools).
+
+In your subclass, you override the **visitor method** for _each location_ your directive can appear in. You can see each location's corresponding visitor method in [the table above](#supported-locations).
+
+### Example implementation: `@deprecated`
+
+Here's a possible implementation of the default `@deprecated` directive:
+
+```js:title=DeprecatedDirective.js
 const { SchemaDirectiveVisitor } = require("apollo-server");
 
-class DeprecatedDirective extends SchemaDirectiveVisitor {
+export class DeprecatedDirective extends SchemaDirectiveVisitor {
+
+  // Called when an object field is @deprecated
   public visitFieldDefinition(field: GraphQLField<any, any>) {
     field.isDeprecated = true;
     field.deprecationReason = this.args.reason;
   }
 
+  // Called when an enum value is @deprecated
   public visitEnumValue(value: GraphQLEnumValue) {
     value.isDeprecated = true;
     value.deprecationReason = this.args.reason;
@@ -47,10 +224,14 @@ class DeprecatedDirective extends SchemaDirectiveVisitor {
 }
 ```
 
-In order to apply this implementation to a schema that contains `@deprecated` directives, simply pass the `DeprecatedDirective` class to Apollo Server's constructor via the `schemaDirectives` option:
+This implementation adds two fields to the JavaScript representation of the deprecated item: a boolean indicating that the item `isDeprecated`, and a string indicating the `deprecationReason`. The reason is taken directly from the directive's [`reason` argument](#defining).
 
-```js
+To add this logic to Apollo Server, you pass the `DeprecatedDirective` class to the `ApolloServer` constructor via the `schemaDirectives` object:
+
+
+```js:title=index.js
 const { ApolloServer, gql } = require("apollo-server");
+const { DeprecatedDirective } = require("./DeprecatedDirective");
 
 const typeDefs = gql`
   type ExampleType {
@@ -63,7 +244,8 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   schemaDirectives: {
-    deprecated: DeprecatedDirective
+    // Object key must match directive name, minus '@'
+    deprecated: DeprecatedDirective // highlight-line
   }
 });
 
@@ -72,17 +254,17 @@ server.listen().then(({ url }) => {
 });
 ```
 
-Alternatively, if you want to modify an existing schema object, you can use the `SchemaDirectiveVisitor.visitSchemaDirectives` interface directly:
+When Apollo Server parses your schema SDL to create your schema document, it automatically instantiates a separate `DeprecatedDirective` for _each instance_ of `@deprecated` it encounters. It then calls the appropriate visitor method for the current location.
+
+## Executing directive logic on a parsed schema
+
+If Apollo Server has already parsed your SDL into a GraphQL document, you can execute directive logic by calling the static `visitSchemaDirectives` method of `SchemaDirectiveVisitor`:
 
 ```js
 SchemaDirectiveVisitor.visitSchemaDirectives(schema, {
   deprecated: DeprecatedDirective
 });
 ```
-
-Note that a subclass of `SchemaDirectiveVisitor` may be instantiated multiple times to visit multiple different occurrences of the `@deprecated` directive. That's why you provide a class rather than an instance of that class.
-
-If for some reason you have a schema that uses another name for the `@deprecated` directive, but you want to use the same implementation, you can! The same `DeprecatedDirective` class can be passed with a different name, simply by changing its key in the `schemaDirectives` object passed to the Apollo Server constructor. In other words, `SchemaDirectiveVisitor` implementations are effectively anonymous, so it's up to whoever uses them to assign names to them.
 
 ## Examples
 
