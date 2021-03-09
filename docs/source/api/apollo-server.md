@@ -338,7 +338,7 @@ In certain cases, Apollo Server installs some of its built-in plugins automatica
 </td>
 <td>
 
-By default (when running in Node and when the `NODE_ENV` environment variable does not equal `test`), whenever Apollo Server receives a `SIGINT` or `SIGTERM` signal, it calls `await this.stop()` on itself. It then sends that same signal to itself to continue process shutdown.
+By default (when running in Node and when the `NODE_ENV` environment variable does not equal `test`), whenever Apollo Server receives a `SIGINT` or `SIGTERM` signal, it calls `await this.stop()` on itself. (While this call to `this.stop()` is running, it ignores all `SIGINT` and `SIGTERM` signals.) It then sends that same signal to itself to continue process shutdown.
 
 Set this option to `false` to disable this default behavior, or to `true` to enable the behavior even when `NODE_ENV` _does_ equal `test`.
 
