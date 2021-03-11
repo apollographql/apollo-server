@@ -3,9 +3,11 @@ title: Creating schema directives
 description: Apply custom logic to GraphQL types, fields, and arguments
 ---
 
+import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
+
 > Before you create a custom schema directive, [learn the basics about directives](./directives).
 
-Your schema can define custom directives that can then decorate _other_ parts of your schema. Apollo Server can execute custom logic whenever it encounters a particular directive in your schema.
+Your schema can define custom directives that can then decorate _other_ parts of your schema. Apollo Server can execute custom logic whenever it encounters a particular directive in your schema, such as by transforming data returned by resolvers.
 
 ## Defining
 
@@ -19,11 +21,11 @@ directive @deprecated(
 
 * This defines a directive named `@deprecated`.
 * The directive takes one optional argument (`reason`) with a default value (`"No longer supported"`).
-* The directive can decorate any number of `FIELD_DEFINITION`s and `ENUM_VALUE`s within your schema.
+* The directive can decorate any number of `FIELD_DEFINITION`s and `ENUM_VALUE`s in your schema.
 
 ### Supported locations
 
-Your custom directive can appear only in the schema locations you list after the `on` keyword in the directive's definition.
+Your custom directive can appear _only_ in the schema locations you list after the `on` keyword in the directive's definition.
 
 The table below lists all available locations in a GraphQL schema. Your directive can support any combination of these locations.
 
@@ -201,14 +203,19 @@ To accomplish this, you create a subclass of `SchemaDirectiveVisitor`, a class t
 
 In your subclass, you override the **visitor method** for _each location_ your directive can appear in. You can see each location's corresponding visitor method in [the table above](#supported-locations).
 
-### Example implementation: `@deprecated`
+> Apollo Server includes `graphql-tools` version 4. To use another version of the library, see [Using a different version of `graphql-tools`](../installing-graphql-tools).
+
+### Example: `@deprecated`
 
 Here's a possible implementation of the default `@deprecated` directive:
 
 ```js:title=DeprecatedDirective.js
 const { SchemaDirectiveVisitor } = require("apollo-server");
 
+// Subclass of SchemaDirectiveVisitor
 export class DeprecatedDirective extends SchemaDirectiveVisitor {
+
+  // Visitor methods:
 
   // Called when an object field is @deprecated
   public visitFieldDefinition(field: GraphQLField<any, any>) {
@@ -224,7 +231,7 @@ export class DeprecatedDirective extends SchemaDirectiveVisitor {
 }
 ```
 
-This implementation adds two fields to the JavaScript representation of the deprecated item: a boolean indicating that the item `isDeprecated`, and a string indicating the `deprecationReason`. The reason is taken directly from the directive's [`reason` argument](#defining).
+This subclass adds two fields to the executable schema's representation of a deprecated field or enum value: a boolean indicating that the item `isDeprecated`, and a string indicating the `deprecationReason`. The reason is taken directly from the directive's [`reason` argument](#defining).
 
 To add this logic to Apollo Server, you pass the `DeprecatedDirective` class to the `ApolloServer` constructor via the `schemaDirectives` object:
 
@@ -254,11 +261,13 @@ server.listen().then(({ url }) => {
 });
 ```
 
-When Apollo Server parses your schema SDL to create your schema document, it automatically instantiates a separate `DeprecatedDirective` for _each instance_ of `@deprecated` it encounters. It then calls the appropriate visitor method for the current location.
+When Apollo Server parses your schema SDL to create your executable schema, it automatically initializes a separate `DeprecatedDirective` for _each instance_ of `@deprecated` it encounters. It then calls the appropriate visitor method for the current location.
 
-## Executing directive logic on a parsed schema
+> You can give your `SchemaDirectiveVisitor` subclass any name. It doesn't need to match the name of the directive it's used for (you can even use the same subclass for multiple directives).
 
-If Apollo Server has already parsed your SDL into a GraphQL document, you can execute directive logic by calling the static `visitSchemaDirectives` method of `SchemaDirectiveVisitor`:
+### Running directive logic on an executable schema
+
+If Apollo Server has _already_ parsed your SDL string into an executable schema, you can still execute directive logic by calling the static method `SchemaDirectiveVisitor.visitSchemaDirectives`. This method takes your executable schema, along the same form of directive map you provide to the `schemaDirectives` constructor option:
 
 ```js
 SchemaDirectiveVisitor.visitSchemaDirectives(schema, {
@@ -266,15 +275,19 @@ SchemaDirectiveVisitor.visitSchemaDirectives(schema, {
 });
 ```
 
-## Examples
+## Transforming resolved fields
 
-To appreciate the range of possibilities enabled by `SchemaDirectiveVisitor`, let's examine a variety of practical examples.
+A custom directive can transform a resolved GraphQL field's value _before_ it's returned to the requesting client.
 
-### Uppercasing strings
+### Example: Uppercasing strings
 
-Suppose you want to ensure a string-valued field is converted to uppercase. Though this use case is simple, it's a good example of a directive implementation that works by wrapping a field's `resolve` function:
+Suppose you want to convert certain `String` fields in your schema to uppercase before they're returned.
 
-```js
+This example defines an `@upper` directive for this purpose:
+
+<ExpansionPanel title="Click to expand">
+
+```js:title=index.js
 const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
 const { defaultFieldResolver } = require("graphql");
 
@@ -286,9 +299,25 @@ const typeDefs = gql`
   }
 `;
 
+const resolvers = {
+  Query: {
+    hello() {
+      return "Hello World!";
+    }
+  }
+};
+
 class UpperCaseDirective extends SchemaDirectiveVisitor {
+
+  // Called on server startup for each @upper field
   visitFieldDefinition(field) {
+
+    // Obtain the field's resolver
     const { resolve = defaultFieldResolver } = field;
+
+    // *Replace* the field's resolver with a function
+    // that calls the *original* resolver, then converts
+    // the result to uppercase before returning
     field.resolve = async function (...args) {
       const result = await resolve.apply(this, args);
       if (typeof result === "string") {
@@ -301,9 +330,9 @@ class UpperCaseDirective extends SchemaDirectiveVisitor {
 
 const server = new ApolloServer({
   typeDefs,
+  resolvers,
   schemaDirectives: {
     upper: UpperCaseDirective,
-    upperCase: UpperCaseDirective
   }
 });
 
@@ -312,7 +341,96 @@ server.listen().then(({ url }) => {
 });
 ```
 
-Notice how easy it is to handle both `@upper` and `@upperCase` with the same `UpperCaseDirective` implementation.
+</ExpansionPanel>
+
+<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/custom-directives/upper-case-directive?fontsize=14&hidenavigation=1&theme=dark">
+  <img alt="Edit upper-case-directive" src="https://codesandbox.io/static/img/play-codesandbox.svg"></img>
+</a>
+
+
+This code _replaces_ the resolver of an `@upper` field with a new function. This new function first calls the _original_ resolver, then transforms its result to uppercase (assuming it's a string) before returning it.
+
+### Example: Formatting dates
+
+Suppose your schema defines a `Date` custom scalar, and you want querying clients to be able to specify a string format for the returned date (e.g., specify `dd/mm/yyyy HH:MM:ss` for a string like `10/03/2021 14:53:03`).
+
+This example defines a `@date` directive for this purpose:
+
+<ExpansionPanel title="Click to expand">
+
+```js
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
+const { defaultFieldResolver } = require('graphql');
+const formatDate = require('dateformat');
+
+const typeDefs = gql`
+
+  # Define the directive with a default date format
+  directive @date(
+    defaultFormat: String = "dd/mm/yyyy HH:MM:ss"
+  ) on FIELD_DEFINITION
+
+  scalar Date
+
+  type Post {
+    # You can override the defaultFormat for individual fields
+    published: Date @date(defaultFormat: "dd/mm/yyyy")
+  }
+`;
+
+class FormattableDateDirective extends SchemaDirectiveVisitor {
+  public visitFieldDefinition(field) {
+
+    // Get the field's resolver
+    const { resolve = defaultFieldResolver } = field;
+
+    // Get the default date format
+    const { defaultFormat } = this.args;
+
+    // *Add* a `format` argument to the GraphQL field for
+    // clients to use
+    field.args.push({
+      name: 'format',
+      type: GraphQLString
+    });
+
+    // *Replace* the field's resolver with this function, which
+    // first calls the *original* resolver, then formats the
+    // returned date
+    field.resolve = async function (
+      source,
+      { format, ...otherArgs },
+      context,
+      info,
+    ) {
+      const date = await resolve.call(this, source, otherArgs, context, info);
+      // If the client does not specify a format, use defaultFormat
+      return formatDate(date, format || defaultFormat);
+    };
+
+    // The field now returns a String instead of a Date.
+    // Update it accordingly.
+    field.type = GraphQLString;
+  }
+}
+
+const server = new ApolloServer({
+  typeDefs,
+  schemaDirectives: {
+    date: FormattableDateDirective
+  }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
+
+</ExpansionPanel>
+
+Now the client can specify a desired `format` argument when requesting the `Post.published` field, or omit the argument to use the `defaultFormat` string specified in the schema.
+
+## Additional examples
 
 ### Fetching data from a REST API
 
@@ -350,126 +468,6 @@ server.listen().then(({ url }) => {
 
 There are many more issues to consider when implementing a real GraphQL wrapper over a REST endpoint (such as how to do caching or pagination), but this example demonstrates the basic structure.
 
-### Formatting date strings
-
-Suppose your resolver returns a `Date` object but you want to return a formatted string to the client:
-
-```js
-const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
-const { defaultFieldResolver } = require('graphql');
-
-
-const typeDefs = gql`
-  directive @date(format: String) on FIELD_DEFINITION
-
-  scalar Date
-
-  type Post {
-    published: Date @date(format: "mmmm d, yyyy")
-  }
-`;
-
-class DateFormatDirective extends SchemaDirectiveVisitor {
-  visitFieldDefinition(field) {
-    const { resolve = defaultFieldResolver } = field;
-    const { format } = this.args;
-    field.resolve = async function (...args) {
-      const date = await resolve.apply(this, args);
-      return require('dateformat')(date, format);
-    };
-    // The formatted Date becomes a String, so the field type must change:
-    field.type = GraphQLString;
-  }
-}
-
-const server = new ApolloServer({
-  typeDefs,
-  schemaDirectives: {
-    date: DateFormatDirective
-  }
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
-```
-
-Of course, it would be even better if the schema author did not have decide on a specific `Date` format, but could instead leave that decision to the client. To make this work, the directive just needs to add an additional argument to the field:
-
-```js
-const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
-const formatDate = require("dateformat");
-const { defaultFieldResolver, GraphQLString } = require("graphql");
-
-const typeDefs = gql`
-  directive @date(
-    defaultFormat: String = "mmmm d, yyyy"
-  ) on FIELD_DEFINITION
-
-  scalar Date
-
-  type Query {
-    today: Date @date
-  }
-`;
-
-class FormattableDateDirective extends SchemaDirectiveVisitor {
-  public visitFieldDefinition(field) {
-    const { resolve = defaultFieldResolver } = field;
-    const { defaultFormat } = this.args;
-
-    field.args.push({
-      name: 'format',
-      type: GraphQLString
-    });
-
-    field.resolve = async function (
-      source,
-      { format, ...otherArgs },
-      context,
-      info,
-    ) {
-      const date = await resolve.call(this, source, otherArgs, context, info);
-      // If a format argument was not provided, default to the optional
-      // defaultFormat argument taken by the @date directive:
-      return formatDate(date, format || defaultFormat);
-    };
-
-    field.type = GraphQLString;
-  }
-}
-
-const server = new ApolloServer({
-  typeDefs,
-  schemaDirectives: {
-    date: FormattableDateDirective
-  }
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
-```
-
-Now the client can specify a desired `format` argument when requesting the `Query.today` field, or omit the argument to use the `defaultFormat` string specified in the schema:
-
-```js
-const { request } = require("graphql-request");
-
-server.listen().then(({ url }) => {
-  request(url, `query { today }`).then(result => {
-    // Logs with the default "mmmm d, yyyy" format:
-    console.log(result.data.today);
-  });
-
-  request(url, `query {
-    today(format: "d mmm yyyy")
-  }`).then(result => {
-    // Logs with the requested "d mmm yyyy" format:
-    console.log(result.data.today);
-  });
-})
-```
 
 ### Marking strings for internationalization
 
