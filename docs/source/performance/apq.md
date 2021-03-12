@@ -82,7 +82,7 @@ ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38
 2. Send a followup request that includes both the query string _and_ its hash, like so:
 
     ```shell
-    curl -g 'http://localhost:4000/?query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+    curl -g 'http://localhost:4000/graphql?query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
     ```
 
     This time, the server persists the query string and then responds with the query result as we'd expect.
