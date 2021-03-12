@@ -70,6 +70,7 @@ import {
   processGraphQLRequest,
   GraphQLRequestContext,
   GraphQLRequest,
+  GraphQLResponse,
   APQ_CACHE_PREFIX,
 } from './requestPipeline';
 
@@ -964,7 +965,11 @@ export class ApolloServerBase {
 
   // This function is used by the integrations to generate the graphQLOptions
   // from an object containing the request and other integration specific
-  // options
+  // options.
+  //
+  // integrationContextArgument vaies by integration, see
+  // https://www.apollographql.com/docs/apollo-server/api/apollo-server/#middleware-specific-context-fields
+  // or ../../docs/source/api/apollo-server.md
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ): Promise<GraphQLServerOptions> {
@@ -1011,8 +1016,11 @@ export class ApolloServerBase {
     };
   }
 
-  public async executeOperation(request: GraphQLRequest) {
-    const options = await this.graphQLServerOptions();
+  public async executeOperation(
+    request: GraphQLRequest,
+    integrationContextArgument?: Record<string, any>,
+  ): Promise<GraphQLResponse> {
+    const options = await this.graphQLServerOptions(integrationContextArgument);
 
     if (typeof options.context === 'function') {
       options.context = (options.context as () => never)();
