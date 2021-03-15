@@ -149,6 +149,7 @@ export class ApolloServerBase {
   /** @deprecated: This is undefined for servers operating as gateways, and will be removed in a future release **/
   protected schema?: GraphQLSchema;
   private toDispose = new Set<() => Promise<void>>();
+  private toDisposeLast = new Set<() => Promise<void>>();
   private experimental_approximateDocumentStoreMiB:
     Config['experimental_approximateDocumentStoreMiB'];
 
@@ -356,15 +357,34 @@ export class ApolloServerBase {
         : isNodeLike && process.env.NODE_ENV !== 'test'
     ) {
       const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
+      let receivedSignal = false;
       signals.forEach((signal) => {
         // Note: Node only started sending signal names to signal events with
         // Node v10 so we can't use that feature here.
         const handler: NodeJS.SignalsListener = async () => {
-          await this.stop();
+          if (receivedSignal) {
+            // If we receive another SIGINT or SIGTERM while we're waiting
+            // for the server to stop, just ignore it.
+            return;
+          }
+          receivedSignal = true;
+          try {
+            await this.stop();
+          } catch (e) {
+            this.logger.error(`stop() threw during ${signal} shutdown`);
+            this.logger.error(e);
+            // Can't rely on the signal handlers being removed.
+            process.exit(1);
+          }
+          // Note: this.stop will call the toDisposeLast handlers below, so at
+          // this point this handler will have been removed and we can re-kill
+          // ourself to die with the appropriate signal exit status. this.stop
+          // takes care to call toDisposeLast last, so the signal handler isn't
+          // removed until after the rest of shutdown happens.
           process.kill(process.pid, signal);
         };
-        process.once(signal, handler);
-        this.toDispose.add(async () => {
+        process.on(signal, handler);
+        this.toDisposeLast.add(async () => {
           process.removeListener(signal, handler);
         });
       });
@@ -596,8 +616,13 @@ export class ApolloServerBase {
   }
 
   public async stop() {
+    // We run shutdown handlers in two phases because we don't want to turn
+    // off our signal listeners until we've done the important parts of shutdown
+    // like running serverWillStop handlers. (We can make this more generic later
+    // if it's helpful.)
     await Promise.all([...this.toDispose].map(dispose => dispose()));
     if (this.subscriptionServer) this.subscriptionServer.close();
+    await Promise.all([...this.toDisposeLast].map(dispose => dispose()));
   }
 
   public installSubscriptionHandlers(server: HttpServer | HttpsServer | Http2Server | Http2SecureServer | WebSocket.Server) {
