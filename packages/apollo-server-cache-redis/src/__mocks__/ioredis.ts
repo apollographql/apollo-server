@@ -3,8 +3,9 @@ const IORedis = jest.genMockFromModule('ioredis');
 const keyValue = {};
 
 const deleteKey = key => {
+  const keysDeleted = keyValue.hasOwnProperty(key) ? 1 : 0;
   delete keyValue[key];
-  return Promise.resolve(true);
+  return Promise.resolve(keysDeleted);
 };
 
 const getKey = key => {
