@@ -29,7 +29,7 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
-// FIXME start
+await server.start();
 
 const app = new Koa();
 server.applyMiddleware({ app });

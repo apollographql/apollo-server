@@ -52,7 +52,6 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
-// FIXME start
 
 exports.graphqlHandler = server.createHandler();
 ```
@@ -165,7 +164,6 @@ const server = new ApolloServer({
     context,
   }),
 });
-// FIXME start
 
 exports.graphqlHandler = server.createHandler();
 ```
@@ -192,7 +190,6 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
-// FIXME start
 
 exports.graphqlHandler = server.createHandler({
   cors: {
@@ -222,7 +219,6 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
-// FIXME start
 
 exports.graphqlHandler = server.createHandler({
   cors: {

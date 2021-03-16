@@ -41,7 +41,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
-// FIXME start
+await server.start();
 
 server.applyMiddleware({ app });
 
