@@ -1172,6 +1172,8 @@ export class ApolloServerBase {
       // (and they're not using `apollo-server` which does that for you). First
       // we log the error that prevented startup (which means it will get logged
       // once for every GraphQL operation).
+      // FIXME the message this error prints is inaccurate in the "shutting down"
+      // case.
       this.logStartupError(err);
       // Now make the operation itself fail.
       // We intentionally do not re-throw actual startup error as it may contain
