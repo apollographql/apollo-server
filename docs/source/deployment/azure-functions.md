@@ -84,7 +84,6 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
-// FIXME start
 exports.graphqlHandler = server.createHandler();
 ```
 

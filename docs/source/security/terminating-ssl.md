@@ -30,7 +30,7 @@ const environment = process.env.NODE_ENV || 'production'
 const config = configurations[environment]
 
 const apollo = new ApolloServer({ typeDefs, resolvers })
-// FIXME start
+await apollo.start()
 
 const app = express()
 apollo.applyMiddleware({ app })

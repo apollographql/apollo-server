@@ -37,7 +37,6 @@ const server = new ApolloServer({
   playground: true,
   introspection: true,
 });
-// FIXME start
 
 exports.handler = server.createHandler();
 ```
@@ -83,7 +82,6 @@ const server = new ApolloServer({
     res,
   }),
 });
-// FIXME start
 
 exports.handler = server.createHandler();
 ```
@@ -113,7 +111,6 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
-// FIXME start
 
 exports.handler = server.createHandler({
   cors: {
@@ -146,7 +143,6 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
-// FIXME start
 
 exports.handler = server.createHandler({
   cors: {

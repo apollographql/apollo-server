@@ -35,7 +35,7 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-// FIXME start
+await server.start();
 module.exports = apolloServer.createHandler();
 ```
 
@@ -87,7 +87,7 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-// FIXME start
+await server.start();
 const handler = apolloServer.createHandler(); // highlight-line
 module.exports = cors((req, res) => req.method === 'OPTIONS' ? res.end() : handler(req, res)) // highlight-line
 ```
@@ -139,7 +139,7 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-// FIXME start
+await server.start();
 module.exports = apolloServer.createHandler({ path: '/data' }); // highlight-line
 ```
 
@@ -192,7 +192,7 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-// FIXME start
+await server.start();
 const graphqlPath = '/data';
 const graphqlHandler = apolloServer.createHandler({ path: graphqlPath });
 module.exports = router(

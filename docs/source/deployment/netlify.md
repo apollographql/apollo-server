@@ -84,7 +84,6 @@ const server = new ApolloServer({
   typeDefs,
   resolvers
 });
-// FIXME start
 
 exports.handler = server.createHandler();
 ```
