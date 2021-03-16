@@ -129,6 +129,7 @@ export interface Config extends BaseConfig {
   apollo?: ApolloConfigInput;
   // deprecated; see https://go.apollo.dev/s/migration-engine-plugins
   engine?: boolean | EngineReportingOptions<Context>;
+  throwOnInitializationErorr?: boolean
 }
 
 // Configuration for the built-in graphql-upload integration.

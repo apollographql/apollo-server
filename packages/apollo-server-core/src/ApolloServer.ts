@@ -560,6 +560,9 @@ export class ApolloServerBase {
     try {
       var { schema, schemaHash } = await this.schemaDerivedData;
     } catch (err) {
+      if (this.config.throwOnInitializationErorr) {
+        throw err
+      }
       // The `schemaDerivedData` can throw if the Promise it points to does not
       // resolve with a `GraphQLSchema`. As errors from `willStart` are start-up
       // errors, other Apollo middleware after us will not be called, including
