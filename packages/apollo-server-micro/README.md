@@ -35,8 +35,7 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-await server.start();
-module.exports = apolloServer.createHandler();
+module.exports = apolloServer.start().then(() => apolloServer.createHandler());
 ```
 
 3) `package.json`
@@ -87,9 +86,10 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-await server.start();
-const handler = apolloServer.createHandler(); // highlight-line
-module.exports = cors((req, res) => req.method === 'OPTIONS' ? res.end() : handler(req, res)) // highlight-line
+module.exports = apolloServer.start().then(() => {
+  const handler = apolloServer.createHandler(); // highlight-line
+  return cors((req, res) => req.method === 'OPTIONS' ? res.end() : handler(req, res)) // highlight-line
+});
 ```
 
 3) `package.json`
@@ -139,8 +139,9 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-await server.start();
-module.exports = apolloServer.createHandler({ path: '/data' }); // highlight-line
+module.exports = apolloServer.start().then(() => {
+  return apolloServer.createHandler({ path: '/data' });  // highlight-line
+});
 ```
 
 3) `package.json`
@@ -192,14 +193,15 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-await server.start();
-const graphqlPath = '/data';
-const graphqlHandler = apolloServer.createHandler({ path: graphqlPath });
-module.exports = router(
-  get('/', (req, res) => 'Welcome!'),
-  post(graphqlPath, graphqlHandler),
-  get(graphqlPath, graphqlHandler),
-);
+module.exports = apolloServer.start().then(() => {
+  const graphqlPath = '/data';
+  const graphqlHandler = apolloServer.createHandler({ path: graphqlPath });
+  return router(
+    get('/', (req, res) => 'Welcome!'),
+    post(graphqlPath, graphqlHandler),
+    get(graphqlPath, graphqlHandler),
+  );
+});
 ```
 
 3) `package.json`
