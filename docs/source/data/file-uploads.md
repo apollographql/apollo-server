@@ -3,6 +3,8 @@ title: File uploads
 description: Enabling file uploads in Apollo Server
 ---
 
+> Note: Apollo Server 2 has built-in support for file uploads which is based on the [`graphql-upload` npm package](https://www.npmjs.com/package/graphql-upload). For backwards compatibility, Apollo Server is stuck depending on an old version of `graphql-upload` that does not fully support Node 14. We are planning to remove this integration in Apollo Server 3 and will instead document how to use `graphql-upload` directly (and work to make sure that all Apollo Server integration libraries have appropriate hooks to let you do so). If you want to use file uploads with Node 14 or use any of the more recently released features of `graphql-upload`, you are encouraged to disable the built-in integration by passing `uploads: false` to `new ApolloServer` and use `graphql-upload`'s API directly as documented in that package's documents. The rest of this page describes how to use the built-in integration.
+
 For server integrations that support file uploads (e.g. Express, hapi, Koa), Apollo Server enables file uploads by default. To enable file uploads, reference the `Upload` type in the schema passed to the Apollo Server construction.
 
 ```js
