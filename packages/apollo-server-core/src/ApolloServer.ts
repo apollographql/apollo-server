@@ -434,9 +434,10 @@ export class ApolloServerBase {
     // unlike (eg) applyMiddleware, so we can't expect you to `await
     // server.start()` before calling it. So we kick off the start
     // asynchronously from the constructor, and failures are logged and cause
-    // later requests to fail (in graphQLServerOptions). There's no way to make
-    // "the whole server fail" separately from making individual requests fail,
-    // but that's not entirely unreasonable for a "serverless" model.
+    // later requests to fail (in ensureStarted, called by
+    // graphQLServerOptions). There's no way to make "the whole server fail"
+    // separately from making individual requests fail, but that's not entirely
+    // unreasonable for a "serverless" model.
     if (this.serverlessFramework()) {
       this.ensureStarting();
     }
@@ -577,11 +578,17 @@ export class ApolloServerBase {
     }
   }
 
-  // Part of the backwards-compatibility behavior described above `start`
-  // to make ApolloServer work if you don't explicitly call `start`. This is
-  // called at the beginning of each GraphQL request by `graphQLServerOptions`.
-  // It calls `start` for you if it hasn't been called yet, and only returns
-  // successfully if some call to `start` succeeds.
+  // Part of the backwards-compatibility behavior described above `start` to
+  // make ApolloServer work if you don't explicitly call `start`, as well as for
+  // serverless frameworks where there is no `start`. This is called at the
+  // beginning of each GraphQL request by `graphQLServerOptions`. It calls
+  // `start` for you if it hasn't been called yet, and only returns successfully
+  // if some call to `start` succeeds.
+  //
+  // This function assumes it is being called in a context where any error it
+  // throws may be shown to the end user, so it only throws specific errors
+  // without details. If it's throwing due to a startup error, it will log that
+  // error each time it is called before throwing a redacted error.
   private async ensureStarted(): Promise<SchemaDerivedData> {
     while (true) {
       switch (this.state.phase) {
@@ -596,13 +603,26 @@ export class ApolloServerBase {
           // continue the while loop
           break;
         case 'failed to start':
-          throw this.state.error;
+          //  First
+          // we log the error that prevented startup (which means it will get logged
+          // once for every GraphQL operation).
+          this.logStartupError(this.state.error);
+          // Now make the operation itself fail.
+          // We intentionally do not re-throw actual startup error as it may contain
+          // implementation details and this error will propagate to the client.
+          throw new Error(
+            'This data graph is missing a valid configuration. More details may be available in the server logs.',
+          );
         case 'started':
           return this.state.schemaDerivedData;
         case 'stopping':
-          throw new Error('Apollo Server is stopping');
+          throw new Error(
+            'Cannot execute GraphQL operations while the server is stopping.',
+          );
         case 'stopped':
-          throw new Error('Apollo Server has stopped');
+          throw new Error(
+            'Cannot execute GraphQL operations after the server has stopped.',
+          );
         default:
           throw new UnreachableCaseError(this.state);
       }
@@ -630,7 +650,7 @@ export class ApolloServerBase {
       // to call and await `start()`; that way they'd be able to learn
       // about any errors from it. Instead we'll kick it off here.
       // Any thrown error will get logged, and also will cause
-      // every call to graphQLServerOptions (ie, every GraphQL operation)
+      // every call to ensureStarted (ie, every GraphQL operation)
       // to log it again and prevent the operation from running.
       this._start().catch((e) => this.logStartupError(e));
     }
@@ -638,7 +658,7 @@ export class ApolloServerBase {
 
   // Given an error that occurred during Apollo Server startup, log it with a
   // helpful message. Note that this is only used if `ensureStarting` or
-  // `graphQLServerOptions` had to initiate the startup process; if you call
+  // `ensureStarted` had to initiate the startup process; if you call
   // `start` yourself (or you're using `apollo-server` whose `listen()` does
   // it for you) then you can handle the error however you'd like rather than
   // this log occurring. (We don't suggest the use of `start()` for serverless
@@ -1164,26 +1184,12 @@ export class ApolloServerBase {
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ): Promise<GraphQLServerOptions> {
-    let schemaDerivedData: SchemaDerivedData;
-    try {
-      schemaDerivedData = await this.ensureStarted();
-    } catch (err) {
-      // This means that the user didn't call and await `server.start()` themselves
-      // (and they're not using `apollo-server` which does that for you). First
-      // we log the error that prevented startup (which means it will get logged
-      // once for every GraphQL operation).
-      // FIXME the message this error prints is inaccurate in the "shutting down"
-      // case.
-      this.logStartupError(err);
-      // Now make the operation itself fail.
-      // We intentionally do not re-throw actual startup error as it may contain
-      // implementation details and this error will propagate to the client.
-      throw new Error(
-        'This data graph is missing a valid configuration. More details may be available in the server logs.',
-      );
-    }
-
-    const { schema, schemaHash, documentStore, extensions } = schemaDerivedData;
+    const {
+      schema,
+      schemaHash,
+      documentStore,
+      extensions,
+    } = await this.ensureStarted();
 
     let context: Context = this.context ? this.context : {};
 
