@@ -697,6 +697,9 @@ The full URL of the server's subscriptions endpoint.
 </tbody>
 </table>
 
+#### `start`
+
+`ApolloServer.start()` is an async method that tells your Apollo Server to do everything necessary to become ready to start serving traffic. FIXME finish this
 #### `applyMiddleware`
 
 Connects Apollo Server to the HTTP framework of a Node.js middleware library, such as hapi or express.
@@ -716,7 +719,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
-// FIXME add start here
+// FIXME add start here, and generally fix top level awaits
 
 const app = express();
 
