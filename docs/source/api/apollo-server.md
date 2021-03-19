@@ -699,12 +699,26 @@ The full URL of the server's subscriptions endpoint.
 
 #### `start`
 
-`ApolloServer.start()` is an async method that tells your Apollo Server to do everything necessary to become ready to start serving traffic. FIXME finish this
+`ApolloServer.start()` is an async method that tells your Apollo Server to do everything necessary to prepare to serve traffic.
+
+You should not call this if you are using the `apollo-server` package; that package's [`listen`](#listen) method begins by starting the server for you.
+
+You should not call this if you are using `apollo-server-lambda`, `apollo-server-azure-functions`, or `apollo-server-cloud-functions`; these "serverless" framework integrations don't differentiate between "starting the server" and "serving a request".
+
+You *should* call this if you are using another integration package such as `apollo-server-express`. Specifically, you should call `await server.start()` *before* calling `server.applyMiddleware` and starting your HTTP server. This will allow you to react to Apollo Server startup failures by crashing your process rather than starting to serve traffic.
+
+Starting your server consists of two steps.
+
+First, if your server is a [federated gateway](https://www.apollographql.com/docs/federation/managed-federation/overview/), it loads its schema; if it cannot load the schema, `start()` throws.
+
+Second, all [plugin `serverWillStart` handlers](../integrations/plugins/#serverwillstart) are invoked in parallel; if any of these throw, `start()` throws.
+
+For backwards compatibility reasons, calling `await server.start()` is optional. If you don't call it yourself, your integration package will invoke it "in the background" when you call `server.applyMiddleware`, and any attempt to execute a GraphQL operation will wait until the server has started and fail if startup fails (with a redacted error message sent to the GraphQL client). We recommend calling it yourself, so that your web server doesn't start trying to serve traffic until the Apollo Server is capable of accepting it.
 #### `applyMiddleware`
 
 Connects Apollo Server to the HTTP framework of a Node.js middleware library, such as hapi or express.
 
-You call this method instead of [`listen`](#listen) if you're using an `apollo-server-{integration}` package.
+You call this method instead of [`listen`](#listen) if you're using an `apollo-server-{integration}` package. You are highly recommended to [`await server.start()`](#start) before calling this method.
 
 Takes an `options` object as a parameter. Supported fields of this object are described below.
 
@@ -715,19 +729,24 @@ const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-// FIXME add start here, and generally fix top level awaits
+async function startApolloServer() {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
+  await server.start();
 
-const app = express();
+  const app = express();
 
-// Additional middleware can be mounted at this point to run before Apollo.
-app.use('*', jwtCheck, requireAuth, checkScope);
+  // Additional middleware can be mounted at this point to run before Apollo.
+  app.use('*', jwtCheck, requireAuth, checkScope);
 
-// Mount Apollo middleware here.
-server.applyMiddleware({ app, path: '/specialUrl' });
+  // Mount Apollo middleware here.
+  server.applyMiddleware({ app, path: '/specialUrl' });
+  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
+  return { server, app };
+}
 ```
 
 ##### Options
