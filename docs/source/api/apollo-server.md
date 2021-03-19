@@ -159,7 +159,7 @@ An executable GraphQL schema. You usually don't need to provide this value, beca
 
 This field is most commonly used with [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses a special `buildFederatedSchema` function to generate its schema.
 
-Note that if you are using [file uploads](../data/file-uploads/), you need to add the `Upload` scalar to your schema manually before providing it here.
+Note that if you are using [file uploads](../data/file-uploads/), you need to add the `Upload` scalar to your schema manually before providing it here, as Apollo Server's automatic uploads integration does not apply if you use this particular option..
 </td>
 </tr>
 
@@ -224,6 +224,21 @@ Providing a function is useful if you want to use a different root value dependi
 <td>
 
 An object containing custom functions to use as additional [validation rules](https://github.com/graphql/graphql-js/tree/master/src/validation/rules) when validating the schema.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `uploads`
+
+`Object` or `Boolean`
+</td>
+<td>
+
+By default, Apollo Server 2 [integrates](../data/file-uploads/) an outdated version of [the `graphql-upload` npm module](https://www.npmjs.com/package/graphql-upload#graphql-upload) into your schema which does not support Node 14. If you provide an object here, it will be passed as the third `options` argument to that module's `processRequest` option.
+
+We recommend instead that you pass `false` here, which will disable Apollo Server's integration with `graphql-upload`, and instead integrate the latest version of that module directly. This integration will be removed in Apollo Server 3.
 </td>
 </tr>
 
