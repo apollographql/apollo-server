@@ -60,4 +60,4 @@ Apollo Server's built-in support for file uploads relies on an old version of th
 
 > To prevent similar backward compatibility issues in the future, Apollo Server 3 will not include built-in file upload support.
 
-To use file uploads with Node 14, you can disable built-in support by passing `uploads: false` to [the `ApolloServer` constructor](../api/apollo-server/#constructor). You can then install and use the lastest version of `graphql-upload` directly ([see the documentation](https://www.npmjs.com/package/graphql-upload#graphql-upload)).
+To use file uploads with Node 14, you can disable built-in support by passing `uploads: false` to [the `ApolloServer` constructor](../api/apollo-server/#uploads). You can then install and use the lastest version of `graphql-upload` directly ([see the documentation](https://www.npmjs.com/package/graphql-upload#graphql-upload)).
