@@ -1,9 +1,10 @@
 ---
-title: Auth
-description: Authorize users and control access to your data
+title: Authentication and authorization
+sidebar_title: Auth
+description: Control access to your GraphQL API
 ---
 
-Your GraphQL API will probably need to control which users can see and interact with the various data it provides.
+Your GraphQL API probably needs to control which users can see and interact with the various data it provides.
 
 * **Authentication** is determining whether a given user is logged in, and subsequently determining _which_ user someone is.
 * **Authorization** is then determining what a given user has permission to do or see.
