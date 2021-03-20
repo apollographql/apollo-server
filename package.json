@@ -75,7 +75,7 @@
     "@types/loglevel": "1.5.4",
     "@types/lru-cache": "5.1.0",
     "@types/memcached": "2.2.6",
-    "@types/micro": "7.3.3",
+    "@types/micro": "7.3.4",
     "@types/nock": "10.0.3",
     "@types/node": "8.10.65",
     "@types/node-fetch": "2.5.8",
