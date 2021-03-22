@@ -129,7 +129,7 @@ type ServerState =
       barrier: Resolvable<void>;
       schemaDerivedData: SchemaDerivedData;
     }
-  | { phase: 'failed to start'; error: Error }
+  | { phase: 'failed to start'; error: Error; loadedSchema: boolean }
   | {
       phase: 'started';
       schemaDerivedData: SchemaDerivedData;
@@ -499,6 +499,8 @@ export class ApolloServerBase {
     return await this._start();
   }
 
+  // This is protected so that it can be called from `apollo-server`. It is
+  // otherwise an internal implementation detail.
   protected async _start(): Promise<void> {
     const initialState = this.state;
     if (
@@ -511,6 +513,7 @@ export class ApolloServerBase {
     }
     const barrier = resolvable();
     this.state = { phase: 'starting', barrier };
+    let loadedSchema = false;
     try {
       const schemaDerivedData =
         initialState.phase === 'initialized with schema'
@@ -518,7 +521,7 @@ export class ApolloServerBase {
           : this.generateSchemaDerivedData(
               await this.startGatewayAndLoadSchema(initialState.gateway),
             );
-
+      loadedSchema = true;
       this.state = {
         phase: 'invoking serverWillStart',
         barrier,
@@ -571,10 +574,36 @@ export class ApolloServerBase {
 
       this.state = { phase: 'started', schemaDerivedData };
     } catch (error) {
-      this.state = { phase: 'failed to start', error };
+      this.state = { phase: 'failed to start', error, loadedSchema };
       throw error;
     } finally {
       barrier.resolve();
+    }
+  }
+
+  /**
+   * @deprecated This deprecated method is provided for backwards compatibility
+   * with the pre-v2.22 API. It could be used for purposes similar to `start` or
+   * `ensureStarting`, and was used by integrations. It had odd error handling
+   * semantics, in that it would ignore any error that came from loading the
+   * schema, but would throw errors that came from `serverWillStart`. Anyone
+   * calling it should call `start` or `ensureStarting` instead.
+   */
+  protected async willStart() {
+    try {
+      this._start();
+    } catch (e) {
+      if (
+        this.state.phase === 'failed to start' &&
+        this.state.error === e &&
+        !this.state.loadedSchema
+      ) {
+        // For backwards compatibility with the odd semantics of the old
+        // willStart method, don't throw if the error occurred in loading the
+        // schema.
+        return;
+      }
+      throw e;
     }
   }
 
@@ -594,7 +623,7 @@ export class ApolloServerBase {
       switch (this.state.phase) {
         case 'initialized with gateway':
         case 'initialized with schema':
-          await this.start();
+          await this._start();
           // continue the while loop
           break;
         case 'starting':
