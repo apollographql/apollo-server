@@ -725,7 +725,7 @@ We recommend calling `await server.start()` yourself, so that your web server do
 
 Connects Apollo Server to the HTTP framework of a Node.js middleware library, such as hapi or express.
 
-You call this method instead of [`listen`](#listen) if you're using an `apollo-server-{integration}` package. Unless you're using a "serverless" integration, always call [`await server.start()`](#start) _before_ calling this method.
+You call this method instead of [`listen`](#listen) if you're using a [middleware integration](../integrations/middleware/), such as `apollo-server-express`. You should call [`await server.start()`](#start) _before_ calling this method.
 
 Takes an `options` object as a parameter. Supported fields of this object are described below.
 
