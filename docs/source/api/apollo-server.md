@@ -617,7 +617,7 @@ A lifecycle hook that's called whenever a subscription connection is terminated 
 
 #### `listen`
 
-> This method is provided only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package (such as `apollo-server-express`), instead see [`applyMiddleware`](#applymiddleware).
+> This method is provided only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package (such as `apollo-server-express`), instead see both [`start`](#start) and [`applyMiddleware`](#applymiddleware).
 
 Instructs Apollo Server to begin listening for incoming requests:
 
@@ -697,11 +697,35 @@ The full URL of the server's subscriptions endpoint.
 </tbody>
 </table>
 
+#### `start`
+
+The async `start` method instructs Apollo Server to prepare to handle incoming operations.
+
+> Call `start` **only** if you are using a [middleware integration](../integrations/middleware/) for a non-"serverless" environment (e.g., `apollo-server-express`).
+>
+> * If you're using the core `apollo-server` library, call [`listen`](#listen) instead.
+> * If you're using a "serverless" middleware integration (such as `apollo-server-lambda`), this method isn't necessary because the integration doesn't distinguish between starting the server and serving a request.
+
+Always call `await server.start()` *before* calling `server.applyMiddleware` and starting your HTTP server. This allows you to react to Apollo Server startup failures by crashing your process instead of starting to serve traffic.
+
+##### Triggered actions
+
+The `start` method triggers the following actions:
+
+1. If your server is a [federated gateway](https://www.apollographql.com/docs/federation/managed-federation/overview/), it attempts to fetch its schema. If the fetch fails, `start` throws an error.
+2. Your server calls all of the [`serverWillStart` handlers](../integrations/plugins/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
+
+##### Backward compatibility
+
+To ensure backward compatibility, calling `await server.start()` is optional. If you don't call it yourself, your integration package invokes it when you call `server.applyMiddleware`. Incoming GraphQL operations wait to execute until Apollo Server has started, and those operations fail if startup fails (a redacted error message is sent to the GraphQL client).
+
+We recommend calling `await server.start()` yourself, so that your web server doesn't start accepting GraphQL requests until Apollo Server is ready to process them.
+
 #### `applyMiddleware`
 
 Connects Apollo Server to the HTTP framework of a Node.js middleware library, such as hapi or express.
 
-You call this method instead of [`listen`](#listen) if you're using an `apollo-server-{integration}` package.
+You call this method instead of [`listen`](#listen) if you're using a [middleware integration](../integrations/middleware/), such as `apollo-server-express`. You should call [`await server.start()`](#start) _before_ calling this method.
 
 Takes an `options` object as a parameter. Supported fields of this object are described below.
 
@@ -712,18 +736,24 @@ const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
+async function startApolloServer() {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
+  await server.start();
 
-const app = express();
+  const app = express();
 
-// Additional middleware can be mounted at this point to run before Apollo.
-app.use('*', jwtCheck, requireAuth, checkScope);
+  // Additional middleware can be mounted at this point to run before Apollo.
+  app.use('*', jwtCheck, requireAuth, checkScope);
 
-// Mount Apollo middleware here.
-server.applyMiddleware({ app, path: '/specialUrl' });
+  // Mount Apollo middleware here.
+  server.applyMiddleware({ app, path: '/specialUrl' });
+  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
+  return { server, app };
+}
 ```
 
 ##### Options
