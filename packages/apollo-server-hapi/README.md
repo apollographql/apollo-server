@@ -18,6 +18,7 @@ const Hapi = require('hapi');
 
 async function StartServer() {
   const server = new ApolloServer({ typeDefs, resolvers });
+  await server.start();
 
   const app = new Hapi.server({
     port: 4000

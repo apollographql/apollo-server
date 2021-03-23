@@ -37,16 +37,15 @@ describe('ApolloServerBase construction', () => {
 
   it('succeeds when passed a graphVariant in construction', () => {
     let serverBase;
-    expect(
-      () =>
-        new ApolloServerBase({
-          typeDefs,
-          resolvers,
-          engine: {
-            graphVariant: 'foo',
-            apiKey: 'not:real:key',
-          },
-        }).stop()
+    expect(() =>
+      new ApolloServerBase({
+        typeDefs,
+        resolvers,
+        engine: {
+          graphVariant: 'foo',
+          apiKey: 'not:real:key',
+        },
+      }).stop(),
     ).not.toThrow();
   });
 
@@ -88,7 +87,7 @@ describe('ApolloServerBase construction', () => {
         schema: {},
       });
     }).toThrowErrorMatchingInlineSnapshot(
-      `"Unexpected error: Unable to resolve a valid GraphQLSchema.  Please file an issue with a reproduction of this error, if possible."`,
+      `"Expected {} to be a GraphQL schema."`,
     );
   });
 

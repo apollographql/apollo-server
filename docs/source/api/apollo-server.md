@@ -159,7 +159,7 @@ An executable GraphQL schema. You usually don't need to provide this value, beca
 
 This field is most commonly used with [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses a special `buildFederatedSchema` function to generate its schema.
 
-Note that if you are using [file uploads](../data/file-uploads/), you need to add the `Upload` scalar to your schema manually before providing it here.
+Note that if you are using [file uploads](../data/file-uploads/), you need to add the `Upload` scalar to your schema manually before providing it here, as Apollo Server's automatic uploads integration does not apply if you use this particular option..
 </td>
 </tr>
 
@@ -224,6 +224,21 @@ Providing a function is useful if you want to use a different root value dependi
 <td>
 
 An object containing custom functions to use as additional [validation rules](https://github.com/graphql/graphql-js/tree/master/src/validation/rules) when validating the schema.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `uploads`
+
+`Object` or `Boolean`
+</td>
+<td>
+
+By default, Apollo Server 2 [integrates](../data/file-uploads/) an outdated version of [the `graphql-upload` npm module](https://www.npmjs.com/package/graphql-upload#graphql-upload) into your schema which does not support Node 14. If you provide an object here, it will be passed as the third `options` argument to that module's `processRequest` option.
+
+We recommend instead that you pass `false` here, which will disable Apollo Server's integration with `graphql-upload`, and instead integrate the latest version of that module directly. This integration will be removed in Apollo Server 3.
 </td>
 </tr>
 
@@ -602,7 +617,7 @@ A lifecycle hook that's called whenever a subscription connection is terminated 
 
 #### `listen`
 
-> This method is provided only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package (such as `apollo-server-express`), instead see [`applyMiddleware`](#applymiddleware).
+> This method is provided only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package (such as `apollo-server-express`), instead see both [`start`](#start) and [`applyMiddleware`](#applymiddleware).
 
 Instructs Apollo Server to begin listening for incoming requests:
 
@@ -682,11 +697,35 @@ The full URL of the server's subscriptions endpoint.
 </tbody>
 </table>
 
+#### `start`
+
+The async `start` method instructs Apollo Server to prepare to handle incoming operations.
+
+> Call `start` **only** if you are using a [middleware integration](../integrations/middleware/) for a non-"serverless" environment (e.g., `apollo-server-express`).
+>
+> * If you're using the core `apollo-server` library, call [`listen`](#listen) instead.
+> * If you're using a "serverless" middleware integration (such as `apollo-server-lambda`), this method isn't necessary because the integration doesn't distinguish between starting the server and serving a request.
+
+Always call `await server.start()` *before* calling `server.applyMiddleware` and starting your HTTP server. This allows you to react to Apollo Server startup failures by crashing your process instead of starting to serve traffic.
+
+##### Triggered actions
+
+The `start` method triggers the following actions:
+
+1. If your server is a [federated gateway](https://www.apollographql.com/docs/federation/managed-federation/overview/), it attempts to fetch its schema. If the fetch fails, `start` throws an error.
+2. Your server calls all of the [`serverWillStart` handlers](../integrations/plugins/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
+
+##### Backward compatibility
+
+To ensure backward compatibility, calling `await server.start()` is optional. If you don't call it yourself, your integration package invokes it when you call `server.applyMiddleware`. Incoming GraphQL operations wait to execute until Apollo Server has started, and those operations fail if startup fails (a redacted error message is sent to the GraphQL client).
+
+We recommend calling `await server.start()` yourself, so that your web server doesn't start accepting GraphQL requests until Apollo Server is ready to process them.
+
 #### `applyMiddleware`
 
 Connects Apollo Server to the HTTP framework of a Node.js middleware library, such as hapi or express.
 
-You call this method instead of [`listen`](#listen) if you're using an `apollo-server-{integration}` package.
+You call this method instead of [`listen`](#listen) if you're using a [middleware integration](../integrations/middleware/), such as `apollo-server-express`. You should call [`await server.start()`](#start) _before_ calling this method.
 
 Takes an `options` object as a parameter. Supported fields of this object are described below.
 
@@ -697,18 +736,24 @@ const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
+async function startApolloServer() {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
+  await server.start();
 
-const app = express();
+  const app = express();
 
-// Additional middleware can be mounted at this point to run before Apollo.
-app.use('*', jwtCheck, requireAuth, checkScope);
+  // Additional middleware can be mounted at this point to run before Apollo.
+  app.use('*', jwtCheck, requireAuth, checkScope);
 
-// Mount Apollo middleware here.
-server.applyMiddleware({ app, path: '/specialUrl' });
+  // Mount Apollo middleware here.
+  server.applyMiddleware({ app, path: '/specialUrl' });
+  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
+  return { server, app };
+}
 ```
 
 ##### Options
