@@ -159,7 +159,7 @@ export class ApolloServer extends ApolloServerBase {
     // Note that we don't just pass all of these handlers to a single app.use call
     // for 'connect' compatibility.
     if (cors === true) {
-      router.use(path, corsMiddleware());
+      router.use(path, corsMiddleware<corsMiddleware.CorsRequest>());
     } else if (cors !== false) {
       router.use(path, corsMiddleware(cors));
     }
