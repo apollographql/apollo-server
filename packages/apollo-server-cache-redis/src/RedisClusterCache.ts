@@ -6,14 +6,16 @@ import Redis, {
 import { BaseRedisCache } from './BaseRedisCache';
 
 export class RedisClusterCache extends BaseRedisCache {
-  readonly client: any;
+  private readonly clusterClient: Redis.Cluster;
 
   constructor(nodes: ClusterNode[], options?: ClusterOptions) {
-    super(new Redis.Cluster(nodes, options));
+    const clusterClient = new Redis.Cluster(nodes, options)
+    super(clusterClient);
+    this.clusterClient = clusterClient;
   }
 
   async flush(): Promise<void> {
-    const masters = this.client.nodes('master') || [];
+    const masters = this.clusterClient.nodes('master') || [];
     await Promise.all(masters.map((node: RedisInstance) => node.flushdb()));
   }
 }
