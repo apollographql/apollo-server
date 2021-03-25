@@ -1256,6 +1256,20 @@ export class ApolloServerBase {
     };
   }
 
+  /**
+   * This method is primarily meant for testing: it allows you to execute a
+   * GraphQL operation via the request pipeline without going through without
+   * going through the HTTP layer. Note that this means that any handling you do
+   * in your server at the HTTP level will not affect this call!
+   *
+   * If you pass a second argument to this method and your ApolloServer's
+   * `context` is a function, that argument will be passed directly to your
+   * `context` function. It is your responsibility to make it as close as needed
+   * by your `context` function to the integration-specific argument that your
+   * integration passes to `context` (eg, for `apollo-server-express`, the
+   * `{req: express.Request, res: express.Response }` object) and to keep it
+   * updated as you upgrade Apollo Server.
+   */
   public async executeOperation(request: GraphQLRequest, integrationContextArgument?: Record<string, any>) {
     const options = await this.graphQLServerOptions(integrationContextArgument);
 
