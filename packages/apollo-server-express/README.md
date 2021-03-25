@@ -49,7 +49,7 @@ async function startApolloServer() {
 > to `apollo-server-express`.
 
 ```shell
-npm install --save connect qs-middleware apollo-server-express
+npm install --save connect qs-middleware apollo-server-express graphql
 ```
 
 ```js
