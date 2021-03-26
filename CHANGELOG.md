@@ -13,6 +13,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-core`: Add optional argument to `ApolloServer.executeOperation` allowing the caller to manually specify an argument to the `config` function analogous to that provided by integration packages. [PR #4166](https://github.com/apollographql/apollo-server/pull/4166) [Issue #2886](https://github.com/apollographql/apollo-server/issues/2886)
 
+## v2.22.1
+
 - `apollo-server-core`: Fix a regression in v2.22.0 where startup errors could be thrown as part of the GraphQL response instead of redacted in one edge case. [PR #5064](https://github.com/apollographql/apollo-server/pull/5064)
 
 ## v2.22.0
