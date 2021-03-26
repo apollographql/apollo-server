@@ -13,6 +13,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-core`: Add optional argument to `ApolloServer.executeOperation` allowing the caller to manually specify an argument to the `config` function analogous to that provided by integration packages. [PR #4166](https://github.com/apollographql/apollo-server/pull/4166) [Issue #2886](https://github.com/apollographql/apollo-server/issues/2886)
 
+- `apollo-server-core`: Fix a regression in v2.22.0 where startup errors could be thrown as part of the GraphQL response instead of redacted in one edge case. [PR #5064](https://github.com/apollographql/apollo-server/pull/5064)
+
 ## v2.22.0
 
 - Improve startup error handling by ensuring that your server has loaded its schema and executed its `serverWillStart` handlers successfully before starting an HTTP server. If you're using the `apollo-server` package, no code changes are necessary. If you're using an integration such as `apollo-server-express` that is not a "serverless framework", you can insert [`await server.start()`](https://www.apollographql.com/docs/apollo-server/api/apollo-server/#start) between `server = new ApolloServer()` and `server.applyMiddleware`. (If you don't call `server.start()` yourself, your server will still work, but the previous behavior of starting a web server that may fail to load its schema still applies.) The serverless framework integrations (Lambda, Azure Functions, and Cloud Functions) do not support this functionality. While the protected method `willStart` still exists for backwards compatibility, you should replace calls to it with `start` or the new protected method `ensureStarting`. [PR #4981](https://github.com/apollographql/apollo-server/pull/4981)

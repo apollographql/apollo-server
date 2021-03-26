@@ -623,7 +623,12 @@ export class ApolloServerBase {
       switch (this.state.phase) {
         case 'initialized with gateway':
         case 'initialized with schema':
-          await this._start();
+          try {
+            await this._start();
+          } catch {
+            // Any thrown error should transition us to 'failed to start', and
+            // we'll handle that on the next iteration of the while loop.
+          }
           // continue the while loop
           break;
         case 'starting':
@@ -632,9 +637,8 @@ export class ApolloServerBase {
           // continue the while loop
           break;
         case 'failed to start':
-          //  First
-          // we log the error that prevented startup (which means it will get logged
-          // once for every GraphQL operation).
+          // First we log the error that prevented startup (which means it will
+          // get logged once for every GraphQL operation).
           this.logStartupError(this.state.error);
           // Now make the operation itself fail.
           // We intentionally do not re-throw actual startup error as it may contain
