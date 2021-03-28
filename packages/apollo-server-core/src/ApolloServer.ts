@@ -174,6 +174,7 @@ export class ApolloServerBase {
   private toDispose = new Set<() => Promise<void>>();
   private toDisposeLast = new Set<() => Promise<void>>();
   private experimental_approximateDocumentStoreMiB: Config['experimental_approximateDocumentStoreMiB'];
+  private schemaResolverDerivedData: WeakMap<GraphQLSchema, SchemaDerivedData> = new Map();
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
@@ -183,6 +184,7 @@ export class ApolloServerBase {
       context,
       resolvers,
       schema,
+      schemaRouter,
       schemaDirectives,
       modules,
       typeDefs,
@@ -235,9 +237,9 @@ export class ApolloServerBase {
 
     this.apolloConfig = determineApolloConfig(apollo, engine, this.logger);
 
-    if (gateway && (modules || schema || typeDefs || resolvers)) {
+    if (gateway && (modules || schema || typeDefs || resolvers || schemaRouter)) {
       throw new Error(
-        'Cannot define both `gateway` and any of: `modules`, `schema`, `typeDefs`, or `resolvers`',
+        'Cannot define both `gateway` and any of: `modules`, `schema`, `typeDefs`, `schemaRouter`, or `resolvers`',
       );
     }
 
@@ -1217,12 +1219,29 @@ export class ApolloServerBase {
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ): Promise<GraphQLServerOptions> {
-    const {
-      schema,
-      schemaHash,
-      documentStore,
-      extensions,
-    } = await this.ensureStarted();
+    let schemaDerivedData = await this.ensureStarted();
+
+    // dynamic schema selection based on integration specific-options
+    if (this.config.schemaRouter) {
+      const schemaRouter = this.config.schemaRouter;
+      // resolve the schema from the router function
+      const resolvedSchema = await schemaRouter(
+        integrationContextArgument || {},
+        schemaDerivedData.schema
+      );
+      // If the schema returned by the schema resolver is the same as the
+      // default schema, we don't need to do anything special here.
+      // Otherwise, we generate new derived data for the schema, then save that
+      // value for use in future calls.
+      if (resolvedSchema) {
+        if (this.schemaResolverDerivedData.has(resolvedSchema)) {
+          schemaDerivedData = this.schemaResolverDerivedData.get(resolvedSchema)!;
+        } else {
+          schemaDerivedData = this.generateSchemaDerivedData(resolvedSchema);
+          this.schemaResolverDerivedData.set(resolvedSchema, schemaDerivedData);
+        }
+      }
+    }
 
     let context: Context = this.context ? this.context : {};
 
@@ -1239,12 +1258,9 @@ export class ApolloServerBase {
     }
 
     return {
-      schema,
-      schemaHash,
+      ...schemaDerivedData,
       logger: this.logger,
       plugins: this.plugins,
-      documentStore,
-      extensions,
       context,
       // Allow overrides from options. Be explicit about a couple of them to
       // avoid a bad side effect of the otherwise useful noUnusedLocals option

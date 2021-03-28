@@ -47,6 +47,7 @@ module.exports = {
           Integrations: [
             'integrations/middleware',
             'integrations/plugins',
+            'integrations/schema-routing',
           ],
           Deployment: [
             'deployment/heroku',
