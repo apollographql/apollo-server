@@ -13,6 +13,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-core`: Add optional argument to `ApolloServer.executeOperation` allowing the caller to manually specify an argument to the `config` function analogous to that provided by integration packages. [PR #4166](https://github.com/apollographql/apollo-server/pull/4166) [Issue #2886](https://github.com/apollographql/apollo-server/issues/2886)
 
+## v2.22.2
+
+- `apollo-server-core`: Fix a regression in v2.22.0 where combining `apollo-server-core` v2.22 with an older version of an integration package could lead to startup errors like `called start() with surprising state invoking serverWillStart`. The fix involves changing the semantics of the protected `willStart` method (which is left in only for backwards compatibility). [Issue #5065](https://github.com/apollographql/apollo-server/issues/5065) [Issue #5066](https://github.com/apollographql/apollo-server/issues/5066) [PR #5073](https://github.com/apollographql/apollo-server/pull/5073)
+
 ## v2.22.1
 
 - `apollo-server-core`: Fix a regression in v2.22.0 where startup errors could be thrown as part of the GraphQL response instead of redacted in one edge case. [PR #5064](https://github.com/apollographql/apollo-server/pull/5064)

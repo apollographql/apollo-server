@@ -583,28 +583,27 @@ export class ApolloServerBase {
 
   /**
    * @deprecated This deprecated method is provided for backwards compatibility
-   * with the pre-v2.22 API. It could be used for purposes similar to `start` or
-   * `ensureStarting`, and was used by integrations. It had odd error handling
-   * semantics, in that it would ignore any error that came from loading the
-   * schema, but would throw errors that came from `serverWillStart`. Anyone
-   * calling it should call `start` or `ensureStarting` instead.
+   * with the pre-v2.22 API. It was sort of a combination of the v2.22 APIs
+   * `ensureStarting` and `start`; it was generally called "in the background"
+   * by integrations to kick off the start process (like `ensureStarting`) and
+   * then the Promise it returns was awaited later before running operations
+   * (sort of like `start`).  It had odd error handling semantics, in that it
+   * would ignore any error that came from loading the schema, but would throw
+   * errors that came from `serverWillStart`.
+   *
+   * We keep it around for backwards-compatibility with pre-v2.22 integrations,
+   * though we just make it call `ensureStarting`. This does mean that the part
+   * of the integration which awaits its result doesn't actually await anything
+   * interesting (despite being async, the method itself doesn't await
+   * anything), but since executing operations now calls `ensureStarted`, that's
+   * OK. (In v2.22.0 and v2.22.1 we tried to mimic the old `willStart` behavior
+   * more closely which led to a bug where `start` could be invoked multiple
+   * times. This approach is simpler.)
+   *
+   * Anyone calling this method should call `start` or `ensureStarting` instead.
    */
   protected async willStart() {
-    try {
-      this._start();
-    } catch (e) {
-      if (
-        this.state.phase === 'failed to start' &&
-        this.state.error === e &&
-        !this.state.loadedSchema
-      ) {
-        // For backwards compatibility with the odd semantics of the old
-        // willStart method, don't throw if the error occurred in loading the
-        // schema.
-        return;
-      }
-      throw e;
-    }
+    this.ensureStarting();
   }
 
   // Part of the backwards-compatibility behavior described above `start` to
