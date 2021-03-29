@@ -59,16 +59,22 @@ function maybeCallbackify(
     event: APIGatewayProxyEvent,
     context: LambdaContext,
   ) => Promise<APIGatewayProxyResult>,
-): (
-  event: APIGatewayProxyEvent,
-  context: LambdaContext,
-  callback: APIGatewayProxyCallback | undefined,
 ) => void | Promise<APIGatewayProxyResult> {
-  return (
+  function handler(
     event: APIGatewayProxyEvent,
     context: LambdaContext,
-    callback: APIGatewayProxyCallback | undefined,
-  ) => {
+    callback?: undefined,
+  ): Promise<APIGatewayProxyResult>;
+  function handler(
+    event: APIGatewayProxyEvent,
+    context: LambdaContext,
+    callback: APIGatewayProxyCallback,
+  ): void;
+  function handler(
+    event: APIGatewayProxyEvent,
+    context: LambdaContext,
+    callback: APIGatewayProxyCallback | undefined = undefined,
+  ): void | Promise<APIGatewayProxyResult> {
     if (callback) {
       context.callbackWaitsForEmptyEventLoop = false;
       asyncHandler(event, context).then(
@@ -80,6 +86,7 @@ function maybeCallbackify(
       return asyncHandler(event, context);
     }
   };
+  return handler;
 }
 
 export class ApolloServer extends ApolloServerBase {
