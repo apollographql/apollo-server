@@ -59,7 +59,7 @@ function maybeCallbackify(
     event: APIGatewayProxyEvent,
     context: LambdaContext,
   ) => Promise<APIGatewayProxyResult>,
-) => void | Promise<APIGatewayProxyResult> {
+) {
   function handler(
     event: APIGatewayProxyEvent,
     context: LambdaContext,
