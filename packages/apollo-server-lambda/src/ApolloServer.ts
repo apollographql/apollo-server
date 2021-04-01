@@ -24,7 +24,7 @@ import { Readable, Writable } from 'stream';
 
 export interface CreateHandlerOptions {
   cors?: {
-    origin?: boolean | string | string[];
+    origin?: boolean | string | (string | RegExp)[];
     methods?: string | string[];
     allowedHeaders?: string | string[];
     exposedHeaders?: string | string[];
@@ -171,8 +171,15 @@ export class ApolloServer extends ApolloServerBase {
             requestOrigin &&
             (typeof cors.origin === 'boolean' ||
               (Array.isArray(cors.origin) &&
-                requestOrigin &&
-                cors.origin.includes(requestOrigin)))
+              // Check settings array for strings matching origin
+              (cors.origin.includes(requestOrigin) ||
+                // Check settings array for Regex matching origin
+                cors.origin.some((setting) =>
+                  setting instanceof RegExp &&
+                    setting.test(requestOrigin)
+                )
+              )
+            ))
           ) {
             requestCorsHeaders.set(
               'access-control-allow-origin',
