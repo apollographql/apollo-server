@@ -85,7 +85,7 @@
     "@types/request": "2.48.5",
     "@types/request-promise": "4.1.47",
     "@types/stoppable": "1.1.0",
-    "@types/supertest": "2.0.10",
+    "@types/supertest": "2.0.11",
     "@types/test-listen": "1.1.0",
     "@types/type-is": "1.6.3",
     "@types/uuid": "8.3.0",
