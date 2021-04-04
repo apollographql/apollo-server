@@ -957,7 +957,6 @@ export class ApolloServerBase {
 
     this.subscriptionServer = SubscriptionServer.create(
       {
-        schema,
         execute,
         subscribe,
         onConnect: onConnect
@@ -994,7 +993,10 @@ export class ApolloServerBase {
             })[0];
           }
 
-          return { ...connection, context };
+          const resolvedSchema = this.config.schemaRouter?.({
+            connection, payload: message.payload }, schema) ?? schema;
+
+          return { ...connection, context, schema: resolvedSchema };
         },
         keepAlive,
         validationRules: this.requestOptions.validationRules,
