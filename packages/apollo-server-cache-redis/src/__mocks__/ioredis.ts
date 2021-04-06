@@ -3,8 +3,9 @@ class Redis {
   private timeouts = new Set<NodeJS.Timer>();
 
   async del(key: string) {
+    const keysDeleted = this.keyValue.hasOwnProperty(key) ? 1 : 0;
     delete this.keyValue[key];
-    return true;
+    return keysDeleted;
   }
 
   async get(key: string) {
