@@ -182,6 +182,8 @@ const server = new ApolloServer({
 
 Apollo Server will put the data sources on the context for every request, so you can access them from your resolvers. It will also give your data sources access to the context. (The reason for not having users put data sources on the context directly is because that would lead to a circular dependency.)
 
+> Make sure to create new instances of your data sources every time the function passed to `dataSources` is called. Reusing the same data source instances across multiple requests will lead to unexpected behavior.
+
 From our resolvers, we can access the data source and return the result:
 
 ```js
