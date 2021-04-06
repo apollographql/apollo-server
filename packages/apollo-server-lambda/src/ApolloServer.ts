@@ -354,7 +354,7 @@ export class ApolloServer extends ApolloServerBase {
               },
             };
           } catch (error) {
-            if (error.name !== 'HttpQueryError') throw Error;
+            if (error.name !== 'HttpQueryError') throw error;
             const httpQueryError = error as HttpQueryError;
             return {
               body: httpQueryError.message,
