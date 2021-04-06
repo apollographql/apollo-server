@@ -348,6 +348,27 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
 
+      it('variable coercion errors', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: gql`
+            type Query {
+              hello(x: String): String
+            }
+          `,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({
+          query: `query ($x:String) {hello(x:$x)}`,
+          variables: { x: 2 },
+        });
+        expect(result.data).toBeUndefined();
+        expect(result.errors).toBeDefined();
+        expect(result.errors[0].message).toMatch(/got invalid value 2; Expected type String/);
+        expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
+      });
+
       describe('schema creation', () => {
         it('accepts typeDefs and resolvers', async () => {
           const typeDefs = gql`

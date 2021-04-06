@@ -134,12 +134,16 @@ export function toApolloError(
 
 export interface ErrorOptions {
   code?: string;
+  // Sometimes it's more convenient to pass a function than a class name.
+  errorConstructor?: (message: string) => ApolloError;
   errorClass?: typeof ApolloError;
 }
 
 export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
   const copy: ApolloError =
-    options && options.errorClass
+    options && options.errorConstructor
+      ? options.errorConstructor(error.message)
+      : options && options.errorClass
       ? new options.errorClass(error.message)
       : new ApolloError(error.message);
 
