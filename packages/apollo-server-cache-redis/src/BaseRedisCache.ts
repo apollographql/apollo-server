@@ -4,28 +4,70 @@ import {
 } from 'apollo-server-caching';
 import DataLoader from 'dataloader';
 
-export interface RedisClient {
-  set: (key: string, value: string, option?: string, optionValue?: number) => Promise<any>
-  mget: (...key: Array<string>) => Promise<Array<string | null>>
-  flushdb: () => Promise<any>
-  del: (key: string) => Promise<number>
-  quit: () => Promise<any>
+interface BaseRedisClient {
+  set: (
+    key: string,
+    value: string,
+    option?: string,
+    optionValue?: number,
+  ) => Promise<any>;
+  flushdb: () => Promise<any>;
+  del: (key: string) => Promise<number>;
+  quit: () => Promise<any>;
+}
+
+export interface RedisClient extends BaseRedisClient {
+  mget: (...key: Array<string>) => Promise<Array<string | null>>;
+}
+
+export interface RedisClusterClient extends BaseRedisClient {
+  get: (key: string) => Promise<string | null>;
+}
+
+/**
+ * Provide exactly one of the options `client` and `clusterClient`. `client` is
+ * a client that supports the `mget` multiple-get command.
+ *
+ * ioredis does not support `mget` for cluster mode (see
+ * https://github.com/luin/ioredis/issues/811), so if you're using cluster mode,
+ * pass `clusterClient` instead, which has a `get` method instead of `mget`;
+ * this package will issue parallel `get` commands instead of a single `mget`
+ * command if `clusterClient` is provided.
+ */
+export interface BaseRedisCacheOptions {
+  client?: RedisClient;
+  clusterClient?: RedisClusterClient;
 }
 
 export class BaseRedisCache implements TestableKeyValueCache<string> {
-  readonly client: RedisClient;
+  readonly client: BaseRedisClient;
   readonly defaultSetOptions: KeyValueCacheSetOptions = {
     ttl: 300,
   };
 
   private loader: DataLoader<string, string | null>;
 
-  constructor(client: RedisClient) {
-    this.client = client;
-
-    this.loader = new DataLoader(keys => client.mget(...keys), {
-      cache: false,
-    });
+  constructor(options: BaseRedisCacheOptions) {
+    const { client, clusterClient } = options;
+    if (client && clusterClient) {
+      throw Error('You may only provide one of `client` and `clusterClient`');
+    } else if (client) {
+      this.client = client;
+      this.loader = new DataLoader((keys) => client.mget(...keys), {
+        cache: false,
+      });
+    } else if (clusterClient) {
+      this.client = clusterClient;
+      this.loader = new DataLoader(
+        (keys) =>
+          Promise.all(keys.map((key) => clusterClient.get(key).catch(() => null))),
+        {
+          cache: false,
+        },
+      );
+    } else {
+      throw Error('You must provide `client` or `clusterClient`');
+    }
   }
 
   async set(
@@ -52,7 +94,7 @@ export class BaseRedisCache implements TestableKeyValueCache<string> {
   }
 
   async delete(key: string): Promise<boolean> {
-    return await this.client.del(key) > 0;
+    return (await this.client.del(key)) > 0;
   }
 
   // Drops all data from Redis. This should only be used by test suites ---

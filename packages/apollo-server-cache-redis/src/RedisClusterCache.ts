@@ -9,16 +9,8 @@ export class RedisClusterCache extends BaseRedisCache {
   private readonly clusterClient: Redis.Cluster;
 
   constructor(nodes: ClusterNode[], options?: ClusterOptions) {
-    const clusterClient = new Redis.Cluster(nodes, options)
-    super({
-      del: clusterClient.del.bind(clusterClient),
-      flushdb: clusterClient.flushdb.bind(clusterClient),
-      mget(...keys: Array<string>): Promise<Array<string | null>> {
-        return Promise.all(keys.map(key => clusterClient.get(key).catch(() => null)))
-      },
-      quit: clusterClient.quit.bind(clusterClient),
-      set: clusterClient.set.bind(clusterClient),
-    });
+    const clusterClient = new Redis.Cluster(nodes, options);
+    super({ clusterClient });
     this.clusterClient = clusterClient;
   }
 

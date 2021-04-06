@@ -3,6 +3,6 @@ import { BaseRedisCache } from './BaseRedisCache';
 
 export class RedisCache extends BaseRedisCache {
   constructor(options?: RedisOptions) {
-    super(new Redis(options));
+    super({ client: new Redis(options) });
   }
 }
