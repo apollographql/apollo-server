@@ -466,7 +466,7 @@ export async function processGraphQLRequest<TContext>(
             )
           ) {
             return fromGraphQLError(e, {
-              errorConstructor: (message) => new UserInputError(message),
+              errorClass: UserInputError,
             });
           }
           return e;
