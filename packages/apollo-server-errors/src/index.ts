@@ -134,6 +134,8 @@ export function toApolloError(
 
 export interface ErrorOptions {
   code?: string;
+  // This declaration means it takes any "class" that has a constructor that
+  // takes a single string, and should be invoked via the `new` operator.
   errorClass?: new (message: string) => ApolloError;
 }
 

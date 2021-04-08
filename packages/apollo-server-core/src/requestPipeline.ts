@@ -10,6 +10,7 @@ import {
   validate as graphqlValidate,
   parse as graphqlParse,
   execute as graphqlExecute,
+  Kind,
 } from 'graphql';
 import {
   GraphQLExtension,
@@ -460,7 +461,7 @@ export async function processGraphQLRequest<TContext>(
         const resultErrors = result.errors?.map((e) => {
           if (
             e.nodes?.length === 1 &&
-            e.nodes[0].kind === 'VariableDefinition' &&
+            e.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
             e.message.startsWith(
               `Variable "$${e.nodes[0].variable.name.value}" got invalid value `,
             )
