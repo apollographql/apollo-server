@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-core",
-  "version": "2.22.2",
+  "version": "2.23.0-alpha.0",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
