@@ -10,6 +10,7 @@ import {
   validate as graphqlValidate,
   parse as graphqlParse,
   execute as graphqlExecute,
+  Kind,
 } from 'graphql';
 import {
   GraphQLExtension,
@@ -31,6 +32,7 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
   formatApolloErrors,
+  UserInputError,
 } from 'apollo-server-errors';
 import {
   GraphQLRequest,
@@ -451,16 +453,36 @@ export async function processGraphQLRequest<TContext>(
           requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
         );
 
-        if (result.errors) {
-          await didEncounterErrors(result.errors);
+        // The first thing that execution does is coerce the request's variables
+        // to the types declared in the operation, which can lead to errors if
+        // they are of the wrong type. We change any such errors into
+        // UserInputError so that their code doesn't end up being
+        // INTERNAL_SERVER_ERROR, since these are client errors.
+        const resultErrors = result.errors?.map((e) => {
+          if (
+            e.nodes?.length === 1 &&
+            e.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
+            e.message.startsWith(
+              `Variable "$${e.nodes[0].variable.name.value}" got invalid value `,
+            )
+          ) {
+            return fromGraphQLError(e, {
+              errorClass: UserInputError,
+            });
+          }
+          return e;
+        });
+
+        if (resultErrors) {
+          await didEncounterErrors(resultErrors);
         }
 
         response = {
           ...result,
-          errors: result.errors ? formatErrors(result.errors) : undefined,
+          errors: resultErrors ? formatErrors(resultErrors) : undefined,
         };
 
-        executionDispatcher.reverseInvokeHookSync("executionDidEnd");
+        executionDispatcher.reverseInvokeHookSync('executionDidEnd');
       } catch (executionError) {
         executionDispatcher.reverseInvokeHookSync("executionDidEnd", executionError);
         return await sendErrorResponse(executionError);
