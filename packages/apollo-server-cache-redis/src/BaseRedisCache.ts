@@ -20,23 +20,23 @@ export interface RedisClient extends BaseRedisClient {
   mget: (...key: Array<string>) => Promise<Array<string | null>>;
 }
 
-export interface RedisClusterClient extends BaseRedisClient {
+export interface RedisNoMgetClient extends BaseRedisClient {
   get: (key: string) => Promise<string | null>;
 }
 
 /**
- * Provide exactly one of the options `client` and `clusterClient`. `client` is
+ * Provide exactly one of the options `client` and `noMgetClient`. `client` is
  * a client that supports the `mget` multiple-get command.
  *
  * ioredis does not support `mget` for cluster mode (see
  * https://github.com/luin/ioredis/issues/811), so if you're using cluster mode,
- * pass `clusterClient` instead, which has a `get` method instead of `mget`;
+ * pass `noMgetClient` instead, which has a `get` method instead of `mget`;
  * this package will issue parallel `get` commands instead of a single `mget`
- * command if `clusterClient` is provided.
+ * command if `noMgetClient` is provided.
  */
 export interface BaseRedisCacheOptions {
   client?: RedisClient;
-  clusterClient?: RedisClusterClient;
+  noMgetClient?: RedisNoMgetClient;
 }
 
 export class BaseRedisCache implements TestableKeyValueCache<string> {
@@ -48,25 +48,25 @@ export class BaseRedisCache implements TestableKeyValueCache<string> {
   private loader: DataLoader<string, string | null>;
 
   constructor(options: BaseRedisCacheOptions) {
-    const { client, clusterClient } = options;
-    if (client && clusterClient) {
-      throw Error('You may only provide one of `client` and `clusterClient`');
+    const { client, noMgetClient } = options;
+    if (client && noMgetClient) {
+      throw Error('You may only provide one of `client` and `noMgetClient`');
     } else if (client) {
       this.client = client;
       this.loader = new DataLoader((keys) => client.mget(...keys), {
         cache: false,
       });
-    } else if (clusterClient) {
-      this.client = clusterClient;
+    } else if (noMgetClient) {
+      this.client = noMgetClient;
       this.loader = new DataLoader(
         (keys) =>
-          Promise.all(keys.map((key) => clusterClient.get(key).catch(() => null))),
+          Promise.all(keys.map((key) => noMgetClient.get(key).catch(() => null))),
         {
           cache: false,
         },
       );
     } else {
-      throw Error('You must provide `client` or `clusterClient`');
+      throw Error('You must provide `client` or `noMgetClient`');
     }
   }
 
