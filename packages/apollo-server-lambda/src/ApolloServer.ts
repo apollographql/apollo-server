@@ -1,6 +1,7 @@
 import {
   APIGatewayProxyCallback,
   APIGatewayProxyEvent,
+  APIGatewayProxyEventV2,
   APIGatewayProxyResult,
   Context as LambdaContext,
 } from 'aws-lambda';
@@ -21,7 +22,6 @@ import { ServerResponse, IncomingHttpHeaders, IncomingMessage } from 'http';
 
 import { Headers } from 'apollo-server-env';
 import { Readable, Writable } from 'stream';
-
 export interface CreateHandlerOptions {
   cors?: {
     origin?: boolean | string | string[];
@@ -32,11 +32,32 @@ export interface CreateHandlerOptions {
     maxAge?: number;
   };
   uploadsConfig?: FileUploadOptions;
-  onHealthCheck?: (req: APIGatewayProxyEvent) => Promise<any>;
+  onHealthCheck?: (req: APIGatewayProxyEventV1OrV2) => Promise<any>;
 }
 
 export class FileUploadRequest extends Readable {
   headers!: IncomingHttpHeaders;
+}
+
+// We try to support payloadFormatEvent 1.0 and 2.0. See
+// https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
+// for a bit of documentation as to what is in these objects. You can determine
+// which one you have by checking `'path' in event` (V1 has path, V2 doesn't).
+type APIGatewayProxyEventV1OrV2 = APIGatewayProxyEvent | APIGatewayProxyEventV2;
+
+function eventHttpMethod(event: APIGatewayProxyEventV1OrV2): string {
+  return 'httpMethod' in event
+    ? event.httpMethod
+    : event.requestContext.http.method;
+}
+
+function eventPath(event: APIGatewayProxyEventV1OrV2): string {
+  // Note: it's unclear if the V2 version should use `event.rawPath` or
+  // `event.requestContext.http.path`; I can't find any documentation about the
+  // distinction between the two. I'm choosing rawPath because that's what
+  // @vendia/serverless-express does (though it also looks at a `requestPath`
+  // field that doesn't exist in the docs or typings).
+  return 'path' in event ? event.path : event.rawPath;
 }
 
 // Lambda has two ways of defining a handler: as an async Promise-returning
@@ -56,16 +77,16 @@ export class FileUploadRequest extends Readable {
 // this package always return an async handler.)
 function maybeCallbackify(
   asyncHandler: (
-    event: APIGatewayProxyEvent,
+    event: APIGatewayProxyEventV1OrV2,
     context: LambdaContext,
   ) => Promise<APIGatewayProxyResult>,
 ): (
-  event: APIGatewayProxyEvent,
+  event: APIGatewayProxyEventV1OrV2,
   context: LambdaContext,
   callback: APIGatewayProxyCallback | undefined,
 ) => void | Promise<APIGatewayProxyResult> {
   return (
-    event: APIGatewayProxyEvent,
+    event: APIGatewayProxyEventV1OrV2,
     context: LambdaContext,
     callback: APIGatewayProxyCallback | undefined,
   ) => {
@@ -96,7 +117,7 @@ export class ApolloServer extends ApolloServerBase {
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
   createGraphQLServerOptions(
-    event: APIGatewayProxyEvent,
+    event: APIGatewayProxyEventV1OrV2,
     context: LambdaContext,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ event, context });
@@ -154,7 +175,7 @@ export class ApolloServer extends ApolloServerBase {
 
     return maybeCallbackify(
       async (
-        event: APIGatewayProxyEvent,
+        event: APIGatewayProxyEventV1OrV2,
         context: LambdaContext,
       ): Promise<APIGatewayProxyResult> => {
         const eventHeaders = new Headers(event.headers);
@@ -202,7 +223,7 @@ export class ApolloServer extends ApolloServerBase {
           return headersObject;
         }, {});
 
-        if (event.httpMethod === 'OPTIONS') {
+        if (eventHttpMethod(event) === 'OPTIONS') {
           return {
             body: '',
             statusCode: 204,
@@ -212,7 +233,7 @@ export class ApolloServer extends ApolloServerBase {
           };
         }
 
-        if (event.path.endsWith('/.well-known/apollo/server-health')) {
+        if (eventPath(event).endsWith('/.well-known/apollo/server-health')) {
           if (onHealthCheck) {
             try {
               await onHealthCheck(event);
@@ -237,14 +258,11 @@ export class ApolloServer extends ApolloServerBase {
           };
         }
 
-        if (this.playgroundOptions && event.httpMethod === 'GET') {
+        if (this.playgroundOptions && eventHttpMethod(event) === 'GET') {
           const acceptHeader =
             event.headers['Accept'] || event.headers['accept'];
           if (acceptHeader && acceptHeader.includes('text/html')) {
-            const path =
-              event.path ||
-              (event.requestContext && event.requestContext.path) ||
-              '/';
+            const path = eventPath(event) || '/';
 
             const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
               endpoint: path,
@@ -310,7 +328,7 @@ export class ApolloServer extends ApolloServerBase {
             body = Buffer.from(body, 'base64').toString();
           }
 
-          if (event.httpMethod === 'POST' && !body) {
+          if (eventHttpMethod(event) === 'POST' && !body) {
             return {
               body: 'POST body missing.',
               statusCode: 500,
@@ -319,13 +337,14 @@ export class ApolloServer extends ApolloServerBase {
 
           if (bodyFromFileUploads) {
             query = bodyFromFileUploads;
-          } else if (body && event.httpMethod === 'POST' && isMultipart) {
+          } else if (body && eventHttpMethod(event) === 'POST' && isMultipart) {
             // XXX Not clear if this was only intended to handle the uploads
             // case or if it had more general applicability
             query = body as any;
-          } else if (body && event.httpMethod === 'POST') {
+          } else if (body && eventHttpMethod(event) === 'POST') {
             query = JSON.parse(body);
           } else {
+            // XXX Note that
             query = event.queryStringParameters || {};
           }
 
@@ -333,14 +352,14 @@ export class ApolloServer extends ApolloServerBase {
             const { graphqlResponse, responseInit } = await runHttpQuery(
               [event, context],
               {
-                method: event.httpMethod,
+                method: eventHttpMethod(event),
                 options: async () => {
                   return this.createGraphQLServerOptions(event, context);
                 },
                 query,
                 request: {
-                  url: event.path,
-                  method: event.httpMethod,
+                  url: eventPath(event),
+                  method: eventHttpMethod(event),
                   headers: eventHeaders,
                 },
               },
