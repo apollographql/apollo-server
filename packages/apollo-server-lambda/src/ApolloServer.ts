@@ -22,28 +22,12 @@ import { ServerResponse, IncomingHttpHeaders, IncomingMessage } from 'http';
 
 import { Headers } from 'apollo-server-env';
 import { Readable, Writable } from 'stream';
-export interface CreateHandlerOptions {
-  cors?: {
-    origin?: boolean | string | string[];
-    methods?: string | string[];
-    allowedHeaders?: string | string[];
-    exposedHeaders?: string | string[];
-    credentials?: boolean;
-    maxAge?: number;
-  };
-  uploadsConfig?: FileUploadOptions;
-  onHealthCheck?: (req: APIGatewayProxyEventV1OrV2) => Promise<any>;
-}
-
-export class FileUploadRequest extends Readable {
-  headers!: IncomingHttpHeaders;
-}
 
 // We try to support payloadFormatEvent 1.0 and 2.0. See
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
 // for a bit of documentation as to what is in these objects. You can determine
 // which one you have by checking `'path' in event` (V1 has path, V2 doesn't).
-type APIGatewayProxyEventV1OrV2 = APIGatewayProxyEvent | APIGatewayProxyEventV2;
+export type APIGatewayProxyEventV1OrV2 = APIGatewayProxyEvent | APIGatewayProxyEventV2;
 
 function eventHttpMethod(event: APIGatewayProxyEventV1OrV2): string {
   return 'httpMethod' in event
@@ -58,6 +42,22 @@ function eventPath(event: APIGatewayProxyEventV1OrV2): string {
   // @vendia/serverless-express does (though it also looks at a `requestPath`
   // field that doesn't exist in the docs or typings).
   return 'path' in event ? event.path : event.rawPath;
+}
+export interface CreateHandlerOptions<EventT extends APIGatewayProxyEventV1OrV2 = APIGatewayProxyEventV1OrV2> {
+  cors?: {
+    origin?: boolean | string | string[];
+    methods?: string | string[];
+    allowedHeaders?: string | string[];
+    exposedHeaders?: string | string[];
+    credentials?: boolean;
+    maxAge?: number;
+  };
+  uploadsConfig?: FileUploadOptions;
+  onHealthCheck?: (req: EventT) => Promise<any>;
+}
+
+export class FileUploadRequest extends Readable {
+  headers!: IncomingHttpHeaders;
 }
 
 // Lambda has two ways of defining a handler: as an async Promise-returning
@@ -75,18 +75,18 @@ function eventPath(event: APIGatewayProxyEventV1OrV2): string {
 //
 // (Apollo Server 3 will drop Node 6 support, at which point we should just make
 // this package always return an async handler.)
-function maybeCallbackify(
+function maybeCallbackify<EventT extends APIGatewayProxyEventV1OrV2 = APIGatewayProxyEventV1OrV2>(
   asyncHandler: (
-    event: APIGatewayProxyEventV1OrV2,
+    event: EventT,
     context: LambdaContext,
   ) => Promise<APIGatewayProxyResult>,
 ): (
-  event: APIGatewayProxyEventV1OrV2,
+  event: EventT,
   context: LambdaContext,
   callback: APIGatewayProxyCallback | undefined,
 ) => void | Promise<APIGatewayProxyResult> {
   return (
-    event: APIGatewayProxyEventV1OrV2,
+    event: EventT,
     context: LambdaContext,
     callback: APIGatewayProxyCallback | undefined,
   ) => {
@@ -103,7 +103,7 @@ function maybeCallbackify(
   };
 }
 
-export class ApolloServer extends ApolloServerBase {
+export class ApolloServer<EventT extends APIGatewayProxyEventV1OrV2 = APIGatewayProxyEventV1OrV2> extends ApolloServerBase {
   protected serverlessFramework(): boolean {
     return true;
   }
@@ -117,14 +117,14 @@ export class ApolloServer extends ApolloServerBase {
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
   createGraphQLServerOptions(
-    event: APIGatewayProxyEventV1OrV2,
+    event: EventT,
     context: LambdaContext,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ event, context });
   }
 
   public createHandler(
-    { cors, onHealthCheck }: CreateHandlerOptions = {
+    { cors, onHealthCheck }: CreateHandlerOptions<EventT> = {
       cors: undefined,
       onHealthCheck: undefined,
     },
@@ -173,9 +173,9 @@ export class ApolloServer extends ApolloServerBase {
       }
     }
 
-    return maybeCallbackify(
+    return maybeCallbackify<EventT>(
       async (
-        event: APIGatewayProxyEventV1OrV2,
+        event: EventT,
         context: LambdaContext,
       ): Promise<APIGatewayProxyResult> => {
         const eventHeaders = new Headers(event.headers);
