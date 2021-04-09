@@ -75,7 +75,7 @@ export class FileUploadRequest extends Readable {
 //
 // (Apollo Server 3 will drop Node 6 support, at which point we should just make
 // this package always return an async handler.)
-function maybeCallbackify<EventT extends APIGatewayProxyEventV1OrV2 = APIGatewayProxyEventV1OrV2>(
+function maybeCallbackify<EventT extends APIGatewayProxyEventV1OrV2>(
   asyncHandler: (
     event: EventT,
     context: LambdaContext,
