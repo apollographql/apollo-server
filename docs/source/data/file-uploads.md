@@ -20,6 +20,12 @@ const typeDefs = gql`
   type Query {
     uploads: [File]
   }
+  
+   input Upload {
+    filename: String!
+    mimetype: String!
+    encoding: String!
+  }
 
   type Mutation {
     singleUpload(file: Upload!): File!
