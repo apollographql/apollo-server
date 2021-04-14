@@ -10,7 +10,7 @@ export class RedisClusterCache extends BaseRedisCache {
 
   constructor(nodes: ClusterNode[], options?: ClusterOptions) {
     const clusterClient = new Redis.Cluster(nodes, options);
-    super({ clusterClient });
+    super({ noMgetClient: clusterClient });
     this.clusterClient = clusterClient;
   }
 

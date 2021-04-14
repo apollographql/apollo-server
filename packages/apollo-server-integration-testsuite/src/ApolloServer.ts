@@ -19,6 +19,7 @@ import {
 import { PubSub } from 'graphql-subscriptions';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import WebSocket from 'ws';
+import resolvable from '@josephg/resolvable';
 
 import { execute } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
@@ -2099,8 +2100,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           .catch(done.fail);
       });
 
-      it('takes websocket server subscriptions configuration', done => {
-        const onConnect = jest.fn(connectionParams => ({
+      it('takes websocket server subscriptions configuration', async () => {
+        const onConnect = jest.fn((connectionParams) => ({
           ...connectionParams,
         }));
         const typeDefs = gql`
@@ -2136,47 +2137,52 @@ export function testApolloServer<AS extends ApolloServerBase>(
         };
 
         const path = '/sub';
-        createApolloServer({
+        const { server } = await createApolloServer({
           typeDefs,
           resolvers,
           subscriptions: { onConnect, path },
-        })
-          .then(({ port, server }) => {
-            const subPort = (typeof port === "number" ? port : parseInt(port)) + 1
-            const websocketServer = new WebSocket.Server({port: subPort})
-            server.installSubscriptionHandlers(websocketServer);
-            expect(onConnect).not.toBeCalled();
+        });
+        const listening = resolvable();
+        const websocketServer = new WebSocket.Server({ port: 0 }, () =>
+          listening.resolve(),
+        );
+        await listening;
+        server.installSubscriptionHandlers(websocketServer);
+        expect(onConnect).not.toBeCalled();
 
-            expect(server.subscriptionsPath).toEqual(path);
-            const client = new SubscriptionClient(
-              `ws://localhost:${subPort}${server.subscriptionsPath}`,
-              {},
-              WebSocket,
-            );
+        expect(server.subscriptionsPath).toEqual(path);
+        const client = new SubscriptionClient(
+          `ws://localhost:${
+            (websocketServer.address() as WebSocket.AddressInfo).port
+          }${server.subscriptionsPath}`,
+          {},
+          WebSocket,
+        );
 
-            const observable = client.request({ query });
+        const observable = client.request({ query });
 
-            let i = 1;
-            subscription = observable.subscribe({
-              next: ({ data }) => {
-                try {
-                  expect(onConnect).toHaveBeenCalledTimes(1);
-                  expect(data.num).toEqual(i);
-                  if (i === 3) {
-                    done();
-                  }
-                  i++;
-                } catch (e) {
-                  done.fail(e);
-                }
-              },
-              error: done.fail,
-              complete: () => {
-                done.fail(new Error('should not complete'));
-              },
-            });
-          })
-          .catch(done.fail);
+        const p = resolvable();
+
+        let i = 1;
+        subscription = observable.subscribe({
+          next: ({ data }) => {
+            try {
+              expect(onConnect).toHaveBeenCalledTimes(1);
+              expect(data.num).toEqual(i);
+              if (i === 3) {
+                p.resolve();
+              }
+              i++;
+            } catch (e) {
+              p.reject(e);
+            }
+          },
+          error: p.reject,
+          complete: () => {
+            p.reject(new Error('should not complete'));
+          },
+        });
+        await p;
       });
 
       it('allows introspection when introspection is enabled on ApolloServer', done => {

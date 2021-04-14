@@ -285,9 +285,9 @@ const server = new ApolloServer({
   // highlight-start
   persistedQueries: {
     cache: new BaseRedisCache({
-      // Note that this uses the "clusterClient" option rather than "client",
+      // Note that this uses the "noMgetClient" option rather than "client",
       // which avoids using the mget command which doesn't work in cluster mode.
-      clusterClient: new Redis.Cluster(
+      noMgetClient: new Redis.Cluster(
         [{
           host: 'redis-node-01-host',
         }],
