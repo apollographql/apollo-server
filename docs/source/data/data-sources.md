@@ -157,6 +157,7 @@ The following data sources are community contributions which offer their own ext
 - `SQLDataSource` from [`datasource-sql`](https://github.com/cvburgess/SQLDataSource)
 - `MongoDataSource` from [`apollo-datasource-mongodb`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/)
 - `CosmosDataSource` from [`apollo-datasource-cosmosdb`](https://github.com/andrejpk/apollo-datasource-cosmosdb)
+- `FirestoreDataSource` from [`apollo-datasource-firestore`](https://github.com/swantzter/apollo-datasource-firestore)
 
 ## Accessing data sources from resolvers
 
