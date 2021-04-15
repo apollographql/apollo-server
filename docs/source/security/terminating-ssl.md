@@ -2,11 +2,9 @@
 title: Terminating SSL
 ---
 
-Most production environments include a load balancer or HTTP proxy (such as nginx)
-that performs SSL termination on behalf of web applications that it serves.
+Most production environments use a load balancer or HTTP proxy (such as nginx) to perform SSL termination on behalf of web applications in that environment.
 
-If you are using Apollo Server in an application that must perform its _own_ SSL
-termination, you can use the `https` module with the `apollo-server-express` [middleware
+If you're using Apollo Server in an application that must perform its _own_ SSL termination, you can use the `https` module with the `apollo-server-express` [middleware
 library](/integrations/middleware/).
 
 Here's an example that uses HTTPS in production and HTTP in development:
@@ -37,11 +35,11 @@ async function startApolloServer() {
   server.applyMiddleware({ app });
 
   // Create the HTTPS or HTTP server, per configuration
-  let server;
+  let httpServer;
   if (config.ssl) {
-    // Assumes certificates are in a .ssl folder off of the package root. Make sure
-    // these files are secured.
-    server = https.createServer(
+    // Assumes certificates are in a .ssl folder off of the package root.
+    // Make sure these files are secured.
+    httpServer = https.createServer(
       {
         key: fs.readFileSync(`./ssl/${environment}/server.key`),
         cert: fs.readFileSync(`./ssl/${environment}/server.crt`)
@@ -49,7 +47,7 @@ async function startApolloServer() {
       app,
     );
   } else {
-    server = http.createServer(app);
+    httpServer = http.createServer(app);
   }
 
   await new Promise(resolve => server.listen({ port: config.port }, resolve));
