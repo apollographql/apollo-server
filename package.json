@@ -110,7 +110,7 @@
     "hapi": "17.8.5",
     "ioredis": "4.26.0",
     "jest": "25.5.4",
-    "jest-config": "25.5.4",
+    "jest-config": "26.6.3",
     "jest-junit": "10.0.0",
     "js-sha256": "0.9.0",
     "koa": "2.13.1",
