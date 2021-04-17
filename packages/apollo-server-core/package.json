@@ -44,7 +44,7 @@
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-extensions": "file:../graphql-extensions",
     "graphql-tag": "^2.11.0",
-    "graphql-tools": "^4.0.8",
+    "graphql-tools": "^7.0.0",
     "loglevel": "^1.6.7",
     "lru-cache": "^6.0.0",
     "sha.js": "^2.4.11",

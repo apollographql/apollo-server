@@ -106,7 +106,7 @@
     "graphql": "14.7.0",
     "graphql-subscriptions": "1.2.1",
     "graphql-tag": "2.11.0",
-    "graphql-tools": "4.0.8",
+    "graphql-tools": "7.0.4",
     "hapi": "17.8.5",
     "ioredis": "4.26.0",
     "jest": "25.5.4",

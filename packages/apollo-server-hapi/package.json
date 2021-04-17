@@ -32,7 +32,7 @@
     "apollo-server-types": "file:../apollo-server-types",
     "boom": "^7.1.0",
     "graphql-subscriptions": "^1.0.0",
-    "graphql-tools": "^4.0.8"
+    "graphql-tools": "^7.0.0"
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
