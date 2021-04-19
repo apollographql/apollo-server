@@ -227,14 +227,16 @@ function iterateOverTraceNode(
     return true;
   }
 
-  return node.child?.some(child => {
-    let childPath = path;
-    if (child.responseName) {
-      // concat creates a new shallow copy of the array
-      childPath = path.concat(child.responseName);
-    }
-    return iterateOverTraceNode(child, childPath, f);
-  }) ?? false;
+  return (
+    node.child?.some((child) => {
+      let childPath = path;
+      if (child.responseName) {
+        // concat creates a new shallow copy of the array
+        childPath = path.concat(child.responseName);
+      }
+      return iterateOverTraceNode(child, childPath, f);
+    }) ?? false
+  );
 }
 
 export function traceHasErrors(trace: Trace): boolean {
