@@ -85,7 +85,8 @@ class StatsMap {
 
     const statsContextKey = JSON.stringify(statsContext);
 
-    // TODO: Update sizing
+    // FIXME: Make this impact ReportData.size so that maxUncompressedReportSize
+    // works.
     (
       this.map[statsContextKey] ||
       (this.map[statsContextKey] = new ContextualizedStats(statsContext))
@@ -557,7 +558,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
               errorKey: hasErrors ? endTimeSeconds % 5 : '',
             });
 
-            const convertTraceToStats = await tracesSeenMap.seen(
+            const convertTraceToStats = tracesSeenMap.seen(
               endTimeSeconds / 60,
               traceCacheKey,
             );
