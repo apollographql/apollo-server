@@ -14,7 +14,7 @@ function defaultLengthCalculation(item: any) {
 export class InMemoryLRUCache<V = string> implements TestableKeyValueCache<V> {
   private store: LRUCache<string, V>;
 
-  // FIXME: Define reasonable default max size of the cache
+  // TODO: Define reasonable default max size of the cache
   constructor({
     maxSize = Infinity,
     sizeCalculator = defaultLengthCalculation,

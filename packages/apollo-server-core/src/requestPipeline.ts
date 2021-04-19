@@ -222,7 +222,7 @@ export async function processGraphQLRequest<TContext>(
       metrics.persistedQueryRegister = true;
     }
   } else if (query) {
-    // FIXME: We'll compute the APQ query hash to use as our cache key for
+    // TODO: We'll compute the APQ query hash to use as our cache key for
     // now, but this should be replaced with the new operation ID algorithm.
     queryHash = computeQueryHash(query);
   } else {
@@ -332,7 +332,7 @@ export async function processGraphQLRequest<TContext>(
       }
     }
 
-    // FIXME: If we want to guarantee an operation has been set when invoking
+    // TODO: If we want to guarantee an operation has been set when invoking
     // `willExecuteOperation` and executionDidStart`, we need to throw an
     // error here and not leave this to `buildExecutionContext` in
     // `graphql-js`.

@@ -42,7 +42,7 @@ export interface ApolloServerHttpResponse {
 }
 
 export interface HttpQueryResponse {
-  // FIXME: This isn't actually an individual GraphQL response, but the body
+  // TODO: This isn't actually an individual GraphQL response, but the body
   // of the HTTP response, which could contain multiple GraphQL responses
   // when using batching.
   graphqlResponse: string;
@@ -132,7 +132,7 @@ export async function runHttpQuery(
     options.debug = debugDefault;
   }
 
-  // FIXME: Errors thrown while resolving the context in
+  // TODO: Errors thrown while resolving the context in
   // ApolloServer#graphQLServerOptions are currently converted to
   // a throwing function, which we invoke here to rethrow an HTTP error.
   // When we refactor the integration between ApolloServer, the middleware and
@@ -168,7 +168,7 @@ export async function runHttpQuery(
     executor: options.executor,
     fieldResolver: options.fieldResolver,
 
-    // FIXME: Use proper option types to ensure this
+    // TODO: Use proper option types to ensure this
     // The cache is guaranteed to be initialized in ApolloServer, and
     // cacheControl defaults will also have been set if a boolean argument is
     // passed in.
@@ -239,7 +239,7 @@ export async function processHTTPRequest<TContext>(
   function buildRequestContext(
     request: GraphQLRequest,
   ): GraphQLRequestContext<TContext> {
-    // FIXME: We currently shallow clone the context for every request,
+    // TODO: We currently shallow clone the context for every request,
     // but that's unlikely to be what people want.
     // We allow passing in a function for `context` to ApolloServer,
     // but this only runs once for a batched request (because this is resolved
