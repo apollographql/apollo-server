@@ -72,8 +72,11 @@ export class ContextualizedStats implements IContextualizedStats {
 
     if (
       !trace.fullQueryCacheHit &&
-      trace.cachePolicy &&
-      trace.cachePolicy.maxAgeNs
+      trace.cachePolicy?.maxAgeNs
+      // FIXME Make sure this matches the Kotlin implementation (eg, handling
+      // of maxAgeNs=0)
+      // FIXME Actually write trace.cachePolicy!
+      // FIXME consider using a `switch` while I'm at it
     ) {
       if (trace.cachePolicy.scope == Trace.CachePolicy.Scope.PRIVATE) {
         queryLatencyStats.privateCacheTtlCount.incrementDuration(
@@ -95,6 +98,7 @@ export class ContextualizedStats implements IContextualizedStats {
     if (trace.forbiddenOperation) {
       queryLatencyStats.forbiddenOperationCount++;
     } else if (trace.registeredOperation) {
+      // FIXME confirm that in Kotlin this has no else and fix
       queryLatencyStats.registeredOperationCount++;
     }
 
@@ -107,12 +111,15 @@ export class ContextualizedStats implements IContextualizedStats {
       path: ReadonlyArray<string>,
     ): boolean {
       // Generate error stats and error path information
-      if (node.error && node.error.length > 0) {
+      if (node.error?.length) {
         hasError = true;
 
         let currPathErrorStats = rootPathErrorStats;
         path.forEach((subPath) => {
           const children = currPathErrorStats.children;
+          // FIXME Are we supposed to skip list indexes here and only actually
+          // use field names? I think we looked into how the server handled this
+          // today. Double check though!
           currPathErrorStats =
             children[subPath] || (children[subPath] = new PathErrorStats());
         });
@@ -123,8 +130,11 @@ export class ContextualizedStats implements IContextualizedStats {
 
       if (
         node.parentType != null &&
+        // FIXME originalFieldName is only for aliases, use reponseName too
+        // (and when it's actually used below)
         node.originalFieldName != null &&
         node.type != null &&
+        // FIXME is this ever actually null?
         node.endTime != null &&
         node.startTime != null
       ) {
@@ -194,11 +204,11 @@ function iterateOverQueryPlan(
     );
   } else if (node.flatten) {
     iterateOverQueryPlan(node.flatten.node, f);
-  } else if (node.parallel && node.parallel.nodes) {
+  } else if (node.parallel?.nodes) {
     node.parallel.nodes.forEach((node) => {
       iterateOverQueryPlan(node, f);
     });
-  } else if (node.sequence && node.sequence.nodes) {
+  } else if (node.sequence?.nodes) {
     node.sequence.nodes.forEach((node) => {
       iterateOverQueryPlan(node, f);
     });
@@ -211,6 +221,8 @@ function iterateOverTraceNode(
   f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
 ) {
   // Exit early if the function returns true.
+  // FIXME Stop the entire walk in this case, including any walk in
+  // iterateOverQueryPlan.
   if (f(node, path)) {
     return;
   }

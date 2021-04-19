@@ -1,5 +1,6 @@
 import LRUCache from "lru-cache";
 
+// FIXME rename this file
 export class TracesSeenMap {
   readonly traceCaches: Map<number, LRUCache<string, Boolean>> = new Map();
   readonly maxTraceCaches: number = 3;
@@ -8,6 +9,7 @@ export class TracesSeenMap {
     return (this.traceCaches.get(endTime)?.get(cacheKey)) || false;
   }
 
+  // FIXME actually call me
   add(endTime: number, cacheKey: string) {
     const traceCache = this.traceCaches.get(endTime);
     if (traceCache) {
@@ -41,7 +43,6 @@ export class TracesSeenMap {
       });
       this.traceCaches.set(endTime, newTraceCache);
       newTraceCache.set(cacheKey, true);
-      return;
     }
   }
 }
