@@ -102,7 +102,7 @@
     "deep-freeze": "0.0.1",
     "express": "4.17.1",
     "fastify": "1.14.6",
-    "form-data": "2.5.1",
+    "form-data": "4.0.0",
     "graphql": "14.7.0",
     "graphql-subscriptions": "1.2.1",
     "graphql-tag": "2.11.0",
