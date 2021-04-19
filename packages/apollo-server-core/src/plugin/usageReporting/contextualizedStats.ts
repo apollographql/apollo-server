@@ -176,7 +176,7 @@ export class ContextualizedStats implements IContextualizedStats {
  */
 function iterateOverTraceForStats(
   trace: Trace,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | undefined,
+  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | void,
 ): void {
   if (trace.root) {
     if (iterateOverTraceNode(trace.root, [], f)) return;
@@ -190,7 +190,7 @@ function iterateOverTraceForStats(
 // Helper for iterateOverTraceForStats; returns true to stop the overall walk.
 function iterateOverQueryPlan(
   node: Trace.IQueryPlanNode | null | undefined,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | undefined,
+  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | void,
 ): boolean {
   if (!node) return false;
 
@@ -219,7 +219,7 @@ function iterateOverQueryPlan(
 function iterateOverTraceNode(
   node: Trace.INode,
   path: ReadonlyArray<string>,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | undefined,
+  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | void,
 ): boolean {
   // Invoke the function; if it returns true, don't descend and tell callers to
   // stop walking.
