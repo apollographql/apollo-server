@@ -439,7 +439,7 @@ describe('Check type stats', () => {
     contextualizedStats.addTrace(trace);
     contextualizedStats.addTrace(trace);
     expect(contextualizedStats).toMatchSnapshot();
-});
+  });
 
   it('add multiple federated trace', () => {
     const contextualizedStats = new ContextualizedStats(statsContext);

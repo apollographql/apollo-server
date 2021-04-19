@@ -88,7 +88,8 @@ describe('end-to-end', () => {
         query: query ?? defaultQuery,
         // If operation name is specified use it. If it is specified as null convert it to
         // undefined because graphqlRequest expects string | undefined
-        operationName: operationName === undefined ? 'q' : (operationName || undefined),
+        operationName:
+          operationName === undefined ? 'q' : operationName || undefined,
         extensions: {
           clientName: 'testing suite',
         },
