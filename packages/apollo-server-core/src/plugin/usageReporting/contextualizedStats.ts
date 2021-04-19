@@ -160,8 +160,6 @@ export class ContextualizedStats implements IContextualizedStats {
           (node.error?.length ?? 0) > 0 ? 1 : 0;
         fieldStat.latencyCount.incrementDuration(node.endTime - node.startTime);
       }
-
-      return false;
     }
 
     iterateOverTraceForStats(trace, traceNodeStats);
@@ -172,71 +170,71 @@ export class ContextualizedStats implements IContextualizedStats {
 }
 
 /**
- * Iterates over the entire trace and add the error to the errorPathStats object if there are errors
- * Also returns true if there are any errors found so we can increment errorsCount
- * @param trace Trace wer are iterating over
- * @param f function to be run on every node of the trace. If it returns true exit early
+ * Iterates over the entire trace, calling `f` on each Trace.Node found.
+ * It looks under the "root" node as well as any inside the query plan.
+ * If any `f` returns true, it stops walking the tree.
  */
 function iterateOverTraceForStats(
   trace: Trace,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
+  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | undefined,
 ): void {
   if (trace.root) {
-    iterateOverTraceNode(trace.root, [], f);
+    if (iterateOverTraceNode(trace.root, [], f)) return;
   }
 
   if (trace.queryPlan) {
-    iterateOverQueryPlan(trace.queryPlan, f);
+    if (iterateOverQueryPlan(trace.queryPlan, f)) return;
   }
 }
 
+// Helper for iterateOverTraceForStats; returns true to stop the overall walk.
 function iterateOverQueryPlan(
   node: Trace.IQueryPlanNode | null | undefined,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
-): void {
-  if (!node) return;
+  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | undefined,
+): boolean {
+  if (!node) return false;
 
   if (node.fetch?.trace?.root && node.fetch.serviceName !== null) {
-    iterateOverTraceNode(
+    return iterateOverTraceNode(
       node.fetch.trace.root,
       [`service:${node.fetch.serviceName}`],
       f,
     );
-  } else if (node.flatten) {
-    iterateOverQueryPlan(node.flatten.node, f);
-  } else if (node.parallel?.nodes) {
-    node.parallel.nodes.forEach((node) => {
-      iterateOverQueryPlan(node, f);
-    });
-  } else if (node.sequence?.nodes) {
-    node.sequence.nodes.forEach((node) => {
-      iterateOverQueryPlan(node, f);
-    });
   }
+  if (node.flatten) {
+    return iterateOverQueryPlan(node.flatten.node, f);
+  }
+  if (node.parallel?.nodes) {
+    return node.parallel.nodes.some((node) => iterateOverQueryPlan(node, f));
+  }
+  if (node.sequence?.nodes) {
+    return node.sequence.nodes.some((node) => iterateOverQueryPlan(node, f));
+  }
+
+  // Shouldn't happen, but keep going anyway.
+  return false;
 }
 
+// Helper for iterateOverTraceForStats; returns true to stop the overall walk.
 function iterateOverTraceNode(
   node: Trace.INode,
   path: ReadonlyArray<string>,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
-) {
-  // Exit early if the function returns true.
-  // FIXME Stop the entire walk in this case, including any walk in
-  // iterateOverQueryPlan.
+  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | undefined,
+): boolean {
+  // Invoke the function; if it returns true, don't descend and tell callers to
+  // stop walking.
   if (f(node, path)) {
-    return;
+    return true;
   }
-  if (node.child) {
-    for (const child of node.child) {
-      let childPath = path;
-      if (child.responseName) {
-        // concat creates a new shallow copy of the array
-        childPath = path.concat(child.responseName);
-      }
 
-      iterateOverTraceNode(child, childPath, f);
+  return node.child?.some(child => {
+    let childPath = path;
+    if (child.responseName) {
+      // concat creates a new shallow copy of the array
+      childPath = path.concat(child.responseName);
     }
-  }
+    return iterateOverTraceNode(child, childPath, f);
+  }) ?? false;
 }
 
 export function traceHasErrors(trace: Trace): boolean {
