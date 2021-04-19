@@ -40,6 +40,6 @@ if (!global.process.hrtime) {
 }
 
 if (!global.os) {
-  // FIXME: Add some sensible values
+  // TODO: Add some sensible values
   global.os = {};
 }

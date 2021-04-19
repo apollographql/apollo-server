@@ -1279,7 +1279,7 @@ export class ApolloServerBase {
     if (typeof options.context === 'function') {
       options.context = (options.context as () => never)();
     } else if (typeof options.context === 'object') {
-      // FIXME: We currently shallow clone the context for every request,
+      // TODO: We currently shallow clone the context for every request,
       // but that's unlikely to be what people want.
       // We allow passing in a function for `context` to ApolloServer,
       // but this only runs once for a batched request (because this is resolved

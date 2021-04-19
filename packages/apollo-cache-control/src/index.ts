@@ -25,7 +25,7 @@ export enum CacheScope {
 
 export interface CacheControlExtensionOptions {
   defaultMaxAge?: number;
-  // FIXME: We should replace these with
+  // TODO: We should replace these with
   // more appropriately named options.
   calculateHttpHeaders?: boolean;
   stripFormattedExtensions?: boolean;

@@ -6,7 +6,7 @@ import Memcached from 'memcached';
 import { promisify } from 'util';
 
 export class MemcachedCache implements TestableKeyValueCache {
-  // FIXME: Replace any with proper promisified type
+  // TODO: Replace any with proper promisified type
   readonly client: any;
   readonly defaultSetOptions: KeyValueCacheSetOptions = {
     ttl: 300,
