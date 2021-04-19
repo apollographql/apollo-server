@@ -109,7 +109,7 @@ export class ContextualizedStats implements IContextualizedStats {
     function traceNodeStats(
       node: Trace.INode,
       path: ReadonlyArray<string>,
-    ): boolean {
+    ) {
       // Generate error stats and error path information
       if (node.error?.length) {
         hasError = true;
