@@ -35,7 +35,7 @@ import { computeExecutableSchemaId } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 import { DurationHistogram } from './durationHistogram';
 import { ContextualizedStats, traceHasErrors } from './contextualizedStats';
-import { TracesSeenMap } from './tracesSeenCache';
+import { TracesSeenMap } from './tracesSeenMap';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),

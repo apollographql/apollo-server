@@ -1,6 +1,5 @@
 import LRUCache from 'lru-cache';
 
-// FIXME rename this file
 export class TracesSeenMap {
   readonly traceCaches: Map<number, LRUCache<string, Boolean>> = new Map();
   readonly maxTraceCaches: number = 3;
