@@ -1,6 +1,6 @@
 {
   "engines": {
-    "node": ">=14 <15",
+    "node": ">=14",
     "npm": "6.x"
   },
   "scripts": {

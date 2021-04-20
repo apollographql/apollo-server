@@ -72,6 +72,11 @@ jobs:
     steps:
       - common_test_steps
 
+  NodeJS 15:
+    executor: { name: oss/node, tag: '15' }
+    steps:
+      - common_test_steps
+
   # We make CI fail if any file contains FIX and ME right next to each other.
   # This means that when working on a big PR, you can throw in notes that you
   # are forced to come back to before merging the PR.  Note that we don't block
@@ -124,6 +129,8 @@ workflows:
           <<: *common_non_publish_filters
       - NodeJS 14:
           <<: *common_non_publish_filters
+      - NodeJS 15:
+          <<: *common_non_publish_filters
       - "Check for FIXM\x45"
       - oss/lerna_tarballs:
           name: Package tarballs
@@ -134,6 +141,7 @@ workflows:
             - NodeJS 10
             - NodeJS 12
             - NodeJS 14
+            - NodeJS 15
       - oss/dry_run:
           name: Dry-run
           <<: *common_publish_filters
@@ -143,6 +151,7 @@ workflows:
             - NodeJS 10
             - NodeJS 12
             - NodeJS 14
+            - NodeJS 15
       - oss/confirmation:
           name: Confirmation
           type: approval
