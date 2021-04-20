@@ -65,6 +65,8 @@ class ReportData {
   }
 }
 
+// FIXME make sure we never reuse a StatsMap with multiple schemas (eg, so field
+// types are consistent)
 class StatsMap {
   readonly map: { [k: string]: ContextualizedStats } = Object.create(null);
 
@@ -263,6 +265,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
             `Apollo usage report: ${JSON.stringify(report.toJSON())}`,
           );
         }
+
+        // FIXME set report.endTime
 
         const protobufError = Report.verify(report);
         if (protobufError) {
