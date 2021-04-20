@@ -125,25 +125,37 @@ export class ContextualizedStats implements IContextualizedStats {
         currPathErrorStats.errorsCount += node.error.length;
       }
 
+      // The actual field name behind the node; originalFieldName is set
+      // if an alias was used, otherwise responseName. (This is falsey for
+      // nodes that are not fields (root, array index, etc).)
+      const fieldName = node.originalFieldName || node.responseName;
+
+      // Protobuf doesn't really differentiate between "unset" and "falsey" so
+      // we're mostly actually checking that these things are non-empty string /
+      // non-zero numbers. The time fields represent the number of nanoseconds
+      // since the beginning of the entire trace, so let's pretend for the
+      // moment that it's plausible for a node to start or even end exactly when
+      // the trace started (ie, for the time values to be 0). This is unlikely
+      // in practice (everything should take at least 1ns). In practice we only
+      // write `type` and `parentType` on a Node when we write `startTime`, so
+      // the main thing we're looking out for by checking the time values is
+      // whether we somehow failed to write `endTime` at the end of the field;
+      // in this case, the `endTime >= startTime` check won't match.
       if (
-        node.parentType != null &&
-        // FIXME originalFieldName is only for aliases, use reponseName too
-        // (and when it's actually used below)
-        node.originalFieldName != null &&
-        node.type != null &&
-        // FIXME is this ever actually null?
+        node.parentType &&
+        fieldName &&
+        node.type &&
         node.endTime != null &&
-        node.startTime != null
+        node.startTime != null &&
+        node.endTime >= node.startTime
       ) {
         const typeStat =
           typeStats[node.parentType] ||
           (typeStats[node.parentType] = new TypeStat());
 
         const fieldStat =
-          typeStat.perFieldStat[node.originalFieldName] ||
-          (typeStat.perFieldStat[node.originalFieldName] = new FieldStat(
-            node.type,
-          ));
+          typeStat.perFieldStat[fieldName] ||
+          (typeStat.perFieldStat[fieldName] = new FieldStat(node.type));
 
         fieldStat.errorsCount += node.error?.length ?? 0;
         fieldStat.count++;
@@ -188,19 +200,19 @@ function iterateOverTraceForStats(
 
 // Helper for iterateOverTraceForStats; returns true to stop the overall walk.
 function iterateOverQueryPlan(
-  node: Trace.IQueryPlanNode | null | undefined,
+  node: Trace.IQueryPlanNode,
   f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
 ): boolean {
   if (!node) return false;
 
-  if (node.fetch?.trace?.root && node.fetch.serviceName !== null) {
+  if (node.fetch?.trace?.root && node.fetch.serviceName) {
     return iterateOverTraceNode(
       node.fetch.trace.root,
       [`service:${node.fetch.serviceName}`],
       f,
     );
   }
-  if (node.flatten) {
+  if (node.flatten?.node) {
     return iterateOverQueryPlan(node.flatten.node, f);
   }
   if (node.parallel?.nodes) {
@@ -214,7 +226,6 @@ function iterateOverQueryPlan(
     return node.sequence.nodes.some((node) => iterateOverQueryPlan(node, f));
   }
 
-  // Shouldn't happen, but keep going anyway.
   return false;
 }
 
