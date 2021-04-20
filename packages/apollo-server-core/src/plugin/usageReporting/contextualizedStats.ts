@@ -204,9 +204,13 @@ function iterateOverQueryPlan(
     return iterateOverQueryPlan(node.flatten.node, f);
   }
   if (node.parallel?.nodes) {
+    // We want to stop as soon as some call returns true, which happens to be
+    // exactly what 'some' does.
     return node.parallel.nodes.some((node) => iterateOverQueryPlan(node, f));
   }
   if (node.sequence?.nodes) {
+    // We want to stop as soon as some call returns true, which happens to be
+    // exactly what 'some' does.
     return node.sequence.nodes.some((node) => iterateOverQueryPlan(node, f));
   }
 
@@ -227,6 +231,8 @@ function iterateOverTraceNode(
   }
 
   return (
+    // We want to stop as soon as some call returns true, which happens to be
+    // exactly what 'some' does.
     node.child?.some((child) => {
       let childPath = path;
       if (child.responseName) {
