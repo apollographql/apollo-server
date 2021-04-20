@@ -9,6 +9,20 @@ import {
   IContextualizedStats,
 } from 'apollo-reporting-protobuf';
 
+// protobuf.js exports both a class and an interface (starting with I) for each
+// message type. For these stats messages, we create our own classes that
+// implement the interfaces, so that the `repeated sint64` DurationHistogram
+// fields can be built up as DurationHistogram objects rather than arrays. (Our
+// fork of protobuf.js contains a change
+// (https://github.com/protobufjs/protobuf.js/pull/1302) which lets you use pass
+// own objects with `toArray` methods to the generated protobuf encode
+// functions.) TypeScript validates that we've properly listed all of the
+// message fields with the appropriate types (we use `Required` to ensure we
+// implement all message fields). Using our own classes has other advantages,
+// like being able to specify that nested messages are instances of the same
+// class rather than the interface type and thus that they have non-null fields
+// (because the interface type allows all fields to be optional, even though the
+// protobuf format doesn't differentiate between missing and falsey).
 class QueryLatencyStats implements Required<IQueryLatencyStats> {
   latencyCount: DurationHistogram = new DurationHistogram();
   requestCount: number = 0;
@@ -25,12 +39,9 @@ class QueryLatencyStats implements Required<IQueryLatencyStats> {
 }
 
 class PathErrorStats implements Required<IPathErrorStats> {
-  // Using our own class over codegen class since children is a
-  // map of IPathErrorStats in codegen which throws typescript
-  // errors when trying to traverse it since children can be null there.
-  public children: { [k: string]: PathErrorStats } = Object.create(null);
-  public errorsCount: number = 0;
-  public requestsWithErrorsCount: number = 0;
+  children: { [k: string]: PathErrorStats } = Object.create(null);
+  errorsCount: number = 0;
+  requestsWithErrorsCount: number = 0;
 }
 
 class TypeStat implements Required<ITypeStat> {
@@ -38,85 +49,78 @@ class TypeStat implements Required<ITypeStat> {
 }
 
 class FieldStat implements Required<IFieldStat> {
-  returnType: string;
   errorsCount: number = 0;
   count: number = 0;
   requestsWithErrorsCount: number = 0;
   latencyCount: DurationHistogram = new DurationHistogram();
 
-  constructor(returnType: string) {
-    this.returnType = returnType;
-  }
+  constructor(public readonly returnType: string) {}
 }
 
 export class ContextualizedStats implements IContextualizedStats {
-  statsContext: IStatsContext;
-  queryLatencyStats: QueryLatencyStats;
-  perTypeStat: { [k: string]: TypeStat };
+  queryLatencyStats = new QueryLatencyStats();
+  perTypeStat: { [k: string]: TypeStat } = Object.create(null);
 
-  constructor(statsContext: IStatsContext) {
-    this.statsContext = statsContext;
-    this.queryLatencyStats = new QueryLatencyStats();
-    this.perTypeStat = Object.create(null);
-  }
+  constructor(public readonly statsContext: IStatsContext) {}
 
   public addTrace(trace: Trace) {
-    const queryLatencyStats = this.queryLatencyStats;
-    queryLatencyStats.requestCount++;
+    this.queryLatencyStats.requestCount++;
     if (trace.fullQueryCacheHit) {
-      queryLatencyStats.cacheLatencyCount.incrementDuration(trace.durationNs);
-      queryLatencyStats.cacheHits++;
+      this.queryLatencyStats.cacheLatencyCount.incrementDuration(
+        trace.durationNs,
+      );
+      this.queryLatencyStats.cacheHits++;
     } else {
-      queryLatencyStats.latencyCount.incrementDuration(trace.durationNs);
+      this.queryLatencyStats.latencyCount.incrementDuration(trace.durationNs);
     }
 
-    if (
-      !trace.fullQueryCacheHit &&
-      trace.cachePolicy?.maxAgeNs
-      // FIXME Make sure this matches the Kotlin implementation (eg, handling
-      // of maxAgeNs=0)
+    // We only provide stats about cache TTLs on cache misses (ie, TTLs directly
+    // calculated by the backend), not for cache hits. This matches the
+    // behavior we've had for a while when converting traces into statistics
+    // in Studio's servers.
+    if (!trace.fullQueryCacheHit && trace.cachePolicy?.maxAgeNs != null) {
       // FIXME Actually write trace.cachePolicy!
-      // FIXME consider using a `switch` while I'm at it
-    ) {
-      if (trace.cachePolicy.scope == Trace.CachePolicy.Scope.PRIVATE) {
-        queryLatencyStats.privateCacheTtlCount.incrementDuration(
-          trace.cachePolicy.maxAgeNs,
-        );
-      } else if (trace.cachePolicy.scope == Trace.CachePolicy.Scope.PUBLIC) {
-        queryLatencyStats.publicCacheTtlCount.incrementDuration(
-          trace.cachePolicy.maxAgeNs,
-        );
+      switch (trace.cachePolicy.scope) {
+        case Trace.CachePolicy.Scope.PRIVATE:
+          this.queryLatencyStats.privateCacheTtlCount.incrementDuration(
+            trace.cachePolicy.maxAgeNs,
+          );
+          break;
+        case Trace.CachePolicy.Scope.PUBLIC:
+          this.queryLatencyStats.publicCacheTtlCount.incrementDuration(
+            trace.cachePolicy.maxAgeNs,
+          );
+          break;
       }
     }
 
     if (trace.persistedQueryHit) {
-      queryLatencyStats.persistedQueryHits++;
-    } else if (trace.persistedQueryRegister) {
-      queryLatencyStats.persistedQueryMisses++;
+      this.queryLatencyStats.persistedQueryHits++;
+    }
+    if (trace.persistedQueryRegister) {
+      this.queryLatencyStats.persistedQueryMisses++;
     }
 
     if (trace.forbiddenOperation) {
-      queryLatencyStats.forbiddenOperationCount++;
-    } else if (trace.registeredOperation) {
-      // FIXME confirm that in Kotlin this has no else and fix
-      queryLatencyStats.registeredOperationCount++;
+      this.queryLatencyStats.forbiddenOperationCount++;
+    }
+    if (trace.registeredOperation) {
+      this.queryLatencyStats.registeredOperationCount++;
     }
 
     let hasError = false;
-    const typeStats = this.perTypeStat;
-    const rootPathErrorStats = queryLatencyStats.rootErrorStats;
 
-    function traceNodeStats(node: Trace.INode, path: ReadonlyArray<string>) {
+    const traceNodeStats = (
+      node: Trace.INode,
+      pathWithoutNumbers: ReadonlyArray<string>,
+    ) => {
       // Generate error stats and error path information
       if (node.error?.length) {
         hasError = true;
 
-        let currPathErrorStats = rootPathErrorStats;
-        path.forEach((subPath) => {
+        let currPathErrorStats = this.queryLatencyStats.rootErrorStats;
+        pathWithoutNumbers.forEach((subPath) => {
           const children = currPathErrorStats.children;
-          // FIXME Are we supposed to skip list indexes here and only actually
-          // use field names? I think we looked into how the server handled this
-          // today. Double check though!
           currPathErrorStats =
             children[subPath] || (children[subPath] = new PathErrorStats());
         });
@@ -150,8 +154,8 @@ export class ContextualizedStats implements IContextualizedStats {
         node.endTime >= node.startTime
       ) {
         const typeStat =
-          typeStats[node.parentType] ||
-          (typeStats[node.parentType] = new TypeStat());
+          this.perTypeStat[node.parentType] ||
+          (this.perTypeStat[node.parentType] = new TypeStat());
 
         const fieldStat =
           typeStat.perFieldStat[fieldName] ||
@@ -162,20 +166,19 @@ export class ContextualizedStats implements IContextualizedStats {
         // Note: this is actually counting the number of resolver calls for this
         // field that had at least one error, not the number of overall GraphQL
         // queries that had at least one error for this field. That doesn't seem
-        // to match the name, but it does match the Go engineproxy implementation.
-        // (Well, actually the Go engineproxy implementation is even buggier because
-        // it counts errors multiple times if multiple resolvers have the same path.)
+        // to match the name, but it does match the other implementations of this
+        // logic.
         fieldStat.requestsWithErrorsCount +=
           (node.error?.length ?? 0) > 0 ? 1 : 0;
         fieldStat.latencyCount.incrementDuration(node.endTime - node.startTime);
       }
 
       return false;
-    }
+    };
 
     iterateOverTraceForStats(trace, traceNodeStats);
     if (hasError) {
-      queryLatencyStats.requestsWithErrorsCount++;
+      this.queryLatencyStats.requestsWithErrorsCount++;
     }
   }
 }
@@ -187,7 +190,7 @@ export class ContextualizedStats implements IContextualizedStats {
  */
 function iterateOverTraceForStats(
   trace: Trace,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
+  f: (node: Trace.INode, pathWithoutNumbers: ReadonlyArray<string>) => boolean,
 ) {
   if (trace.root) {
     if (iterateOverTraceNode(trace.root, [], f)) return;
@@ -201,7 +204,7 @@ function iterateOverTraceForStats(
 // Helper for iterateOverTraceForStats; returns true to stop the overall walk.
 function iterateOverQueryPlan(
   node: Trace.IQueryPlanNode,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
+  f: (node: Trace.INode, pathWithoutNumbers: ReadonlyArray<string>) => boolean,
 ): boolean {
   if (!node) return false;
 
@@ -232,12 +235,12 @@ function iterateOverQueryPlan(
 // Helper for iterateOverTraceForStats; returns true to stop the overall walk.
 function iterateOverTraceNode(
   node: Trace.INode,
-  path: ReadonlyArray<string>,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
+  pathWithoutNumbers: ReadonlyArray<string>,
+  f: (node: Trace.INode, pathWithoutNumbers: ReadonlyArray<string>) => boolean,
 ): boolean {
   // Invoke the function; if it returns true, don't descend and tell callers to
   // stop walking.
-  if (f(node, path)) {
+  if (f(node, pathWithoutNumbers)) {
     return true;
   }
 
@@ -245,12 +248,13 @@ function iterateOverTraceNode(
     // We want to stop as soon as some call returns true, which happens to be
     // exactly what 'some' does.
     node.child?.some((child) => {
-      let childPath = path;
+      let childpathWithoutNumbers = pathWithoutNumbers;
       if (child.responseName) {
         // concat creates a new shallow copy of the array
-        childPath = path.concat(child.responseName);
+        // FIXME use a linked list
+        childpathWithoutNumbers = pathWithoutNumbers.concat(child.responseName);
       }
-      return iterateOverTraceNode(child, childPath, f);
+      return iterateOverTraceNode(child, childpathWithoutNumbers, f);
     }) ?? false
   );
 }
