@@ -106,10 +106,7 @@ export class ContextualizedStats implements IContextualizedStats {
     const typeStats = this.perTypeStat;
     const rootPathErrorStats = queryLatencyStats.rootErrorStats;
 
-    function traceNodeStats(
-      node: Trace.INode,
-      path: ReadonlyArray<string>,
-    ) {
+    function traceNodeStats(node: Trace.INode, path: ReadonlyArray<string>) {
       // Generate error stats and error path information
       if (node.error?.length) {
         hasError = true;
@@ -160,6 +157,8 @@ export class ContextualizedStats implements IContextualizedStats {
           (node.error?.length ?? 0) > 0 ? 1 : 0;
         fieldStat.latencyCount.incrementDuration(node.endTime - node.startTime);
       }
+
+      return false;
     }
 
     iterateOverTraceForStats(trace, traceNodeStats);
@@ -176,8 +175,8 @@ export class ContextualizedStats implements IContextualizedStats {
  */
 function iterateOverTraceForStats(
   trace: Trace,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | void,
-): void {
+  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
+) {
   if (trace.root) {
     if (iterateOverTraceNode(trace.root, [], f)) return;
   }
@@ -190,7 +189,7 @@ function iterateOverTraceForStats(
 // Helper for iterateOverTraceForStats; returns true to stop the overall walk.
 function iterateOverQueryPlan(
   node: Trace.IQueryPlanNode | null | undefined,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | void,
+  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
 ): boolean {
   if (!node) return false;
 
@@ -219,7 +218,7 @@ function iterateOverQueryPlan(
 function iterateOverTraceNode(
   node: Trace.INode,
   path: ReadonlyArray<string>,
-  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean | void,
+  f: (node: Trace.INode, path: ReadonlyArray<string>) => boolean,
 ): boolean {
   // Invoke the function; if it returns true, don't descend and tell callers to
   // stop walking.
