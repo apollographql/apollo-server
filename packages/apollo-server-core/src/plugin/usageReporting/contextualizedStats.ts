@@ -9,7 +9,7 @@ import {
   IContextualizedStats,
 } from 'apollo-reporting-protobuf';
 
-export class QueryLatencyStats implements IQueryLatencyStats {
+class QueryLatencyStats implements Required<IQueryLatencyStats> {
   latencyCount: DurationHistogram = new DurationHistogram();
   requestCount: number = 0;
   cacheHits: number = 0;
@@ -24,7 +24,7 @@ export class QueryLatencyStats implements IQueryLatencyStats {
   forbiddenOperationCount: number = 0;
 }
 
-export class PathErrorStats implements IPathErrorStats {
+class PathErrorStats implements Required<IPathErrorStats> {
   // Using our own class over codegen class since children is a
   // map of IPathErrorStats in codegen which throws typescript
   // errors when trying to traverse it since children can be null there.
@@ -33,11 +33,11 @@ export class PathErrorStats implements IPathErrorStats {
   public requestsWithErrorsCount: number = 0;
 }
 
-export class TypeStat implements ITypeStat {
+class TypeStat implements Required<ITypeStat> {
   perFieldStat: { [k: string]: FieldStat } = Object.create(null);
 }
 
-export class FieldStat implements IFieldStat {
+class FieldStat implements Required<IFieldStat> {
   returnType: string;
   errorsCount: number = 0;
   count: number = 0;
