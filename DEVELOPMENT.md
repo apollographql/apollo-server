@@ -57,7 +57,7 @@ Immediately after bumping the version, use the `release:start-ci-publish` npm sc
 > __Note: By default, publishing will be done to the `latest` tag on npm.__  To publish on a different `dist-tag` set the `APOLLO_DIST_TAG` environment variable.  E.g. To publish to the `alpha` tag instead of `latest`, the following command would be `APOLLO_DIST_TAG=alpha npm run release:start-ci-publish`.
 
 ```
-npm run release:start-ci-publish
+APOLLO_DIST_TAG=latest npm run release:start-ci-publish
 ```
 
 #### Step 3b: Manually publishing
