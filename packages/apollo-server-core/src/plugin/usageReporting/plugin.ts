@@ -28,7 +28,7 @@ import {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
 } from './options';
-import { TraceTreeBuilder } from '../traceTreeBuilder';
+import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder';
 import { makeTraceDetails } from './traceDetails';
 import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
@@ -266,7 +266,9 @@ export function ApolloServerPluginUsageReporting<TContext>(
           );
         }
 
-        // FIXME set report.endTime
+        // Set the report's overall end time. This is the timestamp that will be
+        // associated with the summarized statistics.
+        report.endTime = dateToProtoTimestamp(new Date());
 
         const protobufError = Report.verify(report);
         if (protobufError) {
