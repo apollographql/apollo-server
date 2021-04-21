@@ -790,7 +790,7 @@ export class ApolloServerBase {
     }
 
     if (this.uploadsConfig) {
-      const { GraphQLUpload } = require('@apollographql/graphql-upload-8-fork');
+      const { GraphQLUpload } = require('graphql-upload');
       if (Array.isArray(resolvers)) {
         if (resolvers.every((resolver) => !resolver.Upload)) {
           resolvers.push({ Upload: GraphQLUpload });

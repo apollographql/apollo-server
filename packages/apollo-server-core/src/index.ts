@@ -55,7 +55,7 @@ export { default as processFileUploads } from './processFileUploads';
 // avoid modern ECMAScript from failing to parse by versions of Node.js which
 // don't support it (yet — eg. Node.js 6 and async/await).
 export const GraphQLUpload = runtimeSupportsUploads
-  ? (require('@apollographql/graphql-upload-8-fork')
+  ? (require('graphql-upload')
       .GraphQLUpload as GraphQLScalarType)
   : undefined;
 
