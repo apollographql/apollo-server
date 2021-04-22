@@ -30,7 +30,7 @@ export function defaultSendOperationsAsTrace() {
   return (trace: Trace, statsReportKey: string): Boolean => {
     const endTimeSeconds = trace.endTime?.seconds;
     if (endTimeSeconds == null) {
-      throw Error("programming error: endTime not set on trace");
+      throw Error('programming error: endTime not set on trace');
     }
 
     const hasErrors = traceHasErrors(trace);
