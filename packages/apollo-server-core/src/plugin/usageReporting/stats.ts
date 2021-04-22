@@ -12,6 +12,7 @@ import {
   ITracesAndStats,
   IReport,
 } from 'apollo-reporting-protobuf';
+import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace';
 
 // FIXME review this comment
 
@@ -32,6 +33,29 @@ import {
 
 // FIXME make sure we never reuse a StatsMap with multiple schemas (eg, so field
 // types are consistent)
+
+export class OurReport implements Required<IReport> {
+  constructor(readonly header: ReportHeader) {}
+  readonly tracesPerQuery: Record<
+    string,
+    OurTracesAndStats | undefined
+  > = Object.create(null);
+  public endTime: google.protobuf.ITimestamp | null = null;
+
+  public tracesAndStatsByStatsReportKey(statsReportKey: string) {
+    const existing = this.tracesPerQuery[statsReportKey];
+    if (existing) {
+      return existing;
+    }
+    return (this.tracesPerQuery[statsReportKey] = new OurTracesAndStats());
+  }
+}
+
+class OurTracesAndStats implements Required<ITracesAndStats> {
+  readonly trace: Uint8Array[] = [];
+  readonly statsWithContext = new StatsByContext();
+}
+
 class StatsByContext {
   readonly map: { [k: string]: OurContextualizedStats } = Object.create(null);
 
@@ -59,63 +83,6 @@ class StatsByContext {
       (this.map[statsContextKey] = new OurContextualizedStats(statsContext))
     ).addTrace(trace);
   }
-}
-
-class OurTracesAndStats implements Required<ITracesAndStats> {
-  readonly trace: Uint8Array[] = [];
-  readonly statsWithContext = new StatsByContext();
-}
-
-export class OurReport implements Required<IReport> {
-  constructor(readonly header: ReportHeader) {}
-  readonly tracesPerQuery: Record<
-    string,
-    OurTracesAndStats | undefined
-  > = Object.create(null);
-  public endTime: google.protobuf.ITimestamp | null = null;
-
-  public tracesAndStatsByStatsReportKey(statsReportKey: string) {
-     const existing = this.tracesPerQuery[statsReportKey];
-     if (existing) {
-       return existing;
-     }
-     return this.tracesPerQuery[statsReportKey] = new OurTracesAndStats();
-  }
-}
-
-
-class OurQueryLatencyStats implements Required<IQueryLatencyStats> {
-  latencyCount: DurationHistogram = new DurationHistogram();
-  requestCount: number = 0;
-  cacheHits: number = 0;
-  persistedQueryHits: number = 0;
-  persistedQueryMisses: number = 0;
-  cacheLatencyCount: DurationHistogram = new DurationHistogram();
-  rootErrorStats: OurPathErrorStats = new OurPathErrorStats();
-  requestsWithErrorsCount: number = 0;
-  publicCacheTtlCount: DurationHistogram = new DurationHistogram();
-  privateCacheTtlCount: DurationHistogram = new DurationHistogram();
-  registeredOperationCount: number = 0;
-  forbiddenOperationCount: number = 0;
-}
-
-class OurPathErrorStats implements Required<IPathErrorStats> {
-  children: { [k: string]: OurPathErrorStats } = Object.create(null);
-  errorsCount: number = 0;
-  requestsWithErrorsCount: number = 0;
-}
-
-class OurTypeStat implements Required<ITypeStat> {
-  perFieldStat: { [k: string]: OurFieldStat } = Object.create(null);
-}
-
-class OurFieldStat implements Required<IFieldStat> {
-  errorsCount: number = 0;
-  count: number = 0;
-  requestsWithErrorsCount: number = 0;
-  latencyCount: DurationHistogram = new DurationHistogram();
-
-  constructor(public readonly returnType: string) {}
 }
 
 export class OurContextualizedStats implements IContextualizedStats {
@@ -234,162 +201,43 @@ export class OurContextualizedStats implements IContextualizedStats {
       return false;
     };
 
-    iterateOverTraceForStats(trace, traceNodeStats, true);
+    iterateOverTrace(trace, traceNodeStats, true);
     if (hasError) {
       this.queryLatencyStats.requestsWithErrorsCount++;
     }
   }
 }
 
-/**
- * Iterates over the entire trace, calling `f` on each Trace.Node found. It
- * looks under the "root" node as well as any inside the query plan. If any `f`
- * returns true, it stops walking the tree.
- *
- * Each call to `f` will receive an object that implements ResponseNamePath. If
- * `includePath` is true, `f` can call `toArray()` on it to convert the
- * linked-list representation to an array of the response name (field name)
- * nodes that you navigate to get to the node (including a "service:subgraph"
- * top-level node if this is a federated trace). Note that we don't add anything
- * to the path for index (list element) nodes. This is because the only use case
- * we have (error path statistics) does not care about list indexes (it's not
- * that interesting to know that sometimes an error was at foo.3.bar and
- * sometimes foo.5.bar, vs just generally foo.bar).
- *
- * If `includePath` is false, we don't bother to build up the linked lists, and
- * calling `toArray()` will throw.
- */
-function iterateOverTraceForStats(
-  trace: Trace,
-  f: (node: Trace.INode, path: ResponseNamePath) => boolean,
-  includePath: boolean,
-) {
-  const rootPath = includePath
-    ? new RootCollectingPathsResponseNamePath()
-    : notCollectingPathsResponseNamePath;
-  if (trace.root) {
-    if (iterateOverTraceNode(trace.root, rootPath, f)) return;
-  }
-
-  if (trace.queryPlan) {
-    if (iterateOverQueryPlan(trace.queryPlan, rootPath, f)) return;
-  }
+class OurQueryLatencyStats implements Required<IQueryLatencyStats> {
+  latencyCount: DurationHistogram = new DurationHistogram();
+  requestCount: number = 0;
+  cacheHits: number = 0;
+  persistedQueryHits: number = 0;
+  persistedQueryMisses: number = 0;
+  cacheLatencyCount: DurationHistogram = new DurationHistogram();
+  rootErrorStats: OurPathErrorStats = new OurPathErrorStats();
+  requestsWithErrorsCount: number = 0;
+  publicCacheTtlCount: DurationHistogram = new DurationHistogram();
+  privateCacheTtlCount: DurationHistogram = new DurationHistogram();
+  registeredOperationCount: number = 0;
+  forbiddenOperationCount: number = 0;
 }
 
-// Helper for iterateOverTraceForStats; returns true to stop the overall walk.
-function iterateOverQueryPlan(
-  node: Trace.IQueryPlanNode,
-  rootPath: ResponseNamePath,
-  f: (node: Trace.INode, path: ResponseNamePath) => boolean,
-): boolean {
-  if (!node) return false;
-
-  if (node.fetch?.trace?.root && node.fetch.serviceName) {
-    return iterateOverTraceNode(
-      node.fetch.trace.root,
-      rootPath.child(`service:${node.fetch.serviceName}`),
-      f,
-    );
-  }
-  if (node.flatten?.node) {
-    return iterateOverQueryPlan(node.flatten.node, rootPath, f);
-  }
-  if (node.parallel?.nodes) {
-    // We want to stop as soon as some call returns true, which happens to be
-    // exactly what 'some' does.
-    return node.parallel.nodes.some((node) =>
-      iterateOverQueryPlan(node, rootPath, f),
-    );
-  }
-  if (node.sequence?.nodes) {
-    // We want to stop as soon as some call returns true, which happens to be
-    // exactly what 'some' does.
-    return node.sequence.nodes.some((node) =>
-      iterateOverQueryPlan(node, rootPath, f),
-    );
-  }
-
-  return false;
+class OurPathErrorStats implements Required<IPathErrorStats> {
+  children: { [k: string]: OurPathErrorStats } = Object.create(null);
+  errorsCount: number = 0;
+  requestsWithErrorsCount: number = 0;
 }
 
-// Helper for iterateOverTraceForStats; returns true to stop the overall walk.
-function iterateOverTraceNode(
-  node: Trace.INode,
-  path: ResponseNamePath,
-  f: (node: Trace.INode, path: ResponseNamePath) => boolean,
-): boolean {
-  // Invoke the function; if it returns true, don't descend and tell callers to
-  // stop walking.
-  if (f(node, path)) {
-    return true;
-  }
-
-  return (
-    // We want to stop as soon as some call returns true, which happens to be
-    // exactly what 'some' does.
-    node.child?.some((child) => {
-      const childPath = child.responseName
-        ? path.child(child.responseName)
-        : path;
-      return iterateOverTraceNode(child, childPath, f);
-    }) ?? false
-  );
+class OurTypeStat implements Required<ITypeStat> {
+  perFieldStat: { [k: string]: OurFieldStat } = Object.create(null);
 }
 
-export function traceHasErrors(trace: Trace): boolean {
-  let hasErrors = false;
+class OurFieldStat implements Required<IFieldStat> {
+  errorsCount: number = 0;
+  count: number = 0;
+  requestsWithErrorsCount: number = 0;
+  latencyCount: DurationHistogram = new DurationHistogram();
 
-  function traceNodeStats(node: Trace.INode): boolean {
-    if ((node.error?.length ?? 0) > 0) {
-      hasErrors = true;
-    }
-    return hasErrors;
-  }
-
-  iterateOverTraceForStats(trace, traceNodeStats, false);
-  return hasErrors;
-}
-
-interface ResponseNamePath {
-  toArray(): string[];
-  child(responseName: string): ResponseNamePath;
-}
-
-const notCollectingPathsResponseNamePath: ResponseNamePath = {
-  toArray() {
-    throw Error('not collecting paths!');
-  },
-  child() {
-    return this;
-  },
-};
-
-type CollectingPathsResponseNamePath =
-  | RootCollectingPathsResponseNamePath
-  | ChildCollectingPathsResponseNamePath;
-class RootCollectingPathsResponseNamePath implements ResponseNamePath {
-  toArray() {
-    return [];
-  }
-  child(responseName: string) {
-    return new ChildCollectingPathsResponseNamePath(responseName, this);
-  }
-}
-class ChildCollectingPathsResponseNamePath implements ResponseNamePath {
-  constructor(
-    readonly responseName: string,
-    readonly prev: CollectingPathsResponseNamePath,
-  ) {}
-  toArray() {
-    const out = [];
-    let curr: CollectingPathsResponseNamePath = this;
-    while (curr instanceof ChildCollectingPathsResponseNamePath) {
-      out.push(curr.responseName);
-      curr = curr.prev;
-    }
-    return out.reverse();
-  }
-  child(responseName: string) {
-    return new ChildCollectingPathsResponseNamePath(responseName, this);
-  }
+  constructor(public readonly returnType: string) {}
 }
