@@ -106,7 +106,7 @@ pubsub.publish('POST_CREATED', {
 * The second parameter is the payload associated with the event.
     * _The payload should include whatever data is necessary for your resolvers to populate the associated `Subscription` field and its subfields._
 
-When working with GraphQL subscriptions, you `publish` an event whenever a subscription's return value should be updated. One common cause of such an update is a mutation, but _any_ back-end logic might result in changes that should be `publish`ed.
+When working with GraphQL subscriptions, you `publish` an event whenever a subscription's return value should be updated. One common cause of such an update is a mutation, but _any_ back-end logic might result in changes that should be published.
 
 As an example, let's say our GraphQL API supports a `createPost` mutation:
 
