@@ -14,22 +14,20 @@ import {
 } from 'apollo-reporting-protobuf';
 import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace';
 
-// FIXME review this comment
-
 // protobuf.js exports both a class and an interface (starting with I) for each
-// message type. For these stats messages, we create our own classes that
-// implement the interfaces, so that the `repeated sint64` DurationHistogram
-// fields can be built up as DurationHistogram objects rather than arrays. (Our
-// fork of protobuf.js contains a change
-// (https://github.com/protobufjs/protobuf.js/pull/1302) which lets you use pass
-// own objects with `toArray` methods to the generated protobuf encode
-// functions.) TypeScript validates that we've properly listed all of the
-// message fields with the appropriate types (we use `Required` to ensure we
-// implement all message fields). Using our own classes has other advantages,
-// like being able to specify that nested messages are instances of the same
-// class rather than the interface type and thus that they have non-null fields
-// (because the interface type allows all fields to be optional, even though the
-// protobuf format doesn't differentiate between missing and falsey).
+// message type. The class is what it produces when it decodes the message; the
+// interface is what is accepted as input. We build up our messages using custom
+// types implementing the interfaces, so that we can take advantage of the
+// js_use_toArray option we added to our protobuf.js fork which allows us to use
+// classes like DurationHistogram to generate repeated fields. We end up
+// re-creating most of the report structure as custom classes (starting with
+// "Our"). TypeScript validates that we've properly listed all of the message
+// fields with the appropriate types (we use `Required` to ensure we implement
+// all message fields). Using our own classes has other advantages, like being
+// able to specify that nested messages are instances of the same class rather
+// than the interface type and thus that they have non-null fields (because the
+// interface type allows all fields to be optional, even though the protobuf
+// format doesn't differentiate between missing and falsey).
 
 export class OurReport implements Required<IReport> {
   constructor(readonly header: ReportHeader) {}
