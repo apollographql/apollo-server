@@ -31,10 +31,9 @@ import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace';
 
 export class OurReport implements Required<IReport> {
   constructor(readonly header: ReportHeader) {}
-  readonly tracesPerQuery: Record<
-    string,
-    OurTracesAndStats | undefined
-  > = Object.create(null);
+  readonly tracesPerQuery: Record<string, OurTracesAndStats> = Object.create(
+    null,
+  );
   public endTime: google.protobuf.ITimestamp | null = null;
 
   public tracesAndStatsByStatsReportKey(statsReportKey: string) {
