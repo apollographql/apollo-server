@@ -6,6 +6,7 @@ import {
   GraphQLRequestContext,
 } from 'apollo-server-types';
 import { RequestAgent } from 'apollo-server-env';
+import type { Trace } from 'apollo-reporting-protobuf';
 
 export interface ApolloServerPluginUsageReportingOptions<TContext> {
   //#region Configure exactly which data should be sent to Apollo.
@@ -118,6 +119,25 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * failure will be embedded within the stats report key itself.
    */
   sendUnexecutableOperationDocuments?: boolean;
+
+  /**
+   * This plugin sends information about operations to Apollo's servers in two
+   * forms: as detailed operation traces of single operations and as summarized
+   * statistics of many operations. Each individual operation is described in
+   * exactly one of those ways. This hook lets you select which operations are
+   * sent as traces and which are sent as statistics. The default is a heuristic
+   * that tries to send one trace for each rough duration bucket for each
+   * operation each minute, plus more if the operations have errors. (Note that
+   * Apollo's servers perform their own sampling on received traces; not all
+   * traces sent to Apollo's servers can be later retrieved via the trace UI.)
+   *
+   * This option is highly experimental and may change or be removed in future
+   * versions.
+   */
+  experimental_sendOperationAsTrace?: (
+    trace: Trace,
+    statsReportKey: string,
+  ) => boolean;
   //#endregion
 
   //#region Configure the mechanics of communicating with Apollo's servers.

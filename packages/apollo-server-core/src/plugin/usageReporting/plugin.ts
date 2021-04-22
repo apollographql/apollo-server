@@ -26,11 +26,9 @@ import { makeTraceDetails } from './traceDetails';
 import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
-import { DurationHistogram } from './durationHistogram';
 import { OurReport } from './stats';
-import { TracesSeenMap } from './tracesSeenMap';
-import { iterateOverTrace } from './iterateOverTrace';
 import { CacheScope } from 'apollo-cache-control';
+import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -145,7 +143,10 @@ export function ApolloServerPluginUsageReporting<TContext>(
         );
       }
 
-      const tracesSeenMap = new TracesSeenMap();
+      // FIXME let the new response field impact this
+      const sendOperationAsTrace =
+        options.experimental_sendOperationAsTrace ??
+        defaultSendOperationsAsTrace();
 
       let stopped = false;
 
@@ -525,34 +526,13 @@ export function ApolloServerPluginUsageReporting<TContext>(
               statsReportKey,
             );
 
-            const endTimeSeconds = trace?.endTime?.seconds ?? 0;
-
-            // This is a potentially expensive operation to do on every trace.
-            // We may want to optimize this later so we don't have to potentially
-            // iterate over the entire trace body
-            const hasErrors = traceHasErrors(trace);
-            const traceCacheKey = JSON.stringify({
-              statsReportKey,
-              statsBucket: DurationHistogram.durationToBucket(trace.durationNs),
-              endsAtMinute: endTimeSeconds / 60,
-              // If the trace has an error send one errored trace per 5 second interval
-              // instead of the normal minutely bucket a non-errored trace takes.
-              errorKey: hasErrors ? endTimeSeconds % 5 : '',
-            });
-
-            const convertTraceToStats = tracesSeenMap.seen(
-              endTimeSeconds / 60,
-              traceCacheKey,
-            );
-
-            if (convertTraceToStats) {
-              tracesAndStats.statsWithContext.addTrace(trace);
-            } else {
+            if (sendOperationAsTrace(trace, statsReportKey)) {
               const encodedTrace = Trace.encode(trace).finish();
-
               tracesAndStats.trace.push(encodedTrace);
               reportData.size +=
                 encodedTrace.length + Buffer.byteLength(statsReportKey);
+            } else {
+              tracesAndStats.statsWithContext.addTrace(trace);
             }
 
             // If the buffer gets big (according to our estimate), send.
@@ -763,20 +743,6 @@ export function makeHTTPRequestHeaders(
         });
     }
   }
-}
-
-function traceHasErrors(trace: Trace): boolean {
-  let hasErrors = false;
-
-  function traceNodeStats(node: Trace.INode): boolean {
-    if ((node.error?.length ?? 0) > 0) {
-      hasErrors = true;
-    }
-    return hasErrors;
-  }
-
-  iterateOverTrace(trace, traceNodeStats, false);
-  return hasErrors;
 }
 
 function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
