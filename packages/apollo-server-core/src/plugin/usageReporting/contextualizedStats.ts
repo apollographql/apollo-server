@@ -34,7 +34,7 @@ import {
 
 // FIXME make sure we never reuse a StatsMap with multiple schemas (eg, so field
 // types are consistent)
-class OurTracesAndStatsPerQuery {
+class StatsByContext {
   readonly map: { [k: string]: OurContextualizedStats } = Object.create(null);
 
   /**
@@ -67,7 +67,7 @@ class OurTracesAndStatsPerQuery {
 // methods, check exports
 export class OurTracesAndStats implements Required<ITracesAndStats> {
   readonly trace: Uint8Array[] = [];
-  readonly statsWithContext = new OurTracesAndStatsPerQuery();
+  readonly statsWithContext = new StatsByContext();
 }
 
 export class OurReport implements Required<IReport> {
