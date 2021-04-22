@@ -2,11 +2,7 @@ import os from 'os';
 import { gzip } from 'zlib';
 import retry from 'async-retry';
 import { defaultUsageReportingSignature } from 'apollo-graphql';
-import {
-  Report,
-  ReportHeader,
-  Trace,
-} from 'apollo-reporting-protobuf';
+import { Report, ReportHeader, Trace } from 'apollo-reporting-protobuf';
 import { Response, fetch, Headers } from 'apollo-server-env';
 import {
   GraphQLRequestListener,
@@ -31,7 +27,10 @@ import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 import { DurationHistogram } from './durationHistogram';
-import { OurReport, OurTracesAndStats, traceHasErrors } from './contextualizedStats';
+import {
+  OurReport,
+  traceHasErrors,
+} from './contextualizedStats';
 import { TracesSeenMap } from './tracesSeenMap';
 
 const reportHeaderDefaults = {
@@ -509,10 +508,9 @@ export function ApolloServerPluginUsageReporting<TContext>(
               throw new Error(`Error encoding trace: ${protobufError}`);
             }
 
-            // FIXME change to method
-            const tracesAndStats =
-              report.tracesPerQuery[statsReportKey] ||
-              (report.tracesPerQuery[statsReportKey] = new OurTracesAndStats());
+            const tracesAndStats = report.tracesAndStatsByStatsReportKey(
+              statsReportKey,
+            );
 
             const endTimeSeconds = trace?.endTime?.seconds ?? 0;
 

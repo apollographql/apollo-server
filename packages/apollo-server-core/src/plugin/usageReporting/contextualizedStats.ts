@@ -63,9 +63,7 @@ class StatsByContext {
   }
 }
 
-// FIXME move these to the other file, rename them all to Our*, add get-and-set
-// methods, check exports
-export class OurTracesAndStats implements Required<ITracesAndStats> {
+class OurTracesAndStats implements Required<ITracesAndStats> {
   readonly trace: Uint8Array[] = [];
   readonly statsWithContext = new StatsByContext();
 }
@@ -77,6 +75,14 @@ export class OurReport implements Required<IReport> {
     OurTracesAndStats | undefined
   > = Object.create(null);
   public endTime: google.protobuf.ITimestamp | null = null;
+
+  public tracesAndStatsByStatsReportKey(statsReportKey: string) {
+     const existing = this.tracesPerQuery[statsReportKey];
+     if (existing) {
+       return existing;
+     }
+     return this.tracesPerQuery[statsReportKey] = new OurTracesAndStats();
+  }
 }
 
 
