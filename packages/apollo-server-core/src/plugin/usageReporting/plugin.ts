@@ -3,12 +3,14 @@ import { gzip } from 'zlib';
 import retry from 'async-retry';
 import { defaultUsageReportingSignature } from 'apollo-graphql';
 import {
+  IReport,
   Report,
   ReportHeader,
   Trace,
-  TracesAndStats,
+  ITracesAndStats,
   IContextualizedStats,
   IStatsContext,
+  google,
 } from 'apollo-reporting-protobuf';
 import { Response, fetch, Headers } from 'apollo-server-env';
 import {
@@ -48,7 +50,7 @@ const reportHeaderDefaults = {
 };
 
 class ReportData {
-  report!: Report;
+  report!: OurReport;
   size!: number;
   readonly header: ReportHeader;
   constructor(executableSchemaId: string, graphVariant: string) {
@@ -60,7 +62,7 @@ class ReportData {
     this.reset();
   }
   reset() {
-    this.report = new Report({ header: this.header });
+    this.report = new OurReport(this.header);
     this.size = 0;
   }
 }
@@ -94,6 +96,22 @@ class StatsMap {
       (this.map[statsContextKey] = new ContextualizedStats(statsContext))
     ).addTrace(trace);
   }
+}
+
+// FIXME move these to the other file, rename them all to Our*, add get-and-set
+// methods.
+class TracesAndStats implements Required<ITracesAndStats> {
+  readonly trace: Uint8Array[] = [];
+  readonly statsWithContext = new StatsMap();
+}
+
+class OurReport implements Required<IReport> {
+  constructor(readonly header: ReportHeader) {}
+  readonly tracesPerQuery: Record<
+    string,
+    TracesAndStats | undefined
+  > = Object.create(null);
+  public endTime: google.protobuf.ITimestamp | null = null;
 }
 
 export function ApolloServerPluginUsageReporting<TContext>(
@@ -249,23 +267,6 @@ export function ApolloServerPluginUsageReporting<TContext>(
           return;
         }
 
-        if (options.debugPrintReports) {
-          // In terms of verbosity, and as the name of this option suggests,
-          // this message is either an "info" or a "debug" level message.
-          // However, we are using `warn` here for compatibility reasons since
-          // the `debugPrintReports` flag pre-dated the existence of log-levels
-          // and changing this to also require `debug: true` (in addition to
-          // `debugPrintReports`) just to reach the level of verbosity to
-          // produce the output would be a breaking change.  The "warn" level is
-          // on by default.  There is a similar theory and comment applied
-          // below. (Note that the actual traces are "pre-encoded" and not
-          // accessible to `toJSON` but we do print them separately when we
-          // encode them.)
-          logger.warn(
-            `Apollo usage report: ${JSON.stringify(report.toJSON())}`,
-          );
-        }
-
         // Set the report's overall end time. This is the timestamp that will be
         // associated with the summarized statistics.
         report.endTime = dateToProtoTimestamp(new Date());
@@ -275,6 +276,25 @@ export function ApolloServerPluginUsageReporting<TContext>(
           throw new Error(`Error encoding report: ${protobufError}`);
         }
         const message = Report.encode(report).finish();
+
+        if (options.debugPrintReports) {
+          // In terms of verbosity, and as the name of this option suggests,
+          // this message is either an "info" or a "debug" level message.
+          // However, we are using `warn` here for compatibility reasons since
+          // the `debugPrintReports` flag pre-dated the existence of log-levels
+          // and changing this to also require `debug: true` (in addition to
+          // `debugPrintReports`) just to reach the level of verbosity to
+          // produce the output would be a breaking change.  The "warn" level is
+          // on by default.  There is a similar theory and comment applied
+          // below.
+          //
+          // We decode the report rather than printing the original `report`
+          // so that it includes all of the pre-encoded traces.
+          const decodedReport = Report.decode(message);
+          logger.warn(
+            `Apollo usage report: ${JSON.stringify(decodedReport.toJSON())}`,
+          );
+        }
 
         const compressed = await new Promise<Buffer>((resolve, reject) => {
           // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
@@ -541,13 +561,9 @@ export function ApolloServerPluginUsageReporting<TContext>(
               throw new Error(`Error encoding trace: ${protobufError}`);
             }
 
-            if (!report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
-              report.tracesPerQuery[statsReportKey] = new TracesAndStats();
-              (report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
-              report.tracesPerQuery[
-                statsReportKey
-              ].statsWithContext = new StatsMap();
-            }
+            const tracesAndStats =
+              report.tracesPerQuery[statsReportKey] ||
+              (report.tracesPerQuery[statsReportKey] = new TracesAndStats());
 
             const endTimeSeconds = trace?.endTime?.seconds ?? 0;
 
@@ -570,26 +586,13 @@ export function ApolloServerPluginUsageReporting<TContext>(
             );
 
             if (convertTraceToStats) {
-              (report.tracesPerQuery[statsReportKey]
-                .statsWithContext as StatsMap).addTrace(trace);
+              (tracesAndStats.statsWithContext as StatsMap).addTrace(trace);
             } else {
               const encodedTrace = Trace.encode(trace).finish();
 
-              // See comment on our override of Traces.encode inside of
-              // apollo-reporting-protobuf to learn more about this strategy.
-              (report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
-                encodedTrace,
-              );
+              tracesAndStats.trace.push(encodedTrace);
               reportData.size +=
                 encodedTrace.length + Buffer.byteLength(statsReportKey);
-            }
-
-            if (options.debugPrintReports) {
-              logger.warn(
-                `Apollo usage report trace: ${JSON.stringify(
-                  treeBuilder.trace.toJSON(),
-                )}`,
-              );
             }
 
             // If the buffer gets big (according to our estimate), send.
