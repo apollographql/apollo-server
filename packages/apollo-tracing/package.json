@@ -1,6 +1,6 @@
 {
   "name": "apollo-tracing",
-  "version": "0.13.1-unified.0",
+  "version": "0.13.1-unified.1",
   "description": "Collect and expose trace data for GraphQL requests",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
