@@ -30,6 +30,7 @@ import { DurationHistogram } from './durationHistogram';
 import { OurReport } from './stats';
 import { TracesSeenMap } from './tracesSeenMap';
 import { iterateOverTrace } from './iterateOverTrace';
+import { CacheScope } from 'apollo-cache-control';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -428,6 +429,20 @@ export function ApolloServerPluginUsageReporting<TContext>(
           treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
           treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
           treeBuilder.trace.registeredOperation = !!metrics.registeredOperation;
+
+          if (requestContext.overallCachePolicy) {
+            treeBuilder.trace.cachePolicy = new Trace.CachePolicy({
+              scope:
+                requestContext.overallCachePolicy.scope === CacheScope.Private
+                  ? Trace.CachePolicy.Scope.PRIVATE
+                  : requestContext.overallCachePolicy.scope ===
+                    CacheScope.Public
+                  ? Trace.CachePolicy.Scope.PUBLIC
+                  : Trace.CachePolicy.Scope.UNKNOWN,
+              // Convert from seconds to ns.
+              maxAgeNs: requestContext.overallCachePolicy.maxAge * 1e9,
+            });
+          }
 
           // If operation resolution (parsing and validating the document followed
           // by selecting the correct operation) resulted in the population of the

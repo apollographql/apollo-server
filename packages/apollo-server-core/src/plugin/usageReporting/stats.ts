@@ -102,7 +102,6 @@ export class OurContextualizedStats implements IContextualizedStats {
     // behavior we've had for a while when converting traces into statistics
     // in Studio's servers.
     if (!trace.fullQueryCacheHit && trace.cachePolicy?.maxAgeNs != null) {
-      // FIXME Actually write trace.cachePolicy!
       switch (trace.cachePolicy.scope) {
         case Trace.CachePolicy.Scope.PRIVATE:
           this.queryLatencyStats.privateCacheTtlCount.incrementDuration(
