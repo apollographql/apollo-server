@@ -1,6 +1,6 @@
 import { Trace } from 'apollo-reporting-protobuf';
 import { dateToProtoTimestamp } from '../../traceTreeBuilder';
-import { ContextualizedStats } from 'apollo-server-core/dist/plugin/usageReporting/contextualizedStats';
+import { OurContextualizedStats } from 'apollo-server-core/dist/plugin/usageReporting/contextualizedStats';
 import { DurationHistogram } from '../durationHistogram';
 
 const statsContext = {
@@ -21,7 +21,7 @@ const baseTrace = new Trace({
 // TODO: add a federated trace
 describe('Check query latency stats when', () => {
   it('adding a single trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(baseTrace);
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(1);
     expect(contextualizedStats.queryLatencyStats.latencyCount).toStrictEqual(
@@ -33,7 +33,7 @@ describe('Check query latency stats when', () => {
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('adding a fully cached trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(
       new Trace({
         ...baseTrace,
@@ -48,7 +48,7 @@ describe('Check query latency stats when', () => {
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('adding a public cached trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(
       new Trace({
         ...baseTrace,
@@ -66,7 +66,7 @@ describe('Check query latency stats when', () => {
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('adding a private cached trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(
       new Trace({
         ...baseTrace,
@@ -84,7 +84,7 @@ describe('Check query latency stats when', () => {
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('adding a persisted hit trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(
       new Trace({
         ...baseTrace,
@@ -96,7 +96,7 @@ describe('Check query latency stats when', () => {
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('adding a persisted miss trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(
       new Trace({
         ...baseTrace,
@@ -108,7 +108,7 @@ describe('Check query latency stats when', () => {
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('adding a forbidden trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(
       new Trace({
         ...baseTrace,
@@ -122,7 +122,7 @@ describe('Check query latency stats when', () => {
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('adding a registered trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(
       new Trace({
         ...baseTrace,
@@ -136,7 +136,7 @@ describe('Check query latency stats when', () => {
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('adding an errored trace ', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(
       new Trace({
         ...baseTrace,
@@ -169,7 +169,7 @@ describe('Check query latency stats when', () => {
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('merging errored traces', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(
       new Trace({
         ...baseTrace,
@@ -283,7 +283,7 @@ describe('Check query latency stats when', () => {
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('merging non-errored traces', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(baseTrace);
     contextualizedStats.addTrace(baseTrace);
     contextualizedStats.addTrace(
@@ -430,25 +430,25 @@ describe('Check type stats', () => {
   });
 
   it('add single non-federated trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(trace);
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('add multiple non-federated trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(trace);
     contextualizedStats.addTrace(trace);
     expect(contextualizedStats).toMatchSnapshot();
   });
 
   it('add multiple federated trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(federatedTrace);
     contextualizedStats.addTrace(federatedTrace);
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('add multiple errored traces trace', () => {
-    const contextualizedStats = new ContextualizedStats(statsContext);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
     contextualizedStats.addTrace(errorTrace);
     contextualizedStats.addTrace(errorTrace);
     expect(contextualizedStats).toMatchSnapshot();

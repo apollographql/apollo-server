@@ -7,7 +7,15 @@ import {
   Trace,
   ITypeStat,
   IContextualizedStats,
+  ReportHeader,
+  google,
+  ITracesAndStats,
+  IReport,
 } from 'apollo-reporting-protobuf';
+
+// FIXME rename file
+
+// FIXME review this comment
 
 // protobuf.js exports both a class and an interface (starting with I) for each
 // message type. For these stats messages, we create our own classes that
@@ -23,14 +31,63 @@ import {
 // class rather than the interface type and thus that they have non-null fields
 // (because the interface type allows all fields to be optional, even though the
 // protobuf format doesn't differentiate between missing and falsey).
-class QueryLatencyStats implements Required<IQueryLatencyStats> {
+
+// FIXME make sure we never reuse a StatsMap with multiple schemas (eg, so field
+// types are consistent)
+class OurTracesAndStatsPerQuery {
+  readonly map: { [k: string]: OurContextualizedStats } = Object.create(null);
+
+  /**
+   * This function is used by the protobuf generator to convert this map into
+   * an array of contextualized stats to serialize
+   */
+  public toArray(): IContextualizedStats[] {
+    return Object.values(this.map);
+  }
+
+  public addTrace(trace: Trace) {
+    const statsContext: IStatsContext = {
+      clientName: trace.clientName,
+      clientVersion: trace.clientVersion,
+      clientReferenceId: trace.clientReferenceId,
+    };
+
+    const statsContextKey = JSON.stringify(statsContext);
+
+    // FIXME: Make this impact ReportData.size so that maxUncompressedReportSize
+    // works.
+    (
+      this.map[statsContextKey] ||
+      (this.map[statsContextKey] = new OurContextualizedStats(statsContext))
+    ).addTrace(trace);
+  }
+}
+
+// FIXME move these to the other file, rename them all to Our*, add get-and-set
+// methods, check exports
+export class OurTracesAndStats implements Required<ITracesAndStats> {
+  readonly trace: Uint8Array[] = [];
+  readonly statsWithContext = new OurTracesAndStatsPerQuery();
+}
+
+export class OurReport implements Required<IReport> {
+  constructor(readonly header: ReportHeader) {}
+  readonly tracesPerQuery: Record<
+    string,
+    OurTracesAndStats | undefined
+  > = Object.create(null);
+  public endTime: google.protobuf.ITimestamp | null = null;
+}
+
+
+class OurQueryLatencyStats implements Required<IQueryLatencyStats> {
   latencyCount: DurationHistogram = new DurationHistogram();
   requestCount: number = 0;
   cacheHits: number = 0;
   persistedQueryHits: number = 0;
   persistedQueryMisses: number = 0;
   cacheLatencyCount: DurationHistogram = new DurationHistogram();
-  rootErrorStats: PathErrorStats = new PathErrorStats();
+  rootErrorStats: OurPathErrorStats = new OurPathErrorStats();
   requestsWithErrorsCount: number = 0;
   publicCacheTtlCount: DurationHistogram = new DurationHistogram();
   privateCacheTtlCount: DurationHistogram = new DurationHistogram();
@@ -38,17 +95,17 @@ class QueryLatencyStats implements Required<IQueryLatencyStats> {
   forbiddenOperationCount: number = 0;
 }
 
-class PathErrorStats implements Required<IPathErrorStats> {
-  children: { [k: string]: PathErrorStats } = Object.create(null);
+class OurPathErrorStats implements Required<IPathErrorStats> {
+  children: { [k: string]: OurPathErrorStats } = Object.create(null);
   errorsCount: number = 0;
   requestsWithErrorsCount: number = 0;
 }
 
-class TypeStat implements Required<ITypeStat> {
-  perFieldStat: { [k: string]: FieldStat } = Object.create(null);
+class OurTypeStat implements Required<ITypeStat> {
+  perFieldStat: { [k: string]: OurFieldStat } = Object.create(null);
 }
 
-class FieldStat implements Required<IFieldStat> {
+class OurFieldStat implements Required<IFieldStat> {
   errorsCount: number = 0;
   count: number = 0;
   requestsWithErrorsCount: number = 0;
@@ -57,9 +114,9 @@ class FieldStat implements Required<IFieldStat> {
   constructor(public readonly returnType: string) {}
 }
 
-export class ContextualizedStats implements IContextualizedStats {
-  queryLatencyStats = new QueryLatencyStats();
-  perTypeStat: { [k: string]: TypeStat } = Object.create(null);
+export class OurContextualizedStats implements IContextualizedStats {
+  queryLatencyStats = new OurQueryLatencyStats();
+  perTypeStat: { [k: string]: OurTypeStat } = Object.create(null);
 
   constructor(public readonly statsContext: IStatsContext) {}
 
@@ -119,7 +176,7 @@ export class ContextualizedStats implements IContextualizedStats {
         path.toArray().forEach((subPath) => {
           const children = currPathErrorStats.children;
           currPathErrorStats =
-            children[subPath] || (children[subPath] = new PathErrorStats());
+            children[subPath] || (children[subPath] = new OurPathErrorStats());
         });
 
         currPathErrorStats.requestsWithErrorsCount += 1;
@@ -152,11 +209,11 @@ export class ContextualizedStats implements IContextualizedStats {
       ) {
         const typeStat =
           this.perTypeStat[node.parentType] ||
-          (this.perTypeStat[node.parentType] = new TypeStat());
+          (this.perTypeStat[node.parentType] = new OurTypeStat());
 
         const fieldStat =
           typeStat.perFieldStat[fieldName] ||
-          (typeStat.perFieldStat[fieldName] = new FieldStat(node.type));
+          (typeStat.perFieldStat[fieldName] = new OurFieldStat(node.type));
 
         fieldStat.errorsCount += node.error?.length ?? 0;
         fieldStat.count++;

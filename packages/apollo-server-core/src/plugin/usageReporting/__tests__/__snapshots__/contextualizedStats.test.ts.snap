@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Check query latency stats when adding a forbidden trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -323,7 +323,7 @@ ContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -337,9 +337,9 @@ ContextualizedStats {
 `;
 
 exports[`Check query latency stats when adding a fully cached trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 1,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -659,7 +659,7 @@ ContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -673,9 +673,9 @@ ContextualizedStats {
 `;
 
 exports[`Check query latency stats when adding a persisted hit trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -995,7 +995,7 @@ ContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -1009,9 +1009,9 @@ ContextualizedStats {
 `;
 
 exports[`Check query latency stats when adding a persisted miss trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -1331,7 +1331,7 @@ ContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -1345,9 +1345,9 @@ ContextualizedStats {
 `;
 
 exports[`Check query latency stats when adding a private cached trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -1667,7 +1667,7 @@ ContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -1681,9 +1681,9 @@ ContextualizedStats {
 `;
 
 exports[`Check query latency stats when adding a public cached trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -2003,7 +2003,7 @@ ContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -2017,9 +2017,9 @@ ContextualizedStats {
 `;
 
 exports[`Check query latency stats when adding a registered trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -2339,7 +2339,7 @@ ContextualizedStats {
     "registeredOperationCount": 1,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -2353,9 +2353,9 @@ ContextualizedStats {
 `;
 
 exports[`Check query latency stats when adding a single trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -2675,7 +2675,7 @@ ContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -2689,9 +2689,9 @@ ContextualizedStats {
 `;
 
 exports[`Check query latency stats when adding an errored trace  1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -3011,9 +3011,9 @@ ContextualizedStats {
     "registeredOperationCount": 1,
     "requestCount": 1,
     "requestsWithErrorsCount": 1,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {
-        "user": PathErrorStats {
+        "user": OurPathErrorStats {
           "children": Object {},
           "errorsCount": 1,
           "requestsWithErrorsCount": 1,
@@ -3031,9 +3031,9 @@ ContextualizedStats {
 `;
 
 exports[`Check query latency stats when merging errored traces 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -3353,11 +3353,11 @@ ContextualizedStats {
     "registeredOperationCount": 4,
     "requestCount": 4,
     "requestsWithErrorsCount": 4,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {
-        "account": PathErrorStats {
+        "account": OurPathErrorStats {
           "children": Object {
-            "name": PathErrorStats {
+            "name": OurPathErrorStats {
               "children": Object {},
               "errorsCount": 1,
               "requestsWithErrorsCount": 1,
@@ -3366,9 +3366,9 @@ ContextualizedStats {
           "errorsCount": 0,
           "requestsWithErrorsCount": 0,
         },
-        "user": PathErrorStats {
+        "user": OurPathErrorStats {
           "children": Object {
-            "email": PathErrorStats {
+            "email": OurPathErrorStats {
               "children": Object {},
               "errorsCount": 2,
               "requestsWithErrorsCount": 2,
@@ -3390,9 +3390,9 @@ ContextualizedStats {
 `;
 
 exports[`Check query latency stats when merging non-errored traces 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {},
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 2,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -3712,7 +3712,7 @@ ContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 6,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -3726,11 +3726,11 @@ ContextualizedStats {
 `;
 
 exports[`Check type stats add multiple errored traces trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {
-    "Query": TypeStat {
+    "Query": OurTypeStat {
       "perFieldStat": Object {
-        "user": FieldStat {
+        "user": OurFieldStat {
           "count": 2,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -3816,9 +3816,9 @@ ContextualizedStats {
         },
       },
     },
-    "User": TypeStat {
+    "User": OurTypeStat {
       "perFieldStat": Object {
-        "email": FieldStat {
+        "email": OurFieldStat {
           "count": 2,
           "errorsCount": 4,
           "latencyCount": DurationHistogram {
@@ -3902,7 +3902,7 @@ ContextualizedStats {
           "requestsWithErrorsCount": 2,
           "returnType": "String!",
         },
-        "friends": FieldStat {
+        "friends": OurFieldStat {
           "count": 2,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -3989,7 +3989,7 @@ ContextualizedStats {
       },
     },
   },
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -4309,11 +4309,11 @@ ContextualizedStats {
     "registeredOperationCount": 2,
     "requestCount": 2,
     "requestsWithErrorsCount": 2,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {
-        "user": PathErrorStats {
+        "user": OurPathErrorStats {
           "children": Object {
-            "email": PathErrorStats {
+            "email": OurPathErrorStats {
               "children": Object {},
               "errorsCount": 4,
               "requestsWithErrorsCount": 2,
@@ -4335,11 +4335,11 @@ ContextualizedStats {
 `;
 
 exports[`Check type stats add multiple federated trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {
-    "Query": TypeStat {
+    "Query": OurTypeStat {
       "perFieldStat": Object {
-        "user": FieldStat {
+        "user": OurFieldStat {
           "count": 2,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -4425,9 +4425,9 @@ ContextualizedStats {
         },
       },
     },
-    "User": TypeStat {
+    "User": OurTypeStat {
       "perFieldStat": Object {
-        "email": FieldStat {
+        "email": OurFieldStat {
           "count": 2,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -4511,7 +4511,7 @@ ContextualizedStats {
           "requestsWithErrorsCount": 0,
           "returnType": "String!",
         },
-        "friends": FieldStat {
+        "friends": OurFieldStat {
           "count": 2,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -4598,7 +4598,7 @@ ContextualizedStats {
       },
     },
   },
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -4918,7 +4918,7 @@ ContextualizedStats {
     "registeredOperationCount": 2,
     "requestCount": 2,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -4932,11 +4932,11 @@ ContextualizedStats {
 `;
 
 exports[`Check type stats add multiple non-federated trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {
-    "Query": TypeStat {
+    "Query": OurTypeStat {
       "perFieldStat": Object {
-        "user": FieldStat {
+        "user": OurFieldStat {
           "count": 2,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -5022,9 +5022,9 @@ ContextualizedStats {
         },
       },
     },
-    "User": TypeStat {
+    "User": OurTypeStat {
       "perFieldStat": Object {
-        "email": FieldStat {
+        "email": OurFieldStat {
           "count": 2,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -5108,7 +5108,7 @@ ContextualizedStats {
           "requestsWithErrorsCount": 0,
           "returnType": "String!",
         },
-        "friends": FieldStat {
+        "friends": OurFieldStat {
           "count": 2,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -5195,7 +5195,7 @@ ContextualizedStats {
       },
     },
   },
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -5515,7 +5515,7 @@ ContextualizedStats {
     "registeredOperationCount": 2,
     "requestCount": 2,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
@@ -5529,11 +5529,11 @@ ContextualizedStats {
 `;
 
 exports[`Check type stats add single non-federated trace 1`] = `
-ContextualizedStats {
+OurContextualizedStats {
   "perTypeStat": Object {
-    "Query": TypeStat {
+    "Query": OurTypeStat {
       "perFieldStat": Object {
-        "user": FieldStat {
+        "user": OurFieldStat {
           "count": 1,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -5619,9 +5619,9 @@ ContextualizedStats {
         },
       },
     },
-    "User": TypeStat {
+    "User": OurTypeStat {
       "perFieldStat": Object {
-        "email": FieldStat {
+        "email": OurFieldStat {
           "count": 1,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -5705,7 +5705,7 @@ ContextualizedStats {
           "requestsWithErrorsCount": 0,
           "returnType": "String!",
         },
-        "friends": FieldStat {
+        "friends": OurFieldStat {
           "count": 1,
           "errorsCount": 0,
           "latencyCount": DurationHistogram {
@@ -5792,7 +5792,7 @@ ContextualizedStats {
       },
     },
   },
-  "queryLatencyStats": QueryLatencyStats {
+  "queryLatencyStats": OurQueryLatencyStats {
     "cacheHits": 0,
     "cacheLatencyCount": DurationHistogram {
       "buckets": Array [
@@ -6112,7 +6112,7 @@ ContextualizedStats {
     "registeredOperationCount": 1,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
-    "rootErrorStats": PathErrorStats {
+    "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
       "requestsWithErrorsCount": 0,
