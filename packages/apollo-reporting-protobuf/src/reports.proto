@@ -375,6 +375,6 @@ message ContextualizedStats {
 
 // A sequence of traces and stats. An individual trace should either be counted as a stat or trace
 message TracesAndStats {
-  repeated Trace trace = 1;
+  repeated Trace trace = 1 [(js_preEncoded)=true];
   repeated ContextualizedStats stats_with_context = 2 [(js_use_toArray)=true];
 }
