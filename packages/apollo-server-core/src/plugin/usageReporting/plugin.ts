@@ -27,8 +27,9 @@ import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 import { DurationHistogram } from './durationHistogram';
-import { OurReport, traceHasErrors } from './stats';
+import { OurReport } from './stats';
 import { TracesSeenMap } from './tracesSeenMap';
+import { iterateOverTrace } from './iterateOverTrace';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -747,6 +748,20 @@ export function makeHTTPRequestHeaders(
         });
     }
   }
+}
+
+function traceHasErrors(trace: Trace): boolean {
+  let hasErrors = false;
+
+  function traceNodeStats(node: Trace.INode): boolean {
+    if ((node.error?.length ?? 0) > 0) {
+      hasErrors = true;
+    }
+    return hasErrors;
+  }
+
+  iterateOverTrace(trace, traceNodeStats, false);
+  return hasErrors;
 }
 
 function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
