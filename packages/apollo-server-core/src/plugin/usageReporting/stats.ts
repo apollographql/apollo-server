@@ -31,9 +31,6 @@ import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace';
 // (because the interface type allows all fields to be optional, even though the
 // protobuf format doesn't differentiate between missing and falsey).
 
-// FIXME make sure we never reuse a StatsMap with multiple schemas (eg, so field
-// types are consistent)
-
 export class OurReport implements Required<IReport> {
   constructor(readonly header: ReportHeader) {}
   readonly tracesPerQuery: Record<
