@@ -13,8 +13,6 @@ import {
   IReport,
 } from 'apollo-reporting-protobuf';
 
-// FIXME rename file
-
 // FIXME review this comment
 
 // protobuf.js exports both a class and an interface (starting with I) for each

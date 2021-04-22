@@ -1,6 +1,6 @@
 import { Trace } from 'apollo-reporting-protobuf';
 import { dateToProtoTimestamp } from '../../traceTreeBuilder';
-import { OurContextualizedStats } from 'apollo-server-core/dist/plugin/usageReporting/contextualizedStats';
+import { OurContextualizedStats } from '../stats';
 import { DurationHistogram } from '../durationHistogram';
 
 const statsContext = {

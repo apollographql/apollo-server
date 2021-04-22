@@ -27,10 +27,7 @@ import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 import { DurationHistogram } from './durationHistogram';
-import {
-  OurReport,
-  traceHasErrors,
-} from './contextualizedStats';
+import { OurReport, traceHasErrors } from './stats';
 import { TracesSeenMap } from './tracesSeenMap';
 
 const reportHeaderDefaults = {
