@@ -3,14 +3,9 @@ import { gzip } from 'zlib';
 import retry from 'async-retry';
 import { defaultUsageReportingSignature } from 'apollo-graphql';
 import {
-  IReport,
   Report,
   ReportHeader,
   Trace,
-  ITracesAndStats,
-  IContextualizedStats,
-  IStatsContext,
-  google,
 } from 'apollo-reporting-protobuf';
 import { Response, fetch, Headers } from 'apollo-server-env';
 import {
@@ -36,7 +31,7 @@ import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 import { DurationHistogram } from './durationHistogram';
-import { ContextualizedStats, traceHasErrors } from './contextualizedStats';
+import { OurReport, OurTracesAndStats, traceHasErrors } from './contextualizedStats';
 import { TracesSeenMap } from './tracesSeenMap';
 
 const reportHeaderDefaults = {
@@ -65,53 +60,6 @@ class ReportData {
     this.report = new OurReport(this.header);
     this.size = 0;
   }
-}
-
-// FIXME make sure we never reuse a StatsMap with multiple schemas (eg, so field
-// types are consistent)
-class StatsMap {
-  readonly map: { [k: string]: ContextualizedStats } = Object.create(null);
-
-  /**
-   * This function is used by the protobuf generator to convert this map into
-   * an array of contextualized stats to serialize
-   */
-  public toArray(): IContextualizedStats[] {
-    return Object.values(this.map);
-  }
-
-  public addTrace(trace: Trace) {
-    const statsContext: IStatsContext = {
-      clientName: trace.clientName,
-      clientVersion: trace.clientVersion,
-      clientReferenceId: trace.clientReferenceId,
-    };
-
-    const statsContextKey = JSON.stringify(statsContext);
-
-    // FIXME: Make this impact ReportData.size so that maxUncompressedReportSize
-    // works.
-    (
-      this.map[statsContextKey] ||
-      (this.map[statsContextKey] = new ContextualizedStats(statsContext))
-    ).addTrace(trace);
-  }
-}
-
-// FIXME move these to the other file, rename them all to Our*, add get-and-set
-// methods.
-class TracesAndStats implements Required<ITracesAndStats> {
-  readonly trace: Uint8Array[] = [];
-  readonly statsWithContext = new StatsMap();
-}
-
-class OurReport implements Required<IReport> {
-  constructor(readonly header: ReportHeader) {}
-  readonly tracesPerQuery: Record<
-    string,
-    TracesAndStats | undefined
-  > = Object.create(null);
-  public endTime: google.protobuf.ITimestamp | null = null;
 }
 
 export function ApolloServerPluginUsageReporting<TContext>(
@@ -561,9 +509,10 @@ export function ApolloServerPluginUsageReporting<TContext>(
               throw new Error(`Error encoding trace: ${protobufError}`);
             }
 
+            // FIXME change to method
             const tracesAndStats =
               report.tracesPerQuery[statsReportKey] ||
-              (report.tracesPerQuery[statsReportKey] = new TracesAndStats());
+              (report.tracesPerQuery[statsReportKey] = new OurTracesAndStats());
 
             const endTimeSeconds = trace?.endTime?.seconds ?? 0;
 
@@ -586,7 +535,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
             );
 
             if (convertTraceToStats) {
-              (tracesAndStats.statsWithContext as StatsMap).addTrace(trace);
+              tracesAndStats.statsWithContext.addTrace(trace);
             } else {
               const encodedTrace = Trace.encode(trace).finish();
 
