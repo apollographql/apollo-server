@@ -1,6 +1,6 @@
 import { Trace } from 'apollo-reporting-protobuf';
 import { dateToProtoTimestamp } from '../../traceTreeBuilder';
-import { OurContextualizedStats } from '../stats';
+import { OurContextualizedStats, SizeEstimator } from '../stats';
 import { DurationHistogram } from '../durationHistogram';
 
 const statsContext = {
@@ -22,7 +22,7 @@ const baseTrace = new Trace({
 describe('Check query latency stats when', () => {
   it('adding a single trace', () => {
     const contextualizedStats = new OurContextualizedStats(statsContext);
-    contextualizedStats.addTrace(baseTrace);
+    contextualizedStats.addTrace(baseTrace, new SizeEstimator());
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(1);
     expect(contextualizedStats.queryLatencyStats.latencyCount).toStrictEqual(
       new DurationHistogram().incrementDuration(duration),
@@ -39,6 +39,7 @@ describe('Check query latency stats when', () => {
         ...baseTrace,
         fullQueryCacheHit: true,
       }),
+      new SizeEstimator(),
     );
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(1);
     expect(contextualizedStats.queryLatencyStats.cacheHits).toBe(1);
@@ -58,6 +59,7 @@ describe('Check query latency stats when', () => {
           maxAgeNs: 1000,
         },
       }),
+      new SizeEstimator(),
     );
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(1);
     expect(
@@ -76,6 +78,7 @@ describe('Check query latency stats when', () => {
           maxAgeNs: 1000,
         },
       }),
+      new SizeEstimator(),
     );
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(1);
     expect(
@@ -90,6 +93,7 @@ describe('Check query latency stats when', () => {
         ...baseTrace,
         persistedQueryHit: true,
       }),
+      new SizeEstimator(),
     );
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(1);
     expect(contextualizedStats.queryLatencyStats.persistedQueryHits).toBe(1);
@@ -102,6 +106,7 @@ describe('Check query latency stats when', () => {
         ...baseTrace,
         persistedQueryRegister: true,
       }),
+      new SizeEstimator(),
     );
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(1);
     expect(contextualizedStats.queryLatencyStats.persistedQueryMisses).toBe(1);
@@ -114,6 +119,7 @@ describe('Check query latency stats when', () => {
         ...baseTrace,
         forbiddenOperation: true,
       }),
+      new SizeEstimator(),
     );
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(1);
     expect(contextualizedStats.queryLatencyStats.forbiddenOperationCount).toBe(
@@ -128,6 +134,7 @@ describe('Check query latency stats when', () => {
         ...baseTrace,
         registeredOperation: true,
       }),
+      new SizeEstimator(),
     );
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(1);
     expect(contextualizedStats.queryLatencyStats.registeredOperationCount).toBe(
@@ -156,6 +163,7 @@ describe('Check query latency stats when', () => {
           ],
         },
       }),
+      new SizeEstimator(),
     );
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(1);
     expect(
@@ -189,6 +197,7 @@ describe('Check query latency stats when', () => {
           ],
         },
       }),
+      new SizeEstimator(),
     );
     contextualizedStats.addTrace(
       new Trace({
@@ -216,6 +225,7 @@ describe('Check query latency stats when', () => {
           ],
         },
       }),
+      new SizeEstimator(),
     );
     for (let _ in [1, 2]) {
       contextualizedStats.addTrace(
@@ -244,6 +254,7 @@ describe('Check query latency stats when', () => {
             ],
           },
         }),
+        new SizeEstimator(),
       );
     }
 
@@ -284,8 +295,9 @@ describe('Check query latency stats when', () => {
   });
   it('merging non-errored traces', () => {
     const contextualizedStats = new OurContextualizedStats(statsContext);
-    contextualizedStats.addTrace(baseTrace);
-    contextualizedStats.addTrace(baseTrace);
+    const sizeEstimator = new SizeEstimator();
+    contextualizedStats.addTrace(baseTrace, sizeEstimator);
+    contextualizedStats.addTrace(baseTrace, sizeEstimator);
     contextualizedStats.addTrace(
       new Trace({
         ...baseTrace,
@@ -295,6 +307,7 @@ describe('Check query latency stats when', () => {
           maxAgeNs: 1000,
         },
       }),
+      sizeEstimator,
     );
     contextualizedStats.addTrace(
       new Trace({
@@ -305,6 +318,7 @@ describe('Check query latency stats when', () => {
           maxAgeNs: 1000,
         },
       }),
+      sizeEstimator,
     );
     for (let _ in [1, 2]) {
       contextualizedStats.addTrace(
@@ -312,6 +326,7 @@ describe('Check query latency stats when', () => {
           ...baseTrace,
           fullQueryCacheHit: true,
         }),
+        sizeEstimator,
       );
     }
     expect(contextualizedStats.queryLatencyStats.requestCount).toBe(6);
@@ -431,26 +446,26 @@ describe('Check type stats', () => {
 
   it('add single non-federated trace', () => {
     const contextualizedStats = new OurContextualizedStats(statsContext);
-    contextualizedStats.addTrace(trace);
+    contextualizedStats.addTrace(trace, new SizeEstimator());
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('add multiple non-federated trace', () => {
     const contextualizedStats = new OurContextualizedStats(statsContext);
-    contextualizedStats.addTrace(trace);
-    contextualizedStats.addTrace(trace);
+    contextualizedStats.addTrace(trace, new SizeEstimator());
+    contextualizedStats.addTrace(trace, new SizeEstimator());
     expect(contextualizedStats).toMatchSnapshot();
   });
 
   it('add multiple federated trace', () => {
     const contextualizedStats = new OurContextualizedStats(statsContext);
-    contextualizedStats.addTrace(federatedTrace);
-    contextualizedStats.addTrace(federatedTrace);
+    contextualizedStats.addTrace(federatedTrace, new SizeEstimator());
+    contextualizedStats.addTrace(federatedTrace, new SizeEstimator());
     expect(contextualizedStats).toMatchSnapshot();
   });
   it('add multiple errored traces trace', () => {
     const contextualizedStats = new OurContextualizedStats(statsContext);
-    contextualizedStats.addTrace(errorTrace);
-    contextualizedStats.addTrace(errorTrace);
+    contextualizedStats.addTrace(errorTrace, new SizeEstimator());
+    contextualizedStats.addTrace(errorTrace, new SizeEstimator());
     expect(contextualizedStats).toMatchSnapshot();
   });
 });
