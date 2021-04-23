@@ -141,7 +141,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
         );
       }
 
-      // FIXME let the new response field impact this
+      let graphMightSupportTraces = true;
       const sendOperationAsTrace =
         options.experimental_sendOperationAsTrace ??
         defaultSendOperationsAsTrace();
@@ -278,6 +278,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
                   'user-agent': 'ApolloServerPluginUsageReporting',
                   'x-api-key': key,
                   'content-encoding': 'gzip',
+                  accept: 'application/json',
                 },
                 body: compressed,
                 agent: options.requestAgent,
@@ -313,6 +314,31 @@ export function ApolloServerPluginUsageReporting<TContext>(
               response.status
             }, ${(await response.text()) || '(no body)'}`,
           );
+        }
+
+        if (
+          graphMightSupportTraces &&
+          response.status === 200 &&
+          response.headers
+            .get('content-type')
+            ?.match(/^\s*application\/json\s*(?:;|$)/i)
+        ) {
+          const body = await response.text();
+          let parsedBody;
+          try {
+            parsedBody = JSON.parse(body);
+          } catch (e) {
+            throw new Error(`Error parsing response from Apollo servers: ${e}`);
+          }
+          if (parsedBody.tracesIgnored === true) {
+            logger.debug(
+              "This graph's organization does not have access to traces; sending all " +
+                'subsequent operations as traces.',
+            );
+            graphMightSupportTraces = false;
+            // XXX We could also parse traces that are already in the current
+            // report and convert them to stats if we wanted?
+          }
         }
         if (options.debugPrintReports) {
           // In terms of verbosity, and as the name of this option suggests, this
@@ -527,7 +553,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
             report.addTrace(
               statsReportKey,
               trace,
-              sendOperationAsTrace(trace, statsReportKey),
+              graphMightSupportTraces &&
+                sendOperationAsTrace(trace, statsReportKey),
             );
 
             // If the buffer gets big (according to our estimate), send.
