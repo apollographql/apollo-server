@@ -42,7 +42,6 @@ const reportHeaderDefaults = {
 
 class ReportData {
   report!: OurReport;
-  size!: number;
   readonly header: ReportHeader;
   constructor(executableSchemaId: string, graphVariant: string) {
     this.header = new ReportHeader({
@@ -54,7 +53,6 @@ class ReportData {
   }
   reset() {
     this.report = new OurReport(this.header);
-    this.size = 0;
   }
 }
 
@@ -223,6 +221,10 @@ export function ApolloServerPluginUsageReporting<TContext>(
           throw new Error(`Error encoding report: ${protobufError}`);
         }
         const message = Report.encode(report).finish();
+
+        // Potential follow-up: we can compare message.length to
+        // report.sizeEstimator.bytes and use it to "learn" if our estimation is
+        // off and adjust it based on what we learn.
 
         if (options.debugPrintReports) {
           // In terms of verbosity, and as the name of this option suggests,
@@ -522,23 +524,16 @@ export function ApolloServerPluginUsageReporting<TContext>(
               throw new Error(`Error encoding trace: ${protobufError}`);
             }
 
-            const tracesAndStats = report.tracesAndStatsByStatsReportKey(
+            report.addTrace(
               statsReportKey,
+              trace,
+              sendOperationAsTrace(trace, statsReportKey),
             );
-
-            if (sendOperationAsTrace(trace, statsReportKey)) {
-              const encodedTrace = Trace.encode(trace).finish();
-              tracesAndStats.trace.push(encodedTrace);
-              reportData.size +=
-                encodedTrace.length + Buffer.byteLength(statsReportKey);
-            } else {
-              tracesAndStats.statsWithContext.addTrace(trace);
-            }
 
             // If the buffer gets big (according to our estimate), send.
             if (
               sendReportsImmediately ||
-              reportData.size >=
+              report.sizeEstimator.bytes >=
                 (options.maxUncompressedReportSize || 4 * 1024 * 1024)
             ) {
               await sendReportAndReportErrors(executableSchemaId);

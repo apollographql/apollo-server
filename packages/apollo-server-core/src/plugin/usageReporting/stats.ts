@@ -29,18 +29,45 @@ import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace';
 // interface type allows all fields to be optional, even though the protobuf
 // format doesn't differentiate between missing and falsey).
 
+export class SizeEstimator {
+  bytes = 0;
+}
 export class OurReport implements Required<IReport> {
   constructor(readonly header: ReportHeader) {}
   readonly tracesPerQuery: Record<string, OurTracesAndStats> = Object.create(
     null,
   );
+  // FIXME wtf is public, get rid of them all
   public endTime: google.protobuf.ITimestamp | null = null;
 
-  public tracesAndStatsByStatsReportKey(statsReportKey: string) {
+  // A rough estimate of the number of bytes currently in the report. We start
+  // at zero and don't count `header` and `endTime`, which have the same size
+  // for every report. This really is a rough estimate, so we don't stress too
+  // much about counting bytes for the tags and string/message lengths, etc:
+  // we mostly just count the lengths of strings plus some estimates for the
+  // messages with a bunch of numbers in them.
+  //
+  // We store this in a class so we can pass it down as a reference to other
+  // methods which increment it.
+  readonly sizeEstimator = new SizeEstimator();
+
+  addTrace(statsReportKey: string, trace: Trace, asTrace: boolean) {
+    const tracesAndStats = this.getTracesAndStats(statsReportKey);
+    if (asTrace) {
+      const encodedTrace = Trace.encode(trace).finish();
+      tracesAndStats.trace.push(encodedTrace);
+      this.sizeEstimator.bytes += 2 + encodedTrace.length;
+    } else {
+      tracesAndStats.statsWithContext.addTrace(trace, this.sizeEstimator);
+    }
+  }
+
+  private getTracesAndStats(statsReportKey: string) {
     const existing = this.tracesPerQuery[statsReportKey];
     if (existing) {
       return existing;
     }
+    this.sizeEstimator.bytes += estimatedBytesForString(statsReportKey);
     return (this.tracesPerQuery[statsReportKey] = new OurTracesAndStats());
   }
 }
@@ -61,21 +88,39 @@ class StatsByContext {
     return Object.values(this.map);
   }
 
-  public addTrace(trace: Trace) {
+  public addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
+    this.getContextualizedStats(trace, sizeEstimator).addTrace(
+      trace,
+      sizeEstimator,
+    );
+  }
+
+  private getContextualizedStats(
+    trace: Trace,
+    sizeEstimator: SizeEstimator,
+  ): OurContextualizedStats {
     const statsContext: IStatsContext = {
       clientName: trace.clientName,
       clientVersion: trace.clientVersion,
       clientReferenceId: trace.clientReferenceId,
     };
-
     const statsContextKey = JSON.stringify(statsContext);
 
-    // FIXME: Make this impact ReportData.size so that maxUncompressedReportSize
-    // works.
-    (
-      this.map[statsContextKey] ||
-      (this.map[statsContextKey] = new OurContextualizedStats(statsContext))
-    ).addTrace(trace);
+    const existing = this.map[statsContextKey];
+    if (existing) {
+      return existing;
+    }
+    // Adding a ContextualizedStats means adding a StatsContext plus a
+    // QueryLatencyStats. Let's guess about 20 bytes for a QueryLatencyStats;
+    // it'll be more if more features are used (like cache, APQ, etc).
+    sizeEstimator.bytes +=
+      20 +
+      estimatedBytesForString(trace.clientName) +
+      estimatedBytesForString(trace.clientVersion) +
+      estimatedBytesForString(trace.clientReferenceId);
+    const contextualizedStats = new OurContextualizedStats(statsContext);
+    this.map[statsContextKey] = contextualizedStats;
+    return contextualizedStats;
   }
 }
 
@@ -85,7 +130,11 @@ export class OurContextualizedStats implements IContextualizedStats {
 
   constructor(public readonly statsContext: IStatsContext) {}
 
-  public addTrace(trace: Trace) {
+  // Extract statistics from the trace, and increment the estimated report size.
+  // We only add to the estimate when adding whole sub-messages. If it really
+  // mattered, we could do a lot more careful things like incrementing it
+  // whenever a numeric field on queryLatencyStats gets incremented over 0.
+  public addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
     this.queryLatencyStats.requestCount++;
     if (trace.fullQueryCacheHit) {
       this.queryLatencyStats.cacheLatencyCount.incrementDuration(
@@ -138,9 +187,10 @@ export class OurContextualizedStats implements IContextualizedStats {
 
         let currPathErrorStats = this.queryLatencyStats.rootErrorStats;
         path.toArray().forEach((subPath) => {
-          const children = currPathErrorStats.children;
-          currPathErrorStats =
-            children[subPath] || (children[subPath] = new OurPathErrorStats());
+          currPathErrorStats = currPathErrorStats.getChild(
+            subPath,
+            sizeEstimator,
+          );
         });
 
         currPathErrorStats.requestsWithErrorsCount += 1;
@@ -171,13 +221,13 @@ export class OurContextualizedStats implements IContextualizedStats {
         node.startTime != null &&
         node.endTime >= node.startTime
       ) {
-        const typeStat =
-          this.perTypeStat[node.parentType] ||
-          (this.perTypeStat[node.parentType] = new OurTypeStat());
+        const typeStat = this.getTypeStat(node.parentType, sizeEstimator);
 
-        const fieldStat =
-          typeStat.perFieldStat[fieldName] ||
-          (typeStat.perFieldStat[fieldName] = new OurFieldStat(node.type));
+        const fieldStat = typeStat.getFieldStat(
+          fieldName,
+          node.type,
+          sizeEstimator,
+        );
 
         fieldStat.errorsCount += node.error?.length ?? 0;
         fieldStat.count++;
@@ -198,6 +248,17 @@ export class OurContextualizedStats implements IContextualizedStats {
     if (hasError) {
       this.queryLatencyStats.requestsWithErrorsCount++;
     }
+  }
+
+  getTypeStat(parentType: string, sizeEstimator: SizeEstimator): OurTypeStat {
+    const existing = this.perTypeStat[parentType];
+    if (existing) {
+      return existing;
+    }
+    sizeEstimator.bytes += estimatedBytesForString(parentType);
+    const typeStat = new OurTypeStat();
+    this.perTypeStat[parentType] = typeStat;
+    return typeStat;
   }
 }
 
@@ -220,10 +281,41 @@ class OurPathErrorStats implements Required<IPathErrorStats> {
   children: { [k: string]: OurPathErrorStats } = Object.create(null);
   errorsCount: number = 0;
   requestsWithErrorsCount: number = 0;
+
+  getChild(subPath: string, sizeEstimator: SizeEstimator): OurPathErrorStats {
+    const existing = this.children[subPath];
+    if (existing) {
+      return existing;
+    }
+    const child = new OurPathErrorStats();
+    this.children[subPath] = child;
+    // Include a few bytes in the estimate for the numbers etc.
+    sizeEstimator.bytes += estimatedBytesForString(subPath) + 4;
+    return child;
+  }
 }
 
 class OurTypeStat implements Required<ITypeStat> {
   perFieldStat: { [k: string]: OurFieldStat } = Object.create(null);
+
+  getFieldStat(
+    fieldName: string,
+    returnType: string,
+    sizeEstimator: SizeEstimator,
+  ): OurFieldStat {
+    const existing = this.perFieldStat[fieldName];
+    if (existing) {
+      return existing;
+    }
+    // Rough estimate of 10 bytes for the numbers in the FieldStat.
+    sizeEstimator.bytes +=
+      estimatedBytesForString(fieldName) +
+      estimatedBytesForString(returnType) +
+      10;
+    const fieldStat = new OurFieldStat(returnType);
+    this.perFieldStat[fieldName] = fieldStat;
+    return fieldStat;
+  }
 }
 
 class OurFieldStat implements Required<IFieldStat> {
@@ -233,4 +325,11 @@ class OurFieldStat implements Required<IFieldStat> {
   latencyCount: DurationHistogram = new DurationHistogram();
 
   constructor(public readonly returnType: string) {}
+}
+
+function estimatedBytesForString(s: string) {
+  // 2 is for the tag (field ID + wire type) plus the encoded length. (The
+  // encoded length takes up more than 1 byte for strings that are longer than
+  // 127 bytes, but this is an estimate.)
+  return 2 + Buffer.byteLength(s);
 }
