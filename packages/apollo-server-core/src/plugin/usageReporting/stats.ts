@@ -37,8 +37,7 @@ export class OurReport implements Required<IReport> {
   readonly tracesPerQuery: Record<string, OurTracesAndStats> = Object.create(
     null,
   );
-  // FIXME wtf is public, get rid of them all
-  public endTime: google.protobuf.ITimestamp | null = null;
+  endTime: google.protobuf.ITimestamp | null = null;
 
   // A rough estimate of the number of bytes currently in the report. We start
   // at zero and don't count `header` and `endTime`, which have the same size
@@ -84,11 +83,11 @@ class StatsByContext {
    * This function is used by the protobuf generator to convert this map into
    * an array of contextualized stats to serialize
    */
-  public toArray(): IContextualizedStats[] {
+  toArray(): IContextualizedStats[] {
     return Object.values(this.map);
   }
 
-  public addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
+  addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
     this.getContextualizedStats(trace, sizeEstimator).addTrace(
       trace,
       sizeEstimator,
@@ -128,13 +127,13 @@ export class OurContextualizedStats implements IContextualizedStats {
   queryLatencyStats = new OurQueryLatencyStats();
   perTypeStat: { [k: string]: OurTypeStat } = Object.create(null);
 
-  constructor(public readonly statsContext: IStatsContext) {}
+  constructor(readonly statsContext: IStatsContext) {}
 
   // Extract statistics from the trace, and increment the estimated report size.
   // We only add to the estimate when adding whole sub-messages. If it really
   // mattered, we could do a lot more careful things like incrementing it
   // whenever a numeric field on queryLatencyStats gets incremented over 0.
-  public addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
+  addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
     this.queryLatencyStats.requestCount++;
     if (trace.fullQueryCacheHit) {
       this.queryLatencyStats.cacheLatencyCount.incrementDuration(
@@ -324,7 +323,7 @@ class OurFieldStat implements Required<IFieldStat> {
   requestsWithErrorsCount: number = 0;
   latencyCount: DurationHistogram = new DurationHistogram();
 
-  constructor(public readonly returnType: string) {}
+  constructor(readonly returnType: string) {}
 }
 
 function estimatedBytesForString(s: string) {
