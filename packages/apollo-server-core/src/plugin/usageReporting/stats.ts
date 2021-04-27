@@ -144,11 +144,11 @@ class StatsByContext {
   }
 }
 
-export class OurContextualizedStats implements IContextualizedStats {
+export class OurContextualizedStats implements Required<IContextualizedStats> {
   queryLatencyStats = new OurQueryLatencyStats();
   perTypeStat: { [k: string]: OurTypeStat } = Object.create(null);
 
-  constructor(readonly statsContext: IStatsContext) {}
+  constructor(readonly context: IStatsContext) {}
 
   // Extract statistics from the trace, and increment the estimated report size.
   // We only add to the estimate when adding whole sub-messages. If it really
