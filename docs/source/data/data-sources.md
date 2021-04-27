@@ -1,11 +1,88 @@
 ---
 title: Data sources
-description: Caching Partial Query Results
+description: Manage connections to databases and REST APIs
 ---
 
-Data sources are classes that encapsulate fetching data from a particular service, with built-in support for caching, deduplication, and error handling. You write the code that is specific to interacting with your backend, and Apollo Server takes care of the rest.
+**Data sources** are classes that your server's [resolvers](./resolvers/) can use to encapsulate fetching data from a particular source, such as a database or a REST API. These classes help handle caching, deduplication, and errors while resolving operations.
 
-## REST Data Source
+Your server can use any number of different data sources. You don't _have_ to use data sources to fetch data, but they're strongly recommended.
+
+```mermaid
+flowchart LR;
+  restAPI(REST API);
+  sql(SQL Database);
+  subgraph ApolloServer;
+    restDataSource(RESTDataSource);
+    sqlDataSource(SQLDataSource);
+  end
+  restDataSource --Fetches data--> restAPI;
+  sqlDataSource --Fetches data--> sql;
+  client(ApolloClient);
+  client --Sends query--> ApolloServer;
+  class restAPI,sql secondary;
+```
+
+
+
+## Open-source implementations
+
+All data source implementations extend the [`DataSource` abstract class](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-datasource/src/index.ts), which is included in the `apollo-server` library.
+
+Apollo and the larger community maintain the following open-source implementatons:
+
+> Do you maintain a `DataSource` implementation that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/blob/main/docs/source/data/data-sources.md) to be added to the list!
+
+| Class            | Source    | For Use With          |
+|------------------|-----------|-----------------------|
+| `RESTDataSource` | Apollo    | REST APIs ([see below](#rest-data-source)) |
+| [`SQLDataSource`](https://github.com/cvburgess/SQLDataSource)  | Community | SQL databases (via [Knex.js](http://knexjs.org/)) |
+| [`MongoDataSource`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/) | Community | MongoDB |
+| [`CosmosDataSource`](https://github.com/andrejpk/apollo-datasource-cosmosdb) | Community | Azure Cosmos DB |
+| [`FirestoreDataSource`](https://github.com/swantzter/apollo-datasource-firestore) | Community | Cloud Firestore |
+
+> Apollo does not provide offiical support for community-maintained libraries. We cannot guarantee that community-maintained libraries adhere to best practices, or that they will continue to be maintained.
+
+
+## Adding data sources to Apollo Server
+
+You provide your `DataSource` subclasses to the `ApolloServer` constructor, like so:
+
+```js{4-9}:title=index.js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  dataSources: () => {
+    return {
+      moviesAPI: new MoviesAPI(),
+      personalizationAPI: new PersonalizationAPI(),
+    };
+  },
+});
+```
+
+* As shown, the `dataSources` option is a _function_. This function returns an _object_ containing instances of your `DataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
+* Apollo Server calls this function for _every incoming operation_. It automatically assigns the return value to the `dataSources` field of [the `context` object](./resolvers/#the-context-argument) that's passed between your server's resolvers.
+* Also as shown, **the function should create a new instance of each data source for each operation.** If multiple operations share a data source instance, you might accidentally combine results from multiple operations.
+
+Your resolvers can now access your data sources from the shared `context` object and use them to fetch data:
+
+```js:title=resolvers.js
+const resolvers = {
+  Query: {
+    movie: async (_, { id }, { dataSources }) => {
+      return dataSources.moviesAPI.getMovie(id);
+    },
+    mostViewedMovies: async (_, __, { dataSources }) => {
+      return dataSources.moviesAPI.getMostViewedMovies();
+    },
+    favorites: async (_, __, { dataSources }) => {
+      return dataSources.personalizationAPI.getFavorites();
+    },
+  },
+};
+```
+
+## Using `RESTDataSource`
 
 A `RESTDataSource` is responsible for fetching data from a given REST API.
 
@@ -150,54 +227,7 @@ async resolveURL(request: RequestOptions) {
 }
 ```
 
-## Community data sources
 
-The following data sources are community contributions which offer their own extensions to the base `DataSource` class provided by `apollo-datasource`.  While the packages here have been given cursory reviews, Apollo offers no assurance that they follow best practices or that they will continue to be maintained.  If you're the author of a data source that extends `DataSource`, please open a PR to this documentation to have it featured here.  For more details on specific packages, or to report an issue with one of these packages, please refer to the appropriate repository.
-
-- `SQLDataSource` from [`datasource-sql`](https://github.com/cvburgess/SQLDataSource)
-- `MongoDataSource` from [`apollo-datasource-mongodb`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/)
-- `CosmosDataSource` from [`apollo-datasource-cosmosdb`](https://github.com/andrejpk/apollo-datasource-cosmosdb)
-- `FirestoreDataSource` from [`apollo-datasource-firestore`](https://github.com/swantzter/apollo-datasource-firestore)
-
-## Accessing data sources from resolvers
-
-To give resolvers access to data sources, you pass them as options to the `ApolloServer` constructor:
-
-```js
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  dataSources: () => {
-    return {
-      moviesAPI: new MoviesAPI(),
-      personalizationAPI: new PersonalizationAPI(),
-    };
-  },
-  context: () => {
-    return {
-      token: 'foo',
-    };
-  },
-});
-```
-
-Apollo Server will put the data sources on the context for every request, so you can access them from your resolvers. It will also give your data sources access to the context. (The reason for not having users put data sources on the context directly is because that would lead to a circular dependency.)
-
-From our resolvers, we can access the data source and return the result:
-
-```js
- Query: {
-    movie: async (_source, { id }, { dataSources }) => {
-      return dataSources.moviesAPI.getMovie(id);
-    },
-    mostViewedMovies: async (_source, _args, { dataSources }) => {
-      return dataSources.moviesAPI.getMostViewedMovies();
-    },
-    favorites: async (_source, _args, { dataSources }) => {
-      return dataSources.personalizationAPI.getFavorites();
-    },
-  },
-```
 
 ## What about DataLoader?
 
