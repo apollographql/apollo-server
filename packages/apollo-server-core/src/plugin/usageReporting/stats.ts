@@ -50,7 +50,17 @@ export class OurReport implements Required<IReport> {
   // methods which increment it.
   readonly sizeEstimator = new SizeEstimator();
 
-  addTrace(statsReportKey: string, trace: Trace, asTrace: boolean) {
+  addTrace({
+    statsReportKey,
+    trace,
+    asTrace,
+    includeTracesContributingToStats,
+  }: {
+    statsReportKey: string;
+    trace: Trace;
+    asTrace: boolean;
+    includeTracesContributingToStats: boolean;
+  }) {
     const tracesAndStats = this.getTracesAndStats(statsReportKey);
     if (asTrace) {
       const encodedTrace = Trace.encode(trace).finish();
@@ -58,6 +68,16 @@ export class OurReport implements Required<IReport> {
       this.sizeEstimator.bytes += 2 + encodedTrace.length;
     } else {
       tracesAndStats.statsWithContext.addTrace(trace, this.sizeEstimator);
+      if (includeTracesContributingToStats) {
+        // For specific use inside Apollo's infrastructure to help validate that
+        // the code in this file matches similar code in Apollo's servers,
+        // include the traces that contribute to the stats. Doing this outside
+        // of Apollo's infrastructure only serves to make reports larger with no
+        // other advantage.
+        const encodedTrace = Trace.encode(trace).finish();
+        tracesAndStats.internalTracesContributingToStats.push(encodedTrace);
+        this.sizeEstimator.bytes += 2 + encodedTrace.length;
+      }
     }
   }
 
@@ -74,6 +94,7 @@ export class OurReport implements Required<IReport> {
 class OurTracesAndStats implements Required<ITracesAndStats> {
   readonly trace: Uint8Array[] = [];
   readonly statsWithContext = new StatsByContext();
+  readonly internalTracesContributingToStats: Uint8Array[] = [];
 }
 
 class StatsByContext {

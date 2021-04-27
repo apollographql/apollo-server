@@ -213,6 +213,12 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * about how the signature relates to the operation you executed.
    */
   calculateSignature?: (ast: DocumentNode, operationName: string) => string;
+  /**
+   * This option includes extra data in reports that helps Apollo validate the
+   * stats generation code in this plugin. Do not set it; the only impact on
+   * your app will be a decrease in performance.
+   */
+  internal_includeTracesContributingToStats?: boolean;
   //#endregion
 }
 

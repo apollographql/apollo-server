@@ -377,4 +377,8 @@ message ContextualizedStats {
 message TracesAndStats {
   repeated Trace trace = 1 [(js_preEncoded)=true];
   repeated ContextualizedStats stats_with_context = 2 [(js_use_toArray)=true];
+  // This field is used to validate that the algorithm used to construct `stats_with_context`
+  // matches similar algorithms in Apollo's servers. It is otherwise ignored and should not
+  // be included in reports.
+  repeated Trace internal_traces_contributing_to_stats = 3 [(js_preEncoded)=true];
 }
