@@ -145,6 +145,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
       const sendOperationAsTrace =
         options.experimental_sendOperationAsTrace ??
         defaultSendOperationsAsTrace();
+      const includeTracesContributingToStats =
+        options.internal_includeTracesContributingToStats ?? false;
 
       let stopped = false;
 
@@ -550,12 +552,14 @@ export function ApolloServerPluginUsageReporting<TContext>(
               throw new Error(`Error encoding trace: ${protobufError}`);
             }
 
-            report.addTrace(
+            report.addTrace({
               statsReportKey,
               trace,
-              graphMightSupportTraces &&
+              asTrace:
+                graphMightSupportTraces &&
                 sendOperationAsTrace(trace, statsReportKey),
-            );
+              includeTracesContributingToStats,
+            });
 
             // If the buffer gets big (according to our estimate), send.
             if (
