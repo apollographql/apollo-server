@@ -2,12 +2,7 @@ import os from 'os';
 import { gzip } from 'zlib';
 import retry from 'async-retry';
 import { defaultUsageReportingSignature } from 'apollo-graphql';
-import {
-  Report,
-  ReportHeader,
-  Trace,
-  TracesAndStats,
-} from 'apollo-reporting-protobuf';
+import { Report, ReportHeader, Trace } from 'apollo-reporting-protobuf';
 import { Response, fetch, Headers } from 'apollo-server-env';
 import {
   GraphQLRequestListener,
@@ -26,11 +21,14 @@ import {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
 } from './options';
-import { TraceTreeBuilder } from '../traceTreeBuilder';
+import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder';
 import { makeTraceDetails } from './traceDetails';
 import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
+import { OurReport } from './stats';
+import { CacheScope } from 'apollo-cache-control';
+import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -43,8 +41,7 @@ const reportHeaderDefaults = {
 };
 
 class ReportData {
-  report!: Report;
-  size!: number;
+  report!: OurReport;
   readonly header: ReportHeader;
   constructor(executableSchemaId: string, graphVariant: string) {
     this.header = new ReportHeader({
@@ -55,8 +52,7 @@ class ReportData {
     this.reset();
   }
   reset() {
-    this.report = new Report({ header: this.header });
-    this.size = 0;
+    this.report = new OurReport(this.header);
   }
 }
 
@@ -144,6 +140,14 @@ export function ApolloServerPluginUsageReporting<TContext>(
           options.reportIntervalMs || 10 * 1000,
         );
       }
+
+      let graphMightSupportTraces = true;
+      const sendOperationAsTrace =
+        options.experimental_sendOperationAsTrace ??
+        defaultSendOperationsAsTrace();
+      const includeTracesContributingToStats =
+        options.internal_includeTracesContributingToStats ?? false;
+
       let stopped = false;
 
       function executableSchemaIdForSchema(schema: GraphQLSchema) {
@@ -210,6 +214,20 @@ export function ApolloServerPluginUsageReporting<TContext>(
           return;
         }
 
+        // Set the report's overall end time. This is the timestamp that will be
+        // associated with the summarized statistics.
+        report.endTime = dateToProtoTimestamp(new Date());
+
+        const protobufError = Report.verify(report);
+        if (protobufError) {
+          throw new Error(`Error encoding report: ${protobufError}`);
+        }
+        const message = Report.encode(report).finish();
+
+        // Potential follow-up: we can compare message.length to
+        // report.sizeEstimator.bytes and use it to "learn" if our estimation is
+        // off and adjust it based on what we learn.
+
         if (options.debugPrintReports) {
           // In terms of verbosity, and as the name of this option suggests,
           // this message is either an "info" or a "debug" level message.
@@ -219,19 +237,15 @@ export function ApolloServerPluginUsageReporting<TContext>(
           // `debugPrintReports`) just to reach the level of verbosity to
           // produce the output would be a breaking change.  The "warn" level is
           // on by default.  There is a similar theory and comment applied
-          // below. (Note that the actual traces are "pre-encoded" and not
-          // accessible to `toJSON` but we do print them separately when we
-          // encode them.)
+          // below.
+          //
+          // We decode the report rather than printing the original `report`
+          // so that it includes all of the pre-encoded traces.
+          const decodedReport = Report.decode(message);
           logger.warn(
-            `Apollo usage report: ${JSON.stringify(report.toJSON())}`,
+            `Apollo usage report: ${JSON.stringify(decodedReport.toJSON())}`,
           );
         }
-
-        const protobufError = Report.verify(report);
-        if (protobufError) {
-          throw new Error(`Error encoding report: ${protobufError}`);
-        }
-        const message = Report.encode(report).finish();
 
         const compressed = await new Promise<Buffer>((resolve, reject) => {
           // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
@@ -266,6 +280,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
                   'user-agent': 'ApolloServerPluginUsageReporting',
                   'x-api-key': key,
                   'content-encoding': 'gzip',
+                  accept: 'application/json',
                 },
                 body: compressed,
                 agent: options.requestAgent,
@@ -301,6 +316,31 @@ export function ApolloServerPluginUsageReporting<TContext>(
               response.status
             }, ${(await response.text()) || '(no body)'}`,
           );
+        }
+
+        if (
+          graphMightSupportTraces &&
+          response.status === 200 &&
+          response.headers
+            .get('content-type')
+            ?.match(/^\s*application\/json\s*(?:;|$)/i)
+        ) {
+          const body = await response.text();
+          let parsedBody;
+          try {
+            parsedBody = JSON.parse(body);
+          } catch (e) {
+            throw new Error(`Error parsing response from Apollo servers: ${e}`);
+          }
+          if (parsedBody.tracesIgnored === true) {
+            logger.debug(
+              "This graph's organization does not have access to traces; sending all " +
+                'subsequent operations as traces.',
+            );
+            graphMightSupportTraces = false;
+            // XXX We could also parse traces that are already in the current
+            // report and convert them to stats if we wanted?
+          }
         }
         if (options.debugPrintReports) {
           // In terms of verbosity, and as the name of this option suggests, this
@@ -421,6 +461,20 @@ export function ApolloServerPluginUsageReporting<TContext>(
           treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
           treeBuilder.trace.registeredOperation = !!metrics.registeredOperation;
 
+          if (requestContext.overallCachePolicy) {
+            treeBuilder.trace.cachePolicy = new Trace.CachePolicy({
+              scope:
+                requestContext.overallCachePolicy.scope === CacheScope.Private
+                  ? Trace.CachePolicy.Scope.PRIVATE
+                  : requestContext.overallCachePolicy.scope ===
+                    CacheScope.Public
+                  ? Trace.CachePolicy.Scope.PUBLIC
+                  : Trace.CachePolicy.Scope.UNKNOWN,
+              // Convert from seconds to ns.
+              maxAgeNs: requestContext.overallCachePolicy.maxAge * 1e9,
+            });
+          }
+
           // If operation resolution (parsing and validating the document followed
           // by selecting the correct operation) resulted in the population of the
           // `operationName`, we'll use that. (For anonymous operations,
@@ -472,6 +526,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
             const reportData = getReportData(executableSchemaId);
             const { report } = reportData;
+            const { trace } = treeBuilder;
 
             let statsReportKey: string | undefined = undefined;
             if (!requestContext.document) {
@@ -484,47 +539,32 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
             if (statsReportKey) {
               if (options.sendUnexecutableOperationDocuments) {
-                treeBuilder.trace.unexecutedOperationBody =
-                  requestContext.source;
-                treeBuilder.trace.unexecutedOperationName = operationName;
+                trace.unexecutedOperationBody = requestContext.source;
+                trace.unexecutedOperationName = operationName;
               }
             } else {
               const signature = getTraceSignature();
               statsReportKey = `# ${operationName || '-'}\n${signature}`;
             }
 
-            const protobufError = Trace.verify(treeBuilder.trace);
+            const protobufError = Trace.verify(trace);
             if (protobufError) {
               throw new Error(`Error encoding trace: ${protobufError}`);
             }
 
-            const encodedTrace = Trace.encode(treeBuilder.trace).finish();
-
-            if (!report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
-              report.tracesPerQuery[statsReportKey] = new TracesAndStats();
-              (report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
-            }
-            // See comment on our override of Traces.encode inside of
-            // apollo-reporting-protobuf to learn more about this strategy.
-            (report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
-              encodedTrace,
-            );
-
-            reportData.size +=
-              encodedTrace.length + Buffer.byteLength(statsReportKey);
-
-            if (options.debugPrintReports) {
-              logger.warn(
-                `Apollo usage report trace: ${JSON.stringify(
-                  treeBuilder.trace.toJSON(),
-                )}`,
-              );
-            }
+            report.addTrace({
+              statsReportKey,
+              trace,
+              asTrace:
+                graphMightSupportTraces &&
+                sendOperationAsTrace(trace, statsReportKey),
+              includeTracesContributingToStats,
+            });
 
             // If the buffer gets big (according to our estimate), send.
             if (
               sendReportsImmediately ||
-              reportData.size >=
+              report.sizeEstimator.bytes >=
                 (options.maxUncompressedReportSize || 4 * 1024 * 1024)
             ) {
               await sendReportAndReportErrors(executableSchemaId);
