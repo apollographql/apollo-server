@@ -21,7 +21,7 @@
     "coverage:upload": "codecov"
   },
   "engines": {
-    "node": ">=14.0 <15.0",
+    "node": ">=12",
     "npm": "^6.14.11"
   },
   "dependencies": {
