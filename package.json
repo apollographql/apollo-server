@@ -54,8 +54,6 @@
     "apollo-tracing": "file:packages/apollo-tracing"
   },
   "devDependencies": {
-    "@apollo/federation": "0.20.6",
-    "@apollo/gateway": "0.21.3",
     "@hapi/hapi": "19.2.0",
     "@types/async-retry": "1.4.2",
     "@types/aws-lambda": "8.10.66",
