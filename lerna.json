@@ -1,17 +1,11 @@
 {
-  "packages": ["packages/*", "v3"],
+  "packages": ["packages/*"],
   "version": "independent",
   "command": {
     "version": {
       "message": "Release",
       "ignoreChanges": ["**/*.md"],
       "includeMergedTags": true
-    },
-    "bootstrap": {
-      "scope": "@apollo/server"
-    },
-    "publish": {
-      "message": "Release"
     }
   }
 }

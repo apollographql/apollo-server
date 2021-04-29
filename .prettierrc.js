@@ -22,12 +22,5 @@ module.exports = {
         singleQuote: true,
       },
     },
-    {
-      files: 'v3/**/{*.js,*.ts}',
-      options: {
-        requirePragma: false,
-        trailingComma: 'all',
-      },
-    },
   ],
 };

@@ -15,26 +15,6 @@
       "matchPackageNames": ["@types/node"],
       "allowedVersions": "12.x"
     },
-    /*
-     * Apollo Server 3.x rules
-     *
-     * Essentially, we want to update Apollo whenever its possible!
-     *
-     */
-    {
-      "matchPaths": [
-        "v3/package.json"
-      ],
-      "packageRules": [
-        {
-          "matchPackagePatterns": ["^apollo-"],
-          "schedule": ["at any time"],
-          "automerge": true,
-          "automergeType": "branch",
-          "groupName": "v3"
-        },
-      ],
-    },
 
     /*
       Docs-related Renovate rules
