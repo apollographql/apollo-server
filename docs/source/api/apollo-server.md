@@ -109,7 +109,7 @@ For more details, see [The `context` argument](../data/resolvers/#the-context-ar
 
 A function that returns an object containing `DataSource` instances for use by your resolvers. The object is automatically added to each operation's [`context`](#context).
 
-For more details, see [Accessing data sources from resolvers](../data/data-sources/#accessing-data-sources-from-resolvers).
+For more details, see [Adding data sources to Apollo Server](../data/data-sources/#adding-data-sources-to-apollo-server).
 </td>
 </tr>
 
