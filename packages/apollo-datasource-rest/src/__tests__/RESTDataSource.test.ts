@@ -260,7 +260,7 @@ describe('RESTDataSource', () => {
 
       expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
-      expect(fetch.mock.calls[0][0].body).toEqual(
+      expect(fetch.mock.calls[0][0].body.toString()).toEqual(
         JSON.stringify({ foo: 'bar' }),
       );
       expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
@@ -285,7 +285,7 @@ describe('RESTDataSource', () => {
 
       expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
-      expect(fetch.mock.calls[0][0].body).toEqual(
+      expect(fetch.mock.calls[0][0].body.toString()).toEqual(
         JSON.stringify(['foo', 'bar']),
       );
       expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
@@ -321,7 +321,7 @@ describe('RESTDataSource', () => {
 
       expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
-      expect(fetch.mock.calls[0][0].body).toEqual(
+      expect(fetch.mock.calls[0][0].body.toString()).toEqual(
         JSON.stringify({ foo: 'bar' }),
       );
       expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
@@ -349,7 +349,7 @@ describe('RESTDataSource', () => {
 
       expect(fetch).toBeCalledTimes(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
-      expect(fetch.mock.calls[0][0].body).not.toEqual('{}');
+      expect(fetch.mock.calls[0][0].body.toString()).not.toEqual('{}');
       expect(fetch.mock.calls[0][0].headers.get('Content-Type')).not.toEqual(
         'application/json',
       );
