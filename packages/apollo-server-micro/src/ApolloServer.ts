@@ -2,7 +2,7 @@ import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
-import { parseAll } from 'accept';
+import { parseAll } from '@hapi/accept';
 
 import { graphqlMicro } from './microApollo';
 import { MicroRequest } from './types';

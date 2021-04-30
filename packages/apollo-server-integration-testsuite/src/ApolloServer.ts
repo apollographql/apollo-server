@@ -337,7 +337,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.data).toBeUndefined();
         expect(result.errors).toBeDefined();
         expect(result.errors[0].message).toMatch(
-          /got invalid value 2; Expected type String/,
+          /got invalid value 2; String cannot represent a non string value: 2/,
         );
         expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
       });
