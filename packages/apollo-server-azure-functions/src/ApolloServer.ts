@@ -36,11 +36,6 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
-    // We will kick off the `willStart` event once for the server, and then
-    // await it before processing any requests by incorporating its `await` into
-    // the GraphQLServerOptions function which is called before each request.
-    const promiseWillStart = this.willStart();
-
     const corsHeaders: HttpResponse['headers'] = {};
 
     if (cors) {
@@ -81,18 +76,17 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     return (context: Context, req: HttpRequest) => {
+      const originHeader = req.headers['Origin'] || req.headers['origin'];
       if (cors && cors.origin) {
         if (typeof cors.origin === 'string') {
           corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
         } else if (
           typeof cors.origin === 'boolean' ||
           (Array.isArray(cors.origin) &&
-            cors.origin.includes(
-              req.headers['Origin'] || req.headers['origin'],
-            ))
+            originHeader !== undefined &&
+            cors.origin.includes(originHeader))
         ) {
-          corsHeaders['Access-Control-Allow-Origin'] =
-            req.headers['Origin'] || req.headers['origin'];
+          corsHeaders['Access-Control-Allow-Origin'] = originHeader;
         }
 
         if (!cors.allowedHeaders) {
@@ -145,7 +139,6 @@ export class ApolloServer extends ApolloServerBase {
         );
       };
       graphqlAzureFunction(async () => {
-        await promiseWillStart;
         return this.createGraphQLServerOptions(req, context);
       })(context, req, callbackFilter);
     };

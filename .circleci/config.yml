@@ -6,7 +6,7 @@ orbs:
   # `oss` is a local reference to the package.  The source for Apollo Orbs can
   # be found at http://github.com/apollographql/CircleCI-Orbs/.
   # We could use Renovate to bump this version via PR, but that's not setup now.
-  oss: apollo/oss-ci-cd-tooling@0.0.15
+  oss: apollo/oss-ci-cd-tooling@0.0.17
 
 commands:
   # These are the steps used for each version of Node which we're testing
@@ -56,6 +56,24 @@ jobs:
     steps:
       - common_test_steps
 
+  # We make CI fail if any file contains FIX and ME right next to each other.
+  # This means that when working on a big PR, you can throw in notes that you
+  # are forced to come back to before merging the PR.  Note that we don't block
+  # the tarball or publish steps on this, since you may want to try out builds
+  # on branches that still contain unresolved problems. In order for this file
+  # to not cause this job to fail, we obfuscate the target string by encoding
+  # the last letter in in hex (\x45 = E).
+  "Check for FIXM\x45":
+    docker:
+    - image: cimg/base:stable
+    steps:
+    - add_ssh_keys
+    - checkout
+    - run:
+        name: "Check for FIXM\x45"
+        # ! means this fails if git grep succeeds, ie if there are any matches
+        command: "! git grep FIXM\x45"
+
 # XXX We used to use this filter to only run a "Docs" job on docs branches.
 #     Now we use it to disable all jobs. It's unclear if there's a simpler way
 #     to do this!
@@ -86,6 +104,7 @@ workflows:
           <<: *common_non_publish_filters
       - NodeJS 14:
           <<: *common_non_publish_filters
+      - "Check for FIXM\x45"
       - oss/lerna_tarballs:
           name: Package tarballs
           <<: *common_non_publish_filters

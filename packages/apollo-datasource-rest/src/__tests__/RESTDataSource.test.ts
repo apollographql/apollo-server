@@ -213,7 +213,7 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      // FIXME: request.credentials is not supported by node-fetch
+      // TODO: request.credentials is not supported by node-fetch
       // expect(fetch.mock.calls[0][0].credentials).toEqual('include');
     });
 

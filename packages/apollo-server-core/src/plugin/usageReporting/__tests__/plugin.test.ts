@@ -6,7 +6,7 @@ import {
   ApolloServerPluginUsageReporting,
 } from '../plugin';
 import { Headers } from 'apollo-server-env';
-import { Trace, Report } from 'apollo-reporting-protobuf';
+import { Trace, Report, ITrace } from 'apollo-reporting-protobuf';
 import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
 import nock from 'nock';
 import { gunzipSync } from 'zlib';
@@ -88,7 +88,8 @@ describe('end-to-end', () => {
         query: query ?? defaultQuery,
         // If operation name is specified use it. If it is specified as null convert it to
         // undefined because graphqlRequest expects string | undefined
-        operationName: operationName === undefined ? 'q' : (operationName || undefined),
+        operationName:
+          operationName === undefined ? 'q' : operationName || undefined,
         extensions: {
           clientName: 'testing suite',
         },
@@ -121,62 +122,64 @@ describe('end-to-end', () => {
 
     expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
     expect(Object.keys(report!.tracesPerQuery)[0]).toMatch(/^# q\n/);
-    const traces = Object.values(report!.tracesPerQuery)[0].trace;
+    const traces = Object.values(report!.tracesPerQuery)[0]!.trace;
     expect(traces).toHaveLength(1);
     expect(
-      traces![0].root!.child!.some(
+      (traces![0] as ITrace).root!.child!.some(
         ({ responseName }) => responseName === 'aBoolean',
       ),
     ).toBeTruthy();
   });
 
-  it('fails parse for non-parseable gql', async () => {
-    const { report } = await runTest({ query: 'random text' });
-    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
-    expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
-      '## GraphQLParseFailure\n',
-    );
-    const traces = Object.values(report!.tracesPerQuery)[0].trace;
-    expect(traces).toHaveLength(1);
-  });
-
-  it('validation fails for invalid operation', async () => {
-    const { report } = await runTest({ query: 'query q { nonExistentField }' });
-    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
-    expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
-      '## GraphQLValidationFailure\n',
-    );
-    const traces = Object.values(report!.tracesPerQuery)[0].trace;
-    expect(traces).toHaveLength(1);
-  });
-
-  it('unknown operation error if not specified', async () => {
-    const { report } = await runTest({ query: 'query notQ { aString }' });
-    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
-    expect(Object.keys(report!.tracesPerQuery)[0]).toBe(
-      '## GraphQLUnknownOperationName\n',
-    );
-    const traces = Object.values(report!.tracesPerQuery)[0].trace;
-    expect(traces).toHaveLength(1);
-  });
-
-  it('handles anonymous operation', async () => {
-    const { report } = await runTest({
-      query: 'query { aString }',
-      operationName: null,
-    });
-    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
-    expect(Object.keys(report!.tracesPerQuery)[0]).toMatch(/^# -\n/);
-    const traces = Object.values(report!.tracesPerQuery)[0].trace;
-    expect(traces).toHaveLength(1);
-  });
+  [
+    {
+      testName: 'fails parse for non-parseable gql',
+      op: { query: 'random text' },
+      statsReportKey: '## GraphQLParseFailure\n',
+    },
+    {
+      testName: 'validation fails for invalid operation',
+      op: { query: 'query q { nonExistentField }' },
+      statsReportKey: '## GraphQLValidationFailure\n',
+    },
+    {
+      testName: 'unknown operation error if not specified',
+      op: { query: 'query notQ { aString }' },
+      statsReportKey: '## GraphQLUnknownOperationName\n',
+    },
+    {
+      testName: 'handles anonymous operation',
+      op: {
+        query: 'query { aString }',
+        operationName: null,
+      },
+      statsReportKey: '# -\n{aString}',
+    },
+    {
+      testName: 'handles named operation',
+      op: {
+        query: 'query bar { aString } query foo { aBoolean }',
+        operationName: 'foo',
+      },
+      statsReportKey: '# foo\nquery foo{aBoolean}',
+    },
+  ].forEach(({ testName, op, statsReportKey }) =>
+    it(testName, async () => {
+      const { report } = await runTest(op);
+      const queryEntries = Object.entries(report!.tracesPerQuery);
+      expect(queryEntries).toHaveLength(1);
+      expect(queryEntries[0][0]).toBe(statsReportKey);
+      const traces = queryEntries[0][1]!.trace;
+      expect(traces).toHaveLength(1);
+    }),
+  );
 
   describe('includeRequest', () => {
     it('include based on operation name', async () => {
       const { report, context } = await runTest({
         pluginOptions: {
           includeRequest: async (request: any) => {
-            await new Promise((res) => setTimeout(() => res(), 1));
+            await new Promise<void>((res) => setTimeout(() => res(), 1));
             return request.request.operationName === 'q';
           },
         },
@@ -188,7 +191,7 @@ describe('end-to-end', () => {
       const { context } = await runTest({
         pluginOptions: {
           includeRequest: async (request: any) => {
-            await new Promise((res) => setTimeout(() => res(), 1));
+            await new Promise<void>((res) => setTimeout(() => res(), 1));
             return request.request.operationName === 'not_q';
           },
         },

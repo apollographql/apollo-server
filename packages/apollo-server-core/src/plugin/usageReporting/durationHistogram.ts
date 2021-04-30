@@ -4,10 +4,10 @@ export interface DurationHistogramOptions {
 }
 export class DurationHistogram {
   private readonly buckets: number[];
-  public static readonly BUCKET_COUNT = 384;
-  public static readonly EXPONENT_LOG = Math.log(1.1);
+  static readonly BUCKET_COUNT = 384;
+  static readonly EXPONENT_LOG = Math.log(1.1);
 
-  public toArray(): number[] {
+  toArray(): number[] {
     let bufferedZeroes = 0;
     const outputArray: number[] = [];
 
@@ -39,11 +39,12 @@ export class DurationHistogram {
       : unboundedBucket;
   }
 
-  public incrementDuration(durationNs: number) {
+  incrementDuration(durationNs: number): DurationHistogram {
     this.incrementBucket(DurationHistogram.durationToBucket(durationNs));
+    return this;
   }
 
-  public incrementBucket(bucket: number, value = 1) {
+  incrementBucket(bucket: number, value = 1) {
     if (bucket >= DurationHistogram.BUCKET_COUNT) {
       // Since we don't have fixed size arrays I'd rather throw the error manually
       throw Error('Bucket is out of bounds of the buckets array');
@@ -59,7 +60,7 @@ export class DurationHistogram {
     this.buckets[bucket] += value;
   }
 
-  public combine(otherHistogram: DurationHistogram) {
+  combine(otherHistogram: DurationHistogram) {
     for (let i = 0; i < otherHistogram.buckets.length; i++) {
       this.incrementBucket(i, otherHistogram.buckets[i]);
     }

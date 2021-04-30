@@ -10,6 +10,7 @@ import {
   validate as graphqlValidate,
   parse as graphqlParse,
   execute as graphqlExecute,
+  Kind,
   ParseOptions,
 } from 'graphql';
 import { DataSource } from 'apollo-datasource';
@@ -18,7 +19,7 @@ import {
   symbolExecutionDispatcherWillResolveField,
   enablePluginsForSchemaResolvers,
   symbolUserFieldResolver,
-} from "./utils/schemaInstrumentation"
+} from './utils/schemaInstrumentation';
 import {
   ApolloError,
   fromGraphQLError,
@@ -27,6 +28,7 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
   formatApolloErrors,
+  UserInputError,
 } from 'apollo-server-errors';
 import {
   GraphQLRequest,
@@ -71,9 +73,7 @@ import { HttpQueryError } from './runHttpQuery';
 export const APQ_CACHE_PREFIX = 'apq:';
 
 function computeQueryHash(query: string) {
-  return createSHA('sha256')
-    .update(query)
-    .digest('hex');
+  return createSHA('sha256').update(query).digest('hex');
 }
 
 export interface GraphQLRequestPipelineConfig<TContext> {
@@ -90,9 +90,9 @@ export interface GraphQLRequestPipelineConfig<TContext> {
 
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
   formatResponse?: (
-    response: GraphQLResponse | null,
+    response: GraphQLResponse,
     requestContext: GraphQLRequestContext<TContext>,
-  ) => GraphQLResponse;
+  ) => GraphQLResponse | null;
 
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
@@ -117,8 +117,8 @@ export async function processGraphQLRequest<TContext>(
 
   // If request context's `metrics` already exists, preserve it, but _ensure_ it
   // exists there and shorthand it for use throughout this function.
-  const metrics = requestContext.metrics =
-    requestContext.metrics || Object.create(null);
+  const metrics = (requestContext.metrics =
+    requestContext.metrics || Object.create(null));
 
   const dispatcher = initializeRequestListenerDispatcher();
   await initializeDataSources();
@@ -148,7 +148,8 @@ export async function processGraphQLRequest<TContext>(
       // This particular error will _not_ trigger `willSendResponse`.
       // See comment on `emitErrorAndThrow` for more details.
       return await emitErrorAndThrow(
-        new InvalidGraphQLRequestError('Unsupported persisted query version'));
+        new InvalidGraphQLRequestError('Unsupported persisted query version'),
+      );
     }
 
     // We'll store a reference to the persisted query cache so we can actually
@@ -192,7 +193,8 @@ export async function processGraphQLRequest<TContext>(
         // This particular error will _not_ trigger `willSendResponse`.
         // See comment on `emitErrorAndThrow` for more details.
         return await emitErrorAndThrow(
-          new InvalidGraphQLRequestError('provided sha does not match query'));
+          new InvalidGraphQLRequestError('provided sha does not match query'),
+        );
       }
 
       // We won't write to the persisted query cache until later.
@@ -202,7 +204,7 @@ export async function processGraphQLRequest<TContext>(
       metrics.persistedQueryRegister = true;
     }
   } else if (query) {
-    // FIXME: We'll compute the APQ query hash to use as our cache key for
+    // TODO: We'll compute the APQ query hash to use as our cache key for
     // now, but this should be replaced with the new operation ID algorithm.
     queryHash = computeQueryHash(query);
   } else {
@@ -211,7 +213,8 @@ export async function processGraphQLRequest<TContext>(
     // This particular error will _not_ trigger `willSendResponse`.
     // See comment on `emitErrorAndThrow` for more details.
     return await emitErrorAndThrow(
-      new InvalidGraphQLRequestError('Must provide query string.'));
+      new InvalidGraphQLRequestError('Must provide query string.'),
+    );
   }
 
   requestContext.queryHash = queryHash;
@@ -237,8 +240,8 @@ export async function processGraphQLRequest<TContext>(
         requestContext.document = await config.documentStore.get(queryHash);
       } catch (err) {
         logger.warn(
-          'An error occurred while attempting to read from the documentStore. '
-          + (err && err.message) || err,
+          'An error occurred while attempting to read from the documentStore. ' +
+            (err && err.message) || err,
         );
       }
     }
@@ -288,16 +291,16 @@ export async function processGraphQLRequest<TContext>(
         // is returning a non-native `Promise` (e.g. Bluebird, etc.).
         Promise.resolve(
           config.documentStore.set(queryHash, requestContext.document),
-        ).catch(err =>
+        ).catch((err) =>
           logger.warn(
-            'Could not store validated document. ' +
-            (err && err.message) || err
-          )
+            'Could not store validated document. ' + (err && err.message) ||
+              err,
+          ),
         );
       }
     }
 
-    // FIXME: If we want to guarantee an operation has been set when invoking
+    // TODO: If we want to guarantee an operation has been set when invoking
     // `willExecuteOperation` and executionDidStart`, we need to throw an
     // error here and not leave this to `buildExecutionContext` in
     // `graphql-js`.
@@ -367,19 +370,23 @@ export async function processGraphQLRequest<TContext>(
       // This execution dispatcher code is duplicated in `pluginTestHarness`
       // right now.
 
-      const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
-      dispatcher.invokeHookSync(
-        'executionDidStart',
-        requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
-      ).forEach(executionListener => {
-        if (typeof executionListener === 'function') {
-          executionListeners.push({
-            executionDidEnd: executionListener,
-          });
-        } else if (typeof executionListener === 'object') {
-          executionListeners.push(executionListener);
-        }
-      });
+      const executionListeners: GraphQLRequestExecutionListener<
+        TContext
+      >[] = [];
+      dispatcher
+        .invokeHookSync(
+          'executionDidStart',
+          requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+        )
+        .forEach((executionListener) => {
+          if (typeof executionListener === 'function') {
+            executionListeners.push({
+              executionDidEnd: executionListener,
+            });
+          } else if (typeof executionListener === 'object') {
+            executionListeners.push(executionListener);
+          }
+        });
 
       const executionDispatcher = new Dispatcher(executionListeners);
 
@@ -389,12 +396,12 @@ export async function processGraphQLRequest<TContext>(
       const invokeWillResolveField: GraphQLRequestExecutionListener<
         TContext
       >['willResolveField'] = (...args) =>
-          executionDispatcher.invokeDidStartHook('willResolveField', ...args);
+        executionDispatcher.invokeDidStartHook('willResolveField', ...args);
 
       Object.defineProperty(
         requestContext.context,
         symbolExecutionDispatcherWillResolveField,
-        { value: invokeWillResolveField }
+        { value: invokeWillResolveField },
       );
 
       // If the user has provided a custom field resolver, we will attach
@@ -402,11 +409,9 @@ export async function processGraphQLRequest<TContext>(
       // fields with `wrapField` within `enablePluginsForSchemaResolvers` of
       // the `schemaInstrumentation` module.
       if (config.fieldResolver) {
-        Object.defineProperty(
-          requestContext.context,
-          symbolUserFieldResolver,
-          { value: config.fieldResolver }
-        );
+        Object.defineProperty(requestContext.context, symbolUserFieldResolver, {
+          value: config.fieldResolver,
+        });
       }
 
       // If the schema is already enabled, this is a no-op.  Otherwise, the
@@ -418,18 +423,41 @@ export async function processGraphQLRequest<TContext>(
           requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
         );
 
-        if (result.errors) {
-          await didEncounterErrors(result.errors);
+        // The first thing that execution does is coerce the request's variables
+        // to the types declared in the operation, which can lead to errors if
+        // they are of the wrong type. We change any such errors into
+        // UserInputError so that their code doesn't end up being
+        // INTERNAL_SERVER_ERROR, since these are client errors.
+        const resultErrors = result.errors?.map((e) => {
+          if (
+            e.nodes?.length === 1 &&
+            e.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
+            e.message.startsWith(
+              `Variable "$${e.nodes[0].variable.name.value}" got invalid value `,
+            )
+          ) {
+            return fromGraphQLError(e, {
+              errorClass: UserInputError,
+            });
+          }
+          return e;
+        });
+
+        if (resultErrors) {
+          await didEncounterErrors(resultErrors);
         }
 
         response = {
           ...result,
-          errors: result.errors ? formatErrors(result.errors) : undefined,
+          errors: resultErrors ? formatErrors(resultErrors) : undefined,
         };
 
-        executionDispatcher.reverseInvokeHookSync("executionDidEnd");
+        executionDispatcher.reverseInvokeHookSync('executionDidEnd');
       } catch (executionError) {
-        executionDispatcher.reverseInvokeHookSync("executionDidEnd", executionError);
+        executionDispatcher.reverseInvokeHookSync(
+          'executionDidEnd',
+          executionError,
+        );
         return await sendErrorResponse(executionError);
       }
     }
@@ -448,10 +476,7 @@ export async function processGraphQLRequest<TContext>(
   } finally {
   }
 
-  function parse(
-    query: string,
-    parseOptions?: ParseOptions,
-  ): DocumentNode {
+  function parse(query: string, parseOptions?: ParseOptions): DocumentNode {
     return graphqlParse(query, parseOptions);
   }
 
@@ -560,7 +585,7 @@ export async function processGraphQLRequest<TContext>(
 
     return sendResponse({
       errors: formatErrors(
-        errors.map(err =>
+        errors.map((err) =>
           fromGraphQLError(
             err,
             errorClass && {
@@ -610,7 +635,7 @@ export async function processGraphQLRequest<TContext>(
             dataSource.initialize({
               context,
               cache: requestContext.cache,
-            })
+            }),
           );
         }
       }

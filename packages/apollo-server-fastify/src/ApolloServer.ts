@@ -41,11 +41,13 @@ export class ApolloServer extends ApolloServerBase {
     onHealthCheck,
   }: ServerRegistration = {}) {
     this.graphqlPath = path || '/graphql';
-    const promiseWillStart = this.willStart();
+
+    // In case the user didn't bother to call and await the `start` method, we
+    // kick it off in the background (with any errors getting logged
+    // and also rethrown from graphQLServerOptions during later requests).
+    this.ensureStarting();
 
     return async (app: FastifyInstance) => {
-      await promiseWillStart;
-
       if (!disableHealthCheck) {
         app.get('/.well-known/apollo/server-health', async (request, reply) => {
           // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
@@ -121,7 +123,9 @@ export class ApolloServer extends ApolloServerBase {
             method: ['GET', 'POST'],
             url: '/',
             preHandler: preHandlers,
-            handler: await graphqlFastify(this.createGraphQLServerOptions.bind(this)),
+            handler: await graphqlFastify(
+              this.createGraphQLServerOptions.bind(this),
+            ),
           });
         },
         {

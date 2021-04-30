@@ -364,7 +364,7 @@ Resolver functions are passed four arguments: `parent`, `args`, `context`, and `
 
 ### The `context` argument
 
-The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](/data/data-sources/#what-about-dataloader) across resolvers, you can attach them to the `context` as well.
+The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](/data/data-sources/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
 
 **Resolvers should never destructively modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
 

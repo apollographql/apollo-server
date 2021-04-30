@@ -1,18 +1,48 @@
 import {
   APIGatewayProxyCallback,
   APIGatewayProxyEvent,
+  APIGatewayProxyEventV2,
+  APIGatewayProxyResult,
   Context as LambdaContext,
 } from 'aws-lambda';
-import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
+import {
+  ApolloServerBase,
+  GraphQLOptions,
+  runHttpQuery,
+  HttpQueryError,
+} from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
 
-import { graphqlLambda } from './lambdaApollo';
 import { Headers } from 'apollo-server-env';
 
-export interface CreateHandlerOptions {
+// We try to support payloadFormatEvent 1.0 and 2.0. See
+// https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
+// for a bit of documentation as to what is in these objects. You can determine
+// which one you have by checking `'path' in event` (V1 has path, V2 doesn't).
+export type APIGatewayProxyEventV1OrV2 =
+  | APIGatewayProxyEvent
+  | APIGatewayProxyEventV2;
+
+function eventHttpMethod(event: APIGatewayProxyEventV1OrV2): string {
+  return 'httpMethod' in event
+    ? event.httpMethod
+    : event.requestContext.http.method;
+}
+
+function eventPath(event: APIGatewayProxyEventV1OrV2): string {
+  // Note: it's unclear if the V2 version should use `event.rawPath` or
+  // `event.requestContext.http.path`; I can't find any documentation about the
+  // distinction between the two. I'm choosing rawPath because that's what
+  // @vendia/serverless-express does (though it also looks at a `requestPath`
+  // field that doesn't exist in the docs or typings).
+  return 'path' in event ? event.path : event.rawPath;
+}
+export interface CreateHandlerOptions<
+  EventT extends APIGatewayProxyEventV1OrV2 = APIGatewayProxyEventV1OrV2
+> {
   cors?: {
     origin?: boolean | string | string[];
     methods?: string | string[];
@@ -21,10 +51,55 @@ export interface CreateHandlerOptions {
     credentials?: boolean;
     maxAge?: number;
   };
-  onHealthCheck?: (req: APIGatewayProxyEvent) => Promise<any>;
+  onHealthCheck?: (req: EventT) => Promise<any>;
 }
 
-export class ApolloServer extends ApolloServerBase {
+// Lambda has two ways of defining a handler: as an async Promise-returning
+// function, and as a callback-invoking function.
+// https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html The async
+// variety was introduced with Lambda's Node 8 runtime. Apparently the
+// callback-invoking variety was removed with their Node 14 runtime (their docs
+// don't mention this anywhere but our users have reported this:
+// https://github.com/apollographql/apollo-server/issues/1989#issuecomment-778982945).
+// While AWS doesn't directly support pre-Node-8 runtimes any more, it's
+// possible some users are using a Custom Runtime that still requires the Node 6
+// version, and Apollo Server still technically supports Node 6. So for now, we
+// define an async handler and use this function to convert it to a function
+// that can work either as an async or callback handler.
+//
+// (Apollo Server 3 will drop Node 6 support, at which point we should just make
+// this package always return an async handler.)
+function maybeCallbackify<EventT extends APIGatewayProxyEventV1OrV2>(
+  asyncHandler: (
+    event: EventT,
+    context: LambdaContext,
+  ) => Promise<APIGatewayProxyResult>,
+): (
+  event: EventT,
+  context: LambdaContext,
+  callback: APIGatewayProxyCallback | undefined,
+) => void | Promise<APIGatewayProxyResult> {
+  return (
+    event: EventT,
+    context: LambdaContext,
+    callback: APIGatewayProxyCallback | undefined,
+  ) => {
+    if (callback) {
+      context.callbackWaitsForEmptyEventLoop = false;
+      asyncHandler(event, context).then(
+        (r: APIGatewayProxyResult) => callback(null, r),
+        (e) => callback(e),
+      );
+      return;
+    } else {
+      return asyncHandler(event, context);
+    }
+  };
+}
+
+export class ApolloServer<
+  EventT extends APIGatewayProxyEventV1OrV2 = APIGatewayProxyEventV1OrV2
+> extends ApolloServerBase {
   protected serverlessFramework(): boolean {
     return true;
   }
@@ -33,18 +108,18 @@ export class ApolloServer extends ApolloServerBase {
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
   createGraphQLServerOptions(
-    event: APIGatewayProxyEvent,
+    event: EventT,
     context: LambdaContext,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ event, context });
   }
 
-  public createHandler({ cors, onHealthCheck }: CreateHandlerOptions = { cors: undefined, onHealthCheck: undefined }) {
-    // We will kick off the `willStart` event once for the server, and then
-    // await it before processing any requests by incorporating its `await` into
-    // the GraphQLServerOptions function which is called before each request.
-    const promiseWillStart = this.willStart();
-
+  public createHandler(
+    { cors, onHealthCheck }: CreateHandlerOptions<EventT> = {
+      cors: undefined,
+      onHealthCheck: undefined,
+    },
+  ) {
     const corsHeaders = new Headers();
 
     if (cors) {
@@ -89,146 +164,174 @@ export class ApolloServer extends ApolloServerBase {
       }
     }
 
-    return (
-      event: APIGatewayProxyEvent,
-      context: LambdaContext,
-      callback: APIGatewayProxyCallback,
-    ) => {
-      // We re-load the headers into a Fetch API-compatible `Headers`
-      // interface within `graphqlLambda`, but we still need to respect the
-      // case-insensitivity within this logic here, so we'll need to do it
-      // twice since it's not accessible to us otherwise, right now.
-      const eventHeaders = new Headers(event.headers);
+    return maybeCallbackify<EventT>(
+      async (
+        event: EventT,
+        context: LambdaContext,
+      ): Promise<APIGatewayProxyResult> => {
+        const eventHeaders = new Headers(event.headers);
 
-      // Make a request-specific copy of the CORS headers, based on the server
-      // global CORS headers we've set above.
-      const requestCorsHeaders = new Headers(corsHeaders);
+        // Make a request-specific copy of the CORS headers, based on the server
+        // global CORS headers we've set above.
+        const requestCorsHeaders = new Headers(corsHeaders);
 
-      if (cors && cors.origin) {
-        const requestOrigin = eventHeaders.get('origin');
-        if (typeof cors.origin === 'string') {
-          requestCorsHeaders.set('access-control-allow-origin', cors.origin);
-        } else if (
-          requestOrigin &&
-          (typeof cors.origin === 'boolean' ||
-            (Array.isArray(cors.origin) &&
-              requestOrigin &&
-              cors.origin.includes(requestOrigin)))
-        ) {
-          requestCorsHeaders.set('access-control-allow-origin', requestOrigin);
-        }
+        if (cors && cors.origin) {
+          const requestOrigin = eventHeaders.get('origin');
+          if (typeof cors.origin === 'string') {
+            requestCorsHeaders.set('access-control-allow-origin', cors.origin);
+          } else if (
+            requestOrigin &&
+            (typeof cors.origin === 'boolean' ||
+              (Array.isArray(cors.origin) &&
+                requestOrigin &&
+                cors.origin.includes(requestOrigin)))
+          ) {
+            requestCorsHeaders.set(
+              'access-control-allow-origin',
+              requestOrigin,
+            );
+          }
 
-        const requestAccessControlRequestHeaders = eventHeaders.get(
-          'access-control-request-headers',
-        );
-        if (!cors.allowedHeaders && requestAccessControlRequestHeaders) {
-          requestCorsHeaders.set(
-            'access-control-allow-headers',
-            requestAccessControlRequestHeaders,
+          const requestAccessControlRequestHeaders = eventHeaders.get(
+            'access-control-request-headers',
           );
+          if (!cors.allowedHeaders && requestAccessControlRequestHeaders) {
+            requestCorsHeaders.set(
+              'access-control-allow-headers',
+              requestAccessControlRequestHeaders,
+            );
+          }
         }
-      }
 
-      // Convert the `Headers` into an object which can be spread into the
-      // various headers objects below.
-      // Note: while Object.fromEntries simplifies this code, it's only currently
-      //       supported in Node 12 (we support >=6)
-      const requestCorsHeadersObject = Array.from(requestCorsHeaders).reduce<
-        Record<string, string>
-      >((headersObject, [key, value]) => {
-        headersObject[key] = value;
-        return headersObject;
-      }, {});
+        // Convert the `Headers` into an object which can be spread into the
+        // various headers objects below.
+        // Note: while Object.fromEntries simplifies this code, it's only currently
+        //       supported in Node 12 (we support >=6)
+        const requestCorsHeadersObject = Array.from(requestCorsHeaders).reduce<
+          Record<string, string>
+        >((headersObject, [key, value]) => {
+          headersObject[key] = value;
+          return headersObject;
+        }, {});
 
-      if (event.httpMethod === 'OPTIONS') {
-        context.callbackWaitsForEmptyEventLoop = false;
-        return callback(null, {
-          body: '',
-          statusCode: 204,
-          headers: {
-            ...requestCorsHeadersObject,
-          },
-        });
-      }
+        if (eventHttpMethod(event) === 'OPTIONS') {
+          return {
+            body: '',
+            statusCode: 204,
+            headers: {
+              ...requestCorsHeadersObject,
+            },
+          };
+        }
 
-      if (event.path === '/.well-known/apollo/server-health') {
-        const successfulResponse = {
-          body: JSON.stringify({ status: 'pass' }),
-          statusCode: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            ...requestCorsHeadersObject,
-          },
-        };
-        if (onHealthCheck) {
-          onHealthCheck(event)
-            .then(() => {
-              return callback(null, successfulResponse);
-            })
-            .catch(() => {
-              return callback(null, {
+        if (eventPath(event).endsWith('/.well-known/apollo/server-health')) {
+          if (onHealthCheck) {
+            try {
+              await onHealthCheck(event);
+            } catch (_) {
+              return {
                 body: JSON.stringify({ status: 'fail' }),
                 statusCode: 503,
                 headers: {
                   'Content-Type': 'application/json',
                   ...requestCorsHeadersObject,
                 },
-              });
-            });
-            return;
-          } else {
-            return callback(null, successfulResponse);
+              };
+            }
           }
-      }
-
-      if (this.playgroundOptions && event.httpMethod === 'GET') {
-        const acceptHeader = event.headers['Accept'] || event.headers['accept'];
-        if (acceptHeader && acceptHeader.includes('text/html')) {
-          const path =
-            event.path ||
-            (event.requestContext && event.requestContext.path) ||
-            '/';
-
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: path,
-            ...this.playgroundOptions,
-          };
-
-          return callback(null, {
-            body: renderPlaygroundPage(playgroundRenderPageOptions),
+          return {
+            body: JSON.stringify({ status: 'pass' }),
             statusCode: 200,
             headers: {
-              'Content-Type': 'text/html',
+              'Content-Type': 'application/json',
               ...requestCorsHeadersObject,
             },
-          });
+          };
         }
-      }
 
-      const callbackFilter: APIGatewayProxyCallback = (error, result) => {
-        callback(
-          error,
-          result && {
-            ...result,
+        if (this.playgroundOptions && eventHttpMethod(event) === 'GET') {
+          const acceptHeader =
+            event.headers['Accept'] || event.headers['accept'];
+          if (acceptHeader && acceptHeader.includes('text/html')) {
+            const path = eventPath(event) || '/';
+
+            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
+              endpoint: path,
+              ...this.playgroundOptions,
+            };
+
+            return {
+              body: renderPlaygroundPage(playgroundRenderPageOptions),
+              statusCode: 200,
+              headers: {
+                'Content-Type': 'text/html',
+                ...requestCorsHeadersObject,
+              },
+            };
+          }
+        }
+
+        let { body, isBase64Encoded } = event;
+        let query: Record<string, any> | Record<string, any>[];
+
+        if (body && isBase64Encoded) {
+          body = Buffer.from(body, 'base64').toString();
+        }
+
+        if (eventHttpMethod(event) === 'POST' && !body) {
+          return {
+            body: 'POST body missing.',
+            statusCode: 500,
+          };
+        }
+
+        if (body && eventHttpMethod(event) === 'POST') {
+          query = JSON.parse(body);
+        } else {
+          // XXX Note that if a parameter is included multiple times, this only
+          // includes the first version for payloadFormatVersion 1.0 but
+          // contains all of them joined with commas for payloadFormatVersion
+          // 2.0.
+          query = event.queryStringParameters || {};
+        }
+
+        try {
+          const { graphqlResponse, responseInit } = await runHttpQuery(
+            [event, context],
+            {
+              method: eventHttpMethod(event),
+              options: async () => {
+                return this.createGraphQLServerOptions(event, context);
+              },
+              query,
+              request: {
+                url: eventPath(event),
+                method: eventHttpMethod(event),
+                headers: eventHeaders,
+              },
+            },
+          );
+          return {
+            body: graphqlResponse,
+            statusCode: 200,
             headers: {
-              ...result.headers,
+              ...responseInit.headers,
               ...requestCorsHeadersObject,
             },
-          },
-        );
-      };
-
-      graphqlLambda(async () => {
-        // In a world where this `createHandler` was async, we might avoid this
-        // but since we don't want to introduce a breaking change to this API
-        // (by switching it to `async`), we'll leverage the
-        // `GraphQLServerOptions`, which are dynamically built on each request,
-        // to `await` the `promiseWillStart` which we kicked off at the top of
-        // this method to ensure that it runs to completion (which is part of
-        // its contract) prior to processing the request.
-        await promiseWillStart;
-        return this.createGraphQLServerOptions(event, context);
-      })(event, context, callbackFilter);
-    };
+          };
+        } catch (error) {
+          if (error.name !== 'HttpQueryError') throw error;
+          const httpQueryError = error as HttpQueryError;
+          return {
+            body: httpQueryError.message,
+            statusCode: httpQueryError.statusCode,
+            headers: {
+              ...httpQueryError.headers,
+              ...requestCorsHeadersObject,
+            },
+          };
+        }
+      },
+    );
   }
 }

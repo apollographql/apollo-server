@@ -29,8 +29,11 @@ describe('apollo-server-koa', () => {
   let server: ApolloServer;
   let httpServer: http.Server;
   testApolloServer(
-    async options => {
+    async (options, suppressStartCall?: boolean) => {
       server = new ApolloServer(options);
+      if (!suppressStartCall) {
+        await server.start();
+      }
       const app = new Koa();
       server.applyMiddleware({ app });
       httpServer = await new Promise<http.Server>(resolve => {

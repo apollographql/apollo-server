@@ -16,7 +16,7 @@ union Media = Book | Movie
 A field can have a union as its return type. In this case, it can return any object type that's included in the union:
 
 ```graphql
- type Query {
+type Query {
   allMedia: [Media] # This list can include both Books and Movies
 }
 ```
@@ -131,7 +131,7 @@ type Textbook implements Book {
 A field can have an interface as its return type. In this case, it can return any object type that `implements` that interface:
 
 ```graphql
- type Query {
+type Query {
   schoolBooks: [Book] # Can include Textbooks
 }
 ```

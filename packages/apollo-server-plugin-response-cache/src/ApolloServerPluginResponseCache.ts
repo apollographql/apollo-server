@@ -236,7 +236,7 @@ export default function plugin(
 
           if (options.shouldWriteToCache) {
             const shouldWriteToCache = await options.shouldWriteToCache(requestContext);
-            if(!shouldWriteToCache) return;
+            if (!shouldWriteToCache) return;
           }
 
           const { response, overallCachePolicy } = requestContext;
