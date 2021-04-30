@@ -1,11 +1,11 @@
-import Boom from 'boom';
-import {
+import Boom from '@hapi/boom';
+import type {
   Server,
   Request,
   RouteOptions,
   ResponseToolkit,
   Plugin as IPlugin
-} from 'hapi__hapi';
+} from '@hapi/hapi';
 import {
   GraphQLOptions,
   runHttpQuery,
@@ -72,7 +72,7 @@ const plugin: IPlugin<HapiPluginOptions> = {
             return response;
           }
 
-          const err = new Boom(error.message, { statusCode: error.statusCode });
+          const err = new Boom.Boom(error.message, { statusCode: error.statusCode });
           if (error.headers) {
             Object.keys(error.headers).forEach(header => {
               err.output.headers[header] = error.headers[header];

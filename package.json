@@ -55,7 +55,7 @@
     "apollo-tracing": "file:packages/apollo-tracing"
   },
   "devDependencies": {
-    "@hapi/hapi": "19.2.0",
+    "@hapi/hapi": "20.1.2",
     "@josephg/resolvable": "1.0.0",
     "@types/async-retry": "1.4.2",
     "@types/aws-lambda": "8.10.66",
@@ -65,7 +65,7 @@
     "@types/cors": "2.8.10",
     "@types/express": "4.17.11",
     "@types/fast-json-stable-stringify": "2.0.0",
-    "@types/hapi__hapi": "19.0.4",
+    "@types/hapi__hapi": "20.0.8",
     "@types/ioredis": "4.26.0",
     "@types/jest": "26.0.9",
     "@types/koa-router": "7.4.2",

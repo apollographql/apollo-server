@@ -8,9 +8,8 @@ This is the Hapi integration of Apollo Server. Apollo Server is a community-main
 npm install apollo-server-hapi graphql
 ```
 
+This package is only tested with `@hapi/hapi` 20.1.2 and higher; that is the minimum version of Hapi that supports Node 16.
 ## Usage
-
-The code below requires Hapi 18 or higher.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-hapi');

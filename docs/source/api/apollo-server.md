@@ -534,7 +534,7 @@ The `context` object passed between Apollo Server resolvers automatically includ
 | Express | <code>{<br/>&nbsp;&nbsp;req: [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts),<br/>&nbsp;&nbsp;res: [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861)<br/>}</code> |
 | Fastify  | <code>{<br/>&nbsp;&nbsp;request: [`FastifyRequest`](https://github.com/fastify/fastify/blob/1d4dcf2bcde46256c72e96c2cafc843a461c721e/types/request.d.ts#L15),<br/>&nbsp;&nbsp;reply: [`FastifyReply`](https://github.com/fastify/fastify/blob/1d4dcf2bcde46256c72e96c2cafc843a461c721e/types/reply.d.ts#L10)</br>}</code> |
 | Google Cloud Functions  | <code>{ req: [`Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts), res: [`Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861) }</code> |
-| hapi  | <code>{<br/>&nbsp;&nbsp;request: [`hapi.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/hapi/index.d.ts#L396-L605),<br/>&nbsp;&nbsp;h: [`hapi.ResponseToolkit`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/hapi/index.d.ts#L979-L1100)<br/>}</code> |
+| hapi  | <code>{<br/>&nbsp;&nbsp;request: [`hapi.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/05cbc5521f895344fb7dbf5c51902b6ff235aa69/types/hapi__hapi/index.d.ts#L406-L615),<br/>&nbsp;&nbsp;h: [`hapi.ResponseToolkit`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/05cbc5521f895344fb7dbf5c51902b6ff235aa69/types/hapi__hapi/index.d.ts#L999-L1113)<br/>}</code> |
 | Koa | <code>{ ctx: [`Koa.Context`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/koa/index.d.ts#L724-L731) }</code> |
 | Micro | <code>{ req: [`MicroRequest`](https://github.com/apollographql/apollo-server/blob/c356bcf3f2864b8d2fcca0add455071e0606ef46/packages/apollo-server-micro/src/types.ts#L3-L5), res: [`ServerResponse`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/node/v10/http.d.ts#L145-L158) }</code> |
 
@@ -806,7 +806,7 @@ The default value is `/graphql`.
 </td>
 <td>
 
-Middleware-specific configuration options for CORS. See available options for your middleware: [express](https://github.com/expressjs/cors#cors) | [hapi](https://hapi.dev/api/?v=20.0.0#-routeoptionscors) | [koa](https://github.com/koajs/cors/)
+Middleware-specific configuration options for CORS. See available options for your middleware: [express](https://github.com/expressjs/cors#cors) | [hapi](https://hapi.dev/api/?v=20.1.2#-routeoptionscors) | [koa](https://github.com/koajs/cors/)
 
 Provide `false` to remove CORS middleware entirely, or `true` to use your middleware's default configuration.
 
