@@ -23,7 +23,7 @@ export function defaultSendOperationsAsTrace() {
     // it.
     max: Math.pow(2, 20),
     length: (_val, key) => {
-      return (key && Buffer.byteLength(key, 'uft8')) || 0;
+      return (key && Buffer.byteLength(key)) || 0;
     },
   });
 
