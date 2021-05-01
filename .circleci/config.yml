@@ -6,7 +6,7 @@ orbs:
   # `oss` is a local reference to the package.  The source for Apollo Orbs can
   # be found at http://github.com/apollographql/CircleCI-Orbs/.
   # We could use Renovate to bump this version via PR, but that's not setup now.
-  oss: apollo/oss-ci-cd-tooling@0.0.17
+  oss: apollo/oss-ci-cd-tooling@0.0.18
 
 commands:
   # These are the steps used for each version of Node which we're testing
