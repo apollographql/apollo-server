@@ -133,8 +133,6 @@ export class ApolloServerBase {
   private parseOptions: ParseOptions;
   private config: Config;
   private state: ServerState;
-  /** @deprecated: This is undefined for servers operating as gateways, and will be removed in a future release **/
-  protected schema?: GraphQLSchema;
   private toDispose = new Set<() => Promise<void>>();
   private toDisposeLast = new Set<() => Promise<void>>();
   private experimental_approximateDocumentStoreMiB: Config['experimental_approximateDocumentStoreMiB'];
@@ -300,20 +298,16 @@ export class ApolloServerBase {
       this.requestOptions.executor = gateway.executor;
     } else {
       // We construct the schema synchronously so that we can fail fast if the
-      // schema can't be constructed, and so that the deprecated `.schema` field
-      // (which has never worked with the gateway) are available immediately
-      // after the constructor returns.
+      // schema can't be constructed. (This used to be more important because we
+      // used to have a 'schema' field that was publicly accessible immediately
+      // after construction, though that field never actually worked with
+      // gateways.)
       this.state = {
         phase: 'initialized with schema',
         schemaDerivedData: this.generateSchemaDerivedData(
           this.constructSchema(),
         ),
       };
-      // This field is deprecated; users who are interested in learning
-      // their server's schema should instead make a plugin with serverWillStart,
-      // or register onSchemaChange on their gateway. It is only ever
-      // set for non-gateway servers.
-      this.schema = this.state.schemaDerivedData.schema;
     }
 
     // The main entry point (createHandler) to serverless frameworks generally
