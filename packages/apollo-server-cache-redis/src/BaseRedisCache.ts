@@ -1,5 +1,5 @@
 import {
-  TestableKeyValueCache,
+  KeyValueCache,
   KeyValueCacheSetOptions,
 } from 'apollo-server-caching';
 import DataLoader from 'dataloader';
@@ -39,7 +39,7 @@ export interface BaseRedisCacheOptions {
   noMgetClient?: RedisNoMgetClient;
 }
 
-export class BaseRedisCache implements TestableKeyValueCache<string> {
+export class BaseRedisCache implements KeyValueCache<string> {
   readonly client: BaseRedisClient;
   readonly defaultSetOptions: KeyValueCacheSetOptions = {
     ttl: 300,

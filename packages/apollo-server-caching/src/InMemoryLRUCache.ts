@@ -1,5 +1,5 @@
 import LRUCache from 'lru-cache';
-import { TestableKeyValueCache } from './KeyValueCache';
+import { KeyValueCache } from './KeyValueCache';
 
 function defaultLengthCalculation(item: any) {
   if (Array.isArray(item) || typeof item === 'string') {
@@ -11,7 +11,7 @@ function defaultLengthCalculation(item: any) {
   return 1;
 }
 
-export class InMemoryLRUCache<V = string> implements TestableKeyValueCache<V> {
+export class InMemoryLRUCache<V = string> implements KeyValueCache<V> {
   private store: LRUCache<string, V>;
 
   // TODO: Define reasonable default max size of the cache

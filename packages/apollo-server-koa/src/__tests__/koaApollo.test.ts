@@ -2,7 +2,7 @@ import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
-import { GraphQLOptions, Config } from 'apollo-server-core';
+import { Config } from 'apollo-server-core';
 
 function createApp(options: CreateAppOptions = {}) {
   const Koa = require('koa');
@@ -16,7 +16,7 @@ function createApp(options: CreateAppOptions = {}) {
   return app.listen();
 }
 
-async function destroyApp(app) {
+async function destroyApp(app: any) {
   if (!app || !app.close) {
     return;
   }
@@ -26,7 +26,7 @@ async function destroyApp(app) {
 describe('koaApollo', () => {
   const { ApolloServer } = require('../ApolloServer');
   it('throws error if called without schema', function() {
-    expect(() => new ApolloServer(undefined as GraphQLOptions)).toThrow(
+    expect(() => new ApolloServer(undefined as any)).toThrow(
       'ApolloServer requires options.',
     );
   });

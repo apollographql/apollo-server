@@ -30,7 +30,7 @@ describe('apollo-server', () => {
 
     it('runs serverWillStart and serverWillStop', async () => {
       const fn = jest.fn();
-      const beAsync = () => new Promise((res) => res());
+      const beAsync = () => new Promise<void>((res) => res());
       const server = new ApolloServer({
         typeDefs,
         resolvers,
@@ -197,7 +197,7 @@ describe('apollo-server', () => {
       });
 
       const { url } = await server.listen({ port: 0 });
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         request(
           {
             url,
@@ -267,7 +267,7 @@ describe('apollo-server', () => {
       });
 
       const { port } = await server.listen({ port: 0 });
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         request(
           {
             url: `http://localhost:${port}/.well-known/apollo/server-health`,

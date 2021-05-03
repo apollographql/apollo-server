@@ -9,6 +9,7 @@ import {
 } from 'apollo-server-integration-testsuite';
 
 import { gql } from 'apollo-server-core';
+import { AddressInfo } from 'net';
 
 export class IdAPI extends RESTDataSource {
   // We will set this inside tests.
@@ -32,10 +33,10 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    id: async (_source, _args, { dataSources }) => {
+    id: async (_source: any, _args: any, { dataSources }: any) => {
       return (await dataSources.id.getId('hi')).id;
     },
-    stringId: async (_source, _args, { dataSources }) => {
+    stringId: async (_source: any, _args: any, { dataSources }: any) => {
       return dataSources.id.getStringId('hi');
     },
   },
@@ -49,14 +50,14 @@ describe('apollo-server-koa', () => {
   let restCalls = 0;
   const restAPI = new Koa();
   const router = new KoaRouter();
-  router.all('/id/:id', ctx => {
+  router.all('/id/:id', (ctx: any) => {
     const id = ctx.params.id;
     restCalls++;
     ctx.set('Cache-Control', 'max-age=2000, public');
     ctx.body = { id };
   });
 
-  router.all('/str/:id', ctx => {
+  router.all('/str/:id', (ctx: any) => {
     const id = ctx.params.id;
     restCalls++;
     ctx.set('Cache-Control', 'max-age=2000, public');
@@ -72,7 +73,7 @@ describe('apollo-server-koa', () => {
   beforeAll(async () => {
     restUrl = await new Promise(resolve => {
       restServer = restAPI.listen(0, () => {
-        const { port } = restServer.address();
+        const { port } = (restServer.address() as AddressInfo);
         resolve(`http://localhost:${port}`);
       });
     });

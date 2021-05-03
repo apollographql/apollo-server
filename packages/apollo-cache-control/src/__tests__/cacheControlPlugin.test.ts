@@ -113,14 +113,17 @@ describe('plugin', () => {
     const responsePath: ResponsePath = {
       key: 'test',
       prev: undefined,
+      typename: undefined,
     };
     const responseSubPath: ResponsePath = {
       key: 'subTest',
       prev: responsePath,
+      typename: undefined,
     };
     const responseSubSubPath: ResponsePath = {
       key: 'subSubTest',
       prev: responseSubPath,
+      typename: undefined,
     };
 
     const hints = new Map();

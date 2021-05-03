@@ -22,24 +22,30 @@ export interface KeyValueCache {
 
 ### Test helpers
 
-You can export and run a jest test suite from `apollo-server-caching` to test your implementation:
+`apollo-server-caching` exports a function that you can run within a test suite to validate your implementation. It throws on failure. If you want to test expiration, then mock out `Date` and `setTimeout` (probably with `@sinonjs/fake-timers`) and pass a `tick` can be called to advance the fake time. (If you don't pass `tick`, it won't test expiration.) Other than that, it has no dependencies and can work in any test system and shouldn't require any particular build configuration to use from jest. Here's an example of how to use it with jest:
 
 ```typescript
 // ../__tests__/YourKeyValueCache.test.ts
 
 import YourKeyValueCache from '../src/YourKeyValueCache';
-import { testKeyValueCache } from 'apollo-server-caching';
-testKeyValueCache(new MemcachedCache('localhost'));
+import { runKeyValueCacheTests } from 'apollo-server-caching';
+import FakeTimers from '@sinonjs/fake-timers';
+
+describe('YourKeyValueCache', () => {
+  it('run apollo-server-caching test suite', async () => {
+    const cache = new YourKeyValueCache();
+    const clock = FakeTimers.install();
+    try {
+      await runKeyValueCacheTests(cache, (ms: number) => clock.tick(ms));
+    } finally {
+      clock.uninstall();
+      await cache.close();
+    }
+  });
+});
 ```
 
-The default `testKeyValueCache` helper will run all key-value store tests on the specified store, including basic `get` and `set` functionality, along with time-based expunging rules.
-
-Some key-value cache implementations may not be able to support the full suite of tests (for example, some tests might not be able to expire based on time).  For those cases, there are more granular implementations which can be used:
-
-* `testKeyValueCache_Basic`
-* `testKeyValueCache_Expiration`
-
-For more details, consult the [source for `apollo-server-caching`](./src/__tests__/testsuite.ts).
+For more details, consult the [source for `apollo-server-caching`](./src/testsuite.ts).
 
 ### Running tests
 

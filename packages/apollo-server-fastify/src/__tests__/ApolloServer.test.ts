@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fastify from 'fastify';
 
-import http, { IncomingMessage, OutgoingMessage } from 'http';
+import http from 'http';
 
 import request from 'request';
 import { createApolloFetch } from 'apollo-fetch';
@@ -34,7 +34,7 @@ describe('apollo-server-fastify', () => {
   let app: FastifyInstance;
 
   testApolloServer(
-    async (options, suppressStartCall?: boolean) => {
+    async (options: any, suppressStartCall?: boolean) => {
       server = new ApolloServer(options);
       if (!suppressStartCall) {
         await server.start();
@@ -46,7 +46,7 @@ describe('apollo-server-fastify', () => {
     },
     async () => {
       if (server) await server.stop();
-      if (app) await new Promise(resolve => app.close(() => resolve()));
+      if (app) await new Promise<void>(resolve => app.close(() => resolve()));
       if (httpServer && httpServer.listening) await httpServer.close();
     },
   );
@@ -83,7 +83,7 @@ describe('apollo-server-fastify', () => {
 
   afterEach(async () => {
     if (server) await server.stop();
-    if (app) await new Promise(resolve => app.close(() => resolve()));
+    if (app) await new Promise<void>(resolve => app.close(() => resolve()));
     if (httpServer) await httpServer.close();
   });
 
@@ -96,10 +96,10 @@ describe('apollo-server-fastify', () => {
   describe('createGraphQLServerOptions', () => {
     it('provides FastifyRequest and FastifyReply to ContextFunction', async () => {
       interface ContextArgs {
-        request: FastifyRequest<IncomingMessage> & {
+        request: FastifyRequest & {
           requestDecorator: () => any;
         };
-        reply: FastifyReply<OutgoingMessage> & { replyDecorator: () => any };
+        reply: FastifyReply & { replyDecorator: () => any };
       }
 
       const context = ({ request, reply }: ContextArgs) => {
@@ -163,7 +163,7 @@ describe('apollo-server-fastify', () => {
         'GRAPHQL_VALIDATION_FAILED',
       );
 
-      return new Promise<http.Server>((resolve, reject) => {
+      return new Promise<http.Server | void>((resolve, reject) => {
         request(
           {
             url: uri,
@@ -195,7 +195,7 @@ describe('apollo-server-fastify', () => {
         resolvers,
       });
 
-      return new Promise<http.Server>((resolve, reject) => {
+      return new Promise<http.Server | void>((resolve, reject) => {
         request(
           {
             url,
@@ -246,7 +246,7 @@ describe('apollo-server-fastify', () => {
         {},
       );
 
-      return new Promise<http.Server>((resolve, reject) => {
+      return new Promise<http.Server | void>((resolve, reject) => {
         request(
           {
             url,
@@ -304,7 +304,7 @@ describe('apollo-server-fastify', () => {
         {},
       );
 
-      return new Promise<http.Server>((resolve, reject) => {
+      return new Promise<http.Server | void>((resolve, reject) => {
         request(
           {
             url,
@@ -361,7 +361,7 @@ describe('apollo-server-fastify', () => {
           resolvers,
         });
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url: `http://localhost:${port}/.well-known/apollo/server-health`,
@@ -393,7 +393,7 @@ describe('apollo-server-fastify', () => {
           },
         );
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url: `http://localhost:${port}/.well-known/apollo/server-health`,
@@ -423,7 +423,7 @@ describe('apollo-server-fastify', () => {
           },
         );
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url: `http://localhost:${port}/.well-known/apollo/server-health`,

@@ -1,26 +1,28 @@
-import { fetch, Request, Response } from '__mocks__/apollo-server-env';
+import { fetch, Request } from './mock-apollo-server-env';
 
-import { mockDate, unmockDate, advanceTimeBy } from '__mocks__/date';
+import FakeTimers from '@sinonjs/fake-timers';
 
 import { HTTPCache } from '../HTTPCache';
+import { MapKeyValueCache } from './MapKeyValueCache';
 
 describe('HTTPCache', () => {
-  let store: Map<string, string>;
+  let store: MapKeyValueCache<string>;
   let httpCache: HTTPCache;
+  let clock: FakeTimers.Clock;
 
   beforeAll(() => {
-    mockDate();
+    clock = FakeTimers.install();
   });
 
   beforeEach(() => {
     fetch.mockReset();
 
-    store = new Map();
+    store = new MapKeyValueCache<string>();
     httpCache = new HTTPCache(store as any);
   });
 
   afterAll(() => {
-    unmockDate();
+    clock.uninstall();
   });
 
   it('fetches a response from the origin when not cached', async () => {
@@ -42,7 +44,7 @@ describe('HTTPCache', () => {
 
     await httpCache.fetch(new Request('https://api.example.com/people/1'));
 
-    advanceTimeBy(10000);
+    clock.tick(10000);
 
     const response = await httpCache.fetch(
       new Request('https://api.example.com/people/1'),
@@ -61,7 +63,7 @@ describe('HTTPCache', () => {
 
     await httpCache.fetch(new Request('https://api.example.com/people/1'));
 
-    advanceTimeBy(30000);
+    clock.tick(30000);
 
     fetch.mockJSONResponseOnce(
       { name: 'Alan Turing' },
@@ -94,7 +96,7 @@ describe('HTTPCache', () => {
         },
       });
 
-      advanceTimeBy(10000);
+      clock.tick(10000);
 
       const response = await httpCache.fetch(
         new Request('https://api.example.com/people/1'),
@@ -120,7 +122,7 @@ describe('HTTPCache', () => {
         },
       });
 
-      advanceTimeBy(30000);
+      clock.tick(30000);
 
       fetch.mockJSONResponseOnce(
         { name: 'Alan Turing' },
@@ -152,7 +154,7 @@ describe('HTTPCache', () => {
         },
       });
 
-      advanceTimeBy(10000);
+      clock.tick(10000);
 
       fetch.mockJSONResponseOnce(
         { name: 'Alan Turing' },
@@ -195,12 +197,12 @@ describe('HTTPCache', () => {
       );
 
       await httpCache.fetch(new Request('https://api.example.com/people/1'), {
-        cacheOptions: (response: Response, request: Request) => ({
+        cacheOptions: () => ({
           ttl: 30,
         }),
       });
 
-      advanceTimeBy(10000);
+      clock.tick(10000);
 
       const response = await httpCache.fetch(
         new Request('https://api.example.com/people/1'),
@@ -218,7 +220,7 @@ describe('HTTPCache', () => {
       );
 
       await httpCache.fetch(new Request('https://api.example.com/people/1'), {
-        cacheOptions: (response: Response, request: Request) => ({
+        cacheOptions: () => ({
           ttl: 0,
         }),
       });
@@ -381,7 +383,7 @@ describe('HTTPCache', () => {
 
     await httpCache.fetch(new Request('https://api.example.com/people/1'));
 
-    advanceTimeBy(30000);
+    clock.tick(30000);
 
     fetch.mockResponseOnce(
       null,
@@ -397,13 +399,13 @@ describe('HTTPCache', () => {
     );
 
     expect(fetch.mock.calls.length).toEqual(2);
-    expect(fetch.mock.calls[1][0].headers.get('If-None-Match')).toEqual('foo');
+    expect((fetch.mock.calls[1][0] as Request).headers.get('If-None-Match')).toEqual('foo');
 
     expect(response.status).toEqual(200);
     expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
     expect(response.headers.get('Age')).toEqual('0');
 
-    advanceTimeBy(10000);
+    clock.tick(10000);
 
     const response2 = await httpCache.fetch(
       new Request('https://api.example.com/people/1'),
@@ -427,7 +429,7 @@ describe('HTTPCache', () => {
 
     await httpCache.fetch(new Request('https://api.example.com/people/1'));
 
-    advanceTimeBy(30000);
+    clock.tick(30000);
 
     fetch.mockJSONResponseOnce(
       { name: 'Alan Turing' },
@@ -442,12 +444,12 @@ describe('HTTPCache', () => {
     );
 
     expect(fetch.mock.calls.length).toEqual(2);
-    expect(fetch.mock.calls[1][0].headers.get('If-None-Match')).toEqual('foo');
+    expect((fetch.mock.calls[1][0] as Request).headers.get('If-None-Match')).toEqual('foo');
 
     expect(response.status).toEqual(200);
     expect(await response.json()).toEqual({ name: 'Alan Turing' });
 
-    advanceTimeBy(10000);
+    clock.tick(10000);
 
     const response2 = await httpCache.fetch(
       new Request('https://api.example.com/people/1'),

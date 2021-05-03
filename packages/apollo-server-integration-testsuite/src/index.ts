@@ -17,6 +17,7 @@ import {
 } from 'graphql';
 
 import request from 'supertest';
+import type {HTTPError} from 'superagent';
 import resolvable from '@josephg/resolvable';
 
 import {
@@ -243,7 +244,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .send();
         return req.then(res => {
           expect(res.status).toEqual(500);
-          expect(res.error.text).toMatch('POST body missing.');
+          expect((res.error as HTTPError).text).toMatch('POST body missing.');
         });
       });
 
@@ -252,7 +253,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const req = request(app).get(`/graphql`);
         return req.then(res => {
           expect(res.status).toEqual(400);
-          expect(res.error.text).toMatch('GET query missing.');
+          expect((res.error as HTTPError).text).toMatch('GET query missing.');
         });
       });
 
@@ -314,7 +315,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         await req.then(res => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
-          expect(res.error.text).toMatch('GET supports only query operation');
+          expect((res.error as HTTPError).text).toMatch('GET supports only query operation');
         });
 
         expect(didEncounterErrors).toBeCalledWith(
@@ -357,7 +358,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         await req.then(res => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
-          expect(res.error.text).toMatch('GET supports only query operation');
+          expect((res.error as HTTPError).text).toMatch('GET supports only query operation');
         });
 
         expect(didEncounterErrors).toBeCalledWith(
@@ -498,7 +499,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             },
           });
         return req.then(res => {
-          expect(res.statusCode).toEqual(200);
+          expect(res.status).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual(
@@ -521,7 +522,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             }),
           });
         return req.then(res => {
-          expect(res.statusCode).toEqual(200);
+          expect(res.status).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual('PersistedQueryNotFound');
@@ -593,7 +594,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(400);
-          expect(res.error.text).toMatch('Variables are invalid JSON.');
+          expect((res.error as HTTPError).text).toMatch('Variables are invalid JSON.');
         });
       });
 
@@ -1568,7 +1569,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             query,
           });
         expect(response.status).toEqual(400);
-        expect(response.error.text).toMatch(/does not match query/);
+        expect((response.error as HTTPError).text).toMatch(/does not match query/);
         expect(didResolveSource).not.toHaveBeenCalled();
       });
 

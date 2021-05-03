@@ -16,7 +16,7 @@ const createAzureFunction = (options: CreateAppOptions = {}) => {
 
   return (req: IncomingMessage, res: ServerResponse) => {
     // return 404 if path is /bogus-route to pass the test, azure doesn't have paths
-    if (req.url.includes('/bogus-route')) {
+    if (req.url!.includes('/bogus-route')) {
       res.statusCode = 404;
       return res.end();
     }
@@ -24,7 +24,7 @@ const createAzureFunction = (options: CreateAppOptions = {}) => {
     let body = '';
     req.on('data', chunk => (body += chunk));
     req.on('end', () => {
-      const urlObject = url.parse(req.url, true);
+      const urlObject = url.parse(req.url!, true);
       const request = {
         method: req.method,
         body: body && JSON.parse(body),
@@ -33,7 +33,7 @@ const createAzureFunction = (options: CreateAppOptions = {}) => {
         headers: req.headers,
       };
       const context = {
-        done(error, result) {
+        done(error: any, result: any) {
           if (error) throw error;
           res.statusCode = result.status;
           for (let key in result.headers) {
@@ -124,7 +124,7 @@ describe('integration:AzureFunctions', () => {
       headers: {},
     };
     const context = {
-      done(error, result) {
+      done(error: any, result: any) {
         if (error) throw error;
         expect(result.status).toEqual(204);
         expect(result.headers['Access-Control-Allow-Headers']).toEqual(
@@ -148,7 +148,7 @@ describe('integration:AzureFunctions', () => {
       },
     };
     const context = {
-      done(error, result) {
+      done(error: any, result: any) {
         if (error) throw error;
         expect(result.status).toEqual(200);
         expect(result.body).toMatch(/GraphQL Playground/gi);

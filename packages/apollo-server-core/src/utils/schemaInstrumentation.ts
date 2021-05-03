@@ -68,7 +68,7 @@ function wrapField(field: GraphQLField<any, any>): void {
     const resolveObject: GraphQLObjectResolver<
       any,
       any
-    > = (info.parentType as any).resolveObject;
+    > | undefined = (info.parentType as any).resolveObject;
 
     let whenObjectResolved: Promise<any> | undefined;
 

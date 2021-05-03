@@ -1,36 +1,30 @@
 class Redis {
-  private keyValue = {};
+  private keyValue = new Map<string, {value: string, ttl: number | undefined}>();
   private timeouts = new Set<NodeJS.Timer>();
 
   async del(key: string) {
-    const keysDeleted = this.keyValue.hasOwnProperty(key) ? 1 : 0;
-    delete this.keyValue[key];
+    const keysDeleted = this.keyValue.has(key) ? 1 : 0;
+    this.keyValue.delete(key);
     return keysDeleted;
   }
 
   async get(key: string) {
-    if (this.keyValue[key]) {
-      return this.keyValue[key].value;
-    }
+    return this.keyValue.get(key)?.value;
   }
 
   async mget(...keys: string[]) {
-    return keys.map((key) => {
-      if (this.keyValue[key]) {
-        return this.keyValue[key].value;
-      }
-    });
+    return keys.map((key) => this.keyValue.get(key)?.value);
   }
 
-  async set(key, value, type, ttl) {
-    this.keyValue[key] = {
+  async set(key: string, value: string, _: string, ttl: number | undefined) {
+    this.keyValue.set(key,  {
       value,
       ttl,
-    };
+    });
     if (ttl) {
       const timeout = setTimeout(() => {
         this.timeouts.delete(timeout);
-        delete this.keyValue[key];
+        this.del(key);
       }, ttl * 1000);
       this.timeouts.add(timeout);
     }

@@ -12,6 +12,7 @@ import {
   PersistedQueryNotSupportedError,
   ForbiddenError,
 } from 'apollo-server-errors';
+import { generateSchemaHash } from '../utils/schemaHash';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
@@ -38,6 +39,7 @@ describe('runHttpQuery', () => {
       },
       options: {
         schema,
+        schemaHash: generateSchemaHash(schema),
       },
       request: new MockReq(),
     };

@@ -5,9 +5,6 @@ export const isDirectiveDefined = (
   typeDefs: (DocumentNode | string)[],
   directiveName: string,
 ): boolean => {
-  // If we didn't receive an array of what we want, ensure it's an array.
-  typeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
-
   return typeDefs.some(typeDef => {
     if (typeof typeDef === 'string') {
       typeDef = gql(typeDef);

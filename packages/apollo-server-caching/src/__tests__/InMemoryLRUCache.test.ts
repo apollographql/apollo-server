@@ -1,11 +1,15 @@
-import {
-  testKeyValueCache_Basics,
-  testKeyValueCache_Expiration,
-} from '../../../apollo-server-caching/src/__tests__/testsuite';
 import { InMemoryLRUCache } from '../InMemoryLRUCache';
+import { runKeyValueCacheTests } from 'apollo-server-caching';
+import FakeTimers from '@sinonjs/fake-timers';
 
 describe('InMemoryLRUCache', () => {
-  const cache = new InMemoryLRUCache();
-  testKeyValueCache_Basics(cache);
-  testKeyValueCache_Expiration(cache);
+  it('run apollo-server-caching test suite', async () => {
+    const cache = new InMemoryLRUCache();
+    const clock = FakeTimers.install();
+    try {
+      await runKeyValueCacheTests(cache, (ms: number) => clock.tick(ms));
+    } finally {
+      clock.uninstall();
+    }
+  });
 });

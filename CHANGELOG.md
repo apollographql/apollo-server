@@ -19,6 +19,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 - The `graphql-extensions` API (e.g., `GraphQLExtensions`, `extensions`) has been dropped in favor of the new [plugins API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).
 - In order to let the `graphql-upload` package evolve on its own, uploads are no longer integrated directly with Apollo Server.  To bring them back in their current form, see [the migration guide section on File Uploads](./docs/source/migration.md#File-uploads)
 - Removed deprecated `ApolloServer.schema` field, which never worked with gateways. If you'd like to extract your schema from your server, make a plugin with `serverWillStart`, or register `onSchemaChange` on your gateway.
+- `apollo-server-caching`: The test suite helper works differently, and the `TestableKeyValueCache` interface is removed.
+- `apollo-datasource-rest`: We no longer officially support overriding the `baseURL` property with a getter, because TypeScript 4 does not allow you to do that.
 - Top-level exports have changed. E.g.,
 
   - We no longer re-export the entirety of `graphql-tools` (including `makeExecutableSchema`) from all Apollo Server packages.

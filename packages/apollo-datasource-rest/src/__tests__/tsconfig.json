@@ -1,6 +1,6 @@
 {
   "extends": "../../../../tsconfig.test.base",
-  "include": ["**/*", "../../../../__mocks__"],
+  "include": ["**/*"],
   "references": [
     { "path": "../../" },
   ]
