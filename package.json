@@ -110,7 +110,7 @@
     "js-sha256": "0.9.0",
     "koa": "2.13.1",
     "koa-router": "10.0.0",
-    "lerna": "3.22.1",
+    "lerna": "4.0.0",
     "log4js": "6.3.0",
     "memcached-mock": "0.1.0",
     "mock-req": "0.2.0",
