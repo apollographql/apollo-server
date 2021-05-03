@@ -2,4 +2,7 @@
   base    = "docs/"
   publish = "docs/public/"
   command = "gatsby build --prefix-paths && mkdir -p docs/apollo-server && mv public/* docs/apollo-server && mv docs public/ && mv public/docs/apollo-server/_redirects public"
-  
+
+[build.environment]
+  NODE_VERSION = "16"
+  NPM_VERSION  = "7"
