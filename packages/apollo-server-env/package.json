@@ -21,7 +21,7 @@
     "prepare": "npm run clean && npm run compile"
   },
   "engines": {
-    "node": ">=12.0 <15.0"
+    "node": ">=12.0"
   },
   "dependencies": {
     "node-fetch": "^2.6.1",
