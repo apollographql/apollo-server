@@ -3,7 +3,6 @@ import loglevel from 'loglevel';
 import {
   GraphQLSchema,
   GraphQLError,
-  GraphQLFieldResolver,
   ValidationContext,
   FieldDefinitionNode,
   DocumentNode,
@@ -20,7 +19,7 @@ import {
   GraphQLServerListener,
 } from 'apollo-server-plugin-base';
 
-import { GraphQLServerOptions, PersistedQueryOptions } from './graphqlOptions';
+import { GraphQLServerOptions } from './graphqlOptions';
 
 import {
   Config,
@@ -898,15 +897,6 @@ export class ApolloServerBase {
       plugins: this.plugins,
       documentStore,
       context,
-      // Allow overrides from options. Be explicit about a couple of them to
-      // avoid a bad side effect of the otherwise useful noUnusedLocals option
-      // (https://github.com/Microsoft/TypeScript/issues/21673).
-      persistedQueries: this.requestOptions
-        .persistedQueries as PersistedQueryOptions,
-      fieldResolver: this.requestOptions.fieldResolver as GraphQLFieldResolver<
-        any,
-        any
-      >,
       parseOptions: this.parseOptions,
       ...this.requestOptions,
     };
