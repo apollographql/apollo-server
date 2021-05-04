@@ -16,9 +16,9 @@ export interface MicroGraphQLOptionsFunction {
 }
 
 // Utility function used to set multiple headers on a response object.
-function setHeaders(res: ServerResponse, headers: Object): void {
-  Object.keys(headers).forEach((header: string) => {
-    res.setHeader(header, headers[header]);
+function setHeaders(res: ServerResponse, headers: Record<string, string>): void {
+  Object.entries(headers).forEach(([header, value]) => {
+    res.setHeader(header, value);
   });
 }
 
@@ -39,24 +39,24 @@ export function graphqlMicro(
   }
 
   const graphqlHandler = async (req: MicroRequest, res: ServerResponse) => {
-    let query;
+    let query: any;
     try {
       query =
         req.method === 'POST'
           ? req.filePayload || (await json(req))
-          : url.parse(req.url, true).query;
+          : url.parse(req.url!, true).query;
     } catch (error) {
       // Do nothing; `query` stays `undefined`
     }
 
     try {
       const { graphqlResponse, responseInit } = await runHttpQuery([req, res], {
-        method: req.method,
+        method: req.method!,
         options,
         query,
         request: convertNodeHttpToRequest(req),
       });
-      setHeaders(res, responseInit.headers);
+      setHeaders(res, responseInit.headers!);
       return graphqlResponse;
     } catch (error) {
       if ('HttpQueryError' === error.name && error.headers) {
