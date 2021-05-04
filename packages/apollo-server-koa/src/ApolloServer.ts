@@ -75,19 +75,18 @@ export class ApolloServer extends ApolloServerBase {
       middlewares.push(
         middlewareFromPath(
           '/.well-known/apollo/server-health',
-          (ctx: Koa.Context) => {
+          async (ctx: Koa.Context) => {
             // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
             ctx.set('Content-Type', 'application/health+json');
 
             if (onHealthCheck) {
-              return onHealthCheck(ctx)
-                .then(() => {
-                  ctx.body = { status: 'pass' };
-                })
-                .catch(() => {
-                  ctx.status = 503;
-                  ctx.body = { status: 'fail' };
-                });
+              try {
+                await onHealthCheck(ctx);
+                ctx.body = { status: 'pass' };
+              } catch (e) {
+                ctx.status = 503;
+                ctx.body = { status: 'fail' };
+              }
             } else {
               ctx.body = { status: 'pass' };
             }

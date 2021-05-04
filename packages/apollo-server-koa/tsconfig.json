@@ -4,8 +4,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "noImplicitAny": false,
-    "strictNullChecks": false,
-    "noImplicitReturns": false
+    "strictNullChecks": false
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__"],
