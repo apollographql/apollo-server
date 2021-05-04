@@ -14,6 +14,7 @@ import {
   BREAK,
   DocumentNode,
   getOperationAST,
+  ValidationContext,
 } from 'graphql';
 
 import request from 'supertest';
@@ -27,7 +28,7 @@ import {
   KeyValueCache,
 } from 'apollo-server-core';
 import gql from 'graphql-tag';
-import { ValueOrPromise } from 'apollo-server-types';
+import { GraphQLResponse, ValueOrPromise } from 'apollo-server-types';
 import { GraphQLRequestListener } from "apollo-server-plugin-base";
 import { PersistedQueryNotFoundError } from "apollo-server-errors";
 
@@ -208,11 +209,10 @@ export interface DestroyAppFunc {
 
 export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
   describe('apolloServer', () => {
-    let app;
-    let didEncounterErrors: jest.Mock<
-      ReturnType<GraphQLRequestListener['didEncounterErrors']>,
-      Parameters<GraphQLRequestListener['didEncounterErrors']>
-    >;
+    let app: any;
+    let didEncounterErrors: jest.MockedFunction<NonNullable<
+      GraphQLRequestListener['didEncounterErrors']
+    >>;
 
     afterEach(async () => {
       if (app) {
@@ -837,7 +837,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatResponse(response) {
+            formatResponse(response: GraphQLResponse) {
               response['extensions'] = { it: 'works' };
               return response;
             },
@@ -902,7 +902,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             schema,
             rootValue: (documentNode: DocumentNode) => {
               const op = getOperationAST(documentNode, undefined);
-              return op.operation === 'query'
+              return op!.operation === 'query'
                 ? expectedQuery
                 : expectedMutation;
             },
@@ -1072,7 +1072,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('applies additional validationRules', async () => {
         const expected = 'alwaysInvalidRule was really invalid!';
-        const alwaysInvalidRule = function(context) {
+        const alwaysInvalidRule = function(context: ValidationContext) {
           return {
             enter() {
               context.reportError(new GraphQLError(expected));
@@ -1223,15 +1223,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         };
       }
 
-      let didEncounterErrors: jest.Mock<
-        ReturnType<GraphQLRequestListener['didEncounterErrors']>,
-        Parameters<GraphQLRequestListener['didEncounterErrors']>
-      >;
+      let didEncounterErrors: jest.MockedFunction<NonNullable<
+        GraphQLRequestListener['didEncounterErrors']
+      >>;
 
-      let didResolveSource: jest.Mock<
-        ReturnType<GraphQLRequestListener['didResolveSource']>,
-        Parameters<GraphQLRequestListener['didResolveSource']>
-      >;
+      let didResolveSource: jest.MockedFunction<NonNullable<
+        GraphQLRequestListener['didResolveSource']
+      >>;
 
       function createApqApp(apqOptions: PersistedQueryOptions = {}) {
         return createApp({

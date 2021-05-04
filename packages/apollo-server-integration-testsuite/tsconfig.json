@@ -3,8 +3,6 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "noImplicitAny": false,
-    "strictNullChecks": false,
     "types": ["node", "jest"]
   },
   "include": ["src/**/*"],
