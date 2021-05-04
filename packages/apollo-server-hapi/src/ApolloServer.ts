@@ -41,7 +41,7 @@ export class ApolloServer extends ApolloServerBase {
 
     await app.ext({
       type: 'onRequest',
-      method: async function(request, h) {
+      method: async (request, h) => {
         if (request.path !== path) {
           return h.continue;
         }
@@ -58,7 +58,6 @@ export class ApolloServer extends ApolloServerBase {
           if (prefersHTML) {
             const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
               endpoint: path,
-              version: this.playgroundVersion,
               ...this.playgroundOptions,
             };
 
@@ -69,7 +68,7 @@ export class ApolloServer extends ApolloServerBase {
           }
         }
         return h.continue;
-      }.bind(this),
+      },
     });
 
     if (!disableHealthCheck) {
