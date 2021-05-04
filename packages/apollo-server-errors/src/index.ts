@@ -1,14 +1,14 @@
-import { GraphQLError, GraphQLFormattedError } from 'graphql';
+import { ASTNode, GraphQLError, GraphQLFormattedError, Source, SourceLocation } from 'graphql';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
-  readonly name;
-  readonly locations;
-  readonly path;
-  readonly source;
-  readonly positions;
-  readonly nodes;
-  public originalError;
+  readonly name!: string;
+  readonly locations: ReadonlyArray<SourceLocation> | undefined;
+  readonly path: ReadonlyArray<string | number> | undefined;
+  readonly source: Source | undefined;
+  readonly positions: ReadonlyArray<number> | undefined;
+  readonly nodes: ReadonlyArray<ASTNode> | undefined;
+  public originalError: Error | null | undefined;
 
   [key: string]: any;
 
@@ -146,8 +146,8 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
       : new ApolloError(error.message);
 
   // copy enumerable keys
-  Object.keys(error).forEach(key => {
-    copy[key] = error[key];
+  Object.entries(error).forEach(([key, value]) => {
+    copy[key] = value;
   });
 
   // extensions are non enumerable, so copy them directly
@@ -165,7 +165,7 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
   // are not printed unless directly referenced
   Object.defineProperty(copy, 'originalError', { value: {} });
   Object.getOwnPropertyNames(error).forEach(key => {
-    Object.defineProperty(copy.originalError, key, { value: error[key] });
+    Object.defineProperty(copy.originalError, key, { value: (error as any)[key] });
   });
 
   return copy;
@@ -264,7 +264,7 @@ export function formatApolloErrors(
   // }
 
   const enrichedErrors = errors.map(error => enrichError(error, debug));
-  const makePrintable = error => {
+  const makePrintable = (error: GraphQLFormattedError) => {
     if (error instanceof Error) {
       // Error defines its `message` and other fields as non-enumerable, meaning JSON.stringigfy does not print them.
       const graphQLError = error as GraphQLFormattedError;
