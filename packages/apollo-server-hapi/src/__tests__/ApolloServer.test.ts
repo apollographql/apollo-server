@@ -1,11 +1,11 @@
 import {
   testApolloServer,
   createServerInfo,
+  createApolloFetch,
 } from 'apollo-server-integration-testsuite';
 
 import http = require('http');
 import request = require('request');
-import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError } from 'apollo-server-core';
 import { ApolloServer } from '../ApolloServer';

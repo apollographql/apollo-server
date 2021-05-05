@@ -2,10 +2,9 @@ import http, { Server } from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
-import { createApolloFetch } from 'apollo-fetch';
-
 import {
   createServerInfo,
+  createApolloFetch,
 } from 'apollo-server-integration-testsuite';
 
 import { gql } from 'apollo-server-core';

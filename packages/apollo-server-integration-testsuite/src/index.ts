@@ -33,6 +33,7 @@ import { GraphQLRequestListener } from "apollo-server-plugin-base";
 import { PersistedQueryNotFoundError } from "apollo-server-errors";
 
 export * from './ApolloServer';
+export { createApolloFetch } from './apolloFetch';
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',

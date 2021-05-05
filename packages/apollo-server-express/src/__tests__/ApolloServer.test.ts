@@ -3,7 +3,6 @@ import express from 'express';
 import http from 'http';
 
 import request from 'request';
-import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError } from 'apollo-server-core';
 import {
@@ -15,6 +14,7 @@ import {
 import {
   testApolloServer,
   createServerInfo,
+  createApolloFetch,
 } from 'apollo-server-integration-testsuite';
 
 const typeDefs = gql`

@@ -1,6 +1,6 @@
 import micro from 'micro';
 import listen from 'test-listen';
-import { createApolloFetch } from 'apollo-fetch';
+import { createApolloFetch } from 'apollo-server-integration-testsuite';
 import { gql } from 'apollo-server-core';
 import rp from 'request-promise';
 

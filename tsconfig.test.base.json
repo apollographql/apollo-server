@@ -2,7 +2,7 @@
   "extends": "./tsconfig.base",
   "compilerOptions": {
     "noEmit": true,
-    "lib": ["es2019", "es2019.array", "esnext.asynciterable", "dom"],
+    "lib": ["es2019", "es2019.array", "esnext.asynciterable"],
     "types": ["node", "jest"],
     "paths": {
       "*" : ["types/*"]
