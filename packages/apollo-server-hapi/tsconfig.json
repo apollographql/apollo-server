@@ -2,9 +2,7 @@
   "extends": "../../tsconfig.base",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist",
-    "noImplicitAny": false,
-    "strictNullChecks": false
+    "outDir": "./dist"
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__"],
