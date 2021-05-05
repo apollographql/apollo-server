@@ -10,7 +10,7 @@ import { ApolloServer } from '../ApolloServer';
 import { createServerInfo } from 'apollo-server-integration-testsuite';
 import { gql } from '../index';
 import { AddressInfo } from 'net';
-import { GraphQLResolverMap } from 'apollo-graphql';
+import type { GraphQLResolverMap } from 'apollo-graphql';
 
 export class IdAPI extends RESTDataSource {
   // Set in subclass
