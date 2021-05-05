@@ -10,6 +10,7 @@ import { ApolloServer } from '../ApolloServer';
 import { createServerInfo } from 'apollo-server-integration-testsuite';
 import { gql } from '../index';
 import { AddressInfo } from 'net';
+import { GraphQLResolverMap } from 'apollo-graphql';
 
 export class IdAPI extends RESTDataSource {
   // Set in subclass
@@ -31,12 +32,12 @@ const typeDefs = gql`
   }
 `;
 
-const resolvers = {
+const resolvers: GraphQLResolverMap<{dataSources: {id: IdAPI}}> = {
   Query: {
-    id: async (_source: any, _args: any, { dataSources }: any) => {
+    id: async (_source, _args, { dataSources }) => {
       return (await dataSources.id.getId('hi')).id;
     },
-    stringId: async (_source: any, _args: any, { dataSources }: any) => {
+    stringId: async (_source, _args, { dataSources }) => {
       return dataSources.id.getStringId('hi');
     },
   },

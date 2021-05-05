@@ -9,6 +9,7 @@ import {
 } from 'apollo-server-integration-testsuite';
 
 import { gql } from 'apollo-server-core';
+import type { GraphQLResolverMap } from 'apollo-graphql';
 import { AddressInfo } from 'net';
 
 export class IdAPI extends RESTDataSource {
@@ -31,12 +32,12 @@ const typeDefs = gql`
   }
 `;
 
-const resolvers = {
+const resolvers: GraphQLResolverMap<{dataSources: {id: IdAPI}}> = {
   Query: {
-    id: async (_source: any, _args: any, { dataSources }: any) => {
+    id: async (_source, _args, { dataSources }) => {
       return (await dataSources.id.getId('hi')).id;
     },
-    stringId: async (_source: any, _args: any, { dataSources }: any) => {
+    stringId: async (_source, _args, { dataSources }) => {
       return dataSources.id.getStringId('hi');
     },
   },
