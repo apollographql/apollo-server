@@ -34,7 +34,7 @@ export class ApolloServer extends ApolloServerBase {
     // and also rethrown from graphQLServerOptions during later requests).
     this.ensureStarting();
 
-    return async (req, res) => {
+    return async (req: MicroRequest, res: ServerResponse) => {
       this.graphqlPath = path || '/graphql';
 
       (await this.handleHealthCheck({
@@ -133,7 +133,7 @@ export class ApolloServer extends ApolloServerBase {
     res: ServerResponse;
   }): Promise<boolean> {
     let handled = false;
-    const url = req.url.split('?')[0];
+    const url = req.url!.split('?')[0];
     if (url === this.graphqlPath) {
       const graphqlHandler = graphqlMicro(() => {
         return this.createGraphQLServerOptions(req, res);
