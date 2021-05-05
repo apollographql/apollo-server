@@ -1,6 +1,6 @@
 import { createConnection } from 'net';
 import request from 'request';
-import { createApolloFetch } from 'apollo-fetch';
+import { createApolloFetch } from 'apollo-server-integration-testsuite';
 import resolvable from '@josephg/resolvable';
 
 import { gql, ApolloServer } from '../index';

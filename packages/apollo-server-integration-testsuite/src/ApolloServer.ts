@@ -28,7 +28,7 @@ import {
   ApolloFetch,
   GraphQLRequest,
   ParsedResponse,
-} from 'apollo-fetch';
+} from './apolloFetch';
 import {
   AuthenticationError,
   UserInputError,
@@ -40,7 +40,7 @@ import {
   GraphQLExecutor,
   GraphQLServiceConfig,
 } from 'apollo-server-core';
-import { Headers } from 'apollo-server-env';
+import { Headers, fetch } from 'apollo-server-env';
 import { TracingFormat } from 'apollo-tracing';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
 import { BaseContext, GraphQLRequestContext, GraphQLRequestContextExecutionDidStart } from 'apollo-server-types';
@@ -1167,11 +1167,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             const hash = sha256.create().update(TEST_STRING_QUERY).hex();
 
             const result = await apolloFetch({
-              // @ts-ignore The `ApolloFetch` types don't allow `extensions` to be
-              // passed in, in the same way as `variables`, with a request. This
-              // is a typing omission in `apollo-fetch`, as can be seen here:
-              // https://git.io/Jeb63  This will all be going away soon (and
-              // that package is already archived and deprecated.
               extensions: {
                 persistedQuery: {
                   version: VERSION,

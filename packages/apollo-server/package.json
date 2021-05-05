@@ -27,6 +27,9 @@
     "express": "^4.17.1",
     "stoppable": "^1.1.0"
   },
+  "devDependencies": {
+    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
+  },
   "peerDependencies": {
     "graphql": "^15.3.0"
   }

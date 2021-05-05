@@ -4,10 +4,9 @@ import http, { Server } from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
-import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServer } from '../ApolloServer';
 
-import { createServerInfo } from 'apollo-server-integration-testsuite';
+import { createServerInfo, createApolloFetch } from 'apollo-server-integration-testsuite';
 import { gql } from '../index';
 import { AddressInfo } from 'net';
 import type { GraphQLResolverMap } from 'apollo-graphql';

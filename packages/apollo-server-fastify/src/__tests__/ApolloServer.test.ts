@@ -4,7 +4,6 @@ import fastify from 'fastify';
 import http from 'http';
 
 import request from 'request';
-import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';
 import { ApolloServer, ServerRegistration } from '../ApolloServer';
@@ -12,6 +11,7 @@ import { ApolloServer, ServerRegistration } from '../ApolloServer';
 import {
   testApolloServer,
   createServerInfo,
+  createApolloFetch,
 } from 'apollo-server-integration-testsuite';
 
 const typeDefs = gql`

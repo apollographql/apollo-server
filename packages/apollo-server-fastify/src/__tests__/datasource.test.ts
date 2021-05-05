@@ -2,10 +2,9 @@ import fastify, { FastifyInstance } from 'fastify';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
-import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServer } from '../ApolloServer';
 
-import { createServerInfo } from 'apollo-server-integration-testsuite';
+import { createServerInfo, createApolloFetch } from 'apollo-server-integration-testsuite';
 import { gql } from '../index';
 
 const restPort = 4003;
