@@ -31,7 +31,7 @@ app.use('/graphql', bodyParser.json(), graphqlExpress({
 
 ### Add cache hints to your schema
 
-Cache hints can be added to your schema using directives on your types and fields. When executing your query, these hints will be used to compute an overall cache policy for the response. Hints on fields override hints specified on the target type.
+Cache hints can be added to your schema using directives on your types and fields. When executing your query, these hints will be used to compute an overall cache policy for the response. Hints on fields override hints specified on the target type. With Apollo Server 3, you need to include the definition for the `@cacheControl` directive in your schema.
 
 ```graphql
 type Post @cacheControl(maxAge: 240) {
@@ -41,6 +41,16 @@ type Post @cacheControl(maxAge: 240) {
   votes: Int @cacheControl(maxAge: 30)
   readByCurrentUser: Boolean! @cacheControl(scope: PRIVATE)
 }
+
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope
+) on FIELD_DEFINITION | OBJECT | INTERFACE
 ```
 
 If you need to add cache hints dynamically, you can use a programmatic API from within your resolvers.

@@ -21,6 +21,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 - Removed deprecated `ApolloServer.schema` field, which never worked with gateways. If you'd like to extract your schema from your server, make a plugin with `serverWillStart`, or register `onSchemaChange` on your gateway.
 - `apollo-server-caching`: The test suite helper works differently, and the `TestableKeyValueCache` interface is removed.
 - `apollo-datasource-rest`: We no longer officially support overriding the `baseURL` property with a getter, because TypeScript 4 does not allow you to do that.
+- Previously, Apollo Server would automatically add the definition of the `@cacheControl` directive to your schema in some circumstances but not in others; this depended on how precisely you set up your schema, but not on whether you had disabled the cache control feature. In Apollo Server 3, Apollo Server is now consistent: it never automatically adds the directive definition to your schema. If you use `@cacheControl`, just [define it yourself as shown in the docs](https://www.apollographql.com/docs/apollo-server/performance/caching/#in-your-schema-static).
 - Top-level exports have changed. E.g.,
 
   - We no longer re-export the entirety of `graphql-tools` (including `makeExecutableSchema`) from all Apollo Server packages.

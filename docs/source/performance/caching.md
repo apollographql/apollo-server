@@ -33,7 +33,21 @@ These details can vary significantly, even among the fields of a single object t
 
 ### In your schema (static)
 
-Apollo Server defines the `@cacheControl` directive, which you can use in your schema to define caching behavior either for a [single field](#field-level-definitions), or for _all_ fields that return a particular [type](#type-level-definitions).
+Apollo Server recognizes the `@cacheControl` directive, which you can use in your schema to define caching behavior either for a [single field](#field-level-definitions), or for _all_ fields that return a particular [type](#type-level-definitions).
+
+In order to use the directive in your schema, you need to define it, as well as the enum that is used for one of its arguments; otherwise you will get an error like `Unknown directive "@cacheControl"`. (Older versions of Apollo Server used to automatically insert the definitions in some inconsistent situations; Apollo Server 3 consistently expects you to define them yourself.) Just include the following in your schema file:
+
+```graphql
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope
+) on FIELD_DEFINITION | OBJECT | INTERFACE
+```
 
 The `@cacheControl` directive accepts the following arguments:
 

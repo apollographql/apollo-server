@@ -2231,6 +2231,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
             uncached: String
             private: String @cacheControl(maxAge: 9, scope: PRIVATE)
           }
+
+          enum CacheControlScope {
+            PUBLIC
+            PRIVATE
+          }
+
+          directive @cacheControl(
+            maxAge: Int
+            scope: CacheControlScope
+          ) on FIELD_DEFINITION | OBJECT | INTERFACE
         `;
 
         type FieldName =

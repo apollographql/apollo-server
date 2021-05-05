@@ -29,15 +29,12 @@ import {
   GraphQLService,
 } from './types';
 
-import { gql } from './index';
-
 import {
   createPlaygroundOptions,
   PlaygroundRenderPageOptions,
 } from './playground';
 
 import { generateSchemaHash } from './utils/schemaHash';
-import { isDirectiveDefined } from './utils/isDirectiveDefined';
 import {
   processGraphQLRequest,
   GraphQLRequestContext,
@@ -628,25 +625,6 @@ export class ApolloServerBase {
     }
 
     const augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
-
-    // We augment the typeDefs with the @cacheControl directive and associated
-    // scope enum, so makeExecutableSchema won't fail SDL validation
-
-    if (!isDirectiveDefined(augmentedTypeDefs, 'cacheControl')) {
-      augmentedTypeDefs.push(
-        gql`
-          enum CacheControlScope {
-            PUBLIC
-            PRIVATE
-          }
-
-          directive @cacheControl(
-            maxAge: Int
-            scope: CacheControlScope
-          ) on FIELD_DEFINITION | OBJECT | INTERFACE
-        `,
-      );
-    }
 
     return makeExecutableSchema({
       typeDefs: augmentedTypeDefs,
