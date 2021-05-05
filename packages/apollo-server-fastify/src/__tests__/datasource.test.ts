@@ -31,10 +31,10 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    id: async (_source, _args, { dataSources }) => {
+    id: async (_source: any, _args: any, { dataSources }: any) => {
       return (await dataSources.id.getId('hi')).id;
     },
-    stringId: async (_source, _args, { dataSources }) => {
+    stringId: async (_source: any, _args: any, { dataSources }: any) => {
       return dataSources.id.getStringId('hi');
     },
   },

@@ -219,8 +219,8 @@ describe('Errors', () => {
       expect(result).toBe(false);
     });
 
-    it('should return false if an error is thrown', () => {
-      const result = hasPersistedQueryError({});
+    it('should return false if illegally passed an object instead of an array', () => {
+      const result = hasPersistedQueryError({} as any);
       expect(result).toBe(false);
     });
   });

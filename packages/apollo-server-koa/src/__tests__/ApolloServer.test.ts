@@ -4,7 +4,6 @@ import request from 'request';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';
-import { ServerRegistration } from '../ApolloServer';
 
 import {
   testApolloServer,
@@ -26,10 +25,10 @@ const resolvers = {
 describe('apollo-server-koa', () => {
   const { ApolloServer } = require('../ApolloServer');
   const Koa = require('koa');
-  let server: ApolloServer;
+  let server: any;
   let httpServer: http.Server;
   testApolloServer(
-    async (options, suppressStartCall?: boolean) => {
+    async (options: any, suppressStartCall?: boolean) => {
       server = new ApolloServer(options);
       if (!suppressStartCall) {
         await server.start();
@@ -123,7 +122,7 @@ describe('apollo-server-koa', () => {
         'GRAPHQL_VALIDATION_FAILED',
       );
 
-      return new Promise<http.Server>((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         request(
           {
             url: uri,
@@ -155,7 +154,7 @@ describe('apollo-server-koa', () => {
         resolvers,
       });
 
-      return new Promise<http.Server>((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         request(
           {
             url,
@@ -195,7 +194,7 @@ describe('apollo-server-koa', () => {
           if (!options.headers) {
             options.headers = {}; // Create the headers object if needed.
           }
-          options.headers['origin'] = 'apollographql.com';
+          (options.headers as any)['origin'] = 'apollographql.com';
 
           next();
         })
@@ -221,7 +220,7 @@ describe('apollo-server-koa', () => {
 
       const apolloFetch = createApolloFetch({ uri });
 
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         apolloFetch({ query: '{hello}' })
           .then(reject)
           .catch(error => {
@@ -244,7 +243,7 @@ describe('apollo-server-koa', () => {
           resolvers,
         });
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url: `http://localhost:${port}/.well-known/apollo/server-health`,
@@ -276,7 +275,7 @@ describe('apollo-server-koa', () => {
           },
         );
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url: `http://localhost:${port}/.well-known/apollo/server-health`,
@@ -306,7 +305,7 @@ describe('apollo-server-koa', () => {
           },
         );
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url: `http://localhost:${port}/.well-known/apollo/server-health`,

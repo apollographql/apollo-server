@@ -44,7 +44,7 @@ describe('googleCloudApollo', () => {
     const res = await request(app)
       .get('/')
       .set('Accept', 'text/html');
-    expect(res.statusCode).toEqual(200);
+    expect(res.status).toEqual(200);
   });
 });
 

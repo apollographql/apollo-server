@@ -26,7 +26,7 @@ describe('integration:Hapi', () => {
     return app.listener;
   }
 
-  async function destroyApp(app) {
+  async function destroyApp(app: any) {
     if (!app || !app.close) {
       return;
     }

@@ -13,10 +13,7 @@ import {
   GraphQLError,
   ValidationContext,
   FieldDefinitionNode,
-  getIntrospectionQuery,
 } from 'graphql';
-
-import resolvable from '@josephg/resolvable';
 
 import { execute } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
@@ -47,19 +44,20 @@ import { TracingFormat } from 'apollo-tracing';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
 import { GraphQLRequestContext } from 'apollo-server-types';
 
-import { mockDate, unmockDate, advanceTimeBy } from '../../../__mocks__/date';
+import FakeTimers from '@sinonjs/fake-timers';
 import {
   ApolloServerPluginUsageReporting,
   ApolloServerPluginUsageReportingOptions,
 } from 'apollo-server-core/dist/plugin/usageReporting';
 import { ApolloServerPluginInlineTrace } from 'apollo-server-core/dist/plugin/inlineTrace';
+import { AddressInfo } from 'net';
 
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
   httpServer: http.Server,
 ): ServerInfo<AS> {
   const serverInfo: any = {
-    ...httpServer.address(),
+    ...(httpServer.address() as AddressInfo),
     server,
     httpServer,
   };
@@ -395,7 +393,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(
             createApolloServer({
               gateway,
-              subscriptions: false,
             }),
           ).rejects.toThrowError(loadError);
         });
@@ -938,7 +935,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             if (!this.server) {
               throw new Error('must listen before getting URL');
             }
-            const { family, address, port } = this.server.address();
+            const { family, address, port } = (this.server.address() as AddressInfo);
 
             if (family !== 'IPv4') {
               throw new Error(`The family was unexpectedly ${family}.`);
@@ -1031,7 +1028,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
             const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
-            const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0];
+            const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0] as Trace;
 
             // There should be no error at the root, our error is a child.
             expect(trace.root.error).toStrictEqual([]);
@@ -1227,7 +1224,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 const reports = await reportIngress.promiseOfReports;
                 expect(reports.length).toBe(1);
                 const trace = Object.values(reports[0].tracesPerQuery)[0]
-                  .trace[0];
+                  .trace[0] as Trace;
                 // There should be no error at the root, our error is a child.
                 expect(trace.root.error).toStrictEqual([]);
 
@@ -1273,7 +1270,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 const reports = await reportIngress.promiseOfReports;
                 expect(reports.length).toBe(1);
                 const trace = Object.values(reports[0].tracesPerQuery)[0]
-                  .trace[0];
+                  .trace[0] as Trace;
                 // There should be no error at the root, our error is a child.
                 expect(trace.root.error).toStrictEqual([]);
 
@@ -1316,7 +1313,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 const reports = await reportIngress.promiseOfReports;
                 expect(reports.length).toBe(1);
                 const trace = Object.values(reports[0].tracesPerQuery)[0]
-                  .trace[0];
+                  .trace[0] as Trace;
 
                 // There should be no error at the root, our error is a child.
                 expect(trace.root.error).toStrictEqual([]);
@@ -1353,7 +1350,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               const reports = await reportIngress.promiseOfReports;
               expect(reports.length).toBe(1);
               const trace = Object.values(reports[0].tracesPerQuery)[0]
-                .trace[0];
+                .trace[0] as Trace;
 
               // There should be no error at the root, our error is a child.
               expect(trace.root.error).toStrictEqual([]);
@@ -1849,7 +1846,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         waitWriteResponse?: boolean;
       }) {
         let writeResponseResolve: () => void;
-        const writeResponsePromise = new Promise(
+        const writeResponsePromise = new Promise<void>(
           (resolve) => (writeResponseResolve = resolve),
         );
         const fakeEngineServer = http.createServer(async (_, res) => {
@@ -1857,18 +1854,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
           res.writeHead(status);
           res.end('Important text in the body');
         });
-        await new Promise((resolve) => {
+        await new Promise<void>((resolve) => {
           fakeEngineServer.listen(0, '127.0.0.1', () => {
             resolve();
           });
         });
         async function closeServer() {
-          await new Promise((resolve) =>
+          await new Promise<void>((resolve) =>
             fakeEngineServer.close(() => resolve()),
           );
         }
 
-        const { family, address, port } = fakeEngineServer.address();
+        const { family, address, port } = (fakeEngineServer.address() as AddressInfo);
         if (family !== 'IPv4') {
           throw new Error(`The family was unexpectedly ${family}.`);
         }
@@ -2137,7 +2134,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('reports a total duration that is longer than the duration of its resolvers', async () => {
-        const { url: uri, server } = await createApolloServer({
+        const { url: uri } = await createApolloServer({
           typeDefs: allTypeDefs,
           resolvers,
         });
@@ -2221,12 +2218,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('Response caching', () => {
+      let clock: FakeTimers.Clock;
       beforeAll(() => {
-        mockDate();
+        clock = FakeTimers.install();
       });
 
       afterAll(() => {
-        unmockDate();
+        clock.uninstall();
       });
 
       it('basic caching', async () => {
@@ -2404,7 +2402,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         // Cache hit partway to ttl.
-        advanceTimeBy(5 * 1000);
+        clock.tick(5 * 1000);
         {
           const result = await fetch();
           expectCacheHit('cached');
@@ -2415,7 +2413,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         // Cache miss after ttl.
-        advanceTimeBy(6 * 1000);
+        clock.tick(6 * 1000);
         {
           const result = await fetch();
           expectCacheMiss('cached');
@@ -2692,7 +2690,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         // Let's expire the cache, and run again, not writing to the cache.
-        advanceTimeBy(15 * 1000);
+        clock.tick(15 * 1000);
         {
           const result = await doFetch({
             query: basicQuery,
@@ -2766,8 +2764,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const optionsSpy = jest.fn();
 
         const { gateway, triggers } = makeGatewayMock({ optionsSpy });
-        triggers.resolveLoad({ schema, executor: () => {} });
-        const { server } = await createApolloServer({
+        triggers.resolveLoad({ schema, executor: () => ({}) });
+        await createApolloServer({
           gateway,
           apollo: { key: 'service:tester:1234abc', graphVariant: 'staging' },
         });
@@ -2786,7 +2784,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       it('unsubscribes from schema update on close', async () => {
         const unsubscribeSpy = jest.fn();
         const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
-        triggers.resolveLoad({ schema, executor: () => {} });
+        triggers.resolveLoad({ schema, executor: () => ({}) });
         await createApolloServer({ gateway });
         expect(unsubscribeSpy).not.toHaveBeenCalled();
         await stopServer();

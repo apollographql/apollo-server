@@ -43,7 +43,6 @@ function runQuery(
     query: options.queryString,
     operationName: options.operationName,
     variables: options.variables,
-    extensions: options.extensions,
     http: options.request,
   };
 
@@ -69,7 +68,6 @@ interface QueryOptions
     | 'context'
     | 'debug'
     | 'documentStore'
-    | 'extensions'
     | 'fieldResolver'
     | 'formatError'
     | 'formatResponse'

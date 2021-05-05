@@ -3,6 +3,7 @@ import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import gql from 'graphql-tag';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type { GraphQLSchema } from 'graphql';
+import { Logger } from 'apollo-server-types';
 
 const typeDefs = gql`
   type Query {
@@ -41,9 +42,9 @@ describe('ApolloServerBase construction', () => {
       new ApolloServerBase({
         typeDefs,
         resolvers,
-        engine: {
+        apollo: {
           graphVariant: 'foo',
-          apiKey: 'not:real:key',
+          key: 'not:real:key',
         },
       }).stop(),
     ).not.toThrow();

@@ -1,4 +1,4 @@
-import { fetch, Request, URL } from '__mocks__/apollo-server-env';
+import { fetch, URL, Request } from './mock-apollo-server-env';
 
 import {
   ApolloError,
@@ -8,25 +8,17 @@ import {
 import { RESTDataSource, RequestOptions } from '../RESTDataSource';
 
 import { HTTPCache } from '../HTTPCache';
+import { MapKeyValueCache } from './MapKeyValueCache';
 
 describe('RESTDataSource', () => {
-  const store = new Map<string, string>();
   let httpCache: HTTPCache;
 
-  beforeAll(() => {
-    httpCache = new HTTPCache({
-      async get(key: string) {
-        return store.get(key);
-      },
-      async set(key: string, value: string) {
-        store.set(key, value);
-      },
-    });
+  beforeEach(() => {
+    httpCache = new HTTPCache(new MapKeyValueCache<string>());
   });
 
   beforeEach(() => {
     fetch.mockReset();
-    store.clear();
   });
 
   describe('constructing requests', () => {
@@ -46,7 +38,7 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual('https://api.example.com/foo');
     });
 
     it('interprets paths with a leading slash relative to the base URL', async () => {
@@ -65,7 +57,7 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual(
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual(
         'https://api.example.com/bar/foo',
       );
     });
@@ -86,34 +78,7 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual('https://example.com/api/foo');
-    });
-
-    it('allows computing a dynamic base URL', async () => {
-      const dataSource = new (class extends RESTDataSource {
-        get baseURL() {
-          if (this.context.env === 'development') {
-            return 'https://api-dev.example.com';
-          } else {
-            return 'https://api.example.com';
-          }
-        }
-
-        getFoo() {
-          return this.get('foo');
-        }
-      })();
-
-      dataSource.context = { env: 'development' };
-      dataSource.httpCache = httpCache;
-
-      fetch.mockJSONResponseOnce();
-      await dataSource.getFoo();
-
-      expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual(
-        'https://api-dev.example.com/foo',
-      );
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual('https://example.com/api/foo');
     });
 
     it('allows resolving a base URL asynchronously', async () => {
@@ -136,7 +101,7 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual('https://api.example.com/foo');
     });
 
     it('allows passing in query string parameters', async () => {
@@ -162,7 +127,7 @@ describe('RESTDataSource', () => {
       });
 
       expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual(
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual(
         'https://api.example.com/posts?username=beyonc%C3%A9&filter=jalape%C3%B1o&limit=10&offset=20',
       );
     });
@@ -188,7 +153,7 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual(
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual(
         'https://api.example.com/foo?a=1&api_key=secret',
       );
     });
@@ -238,16 +203,30 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].headers.get('Authorization')).toEqual(
+      expect((fetch.mock.calls[0][0] as Request).headers.get('Authorization')).toEqual(
         'secret',
       );
     });
+
+    function expectJSONFetch(url: string, bodyJSON: unknown) {
+      expect(fetch).toBeCalledTimes(1);
+      const request = fetch.mock.calls[0][0] as Request;
+      expect(request.url).toEqual(url);
+      // request.body is a node-fetch extension which we aren't properly
+      // capturing in our TS types.
+      expect((request as any).body.toString()).toEqual(
+        JSON.stringify(bodyJSON),
+      );
+      expect(request.headers.get('Content-Type')).toEqual(
+        'application/json',
+      );
+    }
 
     it('serializes a request body that is an object as JSON', async () => {
       const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
-        postFoo(foo) {
+        postFoo(foo: object) {
           return this.post('foo', foo);
         }
       })();
@@ -258,21 +237,14 @@ describe('RESTDataSource', () => {
 
       await dataSource.postFoo({ foo: 'bar' });
 
-      expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
-      expect(fetch.mock.calls[0][0].body.toString()).toEqual(
-        JSON.stringify({ foo: 'bar' }),
-      );
-      expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
-        'application/json',
-      );
+      expectJSONFetch('https://api.example.com/foo', { foo: 'bar' });
     });
 
     it('serializes a request body that is an array as JSON', async () => {
       const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
-        postFoo(foo) {
+        postFoo(foo: string[]) {
           return this.post('foo', foo);
         }
       })();
@@ -283,21 +255,14 @@ describe('RESTDataSource', () => {
 
       await dataSource.postFoo(['foo', 'bar']);
 
-      expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
-      expect(fetch.mock.calls[0][0].body.toString()).toEqual(
-        JSON.stringify(['foo', 'bar']),
-      );
-      expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
-        'application/json',
-      );
+      expectJSONFetch('https://api.example.com/foo', ['foo', 'bar']);
     });
 
     it('serializes a request body that has a toJSON method as JSON', async () => {
       const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
-        postFoo(foo) {
+        postFoo(foo: Model) {
           return this.post('foo', foo);
         }
       })();
@@ -319,21 +284,14 @@ describe('RESTDataSource', () => {
 
       await dataSource.postFoo(model);
 
-      expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
-      expect(fetch.mock.calls[0][0].body.toString()).toEqual(
-        JSON.stringify({ foo: 'bar' }),
-      );
-      expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
-        'application/json',
-      );
+      expectJSONFetch('https://api.example.com/foo', {foo: 'bar'});
     });
 
     it('does not serialize a request body that is not an object', async () => {
       const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
-        postFoo(foo) {
+        postFoo(foo: FormData) {
           return this.post('foo', foo);
         }
       })();
@@ -348,9 +306,12 @@ describe('RESTDataSource', () => {
       await dataSource.postFoo(form);
 
       expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
-      expect(fetch.mock.calls[0][0].body.toString()).not.toEqual('{}');
-      expect(fetch.mock.calls[0][0].headers.get('Content-Type')).not.toEqual(
+      const request = fetch.mock.calls[0][0] as Request;
+      expect(request.url).toEqual('https://api.example.com/foo');
+      // request.body is a node-fetch extension which we aren't properly
+      // capturing in our TS types.
+      expect((request as any).body.toString()).not.toEqual('{}');
+      expect(request.headers.get('Content-Type')).not.toEqual(
         'application/json',
       );
     });
@@ -385,12 +346,12 @@ describe('RESTDataSource', () => {
 
         fetch.mockJSONResponseOnce({ foo: 'bar' });
 
-        const data = await dataSource[`${method.toLocaleLowerCase()}Foo`]();
+        const data = await ((dataSource as any)[`${method.toLocaleLowerCase()}Foo`])();
 
         expect(data).toEqual({ foo: 'bar' });
 
         expect(fetch).toBeCalledTimes(1);
-        expect(fetch.mock.calls[0][0].method).toEqual(method);
+        expect((fetch.mock.calls[0][0] as Request).method).toEqual(method);
       });
     }
   });
@@ -505,7 +466,7 @@ describe('RESTDataSource', () => {
 
       fetch.mockResponseOnce('', {
         'Content-Type': 'application/json',
-        'Content-Length': 0,
+        'Content-Length': '0',
       });
 
       const data = await dataSource.getFoo();
@@ -531,7 +492,7 @@ describe('RESTDataSource', () => {
       await Promise.all([dataSource.getFoo(1), dataSource.getFoo(1)]);
 
       expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual(
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual(
         'https://api.example.com/foo/1',
       );
     });
@@ -553,10 +514,10 @@ describe('RESTDataSource', () => {
       await Promise.all([dataSource.getFoo(1), dataSource.getFoo(2)]);
 
       expect(fetch.mock.calls.length).toEqual(2);
-      expect(fetch.mock.calls[0][0].url).toEqual(
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual(
         'https://api.example.com/foo/1',
       );
-      expect(fetch.mock.calls[1][0].url).toEqual(
+      expect((fetch.mock.calls[1][0] as Request).url).toEqual(
         'https://api.example.com/foo/2',
       );
     });
@@ -606,10 +567,10 @@ describe('RESTDataSource', () => {
       ]);
 
       expect(fetch.mock.calls.length).toEqual(3);
-      expect(fetch.mock.calls[0][0].url).toEqual(
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual(
         'https://api.example.com/foo/1',
       );
-      expect(fetch.mock.calls[2][0].url).toEqual(
+      expect((fetch.mock.calls[2][0] as Request).url).toEqual(
         'https://api.example.com/foo/1',
       );
     });
@@ -620,7 +581,7 @@ describe('RESTDataSource', () => {
 
         cacheKeyFor(request: Request) {
           const url = new URL(request.url);
-          url.search = undefined;
+          url.search = '';
           return url.toString();
         }
 
@@ -639,7 +600,7 @@ describe('RESTDataSource', () => {
       ]);
 
       expect(fetch).toBeCalledTimes(1);
-      expect(fetch.mock.calls[0][0].url).toEqual(
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual(
         'https://api.example.com/foo/1?api_key=secret',
       );
     });

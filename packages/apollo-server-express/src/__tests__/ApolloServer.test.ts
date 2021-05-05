@@ -30,10 +30,10 @@ const resolvers = {
 };
 
 describe('apollo-server-express', () => {
-  let server;
-  let httpServer;
+  let server: ApolloServer;
+  let httpServer: http.Server;
   testApolloServer(
-    async (options, suppressStartCall?: boolean) => {
+    async (options: ApolloServerExpressConfig, suppressStartCall?: boolean) => {
       server = new ApolloServer(options);
       if (!suppressStartCall) {
         await server.start();
@@ -41,7 +41,7 @@ describe('apollo-server-express', () => {
       const app = express();
       server.applyMiddleware({ app });
       httpServer = await new Promise<http.Server>(resolve => {
-        const s = app.listen({ port: 0 }, () => resolve(s));
+        const s: http.Server = app.listen({ port: 0 }, () => resolve(s));
       });
       return createServerInfo(server, httpServer);
     },
@@ -68,7 +68,7 @@ describe('apollo-server-express', () => {
     server.applyMiddleware({ ...options, app });
 
     httpServer = await new Promise<http.Server>(resolve => {
-      const l = app.listen({ port: 0 }, () => resolve(l));
+      const l: http.Server = app.listen({ port: 0 }, () => resolve(l));
     });
 
     return createServerInfo(server, httpServer);
@@ -126,7 +126,7 @@ describe('apollo-server-express', () => {
         'GRAPHQL_VALIDATION_FAILED',
       );
 
-      return new Promise<http.Server>((resolve, reject) => {
+      return new Promise<http.Server | void>((resolve, reject) => {
         request(
           {
             url: uri,
@@ -158,7 +158,7 @@ describe('apollo-server-express', () => {
         resolvers,
       });
 
-      return new Promise<http.Server>((resolve, reject) => {
+      return new Promise<http.Server | void>((resolve, reject) => {
         request(
           {
             url,
@@ -198,7 +198,7 @@ describe('apollo-server-express', () => {
       outerApp.use(samplePath, innerApp);
 
       const httpRewiredServer = await new Promise<http.Server>(resolve => {
-        const l = outerApp.listen({ port: 0 }, () => resolve(l));
+        const l: http.Server = outerApp.listen({ port: 0 }, () => resolve(l));
       });
 
       const { url } = createServerInfo(rewiredServer, httpRewiredServer);
@@ -206,7 +206,7 @@ describe('apollo-server-express', () => {
       const paths = url.split('/');
       const rewiredEndpoint = `${samplePath}/${paths.pop()}`;
 
-      await new Promise<http.Server>((resolve, reject) => {
+      await new Promise<http.Server | void>((resolve, reject) => {
         request(
           {
             url: paths.join('/') + rewiredEndpoint,
@@ -258,7 +258,7 @@ describe('apollo-server-express', () => {
         {},
       );
 
-      return new Promise<http.Server>((resolve, reject) => {
+      return new Promise<http.Server | void>((resolve, reject) => {
         request(
           {
             url,
@@ -316,7 +316,7 @@ describe('apollo-server-express', () => {
         {},
       );
 
-      return new Promise<http.Server>((resolve, reject) => {
+      return new Promise<http.Server | void>((resolve, reject) => {
         request(
           {
             url,
@@ -375,7 +375,7 @@ describe('apollo-server-express', () => {
 
       const apolloFetch = createApolloFetch({ uri });
 
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         apolloFetch({ query: '{hello}' })
           .then(reject)
           .catch(error => {
@@ -398,7 +398,7 @@ describe('apollo-server-express', () => {
           resolvers,
         });
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url: `http://localhost:${port}/.well-known/apollo/server-health`,
@@ -430,7 +430,7 @@ describe('apollo-server-express', () => {
           },
         );
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url: `http://localhost:${port}/.well-known/apollo/server-health`,
@@ -460,7 +460,7 @@ describe('apollo-server-express', () => {
           },
         );
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url: `http://localhost:${port}/.well-known/apollo/server-health`,

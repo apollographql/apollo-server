@@ -23,7 +23,7 @@ describe(
     const { Server } = require('@hapi/hapi');
 
     testApolloServer(
-      async (options, suppressStartCall?: boolean) => {
+      async (options: any, suppressStartCall?: boolean) => {
         server = new ApolloServer(options);
         app = new Server({ host: 'localhost', port });
         if (!suppressStartCall) {
@@ -124,7 +124,7 @@ describe(
           'GRAPHQL_VALIDATION_FAILED',
         );
 
-        return new Promise<http.Server>((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url,
@@ -164,7 +164,7 @@ describe(
         httpServer = app.listener;
         const url = app.info.uri + '/graphql';
 
-        return new Promise<http.Server>((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           request(
             {
               url,
@@ -273,7 +273,7 @@ describe(
       });
 
       it('passes each request and response toolkit through to the context function', async () => {
-        const context = async ({ request, h }) => {
+        const context = async ({ request, h }: any) => {
           expect(request).toBeDefined();
           expect(h).toBeDefined();
           return {};
@@ -317,7 +317,7 @@ describe(
           httpServer = app.listener;
           const { port: appPort } = app.info;
 
-          return new Promise((resolve, reject) => {
+          return new Promise<void>((resolve, reject) => {
             request(
               {
                 url: `http://localhost:${appPort}/.well-known/apollo/server-health`,
@@ -354,7 +354,7 @@ describe(
           httpServer = app.listener;
           const { port: appPort } = app.info;
 
-          return new Promise((resolve, reject) => {
+          return new Promise<void>((resolve, reject) => {
             request(
               {
                 url: `http://localhost:${appPort}/.well-known/apollo/server-health`,
@@ -390,7 +390,7 @@ describe(
           httpServer = app.listener;
           const { port: appPort } = app.info;
 
-          return new Promise((resolve, reject) => {
+          return new Promise<void>((resolve, reject) => {
             request(
               {
                 url: `http://localhost:${appPort}/.well-known/apollo/server-health`,

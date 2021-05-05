@@ -14,7 +14,7 @@ function createConnectApp(options: CreateAppOptions = {}) {
   // and make qs-middleware be a dependency of this package. However, we don't
   // think many folks use connect outside of Meteor anyway, and anyone using
   // connect is probably already using connect-query or qs-middleware.
-  app.use(query());
+  app.use(query() as any);
   const server = new ApolloServer(
     (options.graphqlOptions as ApolloServerExpressConfig) || { schema: Schema },
   );

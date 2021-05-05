@@ -103,8 +103,3 @@ export function hashedServiceId(serviceID: string): string {
     .update(serviceID)
     .digest('hex');
 }
-
-function pathForServiceAndSchema(serviceID: string, schemaHash: string): string {
-  return `/${hashedServiceId(serviceID)}/${schemaHash}.v2.json`;
-}
-
