@@ -8,11 +8,12 @@ import {
 } from '@apollographql/graphql-playground-html';
 import {
   ApolloServerBase,
+  convertNodeHttpToRequest,
   GraphQLOptions,
+  HttpQueryError,
+  runHttpQuery,
 } from 'apollo-server-core';
 import accepts from 'accepts';
-
-import { graphqlKoa } from './koaApollo';
 
 export { GraphQLOptions } from 'apollo-server-core';
 
@@ -110,7 +111,7 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     middlewares.push(
-      middlewareFromPath(path, (ctx: Koa.Context, next: Function) => {
+      middlewareFromPath(path, async (ctx: Koa.Context) => {
         if (ctx.request.method === 'OPTIONS') {
           ctx.status = 204;
           ctx.body = '';
@@ -140,9 +141,38 @@ export class ApolloServer extends ApolloServerBase {
           }
         }
 
-        return graphqlKoa(() => {
-          return this.createGraphQLServerOptions(ctx);
-        })(ctx, next);
+        try {
+          const { graphqlResponse, responseInit } = await runHttpQuery([ctx], {
+            method: ctx.request.method,
+            options: () => this.createGraphQLServerOptions(ctx),
+            query:
+              ctx.request.method === 'POST'
+                ? // fallback to ctx.req.body for koa-multer support
+                  (ctx.request as any).body || (ctx.req as any).body
+                : ctx.request.query,
+            request: convertNodeHttpToRequest(ctx.req),
+          });
+          if (responseInit.headers) {
+            Object.entries(
+              responseInit.headers,
+            ).forEach(([headerName, value]) => ctx.set(headerName, value));
+          }
+          ctx.body = graphqlResponse;
+        } catch (e: unknown) {
+          const error = e as HttpQueryError;
+          if ('HttpQueryError' !== error.name) {
+            throw error;
+          }
+
+          if (error.headers) {
+            Object.entries(error.headers).forEach(([headerName, value]) =>
+              ctx.set(headerName, value),
+            );
+          }
+
+          ctx.status = error.statusCode;
+          ctx.body = error.message;
+        }
       }),
     );
     return compose(middlewares);
