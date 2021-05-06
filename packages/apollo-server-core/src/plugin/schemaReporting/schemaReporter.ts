@@ -117,11 +117,13 @@ export class SchemaReporter {
       const result = await this.reportServerInfo(sendNextWithExecutableSchema);
       switch (result.kind) {
         case 'next':
-          this.pollTimer = setTimeout(
-            () =>
-              this.sendOneReportAndScheduleNext(result.withExecutableSchema),
-            result.inSeconds * 1000,
-          );
+          if (!this.stopped()) {
+            this.pollTimer = setTimeout(
+              () =>
+                this.sendOneReportAndScheduleNext(result.withExecutableSchema),
+              result.inSeconds * 1000,
+            );
+          }
           return;
         case 'stop':
           return;
@@ -133,10 +135,12 @@ export class SchemaReporter {
       this.logger.error(
         `Error reporting server info to Apollo during schema reporting: ${error}`,
       );
-      this.pollTimer = setTimeout(
-        () => this.sendOneReportAndScheduleNext(false),
-        this.fallbackReportingDelayInMs,
-      );
+      if (!this.stopped()) {
+        this.pollTimer = setTimeout(
+          () => this.sendOneReportAndScheduleNext(false),
+          this.fallbackReportingDelayInMs,
+        );
+      }
     }
   }
 
