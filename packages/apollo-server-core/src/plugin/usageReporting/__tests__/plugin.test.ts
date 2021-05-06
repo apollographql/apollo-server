@@ -1,4 +1,5 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import { addMocksToSchema } from '@graphql-tools/mock';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import { graphql } from 'graphql';
 import { Request } from 'node-fetch';
 import {
@@ -73,8 +74,9 @@ describe('end-to-end', () => {
           return 'ok';
         });
     }
-    const schema = makeExecutableSchema({ typeDefs });
-    addMockFunctionsToSchema({ schema });
+    const schema = addMocksToSchema({
+      schema: makeExecutableSchema({ typeDefs }),
+    });
 
     const pluginInstance = ApolloServerPluginUsageReporting({
       ...pluginOptions,

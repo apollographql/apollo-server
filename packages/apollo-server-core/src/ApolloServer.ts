@@ -1,4 +1,5 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import { addMocksToSchema } from '@graphql-tools/mock';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import loglevel from 'loglevel';
 import {
   GraphQLSchema,
@@ -141,7 +142,6 @@ export class ApolloServerBase {
       context,
       resolvers,
       schema,
-      schemaDirectives,
       modules,
       typeDefs,
       parseOptions = {},
@@ -301,7 +301,7 @@ export class ApolloServerBase {
       this.state = {
         phase: 'initialized with schema',
         schemaDerivedData: this.generateSchemaDerivedData(
-          this.constructSchema(),
+          this.maybeAddMocksToConstructedSchema(this.constructSchema()),
         ),
       };
     }
@@ -598,14 +598,7 @@ export class ApolloServerBase {
   }
 
   private constructSchema(): GraphQLSchema {
-    const {
-      schema,
-      modules,
-      typeDefs,
-      resolvers,
-      schemaDirectives,
-      parseOptions,
-    } = this.config;
+    const { schema, modules, typeDefs, resolvers, parseOptions } = this.config;
     if (schema) {
       return schema;
     }
@@ -626,30 +619,39 @@ export class ApolloServerBase {
 
     const augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
 
+    // For convenience, we allow you to pass a few options that we pass through
+    // to a particular version of `@graphql-tools/schema`'s
+    // `makeExecutableSchema`. If you want to use more of this function's
+    // features or have more control over the version of the packages used, just
+    // call it yourself like `new ApolloServer({schema:
+    // makeExecutableSchema(...)})`.
     return makeExecutableSchema({
       typeDefs: augmentedTypeDefs,
-      schemaDirectives,
       resolvers,
       parseOptions,
     });
   }
 
+  private maybeAddMocksToConstructedSchema(
+    schema: GraphQLSchema,
+  ): GraphQLSchema {
+    const { mocks, mockEntireSchema } = this.config;
+    if (mocks === false) {
+      return schema;
+    }
+    if (!mocks && typeof mockEntireSchema === 'undefined') {
+      return schema;
+    }
+    return addMocksToSchema({
+      schema,
+      mocks: mocks === true || typeof mocks === 'undefined' ? {} : mocks,
+      preserveResolvers:
+        typeof mockEntireSchema === 'undefined' ? false : !mockEntireSchema,
+    });
+  }
+
   private generateSchemaDerivedData(schema: GraphQLSchema): SchemaDerivedData {
     const schemaHash = generateSchemaHash(schema!);
-
-    const { mocks, mockEntireSchema } = this.config;
-
-    if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
-      addMockFunctionsToSchema({
-        schema,
-        mocks:
-          typeof mocks === 'boolean' || typeof mocks === 'undefined'
-            ? {}
-            : mocks,
-        preserveResolvers:
-          typeof mockEntireSchema === 'undefined' ? false : !mockEntireSchema,
-      });
-    }
 
     // Initialize the document store.  This cannot currently be disabled.
     const documentStore = this.initializeDocumentStore();

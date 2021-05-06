@@ -1,10 +1,9 @@
-import { GraphQLSchema, DocumentNode, ParseOptions } from 'graphql';
-import {
-  SchemaDirectiveVisitor,
+import type { GraphQLSchema, DocumentNode, ParseOptions } from 'graphql';
+import type { IMocks } from '@graphql-tools/mock';
+import type {
   IResolvers,
-  IMocks,
-} from 'graphql-tools';
-import {
+} from '@graphql-tools/utils';
+import type {
   ApolloConfig,
   ValueOrPromise,
   GraphQLExecutor,
@@ -16,12 +15,12 @@ import {
 import { PlaygroundConfig } from './playground';
 export { PlaygroundConfig, PlaygroundRenderPageOptions } from './playground';
 
-import {
+import type {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
-import { CacheControlExtensionOptions } from 'apollo-cache-control';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import type { CacheControlExtensionOptions } from 'apollo-cache-control';
+import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
 export { GraphQLSchemaModule };
@@ -71,8 +70,8 @@ export type GraphQLServiceEngineConfig = {
 
 export interface GraphQLService {
   load(options: {
-    apollo?: ApolloConfig,
-    engine?: GraphQLServiceEngineConfig;  // deprecated; use `apollo` instead
+    apollo?: ApolloConfig;
+    engine?: GraphQLServiceEngineConfig; // deprecated; use `apollo` instead
   }): Promise<GraphQLServiceConfig>;
   onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
   // Note: The `TContext` typing here is not conclusively behaving as we expect:
@@ -91,7 +90,6 @@ export interface Config extends BaseConfig {
   parseOptions?: ParseOptions;
   resolvers?: IResolvers | Array<IResolvers>;
   schema?: GraphQLSchema;
-  schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context | ContextFunction;
   introspection?: boolean;
   mocks?: boolean | IMocks;

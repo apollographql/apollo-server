@@ -27,7 +27,6 @@ module.exports = {
             'schema/unions-interfaces',
             'schema/custom-scalars',
             'schema/directives',
-            'schema/creating-directives',
           ],
           'Fetching Data': [
             'data/resolvers',
@@ -60,7 +59,6 @@ module.exports = {
             'api/plugin/usage-reporting',
             'api/plugin/schema-reporting',
             'api/plugin/inline-trace',
-            'api/graphql-tools',
             '[@apollo/federation](https://www.apollographql.com/docs/federation/api/apollo-federation/)',
             '[@apollo/gateway](https://www.apollographql.com/docs/federation/api/apollo-gateway/)',
           ],

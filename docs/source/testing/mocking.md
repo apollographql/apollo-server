@@ -86,65 +86,23 @@ const mocks = {
 
 The previous example uses [casual](https://github.com/boo1ean/casual), a fake data generator for JavaScript, which returns a different result every time the field is called. In other scenarios, such as testing, a collection of fake objects or a generator that always uses a consistent seed are often necessary to provide consistent data.
 
-### Using `MockList` in resolvers
+### Using lists in mocks
 
-To automate mocking a list, return an instance of `MockList`:
+To automate mocking a list, return an array of the desired length. `[...new Array(n)]` is a convenient syntax for making an array containing *n* copies of `undefined`.
 
 ```js
-const { MockList } = require('apollo-server');
+const casual = require('casual');
 
 const mocks = {
   Person: () => ({
-    // a list of length between 2 and 6 (inclusive)
-    friends: () => new MockList([2,6]),
-    // a list of three lists each with two items: [[1, 1], [2, 2], [3, 3]]
-    listOfLists: () => new MockList(3, () => new MockList(2)),
+    // a list of length between 2 and 6, using the "casual" npm module
+    // to generate a random integer
+    friends: [...new Array(casual.integer(2, 6))],
+    // a list of three lists of two items: [[1, 1], [2, 2], [3, 3]]
+    listOfLists: () => [...new Array(3)].map((i) => [...new Array(2)]),
   }),
 };
 ```
-
-In more complex schemas, `MockList` is helpful for randomizing the number of entries returned in lists.
-
-For example, this schema:
-
-```graphql
-type Query {
-  people: [Person]
-}
-
-type Person {
-  name: String
-  age: Int
-}
-```
-
-By default, the `people` field will always return 2 entries. To change this, we can add a mock resolver that returns `MockList`:
-
-```js
-const mocks = {
-  Query: () =>({
-    people: () => new MockList([0, 12]),
-  }),
-};
-```
-
-Now the mock data will contain between zero and 12 summary entries.
-
-### Accessing arguments in mock resolvers
-
-The mock functions on fields are actually just GraphQL resolvers, which can use arguments and `context`:
-
-```js
-const mocks = {
-  Person: () => ({
-    // the number of friends in the list now depends on numPages
-    paginatedFriends: (parent, args, context, info) => new MockList(args.numPages * PAGE_SIZE),
-  }),
-};
-```
-
-For some more background and flavor on this approach, read the ["Mocking your server with one line of code"](https://medium.com/apollo-stack/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) article on the Apollo blog.
-
 ### Using existing resolvers with mocks
 
 The default behavior for mocks is to overwrite the resolvers already present in the schema. To keep the existing resolvers, set the `mockEntireSchema` option to false.
@@ -212,4 +170,17 @@ server.listen().then(({ url }) => {
 
 ## API
 
-Under the hood, Apollo Server uses a library for building GraphQL servers called `graphql-tools`. The mocking functionality is provided by the function [`addMockFunctionsToSchema`](../api/graphql-tools#addmockfunctionstoschemaoptions). The `mocks` object is passed directly to the function, and `preserveResolvers` is the inverse of `mockEntireSchema`. [`MockList`](../api/graphql-tools/#mocklistlist-mockfunction) is exported directly from the `graphql-tools` library.
+Under the hood, Apollo Server's mocking functionality is provided by the function [`addMocksToSchema`](https://www.graphql-tools.com/docs/mocking/) from the `@graphql-tools/mock` package. The `mocks` object is passed directly to the function, and `preserveResolvers` is the inverse of `mockEntireSchema`.
+
+Apollo Server does not support all of the arguments to `addMocksToSchema`, such as `resolvers`. If you'd like to use features of `@graphql-tools/mock` that aren't supported by Apollo Server, you can use `@graphql-tools/mock` directly:
+
+```js
+const { addMocksToSchema } = require('@graphql-tools/mock')
+const { makeExecutableSchema } = require('@graphql-tools/schema');
+
+const server = new ApolloServer({
+  schema: addMocksToSchema({
+    schema: makeExecutableSchema({ typedefs, resolvers }),
+  }),
+});
+```

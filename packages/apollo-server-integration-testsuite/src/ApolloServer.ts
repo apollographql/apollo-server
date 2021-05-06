@@ -545,46 +545,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           expect(result.errors).toBeUndefined();
         });
-
-        // Need to fix bug in graphql-tools to enable mocks to override the existing resolvers
-        it.skip('allows mocks as an object with overriding the existing resolvers', async () => {
-          const typeDefs = gql`
-            type User {
-              first: String
-              last: String
-            }
-            type Query {
-              user: User
-            }
-          `;
-          const resolvers = {
-            Query: {
-              user: () => ({
-                first: 'James',
-                last: 'Heinlen',
-              }),
-            },
-          };
-          const { url: uri } = await createApolloServer({
-            typeDefs,
-            resolvers,
-            mocks: {
-              User: () => ({
-                last: () => 'mock city',
-              }),
-            },
-            mockEntireSchema: false,
-          });
-
-          const apolloFetch = createApolloFetch({ uri });
-          const result = await apolloFetch({
-            query: '{user{first last}}',
-          });
-          expect(result.data).toEqual({
-            user: { first: 'James', last: 'mock city' },
-          });
-          expect(result.errors).toBeUndefined();
-        });
       });
     });
 
