@@ -2,12 +2,8 @@ import { Context, HttpRequest } from '@azure/functions';
 import { HttpResponse } from 'azure-functions-ts-essentials';
 import { ApolloServerBase } from 'apollo-server-core';
 import { GraphQLOptions } from 'apollo-server-core';
-import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
-
 import { graphqlAzureFunction } from './azureFunctionApollo';
+import { UIPage } from 'apollo-server-plugin-base';
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -75,72 +71,79 @@ export class ApolloServer extends ApolloServerBase {
       }
     }
 
+    // undefined before load, null if loaded but there is none.
+    let uiPage: UIPage | null | undefined;
+
     return (context: Context, req: HttpRequest) => {
-      const originHeader = req.headers['Origin'] || req.headers['origin'];
-      if (cors && cors.origin) {
-        if (typeof cors.origin === 'string') {
-          corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
-        } else if (
-          typeof cors.origin === 'boolean' ||
-          (Array.isArray(cors.origin) &&
-            originHeader !== undefined &&
-            cors.origin.includes(originHeader))
-        ) {
-          corsHeaders['Access-Control-Allow-Origin'] = originHeader;
-        }
+      this.ensureStarted()
+        .then(() => {
+          if (uiPage === undefined) {
+            uiPage = this.getUIPage();
+          }
 
-        if (!cors.allowedHeaders) {
-          corsHeaders['Access-Control-Allow-Headers'] =
-            req.headers['Access-Control-Request-Headers'];
-        }
-      }
+          const originHeader = req.headers['Origin'] || req.headers['origin'];
+          if (cors && cors.origin) {
+            if (typeof cors.origin === 'string') {
+              corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
+            } else if (
+              typeof cors.origin === 'boolean' ||
+              (Array.isArray(cors.origin) &&
+                originHeader !== undefined &&
+                cors.origin.includes(originHeader))
+            ) {
+              corsHeaders['Access-Control-Allow-Origin'] = originHeader;
+            }
 
-      if (req.method === 'OPTIONS') {
-        context.done(null, {
-          body: '',
-          status: 204,
-          headers: corsHeaders,
-        });
-        return;
-      }
+            if (!cors.allowedHeaders) {
+              corsHeaders['Access-Control-Allow-Headers'] =
+                req.headers['Access-Control-Request-Headers'];
+            }
+          }
 
-      if (this.playgroundOptions && req.method === 'GET') {
-        const acceptHeader = req.headers['Accept'] || req.headers['accept'];
-        if (acceptHeader && acceptHeader.includes('text/html')) {
-          const path = req.url || '/';
+          if (req.method === 'OPTIONS') {
+            context.done(null, {
+              body: '',
+              status: 204,
+              headers: corsHeaders,
+            });
+            return;
+          }
 
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: path,
-            ...this.playgroundOptions,
+          if (
+            uiPage &&
+            req.method === 'GET' &&
+            (req.headers['Accept'] || req.headers['accept'])?.includes(
+              'text/html',
+            )
+          ) {
+            context.done(null, {
+              body: uiPage.html,
+              status: 200,
+              headers: {
+                'Content-Type': 'text/html',
+                ...corsHeaders,
+              },
+            });
+            return;
+          }
+
+          const callbackFilter = (error?: any, output?: HttpResponse) => {
+            context.done(
+              error,
+              output && {
+                ...output,
+                headers: {
+                  ...output.headers,
+                  ...corsHeaders,
+                },
+              },
+            );
           };
-          const body = renderPlaygroundPage(playgroundRenderPageOptions);
-          context.done(null, {
-            body: body,
-            status: 200,
-            headers: {
-              'Content-Type': 'text/html',
-              ...corsHeaders,
-            },
-          });
-          return;
-        }
-      }
-
-      const callbackFilter = (error?: any, output?: HttpResponse) => {
-        context.done(
-          error,
-          output && {
-            ...output,
-            headers: {
-              ...output.headers,
-              ...corsHeaders,
-            },
-          },
-        );
-      };
-      graphqlAzureFunction(async () => {
-        return this.createGraphQLServerOptions(req, context);
-      })(context, req, callbackFilter);
+          graphqlAzureFunction(async () => {
+            return this.createGraphQLServerOptions(req, context);
+          })(context, req, callbackFilter);
+        })
+        .catch((err) => context.done(err));
     };
   }
 }

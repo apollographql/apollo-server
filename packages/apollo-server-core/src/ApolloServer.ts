@@ -14,10 +14,11 @@ import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
 } from 'apollo-server-caching';
-import {
+import type {
   ApolloServerPlugin,
   GraphQLServiceContext,
   GraphQLServerListener,
+  UIPage,
 } from 'apollo-server-plugin-base';
 
 import { GraphQLServerOptions } from './graphqlOptions';
@@ -29,11 +30,6 @@ import {
   PluginDefinition,
   GraphQLService,
 } from './types';
-
-import {
-  createPlaygroundOptions,
-  PlaygroundRenderPageOptions,
-} from './playground';
 
 import { generateSchemaHash } from './utils/schemaHash';
 import {
@@ -55,6 +51,7 @@ import {
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
   ApolloServerPluginCacheControl,
+  ApolloServerPluginUIGraphQLPlayground,
 } from './plugin';
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 
@@ -120,15 +117,13 @@ export class ApolloServerBase {
   private apolloConfig: ApolloConfig;
   protected plugins: ApolloServerPlugin[] = [];
 
-  // the default version is specified in playground.ts
-  protected playgroundOptions?: PlaygroundRenderPageOptions;
-
   private parseOptions: ParseOptions;
   private config: Config;
   private state: ServerState;
   private toDispose = new Set<() => Promise<void>>();
   private toDisposeLast = new Set<() => Promise<void>>();
   private experimental_approximateDocumentStoreMiB: Config['experimental_approximateDocumentStoreMiB'];
+  private uiPage: UIPage | null = null;
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
@@ -144,7 +139,6 @@ export class ApolloServerBase {
       introspection,
       mocks,
       mockEntireSchema,
-      playground,
       plugins,
       gateway,
       experimental_approximateDocumentStoreMiB,
@@ -185,12 +179,16 @@ export class ApolloServerBase {
     this.parseOptions = parseOptions;
     this.context = context;
 
-    // While reading process.env is slow, a server should only be constructed
-    // once per run, so we place the env check inside the constructor. If env
-    // should be used outside of the constructor context, place it as a private
-    // or protected field of the class instead of a global. Keeping the read in
-    // the constructor enables testing of different environments
-    const isDev = process.env.NODE_ENV !== 'production';
+    // Allow tests to override process.env.NODE_ENV. As a bonus, this means
+    // we're only reading the env var once in the constructor, which is faster
+    // than reading it over and over as each read is a syscall. Note that an
+    // explicit `__testing__nodeEnv: undefined` overrides a set environment
+    // variable!
+    const nodeEnv =
+      '__testing__nodeEnv' in config
+        ? config.__testing__nodeEnv
+        : process.env.NODE_ENV;
+    const isDev = nodeEnv !== 'production';
 
     // if this is local dev, introspection should turned on
     // in production, we can manually turn introspection on by passing {
@@ -224,18 +222,16 @@ export class ApolloServerBase {
 
     this.requestOptions = requestOptions as GraphQLServerOptions;
 
-    this.playgroundOptions = createPlaygroundOptions(playground);
-
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
-    this.ensurePluginInstantiation(plugins);
+    this.ensurePluginInstantiation(plugins, isDev);
 
     // We handle signals if it was explicitly requested, or if we're in Node,
     // not in a test, and it wasn't explicitly turned off.
     if (
       typeof stopOnTerminationSignals === 'boolean'
         ? stopOnTerminationSignals
-        : isNodeLike && process.env.NODE_ENV !== 'test'
+        : isNodeLike && nodeEnv !== 'test'
     ) {
       const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
       let receivedSignal = false;
@@ -304,11 +300,11 @@ export class ApolloServerBase {
     // unlike (eg) applyMiddleware, so we can't expect you to `await
     // server.start()` before calling it. So we kick off the start
     // asynchronously from the constructor, and failures are logged and cause
-    // later requests to fail (in `ensureStarted`, called by
-    // `graphQLServerOptions` and sometimes earlier by serverless integrations
-    // where helpful). There's no way to make "the whole server fail" separately
-    // from making individual requests fail, but that's not entirely
-    // unreasonable for a "serverless" model.
+    // later requests to fail (in `_ensureStarted`, called by
+    // `graphQLServerOptions` and from the serverless framework handlers).
+    // There's no way to make "the whole server fail" separately from making
+    // individual requests fail, but that's not entirely unreasonable for a
+    // "serverless" model.
     if (this.serverlessFramework()) {
       this._start().catch((e) => this.logStartupError(e));
     }
@@ -411,14 +407,40 @@ export class ApolloServerBase {
         )
       ).filter(
         (maybeServerListener): maybeServerListener is GraphQLServerListener =>
-          typeof maybeServerListener === 'object' &&
-          !!maybeServerListener.serverWillStop,
+          typeof maybeServerListener === 'object',
       );
-      this.toDispose.add(async () => {
-        await Promise.all(
-          serverListeners.map(({ serverWillStop }) => serverWillStop?.()),
+
+      const serverWillStops = serverListeners.flatMap((l) =>
+        l.serverWillStop ? [l.serverWillStop] : [],
+      );
+      if (serverWillStops.length) {
+        this.toDispose.add(async () => {
+          await Promise.all(
+            serverWillStops.map((serverWillStop) => serverWillStop()),
+          );
+        });
+      }
+
+      // Find the renderUIPage callback, if one is provided. If the user
+      // installed ApolloServerPluginUIDisabled then there may be none found. On
+      // the other hand, if the user installed a UI plugin, then both the
+      // implicit installation of ApolloServerPluginUIGraphQLPlayground and the
+      // other plugin will be found; we skip the implicit plugin.
+      let serverListenersWithRenderUIPage = serverListeners.filter(
+        (l) => l.renderUIPage,
+      );
+      if (serverListenersWithRenderUIPage.length > 1) {
+        serverListenersWithRenderUIPage = serverListenersWithRenderUIPage.filter(
+          (l) => !l.__internal_installed_implicitly__,
         );
-      });
+      }
+      if (serverListenersWithRenderUIPage.length > 1) {
+        throw Error('Only one plugin can implement renderUIPage.');
+      } else if (serverListenersWithRenderUIPage.length) {
+        this.uiPage = serverListenersWithRenderUIPage[0].renderUIPage!();
+      } else {
+        this.uiPage = null;
+      }
 
       this.state = { phase: 'started', schemaDerivedData };
     } catch (error) {
@@ -437,10 +459,12 @@ export class ApolloServerBase {
   // verify that) and so the only cases for non-serverless frameworks that this
   // should hit are 'started', 'stopping', and 'stopped'. For serverless
   // frameworks, this lets the server wait until fully started before serving
-  // operations. While it will be called by `graphQLServerOptions`, serverless
-  // integrations may want to also call it earlier in a request if that is
-  // helpful.
-  protected async ensureStarted(): Promise<SchemaDerivedData> {
+  // operations.
+  //
+  // It's also called via `ensureStarted` by serverless frameworks so that they
+  // can call `renderUIPage` (or do other things like call a method on a base
+  // class that expects it to be started).
+  private async _ensureStarted(): Promise<SchemaDerivedData> {
     while (true) {
       switch (this.state.phase) {
         case 'initialized with gateway':
@@ -449,7 +473,9 @@ export class ApolloServerBase {
           // automatically call `_start` at the end of the constructor, and
           // other frameworks call `assertStarted` before setting things up
           // enough to make calling this function possible.
-          throw new Error("You need to call `server.start()` before using your Apollo Server.");
+          throw new Error(
+            'You need to call `server.start()` before using your Apollo Server.',
+          );
         case 'starting':
         case 'invoking serverWillStart':
           await this.state.barrier;
@@ -479,6 +505,12 @@ export class ApolloServerBase {
           throw new UnreachableCaseError(this.state);
       }
     }
+  }
+
+  // For serverless frameworks only. Just like `_ensureStarted` but hides its
+  // return value.
+  protected async ensureStarted() {
+    await this._ensureStarted();
   }
 
   protected assertStarted(methodName: string) {
@@ -639,6 +671,7 @@ export class ApolloServerBase {
 
   private ensurePluginInstantiation(
     userPlugins: PluginDefinition[] = [],
+    isDev: boolean,
   ): void {
     this.plugins = userPlugins.map((plugin) => {
       if (typeof plugin === 'function') {
@@ -723,6 +756,32 @@ export class ApolloServerBase {
         );
       }
     }
+
+    // Special case: If we're not in production, show GraphQL Playground as a
+    // default UI. (Note: as part of minimizing Apollo Server's dependencies on
+    // external software and specifically on a package that is less actively
+    // maintained, we may change this default before AS 3.0.0 is released.)
+    //
+    // This works a bit differently from the other implicitly installed plugins,
+    // which rely entirely on the __internal_plugin_id__ to decide whether the
+    // plugin takes effect. That's because we want third-party plugins to be
+    // able to provide a UI that overrides the default UI, without them having
+    // to know about __internal_plugin_id__. So unless we actively disable the
+    // default UI with ApolloServerPluginUIDisabled, we install the default UI,
+    // but with a special flag that _start() uses to ignore it if some other
+    // plugin defines a renderUIPage callback. (We can't just look now to see if
+    // the plugin defines renderUIPage because we haven't run serverWillStart
+    // yet.)
+    if (isDev) {
+      const alreadyHavePlugin = alreadyHavePluginWithInternalId('UIDisabled');
+      if (!alreadyHavePlugin) {
+        this.plugins.push(
+          ApolloServerPluginUIGraphQLPlayground({
+            __internal_installed_implicitly__: true,
+          }),
+        );
+      }
+    }
   }
 
   private initializeDocumentStore(): InMemoryLRUCache<DocumentNode> {
@@ -744,7 +803,7 @@ export class ApolloServerBase {
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ): Promise<GraphQLServerOptions> {
-    const { schema, schemaHash, documentStore } = await this.ensureStarted();
+    const { schema, schemaHash, documentStore } = await this._ensureStarted();
 
     let context: Context = this.context ? this.context : {};
 
@@ -821,5 +880,20 @@ export class ApolloServerBase {
     };
 
     return processGraphQLRequest(options, requestCtx);
+  }
+
+  // This method is called by integrations after start() (because we want
+  // renderUIPage callbacks to be able to take advantage of the context passed
+  // to serverWillStart); it returns the UIPage from the(single) plugin
+  // `renderUIPage` callback if it exists and returns what it returns to the
+  // integration. The integration should serve the HTML page when requested with
+  // `accept: text/html`. If no UI page is defined by any plugin, returns null.
+  // (Specifically null and not undefined; some serverless integrations rely on
+  // this to tell the difference between "haven't called renderUIPage yet" and
+  // "there is no UI page").
+  protected getUIPage(): UIPage | null {
+    this.assertStarted('getUIPage');
+
+    return this.uiPage;
   }
 }

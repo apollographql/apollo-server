@@ -18,6 +18,7 @@ In a file named `graphql.js`, place the following code:
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
+const { ApolloServerPluginUIGraphQLPlayground } = require('apollo-server-core');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -41,9 +42,9 @@ const server = new ApolloServer({
   // is disabled in "production" (i.e. when `process.env.NODE_ENV` is `production`).
   //
   // If you'd like to have GraphQL Playground and introspection enabled in production,
-  // the `playground` and `introspection` options must be set explicitly to `true`.
-  playground: true,
+  // install the Playground plugin and set the `introspection` option explicitly to `true`.
   introspection: true,
+  plugins: [ApolloServerPluginUIGraphQLPlayground()],
 });
 
 exports.handler = server.createHandler();

@@ -43,6 +43,8 @@ import {
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
   ApolloServerPluginUsageReportingOptions,
+  ApolloServerPluginUIDisabled,
+  ApolloServerPluginUIGraphQLPlayground,
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
@@ -55,6 +57,7 @@ import {
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
 import { AddressInfo } from 'net';
+import request from 'supertest';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -174,9 +177,10 @@ export interface ServerInfo<AS extends ApolloServerBase> {
 }
 
 export interface CreateServerFunc<AS extends ApolloServerBase> {
-  (config: Config, options?: { suppressStartCall?: boolean }): Promise<
-    ServerInfo<AS>
-  >;
+  (
+    config: Config,
+    options?: { suppressStartCall?: boolean; graphqlPath?: string },
+  ): Promise<ServerInfo<AS>>;
 }
 
 export interface StopServerFunc {
@@ -240,12 +244,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         it('allows introspection by default', async () => {
-          const nodeEnv = process.env.NODE_ENV;
-          delete process.env.NODE_ENV;
-
           const { url: uri } = await createApolloServer({
             schema,
             stopOnTerminationSignals: false,
+            __testing__nodeEnv: undefined,
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -253,17 +255,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
           expect(result.data).toBeDefined();
           expect(result.errors).toBeUndefined();
-
-          process.env.NODE_ENV = nodeEnv;
         });
 
         it('prevents introspection by default during production', async () => {
-          const nodeEnv = process.env.NODE_ENV;
-          process.env.NODE_ENV = 'production';
-
           const { url: uri } = await createApolloServer({
             schema,
             stopOnTerminationSignals: false,
+            __testing__nodeEnv: 'production',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -275,18 +273,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.errors[0].extensions.code).toEqual(
             'GRAPHQL_VALIDATION_FAILED',
           );
-
-          process.env.NODE_ENV = nodeEnv;
         });
 
         it('allows introspection to be enabled explicitly', async () => {
-          const nodeEnv = process.env.NODE_ENV;
-          process.env.NODE_ENV = 'production';
-
           const { url: uri } = await createApolloServer({
             schema,
             introspection: true,
             stopOnTerminationSignals: false,
+            __testing__nodeEnv: 'production',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -294,8 +288,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
           expect(result.data).toBeDefined();
           expect(result.errors).toBeUndefined();
-
-          process.env.NODE_ENV = nodeEnv;
         });
 
         it('prohibits providing a gateway in addition to schema/typedefs/resolvers', async () => {
@@ -803,7 +795,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
     describe('lifecycle', () => {
       describe('for Apollo usage reporting', () => {
-        let nodeEnv: string | undefined;
         let reportIngress: MockReportIngress;
 
         class MockReportIngress {
@@ -882,15 +873,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         beforeEach(async () => {
-          nodeEnv = process.env.NODE_ENV;
-          delete process.env.NODE_ENV;
           reportIngress = new MockReportIngress();
           return await reportIngress.listen();
         });
 
         afterEach((done) => {
-          process.env.NODE_ENV = nodeEnv;
-
           (reportIngress.stop() || Promise.resolve()).then(done);
         });
 
@@ -949,6 +936,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               ],
               debug: true,
               stopOnTerminationSignals: false,
+              __testing__nodeEnv: undefined,
               ...constructorOptions,
             });
 
@@ -1550,8 +1538,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
 
           it('returns thrown context error as a valid graphql result', async () => {
-            const nodeEnv = process.env.NODE_ENV;
-            delete process.env.NODE_ENV;
             const typeDefs = gql`
               type Query {
                 hello: String
@@ -1568,6 +1554,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               typeDefs,
               resolvers,
               stopOnTerminationSignals: false,
+              __testing__nodeEnv: undefined,
               context: () => {
                 throw new AuthenticationError('valid result');
               },
@@ -1584,8 +1571,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(e.extensions).toBeDefined();
             expect(e.extensions.code).toEqual('UNAUTHENTICATED');
             expect(e.extensions.exception.stacktrace).toBeDefined();
-
-            process.env.NODE_ENV = nodeEnv;
           });
         });
 
@@ -1613,9 +1598,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('propagates error codes in production', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'production';
-
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
@@ -1630,6 +1612,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
           stopOnTerminationSignals: false,
+          __testing__nodeEnv: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1642,14 +1625,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
-
-        process.env.NODE_ENV = nodeEnv;
       });
 
       it('propagates error codes with null response in production', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'production';
-
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
@@ -1664,6 +1642,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
           stopOnTerminationSignals: false,
+          __testing__nodeEnv: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1675,8 +1654,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
-
-        process.env.NODE_ENV = nodeEnv;
       });
     });
 
@@ -2818,6 +2795,126 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(v3.data).toEqual({ testString3: '3' });
         });
       });
+    });
+
+    describe('renderUIPage', () => {
+      let httpServer: http.Server;
+
+      function getWithoutAcceptHeader(url: string) {
+        return request(httpServer).get(url);
+      }
+      function get(url: string) {
+        return getWithoutAcceptHeader(url).set('accept', 'text/html');
+      }
+
+      function makeServerConfig(htmls: string[]): Config {
+        return {
+          typeDefs: 'type Query {x: ID}',
+          plugins: [
+            ...htmls.map((html) => ({
+              serverWillStart() {
+                return {
+                  renderUIPage() {
+                    return {
+                      html,
+                    };
+                  },
+                };
+              },
+            })),
+          ],
+          // dev mode, so we get the playground defaults
+          __testing__nodeEnv: undefined,
+        };
+      }
+
+      // Pass this to expect in the "not UIPage, you are trying to do GraphQL
+      // but didn't send a query" case, which we should maybe change to
+      // something nicer than an ugly 400.
+      const serveNoUIPage = 400;
+
+      it('defaults to playground', async () => {
+        httpServer = (await createApolloServer(makeServerConfig([])))
+          .httpServer;
+        await get('/graphql').expect(200, /Playground/);
+      });
+
+      it('selecting playground overrides the default', async () => {
+        httpServer = (
+          await createApolloServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [
+              ApolloServerPluginUIGraphQLPlayground({ version: '9.8.7' }),
+            ],
+          })
+        ).httpServer;
+        await get('/graphql')
+          .expect(/Playground/)
+          .expect(/react@9\.8\.7/);
+      });
+
+      it('can be disabled', async () => {
+        httpServer = (
+          await createApolloServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [ApolloServerPluginUIDisabled()],
+          })
+        ).httpServer;
+        await get('/graphql').expect(serveNoUIPage);
+      });
+
+      describe('basic functionality', () => {
+        describe('with non-root graphqlPath', () => {
+          beforeEach(async () => {
+            httpServer = (
+              await createApolloServer(makeServerConfig(['BAZ']), {
+                graphqlPath: '/goofql',
+              })
+            ).httpServer;
+          });
+
+          it('basic GET works', async () => {
+            await get('/goofql').expect(200, 'BAZ');
+          });
+          it('only mounts under graphqlPath', async () => {
+            await get('/foo').expect(404);
+          });
+          it('needs the header', async () => {
+            await getWithoutAcceptHeader('/goofql').expect(serveNoUIPage);
+          });
+          it('trailing slash works', async () => {
+            await get('/goofql/').expect(200, 'BAZ');
+          });
+        });
+
+        describe('with root graphqlPath', () => {
+          beforeEach(async () => {
+            httpServer = (
+              await createApolloServer(makeServerConfig(['BAZ']), {
+                graphqlPath: '/',
+              })
+            ).httpServer;
+          });
+
+          it('basic GET works', async () => {
+            await get('/').expect(200, 'BAZ');
+          });
+          it('needs the header', async () => {
+            await getWithoutAcceptHeader('/').expect(serveNoUIPage);
+          });
+        });
+      });
+
+      // Serverless frameworks don't have startup errors because they don't
+      // have a startup phase.
+      options.serverlessFramework ||
+        describe('startup errors', () => {
+          it('only one plugin can implement renderUIPage', async () => {
+            await expect(
+              createApolloServer(makeServerConfig(['x', 'y'])),
+            ).rejects.toThrow('Only one plugin can implement renderUIPage.');
+          });
+        });
     });
   });
 }

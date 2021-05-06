@@ -115,10 +115,11 @@ export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
-  let options: GraphQLOptions;
-  const debugDefault =
-    process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+  function debugFromNodeEnv(nodeEnv: string | undefined) {
+    return nodeEnv !== 'production' && nodeEnv !== 'test';
+  }
 
+  let options: GraphQLOptions;
   try {
     options = await resolveGraphqlOptions(request.options, ...handlerArguments);
   } catch (e) {
@@ -126,10 +127,17 @@ export async function runHttpQuery(
     // the normal options provided by the user, such as: formatError,
     // debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
-    return throwHttpGraphQLError(500, [e], { debug: debugDefault });
+    return throwHttpGraphQLError(500, [e], {
+      debug: debugFromNodeEnv(process.env.NODE_ENV),
+    });
   }
+
   if (options.debug === undefined) {
-    options.debug = debugDefault;
+    const nodeEnv =
+      '__testing__nodeEnv' in options
+        ? options.__testing__nodeEnv
+        : process.env.NODE_ENV;
+    options.debug = debugFromNodeEnv(nodeEnv);
   }
 
   // TODO: Errors thrown while resolving the context in

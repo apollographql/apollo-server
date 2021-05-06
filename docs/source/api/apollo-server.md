@@ -362,24 +362,6 @@ The default value is `10_000` (10 seconds).
 <tr>
 <td>
 
-###### `playground`
-
-`Boolean` or `Object`
-</td>
-<td>
-
-If truthy, the server hosts [GraphQL Playground](../testing/graphql-playground) from its URL. Can be an object to pass [configuration options](https://github.com/prismagraphql/graphql-playground/#usage) to the playground.
-
-The default value is `true`, **unless** the `NODE_ENV` environment variable is set to `production`.
-
-Note that [`introspection`](#introspection) must be enabled for GraphQL Playground to function properly.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
 ###### `debug`
 
 `Boolean`
@@ -784,7 +766,7 @@ The default value is `true`.
 
 #### `getMiddleware`
 
-Returns an array of the middlewares that together form a complete instance of Apollo Server. Includes middleware for HTTP body parsing, GraphQL Playground, file uploads, and subscriptions.
+Returns an array of the middlewares that together form a complete instance of Apollo Server. Includes middleware for HTTP body parsing, health checks, setting CORS headers, and serving a static UI, as well as actually executing GraphQL operations.
 
 Unlike [`applyMiddleware`](#applymiddleware), `getMiddleware` does _not_ automatically apply Apollo Server middlewares to your application. Instead, this method enables you to apply or omit individual middlewares according to your use case. For an Express or Koa application, you can apply a particular middleware by calling `app.use`.
 

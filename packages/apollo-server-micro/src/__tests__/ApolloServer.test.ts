@@ -1,7 +1,7 @@
 import micro from 'micro';
 import listen from 'test-listen';
 import { createApolloFetch } from 'apollo-server-integration-testsuite';
-import { gql } from 'apollo-server-core';
+import { Config, gql } from 'apollo-server-core';
 import rp from 'request-promise';
 
 import { ApolloServer } from '../ApolloServer';
@@ -18,11 +18,12 @@ const resolvers = {
   },
 };
 
-async function createServer(options: object = {}): Promise<any> {
+async function createServer(options: object = {}, config: Config = {}): Promise<any> {
   const apolloServer = new ApolloServer({
     typeDefs,
     resolvers,
     stopOnTerminationSignals: false,
+    ...config,
   });
   await apolloServer.start();
   const service = micro(apolloServer.createHandler(options));
@@ -42,11 +43,11 @@ describe('apollo-server-micro', function() {
   });
 
   describe('#createHandler', function() {
-    describe('querying', function() {
+    describe('querying', function () {
       it(
         'should be queryable using the default /graphql path, if no path ' +
           'is provided',
-        async function() {
+        async function () {
           const { service, uri } = await createServer();
           const apolloFetch = createApolloFetch({ uri: `${uri}/graphql` });
           const result = await apolloFetch({ query: '{hello}' });
@@ -58,7 +59,7 @@ describe('apollo-server-micro', function() {
       it(
         'should only be queryable at the default /graphql path, if no path ' +
           'is provided',
-        async function() {
+        async function () {
           const { service, uri } = await createServer();
           const apolloFetch = createApolloFetch({ uri: `${uri}/nopath` });
           let errorThrown = false;
@@ -72,7 +73,7 @@ describe('apollo-server-micro', function() {
         },
       );
 
-      it('should be queryable using a custom path', async function() {
+      it('should be queryable using a custom path', async function () {
         const { service, uri } = await createServer({ path: '/data' });
         const apolloFetch = createApolloFetch({ uri: `${uri}/data` });
         const result = await apolloFetch({ query: '{hello}' });
@@ -80,28 +81,24 @@ describe('apollo-server-micro', function() {
         service.close();
       });
 
-      it(
-        'should render a GraphQL playground when a browser sends in a ' +
-          'request',
-        async function() {
-          const nodeEnv = process.env.NODE_ENV;
-          delete process.env.NODE_ENV;
+      it('should render a GraphQL playground when a browser sends in a request', async function () {
+        // Playground is on by default with unset NODE_ENV.
+        const { service, uri } = await createServer(
+          {},
+          { __testing__nodeEnv: undefined },
+        );
 
-          const { service, uri } = await createServer();
-
-          const body = await rp({
-            uri,
-            method: 'GET',
-            headers: {
-              accept:
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            },
-          });
-          process.env.NODE_ENV = nodeEnv;
-          expect(body).toMatch('GraphQLPlayground');
-          service.close();
-        },
-      );
+        const body = await rp({
+          uri,
+          method: 'GET',
+          headers: {
+            accept:
+              'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+          },
+        });
+        expect(body).toMatch('GraphQLPlayground');
+        service.close();
+      });
     });
 
     describe('health checks', function() {

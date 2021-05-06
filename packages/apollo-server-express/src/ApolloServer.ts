@@ -2,10 +2,6 @@ import express from 'express';
 import corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
-import {
   GraphQLOptions,
   ApolloServerBase,
   ContextFunction,
@@ -85,6 +81,9 @@ export class ApolloServer extends ApolloServerBase {
 
     this.assertStarted('getMiddleware');
 
+    // Note that even though we use Express's router here, we still manage to be
+    // Connect-compatible because express.Router just implements the same
+    // middleware interface that Connect and Express share!
     const router = express.Router();
 
     if (!disableHealthCheck) {
@@ -123,36 +122,16 @@ export class ApolloServer extends ApolloServerBase {
       router.use(path, json(bodyParserConfig));
     }
 
-    // Note: if you enable playground in production and expect to be able to see your
-    // schema, you'll need to manually specify `introspection: true` in the
-    // ApolloServer constructor; by default, the introspection query is only
-    // enabled in dev.
+    const uiPage = this.getUIPage();
     router.use(path, (req, res, next) => {
-      if (this.playgroundOptions && req.method === 'GET') {
-        // perform more expensive content-type check only if necessary
-        // XXX We could potentially move this logic into the GuiOptions lambda,
-        // but I don't think it needs any overriding
-        const accept = accepts(req);
-        const types = accept.types() as string[];
-        const prefersHTML =
-          types.find(
-            (x: string) => x === 'text/html' || x === 'application/json',
-          ) === 'text/html';
-
-        if (prefersHTML) {
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: req.originalUrl,
-            ...this.playgroundOptions,
-          };
-          res.setHeader('Content-Type', 'text/html');
-          const playground = renderPlaygroundPage(playgroundRenderPageOptions);
-          res.write(playground);
-          res.end();
-          return;
-        }
+      if (uiPage && prefersHTML(req)) {
+        res.setHeader('Content-Type', 'text/html');
+        res.write(uiPage.html);
+        res.end();
+        return;
       }
 
-      runHttpQuery([req, res], {
+      runHttpQuery([], {
         method: req.method,
         options: () => this.createGraphQLServerOptions(req, res),
         query: req.method === 'POST' ? req.body : req.query,
@@ -198,4 +177,16 @@ export class ApolloServer extends ApolloServerBase {
 
     return router;
   }
+}
+
+function prefersHTML(req: express.Request): boolean {
+  if (req.method !== 'GET') {
+    return false;
+  }
+  const accept = accepts(req);
+  const types = accept.types() as string[];
+  return (
+    types.find((x: string) => x === 'text/html' || x === 'application/json') ===
+    'text/html'
+  );
 }
