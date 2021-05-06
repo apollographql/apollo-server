@@ -611,6 +611,16 @@ describe('apollo-server-fastify', () => {
         cooks: [Cook]
         pooks: [Pook]
       }
+
+      enum CacheControlScope {
+        PUBLIC
+        PRIVATE
+      }
+
+      directive @cacheControl(
+        maxAge: Int
+        scope: CacheControlScope
+      ) on FIELD_DEFINITION | OBJECT | INTERFACE
     `;
 
     const resolvers = {
