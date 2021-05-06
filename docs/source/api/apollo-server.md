@@ -134,20 +134,6 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 <tr>
 <td>
 
-###### `schemaDirectives`
-
-`Object`
-</td>
-
-<td>
-
-A map of all [custom schema directives](../schema/directives/#custom-schema-directives) used in your schema, if any.
-</td>
-</tr>
-
-<tr>
-<td>
-
 ###### `schema`
 
 `Object`
@@ -879,78 +865,3 @@ const typeDefs = gql`
 ```
 
 This converts GraphQL strings into the format that Apollo libraries expect when working with operations and schemas. It also helps tools identify when a string contains GraphQL language (such as to enable syntax highlighting).
-
----
-
-## `makeExecutableSchema`
-
-Builds a schema from provided type definitions and resolvers.
-
-The [`ApolloServer` constructor](#constructor) automatically calls this method using the `typeDefs` and `resolvers` options you provide, so in most cases you don't need to call it yourself.
-
-This method is defined in the `graphql-tools` library and is re-exported from `apollo-server` as a convenience. [See its documentation here.](./graphql-tools/#makeexecutableschemaoptions)
-
----
-
-## `addMockFunctionsToSchema`
-
-The `addMockFunctionsToSchema` method is re-exported from `apollo-server` as a convenience.
-
-Given an instance of a `GraphQLSchema` and a `mock` object, modifies the schema (in place) to return mock data for any valid query that is sent to the server.
-
-If preserveResolvers is set to true, existing resolve functions will not be overwritten to provide mock data. This can be used to mock some parts of the server and not others.
-
-### Parameters
-
-* `options`: <`Object`>
-
-  * `schema`: <`GraphQLSchema`> _(required)_
-
-    Pass an executable schema (`GraphQLSchema`) to be mocked.
-
-  * `mocks`: <`Object`>
-
-    Should be a map of types to mock resolver functions, e.g.:
-
-    ```js
-    {
-      Type: () => true,
-    }
-    ```
-
-    When `mocks` is not defined, the default scalar types (e.g. `Int`, `Float`, `String`, etc.) will be mocked.
-
-  * `preserveResolvers`: <`Boolean`>
-
-    When `true`, resolvers which were already defined will not be over-written with the mock resolver functions specified with `mocks`.
-
-### Usage
-
-```js
-const { addMockFunctionsToSchema } = require('apollo-server');
-
-// We'll make an assumption that an executable schema
-// is already available from the `./schema` file.
-const executableSchema = require('./schema');
-
-addMockFunctionsToSchema({
-  schema: executableSchema,
-  mocks: {
-    // Mocks the `Int` scalar type to always return `12345`.
-    Int: () => 12345,
-
-    // Mocks the `Movies` type to always return 'Titanic'.
-    Movies: () => 'Titanic',
-  },
-  preserveResolvers: false,
-});
-```
----
-
-## `graphql-tools` exports
-
-The `graphql-tools` library provides helpful functions (such as [`makeExecutableSchema`](#makeexecutableschema) above) for creating and manipulating GraphQL schemas. Apollo Server uses many of these functions internally, and it re-exports all of them to support advanced use cases.
-
-Apollo Server uses `graphql-tools` version 4. For documentation of version 4 functions, see [graphql-tools](./graphql-tools).
-
-> For documentation of the _latest_ version of `graphql-tools`, see the [official `graphql-tools` documentation](https://www.graphql-tools.com/docs/introduction).

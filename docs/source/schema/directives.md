@@ -43,7 +43,7 @@ enum MyEnum {
 
 If `@deprecated` appears elsewhere in a GraphQL document, it produces an error.
 
-> If you [create a custom directive](#custom-schema-directives), you need to define it (and its valid locations) in your schema. You don't need to define [default directives](#default-directives) like `@deprecated`.
+> If you create a custom directive, you need to define it (and its valid locations) in your schema. You don't need to define [default directives](#default-directives) like `@deprecated`.
 
 ### Schema directives vs. operation directives
 
@@ -62,68 +62,3 @@ The [GraphQL specification](http://spec.graphql.org/June2018/#sec-Type-System.Di
 | `@deprecated(reason: String)` | Marks the schema definition of a field or enum value as deprecated with an optional reason. |
 | `@skip(if: Boolean!)` | If `true`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
 | `@include(if: Boolean!)` | If `false`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
-
-## Custom schema directives
-
-You can extend Apollo Server with custom schema directives created by you or a third party.
-
-> To learn how to create custom directives, see [implementing directives](./creating-directives/).
-
-To use a custom directive:
-
-1. Make sure the directive is defined in your schema with all valid locations listed.
-2. If the directive uses a `SchemaDirectiveVisitor` subclass to perform custom logic, provide it to the `ApolloServer` constructor via the `schemaDirectives` object.
-
-    _The `schemaDirectives` object maps the name of a directive (e.g., `upper`) to the subclass that implements its behavior (e.g., `UpperCaseDirective`)._
-
-The following example defines an `UpperCaseDirective` subclass for use with the `@upper` custom directive. Because it's decorated with `@upper`, the `Query.hello` field returns `HELLO WORLD!` instead of `Hello world!`.
-
-```js{20,40-42}
-const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
-const { defaultFieldResolver } = require('graphql');
-
-// Subclass definition for @upper directive logic
-class UpperCaseDirective extends SchemaDirectiveVisitor {
-  visitFieldDefinition(field) {
-    const { resolve = defaultFieldResolver } = field;
-    field.resolve = async function (...args) {
-      const result = await resolve.apply(this, args);
-      if (typeof result === 'string') {
-        return result.toUpperCase();
-      }
-      return result;
-    };
-  }
-}
-
-// Schema definition (including custom directive)
-const typeDefs = gql`
-  directive @upper on FIELD_DEFINITION
-
-  type Query {
-    hello: String @upper
-  }
-`;
-
-// Resolvers
-const resolvers = {
-  Query: {
-    hello: (parent, args, context) => {
-      return 'Hello world!';
-    },
-  },
-};
-
-// Add directive to the ApolloServer constructor
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  schemaDirectives: {
-    upper: UpperCaseDirective,
-  }
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
-```

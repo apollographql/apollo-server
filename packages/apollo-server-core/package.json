@@ -27,6 +27,9 @@
   "dependencies": {
     "@apollographql/apollo-tools": "^0.5.0",
     "@apollographql/graphql-playground-html": "1.6.27",
+    "@graphql-tools/mock": "^8.1.2",
+    "@graphql-tools/schema": "^7.1.5",
+    "@graphql-tools/utils": "^7.9.0",
     "@josephg/resolvable": "^1.0.0",
     "apollo-cache-control": "file:../apollo-cache-control",
     "apollo-datasource": "file:../apollo-datasource",
@@ -41,7 +44,6 @@
     "async-retry": "^1.2.1",
     "fast-json-stable-stringify": "^2.1.0",
     "graphql-tag": "^2.11.0",
-    "graphql-tools": "^4.0.0",
     "loglevel": "^1.6.8",
     "lru-cache": "^6.0.0",
     "sha.js": "^2.4.11",

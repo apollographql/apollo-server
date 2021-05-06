@@ -56,6 +56,9 @@
     "apollo-tracing": "file:packages/apollo-tracing"
   },
   "devDependencies": {
+    "@graphql-tools/mock": "8.1.2",
+    "@graphql-tools/schema": "7.1.5",
+    "@graphql-tools/utils": "7.9.0",
     "@hapi/hapi": "20.1.2",
     "@josephg/resolvable": "1.0.0",
     "@sinonjs/fake-timers": "^7.0.5",
@@ -102,7 +105,6 @@
     "form-data": "4.0.0",
     "graphql": "15.3.0",
     "graphql-tag": "2.11.0",
-    "graphql-tools": "4.0.8",
     "ioredis": "4.27.1",
     "jest": "26.6.3",
     "jest-config": "26.6.3",

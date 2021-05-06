@@ -1,7 +1,8 @@
 import { buildSchema } from 'graphql';
-import { makeExecutableSchema } from 'graphql-tools';
-
-type FirstArg<F> = F extends (arg: infer A) => any ? A : never;
+import {
+  makeExecutableSchema,
+  IExecutableSchemaDefinition,
+} from '@graphql-tools/schema';
 
 export function augmentTypeDefsWithCacheControlSupport(typeDefs: string) {
   return (
@@ -24,7 +25,7 @@ export function buildSchemaWithCacheControlSupport(source: string) {
 }
 
 export function makeExecutableSchemaWithCacheControlSupport(
-  options: FirstArg<typeof makeExecutableSchema> & { typeDefs: string },
+  options: IExecutableSchemaDefinition & { typeDefs: string },
 ) {
   return makeExecutableSchema({
     ...options,
