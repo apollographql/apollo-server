@@ -68,9 +68,7 @@ export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin {
 
 //#region Cache control
 import type { ApolloServerPluginCacheControlOptions } from './cacheControl';
-export type {
-  ApolloServerPluginCacheControlOptions,
-} from './cacheControl';
+export type { ApolloServerPluginCacheControlOptions } from './cacheControl';
 
 export function ApolloServerPluginCacheControl(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
@@ -79,5 +77,28 @@ export function ApolloServerPluginCacheControl(
 }
 export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin {
   return require('./cacheControl').ApolloServerPluginCacheControlDisabled();
+}
+//#endregion
+
+//#region UI
+import type { InternalApolloServerPlugin } from '../internalPlugin';
+// FIXME consider a different approach
+export function ApolloServerPluginUIDisabled(): ApolloServerPlugin {
+  const plugin: InternalApolloServerPlugin = {
+    __internal_plugin_id__() {
+      return 'UI';
+    },
+  };
+  return plugin;
+}
+
+import type { ApolloServerPluginUIGraphQLPlaygroundOptions } from './ui/graphqlPlayground';
+export type { ApolloServerPluginUIGraphQLPlaygroundOptions } from './ui/graphqlPlayground';
+export function ApolloServerPluginUIGraphQLPlayground(
+  options: ApolloServerPluginUIGraphQLPlaygroundOptions = Object.create(null),
+): ApolloServerPlugin {
+  return require('./ui/graphqlPlayground').ApolloServerPluginUIGraphQLPlayground(
+    options,
+  );
 }
 //#endregion

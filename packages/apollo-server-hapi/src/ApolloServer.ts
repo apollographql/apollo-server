@@ -1,9 +1,5 @@
 import type hapi from '@hapi/hapi';
 import { parseAll } from '@hapi/accept';
-import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
 
 export { GraphQLOptions } from 'apollo-server-core';
 import {
@@ -45,7 +41,7 @@ export class ApolloServer extends ApolloServerBase {
           return h.continue;
         }
 
-        if (this.playgroundOptions && request.method === 'get') {
+        if (request.method === 'get') {
           // perform more expensive content-type check only if necessary
           const accept = parseAll(request.headers);
           const types = accept.mediaTypes as string[];
@@ -55,13 +51,8 @@ export class ApolloServer extends ApolloServerBase {
             ) === 'text/html';
 
           if (prefersHTML) {
-            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-              endpoint: path,
-              ...this.playgroundOptions,
-            };
-
             return h
-              .response(renderPlaygroundPage(playgroundRenderPageOptions))
+              .response('FIXME')
               .type('text/html')
               .takeover();
           }

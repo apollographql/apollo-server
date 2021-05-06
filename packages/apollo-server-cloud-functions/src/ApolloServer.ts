@@ -1,8 +1,4 @@
 import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
-import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
 import { Request, Response } from 'express';
 
 import { graphqlCloudFunction } from './googleCloudApollo';
@@ -108,17 +104,13 @@ export class ApolloServer extends ApolloServerBase {
         return;
       }
 
-      if (this.playgroundOptions && req.method === 'GET') {
+      if (req.method === 'GET') {
         const acceptHeader = req.headers['accept'] as string;
         if (acceptHeader && acceptHeader.includes('text/html')) {
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: req.get('referer'),
-            ...this.playgroundOptions,
-          };
 
           res
             .status(200)
-            .send(renderPlaygroundPage(playgroundRenderPageOptions));
+            .send("FIXME implement for Google");
           return;
         }
       }

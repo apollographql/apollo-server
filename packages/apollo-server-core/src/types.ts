@@ -12,9 +12,6 @@ import type {
   ApolloConfigInput,
 } from 'apollo-server-types';
 
-import { PlaygroundConfig } from './playground';
-export { PlaygroundConfig, PlaygroundRenderPageOptions } from './playground';
-
 import type {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
@@ -84,10 +81,15 @@ export interface Config extends BaseConfig {
   mockEntireSchema?: boolean;
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
-  //https://github.com/jaydenseric/graphql-upload#type-uploadoptions
-  playground?: PlaygroundConfig;
   gateway?: GraphQLService;
   experimental_approximateDocumentStoreMiB?: number;
   stopOnTerminationSignals?: boolean;
   apollo?: ApolloConfigInput;
+  // Apollo Server only uses process.env.NODE_ENV to determine defaults for
+  // other behavior which have other mechanisms of setting explicitly. Sometimes
+  // our tests want to test the exact logic of how NODE_ENV affects defaults;
+  // they can set this parameter, but there's no reason to do so other than for
+  // tests. Note that 'undefined' means "act as if NODE_ENV is not set", not
+  // "pay attention to NODE_ENV", which is what the key not existing means.
+  __testing__nodeEnv?: string | undefined;
 }

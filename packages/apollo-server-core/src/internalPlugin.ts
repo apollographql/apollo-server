@@ -20,7 +20,8 @@ export type InternalPluginId =
   | 'CacheControl'
   | 'SchemaReporting'
   | 'InlineTrace'
-  | 'UsageReporting';
+  | 'UsageReporting'
+  | 'UI';
 
 export function pluginIsInternal(
   plugin: ApolloServerPlugin,

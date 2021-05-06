@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@apollographql/apollo-tools": "^0.5.0",
-    "@apollographql/graphql-playground-html": "1.6.27",
+    "@apollographql/graphql-playground-html": "1.6.28",
     "@graphql-tools/mock": "^8.1.2",
     "@graphql-tools/schema": "^7.1.5",
     "@graphql-tools/utils": "^7.9.0",

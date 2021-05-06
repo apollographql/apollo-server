@@ -1,3 +1,6 @@
+FIXME for some reason lambda doesn't magically pass tests on this branch
+FIXME also need to test lambda html pages work when deployed! see ~/Scratch/test-serverless
+
 # <a href='https://www.apollographql.com/'><img src='https://user-images.githubusercontent.com/841294/53402609-b97a2180-39ba-11e9-8100-812bab86357c.png' height='100' alt='Apollo Server'></a>
 ## GraphQL Server for Express, Koa, Hapi, Lambda, and more.
 

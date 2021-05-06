@@ -66,6 +66,19 @@ export interface ApolloServerPlugin<
 
 export interface GraphQLServerListener {
   serverWillStop?(): ValueOrPromise<void>;
+  htmlPages?(options: HtmlPagesOptions): HtmlPage[];
+}
+
+// FIXME docs
+export interface HtmlPage {
+  path: string;
+  html: string;
+  redirectFromRoot?: boolean;
+}
+
+// FIXME docs
+export interface HtmlPagesOptions {
+  graphqlPath: string;
 }
 
 export type GraphQLRequestListenerParsingDidEnd = (err?: Error) => void;

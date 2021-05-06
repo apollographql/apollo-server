@@ -1,7 +1,6 @@
 import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
-import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import { parseAll } from '@hapi/accept';
 
 import { graphqlMicro } from './microApollo';
@@ -40,7 +39,7 @@ export class ApolloServer extends ApolloServerBase {
         disableHealthCheck,
         onHealthCheck,
       })) ||
-        this.handleGraphqlRequestsWithPlayground({ req, res }) ||
+        this.handleGraphqlRequestsWithHtmlPages({ req, res }) ||
         (await this.handleGraphqlRequestsWithServer({ req, res })) ||
         send(res, 404, null);
     };
@@ -87,10 +86,7 @@ export class ApolloServer extends ApolloServerBase {
     return handled;
   }
 
-  // If the `playgroundOptions` are set, register a `graphql-playground` instance
-  // (not available in production) that is then used to handle all
-  // incoming GraphQL requests.
-  private handleGraphqlRequestsWithPlayground({
+  private handleGraphqlRequestsWithHtmlPages({
     req,
     res,
   }: {
@@ -99,7 +95,7 @@ export class ApolloServer extends ApolloServerBase {
   }): boolean {
     let handled = false;
 
-    if (this.playgroundOptions && req.method === 'GET') {
+    if (req.method === 'GET') {
       const accept = parseAll(req.headers);
       const types = accept.mediaTypes as string[];
       const prefersHTML =
@@ -108,12 +104,9 @@ export class ApolloServer extends ApolloServerBase {
         ) === 'text/html';
 
       if (prefersHTML) {
-        const middlewareOptions = {
-          endpoint: this.graphqlPath,
-          ...this.playgroundOptions,
-        };
+        // XXX this.graphqlPath
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        send(res, 200, renderPlaygroundPage(middlewareOptions));
+        send(res, 200, 'FIXME');
         handled = true;
       }
     }

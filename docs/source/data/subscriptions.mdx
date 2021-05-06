@@ -7,7 +7,7 @@ import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 > **Subscriptions are not currently supported in [Apollo Federation](https://www.apollographql.com/docs/federation/).**
 
-**Subscriptions** are long-lasting GraphQL read operations that can update their result whenever a particular server-side event occurs. Most commonly, updated results are _pushed_ from the server to subscribing clients. For example, a chat application's server might use a subscription to push newly received messages to all clients in a particular chat room.
+**Subscriptions** are long-lasting GraphQL read operations that can update their result whenever a particular server-side event occurs. Most commonly, updated results are _pushed_ from the erver to subscribing clients. For example, a chat application's server might use a subscription to push newly received messages to all clients in a particular chat room.
 
 Because subscription updates are usually pushed by the server (instead of polled by the client), they usually use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP. To support this, Apollo Server lets you [set a subscription-specific endpoint](#setting-a-subscription-endpoint) that's separate from the default endpoint for queries and mutations.
 

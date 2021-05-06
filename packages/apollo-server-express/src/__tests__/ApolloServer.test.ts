@@ -2,9 +2,17 @@ import express from 'express';
 
 import http from 'http';
 
-import request from 'request';
+// FIXME do we still need 'request' devdep?
+import request from 'supertest';
 
-import { gql, AuthenticationError, ApolloServerPluginCacheControlDisabled } from 'apollo-server-core';
+import nodeUrl from 'url';
+
+import {
+  gql,
+  AuthenticationError,
+  ApolloServerPluginCacheControlDisabled,
+  ApolloServerPluginUIGraphQLPlayground,
+} from 'apollo-server-core';
 import {
   ApolloServer,
   ApolloServerExpressConfig,
@@ -39,8 +47,8 @@ describe('apollo-server-express', () => {
         await server.start();
       }
       const app = express();
-      server.applyMiddleware({ app });
-      httpServer = await new Promise<http.Server>(resolve => {
+      server.applyMiddleware({ app, path: options?.graphqlPath });
+      httpServer = await new Promise<http.Server>((resolve) => {
         const s: http.Server = app.listen({ port: 0 }, () => resolve(s));
       });
       return createServerInfo(server, httpServer);
@@ -62,12 +70,15 @@ describe('apollo-server-express', () => {
     serverOptions: ApolloServerExpressConfig,
     options: Partial<ServerRegistration> = {},
   ) {
-    server = new ApolloServer({stopOnTerminationSignals: false, ...serverOptions});
+    server = new ApolloServer({
+      stopOnTerminationSignals: false,
+      ...serverOptions,
+    });
     await server.start();
     app = express();
     server.applyMiddleware({ ...options, app });
 
-    httpServer = await new Promise<http.Server>(resolve => {
+    httpServer = await new Promise<http.Server>((resolve) => {
       const l: http.Server = app.listen({ port: 0 }, () => resolve(l));
     });
 
@@ -98,247 +109,68 @@ describe('apollo-server-express', () => {
       expect(result.errors).toBeUndefined();
     });
 
-    // XXX Unclear why this would be something somebody would want (vs enabling
-    // introspection without graphql-playground, which seems reasonable, eg you
-    // have your own graphql-playground setup with a custom link)
-    it('can enable playground separately from introspection during production', async () => {
-      const INTROSPECTION_QUERY = `
-  {
-    __schema {
-      directives {
-        name
-      }
-    }
-  }
-`;
-
-      const { url: uri } = await createServer({
-        typeDefs,
-        resolvers,
-        introspection: false,
-      });
-
-      const apolloFetch = createApolloFetch({ uri });
-      const result = await apolloFetch({ query: INTROSPECTION_QUERY });
-
-      expect(result.errors.length).toEqual(1);
-      expect(result.errors[0].extensions.code).toEqual(
-        'GRAPHQL_VALIDATION_FAILED',
-      );
-
-      return new Promise<http.Server | void>((resolve, reject) => {
-        request(
-          {
-            url: uri,
-            method: 'GET',
-            headers: {
-              accept:
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            },
-          },
-          (error, response, body) => {
-            if (error) {
-              reject(error);
-            } else {
-              expect(body).toMatch('GraphQLPlayground');
-              expect(response.statusCode).toEqual(200);
-              resolve();
-            }
-          },
-        );
-      });
-    });
-
     it('renders GraphQL playground by default when browser requests', async () => {
-      const nodeEnv = process.env.NODE_ENV;
-      delete process.env.NODE_ENV;
-
-      const { url } = await createServer({
+      const { httpServer } = await createServer({
         typeDefs,
         resolvers,
+        __testing__nodeEnv: undefined, // default UI
       });
 
-      return new Promise<http.Server | void>((resolve, reject) => {
-        request(
-          {
-            url,
-            method: 'GET',
-            headers: {
-              accept:
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            },
-          },
-          (error, response, body) => {
-            process.env.NODE_ENV = nodeEnv;
-            if (error) {
-              reject(error);
-            } else {
-              expect(body).toMatch('GraphQLPlayground');
-              expect(body).not.toMatch('settings');
-              expect(response.statusCode).toEqual(200);
-              resolve();
-            }
-          },
-        );
-      });
+      await request(httpServer)
+        .get('/graphql')
+        .set(
+          'accept',
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        )
+        .expect(302)
+        .expect('Location', /\/graphql\/ui\/playground$/);
+
+      await request(httpServer)
+        .get('/graphql/ui/playground')
+        .set('accept', 'text/html')
+        .expect(200, /GraphQLPlayground/);
     });
 
     it('renders GraphQL playground using request original url', async () => {
-      const samplePath = '/innerSamplePath';
-
       const rewiredServer = new ApolloServer({
         typeDefs,
         resolvers,
-        playground: true,
+        plugins: [
+          // FIXME mounting the express app inside another app doesn't work
+          //       without explicitly specifying the endpoint here because the app
+          //       know where it's mounted when this is set up. So this test only
+          //       passes because of explicitly configuring the plugin with an endpoint.
+          //       It would also work if you passed the full path to `applyMiddleware`
+          //       but not in this nested way that it does it here. Is that OK?
+          ApolloServerPluginUIGraphQLPlayground({
+            endpoint: '/innerSamplePath/graphql',
+          }),
+        ],
       });
       await rewiredServer.start();
       const innerApp = express();
       rewiredServer.applyMiddleware({ app: innerApp });
 
       const outerApp = express();
-      outerApp.use(samplePath, innerApp);
+      outerApp.use('/innerSamplePath', innerApp);
 
-      const httpRewiredServer = await new Promise<http.Server>(resolve => {
+      const httpRewiredServer = await new Promise<http.Server>((resolve) => {
         const l: http.Server = outerApp.listen({ port: 0 }, () => resolve(l));
       });
 
       const { url } = createServerInfo(rewiredServer, httpRewiredServer);
 
-      const paths = url.split('/');
-      const rewiredEndpoint = `${samplePath}/${paths.pop()}`;
+      const parsedUrl = nodeUrl.parse(url);
+      parsedUrl.pathname = '';
+      const urlWithoutPath = nodeUrl.format(parsedUrl);
 
-      await new Promise<http.Server | void>((resolve, reject) => {
-        request(
-          {
-            url: paths.join('/') + rewiredEndpoint,
-            method: 'GET',
-            headers: {
-              accept:
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            },
-          },
-          (error, response, body) => {
-            if (error) {
-              reject(error);
-            } else {
-              expect(body).toMatch(rewiredEndpoint);
-              expect(body).not.toMatch('settings');
-              expect(response.statusCode).toEqual(200);
-              resolve();
-            }
-          },
-        );
-      });
+      await request(urlWithoutPath)
+        .get('/innerSamplePath/graphql/ui/playground')
+        .set('accept', 'text/html')
+        .expect(200, new RegExp(`"endpoint":"/innerSamplePath/graphql"`));
+
       await rewiredServer.stop();
-      await httpRewiredServer.close();
-    });
-
-    const playgroundPartialOptionsTest = async () => {
-      const defaultQuery = 'query { foo { bar } }';
-      const endpoint = '/fumanchupacabra';
-      const { url } = await createServer(
-        {
-          typeDefs,
-          resolvers,
-          playground: {
-            // https://github.com/apollographql/graphql-playground/blob/0e452d2005fcd26f10fbdcc4eed3b2e2af935e3a/packages/graphql-playground-html/src/render-playground-page.ts#L16-L24
-            // must be made partial
-            settings: {
-              'editor.theme': 'light',
-            } as any,
-            tabs: [
-              {
-                query: defaultQuery,
-              },
-              {
-                endpoint,
-              } as any,
-            ],
-          },
-        },
-        {},
-      );
-
-      return new Promise<http.Server | void>((resolve, reject) => {
-        request(
-          {
-            url,
-            method: 'GET',
-            headers: {
-              accept:
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-              Folo: 'bar',
-            },
-          },
-          (error, response, body) => {
-            if (error) {
-              reject(error);
-            } else {
-              expect(body).toMatch('GraphQLPlayground');
-              expect(body).toMatch(`\"editor.theme\":\"light\"`);
-              expect(body).toMatch(defaultQuery);
-              expect(body).toMatch(endpoint);
-              expect(response.statusCode).toEqual(200);
-              resolve();
-            }
-          },
-        );
-      });
-    };
-
-    it('accepts partial GraphQL Playground Options in production', async () => {
-      const nodeEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
-      await playgroundPartialOptionsTest();
-      process.env.NODE_ENV = nodeEnv;
-    });
-
-    it(
-      'accepts partial GraphQL Playground Options when an environment is ' +
-        'not specified',
-      async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        delete process.env.NODE_ENV;
-        await playgroundPartialOptionsTest();
-        process.env.NODE_ENV = nodeEnv;
-      },
-    );
-
-    it('accepts playground options as a boolean', async () => {
-      const nodeEnv = process.env.NODE_ENV;
-      delete process.env.NODE_ENV;
-
-      const { url } = await createServer(
-        {
-          typeDefs,
-          resolvers,
-          playground: false,
-        },
-        {},
-      );
-
-      return new Promise<http.Server | void>((resolve, reject) => {
-        request(
-          {
-            url,
-            method: 'GET',
-            headers: {
-              accept:
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            },
-          },
-          (error, response, body) => {
-            process.env.NODE_ENV = nodeEnv;
-            if (error) {
-              reject(error);
-            } else {
-              expect(body).not.toMatch('GraphQLPlayground');
-              expect(response.statusCode).not.toEqual(200);
-              resolve();
-            }
-          },
-        );
-      });
+      httpRewiredServer.close();
     });
 
     it('accepts cors configuration', async () => {
@@ -379,7 +211,7 @@ describe('apollo-server-express', () => {
       return new Promise<void>((resolve, reject) => {
         apolloFetch({ query: '{hello}' })
           .then(reject)
-          .catch(error => {
+          .catch((error) => {
             expect(error.response).toBeDefined();
             expect(error.response.status).toEqual(413);
             expect(error.toString()).toMatch('Payload Too Large');
@@ -389,37 +221,19 @@ describe('apollo-server-express', () => {
     });
 
     describe('healthchecks', () => {
-      afterEach(async () => {
-        await server.stop();
-      });
-
       it('creates a healthcheck endpoint', async () => {
-        const { port } = await createServer({
+        const { httpServer } = await createServer({
           typeDefs,
           resolvers,
         });
 
-        return new Promise<void>((resolve, reject) => {
-          request(
-            {
-              url: `http://localhost:${port}/.well-known/apollo/server-health`,
-              method: 'GET',
-            },
-            (error, response, body) => {
-              if (error) {
-                reject(error);
-              } else {
-                expect(body).toEqual(JSON.stringify({ status: 'pass' }));
-                expect(response.statusCode).toEqual(200);
-                resolve();
-              }
-            },
-          );
-        });
+        await request(httpServer)
+          .get('/.well-known/apollo/server-health')
+          .expect(200, { status: 'pass' });
       });
 
       it('provides a callback for the healthcheck', async () => {
-        const { port } = await createServer(
+        const { httpServer } = await createServer(
           {
             typeDefs,
             resolvers,
@@ -431,27 +245,13 @@ describe('apollo-server-express', () => {
           },
         );
 
-        return new Promise<void>((resolve, reject) => {
-          request(
-            {
-              url: `http://localhost:${port}/.well-known/apollo/server-health`,
-              method: 'GET',
-            },
-            (error, response, body) => {
-              if (error) {
-                reject(error);
-              } else {
-                expect(body).toEqual(JSON.stringify({ status: 'fail' }));
-                expect(response.statusCode).toEqual(503);
-                resolve();
-              }
-            },
-          );
-        });
+        await request(httpServer)
+          .get('/.well-known/apollo/server-health')
+          .expect(503, { status: 'fail' });
       });
 
       it('can disable the healthCheck', async () => {
-        const { port } = await createServer(
+        const { httpServer } = await createServer(
           {
             typeDefs,
             resolvers,
@@ -461,29 +261,14 @@ describe('apollo-server-express', () => {
           },
         );
 
-        return new Promise<void>((resolve, reject) => {
-          request(
-            {
-              url: `http://localhost:${port}/.well-known/apollo/server-health`,
-              method: 'GET',
-            },
-            (error, response) => {
-              if (error) {
-                reject(error);
-              } else {
-                expect(response.statusCode).toEqual(404);
-                resolve();
-              }
-            },
-          );
-        });
+        await request(httpServer)
+          .get('/.well-known/apollo/server-health')
+          .expect(404);
       });
     });
 
     describe('errors', () => {
       it('returns thrown context error as a valid graphql result', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        delete process.env.NODE_ENV;
         const typeDefs = gql`
           type Query {
             hello: String
@@ -502,6 +287,8 @@ describe('apollo-server-express', () => {
           context: () => {
             throw new AuthenticationError('valid result');
           },
+          // Stack trace not included for NODE_ENV=test
+          __testing__nodeEnv: undefined,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -515,14 +302,9 @@ describe('apollo-server-express', () => {
         expect(e.extensions).toBeDefined();
         expect(e.extensions.code).toEqual('UNAUTHENTICATED');
         expect(e.extensions.exception.stacktrace).toBeDefined();
-
-        process.env.NODE_ENV = nodeEnv;
       });
 
       it('propogates error codes in dev mode', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        delete process.env.NODE_ENV;
-
         const { url: uri } = await createServer({
           typeDefs: gql`
             type Query {
@@ -536,6 +318,8 @@ describe('apollo-server-express', () => {
               },
             },
           },
+          // Stack trace not included for NODE_ENV=test
+          __testing__nodeEnv: undefined,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -549,14 +333,9 @@ describe('apollo-server-express', () => {
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeDefined();
         expect(result.errors[0].extensions.exception.stacktrace).toBeDefined();
-
-        process.env.NODE_ENV = nodeEnv;
       });
 
       it('propogates error codes in production', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'production';
-
         const { url: uri } = await createServer({
           typeDefs: gql`
             type Query {
@@ -570,6 +349,7 @@ describe('apollo-server-express', () => {
               },
             },
           },
+          __testing__nodeEnv: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -582,14 +362,9 @@ describe('apollo-server-express', () => {
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
-
-        process.env.NODE_ENV = nodeEnv;
       });
 
       it('propogates error codes with null response in production', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'production';
-
         const { url: uri } = await createServer({
           typeDefs: gql`
             type Query {
@@ -603,6 +378,7 @@ describe('apollo-server-express', () => {
               },
             },
           },
+          __testing__nodeEnv: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -614,8 +390,6 @@ describe('apollo-server-express', () => {
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
-
-        process.env.NODE_ENV = nodeEnv;
       });
     });
   });

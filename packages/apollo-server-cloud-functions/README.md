@@ -34,7 +34,6 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  playground: true,
   introspection: true,
 });
 
@@ -45,8 +44,8 @@ exports.handler = server.createHandler();
 
 On the Create Function page, set _Trigger_ to `HTTP` and _Function to execute_ to the name of your exported handler, in this case `handler`.
 
-Since NODE_ENV is a reserved environment variable in GCF and it defaults to "production", both the **playground** and **introspection**
-options need to be explicitly set to `true` for the GraphQL Playground to work correctly.
+Since NODE_ENV is a reserved environment variable in GCF and it defaults to "production", the **introspection**
+option needs to be explicitly set to `true` for the UI to work correctly.
 
 After configuring your Function you can press **Create** and an http endpoint will be created a few seconds later.
 

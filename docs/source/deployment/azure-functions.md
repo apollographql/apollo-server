@@ -200,6 +200,7 @@ Functions in apollo-example:
 
 Finally, going to the Invoke URL shown at the output above, we will see our result.
 
+FIXME take a look
 Note: When GraphQL Playground starts, It won't have the correct URL containing the security `code`, and a message **"Server cannot be reached"** as shown at your browser.
 
 ![Apollo server running on azure with error](../images/deployment/azure-functions/apollo-server-on-azure.png)

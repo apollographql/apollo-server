@@ -60,6 +60,6 @@ async function startApolloServer() {
 
 The parameter you provide to `applyMiddleware` is your middleware's top-level representation of your application. In Express applications, this variable is commonly named `app`.
 
-When you pass your app to `applyMiddleware`, Apollo Server automatically configures various middleware (including body parsing, the GraphQL Playground frontend, and CORS support), so you don't need to apply them with a mechanism like `app.use`.
+When you pass your app to `applyMiddleware`, Apollo Server automatically configures various middleware (including body parsing, an HTML UI, and CORS support), so you don't need to apply them with a mechanism like `app.use`.
 
 > **Note:** When integrating with hapi, call `applyMiddleware` with `await`.

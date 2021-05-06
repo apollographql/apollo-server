@@ -1,12 +1,11 @@
-import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
-import { Accepts } from 'accepts';
 import {
   ApolloServerBase,
-  PlaygroundRenderPageOptions,
+  convertNodeHttpToRequest,
   GraphQLOptions,
+  runHttpQuery,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { graphqlFastify } from './fastifyApollo';
+import accepts from 'fastify-accepts';
 
 const fastJson = require('fast-json-stringify');
 
@@ -44,6 +43,10 @@ export class ApolloServer extends ApolloServerBase {
 
     this.assertStarted('createHandler');
 
+    const { htmlPages, rootRedirectPath } = this.getHtmlPages({
+      graphqlPath: this.graphqlPath,
+    });
+
     return async (app: FastifyInstance) => {
       if (!disableHealthCheck) {
         app.get('/.well-known/apollo/server-health', async (request, reply) => {
@@ -65,8 +68,7 @@ export class ApolloServer extends ApolloServerBase {
 
       app.register(
         async (instance) => {
-          instance.register(require('fastify-accepts'));
-
+          instance.register(accepts);
           if (cors === true) {
             instance.register(require('fastify-cors'));
           } else if (cors !== false) {
@@ -79,19 +81,12 @@ export class ApolloServer extends ApolloServerBase {
             reply.send();
           });
 
-          const preHandlers = [
-            (
-              request: FastifyRequest,
-              reply: FastifyReply,
-              done: () => void,
-            ) => {
-              // Note: if you enable playground in production and expect to be able to see your
-              // schema, you'll need to manually specify `introspection: true` in the
-              // ApolloServer constructor; by default, the introspection query is only
-              // enabled in dev.
-              if (this.playgroundOptions && request.raw.method === 'GET') {
-                // perform more expensive content-type check only if necessary
-                const accept = (request as any).accepts() as Accepts;
+          instance.route<{ Params: { '*': string } }>({
+            method: ['GET', 'POST'],
+            url: '*',
+            preHandler: async (request, reply) => {
+              if (request.raw.method === 'GET') {
+                const accept = request.accepts();
                 const types = accept.types() as string[];
                 const prefersHTML =
                   types.find(
@@ -100,29 +95,70 @@ export class ApolloServer extends ApolloServerBase {
                   ) === 'text/html';
 
                 if (prefersHTML) {
-                  const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-                    endpoint: this.graphqlPath,
-                    ...this.playgroundOptions,
-                  };
-                  reply.type('text/html');
-                  const playground = renderPlaygroundPage(
-                    playgroundRenderPageOptions,
+                  // Strip out trailing slashes when looking up pages. We'd
+                  // prefer to just use a normal router, but it wasn't clear if
+                  // it was possible to use the router to match only `accept:
+                  // text/html` and fall back to other routes otherwise, without
+                  // defining a custom "constraint" which requires special
+                  // configuration at the level of Fastify app creation (which
+                  // happens in user code).
+                  const page = htmlPages.get(
+                    request.url.replace(/([^/])\/+$/, '$1'),
                   );
-                  reply.send(playground);
-                  return;
+                  if (page) {
+                    reply.type('text/html');
+                    reply.send(page);
+                  }
+                  if (
+                    rootRedirectPath &&
+                    (request.params['*'] === '' || request.params['*'] === '/')
+                  ) {
+                    reply.redirect(302, rootRedirectPath);
+                    return;
+                  }
                 }
               }
-              done();
             },
-          ];
+            handler: async (request: FastifyRequest, reply: FastifyReply) => {
+              try {
+                const { graphqlResponse, responseInit } = await runHttpQuery(
+                  [],
+                  {
+                    method: request.raw.method as string,
+                    options: () =>
+                      this.createGraphQLServerOptions(request, reply),
+                    query: (request.raw.method === 'POST'
+                      ? request.body
+                      : request.query) as any,
+                    request: convertNodeHttpToRequest(request.raw),
+                  },
+                );
 
-          instance.route({
-            method: ['GET', 'POST'],
-            url: '/',
-            preHandler: preHandlers,
-            handler: await graphqlFastify(
-              this.createGraphQLServerOptions.bind(this),
-            ),
+                if (responseInit.headers) {
+                  for (const [name, value] of Object.entries<string>(
+                    responseInit.headers,
+                  )) {
+                    reply.header(name, value);
+                  }
+                }
+                reply.serializer((payload: string) => payload);
+                reply.send(graphqlResponse);
+              } catch (error) {
+                if ('HttpQueryError' !== error.name) {
+                  throw error;
+                }
+
+                if (error.headers) {
+                  Object.keys(error.headers).forEach((header) => {
+                    reply.header(header, error.headers[header]);
+                  });
+                }
+
+                reply.code(error.statusCode);
+                reply.serializer((payload: string) => payload);
+                reply.send(error.message);
+              }
+            },
           });
         },
         {

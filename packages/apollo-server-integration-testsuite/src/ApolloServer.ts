@@ -43,6 +43,7 @@ import {
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
   ApolloServerPluginUsageReportingOptions,
+  ApolloServerPluginUIDisabled,
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
@@ -55,6 +56,8 @@ import {
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
 import { AddressInfo } from 'net';
+import request from 'supertest';
+import { HtmlPage, HtmlPagesOptions } from 'apollo-server-plugin-base';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -174,9 +177,10 @@ export interface ServerInfo<AS extends ApolloServerBase> {
 }
 
 export interface CreateServerFunc<AS extends ApolloServerBase> {
-  (config: Config, options?: { suppressStartCall?: boolean }): Promise<
-    ServerInfo<AS>
-  >;
+  (
+    config: Config,
+    options?: { suppressStartCall?: boolean; graphqlPath?: string },
+  ): Promise<ServerInfo<AS>>;
 }
 
 export interface StopServerFunc {
@@ -186,7 +190,7 @@ export interface StopServerFunc {
 export function testApolloServer<AS extends ApolloServerBase>(
   createApolloServer: CreateServerFunc<AS>,
   stopServer: StopServerFunc,
-  options: { serverlessFramework?: boolean } = {},
+  options: { serverlessFramework?: boolean; skipHtmlPageTests?: boolean } = {},
 ) {
   describe('ApolloServer', () => {
     afterEach(stopServer);
@@ -2819,5 +2823,225 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
     });
+
+    options.skipHtmlPageTests ||
+      describe('htmlPages', () => {
+        let httpServer: http.Server;
+
+        function getWithoutAcceptHeader(url: string) {
+          return request(httpServer).get(url);
+        }
+        function get(url: string) {
+          return getWithoutAcceptHeader(url).set('accept', 'text/html');
+        }
+
+        function makeServerConfig(
+          htmlPageses: ((options: HtmlPagesOptions) => HtmlPage[])[],
+        ): Config {
+          return {
+            typeDefs: 'type Query {x: ID}',
+            plugins: [
+              ApolloServerPluginUIDisabled(),
+              ...htmlPageses.map((htmlPages) => ({
+                serverWillStart() {
+                  return {
+                    htmlPages,
+                  };
+                },
+              })),
+            ],
+          };
+        }
+        describe('basic functionality', () => {
+          const basicPages = [
+            () => [
+              {
+                path: '/foo',
+                html: 'FOO',
+              },
+              {
+                path: '/foo/bar',
+                html: 'FOOBAR',
+                redirectFromRoot: true,
+              },
+            ],
+            ({ graphqlPath }: HtmlPagesOptions) => [
+              {
+                path: '/baz',
+                html: `BAZ + ${graphqlPath}`,
+                redirectFromRoot: true,
+              },
+            ],
+          ];
+
+          // We might want to make this consistent (probably 404) but it isn't for
+          // now.
+          function someClientError(res: request.Response) {
+            expect(res.statusType).toBe(4);
+          }
+
+          describe('with non-root graphqlPath', () => {
+            beforeEach(async () => {
+              httpServer = (
+                await createApolloServer(makeServerConfig(basicPages), {
+                  graphqlPath: '/goofql',
+                })
+              ).httpServer;
+            });
+
+            it('basic GET works', async () => {
+              await get('/goofql/foo').expect(200, 'FOO');
+            });
+            it('explicitly served nested paths work', async () => {
+              await get('/goofql/foo/bar').expect(200, 'FOOBAR');
+            });
+            it('callback has access to graphqlPath', async () => {
+              await get('/goofql/baz').expect(200, 'BAZ + /goofql');
+            });
+            it('only mounts under graphqlPath', async () => {
+              await get('/foo').expect(404);
+            });
+            it('no nesting under html pages', async () => {
+              await get('/goofql/foo/nope').expect(someClientError);
+            });
+            it('needs the header', async () => {
+              await getWithoutAcceptHeader('/goofql/foo').expect(
+                someClientError,
+              );
+            });
+            it('root redirects to first one requesting it', async () => {
+              await get('/goofql')
+                .expect(302)
+                .expect('location', '/goofql/foo/bar');
+            });
+            it('trailing slash works', async () => {
+              await get('/goofql/foo/').expect(200, 'FOO');
+            });
+            it('trailing slash works on root', async () => {
+              await get('/goofql/')
+                .expect(302)
+                .expect('location', '/goofql/foo/bar');
+            });
+          });
+
+          describe('with root graphqlPath', () => {
+            beforeEach(async () => {
+              httpServer = (
+                await createApolloServer(makeServerConfig(basicPages), {
+                  graphqlPath: '/',
+                })
+              ).httpServer;
+            });
+
+            it('basic GET works', async () => {
+              await get('/foo').expect(200, 'FOO');
+            });
+            it('explicitly served nested paths work', async () => {
+              await get('/foo/bar').expect(200, 'FOOBAR');
+            });
+            it('callback has access to graphqlPath', async () => {
+              await get('/baz').expect(200, 'BAZ + /');
+            });
+            it('no nesting under html pages', async () => {
+              await get('/foo/nope').expect(someClientError);
+            });
+            it('needs the header', async () => {
+              await getWithoutAcceptHeader('/foo').expect(someClientError);
+            });
+            it('root redirects to first one requesting it', async () => {
+              await get('/').expect(302).expect('location', '/foo/bar');
+            });
+            it('trailing slash works', async () => {
+              await get('/foo/').expect(200, 'FOO');
+            });
+          });
+        });
+
+        describe('serve 200 on graphqlPath', () => {
+          it('non-root graphqlPath', async () => {
+            httpServer = (
+              await createApolloServer(
+                makeServerConfig([
+                  () => [
+                    { path: '/', html: 'ROOT' },
+                    { path: '/other', html: 'OTHER', redirectFromRoot: true },
+                  ],
+                ]),
+                {
+                  graphqlPath: '/goofql',
+                },
+              )
+            ).httpServer;
+            await get('/goofql').expect(200, 'ROOT');
+            await get('/goofql/').expect(200, 'ROOT');
+            await get('/goofql/foo').expect(400);
+          });
+
+          it('root graphqlPath', async () => {
+            httpServer = (
+              await createApolloServer(
+                makeServerConfig([
+                  () => [
+                    { path: '/', html: 'ROOT' },
+                    { path: '/other', html: 'OTHER', redirectFromRoot: true },
+                  ],
+                ]),
+                {
+                  graphqlPath: '/',
+                },
+              )
+            ).httpServer;
+            await get('/').expect(200, 'ROOT');
+            await get('/foo').expect(400);
+          });
+        });
+
+        // Serverless frameworks don't have startup errors because they don't
+        // have a startup phase.
+        options.serverlessFramework ||
+          describe('startup errors', () => {
+            it('paths must start with slash', async () => {
+              await expect(
+                createApolloServer(
+                  makeServerConfig([() => [{ path: 'foo', html: 'FOO' }]]),
+                ),
+              ).rejects.toThrow(/must have path starting with '\/'/);
+            });
+            it('paths must be unique within a plugin', async () => {
+              await expect(
+                createApolloServer(
+                  makeServerConfig([
+                    () => [
+                      { path: '/foo', html: 'FOO' },
+                      { path: '/foo', html: 'FOO2' },
+                    ],
+                  ]),
+                ),
+              ).rejects.toThrow(/multiple HTML pages/);
+            });
+            it('paths must be unique across plugins', async () => {
+              await expect(
+                createApolloServer(
+                  makeServerConfig([
+                    () => [{ path: '/foo', html: 'FOO' }],
+                    () => [{ path: '/foo', html: 'FOO2' }],
+                  ]),
+                ),
+              ).rejects.toThrow(/multiple HTML pages/);
+            });
+            it('only one redirectFromRoot per plugin', async () => {
+              await expect(
+                createApolloServer(
+                  makeServerConfig([
+                    () => [
+                      { path: '/foo1', html: 'FOO1', redirectFromRoot: true },
+                      { path: '/foo2', html: 'FOO2', redirectFromRoot: true },
+                    ],
+                  ]),
+                ),
+              ).rejects.toThrow(/multiple HTML pages/);
+            });
+          });
+      });
   });
 }

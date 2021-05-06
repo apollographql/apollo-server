@@ -3,10 +3,6 @@ import corsMiddleware from '@koa/cors';
 import bodyParser from 'koa-bodyparser';
 import compose from 'koa-compose';
 import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
-import {
   ApolloServerBase,
   convertNodeHttpToRequest,
   GraphQLOptions,
@@ -118,7 +114,7 @@ export class ApolloServer extends ApolloServerBase {
           return;
         }
 
-        if (this.playgroundOptions && ctx.request.method === 'GET') {
+        if (ctx.request.method === 'GET') {
           // perform more expensive content-type check only if necessary
           const accept = accepts(ctx.req);
           const types = accept.types() as string[];
@@ -128,15 +124,8 @@ export class ApolloServer extends ApolloServerBase {
             ) === 'text/html';
 
           if (prefersHTML) {
-            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-              endpoint: path,
-              ...this.playgroundOptions,
-            };
             ctx.set('Content-Type', 'text/html');
-            const playground = renderPlaygroundPage(
-              playgroundRenderPageOptions,
-            );
-            ctx.body = playground;
+            ctx.body = 'FIXME';
             return;
           }
         }
