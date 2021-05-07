@@ -39,6 +39,9 @@ import {
   GraphQLService,
   GraphQLExecutor,
   GraphQLServiceConfig,
+  ApolloServerPluginInlineTrace,
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginUsageReportingOptions,
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import { TracingFormat } from 'apollo-tracing';
@@ -47,11 +50,6 @@ import { BaseContext, GraphQLRequestContext, GraphQLRequestContextExecutionDidSt
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
-import {
-  ApolloServerPluginUsageReporting,
-  ApolloServerPluginUsageReportingOptions,
-} from 'apollo-server-core/dist/plugin/usageReporting';
-import { ApolloServerPluginInlineTrace } from 'apollo-server-core/dist/plugin/inlineTrace';
 import { AddressInfo } from 'net';
 
 export function createServerInfo<AS extends ApolloServerBase>(

@@ -25,7 +25,7 @@ import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder';
 import { makeTraceDetails } from './traceDetails';
 import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
-import type { InternalApolloServerPlugin } from '../internalPlugin';
+import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { OurReport } from './stats';
 import { CacheScope } from 'apollo-cache-control';
 import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';

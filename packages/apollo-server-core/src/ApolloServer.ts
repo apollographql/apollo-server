@@ -60,7 +60,7 @@ import {
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
 } from './plugin';
-import { InternalPluginId, pluginIsInternal } from './plugin/internalPlugin';
+import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {

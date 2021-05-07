@@ -52,3 +52,5 @@ export const gql: (
   template: TemplateStringsArray | string,
   ...substitutions: any[]
 ) => DocumentNode = gqlTag;
+
+export * from './plugin';
