@@ -729,57 +729,5 @@ describe('apollo-server-fastify', () => {
         expect(result.extensions).toBeUndefined();
       });
     });
-
-    describe('Tracing', () => {
-      const typeDefs = gql`
-        type Book {
-          title: String
-          author: String
-        }
-
-        type Query {
-          books: [Book]
-        }
-      `;
-
-      const resolvers = {
-        Query: {
-          books: () => books,
-        },
-      };
-
-      it('applies tracing extension', async () => {
-        const { url: uri } = await createServer({
-          typeDefs,
-          resolvers,
-          tracing: true,
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-        const result = await apolloFetch({
-          query: `{ books { title author } }`,
-        });
-        expect(result.data).toEqual({ books });
-        expect(result.extensions).toBeDefined();
-        expect(result.extensions.tracing).toBeDefined();
-      });
-
-      it('applies tracing extension with cache control enabled', async () => {
-        const { url: uri } = await createServer({
-          typeDefs,
-          resolvers,
-          tracing: true,
-          cacheControl: true,
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-        const result = await apolloFetch({
-          query: `{ books { title author } }`,
-        });
-        expect(result.data).toEqual({ books });
-        expect(result.extensions).toBeDefined();
-        expect(result.extensions.tracing).toBeDefined();
-      });
-    });
   });
 });

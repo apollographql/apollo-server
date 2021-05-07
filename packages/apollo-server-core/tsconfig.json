@@ -13,6 +13,5 @@
     { "path": "../apollo-server-errors" },
     { "path": "../apollo-server-plugin-base" },
     { "path": "../apollo-server-types" },
-    { "path": "../apollo-tracing" },
   ]
 }

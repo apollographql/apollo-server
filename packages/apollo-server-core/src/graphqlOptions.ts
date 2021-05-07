@@ -53,7 +53,6 @@ export interface GraphQLServerOptions<
   ) => GraphQLResponse | null;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
-  tracing?: boolean;
   cacheControl?: CacheControlExtensionOptions;
   dataSources?: () => DataSources<TContext>;
   cache?: KeyValueCache;

@@ -44,7 +44,6 @@ import {
   ApolloServerPluginUsageReportingOptions,
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
-import { TracingFormat } from 'apollo-tracing';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
 import { BaseContext, GraphQLRequestContext, GraphQLRequestContextExecutionDidStart } from 'apollo-server-types';
 
@@ -1939,68 +1938,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         it('with non-retryable error', async () => {
           await testWithStatus(400, 1);
         });
-      });
-    });
-
-    describe('Tracing', () => {
-      const typeDefs = gql`
-        type Book {
-          title: String
-          author: String
-        }
-
-        type Movie {
-          title: String
-        }
-
-        type Query {
-          books: [Book]
-          movies: [Movie]
-        }
-      `;
-
-      const resolvers = {
-        Query: {
-          books: () =>
-            new Promise((resolve) =>
-              setTimeout(() => resolve([{ title: 'H', author: 'J' }]), 10),
-            ),
-          movies: () =>
-            new Promise((resolve) =>
-              setTimeout(() => resolve([{ title: 'H' }]), 12),
-            ),
-        },
-      };
-
-      it('reports a total duration that is longer than the duration of its resolvers', async () => {
-        const { url: uri } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          tracing: true,
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-        const result = await apolloFetch({
-          query: `{ books { title author } }`,
-        });
-
-        const tracing: TracingFormat = result.extensions.tracing;
-
-        const earliestStartOffset = tracing.execution.resolvers
-          .map((resolver) => resolver.startOffset)
-          .reduce((currentEarliestOffset, nextOffset) =>
-            Math.min(currentEarliestOffset, nextOffset),
-          );
-
-        const latestEndOffset = tracing.execution.resolvers
-          .map((resolver) => resolver.startOffset + resolver.duration)
-          .reduce((currentLatestEndOffset, nextEndOffset) =>
-            Math.max(currentLatestEndOffset, nextEndOffset),
-          );
-
-        const resolverDuration = latestEndOffset - earliestStartOffset;
-
-        expect(resolverDuration).not.toBeGreaterThan(tracing.duration);
       });
     });
 

@@ -16,14 +16,13 @@ See https://www.apollographql.com/docs/apollo-server/performance/caching/ for mo
 
 Apollo Server includes built-in support for Apollo Cache Control from version 1.2.0 onwards.
 
-The only code change required is to add `tracing: true` and `cacheControl: true` to the options passed to the Apollo Server middleware function for your framework of choice. For example, for Express:
+The only code change required is to add `cacheControl: true` to the options passed to the Apollo Server middleware function for your framework of choice. For example, for Express:
 
 ```javascript
 app.use('/graphql', bodyParser.json(), graphqlExpress({
   schema,
   context: {},
-  tracing: true,
-  cacheControl: true
+  cacheControl: true,
 }));
 ```
 
@@ -121,7 +120,6 @@ The power of cache hints comes from being able to set them precisely to differen
 app.use('/graphql', bodyParser.json(), graphqlExpress({
   schema,
   context: {},
-  tracing: true,
   cacheControl: {
     defaultMaxAge: 5,
   },
