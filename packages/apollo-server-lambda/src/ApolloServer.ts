@@ -123,7 +123,10 @@ export class ApolloServer<
       event: EventT,
       context: LambdaContext,
     ): Promise<APIGatewayProxyResult> => {
-      const eventHeaders = new Headers(event.headers);
+      // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/50224 changed
+      // the typing of event.headers to be effectively Record<string,
+      // string|undefined> but there should be no actual undefineds as values.
+      const eventHeaders = new Headers(event.headers as Record<string, string>);
 
       // Make a request-specific copy of the CORS headers, based on the server
       // global CORS headers we've set above.
