@@ -40,7 +40,6 @@
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-server-types": "file:../apollo-server-types",
-    "apollo-tracing": "file:../apollo-tracing",
     "async-retry": "^1.2.1",
     "fast-json-stable-stringify": "^2.1.0",
     "graphql-tag": "^2.11.0",

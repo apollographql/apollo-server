@@ -74,7 +74,6 @@ interface QueryOptions
     | 'plugins'
     | 'rootValue'
     | 'schema'
-    | 'tracing'
     | 'validationRules'
   > {
   queryString?: string;

@@ -45,7 +45,6 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { plugin as pluginTracing } from 'apollo-tracing';
 import { Logger, SchemaHash, ApolloConfig } from 'apollo-server-types';
 import {
   plugin as pluginCacheControl,
@@ -715,17 +714,6 @@ export class ApolloServerBase {
     // Internal plugins should be added to `pluginsToInit` here.
     // User's plugins, provided as an argument to this method, will be added
     // at the end of that list so they take precedence.
-
-    // If the user has enabled it explicitly, add our tracing plugin.
-    // (This is the plugin which adds a verbose JSON trace to every GraphQL response;
-    // it was designed for use with the obsolete engineproxy, and also works
-    // with a graphql-playground trace viewer, but isn't generally recommended
-    // (eg, it really does send traces with every single request). The newer
-    // inline tracing plugin may be what you want, or just usage reporting if
-    // the goal is to get traces to Apollo's servers.)
-    if (this.config.tracing) {
-      pluginsToInit.push(pluginTracing());
-    }
 
     // Enable cache control unless it was explicitly disabled.
     if (this.config.cacheControl !== false) {

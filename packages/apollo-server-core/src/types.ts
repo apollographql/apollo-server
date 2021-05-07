@@ -45,7 +45,6 @@ type BaseConfig = Pick<
   | 'executor'
   | 'formatResponse'
   | 'fieldResolver'
-  | 'tracing'
   | 'dataSources'
   | 'cache'
   | 'logger'

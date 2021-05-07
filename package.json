@@ -52,8 +52,7 @@
     "apollo-server-plugin-operation-registry": "file:packages/apollo-server-plugin-operation-registry",
     "apollo-server-plugin-response-cache": "file:packages/apollo-server-plugin-response-cache",
     "apollo-server-testing": "file:packages/apollo-server-testing",
-    "apollo-server-types": "file:packages/apollo-server-types",
-    "apollo-tracing": "file:packages/apollo-tracing"
+    "apollo-server-types": "file:packages/apollo-server-types"
   },
   "devDependencies": {
     "@graphql-tools/mock": "8.1.2",
