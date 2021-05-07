@@ -6,8 +6,6 @@ api_reference: true
 
 Apollo Server has a built-in usage reporting plugin that gathers data on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing this usage data to [Apollo Studio](https://www.apollographql.com/docs/studio/), as described in [Metrics and logging](../../monitoring/metrics/).
 
-> This plugin was introduced in Apollo Server 2.18. In previous versions, usage reporting is configured by providing the `engine` option to the `ApolloServer` constructor. That option continues to work (but is now deprecated). See [the migration guide](../../migration-engine-plugins/) for details.
-
 ## Default installation
 
 Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key to Apollo Server](https://www.apollographql.com/docs/apollo-server/monitoring/metrics/#connecting-to-apollo-studio) (usually by setting the value of the `APOLLO_KEY` environment variable). No other action is required.

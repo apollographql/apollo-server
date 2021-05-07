@@ -29,8 +29,6 @@ const server = new ApolloServer({
 });
 ```
 
-This plugin was introduced in Apollo Server 2.18. In previous versions, schema reporting was configured using the `engine` option to the `ApolloServer` constructor. That option continues to work; see [the migration guide](../../migration-engine-plugins/) for details.
-
 ## Options
 
 <table class="field-table">
