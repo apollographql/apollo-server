@@ -3,15 +3,9 @@ import {
   getNamedType,
   GraphQLInterfaceType,
   GraphQLObjectType,
-  ResponsePath,
   responsePathAsArray,
 } from 'graphql';
 import { ApolloServerPlugin } from "apollo-server-plugin-base";
-
-export interface CacheControlFormat {
-  version: 1;
-  hints: ({ path: (string | number)[] } & CacheHint)[];
-}
 
 export interface CacheHint {
   maxAge?: number;
@@ -28,7 +22,6 @@ export interface CacheControlExtensionOptions {
   // TODO: We should replace these with
   // more appropriately named options.
   calculateHttpHeaders?: boolean;
-  stripFormattedExtensions?: boolean;
 }
 
 declare module 'graphql/type/definition' {
@@ -44,17 +37,17 @@ declare module 'apollo-server-types' {
   interface GraphQLRequestContext<TContext> {
     // Not readonly: plugins can set it.
     overallCachePolicy?: Required<CacheHint> | undefined;
+    cacheHints?: Map<string, CacheHint>;
   }
 }
-
-type MapResponsePathHints = Map<ResponsePath, CacheHint>;
 
 export const plugin = (
   options: CacheControlExtensionOptions = Object.create(null),
 ): ApolloServerPlugin => ({
   requestDidStart(requestContext) {
     const defaultMaxAge: number = options.defaultMaxAge || 0;
-    const hints: MapResponsePathHints = new Map();
+    const hints = new Map<string, CacheHint>();
+    requestContext.cacheHints = hints;
 
 
     function setOverallCachePolicyWhenUnset() {
@@ -111,13 +104,15 @@ export const plugin = (
             hint.maxAge = defaultMaxAge;
           }
 
+          const path = responsePathAsArray(info.path).join('.');
+
           if (hint.maxAge !== undefined || hint.scope !== undefined) {
-            addHint(hints, info.path, hint);
+            addHint(hints, path, hint);
           }
 
           info.cacheControl = {
             setCacheHint: (hint: CacheHint) => {
-              addHint(hints, info.path, hint);
+              addHint(hints, path, hint);
             },
             cacheHint: hint,
           };
@@ -161,30 +156,6 @@ export const plugin = (
             }, ${overallCachePolicy.scope.toLowerCase()}`,
           );
         }
-
-        // We should have to explicitly ask to leave the formatted extension in,
-        // or pass the old-school `cacheControl: true` (as interpreted by
-        // apollo-server-core/ApolloServer), in order to include the
-        // old engineproxy-aimed extensions. Specifically, we want users of
-        // apollo-server-plugin-response-cache to be able to specify
-        // `cacheControl: {defaultMaxAge: 600}` without accidentally turning on
-        // the extension formatting.
-        if (options.stripFormattedExtensions !== false) return;
-
-        const extensions =
-          response.extensions || (response.extensions = Object.create(null));
-
-        if (typeof extensions.cacheControl !== 'undefined') {
-          throw new Error("The cacheControl information already existed.");
-        }
-
-        extensions.cacheControl = {
-          version: 1,
-          hints: Array.from(hints).map(([path, hint]) => ({
-            path: [...responsePathAsArray(path)],
-            ...hint,
-          })),
-        };
       }
     }
   }
@@ -239,7 +210,7 @@ function mergeHints(
 }
 
 function computeOverallCachePolicy(
-  hints: MapResponsePathHints,
+  hints: Map<string, CacheHint>,
 ): Required<CacheHint> | undefined {
   let lowestMaxAge: number | undefined = undefined;
   let scope: CacheScope = CacheScope.Public;
@@ -266,7 +237,7 @@ function computeOverallCachePolicy(
     : undefined;
 }
 
-function addHint(hints: MapResponsePathHints, path: ResponsePath, hint: CacheHint) {
+function addHint(hints: Map<string, CacheHint>, path: string, hint: CacheHint) {
   const existingCacheHint = hints.get(path);
   if (existingCacheHint) {
     hints.set(path, mergeHints(existingCacheHint, hint));

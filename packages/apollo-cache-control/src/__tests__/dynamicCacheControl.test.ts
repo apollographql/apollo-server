@@ -66,7 +66,7 @@ describe('dynamic cache control', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 60 });
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
   });
 
   it('should set the scope for a field from a dynamic cache hint', async () => {
@@ -110,11 +110,9 @@ describe('dynamic cache control', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({
-      path: ['droid'],
-      maxAge: 60,
-      scope: CacheScope.Private,
-    });
+    expect(hints).toStrictEqual(
+      new Map([['droid', { maxAge: 60, scope: CacheScope.Private }]]),
+    );
   });
 
   it('should override the maxAge set for a field from a dynamic cache hint', async () => {
@@ -158,6 +156,6 @@ describe('dynamic cache control', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 120 });
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 120 }]]));
   });
 });

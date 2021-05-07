@@ -725,16 +725,18 @@ export class ApolloServerBase {
         // cacheControl: true means that the user needs the cache-control
         // extensions. This means we are running the proxy, so we should not
         // strip out the cache control extension and not add cache-control headers
+        // FIXME: This comment doesn't make sense any more but this whole chunk
+        // will be refactored on this PR.
         cacheControlOptions = {
-          stripFormattedExtensions: false,
           calculateHttpHeaders: false,
           defaultMaxAge: 0,
         };
       } else {
         // Default behavior is to run default header calculation and return
         // no cacheControl extensions
+        // FIXME: This comment doesn't make sense any more but this whole chunk
+        // will be refactored on this PR.
         cacheControlOptions = {
-          stripFormattedExtensions: true,
           calculateHttpHeaders: true,
           defaultMaxAge: 0,
           ...this.config.cacheControl,

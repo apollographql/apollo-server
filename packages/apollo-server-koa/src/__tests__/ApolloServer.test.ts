@@ -514,7 +514,7 @@ describe('apollo-server-koa', () => {
     };
 
     describe('Cache Control Headers', () => {
-      it('applies cacheControl Headers and strips out extension', async () => {
+      it('applies cacheControl Headers', async () => {
         const { url: uri } = await createServer({ typeDefs, resolvers });
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(
@@ -529,28 +529,6 @@ describe('apollo-server-koa', () => {
           query: `{ cooks { title author } }`,
         });
         expect(result.data).toEqual({ cooks: books });
-        expect(result.extensions).toBeUndefined();
-      });
-
-      it('contains no cacheControl Headers and keeps extension with engine proxy', async () => {
-        const { url: uri } = await createServer({
-          typeDefs,
-          resolvers,
-          cacheControl: true,
-        });
-
-        const apolloFetch = createApolloFetch({ uri }).useAfter(
-          (response, next) => {
-            expect(response.response.headers.get('cache-control')).toBeNull();
-            next();
-          },
-        );
-        const result = await apolloFetch({
-          query: `{ cooks { title author } }`,
-        });
-        expect(result.data).toEqual({ cooks: books });
-        expect(result.extensions).toBeDefined();
-        expect(result.extensions.cacheControl).toBeDefined();
       });
 
       it('contains no cacheControl Headers when uncachable', async () => {
@@ -566,7 +544,6 @@ describe('apollo-server-koa', () => {
           query: `{ books { title author } }`,
         });
         expect(result.data).toEqual({ books });
-        expect(result.extensions).toBeUndefined();
       });
 
       it('contains private cacheControl Headers when scoped', async () => {
@@ -586,7 +563,6 @@ describe('apollo-server-koa', () => {
         expect(result.data).toEqual({
           pooks: [{ title: 'pook', books }],
         });
-        expect(result.extensions).toBeUndefined();
       });
 
       it('runs when cache-control is false', async () => {
@@ -608,7 +584,6 @@ describe('apollo-server-koa', () => {
         expect(result.data).toEqual({
           pooks: [{ title: 'pook', books }],
         });
-        expect(result.extensions).toBeUndefined();
       });
     });
 

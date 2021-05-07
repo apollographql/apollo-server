@@ -1,4 +1,4 @@
-import { ResponsePath, GraphQLError } from 'graphql';
+import { GraphQLError } from 'graphql';
 import { Headers } from 'apollo-server-env';
 import {
   CacheScope,
@@ -110,21 +110,9 @@ describe('plugin', () => {
   });
 
   describe('computeOverallCachePolicy', () => {
-    const responsePath: ResponsePath = {
-      key: 'test',
-      prev: undefined,
-      typename: undefined,
-    };
-    const responseSubPath: ResponsePath = {
-      key: 'subTest',
-      prev: responsePath,
-      typename: undefined,
-    };
-    const responseSubSubPath: ResponsePath = {
-      key: 'subSubTest',
-      prev: responseSubPath,
-      typename: undefined,
-    };
+    const responsePath = 'test';
+    const responseSubPath = `${responsePath}.subTest`;
+    const responseSubSubPath = `${responseSubPath}.subSubTest`;
 
     const hints = new Map();
     afterEach(() => hints.clear());

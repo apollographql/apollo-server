@@ -27,7 +27,7 @@ describe('@cacheControl directives', () => {
       `,
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 0 });
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 0 }]]));
   });
 
   it('should set maxAge: 0 and no scope for a top-level scalar field without cache hints', async () => {
@@ -46,7 +46,7 @@ describe('@cacheControl directives', () => {
       `,
     );
 
-    expect(hints).toContainEqual({ path: ['name'], maxAge: 0 });
+    expect(hints).toStrictEqual(new Map([['name', { maxAge: 0 }]]));
   });
 
   it('should set maxAge to the default and no scope for a field without cache hints', async () => {
@@ -73,7 +73,7 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 10 });
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 10 }]]));
   });
 
   it('should set the specified maxAge from a cache hint on the field', async () => {
@@ -100,7 +100,7 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 60 });
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
   });
 
   it('should set the specified maxAge for a field from a cache hint on the target type', async () => {
@@ -127,7 +127,7 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 60 });
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
   });
 
   it('should overwrite the default maxAge when maxAge=0 is specified on the type', async () => {
@@ -154,7 +154,7 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 0 });
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 0 }]]));
   });
 
   it('should override the maxAge from the target type with that specified on a field', async () => {
@@ -181,7 +181,7 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 120 });
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 120 }]]));
   });
 
   it('should override the maxAge from the target type with that specified on a field, keeping the scope', async () => {
@@ -208,11 +208,9 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({
-      path: ['droid'],
-      maxAge: 120,
-      scope: CacheScope.Private,
-    });
+    expect(hints).toStrictEqual(
+      new Map([['droid', { maxAge: 120, scope: CacheScope.Private }]]),
+    );
   });
 
   it('should override the scope from the target type with that specified on a field', async () => {
@@ -239,10 +237,8 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({
-      path: ['droid'],
-      maxAge: 60,
-      scope: CacheScope.Private,
-    });
+    expect(hints).toStrictEqual(
+      new Map([['droid', { maxAge: 60, scope: CacheScope.Private }]]),
+    );
   });
 });

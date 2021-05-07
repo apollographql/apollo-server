@@ -10,15 +10,9 @@ export async function collectCacheControlHints(
   schema: GraphQLSchema,
   source: string,
   options?: CacheControlExtensionOptions,
-): Promise<CacheHint[]> {
+): Promise<Map<string, CacheHint>> {
 
-  // Because this test helper looks at the formatted extensions, we always want
-  // to include them in the response rather than allow them to be stripped
-  // out.
-  const pluginInstance = plugin({
-    ...options,
-    stripFormattedExtensions: false,
-  });
+  const pluginInstance = plugin(options);
 
   const requestContext = await pluginTestHarness({
     pluginInstance,
@@ -37,5 +31,5 @@ export async function collectCacheControlHints(
 
   expect(requestContext.response.errors).toBeUndefined();
 
-  return requestContext.response.extensions!.cacheControl.hints;
+  return requestContext.cacheHints!;
 }
