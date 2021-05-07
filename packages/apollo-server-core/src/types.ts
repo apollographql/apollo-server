@@ -59,19 +59,9 @@ export type GraphQLServiceConfig = {
   executor: GraphQLExecutor;
 };
 
-/**
- * This is an older format for the data that now lives in ApolloConfig.
- */
-export type GraphQLServiceEngineConfig = {
-  apiKeyHash: string;
-  graphId: string;
-  graphVariant?: string;
-};
-
 export interface GraphQLService {
   load(options: {
     apollo?: ApolloConfig;
-    engine?: GraphQLServiceEngineConfig; // deprecated; use `apollo` instead
   }): Promise<GraphQLServiceConfig>;
   onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
   // Note: The `TContext` typing here is not conclusively behaving as we expect:

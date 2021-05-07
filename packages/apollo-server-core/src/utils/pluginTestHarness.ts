@@ -212,7 +212,7 @@ export default async function pluginTestHarness<TContext>({
 
   requestContext.operation = operation || undefined;
   // We'll set `operationName` to `null` for anonymous operations.  Note that
-  // apollo-engine-reporting relies on the fact that the requestContext passed
+  // usage reporting relies on the fact that the requestContext passed
   // to requestDidStart is mutated to add this field before requestDidEnd is
   // called
   requestContext.operationName =

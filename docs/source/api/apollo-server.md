@@ -308,23 +308,6 @@ An object containing configuration options for connecting Apollo Server to [Apol
 </td>
 </tr>
 
-<tr>
-<td>
-
-###### `engine`
-
-`Object` or `Boolean`
-</td>
-<td>
-
-**Deprecated as of Apollo Server v2.18.** New projects should instead use Apollo Server's Studio connection plugins. For details, see [the migration docs](../migration-engine-plugins/).
-
-An object containing configuration options for connecting Apollo Server to [Apollo Studio](https://www.apollographql.com/docs/studio/).
-
-</td>
-</tr>
-
-
 
 <tr>
 <td colspan="2">

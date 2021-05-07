@@ -1793,7 +1793,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('usage reporting', () => {
-      async function makeFakeTestableEngineServer({
+      async function makeFakeUsageReportingServer({
         status,
         waitWriteResponse = false,
       }: {
@@ -1801,28 +1801,28 @@ export function testApolloServer<AS extends ApolloServerBase>(
         waitWriteResponse?: boolean;
       }) {
         const writeResponsePromise = resolvable();
-        const fakeEngineServer = http.createServer(async (_, res) => {
+        const fakeUsageReportingServer = http.createServer(async (_, res) => {
           await writeResponsePromise;
           res.writeHead(status);
           res.end('Important text in the body');
         });
         await new Promise<void>((resolve) => {
-          fakeEngineServer.listen(0, '127.0.0.1', () => {
+          fakeUsageReportingServer.listen(0, '127.0.0.1', () => {
             resolve();
           });
         });
         async function closeServer() {
           await new Promise<void>((resolve) =>
-            fakeEngineServer.close(() => resolve()),
+            fakeUsageReportingServer.close(() => resolve()),
           );
         }
 
-        const { family, address, port } = (fakeEngineServer.address() as AddressInfo);
+        const { family, address, port } = (fakeUsageReportingServer.address() as AddressInfo);
         if (family !== 'IPv4') {
           throw new Error(`The family was unexpectedly ${family}.`);
         }
 
-        const fakeEngineUrl = `http://${address}:${port}`;
+        const fakeUsageReportingUrl = `http://${address}:${port}`;
 
         if (!waitWriteResponse) {
           writeResponsePromise.resolve();
@@ -1830,8 +1830,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         return {
           closeServer,
-          fakeEngineServer,
-          fakeEngineUrl,
+          fakeUsageReportingUrl,
           writeResponseResolve: () => writeResponsePromise.resolve(),
         };
       }
@@ -1845,9 +1844,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const {
             closeServer,
-            fakeEngineUrl,
+            fakeUsageReportingUrl,
             writeResponseResolve,
-          } = await makeFakeTestableEngineServer({
+          } = await makeFakeUsageReportingServer({
             status,
             waitWriteResponse: true,
           });
@@ -1884,7 +1883,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               },
               plugins: [
                 ApolloServerPluginUsageReporting({
-                  endpointUrl: fakeEngineUrl,
+                  endpointUrl: fakeUsageReportingUrl,
                   reportIntervalMs: 1,
                   maxAttempts: 3,
                   requestAgent,
@@ -2140,7 +2139,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           plugins: [
             ApolloServerPluginInlineTrace({
               rewriteError(err) {
-                err.message = `Rewritten for Engine: ${err.message}`;
+                err.message = `Rewritten for Usage Reporting: ${err.message}`;
                 return err;
               },
             }),
@@ -2164,7 +2163,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const encoded = Buffer.from(ftv1, 'base64');
         const trace = Trace.decode(encoded);
         expect(trace.root!.child![0].error![0].message).toBe(
-          'Rewritten for Engine: It broke',
+          'Rewritten for Usage Reporting: It broke',
         );
       });
     });
