@@ -1,5 +1,4 @@
 import {
-  APIGatewayProxyCallback,
   APIGatewayProxyEvent,
   APIGatewayProxyEventV2,
   APIGatewayProxyResult,
@@ -53,50 +52,6 @@ export interface CreateHandlerOptions<
   };
   onHealthCheck?: (req: EventT) => Promise<any>;
 }
-
-// Lambda has two ways of defining a handler: as an async Promise-returning
-// function, and as a callback-invoking function.
-// https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html The async
-// variety was introduced with Lambda's Node 8 runtime. Apparently the
-// callback-invoking variety was removed with their Node 14 runtime (their docs
-// don't mention this anywhere but our users have reported this:
-// https://github.com/apollographql/apollo-server/issues/1989#issuecomment-778982945).
-// While AWS doesn't directly support pre-Node-8 runtimes any more, it's
-// possible some users are using a Custom Runtime that still requires the Node 6
-// version, and Apollo Server still technically supports Node 6. So for now, we
-// define an async handler and use this function to convert it to a function
-// that can work either as an async or callback handler.
-//
-// (Apollo Server 3 will drop Node 6 support, at which point we should just make
-// this package always return an async handler.)
-function maybeCallbackify<EventT extends APIGatewayProxyEventV1OrV2>(
-  asyncHandler: (
-    event: EventT,
-    context: LambdaContext,
-  ) => Promise<APIGatewayProxyResult>,
-): (
-  event: EventT,
-  context: LambdaContext,
-  callback: APIGatewayProxyCallback | undefined,
-) => void | Promise<APIGatewayProxyResult> {
-  return (
-    event: EventT,
-    context: LambdaContext,
-    callback: APIGatewayProxyCallback | undefined,
-  ) => {
-    if (callback) {
-      context.callbackWaitsForEmptyEventLoop = false;
-      asyncHandler(event, context).then(
-        (r: APIGatewayProxyResult) => callback(null, r),
-        (e) => callback(e),
-      );
-      return;
-    } else {
-      return asyncHandler(event, context);
-    }
-  };
-}
-
 export class ApolloServer<
   EventT extends APIGatewayProxyEventV1OrV2 = APIGatewayProxyEventV1OrV2
 > extends ApolloServerBase {
@@ -164,174 +119,168 @@ export class ApolloServer<
       }
     }
 
-    return maybeCallbackify<EventT>(
-      async (
-        event: EventT,
-        context: LambdaContext,
-      ): Promise<APIGatewayProxyResult> => {
-        const eventHeaders = new Headers(event.headers);
+    return async (
+      event: EventT,
+      context: LambdaContext,
+    ): Promise<APIGatewayProxyResult> => {
+      const eventHeaders = new Headers(event.headers);
 
-        // Make a request-specific copy of the CORS headers, based on the server
-        // global CORS headers we've set above.
-        const requestCorsHeaders = new Headers(corsHeaders);
+      // Make a request-specific copy of the CORS headers, based on the server
+      // global CORS headers we've set above.
+      const requestCorsHeaders = new Headers(corsHeaders);
 
-        if (cors && cors.origin) {
-          const requestOrigin = eventHeaders.get('origin');
-          if (typeof cors.origin === 'string') {
-            requestCorsHeaders.set('access-control-allow-origin', cors.origin);
-          } else if (
-            requestOrigin &&
-            (typeof cors.origin === 'boolean' ||
-              (Array.isArray(cors.origin) &&
-                requestOrigin &&
-                cors.origin.includes(requestOrigin)))
-          ) {
-            requestCorsHeaders.set(
-              'access-control-allow-origin',
-              requestOrigin,
-            );
-          }
+      if (cors && cors.origin) {
+        const requestOrigin = eventHeaders.get('origin');
+        if (typeof cors.origin === 'string') {
+          requestCorsHeaders.set('access-control-allow-origin', cors.origin);
+        } else if (
+          requestOrigin &&
+          (typeof cors.origin === 'boolean' ||
+            (Array.isArray(cors.origin) &&
+              requestOrigin &&
+              cors.origin.includes(requestOrigin)))
+        ) {
+          requestCorsHeaders.set('access-control-allow-origin', requestOrigin);
+        }
 
-          const requestAccessControlRequestHeaders = eventHeaders.get(
-            'access-control-request-headers',
+        const requestAccessControlRequestHeaders = eventHeaders.get(
+          'access-control-request-headers',
+        );
+        if (!cors.allowedHeaders && requestAccessControlRequestHeaders) {
+          requestCorsHeaders.set(
+            'access-control-allow-headers',
+            requestAccessControlRequestHeaders,
           );
-          if (!cors.allowedHeaders && requestAccessControlRequestHeaders) {
-            requestCorsHeaders.set(
-              'access-control-allow-headers',
-              requestAccessControlRequestHeaders,
-            );
-          }
         }
+      }
 
-        // Convert the `Headers` into an object which can be spread into the
-        // various headers objects below.
-        // Note: while Object.fromEntries simplifies this code, it's only currently
-        //       supported in Node 12 (we support >=6)
-        const requestCorsHeadersObject = Array.from(requestCorsHeaders).reduce<
-          Record<string, string>
-        >((headersObject, [key, value]) => {
-          headersObject[key] = value;
-          return headersObject;
-        }, {});
+      // Convert the `Headers` into an object which can be spread into the
+      // various headers objects below.
+      // Note: while Object.fromEntries simplifies this code, it's only currently
+      //       supported in Node 12 (we support >=6)
+      const requestCorsHeadersObject = Array.from(requestCorsHeaders).reduce<
+        Record<string, string>
+      >((headersObject, [key, value]) => {
+        headersObject[key] = value;
+        return headersObject;
+      }, {});
 
-        if (eventHttpMethod(event) === 'OPTIONS') {
-          return {
-            body: '',
-            statusCode: 204,
-            headers: {
-              ...requestCorsHeadersObject,
-            },
-          };
-        }
+      if (eventHttpMethod(event) === 'OPTIONS') {
+        return {
+          body: '',
+          statusCode: 204,
+          headers: {
+            ...requestCorsHeadersObject,
+          },
+        };
+      }
 
-        if (eventPath(event).endsWith('/.well-known/apollo/server-health')) {
-          if (onHealthCheck) {
-            try {
-              await onHealthCheck(event);
-            } catch (_) {
-              return {
-                body: JSON.stringify({ status: 'fail' }),
-                statusCode: 503,
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...requestCorsHeadersObject,
-                },
-              };
-            }
-          }
-          return {
-            body: JSON.stringify({ status: 'pass' }),
-            statusCode: 200,
-            headers: {
-              'Content-Type': 'application/json',
-              ...requestCorsHeadersObject,
-            },
-          };
-        }
-
-        if (this.playgroundOptions && eventHttpMethod(event) === 'GET') {
-          const acceptHeader =
-            event.headers['Accept'] || event.headers['accept'];
-          if (acceptHeader && acceptHeader.includes('text/html')) {
-            const path = eventPath(event) || '/';
-
-            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-              endpoint: path,
-              ...this.playgroundOptions,
-            };
-
+      if (eventPath(event).endsWith('/.well-known/apollo/server-health')) {
+        if (onHealthCheck) {
+          try {
+            await onHealthCheck(event);
+          } catch (_) {
             return {
-              body: renderPlaygroundPage(playgroundRenderPageOptions),
-              statusCode: 200,
+              body: JSON.stringify({ status: 'fail' }),
+              statusCode: 503,
               headers: {
-                'Content-Type': 'text/html',
+                'Content-Type': 'application/json',
                 ...requestCorsHeadersObject,
               },
             };
           }
         }
+        return {
+          body: JSON.stringify({ status: 'pass' }),
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            ...requestCorsHeadersObject,
+          },
+        };
+      }
 
-        let { body, isBase64Encoded } = event;
-        let query: Record<string, any> | Record<string, any>[];
+      if (this.playgroundOptions && eventHttpMethod(event) === 'GET') {
+        const acceptHeader = event.headers['Accept'] || event.headers['accept'];
+        if (acceptHeader && acceptHeader.includes('text/html')) {
+          const path = eventPath(event) || '/';
 
-        if (body && isBase64Encoded) {
-          body = Buffer.from(body, 'base64').toString();
-        }
-
-        if (eventHttpMethod(event) === 'POST' && !body) {
-          return {
-            body: 'POST body missing.',
-            statusCode: 500,
+          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
+            endpoint: path,
+            ...this.playgroundOptions,
           };
-        }
 
-        if (body && eventHttpMethod(event) === 'POST') {
-          query = JSON.parse(body);
-        } else {
-          // XXX Note that if a parameter is included multiple times, this only
-          // includes the first version for payloadFormatVersion 1.0 but
-          // contains all of them joined with commas for payloadFormatVersion
-          // 2.0.
-          query = event.queryStringParameters || {};
-        }
-
-        try {
-          const { graphqlResponse, responseInit } = await runHttpQuery(
-            [event, context],
-            {
-              method: eventHttpMethod(event),
-              options: async () => {
-                return this.createGraphQLServerOptions(event, context);
-              },
-              query,
-              request: {
-                url: eventPath(event),
-                method: eventHttpMethod(event),
-                headers: eventHeaders,
-              },
-            },
-          );
           return {
-            body: graphqlResponse,
+            body: renderPlaygroundPage(playgroundRenderPageOptions),
             statusCode: 200,
             headers: {
-              ...responseInit.headers,
-              ...requestCorsHeadersObject,
-            },
-          };
-        } catch (error) {
-          if (error.name !== 'HttpQueryError') throw error;
-          const httpQueryError = error as HttpQueryError;
-          return {
-            body: httpQueryError.message,
-            statusCode: httpQueryError.statusCode,
-            headers: {
-              ...httpQueryError.headers,
+              'Content-Type': 'text/html',
               ...requestCorsHeadersObject,
             },
           };
         }
-      },
-    );
+      }
+
+      let { body, isBase64Encoded } = event;
+      let query: Record<string, any> | Record<string, any>[];
+
+      if (body && isBase64Encoded) {
+        body = Buffer.from(body, 'base64').toString();
+      }
+
+      if (eventHttpMethod(event) === 'POST' && !body) {
+        return {
+          body: 'POST body missing.',
+          statusCode: 500,
+        };
+      }
+
+      if (body && eventHttpMethod(event) === 'POST') {
+        query = JSON.parse(body);
+      } else {
+        // XXX Note that if a parameter is included multiple times, this only
+        // includes the first version for payloadFormatVersion 1.0 but
+        // contains all of them joined with commas for payloadFormatVersion
+        // 2.0.
+        query = event.queryStringParameters || {};
+      }
+
+      try {
+        const { graphqlResponse, responseInit } = await runHttpQuery(
+          [event, context],
+          {
+            method: eventHttpMethod(event),
+            options: async () => {
+              return this.createGraphQLServerOptions(event, context);
+            },
+            query,
+            request: {
+              url: eventPath(event),
+              method: eventHttpMethod(event),
+              headers: eventHeaders,
+            },
+          },
+        );
+        return {
+          body: graphqlResponse,
+          statusCode: 200,
+          headers: {
+            ...responseInit.headers,
+            ...requestCorsHeadersObject,
+          },
+        };
+      } catch (error) {
+        if (error.name !== 'HttpQueryError') throw error;
+        const httpQueryError = error as HttpQueryError;
+        return {
+          body: httpQueryError.message,
+          statusCode: httpQueryError.statusCode,
+          headers: {
+            ...httpQueryError.headers,
+            ...requestCorsHeadersObject,
+          },
+        };
+      }
+    };
   }
 }
