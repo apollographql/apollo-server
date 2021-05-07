@@ -17,6 +17,7 @@
 // require calls.
 import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
+//#region Usage reporting
 import type { ApolloServerPluginUsageReportingOptions } from './usageReporting';
 export type {
   ApolloServerPluginUsageReportingOptions,
@@ -26,12 +27,6 @@ export type {
   GenerateClientInfo,
 } from './usageReporting';
 
-import type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting';
-export type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting';
-import type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
-export type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
-
-//#region Usage reporting
 export function ApolloServerPluginUsageReporting<TContext>(
   options: ApolloServerPluginUsageReportingOptions<TContext> = Object.create(
     null,
@@ -45,6 +40,9 @@ export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin {
 //#endregion
 
 //#region Schema reporting
+import type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting';
+export type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting';
+
 export function ApolloServerPluginSchemaReporting(
   options: ApolloServerPluginSchemaReportingOptions = Object.create(null),
 ): ApolloServerPlugin {
@@ -55,6 +53,9 @@ export function ApolloServerPluginSchemaReporting(
 //#endregion
 
 //#region Inline trace
+import type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
+export type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
+
 export function ApolloServerPluginInlineTrace(
   options: ApolloServerPluginInlineTraceOptions = Object.create(null),
 ): ApolloServerPlugin {
@@ -62,5 +63,21 @@ export function ApolloServerPluginInlineTrace(
 }
 export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin {
   return require('./inlineTrace').ApolloServerPluginInlineTraceDisabled();
+}
+//#endregion
+
+//#region Cache control
+import type { ApolloServerPluginCacheControlOptions } from './cacheControl';
+export type {
+  ApolloServerPluginCacheControlOptions,
+} from './cacheControl';
+
+export function ApolloServerPluginCacheControl(
+  options: ApolloServerPluginCacheControlOptions = Object.create(null),
+): ApolloServerPlugin {
+  return require('./cacheControl').ApolloServerPluginCacheControl(options);
+}
+export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin {
+  return require('./cacheControl').ApolloServerPluginCacheControlDisabled();
 }
 //#endregion

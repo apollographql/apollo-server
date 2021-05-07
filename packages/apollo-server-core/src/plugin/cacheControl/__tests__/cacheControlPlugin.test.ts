@@ -1,31 +1,34 @@
 import { GraphQLError } from 'graphql';
 import { Headers } from 'apollo-server-env';
+import { CacheHint, CacheScope } from 'apollo-server-types';
 import {
-  CacheScope,
-  CacheControlExtensionOptions,
-  CacheHint,
-  __testing__,
-  plugin,
+  ApolloServerPluginCacheControl,
+  ApolloServerPluginCacheControlOptions,
+  addHint,
+  computeOverallCachePolicy,
 } from '../';
-const { addHint, computeOverallCachePolicy } = __testing__;
 import {
   GraphQLRequestContextWillSendResponse,
   GraphQLResponse,
 } from 'apollo-server-plugin-base';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
+import pluginTestHarness from '../../../utils/pluginTestHarness';
 
 describe('plugin', () => {
   describe('willSendResponse', () => {
-    function makePluginWithOptions({
-      pluginInitializationOptions,
-      overallCachePolicy,
-      errors = false,
-    }: {
-      pluginInitializationOptions?: CacheControlExtensionOptions;
-      overallCachePolicy?: Required<CacheHint>;
-      errors?: boolean;
-    } = Object.create(null)) {
-      const pluginInstance = plugin(pluginInitializationOptions);
+    function makePluginWithOptions(
+      {
+        pluginInitializationOptions,
+        overallCachePolicy,
+        errors = false,
+      }: {
+        pluginInitializationOptions?: ApolloServerPluginCacheControlOptions;
+        overallCachePolicy?: Required<CacheHint>;
+        errors?: boolean;
+      } = Object.create(null),
+    ) {
+      const pluginInstance = ApolloServerPluginCacheControl(
+        pluginInitializationOptions,
+      );
 
       return pluginTestHarness({
         pluginInstance,

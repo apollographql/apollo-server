@@ -135,11 +135,7 @@ const resolvers = {
 
 The `setCacheHint` method accepts an object with the same fields as [the `@cacheControl` directive](#in-your-schema-static).
 
-> **If you're using TypeScript,** you need to add the following `import` statement to indicate that the `info` parameter includes a `cacheControl` field:
->
-> ```javascript
-> import 'apollo-cache-control';
-> ```
+The `cacheControl` object also has a `cacheHint` field which returns the hint set in the schema, if any. (Calling `info.cacheControl.setCacheHint` does not update `info.cacheControl.cacheHint`.)
 
 ### Default `maxAge`
 
@@ -158,14 +154,14 @@ You can set a default `maxAge` (instead of `0`) that's applied to every field th
 
 > You should identify and address all exceptions to your default `maxAge` before you enable it in production, but this is a great way to get started with cache control.
 
-Set your default `maxAge` in the `ApolloServer` constructor, like so:
+Set your default `maxAge` by passing the cache control plugin to the `ApolloServer` constructor, like so:
 
 ```javascript
+import { ApolloServerPluginCacheControl } from 'apollo-server-core';
+
 const server = new ApolloServer({
   // ...other options...
-  cacheControl: {
-    defaultMaxAge: 5, // 5 seconds
-  },
+  plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],  // 5 seconds
 }));
 ```
 
@@ -189,19 +185,27 @@ Alternatively, you can set the `useGETForQueries` option of [HttpLink](https://w
 
 ### Disabling `Cache-Control`
 
-You can prevent Apollo Server from setting `Cache-Control` headers by setting `calculateHttpHeaders` to `false` in the `ApolloServer` constructor:
+You can prevent Apollo Server from setting `Cache-Control` headers by setting up the `ApolloServerPluginCacheControl` yourself and setting `calculateHttpHeaders` to `false`:
 
 ```js
+import { ApolloServerPluginCacheControl } from 'apollo-server-core';
+
 const server = new ApolloServer({
   // ...other options...
-  cacheControl: {
-    calculateHttpHeaders: false,
-  },
+  plugins: [ApolloServerPluginCacheControl({ calculateHttpHeaders: false })],
 }));
 ```
 
+If you do this, the cache control plugin will still calculate an overall cache policy for your operations, which can be used by other plugins like the response cache plugin. If you want to entirely disable cache control calculations, use the `ApolloServerPluginCacheControlDisabled` plugin (which has no effect other than preventing the cache control plugin from being installed):
 
+```js
+import { ApolloServerPluginCacheControlDisabled } from 'apollo-server-core';
 
+const server = new ApolloServer({
+  // ...other options...
+  plugins: [ApolloServerPluginCacheControlDisabled()],
+}));
+```
 ## Caching with `responseCachePlugin` (advanced)
 
 You can cache Apollo Server query responses in stores like Redis, Memcached, or Apollo Server's in-memory cache.

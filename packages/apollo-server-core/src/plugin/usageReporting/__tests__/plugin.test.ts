@@ -8,7 +8,7 @@ import {
 } from '../plugin';
 import { Headers } from 'apollo-server-env';
 import { Trace, Report, ITrace } from 'apollo-reporting-protobuf';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
+import pluginTestHarness from '../../../utils/pluginTestHarness';
 import nock from 'nock';
 import { gunzipSync } from 'zlib';
 import { ApolloServerPluginUsageReportingOptions } from '../options';

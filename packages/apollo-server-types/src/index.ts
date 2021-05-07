@@ -142,6 +142,10 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly metrics: GraphQLRequestMetrics;
 
   debug?: boolean;
+
+  // Not readonly: plugins can set them.
+  overallCachePolicy?: Required<CacheHint> | undefined;
+  cacheHints?: Map<string, CacheHint>;
 }
 
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;
@@ -232,3 +236,13 @@ export type GraphQLRequestContextWillSendResponse<TContext> =
     | 'metrics'
     | 'response'
   >;
+
+export interface CacheHint {
+  maxAge?: number;
+  scope?: CacheScope;
+}
+
+export enum CacheScope {
+  Public = 'PUBLIC',
+  Private = 'PRIVATE',
+}

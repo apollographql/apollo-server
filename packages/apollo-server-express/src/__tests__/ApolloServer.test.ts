@@ -4,7 +4,7 @@ import http from 'http';
 
 import request from 'request';
 
-import { gql, AuthenticationError } from 'apollo-server-core';
+import { gql, AuthenticationError, ApolloServerPluginCacheControlDisabled } from 'apollo-server-core';
 import {
   ApolloServer,
   ApolloServerExpressConfig,
@@ -720,11 +720,11 @@ describe('apollo-server-express', () => {
         });
       });
 
-      it('runs when cache-control is false', async () => {
+      it('runs when cache-control is disabled', async () => {
         const { url: uri } = await createServer({
           typeDefs,
           resolvers,
-          cacheControl: false,
+          plugins: [ApolloServerPluginCacheControlDisabled()],
         });
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(

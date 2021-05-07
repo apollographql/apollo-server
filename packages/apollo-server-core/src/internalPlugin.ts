@@ -17,6 +17,7 @@ export interface InternalApolloServerPlugin<
 }
 
 export type InternalPluginId =
+  | 'CacheControl'
   | 'SchemaReporting'
   | 'InlineTrace'
   | 'UsageReporting';

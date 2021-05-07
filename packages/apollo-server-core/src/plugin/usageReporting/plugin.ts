@@ -9,6 +9,7 @@ import {
   GraphQLServerListener,
 } from 'apollo-server-plugin-base';
 import {
+  CacheScope,
   GraphQLRequestContext,
   GraphQLServiceContext,
   GraphQLRequestContextDidResolveOperation,
@@ -27,7 +28,6 @@ import { GraphQLSchema, printSchema } from 'graphql';
 import { computeExecutableSchemaId } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { OurReport } from './stats';
-import { CacheScope } from 'apollo-cache-control';
 import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
 
 const reportHeaderDefaults = {

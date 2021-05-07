@@ -1,4 +1,5 @@
 import {
+  CacheHint,
   WithRequired,
   GraphQLRequest,
   GraphQLRequestContextExecutionDidStart,
@@ -13,7 +14,6 @@ import {
   GraphQLRequestContextValidationDidStart,
 } from 'apollo-server-types';
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
-import { CacheHint } from 'apollo-cache-control';
 import {
   enablePluginsForSchemaResolvers,
   symbolExecutionDispatcherWillResolveField,

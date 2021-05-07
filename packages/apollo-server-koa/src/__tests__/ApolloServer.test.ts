@@ -2,7 +2,7 @@ import http from 'http';
 
 import request from 'request';
 
-import { gql, AuthenticationError, Config } from 'apollo-server-core';
+import { gql, AuthenticationError, Config, ApolloServerPluginCacheControlDisabled } from 'apollo-server-core';
 
 import {
   testApolloServer,
@@ -569,7 +569,7 @@ describe('apollo-server-koa', () => {
         const { url: uri } = await createServer({
           typeDefs,
           resolvers,
-          cacheControl: false,
+          plugins: [ApolloServerPluginCacheControlDisabled()],
         });
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(

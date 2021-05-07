@@ -26,6 +26,7 @@ import {
   Config,
   PersistedQueryOptions,
   KeyValueCache,
+  ApolloServerPluginCacheControl,
 } from 'apollo-server-core';
 import gql from 'graphql-tag';
 import { GraphQLResponse, ValueOrPromise } from 'apollo-server-types';
@@ -456,9 +457,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            cacheControl: {
-              defaultMaxAge: 5,
-            },
+            plugins: [ApolloServerPluginCacheControl({defaultMaxAge: 5})],
           },
         });
         const expected = {

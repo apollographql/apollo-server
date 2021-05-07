@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { makeExecutableSchemaWithCacheControlSupport } from './cacheControlSupport';
 
-import { CacheScope } from '../';
+import { CacheScope } from 'apollo-server-types';
 import { collectCacheControlHints } from './collectCacheControlHints';
 
 export interface GraphQLResolvers {

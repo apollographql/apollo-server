@@ -1,18 +1,17 @@
 import { GraphQLSchema, graphql } from 'graphql';
+import { CacheHint } from 'apollo-server-types';
 import {
-  CacheHint,
-  CacheControlExtensionOptions,
-  plugin,
+  ApolloServerPluginCacheControl,
+  ApolloServerPluginCacheControlOptions,
 } from '../';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
+import pluginTestHarness from '../../../utils/pluginTestHarness';
 
 export async function collectCacheControlHints(
   schema: GraphQLSchema,
   source: string,
-  options?: CacheControlExtensionOptions,
+  options?: ApolloServerPluginCacheControlOptions,
 ): Promise<Map<string, CacheHint>> {
-
-  const pluginInstance = plugin(options);
+  const pluginInstance = ApolloServerPluginCacheControl(options);
 
   const requestContext = await pluginTestHarness({
     pluginInstance,
@@ -26,7 +25,7 @@ export async function collectCacheControlHints(
         source: requestContext.request.query,
         contextValue: requestContext.context,
       });
-    }
+    },
   });
 
   expect(requestContext.response.errors).toBeUndefined();

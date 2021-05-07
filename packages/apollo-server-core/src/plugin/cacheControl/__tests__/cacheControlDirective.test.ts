@@ -1,6 +1,6 @@
 import { buildSchemaWithCacheControlSupport } from './cacheControlSupport';
 
-import { CacheScope } from '../';
+import { CacheScope } from 'apollo-server-types';
 import { collectCacheControlHints } from './collectCacheControlHints';
 
 describe('@cacheControl directives', () => {
