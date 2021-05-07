@@ -1,7 +1,7 @@
 import { Trace } from 'apollo-reporting-protobuf';
 import { TraceTreeBuilder } from '../traceTreeBuilder';
 import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
-import type { InternalApolloServerPlugin } from '../internalPlugin';
+import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { schemaIsFederated } from '../schemaIsFederated';
 
 export interface ApolloServerPluginInlineTraceOptions {

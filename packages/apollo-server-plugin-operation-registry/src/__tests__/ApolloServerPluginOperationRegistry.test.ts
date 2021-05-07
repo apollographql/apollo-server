@@ -1,7 +1,8 @@
 import plugin, { Options } from '../ApolloServerPluginOperationRegistry';
-import { ApolloServerBase } from 'apollo-server-core';
-
-import { ApolloServerPluginUsageReportingDisabled } from 'apollo-server-core/dist/plugin/usageReporting';
+import {
+  ApolloServerBase,
+  ApolloServerPluginUsageReportingDisabled,
+} from 'apollo-server-core';
 
 import {
   /**
