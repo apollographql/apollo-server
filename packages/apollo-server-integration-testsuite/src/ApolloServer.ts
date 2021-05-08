@@ -933,9 +933,19 @@ export function testApolloServer<AS extends ApolloServerBase>(
           ) => {
             const { url: uri } = await createApolloServer({
               typeDefs: gql`
+                enum CacheControlScope {
+                  PUBLIC
+                  PRIVATE
+                }
+
+                directive @cacheControl(
+                  maxAge: Int
+                  scope: CacheControlScope
+                ) on FIELD_DEFINITION | OBJECT | INTERFACE
+
                 type Query {
                   fieldWhichWillError: String
-                  justAField: String
+                  justAField: String @cacheControl(maxAge: 5, scope: PRIVATE)
                 }
               `,
               resolvers: {
@@ -965,6 +975,29 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
             apolloFetch = createApolloFetch({ uri });
           };
+
+          it('cachePolicy', async () => {
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `{justAField}`,
+            });
+            expect(result.errors).toBeUndefined();
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+            const trace = Object.values(reports[0].tracesPerQuery)[0]
+              .trace![0] as Trace;
+
+            expect(trace.cachePolicy).toBeDefined();
+            expect(trace.cachePolicy?.maxAgeNs).toBe(5e9);
+            expect(trace.cachePolicy?.scope).toBe(
+              Trace.CachePolicy.Scope.PRIVATE,
+            );
+          });
 
           it('does not expose stack', async () => {
             throwError.mockImplementationOnce(() => {
