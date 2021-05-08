@@ -28,9 +28,9 @@ describe('apollo-server-koa', () => {
   let server: any;
   let httpServer: http.Server;
   testApolloServer(
-    async (options: any, suppressStartCall?: boolean) => {
-      server = new ApolloServer(options);
-      if (!suppressStartCall) {
+    async (config: any, options) => {
+      server = new ApolloServer(config);
+      if (!options?.suppressStartCall) {
         await server.start();
       }
       const app = new Koa();
@@ -59,6 +59,7 @@ describe('apollo-server-koa', () => {
     options: Partial<import('../ApolloServer').ServerRegistration> = {},
   ) {
     server = new ApolloServer({ stopOnTerminationSignals: false, ...serverOptions });
+    await server.start();
     app = new Koa();
 
     server.applyMiddleware({ ...options, app });

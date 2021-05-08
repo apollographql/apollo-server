@@ -7,7 +7,7 @@ import testSuite, {
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 
-function createConnectApp(options: CreateAppOptions = {}) {
+async function createConnectApp(options: CreateAppOptions = {}) {
   const app = connect();
   // We do require users of ApolloServer with connect to use a query middleware
   // first. The alternative is to add a 'isConnect' bool to ServerRegistration
@@ -18,11 +18,12 @@ function createConnectApp(options: CreateAppOptions = {}) {
   const server = new ApolloServer(
     (options.graphqlOptions as ApolloServerExpressConfig) || { schema: Schema },
   );
+  await server.start();
   // See comment on ServerRegistration.app for its typing.
   server.applyMiddleware({ app: app as any });
   return app;
 }
 
 describe('integration:Connect', () => {
-  testSuite(createConnectApp);
+  testSuite({createApp: createConnectApp});
 });

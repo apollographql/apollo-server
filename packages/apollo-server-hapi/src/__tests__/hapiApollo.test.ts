@@ -17,6 +17,7 @@ describe('integration:Hapi', () => {
     const server = new ApolloServer(
       (options.graphqlOptions as Config) || { schema: Schema },
     );
+    await server.start();
     await server.applyMiddleware({
       app,
     });
@@ -33,5 +34,5 @@ describe('integration:Hapi', () => {
     await new Promise(resolve => app.close(resolve));
   }
 
-  testSuite(createApp, destroyApp);
+  testSuite({createApp, destroyApp});
 });

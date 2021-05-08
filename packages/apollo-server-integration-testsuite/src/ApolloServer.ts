@@ -45,7 +45,11 @@ import {
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
-import { BaseContext, GraphQLRequestContext, GraphQLRequestContextExecutionDidStart } from 'apollo-server-types';
+import {
+  BaseContext,
+  GraphQLRequestContext,
+  GraphQLRequestContextExecutionDidStart,
+} from 'apollo-server-types';
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
@@ -166,7 +170,9 @@ export interface ServerInfo<AS extends ApolloServerBase> {
 }
 
 export interface CreateServerFunc<AS extends ApolloServerBase> {
-  (config: Config, suppressStartCall?: boolean): Promise<ServerInfo<AS>>;
+  (config: Config, options?: { suppressStartCall?: boolean }): Promise<
+    ServerInfo<AS>
+  >;
 }
 
 export interface StopServerFunc {
@@ -396,54 +402,15 @@ export function testApolloServer<AS extends ApolloServerBase>(
           ).rejects.toThrowError(loadError);
         });
 
-        it('rejected load promise acts as an error boundary', async () => {
-          const executor = jest.fn();
-          executor.mockResolvedValueOnce({
-            data: { testString: 'should not get this' },
-          });
-
-          executor.mockRejectedValueOnce({
-            errors: [{ errorWhichShouldNot: 'ever be triggered' }],
-          });
-
-          const consoleErrorSpy = jest
-            .spyOn(console, 'error')
-            .mockImplementation();
-
-          const { gateway, triggers } = makeGatewayMock({ executor });
-
-          triggers.rejectLoad(new Error('load error which should be masked'));
-
-          const { url: uri } = await createApolloServer(
-            {
-              gateway,
-            },
-            true,
-          );
-
-          const apolloFetch = createApolloFetch({ uri });
-          const result = await apolloFetch({ query: '{testString}' });
-
-          expect(result.data).toBeUndefined();
-          expect(result.errors).toContainEqual(
-            expect.objectContaining({
-              extensions: expect.objectContaining({
-                code: 'INTERNAL_SERVER_ERROR',
-              }),
-              message:
-                'This data graph is missing a valid configuration. ' +
-                'More details may be available in the server logs.',
-            }),
-          );
-          expect(consoleErrorSpy).toHaveBeenCalledWith(
-            'Apollo Server was started implicitly and an error occurred during startup. ' +
-              '(Consider calling `await server.start()` immediately after ' +
-              '`server = new ApolloServer()` so you can handle these errors directly before ' +
-              'starting your web server.) All GraphQL requests will now fail. The startup error ' +
-              'was: ' +
-              'load error which should be masked',
-          );
-          expect(executor).not.toHaveBeenCalled();
+        it('not calling start causes a clear error', async () => {
+          // Note that this test suite is not used by `apollo-server` or
+          // serverless frameworks, so this is legit.
+          expect(
+            createApolloServer(
+              { typeDefs: 'type Query{x: ID}' },
+              { suppressStartCall: true },
+            ),
+          ).rejects.toThrow('You must `await server.start()`');
         });
 
         it('uses schema over resolvers + typeDefs', async () => {
@@ -894,7 +861,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
             if (!this.server) {
               throw new Error('must listen before getting URL');
             }
-            const { family, address, port } = (this.server.address() as AddressInfo);
+            const {
+              family,
+              address,
+              port,
+            } = this.server.address() as AddressInfo;
 
             if (family !== 'IPv4') {
               throw new Error(`The family was unexpectedly ${family}.`);
@@ -1020,7 +991,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
             const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
-            const trace = Object.values(reports[0].tracesPerQuery)[0].trace![0] as Trace;
+            const trace = Object.values(reports[0].tracesPerQuery)[0]
+              .trace![0] as Trace;
 
             // There should be no error at the root, our error is a child.
             expect(trace.root!.error).toStrictEqual([]);
@@ -1849,7 +1821,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
           );
         }
 
-        const { family, address, port } = (fakeUsageReportingServer.address() as AddressInfo);
+        const {
+          family,
+          address,
+          port,
+        } = fakeUsageReportingServer.address() as AddressInfo;
         if (family !== 'IPv4') {
           throw new Error(`The family was unexpectedly ${family}.`);
         }
@@ -2255,7 +2231,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 )
                   return false;
 
-                if (requestContext.request.query!.indexOf('asyncnowrite') >= 0) {
+                if (
+                  requestContext.request.query!.indexOf('asyncnowrite') >= 0
+                ) {
                   return new Promise((resolve) => resolve(false));
                 }
 
@@ -2785,7 +2763,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
           };
         });
 
-        const executor = async (req: GraphQLRequestContextExecutionDidStart<any>) => {
+        const executor = async (
+          req: GraphQLRequestContextExecutionDidStart<any>,
+        ) => {
           const source = req.source as string;
           const { startPromise, endPromise, i } = executorData[source];
           startPromise.resolve();

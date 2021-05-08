@@ -7,10 +7,11 @@ import { Config } from 'apollo-server-core';
 
 import { ApolloServer } from '../ApolloServer';
 
-function createApp(options: CreateAppOptions = {}) {
+async function createApp(options: CreateAppOptions = {}) {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
+  await server.start();
   return micro(server.createHandler());
 }
 
@@ -23,5 +24,5 @@ describe('microApollo', function() {
 });
 
 describe('integration:Micro', function() {
-  testSuite(createApp);
+  testSuite({createApp});
 });

@@ -49,6 +49,9 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   public applyMiddleware({ app, ...rest }: ServerRegistration) {
+    // getMiddleware calls this too, but we want the right method name in the error
+    this.assertStarted('applyMiddleware');
+
     app.use(this.getMiddleware(rest));
   }
 
@@ -65,10 +68,7 @@ export class ApolloServer extends ApolloServerBase {
   }: GetMiddlewareOptions = {}): Middleware {
     if (!path) path = '/graphql';
 
-    // In case the user didn't bother to call and await the `start` method, we
-    // kick it off in the background (with any errors getting logged
-    // and also rethrown from graphQLServerOptions during later requests).
-    this.ensureStarting();
+    this.assertStarted('getMiddleware');
 
     const middlewares = [];
 

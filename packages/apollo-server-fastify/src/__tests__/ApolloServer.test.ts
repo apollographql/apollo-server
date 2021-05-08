@@ -34,9 +34,9 @@ describe('apollo-server-fastify', () => {
   let app: FastifyInstance;
 
   testApolloServer(
-    async (options: any, suppressStartCall?: boolean) => {
-      server = new ApolloServer(options);
-      if (!suppressStartCall) {
+    async (config: any, options) => {
+      server = new ApolloServer(config);
+      if (!options?.suppressStartCall) {
         await server.start();
       }
       app = fastify();
@@ -65,6 +65,7 @@ describe('apollo-server-fastify', () => {
     mockDecorators: boolean = false,
   ) {
     server = new ApolloServer({ stopOnTerminationSignals: false, ...serverOptions });
+    await server.start();
     app = fastify();
 
     if (mockDecorators) {

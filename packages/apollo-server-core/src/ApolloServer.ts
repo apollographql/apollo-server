@@ -274,10 +274,8 @@ export class ApolloServerBase {
     if (gateway) {
       // ApolloServer has been initialized but we have not yet tried to load the
       // schema from the gateway. That will wait until the user calls
-      // `server.start()`, or until `ensureStarting` or `ensureStarted` are
-      // called. (In the case of a serverless framework integration,
-      // `ensureStarting` is automatically called at the end of the
-      // constructor.)
+      // `server.start()` or `server.listen()`, or (in serverless frameworks)
+      // until the `this._start()` call at the end of this constructor.
       this.state = { phase: 'initialized with gateway', gateway };
 
       // The main thing that the Gateway does is replace execution with
@@ -306,12 +304,12 @@ export class ApolloServerBase {
     // unlike (eg) applyMiddleware, so we can't expect you to `await
     // server.start()` before calling it. So we kick off the start
     // asynchronously from the constructor, and failures are logged and cause
-    // later requests to fail (in ensureStarted, called by
-    // graphQLServerOptions). There's no way to make "the whole server fail"
+    // later requests to fail (in `ensureStarted`, called by
+    // `graphQLServerOptions`). There's no way to make "the whole server fail"
     // separately from making individual requests fail, but that's not entirely
     // unreasonable for a "serverless" model.
     if (this.serverlessFramework()) {
-      this.ensureStarting();
+      this._start().catch((e) => this.logStartupError(e));
     }
   }
 
@@ -324,35 +322,22 @@ export class ApolloServerBase {
   // `listen` method takes care of that for you (this is why the actual logic is
   // in the `_start` helper).
   //
-  // If instead you're using an integration package, you are highly encouraged
-  // to await a call to `start` immediately after creating your `ApolloServer`,
-  // before attaching it to your web framework and starting to accept requests.
-  // `start` should only be called once; if it throws and you'd like to retry,
-  // just create another `ApolloServer`. (Note that this paragraph does not
-  // apply to "serverless framework" integrations like Lambda.)
-  //
-  // For backwards compatibility with the pre-2.22 API, you are not required to
-  // call start() yourself (this may change in AS3). Most integration packages
-  // call the protected `ensureStarting` when you first interact with them,
-  // which kicks off a "background" call to `start` if you haven't called it
-  // yourself. Then `graphQLServerOptions` (which is called before processing)
-  // each incoming GraphQL request) calls `ensureStarted` which waits for
-  // `start` to successfully complete (possibly by calling it itself), and
-  // throws a redacted error if `start` was not successful.  If `start` is
-  // invoked implicitly by either of these mechanisms, any error that it throws
-  // will be logged when they occur and then again on every subsequent
-  // `graphQLServerOptions` call (ie, every GraphQL request). Note that start
-  // failures are not recoverable without creating a new ApolloServer. You are
-  // highly encouraged to make these backwards-compatibility paths into no-ops
-  // by awaiting a call to `start` yourself.
+  // If instead you're using an integration package for a non-serverless
+  // framework (like Express), you must await a call to `start` immediately
+  // after creating your `ApolloServer`, before attaching it to your web
+  // framework and starting to accept requests. `start` should only be called
+  // once; if it throws and you'd like to retry, just create another
+  // `ApolloServer`. (Calling `start` was optional in Apollo Server 2, but in
+  // Apollo Server 3 the methods like `server.applyMiddleware` use
+  // `assertStarted` to throw if `start` hasn't successfully completed.)
   //
   // Serverless integrations like Lambda (which override `serverlessFramework()`
   // to return true) do not support calling `start()`, because their lifecycle
   // doesn't allow you to wait before assigning a handler or allowing the
-  // handler to be called. So they call `ensureStarting` at the end of the
+  // handler to be called. So they call `_start()` at the end of the
   // constructor, and don't really differentiate between startup failures and
   // request failures. This is hopefully appropriate for a "serverless"
-  // framework. As above, startup failures result in returning a redacted error
+  // framework. Serverless startup failures result in returning a redacted error
   // to the end user and logging the more detailed error.
   public async start(): Promise<void> {
     if (this.serverlessFramework()) {
@@ -443,55 +428,25 @@ export class ApolloServerBase {
     }
   }
 
-  /**
-   * @deprecated This deprecated method is provided for backwards compatibility
-   * with the pre-v2.22 API. It was sort of a combination of the v2.22 APIs
-   * `ensureStarting` and `start`; it was generally called "in the background"
-   * by integrations to kick off the start process (like `ensureStarting`) and
-   * then the Promise it returns was awaited later before running operations
-   * (sort of like `start`).  It had odd error handling semantics, in that it
-   * would ignore any error that came from loading the schema, but would throw
-   * errors that came from `serverWillStart`.
-   *
-   * We keep it around for backwards-compatibility with pre-v2.22 integrations,
-   * though we just make it call `ensureStarting`. This does mean that the part
-   * of the integration which awaits its result doesn't actually await anything
-   * interesting (despite being async, the method itself doesn't await
-   * anything), but since executing operations now calls `ensureStarted`, that's
-   * OK. (In v2.22.0 and v2.22.1 we tried to mimic the old `willStart` behavior
-   * more closely which led to a bug where `start` could be invoked multiple
-   * times. This approach is simpler.)
-   *
-   * Anyone calling this method should call `start` or `ensureStarting` instead.
-   */
-  protected async willStart() {
-    this.ensureStarting();
-  }
-
-  // Part of the backwards-compatibility behavior described above `start` to
-  // make ApolloServer work if you don't explicitly call `start`, as well as for
-  // serverless frameworks where there is no `start`. This is called at the
-  // beginning of each GraphQL request by `graphQLServerOptions`. It calls
-  // `start` for you if it hasn't been called yet, and only returns successfully
-  // if some call to `start` succeeds.
-  //
-  // This function assumes it is being called in a context where any error it
-  // throws may be shown to the end user, so it only throws specific errors
-  // without details. If it's throwing due to a startup error, it will log that
-  // error each time it is called before throwing a redacted error.
+  // This method is called at the beginning of each GraphQL request by
+  // `graphQLServerOptions`. Most of its logic is only helpful for serverless
+  // frameworks: unless you're in a serverless framework, you should have called
+  // `await server.start()` before the server got to the point of running
+  // GraphQL requests (`assertStarted` calls in the framework integrations
+  // verify that) and so the only cases for non-serverless frameworks that this
+  // should hit are 'started', 'stopping', and 'stopped'. For serverless
+  // frameworks, this lets the server wait until fully started before serving
+  // operations.
   private async ensureStarted(): Promise<SchemaDerivedData> {
     while (true) {
       switch (this.state.phase) {
         case 'initialized with gateway':
         case 'initialized with schema':
-          try {
-            await this._start();
-          } catch {
-            // Any thrown error should transition us to 'failed to start', and
-            // we'll handle that on the next iteration of the while loop.
-          }
-          // continue the while loop
-          break;
+          // This error probably won't happen: serverless frameworks
+          // automatically call `_start` at the end of the constructor, and
+          // other frameworks call `assertStarted` before setting things up
+          // enough to make calling this function possible.
+          throw new Error("You need to call `server.start()` before using your Apollo Server.");
         case 'starting':
         case 'invoking serverWillStart':
           await this.state.barrier;
@@ -523,51 +478,26 @@ export class ApolloServerBase {
     }
   }
 
-  // Part of the backwards-compatibility behavior described above `start` to
-  // make ApolloServer work if you don't explicitly call `start`. This is called
-  // by some of the integration frameworks when you interact with them (eg by
-  // calling applyMiddleware). It is also called from the end of the constructor
-  // for serverless framework integrations.
-  //
-  // It calls `start` for you if it hasn't been called yet, but doesn't wait for
-  // `start` to finish. The goal is that if you don't call `start` yourself the
-  // server should still do the rest of startup vaguely near when your server
-  // starts, not just when the first GraphQL request comes in. Without this
-  // call, startup wouldn't occur until `graphQLServerOptions` invokes
-  // `ensureStarted`.
-  protected ensureStarting() {
-    if (
-      this.state.phase === 'initialized with gateway' ||
-      this.state.phase === 'initialized with schema'
-    ) {
-      // Ah well. It would have been nice if the user had bothered
-      // to call and await `start()`; that way they'd be able to learn
-      // about any errors from it. Instead we'll kick it off here.
-      // Any thrown error will get logged, and also will cause
-      // every call to ensureStarted (ie, every GraphQL operation)
-      // to log it again and prevent the operation from running.
-      this._start().catch((e) => this.logStartupError(e));
+  protected assertStarted(methodName: string) {
+    if (this.state.phase !== 'started') {
+      throw new Error(
+        'You must `await server.start()` before calling `server.' +
+          methodName +
+          '()`',
+      );
     }
+    // XXX do we need to do anything special for stopping/stopped?
   }
 
   // Given an error that occurred during Apollo Server startup, log it with a
-  // helpful message. Note that this is only used if `ensureStarting` or
-  // `ensureStarted` had to initiate the startup process; if you call
-  // `start` yourself (or you're using `apollo-server` whose `listen()` does
-  // it for you) then you can handle the error however you'd like rather than
-  // this log occurring. (We don't suggest the use of `start()` for serverless
-  // frameworks because they don't support it.)
+  // helpful message. This should only happen with serverless frameworks; with
+  // other frameworks, you must `await server.start()` which will throw the
+  // startup error directly instead of logging (or `await server.listen()` for
+  // the batteries-included `apollo-server`).
   private logStartupError(err: Error) {
-    const prelude = this.serverlessFramework()
-      ? 'An error occurred during Apollo Server startup.'
-      : 'Apollo Server was started implicitly and an error occurred during startup. ' +
-        '(Consider calling `await server.start()` immediately after ' +
-        '`server = new ApolloServer()` so you can handle these errors directly before ' +
-        'starting your web server.)';
     this.logger.error(
-      prelude +
-        ' All GraphQL requests will now fail. The startup error ' +
-        'was: ' +
+      'An error occurred during Apollo Server startup. All GraphQL requests ' +
+        'will now fail. The startup error was: ' +
         ((err && err.message) || err),
     );
   }
@@ -704,7 +634,9 @@ export class ApolloServerBase {
     return false;
   }
 
-  private ensurePluginInstantiation(userPlugins: PluginDefinition[] = []): void {
+  private ensurePluginInstantiation(
+    userPlugins: PluginDefinition[] = [],
+  ): void {
     this.plugins = userPlugins.map((plugin) => {
       if (typeof plugin === 'function') {
         return plugin();

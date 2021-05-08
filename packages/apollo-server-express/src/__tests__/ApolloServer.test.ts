@@ -33,9 +33,9 @@ describe('apollo-server-express', () => {
   let server: ApolloServer;
   let httpServer: http.Server;
   testApolloServer(
-    async (options: ApolloServerExpressConfig, suppressStartCall?: boolean) => {
-      server = new ApolloServer(options);
-      if (!suppressStartCall) {
+    async (config: ApolloServerExpressConfig, options) => {
+      server = new ApolloServer(config);
+      if (!options?.suppressStartCall) {
         await server.start();
       }
       const app = express();
@@ -63,8 +63,8 @@ describe('apollo-server-express', () => {
     options: Partial<ServerRegistration> = {},
   ) {
     server = new ApolloServer({stopOnTerminationSignals: false, ...serverOptions});
+    await server.start();
     app = express();
-
     server.applyMiddleware({ ...options, app });
 
     httpServer = await new Promise<http.Server>(resolve => {
@@ -191,6 +191,7 @@ describe('apollo-server-express', () => {
         resolvers,
         playground: true,
       });
+      await rewiredServer.start();
       const innerApp = express();
       rewiredServer.applyMiddleware({ app: innerApp });
 

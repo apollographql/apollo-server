@@ -6,7 +6,7 @@ import testSuite, {
 import { Config } from 'apollo-server-core';
 import {createMockServer} from './mockServer';
 
-const createLambda = (options: CreateAppOptions = {}) => {
+const createLambda = async (options: CreateAppOptions = {}) => {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
@@ -17,5 +17,5 @@ const createLambda = (options: CreateAppOptions = {}) => {
 }
 
 describe('integration:Lambda', () => {
-  testSuite(createLambda);
+  testSuite({createApp: createLambda, serverlessFramework: true});
 });

@@ -659,18 +659,14 @@ The async `start` method instructs Apollo Server to prepare to handle incoming o
 
 Always call `await server.start()` *before* calling `server.applyMiddleware` and starting your HTTP server. This allows you to react to Apollo Server startup failures by crashing your process instead of starting to serve traffic.
 
+This method was optional in Apollo Server 2 but is required in Apollo Server 3.
+
 ##### Triggered actions
 
 The `start` method triggers the following actions:
 
 1. If your server is a [federated gateway](https://www.apollographql.com/docs/federation/managed-federation/overview/), it attempts to fetch its schema. If the fetch fails, `start` throws an error.
 2. Your server calls all of the [`serverWillStart` handlers](../integrations/plugins/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
-
-##### Backward compatibility
-
-To ensure backward compatibility, calling `await server.start()` is optional. If you don't call it yourself, your integration package invokes it when you call `server.applyMiddleware`. Incoming GraphQL operations wait to execute until Apollo Server has started, and those operations fail if startup fails (a redacted error message is sent to the GraphQL client).
-
-We recommend calling `await server.start()` yourself, so that your web server doesn't start accepting GraphQL requests until Apollo Server is ready to process them.
 
 #### `applyMiddleware`
 

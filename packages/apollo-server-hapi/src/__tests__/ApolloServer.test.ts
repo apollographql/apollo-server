@@ -23,10 +23,10 @@ describe(
     const { Server } = require('@hapi/hapi');
 
     testApolloServer(
-      async (options: any, suppressStartCall?: boolean) => {
-        server = new ApolloServer(options);
+      async (config: any, options) => {
+        server = new ApolloServer(config);
         app = new Server({ host: 'localhost', port });
-        if (!suppressStartCall) {
+        if (!options?.suppressStartCall) {
           await server.start();
         }
         await server.applyMiddleware({ app });
@@ -63,6 +63,7 @@ describe(
       it('accepts typeDefs and resolvers', async () => {
         const app = new Server();
         const server = new ApolloServer({ typeDefs, resolvers });
+        await server.start();
         return server.applyMiddleware({ app });
       });
     });
@@ -73,6 +74,7 @@ describe(
           typeDefs,
           resolvers,
         });
+        await server.start();
         app = new Server({ port });
 
         await server.applyMiddleware({ app });
@@ -107,6 +109,7 @@ describe(
           resolvers,
           introspection: false,
         });
+        await server.start();
         app = new Server({ port });
 
         await server.applyMiddleware({ app });
@@ -156,6 +159,7 @@ describe(
           resolvers,
           stopOnTerminationSignals: false,
         });
+        await server.start();
         app = new Server({ port });
 
         await server.applyMiddleware({ app });
@@ -193,6 +197,7 @@ describe(
           typeDefs,
           resolvers,
         });
+        await server.start();
         app = new Server({
           port,
         });
@@ -233,6 +238,7 @@ describe(
           typeDefs,
           resolvers,
         });
+        await server.start();
         app = new Server({
           port,
         });
@@ -284,6 +290,7 @@ describe(
           resolvers,
           context,
         });
+        await server.start();
         app = new Server({ port });
 
         await server.applyMiddleware({ app });
@@ -309,6 +316,7 @@ describe(
             typeDefs,
             resolvers,
           });
+          await server.start();
           app = new Server({ port });
 
           await server.applyMiddleware({ app });
@@ -341,6 +349,7 @@ describe(
             typeDefs,
             resolvers,
           });
+          await server.start();
           app = new Server({ port });
 
           await server.applyMiddleware({
@@ -378,7 +387,7 @@ describe(
             typeDefs,
             resolvers,
           });
-
+          await server.start();
           app = new Server({ port });
 
           await server.applyMiddleware({
@@ -433,6 +442,7 @@ describe(
               throw new AuthenticationError('valid result');
             },
           });
+          await server.start();
 
           app = new Server({ port });
 
@@ -479,6 +489,7 @@ describe(
             },
             stopOnTerminationSignals: false,
           });
+          await server.start();
 
           app = new Server({ port });
 
@@ -527,6 +538,7 @@ describe(
             },
             stopOnTerminationSignals: false,
           });
+          await server.start();
 
           app = new Server({ port });
 
@@ -572,6 +584,7 @@ describe(
             },
             stopOnTerminationSignals: false,
           });
+          await server.start();
 
           app = new Server({ port });
 

@@ -5,12 +5,13 @@ import testSuite, {
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 
-function createApp(options: CreateAppOptions = {}) {
+async function createApp(options: CreateAppOptions = {}) {
   const app = express();
 
   const server = new ApolloServer(
     (options.graphqlOptions as ApolloServerExpressConfig) || { schema: Schema },
   );
+  await server.start();
   server.applyMiddleware({ app });
   return app;
 }
@@ -24,5 +25,5 @@ describe('expressApollo', () => {
 });
 
 describe('integration:Express', () => {
-  testSuite(createApp);
+  testSuite({createApp});
 });

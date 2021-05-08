@@ -26,7 +26,7 @@ const simulateGcfMiddleware = (
   next();
 };
 
-const createCloudFunction = (options: CreateAppOptions = {}) => {
+const createCloudFunction = async (options: CreateAppOptions = {}) => {
   const handler = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   ).createHandler();
@@ -49,5 +49,5 @@ describe('googleCloudApollo', () => {
 });
 
 describe('integration:CloudFunction', () => {
-  testSuite(createCloudFunction);
+  testSuite({createApp: createCloudFunction, serverlessFramework: true});
 });

@@ -101,6 +101,7 @@ describe('apollo-server-express', () => {
         },
       }),
     });
+    await server.start();
     const app = express();
 
     server.applyMiddleware({ app });
@@ -133,6 +134,7 @@ describe('apollo-server-express', () => {
         },
       }),
     });
+    await server.start();
     const app = express();
 
     server.applyMiddleware({ app });
