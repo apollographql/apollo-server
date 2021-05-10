@@ -23,6 +23,8 @@ export interface ApolloServerPluginCacheControlOptions {
    * responses with no errors. The default is true.
    */
   calculateHttpHeaders?: boolean;
+  // For testing only.
+  __testing__cacheHints?: Map<string, CacheHint>;
 }
 
 declare module 'graphql/type/definition' {
@@ -102,11 +104,10 @@ export function ApolloServerPluginCacheControl(
     requestDidStart(requestContext) {
       const defaultMaxAge: number = options.defaultMaxAge ?? 0;
       const calculateHttpHeaders = options.calculateHttpHeaders ?? true;
+      const { __testing__cacheHints } = options;
 
       return {
         executionDidStart: () => {
-          const hints = new Map<string, CacheHint>();
-          requestContext.cacheHints = hints;
           let policyUpdater: PolicyUpdater | undefined;
 
           // Did something set the overall cache policy before we've even
@@ -171,8 +172,6 @@ export function ApolloServerPluginCacheControl(
                 hint.maxAge = defaultMaxAge;
               }
 
-              const path = responsePathAsArray(info.path).join('.');
-
               info.cacheControl = {
                 setCacheHint: (dynamicHint: CacheHint) => {
                   hint = mergeHints(hint, dynamicHint);
@@ -185,12 +184,15 @@ export function ApolloServerPluginCacheControl(
               // of a static hint that gets refined by a dynamic hint.
               return () => {
                 if (hint.maxAge !== undefined || hint.scope !== undefined) {
-                  if (hints.has(path)) {
-                    throw Error(
-                      "shouldn't happen: addHint should only be called once per path",
-                    );
+                  if (__testing__cacheHints) {
+                    const path = responsePathAsArray(info.path).join('.');
+                    if (__testing__cacheHints.has(path)) {
+                      throw Error(
+                        "shouldn't happen: addHint should only be called once per path",
+                      );
+                    }
+                    __testing__cacheHints.set(path, hint);
                   }
-                  hints.set(path, hint);
                   policyUpdater?.addHint(hint);
                 }
               };

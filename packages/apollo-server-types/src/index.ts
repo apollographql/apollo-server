@@ -143,9 +143,8 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
 
   debug?: boolean;
 
-  // Not readonly: plugins can set them.
+  // Not readonly: plugins can set it.
   overallCachePolicy?: Required<CacheHint> | undefined;
-  cacheHints?: Map<string, CacheHint>;
 }
 
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;

@@ -9,9 +9,13 @@ import pluginTestHarness from '../../../utils/pluginTestHarness';
 export async function collectCacheControlHints(
   schema: GraphQLSchema,
   source: string,
-  options?: ApolloServerPluginCacheControlOptions,
+  options: ApolloServerPluginCacheControlOptions = {},
 ): Promise<Map<string, CacheHint>> {
-  const pluginInstance = ApolloServerPluginCacheControl(options);
+  const cacheHints = new Map<string, CacheHint>();
+  const pluginInstance = ApolloServerPluginCacheControl({
+    ...options,
+    __testing__cacheHints: cacheHints,
+  });
 
   const requestContext = await pluginTestHarness({
     pluginInstance,
@@ -30,5 +34,5 @@ export async function collectCacheControlHints(
 
   expect(requestContext.response.errors).toBeUndefined();
 
-  return requestContext.cacheHints!;
+  return cacheHints;
 }
