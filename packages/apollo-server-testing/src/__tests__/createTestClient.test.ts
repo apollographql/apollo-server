@@ -32,6 +32,10 @@ describe('createTestClient', () => {
     resolvers,
   });
 
+  beforeAll(async () => {
+    await myTestServer.start();
+  });
+
   it('allows queries', async () => {
     const query = `{ test(echo: "foo") }`;
     const client = createTestClient(myTestServer);

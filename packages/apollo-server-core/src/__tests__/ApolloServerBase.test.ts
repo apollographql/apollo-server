@@ -87,7 +87,9 @@ describe('ApolloServerBase start', () => {
     await expect(server.start()).rejects.toThrow('nope');
   });
 
-  it('execute throws redacted message on implicit startup error', async () => {
+  // This is specific to serverless because on server-ful frameworks, you can't
+  // get to executeOperation without server.start().
+  it('execute throws redacted message on serverless startup error', async () => {
     const error = jest.fn();
     const logger: Logger = {
       debug: jest.fn(),
@@ -96,28 +98,36 @@ describe('ApolloServerBase start', () => {
       error,
     };
 
-    const server = new ApolloServerBase({
+    class ServerlessApolloServer extends ApolloServerBase {
+      serverlessFramework() {
+        return true;
+      }
+    }
+
+    const server = new ServerlessApolloServer({
       typeDefs,
       resolvers,
       plugins: [failToStartPlugin],
       logger,
     });
-    // Run the operation twice (the first will kick off the start process). We
-    // want to see the same error thrown and log message for the "kick it off"
-    // call as the subsequent call.
+    // Run the operation twice. We want to see the same error thrown and log
+    // message for the "kick it off" call as the subsequent call.
     await expect(
       server.executeOperation({ query: '{__typename}' }),
     ).rejects.toThrow(redactedMessage);
     await expect(
       server.executeOperation({ query: '{__typename}' }),
     ).rejects.toThrow(redactedMessage);
-    expect(error).toHaveBeenCalledTimes(2);
-    expect(error.mock.calls[0][0]).toMatch(
-      /Apollo Server was started implicitly.*nope/,
-    );
-    expect(error.mock.calls[1][0]).toMatch(
-      /Apollo Server was started implicitly.*nope/,
-    );
+
+    // Three times: once for the actual background _start call, twice for the
+    // two operations.
+    expect(error).toHaveBeenCalledTimes(3);
+    for (const [message] of error.mock.calls) {
+      expect(message).toBe(
+        'An error occurred during Apollo Server startup. All ' +
+          'GraphQL requests will now fail. The startup error was: nope',
+      );
+    }
   });
 });
 
@@ -127,6 +137,7 @@ describe('ApolloServerBase executeOperation', () => {
       typeDefs,
       resolvers,
     });
+    await server.start();
 
     const result = await server.executeOperation({ query: 'query { error }' });
 
@@ -142,6 +153,7 @@ describe('ApolloServerBase executeOperation', () => {
       resolvers,
       debug: true,
     });
+    await server.start();
 
     const result = await server.executeOperation({ query: 'query { error }' });
 

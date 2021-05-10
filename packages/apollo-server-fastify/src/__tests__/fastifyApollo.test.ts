@@ -13,6 +13,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
+  await server.start();
 
   app.register(server.createHandler());
   await app.listen(0);
@@ -36,5 +37,5 @@ describe('fastifyApollo', () => {
 });
 
 describe('integration:Fastify', () => {
-  testSuite(createApp, destroyApp);
+  testSuite({createApp, destroyApp});
 });

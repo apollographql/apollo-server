@@ -24,6 +24,7 @@ async function createServer(options: object = {}): Promise<any> {
     resolvers,
     stopOnTerminationSignals: false,
   });
+  await apolloServer.start();
   const service = micro(apolloServer.createHandler(options));
   const uri = await listen(service);
   return {

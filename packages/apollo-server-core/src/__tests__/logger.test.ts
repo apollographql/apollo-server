@@ -14,7 +14,7 @@ const LOWEST_LOG_LEVEL = "debug";
 const KNOWN_DEBUG_MESSAGE = "The request has started.";
 
 async function triggerLogMessage(loggerToUse: Logger) {
-  await (new ApolloServerBase({
+  const server = new ApolloServerBase({
     typeDefs: gql`
       type Query {
         field: String!
@@ -25,11 +25,13 @@ async function triggerLogMessage(loggerToUse: Logger) {
       {
         requestDidStart({ logger }) {
           logger.debug(KNOWN_DEBUG_MESSAGE);
-        }
-      }
-    ]
-  })).executeOperation({
-    query: '{ field }'
+        },
+      },
+    ],
+  });
+  await server.start();
+  await server.executeOperation({
+    query: '{ field }',
   });
 }
 

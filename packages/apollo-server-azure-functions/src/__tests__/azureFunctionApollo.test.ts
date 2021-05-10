@@ -7,7 +7,7 @@ import { Config } from 'apollo-server-core';
 import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 
-const createAzureFunction = (options: CreateAppOptions = {}) => {
+const createAzureFunction = async (options: CreateAppOptions = {}) => {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
@@ -51,7 +51,7 @@ const createAzureFunction = (options: CreateAppOptions = {}) => {
 };
 
 describe('integration:AzureFunctions', () => {
-  testSuite(createAzureFunction);
+  testSuite({createApp: createAzureFunction, serverlessFramework: true});
 
   it('can append CORS headers to GET request', async () => {
     const server = new ApolloServer({ schema: Schema });

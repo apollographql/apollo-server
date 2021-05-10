@@ -105,6 +105,7 @@ describe('apollo-server-koa', () => {
         },
       }),
     });
+    await server.start();
     const app = new Koa();
 
     server.applyMiddleware({ app });
@@ -137,6 +138,7 @@ describe('apollo-server-koa', () => {
         },
       }),
     });
+    await server.start();
     const app = new Koa();
 
     server.applyMiddleware({ app });

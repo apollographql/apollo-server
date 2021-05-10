@@ -4,7 +4,7 @@ import testSuite, {
 } from 'apollo-server-integration-testsuite';
 import { Config } from 'apollo-server-core';
 
-function createApp(options: CreateAppOptions = {}) {
+async function createApp(options: CreateAppOptions = {}) {
   const Koa = require('koa');
   const { ApolloServer } = require('../ApolloServer');
   const app = new Koa();
@@ -12,6 +12,7 @@ function createApp(options: CreateAppOptions = {}) {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
+  await server.start();
   server.applyMiddleware({ app });
   return app.listen();
 }
@@ -33,5 +34,5 @@ describe('koaApollo', () => {
 });
 
 describe('integration:Koa', () => {
-  testSuite(createApp, destroyApp);
+  testSuite({createApp, destroyApp});
 });

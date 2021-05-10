@@ -209,14 +209,22 @@ export interface CreateAppOptions {
 }
 
 export interface CreateAppFunc {
-  (options?: CreateAppOptions): ValueOrPromise<any>;
+  (options?: CreateAppOptions): Promise<any>;
 }
 
 export interface DestroyAppFunc {
   (app: any): ValueOrPromise<void>;
 }
 
-export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
+export default ({
+  createApp,
+  destroyApp,
+  serverlessFramework,
+}: {
+  createApp: CreateAppFunc;
+  destroyApp?: DestroyAppFunc;
+  serverlessFramework?: boolean;
+}) => {
   describe('apolloServer', () => {
     let app: any;
     let didEncounterErrors: jest.MockedFunction<NonNullable<
@@ -224,6 +232,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
     >>;
 
     afterEach(async () => {
+      // XXX nothing calls server.stop?
       if (app) {
         if (destroyApp) {
           await destroyApp(app);
@@ -1130,78 +1139,76 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
     });
 
-    describe('request pipeline plugins', () => {
-      describe('lifecycle hooks', () => {
-        // This tests the backwards-compatibility behavior that ensures
-        // that even if you don't call server.start() yourself, the first
-        // GraphQL request will result in starting the server before
-        // serving the first request
-        it('calls serverWillStart before serving a request', async () => {
-          // We'll use this to determine the order in which
-          // the events we're expecting to happen actually occur and validate
-          // those expectations in various stages of this test.
-          const calls: string[] = [];
+    if (serverlessFramework) {
+      // This tests the serverless-specific behavior that ensures that startup
+      // finishes before serving a request. Non-serverless frameworks don't have
+      // this behavior: they assert that you've done `await server.start()`
+      // earlier in the process.
+      it('calls serverWillStart before serving a request', async () => {
+        // We'll use this to determine the order in which
+        // the events we're expecting to happen actually occur and validate
+        // those expectations in various stages of this test.
+        const calls: string[] = [];
 
-          const pluginStartedBarrier = resolvable();
-          const letPluginFinishBarrier = resolvable();
+        const pluginStartedBarrier = resolvable();
+        const letPluginFinishBarrier = resolvable();
 
-          // We want this to create the app as fast as `createApp` will allow.
-          // for integrations whose `applyMiddleware` currently returns a
-          // Promise we want them to resolve at whatever eventual pace they
-          // will so we can make sure that things are happening in order.
-          const unawaitedApp = createApp({
-            graphqlOptions: {
-              schema,
-              plugins: [
-                {
-                  async serverWillStart() {
-                    calls.push('zero');
-                    pluginStartedBarrier.resolve();
-                    await letPluginFinishBarrier;
-                    calls.push('one');
-                  },
+        // We want this to create the app as fast as `createApp` will allow.
+        // for integrations whose `applyMiddleware` currently returns a
+        // Promise we want them to resolve at whatever eventual pace they
+        // will so we can make sure that things are happening in order.
+        const unawaitedApp = createApp({
+          graphqlOptions: {
+            schema,
+            plugins: [
+              {
+                async serverWillStart() {
+                  calls.push('zero');
+                  pluginStartedBarrier.resolve();
+                  await letPluginFinishBarrier;
+                  calls.push('one');
                 },
-              ],
-            },
+              },
+            ],
+          },
+        });
+
+        // Account for the fact that `createApp` might return a Promise,
+        // and might not, depending on the integration's implementation of
+        // createApp.  This is entirely to account for the fact that
+        // non-async implementations of `applyMiddleware` leverage a
+        // middleware as the technique for yielding to `startWillStart`
+        // hooks while their `async` counterparts simply `await` those same
+        // hooks.  In a future where we make the behavior of `applyMiddleware`
+        // the same across all integrations, this should be changed to simply
+        // `await unawaitedApp`.
+        app = 'then' in unawaitedApp ? await unawaitedApp : unawaitedApp;
+
+        // Intentionally fire off the request asynchronously, without await.
+        const res = request(app)
+          .get('/graphql')
+          .query({
+            query: 'query test{ testString }',
+          })
+          .then((res) => {
+            calls.push('two');
+            return res;
           });
 
-          // Account for the fact that `createApp` might return a Promise,
-          // and might not, depending on the integration's implementation of
-          // createApp.  This is entirely to account for the fact that
-          // non-async implementations of `applyMiddleware` leverage a
-          // middleware as the technique for yielding to `startWillStart`
-          // hooks while their `async` counterparts simply `await` those same
-          // hooks.  In a future where we make the behavior of `applyMiddleware`
-          // the same across all integrations, this should be changed to simply
-          // `await unawaitedApp`.
-          app = 'then' in unawaitedApp ? await unawaitedApp : unawaitedApp;
+        // At this point calls might be [] or ['zero'] because the back-compat
+        // code kicks off start() asynchronously. We can safely wait on
+        // the plugin's serverWillStart to begin.
+        await pluginStartedBarrier;
+        expect(calls).toEqual(['zero']);
+        letPluginFinishBarrier.resolve();
 
-          // Intentionally fire off the request asynchronously, without await.
-          const res = request(app)
-            .get('/graphql')
-            .query({
-              query: 'query test{ testString }',
-            })
-            .then(res => {
-              calls.push('two');
-              return res;
-            });
+        // Now, wait for the request to finish.
+        await res;
 
-          // At this point calls might be [] or ['zero'] because the back-compat
-          // code kicks off start() asynchronously. We can safely wait on
-          // the plugin's serverWillStart to begin.
-          await pluginStartedBarrier;
-          expect(calls).toEqual(['zero']);
-          letPluginFinishBarrier.resolve();
-
-          // Now, wait for the request to finish.
-          await res;
-
-          // Finally, ensure that the order we expected was achieved.
-          expect(calls).toEqual(['zero', 'one', 'two']);
-        });
+        // Finally, ensure that the order we expected was achieved.
+        expect(calls).toEqual(['zero', 'one', 'two']);
       });
-    });
+    }
 
     describe('Persisted Queries', () => {
       const query = '{testString}';

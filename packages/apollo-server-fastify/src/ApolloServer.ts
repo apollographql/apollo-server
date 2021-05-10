@@ -42,10 +42,7 @@ export class ApolloServer extends ApolloServerBase {
   }: ServerRegistration = {}) {
     this.graphqlPath = path || '/graphql';
 
-    // In case the user didn't bother to call and await the `start` method, we
-    // kick it off in the background (with any errors getting logged
-    // and also rethrown from graphQLServerOptions during later requests).
-    this.ensureStarting();
+    this.assertStarted('createHandler');
 
     return async (app: FastifyInstance) => {
       if (!disableHealthCheck) {
