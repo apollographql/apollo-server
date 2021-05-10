@@ -123,11 +123,13 @@ type Author @cacheControl(maxAge: 60) {
 See [the cache control documentation](./caching) for more details, including how to define the `@cacheControl` directive, how to specify hints dynamically inside resolvers, how to set a default `maxAge` for all fields, and how to specify that a field should be cached for specific users only (in which case CDNs should ignore it). For example, to set a default max age other than `0` modify the Apollo Server constructor to include `cacheControl`:
 
 ```js
+import { ApolloServerPluginCacheControl } from 'apollo-server-core';
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   // The max age is calculated in seconds
-  cacheControl: { defaultMaxAge: 5 },
+  plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
 });
 ```
 

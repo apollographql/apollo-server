@@ -5,7 +5,6 @@
   "files": [],
   "include": [],
   "references": [
-    { "path": "./packages/apollo-cache-control" },
     { "path": "./packages/apollo-datasource" },
     { "path": "./packages/apollo-datasource-rest" },
     { "path": "./packages/apollo-server" },

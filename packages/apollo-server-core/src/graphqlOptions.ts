@@ -7,7 +7,6 @@ import {
   GraphQLFormattedError,
   ParseOptions,
 } from 'graphql';
-import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
@@ -53,7 +52,6 @@ export interface GraphQLServerOptions<
   ) => GraphQLResponse | null;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
-  cacheControl?: CacheControlExtensionOptions;
   dataSources?: () => DataSources<TContext>;
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;

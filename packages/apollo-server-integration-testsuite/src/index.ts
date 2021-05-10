@@ -26,6 +26,7 @@ import {
   Config,
   PersistedQueryOptions,
   KeyValueCache,
+  ApolloServerPluginCacheControl,
 } from 'apollo-server-core';
 import gql from 'graphql-tag';
 import { GraphQLResponse, ValueOrPromise } from 'apollo-server-types';
@@ -114,6 +115,13 @@ const queryType = new GraphQLObjectType({
     testPerson: {
       type: personType,
       resolve() {
+        return { firstName: 'Jane', lastName: 'Doe' };
+      },
+    },
+    testPersonWithCacheControl: {
+      type: personType,
+      resolve(_source, _args, _context, info) {
+        info.cacheControl.setCacheHint({maxAge: 11});
         return { firstName: 'Jane', lastName: 'Doe' };
       },
     },
@@ -405,9 +413,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
-      it('can handle a basic request with cacheControl', async () => {
+      it('cache-control not set without any hints', async () => {
         app = await createApp({
-          graphqlOptions: { schema, cacheControl: true },
+          graphqlOptions: { schema },
         });
         const expected = {
           testPerson: { firstName: 'Jane' },
@@ -420,24 +428,36 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
-          expect(res.body.extensions).toEqual({
-            cacheControl: {
-              version: 1,
-              hints: [{ maxAge: 0, path: ['testPerson'] }],
-            },
-          });
+          // hapi defaults to no-cache, so we have to allow that.
+          expect([undefined,  'no-cache']).toContain(res.headers['cache-control']);
         });
       });
 
-      it('can handle a basic request with cacheControl and defaultMaxAge', async () => {
+      it('cache-control set with dynamic hint', async () => {
+        app = await createApp({
+          graphqlOptions: { schema },
+        });
+        const expected = {
+          testPersonWithCacheControl: { firstName: 'Jane' },
+        };
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: 'query test{ testPersonWithCacheControl { firstName } }',
+          });
+        return req.then(res => {
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual(expected);
+          expect(res.headers['cache-control']).toBe('max-age=11, public');
+        });
+      });
+
+
+      it('cache-control set with defaultMaxAge', async () => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            cacheControl: {
-              defaultMaxAge: 5,
-              stripFormattedExtensions: false,
-              calculateHttpHeaders: false,
-            },
+            plugins: [ApolloServerPluginCacheControl({defaultMaxAge: 5})],
           },
         });
         const expected = {
@@ -451,12 +471,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
-          expect(res.body.extensions).toEqual({
-            cacheControl: {
-              version: 1,
-              hints: [{ maxAge: 5, path: ['testPerson'] }],
-            },
-          });
+          expect(res.headers['cache-control']).toBe('max-age=5, public');
         });
       });
 

@@ -46,10 +46,6 @@ import {
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { Logger, SchemaHash, ApolloConfig } from 'apollo-server-types';
-import {
-  plugin as pluginCacheControl,
-  CacheControlExtensionOptions,
-} from 'apollo-cache-control';
 import { cloneObject } from './runHttpQuery';
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';
@@ -58,6 +54,7 @@ import {
   ApolloServerPluginSchemaReportingOptions,
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
+  ApolloServerPluginCacheControl,
 } from './plugin';
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 
@@ -150,7 +147,6 @@ export class ApolloServerBase {
       playground,
       plugins,
       gateway,
-      cacheControl,
       experimental_approximateDocumentStoreMiB,
       stopOnTerminationSignals,
       apollo,
@@ -708,45 +704,8 @@ export class ApolloServerBase {
     return false;
   }
 
-  private ensurePluginInstantiation(plugins: PluginDefinition[] = []): void {
-    const pluginsToInit: PluginDefinition[] = [];
-
-    // Internal plugins should be added to `pluginsToInit` here.
-    // User's plugins, provided as an argument to this method, will be added
-    // at the end of that list so they take precedence.
-
-    // Enable cache control unless it was explicitly disabled.
-    if (this.config.cacheControl !== false) {
-      let cacheControlOptions: CacheControlExtensionOptions = {};
-      if (
-        typeof this.config.cacheControl === 'boolean' &&
-        this.config.cacheControl === true
-      ) {
-        // cacheControl: true means that the user needs the cache-control
-        // extensions. This means we are running the proxy, so we should not
-        // strip out the cache control extension and not add cache-control headers
-        cacheControlOptions = {
-          stripFormattedExtensions: false,
-          calculateHttpHeaders: false,
-          defaultMaxAge: 0,
-        };
-      } else {
-        // Default behavior is to run default header calculation and return
-        // no cacheControl extensions
-        cacheControlOptions = {
-          stripFormattedExtensions: true,
-          calculateHttpHeaders: true,
-          defaultMaxAge: 0,
-          ...this.config.cacheControl,
-        };
-      }
-
-      pluginsToInit.push(pluginCacheControl(cacheControlOptions));
-    }
-
-    pluginsToInit.push(...plugins);
-
-    this.plugins = pluginsToInit.map((plugin) => {
+  private ensurePluginInstantiation(userPlugins: PluginDefinition[] = []): void {
+    this.plugins = userPlugins.map((plugin) => {
       if (typeof plugin === 'function') {
         return plugin();
       }
@@ -758,7 +717,15 @@ export class ApolloServerBase {
         (p) => pluginIsInternal(p) && p.__internal_plugin_id__() === id,
       );
 
-    // Special case: usage reporting is on by default if you configure an API key.
+    // Special case: cache control is on unless you explicitly disable it.
+    {
+      if (!alreadyHavePluginWithInternalId('CacheControl')) {
+        this.plugins.push(ApolloServerPluginCacheControl());
+      }
+    }
+
+    // Special case: usage reporting is on by default (and first!) if you
+    // configure an API key.
     {
       const alreadyHavePlugin = alreadyHavePluginWithInternalId(
         'UsageReporting',

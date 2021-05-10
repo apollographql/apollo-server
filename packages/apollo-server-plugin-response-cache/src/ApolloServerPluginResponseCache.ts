@@ -4,8 +4,8 @@ import {
 } from 'apollo-server-plugin-base';
 import { GraphQLRequestContext, GraphQLResponse } from 'apollo-server-types';
 import { KeyValueCache, PrefixingKeyValueCache } from 'apollo-server-caching';
-import { ValueOrPromise } from 'apollo-server-types';
-import { CacheHint, CacheScope } from 'apollo-cache-control';
+import type { CacheHint, ValueOrPromise } from 'apollo-server-types';
+import { CacheScope } from 'apollo-server-types';
 
 // XXX This should use createSHA from apollo-server-core in order to work on
 // non-Node environments. I'm not sure where that should end up ---
@@ -88,9 +88,7 @@ enum SessionMode {
 }
 
 function sha(s: string) {
-  return createHash('sha256')
-    .update(s)
-    .digest('hex');
+  return createHash('sha256').update(s).digest('hex');
 }
 
 interface BaseCacheKey {
@@ -201,7 +199,9 @@ export default function plugin(
           // check, so that we can still write the result to the cache even if
           // we are told not to read from the cache.
           if (options.shouldReadFromCache) {
-            const shouldReadFromCache = await options.shouldReadFromCache(requestContext);
+            const shouldReadFromCache = await options.shouldReadFromCache(
+              requestContext,
+            );
             if (!shouldReadFromCache) return null;
           }
 
@@ -235,7 +235,9 @@ export default function plugin(
           }
 
           if (options.shouldWriteToCache) {
-            const shouldWriteToCache = await options.shouldWriteToCache(requestContext);
+            const shouldWriteToCache = await options.shouldWriteToCache(
+              requestContext,
+            );
             if (!shouldWriteToCache) return;
           }
 

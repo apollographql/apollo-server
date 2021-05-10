@@ -19,7 +19,6 @@ import type {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
-import type { CacheControlExtensionOptions } from 'apollo-cache-control';
 import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
@@ -83,7 +82,6 @@ export interface Config extends BaseConfig {
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
-  cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
   //https://github.com/jaydenseric/graphql-upload#type-uploadoptions

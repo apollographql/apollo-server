@@ -64,7 +64,6 @@ function runQuery(
 interface QueryOptions
   extends Pick<
     GraphQLOptions<GraphQLContext<any>>,
-    | 'cacheControl'
     | 'context'
     | 'debug'
     | 'documentStore'

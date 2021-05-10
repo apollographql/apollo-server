@@ -1,31 +1,37 @@
-import { ResponsePath, GraphQLError } from 'graphql';
+import { GraphQLError } from 'graphql';
 import { Headers } from 'apollo-server-env';
 import {
-  CacheScope,
-  CacheControlExtensionOptions,
   CacheHint,
-  __testing__,
-  plugin,
+  CacheScope,
+  GraphQLRequestContext,
+} from 'apollo-server-types';
+import {
+  ApolloServerPluginCacheControl,
+  ApolloServerPluginCacheControlOptions,
+  PolicyUpdater,
 } from '../';
-const { addHint, computeOverallCachePolicy } = __testing__;
 import {
   GraphQLRequestContextWillSendResponse,
   GraphQLResponse,
 } from 'apollo-server-plugin-base';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
+import pluginTestHarness from '../../../utils/pluginTestHarness';
 
 describe('plugin', () => {
   describe('willSendResponse', () => {
-    function makePluginWithOptions({
-      pluginInitializationOptions,
-      overallCachePolicy,
-      errors = false,
-    }: {
-      pluginInitializationOptions?: CacheControlExtensionOptions;
-      overallCachePolicy?: Required<CacheHint>;
-      errors?: boolean;
-    } = Object.create(null)) {
-      const pluginInstance = plugin(pluginInitializationOptions);
+    function makePluginWithOptions(
+      {
+        pluginInitializationOptions,
+        overallCachePolicy,
+        errors = false,
+      }: {
+        pluginInitializationOptions?: ApolloServerPluginCacheControlOptions;
+        overallCachePolicy?: Required<CacheHint>;
+        errors?: boolean;
+      } = Object.create(null),
+    ) {
+      const pluginInstance = ApolloServerPluginCacheControl(
+        pluginInitializationOptions,
+      );
 
       return pluginTestHarness({
         pluginInstance,
@@ -109,67 +115,63 @@ describe('plugin', () => {
     });
   });
 
-  describe('computeOverallCachePolicy', () => {
-    const responsePath: ResponsePath = {
-      key: 'test',
-      prev: undefined,
-      typename: undefined,
-    };
-    const responseSubPath: ResponsePath = {
-      key: 'subTest',
-      prev: responsePath,
-      typename: undefined,
-    };
-    const responseSubSubPath: ResponsePath = {
-      key: 'subSubTest',
-      prev: responseSubPath,
-      typename: undefined,
-    };
-
-    const hints = new Map();
-    afterEach(() => hints.clear());
+  describe('PolicyUpdater', () => {
+    let hints: PolicyUpdater;
+    let requestContext: Pick<GraphQLRequestContext, 'overallCachePolicy'>;
+    beforeEach(() => {
+      requestContext = {};
+      hints = new PolicyUpdater(requestContext);
+    });
 
     it('returns undefined without cache hints', () => {
-      const cachePolicy = computeOverallCachePolicy(hints);
-      expect(cachePolicy).toBeUndefined();
+      expect(requestContext.overallCachePolicy).toBeUndefined();
     });
 
     it('returns lowest max age value', () => {
-      addHint(hints, responsePath, { maxAge: 10 });
-      addHint(hints, responseSubPath, { maxAge: 20 });
+      hints.addHint({ maxAge: 10 });
+      hints.addHint({ maxAge: 20 });
 
-      const cachePolicy = computeOverallCachePolicy(hints);
-      expect(cachePolicy).toHaveProperty('maxAge', 10);
+      expect(requestContext.overallCachePolicy).toHaveProperty('maxAge', 10);
     });
 
     it('returns undefined if any cache hint has a maxAge of 0', () => {
-      addHint(hints, responsePath, { maxAge: 120 });
-      addHint(hints, responseSubPath, { maxAge: 0 });
-      addHint(hints, responseSubSubPath, { maxAge: 20 });
+      hints.addHint({ maxAge: 120 });
+      hints.addHint({ maxAge: 0 });
+      hints.addHint({ maxAge: 20 });
 
-      const cachePolicy = computeOverallCachePolicy(hints);
-      expect(cachePolicy).toBeUndefined();
+      expect(requestContext.overallCachePolicy).toBeUndefined();
+    });
+
+    it('returns undefined if first cache hint has a maxAge of 0', () => {
+      hints.addHint({ maxAge: 0 });
+      hints.addHint({ maxAge: 20 });
+
+      expect(requestContext.overallCachePolicy).toBeUndefined();
     });
 
     it('returns PUBLIC scope by default', () => {
-      addHint(hints, responsePath, { maxAge: 10 });
+      hints.addHint({ maxAge: 10 });
 
-      const cachePolicy = computeOverallCachePolicy(hints);
-      expect(cachePolicy).toHaveProperty('scope', CacheScope.Public);
+      expect(requestContext.overallCachePolicy).toHaveProperty(
+        'scope',
+        CacheScope.Public,
+      );
     });
 
     it('returns PRIVATE scope if any cache hint has PRIVATE scope', () => {
-      addHint(hints, responsePath, {
+      hints.addHint({
         maxAge: 10,
         scope: CacheScope.Public,
       });
-      addHint(hints, responseSubPath, {
+      hints.addHint({
         maxAge: 10,
         scope: CacheScope.Private,
       });
 
-      const cachePolicy = computeOverallCachePolicy(hints);
-      expect(cachePolicy).toHaveProperty('scope', CacheScope.Private);
+      expect(requestContext.overallCachePolicy).toHaveProperty(
+        'scope',
+        CacheScope.Private,
+      );
     });
   });
 });

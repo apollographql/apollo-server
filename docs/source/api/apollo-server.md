@@ -250,24 +250,6 @@ This option is used only by the `apollo-server` package. If you're integrating w
 </td>
 </tr>
 
-
-<tr>
-<td>
-
-###### `cacheControl`
-
-`Object`
-</td>
-<td>
-
-An `Object` containing [configuration options for the `apollo-cache-control` package](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-cache-control/src/index.ts#L26-L32), including `defaultMaxAge`, `calculateHttpHeaders`, and `stripFormattedExtensions`.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
 ###### `formatError`
 
 `Function`

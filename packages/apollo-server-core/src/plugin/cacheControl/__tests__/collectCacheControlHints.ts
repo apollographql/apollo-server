@@ -1,23 +1,20 @@
 import { GraphQLSchema, graphql } from 'graphql';
+import { CacheHint } from 'apollo-server-types';
 import {
-  CacheHint,
-  CacheControlExtensionOptions,
-  plugin,
+  ApolloServerPluginCacheControl,
+  ApolloServerPluginCacheControlOptions,
 } from '../';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
+import pluginTestHarness from '../../../utils/pluginTestHarness';
 
 export async function collectCacheControlHints(
   schema: GraphQLSchema,
   source: string,
-  options?: CacheControlExtensionOptions,
-): Promise<CacheHint[]> {
-
-  // Because this test helper looks at the formatted extensions, we always want
-  // to include them in the response rather than allow them to be stripped
-  // out.
-  const pluginInstance = plugin({
+  options: ApolloServerPluginCacheControlOptions = {},
+): Promise<Map<string, CacheHint>> {
+  const cacheHints = new Map<string, CacheHint>();
+  const pluginInstance = ApolloServerPluginCacheControl({
     ...options,
-    stripFormattedExtensions: false,
+    __testing__cacheHints: cacheHints,
   });
 
   const requestContext = await pluginTestHarness({
@@ -32,10 +29,10 @@ export async function collectCacheControlHints(
         source: requestContext.request.query,
         contextValue: requestContext.context,
       });
-    }
+    },
   });
 
   expect(requestContext.response.errors).toBeUndefined();
 
-  return requestContext.response.extensions!.cacheControl.hints;
+  return cacheHints;
 }
