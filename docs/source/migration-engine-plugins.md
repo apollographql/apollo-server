@@ -268,7 +268,7 @@ const server = new ApolloServer({
 
 ## Options for `ApolloServerPluginInlineTrace`
 
-By default, Apollo Server [enables inline tracing on federated implementing services](./api/plugin/inline-trace/). One `engine` option can be used to configure how inline tracing works. If you specified the `engine.rewriteError` function **and your service is an implementing service that is combined with others via federation** (but not if this server is the Apollo gateway which combines multiple implementing services), then you should pass that `rewriteError` function to the `ApolloServerPluginInlineTrace` plugin function. Note that `engine.rewriteError` is also (more commonly) used with graphs that report directly to Apollo's servers with via the usage reporting plugin; you shouldn't add the inline trace plugin unless you're sure you're in a federated implementing service!
+By default, Apollo Server [enables inline tracing on federated subgraphs](./api/plugin/inline-trace/). One `engine` option can be used to configure how inline tracing works. If you specified the `engine.rewriteError` function **and your service is a subgraph that is combined with others via federation** (but not if this server is the Apollo gateway which combines multiple subgraphs), then you should pass that `rewriteError` function to the `ApolloServerPluginInlineTrace` plugin function. Note that `engine.rewriteError` is also (more commonly) used with graphs that report directly to Apollo's servers with via the usage reporting plugin; you shouldn't add the inline trace plugin unless you're sure you're in a federated subgraph!
 
 ```js
 import { ApolloServer } from 'apollo-server-express';
@@ -282,7 +282,7 @@ const server = new ApolloServer({
 });
 
 // ... is equivalent to this code, IF THIS IS A
-// FEDERATED IMPLEMENTING SERVICE.
+// FEDERATED SUBGRAPH.
 const server = new ApolloServer({
   plugins: [ApolloServerPluginInlineTrace({
     rewriteError: (err) => ...
@@ -290,23 +290,23 @@ const server = new ApolloServer({
 });
 ```
 
-Note that the default behavior of whether inline tracing is enabled changed in v2.18.  In v2.18, inline tracing is enabled for any federated implementing service, unless explicitly disabled with `ApolloServerPluginInlineTraceDisabled`. In previous versions, inline tracing was enabled for any federated implementing service *unless an Apollo API key was provided*; this special case is removed in v2.18, which means that the same graph can both report usage to Apollo's servers and include inline traces in responses. These functionalities also both now log at startup, so it should be easy to see if they are unintentionally simultaneously enabled.
+Note that the default behavior of whether inline tracing is enabled changed in v2.18.  In v2.18, inline tracing is enabled for any federated subgraph, unless explicitly disabled with `ApolloServerPluginInlineTraceDisabled`. In previous versions, inline tracing was enabled for any federated subgraph *unless an Apollo API key was provided*; this special case is removed in v2.18, which means that the same graph can both report usage to Apollo's servers and include inline traces in responses. These functionalities also both now log at startup, so it should be easy to see if they are unintentionally simultaneously enabled.
 
 
 ## Migrating from `engine: false`
 
-If you passed `engine: false` to the `ApolloServer` constructor, the main effect was to disable inline tracing even if the current graph is a federated implementing service.
+If you passed `engine: false` to the `ApolloServer` constructor, the main effect was to disable inline tracing even if the current graph is a federated subgraph.
 
 Prior to Apollo Server 2.13, this also had the effect of disabling usage reporting even if you configured an API key. The change in Apollo Server 2.13 appears to have been unintentional and the backwards-compatibility handling of `engine: false` in Apollo Server TODO(no-engine) restores the old behavior of disabling usage reporting.
 
-If your code had `engine: false` because it is a federated implementing service but you do not want to enable inline tracing, you should use the new `ApolloServerPluginInlineTraceDisabled` plugin instead:
+If your code had `engine: false` because it is a federated subgraph but you do not want to enable inline tracing, you should use the new `ApolloServerPluginInlineTraceDisabled` plugin instead:
 
 
 ```js
 import { ApolloServer } from 'apollo-server-express';
 import { ApolloServerPluginInlineTraceDisabled } from 'apollo-server-core';
 
-// In a federated implementing service, this code...
+// In a federated subgraph, this code...
 const server = new ApolloServer({
   engine: false,
 });

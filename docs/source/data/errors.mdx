@@ -385,7 +385,7 @@ Your `rewriteError` function is called for each error (a `GraphQLError` or an `A
 * Return a modified form of the error (e.g., by changing the `err.message` to remove potentially sensitive information)
 * Return `null` to prevent the error from being reported entirely
 
->**For federated graphs**, instead define `rewriteError` in each implementing service's [inline trace plugin](../api/plugin/inline-trace/#rewriteerror). Do not define it in the gateway.
+>**For federated graphs**, instead define `rewriteError` in each subgraph's [inline trace plugin](../api/plugin/inline-trace/#rewriteerror). Do not define it in the gateway.
 
 #### Example: Ignoring common low-severity errors
 

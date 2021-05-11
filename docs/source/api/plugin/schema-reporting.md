@@ -10,7 +10,7 @@ This API reference documents the `ApolloServerPluginSchemaReporting` plugin.
 
 This plugin enables your GraphQL server to register its latest schema with the Apollo schema registry every time it starts up. Full details on schema reporting can be found in [the Apollo Studio docs](https://www.apollographql.com/docs/studio/schema/schema-reporting/).
 
-> **Schema reporting does not currently support graphs that use Apollo Federation.** This plugin will not work if your graph is a federated implementing service or a composed federated graph running in a gateway. If you have a federated graph, you will need to register schema via the CLI; see [Setting up managed federation](https://www.apollographql.com/docs/studio/managed-federation/setup/).
+> **Schema reporting does not currently support graphs that use Apollo Federation.** This plugin will not work if your graph is a federated subgraph or a composed federated graph running in a gateway. If you have a federated graph, you will need to register schema via the CLI; see [Setting up managed federation](https://www.apollographql.com/docs/studio/managed-federation/setup/).
 
 In order to use this plugin, you must configure your server with a graph API key, either with the `APOLLO_KEY` environment variable or by passing it directly to your `ApolloServer` with `new ApolloServer({apollo: {key: KEY}})`. (This is the same way you configure your `ApolloServer` to enable usage reporting.)
 
