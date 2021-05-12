@@ -8,6 +8,8 @@ This is the AWS Lambda integration of GraphQL Server. Apollo Server is a communi
 npm install apollo-server-lambda graphql
 ```
 
+FIXME see what needs to be improved
+
 ## Deploying with AWS Serverless Application Model (SAM)
 
 To deploy the AWS Lambda function we must create a Cloudformation Template and a S3 bucket to store the artifact (zip of source code) and template. We will use the [AWS Command Line Interface](https://aws.amazon.com/cli/).

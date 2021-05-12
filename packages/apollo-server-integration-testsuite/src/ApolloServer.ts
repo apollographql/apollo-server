@@ -182,6 +182,7 @@ export interface StopServerFunc {
 export function testApolloServer<AS extends ApolloServerBase>(
   createApolloServer: CreateServerFunc<AS>,
   stopServer: StopServerFunc,
+  options: { serverlessFramework?: boolean } = {},
 ) {
   describe('ApolloServer', () => {
     afterEach(stopServer);
@@ -387,31 +388,33 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(executor).toHaveBeenCalled();
         });
 
-        it('rejected load promise is thrown by server.start', async () => {
-          const { gateway, triggers } = makeGatewayMock();
+        if (!options.serverlessFramework) {
+          // You don't have to call start on serverless frameworks (or in
+          // `apollo-server` which does not currently use this test suite).
+          it('rejected load promise is thrown by server.start', async () => {
+            const { gateway, triggers } = makeGatewayMock();
 
-          const loadError = new Error(
-            'load error which should be be thrown by start',
-          );
-          triggers.rejectLoad(loadError);
+            const loadError = new Error(
+              'load error which should be be thrown by start',
+            );
+            triggers.rejectLoad(loadError);
 
-          expect(
-            createApolloServer({
-              gateway,
-            }),
-          ).rejects.toThrowError(loadError);
-        });
+            await expect(
+              createApolloServer({
+                gateway,
+              }),
+            ).rejects.toThrowError(loadError);
+          });
 
-        it('not calling start causes a clear error', async () => {
-          // Note that this test suite is not used by `apollo-server` or
-          // serverless frameworks, so this is legit.
-          expect(
-            createApolloServer(
-              { typeDefs: 'type Query{x: ID}' },
-              { suppressStartCall: true },
-            ),
-          ).rejects.toThrow('You must `await server.start()`');
-        });
+          it('not calling start causes a clear error', async () => {
+            await expect(
+              createApolloServer(
+                { typeDefs: 'type Query{x: ID}' },
+                { suppressStartCall: true },
+              ),
+            ).rejects.toThrow('You must `await server.start()`');
+          });
+        }
 
         it('uses schema over resolvers + typeDefs', async () => {
           const typeDefs = gql`

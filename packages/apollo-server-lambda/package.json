@@ -26,11 +26,11 @@
     "node": ">=12.0"
   },
   "dependencies": {
-    "@apollographql/graphql-playground-html": "1.6.27",
+    "@vendia/serverless-express": "^4.3.7",
     "@types/aws-lambda": "^8.10.76",
     "apollo-server-core": "file:../apollo-server-core",
-    "apollo-server-env": "file:../apollo-server-env",
-    "apollo-server-types": "file:../apollo-server-types"
+    "apollo-server-express": "file:../apollo-server-express",
+    "express": "^4.17.1"
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"

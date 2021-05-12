@@ -20,6 +20,7 @@ The following must be done before following this guide:
 
 ---
 
+FIXME see what needs to be improved
 ## Setting up your project
 
 Setting up a project to work with Lambda isn't that different from a typical NodeJS project.
