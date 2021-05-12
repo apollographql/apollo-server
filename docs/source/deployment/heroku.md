@@ -10,10 +10,10 @@ Heroku is a common platform as a service solution that allows users to deploy Ap
 
 The following must be done before following this guide:
 
-- [Set up an Apollo Server](/getting-started)
+- [Set up an Apollo Server](../getting-started)
 - [Set up a Heroku account](https://heroku.com)
 
-In addition, if you would like to [push to Heroku manually](/deployment/heroku/#deploying-with-git) through the command line:
+In addition, if you would like to [push to Heroku manually](./heroku/#deploying-with-git) through the command line:
 - [Install the Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
 
 > Keep in mind that Heroku operations that will be covered in this document
@@ -32,7 +32,7 @@ Choose a name your app (this will be your `<HEROKU_APP_NAME>`) and click the **"
 
 ## Setting up the project
 
-For Heroku, projects can be set up using any of the [Apollo Server HTTP variants](/integrations/middleware) (i.e. Express, Hapi).
+For Heroku, projects can be set up using any of the [Apollo Server HTTP variants](../integrations/middleware) (i.e. Express, Hapi).
 
 ### Manually setting the port
 
@@ -97,8 +97,8 @@ Some things to note:
   ```shell
   $ heroku config:set NODE_ENV=development
   ```
-  or alternatively, you can [configure environment variables](/deployment/heroku/#configuring-environment-variables) through the Heroku dashboard.
-- Reminder that the [GraphQL playground](/testing/graphql-playground) is disabled when the Apollo Server is in production.
+  or alternatively, you can [configure environment variables](./heroku/#configuring-environment-variables) through the Heroku dashboard.
+- Reminder that the [GraphQL playground](../testing/graphql-playground) is disabled when the Apollo Server is in production.
 
 ### Automatically deploying with GitHub
 
