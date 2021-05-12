@@ -305,8 +305,9 @@ export class ApolloServerBase {
     // server.start()` before calling it. So we kick off the start
     // asynchronously from the constructor, and failures are logged and cause
     // later requests to fail (in `ensureStarted`, called by
-    // `graphQLServerOptions`). There's no way to make "the whole server fail"
-    // separately from making individual requests fail, but that's not entirely
+    // `graphQLServerOptions` and sometimes earlier by serverless integrations
+    // where helpful). There's no way to make "the whole server fail" separately
+    // from making individual requests fail, but that's not entirely
     // unreasonable for a "serverless" model.
     if (this.serverlessFramework()) {
       this._start().catch((e) => this.logStartupError(e));
@@ -436,8 +437,10 @@ export class ApolloServerBase {
   // verify that) and so the only cases for non-serverless frameworks that this
   // should hit are 'started', 'stopping', and 'stopped'. For serverless
   // frameworks, this lets the server wait until fully started before serving
-  // operations.
-  private async ensureStarted(): Promise<SchemaDerivedData> {
+  // operations. While it will be called by `graphQLServerOptions`, serverless
+  // integrations may want to also call it earlier in a request if that is
+  // helpful.
+  protected async ensureStarted(): Promise<SchemaDerivedData> {
     while (true) {
       switch (this.state.phase) {
         case 'initialized with gateway':
