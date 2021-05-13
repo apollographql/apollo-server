@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-lambda",
-  "version": "3.0.0-alpha.4",
+  "version": "3.0.0-lambda.0",
   "description": "Production-ready Node.js GraphQL server for AWS Lambda",
   "keywords": [
     "GraphQL",
@@ -26,8 +26,8 @@
     "node": ">=12.0"
   },
   "dependencies": {
-    "@vendia/serverless-express": "^4.3.7",
     "@types/aws-lambda": "^8.10.76",
+    "@vendia/serverless-express": "^4.3.7",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-express": "file:../apollo-server-express",
     "express": "^4.17.1"
