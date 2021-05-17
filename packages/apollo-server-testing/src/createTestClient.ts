@@ -23,8 +23,8 @@ type GraphQLResponse<TData> = Omit<GraphQLResponseType, 'data'> & {
 };
 
 export interface ApolloServerTestClient {
-  query<TData = any, TVariables = Record<string, any>>(query: Query<TVariables>): Promise<GraphQLResponse<TData>>;
-  mutate<TData = any, TVariables = Record<string, any>>(mutation: Mutation<TVariables>): Promise<GraphQLResponse<TData>>;
+  query: <TData = any, TVariables = Record<string, any>>(query: Query<TVariables>) => Promise<GraphQLResponse<TData>>;
+  mutate: <TData = any, TVariables = Record<string, any>>(mutation: Mutation<TVariables>) => Promise<GraphQLResponse<TData>>;
 }
 
 export default (server: ApolloServerBase): ApolloServerTestClient => {
