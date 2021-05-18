@@ -11,6 +11,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+## v2.24.1
+
+- `apollo-server-core`: Fix a typo that could lead to TypeScript compilation when combined with a recent version of `@types/node`. (This bug had no runtime effect.) [PR #5149](https://github.com/apollographql/apollo-server/pull/5149)
+
 ## v2.24.0
 
 - `apollo-server-core`: Apollo Studio usage reporting uses a more efficient format which sends fewer detailed traces to Apollo's server. This change should not have a major effect on the experience of using Apollo Studio. [PR #4142](https://github.com/apollographql/apollo-server/pull/4142)
