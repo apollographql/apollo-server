@@ -52,7 +52,7 @@ export interface ApolloServerPluginSchemaReportingOptions {
   /**
    * Specifies which Fetch API implementation to use when reporting schemas.
    */
-  experimental_fetcher?: typeof fetch;
+  fetcher?: typeof fetch;
 }
 
 export function ApolloServerPluginSchemaReporting(
@@ -60,7 +60,7 @@ export function ApolloServerPluginSchemaReporting(
     initialDelayMaxMs,
     overrideReportedSchema,
     endpointUrl,
-    experimental_fetcher,
+    fetcher,
   }: ApolloServerPluginSchemaReportingOptions = Object.create(null),
 ): InternalApolloServerPlugin {
   const bootId = uuidv4();
@@ -168,7 +168,7 @@ export function ApolloServerPluginSchemaReporting(
           Math.random() * (initialDelayMaxMs ?? 10_000),
         ),
         fallbackReportingDelayInMs: 20_000,
-        fetcher: experimental_fetcher,
+        fetcher,
       });
 
       schemaReporter.start();
