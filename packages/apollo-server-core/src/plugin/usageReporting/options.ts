@@ -5,7 +5,7 @@ import {
   Logger,
   GraphQLRequestContext,
 } from 'apollo-server-types';
-import { RequestAgent } from 'apollo-server-env';
+import type { fetch, RequestAgent } from 'apollo-server-env';
 import type { Trace } from 'apollo-reporting-protobuf';
 
 export interface ApolloServerPluginUsageReportingOptions<TContext> {
@@ -156,6 +156,10 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * Apollo.
    */
   requestAgent?: RequestAgent | false;
+  /**
+   * Specifies which Fetch API implementation to use when sending usage reports.
+   */
+  fetcher?: typeof fetch;
   /**
    * How often to send reports to Apollo. We'll also send reports when the
    * report gets big; see maxUncompressedReportSize.
