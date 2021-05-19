@@ -2,6 +2,7 @@ import os from 'os';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 import { v4 as uuidv4 } from 'uuid';
 import { printSchema, validateSchema, buildSchema } from 'graphql';
+import type { fetch } from 'apollo-server-env';
 import { SchemaReporter } from './schemaReporter';
 import createSHA from '../../utils/createSHA';
 import { schemaIsFederated } from '../schemaIsFederated';
@@ -48,6 +49,10 @@ export interface ApolloServerPluginSchemaReportingOptions {
    * Apollo use.
    */
   endpointUrl?: string;
+  /**
+   * Specifies which Fetch API implementation to use when reporting schemas.
+   */
+  fetcher?: typeof fetch;
 }
 
 export function ApolloServerPluginSchemaReporting(
@@ -55,6 +60,7 @@ export function ApolloServerPluginSchemaReporting(
     initialDelayMaxMs,
     overrideReportedSchema,
     endpointUrl,
+    fetcher,
   }: ApolloServerPluginSchemaReportingOptions = Object.create(null),
 ): InternalApolloServerPlugin {
   const bootId = uuidv4();
@@ -162,6 +168,7 @@ export function ApolloServerPluginSchemaReporting(
           Math.random() * (initialDelayMaxMs ?? 10_000),
         ),
         fallbackReportingDelayInMs: 20_000,
+        fetcher,
       });
 
       schemaReporter.start();

@@ -265,12 +265,13 @@ export function ApolloServerPluginUsageReporting<TContext>(
           });
         });
 
-        // Wrap fetch with async-retry for automatic retrying
+        // Wrap fetcher with async-retry for automatic retrying
+        const fetcher = options.fetcher ?? fetch;
         const response: Response = await retry(
           // Retry on network errors and 5xx HTTP
           // responses.
           async () => {
-            const curResponse = await fetch(
+            const curResponse = await fetcher(
               (options.endpointUrl ||
                 'https://usage-reporting.api.apollographql.com') +
                 '/api/ingress/traces',
