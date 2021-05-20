@@ -40,14 +40,14 @@ const createCloudFunction = async (options: CreateAppOptions = {}) => {
 
 describe('googleCloudApollo', () => {
   it('handles requests with path set to null', async () => {
-    const app = await createCloudFunction();
-    const res = await request(app)
-      .get('/')
-      .set('Accept', 'text/html');
+    const app = await createCloudFunction({
+      graphqlOptions: { schema: Schema, playground: { endpoint: 'xxx' } },
+    });
+    const res = await request(app).get('/').set('Accept', 'text/html');
     expect(res.status).toEqual(200);
   });
 });
 
 describe('integration:CloudFunction', () => {
-  testSuite({createApp: createCloudFunction, serverlessFramework: true});
+  testSuite({ createApp: createCloudFunction, serverlessFramework: true });
 });
