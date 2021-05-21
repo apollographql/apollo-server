@@ -133,9 +133,29 @@ The resulting S3 buckets and Lambda functions can be viewed and managed after lo
 - To find the created S3 bucket, search the listed services for S3. For this example, the bucket created by Serverless was named `apollo-lambda-dev-serverlessdeploymentbucket-1s10e00wvoe5f`
 - To find the created Lambda function, search the listed services for `Lambda`. If the list of Lambda functions is empty, or missing the newly created function, double check the region at the top right of the screen. The default region for Serverless deployments is `us-east-1` (N. Virginia)
 
+## Customizing HTTP serving
+
+`apollo-server-lambda` is built on top of `apollo-server-express`. It combines the HTTP server framework `express` with a package called `@vendia/serverless-express` that translates between Lambda events and Express requests. By default, this is entirely behind the scenes, but you can also provide your own express app with the `expressAppFromMiddleware` option to `createHandler`:
+
+```js
+const { ApolloServer } = require('apollo-server-lambda');
+const express = require('express');
+
+exports.handler = server.createHandler({
+  expressAppFromMiddleware(middleware) {
+    const app = express();
+    app.use(someOtherMiddleware);
+    app.use(middleware);
+    return app;
+  }
+});
+```
+
 ## Getting request info
 
-To read information about the current request from the API Gateway event `(HTTP headers, HTTP method, body, path, ...)` or the current Lambda Context `(Function Name, Function Version, awsRequestId, time remaining, ...)`, use the options function. This way, they can be passed to your schema resolvers via the context option.
+Your ApolloServer's `context` function can read information about the current operation from both the original Lambda data structures and the Express request and response created by `@vendia/serverless-express`. These are provided to your `context` function on the `lambda` and `express` options respectively.
+
+`lambda` contains an `event` field which contains the API Gateway event (HTTP headers, HTTP method, body, path, ...) and a `context` field with the current Lambda Context (Function Name, Function Version, awsRequestId, time remaining, ...). `express` contains `req` and `res` fields with the Express request and response. The object returned from your `context` function is provided to all of your schema resolvers in the third `context` argument.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
@@ -157,11 +177,12 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ event, context }) => ({
-    headers: event.headers,
-    functionName: context.functionName,
-    event,
-    context,
+  context: ({ lambda, express }) => ({
+    headers: lambda.event.headers,
+    functionName: lambda.context.functionName,
+    event: lambda.event,
+    context: lambda.context,
+    expressRequest: express.req,
   }),
 });
 
@@ -192,9 +213,11 @@ const resolvers = {
 const server = new ApolloServer({ typeDefs, resolvers });
 
 exports.graphqlHandler = server.createHandler({
-  cors: {
-    origin: '*',
-    credentials: true,
+  expressGetMiddlewareOptions: {
+    cors: {
+      origin: '*',
+      credentials: true,
+    },
   },
 });
 ```
@@ -221,9 +244,11 @@ const resolvers = {
 const server = new ApolloServer({ typeDefs, resolvers });
 
 exports.graphqlHandler = server.createHandler({
-  cors: {
-    origin: true,
-    credentials: true,
+  expressGetMiddlewareOptions: {
+    cors: {
+      origin: true,
+      credentials: true,
+    },
   },
 });
 ```
