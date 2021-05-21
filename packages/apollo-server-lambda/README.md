@@ -188,9 +188,11 @@ const server = new ApolloServer({
 });
 
 exports.handler = server.createHandler({
-  cors: {
-    origin: '*',
-    credentials: true,
+  expressGetMiddlewareOptions: {
+    cors: {
+      origin: '*',
+      credentials: true,
+    }
   },
 });
 ```
@@ -220,9 +222,11 @@ const server = new ApolloServer({
 });
 
 exports.handler = server.createHandler({
-  cors: {
-    origin: true,
-    credentials: true,
+  expressGetMiddlewareOptions: {
+    cors: {
+      origin: true,
+      credentials: true,
+    }
   },
 });
 ```
