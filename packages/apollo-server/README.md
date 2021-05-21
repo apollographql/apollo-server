@@ -3,7 +3,7 @@
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
 [![Build Status](https://circleci.com/gh/apollographql/apollo-server/tree/main.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server/tree/main)
-[![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/apollo)
+[![Join the community forum](https://img.shields.io/badge/join%20the%20community-forum-blueviolet)](https://community.apollographql.com)
 [![Read CHANGELOG](https://img.shields.io/badge/read-changelog-blue)](https://github.com/apollographql/apollo-server/blob/HEAD/CHANGELOG.md)
 
 Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs to add more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js)--or define a schema's type definitions using schema definition language (SDL).
@@ -83,7 +83,7 @@ Finally, start the server using `node index.js` and go to the URL returned on th
 
 For more details, check out the Apollo Server [Getting Started guide](https://www.apollographql.com/docs/apollo-server/getting-started.html) and the [fullstack tutorial](https://www.apollographql.com/docs/tutorial/introduction.html).
 
-For questions, the [Apollo community on Spectrum.chat](https://spectrum.chat) is a great place to get help.
+For questions, the [Apollo community forum](https://community.apollographql.com) is a great place to get help.
 
 ## Installation: Integrations
 
@@ -157,7 +157,7 @@ npm link apollo-server-<integration>
 
 ## Community
 
-Are you stuck? Want to contribute? Come visit us in the [Apollo community on Spectrum.chat!](https://spectrum.chat/apollo)
+Are you stuck? Want to contribute? Come visit us in the [Apollo community forum!](https://community.apollographql.com)
 
 
 ## Maintainers
