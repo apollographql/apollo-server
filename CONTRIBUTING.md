@@ -4,7 +4,7 @@ Excited about Apollo and want to make it better? We’re excited too!
 
 Apollo is a community of developers just like you, striving to create the best tools and libraries around GraphQL. We welcome anyone who wants to contribute or provide constructive feedback, no matter the age or level of experience. If you want to help but don't know where to start, let us know, and we'll find something for you.
 
-Oh, and if you haven't already, sign up for the [Apollo Spectrum community](https://spectrum.chat/apollo).
+Oh, and if you haven't already, sign up for the [Apollo community forum](https://community.apollographql.com).
 
 Here are some ways to contribute to the project, from easiest to most difficult:
 
@@ -85,4 +85,4 @@ It’s important that every piece of code in Apollo packages is reviewed by at l
 
 If you want to contribute to Apollo server, but aren't quite sure where to start, take a look at the [roadmap and design docs](./ROADMAP.md). Just pick one of the upcoming features that you're interested in, and start working on it. If the design doc isn't clear enough (which it probably won't be), open an issue thread so we can discuss it.
 
-Last but not least, make sure to join the [Apollo Spectrum community](https://spectrum.chat/apollo), where there are lots of other friendly contributors to talk to.
+Last but not least, make sure to join the [Apollo community forum](https://community.apollographql.com), where there are lots of other friendly contributors to talk to.
