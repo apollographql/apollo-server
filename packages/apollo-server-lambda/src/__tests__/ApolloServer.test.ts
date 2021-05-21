@@ -70,9 +70,8 @@ describe('apollo-server-lambda', () => {
           },
           // Add something interesting from each context argument part to the
           // context.
-          context({ express, lambda }) {
+          context({ event, context, express }) {
             const { req, res } = express;
-            const { event, context } = lambda;
             return {
               reqHttpVersion: req.httpVersion,
               resHasApp: !!res.app,

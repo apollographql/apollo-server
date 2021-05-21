@@ -57,8 +57,9 @@ export class ApolloServer extends ApolloServerExpress {
   ): Promise<GraphQLOptions> {
     const { event, context } = getCurrentInvoke();
     return super.graphQLServerOptions({
+      event,
+      context,
       express: { req, res },
-      lambda: { event, context },
     });
   }
 }
