@@ -1,9 +1,9 @@
 import http from 'http';
 import request from 'supertest';
+import express from 'express';
 import { createMockServer } from './mockServer';
 import { Config, gql } from 'apollo-server-core';
-import { ApolloServer } from '../ApolloServer';
-import type { GetMiddlewareOptions } from 'apollo-server-express';
+import { ApolloServer, CreateHandlerOptions } from '../ApolloServer';
 import {
   createServerInfo,
   testApolloServer,
@@ -49,11 +49,11 @@ describe('apollo-server-lambda', () => {
   );
 
   const createLambda = (
-    expressGetMiddlewareOptions: Partial<GetMiddlewareOptions> = {},
+    createHandlerOptions: CreateHandlerOptions = {},
     config: Config = { typeDefs, resolvers },
   ) => {
     const server = new ApolloServer(config);
-    const handler = server.createHandler({ expressGetMiddlewareOptions });
+    const handler = server.createHandler(createHandlerOptions);
     return createMockServer(handler);
   };
 
@@ -87,7 +87,7 @@ describe('apollo-server-lambda', () => {
         .send({ query: '{context}' })
         .expect(200)
         .expect((res) => {
-          expect(typeof res.body.data.context).toBe("string");
+          expect(typeof res.body.data.context).toBe('string');
           const context = JSON.parse(res.body.data.context);
           expect(context).toEqual({
             reqHttpVersion: '1.1',
@@ -97,6 +97,20 @@ describe('apollo-server-lambda', () => {
           });
         });
     });
+  });
+
+  it('expressAppFromMiddleware', async () => {
+    const app = createLambda({
+      expressAppFromMiddleware(middleware) {
+        const app = express();
+        app.get('/lambda-test', (_req, res) => {
+          res.send('some body');
+        });
+        app.use(middleware);
+        return app;
+      },
+    });
+    await request(app).get('/lambda-test').expect(200, 'some body');
   });
 
   describe('healthchecks', () => {
@@ -116,10 +130,12 @@ describe('apollo-server-lambda', () => {
 
     it('provides a callback for the healthcheck', async () => {
       const app = createLambda({
-        onHealthCheck: async () => {
-          return new Promise((resolve) => {
-            return resolve('Success!');
-          });
+        expressGetMiddlewareOptions: {
+          onHealthCheck: async () => {
+            return new Promise((resolve) => {
+              return resolve('Success!');
+            });
+          },
         },
       });
 
@@ -136,10 +152,12 @@ describe('apollo-server-lambda', () => {
 
     it('returns a 503 if healthcheck fails', async () => {
       const app = createLambda({
-        onHealthCheck: async () => {
-          return new Promise(() => {
-            throw new Error('Failed to connect!');
-          });
+        expressGetMiddlewareOptions: {
+          onHealthCheck: async () => {
+            return new Promise(() => {
+              throw new Error('Failed to connect!');
+            });
+          },
         },
       });
 
