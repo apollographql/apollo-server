@@ -153,9 +153,9 @@ exports.handler = server.createHandler({
 
 ## Getting request info
 
-Your ApolloServer's `context` function can read information about the current operation from both the original Lambda data structures and the Express request and response created by `@vendia/serverless-express`. These are provided to your `context` function on the `lambda` and `express` options respectively.
+Your ApolloServer's `context` function can read information about the current operation from both the original Lambda data structures and the Express request and response created by `@vendia/serverless-express`. These are provided to your `context` function as `event`, `context`, and `express` options.
 
-`lambda` contains an `event` field which contains the API Gateway event (HTTP headers, HTTP method, body, path, ...) and a `context` field with the current Lambda Context (Function Name, Function Version, awsRequestId, time remaining, ...). `express` contains `req` and `res` fields with the Express request and response. The object returned from your `context` function is provided to all of your schema resolvers in the third `context` argument.
+The `event` object contains the API Gateway event (HTTP headers, HTTP method, body, path, ...). The `context` object (not to be confused with the `context` function itself!) contains the current Lambda Context (Function Name, Function Version, awsRequestId, time remaining, ...). `express` contains `req` and `res` fields with the Express request and response. The object returned from your `context` function is provided to all of your schema resolvers in the third `context` argument.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
@@ -177,11 +177,11 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ lambda, express }) => ({
-    headers: lambda.event.headers,
-    functionName: lambda.context.functionName,
-    event: lambda.event,
-    context: lambda.context,
+  context: ({ event, context, express }) => ({
+    headers: event.headers,
+    functionName: context.functionName,
+    event,
+    context,
     expressRequest: express.req,
   }),
 });
