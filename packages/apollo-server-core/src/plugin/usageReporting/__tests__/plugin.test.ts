@@ -2,6 +2,7 @@ import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { graphql } from 'graphql';
 import { Request } from 'node-fetch';
+import loglevel from 'loglevel';
 import {
   makeHTTPRequestHeaders,
   ApolloServerPluginUsageReporting,
@@ -12,6 +13,9 @@ import pluginTestHarness from '../../../utils/pluginTestHarness';
 import nock from 'nock';
 import { gunzipSync } from 'zlib';
 import { ApolloServerPluginUsageReportingOptions } from '../options';
+
+const quietLogger = loglevel.getLogger('quiet');
+quietLogger.setLevel(loglevel.levels.WARN);
 
 describe('end-to-end', () => {
   async function runTest({
@@ -81,6 +85,7 @@ describe('end-to-end', () => {
     const pluginInstance = ApolloServerPluginUsageReporting({
       ...pluginOptions,
       sendReportsImmediately: true,
+      logger: quietLogger,
     });
 
     const context = await pluginTestHarness({

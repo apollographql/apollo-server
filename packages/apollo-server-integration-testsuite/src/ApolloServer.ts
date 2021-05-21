@@ -3,6 +3,7 @@ import { sha256 } from 'js-sha256';
 import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
+import loglevel from 'loglevel';
 
 import { Report, Trace } from 'apollo-reporting-protobuf';
 
@@ -54,6 +55,9 @@ import {
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
 import { AddressInfo } from 'net';
+
+const quietLogger = loglevel.getLogger('quiet');
+quietLogger.setLevel(loglevel.levels.WARN);
 
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
@@ -935,6 +939,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 ApolloServerPluginUsageReporting({
                   endpointUrl: reportIngress.getUrl(),
                   maxUncompressedReportSize: 1,
+                  logger: quietLogger,
                   ...usageReportingOptions,
                 }),
                 ...plugins,
@@ -1895,6 +1900,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                   reportIntervalMs: 1,
                   maxAttempts: 3,
                   requestAgent,
+                  logger: quietLogger,
                   reportErrorFunction(error: Error) {
                     reportErrorPromiseResolve(error);
                   },
@@ -2004,6 +2010,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: allTypeDefs,
           resolvers,
+          logger: quietLogger,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -2034,6 +2041,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: allTypeDefs,
           resolvers,
+          logger: quietLogger,
         });
 
         const apolloFetch = createApolloFetchAsIfFromGateway(uri);
@@ -2202,10 +2210,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
               shouldReadFromCache: (
                 requestContext: GraphQLRequestContext<any>,
               ) => {
-                console.debug(
-                  'shouldReadFromCache',
-                  requestContext.request.query,
-                );
                 if (
                   requestContext.request.http!.headers.get('no-read-from-cache')
                 )
@@ -2674,6 +2678,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         await createApolloServer({
           gateway,
           apollo: { key: 'service:tester:1234abc', graphVariant: 'staging' },
+          logger: quietLogger,
         });
 
         expect(optionsSpy).toHaveBeenLastCalledWith({

@@ -17,6 +17,7 @@ import {
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { print } from 'graphql';
+import loglevel from 'loglevel';
 import {
   hashApiKey,
   nockStorageSecret,
@@ -40,6 +41,13 @@ const mockHttpRequestContextForExecuteOperation: Required<Pick<
 >> = {
   http: { method: 'GET', headers: new Headers(), url: '/mocked' },
 };
+
+// Hacky way of turning off debug and info logs during tests.
+beforeEach(() => {
+  loglevel
+  .getLogger('apollo-server:apollo-server-plugin-operation-registry')
+  .setLevel(loglevel.levels.WARN);
+});
 
 describe('Operation registry plugin', () => {
   it('will instantiate when not called with options', () => {
