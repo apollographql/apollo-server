@@ -14,12 +14,12 @@ import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
 } from 'apollo-server-caching';
-import {
+import type {
   ApolloServerPlugin,
   GraphQLServiceContext,
   GraphQLServerListener,
-  HtmlPagesOptions,
-  HtmlPage,
+  RenderUIPageOptions,
+  UIPage,
 } from 'apollo-server-plugin-base';
 
 import { GraphQLServerOptions } from './graphqlOptions';
@@ -124,8 +124,8 @@ export class ApolloServerBase {
   private toDispose = new Set<() => Promise<void>>();
   private toDisposeLast = new Set<() => Promise<void>>();
   private experimental_approximateDocumentStoreMiB: Config['experimental_approximateDocumentStoreMiB'];
-  private htmlPagesCallbacks:
-    | ((options: HtmlPagesOptions) => HtmlPage[])[]
+  private renderUIPageCallback:
+    | ((options: RenderUIPageOptions) => UIPage)
     | null = null;
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
@@ -424,9 +424,14 @@ export class ApolloServerBase {
         });
       }
 
-      this.htmlPagesCallbacks = serverListeners.flatMap((l) =>
-        l.htmlPages ? [l.htmlPages] : [],
+      const renderUIPageCallbacks = serverListeners.flatMap((l) =>
+        l.renderUIPage ? [l.renderUIPage] : [],
       );
+      if (renderUIPageCallbacks.length > 1) {
+        throw Error('Only one plugin can implement renderUIPage.');
+      } else if (renderUIPageCallbacks.length) {
+        this.renderUIPageCallback = renderUIPageCallbacks[0];
+      }
 
       this.state = { phase: 'started', schemaDerivedData };
     } catch (error) {
@@ -448,7 +453,7 @@ export class ApolloServerBase {
   // operations.
   //
   // It's also called via `ensureStarted` by serverless frameworks so that they
-  // can call `getHtmlPages` (or do other things like call a method on a base
+  // can call `getUIPage` (or do other things like call a method on a base
   // class that expects it to be started).
   private async _ensureStarted(): Promise<SchemaDerivedData> {
     while (true) {
@@ -854,59 +859,18 @@ export class ApolloServerBase {
   }
 
   // FIXME doc, declare return value
-  protected getHtmlPages(options: HtmlPagesOptions) {
-    const { htmlPagesCallbacks } = this;
-    if (!htmlPagesCallbacks) {
-      // FIXME need to make start() required first!
-      throw Error(
-        'htmlPagesCallbacks should be set after ensureStarted succeeds!',
-      );
+  protected getUIPage(
+    options: RenderUIPageOptions,
+  ): UIPage | null {
+    this.assertStarted('getUIPage');
+
+    const { renderUIPageCallback } = this;
+    if (!renderUIPageCallback) {
+      return null;
     }
 
     // Convert graphqlPath to something that can be prefixed to an URL path to give an URL path.
     const { graphqlPath } = options;
-    const graphqlPathPrefix = graphqlPath.match(/^\/+$/)
-      ? ''
-      : graphqlPath.replace(/\/+$/, '');
-
-    const htmlPages = new Map<string, string>();
-    let rootRedirectPath: string | null = null;
-    for (const htmlPagesCallback of htmlPagesCallbacks) {
-      let thisPluginSetRedirectFromRoot = false;
-      for (const { path, html, redirectFromRoot } of htmlPagesCallback(
-        options,
-      ) ?? []) {
-        if (!path.startsWith('/')) {
-          throw Error(
-            `Pages returned from htmlPages() must have path starting with '/'; got ${path}`,
-          );
-        }
-        const fullPath =
-          graphqlPathPrefix +
-          (path === '/' && graphqlPathPrefix !== '' ? '' : path);
-        if (htmlPages.has(fullPath)) {
-          throw Error(
-            `Plugins registered multiple HTML pages at ${path} via htmlPages()`,
-          );
-        }
-        htmlPages.set(fullPath, html);
-
-        // There's no good reason a single plugin should declare multiple
-        // pages as redirectFromRoot. However, it's OK if multiple plugins
-        // have a redirectFromRoot page; the first one wins.
-        if (redirectFromRoot) {
-          if (thisPluginSetRedirectFromRoot) {
-            throw Error(
-              'A single plugin registered multiple HTML pages with redirectFromRoot via htmlPages()',
-            );
-          }
-          thisPluginSetRedirectFromRoot = true;
-          if (!rootRedirectPath) {
-            rootRedirectPath = fullPath;
-          }
-        }
-      }
-    }
-    return { htmlPages, rootRedirectPath };
+    return renderUIPageCallback({ graphqlPath });
   }
 }

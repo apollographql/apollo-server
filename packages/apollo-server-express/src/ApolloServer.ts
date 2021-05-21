@@ -120,31 +120,15 @@ export class ApolloServer extends ApolloServerBase {
       router.use(path, json(bodyParserConfig));
     }
 
-    const { htmlPages, rootRedirectPath } = this.getHtmlPages({
-      graphqlPath: path,
-    });
-    htmlPages.forEach((html, pagePath) => {
-      router.get(pagePath, (req, res, next) => {
-        if (prefersHTML(req)) {
-          res.setHeader('Content-Type', 'text/html');
-          res.write(html);
-          res.end();
-        } else {
-          next();
-        }
-      })
-    });
-    if (rootRedirectPath) {
-      router.get(path, (req, res, next) => {
-        if (prefersHTML(req)) {
-          res.redirect(rootRedirectPath);
-        } else {
-          next();
-        }
-      })
-    }
-
+    const uiPage = this.getUIPage({graphqlPath: path});
     router.use(path, (req, res, next) => {
+      if (uiPage && prefersHTML(req)) {
+        res.setHeader('Content-Type', 'text/html');
+        res.write(uiPage.html);
+        res.end();
+        return;
+      }
+
       runHttpQuery([], {
         method: req.method,
         options: () => this.createGraphQLServerOptions(req, res),

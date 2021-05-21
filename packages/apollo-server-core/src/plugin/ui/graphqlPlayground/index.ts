@@ -1,7 +1,7 @@
 // FIXME doc
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 
-import { HtmlPagesOptions } from 'apollo-server-plugin-base';
+import type { RenderUIPageOptions } from 'apollo-server-plugin-base';
 
 import { InternalApolloServerPlugin } from '../../../internalPlugin';
 
@@ -17,9 +17,9 @@ import { InternalApolloServerPlugin } from '../../../internalPlugin';
 // `renderPlaygroundPage` via the integration packages' `playground` config.
 const defaultPlaygroundVersion = '1.7.40';
 
-export type ApolloServerPluginUIGraphQLPlaygroundOptions =
-  Parameters<typeof renderPlaygroundPage>[0]
-;
+export type ApolloServerPluginUIGraphQLPlaygroundOptions = Parameters<
+  typeof renderPlaygroundPage
+>[0];
 
 export function ApolloServerPluginUIGraphQLPlayground(
   options: ApolloServerPluginUIGraphQLPlaygroundOptions = Object.create(null),
@@ -30,18 +30,14 @@ export function ApolloServerPluginUIGraphQLPlayground(
     },
     serverWillStart() {
       return {
-        htmlPages({ graphqlPath }: HtmlPagesOptions) {
-          return [
-            {
-              path: '/ui/playground',
-              html: renderPlaygroundPage({
-                version: defaultPlaygroundVersion,
-                endpoint: graphqlPath,
-                ...options,
-              }),
-              redirectFromRoot: true,
-            },
-          ];
+        renderUIPage({ graphqlPath }: RenderUIPageOptions) {
+          return {
+            html: renderPlaygroundPage({
+              version: defaultPlaygroundVersion,
+              endpoint: graphqlPath,
+              ...options,
+            }),
+          };
         },
       };
     },

@@ -66,18 +66,16 @@ export interface ApolloServerPlugin<
 
 export interface GraphQLServerListener {
   serverWillStop?(): ValueOrPromise<void>;
-  htmlPages?(options: HtmlPagesOptions): HtmlPage[];
+  renderUIPage?(options: RenderUIPageOptions): UIPage;
 }
 
 // FIXME docs
-export interface HtmlPage {
-  path: string;
+export interface UIPage {
   html: string;
-  redirectFromRoot?: boolean;
 }
 
 // FIXME docs
-export interface HtmlPagesOptions {
+export interface RenderUIPageOptions {
   graphqlPath: string;
 }
 
