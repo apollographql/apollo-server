@@ -50,14 +50,54 @@ describe('apollo-server-lambda', () => {
 
   const createLambda = (
     expressGetMiddlewareOptions: Partial<GetMiddlewareOptions> = {},
+    config: Config = { typeDefs, resolvers },
   ) => {
-    const server = new ApolloServer({
-      typeDefs,
-      resolvers,
-    });
+    const server = new ApolloServer(config);
     const handler = server.createHandler({ expressGetMiddlewareOptions });
     return createMockServer(handler);
   };
+
+  describe('context', () => {
+    it('receives both Express and Lambda context', async () => {
+      const app = createLambda(
+        {},
+        {
+          typeDefs: 'type Query { context: String }',
+          resolvers: {
+            Query: {
+              context: (_parent, _args, context) => JSON.stringify(context),
+            },
+          },
+          // Add something interesting from each context argument part to the
+          // context.
+          context({ express, lambda }) {
+            const { req, res } = express;
+            const { event, context } = lambda;
+            return {
+              reqHttpVersion: req.httpVersion,
+              resHasApp: !!res.app,
+              eventVersion: event.version,
+              contextFunctionName: context.functionName,
+            };
+          },
+        },
+      );
+      await request(app)
+        .post('/graphql')
+        .send({ query: '{context}' })
+        .expect(200)
+        .expect((res) => {
+          expect(typeof res.body.data.context).toBe("string");
+          const context = JSON.parse(res.body.data.context);
+          expect(context).toEqual({
+            reqHttpVersion: '1.1',
+            resHasApp: true,
+            eventVersion: '2.0',
+            contextFunctionName: 'someFunc',
+          });
+        });
+    });
+  });
 
   describe('healthchecks', () => {
     it('creates a healthcheck endpoint', async () => {

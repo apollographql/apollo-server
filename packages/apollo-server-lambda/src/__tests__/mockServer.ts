@@ -19,13 +19,13 @@ export function createMockServer(
     // reject should cause a test to fail
     req.on('end', async () => {
       const event = eventFromRequest(req, body);
-      const result = await handler(
+      const result = (await handler(
         event,
-        {} as LambdaContext, // we don't bother with all the fields
+        { functionName: 'someFunc' } as LambdaContext, // we don't bother with all the fields
         () => {
           throw Error("we don't use callback");
         },
-      ) as APIGatewayProxyStructuredResultV2;
+      )) as APIGatewayProxyStructuredResultV2;
       res.statusCode = result.statusCode!;
       Object.entries(result.headers ?? {}).forEach(([key, value]) => {
         res.setHeader(key, value.toString());
