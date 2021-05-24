@@ -424,13 +424,24 @@ export class ApolloServerBase {
         });
       }
 
-      const renderUIPageCallbacks = serverListeners.flatMap((l) =>
-        l.renderUIPage ? [l.renderUIPage] : [],
-      );
-      if (renderUIPageCallbacks.length > 1) {
+      // Find the renderUIPage callback, if one is provided. If the user
+      // installed ApolloServerPluginUIDisabled then there may be none found.
+      // On the other hand, if the user installed a UI plugin, then both the
+      // implicit installation of ApolloServerPluginUIGraphQLPlayground and the
+      // other plugin will be found; we skip the implicit plugin manually.
+      const serverListenersWithRenderUIPage = serverListeners.filter(l => l.renderUIPage);
+      if (serverListenersWithRenderUIPage.length > 2) {
         throw Error('Only one plugin can implement renderUIPage.');
-      } else if (renderUIPageCallbacks.length) {
-        this.renderUIPageCallback = renderUIPageCallbacks[0];
+      } else if (serverListenersWithRenderUIPage.length === 2) {
+        if (serverListenersWithRenderUIPage[0].__internal_installed_implicitly__) {
+          this.renderUIPageCallback = serverListenersWithRenderUIPage[1].renderUIPage!;
+        } else if (serverListenersWithRenderUIPage[1].__internal_installed_implicitly__) {
+          this.renderUIPageCallback = serverListenersWithRenderUIPage[0].renderUIPage!;
+        } else {
+          throw Error('Only one plugin can implement renderUIPage.');
+        }
+      } else if (serverListenersWithRenderUIPage.length) {
+        this.renderUIPageCallback = serverListenersWithRenderUIPage[0].renderUIPage!;
       }
 
       this.state = { phase: 'started', schemaDerivedData };
@@ -752,10 +763,25 @@ export class ApolloServerBase {
     // default UI. (Note: as part of minimizing Apollo Server's dependencies on
     // external software and specifically on a package that is less actively
     // maintained, we may change this default before AS 3.0.0 is released.)
+    //
+    // This works a bit differently from the other implicitly installed plugins,
+    // which rely entirely on the __internal_plugin_id__ to decide whether the
+    // plugin takes effect. That's because we want third-party plugins to be
+    // able to provide a UI that overrides the default UI, without them having
+    // to know about __internal_plugin_id__. So unless we actively disable the
+    // default UI with ApolloServerPluginUIDisabled, we install the default UI,
+    // but with a special flag that _start() uses to ignore it if some other
+    // plugin defines a renderUIPage callback. (We can't just look now to see if
+    // the plugin defines renderUIPage because we haven't run serverWillStart
+    // yet.)
     if (isDev) {
-      const alreadyHavePlugin = alreadyHavePluginWithInternalId('UI');
+      const alreadyHavePlugin = alreadyHavePluginWithInternalId('UIDisabled');
       if (!alreadyHavePlugin) {
-        this.plugins.push(ApolloServerPluginUIGraphQLPlayground());
+        this.plugins.push(
+          ApolloServerPluginUIGraphQLPlayground({
+            __internal_installed_implicitly__: true,
+          }),
+        );
       }
     }
   }
@@ -859,9 +885,7 @@ export class ApolloServerBase {
   }
 
   // FIXME doc, declare return value
-  protected getUIPage(
-    options: RenderUIPageOptions,
-  ): UIPage | null {
+  protected getUIPage(options: RenderUIPageOptions): UIPage | null {
     this.assertStarted('getUIPage');
 
     const { renderUIPageCallback } = this;

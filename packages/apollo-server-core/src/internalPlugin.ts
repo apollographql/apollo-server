@@ -21,7 +21,7 @@ export type InternalPluginId =
   | 'SchemaReporting'
   | 'InlineTrace'
   | 'UsageReporting'
-  | 'UI';
+  | 'UIDisabled';
 
 export function pluginIsInternal(
   plugin: ApolloServerPlugin,

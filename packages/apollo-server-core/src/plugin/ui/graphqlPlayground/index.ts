@@ -1,9 +1,10 @@
 // FIXME doc
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 
-import type { RenderUIPageOptions } from 'apollo-server-plugin-base';
-
-import { InternalApolloServerPlugin } from '../../../internalPlugin';
+import type {
+  ApolloServerPlugin,
+  RenderUIPageOptions,
+} from 'apollo-server-plugin-base';
 
 // This specifies the React version of our fork of GraphQL Playground,
 // `@apollographql/graphql-playground-react`.  It is related to, but not to
@@ -19,17 +20,15 @@ const defaultPlaygroundVersion = '1.7.40';
 
 export type ApolloServerPluginUIGraphQLPlaygroundOptions = Parameters<
   typeof renderPlaygroundPage
->[0];
+>[0] & { __internal_installed_implicitly__?: boolean };
 
 export function ApolloServerPluginUIGraphQLPlayground(
   options: ApolloServerPluginUIGraphQLPlaygroundOptions = Object.create(null),
-): InternalApolloServerPlugin {
+): ApolloServerPlugin {
   return {
-    __internal_plugin_id__() {
-      return 'UI';
-    },
     serverWillStart() {
       return {
+        __internal_installed_implicitly__: !!options.__internal_installed_implicitly__,
         renderUIPage({ graphqlPath }: RenderUIPageOptions) {
           return {
             html: renderPlaygroundPage({

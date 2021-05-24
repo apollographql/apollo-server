@@ -86,7 +86,7 @@ import type { InternalApolloServerPlugin } from '../internalPlugin';
 export function ApolloServerPluginUIDisabled(): ApolloServerPlugin {
   const plugin: InternalApolloServerPlugin = {
     __internal_plugin_id__() {
-      return 'UI';
+      return 'UIDisabled';
     },
   };
   return plugin;
