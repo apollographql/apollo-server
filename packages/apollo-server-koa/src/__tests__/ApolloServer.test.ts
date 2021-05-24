@@ -9,6 +9,7 @@ import {
   createServerInfo,
   createApolloFetch,
 } from 'apollo-server-integration-testsuite';
+import { ApolloServer } from '../ApolloServer';
 
 const typeDefs = gql`
   type Query {
@@ -25,7 +26,7 @@ const resolvers = {
 describe('apollo-server-koa', () => {
   const { ApolloServer } = require('../ApolloServer');
   const Koa = require('koa');
-  let server: any;
+  let server: ApolloServer;
   let httpServer: http.Server;
   testApolloServer(
     async (config: any, options) => {
@@ -34,7 +35,7 @@ describe('apollo-server-koa', () => {
         await server.start();
       }
       const app = new Koa();
-      server.applyMiddleware({ app });
+      server.applyMiddleware({ app, path: options?.graphqlPath });
       httpServer = await new Promise<http.Server>(resolve => {
         const s = app.listen({ port: 0 }, () => resolve(s));
       });
@@ -44,7 +45,6 @@ describe('apollo-server-koa', () => {
       if (server) await server.stop();
       if (httpServer && httpServer.listening) await httpServer.close();
     },
-    {skipHtmlPageTests: true} // FIXME skipHtmlPageTests
   );
 });
 
@@ -96,8 +96,7 @@ describe('apollo-server-koa', () => {
       expect(result.errors).toBeUndefined();
     });
 
-    // FIXME don't skip
-    it.skip('renders GraphQL playground by default when browser requests', async () => {
+    it('renders GraphQL playground by default when browser requests', async () => {
       const { httpServer } = await createServer({
         typeDefs,
         resolvers,

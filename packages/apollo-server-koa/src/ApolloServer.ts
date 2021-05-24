@@ -29,7 +29,7 @@ const middlewareFromPath = <StateT, CustomT>(
   path: string,
   middleware: compose.Middleware<ParameterizedContext<StateT, CustomT>>,
 ) => (ctx: ParameterizedContext<StateT, CustomT>, next: () => Promise<any>) => {
-  if (ctx.path === path) {
+  if (ctx.path === path || ctx.path === `${path}/`) {
     return middleware(ctx, next);
   } else {
     return next();
@@ -106,6 +106,8 @@ export class ApolloServer extends ApolloServerBase {
       middlewares.push(middlewareFromPath(path, bodyParser(bodyParserConfig)));
     }
 
+    const uiPage = this.getUIPage({ graphqlPath: path });
+
     middlewares.push(
       middlewareFromPath(path, async (ctx: Koa.Context) => {
         if (ctx.request.method === 'OPTIONS') {
@@ -114,7 +116,7 @@ export class ApolloServer extends ApolloServerBase {
           return;
         }
 
-        if (ctx.request.method === 'GET') {
+        if (uiPage && ctx.request.method === 'GET') {
           // perform more expensive content-type check only if necessary
           const accept = accepts(ctx.req);
           const types = accept.types() as string[];
@@ -125,7 +127,7 @@ export class ApolloServer extends ApolloServerBase {
 
           if (prefersHTML) {
             ctx.set('Content-Type', 'text/html');
-            ctx.body = 'FIXME';
+            ctx.body = uiPage.html;
             return;
           }
         }
