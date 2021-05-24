@@ -190,7 +190,7 @@ export interface StopServerFunc {
 export function testApolloServer<AS extends ApolloServerBase>(
   createApolloServer: CreateServerFunc<AS>,
   stopServer: StopServerFunc,
-  options: { serverlessFramework?: boolean; skipHtmlPageTests?: boolean } = {},
+  options: { serverlessFramework?: boolean } = {},
 ) {
   describe('ApolloServer', () => {
     afterEach(stopServer);
@@ -2824,104 +2824,102 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
-    // FIXME remove option
-    options.skipHtmlPageTests ||
-      describe('htmlPages', () => {
-        let httpServer: http.Server;
+    describe('htmlPages', () => {
+      let httpServer: http.Server;
 
-        function getWithoutAcceptHeader(url: string) {
-          return request(httpServer).get(url);
+      function getWithoutAcceptHeader(url: string) {
+        return request(httpServer).get(url);
+      }
+      function get(url: string) {
+        return getWithoutAcceptHeader(url).set('accept', 'text/html');
+      }
+
+      function makeServerConfig(
+        renderUiPageCallbacks: ((options: RenderUIPageOptions) => UIPage)[],
+      ): Config {
+        return {
+          typeDefs: 'type Query {x: ID}',
+          plugins: [
+            ApolloServerPluginUIDisabled(),
+            ...renderUiPageCallbacks.map((renderUIPage) => ({
+              serverWillStart() {
+                return {
+                  renderUIPage,
+                };
+              },
+            })),
+          ],
+        };
+      }
+      describe('basic functionality', () => {
+        const basicCallback = [
+          ({ graphqlPath }: RenderUIPageOptions) => ({
+            html: `BAZ + ${graphqlPath}`,
+          }),
+        ];
+
+        // We might want to make this consistent (probably 404) but it isn't for
+        // now. FIXME maybe it could be?
+        function someClientError(res: request.Response) {
+          expect(res.statusType).toBe(4);
         }
-        function get(url: string) {
-          return getWithoutAcceptHeader(url).set('accept', 'text/html');
-        }
 
-        function makeServerConfig(
-          renderUiPageCallbacks: ((options: RenderUIPageOptions) => UIPage)[],
-        ): Config {
-          return {
-            typeDefs: 'type Query {x: ID}',
-            plugins: [
-              ApolloServerPluginUIDisabled(),
-              ...renderUiPageCallbacks.map((renderUIPage) => ({
-                serverWillStart() {
-                  return {
-                    renderUIPage,
-                  };
-                },
-              })),
-            ],
-          };
-        }
-        describe('basic functionality', () => {
-          const basicCallback = [
-            ({ graphqlPath }: RenderUIPageOptions) => ({
-              html: `BAZ + ${graphqlPath}`,
-            }),
-          ];
-
-          // We might want to make this consistent (probably 404) but it isn't for
-          // now. FIXME maybe it could be?
-          function someClientError(res: request.Response) {
-            expect(res.statusType).toBe(4);
-          }
-
-          describe('with non-root graphqlPath', () => {
-            beforeEach(async () => {
-              httpServer = (
-                await createApolloServer(makeServerConfig(basicCallback), {
-                  graphqlPath: '/goofql',
-                })
-              ).httpServer;
-            });
-
-            it('basic GET works', async () => {
-              await get('/goofql').expect(200, 'BAZ + /goofql');
-            });
-            it('only mounts under graphqlPath', async () => {
-              await get('/foo').expect(404);
-            });
-            it('needs the header', async () => {
-              await getWithoutAcceptHeader('/goofql').expect(someClientError);
-            });
-            it('trailing slash works', async () => {
-              await get('/goofql/').expect(200, 'BAZ + /goofql');
-            });
+        describe('with non-root graphqlPath', () => {
+          beforeEach(async () => {
+            httpServer = (
+              await createApolloServer(makeServerConfig(basicCallback), {
+                graphqlPath: '/goofql',
+              })
+            ).httpServer;
           });
 
-          describe('with root graphqlPath', () => {
-            beforeEach(async () => {
-              httpServer = (
-                await createApolloServer(makeServerConfig(basicCallback), {
-                  graphqlPath: '/',
-                })
-              ).httpServer;
-            });
-
-            it('basic GET works', async () => {
-              await get('/').expect(200, 'BAZ + /');
-            });
-            it('needs the header', async () => {
-              await getWithoutAcceptHeader('/').expect(someClientError);
-            });
+          it('basic GET works', async () => {
+            await get('/goofql').expect(200, 'BAZ + /goofql');
+          });
+          it('only mounts under graphqlPath', async () => {
+            await get('/foo').expect(404);
+          });
+          it('needs the header', async () => {
+            await getWithoutAcceptHeader('/goofql').expect(someClientError);
+          });
+          it('trailing slash works', async () => {
+            await get('/goofql/').expect(200, 'BAZ + /goofql');
           });
         });
 
-        // Serverless frameworks don't have startup errors because they don't
-        // have a startup phase.
-        options.serverlessFramework ||
-          describe('startup errors', () => {
-            it('only one plugin can implement renderUIPage', async () => {
-              await expect(
-                createApolloServer(
-                  makeServerConfig([
-                    () => ({ html: 'x' }),
-                    () => ({ html: 'y' }),
-                  ]),
-                ),
-              ).rejects.toThrow('Only one plugin can implement renderUIPage.');
-            });
+        describe('with root graphqlPath', () => {
+          beforeEach(async () => {
+            httpServer = (
+              await createApolloServer(makeServerConfig(basicCallback), {
+                graphqlPath: '/',
+              })
+            ).httpServer;
           });
+
+          it('basic GET works', async () => {
+            await get('/').expect(200, 'BAZ + /');
+          });
+          it('needs the header', async () => {
+            await getWithoutAcceptHeader('/').expect(someClientError);
+          });
+        });
       });
+
+      // Serverless frameworks don't have startup errors because they don't
+      // have a startup phase.
+      options.serverlessFramework ||
+        describe('startup errors', () => {
+          it('only one plugin can implement renderUIPage', async () => {
+            await expect(
+              createApolloServer(
+                makeServerConfig([
+                  () => ({ html: 'x' }),
+                  () => ({ html: 'y' }),
+                ]),
+              ),
+            ).rejects.toThrow('Only one plugin can implement renderUIPage.');
+          });
+        });
+    });
   });
 }
