@@ -2824,6 +2824,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
+    // FIXME remove option
     options.skipHtmlPageTests ||
       describe('htmlPages', () => {
         let httpServer: http.Server;

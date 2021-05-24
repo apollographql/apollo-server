@@ -1,4 +1,5 @@
 import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
+import { UIPage } from 'apollo-server-plugin-base';
 import { Request, Response } from 'express';
 
 import { graphqlCloudFunction } from './googleCloudApollo';
@@ -69,55 +70,64 @@ export class ApolloServer extends ApolloServerBase {
       }
     }
 
+    // undefined before load, null if loaded but there is none.
+    let uiPage: UIPage | null | undefined;
+
     return (req: Request, res: Response) => {
-      // Handle both the root of the GCF endpoint and /graphql
-      // With bare endpoints, GCF sets request params' path to null.
-      // The check for '' is included in case that behaviour changes
-      if (req.path && !['', '/', '/graphql'].includes(req.path)) {
-        res.status(404).end();
-        return;
-      }
-
-      if (cors) {
-        if (typeof cors.origin === 'string') {
-          res.set('Access-Control-Allow-Origin', cors.origin);
-        } else if (
-          typeof cors.origin === 'boolean' ||
-          (Array.isArray(cors.origin) &&
-            cors.origin.includes(req.get('origin') || ''))
-        ) {
-          res.set('Access-Control-Allow-Origin', req.get('origin'));
+      this.ensureStarted().then(() => {
+        if (uiPage === undefined) {
+          // FIXME graphqlPath might be wrong. This package doesn't really
+          // use graphqlPath. Need some other way to find its mount point
+          // to get tests to pass...
+          uiPage = this.getUIPage({ graphqlPath: this.graphqlPath });
         }
 
-        if (!cors.allowedHeaders) {
-          res.set(
-            'Access-Control-Allow-Headers',
-            req.get('Access-Control-Request-Headers'),
-          );
-        }
-      }
-
-      res.set(corsHeaders);
-
-      if (req.method === 'OPTIONS') {
-        res.status(204).send('');
-        return;
-      }
-
-      if (req.method === 'GET') {
-        const acceptHeader = req.headers['accept'] as string;
-        if (acceptHeader && acceptHeader.includes('text/html')) {
-
-          res
-            .status(200)
-            .send("FIXME implement for Google");
+        // Handle both the root of the GCF endpoint and /graphql
+        // With bare endpoints, GCF sets request params' path to null.
+        // The check for '' is included in case that behaviour changes
+        if (req.path && !['', '/', '/graphql'].includes(req.path)) {
+          res.status(404).end();
           return;
         }
-      }
 
-      graphqlCloudFunction(async () => {
-        return this.createGraphQLServerOptions(req, res);
-      })(req, res);
+        if (cors) {
+          if (typeof cors.origin === 'string') {
+            res.set('Access-Control-Allow-Origin', cors.origin);
+          } else if (
+            typeof cors.origin === 'boolean' ||
+            (Array.isArray(cors.origin) &&
+              cors.origin.includes(req.get('origin') || ''))
+          ) {
+            res.set('Access-Control-Allow-Origin', req.get('origin'));
+          }
+
+          if (!cors.allowedHeaders) {
+            res.set(
+              'Access-Control-Allow-Headers',
+              req.get('Access-Control-Request-Headers'),
+            );
+          }
+        }
+
+        res.set(corsHeaders);
+
+        if (req.method === 'OPTIONS') {
+          res.status(204).send('');
+          return;
+        }
+
+        if (uiPage && req.method === 'GET') {
+          const acceptHeader = req.headers['accept'] as string;
+          if (acceptHeader && acceptHeader.includes('text/html')) {
+            res.status(200).send(uiPage.html);
+            return;
+          }
+        }
+
+        graphqlCloudFunction(async () => {
+          return this.createGraphQLServerOptions(req, res);
+        })(req, res);
+      });
     };
   }
 }

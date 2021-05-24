@@ -34,6 +34,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
   - We no longer re-export the entirety of `graphql-tools` (including `makeExecutableSchema`) from all Apollo Server packages. If you'd like to continue using them, install [`graphql-tools`](https://www.graphql-tools.com/) or one of its sub-packages yourself.
   - The `Upload` scalar is no longer exported. (See above as to why.)
+- FIXME playground generalization
 
 ## v2.24.0
 

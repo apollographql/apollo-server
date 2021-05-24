@@ -89,7 +89,8 @@ export interface Config extends BaseConfig {
   // other behavior which have other mechanisms of setting explicitly. Sometimes
   // our tests want to test the exact logic of how NODE_ENV affects defaults;
   // they can set this parameter, but there's no reason to do so other than for
-  // tests. Note that 'undefined' means "act as if NODE_ENV is not set", not
-  // "pay attention to NODE_ENV", which is what the key not existing means.
+  // tests. Note that an explicit `__testing__nodeEnv: undefined` means "act as
+  // if the environment variable is not set", whereas the absence of
+  // `__testing__nodeEnv` means to honor the environment variable.
   __testing__nodeEnv?: string | undefined;
 }

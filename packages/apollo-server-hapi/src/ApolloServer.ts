@@ -34,32 +34,35 @@ export class ApolloServer extends ApolloServerBase {
 
     if (!path) path = '/graphql';
 
-    app.ext({
-      type: 'onRequest',
-      method: async (request, h) => {
-        if (request.path !== path) {
-          return h.continue;
-        }
+    const uiPage = this.getUIPage({graphqlPath: path});
 
-        if (request.method === 'get') {
-          // perform more expensive content-type check only if necessary
-          const accept = parseAll(request.headers);
-          const types = accept.mediaTypes as string[];
-          const prefersHTML =
-            types.find(
-              (x: string) => x === 'text/html' || x === 'application/json',
-            ) === 'text/html';
-
-          if (prefersHTML) {
-            return h
-              .response('FIXME')
-              .type('text/html')
-              .takeover();
+    if (uiPage) {
+      app.ext({
+        type: 'onRequest',
+        method: async (request, h) => {
+          // Note that this path check is stricter than other integrations,
+          // which return UI for arbitrary URLs under the given path.
+          if (request.path !== path && request.path !== `${path}/`) {
+            return h.continue;
           }
-        }
-        return h.continue;
-      },
-    });
+
+          if (request.method === 'get') {
+            // perform more expensive content-type check only if necessary
+            const accept = parseAll(request.headers);
+            const types = accept.mediaTypes as string[];
+            const prefersHTML =
+              types.find(
+                (x: string) => x === 'text/html' || x === 'application/json',
+              ) === 'text/html';
+
+            if (prefersHTML) {
+              return h.response(uiPage.html).type('text/html').takeover();
+            }
+          }
+          return h.continue;
+        },
+      });
+    }
 
     if (!disableHealthCheck) {
       app.route({
