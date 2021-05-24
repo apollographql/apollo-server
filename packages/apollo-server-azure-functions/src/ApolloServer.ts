@@ -78,8 +78,9 @@ export class ApolloServer extends ApolloServerBase {
       this.ensureStarted()
         .then(() => {
           if (uiPage === undefined) {
-            // FIXME graphqlPath might be wrong. This package doesn't really
-            // use graphqlPath. Need some other way to find its mount point
+            // Note that this package doesn't currently pay any attention to
+            // graphqlPath, so there's not really much of a point to sending it
+            // here, but it probably doesn't hurt anything either.            //
             // to get tests to pass...
             uiPage = this.getUIPage({ graphqlPath: this.graphqlPath });
           }

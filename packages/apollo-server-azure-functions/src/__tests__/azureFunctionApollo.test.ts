@@ -135,14 +135,12 @@ describe('integration:AzureFunctions', () => {
     handler(context as any, request as any);
   });
 
-  // FIXME actually finish
-  it.skip('can return playground html', (done) => {
+  it('can return playground html', (done) => {
     const server = new ApolloServer({ schema: Schema });
     const handler = server.createHandler({});
     const request = {
       method: 'GET',
       body: null,
-      // FIXME need to test in practice to understand graphqlPath stuff
       path: '/',
       query: null,
       headers: {
