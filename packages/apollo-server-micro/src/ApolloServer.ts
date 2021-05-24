@@ -5,6 +5,7 @@ import { parseAll } from '@hapi/accept';
 
 import { graphqlMicro } from './microApollo';
 import { MicroRequest } from './types';
+import { UIPage } from 'apollo-server-plugin-base';
 
 export interface ServerRegistration {
   path?: string;
@@ -30,18 +31,31 @@ export class ApolloServer extends ApolloServerBase {
   }: ServerRegistration = {}) {
     this.assertStarted('createHandler');
 
-    return async (req: MicroRequest, res: ServerResponse) => {
-      this.graphqlPath = path || '/graphql';
+    this.graphqlPath = path || '/graphql';
 
-      (await this.handleHealthCheck({
-        req,
-        res,
-        disableHealthCheck,
-        onHealthCheck,
-      })) ||
-        this.handleGraphqlRequestsWithHtmlPages({ req, res }) ||
-        (await this.handleGraphqlRequestsWithServer({ req, res })) ||
-        send(res, 404, null);
+    const uiPage = this.getUIPage({ graphqlPath: this.graphqlPath });
+
+    return async (req: MicroRequest, res: ServerResponse) => {
+      if (
+        await this.handleHealthCheck({
+          req,
+          res,
+          disableHealthCheck,
+          onHealthCheck,
+        })
+      ) {
+        return;
+      }
+      if (
+        uiPage &&
+        this.handleGraphqlRequestsWithUIPage({ req, res, uiPage })
+      ) {
+        return;
+      }
+      if (await this.handleGraphqlRequestsWithServer({ req, res })) {
+        return;
+      }
+      send(res, 404, null);
     };
   }
 
@@ -86,12 +100,14 @@ export class ApolloServer extends ApolloServerBase {
     return handled;
   }
 
-  private handleGraphqlRequestsWithHtmlPages({
+  private handleGraphqlRequestsWithUIPage({
     req,
     res,
+    uiPage,
   }: {
     req: MicroRequest;
     res: ServerResponse;
+    uiPage: UIPage;
   }): boolean {
     let handled = false;
 
@@ -104,9 +120,8 @@ export class ApolloServer extends ApolloServerBase {
         ) === 'text/html';
 
       if (prefersHTML) {
-        // XXX this.graphqlPath
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        send(res, 200, 'FIXME');
+        send(res, 200, uiPage.html);
         handled = true;
       }
     }

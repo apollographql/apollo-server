@@ -81,8 +81,7 @@ describe('apollo-server-micro', function() {
         service.close();
       });
 
-      // FIXME
-      it.skip(
+      it(
         'should render a GraphQL playground when a browser sends in a ' +
           'request',
         async function() {
