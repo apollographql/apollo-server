@@ -3,6 +3,7 @@ import { HttpResponse } from 'azure-functions-ts-essentials';
 import { ApolloServerBase } from 'apollo-server-core';
 import { GraphQLOptions } from 'apollo-server-core';
 import { graphqlAzureFunction } from './azureFunctionApollo';
+import { UIPage } from 'apollo-server-plugin-base';
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -70,23 +71,17 @@ export class ApolloServer extends ApolloServerBase {
       }
     }
 
-    let htmlPages: Map<string, string>;
-    let rootRedirectPath: string | null;
+    // undefined before load, null if loaded but there is none.
+    let uiPage: UIPage | null | undefined;
 
     return (context: Context, req: HttpRequest) => {
       this.ensureStarted()
-        .then(() =>
-          htmlPages
-            ? { htmlPages, rootRedirectPath }
-            // FIXME graphqlPath might be wrong. this package doesn't
-            // really use graphqlPath. Need some other way to find its
-            // mount point to get tests to pass...
-            : this.getHtmlPages({ graphqlPath: this.graphqlPath }),
-        )
-        .then((htmlPagesAndRootRedirectPath) => {
-          if (!htmlPages) {
-            htmlPages = htmlPagesAndRootRedirectPath.htmlPages;
-            rootRedirectPath = htmlPagesAndRootRedirectPath.rootRedirectPath;
+        .then(() => {
+          if (uiPage === undefined) {
+            // FIXME graphqlPath might be wrong. This package doesn't really
+            // use graphqlPath. Need some other way to find its mount point
+            // to get tests to pass...
+            uiPage = this.getUIPage({ graphqlPath: this.graphqlPath });
           }
 
           const originHeader = req.headers['Origin'] || req.headers['origin'];
@@ -118,32 +113,21 @@ export class ApolloServer extends ApolloServerBase {
           }
 
           if (
+            uiPage &&
             req.method === 'GET' &&
             (req.headers['Accept'] || req.headers['accept'])?.includes(
               'text/html',
             )
           ) {
-            if (htmlPages.has(req.url)) {
-              context.done(null, {
-                body: htmlPages.get(req.url),
-                status: 200,
-                headers: {
-                  'Content-Type': 'text/html',
-                  ...corsHeaders,
-                },
-              });
-              return;
-            }
-            if (rootRedirectPath != null && rootRedirectPath === req.url) {
-              context.done(null, {
-                body: `Redirecting to ${rootRedirectPath}`,
-                status: 302,
-                headers: {
-                  Location: rootRedirectPath,
-                  ...corsHeaders,
-                },
-              });
-            }
+            context.done(null, {
+              body: uiPage.html,
+              status: 200,
+              headers: {
+                'Content-Type': 'text/html',
+                ...corsHeaders,
+              },
+            });
+            return;
           }
 
           const callbackFilter = (error?: any, output?: HttpResponse) => {

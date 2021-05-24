@@ -43,9 +43,7 @@ export class ApolloServer extends ApolloServerBase {
 
     this.assertStarted('createHandler');
 
-    const { htmlPages, rootRedirectPath } = this.getHtmlPages({
-      graphqlPath: this.graphqlPath,
-    });
+    const uiPage = this.getUIPage({ graphqlPath: this.graphqlPath });
 
     return async (app: FastifyInstance) => {
       if (!disableHealthCheck) {
@@ -81,44 +79,29 @@ export class ApolloServer extends ApolloServerBase {
             reply.send();
           });
 
-          instance.route<{ Params: { '*': string } }>({
-            method: ['GET', 'POST'],
-            url: '*',
-            preHandler: async (request, reply) => {
-              if (request.raw.method === 'GET') {
-                const accept = request.accepts();
-                const types = accept.types() as string[];
-                const prefersHTML =
-                  types.find(
-                    (x: string) =>
-                      x === 'text/html' || x === 'application/json',
-                  ) === 'text/html';
+          const preHandler = uiPage
+            ? async (request: FastifyRequest, reply: FastifyReply) => {
+                if (request.raw.method === 'GET') {
+                  const accept = request.accepts();
+                  const types = accept.types() as string[];
+                  const prefersHTML =
+                    types.find(
+                      (x: string) =>
+                        x === 'text/html' || x === 'application/json',
+                    ) === 'text/html';
 
-                if (prefersHTML) {
-                  // Strip out trailing slashes when looking up pages. We'd
-                  // prefer to just use a normal router, but it wasn't clear if
-                  // it was possible to use the router to match only `accept:
-                  // text/html` and fall back to other routes otherwise, without
-                  // defining a custom "constraint" which requires special
-                  // configuration at the level of Fastify app creation (which
-                  // happens in user code).
-                  const page = htmlPages.get(
-                    request.url.replace(/([^/])\/+$/, '$1'),
-                  );
-                  if (page) {
+                  if (prefersHTML) {
                     reply.type('text/html');
-                    reply.send(page);
-                  }
-                  if (
-                    rootRedirectPath &&
-                    (request.params['*'] === '' || request.params['*'] === '/')
-                  ) {
-                    reply.redirect(302, rootRedirectPath);
-                    return;
+                    reply.send(uiPage.html);
                   }
                 }
               }
-            },
+            : undefined;
+
+          instance.route({
+            method: ['GET', 'POST'],
+            url: '/',
+            preHandler,
             handler: async (request: FastifyRequest, reply: FastifyReply) => {
               try {
                 const { graphqlResponse, responseInit } = await runHttpQuery(
