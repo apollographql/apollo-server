@@ -157,12 +157,6 @@ describe('apollo-server-fastify', () => {
           'accept',
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         )
-        .expect(302)
-        .expect('Location', /\/graphql\/ui\/playground$/);
-
-      await request(httpServer)
-        .get('/graphql/ui/playground')
-        .set('accept', 'text/html')
         .expect(200, /GraphQLPlayground/);
     });
 
