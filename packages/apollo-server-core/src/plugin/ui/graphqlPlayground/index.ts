@@ -5,8 +5,7 @@
 // specifying `version` when installing the plugin.
 
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
-
-import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
 
 // This specifies the React version of our fork of GraphQL Playground,
 // `@apollographql/graphql-playground-react`.  It is related to, but not to
@@ -22,24 +21,20 @@ const defaultPlaygroundVersion = '1.7.41';
 
 export type ApolloServerPluginUIGraphQLPlaygroundOptions = Parameters<
   typeof renderPlaygroundPage
->[0] & { __internal_installed_implicitly__?: boolean };
+>[0];
 
 export function ApolloServerPluginUIGraphQLPlayground(
   options: ApolloServerPluginUIGraphQLPlaygroundOptions = Object.create(null),
-): ApolloServerPlugin {
-  const {
-    __internal_installed_implicitly__,
-    ...renderPlaygroundPageOptions
-  } = options;
+): ImplicitlyInstallablePlugin {
   return {
+    __internal_installed_implicitly__: false,
     serverWillStart() {
       return {
-        __internal_installed_implicitly__,
         renderUIPage() {
           return {
             html: renderPlaygroundPage({
               version: defaultPlaygroundVersion,
-              ...renderPlaygroundPageOptions,
+              ...options,
             }),
           };
         },

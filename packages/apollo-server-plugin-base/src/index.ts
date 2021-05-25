@@ -72,9 +72,6 @@ export interface GraphQLServerListener {
   // is an intentionally simple API; if you want to do something fancy to serve
   // your UI, you probably should just define a handler in your web framework.
   renderUIPage?(): UIPage;
-  // An internal-only flag used in the default UI plugin so that it can be
-  // ignored if you install another UI plugin.
-  __internal_installed_implicitly__?: boolean;
 }
 
 // The page served to clients with `accept: text/html` headers.

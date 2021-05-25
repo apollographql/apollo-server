@@ -398,20 +398,29 @@ export class ApolloServerBase {
         };
       }
 
-      const serverListeners = (
+      const taggedServerListeners = (
         await Promise.all(
-          this.plugins.map(
-            (plugin) =>
-              plugin.serverWillStart && plugin.serverWillStart(service),
-          ),
+          this.plugins.map(async (plugin) => ({
+            serverListener:
+              plugin.serverWillStart && (await plugin.serverWillStart(service)),
+            installedImplicity:
+              isImplicitlyInstallablePlugin(plugin) &&
+              plugin.__internal_installed_implicitly__,
+          })),
         )
       ).filter(
-        (maybeServerListener): maybeServerListener is GraphQLServerListener =>
-          typeof maybeServerListener === 'object',
+        (
+          maybeTaggedServerListener,
+        ): maybeTaggedServerListener is {
+          serverListener: GraphQLServerListener;
+          installedImplicity: boolean;
+        } => typeof maybeTaggedServerListener.serverListener === 'object',
       );
 
-      const serverWillStops = serverListeners.flatMap((l) =>
-        l.serverWillStop ? [l.serverWillStop] : [],
+      const serverWillStops = taggedServerListeners.flatMap((l) =>
+        l.serverListener.serverWillStop
+          ? [l.serverListener.serverWillStop]
+          : [],
       );
       if (serverWillStops.length) {
         this.toDispose.add(async () => {
@@ -426,18 +435,19 @@ export class ApolloServerBase {
       // the other hand, if the user installed a UI plugin, then both the
       // implicit installation of ApolloServerPluginUIGraphQLPlayground and the
       // other plugin will be found; we skip the implicit plugin.
-      let serverListenersWithRenderUIPage = serverListeners.filter(
-        (l) => l.renderUIPage,
+      let taggedServerListenersWithRenderUIPage = taggedServerListeners.filter(
+        (l) => l.serverListener.renderUIPage,
       );
-      if (serverListenersWithRenderUIPage.length > 1) {
-        serverListenersWithRenderUIPage = serverListenersWithRenderUIPage.filter(
-          (l) => !l.__internal_installed_implicitly__,
+      if (taggedServerListenersWithRenderUIPage.length > 1) {
+        taggedServerListenersWithRenderUIPage = taggedServerListenersWithRenderUIPage.filter(
+          (l) => !l.installedImplicity,
         );
       }
-      if (serverListenersWithRenderUIPage.length > 1) {
+      if (taggedServerListenersWithRenderUIPage.length > 1) {
         throw Error('Only one plugin can implement renderUIPage.');
-      } else if (serverListenersWithRenderUIPage.length) {
-        this.uiPage = serverListenersWithRenderUIPage[0].renderUIPage!();
+      } else if (taggedServerListenersWithRenderUIPage.length) {
+        this.uiPage = taggedServerListenersWithRenderUIPage[0].serverListener
+          .renderUIPage!();
       } else {
         this.uiPage = null;
       }
@@ -775,11 +785,12 @@ export class ApolloServerBase {
     if (isDev) {
       const alreadyHavePlugin = alreadyHavePluginWithInternalId('UIDisabled');
       if (!alreadyHavePlugin) {
-        this.plugins.push(
-          ApolloServerPluginUIGraphQLPlayground({
-            __internal_installed_implicitly__: true,
-          }),
-        );
+        const plugin = ApolloServerPluginUIGraphQLPlayground();
+        if (!isImplicitlyInstallablePlugin(plugin)) {
+          throw Error("playground plugin should be implicitly installable?");
+        }
+        plugin.__internal_installed_implicitly__ = true;
+        this.plugins.push(plugin);
       }
     }
   }
@@ -896,4 +907,13 @@ export class ApolloServerBase {
 
     return this.uiPage;
   }
+}
+
+export type ImplicitlyInstallablePlugin = ApolloServerPlugin & {
+  __internal_installed_implicitly__: boolean;
+};
+export function isImplicitlyInstallablePlugin(
+  p: ApolloServerPlugin,
+): p is ImplicitlyInstallablePlugin {
+  return '__internal_installed_implicitly__' in p;
 }
