@@ -85,7 +85,7 @@ describe('apollo-server-micro', function() {
         // Playground is on by default with unset NODE_ENV.
         const { service, uri } = await createServer(
           {},
-          { __testing__nodeEnv: undefined },
+          { __testing_nodeEnv__: undefined },
         );
 
         const body = await rp({

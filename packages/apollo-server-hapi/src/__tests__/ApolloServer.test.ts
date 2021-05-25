@@ -111,7 +111,7 @@ describe('apollo-server-hapi', () => {
       const { httpServer } = await createServer({
         typeDefs,
         resolvers,
-        __testing__nodeEnv: undefined, // default UI
+        __testing_nodeEnv__: undefined, // default UI
       });
 
       await request(httpServer)
@@ -309,7 +309,7 @@ describe('apollo-server-hapi', () => {
             throw new AuthenticationError('valid result');
           },
           // Stack trace not included for NODE_ENV=test
-          __testing__nodeEnv: undefined,
+          __testing_nodeEnv__: undefined,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -340,7 +340,7 @@ describe('apollo-server-hapi', () => {
             },
           },
           // Stack trace not included for NODE_ENV=test
-          __testing__nodeEnv: undefined,
+          __testing_nodeEnv__: undefined,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -370,7 +370,7 @@ describe('apollo-server-hapi', () => {
               },
             },
           },
-          __testing__nodeEnv: 'production',
+          __testing_nodeEnv__: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -399,7 +399,7 @@ describe('apollo-server-hapi', () => {
               },
             },
           },
-          __testing__nodeEnv: 'production',
+          __testing_nodeEnv__: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });

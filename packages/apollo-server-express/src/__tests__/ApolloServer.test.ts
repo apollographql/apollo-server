@@ -109,7 +109,7 @@ describe('apollo-server-express', () => {
       const { httpServer } = await createServer({
         typeDefs,
         resolvers,
-        __testing__nodeEnv: undefined, // default UI
+        __testing_nodeEnv__: undefined, // default UI
       });
 
       await request(httpServer)
@@ -236,7 +236,7 @@ describe('apollo-server-express', () => {
             throw new AuthenticationError('valid result');
           },
           // Stack trace not included for NODE_ENV=test
-          __testing__nodeEnv: undefined,
+          __testing_nodeEnv__: undefined,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -267,7 +267,7 @@ describe('apollo-server-express', () => {
             },
           },
           // Stack trace not included for NODE_ENV=test
-          __testing__nodeEnv: undefined,
+          __testing_nodeEnv__: undefined,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -297,7 +297,7 @@ describe('apollo-server-express', () => {
               },
             },
           },
-          __testing__nodeEnv: 'production',
+          __testing_nodeEnv__: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -326,7 +326,7 @@ describe('apollo-server-express', () => {
               },
             },
           },
-          __testing__nodeEnv: 'production',
+          __testing_nodeEnv__: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });

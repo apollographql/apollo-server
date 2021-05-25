@@ -134,8 +134,8 @@ export async function runHttpQuery(
 
   if (options.debug === undefined) {
     const nodeEnv =
-      '__testing__nodeEnv' in options
-        ? options.__testing__nodeEnv
+      '__testing_nodeEnv__' in options
+        ? options.__testing_nodeEnv__
         : process.env.NODE_ENV;
     options.debug = debugFromNodeEnv(nodeEnv);
   }

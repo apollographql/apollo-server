@@ -182,11 +182,11 @@ export class ApolloServerBase {
     // Allow tests to override process.env.NODE_ENV. As a bonus, this means
     // we're only reading the env var once in the constructor, which is faster
     // than reading it over and over as each read is a syscall. Note that an
-    // explicit `__testing__nodeEnv: undefined` overrides a set environment
+    // explicit `__testing_nodeEnv__: undefined` overrides a set environment
     // variable!
     const nodeEnv =
-      '__testing__nodeEnv' in config
-        ? config.__testing__nodeEnv
+      '__testing_nodeEnv__' in config
+        ? config.__testing_nodeEnv__
         : process.env.NODE_ENV;
     const isDev = nodeEnv !== 'production';
 
