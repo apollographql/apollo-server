@@ -298,6 +298,32 @@ const server = new ApolloServer({
 })
 ```
 
+### `renderFrontend`
+
+The `renderFrontend` event is fired once by Apollo Server after all `serverWillStart` events run.
+You define your `renderFrontend` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, which allows it to read the values passed to `serverWillStart`. **At most one plugin in your server may define a `renderFrontend` handler.** If your server has a `renderFrontend` handler, it should return a `FrontendPage`, which is just an object with a string `html` field. The value of that field will be served as HTML for any requests with `accept: text/html` headers. (By default, Apollo Server installs `ApolloServerPluginFrontendGraphQLPlayground` which serves GraphQL Playground as a frontend page.)
+
+#### Example
+
+```js
+const server = new ApolloServer({
+  /* ... other necessary configuration ... */
+
+  plugins: [
+    {
+      serverWillStart() {
+        return {
+          renderFrontend() {
+            return { html: `<html><body>Welcome to your server!</body></html>` };
+          }
+        }
+      }
+    }
+  ]
+})
+```
+
+
 ### `requestDidStart`
 
 The `requestDidStart` event fires whenever Apollo Server begins fulfilling a GraphQL request.

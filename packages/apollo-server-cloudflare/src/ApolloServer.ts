@@ -17,6 +17,8 @@ export class ApolloServer extends ApolloServerBase {
     this.assertStarted('listen');
 
     addEventListener('fetch', (event: FetchEvent) => {
+      // Note that this package doesn't support htmlPages plugins (it also has
+      // never supported Playground).
       event.respondWith(
         graphqlCloudflare(() => {
           return this.createGraphQLServerOptions(event.request);

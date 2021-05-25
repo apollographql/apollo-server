@@ -1,5 +1,5 @@
 import { createConnection } from 'net';
-import request from 'request';
+import request from 'supertest';
 import { createApolloFetch } from 'apollo-server-integration-testsuite';
 import resolvable from '@josephg/resolvable';
 
@@ -187,38 +187,21 @@ describe('apollo-server', () => {
     });
 
     it('renders GraphQL playground when browser requests', async () => {
-      const nodeEnv = process.env.NODE_ENV;
-      delete process.env.NODE_ENV;
-
       server = new ApolloServer({
         typeDefs,
         resolvers,
         stopOnTerminationSignals: false,
+        __testing_nodeEnv__: undefined,
       });
 
-      const { url } = await server.listen({ port: 0 });
-      return new Promise<void>((resolve, reject) => {
-        request(
-          {
-            url,
-            method: 'GET',
-            headers: {
-              accept:
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            },
-          },
-          (error, response, body) => {
-            process.env.NODE_ENV = nodeEnv;
-            if (error) {
-              reject(error);
-            } else {
-              expect(body).toMatch('GraphQLPlayground');
-              expect(response.statusCode).toEqual(200);
-              resolve();
-            }
-          },
-        );
-      });
+      const { server: httpServer } = await server.listen({ port: 0 });
+      await request(httpServer)
+        .get('/graphql')
+        .set(
+          'accept',
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        )
+        .expect(200, /GraphQLPlayground/);
     });
 
     it('configures cors', async () => {
@@ -266,24 +249,10 @@ describe('apollo-server', () => {
         resolvers,
       });
 
-      const { port } = await server.listen({ port: 0 });
-      return new Promise<void>((resolve, reject) => {
-        request(
-          {
-            url: `http://localhost:${port}/.well-known/apollo/server-health`,
-            method: 'GET',
-          },
-          (error, response, body) => {
-            if (error) {
-              reject(error);
-            } else {
-              expect(body).toEqual(JSON.stringify({ status: 'pass' }));
-              expect(response.statusCode).toEqual(200);
-              resolve();
-            }
-          },
-        );
-      });
+      const { server: httpServer } = await server.listen({ port: 0 });
+      await request(httpServer)
+      .get('/.well-known/apollo/server-health')
+      .expect(200, { status: 'pass' });
     });
   });
 });

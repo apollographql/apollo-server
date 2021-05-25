@@ -155,11 +155,11 @@ Before deploying, a new application must be setup. To do this, we need to create
 az group create --name apollo-examples --location eastus
 ```
 
-After creating a resource group, we need to create a storage account to store our code on Azure.
+After creating a resource group, we need to create a storage account to store our code on Azure. You will need to choose a unique name.
 
 ```shell
 az storage account create \
-    --name apolloexample \
+    --name apolloexampleYOURNAME \
     --location eastus \
     --resource-group apollo-examples \
     --sku Standard_LRS
@@ -167,15 +167,15 @@ az storage account create \
 
 We will publish our application to Azure now using the CLI as well. We need to create a `functionapp` running the following command.
 
-Note: The your function name must be unique.
+Note: The function name must be unique.
 
 ```shell
 az functionapp create \
     --resource-group apollo-examples \
-    --name apollo-example \
+    --name apollo-example-YOURNAME \
     --consumption-plan-location eastus \
     --runtime node \
-    --storage-account apolloexample
+    --storage-account apolloexampleYOURNAME
 ```
 
 ### Publishing our project to the function app
@@ -183,7 +183,7 @@ az functionapp create \
 After creating a functionapp, it is just to publish our function to azure. The command below could be used to perform releases to all of your functions.
 
 ```shell
-func azure functionapp publish apollo-example
+func azure functionapp publish apollo-example-YOURNAME
 ```
 
 ```shell
@@ -199,14 +199,6 @@ Functions in apollo-example:
 ```
 
 Finally, going to the Invoke URL shown at the output above, we will see our result.
-
-Note: When GraphQL Playground starts, It won't have the correct URL containing the security `code`, and a message **"Server cannot be reached"** as shown at your browser.
-
-![Apollo server running on azure with error](../images/deployment/azure-functions/apollo-server-on-azure.png)
-
-We just need to put the full URL that includes the security `code` in the Playground url box. The background polling should refresh the screen momentarily. Click the **Schema** button to see if the docs are loaded correctly as shown in the image below.
-
-![Apollo server running on azure with success](../images/deployment/azure-functions/apollo-server-on-azure-sucess.png)
 
 ### Cleaning Up
 
@@ -232,12 +224,6 @@ az group delete \
 It is also possible to publish your project from VS Code using the Azure Functions Extension, we recommend referring to [Microsoft's documentation on publishing to Azure from VS Code](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-vs-code#publish-the-project-to-azure).
 
 Once deployment is complete, view the output in VS Code and you should be able to see the url of your GraphQL endpoint. It will look something like **https://our-graphql-project.azurewebsites.net/api/graphql**. Navigate to the url and you should find GraphQL Playground.
-
-Note: When GraphQL Playground starts, It won't have the correct URL containing the security `code`, and a message **"Server cannot be reached"** as shown at your browser.
-
-![Apollo server running on azure with error](../images/deployment/azure-functions/apollo-server-on-azure.png)
-
-We just need to put the full URL that includes the security `code` in the Playground url box. The background polling should refresh the screen momentarily. Click the **Schema** button to see if the docs are loaded correctly as the image below.
 
 Need more details? See the [Docs](https://www.npmjs.com/package/apollo-server-azure-functions)
  at the NPM repository.

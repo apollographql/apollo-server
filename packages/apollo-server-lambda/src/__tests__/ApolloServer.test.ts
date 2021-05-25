@@ -25,11 +25,13 @@ describe('apollo-server-lambda', () => {
   let server: ApolloServer;
   let httpServer: http.Server;
   testApolloServer(
-    async (config: Config) => {
+    async (config: Config, options) => {
       server = new ApolloServer(config);
       // Ignore suppressStartCall because serverless ApolloServers don't
       // get `start`ed.
-      const lambdaHandler = server.createHandler();
+      const lambdaHandler = server.createHandler({
+        expressGetMiddlewareOptions: { path: options?.graphqlPath },
+      });
       const httpHandler = createMockServer(lambdaHandler);
       httpServer = new http.Server(httpHandler);
       await new Promise<void>((resolve) => {

@@ -11,10 +11,6 @@ export {
   AuthenticationError,
   ForbiddenError,
   UserInputError,
-  // playground
-  defaultPlaygroundOptions,
-  PlaygroundConfig,
-  PlaygroundRenderPageOptions,
 } from 'apollo-server-core';
 
 export { CorsOptions } from 'apollo-server-express';

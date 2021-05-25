@@ -68,9 +68,7 @@ export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin {
 
 //#region Cache control
 import type { ApolloServerPluginCacheControlOptions } from './cacheControl';
-export type {
-  ApolloServerPluginCacheControlOptions,
-} from './cacheControl';
+export type { ApolloServerPluginCacheControlOptions } from './cacheControl';
 
 export function ApolloServerPluginCacheControl(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
@@ -79,5 +77,29 @@ export function ApolloServerPluginCacheControl(
 }
 export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin {
   return require('./cacheControl').ApolloServerPluginCacheControlDisabled();
+}
+//#endregion
+
+//#region Frontend
+import type { InternalApolloServerPlugin } from '../internalPlugin';
+export function ApolloServerPluginFrontendDisabled(): ApolloServerPlugin {
+  const plugin: InternalApolloServerPlugin = {
+    __internal_plugin_id__() {
+      return 'FrontendDisabled';
+    },
+  };
+  return plugin;
+}
+
+import type { ApolloServerPluginFrontendGraphQLPlaygroundOptions } from './frontend/graphqlPlayground';
+export type { ApolloServerPluginFrontendGraphQLPlaygroundOptions } from './frontend/graphqlPlayground';
+export function ApolloServerPluginFrontendGraphQLPlayground(
+  options: ApolloServerPluginFrontendGraphQLPlaygroundOptions = Object.create(
+    null,
+  ),
+): ApolloServerPlugin {
+  return require('./frontend/graphqlPlayground').ApolloServerPluginFrontendGraphQLPlayground(
+    options,
+  );
 }
 //#endregion

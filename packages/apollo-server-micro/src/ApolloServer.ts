@@ -1,11 +1,11 @@
 import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
-import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import { parseAll } from '@hapi/accept';
 
 import { graphqlMicro } from './microApollo';
 import { MicroRequest } from './types';
+import { FrontendPage } from 'apollo-server-plugin-base';
 
 export interface ServerRegistration {
   path?: string;
@@ -31,18 +31,31 @@ export class ApolloServer extends ApolloServerBase {
   }: ServerRegistration = {}) {
     this.assertStarted('createHandler');
 
-    return async (req: MicroRequest, res: ServerResponse) => {
-      this.graphqlPath = path || '/graphql';
+    this.graphqlPath = path || '/graphql';
 
-      (await this.handleHealthCheck({
-        req,
-        res,
-        disableHealthCheck,
-        onHealthCheck,
-      })) ||
-        this.handleGraphqlRequestsWithPlayground({ req, res }) ||
-        (await this.handleGraphqlRequestsWithServer({ req, res })) ||
-        send(res, 404, null);
+    const frontendPage = this.getFrontendPage();
+
+    return async (req: MicroRequest, res: ServerResponse) => {
+      if (
+        await this.handleHealthCheck({
+          req,
+          res,
+          disableHealthCheck,
+          onHealthCheck,
+        })
+      ) {
+        return;
+      }
+      if (
+        frontendPage &&
+        this.handleGraphqlRequestsWithFrontendPage({ req, res, frontendPage })
+      ) {
+        return;
+      }
+      if (await this.handleGraphqlRequestsWithServer({ req, res })) {
+        return;
+      }
+      send(res, 404, null);
     };
   }
 
@@ -87,33 +100,28 @@ export class ApolloServer extends ApolloServerBase {
     return handled;
   }
 
-  // If the `playgroundOptions` are set, register a `graphql-playground` instance
-  // (not available in production) that is then used to handle all
-  // incoming GraphQL requests.
-  private handleGraphqlRequestsWithPlayground({
+  private handleGraphqlRequestsWithFrontendPage({
     req,
     res,
+    frontendPage,
   }: {
     req: MicroRequest;
     res: ServerResponse;
+    frontendPage: FrontendPage;
   }): boolean {
     let handled = false;
 
-    if (this.playgroundOptions && req.method === 'GET') {
+    if (req.method === 'GET') {
       const accept = parseAll(req.headers);
       const types = accept.mediaTypes as string[];
-      const prefersHTML =
+      const prefersHtml =
         types.find(
           (x: string) => x === 'text/html' || x === 'application/json',
         ) === 'text/html';
 
-      if (prefersHTML) {
-        const middlewareOptions = {
-          endpoint: this.graphqlPath,
-          ...this.playgroundOptions,
-        };
+      if (prefersHtml) {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        send(res, 200, renderPlaygroundPage(middlewareOptions));
+        send(res, 200, frontendPage.html);
         handled = true;
       }
     }
