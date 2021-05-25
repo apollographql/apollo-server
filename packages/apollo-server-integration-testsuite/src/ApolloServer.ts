@@ -43,8 +43,8 @@ import {
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
   ApolloServerPluginUsageReportingOptions,
-  ApolloServerPluginUIDisabled,
-  ApolloServerPluginUIGraphQLPlayground,
+  ApolloServerPluginFrontendDisabled,
+  ApolloServerPluginFrontendGraphQLPlayground,
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
@@ -2797,7 +2797,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
-    describe('renderUIPage', () => {
+    describe('renderFrontend', () => {
       let httpServer: http.Server;
 
       function getWithoutAcceptHeader(url: string) {
@@ -2814,7 +2814,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             ...htmls.map((html) => ({
               serverWillStart() {
                 return {
-                  renderUIPage() {
+                  renderFrontend() {
                     return {
                       html,
                     };
@@ -2828,10 +2828,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
         };
       }
 
-      // Pass this to expect in the "not UIPage, you are trying to do GraphQL
+      // Pass this to expect in the "not FrontendPage, you are trying to do GraphQL
       // but didn't send a query" case, which we should maybe change to
       // something nicer than an ugly 400.
-      const serveNoUIPage = 400;
+      const serveNoFrontendPage = 400;
 
       it('defaults to playground', async () => {
         httpServer = (await createApolloServer(makeServerConfig([])))
@@ -2844,7 +2844,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           await createApolloServer({
             typeDefs: 'type Query {x: ID}',
             plugins: [
-              ApolloServerPluginUIGraphQLPlayground({ version: '9.8.7' }),
+              ApolloServerPluginFrontendGraphQLPlayground({ version: '9.8.7' }),
             ],
           })
         ).httpServer;
@@ -2857,10 +2857,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
         httpServer = (
           await createApolloServer({
             typeDefs: 'type Query {x: ID}',
-            plugins: [ApolloServerPluginUIDisabled()],
+            plugins: [ApolloServerPluginFrontendDisabled()],
           })
         ).httpServer;
-        await get('/graphql').expect(serveNoUIPage);
+        await get('/graphql').expect(serveNoFrontendPage);
       });
 
       describe('basic functionality', () => {
@@ -2880,7 +2880,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             await get('/foo').expect(404);
           });
           it('needs the header', async () => {
-            await getWithoutAcceptHeader('/goofql').expect(serveNoUIPage);
+            await getWithoutAcceptHeader('/goofql').expect(serveNoFrontendPage);
           });
           it('trailing slash works', async () => {
             await get('/goofql/').expect(200, 'BAZ');
@@ -2900,7 +2900,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             await get('/').expect(200, 'BAZ');
           });
           it('needs the header', async () => {
-            await getWithoutAcceptHeader('/').expect(serveNoUIPage);
+            await getWithoutAcceptHeader('/').expect(serveNoFrontendPage);
           });
         });
       });
@@ -2909,10 +2909,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
       // have a startup phase.
       options.serverlessFramework ||
         describe('startup errors', () => {
-          it('only one plugin can implement renderUIPage', async () => {
+          it('only one plugin can implement renderFrontend', async () => {
             await expect(
               createApolloServer(makeServerConfig(['x', 'y'])),
-            ).rejects.toThrow('Only one plugin can implement renderUIPage.');
+            ).rejects.toThrow('Only one plugin can implement renderFrontend.');
           });
         });
     });

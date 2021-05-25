@@ -111,7 +111,7 @@ describe('apollo-server-hapi', () => {
       const { httpServer } = await createServer({
         typeDefs,
         resolvers,
-        __testing_nodeEnv__: undefined, // default UI
+        __testing_nodeEnv__: undefined, // default frontend
       });
 
       await request(httpServer)

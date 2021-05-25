@@ -80,23 +80,25 @@ export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin {
 }
 //#endregion
 
-//#region UI
+//#region Frontend
 import type { InternalApolloServerPlugin } from '../internalPlugin';
-export function ApolloServerPluginUIDisabled(): ApolloServerPlugin {
+export function ApolloServerPluginFrontendDisabled(): ApolloServerPlugin {
   const plugin: InternalApolloServerPlugin = {
     __internal_plugin_id__() {
-      return 'UIDisabled';
+      return 'FrontendDisabled';
     },
   };
   return plugin;
 }
 
-import type { ApolloServerPluginUIGraphQLPlaygroundOptions } from './ui/graphqlPlayground';
-export type { ApolloServerPluginUIGraphQLPlaygroundOptions } from './ui/graphqlPlayground';
-export function ApolloServerPluginUIGraphQLPlayground(
-  options: ApolloServerPluginUIGraphQLPlaygroundOptions = Object.create(null),
+import type { ApolloServerPluginFrontendGraphQLPlaygroundOptions } from './frontend/graphqlPlayground';
+export type { ApolloServerPluginFrontendGraphQLPlaygroundOptions } from './frontend/graphqlPlayground';
+export function ApolloServerPluginFrontendGraphQLPlayground(
+  options: ApolloServerPluginFrontendGraphQLPlaygroundOptions = Object.create(
+    null,
+  ),
 ): ApolloServerPlugin {
-  return require('./ui/graphqlPlayground').ApolloServerPluginUIGraphQLPlayground(
+  return require('./frontend/graphqlPlayground').ApolloServerPluginFrontendGraphQLPlayground(
     options,
   );
 }

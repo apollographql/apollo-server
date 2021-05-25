@@ -34,14 +34,14 @@ export class ApolloServer extends ApolloServerBase {
 
     if (!path) path = '/graphql';
 
-    const uiPage = this.getUIPage();
+    const frontendPage = this.getFrontendPage();
 
-    if (uiPage) {
+    if (frontendPage) {
       app.ext({
         type: 'onRequest',
         method: async (request, h) => {
           // Note that this path check is stricter than other integrations,
-          // which return UI for arbitrary URLs under the given path.
+          // which return frontend for arbitrary URLs under the given path.
           if (request.path !== path && request.path !== `${path}/`) {
             return h.continue;
           }
@@ -56,7 +56,7 @@ export class ApolloServer extends ApolloServerBase {
               ) === 'text/html';
 
             if (prefersHtml) {
-              return h.response(uiPage.html).type('text/html').takeover();
+              return h.response(frontendPage.html).type('text/html').takeover();
             }
           }
           return h.continue;

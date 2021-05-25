@@ -18,10 +18,10 @@ export interface InternalApolloServerPlugin<
 
 export type InternalPluginId =
   | 'CacheControl'
+  | 'FrontendDisabled'
   | 'SchemaReporting'
   | 'InlineTrace'
-  | 'UsageReporting'
-  | 'UIDisabled';
+  | 'UsageReporting';
 
 export function pluginIsInternal(
   plugin: ApolloServerPlugin,

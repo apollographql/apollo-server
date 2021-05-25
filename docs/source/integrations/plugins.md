@@ -298,10 +298,10 @@ const server = new ApolloServer({
 })
 ```
 
-### `renderUIPage`
+### `renderFrontend`
 
-The `renderUIPage` event is fired once by Apollo Server after all `serverWillStart` events run.
-You define your `renderUIPage` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, which allows it to read the values passed to `serverWillStart`. **At most one plugin in your server may define a `renderUIPage` handler.** If your server has a `renderUIPage` handler, it should return a `UIPage`, which is just an object with a string `html` field. The value of that field will be served as HTML for any requests with `accept: text/html` headers. (By default, Apollo Server installs `ApolloServerPluginUIGraphQLPlayground` which serves GraphQL Playground as a UI page.)
+The `renderFrontend` event is fired once by Apollo Server after all `serverWillStart` events run.
+You define your `renderFrontend` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, which allows it to read the values passed to `serverWillStart`. **At most one plugin in your server may define a `renderFrontend` handler.** If your server has a `renderFrontend` handler, it should return a `FrontendPage`, which is just an object with a string `html` field. The value of that field will be served as HTML for any requests with `accept: text/html` headers. (By default, Apollo Server installs `ApolloServerPluginFrontendGraphQLPlayground` which serves GraphQL Playground as a frontend page.)
 
 #### Example
 
@@ -313,7 +313,7 @@ const server = new ApolloServer({
     {
       serverWillStart() {
         return {
-          renderUIPage() {
+          renderFrontend() {
             return { html: `<html><body>Welcome to your server!</body></html>` };
           }
         }

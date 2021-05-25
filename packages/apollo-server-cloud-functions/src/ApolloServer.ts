@@ -1,5 +1,5 @@
 import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
-import { UIPage } from 'apollo-server-plugin-base';
+import { FrontendPage } from 'apollo-server-plugin-base';
 import { Request, Response } from 'express';
 
 import { graphqlCloudFunction } from './googleCloudApollo';
@@ -71,12 +71,12 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     // undefined before load, null if loaded but there is none.
-    let uiPage: UIPage | null | undefined;
+    let frontendPage: FrontendPage | null | undefined;
 
     return (req: Request, res: Response) => {
       this.ensureStarted().then(() => {
-        if (uiPage === undefined) {
-          uiPage = this.getUIPage();
+        if (frontendPage === undefined) {
+          frontendPage = this.getFrontendPage();
         }
 
         // Handle both the root of the GCF endpoint and /graphql
@@ -113,10 +113,10 @@ export class ApolloServer extends ApolloServerBase {
           return;
         }
 
-        if (uiPage && req.method === 'GET') {
+        if (frontendPage && req.method === 'GET') {
           const acceptHeader = req.headers['accept'] as string;
           if (acceptHeader && acceptHeader.includes('text/html')) {
-            res.status(200).send(uiPage.html);
+            res.status(200).send(frontendPage.html);
             return;
           }
         }

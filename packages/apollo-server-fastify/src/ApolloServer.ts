@@ -43,7 +43,7 @@ export class ApolloServer extends ApolloServerBase {
 
     this.assertStarted('createHandler');
 
-    const uiPage = this.getUIPage();
+    const frontendPage = this.getFrontendPage();
 
     return async (app: FastifyInstance) => {
       if (!disableHealthCheck) {
@@ -79,7 +79,7 @@ export class ApolloServer extends ApolloServerBase {
             reply.send();
           });
 
-          const preHandler = uiPage
+          const preHandler = frontendPage
             ? async (request: FastifyRequest, reply: FastifyReply) => {
                 if (request.raw.method === 'GET') {
                   const accept = request.accepts();
@@ -92,7 +92,7 @@ export class ApolloServer extends ApolloServerBase {
 
                   if (prefersHtml) {
                     reply.type('text/html');
-                    reply.send(uiPage.html);
+                    reply.send(frontendPage.html);
                   }
                 }
               }
