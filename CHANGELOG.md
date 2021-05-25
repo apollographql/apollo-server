@@ -13,6 +13,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-core`: Fix a race condition where schema reporting could lead to a delay at process shutdown. [PR #5222](https://github.com/apollographql/apollo-server/pull/5222)
 - `apollo-server-core`: Allow the Fetch API implementation to be overridden for the schema reporting and usage reporting plugins via a new `fetcher` option. [PR #5179](https://github.com/apollographql/apollo-server/pull/5179)
+- `apollo-server-core`: The `server.executeOperation` method (designed for testing) can now take its `query` as a `DocumentNode` (eg, a `gql`-tagged string) in addition to as a string. (This matches the behavior of the `apollo-server-testing` `createTestClient` function which is now deprecated.) We now recommend this method instead of `apollo-server-testing` in our docs. [Issue #4952](https://github.com/apollographql/apollo-server/issues/4952)
+- `apollo-server-testing`: Replace README with a deprecation notice explaining how to use `server.executeOperation` instead. [Issue #4952](https://github.com/apollographql/apollo-server/issues/4952)
 
 ## v2.24.1
 
