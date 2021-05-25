@@ -66,16 +66,22 @@ export interface ApolloServerPlugin<
 
 export interface GraphQLServerListener {
   serverWillStop?(): ValueOrPromise<void>;
+  // At most one plugin's serverWillStart may return a GraphQLServerListener
+  // with this method. If one does, it is called once on server startup and the
+  // page it returns is served to clients with `accept: text/html` headers. This
+  // is an intentionally simple API; if you want to do something fancy to serve
+  // your UI, you probably should just define a handler in your web framework.
   renderUIPage?(): UIPage;
-  __internal_installed_implicitly__?: boolean;  // FIXME docs
+  // An internal-only flag used in the default UI plugin so that it can be
+  // ignored if you install another UI plugin.
+  __internal_installed_implicitly__?: boolean;
 }
 
-// FIXME docs
+// The page served to clients with `accept: text/html` headers.
 export interface UIPage {
   html: string;
 }
 
-// FIXME docs
 export type GraphQLRequestListenerParsingDidEnd = (err?: Error) => void;
 export type GraphQLRequestListenerValidationDidEnd =
   ((err?: ReadonlyArray<Error>) => void);

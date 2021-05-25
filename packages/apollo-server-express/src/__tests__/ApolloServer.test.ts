@@ -4,13 +4,10 @@ import http from 'http';
 
 import request from 'supertest';
 
-import nodeUrl from 'url';
-
 import {
   gql,
   AuthenticationError,
   ApolloServerPluginCacheControlDisabled,
-  ApolloServerPluginUIGraphQLPlayground,
 } from 'apollo-server-core';
 import {
   ApolloServer,
@@ -122,52 +119,6 @@ describe('apollo-server-express', () => {
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         )
         .expect(200, /GraphQLPlayground/);
-    });
-
-
-    // The following is an AS3 regression from AS2. In AS2, if you mounted an
-    // Express app inside another one, graphql-playground would probably still
-    // work.
-    it('renders GraphQL playground using request original url', async () => {
-      const rewiredServer = new ApolloServer({
-        typeDefs,
-        resolvers,
-        plugins: [
-          // FIXME mounting the express app inside another app doesn't work
-          //       without explicitly specifying the endpoint here because the app
-          //       know where it's mounted when this is set up. So this test only
-          //       passes because of explicitly configuring the plugin with an endpoint.
-          //       It would also work if you passed the full path to `applyMiddleware`
-          //       but not in this nested way that it does it here. Is that OK?
-          ApolloServerPluginUIGraphQLPlayground({
-            endpoint: '/innerSamplePath/graphql',
-          }),
-        ],
-      });
-      await rewiredServer.start();
-      const innerApp = express();
-      rewiredServer.applyMiddleware({ app: innerApp });
-
-      const outerApp = express();
-      outerApp.use('/innerSamplePath', innerApp);
-
-      const httpRewiredServer = await new Promise<http.Server>((resolve) => {
-        const l: http.Server = outerApp.listen({ port: 0 }, () => resolve(l));
-      });
-
-      const { url } = createServerInfo(rewiredServer, httpRewiredServer);
-
-      const parsedUrl = nodeUrl.parse(url);
-      parsedUrl.pathname = '';
-      const urlWithoutPath = nodeUrl.format(parsedUrl);
-
-      await request(urlWithoutPath)
-        .get('/innerSamplePath/graphql/ui/playground')
-        .set('accept', 'text/html')
-        .expect(200, new RegExp(`"endpoint":"/innerSamplePath/graphql"`));
-
-      await rewiredServer.stop();
-      httpRewiredServer.close();
     });
 
     it('accepts cors configuration', async () => {
