@@ -6,10 +6,7 @@
 
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 
-import type {
-  ApolloServerPlugin,
-  RenderUIPageOptions,
-} from 'apollo-server-plugin-base';
+import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 // This specifies the React version of our fork of GraphQL Playground,
 // `@apollographql/graphql-playground-react`.  It is related to, but not to
@@ -30,16 +27,19 @@ export type ApolloServerPluginUIGraphQLPlaygroundOptions = Parameters<
 export function ApolloServerPluginUIGraphQLPlayground(
   options: ApolloServerPluginUIGraphQLPlaygroundOptions = Object.create(null),
 ): ApolloServerPlugin {
+  const {
+    __internal_installed_implicitly__,
+    ...renderPlaygroundPageOptions
+  } = options;
   return {
     serverWillStart() {
       return {
-        __internal_installed_implicitly__: !!options.__internal_installed_implicitly__,
-        renderUIPage({ graphqlPath }: RenderUIPageOptions) {
+        __internal_installed_implicitly__,
+        renderUIPage() {
           return {
             html: renderPlaygroundPage({
               version: defaultPlaygroundVersion,
-              endpoint: graphqlPath,
-              ...options,
+              ...renderPlaygroundPageOptions,
             }),
           };
         },

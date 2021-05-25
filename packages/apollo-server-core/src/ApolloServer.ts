@@ -18,7 +18,6 @@ import type {
   ApolloServerPlugin,
   GraphQLServiceContext,
   GraphQLServerListener,
-  RenderUIPageOptions,
   UIPage,
 } from 'apollo-server-plugin-base';
 
@@ -124,9 +123,7 @@ export class ApolloServerBase {
   private toDispose = new Set<() => Promise<void>>();
   private toDisposeLast = new Set<() => Promise<void>>();
   private experimental_approximateDocumentStoreMiB: Config['experimental_approximateDocumentStoreMiB'];
-  private renderUIPageCallback:
-    | ((options: RenderUIPageOptions) => UIPage)
-    | null = null;
+  private uiPage: UIPage | null = null;
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
@@ -425,23 +422,24 @@ export class ApolloServerBase {
       }
 
       // Find the renderUIPage callback, if one is provided. If the user
-      // installed ApolloServerPluginUIDisabled then there may be none found.
-      // On the other hand, if the user installed a UI plugin, then both the
+      // installed ApolloServerPluginUIDisabled then there may be none found. On
+      // the other hand, if the user installed a UI plugin, then both the
       // implicit installation of ApolloServerPluginUIGraphQLPlayground and the
-      // other plugin will be found; we skip the implicit plugin manually.
-      const serverListenersWithRenderUIPage = serverListeners.filter(l => l.renderUIPage);
-      if (serverListenersWithRenderUIPage.length > 2) {
+      // other plugin will be found; we skip the implicit plugin.
+      let serverListenersWithRenderUIPage = serverListeners.filter(
+        (l) => l.renderUIPage,
+      );
+      if (serverListenersWithRenderUIPage.length > 1) {
+        serverListenersWithRenderUIPage = serverListenersWithRenderUIPage.filter(
+          (l) => !l.__internal_installed_implicitly__,
+        );
+      }
+      if (serverListenersWithRenderUIPage.length > 1) {
         throw Error('Only one plugin can implement renderUIPage.');
-      } else if (serverListenersWithRenderUIPage.length === 2) {
-        if (serverListenersWithRenderUIPage[0].__internal_installed_implicitly__) {
-          this.renderUIPageCallback = serverListenersWithRenderUIPage[1].renderUIPage!;
-        } else if (serverListenersWithRenderUIPage[1].__internal_installed_implicitly__) {
-          this.renderUIPageCallback = serverListenersWithRenderUIPage[0].renderUIPage!;
-        } else {
-          throw Error('Only one plugin can implement renderUIPage.');
-        }
       } else if (serverListenersWithRenderUIPage.length) {
-        this.renderUIPageCallback = serverListenersWithRenderUIPage[0].renderUIPage!;
+        this.uiPage = serverListenersWithRenderUIPage[0].renderUIPage!();
+      } else {
+        this.uiPage = null;
       }
 
       this.state = { phase: 'started', schemaDerivedData };
@@ -886,15 +884,16 @@ export class ApolloServerBase {
 
   // This method is called by integrations after start() (because we want
   // renderUIPage callbacks to be able to take advantage of the context passed
-  // to serverWillStart); it calls the (single) plugin renderUIPage if it exists
-  // and returns what it returns to the integration. The integration should
-  // serve the HTML page when requested with `accept: text/html`. If no UI page
-  // is defined by any plugin, returns null. (Specifically null and not
-  // undefined; some serverless integrations rely on this to tell the difference
-  // between "haven't called renderUIPage yet" and "there is no UI page").
-  protected renderUIPage(options: RenderUIPageOptions): UIPage | null {
-    this.assertStarted('renderUIPage');
+  // to serverWillStart); it returns the UIPage from the(single) plugin
+  // `renderUIPage` callback if it exists and returns what it returns to the
+  // integration. The integration should serve the HTML page when requested with
+  // `accept: text/html`. If no UI page is defined by any plugin, returns null.
+  // (Specifically null and not undefined; some serverless integrations rely on
+  // this to tell the difference between "haven't called renderUIPage yet" and
+  // "there is no UI page").
+  protected getUIPage(): UIPage | null {
+    this.assertStarted('getUIPage');
 
-    return this.renderUIPageCallback?.(options) ?? null;
+    return this.uiPage;
   }
 }

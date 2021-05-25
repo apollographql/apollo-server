@@ -124,6 +124,10 @@ describe('apollo-server-express', () => {
         .expect(200, /GraphQLPlayground/);
     });
 
+
+    // The following is an AS3 regression from AS2. In AS2, if you mounted an
+    // Express app inside another one, graphql-playground would probably still
+    // work.
     it('renders GraphQL playground using request original url', async () => {
       const rewiredServer = new ApolloServer({
         typeDefs,

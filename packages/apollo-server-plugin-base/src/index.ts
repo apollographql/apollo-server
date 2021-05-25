@@ -66,7 +66,7 @@ export interface ApolloServerPlugin<
 
 export interface GraphQLServerListener {
   serverWillStop?(): ValueOrPromise<void>;
-  renderUIPage?(options: RenderUIPageOptions): UIPage;
+  renderUIPage?(): UIPage;
   __internal_installed_implicitly__?: boolean;  // FIXME docs
 }
 
@@ -76,10 +76,6 @@ export interface UIPage {
 }
 
 // FIXME docs
-export interface RenderUIPageOptions {
-  graphqlPath: string;
-}
-
 export type GraphQLRequestListenerParsingDidEnd = (err?: Error) => void;
 export type GraphQLRequestListenerValidationDidEnd =
   ((err?: ReadonlyArray<Error>) => void);

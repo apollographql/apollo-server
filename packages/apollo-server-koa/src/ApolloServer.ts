@@ -106,7 +106,7 @@ export class ApolloServer extends ApolloServerBase {
       middlewares.push(middlewareFromPath(path, bodyParser(bodyParserConfig)));
     }
 
-    const uiPage = this.renderUIPage({ graphqlPath: path });
+    const uiPage = this.getUIPage();
 
     middlewares.push(
       middlewareFromPath(path, async (ctx: Koa.Context) => {

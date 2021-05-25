@@ -58,7 +58,6 @@ import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
 import { AddressInfo } from 'net';
 import request from 'supertest';
-import { RenderUIPageOptions, UIPage } from 'apollo-server-plugin-base';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -2808,16 +2807,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
         return getWithoutAcceptHeader(url).set('accept', 'text/html');
       }
 
-      function makeServerConfig(
-        renderUiPageCallbacks: ((options: RenderUIPageOptions) => UIPage)[],
-      ): Config {
+      function makeServerConfig(htmls: string[]): Config {
         return {
           typeDefs: 'type Query {x: ID}',
           plugins: [
-            ...renderUiPageCallbacks.map((renderUIPage) => ({
+            ...htmls.map((html) => ({
               serverWillStart() {
                 return {
-                  renderUIPage,
+                  renderUIPage() {
+                    return {
+                      html,
+                    };
+                  },
                 };
               },
             })),
@@ -2863,23 +2864,17 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       describe('basic functionality', () => {
-        const basicCallback = [
-          ({ graphqlPath }: RenderUIPageOptions) => ({
-            html: `BAZ + ${graphqlPath}`,
-          }),
-        ];
-
         describe('with non-root graphqlPath', () => {
           beforeEach(async () => {
             httpServer = (
-              await createApolloServer(makeServerConfig(basicCallback), {
+              await createApolloServer(makeServerConfig(['BAZ']), {
                 graphqlPath: '/goofql',
               })
             ).httpServer;
           });
 
           it('basic GET works', async () => {
-            await get('/goofql').expect(200, 'BAZ + /goofql');
+            await get('/goofql').expect(200, 'BAZ');
           });
           it('only mounts under graphqlPath', async () => {
             await get('/foo').expect(404);
@@ -2888,21 +2883,21 @@ export function testApolloServer<AS extends ApolloServerBase>(
             await getWithoutAcceptHeader('/goofql').expect(serveNoUIPage);
           });
           it('trailing slash works', async () => {
-            await get('/goofql/').expect(200, 'BAZ + /goofql');
+            await get('/goofql/').expect(200, 'BAZ');
           });
         });
 
         describe('with root graphqlPath', () => {
           beforeEach(async () => {
             httpServer = (
-              await createApolloServer(makeServerConfig(basicCallback), {
+              await createApolloServer(makeServerConfig(['BAZ']), {
                 graphqlPath: '/',
               })
             ).httpServer;
           });
 
           it('basic GET works', async () => {
-            await get('/').expect(200, 'BAZ + /');
+            await get('/').expect(200, 'BAZ');
           });
           it('needs the header', async () => {
             await getWithoutAcceptHeader('/').expect(serveNoUIPage);
@@ -2916,12 +2911,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         describe('startup errors', () => {
           it('only one plugin can implement renderUIPage', async () => {
             await expect(
-              createApolloServer(
-                makeServerConfig([
-                  () => ({ html: 'x' }),
-                  () => ({ html: 'y' }),
-                ]),
-              ),
+              createApolloServer(makeServerConfig(['x', 'y'])),
             ).rejects.toThrow('Only one plugin can implement renderUIPage.');
           });
         });
