@@ -25,6 +25,5 @@
     { "path": "./packages/apollo-server-plugin-base" },
     { "path": "./packages/apollo-server-plugin-operation-registry" },
     { "path": "./packages/apollo-server-plugin-response-cache" },
-    { "path": "./packages/apollo-server-testing" },
   ]
 }
