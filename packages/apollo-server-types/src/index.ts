@@ -79,12 +79,6 @@ export interface ApolloConfig {
   serverlessFramework: boolean;
 }
 
-export interface ServeHtmlOptions {
-  path: string;
-  html: string;
-  redirectFromRoot?: boolean;
-}
-
 export interface GraphQLRequest {
   query?: string;
   operationName?: string;
