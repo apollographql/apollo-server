@@ -96,7 +96,7 @@ Specify this function to modify GraphQL operation errors before Apollo Server re
 
 The only properties of the reported error you can modify are its `message` and its `extensions`.
 
-**Note:** If this `ApolloServer` instance is acting as the gateway in an [Apollo Federation](https://www.apollographql.com/docs/federation/#architecture) architecture, this option does **not** modify errors that originate in implementing services. To modify those errors, instead configure the [`rewriteError` option in the inline trace plugin](./inline-trace/#rewriteerror), which you install in the implementing service's `ApolloServer` instance.
+**Note:** If this `ApolloServer` instance is acting as the gateway in an [Apollo Federation](https://www.apollographql.com/docs/federation/#architecture) architecture, this option does **not** modify errors that originate in subgraphs. To modify those errors, instead configure the [`rewriteError` option in the inline trace plugin](./inline-trace/#rewriteerror), which you install in the subgraph's `ApolloServer` instance.
 </td>
 </tr>
 

@@ -49,6 +49,7 @@ export class SchemaReporter {
   private readonly logger: Logger;
   private readonly initialReportingDelayInMs: number;
   private readonly fallbackReportingDelayInMs: number;
+  private readonly fetcher: typeof fetch;
 
   private isStopped: boolean;
   private pollTimer?: NodeJS.Timer;
@@ -62,6 +63,7 @@ export class SchemaReporter {
     logger: Logger;
     initialReportingDelayInMs: number;
     fallbackReportingDelayInMs: number;
+    fetcher?: typeof fetch;
   }) {
     this.headers = new Headers();
     this.headers.set('Content-Type', 'application/json');
@@ -85,6 +87,7 @@ export class SchemaReporter {
     this.logger = options.logger;
     this.initialReportingDelayInMs = options.initialReportingDelayInMs;
     this.fallbackReportingDelayInMs = options.fallbackReportingDelayInMs;
+    this.fetcher = options.fetcher ?? fetch;
   }
 
   public stopped(): Boolean {
@@ -117,11 +120,13 @@ export class SchemaReporter {
       const result = await this.reportServerInfo(sendNextWithExecutableSchema);
       switch (result.kind) {
         case 'next':
-          this.pollTimer = setTimeout(
-            () =>
-              this.sendOneReportAndScheduleNext(result.withExecutableSchema),
-            result.inSeconds * 1000,
-          );
+          if (!this.stopped()) {
+            this.pollTimer = setTimeout(
+              () =>
+                this.sendOneReportAndScheduleNext(result.withExecutableSchema),
+              result.inSeconds * 1000,
+            );
+          }
           return;
         case 'stop':
           return;
@@ -133,10 +138,12 @@ export class SchemaReporter {
       this.logger.error(
         `Error reporting server info to Apollo during schema reporting: ${error}`,
       );
-      this.pollTimer = setTimeout(
-        () => this.sendOneReportAndScheduleNext(false),
-        this.fallbackReportingDelayInMs,
-      );
+      if (!this.stopped()) {
+        this.pollTimer = setTimeout(
+          () => this.sendOneReportAndScheduleNext(false),
+          this.fallbackReportingDelayInMs,
+        );
+      }
     }
   }
 
@@ -220,7 +227,7 @@ export class SchemaReporter {
       body: JSON.stringify(request),
     });
 
-    const httpResponse = await fetch(httpRequest);
+    const httpResponse = await this.fetcher(httpRequest);
 
     if (!httpResponse.ok) {
       throw new Error(

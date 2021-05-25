@@ -36,6 +36,17 @@ The version headers in this history reflect the versions of Apollo Server itself
   - The `Upload` scalar is no longer exported. (See above as to why.)
 - Support for serving an HTML UI has been generalized. While servers in dev mode still default to serving GraphQL Playground (note: this may change before v3.0.0), plugins can define a new `renderFrontend` hook which returns an HTML page that is served to browsers. The `playground` option to `new ApolloServer` has been removed; customizing Playground or making it run in production mode can be done by installing the new `ApolloServerPluginFrontendGraphQLPlayground` plugin yourself. To disable Playground, either install the new `ApolloServerPluginFrontendDisabled` plugin or install any other plugin that implements `renderFrontend`. Packages no longer export `defaultPlaygroundOptions`, `PlaygroundConfig`, and `PlaygroundRenderPageOptions`. By default, no GraphQL Playground settings are overridden, including the endpoint, which now just defaults to `window.location.href` (with most query parameters removed); this means you typically don't have to manually configure the endpoint.
 
+## vNEXT
+
+- `apollo-server-core`: Fix a race condition where schema reporting could lead to a delay at process shutdown. [PR #5222](https://github.com/apollographql/apollo-server/pull/5222)
+- `apollo-server-core`: Allow the Fetch API implementation to be overridden for the schema reporting and usage reporting plugins via a new `fetcher` option. [PR #5179](https://github.com/apollographql/apollo-server/pull/5179)
+- `apollo-server-core`: The `server.executeOperation` method (designed for testing) can now take its `query` as a `DocumentNode` (eg, a `gql`-tagged string) in addition to as a string. (This matches the behavior of the `apollo-server-testing` `createTestClient` function which is now deprecated.) We now recommend this method instead of `apollo-server-testing` in our docs. [Issue #4952](https://github.com/apollographql/apollo-server/issues/4952)
+- `apollo-server-testing`: Replace README with a deprecation notice explaining how to use `server.executeOperation` instead. [Issue #4952](https://github.com/apollographql/apollo-server/issues/4952)
+
+## v2.24.1
+
+- `apollo-server-core`: Fix a typo that could lead to TypeScript compilation when combined with a recent version of `@types/node`. (This bug had no runtime effect.) [PR #5149](https://github.com/apollographql/apollo-server/pull/5149)
+
 ## v2.24.0
 
 - `apollo-server-core`: Apollo Studio usage reporting uses a more efficient format which sends fewer detailed traces to Apollo's server. This change should not have a major effect on the experience of using Apollo Studio. [PR #4142](https://github.com/apollographql/apollo-server/pull/4142)
