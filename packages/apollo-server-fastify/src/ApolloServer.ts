@@ -84,13 +84,13 @@ export class ApolloServer extends ApolloServerBase {
                 if (request.raw.method === 'GET') {
                   const accept = request.accepts();
                   const types = accept.types() as string[];
-                  const prefersHTML =
+                  const prefersHtml =
                     types.find(
                       (x: string) =>
                         x === 'text/html' || x === 'application/json',
                     ) === 'text/html';
 
-                  if (prefersHTML) {
+                  if (prefersHtml) {
                     reply.type('text/html');
                     reply.send(uiPage.html);
                   }

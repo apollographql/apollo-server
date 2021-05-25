@@ -50,12 +50,12 @@ export class ApolloServer extends ApolloServerBase {
             // perform more expensive content-type check only if necessary
             const accept = parseAll(request.headers);
             const types = accept.mediaTypes as string[];
-            const prefersHTML =
+            const prefersHtml =
               types.find(
                 (x: string) => x === 'text/html' || x === 'application/json',
               ) === 'text/html';
 
-            if (prefersHTML) {
+            if (prefersHtml) {
               return h.response(uiPage.html).type('text/html').takeover();
             }
           }

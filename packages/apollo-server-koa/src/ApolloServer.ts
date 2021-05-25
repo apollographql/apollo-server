@@ -120,12 +120,12 @@ export class ApolloServer extends ApolloServerBase {
           // perform more expensive content-type check only if necessary
           const accept = accepts(ctx.req);
           const types = accept.types() as string[];
-          const prefersHTML =
+          const prefersHtml =
             types.find(
               (x: string) => x === 'text/html' || x === 'application/json',
             ) === 'text/html';
 
-          if (prefersHTML) {
+          if (prefersHtml) {
             ctx.set('Content-Type', 'text/html');
             ctx.body = uiPage.html;
             return;

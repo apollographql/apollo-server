@@ -114,12 +114,12 @@ export class ApolloServer extends ApolloServerBase {
     if (req.method === 'GET') {
       const accept = parseAll(req.headers);
       const types = accept.mediaTypes as string[];
-      const prefersHTML =
+      const prefersHtml =
         types.find(
           (x: string) => x === 'text/html' || x === 'application/json',
         ) === 'text/html';
 
-      if (prefersHTML) {
+      if (prefersHtml) {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         send(res, 200, uiPage.html);
         handled = true;

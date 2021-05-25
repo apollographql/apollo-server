@@ -124,7 +124,7 @@ export class ApolloServer extends ApolloServerBase {
 
     const uiPage = this.getUIPage();
     router.use(path, (req, res, next) => {
-      if (uiPage && prefersHTML(req)) {
+      if (uiPage && prefersHtml(req)) {
         res.setHeader('Content-Type', 'text/html');
         res.write(uiPage.html);
         res.end();
@@ -179,7 +179,7 @@ export class ApolloServer extends ApolloServerBase {
   }
 }
 
-function prefersHTML(req: express.Request): boolean {
+function prefersHtml(req: express.Request): boolean {
   if (req.method !== 'GET') {
     return false;
   }
