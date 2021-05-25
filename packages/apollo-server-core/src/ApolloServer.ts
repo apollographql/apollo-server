@@ -19,6 +19,7 @@ import {
   ValidationContext,
   FieldDefinitionNode,
   DocumentNode,
+  print,
 } from 'graphql';
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import { GraphQLExtension } from 'graphql-extensions';
@@ -1265,6 +1266,11 @@ export class ApolloServerBase {
    * going through the HTTP layer. Note that this means that any handling you do
    * in your server at the HTTP level will not affect this call!
    *
+   * For convenience, you can provide `request.query` either as a string or a
+   * DocumentNode, in case you choose to use the gql tag in your tests. This is
+   * just a convenience, not an optimization (we convert provided ASTs back into
+   * string).
+   *
    * If you pass a second argument to this method and your ApolloServer's
    * `context` is a function, that argument will be passed directly to your
    * `context` function. It is your responsibility to make it as close as needed
@@ -1273,7 +1279,12 @@ export class ApolloServerBase {
    * `{req: express.Request, res: express.Response }` object) and to keep it
    * updated as you upgrade Apollo Server.
    */
-  public async executeOperation(request: GraphQLRequest, integrationContextArgument?: Record<string, any>) {
+  public async executeOperation(
+    request: Omit<GraphQLRequest, 'query'> & {
+      query?: string | DocumentNode;
+    },
+    integrationContextArgument?: Record<string, any>,
+  ) {
     const options = await this.graphQLServerOptions(integrationContextArgument);
 
     if (typeof options.context === 'function') {
@@ -1292,7 +1303,13 @@ export class ApolloServerBase {
       logger: this.logger,
       schema: options.schema,
       schemaHash: options.schemaHash,
-      request,
+      request: {
+        ...request,
+        query:
+          request.query && typeof request.query !== 'string'
+            ? print(request.query)
+            : request.query,
+      },
       context: options.context || Object.create(null),
       cache: options.cache!,
       metrics: {},
