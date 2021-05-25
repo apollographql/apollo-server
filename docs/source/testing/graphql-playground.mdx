@@ -55,7 +55,7 @@ new ApolloServer({
 
 ## Disabling Playground in development
 
-If you don't want to run GraphQL Playground at all, you have two choices. First, you can replace it with a different UI by installing a plugin that implements the [`renderFrontend` hook](../integrations/plugins/#renderfrontend). Alternatively, you can install the `ApolloServerPluginFrontendDisabled` plugin which stops Apollo Server from serving any HTML UI.
+If you don't want to run GraphQL Playground at all, you have two choices. First, you can replace it with a different frontend by installing a plugin that implements the [`renderFrontend` hook](../integrations/plugins/#renderfrontend). Alternatively, you can install the `ApolloServerPluginFrontendDisabled` plugin which stops Apollo Server from serving any HTML frontend.
 
 ```js
 const { ApolloServer } = require('apollo-server');

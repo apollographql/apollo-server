@@ -766,7 +766,7 @@ The default value is `true`.
 
 #### `getMiddleware`
 
-Returns an array of the middlewares that together form a complete instance of Apollo Server. Includes middleware for HTTP body parsing, health checks, setting CORS headers, and serving a static UI, as well as actually executing GraphQL operations.
+Returns an array of the middlewares that together form a complete instance of Apollo Server. Includes middleware for HTTP body parsing, health checks, setting CORS headers, and serving a static HTML frontend, as well as actually executing GraphQL operations.
 
 Unlike [`applyMiddleware`](#applymiddleware), `getMiddleware` does _not_ automatically apply Apollo Server middlewares to your application. Instead, this method enables you to apply or omit individual middlewares according to your use case. For an Express or Koa application, you can apply a particular middleware by calling `app.use`.
 
