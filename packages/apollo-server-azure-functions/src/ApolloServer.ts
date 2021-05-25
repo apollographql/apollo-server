@@ -80,9 +80,8 @@ export class ApolloServer extends ApolloServerBase {
           if (uiPage === undefined) {
             // Note that this package doesn't currently pay any attention to
             // graphqlPath, so there's not really much of a point to sending it
-            // here, but it probably doesn't hurt anything either.            //
-            // to get tests to pass...
-            uiPage = this.getUIPage({ graphqlPath: this.graphqlPath });
+            // here, but it probably doesn't hurt anything either.
+            uiPage = this.renderUIPage({ graphqlPath: this.graphqlPath });
           }
 
           const originHeader = req.headers['Origin'] || req.headers['origin'];

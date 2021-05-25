@@ -76,10 +76,10 @@ export class ApolloServer extends ApolloServerBase {
     return (req: Request, res: Response) => {
       this.ensureStarted().then(() => {
         if (uiPage === undefined) {
-          // FIXME graphqlPath might be wrong. This package doesn't really
-          // use graphqlPath. Need some other way to find its mount point
-          // to get tests to pass...
-          uiPage = this.getUIPage({ graphqlPath: this.graphqlPath });
+          // At least for now, this package effectively hardcodes graphqlPath to
+          // '/graphql' (see the path check below), which isn't super consistent
+          // with other integrations, but *shrug*
+          uiPage = this.renderUIPage({ graphqlPath: '/graphql' });
         }
 
         // Handle both the root of the GCF endpoint and /graphql

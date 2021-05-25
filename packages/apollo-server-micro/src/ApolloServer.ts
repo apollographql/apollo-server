@@ -33,7 +33,7 @@ export class ApolloServer extends ApolloServerBase {
 
     this.graphqlPath = path || '/graphql';
 
-    const uiPage = this.getUIPage({ graphqlPath: this.graphqlPath });
+    const uiPage = this.renderUIPage({ graphqlPath: this.graphqlPath });
 
     return async (req: MicroRequest, res: ServerResponse) => {
       if (

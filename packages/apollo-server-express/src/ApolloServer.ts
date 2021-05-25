@@ -120,7 +120,7 @@ export class ApolloServer extends ApolloServerBase {
       router.use(path, json(bodyParserConfig));
     }
 
-    const uiPage = this.getUIPage({graphqlPath: path});
+    const uiPage = this.renderUIPage({graphqlPath: path});
     router.use(path, (req, res, next) => {
       if (uiPage && prefersHTML(req)) {
         res.setHeader('Content-Type', 'text/html');

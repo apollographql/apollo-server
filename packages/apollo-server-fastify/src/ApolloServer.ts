@@ -43,7 +43,7 @@ export class ApolloServer extends ApolloServerBase {
 
     this.assertStarted('createHandler');
 
-    const uiPage = this.getUIPage({ graphqlPath: this.graphqlPath });
+    const uiPage = this.renderUIPage({ graphqlPath: this.graphqlPath });
 
     return async (app: FastifyInstance) => {
       if (!disableHealthCheck) {

@@ -464,7 +464,7 @@ export class ApolloServerBase {
   // operations.
   //
   // It's also called via `ensureStarted` by serverless frameworks so that they
-  // can call `getUIPage` (or do other things like call a method on a base
+  // can call `renderUIPage` (or do other things like call a method on a base
   // class that expects it to be started).
   private async _ensureStarted(): Promise<SchemaDerivedData> {
     while (true) {
@@ -884,17 +884,17 @@ export class ApolloServerBase {
     return processGraphQLRequest(options, requestCtx);
   }
 
-  // FIXME doc, declare return value
-  protected getUIPage(options: RenderUIPageOptions): UIPage | null {
-    this.assertStarted('getUIPage');
+  // This method is called by integrations after start() (because we want
+  // renderUIPage callbacks to be able to take advantage of the context passed
+  // to serverWillStart); it calls the (single) plugin renderUIPage if it exists
+  // and returns what it returns to the integration. The integration should
+  // serve the HTML page when requested with `accept: text/html`. If no UI page
+  // is defined by any plugin, returns null. (Specifically null and not
+  // undefined; some serverless integrations rely on this to tell the difference
+  // between "haven't called renderUIPage yet" and "there is no UI page").
+  protected renderUIPage(options: RenderUIPageOptions): UIPage | null {
+    this.assertStarted('renderUIPage');
 
-    const { renderUIPageCallback } = this;
-    if (!renderUIPageCallback) {
-      return null;
-    }
-
-    // Convert graphqlPath to something that can be prefixed to an URL path to give an URL path.
-    const { graphqlPath } = options;
-    return renderUIPageCallback({ graphqlPath });
+    return this.renderUIPageCallback?.(options) ?? null;
   }
 }
