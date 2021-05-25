@@ -2,7 +2,6 @@ import express from 'express';
 
 import http from 'http';
 
-// FIXME do we still need 'request' devdep?
 import request from 'supertest';
 
 import nodeUrl from 'url';

@@ -81,7 +81,9 @@ export class ApolloServer extends ApolloServerBase {
 
     this.assertStarted('getMiddleware');
 
-    // FIXME explain that this works with Connect
+    // Note that even though we use Express's router here, we still manage to be
+    // Connect-compatible because express.Router just implements the same
+    // middleware interface that Connect and Express share!
     const router = express.Router();
 
     if (!disableHealthCheck) {

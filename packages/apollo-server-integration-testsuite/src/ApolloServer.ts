@@ -245,12 +245,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         it('allows introspection by default', async () => {
-          const nodeEnv = process.env.NODE_ENV;
-          delete process.env.NODE_ENV;
-
           const { url: uri } = await createApolloServer({
             schema,
             stopOnTerminationSignals: false,
+            __testing__nodeEnv: undefined,
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -258,17 +256,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
           expect(result.data).toBeDefined();
           expect(result.errors).toBeUndefined();
-
-          process.env.NODE_ENV = nodeEnv;
         });
 
         it('prevents introspection by default during production', async () => {
-          const nodeEnv = process.env.NODE_ENV;
-          process.env.NODE_ENV = 'production';
-
           const { url: uri } = await createApolloServer({
             schema,
             stopOnTerminationSignals: false,
+            __testing__nodeEnv: 'production',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -280,18 +274,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.errors[0].extensions.code).toEqual(
             'GRAPHQL_VALIDATION_FAILED',
           );
-
-          process.env.NODE_ENV = nodeEnv;
         });
 
         it('allows introspection to be enabled explicitly', async () => {
-          const nodeEnv = process.env.NODE_ENV;
-          process.env.NODE_ENV = 'production';
-
           const { url: uri } = await createApolloServer({
             schema,
             introspection: true,
             stopOnTerminationSignals: false,
+            __testing__nodeEnv: 'production',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -299,8 +289,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
           expect(result.data).toBeDefined();
           expect(result.errors).toBeUndefined();
-
-          process.env.NODE_ENV = nodeEnv;
         });
 
         it('prohibits providing a gateway in addition to schema/typedefs/resolvers', async () => {
@@ -808,7 +796,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
     describe('lifecycle', () => {
       describe('for Apollo usage reporting', () => {
-        let nodeEnv: string | undefined;
         let reportIngress: MockReportIngress;
 
         class MockReportIngress {
@@ -887,15 +874,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         beforeEach(async () => {
-          nodeEnv = process.env.NODE_ENV;
-          delete process.env.NODE_ENV;
           reportIngress = new MockReportIngress();
           return await reportIngress.listen();
         });
 
         afterEach((done) => {
-          process.env.NODE_ENV = nodeEnv;
-
           (reportIngress.stop() || Promise.resolve()).then(done);
         });
 
@@ -954,6 +937,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               ],
               debug: true,
               stopOnTerminationSignals: false,
+              __testing__nodeEnv: undefined,
               ...constructorOptions,
             });
 
@@ -1555,8 +1539,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
 
           it('returns thrown context error as a valid graphql result', async () => {
-            const nodeEnv = process.env.NODE_ENV;
-            delete process.env.NODE_ENV;
             const typeDefs = gql`
               type Query {
                 hello: String
@@ -1573,6 +1555,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               typeDefs,
               resolvers,
               stopOnTerminationSignals: false,
+              __testing__nodeEnv: undefined,
               context: () => {
                 throw new AuthenticationError('valid result');
               },
@@ -1589,8 +1572,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(e.extensions).toBeDefined();
             expect(e.extensions.code).toEqual('UNAUTHENTICATED');
             expect(e.extensions.exception.stacktrace).toBeDefined();
-
-            process.env.NODE_ENV = nodeEnv;
           });
         });
 
@@ -1618,9 +1599,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('propagates error codes in production', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'production';
-
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
@@ -1635,6 +1613,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
           stopOnTerminationSignals: false,
+          __testing__nodeEnv: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1647,14 +1626,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
-
-        process.env.NODE_ENV = nodeEnv;
       });
 
       it('propagates error codes with null response in production', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'production';
-
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
@@ -1669,6 +1643,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
           stopOnTerminationSignals: false,
+          __testing__nodeEnv: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1680,8 +1655,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
-
-        process.env.NODE_ENV = nodeEnv;
       });
     });
 
@@ -2849,6 +2822,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
               },
             })),
           ],
+          // dev mode, so we get the playground defaults
+          __testing__nodeEnv: undefined,
         };
       }
 

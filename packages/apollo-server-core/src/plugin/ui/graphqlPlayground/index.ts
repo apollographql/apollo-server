@@ -1,4 +1,9 @@
-// FIXME doc
+// This is the UI plugin for GraphQL Playground. It wraps
+// `@apollographql/graphql-playground-html`, our fork of upstream Playground.
+// That package just contains a small HTML shell that brings in the actual React
+// app from a CDN; you can control what version of the React app to use by
+// specifying `version` when installing the plugin.
+
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 
 import type {
