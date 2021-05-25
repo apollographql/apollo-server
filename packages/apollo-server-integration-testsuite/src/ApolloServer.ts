@@ -44,6 +44,7 @@ import {
   ApolloServerPluginUsageReporting,
   ApolloServerPluginUsageReportingOptions,
   ApolloServerPluginUIDisabled,
+  ApolloServerPluginUIGraphQLPlayground,
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
@@ -2824,7 +2825,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
-    describe('htmlPages', () => {
+    describe('renderUIPage', () => {
       let httpServer: http.Server;
 
       function getWithoutAcceptHeader(url: string) {
@@ -2840,7 +2841,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         return {
           typeDefs: 'type Query {x: ID}',
           plugins: [
-            ApolloServerPluginUIDisabled(),
             ...renderUiPageCallbacks.map((renderUIPage) => ({
               serverWillStart() {
                 return {
@@ -2851,18 +2851,48 @@ export function testApolloServer<AS extends ApolloServerBase>(
           ],
         };
       }
+
+      // Pass this to expect in the "not UIPage, you are trying to do GraphQL
+      // but didn't send a query" case, which we should maybe change to
+      // something nicer than an ugly 400.
+      const serveNoUIPage = 400;
+
+      it('defaults to playground', async () => {
+        httpServer = (await createApolloServer(makeServerConfig([])))
+          .httpServer;
+        await get('/graphql').expect(200, /Playground/);
+      });
+
+      it('selecting playground overrides the default', async () => {
+        httpServer = (
+          await createApolloServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [
+              ApolloServerPluginUIGraphQLPlayground({ version: '9.8.7' }),
+            ],
+          })
+        ).httpServer;
+        await get('/graphql')
+          .expect(/Playground/)
+          .expect(/react@9\.8\.7/);
+      });
+
+      it('can be disabled', async () => {
+        httpServer = (
+          await createApolloServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [ApolloServerPluginUIDisabled()],
+          })
+        ).httpServer;
+        await get('/graphql').expect(serveNoUIPage);
+      });
+
       describe('basic functionality', () => {
         const basicCallback = [
           ({ graphqlPath }: RenderUIPageOptions) => ({
             html: `BAZ + ${graphqlPath}`,
           }),
         ];
-
-        // We might want to make this consistent (probably 404) but it isn't for
-        // now. FIXME maybe it could be?
-        function someClientError(res: request.Response) {
-          expect(res.statusType).toBe(4);
-        }
 
         describe('with non-root graphqlPath', () => {
           beforeEach(async () => {
@@ -2880,7 +2910,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             await get('/foo').expect(404);
           });
           it('needs the header', async () => {
-            await getWithoutAcceptHeader('/goofql').expect(someClientError);
+            await getWithoutAcceptHeader('/goofql').expect(serveNoUIPage);
           });
           it('trailing slash works', async () => {
             await get('/goofql/').expect(200, 'BAZ + /goofql');
@@ -2900,7 +2930,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             await get('/').expect(200, 'BAZ + /');
           });
           it('needs the header', async () => {
-            await getWithoutAcceptHeader('/').expect(someClientError);
+            await getWithoutAcceptHeader('/').expect(serveNoUIPage);
           });
         });
       });

@@ -82,7 +82,6 @@ export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin {
 
 //#region UI
 import type { InternalApolloServerPlugin } from '../internalPlugin';
-// FIXME consider a different approach
 export function ApolloServerPluginUIDisabled(): ApolloServerPlugin {
   const plugin: InternalApolloServerPlugin = {
     __internal_plugin_id__() {
