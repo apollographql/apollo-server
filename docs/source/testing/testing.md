@@ -60,30 +60,9 @@ In addition to `query`, the first argument to `executeOperation` can take `opera
 
 Note that errors in parsing, validating, and executing your operation are returned in the `errors` field of the result (just like in a GraphQL response) rather than thrown.
 
-## `createTestClient` and `apollo-server-testing`
-
-There is also a package called `apollo-server-testing` which exports a function `createTestClient` which wraps `executeOperation`. This API does not support the second context-function-argument argument, and doesn't provide any real advantages over calling `executeOperation` directly. It is deprecated and will no longer be published with Apollo Server 3.
-
-We recommend that you replace this code:
-
-```js
-const { createTestClient } = require('apollo-server-testing');
-
-const { query, mutate } = createTestClient(server);
-
-await query({ query: QUERY });
-await mutate({ mutation: MUTATION });
-```
-
-with
-
-```js
-await server.executeOperation({ query: QUERY });
-await server.executeOperation({ query: MUTATION });
-```
 
 ## End-to-end testing
 
 Instead of bypassing the HTTP layer, you may just want to fully run your server and test it with a real HTTP client.
 
-Apollo Server doesn't have any built-in support for this. You can combine any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](https://www.apollographql.com/docs/react/api/link/apollo-link-http/) to run operations against your server. There are also community packages available such as [`apollo-server-integration-testing`](https://www.npmjs.com/package/apollo-server-integration-testing) which provides an API similar to the deprecated `apollo-server-testing` package which uses mocked Express request and response objects.
+Apollo Server doesn't have any built-in support for this. You can combine any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](https://www.apollographql.com/docs/react/api/link/apollo-link-http/) to run operations against your server. There are also community packages available such as [`apollo-server-integration-testing`](https://www.npmjs.com/package/apollo-server-integration-testing) which uses mocked Express request and response objects.
