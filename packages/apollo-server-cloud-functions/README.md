@@ -45,7 +45,7 @@ exports.handler = server.createHandler();
 On the Create Function page, set _Trigger_ to `HTTP` and _Function to execute_ to the name of your exported handler, in this case `handler`.
 
 Since NODE_ENV is a reserved environment variable in GCF and it defaults to "production", the **introspection**
-option needs to be explicitly set to `true` for the UI to work correctly.
+option needs to be explicitly set to `true` for the UI to work correctly, since the experience depends on the result from introspection.
 
 After configuring your Function you can press **Create** and an http endpoint will be created a few seconds later.
 
