@@ -1,21 +1,27 @@
 import nock from 'nock';
+import { schemaReportGql, SchemaReporter } from '../schemaReporter';
 import {
-  reportServerInfoGql,
-  SchemaReporter,
-  ReportInfoNext,
-} from '../schemaReporter';
+  SchemaReportMutation,
+  ReportSchemaResponse,
+  SchemaReportMutationVariables,
+} from '../operations';
 
-function mockReporterRequest(url: any, variables?: any) {
-  if (variables)
-    return nock(url).post(
-      '/',
-      JSON.stringify({
-        query: reportServerInfoGql,
-        operationName: 'ReportServerInfo',
-        variables,
-      }),
-    );
-  return nock(url).post('/');
+function mockReporterRequest(
+  url: any,
+  variables: any,
+  status: number,
+  reportSchema: SchemaReportMutation['reportSchema'],
+) {
+  const request = variables
+    ? nock(url).post(
+        '/',
+        JSON.stringify({
+          query: schemaReportGql,
+          variables,
+        }),
+      )
+    : nock(url).post('/');
+  return request.reply(status, { data: { reportSchema } });
 }
 
 beforeEach(() => {
@@ -28,10 +34,10 @@ afterEach(() => {
   nock.restore();
 });
 
-const serverInfo = {
+const schemaReport = {
   bootId: 'string',
-  executableSchemaId: 'string',
-  graphVariant: 'string',
+  coreSchemaHash: 'string',
+  graphRef: 'id@string',
 };
 
 const url = 'http://localhost:4000';
@@ -39,8 +45,8 @@ const url = 'http://localhost:4000';
 describe('Schema reporter', () => {
   const newSchemaReporter = () =>
     new SchemaReporter({
-      serverInfo,
-      schemaSdl: 'schemaSdl',
+      schemaReport,
+      coreSchema: 'coreSchema',
       apiKey: 'apiKey',
       endpointUrl: url,
       logger: console,
@@ -49,65 +55,45 @@ describe('Schema reporter', () => {
     });
   it('return correct values if no errors', async () => {
     const schemaReporter = newSchemaReporter();
-    mockReporterRequest(url).reply(200, {
-      data: {
-        me: {
-          __typename: 'ServiceMutation',
-          reportServerInfo: {
-            __typename: 'ReportServerInfoResponse',
-            inSeconds: 30,
-            withExecutableSchema: false,
-          },
-        },
-      },
-    });
-
-    expect(await schemaReporter.reportServerInfo(false)).toEqual<
-      ReportInfoNext
-    >({
-      kind: 'next',
+    mockReporterRequest(url, undefined, 200, {
+      __typename: 'ReportSchemaResponse',
       inSeconds: 30,
-      withExecutableSchema: false,
+      withCoreSchema: false,
     });
 
-    mockReporterRequest(url).reply(200, {
-      data: {
-        me: {
-          __typename: 'ServiceMutation',
-          reportServerInfo: {
-            __typename: 'ReportServerInfoResponse',
-            inSeconds: 60,
-            withExecutableSchema: true,
-          },
-        },
-      },
-    });
-
-    expect(await schemaReporter.reportServerInfo(false)).toEqual<
-      ReportInfoNext
+    expect(await schemaReporter.reportSchema(false)).toEqual<
+      ReportSchemaResponse
     >({
-      kind: 'next',
+      __typename: 'ReportSchemaResponse',
+      inSeconds: 30,
+      withCoreSchema: false,
+    });
+
+    mockReporterRequest(url, undefined, 200, {
+      __typename: 'ReportSchemaResponse',
       inSeconds: 60,
-      withExecutableSchema: true,
+      withCoreSchema: true,
+    });
+
+    expect(await schemaReporter.reportSchema(false)).toEqual<
+      ReportSchemaResponse
+    >({
+      __typename: 'ReportSchemaResponse',
+      inSeconds: 60,
+      withCoreSchema: true,
     });
   });
 
   it('throws on 500 response', async () => {
     const schemaReporter = newSchemaReporter();
-    mockReporterRequest(url).reply(500, {
-      data: {
-        me: {
-          reportServerInfo: {
-            __typename: 'ReportServerInfoResponse',
-            inSeconds: 30,
-            withExecutableSchema: false,
-          },
-        },
-      },
+    mockReporterRequest(url, undefined, 500, {
+      __typename: 'ReportSchemaResponse',
+      inSeconds: 30,
+      withCoreSchema: false,
     });
 
     await expect(
-      schemaReporter.reportServerInfo(false),
+      schemaReporter.reportSchema(false),
     ).rejects.toThrowErrorMatchingInlineSnapshot(
       `"An unexpected HTTP status code (500) was encountered during schema reporting."`,
     );
@@ -115,56 +101,30 @@ describe('Schema reporter', () => {
 
   it('throws on 200 malformed response', async () => {
     const schemaReporter = newSchemaReporter();
-    mockReporterRequest(url).reply(200, {
-      data: {
-        me: {
-          reportServerInfo: {
-            __typename: 'ReportServerInfoResponse',
-          },
-        },
-      },
-    });
+    mockReporterRequest(url, undefined, 200, {
+      __typename: 'ReportServerInfoResponse',
+    } as any);
 
     await expect(
-      schemaReporter.reportServerInfo(false),
+      schemaReporter.reportSchema(false),
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"Unexpected response shape from Apollo when reporting server information for schema reporting. If this continues, please reach out to support@apollographql.com. Received response: {\\"me\\":{\\"reportServerInfo\\":{\\"__typename\\":\\"ReportServerInfoResponse\\"}}}"`,
-    );
-
-    mockReporterRequest(url).reply(200, {
-      data: {
-        me: {
-          __typename: 'UserMutation',
-        },
-      },
-    });
-    await expect(
-      schemaReporter.reportServerInfo(false),
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"This server was configured with an API key for a user. Only a service's API key may be used for schema reporting. Please visit the settings for this graph at https://studio.apollographql.com/ to obtain an API key for a service."`,
+      `"Unexpected response shape from Apollo when reporting schema. If this continues, please reach out to support@apollographql.com. Received response: {\\"reportSchema\\":{\\"__typename\\":\\"ReportServerInfoResponse\\"}}"`,
     );
   });
 
-  it('sends schema if withExecutableSchema is true.', async () => {
+  it('sends schema if withCoreSchema is true.', async () => {
     const schemaReporter = newSchemaReporter();
 
-    const variables = {
-      info: serverInfo,
-      executableSchema: 'schemaSdl',
+    const variables: SchemaReportMutationVariables = {
+      report: schemaReport,
+      coreSchema: 'coreSchema',
     };
-    mockReporterRequest(url, variables).reply(200, {
-      data: {
-        me: {
-          __typename: 'ServiceMutation',
-          reportServerInfo: {
-            __typename: 'ReportServerInfoResponse',
-            inSeconds: 30,
-            withExecutableSchema: false,
-          },
-        },
-      },
+    mockReporterRequest(url, variables, 200, {
+      __typename: 'ReportSchemaResponse',
+      inSeconds: 30,
+      withCoreSchema: false,
     });
 
-    await schemaReporter.reportServerInfo(true);
+    await schemaReporter.reportSchema(true);
   });
 });

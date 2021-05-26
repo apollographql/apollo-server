@@ -51,11 +51,22 @@ type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
  export type SchemaHash = Fauxpaque<string, 'SchemaHash'>;
 
-// Configuration for how Apollo Server talks to the Apollo registry, as
-// passed to the ApolloServer constructor.
+// Configuration for how Apollo Server talks to the Apollo registry, as passed
+// to the ApolloServer constructor. Each field can also be provided as an
+// environment variable.
 export interface ApolloConfigInput {
+  // Your Apollo API key. Environment variable: APOLLO_KEY.
   key?: string;
+  // The graph ref for your graph, eg `my-graph@my-variant` or `my-graph` to use
+  // your graph's default variant. Environment variable: APOLLO_GRAPH_REF. If
+  // you specify `key`, you should specify either `graphRef` or both `graphId`
+  // and `graphVariant`.
+  graphRef?: string;
+  // The graph ID of your graph, eg `my-graph`. Environment variable:
+  // APOLLO_GRAPH_ID.
   graphId?: string;
+  // Your graph's variant name, eg `my-variant`. Environment variable:
+  // APOLLO_GRAPH_VARIANT.
   graphVariant?: string;
 }
 
@@ -64,6 +75,7 @@ export interface ApolloConfigInput {
 export interface ApolloConfig {
   key?: string;
   keyHash?: string;
+  graphRef?: string;
   graphId?: string;
   graphVariant: string;
 }

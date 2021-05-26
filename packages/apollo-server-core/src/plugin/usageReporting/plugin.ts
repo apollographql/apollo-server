@@ -24,7 +24,7 @@ import {
 import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder';
 import { makeTraceDetails } from './traceDetails';
 import { GraphQLSchema, printSchema } from 'graphql';
-import { computeExecutableSchemaId } from '../schemaReporting';
+import { computeCoreSchemaHash } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 import { OurReport } from './stats';
 import { CacheScope } from 'apollo-cache-control';
@@ -43,11 +43,11 @@ const reportHeaderDefaults = {
 class ReportData {
   report!: OurReport;
   readonly header: ReportHeader;
-  constructor(executableSchemaId: string, graphVariant: string) {
+  constructor(executableSchemaId: string, graphRef: string) {
     this.header = new ReportHeader({
       ...reportHeaderDefaults,
       executableSchemaId,
-      schemaTag: graphVariant,
+      graphRef,
     });
     this.reset();
   }
@@ -90,20 +90,21 @@ export function ApolloServerPluginUsageReporting<TContext>(
     }: GraphQLServiceContext): GraphQLServerListener {
       // Use the plugin-specific logger if one is provided; otherwise the general server one.
       const logger = options.logger ?? serverLogger;
-      const { key, graphId } = apollo;
-      if (!(key && graphId)) {
+      const { key, graphRef } = apollo;
+      if (!(key && graphRef)) {
         throw new Error(
           "You've enabled usage reporting via ApolloServerPluginUsageReporting, " +
-            'but you also need to provide your Apollo API key, via the APOLLO_KEY environment ' +
-            'variable or via `new ApolloServer({apollo: {key})',
+            'but you also need to provide your Apollo API key and graph ref, via ' +
+            'the APOLLO_KEY/APOLLO_GRAPH_REF environment ' +
+            'variables or via `new ApolloServer({apollo: {key, graphRef})`.',
         );
       }
 
       logger.info(
         'Apollo usage reporting starting! See your graph at ' +
           `https://studio.apollographql.com/graph/${encodeURIComponent(
-            graphId,
-          )}/?variant=${encodeURIComponent(apollo.graphVariant)}`,
+            graphRef,
+          )}`,
       );
 
       // If sendReportsImmediately is not specified, we default to true if we're running
@@ -123,7 +124,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
       } = Object.create(null);
 
       const overriddenExecutableSchemaId = options.overrideReportedSchema
-        ? computeExecutableSchemaId(options.overrideReportedSchema)
+        ? computeCoreSchemaHash(options.overrideReportedSchema)
         : undefined;
 
       let lastSeenExecutableSchemaToId:
@@ -154,7 +155,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
         if (lastSeenExecutableSchemaToId?.executableSchema === schema) {
           return lastSeenExecutableSchemaToId.executableSchemaId;
         }
-        const id = computeExecutableSchemaId(printSchema(schema));
+        const id = computeCoreSchemaHash(printSchema(schema));
 
         // We override this variable every time we get a new schema so we cache
         // the last seen value. It is a single-entry cache.
@@ -166,18 +167,15 @@ export function ApolloServerPluginUsageReporting<TContext>(
         return id;
       }
 
-      function getReportData(executableSchemaId: string): ReportData {
+      const getReportData = (executableSchemaId: string): ReportData => {
         const existing = reportDataByExecutableSchemaId[executableSchemaId];
         if (existing) {
           return existing;
         }
-        const reportData = new ReportData(
-          executableSchemaId,
-          apollo.graphVariant,
-        );
+        const reportData = new ReportData(executableSchemaId, graphRef);
         reportDataByExecutableSchemaId[executableSchemaId] = reportData;
         return reportData;
-      }
+      };
 
       async function sendAllReportsAndReportErrors(): Promise<void> {
         await Promise.all(
