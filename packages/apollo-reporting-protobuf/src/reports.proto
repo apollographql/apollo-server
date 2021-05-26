@@ -251,6 +251,9 @@ message Trace {
 // agent_version, etc.) is sent by the Apollo Engine Reporting agent, but we do not currently save that
 // information to any of our persistent storage.
 message ReportHeader {
+  // eg "mygraph@myvariant"
+  string graph_ref = 12;
+
   // eg "host-01.example.com"
   string hostname = 5;
 
@@ -262,8 +265,6 @@ message ReportHeader {
   string runtime_version = 8;
   // eg "Linux box 4.6.5-1-ec2 #1 SMP Mon Aug 1 02:31:38 PDT 2016 x86_64 GNU/Linux"
   string uname = 9;
-  // eg "current", "prod"
-  string schema_tag = 10;
   // An id that is used to represent the schema to Apollo Graph Manager
   // Using this in place of what used to be schema_hash, since that is no longer
   // attached to a schema in the backend.

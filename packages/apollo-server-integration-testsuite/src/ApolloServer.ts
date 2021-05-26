@@ -1039,7 +1039,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               extensions: [() => new Extension()],
               apollo: {
                 key: 'service:my-app:secret',
-                graphVariant: 'current',
+                graphRef: 'my-app@current',
               },
               plugins: [
                 ApolloServerPluginUsageReporting({
@@ -1120,7 +1120,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               },
               apollo: {
                 key: 'service:my-app:secret',
-                graphVariant: 'current',
+                graphRef: 'my-app@current',
               },
               plugins: [
                 ApolloServerPluginUsageReporting({
@@ -2515,7 +2515,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               resolvers: { Query: { something: () => 'hello' } },
               apollo: {
                 key: 'service:my-app:secret',
-                graphVariant: 'current',
+                graphRef: 'my-app@current',
               },
               plugins: [
                 ApolloServerPluginUsageReporting({
@@ -3330,7 +3330,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { server } = await createApolloServer({
           gateway,
           subscriptions: false,
-          apollo: { key: 'service:tester:1234abc', graphVariant: 'staging' },
+          apollo: { key: 'service:tester:1234abc', graphRef: 'tester@staging' },
         });
 
         expect(optionsSpy).toHaveBeenLastCalledWith({
@@ -3338,6 +3338,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             key: 'service:tester:1234abc',
             keyHash:
               '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',
+            graphRef: 'tester@staging',
             graphId: 'tester',
             graphVariant: 'staging',
           },

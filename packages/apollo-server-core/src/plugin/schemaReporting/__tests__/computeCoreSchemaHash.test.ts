@@ -1,4 +1,4 @@
-import { computeExecutableSchemaId } from '..';
+import { computeCoreSchemaHash } from '..';
 import { printSchema, buildSchema } from 'graphql';
 
 describe('Executable Schema Id', () => {
@@ -45,18 +45,18 @@ describe('Executable Schema Id', () => {
     // This test made a bit more sense back when computeExecutableSchemaId could take
     // a GraphQLSchema directly, but maybe it's still vaguely helpful.
     expect(
-      computeExecutableSchemaId(
+      computeCoreSchemaHash(
         printSchema(buildSchema(unsortedGQLSchemaDocument)),
       ),
     ).not.toEqual(
-      computeExecutableSchemaId(
+      computeCoreSchemaHash(
         printSchema(buildSchema(sortedGQLSchemaDocument)),
       ),
     );
   });
   it('does not normalize strings', () => {
-    expect(computeExecutableSchemaId(unsortedGQLSchemaDocument)).not.toEqual(
-      computeExecutableSchemaId(sortedGQLSchemaDocument),
+    expect(computeCoreSchemaHash(unsortedGQLSchemaDocument)).not.toEqual(
+      computeCoreSchemaHash(sortedGQLSchemaDocument),
     );
   });
 });

@@ -48,7 +48,7 @@ describe('ApolloServerBase construction', () => {
         resolvers,
         engine: {
           graphVariant: 'foo',
-          apiKey: 'not:real:key',
+          apiKey: 'service:real:key',
         },
       }).stop(),
     ).not.toThrow();
@@ -62,7 +62,7 @@ describe('ApolloServerBase construction', () => {
         resolvers,
         engine: {
           schemaTag: 'foo',
-          apiKey: 'not:real:key',
+          apiKey: 'service:real:key',
         },
       }).stop(),
     ).not.toThrow();
@@ -80,7 +80,7 @@ describe('ApolloServerBase construction', () => {
           engine: {
             schemaTag: 'foo',
             graphVariant: 'heck',
-            apiKey: 'not:real:key',
+            apiKey: 'service:real:key',
           },
         }),
     ).toThrow();
@@ -257,7 +257,7 @@ describe('environment variables', () => {
 
   it('constructs a reporting agent with the ENGINE_API_KEY (deprecated) environment variable and warns', async () => {
     // set the variables
-    process.env.ENGINE_API_KEY = 'just:fake:stuff';
+    process.env.ENGINE_API_KEY = 'service:fake:stuff';
     const warn = jest.fn();
     const mockLogger: Logger = {
       debug: jest.fn(),
@@ -269,7 +269,7 @@ describe('environment variables', () => {
     const server = new ApolloServerBase({
       typeDefs,
       resolvers,
-      apollo: { graphVariant: 'xxx' },
+      apollo: { graphRef: 'fake@xxx' },
       logger: mockLogger,
     });
 
@@ -281,7 +281,7 @@ describe('environment variables', () => {
   it('warns with both the legacy env var and new env var set', async () => {
     // set the variables
     process.env.ENGINE_API_KEY = 'just:fake:stuff';
-    process.env.APOLLO_KEY = 'also:fake:stuff';
+    process.env.APOLLO_KEY = 'service:fake:stuff';
     const warn = jest.fn();
     const mockLogger: Logger = {
       debug: jest.fn(),
@@ -293,7 +293,7 @@ describe('environment variables', () => {
     const server = new ApolloServerBase({
       typeDefs,
       resolvers,
-      apollo: { graphVariant: 'xxx' },
+      apollo: { graphRef: 'fake@xxx' },
       logger: mockLogger,
     });
 
