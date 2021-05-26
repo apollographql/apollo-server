@@ -155,9 +155,9 @@ export function ApolloServerPluginSchemaReporting(
 
       logger.info(
         'Apollo schema reporting starting! See your graph at ' +
-          `https://studio.apollographql.com/graph/${encodeURIComponent(
+          `https://studio.apollographql.com/graph/${encodeURI(
             graphRef,
-          )} with server info ${JSON.stringify(schemaReport)}`,
+          )}/ with server info ${JSON.stringify(schemaReport)}`,
       );
 
       const schemaReporter = new SchemaReporter({

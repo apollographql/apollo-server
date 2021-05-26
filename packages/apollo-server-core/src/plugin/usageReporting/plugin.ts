@@ -102,9 +102,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
       logger.info(
         'Apollo usage reporting starting! See your graph at ' +
-          `https://studio.apollographql.com/graph/${encodeURIComponent(
-            graphRef,
-          )}`,
+          `https://studio.apollographql.com/graph/${encodeURI(graphRef)}/`,
       );
 
       // If sendReportsImmediately is not specified, we default to true if we're running
