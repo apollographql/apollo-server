@@ -18,8 +18,8 @@ import type {
 } from './graphqlOptions';
 import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
-import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
-export { GraphQLSchemaModule };
+import type { GraphQLSchemaModule } from '@apollographql/apollo-tools';
+export type { GraphQLSchemaModule };
 
 export { KeyValueCache } from 'apollo-server-caching';
 
