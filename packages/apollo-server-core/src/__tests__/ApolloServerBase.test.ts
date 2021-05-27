@@ -1,6 +1,6 @@
 import { ApolloServerBase } from '../ApolloServer';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import gql from 'graphql-tag';
+import { gql } from '../';
 import { Logger } from 'apollo-server-types';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type { GraphQLSchema } from 'graphql';
@@ -9,6 +9,7 @@ const typeDefs = gql`
   type Query {
     hello: String
     error: Boolean
+    contextFoo: String
   }
 `;
 
@@ -19,6 +20,9 @@ const resolvers = {
     },
     error() {
       throw new Error('A test error');
+    },
+    contextFoo(_root: any, _args: any, context: any) {
+      return context.foo;
     },
   },
 };
@@ -44,7 +48,7 @@ describe('ApolloServerBase construction', () => {
         resolvers,
         engine: {
           graphVariant: 'foo',
-          apiKey: 'not:real:key',
+          apiKey: 'service:real:key',
         },
       }).stop(),
     ).not.toThrow();
@@ -58,7 +62,7 @@ describe('ApolloServerBase construction', () => {
         resolvers,
         engine: {
           schemaTag: 'foo',
-          apiKey: 'not:real:key',
+          apiKey: 'service:real:key',
         },
       }).stop(),
     ).not.toThrow();
@@ -76,7 +80,7 @@ describe('ApolloServerBase construction', () => {
           engine: {
             schemaTag: 'foo',
             graphVariant: 'heck',
-            apiKey: 'not:real:key',
+            apiKey: 'service:real:key',
           },
         }),
     ).toThrow();
@@ -181,6 +185,60 @@ describe('ApolloServerBase executeOperation', () => {
     expect(result.errors?.[0].extensions?.code).toBe('INTERNAL_SERVER_ERROR');
     expect(result.errors?.[0].extensions?.exception?.stacktrace).toBeDefined();
   });
+
+  it('works with string', async () => {
+    const server = new ApolloServerBase({
+      typeDefs,
+      resolvers,
+    });
+
+    const result = await server.executeOperation({ query: '{ hello }' });
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.hello).toBe('world');
+  });
+
+  it('works with AST', async () => {
+    const server = new ApolloServerBase({
+      typeDefs,
+      resolvers,
+    });
+
+    const result = await server.executeOperation({
+      query: gql`
+        {
+          hello
+        }
+      `,
+    });
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.hello).toBe('world');
+  });
+
+  it('parse errors', async () => {
+    const server = new ApolloServerBase({
+      typeDefs,
+      resolvers,
+    });
+
+    const result = await server.executeOperation({ query: '{' });
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors?.[0].extensions?.code).toBe('GRAPHQL_PARSE_FAILED');
+  });
+
+  it('passes its second argument to context function', async () => {
+    const server = new ApolloServerBase({
+      typeDefs,
+      resolvers,
+      context: ({ fooIn }) => ({ foo: fooIn }),
+    });
+
+    const result = await server.executeOperation(
+      { query: '{ contextFoo }' },
+      { fooIn: 'bla' },
+    );
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.contextFoo).toBe('bla');
+  });
 });
 
 describe('environment variables', () => {
@@ -199,7 +257,7 @@ describe('environment variables', () => {
 
   it('constructs a reporting agent with the ENGINE_API_KEY (deprecated) environment variable and warns', async () => {
     // set the variables
-    process.env.ENGINE_API_KEY = 'just:fake:stuff';
+    process.env.ENGINE_API_KEY = 'service:fake:stuff';
     const warn = jest.fn();
     const mockLogger: Logger = {
       debug: jest.fn(),
@@ -211,7 +269,7 @@ describe('environment variables', () => {
     const server = new ApolloServerBase({
       typeDefs,
       resolvers,
-      apollo: { graphVariant: 'xxx' },
+      apollo: { graphRef: 'fake@xxx' },
       logger: mockLogger,
     });
 
@@ -223,7 +281,7 @@ describe('environment variables', () => {
   it('warns with both the legacy env var and new env var set', async () => {
     // set the variables
     process.env.ENGINE_API_KEY = 'just:fake:stuff';
-    process.env.APOLLO_KEY = 'also:fake:stuff';
+    process.env.APOLLO_KEY = 'service:fake:stuff';
     const warn = jest.fn();
     const mockLogger: Logger = {
       debug: jest.fn(),
@@ -235,7 +293,7 @@ describe('environment variables', () => {
     const server = new ApolloServerBase({
       typeDefs,
       resolvers,
-      apollo: { graphVariant: 'xxx' },
+      apollo: { graphRef: 'fake@xxx' },
       logger: mockLogger,
     });
 

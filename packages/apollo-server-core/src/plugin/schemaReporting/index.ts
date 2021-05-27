@@ -2,9 +2,11 @@ import os from 'os';
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 import { v4 as uuidv4 } from 'uuid';
 import { printSchema, validateSchema, buildSchema } from 'graphql';
+import type { fetch } from 'apollo-server-env';
 import { SchemaReporter } from './schemaReporter';
 import createSHA from '../../utils/createSHA';
 import { schemaIsFederated } from '../schemaIsFederated';
+import { SchemaReport } from './operations';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**
@@ -48,6 +50,10 @@ export interface ApolloServerPluginSchemaReportingOptions {
    * Apollo use.
    */
   endpointUrl?: string;
+  /**
+   * Specifies which Fetch API implementation to use when reporting schemas.
+   */
+  fetcher?: typeof fetch;
 }
 
 export function ApolloServerPluginSchemaReporting(
@@ -55,6 +61,7 @@ export function ApolloServerPluginSchemaReporting(
     initialDelayMaxMs,
     overrideReportedSchema,
     endpointUrl,
+    fetcher,
   }: ApolloServerPluginSchemaReportingOptions = Object.create(null),
 ): InternalApolloServerPlugin {
   const bootId = uuidv4();
@@ -64,18 +71,20 @@ export function ApolloServerPluginSchemaReporting(
       return 'SchemaReporting';
     },
     async serverWillStart({ apollo, schema, logger }) {
-      const { key, graphId } = apollo;
+      const { key, graphRef } = apollo;
       if (!key) {
         throw Error(
           'To use ApolloServerPluginSchemaReporting, you must provide an Apollo API ' +
             'key, via the APOLLO_KEY environment variable or via `new ApolloServer({apollo: {key})`',
         );
       }
-      if (!graphId) {
+      if (!graphRef) {
+        // This error is a bit imprecise as you can also specify ID and variant separately,
+        // or rely on API-key parsing (before AS3), but this is "best practices".
         throw Error(
-          "To use ApolloServerPluginSchemaReporting, you must provide your graph's ID, " +
-            "either by using an API key starting with 'service:',  or by providing it explicitly via " +
-            'the APOLLO_GRAPH_ID environment variable or via `new ApolloServer({apollo: {graphId}})`',
+          'To use ApolloServerPluginSchemaReporting, you must provide your graph ref (eg, ' +
+            "'my-graph-id@my-graph-variant'). Try setting the APOLLO_GRAPH_REF environment " +
+            'variable or passing `new ApolloServer({apollo: {graphRef}})`.',
         );
       }
 
@@ -109,8 +118,10 @@ export function ApolloServerPluginSchemaReporting(
         );
       }
 
-      const executableSchema = overrideReportedSchema ?? printSchema(schema);
-      const executableSchemaId = computeExecutableSchemaId(executableSchema);
+      // Note that this is not actually the core schema for supergraphs yet, but
+      // this will be fixed by #5187.
+      const coreSchema = overrideReportedSchema ?? printSchema(schema);
+      const coreSchemaHash = computeCoreSchemaHash(coreSchema);
 
       if (overrideReportedSchema !== undefined) {
         logger.info(
@@ -123,14 +134,14 @@ export function ApolloServerPluginSchemaReporting(
         );
       }
 
-      const serverInfo = {
+      const schemaReport: SchemaReport = {
         bootId,
-        graphVariant: apollo.graphVariant,
+        graphRef,
         // The infra environment in which this edge server is running, e.g. localhost, Kubernetes
         // Length must be <= 256 characters.
         platform: process.env.APOLLO_SERVER_PLATFORM || 'local',
         runtimeVersion: `node ${process.version}`,
-        executableSchemaId: executableSchemaId,
+        coreSchemaHash,
         // An identifier used to distinguish the version of the server code such as git or docker sha.
         // Length must be <= 256 charecters
         userVersion: process.env.APOLLO_SERVER_USER_VERSION,
@@ -144,16 +155,14 @@ export function ApolloServerPluginSchemaReporting(
 
       logger.info(
         'Apollo schema reporting starting! See your graph at ' +
-          `https://studio.apollographql.com/graph/${encodeURIComponent(
-            graphId,
-          )}/?variant=${encodeURIComponent(
-            apollo.graphVariant,
-          )} with server info ${JSON.stringify(serverInfo)}`,
+          `https://studio.apollographql.com/graph/${encodeURI(
+            graphRef,
+          )}/ with server info ${JSON.stringify(schemaReport)}`,
       );
 
       const schemaReporter = new SchemaReporter({
-        serverInfo,
-        schemaSdl: executableSchema,
+        schemaReport,
+        coreSchema,
         apiKey: key,
         endpointUrl,
         logger,
@@ -162,6 +171,7 @@ export function ApolloServerPluginSchemaReporting(
           Math.random() * (initialDelayMaxMs ?? 10_000),
         ),
         fallbackReportingDelayInMs: 20_000,
+        fetcher,
       });
 
       schemaReporter.start();
@@ -175,6 +185,6 @@ export function ApolloServerPluginSchemaReporting(
   };
 }
 
-export function computeExecutableSchemaId(schema: string): string {
+export function computeCoreSchemaHash(schema: string): string {
   return createSHA('sha256').update(schema).digest('hex');
 }

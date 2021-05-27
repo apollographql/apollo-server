@@ -3,33 +3,26 @@ title: Integration testing
 description: Utilities for testing Apollo Server
 ---
 
-Testing `apollo-server` can be done in many ways. The `apollo-server-testing` package provides tooling to make testing easier and accessible to users of all of the `apollo-server` integrations.
+Testing `apollo-server` can be done in many ways. One simple way is to use ApolloServer's `executeOperation` method to directly execute a GraphQL operation without going through a full HTTP operation.
 
-## `createTestClient`
+## `executeOperation`
 
-Integration testing a GraphQL server means testing many things. `apollo-server` has a request pipeline that can support many plugins that can affect the way an operation is executed. `createTestClient` provides a single hook to run operations through the request pipeline, enabling the most thorough tests possible without starting up an HTTP server.
+Integration testing a GraphQL server means testing many things. `apollo-server` has a request pipeline that can support many plugins that can affect the way an operation is executed. The `executeOperation` method provides a single hook to run operations through the request pipeline, enabling the most thorough tests possible without starting up an HTTP server.
 
 ```javascript
-const { createTestClient } = require('apollo-server-testing');
+const server = new ApolloServer(config);
 
-const { query, mutate } = createTestClient(server);
-
-query({
+const result = await server.executeOperation({
   query: GET_USER,
   variables: { id: 1 }
 });
-
-mutate({
-  mutation: UPDATE_USER,
-  variables: { id: 1, email: 'nancy@foo.co' }
-});
+expect(result.errors).toBeUndefined();
+expect(result.data?.user.name).toBe('Ida');
 ```
 
-When passed an instance of the `ApolloServer` class, `createTestClient` returns a `query` and `mutate` function that can be used to run operations against the server instance. Currently, queries and mutations are the only operation types supported by `createTestClient`.
+For example, you can set up a full server with your schema and resolvers and run an operation against it.
 
 ```javascript
-const { createTestClient } = require('apollo-server-testing');
-
 it('fetches single launch', async () => {
   const userAPI = new UserAPI({ store });
   const launchAPI = new LaunchAPI();
@@ -42,6 +35,7 @@ it('fetches single launch', async () => {
     dataSources: () => ({ userAPI, launchAPI }),
     context: () => ({ user: { id: 1, email: 'a@a.a' } }),
   });
+  await server.start();
 
   // mock the dataSource's underlying fetch methods
   launchAPI.get = jest.fn(() => [mockLaunchResponse]);
@@ -50,15 +44,46 @@ it('fetches single launch', async () => {
     { dataValues: { launchId: 1 } },
   ]);
 
-  // use the test server to create a query function
-  const { query } = createTestClient(server);
-
   // run query against the server and snapshot the output
-  const res = await query({ query: GET_LAUNCH, variables: { id: 1 } });
+  const res = await server.executeOperation({ query: GET_LAUNCH, variables: { id: 1 } });
   expect(res).toMatchSnapshot();
 });
 ```
 
-This is an example of a full integration test being run against a test instance of `apollo-server`. This test imports the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `apollo-server`. Once an instance is created, it's passed to `createTestClient` which returns `{ query, mutate }`. These methods can then be used to execute operations against the server.
+This is an example of a full integration test being run against a test instance of `apollo-server`. This test imports the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `apollo-server`.
 
-For more examples of this tool in action, check out the [integration tests](https://github.com/apollographql/fullstack-tutorial/blob/master/final/server/src/__tests__/integration.js) in the [Fullstack Tutorial](https://www.apollographql.com/docs/tutorial/introduction.html).
+The example above shows writing a test-specific [`context` function](../data/resolvers/#the-context-argument) which provides data directly instead of calculating it from the request context. If you'd like to use your server's real `context` function, you can pass a second argument to `executeOperation` which will be passed to your `context` function as its argument. You will need to put to gether an object with the [middleware-specific context fields](../api/apollo-server/#middleware-specific-context-fields) yourself.
+
+You can use `executeOperation` to execute queries and mutations. Because the interface matches the GraphQL HTTP protocol, you specify the operation text under the `query` key even if the operation is a mutation. You can specify `query` either as a string or as a `DocumentNode` (an AST created by the `gql` tag).
+
+In addition to `query`, the first argument to `executeOperation` can take `operationName`, `variables`, `extensions`, and `http` keys.
+
+Note that errors in parsing, validating, and executing your operation are returned in the `errors` field of the result (just like in a GraphQL response) rather than thrown.
+
+## `createTestClient` and `apollo-server-testing`
+
+There is also a package called `apollo-server-testing` which exports a function `createTestClient` which wraps `executeOperation`. This API does not support the second context-function-argument argument, and doesn't provide any real advantages over calling `executeOperation` directly. It is deprecated and will no longer be published with Apollo Server 3.
+
+We recommend that you replace this code:
+
+```js
+const { createTestClient } = require('apollo-server-testing');
+
+const { query, mutate } = createTestClient(server);
+
+await query({ query: QUERY });
+await mutate({ mutation: MUTATION });
+```
+
+with
+
+```js
+await server.executeOperation({ query: QUERY });
+await server.executeOperation({ query: MUTATION });
+```
+
+## End-to-end testing
+
+Instead of bypassing the HTTP layer, you may just want to fully run your server and test it with a real HTTP client.
+
+Apollo Server doesn't have any built-in support for this. You can combine any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](https://www.apollographql.com/docs/react/api/link/apollo-link-http/) to run operations against your server. There are also community packages available such as [`apollo-server-integration-testing`](https://www.npmjs.com/package/apollo-server-integration-testing) which provides an API similar to the deprecated `apollo-server-testing` package which uses mocked Express request and response objects.

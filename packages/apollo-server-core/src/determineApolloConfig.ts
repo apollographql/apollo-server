@@ -20,10 +20,11 @@ export function determineApolloConfig(
     // There's a more helpful error in the actual ApolloServer constructor.
     throw Error('Cannot pass both `apollo` and `engine`');
   }
-  const apolloConfig: ApolloConfig = { graphVariant: 'current' };
+  const apolloConfig: Partial<ApolloConfig> = {};
 
   const {
     APOLLO_KEY,
+    APOLLO_GRAPH_REF,
     APOLLO_GRAPH_ID,
     APOLLO_GRAPH_VARIANT,
     // AS3: Drop support for deprecated `ENGINE_API_KEY` and `ENGINE_SCHEMA_TAG`.
@@ -57,18 +58,18 @@ export function determineApolloConfig(
       .digest('hex');
   }
 
+  // Determine graph ref, if provided together.
+  if (input?.graphRef) {
+    apolloConfig.graphRef = input.graphRef;
+  } else if (APOLLO_GRAPH_REF) {
+    apolloConfig.graphRef = APOLLO_GRAPH_REF;
+  }
+
   // Determine graph id.
   if (input?.graphId) {
     apolloConfig.graphId = input.graphId;
   } else if (APOLLO_GRAPH_ID) {
     apolloConfig.graphId = APOLLO_GRAPH_ID;
-  } else if (apolloConfig.key) {
-    // This is the common case: if the given key is a graph token (starts with 'service:'),
-    // then use the service name written in the key.
-    const parts = apolloConfig.key.split(':', 2);
-    if (parts[0] === 'service') {
-      apolloConfig.graphId = parts[1];
-    }
   }
 
   // Determine variant.
@@ -100,12 +101,57 @@ export function determineApolloConfig(
       '[deprecated] The `ENGINE_SCHEMA_TAG` environment variable has been renamed to `APOLLO_GRAPH_VARIANT`.',
     );
     apolloConfig.graphVariant = ENGINE_SCHEMA_TAG;
-  } else if (apolloConfig.key) {
-    // Leave the value 'current' in apolloConfig.graphVariant.
-    // We warn if it looks like they're trying to use Apollo registry features, but there's
-    // no reason to warn if there's no key.
-    logger.warn('No graph variant provided. Defaulting to `current`.');
   }
 
-  return apolloConfig;
+  if (apolloConfig.graphRef) {
+    if (apolloConfig.graphId) {
+      throw new Error(
+        'Cannot specify both graph ref and graph ID. Please use ' +
+          '`apollo.graphRef` or `APOLLO_GRAPH_REF` without also setting the graph ID.',
+      );
+    }
+    if (apolloConfig.graphVariant) {
+      throw new Error(
+        'Cannot specify both graph ref and graph variant. Please use ' +
+          '`apollo.graphRef` or `APOLLO_GRAPH_REF` without also setting the graph ID.',
+      );
+    }
+
+    // You've specified the graph ref, so split into id and variant (defaulting
+    // variant to current).
+    const at = apolloConfig.graphRef.indexOf('@');
+    if (at === -1) {
+      apolloConfig.graphId = apolloConfig.graphRef;
+      apolloConfig.graphVariant = 'current';
+    } else {
+      apolloConfig.graphId = apolloConfig.graphRef.substring(0, at);
+      apolloConfig.graphVariant = apolloConfig.graphRef.substring(at + 1);
+    }
+  } else {
+    // Graph ref not specified. Let's try harder to get ID/variant, then join them.
+    if (!apolloConfig.graphId && apolloConfig.key) {
+      // If the given key is a graph token (starts with 'service:'), then use the
+      // service name written in the key. (We will remove this parser in AS3.)
+      const parts = apolloConfig.key.split(':', 2);
+      if (parts[0] === 'service') {
+        apolloConfig.graphId = parts[1];
+      } else {
+        throw Error(
+          'You have specified an API key in `apollo.key` or `APOLLO_KEY`, ' +
+            'but you have not specified your graph ref or graph ID and the key ' +
+            'does not start with `service:`. Please specify your graph ref; for ' +
+            'example, set `APOLLO_GRAPH_REF` to `my-graph-id@my-graph-variant`.',
+        );
+      }
+    }
+    if (!apolloConfig.graphVariant) {
+      apolloConfig.graphVariant = 'current';
+    }
+
+    if (apolloConfig.graphId) {
+      apolloConfig.graphRef = `${apolloConfig.graphId}@${apolloConfig.graphVariant}`;
+    }
+  }
+
+  return apolloConfig as ApolloConfig; // can remove cast in AS3
 }

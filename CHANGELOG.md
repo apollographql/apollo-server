@@ -11,6 +11,18 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+## v2.25.0
+
+- `apollo-server-core`: You may now specify your Studio graph as a graph ref (`id@variant`) via the `APOLLO_GRAPH_REF` environment variable or `new ApolloServer({apollo: {graphRef}})` instead of specifying graph ID and graph variant separately. The `apollo` object passed to plugin `serverWillStart` and to gateway `load` now contains a `graphRef` field.
+- `apollo-server-core`: Fix a race condition where schema reporting could lead to a delay at process shutdown. [PR #5222](https://github.com/apollographql/apollo-server/pull/5222)
+- `apollo-server-core`: Allow the Fetch API implementation to be overridden for the schema reporting and usage reporting plugins via a new `fetcher` option. [PR #5179](https://github.com/apollographql/apollo-server/pull/5179)
+- `apollo-server-core`: The `server.executeOperation` method (designed for testing) can now take its `query` as a `DocumentNode` (eg, a `gql`-tagged string) in addition to as a string. (This matches the behavior of the `apollo-server-testing` `createTestClient` function which is now deprecated.) We now recommend this method instead of `apollo-server-testing` in our docs. [Issue #4952](https://github.com/apollographql/apollo-server/issues/4952)
+- `apollo-server-testing`: Replace README with a deprecation notice explaining how to use `server.executeOperation` instead. [Issue #4952](https://github.com/apollographql/apollo-server/issues/4952)
+
+## v2.24.1
+
+- `apollo-server-core`: Fix a typo that could lead to TypeScript compilation when combined with a recent version of `@types/node`. (This bug had no runtime effect.) [PR #5149](https://github.com/apollographql/apollo-server/pull/5149)
+
 ## v2.24.0
 
 - `apollo-server-core`: Apollo Studio usage reporting uses a more efficient format which sends fewer detailed traces to Apollo's server. This change should not have a major effect on the experience of using Apollo Studio. [PR #4142](https://github.com/apollographql/apollo-server/pull/4142)
