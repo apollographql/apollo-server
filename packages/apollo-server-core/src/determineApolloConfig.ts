@@ -128,7 +128,6 @@ export function determineApolloConfig(
       apolloConfig.graphVariant = apolloConfig.graphRef.substring(at + 1);
     }
   } else {
-    let usedKeyParser = false;
     // Graph ref not specified. Let's try harder to get ID/variant, then join them.
     if (!apolloConfig.graphId && apolloConfig.key) {
       // If the given key is a graph token (starts with 'service:'), then use the
@@ -136,7 +135,6 @@ export function determineApolloConfig(
       const parts = apolloConfig.key.split(':', 2);
       if (parts[0] === 'service') {
         apolloConfig.graphId = parts[1];
-        usedKeyParser = true;
       } else {
         throw Error(
           'You have specified an API key in `apollo.key` or `APOLLO_KEY`, ' +
@@ -152,13 +150,6 @@ export function determineApolloConfig(
 
     if (apolloConfig.graphId) {
       apolloConfig.graphRef = `${apolloConfig.graphId}@${apolloConfig.graphVariant}`;
-      if (usedKeyParser) {
-        logger.warn(
-          'Deprecation warning: Setting your graph ref based on parsing your API key. ' +
-            'API key parsing will be removed in Apollo Server 3. To be compatible with ' +
-            `Apollo Server 3, set \`APOLLO_GRAPH_REF\` to '${apolloConfig.graphRef}'.`,
-        );
-      }
     }
   }
 
