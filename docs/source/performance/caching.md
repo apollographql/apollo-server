@@ -46,6 +46,7 @@ enum CacheControlScope {
 directive @cacheControl(
   maxAge: Int
   scope: CacheControlScope
+  noDefaultMaxAge: Boolean
 ) on FIELD_DEFINITION | OBJECT | INTERFACE
 ```
 
@@ -55,6 +56,7 @@ The `@cacheControl` directive accepts the following arguments:
 |------|-------------|
 | `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-the-default-maxage). |
 | `scope` | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses). |
+| `noDefaultMaxAge` | Do not apply the [default `maxAge`](#default-maxage) to this field, but do apply it to its children. |
 
 Use `@cacheControl` for fields that should always be cached with the same settings. If caching settings might change at runtime, instead use the [dynamic method](#in-your-resolvers-dynamic).
 
@@ -143,14 +145,43 @@ By default, the following schema fields have a `maxAge` of `0` (meaning their va
 
 * All **root fields** (i.e., the fields of the `Query` and `Mutation` objects)
 * Fields that return an object or interface type
+* Scalar fields where no ancestor field in the operation had specified `maxAge`, because they add had `@cacheControl(noDefaultMaxAge: true)` and did not set a `maxAge` in a different way.
 
 Scalar fields inherit their default cache behavior (including `maxAge`) from their parent object type. This enables you to define cache behavior for _most_ scalars at the [type level](#type-level-definitions), while overriding that behavior in individual cases at the [field level](#field-level-definitions).
 
 As a result of these defaults, **no schema fields are cached by default**.
 
+If you don't want a field that falls into one of those categories to affect the response's overall cache policy, you can set `@cacheControl(noDefaultMaxAge: true)` on the field. (This cannot be specified on types or via `setCacheHint`.) In this case the field is treated similarly to a scalar field: if the field's type doesn't have `@cacheControl(maxAge)` set on it and the field's resolver doesn't call `info.setCacheHint({maxAge})`, the overall cache policy will not be affected by this field. When this happens to a non-scalar field, children that are scalars are treated as if they are root fields. For example, given the following schema:
+
+```graphql
+type Query {
+  foo(setMaxAgeDynamically: Boolean): Foo @cacheControl(noDefaultMaxAge: true)
+  defaultFoo: Foo
+  intermediate: Intermediate @cacheControl(maxAge: 40)
+}
+type Foo {
+  uncachedField: String
+  cachedField: String @cacheControl(maxAge: 30)
+}
+type Intermediate {
+  foo: Foo @cacheControl(noDefaultMaxAge: true)
+}
+```
+
+Assume that `Query.foo` calls `info.setCacheHint({maxAge: 60})` if its `setMaxAgeDynamically` argument is provided. Then the following queries will have the given `maxAge` values:
+
+| Query | `maxAge` | Explanation |
+|-------|----------|-------------|
+|`{foo{cachedField}}`|30|`foo` has `noDefaultMaxAge` so it does not affect the policy; `cachedField` sets it to 30.|
+|`{foo{uncachedField}}`|0|`foo` has `noDefaultMaxAge` so it does not affect the policy; `uncachedField` is the child of a field with no `maxAge` so it defaults to `maxAge` 0.|
+|`{defaultFoo{cachedField}}`|0|`foo` is a root field (and an object-typed field) with no `maxAge` or `noDefaultMaxAge` so it defaults to 0.|
+|`{foo(setMaxAgeDynamically: true){uncachedField}}`|60|`foo` sets its `maxAge` to 60 dynamically; this means `uncachedField` can follow the normal scalar field rules and not affect `maxAge`.|
+|`{intermediate{foo{uncachedField}}}`|40|`intermediate` sets its `maxAge` to 40. `Intermediate.foo` has `noDefaultMaxAge` so it does not affect the cache policy. `Foo.uncachedField` is a scalar; while its parent field (`foo`) has `noDefaultMaxAge`, its grandparent does have a `maxAge`, so it is treated like a normal scalar field rather than the special case of a root-like scalar field.|
+
+
 #### Setting the default `maxAge`
 
-You can set a default `maxAge` (instead of `0`) that's applied to every field that doesn't specify a different value.
+You can set a default `maxAge` (instead of `0`) that's applied to every root or object-typed or interface-typed field that doesn't specify a different value and doesn't specify `noDefaultMaxAge`.
 
 > You should identify and address all exceptions to your default `maxAge` before you enable it in production, but this is a great way to get started with cache control.
 

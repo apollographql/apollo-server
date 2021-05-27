@@ -1,4 +1,7 @@
-import type { CacheHint, CachePolicy } from 'apollo-server-types';
+import type {
+  CacheHint,
+  CachePolicy,
+} from 'apollo-server-types';
 import { CacheScope } from 'apollo-server-types';
 import {
   DirectiveNode,
@@ -10,6 +13,7 @@ import {
   isCompositeType,
   isInterfaceType,
   isObjectType,
+  ResponsePath,
   responsePathAsArray,
 } from 'graphql';
 import { newCachePolicy } from '../../cachePolicy';
@@ -47,13 +51,18 @@ declare module 'graphql/type/definition' {
   }
 }
 
+// Represents the `@cacheControl` directive that can appear on a field.
+export interface CacheFieldHint extends CacheHint {
+  noDefaultMaxAge?: boolean;
+}
+
 export function ApolloServerPluginCacheControl(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
 ): InternalApolloServerPlugin {
   const typeCacheHintCache = new LRUCache<GraphQLCompositeType, CacheHint>();
   const fieldCacheHintCache = new LRUCache<
     GraphQLField<unknown, unknown>,
-    CacheHint
+    CacheFieldHint
   >();
 
   function memoizedCacheHintFromType(t: GraphQLCompositeType): CacheHint {
@@ -68,7 +77,7 @@ export function ApolloServerPluginCacheControl(
 
   function memoizedCacheHintFromField(
     field: GraphQLField<unknown, unknown>,
-  ): CacheHint {
+  ): CacheFieldHint {
     const cachedHint = fieldCacheHintCache.get(field);
     if (cachedHint) {
       return cachedHint;
@@ -107,6 +116,17 @@ export function ApolloServerPluginCacheControl(
       const defaultMaxAge: number = options.defaultMaxAge ?? 0;
       const calculateHttpHeaders = options.calculateHttpHeaders ?? true;
       const { __testing__cacheHints } = options;
+
+      // These are the ResponsePaths that we treat as being "root paths", in the
+      // sense that scalar children of these paths receive `defaultMaxAge` for
+      // their `maxAge` (unless they receive a `maxAge` via some other mechanism
+      // or they explicitly request `noDefaultMaxAge`). This includes the actual
+      // root as well as any path consisting entirely of fields with no `maxAge`
+      // (due to setting `noDefaultMaxAge` and not setting `maxAge` in some
+      // other way).
+      const effectiveRootPaths = new Set<ResponsePath | undefined>();
+      // The actual root is an effective root path.
+      effectiveRootPaths.add(undefined);
 
       return {
         executionDidStart: () => {
@@ -154,27 +174,51 @@ export function ApolloServerPluginCacheControl(
 
               // Look for hints on the field itself (on its parent type), taking
               // precedence over previously calculated hints.
-              fieldPolicy.replace(
-                memoizedCacheHintFromField(
-                  info.parentType.getFields()[info.fieldName],
-                ),
+              const fieldHint = memoizedCacheHintFromField(
+                info.parentType.getFields()[info.fieldName],
               );
 
-              // If this resolver returns an object or is a root field and we haven't
-              // seen an explicit maxAge hint, set the maxAge to 0 (uncached) or the
-              // default if specified in the constructor. (Non-object fields by
-              // default are assumed to inherit their cacheability from their parents.
-              // But on the other hand, while root non-object fields can get explicit
-              // hints from their definition on the Query/Mutation object, if that
-              // doesn't exist then there's no parent field that would assign the
-              // default maxAge, so we do it here.)
-              // XXX This should also handled union-valued fields; going to deal
-              // with this in a separate PR.
+              let noDefaultMaxAge = false;
               if (
+                fieldHint.noDefaultMaxAge &&
+                fieldPolicy.maxAge === undefined
+              ) {
+                noDefaultMaxAge = true;
+                // If this is field on root, or on a series of other fields
+                // that have no maxAge due to defaultMaxAge, then remember
+                // that this too is an effective root path.
+                if (effectiveRootPaths.has(skipListIndexes(info.path.prev))) {
+                  effectiveRootPaths.add(info.path);
+                }
+                // Handle `@cacheControl(noDefaultMaxAge: true, scope: PRIVATE)`.
+                if (fieldHint.scope) {
+                  fieldPolicy.replace({ scope: fieldHint.scope });
+                }
+              } else {
+                fieldPolicy.replace(fieldHint);
+              }
+
+              // If this resolver returns an object or is a root field and we
+              // haven't seen an explicit maxAge hint, set the maxAge to 0
+              // (uncached) or the default if specified in the constructor.
+              // (Non-object fields by default are assumed to inherit their
+              // cacheability from their parents. But on the other hand, while
+              // root non-object fields can get explicit hints from their
+              // definition on the Query/Mutation object, if that doesn't exist
+              // then there's no parent field that would assign the default
+              // maxAge, so we do it here.)
+              //
+              // You can disable this on a field by writing
+              // `@cacheControl(noDefaultMaxAge: true)` on it. If you do this,
+              // then its children will be treated like root paths, since there
+              // is no parent maxAge to inherit.
+              if (
+                fieldPolicy.maxAge === undefined &&
+                !noDefaultMaxAge &&
+                // FIXME unions too
                 (targetType instanceof GraphQLObjectType ||
                   targetType instanceof GraphQLInterfaceType ||
-                  !info.path.prev) &&
-                fieldPolicy.maxAge === undefined
+                  effectiveRootPaths.has(skipListIndexes(info.path.prev)))
               ) {
                 fieldPolicy.restrict({ maxAge: defaultMaxAge });
               }
@@ -191,6 +235,14 @@ export function ApolloServerPluginCacheControl(
               // once, we don't need to "undo" the effect on overallCachePolicy
               // of a static hint that gets refined by a dynamic hint.
               return () => {
+                // If the field had `@cacheControl(noDefaultMaxAge: true)` but
+                // then we dynamically set a hint, then it's no longer an
+                // effective root path, and its scalar children get to act
+                // like normal scalars by inheriting its maxAge.
+                if (noDefaultMaxAge && fieldPolicy.maxAge !== undefined) {
+                  effectiveRootPaths.delete(info.path);
+                }
+
                 if (__testing__cacheHints && isRestricted(fieldPolicy)) {
                   const path = responsePathAsArray(info.path).join('.');
                   if (__testing__cacheHints.has(path)) {
@@ -238,7 +290,8 @@ export function ApolloServerPluginCacheControl(
 
 function cacheHintFromDirectives(
   directives: ReadonlyArray<DirectiveNode> | undefined,
-): CacheHint | undefined {
+  allowNoDefaultMaxAge: boolean,
+): CacheFieldHint | undefined {
   if (!directives) return undefined;
 
   const cacheControlDirective = directives.find(
@@ -254,6 +307,27 @@ function cacheHintFromDirectives(
   const scopeArgument = cacheControlDirective.arguments.find(
     (argument) => argument.name.value === 'scope',
   );
+  const noDefaultMaxAgeArgument = cacheControlDirective.arguments.find(
+    (argument) => argument.name.value === 'noDefaultMaxAge',
+  );
+
+  const scope =
+    scopeArgument &&
+    scopeArgument.value &&
+    scopeArgument.value.kind === 'EnumValue'
+      ? (scopeArgument.value.value as CacheScope)
+      : undefined;
+
+  if (
+    allowNoDefaultMaxAge &&
+    noDefaultMaxAgeArgument &&
+    noDefaultMaxAgeArgument.value &&
+    noDefaultMaxAgeArgument.value.kind === 'BooleanValue' &&
+    noDefaultMaxAgeArgument.value.value
+  ) {
+    // We ignore maxAge if it is also specified.
+    return { noDefaultMaxAge: true, scope };
+  }
 
   // TODO: Add proper typechecking of arguments
   return {
@@ -263,25 +337,20 @@ function cacheHintFromDirectives(
       maxAgeArgument.value.kind === 'IntValue'
         ? parseInt(maxAgeArgument.value.value)
         : undefined,
-    scope:
-      scopeArgument &&
-      scopeArgument.value &&
-      scopeArgument.value.kind === 'EnumValue'
-        ? (scopeArgument.value.value as CacheScope)
-        : undefined,
+    scope,
   };
 }
 
 function cacheHintFromType(t: GraphQLCompositeType): CacheHint {
   if (t.astNode) {
-    const hint = cacheHintFromDirectives(t.astNode.directives);
+    const hint = cacheHintFromDirectives(t.astNode.directives, false);
     if (hint) {
       return hint;
     }
   }
   if (t.extensionASTNodes) {
     for (const node of t.extensionASTNodes) {
-      const hint = cacheHintFromDirectives(node.directives);
+      const hint = cacheHintFromDirectives(node.directives, false);
       if (hint) {
         return hint;
       }
@@ -290,9 +359,11 @@ function cacheHintFromType(t: GraphQLCompositeType): CacheHint {
   return {};
 }
 
-function cacheHintFromField(field: GraphQLField<unknown, unknown>): CacheHint {
+function cacheHintFromField(
+  field: GraphQLField<unknown, unknown>,
+): CacheFieldHint {
   if (field.astNode) {
-    const hint = cacheHintFromDirectives(field.astNode.directives);
+    const hint = cacheHintFromDirectives(field.astNode.directives, true);
     if (hint) {
       return hint;
     }
@@ -302,6 +373,26 @@ function cacheHintFromField(field: GraphQLField<unknown, unknown>): CacheHint {
 
 function isRestricted(hint: CacheHint) {
   return hint.maxAge !== undefined || hint.scope !== undefined;
+}
+
+// Returns the closest ancestor of `path` that doesn't end in a list index.
+function skipListIndexes(
+  path: ResponsePath | undefined,
+): ResponsePath | undefined {
+  if (!path) {
+    return undefined;
+  }
+  if (typeof path.key === 'string') {
+    return path;
+  }
+  if (!path.prev) {
+    throw Error(
+      `First element of path ${responsePathAsArray(path).join(
+        '.',
+      )} is an array?`,
+    );
+  }
+  return skipListIndexes(path.prev);
 }
 
 // This plugin does nothing, but it ensures that ApolloServer won't try
