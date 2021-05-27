@@ -1,44 +1,42 @@
 ---
 title: Deploying with Heroku
 sidebar_title: Heroku
-description: Get started with deploying your GraphQL server to Heroku
 ---
 
-Heroku is a common platform as a service solution that allows users to deploy Apollo Servers and have a functioning GraphQL endpoint running in a matter of minutes.
+Heroku is a common platform-as-a-service solution that enables you to deploy Apollo Server and have a running GraphQL endpoint in a matter of minutes.
 
 ## Prerequisites
 
-The following must be done before following this guide:
+Make sure you've completed the following before proceeding with this guide:
 
-- [Set up an Apollo Server](../getting-started)
-- [Set up a Heroku account](https://heroku.com)
+- [Get started with Apollo Server](../getting-started)
+- [Create a Heroku account](https://heroku.com)
 
-In addition, if you would like to [push to Heroku manually](./heroku/#deploying-with-git) through the command line:
+In addition, to help you [push to Heroku manually](./heroku/#deploying-with-git) from the command line:
+
 - [Install the Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
 
-> Keep in mind that Heroku operations that will be covered in this document
-> can also be done through the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli).
-> Refer to the [Heroku CLI documentation](https://devcenter.heroku.com/categories/command-line)
-> for more detailed help.
+> Note that the Heroku operations covered in this article can also be performed with the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli). See the [Heroku CLI documentation](https://devcenter.heroku.com/categories/command-line) for more detailed help.
+
 ## Set up a new Heroku application
 
-First, create a new application through the [Heroku dashboard](https://dashboard.heroku.com/apps) by clicking on the **"Create new app"** button on the top right.
+First, create a new application from your [Heroku dashboard](https://dashboard.heroku.com/apps) by clicking the **Create new app** button in the top right:
 
-![Create New App Screenshot](../images/deployment/heroku/create-new-app.png)
+<img class="screenshot" src="../images/deployment/heroku/create-new-app.png" alt="Create new Heroku app UI"></img>
 
-Choose a name your app (this will be your `<HEROKU_APP_NAME>`) and click the **"Create app"** button.
+Choose a name your app (this will be your `<HEROKU_APP_NAME>`) and click **Create app**.
 
-![Set App Name Screenshot](../images/deployment/heroku/set-app-name.png)
+<img class="screenshot" src="../images/deployment/heroku/set-app-name.png" alt="Set Heroku app name UI"></img>
 
 ## Setting up the project
 
-For Heroku, projects can be set up using any of the [Apollo Server HTTP variants](../integrations/middleware) (i.e. Express, Hapi).
+For Heroku, you can set up your project using Apollo Server's core library or any of its [supported middleware](../integrations/middleware) (such as Express or Hapi).
 
 ### Manually setting the port
 
-When deploying to Heroku, we cannot specify a specific port, and must therefore manually set the port as the `$PORT` variable set by Heroku.
+When deployed to Heroku, your server _must_ `listen` on the port specified by the `PORT` environment variable (which is set by Heroku itself). Otherwise, your server will not receive requests and will time out.
 
-The Apollo Server must be configured to bind to the value stored in `process.env.PORT` to avoid errors (such as request timeout). To configure `apollo-server` to use a port defined by Heroku at runtime, the `listen` function in your setup file can be called with a port defined by the `PORT` environment variable:
+The following example server `listen`s on the port specified by `process.env.PORT` and defaults to `4000` if none is specified:
 
 ```js
 server.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
@@ -51,27 +49,26 @@ server.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
 
 ### Adding a Procfile
 
-Heroku apps by default look for a [Procfile](https://devcenter.heroku.com/articles/procfile) in the root directory that contains commands run by the app on startup. For your Apollo Server, this file should at least contain:
+By default, Heroku apps look for a [Procfile](https://devcenter.heroku.com/articles/procfile) in your root directory that contains commands run by the app on startup. For a basic Apollo Server application, this file should at least contain a line similar to the following:
 
 ```shell:title=Procfile
 web: node index.js
 ```
 
-`node index.js` should be replaced with whichever command is used to start your Apollo Server instance.
+Replace `node index.js` with whichever command you use to start your Apollo Server instance.
 
-> **Procfiles** are not absolutely necessary to run your Apollo Server through Heroku.
-> However, in the absence of a **Procfile**, Heroku will run a `start script` which should defined
-> in your `package.json`. Otherwise, you will run into errors.
+> A Procfile is not _required_ to run Apollo Server on Heroku. If you don't provide a Procfile, attempts to run the `start script` that's defined in your `package.json` file.
 
 ## Deploying the project
 
 There are a couple ways to push projects to Heroku:
-- manually with [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
-- automatically through GitHub integration
+
+- Manually with [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
+- Automatically via GitHub integration
 
 ### Deploying with Git
 
-Again, make sure you have [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) installed. Then, log into your Heroku CLI through your terminal.
+Again, make sure you have [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) installed. Then, log into the Heroku CLI from your terminal.
 
 ```shell
 $ heroku login
@@ -88,33 +85,35 @@ $ git commit -m "initial apollo server deployment"
 $ git push heroku # specify your branch name, if necessary
 ```
 
-Now you're Apollo Server is up and running!
-Send a query to your GraphQL service at your Heroku application at **<HEROKU\_APP\_NAME>.herokuapp.com**
+After deployment completes, your Apollo Server project is up and running! You can send a query to your Heroku-hosted GraphQL endpoint at `<HEROKU\_APP\_NAME>.herokuapp.com`.
 
 Some things to note:
-- `git push heroku` does not push to your git repository. You must run `git push` again separately.
+- `git push heroku` does _not_ push to your `origin` remote or any other remote. You must run `git push` again separately.
 - By default, Heroku sets the `NODE_ENV` variable to `production`. If you wish to change this, run this command in your project directory:
-  ```shell
-  $ heroku config:set NODE_ENV=development
-  ```
-  or alternatively, you can [configure environment variables](./heroku/#configuring-environment-variables) through the Heroku dashboard.
-- Reminder that the [GraphQL playground](../testing/graphql-playground) is disabled when the Apollo Server is in production.
+
+    ```shell
+    $ heroku config:set NODE_ENV=development
+    ```
+
+    Alternatively, you can [configure environment variables](./heroku/#configuring-environment-variables) through the Heroku dashboard.
+
+- Remember that [GraphQL Playground](../testing/graphql-playground) is disabled by default when Apollo Server is in a production environment.
 
 ### Automatically deploying with GitHub
 
-If the project is already pushed to GitHub, it may be easier to set up automatic deployments from the project's repository.
+If your project is already pushed to GitHub, you might prefer to set up automatic deployments from the project's repository.
 
-On the Heroku dashboard, click on the name of the app that will be deployed from GitHub.
+From your Heroku dashboard, select the app that you want to deploy from GitHub.
 
-Then, on the app detail page, there is a tab bar at the top, with a "Deploy" option. On that page, the deployment method can be chosen and configured to integrate with GitHub.
+Then from the app's detail page, select the **Deploy** tab. On that tab, you can choose a deployment method and configure the app to integrate with GitHub:
 
-![automatic deployment instructions](../images/deployment/heroku/automatic-deployment.png)
+<img class="screenshot" src="../images/deployment/heroku/automatic-deployment.png" alt="Configuring Heroku autodeploys"></img>
 
 ## Configuring environment variables
 
 To enable the production mode of Apollo Server, you need to set the `NODE_ENV` variable to `production`. To ensure you have visibility into your GraphQL performance in Apollo Server, you'll want to add the `APOLLO_KEY` environment variable to Heroku. For the API key, log in to [Apollo Studio](https://studio.apollographql.com) and navigate to your graph or create a new one.
 
-Under the Settings tab, click **Reveal Config Vars**. Next, set `NODE_ENV` to `production` and copy your graph API key from [Apollo Studio](http://studio.apollographql.com/) as the value for `APOLLO_KEY`.
+Under your Heroku app's Settings tab, click **Reveal Config Vars**. Next, set `NODE_ENV` to `production` and copy your graph API key from [Apollo Studio](http://studio.apollographql.com/) as the value for `APOLLO_KEY`.
 
 ![Add Studio API Key Screenshot](../images/deployment/heroku/config-vars.png)
 
