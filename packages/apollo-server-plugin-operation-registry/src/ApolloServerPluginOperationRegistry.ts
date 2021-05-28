@@ -49,9 +49,6 @@ export interface Options {
     | boolean
     | ForbidUnregisteredOperationsPredicate;
   dryRun?: boolean;
-  // Deprecated; configure via `new ApolloServer({apollo: {graphVariant}})`
-  // or $APOLLO_GRAPH_VARIANT instead.
-  graphVariant?: string;
   onUnregisteredOperation?: (
     requestContext: GraphQLRequestContext,
     operationRegistryRequestContext: OperationRegistryRequestContext,
@@ -95,26 +92,28 @@ for observability purposes, but all operations will be permitted.`,
   // time depending on the usecase.
   Object.freeze(options);
 
-  let graphVariant: string;
-
   return (): ApolloServerPlugin => ({
     async serverWillStart({
       apollo,
     }: GraphQLServiceContext): Promise<GraphQLServerListener> {
       // Make available to requestDidStart.
-      graphVariant = apollo.graphVariant;
       logger.debug('Initializing operation registry plugin.');
 
-      const {graphId, keyHash} = apollo;
+      const {graphRef, keyHash} = apollo;
 
-      if (!(graphId && keyHash)) {
+      if (!keyHash) {
         const messageApolloConfigurationRequired =
           'The Apollo API key must be set to use the operation registry.';
         throw new Error(`${pluginName}: ${messageApolloConfigurationRequired}`);
       }
+      if (!graphRef) {
+        const messageApolloConfigurationRequired =
+          'APOLLO_GRAPH_REF must be set to use the operation registry.';
+        throw new Error(`${pluginName}: ${messageApolloConfigurationRequired}`);
+      }
 
       logger.debug(
-        `Operation registry is configured for '${apollo.graphId}'.`);
+        `Operation registry is configured for '${graphRef}'.`);
 
       // An LRU store with no `maxSize` is effectively an InMemoryStore and
       // exactly what we want for this purpose.
@@ -126,7 +125,7 @@ for observability purposes, but all operations will be permitted.`,
         apollo: {
           ...apollo,
           // Convince TypeScript that these fields are not undefined.
-          graphId,
+          graphRef,
           keyHash
         },
         store,
@@ -308,7 +307,7 @@ for observability purposes, but all operations will be permitted.`,
           Object.assign(error.extensions, {
             operationSignature: signature,
             exception: {
-              message: `Please register your operation with \`npx apollo client:push --variant="${graphVariant}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
+              message: `Please register your operation with \`npx apollo client:push --variant="${agent.graphVariant}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
             },
           });
           throw error;

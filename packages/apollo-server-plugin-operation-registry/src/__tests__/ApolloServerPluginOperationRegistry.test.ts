@@ -66,6 +66,7 @@ describe('Operation registry plugin', () => {
     const hashedApiKey = hashApiKey(apiKey);
     const apollo: ApolloConfigInput = {
       key: apiKey,
+      graphId,
       graphVariant: 'current',
     };
     const typeDefs = gql`

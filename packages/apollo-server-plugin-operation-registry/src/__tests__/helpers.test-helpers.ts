@@ -21,9 +21,8 @@ export const defaultTestAgentPollSeconds = 60;
 
 export const defaultAgentOptions: AgentOptions = {
   apollo: {
-    graphId: genericServiceID,
+    graphRef: genericServiceID,
     keyHash: genericApiKeyHash,
-    graphVariant: 'current',
   },
   store: defaultStore(),
   pollSeconds: defaultTestAgentPollSeconds,

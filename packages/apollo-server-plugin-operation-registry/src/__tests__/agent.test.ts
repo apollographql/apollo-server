@@ -324,7 +324,10 @@ describe('Agent', () => {
         it('fetches manifests for the corresponding variant', async () => {
           nockStorageSecret(genericServiceID, genericApiKeyHash);
           const agent = createAgent({
-            apollo: { ...defaultAgentOptions.apollo, graphVariant },
+            apollo: {
+              ...defaultAgentOptions.apollo,
+              graphRef: `${genericServiceID}@${graphVariant}`,
+            },
           });
           const nockedManifest = nockBase()
             .get(

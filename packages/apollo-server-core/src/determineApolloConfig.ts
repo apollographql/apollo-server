@@ -1,4 +1,4 @@
-import { ApolloConfig, ApolloConfigInput, Logger } from 'apollo-server-types';
+import { ApolloConfig, ApolloConfigInput } from 'apollo-server-types';
 import createSHA from './utils/createSHA';
 
 // This function combines the `apollo` constructor argument and some environment
@@ -58,7 +58,9 @@ export function determineApolloConfig(
     // from the ID and variant. Note that after this, we stop tracking the ID
     // and variant, because Apollo Server 3 does not assume that all graph refs
     // can be decomposed into ID and variant (except in the op reg plugin).
-    apolloConfig.graphRef = `${graphId}@${graphVariant ?? 'current'}`;
+    apolloConfig.graphRef = graphVariant
+      ? `${graphId}@${graphVariant}`
+      : graphId;
   }
 
   return apolloConfig;

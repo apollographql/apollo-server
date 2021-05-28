@@ -2667,8 +2667,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             keyHash:
               '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',
             graphRef: 'tester@staging',
-            graphId: 'tester',
-            graphVariant: 'staging',
           },
         });
       });

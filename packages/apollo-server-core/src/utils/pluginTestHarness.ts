@@ -114,8 +114,6 @@ export default async function pluginTestHarness<TContext>({
       apollo: {
         key: 'some-key',
         graphRef: 'graph@current',
-        graphId: 'graph',
-        graphVariant: 'current',
       },
     });
     if (maybeServerListener && maybeServerListener.serverWillStop) {
