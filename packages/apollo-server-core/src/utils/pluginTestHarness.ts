@@ -27,6 +27,7 @@ import { InMemoryLRUCache } from 'apollo-server-caching';
 import { Dispatcher } from './dispatcher';
 import { generateSchemaHash } from './schemaHash';
 import { getOperationAST, parse, validate as graphqlValidate } from 'graphql';
+import { newCachePolicy } from '../cachePolicy';
 
 // This test harness guarantees the presence of `query`.
 type IPluginTestHarnessGraphqlRequest = WithRequired<GraphQLRequest, 'query'>;
@@ -132,13 +133,16 @@ export default async function pluginTestHarness<TContext>({
     source: graphqlRequest.query,
     cache: new InMemoryLRUCache(),
     context,
+    overallCachePolicy: newCachePolicy(),
   };
 
   if (requestContext.source === undefined) {
     throw new Error("No source provided for test");
   }
 
-  requestContext.overallCachePolicy = overallCachePolicy;
+  if (overallCachePolicy) {
+    requestContext.overallCachePolicy.replace(overallCachePolicy);
+  }
 
   if (typeof pluginInstance.requestDidStart !== "function") {
     throw new Error("This test harness expects this to be defined.");

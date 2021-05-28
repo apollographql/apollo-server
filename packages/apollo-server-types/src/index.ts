@@ -78,7 +78,7 @@ export interface ApolloConfig {
   graphRef?: string;
 }
 
- export interface GraphQLServiceContext {
+export interface GraphQLServiceContext {
   logger: Logger;
   schema: GraphQLSchema;
   schemaHash: SchemaHash;
@@ -153,8 +153,7 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
 
   debug?: boolean;
 
-  // Not readonly: plugins can set it.
-  overallCachePolicy?: Required<CacheHint> | undefined;
+  overallCachePolicy: CachePolicy;
 }
 
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;
@@ -246,6 +245,10 @@ export type GraphQLRequestContextWillSendResponse<TContext> =
     | 'response'
   >;
 
+/**
+ * CacheHint represents a contribution to an overall cache policy. It can
+ * specify a maxAge and/or a scope.
+ */
 export interface CacheHint {
   maxAge?: number;
   scope?: CacheScope;
@@ -254,4 +257,27 @@ export interface CacheHint {
 export enum CacheScope {
   Public = 'PUBLIC',
   Private = 'PRIVATE',
+}
+
+/**
+ * CachePolicy is a mutable CacheHint with helpful methods for updating its
+ * fields.
+ */
+export interface CachePolicy extends CacheHint {
+  /**
+   * Mutate this CachePolicy by replacing each field defined in `hint`. This can
+   * make the policy more restrictive or less restrictive.
+   */
+  replace(hint: CacheHint): void;
+  /**
+   * Mutate this CachePolicy by restricting each field defined in `hint`. This
+   * can only make the policy more restrictive: a previously defined `maxAge`
+   * can only be reduced, and a previously Private scope cannot be made Public.
+   */
+  restrict(hint: CacheHint): void;
+  /**
+   * If this policy has a positive `maxAge`, then return a copy of itself as a
+   * `CacheHint` with both fields defined. Otherwise return null.
+   */
+  policyIfCacheable(): Required<CacheHint> | null;
 }

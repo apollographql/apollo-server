@@ -55,6 +55,7 @@ import {
   ApolloServerPluginFrontendGraphQLPlayground,
 } from './plugin';
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
+import { newCachePolicy } from './cachePolicy';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -912,6 +913,7 @@ export class ApolloServerBase {
         },
       },
       debug: options.debug,
+      overallCachePolicy: newCachePolicy(),
     };
 
     return processGraphQLRequest(options, requestCtx);

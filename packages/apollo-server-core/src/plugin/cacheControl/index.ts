@@ -1,12 +1,15 @@
-import type { CacheHint, GraphQLRequestContext } from 'apollo-server-types';
+import type { CacheHint, CachePolicy } from 'apollo-server-types';
 import { CacheScope } from 'apollo-server-types';
 import {
   DirectiveNode,
   getNamedType,
+  GraphQLCompositeType,
+  GraphQLField,
   GraphQLInterfaceType,
   GraphQLObjectType,
   responsePathAsArray,
 } from 'graphql';
+import { newCachePolicy } from '../../cachePolicy';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 export interface ApolloServerPluginCacheControlOptions {
   /**
@@ -30,72 +33,46 @@ export interface ApolloServerPluginCacheControlOptions {
 declare module 'graphql/type/definition' {
   interface GraphQLResolveInfo {
     cacheControl: {
-      setCacheHint: (hint: CacheHint) => void;
-      cacheHint: CacheHint;
+      cacheHint: CachePolicy;
+      // Shorthand for `cacheHint.replace(hint)`; also for compatibility with
+      // the Apollo Server 2.x API.
+      setCacheHint(hint: CacheHint): void;
+      cacheHintFromType(t: GraphQLCompositeType): CacheHint | undefined;
     };
-  }
-}
-
-// Exported for tests only.
-export class PolicyUpdater {
-  private overallCachePolicyIsUncacheable = false;
-  constructor(
-    private requestContext: Pick<GraphQLRequestContext, 'overallCachePolicy'>,
-  ) {}
-  addHint(hint: CacheHint) {
-    // If we've already seen that some piece of the response has maxAge 0,
-    // then there's nothing we can learn that can change the policy from
-    // undefined.
-    if (this.overallCachePolicyIsUncacheable) {
-      return;
-    }
-
-    // If this piece is entirely uncacheable, then the overall policy is
-    // undefined (uncacheable) and no information we learn later can change
-    // our mind. (This is distinct from "the policy we've learned so far is
-    // 'undefined' but that's just because we haven't seen any hints yet".)
-    if (hint.maxAge === 0) {
-      this.requestContext.overallCachePolicy = undefined;
-      this.overallCachePolicyIsUncacheable = true;
-      return;
-    }
-
-    if (!this.requestContext.overallCachePolicy) {
-      if (hint.maxAge === undefined) {
-        // This shouldn't happen. If we've gotten this far, then the reason
-        // requestContext.overallCachePolicy is unset is because we haven't seen
-        // any hints yet, not because some hint told us that the operation is
-        // uncacheable (overallCachePolicyIsUncacheable would have been true
-        // otherwise). Every time we start to resolve a field, this function
-        // gets called. So this must be the first field we're resolving, which
-        // means it must be a root field. But root field maxAge is always a
-        // number. So this shouldn't happen.
-        throw Error("Shouldn't happen: first hint has undefined maxAge?");
-      }
-      this.requestContext.overallCachePolicy = {
-        maxAge: hint.maxAge,
-        scope: hint.scope ?? CacheScope.Public,
-      };
-      return;
-    }
-
-    // OK! We already have a cache policy, and we have a new hint. Let's
-    // combine! Take the minimum maxAge and the privatest scope.
-    if (
-      hint.maxAge !== undefined &&
-      hint.maxAge < this.requestContext.overallCachePolicy.maxAge
-    ) {
-      this.requestContext.overallCachePolicy.maxAge = hint.maxAge;
-    }
-    if (hint.scope === CacheScope.Private) {
-      this.requestContext.overallCachePolicy.scope = CacheScope.Private;
-    }
   }
 }
 
 export function ApolloServerPluginCacheControl(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
 ): InternalApolloServerPlugin {
+  const typeCacheHintCache = new Map<GraphQLCompositeType, CacheHint>();
+  const fieldCacheHintCache = new Map<
+    GraphQLField<unknown, unknown>,
+    CacheHint
+  >();
+
+  function memoizedCacheHintFromType(t: GraphQLCompositeType): CacheHint {
+    const cachedHint = typeCacheHintCache.get(t);
+    if (cachedHint) {
+      return cachedHint;
+    }
+    const hint = cacheHintFromType(t);
+    typeCacheHintCache.set(t, hint);
+    return hint;
+  }
+
+  function memoizedCacheHintFromField(
+    field: GraphQLField<unknown, unknown>,
+  ): CacheHint {
+    const cachedHint = fieldCacheHintCache.get(field);
+    if (cachedHint) {
+      return cachedHint;
+    }
+    const hint = cacheHintFromField(field);
+    fieldCacheHintCache.set(field, hint);
+    return hint;
+  }
+
   return {
     __internal_plugin_id__() {
       return 'CacheControl';
@@ -108,27 +85,35 @@ export function ApolloServerPluginCacheControl(
 
       return {
         executionDidStart: () => {
-          let policyUpdater: PolicyUpdater | undefined;
-
           // Did something set the overall cache policy before we've even
           // started? If so, consider that as an override and don't touch it.
-          // Otherwise, create a PolicyUpdater which tracks a tiny bit of state
-          // and updates requestContext.overallCachePolicy when necessary.
+          // Just put set up fake `info.cacheControl` objects and otherwise
+          // don't track cache policy.
           //
-          // XXX I'm not really sure when requestContext.overallCachePolicy
-          // could be already set. The main use case for setting
-          // overallCachePolicy outside of this plugin is
-          // apollo-server-plugin-response-cache, but when it sets the policy we
-          // never get to execution at all! This is preserving behavior
-          // introduced in #3997 but I'm not sure it was ever actually
-          // necessary.
-          if (!requestContext.overallCachePolicy) {
-            policyUpdater = new PolicyUpdater(requestContext);
+          // (This doesn't happen in practice using the core plugins: the main
+          // use case for restricting overallCachePolicy outside of this plugin
+          // is apollo-server-plugin-response-cache, but when it sets the policy
+          // we never get to execution at all.)
+          if (isRestricted(requestContext.overallCachePolicy)) {
+            // This is "fake" in the sense that it never actually affects
+            // requestContext.overallCachePolicy.
+            const fakeFieldPolicy = newCachePolicy();
+            return {
+              willResolveField({ info }) {
+                info.cacheControl = {
+                  setCacheHint: (dynamicHint: CacheHint) => {
+                    fakeFieldPolicy.replace(dynamicHint);
+                  },
+                  cacheHint: fakeFieldPolicy,
+                  cacheHintFromType,
+                };
+              },
+            };
           }
 
           return {
             willResolveField({ info }) {
-              let hint: CacheHint = {};
+              const fieldPolicy = newCachePolicy();
 
               // If this field's resolver returns an object or interface, look for
               // hints on that return type.
@@ -137,23 +122,16 @@ export function ApolloServerPluginCacheControl(
                 targetType instanceof GraphQLObjectType ||
                 targetType instanceof GraphQLInterfaceType
               ) {
-                if (targetType.astNode) {
-                  hint = mergeHints(
-                    hint,
-                    cacheHintFromDirectives(targetType.astNode.directives),
-                  );
-                }
+                fieldPolicy.replace(memoizedCacheHintFromType(targetType));
               }
 
               // Look for hints on the field itself (on its parent type), taking
               // precedence over previously calculated hints.
-              const fieldDef = info.parentType.getFields()[info.fieldName];
-              if (fieldDef.astNode) {
-                hint = mergeHints(
-                  hint,
-                  cacheHintFromDirectives(fieldDef.astNode.directives),
-                );
-              }
+              fieldPolicy.replace(
+                memoizedCacheHintFromField(
+                  info.parentType.getFields()[info.fieldName],
+                ),
+              );
 
               // If this resolver returns an object or is a root field and we haven't
               // seen an explicit maxAge hint, set the maxAge to 0 (uncached) or the
@@ -167,34 +145,36 @@ export function ApolloServerPluginCacheControl(
                 (targetType instanceof GraphQLObjectType ||
                   targetType instanceof GraphQLInterfaceType ||
                   !info.path.prev) &&
-                hint.maxAge === undefined
+                fieldPolicy.maxAge === undefined
               ) {
-                hint.maxAge = defaultMaxAge;
+                fieldPolicy.restrict({ maxAge: defaultMaxAge });
               }
 
               info.cacheControl = {
                 setCacheHint: (dynamicHint: CacheHint) => {
-                  hint = mergeHints(hint, dynamicHint);
+                  fieldPolicy.replace(dynamicHint);
                 },
-                cacheHint: hint,
+                cacheHint: fieldPolicy,
+                cacheHintFromType,
               };
 
               // When the field is done, call addHint once. By calling addHint
               // once, we don't need to "undo" the effect on overallCachePolicy
               // of a static hint that gets refined by a dynamic hint.
               return () => {
-                if (hint.maxAge !== undefined || hint.scope !== undefined) {
-                  if (__testing__cacheHints) {
-                    const path = responsePathAsArray(info.path).join('.');
-                    if (__testing__cacheHints.has(path)) {
-                      throw Error(
-                        "shouldn't happen: addHint should only be called once per path",
-                      );
-                    }
-                    __testing__cacheHints.set(path, hint);
+                if (__testing__cacheHints && isRestricted(fieldPolicy)) {
+                  const path = responsePathAsArray(info.path).join('.');
+                  if (__testing__cacheHints.has(path)) {
+                    throw Error(
+                      "shouldn't happen: addHint should only be called once per path",
+                    );
                   }
-                  policyUpdater?.addHint(hint);
+                  __testing__cacheHints.set(path, {
+                    maxAge: fieldPolicy.maxAge,
+                    scope: fieldPolicy.scope,
+                  });
                 }
+                requestContext.overallCachePolicy.restrict(fieldPolicy);
               };
             },
           };
@@ -203,20 +183,22 @@ export function ApolloServerPluginCacheControl(
         willSendResponse(requestContext) {
           const { response, overallCachePolicy } = requestContext;
 
+          const policyIfCacheable = overallCachePolicy.policyIfCacheable();
+
           // If the feature is enabled, there is a non-trivial cache policy,
           // there are no errors, and we actually can write headers, write the
           // header.
           if (
             calculateHttpHeaders &&
-            overallCachePolicy &&
+            policyIfCacheable &&
             !response.errors &&
             response.http
           ) {
             response.http.headers.set(
               'Cache-Control',
               `max-age=${
-                overallCachePolicy.maxAge
-              }, ${overallCachePolicy.scope.toLowerCase()}`,
+                policyIfCacheable.maxAge
+              }, ${policyIfCacheable.scope.toLowerCase()}`,
             );
           }
         },
@@ -261,16 +243,36 @@ function cacheHintFromDirectives(
   };
 }
 
-function mergeHints(
-  hint: CacheHint,
-  otherHint: CacheHint | undefined,
-): CacheHint {
-  if (!otherHint) return hint;
+function cacheHintFromType(t: GraphQLCompositeType): CacheHint {
+  if (t.astNode) {
+    const hint = cacheHintFromDirectives(t.astNode.directives);
+    if (hint) {
+      return hint;
+    }
+  }
+  if (t.extensionASTNodes) {
+    for (const node of t.extensionASTNodes) {
+      const hint = cacheHintFromDirectives(node.directives);
+      if (hint) {
+        return hint;
+      }
+    }
+  }
+  return {};
+}
 
-  return {
-    maxAge: otherHint.maxAge !== undefined ? otherHint.maxAge : hint.maxAge,
-    scope: otherHint.scope || hint.scope,
-  };
+function cacheHintFromField(field: GraphQLField<unknown, unknown>): CacheHint {
+  if (field.astNode) {
+    const hint = cacheHintFromDirectives(field.astNode.directives);
+    if (hint) {
+      return hint;
+    }
+  }
+  return {};
+}
+
+function isRestricted(hint: CacheHint) {
+  return hint.maxAge !== undefined || hint.scope !== undefined;
 }
 
 // This plugin does nothing, but it ensures that ApolloServer won't try

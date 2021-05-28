@@ -19,6 +19,7 @@ import {
 } from './requestPipeline';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { WithRequired, GraphQLExecutionResult } from 'apollo-server-types';
+import { newCachePolicy } from './cachePolicy';
 
 export interface HttpQueryRequest {
   method: string;
@@ -270,6 +271,7 @@ export async function processHTTPRequest<TContext>(
       cache: options.cache,
       debug: options.debug,
       metrics: {},
+      overallCachePolicy: newCachePolicy(),
     };
   }
 

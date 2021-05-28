@@ -3,12 +3,10 @@ import { Headers } from 'apollo-server-env';
 import {
   CacheHint,
   CacheScope,
-  GraphQLRequestContext,
 } from 'apollo-server-types';
 import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
-  PolicyUpdater,
 } from '../';
 import {
   GraphQLRequestContextWillSendResponse,
@@ -112,66 +110,6 @@ describe('plugin', () => {
         });
         shouldNotSetCacheControlHeader(requestContext);
       });
-    });
-  });
-
-  describe('PolicyUpdater', () => {
-    let hints: PolicyUpdater;
-    let requestContext: Pick<GraphQLRequestContext, 'overallCachePolicy'>;
-    beforeEach(() => {
-      requestContext = {};
-      hints = new PolicyUpdater(requestContext);
-    });
-
-    it('returns undefined without cache hints', () => {
-      expect(requestContext.overallCachePolicy).toBeUndefined();
-    });
-
-    it('returns lowest max age value', () => {
-      hints.addHint({ maxAge: 10 });
-      hints.addHint({ maxAge: 20 });
-
-      expect(requestContext.overallCachePolicy).toHaveProperty('maxAge', 10);
-    });
-
-    it('returns undefined if any cache hint has a maxAge of 0', () => {
-      hints.addHint({ maxAge: 120 });
-      hints.addHint({ maxAge: 0 });
-      hints.addHint({ maxAge: 20 });
-
-      expect(requestContext.overallCachePolicy).toBeUndefined();
-    });
-
-    it('returns undefined if first cache hint has a maxAge of 0', () => {
-      hints.addHint({ maxAge: 0 });
-      hints.addHint({ maxAge: 20 });
-
-      expect(requestContext.overallCachePolicy).toBeUndefined();
-    });
-
-    it('returns PUBLIC scope by default', () => {
-      hints.addHint({ maxAge: 10 });
-
-      expect(requestContext.overallCachePolicy).toHaveProperty(
-        'scope',
-        CacheScope.Public,
-      );
-    });
-
-    it('returns PRIVATE scope if any cache hint has PRIVATE scope', () => {
-      hints.addHint({
-        maxAge: 10,
-        scope: CacheScope.Public,
-      });
-      hints.addHint({
-        maxAge: 10,
-        scope: CacheScope.Private,
-      });
-
-      expect(requestContext.overallCachePolicy).toHaveProperty(
-        'scope',
-        CacheScope.Private,
-      );
     });
   });
 });
