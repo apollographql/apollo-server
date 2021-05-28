@@ -6,7 +6,7 @@ description: How to deploy Apollo Server with AWS Lambda
 
 AWS Lambda is a service that allows users to run code without provisioning or managing servers. Cost is based on the compute time that is consumed, and there is no charge when code is not running.
 
-This guide explains how to setup Apollo Server 2 to run on AWS Lambda.
+This guide explains how to setup Apollo Server 2 to run on AWS Lambda using Serverless Framework. To use CDK and SST instead, [follow this tutorial](https://serverless-stack.com/examples/how-to-create-an-apollo-graphql-api-with-serverless.html).
 
 ## Prerequisites
 
