@@ -20,7 +20,7 @@
 /docs/apollo-server/federation/concerns/ /docs/apollo-server/federation/introduction/#separation-of-concerns
 
 /docs/apollo-server/schema/creating-directives /docs/apollo-server/schema/directives/
-/docs/apollo-server/api/graphql-tools / docs/apollo-server/
+/docs/apollo-server/api/graphql-tools /docs/apollo-server/
 
 # Redirects associated with revamp of Apollo Server information architecture
 /docs/apollo-server/whats-new https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md
