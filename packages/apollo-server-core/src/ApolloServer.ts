@@ -110,9 +110,8 @@ class UnreachableCaseError extends Error {
 export class ApolloServerBase {
   private logger: Logger;
   public graphqlPath: string = '/graphql';
-  public requestOptions: Partial<GraphQLServerOptions<any>> = Object.create(
-    null,
-  );
+  public requestOptions: Partial<GraphQLServerOptions<any>> =
+    Object.create(null);
 
   private context?: Context | ContextFunction;
   private apolloConfig: ApolloConfig;
@@ -437,19 +436,20 @@ export class ApolloServerBase {
       // both the implicit installation of
       // ApolloServerPluginFrontendGraphQLPlayground and the other plugin will
       // be found; we skip the implicit plugin.
-      let taggedServerListenersWithRenderFrontend = taggedServerListeners.filter(
-        (l) => l.serverListener.renderFrontend,
-      );
+      let taggedServerListenersWithRenderFrontend =
+        taggedServerListeners.filter((l) => l.serverListener.renderFrontend);
       if (taggedServerListenersWithRenderFrontend.length > 1) {
-        taggedServerListenersWithRenderFrontend = taggedServerListenersWithRenderFrontend.filter(
-          (l) => !l.installedImplicity,
-        );
+        taggedServerListenersWithRenderFrontend =
+          taggedServerListenersWithRenderFrontend.filter(
+            (l) => !l.installedImplicity,
+          );
       }
       if (taggedServerListenersWithRenderFrontend.length > 1) {
         throw Error('Only one plugin can implement renderFrontend.');
       } else if (taggedServerListenersWithRenderFrontend.length) {
-        this.frontendPage = taggedServerListenersWithRenderFrontend[0]
-          .serverListener.renderFrontend!();
+        this.frontendPage =
+          taggedServerListenersWithRenderFrontend[0].serverListener
+            .renderFrontend!();
       } else {
         this.frontendPage = null;
       }
@@ -707,22 +707,29 @@ export class ApolloServerBase {
     // Special case: usage reporting is on by default (and first!) if you
     // configure an API key.
     {
-      const alreadyHavePlugin = alreadyHavePluginWithInternalId(
-        'UsageReporting',
-      );
+      const alreadyHavePlugin =
+        alreadyHavePluginWithInternalId('UsageReporting');
       if (!alreadyHavePlugin && this.apolloConfig.key) {
-        // Keep this plugin first so it wraps everything. (Unfortunately despite
-        // the fact that the person who wrote this line also was the original
-        // author of the comment above in #1105, they don't quite understand why this was important.)
-        this.plugins.unshift(ApolloServerPluginUsageReporting());
+        if (this.apolloConfig.graphRef) {
+          // Keep this plugin first so it wraps everything. (Unfortunately despite
+          // the fact that the person who wrote this line also was the original
+          // author of the comment above in #1105, they don't quite understand why this was important.)
+          this.plugins.unshift(ApolloServerPluginUsageReporting());
+        } else {
+          this.logger.warn(
+            'You have specified an Apollo key but have not specified a graph ref; usage ' +
+              'reporting is disabled. To enable usage reporting, set the `APOLLO_GRAPH_REF` ' +
+              'environment variable to `your-graph-id@your-graph-variant`. To disable this ' +
+              'warning, install `ApolloServerPluginUsageReportingDisabled`.',
+          );
+        }
       }
     }
 
     // Special case: schema reporting can be turned on via environment variable.
     {
-      const alreadyHavePlugin = alreadyHavePluginWithInternalId(
-        'SchemaReporting',
-      );
+      const alreadyHavePlugin =
+        alreadyHavePluginWithInternalId('SchemaReporting');
       const enabledViaEnvVar = process.env.APOLLO_SCHEMA_REPORTING === 'true';
       if (alreadyHavePlugin || enabledViaEnvVar) {
         if (this.config.gateway) {
@@ -786,9 +793,8 @@ export class ApolloServerBase {
     // can't just look now to see if the plugin defines renderFrontend because
     // we haven't run serverWillStart yet.)
     if (isDev) {
-      const alreadyHavePlugin = alreadyHavePluginWithInternalId(
-        'FrontendDisabled',
-      );
+      const alreadyHavePlugin =
+        alreadyHavePluginWithInternalId('FrontendDisabled');
       if (!alreadyHavePlugin) {
         const plugin = ApolloServerPluginFrontendGraphQLPlayground();
         if (!isImplicitlyInstallablePlugin(plugin)) {

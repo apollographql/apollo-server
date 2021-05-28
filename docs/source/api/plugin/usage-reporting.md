@@ -8,9 +8,11 @@ Apollo Server has a built-in usage reporting plugin that gathers data on how you
 
 ## Default installation
 
-Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key to Apollo Server](https://www.apollographql.com/docs/apollo-server/monitoring/metrics/#connecting-to-apollo-studio) (usually by setting the value of the `APOLLO_KEY` environment variable). No other action is required.
+Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](https://www.apollographql.com/docs/apollo-server/monitoring/metrics/#connecting-to-apollo-studio) (usually by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables). No other action is required.
 
-If you don't provide an API key, this plugin is not installed.
+If you don't provide an API key and graph ref, this plugin is not installed.
+
+If you provide an API key but do not provide a graph ref, a warning is logged; you can [disable the plugin](#disabling-the-plugin) to hide the warning.
 
 ## Custom installation
 
@@ -385,3 +387,5 @@ const server = new ApolloServer({
   plugins: [ApolloServerPluginUsageReportingDisabled()],
 });
 ```
+
+This also disables the warning log if you provide an API key but do not provide a graph ref.

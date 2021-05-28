@@ -42,6 +42,13 @@ describe('ApolloServerBase construction', () => {
   });
 
   it('succeeds when passed a graphVariant in construction', () => {
+    const warn = jest.fn();
+    const logger: Logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn,
+      error: jest.fn(),
+    };
     expect(() =>
       new ApolloServerBase({
         typeDefs,
@@ -50,8 +57,13 @@ describe('ApolloServerBase construction', () => {
           graphVariant: 'foo',
           key: 'service:real:key',
         },
+        logger,
       }).stop(),
     ).not.toThrow();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toMatch(
+      /Apollo key but have not specified a graph ref/,
+    );
   });
 
   it('throws when a GraphQLSchema is not provided to the schema configuration option', () => {
