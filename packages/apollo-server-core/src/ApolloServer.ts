@@ -169,7 +169,7 @@ export class ApolloServerBase {
       this.logger = loglevelLogger;
     }
 
-    this.apolloConfig = determineApolloConfig(apollo, this.logger);
+    this.apolloConfig = determineApolloConfig(apollo);
 
     if (gateway && (modules || schema || typeDefs || resolvers)) {
       throw new Error(

@@ -113,6 +113,7 @@ export default async function pluginTestHarness<TContext>({
       serverlessFramework: false,
       apollo: {
         key: 'some-key',
+        graphRef: 'graph@current',
         graphId: 'graph',
         graphVariant: 'current',
       },

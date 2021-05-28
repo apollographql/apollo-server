@@ -48,7 +48,7 @@ describe('ApolloServerBase construction', () => {
         resolvers,
         apollo: {
           graphVariant: 'foo',
-          key: 'not:real:key',
+          key: 'service:real:key',
         },
       }).stop(),
     ).not.toThrow();

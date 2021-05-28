@@ -19,7 +19,8 @@
     "testonly": "npm test",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2  --reporters=default --reporters=jest-junit",
     "coverage": "npm test -- --coverage",
-    "coverage:upload": "codecov"
+    "coverage:upload": "codecov",
+    "codegen": "graphql-codegen"
   },
   "engines": {
     "node": ">=12",
@@ -53,6 +54,8 @@
     "apollo-server-types": "file:packages/apollo-server-types"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "1.21.4",
+    "@graphql-codegen/typescript-operations": "1.17.16",
     "@graphql-tools/mock": "8.1.2",
     "@graphql-tools/schema": "7.1.5",
     "@graphql-tools/utils": "7.9.0",
