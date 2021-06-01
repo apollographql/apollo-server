@@ -102,5 +102,18 @@ The URL to use for reporting schemas. Primarily for testing and internal Apollo 
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `fetcher`
+
+`typeof fetch`
+</td>
+<td>
+
+Specifies which Fetch API implementation to use when reporting schemas.
+</td>
+</tr>
+
 </tbody>
 </table>
