@@ -215,7 +215,7 @@ An HTTP(S) agent to use for reporting. Can be either an [`http.Agent`](https://n
 </td>
 <td>
 
-Specifies which Fetch API implementation to use when sending usage reports.
+Specifies which [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) function implementation to use when sending usage reports.
 </td>
 </tr>
 
