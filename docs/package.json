@@ -1,8 +1,4 @@
 {
-  "engines": {
-    "node": ">=16 <17",
-    "npm": "7.x"
-  },
   "scripts": {
     "prestart": "gatsby clean",
     "start": "gatsby develop",
