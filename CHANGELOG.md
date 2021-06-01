@@ -15,6 +15,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - Dropped support for `graphql` versions prior to `15.3.0`.
 - Dropped support for Node.js v6, v8 and v10.  Apollo Server 3.x is being compiled to ES2020 which maps to Node.js 12+.  Please note that we only test on _even-numbered_ versions of Node.js and only aim to support Node.js versions which are under [long-term support](https://nodejs.org/en/about/releases/#releases) from the Node.js Foundation.
+- `apollo-server-fastify` is now compatible with Fastify v3 instead of Fastify v2.
 - Apollo Server 2 supported subscriptions via a loose integration with the `subscriptions-transport-ws` package. This integration did not support many of Apollo Server's features, and `subscriptions-transport-ws` has not been actively maintained. Apollo Server 3 removes this integration. See [the migration guide section on Subscriptions](./docs/source/migration.md#Subscriptions) to bring them back in their current form. We hope to implement subscriptions again in a more deeply integrated way in a future release.
 - The `graphql-extensions` API (e.g., `GraphQLExtensions`, `extensions`) has been dropped in favor of the new [plugins API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).
 - In order to let the `graphql-upload` package evolve on its own, uploads are no longer integrated directly with Apollo Server.  To bring them back in their current form, see [the migration guide section on File Uploads](./docs/source/migration.md#File-uploads)
