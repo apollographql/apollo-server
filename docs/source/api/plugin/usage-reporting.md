@@ -209,6 +209,19 @@ An HTTP(S) agent to use for reporting. Can be either an [`http.Agent`](https://n
 <tr>
 <td>
 
+###### `fetcher`
+
+`typeof fetch`
+</td>
+<td>
+
+Specifies which Fetch API implementation to use when sending usage reports.
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `reportIntervalMs`
 
 `number`
