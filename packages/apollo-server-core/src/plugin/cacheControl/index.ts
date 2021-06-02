@@ -7,10 +7,15 @@ import {
   GraphQLField,
   GraphQLInterfaceType,
   GraphQLObjectType,
+  isCompositeType,
+  isInterfaceType,
+  isObjectType,
   responsePathAsArray,
 } from 'graphql';
 import { newCachePolicy } from '../../cachePolicy';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
+import LRUCache from 'lru-cache';
+
 export interface ApolloServerPluginCacheControlOptions {
   /**
    * All root fields and fields returning objects or interfaces have this value
@@ -45,8 +50,8 @@ declare module 'graphql/type/definition' {
 export function ApolloServerPluginCacheControl(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
 ): InternalApolloServerPlugin {
-  const typeCacheHintCache = new Map<GraphQLCompositeType, CacheHint>();
-  const fieldCacheHintCache = new Map<
+  const typeCacheHintCache = new LRUCache<GraphQLCompositeType, CacheHint>();
+  const fieldCacheHintCache = new LRUCache<
     GraphQLField<unknown, unknown>,
     CacheHint
   >();
@@ -76,6 +81,26 @@ export function ApolloServerPluginCacheControl(
   return {
     __internal_plugin_id__() {
       return 'CacheControl';
+    },
+
+    serverWillStart({ schema }) {
+      // Set the size of the caches to be equal to the number of composite types
+      // and fields in the schema respectively. This generally means that the
+      // cache will always have room for all the cache hints in the active
+      // schema but we won't have a memory leak as schemas are replaced in a
+      // gateway. (Once https://github.com/apollographql/apollo-server/pull/5187
+      // lands we should also run this code from a schemaDidLoadOrUpdate
+      // callback.)
+      typeCacheHintCache.max = Object.values(schema.getTypeMap()).filter(
+        isCompositeType,
+      ).length;
+      fieldCacheHintCache.max =
+        Object.values(schema.getTypeMap())
+          .filter(isObjectType)
+          .flatMap((t) => Object.values(t.getFields())).length +
+        Object.values(schema.getTypeMap())
+          .filter(isInterfaceType)
+          .flatMap((t) => Object.values(t.getFields())).length;
     },
 
     requestDidStart(requestContext) {
@@ -117,6 +142,8 @@ export function ApolloServerPluginCacheControl(
 
               // If this field's resolver returns an object or interface, look for
               // hints on that return type.
+              // XXX This should also handled union-valued fields; going to deal
+              // with this in a separate PR.
               const targetType = getNamedType(info.returnType);
               if (
                 targetType instanceof GraphQLObjectType ||
@@ -141,6 +168,8 @@ export function ApolloServerPluginCacheControl(
               // hints from their definition on the Query/Mutation object, if that
               // doesn't exist then there's no parent field that would assign the
               // default maxAge, so we do it here.)
+              // XXX This should also handled union-valued fields; going to deal
+              // with this in a separate PR.
               if (
                 (targetType instanceof GraphQLObjectType ||
                   targetType instanceof GraphQLInterfaceType ||
