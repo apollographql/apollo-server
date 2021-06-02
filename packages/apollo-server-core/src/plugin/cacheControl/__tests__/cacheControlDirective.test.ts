@@ -284,7 +284,7 @@ describe('@cacheControl directives', () => {
         topLevel: DroidQuery @cacheControl(maxAge: 1000)
       }
 
-      type DroidQuery
+      type DroidQuery {
         droid: Droid @cacheControl(inheritMaxAge: true)
         droids: [Droid] @cacheControl(inheritMaxAge: true)
       }
