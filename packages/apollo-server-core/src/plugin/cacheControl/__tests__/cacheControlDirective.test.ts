@@ -277,32 +277,30 @@ describe('@cacheControl directives', () => {
     );
   });
 
-  it('noDefaultMaxAge works', async () => {
+  it('inheritMaxAge', async () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
-      typeDefs: `
+      typeDefs: `#graphql
       type Query {
-        droid(setMaxAgeDynamically: Boolean): Droid @cacheControl(noDefaultMaxAge: true)
-        droids: [Droid] @cacheControl(noDefaultMaxAge: true)
+        topLevel: DroidQuery @cacheControl(maxAge: 1000)
+      }
+
+      type DroidQuery
+        droid: Droid @cacheControl(inheritMaxAge: true)
+        droids: [Droid] @cacheControl(inheritMaxAge: true)
       }
 
       type Droid {
-        uncachedField: String
+        uncachedField: Droid
+        scalarField: String
         cachedField: String @cacheControl(maxAge: 30)
       }
     `,
       resolvers: {
         Query: {
-          droid: (
-            _parent,
-            { setMaxAgeDynamically },
-            _context,
-            { cacheControl },
-          ) => {
-            if (setMaxAgeDynamically) {
-              cacheControl.setCacheHint({ maxAge: 60 });
-            }
-            return {};
-          },
+          topLevel: () => ({}),
+        },
+        Droid: {
+          droid: () => ({}),
           droids: () => [{}, {}],
         },
       },
@@ -312,12 +310,15 @@ describe('@cacheControl directives', () => {
       const { hints, policyIfCacheable } =
         await collectCacheControlHintsAndPolicyIfCacheable(
           schema,
-          '{ droid { cachedField } }',
+          '{ topLevel { droid { cachedField } } }',
           {},
         );
 
       expect(hints).toStrictEqual(
-        new Map([['droid.cachedField', { maxAge: 30 }]]),
+        new Map([
+          ['topLevel', { maxAge: 1000 }],
+          ['topLevel.droid.cachedField', { maxAge: 30 }],
+        ]),
       );
       expect(policyIfCacheable).toStrictEqual({
         maxAge: 30,
@@ -329,14 +330,16 @@ describe('@cacheControl directives', () => {
       const { hints, policyIfCacheable } =
         await collectCacheControlHintsAndPolicyIfCacheable(
           schema,
-          '{ droid { uncachedField cachedField } }',
+          '{ topLevel { droid { uncachedField { cachedField } cachedField } } }',
           {},
         );
 
       expect(hints).toStrictEqual(
         new Map([
-          ['droid.cachedField', { maxAge: 30 }],
-          ['droid.uncachedField', { maxAge: 0 }],
+          ['topLevel', { maxAge: 1000 }],
+          ['topLevel.droid.cachedField', { maxAge: 30 }],
+          ['topLevel.droid.uncachedField', { maxAge: 0 }],
+          ['topLevel.droid.uncachedField.cachedField', { maxAge: 30 }],
         ]),
       );
       expect(policyIfCacheable).toBeNull();
@@ -346,76 +349,49 @@ describe('@cacheControl directives', () => {
       const { hints, policyIfCacheable } =
         await collectCacheControlHintsAndPolicyIfCacheable(
           schema,
-          '{ droid(setMaxAgeDynamically: true) { uncachedField cachedField } }',
+          '{ topLevel { droids { uncachedField { cachedField } cachedField } } }',
           {},
         );
 
       expect(hints).toStrictEqual(
         new Map([
-          ['droid', { maxAge: 60 }],
-          ['droid.cachedField', { maxAge: 30 }],
-          // We do *not* get a hint on uncachedField because it's a scalar whose
-          // parent has a hint, even though that hint was a dynamic hint layered
-          // on top of noDefaultMaxAge.
-        ]),
-      );
-      expect(policyIfCacheable).toStrictEqual({
-        maxAge: 30,
-        scope: CacheScope.Public,
-      });
-    }
-
-    {
-      const { hints, policyIfCacheable } =
-        await collectCacheControlHintsAndPolicyIfCacheable(
-          schema,
-          '{ droids { uncachedField cachedField } }',
-          {},
-        );
-
-      expect(hints).toStrictEqual(
-        new Map([
-          ['droids.0.cachedField', { maxAge: 30 }],
-          ['droids.0.uncachedField', { maxAge: 0 }],
-          ['droids.1.cachedField', { maxAge: 30 }],
-          ['droids.1.uncachedField', { maxAge: 0 }],
+          ['topLevel.droids.0.cachedField', { maxAge: 30 }],
+          ['topLevel.droids.0.uncachedField', { maxAge: 0 }],
+          ['topLevel.droids.0.uncachedField.cachedField', { maxAge: 30 }],
+          ['topLevel.droids.1.cachedField', { maxAge: 30 }],
+          ['topLevel.droids.1.uncachedField', { maxAge: 0 }],
+          ['topLevel.droids.1.uncachedField.cachedField', { maxAge: 30 }],
         ]),
       );
       expect(policyIfCacheable).toBeNull();
     }
   });
 
-  it('noDefaultMaxAge docs examples', async () => {
+  it('inheritMaxAge docs examples', async () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
-      typeDefs: `
-      type Query {
-        foo(setMaxAgeDynamically: Boolean): Foo @cacheControl(noDefaultMaxAge: true)
-        intermediate: Intermediate @cacheControl(maxAge: 40)
-        defaultFoo: Foo
-      }
-
-      type Foo {
-        uncachedField: String
-        cachedField: String @cacheControl(maxAge: 30)
-      }
-      type Intermediate {
-        foo: Foo @cacheControl(noDefaultMaxAge: true)
-      }
-    `,
+      typeDefs: `#graphql
+        type Query {
+          foo: Foo
+          cachedFoo: Foo @cacheControl(maxAge: 60)
+          intermediate: Intermediate @cacheControl(maxAge: 40)
+        }
+        type Foo {
+          inheritingField: String
+          cachedField: String @cacheControl(maxAge: 30)
+        }
+        type Intermediate {
+          foo: Foo @cacheControl(inheritMaxAge: true)
+        }
+      `,
+      // FIXME can we do mocking?
       resolvers: {
         Query: {
-          foo: (
-            _parent,
-            { setMaxAgeDynamically },
-            _context,
-            { cacheControl },
-          ) => {
-            if (setMaxAgeDynamically) {
-              cacheControl.setCacheHint({ maxAge: 60 });
-            }
-            return {};
-          },
-          defaultFoo: () => ({}),
+          foo: () => ({}),
+          cachedFoo: () => ({}),
+          intermediate: () => ({}),
+        },
+        Intermediate: {
+          foo: () => ({}),
         },
       },
     });
@@ -437,32 +413,43 @@ describe('@cacheControl directives', () => {
     await expectMaxAge('{defaultFoo{cachedField}}', undefined);
     await expectMaxAge('{foo(setMaxAgeDynamically:true){uncachedField}}', 60);
     await expectMaxAge('{intermediate{foo{uncachedField}}}', 40);
+    await expectMaxAge('{foo{cachedField}}', undefined);
+    await expectMaxAge('{cachedFoo{inheritingField}}', 60);
+    await expectMaxAge('{cachedFoo{cachedField}}', 30);
+    await expectMaxAge('{intermediate{foo{inheritingField}}}', 40);
   });
 
-  it('noDefaultMaxAge can be combined with scope', async () => {
+  it('inheritMaxAge can be combined with scope', async () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
       typeDefs: `
         type Query {
-          foo: Foo @cacheControl(noDefaultMaxAge: true, scope: PRIVATE)
+          topLevel: TopLevel @cacheControl(maxAge: 500)
+        }
+        type TopLevel {
+          foo: Foo @cacheControl(inheritMaxAge: true, scope: PRIVATE)
         }
         type Foo {
           bar: String @cacheControl(maxAge: 5)
         }
     `,
-      resolvers: { Query: { foo: () => ({}) } },
+      resolvers: {
+        Query: { topLevel: () => ({}) },
+        TopLevel: { foo: () => ({}) },
+      },
     });
 
     const { hints, policyIfCacheable } =
       await collectCacheControlHintsAndPolicyIfCacheable(
         schema,
-        '{ foo { bar } }',
+        '{topLevel { foo { bar } } }',
         {},
       );
 
     expect(hints).toStrictEqual(
       new Map([
-        ['foo', { scope: CacheScope.Private }],
-        ['foo.bar', { maxAge: 5 }],
+        ['topLevel', { maxAge: 500 }],
+        ['topLevel.foo', { scope: CacheScope.Private }],
+        ['topLevel.foo.bar', { maxAge: 5 }],
       ]),
     );
     expect(policyIfCacheable).toStrictEqual({
@@ -478,7 +465,7 @@ describe('@cacheControl directives', () => {
           foo: Foo @cacheControl(maxAge: 5)
         }
         type Foo {
-          bar: Bar @cacheControl(noDefaultMaxAge: true)
+          bar: Bar @cacheControl(inheritMaxAge: true)
           defaultBar: Bar
         }
         type Bar {

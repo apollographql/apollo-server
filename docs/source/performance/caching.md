@@ -159,7 +159,7 @@ For example, given the following schema:
 ```graphql
 type Query {
   foo: Foo
-  cachedFoo: @cacheControl(maxAge: 60)
+  cachedFoo: Foo @cacheControl(maxAge: 60)
   intermediate: Intermediate @cacheControl(maxAge: 40)
 }
 type Foo {
