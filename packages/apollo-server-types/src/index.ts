@@ -254,6 +254,13 @@ export interface CacheHint {
   scope?: CacheScope;
 }
 
+/**
+ * FIXME doc
+ */
+export interface CacheAnnotation extends CacheHint {
+  inheritMaxAge?: true;
+}
+
 export enum CacheScope {
   Public = 'PUBLIC',
   Private = 'PRIVATE',

@@ -46,8 +46,8 @@ enum CacheControlScope {
 directive @cacheControl(
   maxAge: Int
   scope: CacheControlScope
-  noDefaultMaxAge: Boolean
-) on FIELD_DEFINITION | OBJECT | INTERFACE
+  inheritMaxAge: Boolean
+) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 ```
 
 The `@cacheControl` directive accepts the following arguments:
@@ -56,7 +56,7 @@ The `@cacheControl` directive accepts the following arguments:
 |------|-------------|
 | `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-the-default-maxage). |
 | `scope` | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses). |
-| `noDefaultMaxAge` | Do not apply the [default `maxAge`](#default-maxage) to this field, but do apply it to its children. |
+| `inheritMaxAge` | If `true`, inherits the `maxAge` from its parent field. This means that non-root fields returning objects, interfaces, or unions that do not specify `maxAge` in some other way does not have the [default `maxAge`](#setting-the-default-maxage) applied. Do not combine this with `maxAge` in the same directive. |
 
 Use `@cacheControl` for fields that should always be cached with the same settings. If caching settings might change at runtime, instead use the [dynamic method](#in-your-resolvers-dynamic).
 
@@ -139,49 +139,51 @@ The `setCacheHint` method accepts an object with the same fields as [the `@cache
 
 The `cacheControl` object also has a `cacheHint` field which returns the field's current hint. This object also has a few other helpful methods, such as `info.cacheControl.cacheHint.restrict({ maxAge, scope })` which is similar to `setCacheHint` but it will never make `maxAge` larger or change `scope` from `PRIVATE` to `PUBLIC`. There is also a function `info.cacheControl.cacheHintFromType()` which takes an object type from a GraphQL AST and returns a cache hint which can be passed to `setCacheHint` or `restrict`; it may be useful for implementing resolvers that return unions or interfaces.
 
-### Default `maxAge`
+### Root and composite-type fields are not cachable by default
 
-By default, the following schema fields have a `maxAge` of `0` (meaning their values are _not_ cached unless you specify otherwise):
+The general philosophy behind `@cacheControl` is that we should only consider a response to be cachable if we have been told that each piece of it is cachable; we never assume that anything is cachable by default. However, we don't want you to have to specify cache hints for every single field in your entire schema. Ideally, you would specify a cache hint on every field whose resolver reads from a data source such as a database or REST API, based on how long you'd like to cache that particular read operation; fields whose resolvers just read in-memory data fetched by a parent resolver (including the default resolver) don't have a particularly interesting cache policy.
 
-* All **root fields** (i.e., the fields of the `Query` and `Mutation` objects)
-* Fields that return an object or interface type
-* Scalar fields where no ancestor field in the operation had specified `maxAge`, because they add had `@cacheControl(noDefaultMaxAge: true)` and did not set a `maxAge` in a different way.
+So we follow the following heuristic. By default, the following schema fields have a `maxAge` of `0` (meaning their values are _not_ cached unless you specify otherwise):
 
-Scalar fields inherit their default cache behavior (including `maxAge`) from their parent object type. This enables you to define cache behavior for _most_ scalars at the [type level](#type-level-definitions), while overriding that behavior in individual cases at the [field level](#field-level-definitions).
+* All **root fields** (i.e., the fields of the `Query` and `Mutation` objects). Because their parent objects have no data, we guess that they are likely to be doing some sort of non-trivial read operation.
+* Fields that **return a composite type** (object, interface, or union), possibly wrapped inside one or more layers of "list of" and "non-null". Our heuristic assumes that these fields (fields with their own sub-fields) are likely to involve a non-trivial read operation, whereas scalar fields are more likely to contain data read in a parent resolver.
+
+Non-root scalar fields inherit their default cache behavior (including `maxAge`) from their parent object type. This enables you to define cache behavior for _most_ scalars at the [type level](#type-level-definitions), while overriding that behavior in individual cases at the [field level](#field-level-definitions).
 
 As a result of these defaults, **no schema fields are cached by default**.
 
-If you don't want a field that falls into one of those categories to affect the response's overall cache policy, you can set `@cacheControl(noDefaultMaxAge: true)` on the field. (This cannot be specified on types or via `setCacheHint`.) In this case the field is treated similarly to a scalar field: if the field's type doesn't have `@cacheControl(maxAge)` set on it and the field's resolver doesn't call `info.setCacheHint({maxAge})`, the overall cache policy will not be affected by this field. When this happens to a non-scalar field, children that are scalars are treated as if they are root fields. For example, given the following schema:
+These heuristics aren't always correct. If a (non-root) scalar field does actually perform a read operation with a different cachability from its parent, you can specify a cache hint on it to override the default assumption that non-root scalar fields inherit their parent's cache policy. And if a field returns an object type just as a way of organizing data and not because it's performing a read operation, you can set `@cacheControl(inheritMaxAge: true)` on the field or its return type; in this case, the default `maxAge` of 0 will not be applied. (Setting `@cacheControl(inheritMaxAge: true)` on a root field has no effect. `inheritMaxAge: true` cannot be specified via `info.cacheControl`.) Note that if you specify `@cacheControl(inheritMaxAge: true)` on a type, you may still specify `maxAge` on a field returning that type, which will take effect; and you can specify `maxAge` via `info.cacheControl` even on fields/types with `inheritMaxAge: true`.
+
+For example, given the following schema:
 
 ```graphql
 type Query {
-  foo(setMaxAgeDynamically: Boolean): Foo @cacheControl(noDefaultMaxAge: true)
-  defaultFoo: Foo
+  foo: Foo
+  cachedFoo: @cacheControl(maxAge: 60)
   intermediate: Intermediate @cacheControl(maxAge: 40)
 }
 type Foo {
-  uncachedField: String
+  inheritingField: String
   cachedField: String @cacheControl(maxAge: 30)
 }
 type Intermediate {
-  foo: Foo @cacheControl(noDefaultMaxAge: true)
+  foo: Foo @cacheControl(inheritMaxAge: true)
 }
 ```
 
-Assume that `Query.foo` calls `info.setCacheHint({maxAge: 60})` if its `setMaxAgeDynamically` argument is provided. Then the following queries will have the given `maxAge` values:
+Then the following queries will have the given `maxAge` values:
 
 | Query | `maxAge` | Explanation |
 |-------|----------|-------------|
-|`{foo{cachedField}}`|30|`foo` has `noDefaultMaxAge` so it does not affect the policy; `cachedField` sets it to 30.|
-|`{foo{uncachedField}}`|0|`foo` has `noDefaultMaxAge` so it does not affect the policy; `uncachedField` is the child of a field with no `maxAge` so it defaults to `maxAge` 0.|
-|`{defaultFoo{cachedField}}`|0|`foo` is a root field (and an object-typed field) with no `maxAge` or `noDefaultMaxAge` so it defaults to 0.|
-|`{foo(setMaxAgeDynamically: true){uncachedField}}`|60|`foo` sets its `maxAge` to 60 dynamically; this means `uncachedField` can follow the normal scalar field rules and not affect `maxAge`.|
-|`{intermediate{foo{uncachedField}}}`|40|`intermediate` sets its `maxAge` to 40. `Intermediate.foo` has `noDefaultMaxAge` so it does not affect the cache policy. `Foo.uncachedField` is a scalar; while its parent field (`foo`) has `noDefaultMaxAge`, its grandparent does have a `maxAge`, so it is treated like a normal scalar field rather than the special case of a root-like scalar field.|
+|`{foo{cachedField}}`|0|is a root field (and an object-typed field) with no `maxAge` and it does not set `maxAge` dynamically, so it defaults to 0. It does not matter that `cachedField` has a `maxAge`.|
+|`{cachedFoo{inheritingField}}`|60|`cachedFoo` has a `maxAge` of 60; this means `inheritingField` can follow the normal scalar field rules and not affect `maxAge`.|
+|`{cachedFoo{cachedField}}`|30|`cachedFoo` has a `maxAge` of 60 and `cachedField` has a `maxAge` of 30; we take the most restrictive value, 30.|
+|`{intermediate{foo{inheritingField}}}`|40|`intermediate` sets its `maxAge` to 40. `Intermediate.foo` has `inheritMaxAge` so it does not affect the cache policy. `Foo.uncachedField` is a scalar so it inherits the `maxAge` from its parent, and thus indirectly from its grandparent: 40.|
 
 
 #### Setting the default `maxAge`
 
-You can set a default `maxAge` (instead of `0`) that's applied to every root or object-typed or interface-typed field that doesn't specify a different value and doesn't specify `noDefaultMaxAge`.
+You can set a default `maxAge` that's applied to the fields that would otherwise receive the default `maxAge` of `0`. That is: fields that don't explicitly specify `maxAge` via `@cacheControl` on the field or the type they return or via `info.cacheControl`, and which are either root fields, or fields that return a composite (object, interface, or union) type and do not have `@cacheControl(inheritMaxAge: true)`.
 
 > You should identify and address all exceptions to your default `maxAge` before you enable it in production, but this is a great way to get started with cache control.
 
