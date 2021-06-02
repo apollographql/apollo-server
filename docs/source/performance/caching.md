@@ -135,7 +135,7 @@ const resolvers = {
 
 The `setCacheHint` method accepts an object with the same fields as [the `@cacheControl` directive](#in-your-schema-static).
 
-The `cacheControl` object also has a `cacheHint` field which returns the field's current hint. This object also has a few other helpful methods, such as `info.cacheControl.cacheHint.restrict({ maxAge, scope })` which is similar to `setCacheHint` but it will never make `makeAge` larger or change `scope` from `PRIVATE` to `PUBLIC`. There is also a function `info.cacheControl.cacheHintFromType()` which takes an object type from a GraphQL AST and returns a cache hint which can be passed to `setCacheHint` or `restrict`; it may be useful for implementing resolvers that return unions or interfaces.
+The `cacheControl` object also has a `cacheHint` field which returns the field's current hint. This object also has a few other helpful methods, such as `info.cacheControl.cacheHint.restrict({ maxAge, scope })` which is similar to `setCacheHint` but it will never make `maxAge` larger or change `scope` from `PRIVATE` to `PUBLIC`. There is also a function `info.cacheControl.cacheHintFromType()` which takes an object type from a GraphQL AST and returns a cache hint which can be passed to `setCacheHint` or `restrict`; it may be useful for implementing resolvers that return unions or interfaces.
 
 ### Default `maxAge`
 
