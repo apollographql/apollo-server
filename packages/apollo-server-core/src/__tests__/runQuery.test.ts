@@ -29,6 +29,7 @@ import {
 } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { generateSchemaHash } from "../utils/schemaHash";
+import { newCachePolicy } from '../cachePolicy';
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
 // GraphQLRequestProcessor refactoring.
@@ -57,6 +58,7 @@ function runQuery(
     context: options.context || {},
     debug: options.debug,
     cache: {} as any,
+    overallCachePolicy: newCachePolicy(),
     ...requestContextExtra,
   });
 }

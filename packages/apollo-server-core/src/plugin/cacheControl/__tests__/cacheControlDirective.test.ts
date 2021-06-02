@@ -130,6 +130,35 @@ describe('@cacheControl directives', () => {
     expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
   });
 
+  it('should set the specified maxAge for a field from a cache hint on the target type extension', async () => {
+    const schema = buildSchemaWithCacheControlSupport(`
+      type Query {
+        droid(id: ID!): Droid
+      }
+
+      type Droid {
+        id: ID!
+        name: String!
+      }
+
+      extend type Droid @cacheControl(maxAge: 60)
+    `);
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10 },
+    );
+
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
+  });
+
   it('should overwrite the default maxAge when maxAge=0 is specified on the type', async () => {
     const schema = buildSchemaWithCacheControlSupport(`
       type Query {

@@ -177,10 +177,9 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
       async function sendAllReportsAndReportErrors(): Promise<void> {
         await Promise.all(
-          Object.keys(
-            reportDataByExecutableSchemaId,
-          ).map((executableSchemaId) =>
-            sendReportAndReportErrors(executableSchemaId),
+          Object.keys(reportDataByExecutableSchemaId).map(
+            (executableSchemaId) =>
+              sendReportAndReportErrors(executableSchemaId),
           ),
         );
       }
@@ -458,17 +457,18 @@ export function ApolloServerPluginUsageReporting<TContext>(
           treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
           treeBuilder.trace.registeredOperation = !!metrics.registeredOperation;
 
-          if (requestContext.overallCachePolicy) {
+          const policyIfCacheable =
+            requestContext.overallCachePolicy.policyIfCacheable();
+          if (policyIfCacheable) {
             treeBuilder.trace.cachePolicy = new Trace.CachePolicy({
               scope:
-                requestContext.overallCachePolicy.scope === CacheScope.Private
+                policyIfCacheable.scope === CacheScope.Private
                   ? Trace.CachePolicy.Scope.PRIVATE
-                  : requestContext.overallCachePolicy.scope ===
-                    CacheScope.Public
+                  : policyIfCacheable.scope === CacheScope.Public
                   ? Trace.CachePolicy.Scope.PUBLIC
                   : Trace.CachePolicy.Scope.UNKNOWN,
               // Convert from seconds to ns.
-              maxAgeNs: requestContext.overallCachePolicy.maxAge * 1e9,
+              maxAgeNs: policyIfCacheable.maxAge * 1e9,
             });
           }
 
@@ -635,11 +635,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
             if (clientInfo) {
               // While there is a clientAddress protobuf field, the backend
               // doesn't pay attention to it yet, so we'll ignore it for now.
-              const {
-                clientName,
-                clientVersion,
-                clientReferenceId,
-              } = clientInfo;
+              const { clientName, clientVersion, clientReferenceId } =
+                clientInfo;
               // the backend makes the choice of mapping clientName => clientReferenceId if
               // no custom reference id is provided
               treeBuilder.trace.clientVersion = clientVersion || '';
@@ -700,9 +697,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
             // See comment above for why `didEnd` must be called in two hooks.
             // The type assertion is valid becaus we check didResolveSource above.
             didEnd(
-              requestContext as GraphQLRequestContextDidEncounterErrors<
-                TContext
-              > &
+              requestContext as GraphQLRequestContextDidEncounterErrors<TContext> &
                 GraphQLRequestContextDidResolveSource<TContext>,
             );
           },
