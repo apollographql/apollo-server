@@ -130,7 +130,7 @@ export function ApolloServerPluginCacheControl(
                     fakeFieldPolicy.replace(dynamicHint);
                   },
                   cacheHint: fakeFieldPolicy,
-                  cacheHintFromType,
+                  cacheHintFromType: memoizedCacheHintFromType,
                 };
               },
             };
