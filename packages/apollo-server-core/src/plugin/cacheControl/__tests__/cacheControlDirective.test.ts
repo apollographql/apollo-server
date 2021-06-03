@@ -299,9 +299,12 @@ describe('@cacheControl directives', () => {
         Query: {
           topLevel: () => ({}),
         },
-        Droid: {
+        DroidQuery: {
           droid: () => ({}),
           droids: () => [{}, {}],
+        },
+        Droid: {
+          uncachedField: () => ({}),
         },
       },
     });
@@ -355,6 +358,7 @@ describe('@cacheControl directives', () => {
 
       expect(hints).toStrictEqual(
         new Map([
+          ['topLevel', { maxAge: 1000 }],
           ['topLevel.droids.0.cachedField', { maxAge: 30 }],
           ['topLevel.droids.0.uncachedField', { maxAge: 0 }],
           ['topLevel.droids.0.uncachedField.cachedField', { maxAge: 30 }],
@@ -408,11 +412,6 @@ describe('@cacheControl directives', () => {
       ).toBe(maxAge);
     }
 
-    await expectMaxAge('{foo{cachedField}}', 30);
-    await expectMaxAge('{foo{uncachedField}}', undefined);
-    await expectMaxAge('{defaultFoo{cachedField}}', undefined);
-    await expectMaxAge('{foo(setMaxAgeDynamically:true){uncachedField}}', 60);
-    await expectMaxAge('{intermediate{foo{uncachedField}}}', 40);
     await expectMaxAge('{foo{cachedField}}', undefined);
     await expectMaxAge('{cachedFoo{inheritingField}}', 60);
     await expectMaxAge('{cachedFoo{cachedField}}', 30);
