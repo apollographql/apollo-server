@@ -122,11 +122,11 @@ export class ApolloServer extends ApolloServerBase {
       router.use(path, json(bodyParserConfig));
     }
 
-    const frontendPage = this.getFrontendPage();
+    const landingPage = this.getLandingPage();
     router.use(path, (req, res, next) => {
-      if (frontendPage && prefersHtml(req)) {
+      if (landingPage && prefersHtml(req)) {
         res.setHeader('Content-Type', 'text/html');
-        res.write(frontendPage.html);
+        res.write(landingPage.html);
         res.end();
         return;
       }
