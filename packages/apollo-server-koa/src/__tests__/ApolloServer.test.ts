@@ -96,7 +96,7 @@ describe('apollo-server-koa', () => {
       expect(result.errors).toBeUndefined();
     });
 
-    it('renders GraphQL playground by default when browser requests', async () => {
+    it('renders landing page by default when browser requests', async () => {
       const { httpServer } = await createServer({
         typeDefs,
         resolvers,
@@ -109,7 +109,7 @@ describe('apollo-server-koa', () => {
           'accept',
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         )
-        .expect(200, /GraphQLPlayground/);
+        .expect(200, /apollo-server-landing-page.cdn.apollographql.com\/_latest/);
     });
     it('accepts cors configuration', async () => {
       const { url: uri } = await createServer(

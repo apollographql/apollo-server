@@ -81,8 +81,7 @@ describe('apollo-server-micro', function() {
         service.close();
       });
 
-      it('should render a GraphQL playground when a browser sends in a request', async function () {
-        // Playground is on by default with unset NODE_ENV.
+      it('should render a landing page when a browser sends in a request', async function () {
         const { service, uri } = await createServer(
           {},
           { __testing_nodeEnv__: undefined },
@@ -96,7 +95,7 @@ describe('apollo-server-micro', function() {
               'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
           },
         });
-        expect(body).toMatch('GraphQLPlayground');
+        expect(body).toMatch(/apollo-server-landing-page.cdn.apollographql.com\/_latest/);
         service.close();
       });
     });

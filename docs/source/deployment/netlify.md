@@ -88,13 +88,9 @@ const server = new ApolloServer({
 exports.handler = server.createHandler();
 ```
 
-Now, make sure you've run `NODE_ENV=development npm run start:lambda`, and navigate to `localhost:9000/graphql` in your browser. You should see GraphQL Playground, where you can run queries against your API!
+Now, make sure you've run `NODE_ENV=development npm run start:lambda`, and navigate to `localhost:9000/graphql` in your browser. You should see your server's landing page!
 
-*Note - The GraphQL Playground will only run if your `NODE_ENV` is set to `development`. If you don't pass this, or your `NODE_ENV` is set to `production`, you will not see the GraphQL Playground.*
-
-![Local GraphQL Server](../images/graphql.png)
-
-If you can see GraphQL Playground and run a simple query, you've done everything properly. Now, let's add Apollo Client to the frontend.
+If your `NODE_ENV` is not set to `production`, you will see a link <q>Query your Server</q> which should take you to Apollo Sandbox where you can query your app. If you can see the landing page and run a simple query from Sandbox, you've done everything properly. Now, let's add Apollo Client to the frontend.
 
 ### Add endpoint to Apollo Client
 

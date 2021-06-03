@@ -52,7 +52,7 @@ From your Google Cloud Console, go to the [Cloud Functions page](https://console
 
 Click **Create Function**. Give the function a name and set the **Trigger type** to `HTTP`.
 
-For quick setup and access to the GraphQL endpoint/playground, choose to **Allow unauthenticated invocations**. To require authentication for this endpoint, you can manage authorized users via [Cloud IAM](https://console.cloud.google.com/iam-admin/iam).
+For quick setup and access to the GraphQL endpoint/landing page, choose to **Allow unauthenticated invocations**. To require authentication for this endpoint, you can manage authorized users via [Cloud IAM](https://console.cloud.google.com/iam-admin/iam).
 
 Save your configuration changes in the Trigger section. Copy the trigger's URL for later and click **Next**.
 
@@ -122,11 +122,11 @@ For more information, see the official [Cloud Functions docs](https://cloud.goog
 
 ## Testing the function
 
-After deployment completes, navigate to your function's trigger URL. If deployment succeeded, GraphQL Playground opens.
+After deployment completes, navigate to your function's trigger URL. If deployment succeeded, you should see your server's landing page.
 
 > If you can't access your trigger URL, you might need to [add `allAuthenticatedUsers` or `allUsers` permissions](https://cloud.google.com/iam/docs/overview#all-authenticated-users) to your function.
 
-You can use GraphQL Playground to test the following query:
+Click <q>Query your Server</q> and use Apollo Sandbox to test the following query:
 
 ```graphql
 query TestQuery {
