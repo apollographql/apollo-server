@@ -70,13 +70,13 @@ export interface GraphQLServerListener {
   // with this method. If one does, it is called once on server startup and the
   // page it returns is served to clients with `accept: text/html` headers. This
   // is an intentionally simple API; if you want to do something fancy to serve
-  // your frontend UI, you probably should just define a handler in your web
+  // a landing page, you probably should just define a handler in your web
   // framework.
-  renderFrontend?(): FrontendPage;
+  renderLandingPage?(): LandingPage;
 }
 
 // The page served to clients with `accept: text/html` headers.
-export interface FrontendPage {
+export interface LandingPage {
   html: string;
 }
 

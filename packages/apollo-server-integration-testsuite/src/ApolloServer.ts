@@ -43,8 +43,8 @@ import {
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
   ApolloServerPluginUsageReportingOptions,
-  ApolloServerPluginFrontendDisabled,
-  ApolloServerPluginFrontendGraphQLPlayground,
+  ApolloServerPluginLandingPageDisabled,
+  ApolloServerPluginLandingPageGraphQLPlayground,
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
@@ -859,11 +859,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
             if (!this.server) {
               throw new Error('must listen before getting URL');
             }
-            const {
-              family,
-              address,
-              port,
-            } = this.server.address() as AddressInfo;
+            const { family, address, port } =
+              this.server.address() as AddressInfo;
 
             if (family !== 'IPv4') {
               throw new Error(`The family was unexpectedly ${family}.`);
@@ -1190,8 +1187,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 // rewritten.
                 expect(trace.root!.child![0].error).toMatchObject([
                   {
-                    json:
-                      '{"message":"rewritten as a new error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                    json: '{"message":"rewritten as a new error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
                     message: 'rewritten as a new error',
                     location: [{ column: 2, line: 1 }],
                   },
@@ -1236,8 +1232,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 // rewritten.
                 expect(trace.root!.child![0].error).toMatchObject([
                   {
-                    json:
-                      '{"message":"rewritten as a modified error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                    json: '{"message":"rewritten as a modified error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
                     message: 'rewritten as a modified error',
                     location: [{ column: 2, line: 1 }],
                   },
@@ -1317,8 +1312,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               // rewritten.
               expect(trace.root!.child![0].error).toMatchObject([
                 {
-                  json:
-                    '{"message":"rewriteError undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                  json: '{"message":"rewriteError undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
                   message: 'rewriteError undefined whoops',
                   location: [{ column: 2, line: 1 }],
                 },
@@ -1743,8 +1737,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             extensions: {
               persistedQuery: {
                 version: VERSION,
-                sha:
-                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
               },
             },
             query: TEST_STRING_QUERY,
@@ -1806,11 +1799,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           );
         }
 
-        const {
-          family,
-          address,
-          port,
-        } = fakeUsageReportingServer.address() as AddressInfo;
+        const { family, address, port } =
+          fakeUsageReportingServer.address() as AddressInfo;
         if (family !== 'IPv4') {
           throw new Error(`The family was unexpectedly ${family}.`);
         }
@@ -1835,14 +1825,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
         ) {
           const networkError = status === 0;
 
-          const {
-            closeServer,
-            fakeUsageReportingUrl,
-            writeResponseResolve,
-          } = await makeFakeUsageReportingServer({
-            status,
-            waitWriteResponse: true,
-          });
+          const { closeServer, fakeUsageReportingUrl, writeResponseResolve } =
+            await makeFakeUsageReportingServer({
+              status,
+              waitWriteResponse: true,
+            });
 
           try {
             // To simulate a network error, we create and close the server.
@@ -2796,7 +2783,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
-    describe('renderFrontend', () => {
+    describe('renderLandingPage', () => {
       let httpServer: http.Server;
 
       function getWithoutAcceptHeader(url: string) {
@@ -2813,7 +2800,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             ...htmls.map((html) => ({
               serverWillStart() {
                 return {
-                  renderFrontend() {
+                  renderLandingPage() {
                     return {
                       html,
                     };
@@ -2827,10 +2814,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
         };
       }
 
-      // Pass this to expect in the "not FrontendPage, you are trying to do GraphQL
+      // Pass this to expect in the "not LandingPage, you are trying to do GraphQL
       // but didn't send a query" case, which we should maybe change to
       // something nicer than an ugly 400.
-      const serveNoFrontendPage = 400;
+      const serveNoLandingPage = 400;
 
       it('defaults to playground', async () => {
         httpServer = (await createApolloServer(makeServerConfig([])))
@@ -2843,7 +2830,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
           await createApolloServer({
             typeDefs: 'type Query {x: ID}',
             plugins: [
-              ApolloServerPluginFrontendGraphQLPlayground({ version: '9.8.7' }),
+              ApolloServerPluginLandingPageGraphQLPlayground({
+                version: '9.8.7',
+              }),
             ],
           })
         ).httpServer;
@@ -2856,10 +2845,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
         httpServer = (
           await createApolloServer({
             typeDefs: 'type Query {x: ID}',
-            plugins: [ApolloServerPluginFrontendDisabled()],
+            plugins: [ApolloServerPluginLandingPageDisabled()],
           })
         ).httpServer;
-        await get('/graphql').expect(serveNoFrontendPage);
+        await get('/graphql').expect(serveNoLandingPage);
       });
 
       describe('basic functionality', () => {
@@ -2879,7 +2868,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             await get('/foo').expect(404);
           });
           it('needs the header', async () => {
-            await getWithoutAcceptHeader('/goofql').expect(serveNoFrontendPage);
+            await getWithoutAcceptHeader('/goofql').expect(serveNoLandingPage);
           });
           it('trailing slash works', async () => {
             await get('/goofql/').expect(200, 'BAZ');
@@ -2899,7 +2888,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             await get('/').expect(200, 'BAZ');
           });
           it('needs the header', async () => {
-            await getWithoutAcceptHeader('/').expect(serveNoFrontendPage);
+            await getWithoutAcceptHeader('/').expect(serveNoLandingPage);
           });
         });
       });
@@ -2908,10 +2897,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
       // have a startup phase.
       options.serverlessFramework ||
         describe('startup errors', () => {
-          it('only one plugin can implement renderFrontend', async () => {
+          it('only one plugin can implement renderLandingPage', async () => {
             await expect(
               createApolloServer(makeServerConfig(['x', 'y'])),
-            ).rejects.toThrow('Only one plugin can implement renderFrontend.');
+            ).rejects.toThrow(
+              'Only one plugin can implement renderLandingPage.',
+            );
           });
         });
     });

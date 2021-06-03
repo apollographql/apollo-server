@@ -1,4 +1,4 @@
-// This is the frontend plugin for GraphQL Playground. It wraps
+// This is the landing page plugin for GraphQL Playground. It wraps
 // `@apollographql/graphql-playground-html`, our fork of upstream Playground.
 // That package just contains a small HTML shell that brings in the actual React
 // app from a CDN; you can control what version of the React app to use by
@@ -20,18 +20,18 @@ import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
 // `renderPlaygroundPage` via the integration packages' `playground` config.
 const defaultPlaygroundVersion = '1.7.41';
 
-export type ApolloServerPluginFrontendGraphQLPlaygroundOptions = Parameters<
+export type ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Parameters<
   typeof renderPlaygroundPage
 >[0];
 
-export function ApolloServerPluginFrontendGraphQLPlayground(
-  options: ApolloServerPluginFrontendGraphQLPlaygroundOptions = Object.create(null),
+export function ApolloServerPluginLandingPageGraphQLPlayground(
+  options: ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Object.create(null),
 ): ImplicitlyInstallablePlugin {
   return {
     __internal_installed_implicitly__: false,
     serverWillStart(): GraphQLServerListener {
       return {
-        renderFrontend() {
+        renderLandingPage() {
           return {
             html: renderPlaygroundPage({
               version: defaultPlaygroundVersion,

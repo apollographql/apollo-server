@@ -106,7 +106,7 @@ export class ApolloServer extends ApolloServerBase {
       middlewares.push(middlewareFromPath(path, bodyParser(bodyParserConfig)));
     }
 
-    const frontendPage = this.getFrontendPage();
+    const landingPage = this.getLandingPage();
 
     middlewares.push(
       middlewareFromPath(path, async (ctx: Koa.Context) => {
@@ -116,7 +116,7 @@ export class ApolloServer extends ApolloServerBase {
           return;
         }
 
-        if (frontendPage && ctx.request.method === 'GET') {
+        if (landingPage && ctx.request.method === 'GET') {
           // perform more expensive content-type check only if necessary
           const accept = accepts(ctx.req);
           const types = accept.types() as string[];
@@ -127,7 +127,7 @@ export class ApolloServer extends ApolloServerBase {
 
           if (prefersHtml) {
             ctx.set('Content-Type', 'text/html');
-            ctx.body = frontendPage.html;
+            ctx.body = landingPage.html;
             return;
           }
         }

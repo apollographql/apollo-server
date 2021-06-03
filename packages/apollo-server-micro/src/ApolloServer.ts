@@ -5,7 +5,7 @@ import { parseAll } from '@hapi/accept';
 
 import { graphqlMicro } from './microApollo';
 import { MicroRequest } from './types';
-import { FrontendPage } from 'apollo-server-plugin-base';
+import { LandingPage } from 'apollo-server-plugin-base';
 
 export interface ServerRegistration {
   path?: string;
@@ -33,7 +33,7 @@ export class ApolloServer extends ApolloServerBase {
 
     this.graphqlPath = path || '/graphql';
 
-    const frontendPage = this.getFrontendPage();
+    const landingPage = this.getLandingPage();
 
     return async (req: MicroRequest, res: ServerResponse) => {
       if (
@@ -47,8 +47,8 @@ export class ApolloServer extends ApolloServerBase {
         return;
       }
       if (
-        frontendPage &&
-        this.handleGraphqlRequestsWithFrontendPage({ req, res, frontendPage })
+        landingPage &&
+        this.handleGraphqlRequestsWithLandingPage({ req, res, landingPage })
       ) {
         return;
       }
@@ -100,14 +100,14 @@ export class ApolloServer extends ApolloServerBase {
     return handled;
   }
 
-  private handleGraphqlRequestsWithFrontendPage({
+  private handleGraphqlRequestsWithLandingPage({
     req,
     res,
-    frontendPage,
+    landingPage,
   }: {
     req: MicroRequest;
     res: ServerResponse;
-    frontendPage: FrontendPage;
+    landingPage: LandingPage;
   }): boolean {
     let handled = false;
 
@@ -121,7 +121,7 @@ export class ApolloServer extends ApolloServerBase {
 
       if (prefersHtml) {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        send(res, 200, frontendPage.html);
+        send(res, 200, landingPage.html);
         handled = true;
       }
     }

@@ -80,25 +80,25 @@ export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin {
 }
 //#endregion
 
-//#region Frontend
+//#region LandingPage
 import type { InternalApolloServerPlugin } from '../internalPlugin';
-export function ApolloServerPluginFrontendDisabled(): ApolloServerPlugin {
+export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin {
   const plugin: InternalApolloServerPlugin = {
     __internal_plugin_id__() {
-      return 'FrontendDisabled';
+      return 'LandingPageDisabled';
     },
   };
   return plugin;
 }
 
-import type { ApolloServerPluginFrontendGraphQLPlaygroundOptions } from './frontend/graphqlPlayground';
-export type { ApolloServerPluginFrontendGraphQLPlaygroundOptions } from './frontend/graphqlPlayground';
-export function ApolloServerPluginFrontendGraphQLPlayground(
-  options: ApolloServerPluginFrontendGraphQLPlaygroundOptions = Object.create(
+import type { ApolloServerPluginLandingPageGraphQLPlaygroundOptions } from './landingPage/graphqlPlayground';
+export type { ApolloServerPluginLandingPageGraphQLPlaygroundOptions } from './landingPage/graphqlPlayground';
+export function ApolloServerPluginLandingPageGraphQLPlayground(
+  options: ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Object.create(
     null,
   ),
 ): ApolloServerPlugin {
-  return require('./frontend/graphqlPlayground').ApolloServerPluginFrontendGraphQLPlayground(
+  return require('./landingPage/graphqlPlayground').ApolloServerPluginLandingPageGraphQLPlayground(
     options,
   );
 }

@@ -19,7 +19,7 @@ import type {
   ApolloServerPlugin,
   GraphQLServiceContext,
   GraphQLServerListener,
-  FrontendPage,
+  LandingPage,
 } from 'apollo-server-plugin-base';
 
 import { GraphQLServerOptions } from './graphqlOptions';
@@ -52,7 +52,7 @@ import {
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
   ApolloServerPluginCacheControl,
-  ApolloServerPluginFrontendGraphQLPlayground,
+  ApolloServerPluginLandingPageGraphQLPlayground,
 } from './plugin';
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import { newCachePolicy } from './cachePolicy';
@@ -124,7 +124,7 @@ export class ApolloServerBase {
   private toDispose = new Set<() => Promise<void>>();
   private toDisposeLast = new Set<() => Promise<void>>();
   private experimental_approximateDocumentStoreMiB: Config['experimental_approximateDocumentStoreMiB'];
-  private frontendPage: FrontendPage | null = null;
+  private landingPage: LandingPage | null = null;
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
@@ -431,28 +431,28 @@ export class ApolloServerBase {
         });
       }
 
-      // Find the renderFrontend callback, if one is provided. If the user
-      // installed ApolloServerPluginFrontendDisabled then there may be none
-      // found. On the other hand, if the user installed a frontend plugin, then
+      // Find the renderLandingPage callback, if one is provided. If the user
+      // installed ApolloServerPluginLandingPageDisabled then there may be none
+      // found. On the other hand, if the user installed a landingPage plugin, then
       // both the implicit installation of
-      // ApolloServerPluginFrontendGraphQLPlayground and the other plugin will
+      // ApolloServerPluginLandingPageGraphQLPlayground and the other plugin will
       // be found; we skip the implicit plugin.
-      let taggedServerListenersWithRenderFrontend =
-        taggedServerListeners.filter((l) => l.serverListener.renderFrontend);
-      if (taggedServerListenersWithRenderFrontend.length > 1) {
-        taggedServerListenersWithRenderFrontend =
-          taggedServerListenersWithRenderFrontend.filter(
+      let taggedServerListenersWithRenderLandingPage =
+        taggedServerListeners.filter((l) => l.serverListener.renderLandingPage);
+      if (taggedServerListenersWithRenderLandingPage.length > 1) {
+        taggedServerListenersWithRenderLandingPage =
+          taggedServerListenersWithRenderLandingPage.filter(
             (l) => !l.installedImplicity,
           );
       }
-      if (taggedServerListenersWithRenderFrontend.length > 1) {
-        throw Error('Only one plugin can implement renderFrontend.');
-      } else if (taggedServerListenersWithRenderFrontend.length) {
-        this.frontendPage =
-          taggedServerListenersWithRenderFrontend[0].serverListener
-            .renderFrontend!();
+      if (taggedServerListenersWithRenderLandingPage.length > 1) {
+        throw Error('Only one plugin can implement renderLandingPage.');
+      } else if (taggedServerListenersWithRenderLandingPage.length) {
+        this.landingPage =
+          taggedServerListenersWithRenderLandingPage[0].serverListener
+            .renderLandingPage!();
       } else {
-        this.frontendPage = null;
+        this.landingPage = null;
       }
 
       this.state = { phase: 'started', schemaDerivedData };
@@ -475,7 +475,7 @@ export class ApolloServerBase {
   // operations.
   //
   // It's also called via `ensureStarted` by serverless frameworks so that they
-  // can call `renderFrontend` (or do other things like call a method on a base
+  // can call `renderLandingPage` (or do other things like call a method on a base
   // class that expects it to be started).
   private async _ensureStarted(): Promise<SchemaDerivedData> {
     while (true) {
@@ -778,7 +778,7 @@ export class ApolloServerBase {
     }
 
     // Special case: If we're not in production, show GraphQL Playground as a
-    // default frontend. (Note: as part of minimizing Apollo Server's
+    // default landing page. (Note: as part of minimizing Apollo Server's
     // dependencies on external software and specifically on a package that is
     // less actively maintained, we may change this default before AS 3.0.0 is
     // released.)
@@ -786,18 +786,20 @@ export class ApolloServerBase {
     // This works a bit differently from the other implicitly installed plugins,
     // which rely entirely on the __internal_plugin_id__ to decide whether the
     // plugin takes effect. That's because we want third-party plugins to be
-    // able to provide a frontend that overrides the default frontend, without
-    // them having to know about __internal_plugin_id__. So unless we actively
-    // disable the default frontend with ApolloServerPluginFrontendDisabled, we
-    // install the default frontend, but with a special flag that _start() uses
-    // to ignore it if some other plugin defines a renderFrontend callback. (We
-    // can't just look now to see if the plugin defines renderFrontend because
-    // we haven't run serverWillStart yet.)
+    // able to provide a landing page that overrides the default landing page,
+    // without them having to know about __internal_plugin_id__. So unless we
+    // actively disable the default landing page with
+    // ApolloServerPluginLandingPageDisabled, we install the default landing
+    // page, but with a special flag that _start() uses to ignore it if some
+    // other plugin defines a renderLandingPage callback. (We can't just look
+    // now to see if the plugin defines renderLandingPage because we haven't run
+    // serverWillStart yet.)
     if (isDev) {
-      const alreadyHavePlugin =
-        alreadyHavePluginWithInternalId('FrontendDisabled');
+      const alreadyHavePlugin = alreadyHavePluginWithInternalId(
+        'LandingPageDisabled',
+      );
       if (!alreadyHavePlugin) {
-        const plugin = ApolloServerPluginFrontendGraphQLPlayground();
+        const plugin = ApolloServerPluginLandingPageGraphQLPlayground();
         if (!isImplicitlyInstallablePlugin(plugin)) {
           throw Error('playground plugin should be implicitly installable?');
         }
@@ -920,18 +922,18 @@ export class ApolloServerBase {
   }
 
   // This method is called by integrations after start() (because we want
-  // renderFrontend callbacks to be able to take advantage of the context passed
-  // to serverWillStart); it returns the FrontendPage from the(single) plugin
-  // `renderFrontend` callback if it exists and returns what it returns to the
-  // integration. The integration should serve the HTML page when requested with
-  // `accept: text/html`. If no frontend page is defined by any plugin, returns
-  // null. (Specifically null and not undefined; some serverless integrations
-  // rely on this to tell the difference between "haven't called renderFrontend
-  // yet" and "there is no frontend page").
-  protected getFrontendPage(): FrontendPage | null {
-    this.assertStarted('getFrontendPage');
+  // renderLandingPage callbacks to be able to take advantage of the context
+  // passed to serverWillStart); it returns the LandingPage from the (single)
+  // plugin `renderLandingPage` callback if it exists and returns what it
+  // returns to the integration. The integration should serve the HTML page when
+  // requested with `accept: text/html`. If no landing page is defined by any
+  // plugin, returns null. (Specifically null and not undefined; some serverless
+  // integrations rely on this to tell the difference between "haven't called
+  // renderLandingPage yet" and "there is no landingß page").
+  protected getLandingPage(): LandingPage | null {
+    this.assertStarted('getLandingPage');
 
-    return this.frontendPage;
+    return this.landingPage;
   }
 }
 

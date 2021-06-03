@@ -100,7 +100,7 @@ describe('apollo-server-koa', () => {
       const { httpServer } = await createServer({
         typeDefs,
         resolvers,
-        __testing_nodeEnv__: undefined, // default frontend
+        __testing_nodeEnv__: undefined, // default landing page
       });
 
       await request(httpServer)

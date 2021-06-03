@@ -22,23 +22,23 @@ To try out dev graphs:
 
 [GraphQL Playground](https://github.com/graphql/graphql-playground) is a graphical, interactive, in-browser GraphQL IDE, created by [Prisma](https://www.prisma.io/) and based on [GraphiQL](https://github.com/graphql/graphiql).
 
-In development, Apollo Server enables GraphQL Playground on the same URL as the GraphQL server itself (e.g. `http://localhost:4000/graphql`) and automatically serves the GUI to web browsers.  When `NODE_ENV` is set to `production`, GraphQL Playground (as well as introspection) is disabled as a production best-practice. It does this by installing the `ApolloServerPluginFrontendGraphQLPlayground` plugin with default settings.
+In development, Apollo Server enables GraphQL Playground on the same URL as the GraphQL server itself (e.g. `http://localhost:4000/graphql`) and automatically serves the GUI to web browsers.  When `NODE_ENV` is set to `production`, GraphQL Playground (as well as introspection) is disabled as a production best-practice. It does this by installing the `ApolloServerPluginLandingPageGraphQLPlayground` plugin with default settings.
 
 ![GraphQL Playground](../images/graphql-playground.png)
 
 ## Configuring Playground
 
-If you'd like to configure playground, you can add `ApolloServerPluginFrontendGraphQLPlayground` to your Apollo Server yourself. The options can be found on GraphQL Playground's [documentation](https://github.com/graphql/graphql-playground/#usage).
+If you'd like to configure playground, you can add `ApolloServerPluginLandingPageGraphQLPlayground` to your Apollo Server yourself. The options can be found on GraphQL Playground's [documentation](https://github.com/graphql/graphql-playground/#usage).
 
 ```js
 const { ApolloServer } = require('apollo-server');
-const { ApolloServerPluginFrontendGraphQLPlayground } = require('apollo-server-core');
+const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
 
 new ApolloServer({
   typeDefs,
   resolvers,
   plugins: [
-    ApolloServerPluginFrontendGraphQLPlayground({
+    ApolloServerPluginLandingPageGraphQLPlayground({
       settings: {
         'editor.theme': 'light',
       },
@@ -55,16 +55,16 @@ new ApolloServer({
 
 ## Disabling Playground in development
 
-If you don't want to run GraphQL Playground at all, you have two choices. First, you can replace it with a different frontend by installing a plugin that implements the [`renderFrontend` hook](../integrations/plugins/#renderfrontend). Alternatively, you can install the `ApolloServerPluginFrontendDisabled` plugin which stops Apollo Server from serving any HTML frontend.
+If you don't want to run GraphQL Playground at all, you have two choices. First, you can replace it with a different landing page by installing a plugin that implements the [`renderLandingPage` hook](../integrations/plugins/#renderlandingpage). Alternatively, you can install the `ApolloServerPluginLandingPageDisabled` plugin which stops Apollo Server from serving any HTML landing page.
 
 ```js
 const { ApolloServer } = require('apollo-server');
-const { ApolloServerPluginFrontendDisabled } = require('apollo-server-core');
+const { ApolloServerPluginLandingPageDisabled } = require('apollo-server-core');
 
 new ApolloServer({
   typeDefs,
   resolvers,
-  plugins: [ApolloServerPluginFrontendDisabled()],
+  plugins: [ApolloServerPluginLandingPageDisabled()],
 });
 ```
 
@@ -74,13 +74,13 @@ To enable GraphQL Playground in production, just install GraphQL Playground your
 
 ```js
 const { ApolloServer } = require('apollo-server');
-const { ApolloServerPluginFrontendGraphQLPlayground } = require('apollo-server-core');
+const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
 
 new ApolloServer({
   typeDefs,
   resolvers,
   introspection: true,
-  plugins: [ApolloServerPluginFrontendGraphQLPlayground()],
+  plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
 });
 
 ```

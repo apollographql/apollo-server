@@ -3,7 +3,7 @@ import { HttpResponse } from 'azure-functions-ts-essentials';
 import { ApolloServerBase } from 'apollo-server-core';
 import { GraphQLOptions } from 'apollo-server-core';
 import { graphqlAzureFunction } from './azureFunctionApollo';
-import { FrontendPage } from 'apollo-server-plugin-base';
+import { LandingPage } from 'apollo-server-plugin-base';
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -72,13 +72,13 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     // undefined before load, null if loaded but there is none.
-    let frontendPage: FrontendPage | null | undefined;
+    let landingPage: LandingPage | null | undefined;
 
     return (context: Context, req: HttpRequest) => {
       this.ensureStarted()
         .then(() => {
-          if (frontendPage === undefined) {
-            frontendPage = this.getFrontendPage();
+          if (landingPage === undefined) {
+            landingPage = this.getLandingPage();
           }
 
           const originHeader = req.headers['Origin'] || req.headers['origin'];
@@ -110,14 +110,14 @@ export class ApolloServer extends ApolloServerBase {
           }
 
           if (
-            frontendPage &&
+            landingPage &&
             req.method === 'GET' &&
             (req.headers['Accept'] || req.headers['accept'])?.includes(
               'text/html',
             )
           ) {
             context.done(null, {
-              body: frontendPage.html,
+              body: landingPage.html,
               status: 200,
               headers: {
                 'Content-Type': 'text/html',

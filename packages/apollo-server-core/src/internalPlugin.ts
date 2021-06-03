@@ -18,7 +18,7 @@ export interface InternalApolloServerPlugin<
 
 export type InternalPluginId =
   | 'CacheControl'
-  | 'FrontendDisabled'
+  | 'LandingPageDisabled'
   | 'SchemaReporting'
   | 'InlineTrace'
   | 'UsageReporting';
