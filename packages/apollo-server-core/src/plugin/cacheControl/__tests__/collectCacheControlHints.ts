@@ -6,11 +6,14 @@ import {
 } from '../';
 import pluginTestHarness from '../../../utils/pluginTestHarness';
 
-export async function collectCacheControlHints(
+export async function collectCacheControlHintsAndPolicyIfCacheable(
   schema: GraphQLSchema,
   source: string,
   options: ApolloServerPluginCacheControlOptions = {},
-): Promise<Map<string, CacheHint>> {
+): Promise<{
+  hints: Map<string, CacheHint>;
+  policyIfCacheable: Required<CacheHint> | null;
+}> {
   const cacheHints = new Map<string, CacheHint>();
   const pluginInstance = ApolloServerPluginCacheControl({
     ...options,
@@ -34,5 +37,14 @@ export async function collectCacheControlHints(
 
   expect(requestContext.response.errors).toBeUndefined();
 
-  return cacheHints;
+  return {
+    hints: cacheHints,
+    policyIfCacheable: requestContext.overallCachePolicy.policyIfCacheable(),
+  };
+}
+
+export async function collectCacheControlHints(
+  ...args: Parameters<typeof collectCacheControlHintsAndPolicyIfCacheable>
+): Promise<Map<string, CacheHint>> {
+  return (await collectCacheControlHintsAndPolicyIfCacheable(...args)).hints;
 }

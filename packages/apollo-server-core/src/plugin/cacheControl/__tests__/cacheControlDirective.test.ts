@@ -1,7 +1,13 @@
-import { buildSchemaWithCacheControlSupport } from './cacheControlSupport';
+import {
+  buildSchemaWithCacheControlSupport,
+  makeExecutableSchemaWithCacheControlSupport,
+} from './cacheControlSupport';
 
 import { CacheScope } from 'apollo-server-types';
-import { collectCacheControlHints } from './collectCacheControlHints';
+import {
+  collectCacheControlHints,
+  collectCacheControlHintsAndPolicyIfCacheable,
+} from './collectCacheControlHints';
 
 describe('@cacheControl directives', () => {
   it('should set maxAge: 0 and no scope for a field without cache hints', async () => {
@@ -269,5 +275,222 @@ describe('@cacheControl directives', () => {
     expect(hints).toStrictEqual(
       new Map([['droid', { maxAge: 60, scope: CacheScope.Private }]]),
     );
+  });
+
+  it('inheritMaxAge', async () => {
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs: `#graphql
+      type Query {
+        topLevel: DroidQuery @cacheControl(maxAge: 1000)
+      }
+
+      type DroidQuery {
+        droid: Droid @cacheControl(inheritMaxAge: true)
+        droids: [Droid] @cacheControl(inheritMaxAge: true)
+      }
+
+      type Droid {
+        uncachedField: Droid
+        scalarField: String
+        cachedField: String @cacheControl(maxAge: 30)
+      }
+    `,
+    });
+
+    {
+      const { hints, policyIfCacheable } =
+        await collectCacheControlHintsAndPolicyIfCacheable(
+          schema,
+          '{ topLevel { droid { cachedField } } }',
+          {},
+        );
+
+      expect(hints).toStrictEqual(
+        new Map([
+          ['topLevel', { maxAge: 1000 }],
+          ['topLevel.droid.cachedField', { maxAge: 30 }],
+        ]),
+      );
+      expect(policyIfCacheable).toStrictEqual({
+        maxAge: 30,
+        scope: CacheScope.Public,
+      });
+    }
+
+    {
+      const { hints, policyIfCacheable } =
+        await collectCacheControlHintsAndPolicyIfCacheable(
+          schema,
+          '{ topLevel { droid { uncachedField { cachedField } cachedField } } }',
+          {},
+        );
+
+      expect(hints).toStrictEqual(
+        new Map([
+          ['topLevel', { maxAge: 1000 }],
+          ['topLevel.droid.cachedField', { maxAge: 30 }],
+          ['topLevel.droid.uncachedField', { maxAge: 0 }],
+          ['topLevel.droid.uncachedField.cachedField', { maxAge: 30 }],
+        ]),
+      );
+      expect(policyIfCacheable).toBeNull();
+    }
+
+    {
+      const { hints, policyIfCacheable } =
+        await collectCacheControlHintsAndPolicyIfCacheable(
+          schema,
+          '{ topLevel { droids { uncachedField { cachedField } cachedField } } }',
+          {},
+        );
+
+      expect(hints).toStrictEqual(
+        new Map([
+          ['topLevel', { maxAge: 1000 }],
+          ['topLevel.droids.0.cachedField', { maxAge: 30 }],
+          ['topLevel.droids.0.uncachedField', { maxAge: 0 }],
+          ['topLevel.droids.0.uncachedField.cachedField', { maxAge: 30 }],
+          ['topLevel.droids.1.cachedField', { maxAge: 30 }],
+          ['topLevel.droids.1.uncachedField', { maxAge: 0 }],
+          ['topLevel.droids.1.uncachedField.cachedField', { maxAge: 30 }],
+        ]),
+      );
+      expect(policyIfCacheable).toBeNull();
+    }
+  });
+
+  it('inheritMaxAge docs examples', async () => {
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs: `#graphql
+        type Query {
+          foo: Foo
+          cachedFoo: Foo @cacheControl(maxAge: 60)
+          intermediate: Intermediate @cacheControl(maxAge: 40)
+        }
+        type Foo {
+          inheritingField: String
+          cachedField: String @cacheControl(maxAge: 30)
+        }
+        type Intermediate {
+          foo: Foo @cacheControl(inheritMaxAge: true)
+        }
+      `,
+    });
+
+    async function expectMaxAge(operation: string, maxAge: number | undefined) {
+      expect(
+        (
+          await collectCacheControlHintsAndPolicyIfCacheable(
+            schema,
+            operation,
+            {},
+          )
+        ).policyIfCacheable?.maxAge,
+      ).toBe(maxAge);
+    }
+
+    await expectMaxAge('{foo{cachedField}}', undefined);
+    await expectMaxAge('{cachedFoo{inheritingField}}', 60);
+    await expectMaxAge('{cachedFoo{cachedField}}', 30);
+    await expectMaxAge('{intermediate{foo{inheritingField}}}', 40);
+  });
+
+  it('inheritMaxAge can be combined with scope', async () => {
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs: `#graphql
+        type Query {
+          topLevel: TopLevel @cacheControl(maxAge: 500)
+        }
+        type TopLevel {
+          foo: Foo @cacheControl(inheritMaxAge: true, scope: PRIVATE)
+        }
+        type Foo {
+          bar: String @cacheControl(maxAge: 5)
+        }
+    `,
+    });
+
+    const { hints, policyIfCacheable } =
+      await collectCacheControlHintsAndPolicyIfCacheable(
+        schema,
+        '{topLevel { foo { bar } } }',
+        {},
+      );
+
+    expect(hints).toStrictEqual(
+      new Map([
+        ['topLevel', { maxAge: 500 }],
+        ['topLevel.foo', { scope: CacheScope.Private }],
+        ['topLevel.foo.bar', { maxAge: 5 }],
+      ]),
+    );
+    expect(policyIfCacheable).toStrictEqual({
+      maxAge: 5,
+      scope: CacheScope.Private,
+    });
+  });
+
+  it('inheritMaxAge on types', async () => {
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs: `#graphql
+        type Query {
+          topLevel: TopLevel @cacheControl(maxAge: 500)
+        }
+        type TopLevel {
+          foo: Foo
+        }
+        type Foo @cacheControl(inheritMaxAge: true) {
+          bar: String
+        }
+    `,
+    });
+
+    const { hints, policyIfCacheable } =
+      await collectCacheControlHintsAndPolicyIfCacheable(
+        schema,
+        '{topLevel { foo { bar } } }',
+        {},
+      );
+
+    expect(hints).toStrictEqual(new Map([['topLevel', { maxAge: 500 }]]));
+    expect(policyIfCacheable).toStrictEqual({
+      maxAge: 500,
+      scope: CacheScope.Public,
+    });
+  });
+
+  it('scalars can inherit from grandparents', async () => {
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs: `#graphql
+        type Query {
+          foo: Foo @cacheControl(maxAge: 5)
+        }
+        type Foo {
+          bar: Bar @cacheControl(inheritMaxAge: true)
+          defaultBar: Bar
+        }
+        type Bar {
+          scalar: String
+          cachedScalar: String @cacheControl(maxAge: 2)
+        }
+    `,
+    });
+
+    async function expectMaxAge(operation: string, maxAge: number | undefined) {
+      expect(
+        (
+          await collectCacheControlHintsAndPolicyIfCacheable(
+            schema,
+            operation,
+            {},
+          )
+        ).policyIfCacheable?.maxAge,
+      ).toBe(maxAge);
+    }
+
+    await expectMaxAge('{foo{defaultBar{scalar}}}', undefined);
+    await expectMaxAge('{foo{defaultBar{cachedScalar}}}', undefined);
+    await expectMaxAge('{foo{bar{scalar}}}', 5);
+    await expectMaxAge('{foo{bar{cachedScalar}}}', 2);
   });
 });

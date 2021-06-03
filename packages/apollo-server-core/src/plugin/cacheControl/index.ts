@@ -1,12 +1,14 @@
-import type { CacheHint, CachePolicy } from 'apollo-server-types';
+import type {
+  CacheAnnotation,
+  CacheHint,
+  CachePolicy,
+} from 'apollo-server-types';
 import { CacheScope } from 'apollo-server-types';
 import {
   DirectiveNode,
   getNamedType,
   GraphQLCompositeType,
   GraphQLField,
-  GraphQLInterfaceType,
-  GraphQLObjectType,
   isCompositeType,
   isInterfaceType,
   isObjectType,
@@ -50,32 +52,37 @@ declare module 'graphql/type/definition' {
 export function ApolloServerPluginCacheControl(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
 ): InternalApolloServerPlugin {
-  const typeCacheHintCache = new LRUCache<GraphQLCompositeType, CacheHint>();
-  const fieldCacheHintCache = new LRUCache<
+  const typeAnnotationCache = new LRUCache<
+    GraphQLCompositeType,
+    CacheAnnotation
+  >();
+  const fieldAnnotationCache = new LRUCache<
     GraphQLField<unknown, unknown>,
-    CacheHint
+    CacheAnnotation
   >();
 
-  function memoizedCacheHintFromType(t: GraphQLCompositeType): CacheHint {
-    const cachedHint = typeCacheHintCache.get(t);
-    if (cachedHint) {
-      return cachedHint;
+  function memoizedCacheAnnotationFromType(
+    t: GraphQLCompositeType,
+  ): CacheAnnotation {
+    const existing = typeAnnotationCache.get(t);
+    if (existing) {
+      return existing;
     }
-    const hint = cacheHintFromType(t);
-    typeCacheHintCache.set(t, hint);
-    return hint;
+    const annotation = cacheAnnotationFromType(t);
+    typeAnnotationCache.set(t, annotation);
+    return annotation;
   }
 
-  function memoizedCacheHintFromField(
+  function memoizedCacheAnnotationFromField(
     field: GraphQLField<unknown, unknown>,
-  ): CacheHint {
-    const cachedHint = fieldCacheHintCache.get(field);
-    if (cachedHint) {
-      return cachedHint;
+  ): CacheAnnotation {
+    const existing = fieldAnnotationCache.get(field);
+    if (existing) {
+      return existing;
     }
-    const hint = cacheHintFromField(field);
-    fieldCacheHintCache.set(field, hint);
-    return hint;
+    const annotation = cacheAnnotationFromField(field);
+    fieldAnnotationCache.set(field, annotation);
+    return annotation;
   }
 
   return {
@@ -91,10 +98,10 @@ export function ApolloServerPluginCacheControl(
       // gateway. (Once https://github.com/apollographql/apollo-server/pull/5187
       // lands we should also run this code from a schemaDidLoadOrUpdate
       // callback.)
-      typeCacheHintCache.max = Object.values(schema.getTypeMap()).filter(
+      typeAnnotationCache.max = Object.values(schema.getTypeMap()).filter(
         isCompositeType,
       ).length;
-      fieldCacheHintCache.max =
+      fieldAnnotationCache.max =
         Object.values(schema.getTypeMap())
           .filter(isObjectType)
           .flatMap((t) => Object.values(t.getFields())).length +
@@ -130,7 +137,7 @@ export function ApolloServerPluginCacheControl(
                     fakeFieldPolicy.replace(dynamicHint);
                   },
                   cacheHint: fakeFieldPolicy,
-                  cacheHintFromType: memoizedCacheHintFromType,
+                  cacheHintFromType: memoizedCacheAnnotationFromType,
                 };
               },
             };
@@ -140,41 +147,62 @@ export function ApolloServerPluginCacheControl(
             willResolveField({ info }) {
               const fieldPolicy = newCachePolicy();
 
-              // If this field's resolver returns an object or interface, look for
-              // hints on that return type.
-              // XXX This should also handled union-valued fields; going to deal
-              // with this in a separate PR.
+              let inheritMaxAge = false;
+
+              // If this field's resolver returns an object/interface/union
+              // (maybe wrapped in list/non-null), look for hints on that return
+              // type.
               const targetType = getNamedType(info.returnType);
-              if (
-                targetType instanceof GraphQLObjectType ||
-                targetType instanceof GraphQLInterfaceType
-              ) {
-                fieldPolicy.replace(memoizedCacheHintFromType(targetType));
+              if (isCompositeType(targetType)) {
+                const typeAnnotation =
+                  memoizedCacheAnnotationFromType(targetType);
+                fieldPolicy.replace(typeAnnotation);
+                inheritMaxAge = !!typeAnnotation.inheritMaxAge;
               }
 
               // Look for hints on the field itself (on its parent type), taking
               // precedence over previously calculated hints.
-              fieldPolicy.replace(
-                memoizedCacheHintFromField(
-                  info.parentType.getFields()[info.fieldName],
-                ),
+              const fieldAnnotation = memoizedCacheAnnotationFromField(
+                info.parentType.getFields()[info.fieldName],
               );
 
-              // If this resolver returns an object or is a root field and we haven't
-              // seen an explicit maxAge hint, set the maxAge to 0 (uncached) or the
-              // default if specified in the constructor. (Non-object fields by
-              // default are assumed to inherit their cacheability from their parents.
-              // But on the other hand, while root non-object fields can get explicit
-              // hints from their definition on the Query/Mutation object, if that
-              // doesn't exist then there's no parent field that would assign the
-              // default maxAge, so we do it here.)
-              // XXX This should also handled union-valued fields; going to deal
-              // with this in a separate PR.
+              // Note that specifying `@cacheControl(inheritMaxAge: true)` on a
+              // field whose return type defines a `maxAge` gives precedence to
+              // the type's `maxAge`. (Perhaps this should be some sort of
+              // error.)
               if (
-                (targetType instanceof GraphQLObjectType ||
-                  targetType instanceof GraphQLInterfaceType ||
-                  !info.path.prev) &&
+                fieldAnnotation.inheritMaxAge &&
                 fieldPolicy.maxAge === undefined
+              ) {
+                inheritMaxAge = true;
+                // Handle `@cacheControl(inheritMaxAge: true, scope: PRIVATE)`.
+                // (We ignore any specified `maxAge`; perhaps it should be some
+                // sort of error.)
+                if (fieldAnnotation.scope) {
+                  fieldPolicy.replace({ scope: fieldAnnotation.scope });
+                }
+              } else {
+                fieldPolicy.replace(fieldAnnotation);
+              }
+
+              // If this field returns a composite type or is a root field and
+              // we haven't seen an explicit maxAge hint, set the maxAge to 0
+              // (uncached) or the default if specified in the constructor.
+              // (Non-object fields by default are assumed to inherit their
+              // cacheability from their parents. But on the other hand, while
+              // root non-object fields can get explicit hints from their
+              // definition on the Query/Mutation object, if that doesn't exist
+              // then there's no parent field that would assign the default
+              // maxAge, so we do it here.)
+              //
+              // You can disable this on a non-root field by writing
+              // `@cacheControl(inheritMaxAge: true)` on it. If you do this,
+              // then its children will be treated like root paths, since there
+              // is no parent maxAge to inherit.
+              if (
+                fieldPolicy.maxAge === undefined &&
+                ((isCompositeType(targetType) && !inheritMaxAge) ||
+                  !info.path.prev)
               ) {
                 fieldPolicy.restrict({ maxAge: defaultMaxAge });
               }
@@ -184,12 +212,13 @@ export function ApolloServerPluginCacheControl(
                   fieldPolicy.replace(dynamicHint);
                 },
                 cacheHint: fieldPolicy,
-                cacheHintFromType,
+                cacheHintFromType: cacheAnnotationFromType,
               };
 
-              // When the field is done, call addHint once. By calling addHint
-              // once, we don't need to "undo" the effect on overallCachePolicy
-              // of a static hint that gets refined by a dynamic hint.
+              // When the resolver is done, call restrict once. By calling
+              // restrict after the resolver instead of before, we don't need to
+              // "undo" the effect on overallCachePolicy of a static hint that
+              // gets refined by a dynamic hint.
               return () => {
                 if (__testing__cacheHints && isRestricted(fieldPolicy)) {
                   const path = responsePathAsArray(info.path).join('.');
@@ -236,9 +265,9 @@ export function ApolloServerPluginCacheControl(
   };
 }
 
-function cacheHintFromDirectives(
+function cacheAnnotationFromDirectives(
   directives: ReadonlyArray<DirectiveNode> | undefined,
-): CacheHint | undefined {
+): CacheAnnotation | undefined {
   if (!directives) return undefined;
 
   const cacheControlDirective = directives.find(
@@ -254,34 +283,42 @@ function cacheHintFromDirectives(
   const scopeArgument = cacheControlDirective.arguments.find(
     (argument) => argument.name.value === 'scope',
   );
+  const inheritMaxAgeArgument = cacheControlDirective.arguments.find(
+    (argument) => argument.name.value === 'inheritMaxAge',
+  );
 
-  // TODO: Add proper typechecking of arguments
+  const scope =
+    scopeArgument?.value?.kind === 'EnumValue'
+      ? (scopeArgument.value.value as CacheScope)
+      : undefined;
+
+  if (
+    inheritMaxAgeArgument?.value?.kind === 'BooleanValue' &&
+    inheritMaxAgeArgument.value.value
+  ) {
+    // We ignore maxAge if it is also specified.
+    return { inheritMaxAge: true, scope };
+  }
+
   return {
     maxAge:
-      maxAgeArgument &&
-      maxAgeArgument.value &&
-      maxAgeArgument.value.kind === 'IntValue'
+      maxAgeArgument?.value?.kind === 'IntValue'
         ? parseInt(maxAgeArgument.value.value)
         : undefined,
-    scope:
-      scopeArgument &&
-      scopeArgument.value &&
-      scopeArgument.value.kind === 'EnumValue'
-        ? (scopeArgument.value.value as CacheScope)
-        : undefined,
+    scope,
   };
 }
 
-function cacheHintFromType(t: GraphQLCompositeType): CacheHint {
+function cacheAnnotationFromType(t: GraphQLCompositeType): CacheAnnotation {
   if (t.astNode) {
-    const hint = cacheHintFromDirectives(t.astNode.directives);
+    const hint = cacheAnnotationFromDirectives(t.astNode.directives);
     if (hint) {
       return hint;
     }
   }
   if (t.extensionASTNodes) {
     for (const node of t.extensionASTNodes) {
-      const hint = cacheHintFromDirectives(node.directives);
+      const hint = cacheAnnotationFromDirectives(node.directives);
       if (hint) {
         return hint;
       }
@@ -290,9 +327,11 @@ function cacheHintFromType(t: GraphQLCompositeType): CacheHint {
   return {};
 }
 
-function cacheHintFromField(field: GraphQLField<unknown, unknown>): CacheHint {
+function cacheAnnotationFromField(
+  field: GraphQLField<unknown, unknown>,
+): CacheAnnotation {
   if (field.astNode) {
-    const hint = cacheHintFromDirectives(field.astNode.directives);
+    const hint = cacheAnnotationFromDirectives(field.astNode.directives);
     if (hint) {
       return hint;
     }
