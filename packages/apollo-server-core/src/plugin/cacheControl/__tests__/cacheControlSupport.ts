@@ -3,6 +3,7 @@ import {
   makeExecutableSchema,
   IExecutableSchemaDefinition,
 } from '@graphql-tools/schema';
+import { addMocksToSchema } from '@graphql-tools/mock';
 
 export function augmentTypeDefsWithCacheControlSupport(typeDefs: string) {
   return (
@@ -28,8 +29,11 @@ export function buildSchemaWithCacheControlSupport(source: string) {
 export function makeExecutableSchemaWithCacheControlSupport(
   options: IExecutableSchemaDefinition & { typeDefs: string },
 ) {
-  return makeExecutableSchema({
-    ...options,
-    typeDefs: augmentTypeDefsWithCacheControlSupport(options.typeDefs),
+  return addMocksToSchema({
+    schema: makeExecutableSchema({
+      ...options,
+      typeDefs: augmentTypeDefsWithCacheControlSupport(options.typeDefs),
+    }),
+    preserveResolvers: true,
   });
 }

@@ -295,18 +295,6 @@ describe('@cacheControl directives', () => {
         cachedField: String @cacheControl(maxAge: 30)
       }
     `,
-      resolvers: {
-        Query: {
-          topLevel: () => ({}),
-        },
-        DroidQuery: {
-          droid: () => ({}),
-          droids: () => [{}, {}],
-        },
-        Droid: {
-          uncachedField: () => ({}),
-        },
-      },
     });
 
     {
@@ -387,17 +375,6 @@ describe('@cacheControl directives', () => {
           foo: Foo @cacheControl(inheritMaxAge: true)
         }
       `,
-      // FIXME can we do mocking?
-      resolvers: {
-        Query: {
-          foo: () => ({}),
-          cachedFoo: () => ({}),
-          intermediate: () => ({}),
-        },
-        Intermediate: {
-          foo: () => ({}),
-        },
-      },
     });
 
     async function expectMaxAge(operation: string, maxAge: number | undefined) {
@@ -420,7 +397,7 @@ describe('@cacheControl directives', () => {
 
   it('inheritMaxAge can be combined with scope', async () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
-      typeDefs: `
+      typeDefs: `#graphql
         type Query {
           topLevel: TopLevel @cacheControl(maxAge: 500)
         }
@@ -431,10 +408,6 @@ describe('@cacheControl directives', () => {
           bar: String @cacheControl(maxAge: 5)
         }
     `,
-      resolvers: {
-        Query: { topLevel: () => ({}) },
-        TopLevel: { foo: () => ({}) },
-      },
     });
 
     const { hints, policyIfCacheable } =
@@ -459,7 +432,7 @@ describe('@cacheControl directives', () => {
 
   it('scalars can inherit from grandparents', async () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
-      typeDefs: `
+      typeDefs: `#graphql
         type Query {
           foo: Foo @cacheControl(maxAge: 5)
         }
@@ -472,10 +445,6 @@ describe('@cacheControl directives', () => {
           cachedScalar: String @cacheControl(maxAge: 2)
         }
     `,
-      resolvers: {
-        Query: { foo: () => ({}) },
-        Foo: { bar: () => ({}), defaultBar: () => ({}) },
-      },
     });
 
     async function expectMaxAge(operation: string, maxAge: number | undefined) {
