@@ -147,14 +147,17 @@ export function ApolloServerPluginCacheControl(
             willResolveField({ info }) {
               const fieldPolicy = newCachePolicy();
 
+              let inheritMaxAge = false;
+
               // If this field's resolver returns an object/interface/union
               // (maybe wrapped in list/non-null), look for hints on that return
               // type.
               const targetType = getNamedType(info.returnType);
               if (isCompositeType(targetType)) {
-                fieldPolicy.replace(
-                  memoizedCacheAnnotationFromType(targetType),
-                );
+                const typeAnnotation =
+                  memoizedCacheAnnotationFromType(targetType);
+                fieldPolicy.replace(typeAnnotation);
+                inheritMaxAge = !!typeAnnotation.inheritMaxAge;
               }
 
               // Look for hints on the field itself (on its parent type), taking
@@ -167,7 +170,6 @@ export function ApolloServerPluginCacheControl(
               // field whose return type defines a `maxAge` gives precedence to
               // the type's `maxAge`. (Perhaps this should be some sort of
               // error.)
-              let inheritMaxAge = false;
               if (
                 fieldAnnotation.inheritMaxAge &&
                 fieldPolicy.maxAge === undefined

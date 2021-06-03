@@ -430,6 +430,35 @@ describe('@cacheControl directives', () => {
     });
   });
 
+  it('inheritMaxAge on types', async () => {
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs: `#graphql
+        type Query {
+          topLevel: TopLevel @cacheControl(maxAge: 500)
+        }
+        type TopLevel {
+          foo: Foo
+        }
+        type Foo @cacheControl(inheritMaxAge: true) {
+          bar: String
+        }
+    `,
+    });
+
+    const { hints, policyIfCacheable } =
+      await collectCacheControlHintsAndPolicyIfCacheable(
+        schema,
+        '{topLevel { foo { bar } } }',
+        {},
+      );
+
+    expect(hints).toStrictEqual(new Map([['topLevel', { maxAge: 500 }]]));
+    expect(policyIfCacheable).toStrictEqual({
+      maxAge: 500,
+      scope: CacheScope.Public,
+    });
+  });
+
   it('scalars can inherit from grandparents', async () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
       typeDefs: `#graphql
