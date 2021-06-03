@@ -160,7 +160,7 @@ Note that if you are using [file uploads](../data/file-uploads/), you need to ad
 
 <td>
 
-If you're using [automated persisted queries (APQ)](../performance/apq/), you can provide an object with a `cache` field as the value of this option to customize where Apolllo Server stores the mapping between operation hashes and query strings.
+If you're using [automated persisted queries (APQ)](../performance/apq/), you can provide an object with a `cache` field as the value of this option to customize where Apollo Server stores the mapping between operation hashes and query strings.
 
 Provide `false` to disable APQ entirely.
 </td>
