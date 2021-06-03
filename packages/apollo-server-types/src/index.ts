@@ -255,7 +255,10 @@ export interface CacheHint {
 }
 
 /**
- * FIXME doc
+ * CacheAnnotation represents the contents of a `@cacheControl` directive.
+ * (`inheritMaxAge` is part of this interface and not CacheHint, because
+ * `inheritMaxAge` isn't a contributing piece of a cache policy: it just means
+ * to not apply default values in some contexts.)
  */
 export interface CacheAnnotation extends CacheHint {
   inheritMaxAge?: true;

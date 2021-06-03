@@ -268,7 +268,6 @@ function cacheAnnotationFromDirectives(
 ): CacheAnnotation | undefined {
   if (!directives) return undefined;
 
-  // FIXME refactor getDirectiveValues
   const cacheControlDirective = directives.find(
     (directive) => directive.name.value === 'cacheControl',
   );
