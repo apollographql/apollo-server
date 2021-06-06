@@ -376,8 +376,8 @@ To provide a `context` to your resolvers, add a `context` initialization functio
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ req }) => ({
-    authScope: getScope(req.headers.authorization)
+  context: ({ request }) => ({
+    authScope: getScope(request.headers.authorization)
   })
 }));
 
