@@ -230,251 +230,245 @@ export async function processGraphQLRequest<TContext>(
     requestContext as GraphQLRequestContextDidResolveSource<TContext>,
   );
 
-  try {
-    // If we're configured with a document store (by default, we are), we'll
-    // utilize the operation's hash to lookup the AST from the previously
-    // parsed-and-validated operation.  Failure to retrieve anything from the
-    // cache just means we're committed to doing the parsing and validation.
-    if (config.documentStore) {
-      try {
-        requestContext.document = await config.documentStore.get(queryHash);
-      } catch (err) {
-        logger.warn(
-          'An error occurred while attempting to read from the documentStore. ' +
-            (err && err.message) || err,
-        );
-      }
-    }
-
-    // If we still don't have a document, we'll need to parse and validate it.
-    // With success, we'll attempt to save it into the store for future use.
-    if (!requestContext.document) {
-      const parsingDidEnd = await dispatcher.invokeDidStartHook(
-        'parsingDidStart',
-        requestContext as GraphQLRequestContextParsingDidStart<TContext>,
+  // If we're configured with a document store (by default, we are), we'll
+  // utilize the operation's hash to lookup the AST from the previously
+  // parsed-and-validated operation.  Failure to retrieve anything from the
+  // cache just means we're committed to doing the parsing and validation.
+  if (config.documentStore) {
+    try {
+      requestContext.document = await config.documentStore.get(queryHash);
+    } catch (err) {
+      logger.warn(
+        'An error occurred while attempting to read from the documentStore. ' +
+          (err && err.message) || err,
       );
-
-      try {
-        requestContext.document = parse(query, config.parseOptions);
-        parsingDidEnd();
-      } catch (syntaxError) {
-        parsingDidEnd(syntaxError);
-        return await sendErrorResponse(syntaxError, SyntaxError);
-      }
-
-      const validationDidEnd = await dispatcher.invokeDidStartHook(
-        'validationDidStart',
-        requestContext as GraphQLRequestContextValidationDidStart<TContext>,
-      );
-
-      const validationErrors = validate(requestContext.document);
-
-      if (validationErrors.length === 0) {
-        validationDidEnd();
-      } else {
-        validationDidEnd(validationErrors);
-        return await sendErrorResponse(validationErrors, ValidationError);
-      }
-
-      if (config.documentStore) {
-        // The underlying cache store behind the `documentStore` returns a
-        // `Promise` which is resolved (or rejected), eventually, based on the
-        // success or failure (respectively) of the cache save attempt.  While
-        // it's certainly possible to `await` this `Promise`, we don't care about
-        // whether or not it's successful at this point.  We'll instead proceed
-        // to serve the rest of the request and just hope that this works out.
-        // If it doesn't work, the next request will have another opportunity to
-        // try again.  Errors will surface as warnings, as appropriate.
-        //
-        // While it shouldn't normally be necessary to wrap this `Promise` in a
-        // `Promise.resolve` invocation, it seems that the underlying cache store
-        // is returning a non-native `Promise` (e.g. Bluebird, etc.).
-        Promise.resolve(
-          config.documentStore.set(queryHash, requestContext.document),
-        ).catch((err) =>
-          logger.warn(
-            'Could not store validated document. ' + (err && err.message) ||
-              err,
-          ),
-        );
-      }
     }
+  }
 
-    // TODO: If we want to guarantee an operation has been set when invoking
-    // `willExecuteOperation` and executionDidStart`, we need to throw an
-    // error here and not leave this to `buildExecutionContext` in
-    // `graphql-js`.
-    const operation = getOperationAST(
-      requestContext.document,
-      request.operationName,
+  // If we still don't have a document, we'll need to parse and validate it.
+  // With success, we'll attempt to save it into the store for future use.
+  if (!requestContext.document) {
+    const parsingDidEnd = await dispatcher.invokeDidStartHook(
+      'parsingDidStart',
+      requestContext as GraphQLRequestContextParsingDidStart<TContext>,
     );
 
-    requestContext.operation = operation || undefined;
-    // We'll set `operationName` to `null` for anonymous operations.
-    requestContext.operationName =
-      (operation && operation.name && operation.name.value) || null;
-
     try {
-      await dispatcher.invokeHookAsync(
-        'didResolveOperation',
-        requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
-      );
-    } catch (err) {
-      // XXX: The HttpQueryError is special-cased here because we currently
-      // depend on `throw`-ing an error from the `didResolveOperation` hook
-      // we've implemented in `runHttpQuery.ts`'s `checkOperationPlugin`:
-      // https://git.io/fj427.  This could be perceived as a feature, but
-      // for the time-being this just maintains existing behavior for what
-      // happens when `throw`-ing an `HttpQueryError` in `didResolveOperation`.
-      if (err instanceof HttpQueryError) {
-        // In order to report this error reliably to the request pipeline, we'll
-        // have to regenerate it with the original error message and stack for
-        // the purposes of the `didEncounterErrors` life-cycle hook (which
-        // expects `GraphQLError`s), but still throw the `HttpQueryError`, so
-        // the appropriate status code is enforced by `runHttpQuery.ts`.
-        const graphqlError = new GraphQLError(err.message);
-        graphqlError.stack = err.stack;
-        await didEncounterErrors([graphqlError]);
-        throw err;
-      }
-      return await sendErrorResponse(err);
+      requestContext.document = parse(query, config.parseOptions);
+      parsingDidEnd();
+    } catch (syntaxError) {
+      parsingDidEnd(syntaxError);
+      return await sendErrorResponse(syntaxError, SyntaxError);
     }
 
-    // Now that we've gone through the pre-execution phases of the request
-    // pipeline, and given plugins appropriate ability to object (by throwing
-    // an error) and not actually write, we'll write to the cache if it was
-    // determined earlier in the request pipeline that we should do so.
-    if (metrics.persistedQueryRegister && persistedQueryCache) {
+    const validationDidEnd = await dispatcher.invokeDidStartHook(
+      'validationDidStart',
+      requestContext as GraphQLRequestContextValidationDidStart<TContext>,
+    );
+
+    const validationErrors = validate(requestContext.document);
+
+    if (validationErrors.length === 0) {
+      validationDidEnd();
+    } else {
+      validationDidEnd(validationErrors);
+      return await sendErrorResponse(validationErrors, ValidationError);
+    }
+
+    if (config.documentStore) {
+      // The underlying cache store behind the `documentStore` returns a
+      // `Promise` which is resolved (or rejected), eventually, based on the
+      // success or failure (respectively) of the cache save attempt.  While
+      // it's certainly possible to `await` this `Promise`, we don't care about
+      // whether or not it's successful at this point.  We'll instead proceed
+      // to serve the rest of the request and just hope that this works out.
+      // If it doesn't work, the next request will have another opportunity to
+      // try again.  Errors will surface as warnings, as appropriate.
+      //
       // While it shouldn't normally be necessary to wrap this `Promise` in a
       // `Promise.resolve` invocation, it seems that the underlying cache store
       // is returning a non-native `Promise` (e.g. Bluebird, etc.).
       Promise.resolve(
-        persistedQueryCache.set(
-          queryHash,
-          query,
-          config.persistedQueries &&
-            typeof config.persistedQueries.ttl !== 'undefined'
-            ? {
-                ttl: config.persistedQueries.ttl,
-              }
-            : Object.create(null),
+        config.documentStore.set(queryHash, requestContext.document),
+      ).catch((err) =>
+        logger.warn(
+          'Could not store validated document. ' + (err && err.message) || err,
         ),
-      ).catch(logger.warn);
+      );
     }
+  }
 
-    let response: GraphQLResponse | null = await dispatcher.invokeHooksUntilNonNull(
+  // TODO: If we want to guarantee an operation has been set when invoking
+  // `willExecuteOperation` and executionDidStart`, we need to throw an
+  // error here and not leave this to `buildExecutionContext` in
+  // `graphql-js`.
+  const operation = getOperationAST(
+    requestContext.document,
+    request.operationName,
+  );
+
+  requestContext.operation = operation || undefined;
+  // We'll set `operationName` to `null` for anonymous operations.
+  requestContext.operationName =
+    (operation && operation.name && operation.name.value) || null;
+
+  try {
+    await dispatcher.invokeHookAsync(
+      'didResolveOperation',
+      requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
+    );
+  } catch (err) {
+    // XXX: The HttpQueryError is special-cased here because we currently
+    // depend on `throw`-ing an error from the `didResolveOperation` hook
+    // we've implemented in `runHttpQuery.ts`'s `checkOperationPlugin`:
+    // https://git.io/fj427.  This could be perceived as a feature, but
+    // for the time-being this just maintains existing behavior for what
+    // happens when `throw`-ing an `HttpQueryError` in `didResolveOperation`.
+    if (err instanceof HttpQueryError) {
+      // In order to report this error reliably to the request pipeline, we'll
+      // have to regenerate it with the original error message and stack for
+      // the purposes of the `didEncounterErrors` life-cycle hook (which
+      // expects `GraphQLError`s), but still throw the `HttpQueryError`, so
+      // the appropriate status code is enforced by `runHttpQuery.ts`.
+      const graphqlError = new GraphQLError(err.message);
+      graphqlError.stack = err.stack;
+      await didEncounterErrors([graphqlError]);
+      throw err;
+    }
+    return await sendErrorResponse(err);
+  }
+
+  // Now that we've gone through the pre-execution phases of the request
+  // pipeline, and given plugins appropriate ability to object (by throwing
+  // an error) and not actually write, we'll write to the cache if it was
+  // determined earlier in the request pipeline that we should do so.
+  if (metrics.persistedQueryRegister && persistedQueryCache) {
+    // While it shouldn't normally be necessary to wrap this `Promise` in a
+    // `Promise.resolve` invocation, it seems that the underlying cache store
+    // is returning a non-native `Promise` (e.g. Bluebird, etc.).
+    Promise.resolve(
+      persistedQueryCache.set(
+        queryHash,
+        query,
+        config.persistedQueries &&
+          typeof config.persistedQueries.ttl !== 'undefined'
+          ? {
+              ttl: config.persistedQueries.ttl,
+            }
+          : Object.create(null),
+      ),
+    ).catch(logger.warn);
+  }
+
+  let response: GraphQLResponse | null =
+    await dispatcher.invokeHooksUntilNonNull(
       'responseForOperation',
       requestContext as GraphQLRequestContextResponseForOperation<TContext>,
     );
-    if (response == null) {
-      // This execution dispatcher code is duplicated in `pluginTestHarness`
-      // right now.
+  if (response == null) {
+    // This execution dispatcher code is duplicated in `pluginTestHarness`
+    // right now.
 
-      const executionListeners: GraphQLRequestExecutionListener<
-        TContext
-      >[] = [];
-      dispatcher
-        .invokeHookSync(
-          'executionDidStart',
-          requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
-        )
-        .forEach((executionListener) => {
-          if (typeof executionListener === 'function') {
-            executionListeners.push({
-              executionDidEnd: executionListener,
-            });
-          } else if (typeof executionListener === 'object') {
-            executionListeners.push(executionListener);
-          }
-        });
+    const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
+    dispatcher
+      .invokeHookSync(
+        'executionDidStart',
+        requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+      )
+      .forEach((executionListener) => {
+        if (typeof executionListener === 'function') {
+          executionListeners.push({
+            executionDidEnd: executionListener,
+          });
+        } else if (typeof executionListener === 'object') {
+          executionListeners.push(executionListener);
+        }
+      });
 
-      const executionDispatcher = new Dispatcher(executionListeners);
+    const executionDispatcher = new Dispatcher(executionListeners);
 
-      // Create a callback that will trigger the execution dispatcher's
-      // `willResolveField` hook.  We will attach this to the context on a
-      // symbol so it can be invoked by our `wrapField` method during execution.
-      const invokeWillResolveField: GraphQLRequestExecutionListener<
-        TContext
-      >['willResolveField'] = (...args) =>
+    // Create a callback that will trigger the execution dispatcher's
+    // `willResolveField` hook.  We will attach this to the context on a
+    // symbol so it can be invoked by our `wrapField` method during execution.
+    const invokeWillResolveField: GraphQLRequestExecutionListener<TContext>['willResolveField'] =
+      (...args) =>
         executionDispatcher.invokeDidStartHook('willResolveField', ...args);
 
-      Object.defineProperty(
-        requestContext.context,
-        symbolExecutionDispatcherWillResolveField,
-        { value: invokeWillResolveField },
+    Object.defineProperty(
+      requestContext.context,
+      symbolExecutionDispatcherWillResolveField,
+      { value: invokeWillResolveField },
+    );
+
+    // If the user has provided a custom field resolver, we will attach
+    // it to the context so we can still invoke it after we've wrapped the
+    // fields with `wrapField` within `enablePluginsForSchemaResolvers` of
+    // the `schemaInstrumentation` module.
+    if (config.fieldResolver) {
+      Object.defineProperty(requestContext.context, symbolUserFieldResolver, {
+        value: config.fieldResolver,
+      });
+    }
+
+    // If the schema is already enabled, this is a no-op.  Otherwise, the
+    // schema will be augmented so it is able to invoke willResolveField.
+    enablePluginsForSchemaResolvers(config.schema);
+
+    try {
+      const result = await execute(
+        requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
       );
 
-      // If the user has provided a custom field resolver, we will attach
-      // it to the context so we can still invoke it after we've wrapped the
-      // fields with `wrapField` within `enablePluginsForSchemaResolvers` of
-      // the `schemaInstrumentation` module.
-      if (config.fieldResolver) {
-        Object.defineProperty(requestContext.context, symbolUserFieldResolver, {
-          value: config.fieldResolver,
-        });
-      }
-
-      // If the schema is already enabled, this is a no-op.  Otherwise, the
-      // schema will be augmented so it is able to invoke willResolveField.
-      enablePluginsForSchemaResolvers(config.schema);
-
-      try {
-        const result = await execute(
-          requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
-        );
-
-        // The first thing that execution does is coerce the request's variables
-        // to the types declared in the operation, which can lead to errors if
-        // they are of the wrong type. We change any such errors into
-        // UserInputError so that their code doesn't end up being
-        // INTERNAL_SERVER_ERROR, since these are client errors.
-        const resultErrors = result.errors?.map((e) => {
-          if (
-            e.nodes?.length === 1 &&
-            e.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
-            e.message.startsWith(
-              `Variable "$${e.nodes[0].variable.name.value}" got invalid value `,
-            )
-          ) {
-            return fromGraphQLError(e, {
-              errorClass: UserInputError,
-            });
-          }
-          return e;
-        });
-
-        if (resultErrors) {
-          await didEncounterErrors(resultErrors);
+      // The first thing that execution does is coerce the request's variables
+      // to the types declared in the operation, which can lead to errors if
+      // they are of the wrong type. We change any such errors into
+      // UserInputError so that their code doesn't end up being
+      // INTERNAL_SERVER_ERROR, since these are client errors.
+      const resultErrors = result.errors?.map((e) => {
+        if (
+          e.nodes?.length === 1 &&
+          e.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
+          e.message.startsWith(
+            `Variable "$${e.nodes[0].variable.name.value}" got invalid value `,
+          )
+        ) {
+          return fromGraphQLError(e, {
+            errorClass: UserInputError,
+          });
         }
+        return e;
+      });
 
-        response = {
-          ...result,
-          errors: resultErrors ? formatErrors(resultErrors) : undefined,
-        };
-
-        executionDispatcher.reverseInvokeHookSync('executionDidEnd');
-      } catch (executionError) {
-        executionDispatcher.reverseInvokeHookSync(
-          'executionDidEnd',
-          executionError,
-        );
-        return await sendErrorResponse(executionError);
+      if (resultErrors) {
+        await didEncounterErrors(resultErrors);
       }
-    }
 
-    if (config.formatResponse) {
-      const formattedResponse: GraphQLResponse | null = config.formatResponse(
-        response,
-        requestContext,
+      response = {
+        ...result,
+        errors: resultErrors ? formatErrors(resultErrors) : undefined,
+      };
+
+      executionDispatcher.reverseInvokeHookSync('executionDidEnd');
+    } catch (executionError) {
+      executionDispatcher.reverseInvokeHookSync(
+        'executionDidEnd',
+        executionError,
       );
-      if (formattedResponse != null) {
-        response = formattedResponse;
-      }
+      return await sendErrorResponse(executionError);
     }
-
-    return sendResponse(response);
-  } finally {
   }
+
+  if (config.formatResponse) {
+    const formattedResponse: GraphQLResponse | null = config.formatResponse(
+      response,
+      requestContext,
+    );
+    if (formattedResponse != null) {
+      response = formattedResponse;
+    }
+  }
+
+  return sendResponse(response);
 
   function parse(query: string, parseOptions?: ParseOptions): DocumentNode {
     return graphqlParse(query, parseOptions);
