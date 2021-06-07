@@ -135,7 +135,7 @@
     "typescript": "3.9.9",
     "winston": "3.3.3",
     "winston-transport": "4.4.0",
-    "ws": "6.2.1"
+    "ws": "6.2.2"
   },
   "jest": {
     "projects": [
