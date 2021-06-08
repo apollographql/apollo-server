@@ -34,12 +34,12 @@ import {
 } from 'apollo-server-plugin-base';
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
-import {
+import type {
   SubscriptionServer,
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
-import WebSocket from 'ws';
+import type WebSocket from 'ws';
 
 import { formatApolloErrors } from 'apollo-server-errors';
 import { GraphQLServerOptions, PersistedQueryOptions } from './graphqlOptions';
