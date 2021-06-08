@@ -13,7 +13,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## v2.25.1
 
-- `apollo-server-core`, `apollo-server-express`: Upgrade `subscriptions-transport-ws` dependency and remove unneeded runtime dependency on `ws`. This should enable you to install Apollo Server without depending on versions of `ws` vulnerable to [CVE-2021-32640](https://www.npmjs.com/advisories/1748). Note that the superficial integration of the unmaintained `subscriptions-transport-ws` package will be removed in Apollo Server 3; you can also avoid this vulnerability by disabling the built-in subscription support with `new ApolloServer({subscriptions: false})` and using a maintained package such as `graphql-ws` instead.
+- `apollo-server-core`, `apollo-server-express`: Upgrade `subscriptions-transport-ws` dependency and remove unneeded runtime dependency on `ws`. This should enable you to install Apollo Server without depending on versions of `ws` vulnerable to [CVE-2021-32640](https://www.npmjs.com/advisories/1748). Note that the superficial integration of the unmaintained `subscriptions-transport-ws` package will be removed in Apollo Server 3; you can also avoid this vulnerability by disabling the built-in subscription support with `new ApolloServer({subscriptions: false})` and using a maintained package such as `graphql-ws` instead. (Instead of taking this upgrade, you can also upgrade `ws` to `5.2.3`, which was just released.)
 
 ## v2.25.0
 
