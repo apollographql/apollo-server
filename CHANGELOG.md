@@ -11,6 +11,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+## v2.25.1
+
+- `apollo-server-core`, `apollo-server-express`: Upgrade `subscriptions-transport-ws` dependency and remove unneeded runtime dependency on `ws`. This should enable you to install Apollo Server without depending on versions of `ws` vulnerable to [CVE-2021-32640](https://www.npmjs.com/advisories/1748). Note that the superficial integration of the unmaintained `subscriptions-transport-ws` package will be removed in Apollo Server 3; you can also avoid this vulnerability by disabling the built-in subscription support with `new ApolloServer({subscriptions: false})` and using a maintained package such as `graphql-ws` instead.
+
 ## v2.25.0
 
 - `apollo-server-core`: You may now specify your Studio graph as a graph ref (`id@variant`) via the `APOLLO_GRAPH_REF` environment variable or `new ApolloServer({apollo: {graphRef}})` instead of specifying graph ID and graph variant separately. The `apollo` object passed to plugin `serverWillStart` and to gateway `load` now contains a `graphRef` field.
