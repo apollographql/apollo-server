@@ -15,7 +15,7 @@ import {
   Context,
   Config,
 } from 'apollo-server-core';
-import { ExecutionParams } from 'subscriptions-transport-ws';
+import type { ExecutionParams } from 'subscriptions-transport-ws';
 import accepts from 'accepts';
 import typeis from 'type-is';
 import { graphqlExpress } from './expressApollo';

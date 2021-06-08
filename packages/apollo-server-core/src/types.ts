@@ -14,9 +14,7 @@ import {
   ApolloConfigInput,
 } from 'apollo-server-types';
 import { ConnectionContext } from 'subscriptions-transport-ws';
-// The types for `ws` use `export = WebSocket`, so we'll use the
-// matching `import =` to bring in its sole export.
-import WebSocket = require('ws');
+import type WebSocket from 'ws';
 import { GraphQLExtension } from 'graphql-extensions';
 export { GraphQLExtension } from 'graphql-extensions';
 
