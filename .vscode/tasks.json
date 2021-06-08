@@ -14,14 +14,29 @@
 			"problemMatcher": [
 				"$tsc-watch"
 			],
-			"group": {
+			"presentation": {
+        "group": "tsc-and-shell"
+			}
+		},
+    {
+			"label": "Shell",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"-l",
+			],
+			"isBackground": true,
+			"presentation": {
+        "group": "tsc-and-shell"
+			}
+		},
+    {
+      "label": "TS and shell",
+      "dependsOn": ["TypeScript watch", "Shell"],
+      "group": {
 				"kind": "build",
 				"isDefault": true
-			},
-			"presentation": {
-				"reveal": "never",
-				"panel": "dedicated"
 			}
-		}
+    }
 	]
 }
