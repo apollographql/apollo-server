@@ -26,9 +26,8 @@
     "node": ">=12.0"
   },
   "dependencies": {
-    "apollo-server-core": "file:../apollo-server-core",
-    "apollo-server-env": "file:../apollo-server-env",
-    "apollo-server-types": "file:../apollo-server-types"
+    "apollo-server-express": "file:../apollo-server-express",
+    "express": "^4.17.1"
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
