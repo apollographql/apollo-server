@@ -529,24 +529,6 @@ export function ApolloServerPluginUsageReporting<TContext>(
               });
             }
 
-            // If operation resolution (parsing and validating the document followed
-            // by selecting the correct operation) resulted in the population of the
-            // `operationName`, we'll use that. (For anonymous operations,
-            // `requestContext.operationName` is null, which we represent here as
-            // the empty string.)
-            //
-            // If the user explicitly specified an `operationName` in their request
-            // but operation resolution failed (due to parse or validation errors or
-            // because there is no operation with that name in the document), we
-            // still put _that_ user-supplied `operationName` in the trace. This
-            // allows the error to be better understood in Studio. (We are
-            // considering changing the behavior of `operationName` in these 3 error
-            // cases; https://github.com/apollographql/apollo-server/pull/3465)
-            const operationName =
-              requestContext.operationName ||
-              requestContext.request.operationName ||
-              '';
-
             // If this was a federated operation and we're the gateway, add the query plan
             // to the trace.
             if (metrics.queryPlanTrace) {
@@ -594,11 +576,16 @@ export function ApolloServerPluginUsageReporting<TContext>(
               if (statsReportKey) {
                 if (options.sendUnexecutableOperationDocuments) {
                   trace.unexecutedOperationBody = requestContext.source;
-                  trace.unexecutedOperationName = operationName;
+                  // Get the operation name from the request (which might not
+                  // correspond to an actual operation).
+                  trace.unexecutedOperationName =
+                    requestContext.request.operationName || '';
                 }
               } else {
                 const signature = getTraceSignature();
-                statsReportKey = `# ${operationName || '-'}\n${signature}`;
+                statsReportKey = `# ${
+                  requestContext.operationName || '-'
+                }\n${signature}`;
               }
 
               const protobufError = Trace.verify(trace);
@@ -634,7 +621,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
               const cacheKey = signatureCacheKey(
                 requestContext.queryHash,
-                operationName,
+                requestContext.operationName || '',
               );
 
               // If we didn't have the signature in the cache, we'll resort to
@@ -647,7 +634,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
               const generatedSignature = (
                 options.calculateSignature || defaultUsageReportingSignature
-              )(requestContext.document, operationName);
+              )(requestContext.document, requestContext.operationName || '');
 
               // Note that this cache is always an in-memory cache.
               // If we replace it with a more generic async cache, we should
