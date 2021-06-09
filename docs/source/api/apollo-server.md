@@ -256,7 +256,7 @@ This option is used only by the `apollo-server` package. If you're integrating w
 </td>
 <td>
 
-Provide this function to transform the structure of error objects before they're sent to a client. The function takes a [`GraphQLError`](https://github.com/graphql/graphql-js/blob/master/src/error/GraphQLError.js) object and should return a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/master/src/error/formatError.js#L26) object.
+Provide this function to transform the structure of error objects before they're sent to a client. The function takes a [`GraphQLError`](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts) object and should return a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/main/src/error/formatError.ts#L26) object.
 </td>
 </tr>
 
@@ -269,7 +269,7 @@ Provide this function to transform the structure of error objects before they're
 </td>
 <td>
 
-Provide this function to transform the structure of GraphQL response objects before they're sent to a client. The function takes a [`GraphQLResponse`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L77-L82) object and a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L95-L130) object, and it should return a `GraphQLResponse` object, or null to preserve the existing structure.
+Provide this function to transform the structure of GraphQL response objects before they're sent to a client. The function takes a [`GraphQLResponse`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#109-L114) object and a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L127-L162) object, and it should return a `GraphQLResponse` object, or null to preserve the existing structure.
 </td>
 </tr>
 
@@ -382,11 +382,11 @@ Defaults to `true`.
 
 ###### `logger`
 
-[`Logger`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L146-L152)
+[`Logger`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L178-L184)
 </td>
 <td>
 
-An object to use for logging in place of `console`. If provided, this object must implement all methods of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L146-L152).
+An object to use for logging in place of `console`. If provided, this object must implement all methods of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L178-L184).
 
 If you provide this value, Apollo Server automatically logs all messages of _all_ severity levels (`debug` through `error`), regardless of whether the `debug` option is set to `true`. It is the responsibility of the logger to determine how to handle logged messages of each level.
 
