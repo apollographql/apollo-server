@@ -7,20 +7,35 @@ import testSuite, {
 import { Config } from 'apollo-server-core';
 import gql from 'graphql-tag';
 import request from 'supertest';
-import {createMockServer} from './mockServer';
+import { createMockServer as createAPIGatewayMockServer } from './mockAPIGatewayServer';
+import { createMockServer as createALBMockServer } from './mockALBServer';
 
-const createLambda = (options: CreateAppOptions = {}) => {
+const createAPIGatewayLambda = (options: CreateAppOptions = {}) => {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
 
   const handler = server.createHandler();
 
-  return createMockServer(handler);
-}
+  return createAPIGatewayMockServer(handler);
+};
 
-describe('integration:Lambda', () => {
-  testSuite(createLambda);
+const createALBLambda = (options: CreateAppOptions = {}) => {
+  const server = new ApolloServer(
+    (options.graphqlOptions as Config) || { schema: Schema },
+  );
+
+  const handler = server.createHandler();
+
+  return createALBMockServer(handler);
+};
+
+describe('integration:APIGateway:Lambda', () => {
+  testSuite(createAPIGatewayLambda);
+});
+
+describe('integration:ALB:Lambda', () => {
+  testSuite(createALBLambda);
 });
 
 const typeDefs = gql`
@@ -41,8 +56,10 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    uploads() { },
-    helloWorld() { return 'hi'; }
+    uploads() {},
+    helloWorld() {
+      return 'hi';
+    },
   },
   Mutation: {
     async singleUpload(_parent: any, { file }: { file: any }) {
@@ -59,49 +76,48 @@ const resolvers = {
   },
 };
 
-
 // NODE: Skip Node.js 6 and 14, but only because `graphql-upload`
 // doesn't support them on the version use use.
-(
-  [6, 14].includes(NODE_MAJOR_VERSION) ? describe.skip : describe
-)('file uploads', () => {
-  let app = <any>null
-  beforeAll(async () => {
-    app = await createLambda({
-      graphqlOptions: {
-        typeDefs,
-        resolvers,
-      },
-    });
-  });
-
-  it('allows for a standard query without uploads', async () => {
-    const req = request(app)
-      .post('/graphql')
-      .set('Content-Type', 'application/json')
-      .set('Accept', 'application/json')
-      .send({
-        query: `query{helloWorld}`
+([6, 14].includes(NODE_MAJOR_VERSION) ? describe.skip : describe)(
+  'file uploads',
+  () => {
+    let app = <any>null;
+    beforeAll(async () => {
+      app = await createAPIGatewayLambda({
+        graphqlOptions: {
+          typeDefs,
+          resolvers,
+        },
       });
-    const res = await req;
-    expect(res.statusCode).toBe(200);
-    expect(res.body.data.helloWorld).toBe('hi')
-  });
+    });
 
-  it('allows for uploading a single file', async () => {
-    const expected = {
-      filename: 'package.json',
-      encoding: '7bit',
-      mimetype: 'application/json',
-    };
+    it('allows for a standard query without uploads', async () => {
+      const req = request(app)
+        .post('/graphql')
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
+        .send({
+          query: `query{helloWorld}`,
+        });
+      const res = await req;
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.helloWorld).toBe('hi');
+    });
 
-    const req = request(app)
-      .post('/graphql')
-      .set('Content-Type', 'multipart/form-data')
-      .field(
-        'operations',
-        JSON.stringify({
-          query: `
+    it('allows for uploading a single file', async () => {
+      const expected = {
+        filename: 'package.json',
+        encoding: '7bit',
+        mimetype: 'application/json',
+      };
+
+      const req = request(app)
+        .post('/graphql')
+        .set('Content-Type', 'multipart/form-data')
+        .field(
+          'operations',
+          JSON.stringify({
+            query: `
             mutation($file: Upload!) {
               singleUpload(file: $file) {
                 filename
@@ -110,39 +126,41 @@ const resolvers = {
               }
             }
           `,
-          variables: {
-            file: null,
-          },
-        }),
-      )
-      .field('map', JSON.stringify({ 0: ['variables.file'] }))
-      .attach('0', 'package.json');
-    return req.then((res: any) => {
-      expect(res.status).toEqual(200);
-      expect(res.body.errors).toBeUndefined();
-      expect(res.body.data.singleUpload).toEqual(expected);
+            variables: {
+              file: null,
+            },
+          }),
+        )
+        .field('map', JSON.stringify({ 0: ['variables.file'] }))
+        .attach('0', 'package.json');
+      return req.then((res: any) => {
+        expect(res.status).toEqual(200);
+        expect(res.body.errors).toBeUndefined();
+        expect(res.body.data.singleUpload).toEqual(expected);
+      });
     });
-  });
 
-  it('allows for uploading multiple files', async () => {
-    const expected = [{
-      filename: 'package.json',
-      encoding: '7bit',
-      mimetype: 'application/json',
-    },
-    {
-      filename: 'tsconfig.json',
-      encoding: '7bit',
-      mimetype: 'application/json',
-    }];
+    it('allows for uploading multiple files', async () => {
+      const expected = [
+        {
+          filename: 'package.json',
+          encoding: '7bit',
+          mimetype: 'application/json',
+        },
+        {
+          filename: 'tsconfig.json',
+          encoding: '7bit',
+          mimetype: 'application/json',
+        },
+      ];
 
-    const req = request(app)
-      .post('/graphql')
-      .type('form')
-      .field(
-        'operations',
-        JSON.stringify({
-          query: `
+      const req = request(app)
+        .post('/graphql')
+        .type('form')
+        .field(
+          'operations',
+          JSON.stringify({
+            query: `
             mutation($files: [Upload!]!) {
               multiUpload(files: $files) {
                 filename
@@ -151,18 +169,25 @@ const resolvers = {
               }
             }
           `,
-          variables: {
-            files: [null, null],
-          },
-        }),
-      )
-      .field('map', JSON.stringify({ 0: ['variables.files.0'], 1: ['variables.files.1'] }))
-      .attach('0', 'package.json')
-      .attach('1', 'tsconfig.json');
-    return req.then((res: any) => {
-      expect(res.status).toEqual(200);
-      expect(res.body.errors).toBeUndefined();
-      expect(res.body.data.multiUpload).toEqual(expected);
+            variables: {
+              files: [null, null],
+            },
+          }),
+        )
+        .field(
+          'map',
+          JSON.stringify({
+            0: ['variables.files.0'],
+            1: ['variables.files.1'],
+          }),
+        )
+        .attach('0', 'package.json')
+        .attach('1', 'tsconfig.json');
+      return req.then((res: any) => {
+        expect(res.status).toEqual(200);
+        expect(res.body.errors).toBeUndefined();
+        expect(res.body.data.multiUpload).toEqual(expected);
+      });
     });
-  });
-});
+  },
+);

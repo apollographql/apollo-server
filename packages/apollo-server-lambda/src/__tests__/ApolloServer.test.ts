@@ -1,10 +1,7 @@
 import request from 'supertest';
-import {createMockServer} from './mockServer';
+import { createMockServer } from './mockAPIGatewayServer';
 import { gql } from 'apollo-server-core';
-import {
-  ApolloServer,
-  CreateHandlerOptions
-} from '../ApolloServer';
+import { ApolloServer, CreateHandlerOptions } from '../ApolloServer';
 
 const typeDefs = gql`
   type Query {
@@ -19,24 +16,20 @@ const resolvers = {
 };
 
 describe('apollo-server-lambda', () => {
-  const createLambda = (
-    options: Partial<CreateHandlerOptions> = {},
-  ) => {
+  const createLambda = (options: Partial<CreateHandlerOptions> = {}) => {
     const server = new ApolloServer({
       typeDefs,
-      resolvers
+      resolvers,
     });
     const handler = server.createHandler(options);
     return createMockServer(handler);
-  }
+  };
 
   describe('healthchecks', () => {
-
     it('creates a healthcheck endpoint', async () => {
       const app = createLambda();
 
-      const req = request(app)
-        .get('/.well-known/apollo/server-health');
+      const req = request(app).get('/.well-known/apollo/server-health');
 
       return req.then((res: any) => {
         expect(res.status).toEqual(200);
@@ -49,13 +42,12 @@ describe('apollo-server-lambda', () => {
       const app = createLambda({
         onHealthCheck: async () => {
           return new Promise((resolve) => {
-            return resolve("Success!");
+            return resolve('Success!');
           });
-        }
+        },
       });
 
-      const req = request(app)
-        .get('/.well-known/apollo/server-health');
+      const req = request(app).get('/.well-known/apollo/server-health');
 
       return req.then((res: any) => {
         expect(res.status).toEqual(200);
@@ -68,13 +60,12 @@ describe('apollo-server-lambda', () => {
       const app = createLambda({
         onHealthCheck: async () => {
           return new Promise(() => {
-            throw new Error("Failed to connect!");
+            throw new Error('Failed to connect!');
           });
-        }
+        },
       });
 
-      const req = request(app)
-        .get('/.well-known/apollo/server-health');
+      const req = request(app).get('/.well-known/apollo/server-health');
 
       return req.then((res: any) => {
         expect(res.status).toEqual(503);
@@ -83,5 +74,4 @@ describe('apollo-server-lambda', () => {
       });
     });
   });
-
 });

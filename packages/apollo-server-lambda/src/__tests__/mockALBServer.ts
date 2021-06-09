@@ -2,13 +2,13 @@ import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 import {
   APIGatewayProxyCallback,
-  APIGatewayProxyEvent,
   Context as LambdaContext,
-  Handler,
-  APIGatewayProxyResult
-} from "aws-lambda";
+  ALBHandler,
+  ALBEvent,
+  ALBCallback,
+} from 'aws-lambda';
 
-export function createMockServer(handler: Handler<APIGatewayProxyEvent, APIGatewayProxyResult>) {
+export function createMockServer(handler: ALBHandler) {
   return (req: IncomingMessage, res: ServerResponse) => {
     // return 404 if path is /bogus-route to pass the test, lambda doesn't have paths
     if (req.url && req.url.includes('/bogus-route')) {
@@ -17,16 +17,21 @@ export function createMockServer(handler: Handler<APIGatewayProxyEvent, APIGatew
     }
 
     let body = '';
-    req.on('data', chunk => (body += chunk));
+    req.on('data', (chunk) => (body += chunk));
     req.on('end', () => {
       const urlObject = url.parse(req.url || '', true);
+      const queryStringParameters = Object.entries(urlObject.query)
+        .map(([key, value]) => {
+          return [key, encodeURIComponent(value as string)];
+        })
+        .reduce((acc, [key, value]) => ({ [key]: value, ...acc }), {});
       const event = {
         httpMethod: req.method,
         body: body,
         path: req.url,
-        queryStringParameters: urlObject.query,
+        queryStringParameters,
         requestContext: {
-          path: urlObject.pathname,
+          alb: {},
         },
         headers: req.headers,
       };
@@ -53,10 +58,10 @@ export function createMockServer(handler: Handler<APIGatewayProxyEvent, APIGatew
       };
 
       handler(
-        event as APIGatewayProxyEvent,
+        event as unknown as ALBEvent,
         {} as LambdaContext,
-        callback as APIGatewayProxyCallback
+        callback as ALBCallback,
       );
     });
   };
-};
+}

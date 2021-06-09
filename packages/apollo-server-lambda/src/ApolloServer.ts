@@ -3,6 +3,7 @@ import {
   APIGatewayProxyEvent,
   APIGatewayProxyEventV2,
   APIGatewayProxyResult,
+  ALBEvent,
   Context as LambdaContext,
 } from 'aws-lambda';
 import {
@@ -23,19 +24,26 @@ import { ServerResponse, IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Headers } from 'apollo-server-env';
 import { Readable, Writable } from 'stream';
 
-// We try to support payloadFormatEvent 1.0 and 2.0. See
+// We try to support:
+// API Gateway payloadFormatEvent 1.0 and 2.0. See
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
 // for a bit of documentation as to what is in these objects. You can determine
 // which one you have by checking `'path' in event` (V1 has path, V2 doesn't).
-export type APIGatewayProxyEventV1OrV2 = APIGatewayProxyEvent | APIGatewayProxyEventV2;
+// ALB which is similar to API Gateway 1.0 with a few exceptions. See
+// https://docs.aws.amazon.com/lambda/latest/dg/services-alb.html
+// the biggest difference is in the queryParameters which are not decoded.
+export type ALBOrAPIGatewayProxyEventV1OrV2 =
+  | APIGatewayProxyEvent
+  | APIGatewayProxyEventV2
+  | ALBEvent;
 
-function eventHttpMethod(event: APIGatewayProxyEventV1OrV2): string {
+function eventHttpMethod(event: ALBOrAPIGatewayProxyEventV1OrV2): string {
   return 'httpMethod' in event
     ? event.httpMethod
     : event.requestContext.http.method;
 }
 
-function eventPath(event: APIGatewayProxyEventV1OrV2): string {
+function eventPath(event: ALBOrAPIGatewayProxyEventV1OrV2): string {
   // Note: it's unclear if the V2 version should use `event.rawPath` or
   // `event.requestContext.http.path`; I can't find any documentation about the
   // distinction between the two. I'm choosing rawPath because that's what
@@ -43,7 +51,9 @@ function eventPath(event: APIGatewayProxyEventV1OrV2): string {
   // field that doesn't exist in the docs or typings).
   return 'path' in event ? event.path : event.rawPath;
 }
-export interface CreateHandlerOptions<EventT extends APIGatewayProxyEventV1OrV2 = APIGatewayProxyEventV1OrV2> {
+export interface CreateHandlerOptions<
+  EventT extends ALBOrAPIGatewayProxyEventV1OrV2 = ALBOrAPIGatewayProxyEventV1OrV2,
+> {
   cors?: {
     origin?: boolean | string | string[];
     methods?: string | string[];
@@ -75,7 +85,7 @@ export class FileUploadRequest extends Readable {
 //
 // (Apollo Server 3 will drop Node 6 support, at which point we should just make
 // this package always return an async handler.)
-function maybeCallbackify<EventT extends APIGatewayProxyEventV1OrV2>(
+function maybeCallbackify<EventT extends ALBOrAPIGatewayProxyEventV1OrV2>(
   asyncHandler: (
     event: EventT,
     context: LambdaContext,
@@ -103,7 +113,9 @@ function maybeCallbackify<EventT extends APIGatewayProxyEventV1OrV2>(
   };
 }
 
-export class ApolloServer<EventT extends APIGatewayProxyEventV1OrV2 = APIGatewayProxyEventV1OrV2> extends ApolloServerBase {
+export class ApolloServer<
+  EventT extends ALBOrAPIGatewayProxyEventV1OrV2 = ALBOrAPIGatewayProxyEventV1OrV2,
+> extends ApolloServerBase {
   protected serverlessFramework(): boolean {
     return true;
   }
@@ -345,7 +357,20 @@ export class ApolloServer<EventT extends APIGatewayProxyEventV1OrV2 = APIGateway
             query = JSON.parse(body);
           } else {
             // XXX Note that
-            query = event.queryStringParameters || {};
+            if (event.requestContext && 'alb' in event.requestContext) {
+              query = event.queryStringParameters
+                ? Object.entries(event.queryStringParameters)
+                    .map(([key, value]) => {
+                      return [key, decodeURIComponent(value)];
+                    })
+                    .reduce(
+                      (acc, [key, value]) => ({ ...acc, [key]: value }),
+                      {},
+                    )
+                : {};
+            } else {
+              query = event.queryStringParameters || {};
+            }
           }
 
           try {
