@@ -36,7 +36,7 @@ describe('plugin', () => {
         overallCachePolicy,
         // This query needs to pass graphql validation
         graphqlRequest: { query: 'query { hello }' },
-        executor: () => {
+        executor: async () => {
           const response: GraphQLResponse = {
             http: {
               headers: new Headers(),

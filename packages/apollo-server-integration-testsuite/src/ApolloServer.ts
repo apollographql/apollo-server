@@ -127,7 +127,7 @@ const schema = new GraphQLSchema({
 const makeGatewayMock = ({
   optionsSpy = (_options) => {},
   unsubscribeSpy = () => {},
-  executor = () => ({}),
+  executor = async () => ({}),
 }: {
   optionsSpy?: (_options: any) => void;
   unsubscribeSpy?: () => void;
@@ -163,6 +163,7 @@ const makeGatewayMock = ({
       eventuallyAssigned.triggerSchemaChange = callback;
       return unsubscribeSpy;
     },
+    stop: async () => {},
   };
 
   return { gateway: mockedGateway, triggers: eventuallyAssigned };
@@ -546,8 +547,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const encounteredContext: BaseContext[] = [];
         await setupApolloServerAndFetchPairForPlugins([
           {
-            requestDidStart: () => ({
-              executionDidStart: () => ({
+            requestDidStart: async () => ({
+              executionDidStart: async () => ({
                 willResolveField({ info, context }) {
                   encounteredFields.push(info.path);
                   encounteredContext.push(context);
@@ -601,12 +602,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
       it('allows setting a custom status code for an error', async () => {
         await setupApolloServerAndFetchPairForPlugins([
           {
-            requestDidStart() {
+            async requestDidStart() {
               return {
-                didResolveOperation() {
+                async didResolveOperation() {
                   throw new Error('known_error');
                 },
-                willSendResponse({ response: { http, errors } }) {
+                async willSendResponse({ response: { http, errors } }) {
                   if (errors![0].message === 'known_error') {
                     http!.status = 403;
                   }
@@ -624,9 +625,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
       it('preserves user-added "extensions" in the response when parsing errors occur', async () => {
         await setupApolloServerAndFetchPairForPlugins([
           {
-            requestDidStart() {
+            async requestDidStart() {
               return {
-                willSendResponse({ response }) {
+                async willSendResponse({ response }) {
                   response.extensions = { myExtension: true };
                 },
               };
@@ -646,9 +647,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
       it('preserves user-added "extensions" in the response when validation errors occur', async () => {
         await setupApolloServerAndFetchPairForPlugins([
           {
-            requestDidStart() {
+            async requestDidStart() {
               return {
-                willSendResponse({ response }) {
+                async willSendResponse({ response }) {
                   response.extensions = { myExtension: true };
                 },
               };
@@ -1086,7 +1087,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
             await setupApolloServerAndFetchPair({}, {}, [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return {
                     didResolveOperation() {
                       throw new Error('known_error');
@@ -2676,7 +2677,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const optionsSpy = jest.fn();
 
         const { gateway, triggers } = makeGatewayMock({ optionsSpy });
-        triggers.resolveLoad({ schema, executor: () => ({}) });
+        triggers.resolveLoad({ schema, executor: async () => ({}) });
         await createApolloServer({
           gateway,
           apollo: { key: 'service:tester:1234abc', graphRef: 'tester@staging' },
@@ -2696,7 +2697,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       it('unsubscribes from schema update on close', async () => {
         const unsubscribeSpy = jest.fn();
         const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
-        triggers.resolveLoad({ schema, executor: () => ({}) });
+        triggers.resolveLoad({ schema, executor: async () => ({}) });
         await createApolloServer({ gateway });
         expect(unsubscribeSpy).not.toHaveBeenCalled();
         await stopServer();
@@ -2833,9 +2834,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
           typeDefs: 'type Query {x: ID}',
           plugins: [
             ...htmls.map((html) => ({
-              serverWillStart() {
+              async serverWillStart() {
                 return {
-                  renderLandingPage() {
+                  async renderLandingPage() {
                     return {
                       html,
                     };

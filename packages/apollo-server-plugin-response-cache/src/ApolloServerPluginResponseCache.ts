@@ -135,9 +135,9 @@ export default function plugin(
   options: Options = Object.create(null),
 ): ApolloServerPlugin {
   return {
-    requestDidStart(
+    async requestDidStart(
       outerRequestContext: GraphQLRequestContext<any>,
-    ): GraphQLRequestListener<any> {
+    ): Promise<GraphQLRequestListener<any>> {
       const cache = new PrefixingKeyValueCache(
         options.cache || outerRequestContext.cache!,
         'fqc:',

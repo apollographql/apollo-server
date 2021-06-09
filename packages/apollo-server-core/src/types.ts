@@ -56,15 +56,15 @@ export type GraphQLServiceConfig = {
 
 export interface GraphQLService {
   load(options: {
-    apollo?: ApolloConfig;
+    apollo: ApolloConfig;
   }): Promise<GraphQLServiceConfig>;
   onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
   // Note: The `TContext` typing here is not conclusively behaving as we expect:
   // https://github.com/apollographql/apollo-server/pull/3811#discussion_r387381605
   executor<TContext>(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ): ValueOrPromise<GraphQLExecutionResult>;
-  stop?(): Promise<void>;
+  ): Promise<GraphQLExecutionResult>;
+  stop(): Promise<void>;
 }
 
 // This configuration is shared between all integrations and should include

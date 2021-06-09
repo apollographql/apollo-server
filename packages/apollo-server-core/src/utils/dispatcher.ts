@@ -1,10 +1,11 @@
-import { AnyFunction, AnyFunctionMap } from "apollo-server-types";
+import { AnyFunction, AnyFunctionMap } from 'apollo-server-types';
 
 type Args<F> = F extends (...args: infer A) => any ? A : never;
 type AsFunction<F> = F extends AnyFunction ? F : never;
-type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
+type StripPromise<T> = T extends Promise<infer U> ? U : never;
 
 type DidEndHook<TArgs extends any[]> = (...args: TArgs) => void;
+type AsyncDidEndHook<TArgs extends any[]> = (...args: TArgs) => Promise<void>;
 
 export class Dispatcher<T extends AnyFunctionMap> {
   constructor(protected targets: T[]) {}
@@ -14,7 +15,7 @@ export class Dispatcher<T extends AnyFunctionMap> {
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>
   ): ReturnType<AsFunction<T[TMethodName]>>[] {
-    return targets.map(target => {
+    return targets.map((target) => {
       const method = target[methodName];
       if (method && typeof method === 'function') {
         return method.apply(target, args);
@@ -22,32 +23,20 @@ export class Dispatcher<T extends AnyFunctionMap> {
     });
   }
 
-  public async invokeHookAsync<TMethodName extends keyof T>(
+  public async invokeHook<
+    TMethodName extends keyof T,
+    THookReturn extends StripPromise<ReturnType<AsFunction<T[TMethodName]>>>,
+  >(
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>
-  ): Promise<ReturnType<AsFunction<T[TMethodName]>>[]> {
-    return await Promise.all(
-      this.callTargets(this.targets, methodName, ...args));
-  }
-
-  public invokeHookSync<TMethodName extends keyof T>(
-    methodName: TMethodName,
-    ...args: Args<T[TMethodName]>
-  ): ReturnType<AsFunction<T[TMethodName]>>[] {
-    return this.callTargets(this.targets, methodName, ...args);
-  }
-
-  public reverseInvokeHookSync<TMethodName extends keyof T>(
-    methodName: TMethodName,
-    ...args: Args<T[TMethodName]>
-  ): ReturnType<AsFunction<T[TMethodName]>>[] {
-    return this.callTargets(this.targets.reverse(), methodName, ...args);
+  ): Promise<THookReturn[]> {
+    return Promise.all(this.callTargets(this.targets, methodName, ...args));
   }
 
   public async invokeHooksUntilNonNull<TMethodName extends keyof T>(
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>
-  ): Promise<UnwrapPromise<ReturnType<AsFunction<T[TMethodName]>>> | null> {
+  ): Promise<StripPromise<ReturnType<AsFunction<T[TMethodName]>>> | null> {
     for (const target of this.targets) {
       const method = target[methodName];
       if (!(method && typeof method === 'function')) {
@@ -61,9 +50,33 @@ export class Dispatcher<T extends AnyFunctionMap> {
     return null;
   }
 
-  public invokeDidStartHook<
+  public async invokeDidStartHook<
     TMethodName extends keyof T,
-    TEndHookArgs extends Args<ReturnType<AsFunction<T[TMethodName]>>>
+    TEndHookArgs extends Args<
+      StripPromise<ReturnType<AsFunction<T[TMethodName]>>>
+    >,
+  >(
+    methodName: TMethodName,
+    ...args: Args<T[TMethodName]>
+  ): Promise<AsyncDidEndHook<TEndHookArgs>> {
+    const hookReturnValues: (AsyncDidEndHook<TEndHookArgs> | void)[] =
+      await Promise.all(this.callTargets(this.targets, methodName, ...args));
+
+    const didEndHooks = hookReturnValues.filter(
+      (hook): hook is AsyncDidEndHook<TEndHookArgs> => !!hook,
+    );
+    didEndHooks.reverse();
+
+    return async (...args: TEndHookArgs) => {
+      await Promise.all(didEndHooks.map((hook) => hook(...args)));
+    };
+  }
+
+  // Almost all hooks are async, but as a special case, willResolveField is sync
+  // due to performance concerns.
+  public invokeSyncDidStartHook<
+    TMethodName extends keyof T,
+    TEndHookArgs extends Args<ReturnType<AsFunction<T[TMethodName]>>>,
   >(
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>
@@ -79,10 +92,9 @@ export class Dispatcher<T extends AnyFunctionMap> {
         }
       }
     }
+    didEndHooks.reverse();
 
     return (...args: TEndHookArgs) => {
-      didEndHooks.reverse();
-
       for (const didEndHook of didEndHooks) {
         didEndHook(...args);
       }

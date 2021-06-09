@@ -5,7 +5,6 @@ import {
   GraphQLRequestContext,
   GraphQLRequest,
   GraphQLResponse,
-  ValueOrPromise,
   WithRequired,
   GraphQLFieldResolverParams,
   GraphQLRequestContextDidResolveSource,
@@ -32,7 +31,6 @@ export {
   GraphQLRequestContext,
   GraphQLRequest,
   GraphQLResponse,
-  ValueOrPromise,
   WithRequired,
   GraphQLFieldResolverParams,
   GraphQLRequestContextDidResolveSource,
@@ -54,25 +52,25 @@ export {
 // review: https://github.com/apollographql/apollo-server/issues/4103
 
 export interface ApolloServerPlugin<
-  TContext extends BaseContext = BaseContext
+  TContext extends BaseContext = BaseContext,
 > {
   serverWillStart?(
     service: GraphQLServiceContext,
-  ): ValueOrPromise<GraphQLServerListener | void>;
+  ): Promise<GraphQLServerListener | void>;
   requestDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): GraphQLRequestListener<TContext> | void;
+  ): Promise<GraphQLRequestListener<TContext> | void>;
 }
 
 export interface GraphQLServerListener {
-  serverWillStop?(): ValueOrPromise<void>;
+  serverWillStop?(): Promise<void>;
   // At most one plugin's serverWillStart may return a GraphQLServerListener
   // with this method. If one does, it is called once on server startup and the
   // page it returns is served to clients with `accept: text/html` headers. This
   // is an intentionally simple API; if you want to do something fancy to serve
   // a landing page, you probably should just define a handler in your web
   // framework.
-  renderLandingPage?(): LandingPage;
+  renderLandingPage?(): Promise<LandingPage>;
 }
 
 // The page served to clients with `accept: text/html` headers.
@@ -80,31 +78,38 @@ export interface LandingPage {
   html: string;
 }
 
-export type GraphQLRequestListenerParsingDidEnd = (err?: Error) => void;
-export type GraphQLRequestListenerValidationDidEnd =
-  ((err?: ReadonlyArray<Error>) => void);
-export type GraphQLRequestListenerExecutionDidEnd = ((err?: Error) => void);
-export type GraphQLRequestListenerDidResolveField =
-  ((error: Error | null, result?: any) => void);
+export type GraphQLRequestListenerParsingDidEnd = (
+  err?: Error,
+) => Promise<void>;
+export type GraphQLRequestListenerValidationDidEnd = (
+  err?: ReadonlyArray<Error>,
+) => Promise<void>;
+export type GraphQLRequestListenerExecutionDidEnd = (
+  err?: Error,
+) => Promise<void>;
+export type GraphQLRequestListenerDidResolveField = (
+  error: Error | null,
+  result?: any,
+) => void;
 
 export interface GraphQLRequestListener<
-  TContext extends BaseContext = BaseContext
+  TContext extends BaseContext = BaseContext,
 > extends AnyFunctionMap {
   didResolveSource?(
     requestContext: GraphQLRequestContextDidResolveSource<TContext>,
-  ): ValueOrPromise<void>;
+  ): Promise<void>;
   parsingDidStart?(
     requestContext: GraphQLRequestContextParsingDidStart<TContext>,
-  ): GraphQLRequestListenerParsingDidEnd | void;
+  ): Promise<GraphQLRequestListenerParsingDidEnd | void>;
   validationDidStart?(
     requestContext: GraphQLRequestContextValidationDidStart<TContext>,
-  ): GraphQLRequestListenerValidationDidEnd | void;
+  ): Promise<GraphQLRequestListenerValidationDidEnd | void>;
   didResolveOperation?(
     requestContext: GraphQLRequestContextDidResolveOperation<TContext>,
-  ): ValueOrPromise<void>;
+  ): Promise<void>;
   didEncounterErrors?(
     requestContext: GraphQLRequestContextDidEncounterErrors<TContext>,
-  ): ValueOrPromise<void>;
+  ): Promise<void>;
   // If this hook is defined, it is invoked immediately before GraphQL execution
   // would take place. If its return value resolves to a non-null
   // GraphQLResponse, that result is used instead of executing the query.
@@ -112,23 +117,26 @@ export interface GraphQLRequestListener<
   // response is used.
   responseForOperation?(
     requestContext: GraphQLRequestContextResponseForOperation<TContext>,
-  ): ValueOrPromise<GraphQLResponse | null>;
+  ): Promise<GraphQLResponse | null>;
   executionDidStart?(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ):
-    | GraphQLRequestExecutionListener
-    | GraphQLRequestListenerExecutionDidEnd
-    | void;
+  ): Promise<GraphQLRequestExecutionListener | void>;
   willSendResponse?(
     requestContext: GraphQLRequestContextWillSendResponse<TContext>,
-  ): ValueOrPromise<void>;
+  ): Promise<void>;
 }
 
 export interface GraphQLRequestExecutionListener<
-  TContext extends BaseContext = BaseContext
+  TContext extends BaseContext = BaseContext,
 > extends AnyFunctionMap {
   executionDidEnd?: GraphQLRequestListenerExecutionDidEnd;
+  // willResolveField is not async because we've observed that it already has
+  // quite a performance impact on execution even without involving the Promise
+  // queue. If we can come up with ways to alleviate the burden (eg having an
+  // uninstrumented schema and an instrumented schema and only using the
+  // instrumented schema for a subset of operations that need detailed
+  // performance traces) we could be happier supporting async willResolveField.
   willResolveField?(
-    fieldResolverParams: GraphQLFieldResolverParams<any, TContext>
+    fieldResolverParams: GraphQLFieldResolverParams<any, TContext>,
   ): GraphQLRequestListenerDidResolveField | void;
 }

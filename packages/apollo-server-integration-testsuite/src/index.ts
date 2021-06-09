@@ -308,7 +308,7 @@ export default ({
             schema,
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return { didEncounterErrors };
                 },
               },
@@ -346,7 +346,7 @@ export default ({
             schema,
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return { didEncounterErrors };
                 },
               },
@@ -1227,7 +1227,7 @@ export default ({
             schema,
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return {
                     didResolveSource,
                     didEncounterErrors,

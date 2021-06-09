@@ -417,9 +417,9 @@ function parseGraphQLRequest(
 // GET operations should only be queries (not mutations). We want to throw
 // a particular HTTP error in that case.
 const checkOperationPlugin: ApolloServerPlugin = {
-  requestDidStart() {
+  async requestDidStart() {
     return {
-      didResolveOperation({ request, operation }) {
+      async didResolveOperation({ request, operation }) {
         if (!request.http) return;
 
         if (request.http.method === 'GET' && operation.operation !== 'query') {

@@ -160,7 +160,7 @@ export type ValidationRule = (context: ValidationContext) => ASTVisitor;
 
 export type GraphQLExecutor<TContext = Record<string, any>> = (
   requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-) => ValueOrPromise<GraphQLExecutionResult>;
+) => Promise<GraphQLExecutionResult>;
 
 export type GraphQLExecutionResult = {
   data?: Record<string, any> | null;

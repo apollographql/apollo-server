@@ -29,9 +29,9 @@ export function ApolloServerPluginLandingPageGraphQLPlayground(
 ): ImplicitlyInstallablePlugin {
   return {
     __internal_installed_implicitly__: false,
-    serverWillStart(): GraphQLServerListener {
+    async serverWillStart(): Promise<GraphQLServerListener> {
       return {
-        renderLandingPage() {
+        async renderLandingPage() {
           return {
             html: renderPlaygroundPage({
               version: defaultPlaygroundVersion,
