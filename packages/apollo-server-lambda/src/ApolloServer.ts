@@ -272,7 +272,7 @@ export class ApolloServer<
 
         if (this.playgroundOptions && eventHttpMethod(event) === 'GET') {
           const acceptHeader =
-            event.headers['Accept'] || event.headers['accept'];
+            event.headers?.['Accept'] || event.headers?.['accept'];
           if (acceptHeader && acceptHeader.includes('text/html')) {
             const path = eventPath(event) || '/';
 
@@ -297,8 +297,8 @@ export class ApolloServer<
         // that purpose.
         const response = new Writable() as ServerResponse;
         const contentType = (
-          event.headers['content-type'] ||
-          event.headers['Content-Type'] ||
+          event.headers?.['content-type'] ||
+          event.headers?.['Content-Type'] ||
           ''
         ).toLowerCase();
         const isMultipart = contentType.startsWith('multipart/form-data');
@@ -317,7 +317,7 @@ export class ApolloServer<
             ),
           );
           request.push(null);
-          request.headers = event.headers;
+          request.headers = event.headers ?? {};
           try {
             bodyFromFileUploads = await processFileUploads(
               request,
