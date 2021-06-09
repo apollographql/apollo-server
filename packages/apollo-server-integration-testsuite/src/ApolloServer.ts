@@ -45,6 +45,7 @@ import {
   ApolloServerPluginUsageReportingOptions,
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginLandingPageGraphQLPlayground,
+  ApolloError,
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
@@ -1648,6 +1649,40 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
+      });
+
+      it('shows ApolloError extensions in extensions (only!)', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: gql`
+            type Query {
+              fieldWhichWillError: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              fieldWhichWillError: () => {
+                throw new ApolloError('Some message', 'SOME_CODE', {
+                  ext1: 'myext',
+                });
+              },
+            },
+          },
+          stopOnTerminationSignals: false,
+          __testing_nodeEnv__: 'development',
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({ query: `{fieldWhichWillError}` });
+        expect(result.data).toEqual({ fieldWhichWillError: null });
+
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].message).toEqual('Some message');
+        expect(result.errors[0].extensions.code).toEqual('SOME_CODE');
+        expect(result.errors[0].extensions.ext1).toEqual('myext');
+        expect(result.errors[0].extensions.exception).toBeDefined();
+        expect(result.errors[0].extensions.exception.ext1).toBeUndefined();
       });
     });
 

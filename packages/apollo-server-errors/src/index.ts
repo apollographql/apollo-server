@@ -1,4 +1,10 @@
-import { ASTNode, GraphQLError, GraphQLFormattedError, Source, SourceLocation } from 'graphql';
+import {
+  ASTNode,
+  GraphQLError,
+  GraphQLFormattedError,
+  Source,
+  SourceLocation,
+} from 'graphql';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
@@ -19,39 +25,20 @@ export class ApolloError extends Error implements GraphQLError {
   ) {
     super(message);
 
-    // This variable was previously named `properties`, which allowed users to set
-    // arbitrary properties on the ApolloError object. This use case is still supported,
-    // but deprecated in favor of using the ApolloError.extensions object instead.
-    // This change intends to comply with the GraphQL spec on errors. See:
-    // https://github.com/graphql/graphql-spec/blob/master/spec/Section%207%20--%20Response.md#response-format
-    //
-    // Going forward, users should use the ApolloError.extensions object for storing
-    // and reading arbitrary data on an error, as arbitrary properties on the ApolloError
-    // itself won't be supported in the future.
-    //
-    // XXX Filter 'message' and 'extensions' specifically so they don't overwrite the class property.
-    // We _could_ filter all of the class properties, but have chosen to only do
-    // so if it's an issue for other users. Please feel free to open an issue if you
-    // find yourself here with this exact problem.
-    if (extensions) {
-      Object.keys(extensions)
-        .filter(keyName => keyName !== 'message' && keyName !== 'extensions')
-        .forEach(key => {
-          this[key] = extensions[key];
-        });
-    }
-
     // if no name provided, use the default. defineProperty ensures that it stays non-enumerable
     if (!this.name) {
       Object.defineProperty(this, 'name', { value: 'ApolloError' });
     }
 
-    // Before the mentioned change to extensions, users could previously set the extensions
-    // object by providing it as a key on the third argument to the constructor.
-    // This step provides backwards compatibility for those hypothetical users.
-    const userProvidedExtensions = (extensions && extensions.extensions) || null;
+    if (extensions?.extensions) {
+      throw Error(
+        'Pass extensions directly as the third argument of the ApolloError constructor: `new ' +
+          'ApolloError(message, code, {myExt: value})`, not `new ApolloError(message, code, ' +
+          '{extensions: {myExt: value}})`',
+      );
+    }
 
-    this.extensions = { ...extensions, ...userProvidedExtensions, code };
+    this.extensions = { ...extensions, code };
   }
 }
 
@@ -164,8 +151,10 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
   // copy the original error, while keeping all values non-enumerable, so they
   // are not printed unless directly referenced
   Object.defineProperty(copy, 'originalError', { value: {} });
-  Object.getOwnPropertyNames(error).forEach(key => {
-    Object.defineProperty(copy.originalError, key, { value: (error as any)[key] });
+  Object.getOwnPropertyNames(error).forEach((key) => {
+    Object.defineProperty(copy.originalError, key, {
+      value: (error as any)[key],
+    });
   });
 
   return copy;
@@ -224,8 +213,8 @@ export class PersistedQueryNotSupportedError extends ApolloError {
 }
 
 export class UserInputError extends ApolloError {
-  constructor(message: string, properties?: Record<string, any>) {
-    super(message, 'BAD_USER_INPUT', properties);
+  constructor(message: string, extensions?: Record<string, any>) {
+    super(message, 'BAD_USER_INPUT', extensions);
 
     Object.defineProperty(this, 'name', { value: 'UserInputError' });
   }
@@ -239,7 +228,7 @@ export function formatApolloErrors(
   },
 ): Array<ApolloError> {
   if (!options) {
-    return errors.map(error => enrichError(error));
+    return errors.map((error) => enrichError(error));
   }
   const { formatter, debug } = options;
 
@@ -263,7 +252,7 @@ export function formatApolloErrors(
   //   flattenedErrors.push(error);
   // }
 
-  const enrichedErrors = errors.map(error => enrichError(error, debug));
+  const enrichedErrors = errors.map((error) => enrichError(error, debug));
   const makePrintable = (error: GraphQLFormattedError) => {
     if (error instanceof Error) {
       // Error defines its `message` and other fields as non-enumerable, meaning JSON.stringigfy does not print them.
@@ -282,7 +271,7 @@ export function formatApolloErrors(
     return enrichedErrors;
   }
 
-  return enrichedErrors.map(error => {
+  return enrichedErrors.map((error) => {
     try {
       return makePrintable(formatter(error));
     } catch (err) {
