@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@types/aws-lambda": "^8.10.76",
-    "@vendia/serverless-express": "^4.3.7",
+    "@vendia/serverless-express": "^4.3.9",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-express": "file:../apollo-server-express",
     "express": "^4.17.1"

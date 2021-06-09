@@ -4,18 +4,33 @@ import testSuite, {
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 import { Config } from 'apollo-server-core';
-import {createMockServer} from './mockServer';
+import { createMockServer as createAPIGatewayMockServer } from './mockAPIGatewayServer';
+import { createMockServer as createALBMockServer } from './mockALBServer';
 
-const createLambda = async (options: CreateAppOptions = {}) => {
+const createAPIGatewayLambda = async (options: CreateAppOptions = {}) => {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
 
   const handler = server.createHandler();
 
-  return createMockServer(handler);
-}
+  return createAPIGatewayMockServer(handler);
+};
 
-describe('integration:Lambda', () => {
-  testSuite({createApp: createLambda, serverlessFramework: true});
+const createALBLambda = async (options: CreateAppOptions = {}) => {
+  const server = new ApolloServer(
+    (options.graphqlOptions as Config) || { schema: Schema },
+  );
+
+  const handler = server.createHandler();
+
+  return createALBMockServer(handler);
+};
+
+describe('integration:APIGateway:Lambda', () => {
+  testSuite({ createApp: createAPIGatewayLambda, serverlessFramework: true });
+});
+
+describe('integration:ALB:Lambda', () => {
+  testSuite({ createApp: createALBLambda, serverlessFramework: true });
 });
