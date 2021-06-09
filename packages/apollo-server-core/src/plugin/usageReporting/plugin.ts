@@ -421,163 +421,6 @@ export function ApolloServerPluginUsageReporting<TContext>(
           }
         }
 
-        function didEnd(
-          requestContext:
-            | GraphQLRequestContextWillSendResponse<TContext>
-            | GraphQLRequestContextDidResolveOperation<TContext>,
-        ) {
-          treeBuilder.stopTiming();
-
-          if (metrics.captureTraces === false) return;
-
-          treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
-          treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
-          treeBuilder.trace.registeredOperation = !!metrics.registeredOperation;
-
-          const policyIfCacheable =
-            requestContext.overallCachePolicy.policyIfCacheable();
-          if (policyIfCacheable) {
-            treeBuilder.trace.cachePolicy = new Trace.CachePolicy({
-              scope:
-                policyIfCacheable.scope === CacheScope.Private
-                  ? Trace.CachePolicy.Scope.PRIVATE
-                  : policyIfCacheable.scope === CacheScope.Public
-                  ? Trace.CachePolicy.Scope.PUBLIC
-                  : Trace.CachePolicy.Scope.UNKNOWN,
-              // Convert from seconds to ns.
-              maxAgeNs: policyIfCacheable.maxAge * 1e9,
-            });
-          }
-
-          // If operation resolution (parsing and validating the document followed
-          // by selecting the correct operation) resulted in the population of the
-          // `operationName`, we'll use that. (For anonymous operations,
-          // `requestContext.operationName` is null, which we represent here as
-          // the empty string.)
-          //
-          // If the user explicitly specified an `operationName` in their request
-          // but operation resolution failed (due to parse or validation errors or
-          // because there is no operation with that name in the document), we
-          // still put _that_ user-supplied `operationName` in the trace. This
-          // allows the error to be better understood in Studio. (We are
-          // considering changing the behavior of `operationName` in these 3 error
-          // cases; https://github.com/apollographql/apollo-server/pull/3465)
-          const operationName =
-            requestContext.operationName ||
-            requestContext.request.operationName ||
-            '';
-
-          // If this was a federated operation and we're the gateway, add the query plan
-          // to the trace.
-          if (metrics.queryPlanTrace) {
-            treeBuilder.trace.queryPlan = metrics.queryPlanTrace;
-          }
-
-          // Intentionally un-awaited so as not to block the response.  Any
-          // errors will be logged, but will not manifest a user-facing error.
-          // The logger in this case is a request specific logger OR the logger
-          // defined by the plugin if that's unavailable.  The request-specific
-          // logger is preferred since this is very much coupled directly to a
-          // client-triggered action which might be more granularly tagged by
-          // logging implementations.
-          addTrace().catch(logger.error);
-
-          async function addTrace(): Promise<void> {
-            // Ignore traces that come in after stop().
-            if (stopped) {
-              return;
-            }
-
-            // Ensure that the caller of addTrace (which does not await it) is
-            // not blocked. We use setImmediate rather than process.nextTick or
-            // just relying on the Promise microtask queue because setImmediate
-            // comes after IO, which is what we want.
-            await new Promise((res) => setImmediate(res));
-
-            const executableSchemaId =
-              overriddenExecutableSchemaId ??
-              executableSchemaIdForSchema(schema);
-
-            const reportData = getReportData(executableSchemaId);
-            const { report } = reportData;
-            const { trace } = treeBuilder;
-
-            let statsReportKey: string | undefined = undefined;
-            if (!requestContext.document) {
-              statsReportKey = `## GraphQLParseFailure\n`;
-            } else if (graphqlValidationFailure) {
-              statsReportKey = `## GraphQLValidationFailure\n`;
-            } else if (graphqlUnknownOperationName) {
-              statsReportKey = `## GraphQLUnknownOperationName\n`;
-            }
-
-            if (statsReportKey) {
-              if (options.sendUnexecutableOperationDocuments) {
-                trace.unexecutedOperationBody = requestContext.source;
-                trace.unexecutedOperationName = operationName;
-              }
-            } else {
-              const signature = getTraceSignature();
-              statsReportKey = `# ${operationName || '-'}\n${signature}`;
-            }
-
-            const protobufError = Trace.verify(trace);
-            if (protobufError) {
-              throw new Error(`Error encoding trace: ${protobufError}`);
-            }
-
-            report.addTrace({
-              statsReportKey,
-              trace,
-              asTrace:
-                graphMightSupportTraces &&
-                sendOperationAsTrace(trace, statsReportKey),
-              includeTracesContributingToStats,
-            });
-
-            // If the buffer gets big (according to our estimate), send.
-            if (
-              sendReportsImmediately ||
-              report.sizeEstimator.bytes >=
-                (options.maxUncompressedReportSize || 4 * 1024 * 1024)
-            ) {
-              await sendReportAndReportErrors(executableSchemaId);
-            }
-          }
-
-          function getTraceSignature(): string {
-            if (!requestContext.document) {
-              // This shouldn't happen: no document means parse failure, which
-              // uses its own special statsReportKey.
-              throw new Error('No document?');
-            }
-
-            const cacheKey = signatureCacheKey(
-              requestContext.queryHash,
-              operationName,
-            );
-
-            // If we didn't have the signature in the cache, we'll resort to
-            // calculating it.
-            const cachedSignature = signatureCache.get(cacheKey);
-
-            if (cachedSignature) {
-              return cachedSignature;
-            }
-
-            const generatedSignature = (
-              options.calculateSignature || defaultUsageReportingSignature
-            )(requestContext.document, operationName);
-
-            // Note that this cache is always an in-memory cache.
-            // If we replace it with a more generic async cache, we should
-            // not await the write operation.
-            signatureCache.set(cacheKey, generatedSignature);
-
-            return generatedSignature;
-          }
-        }
-
         // Our usage reporting groups everything by operation, so we don't
         // actually report about any issues that prevent us from getting an
         // operation string (eg, a missing operation, or APQ problems).
@@ -662,7 +505,157 @@ export function ApolloServerPluginUsageReporting<TContext>(
             // validation error), check to see if we should include the request.
             await shouldIncludeRequest(requestContext);
 
-            didEnd(requestContext);
+            treeBuilder.stopTiming();
+
+            if (metrics.captureTraces === false) return;
+
+            treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
+            treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
+            treeBuilder.trace.registeredOperation =
+              !!metrics.registeredOperation;
+
+            const policyIfCacheable =
+              requestContext.overallCachePolicy.policyIfCacheable();
+            if (policyIfCacheable) {
+              treeBuilder.trace.cachePolicy = new Trace.CachePolicy({
+                scope:
+                  policyIfCacheable.scope === CacheScope.Private
+                    ? Trace.CachePolicy.Scope.PRIVATE
+                    : policyIfCacheable.scope === CacheScope.Public
+                    ? Trace.CachePolicy.Scope.PUBLIC
+                    : Trace.CachePolicy.Scope.UNKNOWN,
+                // Convert from seconds to ns.
+                maxAgeNs: policyIfCacheable.maxAge * 1e9,
+              });
+            }
+
+            // If operation resolution (parsing and validating the document followed
+            // by selecting the correct operation) resulted in the population of the
+            // `operationName`, we'll use that. (For anonymous operations,
+            // `requestContext.operationName` is null, which we represent here as
+            // the empty string.)
+            //
+            // If the user explicitly specified an `operationName` in their request
+            // but operation resolution failed (due to parse or validation errors or
+            // because there is no operation with that name in the document), we
+            // still put _that_ user-supplied `operationName` in the trace. This
+            // allows the error to be better understood in Studio. (We are
+            // considering changing the behavior of `operationName` in these 3 error
+            // cases; https://github.com/apollographql/apollo-server/pull/3465)
+            const operationName =
+              requestContext.operationName ||
+              requestContext.request.operationName ||
+              '';
+
+            // If this was a federated operation and we're the gateway, add the query plan
+            // to the trace.
+            if (metrics.queryPlanTrace) {
+              treeBuilder.trace.queryPlan = metrics.queryPlanTrace;
+            }
+
+            // Intentionally un-awaited so as not to block the response.  Any
+            // errors will be logged, but will not manifest a user-facing error.
+            // The logger in this case is a request specific logger OR the logger
+            // defined by the plugin if that's unavailable.  The request-specific
+            // logger is preferred since this is very much coupled directly to a
+            // client-triggered action which might be more granularly tagged by
+            // logging implementations.
+            addTrace().catch(logger.error);
+
+            async function addTrace(): Promise<void> {
+              // Ignore traces that come in after stop().
+              if (stopped) {
+                return;
+              }
+
+              // Ensure that the caller of addTrace (which does not await it) is
+              // not blocked. We use setImmediate rather than process.nextTick or
+              // just relying on the Promise microtask queue because setImmediate
+              // comes after IO, which is what we want.
+              await new Promise((res) => setImmediate(res));
+
+              const executableSchemaId =
+                overriddenExecutableSchemaId ??
+                executableSchemaIdForSchema(schema);
+
+              const reportData = getReportData(executableSchemaId);
+              const { report } = reportData;
+              const { trace } = treeBuilder;
+
+              let statsReportKey: string | undefined = undefined;
+              if (!requestContext.document) {
+                statsReportKey = `## GraphQLParseFailure\n`;
+              } else if (graphqlValidationFailure) {
+                statsReportKey = `## GraphQLValidationFailure\n`;
+              } else if (graphqlUnknownOperationName) {
+                statsReportKey = `## GraphQLUnknownOperationName\n`;
+              }
+
+              if (statsReportKey) {
+                if (options.sendUnexecutableOperationDocuments) {
+                  trace.unexecutedOperationBody = requestContext.source;
+                  trace.unexecutedOperationName = operationName;
+                }
+              } else {
+                const signature = getTraceSignature();
+                statsReportKey = `# ${operationName || '-'}\n${signature}`;
+              }
+
+              const protobufError = Trace.verify(trace);
+              if (protobufError) {
+                throw new Error(`Error encoding trace: ${protobufError}`);
+              }
+
+              report.addTrace({
+                statsReportKey,
+                trace,
+                asTrace:
+                  graphMightSupportTraces &&
+                  sendOperationAsTrace(trace, statsReportKey),
+                includeTracesContributingToStats,
+              });
+
+              // If the buffer gets big (according to our estimate), send.
+              if (
+                sendReportsImmediately ||
+                report.sizeEstimator.bytes >=
+                  (options.maxUncompressedReportSize || 4 * 1024 * 1024)
+              ) {
+                await sendReportAndReportErrors(executableSchemaId);
+              }
+            }
+
+            function getTraceSignature(): string {
+              if (!requestContext.document) {
+                // This shouldn't happen: no document means parse failure, which
+                // uses its own special statsReportKey.
+                throw new Error('No document?');
+              }
+
+              const cacheKey = signatureCacheKey(
+                requestContext.queryHash,
+                operationName,
+              );
+
+              // If we didn't have the signature in the cache, we'll resort to
+              // calculating it.
+              const cachedSignature = signatureCache.get(cacheKey);
+
+              if (cachedSignature) {
+                return cachedSignature;
+              }
+
+              const generatedSignature = (
+                options.calculateSignature || defaultUsageReportingSignature
+              )(requestContext.document, operationName);
+
+              // Note that this cache is always an in-memory cache.
+              // If we replace it with a more generic async cache, we should
+              // not await the write operation.
+              signatureCache.set(cacheKey, generatedSignature);
+
+              return generatedSignature;
+            }
           },
         };
       };
