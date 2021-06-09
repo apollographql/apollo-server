@@ -1,7 +1,7 @@
 import http from 'http';
 import request from 'supertest';
 import express from 'express';
-import { createMockServer } from './mockServer';
+import { createMockServer } from './mockAPIGatewayServer';
 import { Config, gql } from 'apollo-server-core';
 import { ApolloServer, CreateHandlerOptions } from '../ApolloServer';
 import {
