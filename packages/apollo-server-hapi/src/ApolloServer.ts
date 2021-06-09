@@ -128,6 +128,11 @@ export class ApolloServer extends ApolloServerBase {
 
           if (true === error.isGraphQLError) {
             const response = h.response(error.message);
+            if (error.headers) {
+              Object.entries(error.headers).forEach(([headerName, value]) => {
+                response.header(headerName, value);
+              });
+            }
             response.code(error.statusCode);
             response.type('application/json');
             return response;

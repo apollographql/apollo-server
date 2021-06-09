@@ -492,6 +492,9 @@ export default ({
           expect(res.body.errors[0].message).toEqual(
             'PersistedQueryNotSupported',
           );
+          expect(res.headers['cache-control']).toBe(
+            'private, no-cache, must-revalidate',
+          );
         });
       });
 
@@ -517,6 +520,9 @@ export default ({
           expect(res.body.errors[0].message).toEqual(
             'PersistedQueryNotSupported',
           );
+          expect(res.headers['cache-control']).toBe(
+            'private, no-cache, must-revalidate',
+          );
         });
       });
 
@@ -538,6 +544,9 @@ export default ({
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual('PersistedQueryNotFound');
+          expect(res.headers['cache-control']).toBe(
+            'private, no-cache, must-revalidate',
+          );
         });
       });
 
@@ -559,6 +568,9 @@ export default ({
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual('PersistedQueryNotFound');
+          expect(res.headers['cache-control']).toBe(
+            'private, no-cache, must-revalidate',
+          );
         });
       });
 

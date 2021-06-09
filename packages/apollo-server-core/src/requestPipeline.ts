@@ -36,7 +36,6 @@ import {
   GraphQLRequestContext,
   GraphQLExecutor,
   GraphQLExecutionResult,
-  InvalidGraphQLRequestError,
   ValidationRule,
 } from 'apollo-server-types';
 import {
@@ -60,15 +59,11 @@ import {
   PrefixingKeyValueCache,
 } from 'apollo-server-caching';
 
-export {
-  GraphQLRequest,
-  GraphQLResponse,
-  GraphQLRequestContext,
-  InvalidGraphQLRequestError,
-};
+export { GraphQLRequest, GraphQLResponse, GraphQLRequestContext };
 
 import createSHA from './utils/createSHA';
 import { HttpQueryError } from './runHttpQuery';
+import { Headers } from 'apollo-server-env';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 
@@ -137,18 +132,10 @@ export async function processGraphQLRequest<TContext>(
     // It looks like we've received a persisted query. Check if we
     // support them.
     if (!config.persistedQueries || !config.persistedQueries.cache) {
-      // We are returning to `runHttpQuery` to preserve legacy behavior while
-      // still delivering observability to the `didEncounterErrors` hook.
-      // This particular error will _not_ trigger `willSendResponse`.
-      // See comment on `emitErrorAndThrow` for more details.
-      return await emitErrorAndThrow(new PersistedQueryNotSupportedError());
+      return await sendErrorResponse(new PersistedQueryNotSupportedError());
     } else if (extensions.persistedQuery.version !== 1) {
-      // We are returning to `runHttpQuery` to preserve legacy behavior while
-      // still delivering observability to the `didEncounterErrors` hook.
-      // This particular error will _not_ trigger `willSendResponse`.
-      // See comment on `emitErrorAndThrow` for more details.
-      return await emitErrorAndThrow(
-        new InvalidGraphQLRequestError('Unsupported persisted query version'),
+      return await sendErrorResponse(
+        new GraphQLError('Unsupported persisted query version'),
       );
     }
 
@@ -174,11 +161,7 @@ export async function processGraphQLRequest<TContext>(
       if (query) {
         metrics.persistedQueryHit = true;
       } else {
-        // We are returning to `runHttpQuery` to preserve legacy behavior while
-        // still delivering observability to the `didEncounterErrors` hook.
-        // This particular error will _not_ trigger `willSendResponse`.
-        // See comment on `emitErrorAndThrow` for more details.
-        return await emitErrorAndThrow(new PersistedQueryNotFoundError());
+        return await sendErrorResponse(new PersistedQueryNotFoundError());
       }
     } else {
       const computedQueryHash = computeQueryHash(query);
@@ -188,12 +171,8 @@ export async function processGraphQLRequest<TContext>(
       // new and potentially malicious query is associated with
       // an existing hash.
       if (queryHash !== computedQueryHash) {
-        // We are returning to `runHttpQuery` to preserve legacy behavior while
-        // still delivering observability to the `didEncounterErrors` hook.
-        // This particular error will _not_ trigger `willSendResponse`.
-        // See comment on `emitErrorAndThrow` for more details.
-        return await emitErrorAndThrow(
-          new InvalidGraphQLRequestError('provided sha does not match query'),
+        return await sendErrorResponse(
+          new GraphQLError('provided sha does not match query'),
         );
       }
 
@@ -208,12 +187,10 @@ export async function processGraphQLRequest<TContext>(
     // now, but this should be replaced with the new operation ID algorithm.
     queryHash = computeQueryHash(query);
   } else {
-    // We are returning to `runHttpQuery` to preserve legacy behavior
-    // while still delivering observability to the `didEncounterErrors` hook.
-    // This particular error will _not_ trigger `willSendResponse`.
-    // See comment on `emitErrorAndThrow` for more details.
-    return await emitErrorAndThrow(
-      new InvalidGraphQLRequestError('Must provide query string.'),
+    return await sendErrorResponse(
+      new GraphQLError(
+        'GraphQL operations must contain a `query` or a `persistedQuery` extension.',
+      ),
     );
   }
 
@@ -318,23 +295,6 @@ export async function processGraphQLRequest<TContext>(
       requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
     );
   } catch (err) {
-    // XXX: The HttpQueryError is special-cased here because we currently
-    // depend on `throw`-ing an error from the `didResolveOperation` hook
-    // we've implemented in `runHttpQuery.ts`'s `checkOperationPlugin`:
-    // https://git.io/fj427.  This could be perceived as a feature, but
-    // for the time-being this just maintains existing behavior for what
-    // happens when `throw`-ing an `HttpQueryError` in `didResolveOperation`.
-    if (err instanceof HttpQueryError) {
-      // In order to report this error reliably to the request pipeline, we'll
-      // have to regenerate it with the original error message and stack for
-      // the purposes of the `didEncounterErrors` life-cycle hook (which
-      // expects `GraphQLError`s), but still throw the `HttpQueryError`, so
-      // the appropriate status code is enforced by `runHttpQuery.ts`.
-      const graphqlError = new GraphQLError(err.message);
-      graphqlError.stack = err.stack;
-      await didEncounterErrors([graphqlError]);
-      throw err;
-    }
     return await sendErrorResponse(err);
   }
 
@@ -514,14 +474,25 @@ export async function processGraphQLRequest<TContext>(
   async function sendResponse(
     response: GraphQLResponse,
   ): Promise<GraphQLResponse> {
-    // We override errors, data, and extensions with the passed in response,
-    // but keep other properties (like http)
     requestContext.response = {
       ...requestContext.response,
       errors: response.errors,
       data: response.data,
       extensions: response.extensions,
     };
+    if (response.http) {
+      if (!requestContext.response.http) {
+        requestContext.response.http = {
+          headers: new Headers(),
+        };
+      }
+      if (response.http.status) {
+        requestContext.response.http.status = response.http.status;
+      }
+      for (const [name, value] of response.http.headers) {
+        requestContext.response.http.headers.set(name, value);
+      }
+    }
     await dispatcher.invokeHookAsync(
       'willSendResponse',
       requestContext as GraphQLRequestContextWillSendResponse<TContext>,
@@ -529,34 +500,8 @@ export async function processGraphQLRequest<TContext>(
     return requestContext.response;
   }
 
-  /**
-   * HEREIN LIE LEGACY COMPATIBILITY
-   *
-   * DO NOT PERPETUATE THE USE OF THIS METHOD IN NEWLY INTRODUCED CODE.
-   *
-   * Report an error via `didEncounterErrors` and then `throw` it again,
-   * ENTIRELY BYPASSING the rest of the request pipeline and returning
-   * control to `runHttpQuery.ts`.
-   *
-   * Any number of other life-cycle events may not be invoked in this case.
-   *
-   * Prior to the introduction of this function, some errors were being thrown
-   * within the request pipeline and going directly to handling within
-   * the `runHttpQuery.ts` module, rather than first being reported to the
-   * plugin API's `didEncounterErrors` life-cycle hook (where they are to be
-   * expected!).
-   *
-   * @param error The error to report to the request pipeline plugins prior
-   *              to being thrown.
-   *
-   * @throws
-   *
-   */
-  async function emitErrorAndThrow(error: GraphQLError): Promise<never> {
-    await didEncounterErrors([error]);
-    throw error;
-  }
-
+  // Note that we ensure that all calls to didEncounterErrors are followed by
+  // calls to willSendResponse. (The usage reporting plugin depends on this.)
   async function didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
     requestContext.errors = errors;
 
@@ -577,18 +522,46 @@ export async function processGraphQLRequest<TContext>(
 
     await didEncounterErrors(errors);
 
-    return sendResponse({
+    const response: GraphQLResponse = {
       errors: formatErrors(
         errors.map((err) =>
-          fromGraphQLError(
-            err,
-            errorClass && {
-              errorClass,
-            },
-          ),
+          err instanceof ApolloError && !errorClass
+            ? err
+            : fromGraphQLError(
+                err,
+                errorClass && {
+                  errorClass,
+                },
+              ),
         ),
       ),
-    });
+    };
+
+    // Persisted query errors (especially "not found") need to be uncached,
+    // because hopefully we're about to fill in the APQ cache and the same
+    // request will succeed next time. We also want a 200 response to avoid any
+    // error handling that may mask the contents of an error response.
+    if (
+      errors.every(
+        (err) =>
+          err instanceof PersistedQueryNotSupportedError ||
+          err instanceof PersistedQueryNotFoundError,
+      )
+    ) {
+      response.http = {
+        status: 200,
+        headers: new Headers({
+          'Cache-Control': 'private, no-cache, must-revalidate',
+        }),
+      };
+    } else if (errors.length === 1 && errors[0] instanceof HttpQueryError) {
+      response.http = {
+        status: errors[0].statusCode,
+        headers: new Headers(errors[0].headers),
+      };
+    }
+
+    return sendResponse(response);
   }
 
   function formatErrors(

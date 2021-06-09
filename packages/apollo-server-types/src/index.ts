@@ -158,8 +158,6 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
 
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;
 
-export class InvalidGraphQLRequestError extends GraphQLError {}
-
 export type GraphQLExecutor<TContext = Record<string, any>> = (
   requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
 ) => ValueOrPromise<GraphQLExecutionResult>;

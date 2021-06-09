@@ -13,9 +13,7 @@ import {
   GraphQLRequestContext,
   GraphQLServiceContext,
   GraphQLRequestContextDidResolveOperation,
-  GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextWillSendResponse,
-  GraphQLRequestContextDidResolveSource,
 } from 'apollo-server-types';
 import { createSignatureCache, signatureCacheKey } from './signatureCache';
 import {
@@ -395,13 +393,14 @@ export function ApolloServerPluginUsageReporting<TContext>(
           }
         }
 
+        // After this function completes, metrics.captureTraces is defined.
         async function shouldIncludeRequest(
           requestContext:
             | GraphQLRequestContextDidResolveOperation<TContext>
-            | GraphQLRequestContextDidEncounterErrors<TContext>,
+            | GraphQLRequestContextWillSendResponse<TContext>,
         ): Promise<void> {
-          // This could be hit if we call `shouldIncludeRequest` more than once during a request.
-          // such as if `didEncounterError` gets called after `didResolveOperation`.
+          // If this is the second call in `willSendResponse` after
+          // `didResolveOperation`, we're done.
           if (metrics.captureTraces !== undefined) return;
 
           if (typeof options.includeRequest !== 'function') {
@@ -422,34 +421,12 @@ export function ApolloServerPluginUsageReporting<TContext>(
           }
         }
 
-        /**
-         * Due to a number of exceptions in the request pipeline — which are
-         * intended to preserve backwards compatible behavior with the
-         * first generation of the request pipeline plugins prior to the
-         * introduction of `didEncounterErrors` — we need to have this "didEnd"
-         * functionality invoked from two places.  This accounts for the fact
-         * that sometimes, under some special-cased error conditions,
-         * `willSendResponse` is not invoked.  To zoom in on some of these cases,
-         * check the `requestPipeline.ts` for `emitErrorAndThrow`.
-         */
-        let endDone: boolean = false;
         function didEnd(
           requestContext:
             | GraphQLRequestContextWillSendResponse<TContext>
-            // Our didEncounterErrors handler only calls this function if didResolveSource.
-            | (GraphQLRequestContextDidEncounterErrors<TContext> &
-                GraphQLRequestContextDidResolveSource<TContext>)
             | GraphQLRequestContextDidResolveOperation<TContext>,
         ) {
-          if (endDone) return;
-          endDone = true;
           treeBuilder.stopTiming();
-
-          if (metrics.captureTraces === undefined) {
-            logger.warn(
-              'captureTrace is undefined at the end of the request. This is a bug in ApolloServerPluginUsageReporting.',
-            );
-          }
 
           if (metrics.captureTraces === false) return;
 
@@ -601,13 +578,14 @@ export function ApolloServerPluginUsageReporting<TContext>(
           }
         }
 
-        // While we start the tracing as soon as possible, we only actually report
-        // traces when we have resolved the source.  This is largely because of
-        // the APQ negotiation that takes place before that resolution happens.
+        // Our usage reporting groups everything by operation, so we don't
+        // actually report about any issues that prevent us from getting an
+        // operation string (eg, a missing operation, or APQ problems).
         // This is effectively bypassing the reporting of:
         //   - PersistedQueryNotFoundError
         //   - PersistedQueryNotSupportedError
-        //   - InvalidGraphQLRequestError
+        //   - Missing `query` error
+        // We may want to report them some other way later!
         let didResolveSource: boolean = false;
 
         return {
@@ -657,17 +635,11 @@ export function ApolloServerPluginUsageReporting<TContext>(
             graphqlUnknownOperationName =
               requestContext.operation === undefined;
             await shouldIncludeRequest(requestContext);
-
-            if (metrics.captureTraces === false) {
-              // End early if we aren't going to send the trace so we continue to
-              // run the tree builder.
-              didEnd(requestContext);
-            }
           },
           executionDidStart() {
             // If we stopped tracing early, return undefined so we don't trace
             // an object
-            if (endDone) return;
+            if (metrics.captureTraces === false) return;
 
             return {
               willResolveField({ info }) {
@@ -678,28 +650,19 @@ export function ApolloServerPluginUsageReporting<TContext>(
               },
             };
           },
-          willSendResponse(requestContext) {
-            // shouldTraceOperation will be called before this in `didResolveOperation`
-            // so we don't need to call it again here.
-
-            // See comment above for why `didEnd` must be called in two hooks.
-            didEnd(requestContext);
-          },
-          async didEncounterErrors(requestContext) {
+          async willSendResponse(requestContext) {
             // Search above for a comment about "didResolveSource" to see which
             // of the pre-source-resolution errors we are intentionally avoiding.
-            if (!didResolveSource || endDone) return;
-            treeBuilder.didEncounterErrors(requestContext.errors);
+            if (!didResolveSource) return;
+            if (requestContext.errors) {
+              treeBuilder.didEncounterErrors(requestContext.errors);
+            }
 
-            // This will exit early if we have already set metrics.captureTraces
+            // If we got an error before we called didResolveOperation (eg parse or
+            // validation error), check to see if we should include the request.
             await shouldIncludeRequest(requestContext);
 
-            // See comment above for why `didEnd` must be called in two hooks.
-            // The type assertion is valid becaus we check didResolveSource above.
-            didEnd(
-              requestContext as GraphQLRequestContextDidEncounterErrors<TContext> &
-                GraphQLRequestContextDidResolveSource<TContext>,
-            );
+            didEnd(requestContext);
           },
         };
       };
