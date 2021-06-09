@@ -18,7 +18,7 @@ import {
 } from 'graphql';
 
 import request from 'supertest';
-import type {HTTPError} from 'superagent';
+import type { HTTPError } from 'superagent';
 import resolvable from '@josephg/resolvable';
 
 import {
@@ -30,8 +30,8 @@ import {
 } from 'apollo-server-core';
 import gql from 'graphql-tag';
 import { GraphQLResponse, ValueOrPromise } from 'apollo-server-types';
-import { GraphQLRequestListener } from "apollo-server-plugin-base";
-import { PersistedQueryNotFoundError } from "apollo-server-errors";
+import { GraphQLRequestListener } from 'apollo-server-plugin-base';
+import { PersistedQueryNotFoundError } from 'apollo-server-errors';
 
 export * from './ApolloServer';
 export { createApolloFetch } from './apolloFetch';
@@ -60,7 +60,7 @@ const QueryRootType = new GraphQLObjectType({
         foo: {
           type: new GraphQLScalarType({
             name: 'Foo',
-            serialize: v => v,
+            serialize: (v) => v,
             parseValue: () => {
               throw new Error('Something bad happened');
             },
@@ -121,7 +121,7 @@ const queryType = new GraphQLObjectType({
     testPersonWithCacheControl: {
       type: personType,
       resolve(_source, _args, _context, info) {
-        info.cacheControl.setCacheHint({maxAge: 11});
+        info.cacheControl.setCacheHint({ maxAge: 11 });
         return { firstName: 'Jane', lastName: 'Doe' };
       },
     },
@@ -131,7 +131,7 @@ const queryType = new GraphQLObjectType({
         delay: { type: new GraphQLNonNull(GraphQLInt) },
       },
       resolve(_, args) {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           setTimeout(() => resolve('it works'), args['delay']);
         });
       },
@@ -227,9 +227,9 @@ export default ({
 }) => {
   describe('apolloServer', () => {
     let app: any;
-    let didEncounterErrors: jest.MockedFunction<NonNullable<
-      GraphQLRequestListener['didEncounterErrors']
-    >>;
+    let didEncounterErrors: jest.MockedFunction<
+      NonNullable<GraphQLRequestListener['didEncounterErrors']>
+    >;
 
     afterEach(async () => {
       // XXX nothing calls server.stop?
@@ -246,10 +246,8 @@ export default ({
     describe('graphqlHTTP', () => {
       it('rejects the request if the method is not POST or GET', async () => {
         app = await createApp();
-        const req = request(app)
-          .head('/graphql')
-          .send();
-        return req.then(res => {
+        const req = request(app).head('/graphql').send();
+        return req.then((res) => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('GET, POST');
         });
@@ -257,10 +255,8 @@ export default ({
 
       it('throws an error if POST body is missing', async () => {
         app = await createApp();
-        const req = request(app)
-          .post('/graphql')
-          .send();
-        return req.then(res => {
+        const req = request(app).post('/graphql').send();
+        return req.then((res) => {
           expect(res.status).toEqual(500);
           expect((res.error as HTTPError).text).toMatch('POST body missing.');
         });
@@ -269,7 +265,7 @@ export default ({
       it('throws an error if GET query is missing', async () => {
         app = await createApp();
         const req = request(app).get(`/graphql`);
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(400);
           expect((res.error as HTTPError).text).toMatch('GET query missing.');
         });
@@ -283,10 +279,8 @@ export default ({
         const query = {
           query: 'query test{ testString }',
         };
-        const req = request(app)
-          .get('/graphql')
-          .query(query);
-        return req.then(res => {
+        const req = request(app).get('/graphql').query(query);
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -300,10 +294,8 @@ export default ({
         const query = {
           query: '{ testString }',
         };
-        const req = request(app)
-          .get('/graphql')
-          .query(query);
-        return req.then(res => {
+        const req = request(app).get('/graphql').query(query);
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -318,29 +310,31 @@ export default ({
               {
                 requestDidStart() {
                   return { didEncounterErrors };
-                }
-              }
-            ]
-          }
+                },
+              },
+            ],
+          },
         });
         const query = {
           query: 'mutation test{ testMutation(echo: "ping") }',
         };
-        const req = request(app)
-          .get('/graphql')
-          .query(query);
+        const req = request(app).get('/graphql').query(query);
 
-        await req.then(res => {
+        await req.then((res) => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
-          expect((res.error as HTTPError).text).toMatch('GET supports only query operation');
+          expect((res.error as HTTPError).text).toMatch(
+            'GET supports only query operation',
+          );
         });
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'GET supports only query operation',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'GET supports only query operation',
+              }),
+            ]),
           }),
         );
       });
@@ -354,10 +348,10 @@ export default ({
               {
                 requestDidStart() {
                   return { didEncounterErrors };
-                }
-              }
-            ]
-          }
+                },
+              },
+            ],
+          },
         });
         const query = {
           query: `fragment PersonDetails on PersonType {
@@ -370,20 +364,22 @@ export default ({
               }
             }`,
         };
-        const req = request(app)
-          .get('/graphql')
-          .query(query);
-        await req.then(res => {
+        const req = request(app).get('/graphql').query(query);
+        await req.then((res) => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
-          expect((res.error as HTTPError).text).toMatch('GET supports only query operation');
+          expect((res.error as HTTPError).text).toMatch(
+            'GET supports only query operation',
+          );
         });
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'GET supports only query operation',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'GET supports only query operation',
+              }),
+            ]),
           }),
         );
       });
@@ -397,10 +393,8 @@ export default ({
         const expected = {
           testArgument: 'hello world',
         };
-        const req = request(app)
-          .get('/graphql')
-          .query(query);
-        return req.then(res => {
+        const req = request(app).get('/graphql').query(query);
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -411,12 +405,10 @@ export default ({
         const expected = {
           testString: 'it works',
         };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testString }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testString }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -429,16 +421,16 @@ export default ({
         const expected = {
           testPerson: { firstName: 'Jane' },
         };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testPerson { firstName } }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testPerson { firstName } }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
           // hapi defaults to no-cache, so we have to allow that.
-          expect([undefined,  'no-cache']).toContain(res.headers['cache-control']);
+          expect([undefined, 'no-cache']).toContain(
+            res.headers['cache-control'],
+          );
         });
       });
 
@@ -449,35 +441,30 @@ export default ({
         const expected = {
           testPersonWithCacheControl: { firstName: 'Jane' },
         };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testPersonWithCacheControl { firstName } }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testPersonWithCacheControl { firstName } }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
           expect(res.headers['cache-control']).toBe('max-age=11, public');
         });
       });
 
-
       it('cache-control set with defaultMaxAge', async () => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            plugins: [ApolloServerPluginCacheControl({defaultMaxAge: 5})],
+            plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
           },
         });
         const expected = {
           testPerson: { firstName: 'Jane' },
         };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testPerson { firstName } }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testPerson { firstName } }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
           expect(res.headers['cache-control']).toBe('max-age=5, public');
@@ -499,7 +486,7 @@ export default ({
               },
             }),
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors[0].message).toEqual(
@@ -523,7 +510,7 @@ export default ({
               },
             },
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
@@ -546,7 +533,7 @@ export default ({
               },
             }),
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
@@ -567,7 +554,7 @@ export default ({
               },
             },
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
@@ -586,7 +573,7 @@ export default ({
             query: 'query test($echo: String){ testArgument(echo: $echo) }',
             variables: { echo: 'world' },
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -597,13 +584,11 @@ export default ({
         const expected = {
           testArgument: 'hello world',
         };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test($echo: String!){ testArgument(echo: $echo) }',
-            variables: '{ "echo": "world" }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test($echo: String!){ testArgument(echo: $echo) }',
+          variables: '{ "echo": "world" }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -611,15 +596,15 @@ export default ({
 
       it('can handle a request with variables as an invalid string', async () => {
         app = await createApp();
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test($echo: String!){ testArgument(echo: $echo) }',
-            variables: '{ echo: "world" }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test($echo: String!){ testArgument(echo: $echo) }',
+          variables: '{ echo: "world" }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(400);
-          expect((res.error as HTTPError).text).toMatch('Variables are invalid JSON.');
+          expect((res.error as HTTPError).text).toMatch(
+            'Variables are invalid JSON.',
+          );
         });
       });
 
@@ -637,7 +622,7 @@ export default ({
             variables: { echo: 'world' },
             operationName: 'test2',
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -648,7 +633,7 @@ export default ({
         const req = request(app)
           .post('/graphql')
           .send({ query: getIntrospectionQuery() });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.__schema.types[0].fields[0].name).toEqual(
             'testString',
@@ -667,7 +652,7 @@ export default ({
               }
             `,
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(400);
           expect(res.text).toMatch('GraphQL queries must be strings');
         });
@@ -704,7 +689,7 @@ export default ({
               operationName: 'testX',
             },
           ]);
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
         });
@@ -730,13 +715,13 @@ export default ({
               operationName: 'test2',
             },
           ]);
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
         });
       });
 
-      it('can handle batch requests in parallel', async function() {
+      it('can handle batch requests in parallel', async function () {
         const parallels = 100;
         const delayPerReq = 40;
 
@@ -753,7 +738,7 @@ export default ({
               variables: { delay: delayPerReq },
             }),
           );
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
         });
@@ -788,7 +773,7 @@ export default ({
               query: 'query test{ testContext }',
             },
           ]);
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
         });
@@ -827,7 +812,7 @@ export default ({
               query: 'query test{ testContext }',
             },
           ]);
-        return req.then(res => {
+        return req.then((res) => {
           // XXX In AS 1.0 we ran context once per GraphQL operation (so this
           // was 2) rather than once per HTTP request. Was this actually
           // helpful? Honestly we're not sure why you'd use a function in the
@@ -852,7 +837,7 @@ export default ({
             query: 'mutation test($echo: String){ testMutation(echo: $echo) }',
             variables: { echo: 'world' },
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -875,7 +860,7 @@ export default ({
             query: 'mutation test($echo: String){ testMutation(echo: $echo) }',
             variables: { echo: 'world' },
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.extensions).toEqual(expected);
         });
@@ -889,12 +874,10 @@ export default ({
             context: { testField: expected },
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testContext }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testContext }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testContext).toEqual(expected);
         });
@@ -908,12 +891,10 @@ export default ({
             rootValue: expected,
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testRootValue }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testRootValue }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testRootValue).toEqual(expected);
         });
@@ -933,21 +914,17 @@ export default ({
             },
           },
         });
-        const queryReq = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testRootValue }',
-          });
-        return queryReq.then(res => {
+        const queryReq = request(app).post('/graphql').send({
+          query: 'query test{ testRootValue }',
+        });
+        return queryReq.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testRootValue).toEqual(expectedQuery);
         });
-        const mutationReq = request(app)
-          .post('/graphql')
-          .send({
-            query: 'mutation test{ testMutation(echo: "ping") }',
-          });
-        return mutationReq.then(res => {
+        const mutationReq = request(app).post('/graphql').send({
+          query: 'mutation test{ testMutation(echo: "ping") }',
+        });
+        return mutationReq.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testRootValue).toEqual(expectedMutation);
         });
@@ -960,12 +937,10 @@ export default ({
             schema,
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testError }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testError }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors[0].message).toEqual(expected);
         });
@@ -976,18 +951,16 @@ export default ({
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatError: error => {
+            formatError: (error) => {
               expect(error instanceof Error).toBe(true);
               return { message: expected };
             },
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testError }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testError }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors[0].message).toEqual(expected);
         });
@@ -998,19 +971,17 @@ export default ({
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatError: error => {
+            formatError: (error) => {
               expect(error instanceof Error).toBe(true);
               expect(error instanceof GraphQLError).toBe(true);
               return { message: expected };
             },
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testError }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testError }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors[0].message).toEqual(expected);
         });
@@ -1026,11 +997,9 @@ export default ({
           },
         });
 
-        const response = await request(app)
-          .post('/graphql')
-          .send({
-            query: '{thrower}',
-          });
+        const response = await request(app).post('/graphql').send({
+          query: '{thrower}',
+        });
 
         expect(response.status).toEqual(200);
         expect(JSON.parse(response.text)).toEqual({
@@ -1057,11 +1026,9 @@ export default ({
           },
         });
 
-        const response = await request(app)
-          .post('/graphql')
-          .send({
-            query: '{thrower}',
-          });
+        const response = await request(app).post('/graphql').send({
+          query: '{thrower}',
+        });
 
         expect(response.status).toEqual(200);
         expect(JSON.parse(response.text)).toEqual({
@@ -1085,19 +1052,17 @@ export default ({
             },
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testError }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testError }',
+        });
+        return req.then((res) => {
           expect(res.body.errors[0].message).toEqual('Internal server error');
         });
       });
 
       it('applies additional validationRules', async () => {
         const expected = 'alwaysInvalidRule was really invalid!';
-        const alwaysInvalidRule = function(context: ValidationContext) {
+        const alwaysInvalidRule = function (context: ValidationContext) {
           return {
             enter() {
               context.reportError(new GraphQLError(expected));
@@ -1111,12 +1076,10 @@ export default ({
             validationRules: [alwaysInvalidRule],
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testString }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testString }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(400);
           expect(res.body.errors[0].message).toEqual(expected);
         });
@@ -1130,10 +1093,8 @@ export default ({
         const query = {
           query: '{ testString }',
         };
-        const req = request(app)
-          .get('/bogus-route')
-          .query(query);
-        return req.then(res => {
+        const req = request(app).get('/bogus-route').query(query);
+        return req.then((res) => {
           expect(res.status).toEqual(404);
         });
       });
@@ -1214,10 +1175,7 @@ export default ({
       const query = '{testString}';
       const query2 = '{ testString }';
 
-      const hash = sha256
-        .create()
-        .update(query)
-        .hex();
+      const hash = sha256.create().update(query).hex();
       const extensions = {
         persistedQuery: {
           version: VERSION,
@@ -1228,10 +1186,7 @@ export default ({
       const extensions2 = {
         persistedQuery: {
           version: VERSION,
-          sha256Hash: sha256
-            .create()
-            .update(query2)
-            .hex(),
+          sha256Hash: sha256.create().update(query2).hex(),
         },
       };
 
@@ -1241,18 +1196,18 @@ export default ({
           set: jest.fn(async (key, val) => {
             await map.set(key, val);
           }),
-          get: jest.fn(async key => map.get(key)),
-          delete: jest.fn(async key => map.delete(key)),
+          get: jest.fn(async (key) => map.get(key)),
+          delete: jest.fn(async (key) => map.delete(key)),
         };
       }
 
-      let didEncounterErrors: jest.MockedFunction<NonNullable<
-        GraphQLRequestListener['didEncounterErrors']
-      >>;
+      let didEncounterErrors: jest.MockedFunction<
+        NonNullable<GraphQLRequestListener['didEncounterErrors']>
+      >;
 
-      let didResolveSource: jest.MockedFunction<NonNullable<
-        GraphQLRequestListener['didResolveSource']
-      >>;
+      let didResolveSource: jest.MockedFunction<
+        NonNullable<GraphQLRequestListener['didResolveSource']>
+      >;
 
       function createApqApp(apqOptions: PersistedQueryOptions = {}) {
         return createApp({
@@ -1265,8 +1220,8 @@ export default ({
                     didResolveSource,
                     didEncounterErrors,
                   };
-                }
-              }
+                },
+              },
             ],
             persistedQueries: {
               cache,
@@ -1287,12 +1242,10 @@ export default ({
       it('when ttlSeconds is set, passes ttl to the apq cache set call', async () => {
         app = await createApqApp({ ttl: 900 });
 
-        await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-            query,
-          });
+        await request(app).post('/graphql').send({
+          extensions,
+          query,
+        });
 
         expect(cache.set).toHaveBeenCalledWith(
           expect.stringMatching(/^apq:/),
@@ -1301,32 +1254,32 @@ export default ({
             ttl: 900,
           }),
         );
-        expect(didResolveSource.mock.calls[0][0])
-          .toHaveProperty('source', query);
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          query,
+        );
       });
 
-      it('when ttlSeconds is unset, ttl is not passed to apq cache',
-        async () => {
-          app = await createApqApp();
+      it('when ttlSeconds is unset, ttl is not passed to apq cache', async () => {
+        app = await createApqApp();
 
-          await request(app)
-            .post('/graphql')
-            .send({
-              extensions,
-              query,
-            });
+        await request(app).post('/graphql').send({
+          extensions,
+          query,
+        });
 
-          expect(cache.set).toHaveBeenCalledWith(
-            expect.stringMatching(/^apq:/),
-            '{testString}',
-            expect.not.objectContaining({
-              ttl: 900,
-            }),
-          );
-          expect(didResolveSource.mock.calls[0][0])
-            .toHaveProperty('source', query);
-        }
-      );
+        expect(cache.set).toHaveBeenCalledWith(
+          expect.stringMatching(/^apq:/),
+          '{testString}',
+          expect.not.objectContaining({
+            ttl: 900,
+          }),
+        );
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          query,
+        );
+      });
 
       it('errors when version is not specified', async () => {
         app = await createApqApp();
@@ -1339,7 +1292,7 @@ export default ({
               persistedQuery: {
                 // Version intentionally omitted.
                 sha256Hash: extensions.persistedQuery.sha256Hash,
-              }
+              },
             }),
           });
 
@@ -1354,9 +1307,11 @@ export default ({
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'Unsupported persisted query version',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'Unsupported persisted query version',
+              }),
+            ]),
           }),
         );
       });
@@ -1373,7 +1328,7 @@ export default ({
                 // Version intentionally wrong.
                 version: VERSION + 1,
                 sha256Hash: extensions.persistedQuery.sha256Hash,
-              }
+              },
             }),
           });
 
@@ -1388,9 +1343,11 @@ export default ({
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'Unsupported persisted query version',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'Unsupported persisted query version',
+              }),
+            ]),
           }),
         );
       });
@@ -1406,8 +1363,8 @@ export default ({
               persistedQuery: {
                 version: 1,
                 // Sha intentionally wrong.
-                sha256Hash: extensions.persistedQuery.sha256Hash.substr(0,5),
-              }
+                sha256Hash: extensions.persistedQuery.sha256Hash.substr(0, 5),
+              },
             }),
           });
 
@@ -1422,9 +1379,11 @@ export default ({
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'provided sha does not match query',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'provided sha does not match query',
+              }),
+            ]),
           }),
         );
 
@@ -1434,11 +1393,9 @@ export default ({
       it('returns PersistedQueryNotFound on the first try', async () => {
         app = await createApqApp();
 
-        const result = await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-          });
+        const result = await request(app).post('/graphql').send({
+          extensions,
+        });
 
         expect(result.body.data).toBeUndefined();
         expect(result.body.errors.length).toEqual(1);
@@ -1450,7 +1407,7 @@ export default ({
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
-              expect.any(PersistedQueryNotFoundError)
+              expect.any(PersistedQueryNotFoundError),
             ]),
           }),
         );
@@ -1460,38 +1417,36 @@ export default ({
       it('returns result on the second try', async () => {
         app = await createApqApp();
 
-        await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-          });
+        await request(app).post('/graphql').send({
+          extensions,
+        });
 
         // Only the first request should result in an error.
         expect(didEncounterErrors).toHaveBeenCalledTimes(1);
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
-              expect.any(PersistedQueryNotFoundError)
+              expect.any(PersistedQueryNotFoundError),
             ]),
           }),
         );
 
         expect(didResolveSource).not.toHaveBeenCalled();
 
-        const result = await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-            query,
-          });
+        const result = await request(app).post('/graphql').send({
+          extensions,
+          query,
+        });
 
         // There should be no additional errors now.  In other words, we'll
         // re-assert that we've been called the same single time that we
         // asserted above.
         expect(didEncounterErrors).toHaveBeenCalledTimes(1);
 
-        expect(didResolveSource.mock.calls[0][0])
-          .toHaveProperty('source', query);
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          query,
+        );
 
         expect(result.body.data).toEqual({ testString: 'it works' });
         expect(result.body.errors).toBeUndefined();
@@ -1547,28 +1502,24 @@ export default ({
       it('returns result on the persisted query', async () => {
         app = await createApqApp();
 
-        await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-          });
+        await request(app).post('/graphql').send({
+          extensions,
+        });
 
         expect(didResolveSource).not.toHaveBeenCalled();
 
-        await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-            query,
-          });
-        const result = await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-          });
+        await request(app).post('/graphql').send({
+          extensions,
+          query,
+        });
+        const result = await request(app).post('/graphql').send({
+          extensions,
+        });
 
-        expect(didResolveSource.mock.calls[0][0])
-          .toHaveProperty('source', query);
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          query,
+        );
 
         expect(result.body.data).toEqual({ testString: 'it works' });
         expect(result.body.errors).toBeUndefined();
@@ -1583,35 +1534,35 @@ export default ({
             extensions: {
               persistedQuery: {
                 version: VERSION,
-                sha:
-                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
               },
             },
             query,
           });
         expect(response.status).toEqual(400);
-        expect((response.error as HTTPError).text).toMatch(/does not match query/);
+        expect((response.error as HTTPError).text).toMatch(
+          /does not match query/,
+        );
         expect(didResolveSource).not.toHaveBeenCalled();
       });
 
       it('returns correct result using get request', async () => {
         app = await createApqApp();
 
-        await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-            query,
-          });
+        await request(app).post('/graphql').send({
+          extensions,
+          query,
+        });
         const result = await request(app)
           .get('/graphql')
           .query({
             extensions: JSON.stringify(extensions),
           });
         expect(result.body.data).toEqual({ testString: 'it works' });
-        expect(didResolveSource.mock.calls[0][0])
-          .toHaveProperty('source', query);
-
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          query,
+        );
       });
     });
   });
