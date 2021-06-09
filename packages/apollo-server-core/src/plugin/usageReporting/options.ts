@@ -1,9 +1,9 @@
 import { GraphQLError, DocumentNode } from 'graphql';
 import {
   GraphQLRequestContextDidResolveOperation,
-  GraphQLRequestContextDidEncounterErrors,
   Logger,
   GraphQLRequestContext,
+  GraphQLRequestContextWillSendResponse,
 } from 'apollo-server-types';
 import type { fetch, RequestAgent } from 'apollo-server-env';
 import type { Trace } from 'apollo-reporting-protobuf';
@@ -63,7 +63,7 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * phase, which permits tracing based on dynamic properties, e.g., HTTP
    * headers or the `operationName` (when available). Otherwise it will receive
    * the request context in the
-   * [`GraphQLRequestContextDidEncounterError`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didencountererrors)
+   * [`GraphQLRequestContextWillSendResponse`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#willsendresponse)
    * phase:
    *
    * (If you don't want any usage reporting, don't use this plugin; if you are
@@ -92,7 +92,7 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
   includeRequest?: (
     request:
       | GraphQLRequestContextDidResolveOperation<TContext>
-      | GraphQLRequestContextDidEncounterErrors<TContext>,
+      | GraphQLRequestContextWillSendResponse<TContext>,
   ) => Promise<boolean>;
   /**
    * By default, this plugin associates client information such as name

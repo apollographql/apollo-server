@@ -181,6 +181,10 @@ export default async function pluginTestHarness<TContext>({
         'didEncounterErrors',
         requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
       );
+      await dispatcher.invokeHookAsync(
+        "willSendResponse",
+        requestContext as GraphQLRequestContextWillSendResponse<TContext>,
+      );
 
       return requestContext as GraphQLRequestContextWillSendResponse<TContext>;
     }
@@ -201,6 +205,10 @@ export default async function pluginTestHarness<TContext>({
       await dispatcher.invokeHookAsync(
         'didEncounterErrors',
         requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
+      );
+      await dispatcher.invokeHookAsync(
+        "willSendResponse",
+        requestContext as GraphQLRequestContextWillSendResponse<TContext>,
       );
       return requestContext as GraphQLRequestContextWillSendResponse<TContext>;
     } else {

@@ -2,16 +2,7 @@ import MockReq = require('mock-req');
 
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 
-import {
-  runHttpQuery,
-  HttpQueryError,
-  throwHttpGraphQLError,
-} from '../runHttpQuery';
-import {
-  PersistedQueryNotFoundError,
-  PersistedQueryNotSupportedError,
-  ForbiddenError,
-} from 'apollo-server-errors';
+import { runHttpQuery, HttpQueryError } from '../runHttpQuery';
 import { generateSchemaHash } from '../utils/schemaHash';
 
 const queryType = new GraphQLObjectType({
@@ -52,40 +43,18 @@ describe('runHttpQuery', () => {
       expect.assertions(2);
       return runHttpQuery([], noQueryRequest).catch((err: HttpQueryError) => {
         expect(err.statusCode).toEqual(400);
-        expect(err.message).toEqual('Must provide query string.');
+        expect(err.message).toEqual(
+          JSON.stringify({
+            errors: [
+              {
+                message:
+                  'GraphQL operations must contain a `query` or a `persistedQuery` extension.',
+                extensions: { code: 'INTERNAL_SERVER_ERROR' },
+              },
+            ],
+          }) + '\n',
+        );
       });
-    });
-  });
-
-  describe('throwHttpGraphQLError', () => {
-    it('should add no-cache headers if error is of type PersistedQueryNotSupportedError', () => {
-      try {
-        throwHttpGraphQLError(200, [new PersistedQueryNotSupportedError()]);
-      } catch (err) {
-        expect(err.headers).toEqual({
-          'Content-Type': 'application/json',
-          'Cache-Control': 'private, no-cache, must-revalidate',
-        });
-      }
-    });
-
-    it('should add no-cache headers if error is of type PersistedQueryNotFoundError', () => {
-      try {
-        throwHttpGraphQLError(200, [new PersistedQueryNotFoundError()]);
-      } catch (err) {
-        expect(err.headers).toEqual({
-          'Content-Type': 'application/json',
-          'Cache-Control': 'private, no-cache, must-revalidate',
-        });
-      }
-    });
-
-    it('should not add no-cache headers if error is not a PersistedQuery error', () => {
-      try {
-        throwHttpGraphQLError(200, [new ForbiddenError('401')]);
-      } catch (err) {
-        expect(err.headers).toEqual({ 'Content-Type': 'application/json' });
-      }
     });
   });
 });
