@@ -37,13 +37,14 @@ describe('ApolloError', () => {
     );
   });
 
-  it('(back-compat) sets extensions correctly for users who use an extensions key in the third constructor argument', () => {
-    const error = new ApolloError('My original message', 'A_CODE', {
-      extensions: {
-        arbitrary: 'user_data',
-      },
-    });
-
-    expect(error.extensions.arbitrary).toEqual('user_data');
+  it('throws for users who use an extensions key in the third constructor argument', () => {
+    expect(
+      () =>
+        new ApolloError('My original message', 'A_CODE', {
+          extensions: {
+            arbitrary: 'user_data',
+          },
+        }),
+    ).toThrow(/Pass extensions directly/);
   });
 });
