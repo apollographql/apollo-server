@@ -29,7 +29,7 @@ import {
   Context,
   ContextFunction,
   PluginDefinition,
-  GraphQLService,
+  GatewayInterface,
 } from './types';
 
 import { generateSchemaHash } from './utils/schemaHash';
@@ -85,7 +85,7 @@ type SchemaDerivedData = {
 
 type ServerState =
   | { phase: 'initialized with schema'; schemaDerivedData: SchemaDerivedData }
-  | { phase: 'initialized with gateway'; gateway: GraphQLService }
+  | { phase: 'initialized with gateway'; gateway: GatewayInterface }
   | { phase: 'starting'; barrier: Resolvable<void> }
   | {
       phase: 'invoking serverWillStart';
@@ -550,7 +550,7 @@ export class ApolloServerBase {
   }
 
   private async startGatewayAndLoadSchema(
-    gateway: GraphQLService,
+    gateway: GatewayInterface,
   ): Promise<GraphQLSchema> {
     // Store the unsubscribe handles, which are returned from
     // `onSchemaChange`, for later disposal when the server stops

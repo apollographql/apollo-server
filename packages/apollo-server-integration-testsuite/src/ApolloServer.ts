@@ -37,7 +37,7 @@ import {
   Config,
   ApolloServerBase,
   PluginDefinition,
-  GraphQLService,
+  GatewayInterface,
   GraphQLExecutor,
   GraphQLServiceConfig,
   ApolloServerPluginInlineTrace,
@@ -145,7 +145,7 @@ const makeGatewayMock = ({
     triggerSchemaChange: null as ((newSchema: GraphQLSchema) => void) | null,
   };
 
-  const mockedGateway: GraphQLService = {
+  const mockedGateway: GatewayInterface = {
     executor,
     load: async (options) => {
       optionsSpy(options);

@@ -1,8 +1,6 @@
 import type { GraphQLSchema, DocumentNode, ParseOptions } from 'graphql';
 import type { IMocks } from '@graphql-tools/mock';
-import type {
-  IResolvers,
-} from '@graphql-tools/utils';
+import type { IResolvers } from '@graphql-tools/utils';
 import type {
   ApolloConfig,
   ValueOrPromise,
@@ -54,10 +52,8 @@ export type GraphQLServiceConfig = {
   executor: GraphQLExecutor;
 };
 
-export interface GraphQLService {
-  load(options: {
-    apollo: ApolloConfig;
-  }): Promise<GraphQLServiceConfig>;
+export interface GatewayInterface {
+  load(options: { apollo: ApolloConfig }): Promise<GraphQLServiceConfig>;
   onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
   // Note: The `TContext` typing here is not conclusively behaving as we expect:
   // https://github.com/apollographql/apollo-server/pull/3811#discussion_r387381605
@@ -66,6 +62,10 @@ export interface GraphQLService {
   ): Promise<GraphQLExecutionResult>;
   stop(): Promise<void>;
 }
+
+// This was the name used for GatewayInterface in AS2; continue to export it so
+// that older versions of `@apollo/gateway` build against AS3.
+export interface GraphQLService extends GatewayInterface {}
 
 // This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
@@ -81,7 +81,7 @@ export interface Config extends BaseConfig {
   mockEntireSchema?: boolean;
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
-  gateway?: GraphQLService;
+  gateway?: GatewayInterface;
   experimental_approximateDocumentStoreMiB?: number;
   stopOnTerminationSignals?: boolean;
   apollo?: ApolloConfigInput;
