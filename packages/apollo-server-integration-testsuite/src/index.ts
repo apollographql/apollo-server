@@ -1265,10 +1265,10 @@ export default ({
             schema,
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return {
-                    willSendResponse({ response: { http } }) {
-                      http.status = 403;
+                    async willSendResponse({ response: { http } }) {
+                      http!.status = 403;
                     },
                   };
                 },
