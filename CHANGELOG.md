@@ -9,34 +9,114 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## v3.0.0 (PRERELEASE)
 
-> The changes noted within this `v3.0.0` section have not been finalized.  This section aims to track all changes that are going into the 3.0 release, but we will not claim that it is comprehensive until we have finalized the 3.0 release.
+> The changes in this `v3.0.0` section are not final. This section aims to track all changes that are going into the 3.0 release, but it is not comprehensive until the release is final.
 
 ### BREAKING CHANGES
 
-- Dropped support for `graphql` versions prior to `15.3.0`.
-- Dropped support for Node.js v6, v8 and v10.  Apollo Server 3.x is being compiled to ES2020 which maps to Node.js 12+.  Please note that we only test on _even-numbered_ versions of Node.js and only aim to support Node.js versions which are under [long-term support](https://nodejs.org/en/about/releases/#releases) from the Node.js Foundation.
-- `apollo-server-fastify` is now compatible with Fastify v3 instead of Fastify v2.
-- Apollo Server 2 supported subscriptions via a loose integration with the `subscriptions-transport-ws` package. This integration did not support many of Apollo Server's features, and `subscriptions-transport-ws` has not been actively maintained. Apollo Server 3 removes this integration. See [the migration guide section on Subscriptions](./docs/source/migration.md#Subscriptions) to bring them back in their current form. We hope to implement subscriptions again in a more deeply integrated way in a future release.
-- The `graphql-extensions` API (e.g., `GraphQLExtensions`, `extensions`) has been dropped in favor of the new [plugins API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).
-- In order to let the `graphql-upload` package evolve on its own, uploads are no longer integrated directly with Apollo Server.  To bring them back in their current form, see [the migration guide section on File Uploads](./docs/source/migration.md#File-uploads)
-- Removed deprecated `ApolloServer.schema` field, which never worked with gateways. If you'd like to extract your schema from your server, make a plugin with `serverWillStart`, or register `onSchemaChange` on your gateway.
-- `apollo-server-caching`: The test suite helper works differently, and the `TestableKeyValueCache` interface is removed.
-- `apollo-datasource-rest`: We no longer officially support overriding the `baseURL` property with a getter, because TypeScript 4 does not allow you to do that.
-- Previously, Apollo Server would automatically add the definition of the `@cacheControl` directive to your schema in some circumstances but not in others; this depended on how precisely you set up your schema, but not on whether you had disabled the cache control feature. In Apollo Server 3, Apollo Server is now consistent: it never automatically adds the directive definition to your schema. If you use `@cacheControl`, just [define it yourself as shown in the docs](https://www.apollographql.com/docs/apollo-server/performance/caching/#in-your-schema-static).
-- The `schemaDirectives` option to `new ApolloServer` has been removed. This option was implemented inside the `graphql-tools` function `makeExecutableSchema`. If you'd like to continue using it, just import `makeExecutableSchema` from `@graphql-tools/schema` and call it yourself: `new ApolloServer({schema: makeExecutableSchema({typeDefs, resolvers, schemaDirectives})})`. Note that `graphql-tools` calls this option ["legacy" schema directives](https://www.graphql-tools.com/docs/legacy-schema-directives/) and you may want to consider the newer [`schemaTransforms`](https://www.graphql-tools.com/docs/schema-directives/) option instead.
-- The `mocks` option to `new ApolloSchema` is now powered by `@graphql-tools/mock` v7 instead of `graphql-tools` v4. This contains some [breaking changes](https://www.graphql-tools.com/docs/mocking#migration-from-v7-and-below); for example, mock functions no longer receive arguments and cannot return `Promise`s. Note that some of the suggestions in the v7 migration guide suggest using the `resolvers` argument to `addMocksToSchema`. Apollo Server does not support this option, but you're welcome to call `addMocksToSchema` yourself and pass the result to the `schema` option to `new ApolloSchema`.
-- `apollo-server-express`: We no longer officially support using this package with the `connect` framework. We have not actively removed any `connect` compatibility code and do still test that it works with `connect`, but we reserve the right to break that compatibility without a major version bump of this package (though it will certainly be noted in the CHANGELOG if we do so).
-- `apollo-server-lambda`: The handler returned by `createHandler` can now only be called as an async function returning a `Promise` (it no longer optionally accepts a callback as the third argument). All current Lambda Node runtimes support this invocation mode (so `exports.handler = server.createHandler()` will keep working without any changes), but if you've written your own handler which calls the handler returned by `createHandler` with a callback, you'll need to handle its `Promise` return value instead.
-- `apollo-server-lambda`: This package is now implemented as a wrapper around `apollo-server-express`. `createHandler`'s argument now has different options: `expressGetMiddlewareOptions` which includes things like `cors` that is passed through to `apollo-server-express`'s `getMiddleware`, and `expressAppFromMiddleware` which lets you customize HTTP processing. The `context` function now receives an `express: { req, res }` option in addition to `event` and `context`.
-- The `tracing` option to `new ApolloServer` has been removed, and the `apollo-server-tracing` package has been deprecated and is no longer being published. This package implemented an inefficient JSON format for execution traces returned on the `tracing` GraphQL response extension; it was only consumed by the deprecated `engineproxy` and Playground. If you really need this format, the old version of `apollo-server-tracing` should still work (`new ApolloServer({plugins: [require('apollo-server-tracing').plugin()]})`).
-- The `cacheControl` option to `new ApolloServer` has been removed. The functionality provided by `cacheControl: true` or `cacheControl: {stripFormattedExtensions: false}` (which included a `cacheControl` extension in the GraphQL response, for use by the deprecated `engineproxy`) has been entirely removed. By default, Apollo Server continues to calculate an overall cache policy and to set the `Cache-Control` HTTP header, but this is now implemented directly inside `apollo-server-core` rather than a separate `apollo-cache-control` package (this package has been deprecated and is no longer being published). Tweaking cache control settings like `defaultMaxAge` is now done via the newly exported `ApolloServerPluginCacheControl` plugin rather than as a top-level constructor option. This follows the same pattern as the other built-in plugins like usage reporting. The `CacheHint` and `CacheScope` types are now exported from `apollo-server-types`. The `info.cacheControl.cacheHint` object now has additional methods `replace`, `restrict`, and `policyIfCacheable`, and its fields update when those methods or `setCacheHint` are called. These methods also exist on `requestContext.overallCachePolicy`, which is always defined and which should not be overwritten (use `replace` instead). There is also a new function `info.cacheControl.cacheHintFromType` available. `@cacheControl` directives on type extensions are no longer ignored. Fields returning union types are now treated similarly to fields returning object and interface types (`@cacheControl` directives on the type are honored, the default `maxAge` is applied to them). New feature: `@cacheControl(inheritMaxAge: true)` when applied to a composite type or a field returning a composite type means that the default `maxAge` is not applied to that field (unless it is a root field).
-- When using a non-serverless framework integration (Express, Fastify, Hapi, Koa, Micro, or Cloudflare), you now *must* `await server.start()` before attaching the server to your framework. (This method was introduced in v2.22 but was optional before Apollo Server 3.) This does not apply to the batteries-included `apollo-server` or to serverless framework integrations.
-- Top-level exports have changed. E.g.,
+#### Bumped dependencies
 
-  - We no longer re-export the entirety of `graphql-tools` (including `makeExecutableSchema`) from all Apollo Server packages. If you'd like to continue using them, install [`graphql-tools`](https://www.graphql-tools.com/) or one of its sub-packages yourself.
-  - The `Upload` scalar is no longer exported. (See above as to why.)
-- Support for serving an HTML UI has been generalized. While servers in dev mode still default to serving GraphQL Playground (note: this may change before v3.0.0), plugins can define a new `renderLandingPage` hook which returns an HTML page that is served to browsers. The `playground` option to `new ApolloServer` has been removed; customizing Playground or making it run in production mode can be done by installing the new `ApolloServerPluginLandingPageGraphQLPlayground` plugin yourself. To disable Playground, either install the new `ApolloServerPluginLandingPageDisabled` plugin or install any other plugin that implements `renderLandingPage`. Packages no longer export `defaultPlaygroundOptions`, `PlaygroundConfig`, and `PlaygroundRenderPageOptions`. By default, no GraphQL Playground settings are overridden, including the endpoint, which now just defaults to `window.location.href` (with most query parameters removed); this means you typically don't have to manually configure the endpoint.
-- Stopped publishing the deprecated `apollo-server-testing` package. This package is just a wrapper around `server.executeOperation` which you can use directly.
+The minimum versions of these dependencies have been bumped to provide an improved foundation for the development of future features.
+
+- Dropped support for Node.js v6, v8 and v10. Apollo Server 3.x is being compiled to ES2020, which maps to Node.js 12+.
+  - Note also that we only test Apollo Server on _even-numbered_ versions of Node.js, and we only aim to support Node.js versions that are under [long-term support](https://nodejs.org/en/about/releases/#releases) from the Node.js Foundation.
+- Dropped support for versions of the `graphql` library prior to `15.3.0`.
+- The `mocks` option of the `ApolloServer` constructor now uses `@graphql-tools/mock` v7 instead of `graphql-tools` v4, which causes some [breaking changes](https://www.graphql-tools.com/docs/mocking#migration-from-v7-and-below). 
+  - For example, mock functions no longer receive arguments and cannot return `Promise`s.
+  - Note that some parts of the v7 migration guide suggest using the `resolvers` argument to `addMocksToSchema`. Apollo Server does not support this option, but you can call `addMocksToSchema` yourself and pass the result to the `schema` option of the `ApolloServer` constructor.
+
+#### Removed functionality
+
+Certain undersupported and underused Apollo Server features have been removed in favor of current or future methods for achieving similar functionality. Many of these features can be manually re-enabled, as listed below.
+
+- Dropped built-in partial support for subscriptions via the `subscriptions-transport-ws` package.
+  - This integration did not support many Apollo Server features, and `subscriptions-transport-ws` has not been actively maintained.
+  - To re-enable subscriptions in Apollo Server 3 as they're supported in v2, [see the migration guide](./docs/source/migration.md#Subscriptions).
+  - We hope to provide more deeply integrated subscription support in a future release.
+- Dropped built-in support for file uploads via the `graphql-upload` package.
+  - To re-enable file uploads in Apollo Server 3 as they're supported in v2, [see the migration guide](./docs/source/migration.md#File-uploads).
+- Dropped support for the `graphql-extensions` API (e.g., `GraphQLExtensions`, `extensions`) in favor of the Apollo Server [plugins API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).
+- Dropped support for passing the `schemaDirectives` option to the `ApolloServer` constructor.
+  - This option was passed directly to the `graphql-tools` function `makeExecutableSchema`. To continue using it, you can import `makeExecutableSchema` from `@graphql-tools/schema` and call it yourself:
+
+    ```
+    new ApolloServer({
+      schema: makeExecutableSchema({
+        typeDefs,
+        resolvers,
+        schemaDirectives
+      })
+    })
+    ```
+
+    Note that `graphql-tools` calls this feature ["legacy" schema directives](https://www.graphql-tools.com/docs/legacy-schema-directives/), and you might want to consider the newer [`schemaTransforms`](https://www.graphql-tools.com/docs/schema-directives/) option instead.
+- Removed the deprecated `ApolloServer.schema` field, which never worked with federated gateways.
+  - To extract your schema from your server, you can make a plugin with `serverWillStart` or register `onSchemaChange` on your gateway.
+- `apollo-datasource-rest`: We no longer officially support overriding the `baseURL` property with a getter, because TypeScript 4 does not allow you to do so.
+- Removed the automatic addition of the `@cacheControl` directive to schemas.
+  - This directive was added in some circumstances but not in others, which caused confusion.
+  - If you use `@cacheControl`, you can [define it in your schema as shown in the docs](https://www.apollographql.com/docs/apollo-server/performance/caching/#in-your-schema-static).
+- Removed the `tracing` option passed to the `ApolloServer` constructor. The corresponding `apollo-server-tracing` package has been deprecated and is no longer being published.
+  - This package implemented an inefficient JSON format for execution traces returned via the `tracing` GraphQL response extension. This format was only consumed by the deprecated `engineproxy` and GraphQL Playground.
+  - If you rely on this trace format, the old version of `apollo-server-tracing` should still work:
+
+    ```
+    new ApolloServer({
+      plugins: [
+        require('apollo-server-tracing').plugin()
+      ]
+    });
+    ```
+- Removed a redundant mechanism for applying extensions to an `ApolloError`.
+  - Applied extensions are now available only on `error.extensions`, and are not _also_ available on `error` itself. 
+  - For details, see [#5294](https://github.com/apollographql/apollo-server/pull/5294).
+- Removed the `cacheControl` option passed to the `ApolloServer` constructor.
+  - By default, Apollo Server continues to calculate an overall cache policy for each operation and sets the `Cache-Control` HTTP header. However, this is now implemented directly inside `apollo-server-core` instead of inside a separate `apollo-cache-control` package (this package has been deprecated and is no longer being published).
+  - Setting cache control options like `defaultMaxAge` is now done via the newly exported `ApolloServerPluginCacheControl` plugin, instead of as a top-level constructor option. This follows the same pattern as other built-in plugins like usage reporting.
+  - The `CacheHint` and `CacheScope` types are now exported from `apollo-server-types`. The `info.cacheControl.cacheHint` object now has additional methods (`replace`, `restrict`, and `policyIfCacheable`), and its fields update when those methods or `setCacheHint` are called. These methods also exist on `requestContext.overallCachePolicy`, which is always defined and which should not be overwritten (use `replace` instead). There is also a new function `info.cacheControl.cacheHintFromType` available. 
+  - `@cacheControl` directives on type extensions are no longer ignored. Fields returning union types are now treated similarly to fields returning object and interface types (`@cacheControl` directives on the type are honored, the default `maxAge` is applied to them).
+  - New feature: `@cacheControl(inheritMaxAge: true)` when applied to a composite type or a field returning a composite type means that the default `maxAge` is not applied to that field (unless it is a root field).
+
+- Top-level exports have changed. For example:
+
+  - We no longer re-export the entirety of `graphql-tools` (including `makeExecutableSchema`) from all Apollo Server packages. To continue using them, install [`graphql-tools`](https://www.graphql-tools.com/) or one of its sub-packages yourself.
+  - The `Upload` scalar is no longer exported as part of  dropping built-in support for file uploads.
+- Stopped publishing the deprecated `apollo-server-testing` package. This package is just a wrapper around `server.executeOperation`, which you can use directly.
+- `apollo-server-caching`: The test suite helper works differently, and the `TestableKeyValueCache` interface is removed.
+
+#### Modified functionality
+
+- With one exception, all Apollo Server plugin methods (`requestDidStart`, `didResolveOperation`, etc.) are now `async`.
+  - Previously, some of these methods were synchronous, others were `async`, and some were "sometimes-`async`" by returning a `ValueOrPromise`.
+  - The exception is `willResolveField`, which remains synchronous. This method is called much more often than any other plugin method, and converting it to `async` might affect performance.
+  - In a future release, `willResolveField` might become "sometimes-`async`" by returning a `ValueOrPromise`.
+- Apollo Server now always fires the `willSendResponse` plugin lifecycle event after firing `didEncounterError`.
+  - In certain error cases (mostly related to automated persisted queries), Apollo Server 2 skips firing `willSendResponse`.
+- Renamed the `GraphQLService` interface to `GatewayInterface`.
+  - This interface is the type used to provide a federated gateway instance to Apollo Server. Its name has been changed to reduce ambiguity.
+  - The previous name is still exported for backward compatibility purposes.
+- Added support for serving a custom landing page at Apollo Server's base URL.
+  - Servers in dev mode still default to serving GraphQL Playground (this might change before release), but plugins can define a new `renderLandingPage` hook that returns an HTML page to serve to browsers.
+  - Removed the `playground` option provided to the `ApolloServer` constructor. You can customize GraphQL Playground or enable it in a production environment by installing the new `ApolloServerPluginLandingPageGraphQLPlayground` plugin.
+  - To disable GraphQL Playground, either install the new `ApolloServerPluginLandingPageDisabled` plugin or install any other plugin that implements `renderLandingPage`.
+  - Apollo Server packages no longer export `defaultPlaygroundOptions`, `PlaygroundConfig`, or `PlaygroundRenderPageOptions`. By default, no GraphQL Playground settings are overridden, including the endpoint, which now defaults to `window.location.href` (with most query parameters removed). This means you typically don't have to manually configure the endpoint.
+
+#### Changes to Node.js framework integrations
+
+- When using a non-serverless framework integration (Express, Fastify, Hapi, Koa, Micro, or Cloudflare), you now *must* call `await server.start()` before attaching the server to your framework. 
+  * This method was introduced in v2.22 but was optional prior to Apollo Server 3.
+  * This requirement does not apply to the `apollo-server` library or to _serverless_ framework integrations.
+- `apollo-server-express` no longer officially supports using with the `connect` framework.
+  - We have not actively removed any `connect` compatibility code, and we do still test that it works with `connect`. However, we reserve the right to break that compatibility without a major version bump of this package (we will certainly note in this changelog if we do so).
+- `apollo-server-lambda`: This package is now implemented as a wrapper around `apollo-server-express`. `createHandler`'s argument now has different options: 
+  - `expressGetMiddlewareOptions`, which includes options like `cors` and is passed through to `apollo-server-express`'s `getMiddleware`
+  - `expressAppFromMiddleware`, which lets you customize HTTP processing
+  
+  Also, the `context` function now receives an `express: { req, res }` option in addition to `event` and `context`
+- `apollo-server-lambda`: The handler returned by `createHandler` can now only be called as an async function returning a `Promise` (it no longer optionally accepts a callback as the third argument).
+  - All current Lambda Node runtimes support this invocation mode (so `exports.handler = server.createHandler()` will keep working without any changes).
+  - If you've written your _own_ handler that calls the handler returned by `createHandler` with a callback, you'll need to handle its `Promise` return value instead.
+- `apollo-server-lambda`: Improved support for running behind an Application Load Balancer (ALB).
+- `apollo-server-fastify` is now compatible with Fastify v3 instead of Fastify v2.
 
 ## vNEXT
 
