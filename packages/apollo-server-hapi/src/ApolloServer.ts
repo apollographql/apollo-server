@@ -119,6 +119,7 @@ export class ApolloServer extends ApolloServerBase {
               response.header(headerName, value),
             );
           }
+          response.code(responseInit.status || 200);
           return response;
         } catch (e: unknown) {
           const error = e as HttpQueryError;
