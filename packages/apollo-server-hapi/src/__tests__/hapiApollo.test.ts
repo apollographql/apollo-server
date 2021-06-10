@@ -34,5 +34,5 @@ describe('integration:Hapi', () => {
     await new Promise(resolve => app.close(resolve));
   }
 
-  testSuite({createApp, destroyApp});
+  testSuite({createApp, destroyApp, integrationName: 'hapi'});
 });

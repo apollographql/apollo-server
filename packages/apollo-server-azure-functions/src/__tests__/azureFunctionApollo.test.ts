@@ -6,6 +6,7 @@ import testSuite, {
 import { Config } from 'apollo-server-core';
 import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
+import typeis from 'type-is';
 
 const createAzureFunction = async (options: CreateAppOptions = {}) => {
   const server = new ApolloServer(
@@ -25,13 +26,28 @@ const createAzureFunction = async (options: CreateAppOptions = {}) => {
     req.on('data', (chunk) => (body += chunk));
     req.on('end', () => {
       const urlObject = url.parse(req.url!, true);
+      const contentType = req.headers['content-type'];
       const request = {
         method: req.method,
-        body: body && JSON.parse(body),
+        body,
         path: req.url,
         query: urlObject.query,
         headers: req.headers,
       };
+      if (
+        body &&
+        contentType &&
+        req.headers['content-length'] &&
+        req.headers['content-length'] !== '0' &&
+        typeis.is(contentType, 'application/json')
+      ) {
+        try {
+          request.body = JSON.parse(body);
+        } catch (e) {
+          // Leaving body as string seems to be what Azure Functions does.
+          // https://github.com/Azure/azure-functions-host/blob/ba408f522b59228f7fcf9c64223d2ef109ca810d/src/WebJobs.Script.Grpc/MessageExtensions/GrpcMessageConversionExtensions.cs#L251-L264
+        }
+      }
       const context = {
         done(error: any, result: any) {
           if (error) throw error;
@@ -51,7 +67,11 @@ const createAzureFunction = async (options: CreateAppOptions = {}) => {
 };
 
 describe('integration:AzureFunctions', () => {
-  testSuite({ createApp: createAzureFunction, serverlessFramework: true });
+  testSuite({
+    createApp: createAzureFunction,
+    serverlessFramework: true,
+    integrationName: 'azure-functions',
+  });
 
   it('can append CORS headers to GET request', async () => {
     const server = new ApolloServer({ schema: Schema });

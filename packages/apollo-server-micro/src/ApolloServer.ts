@@ -11,6 +11,7 @@ export interface ServerRegistration {
   path?: string;
   disableHealthCheck?: boolean;
   onHealthCheck?: (req: MicroRequest) => Promise<any>;
+  __testing__microSuppressErrorLog?: boolean;
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -28,6 +29,7 @@ export class ApolloServer extends ApolloServerBase {
     path,
     disableHealthCheck,
     onHealthCheck,
+    __testing__microSuppressErrorLog,
   }: ServerRegistration = {}) {
     this.assertStarted('createHandler');
 
@@ -36,26 +38,35 @@ export class ApolloServer extends ApolloServerBase {
     const landingPage = this.getLandingPage();
 
     return async (req: MicroRequest, res: ServerResponse) => {
-      if (
-        await this.handleHealthCheck({
-          req,
-          res,
-          disableHealthCheck,
-          onHealthCheck,
-        })
-      ) {
-        return;
+      try {
+        if (
+          await this.handleHealthCheck({
+            req,
+            res,
+            disableHealthCheck,
+            onHealthCheck,
+          })
+        ) {
+          return;
+        }
+        if (
+          landingPage &&
+          this.handleGraphqlRequestsWithLandingPage({ req, res, landingPage })
+        ) {
+          return;
+        }
+        if (await this.handleGraphqlRequestsWithServer({ req, res })) {
+          return;
+        }
+        send(res, 404, null);
+      } catch (errorObj) {
+        if (!__testing__microSuppressErrorLog) {
+          throw errorObj;
+        }
+        // Like Micro's sendError but without the logging.
+        const statusCode = errorObj.statusCode || errorObj.status;
+        send(res, statusCode || 500, errorObj.stack);
       }
-      if (
-        landingPage &&
-        this.handleGraphqlRequestsWithLandingPage({ req, res, landingPage })
-      ) {
-        return;
-      }
-      if (await this.handleGraphqlRequestsWithServer({ req, res })) {
-        return;
-      }
-      send(res, 404, null);
     };
   }
 

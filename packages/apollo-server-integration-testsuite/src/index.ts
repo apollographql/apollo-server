@@ -220,10 +220,12 @@ export default ({
   createApp,
   destroyApp,
   serverlessFramework,
+  integrationName,
 }: {
   createApp: CreateAppFunc;
   destroyApp?: DestroyAppFunc;
   serverlessFramework?: boolean;
+  integrationName?: string;
 }) => {
   describe('apolloServer', () => {
     let app: any;
@@ -253,12 +255,85 @@ export default ({
         });
       });
 
-      it('throws an error if POST body is missing', async () => {
+      it('throws an error if POST body is empty', async () => {
         app = await createApp();
-        const req = request(app).post('/graphql').send();
+        const req = request(app).post('/graphql').type('text/plain').send('  ');
         return req.then((res) => {
-          expect(res.status).toEqual(500);
-          expect((res.error as HTTPError).text).toMatch('POST body missing.');
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch('POST body missing');
+        });
+      });
+
+      it('throws an error if POST body is missing even with content-type', async () => {
+        app = await createApp();
+        const req = request(app)
+          .post('/graphql')
+          .type('application/json')
+          .send();
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch(
+            integrationName === 'fastify'
+              ? "Body cannot be empty when content-type is set to 'application/json'"
+              : 'POST body missing',
+          );
+        });
+      });
+
+      it('throws an error if invalid content-type', async () => {
+        app = await createApp();
+        const req = request(app)
+          .post('/graphql')
+          .type('text/plain')
+          .send(
+            JSON.stringify({
+              query: 'query test{ testString }',
+            }),
+          );
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch('invalid Content-Type');
+        });
+      });
+
+      it('throws an error if POST operation is missing', async () => {
+        app = await createApp();
+        const req = request(app).post('/graphql').send({});
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch('has no keys');
+        });
+      });
+
+      it('throws an error if POST operation is empty', async () => {
+        app = await createApp();
+        const req = request(app).post('/graphql').send({ query: '' });
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch('non-empty `query`');
+        });
+      });
+
+      it('throws an error if POST JSON is malformed', async () => {
+        app = await createApp();
+        const req = request(app)
+          .post('/graphql')
+          .type('application/json')
+          .send('{foo');
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch(
+            integrationName === 'hapi'
+              ? 'Invalid request payload JSON format'
+              : integrationName === 'micro'
+              ? 'Invalid JSON'
+              : integrationName === 'azure-functions'
+              ? // This is not really the right message but AF does its parsing
+                // outside of our handlers and getting it actually right was too
+                // much of a pain.
+                'POST body missing, invalid Content-Type, or JSON object has no keys.'
+              : 'Unexpected token f',
+          );
         });
       });
 

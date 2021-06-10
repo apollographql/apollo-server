@@ -99,6 +99,7 @@ Certain undersupported and underused Apollo Server features have been removed in
   - Removed the `playground` option provided to the `ApolloServer` constructor. You can customize GraphQL Playground or enable it in a production environment by installing the new `ApolloServerPluginLandingPageGraphQLPlayground` plugin.
   - To disable GraphQL Playground, either install the new `ApolloServerPluginLandingPageDisabled` plugin or install any other plugin that implements `renderLandingPage`.
   - Apollo Server packages no longer export `defaultPlaygroundOptions`, `PlaygroundConfig`, or `PlaygroundRenderPageOptions`. By default, no GraphQL Playground settings are overridden, including the endpoint, which now defaults to `window.location.href` (with most query parameters removed). This means you typically don't have to manually configure the endpoint.
+- Bad request errors (invalid JSON, missing body, etc) are more consistent across integrations and consistently return 4xx status codes instead of sometimes returning 5xx status codes.
 
 #### Changes to Node.js framework integrations
 

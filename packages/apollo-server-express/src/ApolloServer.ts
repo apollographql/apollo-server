@@ -131,6 +131,25 @@ export class ApolloServer extends ApolloServerBase {
         return;
       }
 
+      if (!req.body) {
+        // The json body-parser *always* sets req.body to {} if it's unset (even
+        // if the Content-Type doesn't match), so if it isn't set, you probably
+        // forgot to set up body-parser.
+        res.status(500);
+        if (bodyParserConfig === false) {
+          res.send(
+            '`res.body` is not set; you passed `bodyParserConfig: false`, ' +
+              'but you still need to use `body-parser` middleware yourself.',
+          );
+        } else {
+          res.send(
+            '`res.body` is not set even though Apollo Server installed ' +
+              "`body-parser` middleware; this shouldn't happen!",
+          );
+        }
+        return;
+      }
+
       runHttpQuery([], {
         method: req.method,
         options: () => this.createGraphQLServerOptions(req, res),

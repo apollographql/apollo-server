@@ -27,6 +27,7 @@
     "@hapi/accept": "^5.0.2",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-types": "file:../apollo-server-types",
+    "type-is": "^1.6.18",
     "micro": "^9.3.4"
   },
   "devDependencies": {
