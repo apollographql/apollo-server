@@ -93,6 +93,7 @@ Certain undersupported and underused Apollo Server features have been removed in
   - In certain error cases (mostly related to automated persisted queries), Apollo Server 2 skips firing `willSendResponse`.
 - Renamed the `GraphQLService` interface to `GatewayInterface`.
   - This interface is the type used to provide a federated gateway instance to Apollo Server. Its name has been changed to reduce ambiguity.
+  - The previous name is still exported for backward compatibility purposes.
 - Added support for serving a custom landing page at Apollo Server's base URL.
   - Servers in dev mode still default to serving GraphQL Playground (this might change before release), but plugins can define a new `renderLandingPage` hook that returns an HTML page to serve to browsers.
   - Removed the `playground` option provided to the `ApolloServer` constructor. You can customize GraphQL Playground or enable it in a production environment by installing the new `ApolloServerPluginLandingPageGraphQLPlayground` plugin.
