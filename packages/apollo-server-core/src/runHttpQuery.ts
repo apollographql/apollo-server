@@ -343,6 +343,10 @@ export async function processHTTPRequest<TContext>(
         for (const [name, value] of response.http.headers) {
           responseInit.headers![name] = value;
         }
+
+        if (response.http.status) {
+          responseInit.status = response.http.status;
+        }
       }
 
       body = prettyJSONStringify(serializeGraphQLResponse(response));
