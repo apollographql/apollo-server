@@ -23,7 +23,7 @@ async function triggerLogMessage(loggerToUse: Logger) {
     logger: loggerToUse,
     plugins: [
       {
-        requestDidStart({ logger }) {
+        async requestDidStart({ logger }) {
           logger.debug(KNOWN_DEBUG_MESSAGE);
         },
       },

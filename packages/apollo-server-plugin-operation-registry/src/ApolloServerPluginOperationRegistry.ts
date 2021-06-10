@@ -21,7 +21,7 @@ import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
-import { fetch } from "apollo-server-env";
+import { fetch } from 'apollo-server-env';
 
 type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,
@@ -99,7 +99,7 @@ for observability purposes, but all operations will be permitted.`,
       // Make available to requestDidStart.
       logger.debug('Initializing operation registry plugin.');
 
-      const {graphRef, keyHash} = apollo;
+      const { graphRef, keyHash } = apollo;
 
       if (!keyHash) {
         const messageApolloConfigurationRequired =
@@ -112,8 +112,7 @@ for observability purposes, but all operations will be permitted.`,
         throw new Error(`${pluginName}: ${messageApolloConfigurationRequired}`);
       }
 
-      logger.debug(
-        `Operation registry is configured for '${graphRef}'.`);
+      logger.debug(`Operation registry is configured for '${graphRef}'.`);
 
       // An LRU store with no `maxSize` is effectively an InMemoryStore and
       // exactly what we want for this purpose.
@@ -126,7 +125,7 @@ for observability purposes, but all operations will be permitted.`,
           ...apollo,
           // Convince TypeScript that these fields are not undefined.
           graphRef,
-          keyHash
+          keyHash,
         },
         store,
         logger,
@@ -136,13 +135,13 @@ for observability purposes, but all operations will be permitted.`,
       await agent.start();
 
       return {
-        serverWillStop() {
+        async serverWillStop() {
           agent.stop();
         },
       };
     },
 
-    requestDidStart(): GraphQLRequestListener<any> {
+    async requestDidStart(): Promise<GraphQLRequestListener<any>> {
       return {
         async didResolveOperation(requestContext) {
           const documentFromRequestContext = requestContext.document;
@@ -227,9 +226,8 @@ for observability purposes, but all operations will be permitted.`,
             );
 
             try {
-              const predicateResult = options.forbidUnregisteredOperations(
-                requestContext,
-              );
+              const predicateResult =
+                options.forbidUnregisteredOperations(requestContext);
 
               logger.debug(
                 `${logSignature}: The 'forbidUnregisteredOperations' predicate function returned ${predicateResult}`,

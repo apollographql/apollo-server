@@ -448,9 +448,8 @@ export class ApolloServerBase {
       if (taggedServerListenersWithRenderLandingPage.length > 1) {
         throw Error('Only one plugin can implement renderLandingPage.');
       } else if (taggedServerListenersWithRenderLandingPage.length) {
-        this.landingPage =
-          taggedServerListenersWithRenderLandingPage[0].serverListener
-            .renderLandingPage!();
+        this.landingPage = await taggedServerListenersWithRenderLandingPage[0]
+          .serverListener.renderLandingPage!();
       } else {
         this.landingPage = null;
       }

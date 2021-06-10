@@ -115,7 +115,7 @@ export async function processGraphQLRequest<TContext>(
   const metrics = (requestContext.metrics =
     requestContext.metrics || Object.create(null));
 
-  const dispatcher = initializeRequestListenerDispatcher();
+  const dispatcher = await initializeRequestListenerDispatcher();
   await initializeDataSources();
 
   const request = requestContext.request;
@@ -202,7 +202,7 @@ export async function processGraphQLRequest<TContext>(
   // retrieved this from our APQ cache, there's no guarantee that it is
   // syntactically correct, so this string should not be trusted as a valid
   // document until after it's parsed and validated.
-  await dispatcher.invokeHookAsync(
+  await dispatcher.invokeHook(
     'didResolveSource',
     requestContext as GraphQLRequestContextDidResolveSource<TContext>,
   );
@@ -234,7 +234,7 @@ export async function processGraphQLRequest<TContext>(
       requestContext.document = parse(query, config.parseOptions);
       parsingDidEnd();
     } catch (syntaxError) {
-      parsingDidEnd(syntaxError);
+      await parsingDidEnd(syntaxError);
       return await sendErrorResponse(syntaxError, SyntaxError);
     }
 
@@ -246,9 +246,9 @@ export async function processGraphQLRequest<TContext>(
     const validationErrors = validate(requestContext.document);
 
     if (validationErrors.length === 0) {
-      validationDidEnd();
+      await validationDidEnd();
     } else {
-      validationDidEnd(validationErrors);
+      await validationDidEnd(validationErrors);
       return await sendErrorResponse(validationErrors, ValidationError);
     }
 
@@ -290,7 +290,7 @@ export async function processGraphQLRequest<TContext>(
     (operation && operation.name && operation.name.value) || null;
 
   try {
-    await dispatcher.invokeHookAsync(
+    await dispatcher.invokeHook(
       'didResolveOperation',
       requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
     );
@@ -330,20 +330,17 @@ export async function processGraphQLRequest<TContext>(
     // right now.
 
     const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
-    dispatcher
-      .invokeHookSync(
+    (
+      await dispatcher.invokeHook(
         'executionDidStart',
         requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
       )
-      .forEach((executionListener) => {
-        if (typeof executionListener === 'function') {
-          executionListeners.push({
-            executionDidEnd: executionListener,
-          });
-        } else if (typeof executionListener === 'object') {
-          executionListeners.push(executionListener);
-        }
-      });
+    ).forEach((executionListener) => {
+      if (executionListener) {
+        executionListeners.push(executionListener);
+      }
+    });
+    executionListeners.reverse();
 
     const executionDispatcher = new Dispatcher(executionListeners);
 
@@ -352,7 +349,7 @@ export async function processGraphQLRequest<TContext>(
     // symbol so it can be invoked by our `wrapField` method during execution.
     const invokeWillResolveField: GraphQLRequestExecutionListener<TContext>['willResolveField'] =
       (...args) =>
-        executionDispatcher.invokeDidStartHook('willResolveField', ...args);
+        executionDispatcher.invokeSyncDidStartHook('willResolveField', ...args);
 
     Object.defineProperty(
       requestContext.context,
@@ -408,9 +405,9 @@ export async function processGraphQLRequest<TContext>(
         errors: resultErrors ? formatErrors(resultErrors) : undefined,
       };
 
-      executionDispatcher.reverseInvokeHookSync('executionDidEnd');
+      await executionDispatcher.invokeHook('executionDidEnd');
     } catch (executionError) {
-      executionDispatcher.reverseInvokeHookSync(
+      await executionDispatcher.invokeHook(
         'executionDidEnd',
         executionError,
       );
@@ -493,7 +490,7 @@ export async function processGraphQLRequest<TContext>(
         requestContext.response.http.headers.set(name, value);
       }
     }
-    await dispatcher.invokeHookAsync(
+    await dispatcher.invokeHook(
       'willSendResponse',
       requestContext as GraphQLRequestContextWillSendResponse<TContext>,
     );
@@ -505,7 +502,7 @@ export async function processGraphQLRequest<TContext>(
   async function didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
     requestContext.errors = errors;
 
-    return await dispatcher.invokeHookAsync(
+    return await dispatcher.invokeHook(
       'didEncounterErrors',
       requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
     );
@@ -573,14 +570,14 @@ export async function processGraphQLRequest<TContext>(
     });
   }
 
-  function initializeRequestListenerDispatcher(): Dispatcher<
-    GraphQLRequestListener<TContext>
+  async function initializeRequestListenerDispatcher(): Promise<
+    Dispatcher<GraphQLRequestListener<TContext>>
   > {
     const requestListeners: GraphQLRequestListener<TContext>[] = [];
     if (config.plugins) {
       for (const plugin of config.plugins) {
         if (!plugin.requestDidStart) continue;
-        const listener = plugin.requestDidStart(requestContext);
+        const listener = await plugin.requestDidStart(requestContext);
         if (listener) {
           requestListeners.push(listener);
         }

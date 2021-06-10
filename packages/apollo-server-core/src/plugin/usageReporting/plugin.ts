@@ -70,7 +70,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
     // We want to be able to access locals from `serverWillStart` in our `requestDidStart`, thus
     // this little hack. (Perhaps we should also allow GraphQLServerListener to contain
     // a requestDidStart?)
-    requestDidStart(requestContext: GraphQLRequestContext<TContext>) {
+    async requestDidStart(requestContext: GraphQLRequestContext<TContext>) {
       if (!requestDidStartHandler) {
         throw Error(
           'The usage reporting plugin has been asked to handle a request before the ' +
@@ -81,11 +81,11 @@ export function ApolloServerPluginUsageReporting<TContext>(
       return requestDidStartHandler(requestContext);
     },
 
-    serverWillStart({
+    async serverWillStart({
       logger: serverLogger,
       apollo,
       serverlessFramework,
-    }: GraphQLServiceContext): GraphQLServerListener {
+    }: GraphQLServiceContext): Promise<GraphQLServerListener> {
       // Use the plugin-specific logger if one is provided; otherwise the general server one.
       const logger = options.logger ?? serverLogger;
       const { key, graphRef } = apollo;
@@ -432,7 +432,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
         let didResolveSource: boolean = false;
 
         return {
-          didResolveSource(requestContext) {
+          async didResolveSource(requestContext) {
             didResolveSource = true;
 
             if (metrics.persistedQueryHit) {
@@ -465,8 +465,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
               treeBuilder.trace.clientName = clientName || '';
             }
           },
-          validationDidStart() {
-            return (validationErrors?: ReadonlyArray<Error>) => {
+          async validationDidStart() {
+            return async (validationErrors?: ReadonlyArray<Error>) => {
               graphqlValidationFailure = validationErrors
                 ? validationErrors.length !== 0
                 : false;
@@ -479,7 +479,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
               requestContext.operation === undefined;
             await shouldIncludeRequest(requestContext);
           },
-          executionDidStart() {
+          async executionDidStart() {
             // If we stopped tracing early, return undefined so we don't trace
             // an object
             if (metrics.captureTraces === false) return;

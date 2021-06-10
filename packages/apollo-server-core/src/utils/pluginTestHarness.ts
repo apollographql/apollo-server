@@ -4,7 +4,6 @@ import {
   GraphQLRequest,
   GraphQLRequestContextExecutionDidStart,
   GraphQLResponse,
-  ValueOrPromise,
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContext,
   Logger,
@@ -33,7 +32,7 @@ import { newCachePolicy } from '../cachePolicy';
 type IPluginTestHarnessGraphqlRequest = WithRequired<GraphQLRequest, 'query'>;
 type IPluginTestHarnessExecutionDidStart<TContext> =
   GraphQLRequestContextExecutionDidStart<TContext> & {
-    request: IPluginTestHarnessGraphqlRequest,
+    request: IPluginTestHarnessGraphqlRequest;
   };
 
 export default async function pluginTestHarness<TContext>({
@@ -43,12 +42,12 @@ export default async function pluginTestHarness<TContext>({
   graphqlRequest,
   overallCachePolicy,
   executor,
-  context = Object.create(null)
+  context = Object.create(null),
 }: {
   /**
    * An instance of the plugin to test.
    */
-  pluginInstance: ApolloServerPlugin<TContext>,
+  pluginInstance: ApolloServerPlugin<TContext>;
 
   /**
    * The optional schema that will be received by the executor.  If not
@@ -81,7 +80,7 @@ export default async function pluginTestHarness<TContext>({
    */
   executor: (
     requestContext: IPluginTestHarnessExecutionDidStart<TContext>,
-  ) => ValueOrPromise<GraphQLResponse>;
+  ) => Promise<GraphQLResponse>;
 
   /**
    * (optional) To provide a user context, if necessary.
@@ -97,10 +96,10 @@ export default async function pluginTestHarness<TContext>({
             type: GraphQLString,
             resolve() {
               return 'hello world';
-            }
-          }
-        }
-      })
+            },
+          },
+        },
+      }),
     });
   }
 
@@ -137,18 +136,18 @@ export default async function pluginTestHarness<TContext>({
   };
 
   if (requestContext.source === undefined) {
-    throw new Error("No source provided for test");
+    throw new Error('No source provided for test');
   }
 
   if (overallCachePolicy) {
     requestContext.overallCachePolicy.replace(overallCachePolicy);
   }
 
-  if (typeof pluginInstance.requestDidStart !== "function") {
-    throw new Error("This test harness expects this to be defined.");
+  if (typeof pluginInstance.requestDidStart !== 'function') {
+    throw new Error('This test harness expects this to be defined.');
   }
 
-  const listener = pluginInstance.requestDidStart(requestContext);
+  const listener = await pluginInstance.requestDidStart(requestContext);
 
   const dispatcher = new Dispatcher(listener ? [listener] : []);
 
@@ -159,7 +158,7 @@ export default async function pluginTestHarness<TContext>({
   // retrieved this from our APQ cache, there's no guarantee that it is
   // syntactically correct, so this string should not be trusted as a valid
   // document until after it's parsed and validated.
-  await dispatcher.invokeHookAsync(
+  await dispatcher.invokeHook(
     'didResolveSource',
     requestContext as GraphQLRequestContextDidResolveSource<TContext>,
   );
@@ -173,16 +172,16 @@ export default async function pluginTestHarness<TContext>({
     try {
       requestContext.document = parse(requestContext.source, undefined);
     } catch (syntaxError) {
-      const errorOrErrors = syntaxError
+      const errorOrErrors = syntaxError;
       requestContext.errors = Array.isArray(errorOrErrors)
         ? errorOrErrors
         : [errorOrErrors];
-      await dispatcher.invokeHookAsync(
+      await dispatcher.invokeHook(
         'didEncounterErrors',
         requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
       );
-      await dispatcher.invokeHookAsync(
-        "willSendResponse",
+      await dispatcher.invokeHook(
+        'willSendResponse',
         requestContext as GraphQLRequestContextWillSendResponse<TContext>,
       );
 
@@ -197,17 +196,20 @@ export default async function pluginTestHarness<TContext>({
     /**
      * We are validating only with the default rules.
      */
-    const validationErrors = graphqlValidate(requestContext.schema, requestContext.document);
+    const validationErrors = graphqlValidate(
+      requestContext.schema,
+      requestContext.document,
+    );
 
     if (validationErrors.length !== 0) {
       requestContext.errors = validationErrors;
       validationDidEnd(validationErrors);
-      await dispatcher.invokeHookAsync(
+      await dispatcher.invokeHook(
         'didEncounterErrors',
         requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
       );
-      await dispatcher.invokeHookAsync(
-        "willSendResponse",
+      await dispatcher.invokeHook(
+        'willSendResponse',
         requestContext as GraphQLRequestContextWillSendResponse<TContext>,
       );
       return requestContext as GraphQLRequestContextWillSendResponse<TContext>;
@@ -229,40 +231,38 @@ export default async function pluginTestHarness<TContext>({
   requestContext.operationName =
     (operation && operation.name && operation.name.value) || null;
 
-  await dispatcher.invokeHookAsync(
+  await dispatcher.invokeHook(
     'didResolveOperation',
     requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
   );
 
   // This execution dispatcher logic is duplicated in the request pipeline
   // right now.
-  dispatcher.invokeHookSync(
-    'executionDidStart',
-    requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
-  ).forEach(executionListener => {
-    if (typeof executionListener === 'function') {
-      executionListeners.push({
-        executionDidEnd: executionListener,
-      });
-    } else if (typeof executionListener === 'object') {
+  (
+    await dispatcher.invokeHook(
+      'executionDidStart',
+      requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+    )
+  ).forEach((executionListener) => {
+    if (executionListener) {
       executionListeners.push(executionListener);
     }
   });
+  executionListeners.reverse();
 
   const executionDispatcher = new Dispatcher(executionListeners);
 
   // Create a callback that will trigger the execution dispatcher's
   // `willResolveField` hook.  We will attach this to the context on a
   // symbol so it can be invoked by our `wrapField` method during execution.
-  const invokeWillResolveField: GraphQLRequestExecutionListener<
-    TContext
-  >['willResolveField'] = (...args) =>
-      executionDispatcher.invokeDidStartHook('willResolveField', ...args);
+  const invokeWillResolveField: GraphQLRequestExecutionListener<TContext>['willResolveField'] =
+    (...args) =>
+      executionDispatcher.invokeSyncDidStartHook('willResolveField', ...args);
 
   Object.defineProperty(
     requestContext.context,
     symbolExecutionDispatcherWillResolveField,
-    { value: invokeWillResolveField }
+    { value: invokeWillResolveField },
   );
 
   // If the schema is already enabled, this is a no-op.  Otherwise, the
@@ -274,14 +274,13 @@ export default async function pluginTestHarness<TContext>({
     (requestContext.response as any) = await executor(
       requestContext as IPluginTestHarnessExecutionDidStart<TContext>,
     );
-    executionDispatcher.reverseInvokeHookSync("executionDidEnd");
-
+    await executionDispatcher.invokeHook('executionDidEnd');
   } catch (executionErr) {
-    executionDispatcher.reverseInvokeHookSync("executionDidEnd", executionErr);
+    await executionDispatcher.invokeHook('executionDidEnd', executionErr);
   }
 
-  await dispatcher.invokeHookAsync(
-    "willSendResponse",
+  await dispatcher.invokeHook(
+    'willSendResponse',
     requestContext as GraphQLRequestContextWillSendResponse<TContext>,
   );
 

@@ -19,7 +19,7 @@ events. Here's a basic plugin that responds to the `serverWillStart` event:
 
 ```js:title=index.js
 const myPlugin = {
-  serverWillStart() {
+  async serverWillStart() {
     console.log('Server starting up!');
   },
 };
@@ -32,7 +32,7 @@ you can export it as a separate module:
 
 ```js:title=myplugin.js
 module.exports = {
-  serverWillStart() {
+  async serverWillStart() {
     console.log('Server starting up!');
   },
 };
@@ -44,7 +44,7 @@ To create a plugin that accepts options, create a function that accepts an
 ```js:title=myplugin.js
 module.exports = (options) => {
   return {
-    serverWillStart() {
+    async serverWillStart() {
       console.log(options.logMessage);
     },
   };
@@ -57,7 +57,9 @@ module.exports = (options) => {
 A plugin specifies exactly which [events](#apollo-server-event-reference)
 it responds to by implementing functions that correspond to those events.
 The plugin in the examples above responds to the `serverWillStart` event, which
-fires when Apollo Server is preparing to start up.
+fires when Apollo Server is preparing to start up. Almost all plugin events
+are `async` functions (ie, functions that return `Promise`s); the one exception
+is [`willResolveField`](#willresolvefield).
 
 A plugin can respond to any combination of supported events.
 
@@ -79,7 +81,7 @@ lifecycle:
 
 ```js
 const myPlugin = {
-  requestDidStart() {
+  async requestDidStart() {
     console.log('Request started!');
   },
 };
@@ -92,19 +94,17 @@ just like you respond to `serverWillStart`, but you _also_ use this function
 
 ```js
 const myPlugin = {
-  requestDidStart(requestContext) {
+  asyn crequestDidStart(requestContext) {
     console.log('Request started!');
 
     return {
-
-      parsingDidStart(requestContext) {
+      async parsingDidStart(requestContext) {
         console.log('Parsing started!');
       },
 
-      validationDidStart(requestContext) {
+      async validationDidStart(requestContext) {
         console.log('Validation started!');
       }
-
     }
   },
 };
@@ -150,8 +150,11 @@ that is invoked after the corresponding lifecycle phase _ends_:
 
 * [`parsingDidStart`](#parsingdidstart)
 * [`validationDidStart`](#validationdidstart)
-* [`executionDidStart`](#executiondidstart) (this handler can alternatively return an _object_ containing an `executionDidEnd` function)
 * [`willResolveField`](#willresolvefield)
+
+([`executionDidStart`](#executiondidstart) returns an _object_ containing an `executionDidEnd` function instead of just a function as an end handler; that's because the returned object can also contain `willResolveField`.)
+
+Just like the event handers themselves, these end hooks are async functions (except for the end hook for `willResolveField`).
 
 These **end hooks** are passed any errors that occurred during the
 execution of that lifecycle phase. For example, the following plugin logs
@@ -159,33 +162,35 @@ any errors that occur during any of the above lifecycle events:
 
 ```js
 const myPlugin = {
-  requestDidStart() {
+  async requestDidStart() {
     return {
-      parsingDidStart() {
-        return (err) => {
+      async parsingDidStart() {
+        return async (err) => {
           if (err) {
             console.error(err);
           }
         }
       },
-      validationDidStart() {
+      async validationDidStart() {
         // This end hook is unique in that it can receive an array of errors,
         // which will contain every validation error that occurred.
-        return (errs) => {
+        return async (errs) => {
           if (errs) {
             errs.forEach(err => console.error(err));
           }
         }
       },
-      executionDidStart() {
-        return (err) => {
-          if (err) {
-            console.error(err);
+      async executionDidStart() {
+        return {
+          async executionDidEnd(err) {
+            if (err) {
+              console.error(err);
+            }
           }
-        }
-      }
-    }
-  }
+        };
+      },
+    };
+  },
 }
 ```
 
@@ -230,7 +235,7 @@ const server = new ApolloServer({
 
     /* This plugin is defined in-line. */
     {
-      serverWillStart() {
+      async serverWillStart() {
         console.log('Server starting up!');
       },
     }
@@ -252,8 +257,7 @@ Request lifecycle events are associated with a specific request. You define resp
 
 ### `serverWillStart`
 
-The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. If you respond to this event with an `async` function (or if the function returns a `Promise`), the server doesn't start until the asynchronous operation completes. If the `Promise` is _rejected_, startup _fails_ (**unless you're using [Express middleware](/integrations/middleware/)**). This helps you make sure all
-of your server's dependencies are available before attempting to begin serving requests.
+The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. The server doesn't start until this asynchronous method completes. If it throws (ie, if the `Promise` it returns is _rejected_), startup _fails_ and your server will not serve GraphQL operations. This helps you make sure all of your server's dependencies are available before attempting to begin serving requests. (Specifically, this is fired from the `listen()` method in `apollo-server`, from the `start()` method for a framework integration like `apollo-server-express`, and during the first request for a serverless integration like `apollo-server-lambda`.)
 
 #### Example
 
@@ -263,7 +267,7 @@ const server = new ApolloServer({
 
   plugins: [
     {
-      serverWillStart() {
+      async serverWillStart() {
         console.log('Server starting!');
       }
     }
@@ -285,10 +289,10 @@ const server = new ApolloServer({
 
   plugins: [
     {
-      serverWillStart() {
+      async serverWillStart() {
         const interval = setInterval(doSomethingPeriodically, 1000);
         return {
-          serverWillStop() {
+          async serverWillStop() {
             clearInterval(interval);
           }
         }
@@ -311,9 +315,9 @@ const server = new ApolloServer({
 
   plugins: [
     {
-      serverWillStart() {
+      async serverWillStart() {
         return {
-          renderLandingPage() {
+          async renderLandingPage() {
             return { html: `<html><body>Welcome to your server!</body></html>` };
           }
         }
@@ -334,7 +338,7 @@ requestDidStart?(
     GraphQLRequestContext<TContext>,
     'request' | 'context' | 'logger'
   >
-): GraphQLRequestListener<TContext> | void;
+): Promise<GraphQLRequestListener<TContext> | void>;
 ```
 
 This function can optionally return an object that includes functions for responding
@@ -346,16 +350,14 @@ const server = new ApolloServer({
 
   plugins: [
     {
-      requestDidStart(requestContext) {
-
-        /* Within this returned object, define functions that respond
-           to request-specific lifecycle events. */
+      async requestDidStart(requestContext) {
+        // Within this returned object, define functions that respond
+        // to request-specific lifecycle events.
         return {
-
-          /* The `parsingDidStart` request lifecycle event fires
-             when parsing begins. The event is scoped within an
-             associated `requestDidStart` server lifecycle event. */
-          parsingDidStart(requestContext) {
+          // The `parsingDidStart` request lifecycle event fires
+          // when parsing begins. The event is scoped within an
+          // associated `requestDidStart` server lifecycle event.
+          async parsingDidStart(requestContext) {
             console.log('Parsing started!')
           },
         }
@@ -386,7 +388,7 @@ didResolveSource?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>, 'source' | 'logger'>,
   >,
-): ValueOrPromise<void>;
+): Promise<void>;
 ```
 
 ### `parsingDidStart`
@@ -405,7 +407,7 @@ parsingDidStart?(
     GraphQLRequestContext<TContext>,
     'metrics' | 'source' | 'logger'
   >,
-): (err?: Error) => void | void;
+): Promise<void | (err?: Error) => Promise<void>>;
 ```
 
 ### `validationDidStart`
@@ -425,7 +427,7 @@ validationDidStart?(
     GraphQLRequestContext<TContext>,
     'metrics' | 'source' | 'document' | 'logger'
   >,
-): (err?: ReadonlyArray<Error>) => void | void;
+): Promise<void | (err?: ReadonlyArray<Error>) => Promise<void>>;
 ```
 
 ### `didResolveOperation`
@@ -444,7 +446,7 @@ didResolveOperation?(
     GraphQLRequestContext<TContext>,
     'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
   >,
-): ValueOrPromise<void>;
+): Promise<void>;
 ```
 
 ### `responseForOperation`
@@ -460,7 +462,7 @@ responseForOperation?(
     GraphQLRequestContext<TContext>,
     'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
   >,
-): ValueOrPromise<GraphQLResponse | null>;
+): Promise<GraphQLResponse | null>;
 ```
 
 ### `executionDidStart`
@@ -474,10 +476,10 @@ executionDidStart?(
     GraphQLRequestContext<TContext>,
     'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
   >,
-): (err?: Error) => void | void;
+): Promise<GraphQLRequestExecutionListener | void>;
 ```
 
-`executionDidStart` may return an ["end hook"](#end-hooks) function. Alternatively, it may return an object with one or both of the methods `executionDidEnd` and `willResolveField`.  `executionDidEnd` is treated identically to an end hook: it is called after execution with any errors that occurred. `willResolveField` is documented in the next section.
+`executionDidStart` may return an object with one or both of the methods `executionDidEnd` and `willResolveField`.  `executionDidEnd` is treated like an end hook: it is called after execution with any errors that occurred. `willResolveField` is documented in the next section. (In Apollo Server 2, `executionDidStart` could return also return an end hook directly.)
 
 ### `willResolveField`
 
@@ -487,6 +489,8 @@ You provide your `willResolveField` handler in the object returned by your [`exe
 
 Your `willResolveField` handler can optionally return an ["end hook"](#end-hooks) function that's invoked with the resolver's result (or the error that it throws). The end hook is called when your resolver has _fully_ resolved (e.g., if the resolver returns a Promise, the hook is called with the Promise's eventual resolved result).
 
+`willResolveField` and its end hook are the only synchronous plugin APIs (ie, they do not return `Promise`s).
+
 #### Example
 
 ```js
@@ -495,9 +499,9 @@ const server = new ApolloServer({
 
   plugins: [
     {
-      requestDidStart(initialRequestContext) {
+      async requestDidStart(initialRequestContext) {
         return {
-          executionDidStart(executionRequestContext) {
+          async executionDidStart(executionRequestContext) {
             return {
               willResolveField({source, args, context, info}) {
                 const start = process.hrtime.bigint();
@@ -531,7 +535,7 @@ didEncounterErrors?(
     GraphQLRequestContext<TContext>,
     'metrics' | 'source' | 'errors' | 'logger'
   >,
-): ValueOrPromise<void>;
+): Promise<void>;
 ```
 
 ### `willSendResponse`
@@ -546,5 +550,5 @@ willSendResponse?(
     GraphQLRequestContext<TContext>,
     'metrics' | 'response' | 'logger'
   >,
-): ValueOrPromise<void>;
+): Promise<void>;
 ```

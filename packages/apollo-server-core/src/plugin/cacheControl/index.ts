@@ -90,7 +90,7 @@ export function ApolloServerPluginCacheControl(
       return 'CacheControl';
     },
 
-    serverWillStart({ schema }) {
+    async serverWillStart({ schema }) {
       // Set the size of the caches to be equal to the number of composite types
       // and fields in the schema respectively. This generally means that the
       // cache will always have room for all the cache hints in the active
@@ -108,15 +108,16 @@ export function ApolloServerPluginCacheControl(
         Object.values(schema.getTypeMap())
           .filter(isInterfaceType)
           .flatMap((t) => Object.values(t.getFields())).length;
+      return undefined;
     },
 
-    requestDidStart(requestContext) {
+    async requestDidStart(requestContext) {
       const defaultMaxAge: number = options.defaultMaxAge ?? 0;
       const calculateHttpHeaders = options.calculateHttpHeaders ?? true;
       const { __testing__cacheHints } = options;
 
       return {
-        executionDidStart: () => {
+        async executionDidStart() {
           // Did something set the overall cache policy before we've even
           // started? If so, consider that as an override and don't touch it.
           // Just put set up fake `info.cacheControl` objects and otherwise
@@ -238,7 +239,7 @@ export function ApolloServerPluginCacheControl(
           };
         },
 
-        willSendResponse(requestContext) {
+        async willSendResponse(requestContext) {
           const { response, overallCachePolicy } = requestContext;
 
           const policyIfCacheable = overallCachePolicy.policyIfCacheable();
