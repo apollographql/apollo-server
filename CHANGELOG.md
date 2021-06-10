@@ -20,7 +20,7 @@ The minimum versions of these dependencies have been bumped to provide an improv
 - Dropped support for Node.js v6, v8 and v10. Apollo Server 3.x is being compiled to ES2020, which maps to Node.js 12+.
   - Note also that we only test Apollo Server on _even-numbered_ versions of Node.js, and we only aim to support Node.js versions that are under [long-term support](https://nodejs.org/en/about/releases/#releases) from the Node.js Foundation.
 - Dropped support for versions of the `graphql` library prior to `15.3.0`.
-- The `mocks` option of the `ApolloServer` constructor now uses `@graphql-tools/mock` v7 instead of `graphql-tools` v4, which causes some [breaking changes](https://www.graphql-tools.com/docs/mocking#migration-from-v7-and-below). 
+- The `mocks` option of the `ApolloServer` constructor now uses `@graphql-tools/mock` v7 instead of `graphql-tools` v4, which causes some [breaking changes](https://www.graphql-tools.com/docs/mocking#migration-from-v7-and-below).
   - For example, mock functions no longer receive arguments and cannot return `Promise`s.
   - Note that some parts of the v7 migration guide suggest using the `resolvers` argument to `addMocksToSchema`. Apollo Server does not support this option, but you can call `addMocksToSchema` yourself and pass the result to the `schema` option of the `ApolloServer` constructor.
 
@@ -67,12 +67,12 @@ Certain undersupported and underused Apollo Server features have been removed in
     });
     ```
 - Removed a redundant mechanism for applying extensions to an `ApolloError`.
-  - Applied extensions are now available only on `error.extensions`, and are not _also_ available on `error` itself. 
+  - Applied extensions are now available only on `error.extensions`, and are not _also_ available on `error` itself.
   - For details, see [#5294](https://github.com/apollographql/apollo-server/pull/5294).
 - Removed the `cacheControl` option passed to the `ApolloServer` constructor.
   - By default, Apollo Server continues to calculate an overall cache policy for each operation and sets the `Cache-Control` HTTP header. However, this is now implemented directly inside `apollo-server-core` instead of inside a separate `apollo-cache-control` package (this package has been deprecated and is no longer being published).
   - Setting cache control options like `defaultMaxAge` is now done via the newly exported `ApolloServerPluginCacheControl` plugin, instead of as a top-level constructor option. This follows the same pattern as other built-in plugins like usage reporting.
-  - The `CacheHint` and `CacheScope` types are now exported from `apollo-server-types`. The `info.cacheControl.cacheHint` object now has additional methods (`replace`, `restrict`, and `policyIfCacheable`), and its fields update when those methods or `setCacheHint` are called. These methods also exist on `requestContext.overallCachePolicy`, which is always defined and which should not be overwritten (use `replace` instead). There is also a new function `info.cacheControl.cacheHintFromType` available. 
+  - The `CacheHint` and `CacheScope` types are now exported from `apollo-server-types`. The `info.cacheControl.cacheHint` object now has additional methods (`replace`, `restrict`, and `policyIfCacheable`), and its fields update when those methods or `setCacheHint` are called. These methods also exist on `requestContext.overallCachePolicy`, which is always defined and which should not be overwritten (use `replace` instead). There is also a new function `info.cacheControl.cacheHintFromType` available.
   - `@cacheControl` directives on type extensions are no longer ignored. Fields returning union types are now treated similarly to fields returning object and interface types (`@cacheControl` directives on the type are honored, the default `maxAge` is applied to them).
   - New feature: `@cacheControl(inheritMaxAge: true)` when applied to a composite type or a field returning a composite type means that the default `maxAge` is not applied to that field (unless it is a root field).
 
@@ -102,21 +102,22 @@ Certain undersupported and underused Apollo Server features have been removed in
 
 #### Changes to Node.js framework integrations
 
-- When using a non-serverless framework integration (Express, Fastify, Hapi, Koa, Micro, or Cloudflare), you now *must* call `await server.start()` before attaching the server to your framework. 
+- When using a non-serverless framework integration (Express, Fastify, Hapi, Koa, Micro, or Cloudflare), you now *must* call `await server.start()` before attaching the server to your framework.
   * This method was introduced in v2.22 but was optional prior to Apollo Server 3.
   * This requirement does not apply to the `apollo-server` library or to _serverless_ framework integrations.
 - `apollo-server-express` no longer officially supports using with the `connect` framework.
   - We have not actively removed any `connect` compatibility code, and we do still test that it works with `connect`. However, we reserve the right to break that compatibility without a major version bump of this package (we will certainly note in this changelog if we do so).
-- `apollo-server-lambda`: This package is now implemented as a wrapper around `apollo-server-express`. `createHandler`'s argument now has different options: 
+- `apollo-server-lambda`: This package is now implemented as a wrapper around `apollo-server-express`. `createHandler`'s argument now has different options:
   - `expressGetMiddlewareOptions`, which includes options like `cors` and is passed through to `apollo-server-express`'s `getMiddleware`
   - `expressAppFromMiddleware`, which lets you customize HTTP processing
-  
+
   Also, the `context` function now receives an `express: { req, res }` option in addition to `event` and `context`
 - `apollo-server-lambda`: The handler returned by `createHandler` can now only be called as an async function returning a `Promise` (it no longer optionally accepts a callback as the third argument).
   - All current Lambda Node runtimes support this invocation mode (so `exports.handler = server.createHandler()` will keep working without any changes).
   - If you've written your _own_ handler that calls the handler returned by `createHandler` with a callback, you'll need to handle its `Promise` return value instead.
 - `apollo-server-lambda`: Improved support for running behind an Application Load Balancer (ALB).
 - `apollo-server-fastify` is now compatible with Fastify v3 instead of Fastify v2.
+- All integrations that allow CORS headers to be customized now default to `access-control-allow-origin: *`. This was already the case for `apollo-server`, Express, Fastify, and Hapi; it is now also the same for Koa (which previously reflected the request's origin), Lambda, Cloud Functions, and Azure Functions as well (which did not set CORS by default). Micro and CloudFlare do not have a built-in way of setting CORS headers.
 
 ## vNEXT
 
