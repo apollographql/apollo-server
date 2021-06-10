@@ -32,22 +32,22 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
-    const corsHeaders: HttpResponse['headers'] = {};
+    const staticCorsHeaders: HttpResponse['headers'] = {};
 
     if (cors) {
       if (cors.methods) {
         if (typeof cors.methods === 'string') {
-          corsHeaders['Access-Control-Allow-Methods'] = cors.methods;
+          staticCorsHeaders['Access-Control-Allow-Methods'] = cors.methods;
         } else if (Array.isArray(cors.methods)) {
-          corsHeaders['Access-Control-Allow-Methods'] = cors.methods.join(',');
+          staticCorsHeaders['Access-Control-Allow-Methods'] = cors.methods.join(',');
         }
       }
 
       if (cors.allowedHeaders) {
         if (typeof cors.allowedHeaders === 'string') {
-          corsHeaders['Access-Control-Allow-Headers'] = cors.allowedHeaders;
+          staticCorsHeaders['Access-Control-Allow-Headers'] = cors.allowedHeaders;
         } else if (Array.isArray(cors.allowedHeaders)) {
-          corsHeaders[
+          staticCorsHeaders[
             'Access-Control-Allow-Headers'
           ] = cors.allowedHeaders.join(',');
         }
@@ -55,19 +55,19 @@ export class ApolloServer extends ApolloServerBase {
 
       if (cors.exposedHeaders) {
         if (typeof cors.exposedHeaders === 'string') {
-          corsHeaders['Access-Control-Expose-Headers'] = cors.exposedHeaders;
+          staticCorsHeaders['Access-Control-Expose-Headers'] = cors.exposedHeaders;
         } else if (Array.isArray(cors.exposedHeaders)) {
-          corsHeaders[
+          staticCorsHeaders[
             'Access-Control-Expose-Headers'
           ] = cors.exposedHeaders.join(',');
         }
       }
 
       if (cors.credentials) {
-        corsHeaders['Access-Control-Allow-Credentials'] = 'true';
+        staticCorsHeaders['Access-Control-Allow-Credentials'] = 'true';
       }
       if (cors.maxAge) {
-        corsHeaders['Access-Control-Max-Age'] = cors.maxAge;
+        staticCorsHeaders['Access-Control-Max-Age'] = cors.maxAge;
       }
     }
 
@@ -81,8 +81,11 @@ export class ApolloServer extends ApolloServerBase {
             landingPage = this.getLandingPage();
           }
 
+          const corsHeaders: HttpResponse['headers'] = {...staticCorsHeaders};
           const originHeader = req.headers['Origin'] || req.headers['origin'];
-          if (cors && cors.origin) {
+          if (cors === undefined) {
+            corsHeaders['Access-Control-Allow-Origin'] = '*';
+          } else if (cors && cors.origin) {
             if (typeof cors.origin === 'string') {
               corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
             } else if (
