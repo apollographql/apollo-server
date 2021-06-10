@@ -85,8 +85,14 @@ Certain undersupported and underused Apollo Server features have been removed in
 
 #### Modified functionality
 
-- Apollo Server now always fires the `willSendResponse` lifecycle event after firing `didEncounterError`.
+- With one exception, all Apollo Server plugin methods (`requestDidStart`, `didResolveOperation`, etc.) are now `async`.
+  - Previously, some of these methods were synchronous, others were `async`, and some were "sometimes-`async`" by returning a `ValueOrPromise`.
+  - The exception is `willResolveField`, which remains synchronous. This method is called much more often than any other plugin method, and converting it to `async` might affect performance.
+  - In a future release, `willResolveField` might become "sometimes-`async`" by returning a `ValueOrPromise`.
+- Apollo Server now always fires the `willSendResponse` plugin lifecycle event after firing `didEncounterError`.
   - In certain error cases (mostly related to automated persisted queries), Apollo Server 2 skips firing `willSendResponse`.
+- Renamed the `GraphQLService` interface to `GatewayInterface`.
+  - This interface is the type used to provide a federated gateway instance to Apollo Server. Its name has been changed to reduce ambiguity.
 - Added support for serving a custom landing page at Apollo Server's base URL.
   - Servers in dev mode still default to serving GraphQL Playground (this might change before release), but plugins can define a new `renderLandingPage` hook that returns an HTML page to serve to browsers.
   - Removed the `playground` option provided to the `ApolloServer` constructor. You can customize GraphQL Playground or enable it in a production environment by installing the new `ApolloServerPluginLandingPageGraphQLPlayground` plugin.
