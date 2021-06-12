@@ -67,7 +67,7 @@
     "@types/bunyan": "1.8.6",
     "@types/connect": "3.4.34",
     "@types/cors": "2.8.10",
-    "@types/express": "4.17.11",
+    "@types/express": "4.17.12",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/hapi": "17.8.10",
     "@types/ioredis": "4.26.2",
