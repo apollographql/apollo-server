@@ -71,7 +71,7 @@
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/hapi": "17.8.10",
     "@types/ioredis": "4.26.2",
-    "@types/jest": "25.2.3",
+    "@types/jest": "26.0.23",
     "@types/koa-router": "7.4.2",
     "@types/lodash": "4.14.168",
     "@types/lodash.sortby": "4.7.6",
