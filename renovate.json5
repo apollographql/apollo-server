@@ -2,54 +2,13 @@
   "extends": [
     "apollo-open-source"
   ],
+  /* During the last stages of v3, we are running Renovate against
+   * release-3.0 instead of main. Note that Renovate config still lives
+   * on main!
+   */
   "dependencyDashboard": true,
   "automerge": false,
   "packageRules": [
-    {
-      "matchPackageNames": ["@types/node"],
-      "allowedVersions": "8.x"
-    },
-    /*
-      Avoid major version bumps to server frameworks (those used by the
-      various Apollo Server integrations (e.g. Fastify, Express, Koa, etc.),
-      which must be reserved for a major version bump to Apollo Server itself.
-
-      For more thoughts here, see my comment on the commits that introduced
-      these threshholds via `git blame`.
-    */
-    {
-      "matchPackageNames": ["fastify"],
-      "allowedVersions": "<2"
-    },
-    {
-      "matchPackageNames": ["fastify-cors"],
-      "allowedVersions": "<1"
-    },
-    {
-      "matchPackageNames": ["koa-bodyparser"],
-      "allowedVersions": "<4"
-    },
-    {
-      "matchPackageNames": ["@koa/cors"],
-      "allowedVersions": "<3"
-    },
-    {
-      "matchPackageNames": ["log4js"],
-      "allowedVersions": "<5"
-    },
-    {
-      "matchPackageNames": ["hapi", "@types/hapi"],
-      "allowedVersions": "<18"
-    },
-    {
-      "matchPackageNames": ["ws"],
-      "allowedVersions": "<7"
-    },
-    // Remove when we're no longer supporting Node.js v6
-    {
-      "matchPackageNames": ["nock"],
-      "allowedVersions": "<11"
-    },
     /*
       Docs-related Renovate rules
 
@@ -70,7 +29,7 @@
       // of Apollo Server.  "Past" major versions should be added here!
       "baseBranches": [
         "main",
-        "version-2"
+        "release-3.0"
       ]
     }
   ]
