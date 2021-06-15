@@ -212,6 +212,8 @@ Paste this string into the Operations panel and click the blue button in the upp
 
 <img class="screenshot" src="./images/sandbox-response.jpg" width="400" alt="Sandbox response panel"/>
 
+> **Note:** If your server is deployed to an environment where `NODE_ENV` is set to `production`, introspection is **disabled** by default. This prevents Apollo Sandbox from working properly. To enable introspection, set `introspection: true` in [the options to `ApolloServer`'s constructor](./api/apollo-server/#constructor).
+
 One of the most important concepts of GraphQL is that clients can choose to query _only for the fields they need_. Delete `author` from the query string and execute it again. The response updates to include only the `title` field for each book!
 
 ## Combined example
