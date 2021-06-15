@@ -1,6 +1,5 @@
 // persisted query tests
 import { sha256 } from 'js-sha256';
-import { VERSION } from 'apollo-link-persisted-queries';
 
 import {
   GraphQLSchema,
@@ -1298,14 +1297,14 @@ export default ({
       const hash = sha256.create().update(query).hex();
       const extensions = {
         persistedQuery: {
-          version: VERSION,
+          version: 1,
           sha256Hash: hash,
         },
       };
 
       const extensions2 = {
         persistedQuery: {
-          version: VERSION,
+          version: 1,
           sha256Hash: sha256.create().update(query2).hex(),
         },
       };
@@ -1446,7 +1445,7 @@ export default ({
             extensions: JSON.stringify({
               persistedQuery: {
                 // Version intentionally wrong.
-                version: VERSION + 1,
+                version: 2,
                 sha256Hash: extensions.persistedQuery.sha256Hash,
               },
             }),
@@ -1653,7 +1652,7 @@ export default ({
           .send({
             extensions: {
               persistedQuery: {
-                version: VERSION,
+                version: 1,
                 sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
               },
             },
