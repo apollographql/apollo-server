@@ -44,8 +44,10 @@ Add the persisted query link anywhere in the chain before the terminating link. 
 ```js
 import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+import { sha256 } from 'crypto-hash';
 
-const linkChain = createPersistedQueryLink().concat(new HttpLink({ uri: "http://localhost:4000/graphql" }));
+const linkChain = createPersistedQueryLink({ sha256 }).concat(
+  new HttpLink({ uri: "http://localhost:4000/graphql" }));
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -139,29 +141,23 @@ After this step, Apollo Server will serve the HTTP `Cache-Control` header on ful
 
 Often, GraphQL requests are big POST requests and most CDNs will only cache GET requests. Additionally, GET requests generally work best when the URL has a bounded size. Enabling automatic persisted queries means that short hashes are sent over the wire instead of full queries, and Apollo Client can be configured to use GET requests for those hashed queries.
 
-To do this, update the **client** code. First, add the package:
-
-```
-npm install apollo-link-persisted-queries
-```
-
-Then, add the persisted queries link to the Apollo Client constructor before the HTTP link:
+To do this, update the **client** code. Add the persisted queries link to the Apollo Client constructor before the HTTP link:
 
 ```js
-import { createPersistedQueryLink } from "apollo-link-persisted-queries";
-import { createHttpLink } from "apollo-link-http";
-import { InMemoryCache } from "apollo-cache-inmemory";
-import { ApolloLink } from "apollo-link";
-import ApolloClient from "apollo-client";
+import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+import { sha256 } from 'crypto-hash';
 
-const link = ApolloLink.from([
-  createPersistedQueryLink({ useGETForHashedQueries: true }),
-  createHttpLink({ uri: "/graphql" })
-]);
+const link = createPersistedQueryLink({
+  sha256,
+  useGETForHashedQueries: true
+}).concat(
+  new HttpLink({ uri: "/graphql" })
+);
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: link
+  link,
 });
 ```
 

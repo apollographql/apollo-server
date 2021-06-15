@@ -17,12 +17,10 @@ import {
   ResponsePath,
 } from 'graphql';
 
-import { execute } from 'apollo-link';
-import { createHttpLink } from 'apollo-link-http';
-import {
-  createPersistedQueryLink as createPersistedQuery,
-  VERSION,
-} from 'apollo-link-persisted-queries';
+// Note that by doing deep imports here we don't need to install React.
+import { execute } from '@apollo/client/link/core';
+import { createHttpLink } from '@apollo/client/link/http';
+import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 
 import {
   createApolloFetch,
@@ -1126,7 +1124,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             const result = await apolloFetch({
               extensions: {
                 persistedQuery: {
-                  version: VERSION,
+                  version: 1,
                   sha256Hash: hash,
                 },
               },
@@ -1696,7 +1694,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       const hash = sha256.create().update(TEST_STRING_QUERY).hex();
       const extensions = {
         persistedQuery: {
-          version: VERSION,
+          version: 1,
           sha256Hash: hash,
         },
       };
@@ -1773,7 +1771,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           await apolloFetch({
             extensions: {
               persistedQuery: {
-                version: VERSION,
+                version: 1,
                 sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
               },
             },
@@ -1788,7 +1786,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       it('returns correct result for persisted query link', (done) => {
         const variables = { id: 1 };
-        const link = createPersistedQuery().concat(
+        const link = createPersistedQueryLink({sha256}).concat(
           createHttpLink({ uri, fetch } as any),
         );
 
@@ -1800,7 +1798,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       it('returns correct result for persisted query link using get request', (done) => {
         const variables = { id: 1 };
-        const link = createPersistedQuery({
+        const link = createPersistedQueryLink({
+          sha256,
           useGETForHashedQueries: true,
         }).concat(createHttpLink({ uri, fetch } as any));
 
