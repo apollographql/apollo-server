@@ -53,6 +53,7 @@ module.exports = {
             'deployment/lambda',
             'deployment/netlify',
             'deployment/azure-functions',
+            'deployment/gcp-functions'
           ],
           Monitoring: ['monitoring/metrics', 'monitoring/health-checks'],
           'API Reference': [
