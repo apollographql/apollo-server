@@ -9,13 +9,17 @@
   "dependencyDashboard": true,
   "automerge": false,
   "packageRules": [
+    {
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "12.x"
+    },
     /*
       Docs-related Renovate rules
 
       These ensure that the `docs/` folder, which is its own application with
       its own dependencies which lives inside this repository, plays by its
       own Renovate rules.  Those rules are defined within the external (npm)
-      package called `renovate-config-apolllo-docs` (defined here only by
+      package called `renovate-config-apollo-docs` (defined here only by
       the `apollo-docs` suffix).
     */
     {
