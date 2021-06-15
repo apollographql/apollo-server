@@ -32,7 +32,7 @@
     "@apollo/protobufjs": "1.2.2"
   },
   "devDependencies": {
-    "chalk": "^1.1.3",
+    "chalk": "4.1.1",
     "escodegen": "^1.8.1",
     "espree": "^3.1.3",
     "estraverse": "^4.2.0",
