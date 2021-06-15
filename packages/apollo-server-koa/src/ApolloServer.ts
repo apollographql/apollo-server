@@ -1,4 +1,5 @@
-import Koa, { ParameterizedContext, Middleware } from 'koa';
+import type Koa from 'koa';
+import type { ParameterizedContext, Middleware } from 'koa';
 import corsMiddleware from '@koa/cors';
 import bodyParser from 'koa-bodyparser';
 import compose from 'koa-compose';
