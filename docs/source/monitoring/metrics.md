@@ -82,6 +82,32 @@ server.listen().then(({ url }) => {
 });
 ```
 
+## OpenTelemetry
+
+[OpenTelemetry](https://opentelemetry.io/) is an open-source framework for configuring and collecting distributed telemetry data (such as metrics and logs) from back-end systems. Its generic APIs enable multiple unrelated systems to report temetry data in a consistent way.
+
+You can use open-source libraries to enable OpenTelemetry support in Apollo Server.
+
+> Note that [Apollo Studio](https://www.apollographql.com/docs/studio/) does _not_ currently ingest OpenTelemetry data. To report metrics to Studio, [see above](#sending-metrics-to-apollo-studio).
+
+### Recommended OpenTelemetry libraries
+
+The following OpenTelemetry libraries are especially useful for Apollo Server:
+
+| Name | Description |
+|------|-------------|
+| [`@opentelemetry/instrumentation-http`](https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/plugins/node/opentelemetry-instrumentation-http) | Instrumentation for the `http` and `https` libraries |
+| [`@opentelemetry/instrumentation-graphql`](https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/plugins/node/opentelemetry-instrumentation-graphql) | Instrumentation for GraphQL  |
+| [`opentelemetry-instrumentation-express`](https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/plugins/node/opentelemetry-instrumentation-express) | Instrumentation for Express |
+
+> If you're using Apollo Server with [Node.js middleware](../integrations/middleware/), an OpenTelemetry plugin might be available for that middleware as well. [See available plugins](https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/plugins/node)
+
+### Setup (monolith)
+
+### Setup (federated)
+
+
+
 ## Logging
 
 You can set up fine-grained operation logging in Apollo Server by defining a custom **plugin**. Apollo Server plugins enable you to perform actions in response to individual phases of the GraphQL request lifecycle, such as whenever a GraphQL request is received from a client.
