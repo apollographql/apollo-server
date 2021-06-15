@@ -15,12 +15,8 @@ if (!process.env.ALLOW_CONSOLE) {
     };
   });
 
-  jasmine.getEnv().addReporter({
-    specStarted: (result) => (jasmine.currentTest = result),
-  });
-
   afterEach(() => {
-    if (usedConsole && !jasmine.currentTest.failedExpectations.length) {
+    if (usedConsole) {
       usedConsole = false;
       throw Error('To keep unit test output readable, tests should not write to the console. To test logging behavior, pass a logger to the class under test.');
     }
