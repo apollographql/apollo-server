@@ -213,7 +213,7 @@ describe('Agent', () => {
         const storeSetSpy = jest.spyOn(store, 'set');
         const storeDeleteSpy = jest.spyOn(store, 'delete');
         const agent = createAgent({ store });
-        jest.useFakeTimers();
+        jest.useFakeTimers("legacy");
         await agent.start();
 
         // Three additions, no deletions.
