@@ -12,7 +12,7 @@
     "release:version-bump:server": "npm run release:version-bump -- --force-publish=apollo-server,apollo-server-core,apollo-server-azure-functions,apollo-server-cloud-functions,apollo-server-cloudflare,apollo-server-express,apollo-server-fastify,apollo-server-hapi,apollo-server-koa,apollo-server-lambda,apollo-server-micro,apollo-server-integration-testsuite",
     "release:start-ci-publish": "node -p '`Publish (dist-tag:${process.env.APOLLO_DIST_TAG || \"latest\"})`' | git tag -F - \"publish/$(date -u '+%Y%m%d%H%M%S')\" && git push origin \"$(git describe --match='publish/*' --tags --exact-match HEAD)\"",
     "postinstall": "lerna run prepare && npm run compile",
-    "pretest": "npm run compile && tsc --build tsconfig.test.json",
+    "pretest": "tsc --build tsconfig.json",
     "test": "jest --verbose",
     "test:clean": "jest --clearCache",
     "test:watch": "jest --verbose --watchAll",
