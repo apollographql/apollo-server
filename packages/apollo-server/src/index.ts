@@ -11,6 +11,8 @@ import {
   CorsOptions,
   ApolloServerExpressConfig,
 } from 'apollo-server-express';
+import type { AddressInfo } from 'net';
+import { format as urlFormat } from 'url';
 
 export * from './exports';
 
@@ -41,40 +43,30 @@ export class ApolloServer extends ApolloServerBase {
     this.stopGracePeriodMillis = config?.stopGracePeriodMillis ?? 10_000;
   }
 
-  private createServerInfo(
-    server: http.Server,
-  ): ServerInfo {
-    const serverInfo: any = {
-      // TODO: Once we bump to `@types/node@10` or higher, we can replace cast
-      // with the `net.AddressInfo` type, rather than this custom interface.
-      // Unfortunately, prior to the 10.x types, this type existed on `dgram`,
-      // but not on `net`, and in later types, the `server.address()` signature
-      // can also be a string.
-      ...(server.address() as {
-        address: string;
-        family: string;
-        port: number;
-      }),
-      server,
-    };
+  private createServerInfo(server: http.Server): ServerInfo {
+    const addressInfo = server.address() as AddressInfo;
 
     // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
-    // corresponding loopback ip. Note that the url field we're setting is
-    // primarily for consumption by our test suite. If this heuristic is wrong
-    // for your use case, explicitly specify a frontend host (in the `host`
-    // option to ApolloServer.listen).
-    let hostForUrl = serverInfo.address;
-    if (serverInfo.address === '' || serverInfo.address === '::')
+    // corresponding loopback ip. If this heuristic is wrong for your use case,
+    // explicitly specify a frontend host (in the `host` option to
+    // ApolloServer.listen).
+    let hostForUrl = addressInfo.address;
+    if (hostForUrl === '' || hostForUrl === '::') {
       hostForUrl = 'localhost';
+    }
 
-    serverInfo.url = require('url').format({
+    const url = urlFormat({
       protocol: 'http',
       hostname: hostForUrl,
-      port: serverInfo.port,
+      port: addressInfo.port,
       pathname: this.graphqlPath,
     });
 
-    return serverInfo;
+    return {
+      ...addressInfo,
+      server,
+      url,
+    };
   }
 
   public applyMiddleware() {
