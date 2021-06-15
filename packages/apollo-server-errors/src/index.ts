@@ -177,16 +177,16 @@ export class ValidationError extends ApolloError {
 }
 
 export class AuthenticationError extends ApolloError {
-  constructor(message: string) {
-    super(message, 'UNAUTHENTICATED');
+  constructor(message: string, extensions?: Record<string, any>) {
+    super(message, 'UNAUTHENTICATED', extensions);
 
     Object.defineProperty(this, 'name', { value: 'AuthenticationError' });
   }
 }
 
 export class ForbiddenError extends ApolloError {
-  constructor(message: string) {
-    super(message, 'FORBIDDEN');
+  constructor(message: string, extensions?: Record<string, any>) {
+    super(message, 'FORBIDDEN', extensions);
 
     Object.defineProperty(this, 'name', { value: 'ForbiddenError' });
   }
