@@ -10,7 +10,6 @@
   "baseBranches": ["release-3.0"],
   "schedule": null,
   "dependencyDashboard": true,
-  "automerge": false,
   "packageRules": [
     {
       "matchPackageNames": ["@types/node"],
