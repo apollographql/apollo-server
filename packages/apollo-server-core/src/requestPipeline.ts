@@ -189,7 +189,7 @@ export async function processGraphQLRequest<TContext>(
   } else {
     return await sendErrorResponse(
       new GraphQLError(
-        'GraphQL operations must contain a `query` or a `persistedQuery` extension.',
+        'GraphQL operations must contain a non-empty `query` or a `persistedQuery` extension.',
       ),
     );
   }

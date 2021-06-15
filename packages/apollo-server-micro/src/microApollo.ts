@@ -6,6 +6,7 @@ import {
 import { send, json, RequestHandler } from 'micro';
 import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
+import typeis from 'type-is';
 
 import { MicroRequest } from './types';
 import { ValueOrPromise } from 'apollo-server-types';
@@ -16,7 +17,10 @@ export interface MicroGraphQLOptionsFunction {
 }
 
 // Utility function used to set multiple headers on a response object.
-function setHeaders(res: ServerResponse, headers: Record<string, string>): void {
+function setHeaders(
+  res: ServerResponse,
+  headers: Record<string, string>,
+): void {
   Object.entries(headers).forEach(([header, value]) => {
     res.setHeader(header, value);
   });
@@ -39,21 +43,22 @@ export function graphqlMicro(
   }
 
   const graphqlHandler = async (req: MicroRequest, res: ServerResponse) => {
-    let query: any;
-    try {
-      query =
-        req.method === 'POST'
-          ? req.filePayload || (await json(req))
-          : url.parse(req.url!, true).query;
-    } catch (error) {
-      // Do nothing; `query` stays `undefined`
-    }
+    const contentType = req.headers['content-type'];
+    const query =
+      req.method === 'POST'
+        ? req.filePayload ||
+          (contentType &&
+            req.headers['content-length'] &&
+            req.headers['content-length'] !== '0' &&
+            typeis.is(contentType, 'application/json') &&
+            (await json(req)))
+        : url.parse(req.url!, true).query;
 
     try {
       const { graphqlResponse, responseInit } = await runHttpQuery([req, res], {
         method: req.method!,
         options,
-        query,
+        query: query as any,
         request: convertNodeHttpToRequest(req),
       });
       setHeaders(res, responseInit.headers!);

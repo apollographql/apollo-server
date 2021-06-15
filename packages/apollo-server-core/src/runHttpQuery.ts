@@ -202,10 +202,15 @@ export async function processHTTPRequest<TContext>(
 
   switch (httpRequest.method) {
     case 'POST':
-      if (!httpRequest.query || Object.keys(httpRequest.query).length === 0) {
+      if (
+        !httpRequest.query ||
+        typeof httpRequest.query === 'string' ||
+        Buffer.isBuffer(httpRequest.query) ||
+        Object.keys(httpRequest.query).length === 0
+      ) {
         throw new HttpQueryError(
-          500,
-          'POST body missing. Did you forget use body-parser middleware?',
+          400,
+          'POST body missing, invalid Content-Type, or JSON object has no keys.',
         );
       }
 

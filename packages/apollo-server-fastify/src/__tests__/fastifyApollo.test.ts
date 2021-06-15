@@ -37,5 +37,5 @@ describe('fastifyApollo', () => {
 });
 
 describe('integration:Fastify', () => {
-  testSuite({createApp, destroyApp});
+  testSuite({ createApp, destroyApp, integrationName: 'fastify' });
 });

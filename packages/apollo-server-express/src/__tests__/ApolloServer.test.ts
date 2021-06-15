@@ -168,6 +168,21 @@ describe('apollo-server-express', () => {
       });
     });
 
+    it('gives helpful error if body is not parsed', async () => {
+      const { server, httpServer } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        { bodyParserConfig: false },
+      );
+
+      await request(httpServer)
+        .post(server.graphqlPath)
+        .send({ query: '{hello}' })
+        .expect(500, /need to use `body-parser`/);
+    });
+
     describe('healthchecks', () => {
       it('creates a healthcheck endpoint', async () => {
         const { httpServer } = await createServer({

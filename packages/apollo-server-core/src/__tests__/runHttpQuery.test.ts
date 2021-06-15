@@ -48,7 +48,7 @@ describe('runHttpQuery', () => {
             errors: [
               {
                 message:
-                  'GraphQL operations must contain a `query` or a `persistedQuery` extension.',
+                  'GraphQL operations must contain a non-empty `query` or a `persistedQuery` extension.',
                 extensions: { code: 'INTERNAL_SERVER_ERROR' },
               },
             ],

@@ -12,17 +12,19 @@ async function createApp(options: CreateAppOptions = {}) {
     (options.graphqlOptions as Config) || { schema: Schema },
   );
   await server.start();
-  return micro(server.createHandler());
+  return micro(
+    server.createHandler({ __testing__microSuppressErrorLog: true }),
+  );
 }
 
-describe('microApollo', function() {
-  it('should throw an error if called without a schema', function() {
+describe('microApollo', function () {
+  it('should throw an error if called without a schema', function () {
     expect(() => new ApolloServer(undefined as any)).toThrow(
       'ApolloServer requires options.',
     );
   });
 });
 
-describe('integration:Micro', function() {
-  testSuite({createApp});
+describe('integration:Micro', function () {
+  testSuite({ createApp, integrationName: 'micro' });
 });
