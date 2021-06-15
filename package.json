@@ -81,7 +81,7 @@
     "@types/lodash.xorby": "4.7.6",
     "@types/lru-cache": "5.1.0",
     "@types/memcached": "2.2.6",
-    "@types/micro": "7.3.4",
+    "@types/micro": "7.3.5",
     "@types/node": "12.12.50",
     "@types/node-fetch": "2.5.10",
     "@types/qs-middleware": "1.0.1",
