@@ -78,7 +78,6 @@ interface QueryOptions
     | 'validationRules'
   > {
   queryString?: string;
-  parsedQuery?: DocumentNode;
   variables?: { [key: string]: any };
   operationName?: string;
   request: Pick<Request, 'url' | 'method' | 'headers'>;
@@ -155,18 +154,6 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: query,
-      request: new MockReq(),
-    }).then(res => {
-      expect(res.data).toEqual(expected);
-    });
-  });
-
-  it.skip('returns the right result when query is a document', () => {
-    const query = parse(`{ testString }`);
-    const expected = { testString: 'it works' };
-    return runQuery({
-      schema,
-      parsedQuery: query,
       request: new MockReq(),
     }).then(res => {
       expect(res.data).toEqual(expected);

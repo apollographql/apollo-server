@@ -43,14 +43,6 @@ export {
   GraphQLRequestContextWillSendResponse,
 };
 
-// Typings Note! (Fix in AS3?)
-//
-// There are a number of types in this module which are specifying `void` as
-// their return type, despite the fact that we _are_ observing the value.
-// It's possible those should instead be `undefined`.  For more details, see
-// the issue that was logged as a result of this discovery during (unrelated) PR
-// review: https://github.com/apollographql/apollo-server/issues/4103
-
 export interface ApolloServerPlugin<
   TContext extends BaseContext = BaseContext,
 > {
