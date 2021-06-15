@@ -2,6 +2,10 @@
   "extends": [
     "apollo-open-source"
   ],
+  /* During the last stages of v3, we are running Renovate against
+   * release-3.0 instead of main. Note that Renovate config still lives
+   * on main!
+   */
   "dependencyDashboard": true,
   "automerge": false,
   "baseBranches": ["main", "release-3.0"],
@@ -10,7 +14,6 @@
       "matchPackageNames": ["@types/node"],
       "allowedVersions": "12.x"
     },
-
     /*
       Docs-related Renovate rules
 
@@ -31,7 +34,7 @@
       // of Apollo Server.  "Past" major versions should be added here!
       "baseBranches": [
         "main",
-        "version-2"
+        "release-3.0"
       ]
     }
   ]
