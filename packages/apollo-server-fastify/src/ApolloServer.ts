@@ -4,10 +4,10 @@ import {
   GraphQLOptions,
   runHttpQuery,
 } from 'apollo-server-core';
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import accepts from 'fastify-accepts';
-
-const fastJson = require('fast-json-stringify');
+import fastifyCors from 'fastify-cors';
+import fastJson from 'fast-json-stringify';
 
 export interface ServerRegistration {
   path?: string;
@@ -68,9 +68,9 @@ export class ApolloServer extends ApolloServerBase {
         async (instance) => {
           instance.register(accepts);
           if (cors === true) {
-            instance.register(require('fastify-cors'));
+            instance.register(fastifyCors);
           } else if (cors !== false) {
-            instance.register(require('fastify-cors'), cors);
+            instance.register(fastifyCors, cors);
           }
 
           instance.setNotFoundHandler((_request, reply) => {

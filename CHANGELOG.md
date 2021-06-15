@@ -119,6 +119,7 @@ Certain undersupported and underused Apollo Server features have been removed in
   - If you've written your _own_ handler that calls the handler returned by `createHandler` with a callback, you'll need to handle its `Promise` return value instead.
 - `apollo-server-lambda`: Improved support for running behind an Application Load Balancer (ALB).
 - `apollo-server-fastify` is now compatible with Fastify v3 instead of Fastify v2.
+- The non-serverless integrations now depend on their corresponding web frameworks via peer dependencies rather than direct dependencies.
 - All integrations that allow CORS headers to be customized now default to `access-control-allow-origin: *`. This was already the case for `apollo-server`, Express, Fastify, and Hapi; it is now also the same for Koa (which previously reflected the request's origin), Lambda, Cloud Functions, and Azure Functions as well (which did not set CORS by default). Micro and CloudFlare do not have a built-in way of setting CORS headers.
 
 ## vNEXT
