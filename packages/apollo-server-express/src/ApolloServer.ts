@@ -162,6 +162,7 @@ export class ApolloServer extends ApolloServerBase {
               res.setHeader(name, value);
             }
           }
+          res.statusCode = responseInit.status || 200;
 
           // Using `.send` is a best practice for Express, but we also just use
           // `.end` for compatibility with `connect`.

@@ -152,6 +152,7 @@ export class ApolloServer extends ApolloServerBase {
             ).forEach(([headerName, value]) => ctx.set(headerName, value));
           }
           ctx.body = graphqlResponse;
+          ctx.status = responseInit.status || 200;
         } catch (e: unknown) {
           const error = e as HttpQueryError;
           if ('HttpQueryError' !== error.name) {

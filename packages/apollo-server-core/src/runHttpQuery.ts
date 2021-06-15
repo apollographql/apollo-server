@@ -30,8 +30,8 @@ export interface HttpQueryRequest {
 
 interface ApolloServerHttpResponse {
   headers?: Record<string, string>;
+  status?: number;
   // ResponseInit contains the follow, which we do not use
-  // status?: number;
   // statusText?: string;
 }
 
@@ -301,6 +301,10 @@ export async function processHTTPRequest<TContext>(
               for (const [name, value] of response.http.headers) {
                 responseInit.headers![name] = value;
               }
+
+              if (response.http.status) {
+                responseInit.status = response.http.status;
+              }
             }
             return response;
           } catch (error) {
@@ -338,6 +342,10 @@ export async function processHTTPRequest<TContext>(
       if (response.http) {
         for (const [name, value] of response.http.headers) {
           responseInit.headers![name] = value;
+        }
+
+        if (response.http.status) {
+          responseInit.status = response.http.status;
         }
       }
 

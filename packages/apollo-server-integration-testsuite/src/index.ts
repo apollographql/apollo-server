@@ -1258,6 +1258,39 @@ export default ({
       });
     }
 
+    describe('status code', () => {
+      it('allows setting a custom status code', async () => {
+        const app = await createApp({
+          graphqlOptions: {
+            schema,
+            plugins: [
+              {
+                async requestDidStart() {
+                  return {
+                    async willSendResponse({ response: { http } }) {
+                      http!.status = 403;
+                    },
+                  };
+                },
+              },
+            ],
+          },
+        });
+
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: 'query test{ testString }',
+          });
+        return req.then(res => {
+          expect(res.status).toEqual(403);
+          expect(res.body.data).toEqual({
+            testString: 'it works',
+          });
+        });
+      });
+    });
+
     describe('Persisted Queries', () => {
       const query = '{testString}';
       const query2 = '{ testString }';
