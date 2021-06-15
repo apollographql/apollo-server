@@ -26,7 +26,7 @@
     "npm": "^6.14.11"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "0.5.0",
+    "@apollographql/apollo-tools": "0.5.1",
     "apollo-cache-control": "file:packages/apollo-cache-control",
     "apollo-datasource": "file:packages/apollo-datasource",
     "apollo-datasource-rest": "file:packages/apollo-datasource-rest",
