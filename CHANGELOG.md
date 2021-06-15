@@ -69,6 +69,7 @@ Certain undersupported and underused Apollo Server features have been removed in
 - Removed a redundant mechanism for applying extensions to an `ApolloError`.
   - Applied extensions are now available only on `error.extensions`, and are not _also_ available on `error` itself.
   - For details, see [#5294](https://github.com/apollographql/apollo-server/pull/5294).
+  - Relatedly, the `ForbiddenError` and `AuthenticationError` constructors now allow you to pass additional extensions.
 - Removed the `cacheControl` option passed to the `ApolloServer` constructor.
   - By default, Apollo Server continues to calculate an overall cache policy for each operation and sets the `Cache-Control` HTTP header. However, this is now implemented directly inside `apollo-server-core` instead of inside a separate `apollo-cache-control` package (this package has been deprecated and is no longer being published).
   - Setting cache control options like `defaultMaxAge` is now done via the newly exported `ApolloServerPluginCacheControl` plugin, instead of as a top-level constructor option. This follows the same pattern as other built-in plugins like usage reporting.
