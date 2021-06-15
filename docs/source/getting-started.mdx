@@ -1,5 +1,6 @@
 ---
 title: Get started with Apollo Server
+sidebar_title: Get started
 ---
 
 import {
@@ -182,38 +183,24 @@ We're up and running!
 ## Step 8: Execute your first query
 
 We can now execute GraphQL queries on our server. To execute our first query,
-we can use a tool called **GraphQL Playground**.
+we can use **Apollo Sandbox**.
 
-<ExpansionPanel title="📣 The Apollo Studio Explorer now supports local servers">
+With your server still running, visit [studio.apollographql.com/sandbox](https://studio.apollographql.com/sandbox) to open Sandbox:
 
-Apollo Studio now supports **dev graphs**, which are user-specific graphs that represent your local development server. Dev graphs enable you to query your locally running server with Studio's powerful Explorer.
+<img class="screenshot" src="./images/sandbox.jpg" alt="Apollo Sandbox"/>
 
-To try out dev graphs:
+The Sandbox UI includes:
 
-1. Make sure your server is running locally.
-2. Visit [studio.apollographql.com/dev](https://studio.apollographql.com/dev).
-3. Create a (free) Apollo account if you don't have one. Then specify a name, endpoint (e.g., `http://localhost:4000`), and organization for your dev graph.
-4. Try running operations on your local server using the [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/).
-
-</ExpansionPanel>
-
-With your server still running, visit `http://localhost:4000` in your browser to open GraphQL Playground. (Apollo Server hosts GraphQL Playground automatically when you run it in a non-production environment.)
-
-![GraphQL Playground](./images/getting-started/graphql-playground.png)
-
-The GraphQL Playground UI includes:
-
-* A text area (to the left) for writing queries
-* A Play button (the triangle button in the middle) for executing queries
-* A text area (to the right) for viewing query results
-* Views for schema inspection and generated documentation (via tabs on the right side)
+* An Operations panel (in the middle) for writing and executing queries
+* A Response panel (to the right) for viewing query results
+* Tabs for schema exploration, search, and settings (on the left)
 
 Our server supports a single query named `books`. Let's execute it!
 
 Here's a GraphQL **query string** for executing the `books` query:
 
 ```graphql
-{
+query GetBooks {
   books {
     title
     author
@@ -221,16 +208,13 @@ Here's a GraphQL **query string** for executing the `books` query:
 }
 ```
 
-Paste this string into the left text area and click the Play button. The
-results (from our hardcoded data set) appear on the right:
+Paste this string into the Operations panel and click the blue button in the upper right. The results (from our hardcoded data set) appear in the Response panel:
 
-![The response from our server shows title and author!](./images/getting-started/graphql-playground-response.png)
+<img class="screenshot" src="./images/sandbox-response.jpg" width="400" alt="Sandbox response panel"/>
 
-One of the most important concepts of GraphQL is that clients can choose to query
-_only for the fields they need_. Delete `author` from the query string and execute
-it again. The response updates to include only the `title` field for each book!
+> **Note:** If your server is deployed to an environment where `NODE_ENV` is set to `production`, introspection is **disabled** by default. This prevents Apollo Sandbox from working properly. To enable introspection, set `introspection: true` in [the options to `ApolloServer`'s constructor](./api/apollo-server/#constructor).
 
-> **Note:** If your server is deployed to an environment where `NODE_ENV` is set to `production`, GraphQL Playground and introspection are **disabled** by default. To enable them, set `playground: true` and `introspection: true` in [the options to `ApolloServer`'s constructor](./api/apollo-server/#constructor).
+One of the most important concepts of GraphQL is that clients can choose to query _only for the fields they need_. Delete `author` from the query string and execute it again. The response updates to include only the `title` field for each book!
 
 ## Combined example
 
