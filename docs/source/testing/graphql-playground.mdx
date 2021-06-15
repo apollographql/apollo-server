@@ -6,17 +6,25 @@ description: Visually explore Apollo Server
 import {
   ExpansionPanel,
 } from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
+import { Button } from '@apollo/space-kit/Button';
+import { Link } from 'gatsby';
+import { colors } from 'gatsby-theme-apollo-core';
 
 <ExpansionPanel title="📣 The Apollo Studio Explorer now supports local development">
 
-Apollo Studio now supports **dev graphs**, which are user-specific graphs that represent your local development server. Dev graphs enable you to query your locally running server with Studio's powerful Explorer.
+**Apollo Sandbox** is a special instance of the Apollo Studio Explorer that you can use for local development without an Apollo account.
 
-To try out dev graphs:
+<p>
+  <Button
+    size="large"
+    color={colors.primary}
+    as={<Link to="https://studio.apollographql.com/sandbox/" target="_blank" />}
+  >
+    Launch Sandbox
+  </Button>
+</p>
 
-1. Make sure your server is running locally.
-2. Visit [studio.apollographql.com/dev](https://studio.apollographql.com/dev).
-3. Create a (free) Apollo account if you don't have one. Then specify a name, endpoint (e.g., `http://localhost:4000`), and organization for your dev graph.
-4. Try running operations on your local server using the [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/).
+Sandbox automatically attempts to connect to a GraphQL server running at `http://localhost:4000`. You can use the box at the top of the page to change this URL to any local or remote GraphQL endpoint that's accessible by your browser.
 
 </ExpansionPanel>
 

@@ -232,12 +232,9 @@ An example server is available on [GitHub](https://github.com/apollographql/docs
   <img alt="Edit server-subscriptions" src="https://codesandbox.io/static/img/play-codesandbox.svg"></img>
 </a>
 
-
 The server exposes one subscription (`numberIncremented`) that returns an integer that's incremented on the server every second. The example requires only the `apollo-server` library.
 
-After you start up this server, you can test out running a subscription with the Apollo Studio Explorer or GraphQL Playground, as described in the [full-stack tutorial](https://www.apollographql.com/docs/tutorial/schema/#explore-your-schema). You'll see the subscription's value update every second.
-
-> In the Apollo Studio Explorer, you must specify your server's subscription endpoint (`ws://localhost:4000/subscriptions`) in the **Explorer Settings** tab.
+After you start up this server locally, you can visit `http://localhost:4000` to test out running the `numberIncremented` subscription in GraphQL Playground. You'll see the subscription's value update every second.
 
 ## Operation context
 
