@@ -9,8 +9,9 @@
    */
   "baseBranches": ["release-3.0"],
   "schedule": null,
+  // Disable circleci manager; see apollographql/federation's renovate file for details.
+  "enabledManagers": ["npm"],
   "dependencyDashboard": true,
-  "automerge": false,
   "packageRules": [
     {
       "matchPackageNames": ["@types/node"],
