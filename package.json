@@ -60,7 +60,7 @@
     "@graphql-tools/mock": "8.1.2",
     "@graphql-tools/schema": "7.1.5",
     "@graphql-tools/utils": "7.9.0",
-    "@hapi/hapi": "20.1.2",
+    "@hapi/hapi": "20.1.4",
     "@josephg/resolvable": "1.0.1",
     "@sinonjs/fake-timers": "7.0.5",
     "@types/async-retry": "1.4.2",
