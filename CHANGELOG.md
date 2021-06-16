@@ -97,7 +97,7 @@ Certain undersupported and underused Apollo Server features have been removed in
   - The previous name is still exported for backward compatibility purposes.
 - Added support for serving a custom landing page at Apollo Server's base URL.
   - Plugins can define a new `renderLandingPage` hook that returns an HTML page to serve to browsers.
-  - New plugins (`ApolloServerPluginLandingPageProductionDefault` and `ApolloServerPluginLandingPageLocalDefault`) are installed by default (the former when `NODE_ENV` is `production`, the latter otherwise) with instructions on how to communicate with the server, links to Apollo Studio Sandbox, etc.
+  - New plugins (`ApolloServerPluginLandingPageProductionDefault` and `ApolloServerPluginLandingPageLocalDefault`) are installed by default (the former when `NODE_ENV` is `production`, the latter otherwise) with instructions on how to communicate with the server, links to Apollo Sandbox, etc.
   - A new `ApolloServerPluginLandingPageGraphQLPlayground` plugin can be installed instead to continue to use GraphQL Playground instead. The `playground` option provided to the `ApolloServer` constructor has been removed; to customize GraphQL Playground you can provide an argument to the new playground plugin. By default, no GraphQL Playground settings are overridden, including the endpoint, which now defaults to `window.location.href` (with most query parameters removed). This means you typically don't have to manually configure the endpoint when using GraphQL Playground.
   - To disable all landing pages, install the new `ApolloServerPluginLandingPageDisabled` plugin.
   - Apollo Server packages no longer export `defaultPlaygroundOptions`, `PlaygroundConfig`, or `PlaygroundRenderPageOptions`.
