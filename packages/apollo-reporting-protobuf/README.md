@@ -19,12 +19,21 @@ Apollo.
 > We'd happily accept a PR which makes the appropriate changes!
 
 Currently, this package generates a majority of its code with
-[`protobufjs`](https://www.npmjs.com/package/protobufjs) based on the
-`reports.proto` file. The output is generated with the `prepare` npm script.
+`@apollo/protobufjs` (a fork of
+[`protobufjs`](https://www.npmjs.com/package/protobufjs) that we maintain
+specifically for this package) based on the `reports.proto` file. The output is
+generated with the `generate` npm script.
 
-The root of the repository provides the `devDependencies` necessary to build
-these definitions (e.g. `pbjs`, `pbts`, `protobuf`, etc.) and the `prepare`
-npm script is invoked programmatically via the monorepo tooling (e.g. Lerna)
-thanks to _this_ module's `postinstall` script.   Therefore, when making
-changes to this module, `npx lerna run prepare` should be run from the **root**
-of this monorepo in order to update the definitions in _this_ module.
+The root of the repository provides some `devDependencies` necessary to build
+these definitions qand the `prepare` npm script is invoked programmatically via
+the monorepo tooling (e.g. Lerna) thanks to _this_ module's `postinstall`
+script.  Therefore, when making changes to this module, run scripts via `npx
+lerna run SCRIPTNAME` in the **root** of this monorepo in order to update the
+definitions in _this_ module.
+
+To update `reports.proto` to the current version recognized by the Studio usage
+reporting ingress, run `lerna run update-proto`. To then regenerate the JS and
+TS files, run `npx lerna run generate`. We check in the generated code and only
+regenerate it manually, partially to make builds faster (no need to run pbjs on
+every `npm install`) and partially so that we don't have to make sure that
+`pbjs` runs on every Node version that we support.
