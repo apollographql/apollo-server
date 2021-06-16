@@ -102,7 +102,7 @@
     "express": "4.17.1",
     "fastify": "3.17.0",
     "form-data": "4.0.0",
-    "graphql": "15.3.0",
+    "graphql": "15.5.0",
     "graphql-tag": "2.12.4",
     "ioredis": "4.27.6",
     "jest": "27.0.4",

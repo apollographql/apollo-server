@@ -412,7 +412,7 @@ describe('runQuery', () => {
         const invocation = requestDidStart.mock.calls[0][0];
         expect(invocation).toHaveProperty('schema', schema);
         expect(invocation).toHaveProperty( /* Shorter as a RegExp */
-          'schemaHash', expect.stringMatching(/^d11e490553/));
+          'schemaHash', expect.stringMatching(/^1a1814b60b/));
       });
     });
 
