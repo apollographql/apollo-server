@@ -44,6 +44,7 @@ import {
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloError,
+  ApolloServerPluginLandingPageLocalDefault,
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
@@ -1786,7 +1787,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       it('returns correct result for persisted query link', (done) => {
         const variables = { id: 1 };
-        const link = createPersistedQueryLink({sha256}).concat(
+        const link = createPersistedQueryLink({ sha256 }).concat(
           createHttpLink({ uri, fetch } as any),
         );
 
@@ -2845,7 +2846,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               },
             })),
           ],
-          // dev mode, so we get the playground defaults
+          // dev mode, so we get the local landing page
           __testing_nodeEnv__: undefined,
         };
       }
@@ -2855,13 +2856,31 @@ export function testApolloServer<AS extends ApolloServerBase>(
       // something nicer than an ugly 400.
       const serveNoLandingPage = 400;
 
-      it('defaults to playground', async () => {
+      it('defaults to LocalDefault', async () => {
         httpServer = (await createApolloServer(makeServerConfig([])))
           .httpServer;
-        await get('/graphql').expect(200, /Playground/);
+        await get('/graphql').expect(
+          200,
+          /apollo-server-landing-page.cdn.apollographql.com\/_latest.*isProd[^t]+false/s,
+        );
       });
 
-      it('selecting playground overrides the default', async () => {
+      it('can specify version for LocalDefault', async () => {
+        httpServer = (
+          await createApolloServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [
+              ApolloServerPluginLandingPageLocalDefault({ version: 'abcdef' }),
+            ],
+          })
+        ).httpServer;
+        await get('/graphql').expect(
+          200,
+          /apollo-server-landing-page.cdn.apollographql.com\/abcdef.*isProd[^t]+false/s,
+        );
+      });
+
+      it('can install playground with specific version', async () => {
         httpServer = (
           await createApolloServer({
             typeDefs: 'type Query {x: ID}',

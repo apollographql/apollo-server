@@ -186,7 +186,7 @@ describe('apollo-server', () => {
       expect(result.errors).toBeUndefined();
     });
 
-    it('renders GraphQL playground when browser requests', async () => {
+    it('renders landing page when browser requests', async () => {
       server = new ApolloServer({
         typeDefs,
         resolvers,
@@ -201,7 +201,7 @@ describe('apollo-server', () => {
           'accept',
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         )
-        .expect(200, /GraphQLPlayground/);
+        .expect(200, /apollo-server-landing-page.cdn.apollographql.com\/_latest/);
     });
 
     it('configures cors', async () => {

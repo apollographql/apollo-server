@@ -52,7 +52,8 @@ import {
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
   ApolloServerPluginCacheControl,
-  ApolloServerPluginLandingPageGraphQLPlayground,
+  ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault,
 } from './plugin';
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import { newCachePolicy } from './cachePolicy';
@@ -433,10 +434,10 @@ export class ApolloServerBase {
 
       // Find the renderLandingPage callback, if one is provided. If the user
       // installed ApolloServerPluginLandingPageDisabled then there may be none
-      // found. On the other hand, if the user installed a landingPage plugin, then
-      // both the implicit installation of
-      // ApolloServerPluginLandingPageGraphQLPlayground and the other plugin will
-      // be found; we skip the implicit plugin.
+      // found. On the other hand, if the user installed a landingPage plugin,
+      // then both the implicit installation of
+      // ApolloServerPluginLandingPage*Default and the other plugin will be
+      // found; we skip the implicit plugin.
       let taggedServerListenersWithRenderLandingPage =
         taggedServerListeners.filter((l) => l.serverListener.renderLandingPage);
       if (taggedServerListenersWithRenderLandingPage.length > 1) {
@@ -776,11 +777,7 @@ export class ApolloServerBase {
       }
     }
 
-    // Special case: If we're not in production, show GraphQL Playground as a
-    // default landing page. (Note: as part of minimizing Apollo Server's
-    // dependencies on external software and specifically on a package that is
-    // less actively maintained, we may change this default before AS 3.0.0 is
-    // released.)
+    // Special case: If we're not in production, show our default landing page.
     //
     // This works a bit differently from the other implicitly installed plugins,
     // which rely entirely on the __internal_plugin_id__ to decide whether the
@@ -793,18 +790,20 @@ export class ApolloServerBase {
     // other plugin defines a renderLandingPage callback. (We can't just look
     // now to see if the plugin defines renderLandingPage because we haven't run
     // serverWillStart yet.)
-    if (isDev) {
-      const alreadyHavePlugin = alreadyHavePluginWithInternalId(
-        'LandingPageDisabled',
-      );
-      if (!alreadyHavePlugin) {
-        const plugin = ApolloServerPluginLandingPageGraphQLPlayground();
-        if (!isImplicitlyInstallablePlugin(plugin)) {
-          throw Error('playground plugin should be implicitly installable?');
-        }
-        plugin.__internal_installed_implicitly__ = true;
-        this.plugins.push(plugin);
+    const alreadyHavePlugin = alreadyHavePluginWithInternalId(
+      'LandingPageDisabled',
+    );
+    if (!alreadyHavePlugin) {
+      const plugin = isDev
+        ? ApolloServerPluginLandingPageLocalDefault()
+        : ApolloServerPluginLandingPageProductionDefault();
+      if (!isImplicitlyInstallablePlugin(plugin)) {
+        throw Error(
+          'default landing page plugin should be implicitly installable?',
+        );
       }
+      plugin.__internal_installed_implicitly__ = true;
+      this.plugins.push(plugin);
     }
   }
 

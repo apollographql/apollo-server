@@ -91,6 +91,30 @@ export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin {
   return plugin;
 }
 
+import type {
+  ApolloServerPluginLandingPageLocalDefaultOptions,
+  ApolloServerPluginLandingPageProductionDefaultOptions,
+} from './landingPage/default';
+export type {
+  ApolloServerPluginLandingPageDefaultBaseOptions,
+  ApolloServerPluginLandingPageLocalDefaultOptions,
+  ApolloServerPluginLandingPageProductionDefaultOptions,
+} from './landingPage/default';
+export function ApolloServerPluginLandingPageLocalDefault(
+  options?: ApolloServerPluginLandingPageLocalDefaultOptions,
+): ApolloServerPlugin {
+  return require('./landingPage/default').ApolloServerPluginLandingPageLocalDefault(
+    options,
+  );
+}
+export function ApolloServerPluginLandingPageProductionDefault(
+  options?: ApolloServerPluginLandingPageProductionDefaultOptions,
+): ApolloServerPlugin {
+  return require('./landingPage/default').ApolloServerPluginLandingPageProductionDefault(
+    options,
+  );
+}
+
 import type { ApolloServerPluginLandingPageGraphQLPlaygroundOptions } from './landingPage/graphqlPlayground';
 export type { ApolloServerPluginLandingPageGraphQLPlaygroundOptions } from './landingPage/graphqlPlayground';
 export function ApolloServerPluginLandingPageGraphQLPlayground(

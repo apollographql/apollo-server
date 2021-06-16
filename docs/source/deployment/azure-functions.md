@@ -223,7 +223,7 @@ az group delete \
 
 It is also possible to publish your project from VS Code using the Azure Functions Extension, we recommend referring to [Microsoft's documentation on publishing to Azure from VS Code](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-vs-code#publish-the-project-to-azure).
 
-Once deployment is complete, view the output in VS Code and you should be able to see the url of your GraphQL endpoint. It will look something like **https://our-graphql-project.azurewebsites.net/api/graphql**. Navigate to the url and you should find GraphQL Playground.
+Once deployment is complete, view the output in VS Code and you should be able to see the url of your GraphQL endpoint. It will look something like **https://our-graphql-project.azurewebsites.net/api/graphql**. Navigate to the url and you should find your server's landing page.
 
 Need more details? See the [Docs](https://www.npmjs.com/package/apollo-server-azure-functions)
  at the NPM repository.

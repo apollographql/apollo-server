@@ -155,7 +155,7 @@ describe('integration:AzureFunctions', () => {
     handler(context as any, request as any);
   });
 
-  it('can return playground html', (done) => {
+  it('can return landing page', (done) => {
     const server = new ApolloServer({ schema: Schema });
     const handler = server.createHandler({});
     const request = {
@@ -175,7 +175,7 @@ describe('integration:AzureFunctions', () => {
         }
         try {
           expect(result.status).toEqual(200);
-          expect(result.body).toMatch(/GraphQL Playground/gi);
+          expect(result.body).toMatch(/apollo-server-landing-page.cdn.apollographql.com\/_latest/);
           expect(result.headers['Content-Type']).toEqual('text/html');
           done();
         } catch (e) {

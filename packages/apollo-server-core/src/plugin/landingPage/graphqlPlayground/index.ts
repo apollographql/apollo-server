@@ -5,8 +5,7 @@
 // specifying `version` when installing the plugin.
 
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
-import { GraphQLServerListener } from 'apollo-server-plugin-base';
-import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
+import { ApolloServerPlugin, GraphQLServerListener } from 'apollo-server-plugin-base';
 
 // This specifies the React version of our fork of GraphQL Playground,
 // `@apollographql/graphql-playground-react`.  It is related to, but not to
@@ -26,9 +25,8 @@ export type ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Parameters<
 
 export function ApolloServerPluginLandingPageGraphQLPlayground(
   options: ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Object.create(null),
-): ImplicitlyInstallablePlugin {
+): ApolloServerPlugin {
   return {
-    __internal_installed_implicitly__: false,
     async serverWillStart(): Promise<GraphQLServerListener> {
       return {
         async renderLandingPage() {

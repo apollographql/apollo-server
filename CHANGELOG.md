@@ -96,10 +96,11 @@ Certain undersupported and underused Apollo Server features have been removed in
   - This interface is the type used to provide a federated gateway instance to Apollo Server. Its name has been changed to reduce ambiguity.
   - The previous name is still exported for backward compatibility purposes.
 - Added support for serving a custom landing page at Apollo Server's base URL.
-  - Servers in dev mode still default to serving GraphQL Playground (this might change before release), but plugins can define a new `renderLandingPage` hook that returns an HTML page to serve to browsers.
-  - Removed the `playground` option provided to the `ApolloServer` constructor. You can customize GraphQL Playground or enable it in a production environment by installing the new `ApolloServerPluginLandingPageGraphQLPlayground` plugin.
-  - To disable GraphQL Playground, either install the new `ApolloServerPluginLandingPageDisabled` plugin or install any other plugin that implements `renderLandingPage`.
-  - Apollo Server packages no longer export `defaultPlaygroundOptions`, `PlaygroundConfig`, or `PlaygroundRenderPageOptions`. By default, no GraphQL Playground settings are overridden, including the endpoint, which now defaults to `window.location.href` (with most query parameters removed). This means you typically don't have to manually configure the endpoint.
+  - Plugins can define a new `renderLandingPage` hook that returns an HTML page to serve to browsers.
+  - New plugins (`ApolloServerPluginLandingPageProductionDefault` and `ApolloServerPluginLandingPageLocalDefault`) are installed by default (the former when `NODE_ENV` is `production`, the latter otherwise) with instructions on how to communicate with the server, links to Apollo Studio Sandbox, etc.
+  - A new `ApolloServerPluginLandingPageGraphQLPlayground` plugin can be installed instead to continue to use GraphQL Playground instead. The `playground` option provided to the `ApolloServer` constructor has been removed; to customize GraphQL Playground you can provide an argument to the new playground plugin. By default, no GraphQL Playground settings are overridden, including the endpoint, which now defaults to `window.location.href` (with most query parameters removed). This means you typically don't have to manually configure the endpoint when using GraphQL Playground.
+  - To disable all landing pages, install the new `ApolloServerPluginLandingPageDisabled` plugin.
+  - Apollo Server packages no longer export `defaultPlaygroundOptions`, `PlaygroundConfig`, or `PlaygroundRenderPageOptions`.
 - Bad request errors (invalid JSON, missing body, etc) are more consistent across integrations and consistently return 4xx status codes instead of sometimes returning 5xx status codes.
 - Setting `requestContext.response.http.status` now affects successful GraphQL responses, not just errors.
 
