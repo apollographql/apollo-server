@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-express",
-  "version": "3.0.0-preview.0",
+  "version": "3.0.0-preview.1",
   "description": "Production-ready Node.js GraphQL server for Express",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -42,7 +42,7 @@
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   },
   "peerDependencies": {
-    "graphql": "^15.3.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "graphql": "^15.3.0"
   }
 }
