@@ -115,7 +115,7 @@
     "log4js": "6.3.0",
     "memcached-mock": "0.1.0",
     "mock-req": "0.2.0",
-    "nock": "13.0.3",
+    "nock": "13.1.0",
     "node-fetch": "2.6.1",
     "prettier": "2.3.1",
     "qs-middleware": "1.0.3",
