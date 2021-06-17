@@ -121,7 +121,7 @@ const server = new ApolloServer({
 In this example, we create a custom scalar called `Odd` that can only contain odd integers:
 
 ```js{19-30}
-const { ApolloServer, gql } = require('apollo-server');
+const { ApolloServer, gql, UserInputError } = require('apollo-server');
 const { GraphQLScalarType, Kind } = require('graphql');
 
 // Basic schema
@@ -135,7 +135,10 @@ const typeDefs = gql`
 
 // Validation function
 function oddValue(value) {
-  return value % 2 === 1 ? value : null;
+  if (typeof value === "number" && value % 2 === 1) {
+    return value;
+  }
+  throw new UserInputError("provided value is not an odd number");
 }
 
 const resolvers = {
