@@ -50,7 +50,7 @@ async function startApolloServer() {
     httpServer = http.createServer(app);
   }
 
-  await new Promise(resolve => server.listen({ port: config.port }, resolve));
+  await new Promise(resolve => httpServer.listen({ port: config.port }, resolve));
   console.log(
     '🚀 Server ready at',
     `http${config.ssl ? 's' : ''}://${config.hostname}:${config.port}${server.graphqlPath}`
