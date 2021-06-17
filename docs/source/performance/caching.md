@@ -56,7 +56,7 @@ The `@cacheControl` directive accepts the following arguments:
 |------|-------------|
 | `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-the-default-maxage). |
 | `scope` | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses). |
-| `inheritMaxAge` | If `true`, inherits the `maxAge` from its parent field. This means that non-root fields returning objects, interfaces, or unions that do not specify `maxAge` in some other way does not have the [default `maxAge`](#setting-the-default-maxage) applied. Do not combine this with `maxAge` in the same directive. |
+| `inheritMaxAge` | If `true`, inherits the `maxAge` from its parent field. This means that non-root fields returning objects, interfaces, or unions that do not specify `maxAge` in some other way will not have the [default `maxAge`](#setting-the-default-maxage) applied. Do not combine this with `maxAge` in the same directive. |
 
 Use `@cacheControl` for fields that should always be cached with the same settings. If caching settings might change at runtime, instead use the [dynamic method](#in-your-resolvers-dynamic).
 
@@ -218,7 +218,7 @@ Alternatively, you can set the `useGETForQueries` option of [HttpLink](https://w
 
 ### Disabling `Cache-Control`
 
-You can prevent Apollo Server from setting `Cache-Control` headers by setting up the `ApolloServerPluginCacheControl` yourself and setting `calculateHttpHeaders` to `false`:
+You can prevent Apollo Server from setting `Cache-Control` headers by installing the `ApolloServerPluginCacheControl` plugin yourself and setting `calculateHttpHeaders` to `false`:
 
 ```js
 import { ApolloServerPluginCacheControl } from 'apollo-server-core';
