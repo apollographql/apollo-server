@@ -879,6 +879,16 @@ export class ApolloServerBase {
     },
     integrationContextArgument?: Record<string, any>,
   ) {
+    // Since this function is mostly for testing, you don't need to explicitly
+    // start your server before calling it. (That also means you can use it with
+    // `apollo-server` which doesn't support `start()`.)
+    if (
+      this.state.phase === 'initialized with gateway' ||
+      this.state.phase === 'initialized with schema'
+    ) {
+      await this._start();
+    }
+
     const options = await this.graphQLServerOptions(integrationContextArgument);
 
     if (typeof options.context === 'function') {

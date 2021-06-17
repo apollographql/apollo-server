@@ -186,6 +186,18 @@ describe('apollo-server', () => {
       expect(result.errors).toBeUndefined();
     });
 
+    it('can use executeOperation', async () => {
+      server = new ApolloServer({
+        typeDefs,
+        resolvers,
+      });
+      const result = await server.executeOperation({
+        query: '{hello}',
+      });
+      expect(result.errors).toBeUndefined();
+      expect(result.data).toEqual({ hello: 'hi' });
+    });
+
     it('renders landing page when browser requests', async () => {
       server = new ApolloServer({
         typeDefs,
