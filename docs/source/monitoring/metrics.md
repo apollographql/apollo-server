@@ -15,13 +15,16 @@ Apollo Server integrates seamlessly with Apollo Studio to help you monitor the e
 
 To connect Apollo Server to Apollo Studio, first [obtain a graph API key](https://www.apollographql.com/docs/studio/setup-analytics/#pushing-traces-from-apollo-server). To provide this key to Apollo Server, assign it to the `APOLLO_KEY` environment variable in your server's environment.
 
-Then associate your server instance with a particular graph ID and [graph variant](https://www.apollographql.com/docs/studio/schema/registry/#managing-environments-with-variants) by  setting the `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT` environment variables.
+Then associate your server instance with a particular graph ID and [graph variant](https://www.apollographql.com/docs/studio/schema/registry/#managing-environments-with-variants) by  setting the `APOLLO_GRAPH_REF` environment variable.
 
 You can set environment variable values on the command line as seen below, or with the [`dotenv` npm package](https://www.npmjs.com/package/dotenv) (or similar).
 
 ```bash
 # Replace the example values below with values specific to your use case.
-APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_ID=mygraph APOLLO_GRAPH_VARIANT=development node start-server.js
+# This example associates your server with the `development` variant of
+# the `mygraph` graph.
+$ APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_REF=mygraph@development \
+  node start-server.js
 ```
 
 ### Identifying distinct clients
