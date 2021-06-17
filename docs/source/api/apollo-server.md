@@ -144,8 +144,6 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 An executable GraphQL schema. You usually don't need to provide this value, because Apollo Server generates it from [`typeDefs`](#typedefs) and [`resolvers`](#resolvers).
 
 This field is most commonly used with [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses a special `buildFederatedSchema` function to generate its schema.
-
-Note that if you are using [file uploads](../data/file-uploads/), you need to add the `Upload` scalar to your schema manually before providing it here, as Apollo Server's automatic uploads integration does not apply if you use this particular option..
 </td>
 </tr>
 
@@ -160,26 +158,7 @@ Note that if you are using [file uploads](../data/file-uploads/), you need to ad
 
 <td>
 
-If you're using [automated persisted queries (APQ)](../performance/apq/), you can provide an object with a `cache` field as the value of this option to customize where Apollo Server stores the mapping between operation hashes and query strings.
-
-Provide `false` to disable APQ entirely.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `subscriptions`
-
-`Object` or `String` or `false`
-</td>
-
-<td>
-
-Provide a `String` to specify the server's subscription-specific endpoint, or an `Object` to further [configure subscription behavior](#subscription-configuration-fields).
-
-Provide `false` to disable subscription operations entirely.
+If you're using [automated persisted queries (APQ)](../performance/apq/), you can provide an object with `cache` and/or `ttl` fields to customize how Apollo Server stores the mapping between operation hashes and query strings, or provide `false` to disable APQ entirely.
 </td>
 </tr>
 
@@ -213,20 +192,6 @@ An object containing custom functions to use as additional [validation rules](ht
 </td>
 </tr>
 
-<tr>
-<td>
-
-###### `uploads`
-
-`Object` or `Boolean`
-</td>
-<td>
-
-By default, Apollo Server 2 [integrates](../data/file-uploads/) an outdated version of [the `graphql-upload` npm module](https://www.npmjs.com/package/graphql-upload#graphql-upload) into your schema which does not support Node 14. If you provide an object here, it will be passed as the third `options` argument to that module's `processRequest` option.
-
-We recommend instead that you pass `false` here, which will disable Apollo Server's integration with `graphql-upload`, and instead integrate the latest version of that module directly. This integration will be removed in Apollo Server 3.
-</td>
-</tr>
 
 <tr>
 <td colspan="2">
@@ -249,6 +214,9 @@ An `Object` containing [configuration options](https://github.com/expressjs/cors
 This option is used only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package, instead see [`applyMiddleware`](#applymiddleware).
 </td>
 </tr>
+
+<tr>
+<td>
 
 ###### `formatError`
 
@@ -370,9 +338,9 @@ The default value is `10_000` (10 seconds).
 
 <td>
 
-If `true`, enables development mode helpers and logs messages of all severity levels (`debug` through `error`). If `false`, only `warn`- and `error`-level messages are logged.
+If `true`, stack traces are included in GraphQL responses when errors occur, and some extra information is logged via the `logger` at the `debug` level.
 
-Defaults to `true`.
+Defaults to `true` unless the `NODE_ENV` environment variable is `production` or `test`.
 </td>
 </tr>
 
@@ -462,7 +430,7 @@ The `context` object passed between Apollo Server resolvers automatically includ
 
 | Middleware | Context fields |
 |---|---|
-| AWS Lambda | <code>{<br/>&nbsp;&nbsp;event: [`APIGatewayProxyEvent`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L78-L92),<br/>&nbsp;&nbsp;context: [`LambdaContext`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L510-L534)<br/>}</code> |
+| AWS Lambda | <code>{<br/>&nbsp;&nbsp;event: [`APIGatewayProxyEvent`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L78-L92),<br/>&nbsp;&nbsp;context: [`LambdaContext`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L510-L534),<br/>&nbsp;&nbsp;express: {<br/>&nbsp;&nbsp;&nbsp;&nbsp;req: [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts),<br/>&nbsp;&nbsp;&nbsp;&nbsp;res: [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861)<br/>&nbsp;&nbsp;}<br/>}</code> |
 | Azure Functions  | <code>{<br/>&nbsp;&nbsp;request: [`HttpRequest`](https://github.com/Azure/azure-functions-nodejs-worker/blob/ba8402bd3e86344e68cb06f65f9740b5d05a9700/types/public/Interfaces.d.ts#L73-L108),<br/>&nbsp;&nbsp;context: [`Context`](https://github.com/Azure/azure-functions-nodejs-worker/blob/ba8402bd3e86344e68cb06f65f9740b5d05a9700/types/public/Interfaces.d.ts#L18-L69)<br/>}</code> |
 | Cloudflare  | <code>{ req: [`Request`](https://github.com/apollographql/apollo-server/blob/04fe6aa1314ca84de26b4dc26e9b29dda16b81bc/packages/apollo-server-env/src/fetch.d.ts#L37-L45) }</code> |
 | Express | <code>{<br/>&nbsp;&nbsp;req: [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts),<br/>&nbsp;&nbsp;res: [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861)<br/>}</code> |
@@ -472,83 +440,6 @@ The `context` object passed between Apollo Server resolvers automatically includ
 | Koa | <code>{ ctx: [`Koa.Context`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/koa/index.d.ts#L724-L731) }</code> |
 | Micro | <code>{ req: [`MicroRequest`](https://github.com/apollographql/apollo-server/blob/c356bcf3f2864b8d2fcca0add455071e0606ef46/packages/apollo-server-micro/src/types.ts#L3-L5), res: [`ServerResponse`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/node/v10/http.d.ts#L145-L158) }</code> |
 
-##### Subscription configuration fields
-
-Apollo Server supports the following fields of an object you provide to the [`subscriptions`](#subscriptions) option of the `ApolloServer` constructor:
-
-<table class="field-table">
-  <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-
-<tbody>
-
-<tr class="required">
-<td>
-
-###### `path`
-
-`String`
-</td>
-<td>
-
-**Required.** The URL for the server's subscription-specific endpoint.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `keepAlive`
-
-`Number`
-</td>
-<td>
-
-The frequency with which the subscription endpoint should send keep-alive messages to open client connections, in milliseconds, if any.
-
-If this value isn't provided, the subscription endpoint doesn't send keep-alive messages.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `onConnect`
-
-`Function`
-</td>
-
-<td>
-
-A lifecycle hook that's called whenever a subscription connection is initiated by a client. [See an example](../data/subscriptions/#example-authentication-with-onconnect)
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `onDisconnect`
-
-`Function`
-</td>
-
-<td>
-
-A lifecycle hook that's called whenever a subscription connection is terminated by a client.
-</td>
-</tr>
-
-
-</tbody>
-</table>
-
 #### `listen`
 
 > This method is provided only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package (such as `apollo-server-express`), instead see both [`start`](#start) and [`applyMiddleware`](#applymiddleware).
@@ -556,7 +447,7 @@ A lifecycle hook that's called whenever a subscription connection is terminated 
 Instructs Apollo Server to begin listening for incoming requests:
 
 ```js
-server.listen({
+await server.listen({
   port: 4001,
 });
 ```
@@ -601,33 +492,6 @@ The server instance that's listening at `url`.
 </td>
 </tr>
 
-
-<tr>
-<td>
-
-###### `subscriptionsPath`
-
-`String`
-</td>
-<td>
-
-The path of the server's subscriptions endpoint.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `subscriptionsUrl`
-
-`String`
-</td>
-<td>
-
-The full URL of the server's subscriptions endpoint.
-</td>
-</tr>
 </tbody>
 </table>
 
