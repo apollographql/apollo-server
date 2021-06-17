@@ -17,6 +17,12 @@
       "matchPackageNames": ["@types/node"],
       "allowedVersions": "12.x"
     },
+    // make-fetch-happen is used by the op reg plugin, which uses a cache API
+    // that is removed in v9.
+    {
+      "matchPackageNames": ["make-fetch-happen"],
+      "allowedVersions": "8.x"
+    },
     /*
       Docs-related Renovate rules
 
@@ -39,6 +45,15 @@
         "main",
         "release-3.0"
       ]
+    },
+    // The current Apollo Gatsby theme does not support a version of Gatsby
+    // that supports React 17.
+    {
+      "matchPaths": [
+        "docs/package.json"
+      ],
+      "matchPackageNames": ["react", "react-dom"],
+      "allowedVersions": "16.x",
     }
   ]
 }
