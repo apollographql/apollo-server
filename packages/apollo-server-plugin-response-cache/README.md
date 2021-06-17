@@ -10,3 +10,4 @@ This Apollo server plugin implements a full GraphQL query response cache.
 This cache is a full query cache: cached responses are only used for identical requests.
 
 
+See [the docs](https://www.apollographql.com/docs/apollo-server/performance/caching/) for details.
