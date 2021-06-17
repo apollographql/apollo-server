@@ -124,7 +124,7 @@ For more details, see [Adding data sources to Apollo Server](../data/data-source
 
 <td>
 
-If `true`, enables [schema introspection](https://graphql.org/learn/introspection/) by clients.
+If `true`, enables [schema introspection](https://graphql.org/learn/introspection/) by clients. This is required to use tools that figure out your server's schema from talking to it directly, like Apollo Sandbox and GraphQL Playground. (It's not needed for the non-Sandbox version of Apollo Studio Explorer, which uses the schema published in the Studio schema registry instead.)
 
 The default value is `true`, **unless** the `NODE_ENV` environment variable is set to `production`.
 </td>
