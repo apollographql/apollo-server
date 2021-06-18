@@ -35,7 +35,6 @@ it('fetches single launch', async () => {
     dataSources: () => ({ userAPI, launchAPI }),
     context: () => ({ user: { id: 1, email: 'a@a.a' } }),
   });
-  await server.start();
 
   // mock the dataSource's underlying fetch methods
   launchAPI.get = jest.fn(() => [mockLaunchResponse]);
@@ -59,6 +58,8 @@ You can use `executeOperation` to execute queries and mutations. Because the int
 In addition to `query`, the first argument to `executeOperation` can take `operationName`, `variables`, `extensions`, and `http` keys.
 
 Note that errors in parsing, validating, and executing your operation are returned in the `errors` field of the result (just like in a GraphQL response) rather than thrown.
+
+You don't have to call [`start`](../../api/apollo-server/#start) before calling `executeOperation`; it will be called automatically for you if it has not been called, and any startup errors will be thrown.
 
 
 ## End-to-end testing

@@ -642,6 +642,8 @@ The async `start` method instructs Apollo Server to prepare to handle incoming o
 
 Always call `await server.start()` *before* calling `server.applyMiddleware` and starting your HTTP server. This allows you to react to Apollo Server startup failures by crashing your process instead of starting to serve traffic.
 
+If the only thing you are doing with your server is calling [`executeOperation`](../../testing/testing/) on it (ie, you're not actually starting an HTTP server), you don't have to call `start()`; `executeOperation` will do that for you.
+
 This method was optional in Apollo Server 2 but is required in Apollo Server 3.
 
 ##### Triggered actions
