@@ -65,7 +65,7 @@ new ApolloServer({
 
 ## Disabling Playground in development
 
-If you don't want to run GraphQL Playground at all, you have two choices. First, you can replace it with a different landing page by installing a plugin that implements the [`renderLandingPage` hook](../integrations/plugins/#renderlandingpage). Alternatively, you can install the `ApolloServerPluginLandingPageDisabled` plugin which stops Apollo Server from serving any HTML landing page.
+If you don't want to run GraphQL Playground at all, you have two choices. First, you can replace it with a different landing page by installing a plugin that implements the [`renderLandingPage` hook](../integrations/plugins-event-reference/#renderlandingpage). Alternatively, you can install the `ApolloServerPluginLandingPageDisabled` plugin, which stops Apollo Server from serving any HTML landing page.
 
 ```js
 const { ApolloServer } = require('apollo-server');

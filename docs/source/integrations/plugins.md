@@ -48,7 +48,7 @@ module.exports = (options) => {
 ## Responding to events
 
 A plugin specifies exactly which events it responds to by implementing functions that correspond to those events. The plugin in the examples above responds to the `serverWillStart` event, which fires when Apollo Server is preparing to start up. Almost all plugin events are `async` functions (i.e., functions that return `Promise`s). The only exception
-is [`willResolveField`](#willresolvefield).
+is [`willResolveField`](./plugins-event-reference/#willresolvefield).
 
 A plugin can respond to any combination of [supported events](./plugins-event-reference/).
 
@@ -138,11 +138,11 @@ graph TB;
 Event handlers for the following events can optionally return a function
 that is invoked after the corresponding lifecycle phase _ends_:
 
-* [`parsingDidStart`](#parsingdidstart)
-* [`validationDidStart`](#validationdidstart)
-* [`willResolveField`](#willresolvefield)
+* [`parsingDidStart`](./plugins-event-reference/#parsingdidstart)
+* [`validationDidStart`](./plugins-event-reference/#validationdidstart)
+* [`willResolveField`](./plugins-event-reference/#willresolvefield)
 
-([`executionDidStart`](#executiondidstart) returns an _object_ containing an `executionDidEnd` function instead of just a function as an end handler; that's because the returned object can also contain `willResolveField`.)
+([`executionDidStart`](./plugins-event-reference/#executiondidstart) returns an _object_ containing an `executionDidEnd` function instead of just a function as an end handler; that's because the returned object can also contain `willResolveField`.)
 
 Just like the event handers themselves, these end hooks are async functions (except for the end hook for `willResolveField`).
 
