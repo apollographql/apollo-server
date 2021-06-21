@@ -24,8 +24,12 @@ module.exports = {
           null: [
             'index',
             'getting-started',
-            '[Changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)',
+            'integrations/middleware',
             '[Apollo Federation](https://www.apollographql.com/docs/federation/)',
+          ],
+          'New in v3': [
+            'migration',
+            '[Changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)',
           ],
           'Defining a Schema': [
             'schema/schema',
@@ -47,10 +51,10 @@ module.exports = {
             'testing/graphql-playground'
           ],
           Performance: ['performance/caching', 'performance/apq'],
-          Security: ['security/authentication', 'security/terminating-ssl'],
-          Integrations: [
-            'integrations/middleware',
-            'integrations/plugins',
+          Security: [
+            'security/authentication',
+            'security/terminating-ssl',
+            'proxy-configuration',
           ],
           Deployment: [
             'deployment/heroku',
@@ -62,17 +66,18 @@ module.exports = {
           Monitoring: ['monitoring/metrics', 'monitoring/health-checks'],
           'API Reference': [
             'api/apollo-server',
-            'api/plugin/usage-reporting',
-            'api/plugin/schema-reporting',
-            'api/plugin/inline-trace',
             '[@apollo/federation](https://www.apollographql.com/docs/federation/api/apollo-federation/)',
             '[@apollo/gateway](https://www.apollographql.com/docs/federation/api/apollo-gateway/)',
           ],
-          Appendices: [
-            'proxy-configuration',
-            'migration',
-            'migration-file-uploads',
-            'migration-engine-plugins',
+          'Native Plugins': [
+            'native-plugins',
+            'api/plugin/usage-reporting',
+            'api/plugin/schema-reporting',
+            'api/plugin/inline-trace',
+          ],
+          'Custom Plugins': [
+            'integrations/plugins',
+            'integrations/plugins-event-reference',
           ],
         },
       },

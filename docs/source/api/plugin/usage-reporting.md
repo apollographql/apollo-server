@@ -1,6 +1,6 @@
 ---
 title: "API Reference: Usage reporting plugin"
-sidebar_title: Usage reporting plugin
+sidebar_title: Usage reporting
 api_reference: true
 ---
 
