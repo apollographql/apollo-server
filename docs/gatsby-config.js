@@ -69,8 +69,8 @@ module.exports = {
             '[@apollo/federation](https://www.apollographql.com/docs/federation/api/apollo-federation/)',
             '[@apollo/gateway](https://www.apollographql.com/docs/federation/api/apollo-gateway/)',
           ],
-          'Native Plugins': [
-            'native-plugins',
+          'Built-in Plugins': [
+            'builtin-plugins',
             'api/plugin/usage-reporting',
             'api/plugin/schema-reporting',
             'api/plugin/inline-trace',
