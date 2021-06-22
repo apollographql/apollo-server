@@ -12,7 +12,7 @@ npm install apollo-server-fastify graphql
 
 ## Fastify
 
-As of Apollo Server 3, this package works with Fastify v3.
+As of Apollo Server 3, this package supports Fastify v3 only.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-fastify');

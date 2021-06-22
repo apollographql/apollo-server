@@ -21,9 +21,9 @@ You can set environment variable values on the command line as seen below, or wi
 
 ```bash
 # Replace the example values below with values specific to your use case.
-# This example associates your server with the `development` variant of
-# the `mygraph` graph.
-$ APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_REF=mygraph@development \
+# This example associates your server with the `my-variant` variant of
+# the `my-graph` graph.
+$ APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_REF=my-graph@my-variant \
   node start-server.js
 ```
 
