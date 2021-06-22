@@ -4,6 +4,8 @@ sidebar_title: Creating plugins
 description: Extend Apollo Server with custom functionality
 ---
 
+> **New in Apollo Server 3:** All plugin lifecycle methods are `async`, _except for [`willResolveField`](./plugins-event-reference/#willresolvefield)_.
+
 You can create your own Apollo Server plugins to perform custom operations in response to certain events. For example, a basic logging plugin might log the GraphQL query string associated with each request that's sent to Apollo Server.
 
 ## The anatomy of a plugin
@@ -135,20 +137,17 @@ graph TB;
 
 ### End hooks
 
-Event handlers for the following events can optionally return a function
-that is invoked after the corresponding lifecycle phase _ends_:
+Event handlers for the following events can optionally return a function that is invoked after the corresponding lifecycle phase _ends_:
 
 * [`parsingDidStart`](./plugins-event-reference/#parsingdidstart)
 * [`validationDidStart`](./plugins-event-reference/#validationdidstart)
 * [`willResolveField`](./plugins-event-reference/#willresolvefield)
 
-([`executionDidStart`](./plugins-event-reference/#executiondidstart) returns an _object_ containing an `executionDidEnd` function instead of just a function as an end handler; that's because the returned object can also contain `willResolveField`.)
+([`executionDidStart`](./plugins-event-reference/#executiondidstart) returns an _object_ containing an `executionDidEnd` function instead of just a function as an end hook. This is because the returned object can also contain `willResolveField`.)
 
 Just like the event handers themselves, these end hooks are async functions (except for the end hook for `willResolveField`).
 
-These **end hooks** are passed any errors that occurred during the
-execution of that lifecycle phase. For example, the following plugin logs
-any errors that occur during any of the above lifecycle events:
+End hooks are passed any errors that occurred during the execution of that lifecycle phase. For example, the following plugin logs any errors that occur during any of the above lifecycle events:
 
 ```js
 const myPlugin = {
@@ -184,9 +183,7 @@ const myPlugin = {
 }
 ```
 
-Note that the `validationDidStart` end hook receives an _array_ of errors that
-contains every validation error that occurred (if any). The `willResolveField` end hook receives the error thrown by the resolver as the first argument and the result of the resolver as the second argument. The arguments to each
-end hook are documented in the type definitions in [Request lifecycle events](./plugins-event-reference/#request-lifecycle-events).
+Note that the `validationDidStart` end hook receives an _array_ of errors that contains every validation error that occurred (if any). The `willResolveField` end hook receives the error thrown by the resolver as the first argument and the result of the resolver as the second argument. The arguments to each end hook are documented in the type definitions in [Request lifecycle events](./plugins-event-reference/#request-lifecycle-events).
 
 ### Inspecting request and response details
 

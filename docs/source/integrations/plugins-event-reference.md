@@ -3,6 +3,8 @@ title: Apollo Server plugin event reference
 sidebar_title: Event reference
 ---
 
+> **New in Apollo Server 3:** All plugin lifecycle methods are `async`, _except for [`willResolveField`](#willresolvefield)_.
+
 This reference describes the lifecycle events that your [custom Apollo Server plugin](./plugins/) can respond to.
 
 Apollo Server fires two types of events that plugins can hook into: **server lifecycle
