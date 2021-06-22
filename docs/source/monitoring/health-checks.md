@@ -1,6 +1,6 @@
 ---
 title: Health checks
-description: Determining the health status of the Apollo Server 
+description: Determining the health status of the Apollo Server
 ---
 
 Health checks are often used by load balancers to determine if a server is available and ready to start serving traffic.  By default, Apollo Server provides a health check endpoint at `/.well-known/apollo/server-health` which returns a 200 status code if the server has started.

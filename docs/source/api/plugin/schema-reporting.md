@@ -14,7 +14,7 @@ This plugin enables your GraphQL server to register its latest schema with the A
 
 In order to use this plugin, you must configure your server with a graph API key, either with the `APOLLO_KEY` environment variable or by passing it directly to your `ApolloServer` with `new ApolloServer({apollo: {key: KEY}})`. (This is the same way you configure your `ApolloServer` to enable usage reporting.)
 
-If you just want to turn on schema reporting with its default configuration, you can set the `APOLLO_SCHEMA_REPORTING` environment variable to `true`. If you want to configure schema reporting (or prefer your setup to be via code rather than environment variables), import `ApolloServerPluginSchemaReporting` from the `apollo-server-core` package and pass it to your `ApolloServer` in the `plugins` array:
+Additionally, you must explicitly enable schema reporting. If you just want to turn on schema reporting with its default configuration, you can set the `APOLLO_SCHEMA_REPORTING` environment variable to `true`. If you want to configure schema reporting (or prefer your setup to be via code rather than environment variables), import `ApolloServerPluginSchemaReporting` from the `apollo-server-core` package and pass it to your `ApolloServer` in the `plugins` array:
 
 ```js
 import { ApolloServer } from "apollo-server";

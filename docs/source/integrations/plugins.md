@@ -3,8 +3,6 @@ title: Plugins
 description: Extend Apollo Server with custom functionality
 ---
 
-> Plugins are available in Apollo Server 2.2.x and later.
-
 **Plugins** enable you to extend Apollo Server's core functionality by performing
 custom operations in response to certain events. Currently, these events correspond
 to individual phases of the GraphQL request lifecycle, and to the startup of Apollo Server itself.
@@ -94,7 +92,7 @@ just like you respond to `serverWillStart`, but you _also_ use this function
 
 ```js
 const myPlugin = {
-  asyn crequestDidStart(requestContext) {
+  async requestDidStart(requestContext) {
     console.log('Request started!');
 
     return {
