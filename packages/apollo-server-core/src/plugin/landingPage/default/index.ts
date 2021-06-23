@@ -111,7 +111,30 @@ function ApolloServerPluginLandingPageDefault(
   </head>
   <body style="margin: 0; overflow-x: hidden; overflow-y: hidden">
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="react-root" style="width: 100vw; height: 100vh"></div>
+    <div id="react-root">
+      <style>
+        .fallback {
+          opacity: 0;
+          animation: fadeIn 1s 1s;
+          animation-iteration-count: 1;
+          animation-fill-mode: forwards;
+          padding: 1em;
+        }
+        @keyframes fadeIn {
+          0% {opacity:0;}
+          100% {opacity:1; }
+        }
+      </style>
+      <div class="fallback">
+        <h1>Welcome to Apollo Server</h1>
+        <p>It appears that you might be offline. POST to this endpoint to query your graph:</p>
+        <code style="white-space: pre;">
+curl --request POST \\
+  --header 'content-type: application/json' \\
+  --url '<script>document.write(window.location.href)</script>' \\
+  --data '{"query":"query { __typename }"}'</code>
+      </div>
+    </div>
     <script>window.landingPage = ${encodedConfig};</script>
     <script src="https://apollo-server-landing-page.cdn.apollographql.com/${version}/static/js/main.js"></script>
   </body>
