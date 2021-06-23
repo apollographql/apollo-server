@@ -5,6 +5,8 @@ description: Persistent GraphQL read operations
 
 import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
+FIXME AS3: Whole file needs to be rewritten, as we don't have built in subscription support any more, and probably shouldn't recommend using `subscriptions-transport-ws` at this time.
+
 > **Subscriptions are not currently supported in [Apollo Federation](https://www.apollographql.com/docs/federation/).**
 
 **Subscriptions** are long-lasting GraphQL read operations that can update their result whenever a particular server-side event occurs. Most commonly, updated results are _pushed_ from the server to subscribing clients. For example, a chat application's server might use a subscription to push newly received messages to all clients in a particular chat room.

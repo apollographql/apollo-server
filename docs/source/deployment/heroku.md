@@ -4,6 +4,8 @@ sidebar_title: Heroku
 description: Deploying your GraphQL server to Heroku
 ---
 
+FIXME AS3: Walk through and test this whole file.
+
 Heroku is a common Platform as a Service solution that allows users to deploy and have a functioning GraphQL endpoint running in a matter of minutes.
 
 ## Prerequisites

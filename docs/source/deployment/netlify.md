@@ -4,6 +4,8 @@ sidebar_title: Netlify
 description: How to run your API using Netlify Functions on AWS Lambda
 ---
 
+FIXME AS3: Walk through and test this whole file.
+
 [Netlify Functions](https://www.netlify.com/docs/functions/) allow deploying server-side code, directly from GitHub, to AWS Lambda.  This guide demonstrates how to use Netlify Functions to deploy a GraphQL server and reference the server in Apollo Client. Some benefits of Netlify Functions include:
 
 1. Use the same platform to deploy your frontend and API code.

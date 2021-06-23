@@ -3,6 +3,8 @@ title: Deploying with Google Cloud Functions
 sidebar_title: Google Cloud Functions
 ---
 
+FIXME AS3: Walk through and test this whole file. Ensure README.md reflects changes here (or remove the duplication).
+
 import {
   ExpansionPanel,
 } from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
@@ -63,6 +65,8 @@ Now on the Code page, set the runtime to a currently supported version of Node.j
 Paste the example code at the top of this page into the contents of `index.js` in the code editor.
 
 Edit `package.json` so that it lists `apollo-server-cloud-functions` and `graphql` in its dependencies:
+
+FIXME AS3: can we make this just be an `npm install` somehow? Otherwise we have to keep the version up to date here. At the very least we have to get this to 3.0.0.
 
 ```json:title=package.json
 "dependencies": {
@@ -179,6 +183,8 @@ exports.handler = server.createHandler();
 ```
 
 ## Modifying the GCF Response (CORS)
+
+FIXME AS3: I think CORS is now enabled by default so at least part of this can be removed.
 
 To enable CORS, you need to modify your HTTP response headers. To do so, use the `cors` option:
 

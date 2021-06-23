@@ -2,6 +2,8 @@
 title: Migrating from the "engine" option
 ---
 
+FIXME AS3: We can probably remove this but also have the first step in the migration guide say "if you're using `engine:`, then before migrating to 2.0, stop setting `engine` based on this page in the v2 migration guide"
+
 Apollo Server v2.18 deprecates the `engine` option to the `ApolloServer` constructor and provides a new way of configuring its communication with Apollo Studio. The `engine` option continues to work for existing functionality, but you will eventually want to update to the new API. If you don't explicitly pass `engine` to the `ApolloServer` constructor, you don't have to do anything.
 
 Apollo Server ships with several plugins that help it integrate with Apollo Studio: the [usage reporting plugin](./api/plugin/usage-reporting/) plugin, the [schema reporting plugin](./api/plugin/schema-reporting/), and the [inline trace plugin](./api/plugin/inline-trace/). Apollo Server has some heuristics to install these plugins by default in certain circumstances (documented in the individual plugin reference pages), but otherwise they are standard [Apollo Server plugins](./integrations/plugins/). They are configured by passing arguments to the constructor functions. Some overall graph configuration (such as your graph API key and graph variant name) is set via the `apollo` option to the `ApolloServer` constructor (or via environment variables).

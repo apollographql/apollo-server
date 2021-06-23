@@ -4,6 +4,8 @@ sidebar_title: Lambda
 description: How to deploy Apollo Server with AWS Lambda
 ---
 
+FIXME AS3: Walk through and test this whole file. Ensure README.md reflects changes here (or remove the duplication).
+
 AWS Lambda is a service that allows users to run code without provisioning or managing servers. Cost is based on the compute time that is consumed, and there is no charge when code is not running.
 
 This guide explains how to setup Apollo Server 2 to run on AWS Lambda using Serverless Framework. To use CDK and SST instead, [follow this tutorial](https://serverless-stack.com/examples/how-to-create-an-apollo-graphql-api-with-serverless.html).
@@ -190,6 +192,8 @@ exports.graphqlHandler = server.createHandler();
 ```
 
 ## Modifying the Lambda response (Enable CORS)
+
+FIXME AS3: I think CORS is now enabled by default so at least part of this can be removed.
 
 To enable CORS, the response HTTP headers need to be modified. To accomplish this, use the `cors` options.
 

@@ -3,6 +3,7 @@ title: Migrating to v3.0
 description: How to migrate to Apollo Server 3.0
 ---
 
+FIXME AS3: Lots more is needed here.
 ## Subscriptions
 
 > *Note:* Currently, these instructions are only for the Express integration.
