@@ -53,7 +53,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     super();
   }
 
-  initialize(config: DataSourceConfig<TContext>): void {
+  override initialize(config: DataSourceConfig<TContext>): void {
     this.context = config.context;
     this.httpCache = new HTTPCache(config.cache, this.httpFetch);
   }

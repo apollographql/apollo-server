@@ -8,7 +8,7 @@ import {
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
-  readonly name!: string;
+  override readonly name!: string;
   readonly locations: ReadonlyArray<SourceLocation> | undefined;
   readonly path: ReadonlyArray<string | number> | undefined;
   readonly source: Source | undefined;

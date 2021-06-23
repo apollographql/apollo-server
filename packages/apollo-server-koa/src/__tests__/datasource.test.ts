@@ -101,7 +101,7 @@ describe('apollo-server-koa', () => {
       resolvers,
       dataSources: () => ({
         id: new class extends IdAPI {
-          baseURL = restUrl;
+          override baseURL = restUrl;
         },
       }),
     });
@@ -134,7 +134,7 @@ describe('apollo-server-koa', () => {
       resolvers,
       dataSources: () => ({
         id: new class extends IdAPI {
-          baseURL = restUrl;
+          override baseURL = restUrl;
         },
       }),
     });

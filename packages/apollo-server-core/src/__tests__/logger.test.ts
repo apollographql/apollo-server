@@ -45,7 +45,7 @@ describe("logger", () => {
         });
       }
 
-      log(info: any) {
+      override log(info: any) {
         sink(info);
       }
     };

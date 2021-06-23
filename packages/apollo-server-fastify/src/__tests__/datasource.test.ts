@@ -10,7 +10,7 @@ import { gql } from '../index';
 const restPort = 4003;
 
 export class IdAPI extends RESTDataSource {
-  baseURL = `http://localhost:${restPort}/`;
+  override baseURL = `http://localhost:${restPort}/`;
 
   async getId(id: string) {
     return this.get(`id/${id}`);

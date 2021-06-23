@@ -14,7 +14,7 @@ export class RedisClusterCache extends BaseRedisCache {
     this.clusterClient = clusterClient;
   }
 
-  async flush(): Promise<void> {
+  override async flush(): Promise<void> {
     const masters = this.clusterClient.nodes('master') || [];
     await Promise.all(masters.map((node: RedisInstance) => node.flushdb()));
   }
