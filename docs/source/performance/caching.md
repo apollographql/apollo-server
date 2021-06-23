@@ -188,6 +188,14 @@ All other schema fields (i.e., **non-root fields that return scalar types**) ins
 
 Our philosophy behind Apollo Server caching is that a response should only be considered cacheable if every part of that response _opts in_ to being cacheable. At the same time, we don't think developers should have to specify cache hints for every single field in their schema.
 
+So, we follow these heuristics:
+
+* Root field resolvers are extremely likely to fetch data (because these fields have no parent), so we set their default `maxAge` to `0` to avoid automatically caching sensitive data that _shouldn't_ be cached.
+* Resolvers for other non-scalar fields (objects, interfaces, and unions) _also_ commonly fetch data because they contain arbitrarily many fields. Consequently, we also set their default `maxAge` to `0`.
+* Resolvers for scalar, non-root fields _rarely_ fetch data and instead usually populate data via the `parent` argument. Consequently, these fields inherit their default `maxAge` from their parent to reduce schema clutter.
+
+Of course, these heuristics aren't always correct! For example, the resolver for a non-root scalar field might indeed fetch remote data. You can always set your own cache hint for any field with an undesirable default behavior.
+
 Ideally, you can provide a `maxAge` for every field with a resolver that actually fetches data from a data source (such as a database or REST API). _Most_ other fields can then inherit their cache hint from their parent (fields with resolvers that _don't_ fetch data less commonly have specific caching needs). For more on this, see [Recommended starting usage](#recommended-starting-usage).
 
 #### Setting a different default `maxAge`
