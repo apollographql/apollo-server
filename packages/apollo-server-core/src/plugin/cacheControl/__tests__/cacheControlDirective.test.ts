@@ -363,16 +363,16 @@ describe('@cacheControl directives', () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
       typeDefs: `#graphql
         type Query {
-          foo: Foo
-          cachedFoo: Foo @cacheControl(maxAge: 60)
-          intermediate: Intermediate @cacheControl(maxAge: 40)
+          book: Book
+          cachedBook: Book @cacheControl(maxAge: 60)
+          reader: Reader @cacheControl(maxAge: 40)
         }
-        type Foo {
-          inheritingField: String
-          cachedField: String @cacheControl(maxAge: 30)
+        type Book {
+          title: String
+          cachedTitle: String @cacheControl(maxAge: 30)
         }
-        type Intermediate {
-          foo: Foo @cacheControl(inheritMaxAge: true)
+        type Reader {
+          book: Book @cacheControl(inheritMaxAge: true)
         }
       `,
     });
@@ -389,10 +389,10 @@ describe('@cacheControl directives', () => {
       ).toBe(maxAge);
     }
 
-    await expectMaxAge('{foo{cachedField}}', undefined);
-    await expectMaxAge('{cachedFoo{inheritingField}}', 60);
-    await expectMaxAge('{cachedFoo{cachedField}}', 30);
-    await expectMaxAge('{intermediate{foo{inheritingField}}}', 40);
+    await expectMaxAge('{book{cachedTitle}}', undefined);
+    await expectMaxAge('{cachedBook{title}}', 60);
+    await expectMaxAge('{cachedBook{cachedTitle}}', 30);
+    await expectMaxAge('{reader{book{title}}}', 40);
   });
 
   it('inheritMaxAge can be combined with scope', async () => {

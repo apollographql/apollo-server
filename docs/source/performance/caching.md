@@ -4,6 +4,8 @@ sidebar_title: Caching
 description: Configure caching behavior on a per-field basis
 ---
 
+> **New in Apollo Server 3**: You must manually define the `@cacheControl` directive in your schema to use static cache hints. [See below.](#in-your-schema-static)
+
 Apollo Server enables you to define cache control settings (`maxAge` and `scope`) for each field in your schema:
 
 ```graphql{5,7}
@@ -17,25 +19,25 @@ type Post {
 }
 ```
 
- When Apollo Server resolves an operation, it calculates the result's correct cache behavior based on the _most restrictive_ settings among the result's fields. You can then use this calculation to support any form of cache implementation you want, such as by providing it to your CDN via a `Cache-Control` header.
+When Apollo Server resolves an operation, it calculates the result's correct cache behavior based on the [_most restrictive_ settings](#calculating-cache-behavior) among the result's fields. You can then use this calculation to support any form of cache implementation you want, such as by providing it to your CDN via a `Cache-Control` header.
 
-You can define field-level cache settings [statically in your schema definition](#in-your-schema-static) (as shown above) or [dynamically in your resolvers](#in-your-resolvers-dynamic).
+## Setting cache hints
 
-## Field settings
+You can define field-level cache hints [statically](#in-your-schema-static)  in your schema definition or [dynamically](#in-your-resolvers-dynamic) in your resolvers (or both).
 
-When caching operation results, it's important to understand:
+Note that when setting cache hints, it's important to understand:
 
 * Which fields of your schema can be cached safely
 * How long a cached value should remain valid
 * Whether a cached value is global or user-specific
 
-These details can vary significantly, even among the fields of a single object type. You can specify these details statically in your schema definition or dynamically in your resolvers.
+These details can vary significantly, even among the fields of a single object type.
 
 ### In your schema (static)
 
 Apollo Server recognizes the `@cacheControl` directive, which you can use in your schema to define caching behavior either for a [single field](#field-level-definitions), or for _all_ fields that return a particular [type](#type-level-definitions).
 
-In order to use the directive in your schema, you need to define it, as well as the enum that is used for one of its arguments; otherwise you will get an error like `Unknown directive "@cacheControl"`. (Older versions of Apollo Server used to automatically insert the definitions in some inconsistent situations; Apollo Server 3 consistently expects you to define them yourself.) Just include the following in your schema file:
+**To use the `@cacheControl` directive, you must add the following definitions to your server's schema:**
 
 ```graphql
 enum CacheControlScope {
@@ -50,15 +52,18 @@ directive @cacheControl(
 ) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 ```
 
+If you don't add these definitions, Apollo Server throws an `Unknown directive "@cacheControl"` error on startup.
+
+
 The `@cacheControl` directive accepts the following arguments:
 
 | Name | Description |
 |------|-------------|
-| `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-the-default-maxage). |
+| `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-a-different-default-maxage). |
 | `scope` | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses). |
-| `inheritMaxAge` | If `true`, inherits the `maxAge` from its parent field. This means that non-root fields returning objects, interfaces, or unions that do not specify `maxAge` in some other way will not have the [default `maxAge`](#setting-the-default-maxage) applied. Do not combine this with `maxAge` in the same directive. |
+| `inheritMaxAge` | If `true`, this field inherits the `maxAge` of its parent field instead of using the [default `maxAge`](#setting-a-different-default-maxage). Do not provide `maxAge` if you provide this argument. |
 
-Use `@cacheControl` for fields that should always be cached with the same settings. If caching settings might change at runtime, instead use the [dynamic method](#in-your-resolvers-dynamic).
+Use `@cacheControl` for fields that should usually be cached with the same settings. If caching settings might change at runtime, you can use the [dynamic method](#in-your-resolvers-dynamic).
 
 > **Important:** Apollo Server assigns each GraphQL response a `maxAge` equal to the _lowest_ `maxAge` among included fields. If any field has a `maxAge` of `0`, the response will not be cached at all.
 >
@@ -81,14 +86,14 @@ type Post {
 
 In this example:
 
-* The value of a `Post`'s `votes` field is cached for a maximum of 30 seconds.
-* The value of a `Post`'s `readByCurrentUser` field is cached for a maximum of 10 seconds, and its visibility is restricted to a single user.
+* The value of the `votes` field is cached for a maximum of 30 seconds.
+* The value of the `readByCurrentUser` field is cached for a maximum of 10 seconds, and its visibility is restricted to a single user.
 
 #### Type-level definitions
 
 This example defines cache control settings for _all_ schema fields that return a `Post` object:
 
-```graphql:title=schema.graphql
+```graphql{1}:title=schema.graphql
 type Post @cacheControl(maxAge: 240) {
   id: Int!
   title: String
@@ -121,10 +126,14 @@ type Comment {
 
 You can decide how to cache a particular field's result _while_ you're resolving it. To support this, Apollo Server provides a `cacheControl` object in the [`info` parameter](../data/resolvers/#resolver-arguments) that's passed to every resolver.
 
+> If you set a field's cache hint in its resolver, it **overrides** any cache hint you [provided in your schema](#in-your-schema-static).
+
+#### `cacheControl.setCacheHint`
+
 The `cacheControl` object includes a `setCacheHint` method, which you call like so:
 
 
-```javascript
+```js{4}
 const resolvers = {
   Query: {
     post: (_, { id }, _, info) => {
@@ -135,55 +144,63 @@ const resolvers = {
 }
 ```
 
-The `setCacheHint` method accepts an object with the same fields as [the `@cacheControl` directive](#in-your-schema-static).
+The `setCacheHint` method accepts an object with `maxAge` and `scope` fields.
 
-The `cacheControl` object also has a `cacheHint` field which returns the field's current hint. This object also has a few other helpful methods, such as `info.cacheControl.cacheHint.restrict({ maxAge, scope })` which is similar to `setCacheHint` but it will never make `maxAge` larger or change `scope` from `PRIVATE` to `PUBLIC`. There is also a function `info.cacheControl.cacheHintFromType()` which takes an object type from a GraphQL AST and returns a cache hint which can be passed to `setCacheHint` or `restrict`; it may be useful for implementing resolvers that return unions or interfaces.
+#### `cacheControl.cacheHint`
 
-### Root and composite-type fields are not cachable by default
+This object represents the field's current cache hint. Its fields include the following:
 
-The general philosophy behind `@cacheControl` is that we should only consider a response to be cachable if we have been told that each piece of it is cachable; we never assume that anything is cachable by default. However, we don't want you to have to specify cache hints for every single field in your entire schema. Ideally, you would specify a cache hint on every field whose resolver reads from a data source such as a database or REST API, based on how long you'd like to cache that particular read operation; fields whose resolvers just read in-memory data fetched by a parent resolver (including the default resolver) don't have a particularly interesting cache policy.
+* The field's current `maxAge` and `scope` (which might have been set [statically](#in-your-schema-static))
+* A `restrict` method, which is similar to `setCacheHint` but it can't _relax_ existing hint settings:
 
-So we follow the following heuristic. By default, the following schema fields have a `maxAge` of `0` (meaning their values are _not_ cached unless you specify otherwise):
+    ```js
+    // If we call this first...
+    info.cacheControl.setCacheHint({ maxAge: 60, scope: 'PRIVATE' });
 
-* All **root fields** (i.e., the fields of the `Query` and `Mutation` objects). Because their parent objects have no data, we guess that they are likely to be doing some sort of non-trivial read operation.
-* Fields that **return a composite type** (object, interface, or union), possibly wrapped inside one or more layers of "list of" and "non-null". Our heuristic assumes that these fields (fields with their own sub-fields) are likely to involve a non-trivial read operation, whereas scalar fields are more likely to contain data read in a parent resolver.
+    // ...then this changes maxAge (more restrictive) but NOT scope (less restrictive)
+    info.cacheControl.cacheHint.restrict({ maxAge: 30, scope: 'PUBLIC'});
+    ```
 
-Non-root scalar fields inherit their default cache behavior (including `maxAge`) from their parent object type. This enables you to define cache behavior for _most_ scalars at the [type level](#type-level-definitions), while overriding that behavior in individual cases at the [field level](#field-level-definitions).
+#### `cacheControl.cacheHintFromType`
 
-As a result of these defaults, **no schema fields are cached by default**.
+This method enables you to get the default cache hint for a particular object type. This can be useful when resolving a union or interface field, which might return one of multiple object types.
 
-These heuristics aren't always correct. If a (non-root) scalar field does actually perform a read operation with a different cachability from its parent, you can specify a cache hint on it to override the default assumption that non-root scalar fields inherit their parent's cache policy. And if a field returns an object type just as a way of organizing data and not because it's performing a read operation, you can set `@cacheControl(inheritMaxAge: true)` on the field or its return type; in this case, the default `maxAge` of 0 will not be applied. (Setting `@cacheControl(inheritMaxAge: true)` on a root field has no effect. `inheritMaxAge: true` cannot be specified via `info.cacheControl`.) Note that if you specify `@cacheControl(inheritMaxAge: true)` on a type, you may still specify `maxAge` on a field returning that type, which will take effect; and you can specify `maxAge` via `info.cacheControl` even on fields/types with `inheritMaxAge: true`.
+### Calculating cache behavior
 
-For example, given the following schema:
+For security, each operation response's cache behavior is calculated based on the _most restrictive_ cache hints among the result's fields:
 
-```graphql
-type Query {
-  foo: Foo
-  cachedFoo: Foo @cacheControl(maxAge: 60)
-  intermediate: Intermediate @cacheControl(maxAge: 40)
-}
-type Foo {
-  inheritingField: String
-  cachedField: String @cacheControl(maxAge: 30)
-}
-type Intermediate {
-  foo: Foo @cacheControl(inheritMaxAge: true)
-}
-```
+* The response's `maxAge` equals the lowest `maxAge` among all fields. If that value is `0`, the entire result is _not_ cached.
+* The response's `scope` is `PRIVATE` if _any_ field's `scope` is `PRIVATE`.
 
-Then the following queries will have the given `maxAge` values:
+### Default `maxAge`
 
-| Query | `maxAge` | Explanation |
-|-------|----------|-------------|
-|`{foo{cachedField}}`|0|is a root field (and an object-typed field) with no `maxAge` and it does not set `maxAge` dynamically, so it defaults to 0. It does not matter that `cachedField` has a `maxAge`.|
-|`{cachedFoo{inheritingField}}`|60|`cachedFoo` has a `maxAge` of 60; this means `inheritingField` can follow the normal scalar field rules and not affect `maxAge`.|
-|`{cachedFoo{cachedField}}`|30|`cachedFoo` has a `maxAge` of 60 and `cachedField` has a `maxAge` of 30; we take the most restrictive value, 30.|
-|`{intermediate{foo{inheritingField}}}`|40|`intermediate` sets its `maxAge` to 40. `Intermediate.foo` has `inheritMaxAge` so it does not affect the cache policy. `Foo.uncachedField` is a scalar so it inherits the `maxAge` from its parent, and thus indirectly from its grandparent: 40.|
+By default, the following schema fields have a `maxAge` of `0` _if you don't specify one_:
 
+* **Root fields** (i.e., the fields of the `Query`, `Mutation`, and `Subscription` types)
+  * Because _every_ GraphQL operation includes a root field, this means that by default, **no operation results are cached unless you set cache hints!**
+* **Fields that return a non-scalar type** (object, interface, or union) or a list of non-scalar types.
 
-#### Setting the default `maxAge`
+You can [customize this default](#setting-a-different-default-maxage).
 
-You can set a default `maxAge` that's applied to the fields that would otherwise receive the default `maxAge` of `0`. That is: fields that don't explicitly specify `maxAge` via `@cacheControl` on the field or the type they return or via `info.cacheControl`, and which are either root fields, or fields that return a composite (object, interface, or union) type and do not have `@cacheControl(inheritMaxAge: true)`.
+All other schema fields (i.e., **non-root fields that return scalar types**) instead inherit their default `maxAge` from their parent field.
+
+#### Why are these the `maxAge` defaults?
+
+Our philosophy behind Apollo Server caching is that a response should only be considered cacheable if every part of that response _opts in_ to being cacheable. At the same time, we don't think developers should have to specify cache hints for every single field in their schema.
+
+So, we follow these heuristics:
+
+* Root field resolvers are extremely likely to fetch data (because these fields have no parent), so we set their default `maxAge` to `0` to avoid automatically caching data that _shouldn't_ be cached.
+* Resolvers for other non-scalar fields (objects, interfaces, and unions) _also_ commonly fetch data because they contain arbitrarily many fields. Consequently, we also set their default `maxAge` to `0`.
+* Resolvers for scalar, non-root fields _rarely_ fetch data and instead usually populate data via the `parent` argument. Consequently, these fields inherit their default `maxAge` from their parent to reduce schema clutter.
+
+Of course, these heuristics aren't always correct! For example, the resolver for a non-root scalar field might indeed fetch remote data. You can always set your own cache hint for any field with an undesirable default behavior.
+
+Ideally, you can provide a `maxAge` for every field with a resolver that actually fetches data from a data source (such as a database or REST API). _Most_ other fields can then inherit their cache hint from their parent (fields with resolvers that _don't_ fetch data less commonly have specific caching needs). For more on this, see [Recommended starting usage](#recommended-starting-usage).
+
+#### Setting a different default `maxAge`
+
+You can set a default `maxAge` that's applied to fields that otherwise receive the [default `maxAge` of `0`](#default-maxage).
 
 > You should identify and address all exceptions to your default `maxAge` before you enable it in production, but this is a great way to get started with cache control.
 
@@ -196,6 +213,81 @@ const server = new ApolloServer({
   // ...other options...
   plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],  // 5 seconds
 }));
+```
+
+### Recommended starting usage
+
+You usually don't need to specify cache hints for every field in your schema. Instead, we recommend doing the following as a starting point:
+
+* For fields that should _never_ be cached, explicitly set `maxAge` to `0`.
+
+* Set a `maxAge` for every field with a resolver that _actually fetches data from a data source_ (such as a database or REST API). You can base the value of `maxAge` on the frequency of updates that are made to the relevant data.
+
+* Set `inheritMaxAge: true` for each other non-root field that returns a non-scalar type.
+
+    * Note that you can only set `inheritMaxAge` [statically](#in-your-schema-static).
+
+### Example `maxAge` calculations
+
+Consider the following schema:
+
+```graphql
+type Query {
+  book: Book
+  cachedBook: Book @cacheControl(maxAge: 60)
+  reader: Reader @cacheControl(maxAge: 40)
+}
+
+type Book {
+  title: String
+  cachedTitle: String @cacheControl(maxAge: 30)
+}
+
+type Reader {
+  book: Book @cacheControl(inheritMaxAge: true)
+}
+```
+
+Let's look at some queries and their resulting `maxAge` values:
+
+```graphql
+# maxAge: 0
+# Query.book doesn't set a maxAge and it's a root field (default 0).
+query GetBookTitle {
+  book {        # 0
+    cachedTitle # 30
+  }
+}
+
+# maxAge: 60
+# Query.cachedBook has a maxAge of 60, and Book.title is a scalar, so it
+# inherits maxAge from its parent by default.
+query GetCachedBookTitle {
+  cachedBook { # 60
+    title      # inherits
+  }
+}
+
+# maxAge: 30
+# Query.cachedBook has a maxAge of 60, but Book.cachedTitle has
+# a maxAge of 30.
+query GetCachedBookCachedTitle {
+  cachedBook {  # 60
+    cachedTitle # 30
+  }
+}
+
+# maxAge: 40
+# Query.reader has a maxAge of 40. Reader.Book is set to
+# inheritMaxAge from its parent, and Book.title is a scalar
+# that inherits maxAge from its parent by default.
+query GetReaderBookTitle {
+  reader {  # 40
+    book {  # inherits
+      title # inherits
+    }
+  }
+}
 ```
 
 ## Caching with a CDN
@@ -216,7 +308,7 @@ Because CDNs and caching proxies only cache GET requests (not POST requests, whi
 
 Alternatively, you can set the `useGETForQueries` option of [HttpLink](https://www.apollographql.com/docs/react/api/link/apollo-link-http) in your `ApolloClient` instance, but **this is less secure** because your query string and GraphQL variables are sent as plaintext URL query parameters.
 
-### Disabling `Cache-Control`
+## Disabling cache control
 
 You can prevent Apollo Server from setting `Cache-Control` headers by installing the `ApolloServerPluginCacheControl` plugin yourself and setting `calculateHttpHeaders` to `false`:
 
@@ -229,7 +321,9 @@ const server = new ApolloServer({
 }));
 ```
 
-If you do this, the cache control plugin will still calculate an overall cache policy for your operations, which can be used by other plugins like the response cache plugin. If you want to entirely disable cache control calculations, use the `ApolloServerPluginCacheControlDisabled` plugin (which has no effect other than preventing the cache control plugin from being installed):
+If you do this, the cache control plugin still calculates caching behavior for each operation response. You can then use this information with other plugins (like the [response cache plugin](#caching-with-responsecacheplugin-advanced)).
+
+To disable cache control calculations entirely, instead install the `ApolloServerPluginCacheControlDisabled` plugin (this plugin has no effect other than preventing the cache control plugin from being installed):
 
 ```js
 import { ApolloServerPluginCacheControlDisabled } from 'apollo-server-core';
