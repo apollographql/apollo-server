@@ -83,6 +83,7 @@ Certain undersupported and underused Apollo Server features have been removed in
   - The `Upload` scalar is no longer exported as part of  dropping built-in support for file uploads.
 - Stopped publishing the deprecated `apollo-server-testing` package. This package is just a wrapper around `server.executeOperation`, which you can use directly.
 - `apollo-server-caching`: The test suite helper works differently, and the `TestableKeyValueCache` interface is removed.
+- The `engine` constructor option, `ENGINE_API_KEY` environment variable, and `ENGINE_SCHEMA_TAG` environment variables are no longer respected. Use the `apollo` constructor option, `APOLLO_KEY` environment variable, and `APOLLO_GRAPH_VARIANT` environment variable instead, as described in [the `engine` option migration guide from v2.18)[https://www.apollographql.com/docs/apollo-server/migration-engine-plugins/].
 
 #### Modified functionality
 
@@ -121,6 +122,7 @@ Certain undersupported and underused Apollo Server features have been removed in
   - If you've written your _own_ handler that calls the handler returned by `createHandler` with a callback, you'll need to handle its `Promise` return value instead.
 - `apollo-server-lambda`: Improved support for running behind an Application Load Balancer (ALB).
 - `apollo-server-fastify` is now compatible with Fastify v3 instead of Fastify v2.
+- `apollo-server-hapi` is now only tested with Hapi v20.1.2 and higher (the minimum version that supports Node 16).
 - The non-serverless integrations now depend on their corresponding web frameworks via peer dependencies rather than direct dependencies.
 - All integrations that allow CORS headers to be customized now default to `access-control-allow-origin: *`. This was already the case for `apollo-server`, Express, Fastify, and Hapi; it is now also the same for Koa (which previously reflected the request's origin), Lambda, Cloud Functions, and Azure Functions as well (which did not set CORS by default). Micro and CloudFlare do not have a built-in way of setting CORS headers.
 
