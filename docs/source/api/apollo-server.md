@@ -515,7 +515,7 @@ This method was optional in Apollo Server 2 but is required in Apollo Server 3.
 The `start` method triggers the following actions:
 
 1. If your server is a [federated gateway](https://www.apollographql.com/docs/federation/managed-federation/overview/), it attempts to fetch its schema. If the fetch fails, `start` throws an error.
-2. Your server calls all of the [`serverWillStart` handlers](../integrations/plugins/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
+2. Your server calls all of the [`serverWillStart` handlers](../integrations/plugins-event-reference/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
 
 #### `applyMiddleware`
 
@@ -641,7 +641,7 @@ The `getMiddleware` method takes the same options as [`applyMiddleware`](#applym
 
 #### `stop`
 
-`ApolloServer.stop()` is an async method that tells all of Apollo Server's background tasks to complete. It calls and awaits all [`serverWillStop` plugin handlers](../integrations/plugins/#serverwillstop) (including the [usage reporting plugin](./plugin/usage-reporting/)'s handler, which sends a final usage report to Apollo Studio). This method takes no arguments.
+`ApolloServer.stop()` is an async method that tells all of Apollo Server's background tasks to complete. It calls and awaits all [`serverWillStop` plugin handlers](../integrations/plugins-event-reference/#serverwillstop) (including the [usage reporting plugin](./plugin/usage-reporting/)'s handler, which sends a final usage report to Apollo Studio). This method takes no arguments.
 
 If your server is a [federated gateway](https://www.apollographql.com/docs/federation/gateway/), `stop` also stops gateway-specific background activities, such as polling for updated service configuration.
 

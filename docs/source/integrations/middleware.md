@@ -1,16 +1,16 @@
 ---
 title: Integrating with Node.js middleware
-sidebar_title: Node.js middleware
+sidebar_title: Using with middleware (Express, etc.)
 description: Use Apollo Server with Express, Koa, and more
 ---
 
-Apollo Server integrates easily with several popular Node.js middleware libraries.
+Apollo Server integrates with several popular Node.js middleware libraries.
 To integrate, first install the appropriate package from the table below _instead of_
-the core `apollo-server` package:
+the `apollo-server` package:
 
-| Middleware  | Package  |
-|---|---|
-| Express  | `apollo-server-express`  |
+| Middleware  | Package |
+|-------------|---------|
+| Express  | `apollo-server-express` |
 | AWS Lambda | `apollo-server-lambda` |
 | Koa | `apollo-server-koa` |
 | hapi  | `apollo-server-hapi`  |
@@ -19,7 +19,6 @@ the core `apollo-server` package:
 | Google Cloud Functions | `apollo-server-cloud-functions` |
 | Azure Functions | `apollo-server-azure-functions` |
 | Cloudflare | `apollo-server-cloudflare` |
-
 
 If you've already installed the core `apollo-server` package, you can `npm uninstall`
 it after installing an integration package.

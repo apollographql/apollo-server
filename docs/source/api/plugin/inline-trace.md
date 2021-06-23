@@ -1,6 +1,6 @@
 ---
 title: "API Reference: Inline trace plugin"
-sidebar_title: Inline trace plugin
+sidebar_title: Inline trace
 api_reference: true
 ---
 
