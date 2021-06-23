@@ -21,11 +21,11 @@ type Post {
 
 When Apollo Server resolves an operation, it calculates the result's correct cache behavior based on the [_most restrictive_ settings](#calculating-cache-behavior) among the result's fields. You can then use this calculation to support any form of cache implementation you want, such as by providing it to your CDN via a `Cache-Control` header.
 
-You can define field-level cache settings [statically in your schema definition](#in-your-schema-static) (as shown above) or [dynamically in your resolvers](#in-your-resolvers-dynamic).
-
 ## Setting cache hints
 
-When caching operation results, it's important to understand:
+You can define field-level cache hints [statically](#in-your-schema-static)  in your schema definition or [dynamically](#in-your-resolvers-dynamic) in your resolvers (or both).
+
+Note that when setting cache hints, it's important to understand:
 
 * Which fields of your schema can be cached safely
 * How long a cached value should remain valid
@@ -148,7 +148,7 @@ The `setCacheHint` method accepts an object with `maxAge` and `scope` fields.
 
 #### `cacheControl.cacheHint`
 
-The `cacheControl` object _also_ includes a `cacheHint` object. Its fields include the following:
+This object represents the field's current cache hint. Its fields include the following:
 
 * The field's current `maxAge` and `scope` (which might have been set [statically](#in-your-schema-static))
 * A `restrict` method, which is similar to `setCacheHint` but it can't _relax_ existing hint settings:
@@ -161,7 +161,9 @@ The `cacheControl` object _also_ includes a `cacheHint` object. Its fields inclu
     info.cacheControl.cacheHint.restrict({ maxAge: 30, scope: 'PUBLIC'});
     ```
 
-* A `cacheHintFromType` method, which enables you to get the default cache hint for a particular object type. This can be useful when resolving a union or interface field, which might return one of multiple object types.
+#### `cacheControl.cacheHintFromType`
+
+This method enables you to get the default cache hint for a particular object type. This can be useful when resolving a union or interface field, which might return one of multiple object types.
 
 ### Calculating cache behavior
 
@@ -181,6 +183,12 @@ By default, the following schema fields have a `maxAge` of `0` _if you don't spe
 You can [customize this default](#setting-a-different-default-maxage).
 
 All other schema fields (i.e., **non-root fields that return scalar types**) instead inherit their default `maxAge` from their parent field.
+
+#### Why are these the `maxAge` defaults?
+
+Our philosophy behind Apollo Server caching is that a response should only be considered cacheable if every part of that response _opts in_ to being cacheable. At the same time, we don't think developers should have to specify cache hints for every single field in their schema.
+
+Ideally, you can provide a `maxAge` for every field with a resolver that actually fetches data from a data source (such as a database or REST API). _Most_ other fields can then inherit their cache hint from their parent (fields with resolvers that _don't_ fetch data less commonly have specific caching needs). For more on this, see [Recommended starting usage](#recommended-starting-usage).
 
 #### Setting a different default `maxAge`
 
@@ -207,7 +215,7 @@ You usually don't need to specify cache hints for every field in your schema. In
 
 * Set a `maxAge` for every field with a resolver that _actually fetches data from a data source_ (such as a database or REST API). You can base the value of `maxAge` on the frequency of updates that are made to the relevant data.
 
-* Set `inheritMaxAge: true` for each other field that returns a non-scalar type.
+* Set `inheritMaxAge: true` for each other non-root field that returns a non-scalar type.
 
     * Note that you can only set `inheritMaxAge` [statically](#in-your-schema-static).
 
