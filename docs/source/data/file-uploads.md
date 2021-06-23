@@ -3,11 +3,9 @@ title: File uploads
 description: Enabling file uploads in Apollo Server
 ---
 
-> Note: As of Apollo Server 3.0, in order to allow the `graphql-upload` package to evolve and live on its own, uploads are no longer enabled by default and are not an integrated part of Apollo Server.
+You can add file upload support to Apollo Server via the third-party [`graphql-upload`](https://npm.im/graphql-upload) library. This package provides support for the `multipart/form-data` content-type.
 
-File uploads can be enabled by using the third-party [`graphql-upload`](https://npm.im/graphql-upload) package.  Using this package will introduce support for the `multipart/form-data` content-type.
-
-The instructions below demonstrate how to do this on Express.  Those wishing to implement similar functionality on other Node.js HTTP frameworks (e.g., Koa) should see the [`graphql-upload` repository's documentation](https://github.com/jaydenseric/graphql-upload) for more information.  Some integrations may need to use `graphql-upload`'s `processRequest` directly.
+**New in Apollo Server 3:** Apollo Server 3 does not contain a built-in integration with `graphql-upload` like in Apollo Server 2. Instead, the instructions below show how to integrate it yourself. You cannot do this with the "batteries-included" `apollo-server` library; you must use a web framework integration such as `apollo-server-express` instead. To implement similar functionality with another Node.js HTTP framework (e.g., Koa), see the [`graphql-upload` documentation](https://github.com/jaydenseric/graphql-upload) for more information. Some integrations might need to use `graphql-upload`'s `processRequest` directly.
 
 ```js
 const express = require('express');
