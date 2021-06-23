@@ -16,6 +16,7 @@ const {
   GraphQLUpload,
   graphqlUploadExpress, // A Koa implementation is also exported.
 } = require('graphql-upload');
+const { finished } = require('stream/promises');
 
 const typeDefs = gql`
   # The implementation for this scalar is provided by the
@@ -48,7 +49,7 @@ const resolvers = {
   Upload: GraphQLUpload,
 
   Mutation: {
-    async singleUpload: (parent, { file }) => {
+    singleUpload: async (parent, { file }) => {
       const { createReadStream, filename, mimetype, encoding } = await file;
 
       // Invoking the `createReadStream` will return a Readable Stream.
@@ -59,25 +60,31 @@ const resolvers = {
       // local-file-output.txt in the current working directory on EACH upload.
       const out = require('fs').createWriteStream('local-file-output.txt');
       stream.pipe(out);
+      await finished(out);
 
       return { filename, mimetype, encoding };
     },
   },
 };
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
+async function startServer() {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
+  await server.start();
 
-const app = express();
+  const app = express();
 
-// This middleware should be added before calling `applyMiddleware`.
-app.use(graphqlUploadExpress());
+  // This middleware should be added before calling `applyMiddleware`.
+  app.use(graphqlUploadExpress());
 
-server.applyMiddleware({ app });
+  server.applyMiddleware({ app });
 
-app.listen({ port: 4000 }, () => {
+  await new Promise(r => app.listen({ port: 4000 }, r));
+
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
-});
+}
+
+startServer();
 ```
