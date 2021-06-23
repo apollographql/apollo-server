@@ -1,6 +1,6 @@
 ---
 title: Integrating with Node.js middleware
-sidebar_title: Node.js middleware
+sidebar_title: Using with middleware (Express, etc.)
 description: Use Apollo Server with Express, Koa, and more
 ---
 
