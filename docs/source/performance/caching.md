@@ -19,7 +19,7 @@ type Post {
 }
 ```
 
-When Apollo Server resolves an operation, it calculates the result's correct cache behavior based on the [_most restrictive_ settings](#default-cache-control-settings) among the result's fields. You can then use this calculation to support any form of cache implementation you want, such as by providing it to your CDN via a `Cache-Control` header.
+When Apollo Server resolves an operation, it calculates the result's correct cache behavior based on the [_most restrictive_ settings](#calculating-cache-behavior) among the result's fields. You can then use this calculation to support any form of cache implementation you want, such as by providing it to your CDN via a `Cache-Control` header.
 
 You can define field-level cache settings [statically in your schema definition](#in-your-schema-static) (as shown above) or [dynamically in your resolvers](#in-your-resolvers-dynamic).
 
@@ -59,9 +59,9 @@ The `@cacheControl` directive accepts the following arguments:
 
 | Name | Description |
 |------|-------------|
-| `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-the-default-maxage). |
+| `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-a-different-default-maxage). |
 | `scope` | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses). |
-| `inheritMaxAge` | If `true`, this field inherits the `maxAge` of its parent field instead of using the [default `maxAge`](#setting-the-default-maxage). Do not provide `maxAge` if you provide this argument. |
+| `inheritMaxAge` | If `true`, this field inherits the `maxAge` of its parent field instead of using the [default `maxAge`](#setting-a-different-default-maxage). Do not provide `maxAge` if you provide this argument. |
 
 Use `@cacheControl` for fields that should usually be cached with the same settings. If caching settings might change at runtime, you can use the [dynamic method](#in-your-resolvers-dynamic).
 
@@ -178,7 +178,7 @@ By default, the following schema fields have a `maxAge` of `0` _if you don't spe
   * Because _every_ GraphQL operation includes a root field, this means that by default, **no operation results are cached unless you set cache hints!**
 * **Fields that return a non-scalar type** (object, interface, or union) or a list of non-scalar types.
 
-You can [customize this default](#setting-default-maxage).
+You can [customize this default](#setting-a-different-default-maxage).
 
 All other schema fields (i.e., **non-root fields that return scalar types**) instead inherit their default `maxAge` from their parent field.
 
