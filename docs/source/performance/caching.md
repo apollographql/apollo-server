@@ -190,7 +190,7 @@ Our philosophy behind Apollo Server caching is that a response should only be co
 
 So, we follow these heuristics:
 
-* Root field resolvers are extremely likely to fetch data (because these fields have no parent), so we set their default `maxAge` to `0` to avoid automatically caching sensitive data that _shouldn't_ be cached.
+* Root field resolvers are extremely likely to fetch data (because these fields have no parent), so we set their default `maxAge` to `0` to avoid automatically caching data that _shouldn't_ be cached.
 * Resolvers for other non-scalar fields (objects, interfaces, and unions) _also_ commonly fetch data because they contain arbitrarily many fields. Consequently, we also set their default `maxAge` to `0`.
 * Resolvers for scalar, non-root fields _rarely_ fetch data and instead usually populate data via the `parent` argument. Consequently, these fields inherit their default `maxAge` from their parent to reduce schema clutter.
 
