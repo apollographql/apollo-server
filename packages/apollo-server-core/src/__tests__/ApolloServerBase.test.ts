@@ -115,7 +115,7 @@ describe('ApolloServerBase start', () => {
     };
 
     class ServerlessApolloServer extends ApolloServerBase {
-      serverlessFramework() {
+      override serverlessFramework() {
         return true;
       }
     }

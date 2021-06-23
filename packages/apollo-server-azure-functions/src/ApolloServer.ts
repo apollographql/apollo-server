@@ -17,7 +17,7 @@ export interface CreateHandlerOptions {
 }
 
 export class ApolloServer extends ApolloServerBase {
-  protected serverlessFramework(): boolean {
+  protected override serverlessFramework(): boolean {
     return true;
   }
 

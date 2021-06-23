@@ -97,7 +97,7 @@ describe('apollo-server-express', () => {
       resolvers,
       dataSources: () => ({
         id: new class extends IdAPI {
-          baseURL = restUrl;
+          override baseURL = restUrl;
         },
       }),
     });
@@ -130,7 +130,7 @@ describe('apollo-server-express', () => {
       resolvers,
       dataSources: () => ({
         id: new class extends IdAPI {
-          baseURL = restUrl;
+          override baseURL = restUrl;
         },
       }),
     });

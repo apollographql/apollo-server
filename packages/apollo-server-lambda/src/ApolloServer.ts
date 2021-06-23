@@ -24,7 +24,7 @@ function defaultExpressAppFromMiddleware(
   return app;
 }
 export class ApolloServer extends ApolloServerExpress {
-  protected serverlessFramework(): boolean {
+  protected override serverlessFramework(): boolean {
     return true;
   }
 
@@ -51,7 +51,7 @@ export class ApolloServer extends ApolloServerExpress {
   // response. It fetches the Lambda context as well (from a global variable,
   // which is safe because the Lambda runtime doesn't invoke multiple operations
   // concurrently).
-  async createGraphQLServerOptions(
+  override async createGraphQLServerOptions(
     req: express.Request,
     res: express.Response,
   ): Promise<GraphQLOptions> {

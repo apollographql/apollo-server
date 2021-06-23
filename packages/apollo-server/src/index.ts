@@ -69,13 +69,13 @@ export class ApolloServer extends ApolloServerBase {
     };
   }
 
-  public applyMiddleware() {
+  public override applyMiddleware() {
     throw new Error(
       'To use Apollo Server with an existing express application, please use apollo-server-express',
     );
   }
 
-  public async start(): Promise<void> {
+  public override async start(): Promise<void> {
     throw new Error(
       "When using the `apollo-server` package, you don't need to call start(); just call listen().",
     );
@@ -131,7 +131,7 @@ export class ApolloServer extends ApolloServerBase {
     return this.createServerInfo(httpServer);
   }
 
-  public async stop() {
+  public override async stop() {
     if (this.httpServer) {
       const httpServer = this.httpServer;
       await new Promise<void>((resolve) => httpServer.stop(() => resolve()));

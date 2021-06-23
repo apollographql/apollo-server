@@ -20,7 +20,7 @@ function defaultExpressAppFromMiddleware(
 }
 
 export class ApolloServer extends ApolloServerExpress {
-  protected serverlessFramework(): boolean {
+  protected override serverlessFramework(): boolean {
     return true;
   }
 
