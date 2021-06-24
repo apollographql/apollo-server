@@ -190,7 +190,7 @@ In Apollo Server 3, the `tracing` constructor option has been removed. The `apol
 
 If you rely on this old trace format, you may be able to still use the old version of `apollo-server-tracing` directly:
 
-```
+```javascript
 new ApolloServer({
   plugins: [
     require('apollo-tracing').plugin()
@@ -202,15 +202,98 @@ new ApolloServer({
 
 ### `cacheControl`
 
-FIXME this is where I got up to
+In Apollo Server 2, [cache policy support](../performance/caching/) was configured via the `cacheControl` constructor option. There are several improvements to the semantics of cache policies in Apollo Server 3, as well as changes to how caching is configured.
 
-- configured via plugin
-- cannot overwrite requestContext.overallCachePolicy
-- `@cacheControl` respected on extensions and fields returning union types
-- need to declare `@cacheControl` yourself
+The `cacheControl` constructor option has been removed. This option controlled the arguments to the built-in [cache control plugin](FIXME link). This now functions like the other built-in plugins: Apollo Server may implicitly install it with default arguments, and if you want to pass non-default arguments, just install the plugin yourself.
+
+If you used the `defaultMaxAge` and/or `calculateHttpHeaders` sub-options, pass them to the plugin instead. So replace:
+
+```javascript
+new ApolloServer({
+  cacheControl: {
+    defaultMaxAge,
+    calculateHttpHeaders,
+  },
+});
+```
+
+with
+
+```javascript
+import { ApolloServerPluginCacheControl } from 'apollo-server-core';
+
+new ApolloServer({
+  plugins: [
+    ApolloServerPluginCacheControl({
+      defaultMaxAge,
+      calculateHttpHeaders,
+    }),
+  ],
+})
+```
+
+If you passed `cacheControl` false, use the disabling plugin instead. So replace:
+
+```javascript
+new ApolloServer({
+  cacheControl: false,
+});
+```
+
+with
+
+```javascript
+import { ApolloServerPluginCacheControlDisabled } from 'apollo-server-core';
+
+new ApolloServer({
+  plugins: [
+    ApolloServerPluginCacheControlDisabled(),
+  ],
+})
+```
+
+In Apollo Server 2, `cacheControl: true` was a shorthand for setting `cacheControl: {stripFormattedExtensions: false, calculateHttpHeaders: false}`. If you either passed `cacheControl: true` or explicitly passed `stripFormattedExtensions: false`, Apollo Server 2 would include a `cacheControl` response extension inside your GraphQL response. This was used by the deprecated `engineproxy` server. Support for writing this response extension has been removed from Apollo Server 2. This allows for a more memory-efficient cache control plugin implementation.
+
+In Apollo Server 2, definitions of the `@cacheControl` directive (and the `CacheControlScope` enum that it uses) were sometimes automatically inserted into your schema. (Specifically, they were added if you defined your schema with the `typeDefs` and `resolvers` options, but not if you used the `modules` or `schema` options or if you were a federated gateway. Passing `cacheControl: false` did not stop the definitions from being inserted!) In Apollo Server 3, these definitions are never automatically inserted.
+
+So **if you use the `@cacheControl` directive in your schema, you should add these definitions to your schema**:
+
+```graphql
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope
+  inheritMaxAge: Boolean
+) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
+```
+
+(You may add them to your schema in Apollo Server 2 before upgrading if you'd like.)
+
+In Apollo Server 2, plugins that want to change the operation's overall cache policy can overwrite the field `requestContext.overallCachePolicy`. In Apollo Server 3, that field is considered read-only, but it does have new methods to mutate its state. So you should replace:
+
+```javascript
+requestContext.overallCachePolicy = { maxAge: 100 };
+```
+
+with:
+
+```javascript
+requestContext.overallCachePolicy.replace({ maxAge: 100 });
+```
+
+(You may also want to consider using `restrict` instead of `replace`; this method only allows `maxAge` to be reduced and only allows `scope` to change from `PUBLIC` to `PRIVATE`.)
+
+In Apollo Server 2, fields returning a union type are treated similarly to fields returning a scalar type: `@cacheControl` on the type itself is ignored, and `maxAge` if unspecified is inherited from its parent in the operation (unless it is a root field) instead of defaulting to `defaultMaxAge` (which itself defaults to 0). In Apollo Server 3, fields returning a union type are treated similarly to fields returning an interface or object type: `@cacheControl` on the type itself is honored, and `maxAge` if unspecified defaults to `defaultMaxAge`. If you were relying on the inheritance behavior, you can specify `@cacheControl(maxAge: ...)` explicitly on your union types or union-returning fields, or you can use the new `@cacheControl(inheritMaxAge: true)` feature on the union-returning field to restore the Apollo Server 2 behavior. If your schema contained `union SomeUnion @cacheControl(...)`, that directive will start having an effect when you upgrade to Apollo Server 3.
+
+In Apollo Server 2, the `@cacheControl` is honored on type definitions but not on type extensions. That is, if you write `type SomeType @cacheControl(maxAge: 123)` it takes effect but if you write `extend type SomeType @cacheControl(maxAge: 123)` it does not take effect. In Apollo Server 3, `@cacheControl` is honored on object, interface, and union extensions. If your schema accidentally contained `@cacheControl` on an `extend`, that directive will start having an effect when you upgrade to Apollo Server 3.
 
 ### `playground`
 
+FIXME I'm here now
 
 ## Removed features
 

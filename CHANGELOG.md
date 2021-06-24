@@ -55,14 +55,14 @@ Certain undersupported and underused Apollo Server features have been removed in
 - Removed the automatic addition of the `@cacheControl` directive to schemas.
   - This directive was added in some circumstances but not in others, which caused confusion.
   - If you use `@cacheControl`, you can [define it in your schema as shown in the docs](https://www.apollographql.com/docs/apollo-server/performance/caching/#in-your-schema-static).
-- Removed the `tracing` option passed to the `ApolloServer` constructor. The corresponding `apollo-server-tracing` package has been deprecated and is no longer being published.
+- Removed the `tracing` option passed to the `ApolloServer` constructor. The corresponding `apollo-tracing` package has been deprecated and is no longer being published.
   - This package implemented an inefficient JSON format for execution traces returned via the `tracing` GraphQL response extension. This format was only consumed by the deprecated `engineproxy` and GraphQL Playground.
-  - If you rely on this trace format, the old version of `apollo-server-tracing` should still work:
+  - If you rely on this trace format, the old version of `apollo-tracing` should still work:
 
     ```
     new ApolloServer({
       plugins: [
-        require('apollo-server-tracing').plugin()
+        require('apollo-tracing').plugin()
       ]
     });
     ```

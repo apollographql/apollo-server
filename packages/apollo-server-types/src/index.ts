@@ -153,7 +153,7 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
 
   debug?: boolean;
 
-  overallCachePolicy: CachePolicy;
+  readonly overallCachePolicy: CachePolicy;
 }
 
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;
