@@ -11,14 +11,14 @@ module.exports = {
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
         githubRepo: 'apollographql/apollo-server',
-        defaultVersion: '2',
+        defaultVersion: '3',
         // We build our docs including older versions which are synced from
         // GitHub at build time. If you want to be able to work on docs while
         // offline, set $OFFLINE and we won't include the old versions.
         versions: process.env.OFFLINE
           ? {}
           : {
-              1: 'version-1',
+              2: 'main',
             },
         sidebarCategories: {
           null: [
