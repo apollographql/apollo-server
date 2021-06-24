@@ -29,8 +29,8 @@ export interface HttpQueryRequest {
   // 'extensions', etc.
   query: Record<string, any> | Array<Record<string, any>>;
   options:
-    | GraphQLOptions
-    | ((...args: Array<any>) => ValueOrPromise<GraphQLOptions>);
+  | GraphQLOptions
+  | ((...args: Array<any>) => ValueOrPromise<GraphQLOptions>);
   request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
@@ -81,21 +81,21 @@ export function throwHttpGraphQLError<E extends Error>(
   // force no-cache on PersistedQuery errors
   const headers = hasPersistedQueryError(errors)
     ? {
-        ...defaultHeaders,
-        'Cache-Control': 'private, no-cache, must-revalidate',
-      }
+      ...defaultHeaders,
+      'Cache-Control': 'private, no-cache, must-revalidate',
+    }
     : defaultHeaders;
 
   type Result =
-   & Pick<GraphQLExecutionResult, 'extensions'>
-   & { errors: E[] | ApolloError[] }
+    & Pick<GraphQLExecutionResult, 'extensions'>
+    & { errors: E[] | ApolloError[] }
 
   const result: Result = {
     errors: options
       ? formatApolloErrors(errors, {
-          debug: options.debug,
-          formatter: options.formatError,
-        })
+        debug: options.debug,
+        formatter: options.formatError,
+      })
       : errors,
   };
 
@@ -381,11 +381,11 @@ function parseGraphQLRequest(
       throw new HttpQueryError(
         400,
         "GraphQL queries must be strings. It looks like you're sending the " +
-          'internal graphql-js representation of a parsed query in your ' +
-          'request instead of a request in the GraphQL query language. You ' +
-          'can convert an AST to a string using the `print` function from ' +
-          '`graphql`, or use a client like `apollo-client` which converts ' +
-          'the internal representation to a string for you.',
+        'internal graphql-js representation of a parsed query in your ' +
+        'request instead of a request in the GraphQL query language. You ' +
+        'can convert an AST to a string using the `print` function from ' +
+        '`graphql`, or use a client like `apollo-client` which converts ' +
+        'the internal representation to a string for you.',
       );
     } else {
       throw new HttpQueryError(400, 'GraphQL queries must be strings.');
@@ -452,7 +452,8 @@ function serializeGraphQLResponse(
 
 // The result of a curl does not appear well in the terminal, so we add an extra new line
 function prettyJSONStringify(value: any) {
-  return JSON.stringify(value) + '\n';
+  return JSON.stringify(value, (key, value) =>
+    typeof value === "bigint" ? value.toString() + "n" : value) + '\n';
 }
 
 export function cloneObject<T extends Object>(object: T): T {
