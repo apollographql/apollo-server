@@ -453,7 +453,7 @@ function serializeGraphQLResponse(
 // The result of a curl does not appear well in the terminal, so we add an extra new line
 function prettyJSONStringify(value: any) {
   return JSON.stringify(value, (key, value) =>
-    typeof value === "bigint" ? value.toString() + "n" : value) + '\n';
+    (key && typeof value === "bigint") ? value.toString() + "n" : value) + '\n';
 }
 
 export function cloneObject<T extends Object>(object: T): T {
