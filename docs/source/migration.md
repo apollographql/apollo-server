@@ -293,12 +293,169 @@ In Apollo Server 2, the `@cacheControl` is honored on type definitions but not o
 
 ### `playground`
 
-FIXME I'm here now
+In Apollo Server 2, the only available landing page was the (now-[retired](https://github.com/graphql/graphql-playground/issues/1143)) [GraphQL Playground](https://github.com/graphql/graphql-playground). By default, it was enabled unless the `NODE_ENV` environment variable was set to `production`. You could pass the constructor option `playground: true` to enable it regardless of `NODE_ENV`, `playground: false` to disable it regardless of `NODE_ENV`, or `playground: {...}` to customize its settings more.
+
+In Apollo Server 3, there is a [landing page API](../integrations/plugins-event-references/#renderlandingpage) which allows for multiple landing pages. The default landing page is a simple [splash page](FIXME link), which is always enabled but has a different appearance depending on the value of `NODE_ENV`. When `NODE_ENV` is not `production`, this splash page links to the Apollo Explorer GraphQL UI.
+
+You can still use GraphQL Playground if you'd like by installing a different plugin. It is customized by passing options to the playground plugin, not by using the top-level `playground` constructor option.
+
+If your code did not specify the `playground` constructor option and you'd like to keep the previous behavior instead of trying the new splash page, you can do that as follows:
+
+```javascript
+import { ApolloServerPluginLandingPageGraphQLPlayground,
+         ApolloServerPluginLandingPageDisabled } from 'apollo-server-core';
+new ApolloServer({
+  plugins: [
+    process.env.NODE_ENV === 'production'
+      ? ApolloServerPluginLandingPageDisabled()
+      : ApolloServerPluginLandingPageGraphQLPlayground(),
+  ],
+});
+```
+
+If your code passed `new ApolloServer({playground: true})`, you can keep the previous behavior with:
+
+```javascript
+import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+new ApolloServer({
+  plugins: [
+    ApolloServerPluginLandingPageGraphQLPlayground(),
+  ],
+});
+```
+
+If your code passed `new ApolloServer({playground: false})` you can keep the previous behavior with:
+
+```javascript
+import { ApolloServerPluginLandingPageDisabled } from 'apollo-server-core';
+new ApolloServer({
+  plugins: [
+    ApolloServerPluginLandingPageDisabled(),
+  ],
+});
+```
+
+If your code passed an options object like `new ApolloServer({playground: playgroundOptions})`, you can keep the previous behavior with:
+
+```javascript
+import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+new ApolloServer({
+  plugins: [
+    ApolloServerPluginLandingPageGraphQLPlayground(playgroundOptions),
+  ],
+});
+```
+
+In addition to moving the options from the top-level `playground` There are two changes to how passing options here works.
+
+First, in Apollo Server 2, the default value of the `endpoint` option was determined in different ways by different framework integrations, and in many cases it was necessary to manually specify `playground: {endpoint}`. In Apollo Server 3, the default endpoint used by GraphQL Playground is the browser's current address. In many cases, this means that you don't have to specify `endpoint` any more. If your Apollo Server 2 app specified `playground: {endpoint}` (and you wish to continue using GraphQL Playground), try removing `endpoint` from the options passed to `ApolloServerPluginLandingPageGraphQLPlayground` and see if it works for you.
+
+Second, in Apollo Server 2, the behavior of the `settings` sub-option was surprising. If you did not explicitly pass `{playground: {settings: {...}}}` then GraphQL Playground would always use a set of settings built into its React application (some of which could be adjusted by the user in their browser). However, if you passed any object as `playground: {settings: {...}}`, a [bunch of default settings value overrides] (https://github.com/apollographql/apollo-server/blob/70a431212bd2d07d68c962cb5ded63ecc6a21963/packages/apollo-server-core/src/playground.ts#L38-L46) would take effect. This confusing behavior is removed in Apollo Server 3; all `settings` use the default values from the GraphQL Playground React app if not specified in the `settings` option to `ApolloServerPluginLandingPageGraphQLPlayground`. If you did pass in `playground: {settings: {...}}` and you want to make sure the settings used in your GraphQL Playground do not change, you should copy any relevant settings from [the Apollo Server 2 code]([bunch of default settings value overrides] (https://github.com/apollographql/apollo-server/blob/70a431212bd2d07d68c962cb5ded63ecc6a21963/packages/apollo-server-core/src/playground.ts#L38-L46)) into your app. So for example, you could replace:
+
+```javascript
+new ApolloServer({playground: {settings: {'some.setting': true}}})
+```
+
+with:
+
+```javascript
+import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+new ApolloServer({
+  plugins: [
+    ApolloServerPluginLandingPageGraphQLPlayground({
+      'some.setting': true,
+      'general.betaUpdates': false,
+      'editor.theme': 'dark' as Theme,
+      'editor.cursorShape': 'line' as CursorShape,
+      'editor.reuseHeaders': true,
+      'tracing.hideTracingResponse': true,
+      'queryPlan.hideQueryPlanResponse': true,
+      'editor.fontSize': 14,
+      'editor.fontFamily': `'Source Code Pro', 'Consolas', 'Inconsolata', 'Droid Sans Mono', 'Monaco', monospace`,
+      'request.credentials': 'omit',
+    }),
+  ],
+});
+```
+
+## Removed exports
+
+In Apollo Server 2, `apollo-server` and framework integration packages such as `apollo-server-express` imported many symbols from third-party packages and re-exported them.  This effectively tied the API of Apollo Server to the specific version of those third-party packages and made it challenging for us to upgrade to a newer version or for you to upgrade those packages yourself.
+
+In Apollo Server 3, most of these "re-exports" have been removed. If you want to use these exports, you should import them directly from the package they came from.
+
+### Exports from `graphql-tools`
+
+Apollo Server 2 exported every symbol exported by [`graphql-tools`](https://www.graphql-tools.com/) v4. If you are importing any of the following symbols from an Apollo Server package, you should instead run `npm install graphql-tools@4.x` and import the symbol from `graphql-tools` instead. Alternatively, read the [GraphQL Tools docs](https://www.graphql-tools.com/docs/introduction) and find out which `@graphql-tools/subpackage` the symbol is exported from in more modern versions of GraphQL Tools.
+
+- `AddArgumentsAsVariables`
+- `AddTypenameToAbstract`
+- `CheckResultAndHandleErrors`
+- `ExpandAbstractTypes`
+- `ExtractField`
+- `FilterRootFields`
+- `FilterToSchema`
+- `FilterTypes`
+- `MockList`
+- `RenameRootFields`
+- `RenameTypes`
+- `ReplaceFieldWithFragment`
+- `SchemaDirectiveVisitor'
+- `SchemaError`
+- `TransformRootFields`
+- `WrapQuery`
+- `addCatchUndefinedToSchema`
+- `addErrorLoggingToSchema`
+- `addMockFunctionsToSchema`
+- `addResolveFunctionsToSchema`
+- `addSchemaLevelResolveFunction`
+- `assertResolveFunctionsPresent`
+- `attachConnectorsToContext`
+- `attachDirectiveResolvers`
+- `buildSchemaFromTypeDefinitions`
+- `chainResolvers`
+- `checkForResolveTypeResolver`
+- `concatenateTypeDefs`
+- `decorateWithLogger`
+- `defaultCreateRemoteResolver`
+- `defaultMergedResolver`
+- `delegateToSchema`
+- `extendResolversFromInterfaces`
+- `extractExtensionDefinitions`
+- `forEachField`
+- `introspectSchema`
+- `makeExecutableSchema`
+- `makeRemoteExecutableSchema`
+- `mergeSchemas`
+- `mockServer`
+- `transformSchema`
+
+FIXME this is missing TS-only exports
+
+### Exports from `graphql-subscriptions`
+
+Apollo Server 2 exported every symbol exported by [`graphql-subscriptions`](https://www.npmjs.com/package/graphql-subscriptions). If you are importing any of the following symbols from an Apollo Server package, you should instead run `npm install graphql-subscriptions` and import the symbol from `graphql-subscriptions` instead.
+
+- `FilterFn`
+- `PubSub`
+- `PubSubEngine`
+- `PubSubOptions`
+- `ResolverFn`
+- `withFilter`
+
+### Exports from `graphql-upload`
+
+Apollo Server 2 exported the `GraphQLUpload` symbol from (our fork of) `graphql-upload`. Apollo Server 3 no longer has built-in `graphql-upload` integration. See [../data/file-uploads/](the documentation on how to enable file uploads in Apollo Server 3).
+
+### Exports related to GraphQL Playground
+
+Apollo Server 2 exported a `defaultPlaygroundOptions` object and `PlaygroundConfig` and `PlaygroundRenderPageOptions` types to support the `playground` top-level constructor argument. In Apollo Server 3, GraphQL Playground is one of several landing pages implemented via plugins, and there are no default options for it. The `ApolloServerPluginLandingPageGraphQLPlaygroundOptions` type exported from `apollo-server-core` plays a similar role to `PlaygroundConfig` and `PlaygroundRenderPageOptions`. See [the section on `playground` above](#playground) for more details on configuring GraphQL Playground in Apollo Server 3.
 
 ## Removed features
 
 Several small features have been removed from Apollo Server 3.
 
+FIXME this is where I got to
 
 ### `ApolloServer.schema` field
 
@@ -307,14 +464,6 @@ Several small features have been removed from Apollo Server 3.
 ### `apollo-datasource-rest`: `baseURL` override change
 
 
-
-## Removed exports
-
-- all of `graphql-tools`
-- all of `graphql-subscriptions`
-- `Upload`
-- playground
-- check for more?
 
 
 ## Changed features
