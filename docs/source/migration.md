@@ -1,28 +1,50 @@
 ---
-title: Migrating to v3.0
-description: How to migrate to Apollo Server 3.0
+title: Migrating to Apollo Server 3
 ---
 
-Apollo Server 3.0 is our first major-version release in three years. The theme of Apollo Server 3 is a lighter, nimbler core. We've dropped compatibility with old versions of Node and `graphql-js`, replaced hard-coded integrations with specific versions of third-party library with more flexible approaches, and moved feature configuration from top-level `new ApolloServer` constructor arguments with plugins.
+**Apollo Server 3 is generally available.** The focus of this major-version release is to provide a lighter, nimbler core library as a foundation for future features and improved extensibility.
 
-Many Apollo Server users won't have to make any changes to upgrade to Apollo Server 3, especially if you use the "batteries-included" `apollo-server` package. This document explains which features do require code changes and shows what changes are necessary.
+Many Apollo Server 2 users don't need to make any code changes to upgrade to Apollo Server 3, especially if you use the "batteries-included" `apollo-server` library (as opposed to a [middleware-specific library](./integrations/middleware/)).
+
+This document explains which features _do_ require code changes and how to make them.
+
+> For a list of all breaking changes, [see the changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md).
+
+
 
 ## Bumped dependencies
 
-Apollo Server 3 only supports Node 12 or newer. (Apollo Server 2 supported Node v6.) This includes [all LTS and Current versions at the time of release](https://nodejs.org/en/about/releases/). If you are using an older version of Node, you should upgrade your Node runtime before upgrading to Apollo Server 3.
+### Node.js 
 
-Apollo Server has a peer dependency on [`graphql`](https://www.npmjs.com/package/graphql) (the core JS GraphQL implementation), which means that you are responsible for choosing the version installed in your app. In Apollo Server 3, the minimum supported version of `graphql` is v15.3.0. (Apollo Server 2 supported `graphql` v0.12 through v15.) If you are using an older version of `graphql`, you should upgrade it to the latest version before upgrading to Apollo Server 3.
+**Apollo Server 3 supports Node.js 12 and later.** (Apollo Server 2 supports back to Node.js 6.) This includes [all LTS and Current versions at the time of release](https://nodejs.org/about/releases/).
+
+If you're using an older version of Node, you should upgrade your Node runtime before upgrading to Apollo Server 3.
+
+### `graphql`
+
+Apollo Server has a peer dependency on [`graphql`](https://www.npmjs.com/package/graphql) (the core JS GraphQL implementation), which means you are responsible for choosing the version installed in your app.
+
+**Apollo Server 3 supports `graphql` v15.3.0 and later.** (Apollo Server 2 supported `graphql` v0.12 through v15.)
+
+If you're using an older version of `graphql`, you should upgrade it to the latest version before upgrading to Apollo Server 3.
 
 ## Removed integrations
 
-Apollo Server 2 had built-in enabled-by-default integrations with the `subscriptions-transport-ws` and `graphql-upload` packages. These integrations are not part of Apollo Server 3, but you can integrate them directly in your app instead.
+Apollo Server 2 provides built-in support for subscriptions and file uploads via the `subscriptions-transport-ws` and `graphql-upload` packages, respectively.
+
+Apollo Server 3 removes these built-in integrations, in favor of enabling users to provide their own mechanisms for these features. You can still enable these integrations as they exist in Apollo Server 2.
+
 ### Subscriptions
 
-Apollo Server 2 had a superficial integration with the `subscriptions-transport-ws` package. This allowed you to add a WebSocket-based GraphQL subscriptions server alongside Apollo Server's HTTP-based GraphQL query and mutation server. This integration didn't work with Apollo Server's plugin system, Studio usage reporting, or federation.
+Apollo Server 2 provides limited, built-in support for WebSocket-based GraphQL subscriptions via the `subscriptions-transport-ws` package. This integration is incompatible with Apollo Server's plugin system and Apollo Studio usage reporting.
 
-Apollo Server 3 no longer contains this integration. (We hope to add a more fully-integrated subscription server to Apollo Server in a future version.) However, you can still integrate directly with `subscriptions-transport-ws` if you depend on the existing implementation. (Just like in Apollo Server 2, this integration won't work with Apollo Server's plugin system, Studio usage reporting, or federation.)
+Apollo Server 3 no longer contains this built-in integration. However, you can still use `subscriptions-transport-ws` for subscriptions if you depend on the existing implementation. Note that as with Apollo Server 2, this integration won't work with the plugin system or Studio usage reporting.
 
-(Note that `subscriptions-transport-ws` has not been actively maintained. You may want to implement subscriptions using the newer [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) package instead; this is what we describe in [the subscriptions docs](../data/subscriptions/). But if you're already using subscriptions with Apollo Server 2, continuing to use `subscriptions-transport-ws` requires fewer changes to your code.)
+We hope to add more fully-integrated subscription support to Apollo Server in a future version.
+
+#### Reenabling subscriptions
+
+> **The `subscriptions-transport-ws` library is not actively maintained.** We recommend instead implementing subscriptions with the newer [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) package (as described in [the subscriptions docs](../data/subscriptions/). But if you're already using subscriptions with Apollo Server 2, continuing to use `subscriptions-transport-ws` requires fewer changes to your code.
 
 You cannot integrate the batteries-included `apollo-server` package with `subscriptions-transport-ws`; if you were using `apollo-server` with subscriptions, first [eject to `apollo-server-express`](FIXME link).
 
