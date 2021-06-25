@@ -38,7 +38,7 @@ You can reenable all of these integrations as they exist in Apollo Server 2.
 
 ### Subscriptions
 
-Apollo Server 2 provides limited, built-in support for WebSocket-based GraphQL subscriptions via the `subscriptions-transport-ws` package. This integration is incompatible with Apollo Server's plugin system and Apollo Studio usage reporting.
+Apollo Server 2 provides limited, built-in support for WebSocket-based GraphQL subscriptions via the `subscriptions-transport-ws` package. This integration doesn't work with Apollo Server's plugin system or Apollo Studio usage reporting.
 
 Apollo Server 3 no longer contains this built-in integration. However, you can still use `subscriptions-transport-ws` for subscriptions if you depend on this implementation. Note that as with Apollo Server 2, this integration won't work with the plugin system or Studio usage reporting.
 
