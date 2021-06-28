@@ -70,7 +70,7 @@
     "@types/connect": "3.4.34",
     "@types/cors": "2.8.10",
     "@types/express": "4.17.12",
-    "@types/express-serve-static-core": "4.17.21",
+    "@types/express-serve-static-core": "4.17.22",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/hapi__hapi": "20.0.8",
     "@types/ioredis": "4.26.4",
