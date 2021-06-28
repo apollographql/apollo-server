@@ -9,6 +9,11 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
    * here.
    */
   version?: string;
+  /**
+   * Set to false to suppress the footer which explains how to configure the
+   * landing page.
+   */
+  footer?: boolean;
   // For Apollo use only.
   __internal_apolloStudioEnv__?: 'staging' | 'prod';
 }
@@ -32,29 +37,43 @@ interface LandingPageConfig {
   graphRef?: string | undefined;
   isProd?: boolean;
   apolloStudioEnv?: 'staging' | 'prod';
+  footer?: boolean;
 }
 
 export function ApolloServerPluginLandingPageLocalDefault(
-  options?: ApolloServerPluginLandingPageLocalDefaultOptions,
+  options: ApolloServerPluginLandingPageLocalDefaultOptions = {},
 ): ImplicitlyInstallablePlugin {
+  // We list known keys explicitly to get better typechecking, but we pass
+  // through extras in case we've added new keys to the splash page and haven't
+  // quite updated the plugin yet.
+  const { version, __internal_apolloStudioEnv__, footer, ...rest } = options;
   return ApolloServerPluginLandingPageDefault(
-    options?.version,
+    version,
     encodeConfig({
       isProd: false,
-      apolloStudioEnv: options?.__internal_apolloStudioEnv__,
+      apolloStudioEnv: __internal_apolloStudioEnv__,
+      footer,
+      ...rest,
     }),
   );
 }
 
 export function ApolloServerPluginLandingPageProductionDefault(
-  options?: ApolloServerPluginLandingPageProductionDefaultOptions,
+  options: ApolloServerPluginLandingPageProductionDefaultOptions = {},
 ): ImplicitlyInstallablePlugin {
+  // We list known keys explicitly to get better typechecking, but we pass
+  // through extras in case we've added new keys to the splash page and haven't
+  // quite updated the plugin yet.
+  const { version, __internal_apolloStudioEnv__, footer, graphRef, ...rest } =
+    options;
   return ApolloServerPluginLandingPageDefault(
-    options?.version,
+    version,
     encodeConfig({
       isProd: true,
-      apolloStudioEnv: options?.__internal_apolloStudioEnv__,
-      graphRef: options?.graphRef,
+      apolloStudioEnv: __internal_apolloStudioEnv__,
+      footer,
+      graphRef,
+      ...rest,
     }),
   );
 }
