@@ -45,10 +45,10 @@ module.exports = {
             'data/subscriptions',
           ],
           Testing: [
+            'testing/landing-page',
             'testing/mocking',
             'testing/testing',
             '[Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/)',
-            'testing/graphql-playground'
           ],
           Performance: ['performance/caching', 'performance/apq'],
           Security: [
