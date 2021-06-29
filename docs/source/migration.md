@@ -44,10 +44,10 @@ Apollo Server 3 no longer contains this built-in integration. However, you can s
 
 We hope to add more fully-integrated subscription support to Apollo Server in a future version.
 
+**Please note that the `subscriptions-transport-ws` library is not actively maintained.** However, as this is written, this protocol is exclusively supported by both GraphQL Playground and Apollo Sandbox. An alternative, actively-maintained [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) package exists which we intend to support in the future.
+
 #### Reenabling subscriptions
 
-> **The `subscriptions-transport-ws` library is not actively maintained.** We recommend instead implementing subscriptions with the newer [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) package (as described in [the subscriptions docs](../data/subscriptions/)).
->
 > The steps below assume you want to continue using `subscriptions-transport-ws`, which requires fewer changes to existing code.
 
 You cannot integrate the batteries-included `apollo-server` package with `subscriptions-transport-ws`; if you were using `apollo-server` with subscriptions, first eject to `apollo-server-express` (TODO: link to ejection doc; see #5097).
@@ -88,7 +88,7 @@ You cannot integrate the batteries-included `apollo-server` package with `subscr
 
     The `SubscriptionServer` (which we'll initiate in a later step) doesn't
     accept `typeDefs` and `resolvers` directly; it instead only accepts
-    an executable `GraphQLSchema` as `schema`. So we need to make one of those.
+    an executable `GraphQLSchema` as `schema`, so we need to make one of those.
     We can then pass the same object to `new ApolloServer` instead of `typeDefs`
     and `resolvers` so it's clear that the same schema is being used in both
     places.
