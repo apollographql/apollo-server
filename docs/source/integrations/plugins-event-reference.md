@@ -20,7 +20,13 @@ events** and **request lifecycle events**.
 
 ### `serverWillStart`
 
-The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. The server doesn't start until this asynchronous method completes. If it throws (ie, if the `Promise` it returns is _rejected_), startup _fails_ and your server will not serve GraphQL operations. This helps you make sure all of your server's dependencies are available before attempting to begin serving requests. (Specifically, this is fired from the `listen()` method in `apollo-server`, from the `start()` method for a framework integration like `apollo-server-express`, and during the first request for a serverless integration like `apollo-server-lambda`.)
+The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. The server doesn't start until this asynchronous method completes. If it throws (i.e., if the `Promise` it returns is _rejected_), startup _fails_ and your server does not serve GraphQL operations. This helps you make sure all of your server's dependencies are available before attempting to begin serving requests.
+
+This event is fired at different times depending on which [Apollo Server middleware](./middleware/) you're using:
+
+* In `apollo-server`, it's fired from the `listen()` method.
+* In non-serverless middleware libraries like `apollo-server-express`, it's fired from the `start()` method.
+* In serverless middleware libraries like `apollo-server-lambda`, it's fired in response to the first incoming request.
 
 #### Example
 
@@ -67,8 +73,40 @@ const server = new ApolloServer({
 
 ### `renderLandingPage`
 
-The `renderLandingPage` event is fired once by Apollo Server after all `serverWillStart` events run.
-You define your `renderLandingPage` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, which allows it to read the values passed to `serverWillStart`. **At most one plugin in your server may define a `renderLandingPage` handler.** If your server has a `renderLandingPage` handler, it should return a `LandingPage`, which is just an object with a string `html` field. The value of that field will be served as HTML for any requests with `accept: text/html` headers. (By default, Apollo Server installs `ApolloServerPluginLandingPageLocalDefault` (if `NODE_ENV` is not `production`) or `ApolloServerPluginLandingPageProductionDefault` (if `NODE_ENV` is `production) which serves a simple landing page. `apollo-server-core` also includes `ApolloServerPluginLandingPageGraphQLPlayground` which serves GraphQL Playground as a landing page.)
+This event enables you to serve a [custom landing page](../testing/build-run-queries/#custom-landing-page) from Apollo Server's base URL. The event is fired once by Apollo Server after all `serverWillStart` events run. **At most one installed plugin can define a `renderLandingPage` handler.** Otherwise, Apollo Server throws an error on startup.
+
+You define your plugin's `renderLandingPage` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, which enables it to read values passed to `serverWillStart`:
+
+```js{5-22}:title=index.js
+const server = new ApolloServer({
+  // ... other configuration ...
+
+  plugins: [
+    {
+      async serverWillStart() {
+        return {
+          async renderLandingPage() {
+            const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <h1>Hello world!</h1>
+  </body>
+</html>`;
+            return { html };
+          }
+        }
+      }
+    }
+  ]
+});
+```
+
+The handler should return an object with a string `html` field. The value of that field is served as HTML for any requests with `accept: text/html` headers.
+
+For more landing page options, see [Changing the landing page](../testing/build-run-queries/#changing-the-landing-page).
 
 #### Example
 

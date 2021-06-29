@@ -44,11 +44,11 @@ module.exports = {
             'data/file-uploads',
             'data/subscriptions',
           ],
-          Testing: [
+          'Development Workflow': [
+            'testing/build-run-queries',
             'testing/mocking',
             'testing/testing',
             '[Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/)',
-            'testing/graphql-playground'
           ],
           Performance: ['performance/caching', 'performance/apq'],
           Security: [

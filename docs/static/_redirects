@@ -1,9 +1,12 @@
 / /docs/apollo-server/
 
-# The v2 docs were beta for a while, and non-default, but now that they are
-# default, the v2 docs don't exist anymore.  So redirect them to the default!
-/docs/apollo-server/v2 /docs/apollo-server/
-/docs/apollo-server/v2/* /docs/apollo-server/:splat
+# The v3 docs were beta for a while, and non-default, but now that they are
+# default, the v3 docs don't exist anymore.  So redirect them to the default!
+/docs/apollo-server/v3 /docs/apollo-server
+/docs/apollo-server/v3/* /docs/apollo-server/:splat
+
+# Updating URLs for v3
+/docs/apollo-server/testing/graphql-playground/ /docs/apollo-server/testing/landing-page/#graphql-playground
 
 # Removing old hidden documentation
 /docs/apollo-server/features/schema-stitching/ /docs/apollo-server/
