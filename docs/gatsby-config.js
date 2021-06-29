@@ -44,7 +44,7 @@ module.exports = {
             'data/file-uploads',
             'data/subscriptions',
           ],
-          Testing: [
+          'Development Workflow': [
             'testing/landing-page',
             'testing/mocking',
             'testing/testing',
