@@ -45,7 +45,7 @@ module.exports = {
             'data/subscriptions',
           ],
           'Development Workflow': [
-            'testing/landing-page',
+            'testing/build-run-queries',
             'testing/mocking',
             'testing/testing',
             '[Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/)',
