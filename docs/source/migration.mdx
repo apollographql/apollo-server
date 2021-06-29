@@ -52,7 +52,7 @@ Please note that the `subscriptions-transport-ws` library is not actively mainta
 
 > The steps below assume you want to continue using `subscriptions-transport-ws`, which requires fewer changes to existing code.
 
-You cannot integrate the batteries-included `apollo-server` package with `subscriptions-transport-ws`; if you were using `apollo-server` with subscriptions, first eject to `apollo-server-express` (TODO: link to ejection doc; see #5097).
+You cannot integrate the batteries-included `apollo-server` package with `subscriptions-transport-ws`; if you were using `apollo-server` with subscriptions, first [eject to `apollo-server-express`](./integrations/middleware/#apollo-server-express).
 
 > *Note:* Currently, these instructions are only for the Express integration. It is likely possible to integrate `subscriptions-transport-ws` with other integrations. PRs to this migration guide are certainly welcome!
 
@@ -160,7 +160,7 @@ Apollo Server 2 provides built-in support for file uploads via an outdated versi
 
 This built-in support is removed in Apollo Server 3. To use `graphql-upload`, you can choose an appropriate version and integrate it yourself. Note that `graphql-upload` does not support federation or every Node.js framework supported by Apollo Server.
 
-To use `graphql-upload` with Apollo Server 3, see the [documentation on enabling file uploads in Apollo Server](../data/file-uploads/). Note that if you were using uploads with the  "batteries-included" `apollo-server` package, you must first eject to `apollo-server-express` (TODO: link to eject doc; see #5097).
+To use `graphql-upload` with Apollo Server 3, see the [documentation on enabling file uploads in Apollo Server](../data/file-uploads/). Note that if you were using uploads with the  "batteries-included" `apollo-server` package, you must first [eject to `apollo-server-express`](./integrations/middleware/#apollo-server-express).
 
 ### GraphQL Playground
 
