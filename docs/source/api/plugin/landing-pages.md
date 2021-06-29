@@ -4,15 +4,29 @@ sidebar_title: Landing pages
 api_reference: true
 ---
 
-## The landing page plugins
+This API reference documents built-in plugins that add a landing page to Apollo Server's base URL, enabling visitors to interact with the server from their browser.
 
-This API reference documents the `ApolloServerPluginLandingPageLocalDefault`, `ApolloServerPluginLandingPageProductionDefault`, and `ApolloServerPluginLandingPageGraphQLPlayground` plugins.
+This includes plugins for:
 
-These plugins add a landing page to your GraphQL server, making it easy for visitors to interact with your graph from a web browser. They work by implementing the [`renderLandingPage`](../../integrations/plugins-event-reference/#renderlandingpage) plugin event, which serves an HTML page whenever a browser includes an `accept: text/html` header.
+* The default landing page for [non-production environments](#default-non-production-landing-page) (`ApolloServerPluginLandingPageLocalDefault`)
+* The default landing page for [production](#default-production-landing-page) (`ApolloServerPluginLandingPageProductionDefault`)
+* Using [GraphQL Playground](#graphql-playground-landing-page) as a landing page (`ApolloServerPluginLandingPageGraphQLPlayground`)
 
-Apollo Server installs the `ApolloServerPluginLandingPageLocalDefault` default in all servers unless the `NODE_ENV` environment variable is set to `production`, in which case it installs the `ApolloServerPluginLandingPageProductionDefault` plugin. You typically do not have to install these plugins yourself; you only need to do so if you want to provide non-default configuration.
 
-If you want to configure the default plugins while still using based on the same `NODE_ENV` logic, import them from the `apollo-server-core` package and pass them to your `ApolloServer` in the `plugins` array:
+These plugins work by implementing the [`renderLandingPage`](../../integrations/plugins-event-reference/#renderlandingpage) plugin event, which serves an HTML page whenever a browser includes an `accept: text/html` header. In addition to these, [custom plugins](../../integrations/plugins/) can also render a [custom landing page](FIXME).
+ 
+## Default behavior
+
+If you don't manually install any plugin that implements `renderLandingPage`, Apollo Server does the following by default:
+
+* In non-production environments (`NODE_ENV` is not `production`), Apollo Server installs `ApolloServerPluginLandingPageLocalDefault`.
+* In production environments (`NODE_ENV` _is_ `production`), Apollo Server installs `ApolloServerPluginLandingPageProductionDefault`.
+
+In either case, Apollo Server provides no configuration options to the plugin. You only need to install one of these plugins manually if you want to override its default configuration.
+
+### Configuring default landing pages
+
+To configure these default plugins while still using same `NODE_ENV`-based logic, import them from the `apollo-server-core` package and pass them to your `ApolloServer` in the `plugins` array:
 
 ```js
 import { ApolloServer } from "apollo-server";
@@ -34,15 +48,11 @@ const server = new ApolloServer({
 });
 ```
 
-If you don't want to use Apollo Server's default landing page, you can:
-- Install the `ApolloServerPluginLandingPageGraphQLPlayground` plugin, which uses the [GraphQL Playground IDE](https://github.com/graphql/graphql-playground) as a landing page,
-- Install a [custom plugin](../../integrations/plugins/) implementing [`renderLandingPage`](../../integrations/plugins-event-reference/#renderlandingpage), or
-- Install the `ApolloServerPluginLandingPageDisabled` plugin to serve no landing page.
+Available configuration options are listed in each plugin's reference below.
 
-FIXME should link to the main landing pages page, depending which lands first
-## `ApolloServerPluginLandingPageLocalDefault`
+## Default non-production landing page
 
-The `ApolloServerPluginLandingPageLocalDefault` shows a splash page welcoming you to your server. It's designed for use in local development, where `NODE_ENV` is not set to `production`. The landing page provides a copyable command-line snippet showing how to run operations with your server, and provides a link to query your graph in Apollo Sandbox (a hosted GraphQL IDE that runs entirely inside your browser and doesn't require an account).
+The `ApolloServerPluginLandingPageLocalDefault` shows a splash page welcoming you to Apollo Server . It's designed for use in local development, where `NODE_ENV` is not set to `production`. The landing page provides a copyable command-line snippet showing how to run operations with your server, and provides a link to query your graph in Apollo Sandbox (a hosted GraphQL IDE that runs entirely inside your browser and doesn't require an account).
 
 ### Options
 
@@ -88,7 +98,7 @@ By default, the landing page has a footer linking to Apollo Server docs telling 
 </table>
 
 
-## `ApolloServerPluginLandingPageProductionDefault`
+## Default production landing page
 
 The `ApolloServerPluginLandingPageProductionDefault` shows a minimalist splash page. It's designed for use in production, and is displayed by default when `NODE_ENV` is not set to `production`. The landing page provides a copyable command-line snippet showing how to run operations with your server. By default, the only visible reference to Apollo is a footer explaining how to customize the page. You may also configure it to add a link to query your graph in Apollo Studio via Explorer.
 
@@ -150,7 +160,7 @@ If specified, the landing page will contain a link (with opt-in auto-redirect) t
 </tbody>
 </table>
 
-## `ApolloServerPluginLandingPageGraphQLPlayground`
+## GraphQL Playground landing page
 
 The `ApolloServerPluginLandingPageGraphQLPlayground` serves the [GraphQL Playground IDE](https://github.com/graphql/graphql-playground) as a landing page. (This was the landing page served by default in Apollo Server 2; note that the GraphQL Playground project has officially been [retired](https://github.com/graphql/graphql-playground/issues/1143).)
 
