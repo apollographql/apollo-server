@@ -73,7 +73,7 @@ const server = new ApolloServer({
 
 ### `renderLandingPage`
 
-This event enables you to serve a [custom landing page](../testing/landing-page/#custom-landing-page) from Apollo Server's base URL. The event is fired once by Apollo Server after all `serverWillStart` events run. **At most one installed plugin can define a `renderLandingPage` handler.** Otherwise, Apollo Server throws an error on startup.
+This event enables you to serve a [custom landing page](../testing/build-run-queries/#custom-landing-page) from Apollo Server's base URL. The event is fired once by Apollo Server after all `serverWillStart` events run. **At most one installed plugin can define a `renderLandingPage` handler.** Otherwise, Apollo Server throws an error on startup.
 
 You define your plugin's `renderLandingPage` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, which enables it to read values passed to `serverWillStart`:
 
@@ -106,7 +106,7 @@ const server = new ApolloServer({
 
 The handler should return an object with a string `html` field. The value of that field is served as HTML for any requests with `accept: text/html` headers.
 
-For more landing page options, see [Setting an Apollo Server landing page](../testing/landing-page/).
+For more landing page options, see [Changing the landing page](../testing/build-run-queries/#changing-the-landing-page).
 
 #### Example
 
