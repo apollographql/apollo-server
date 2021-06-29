@@ -75,6 +75,7 @@ module.exports = {
             'api/plugin/schema-reporting',
             'api/plugin/inline-trace',
             'api/plugin/cache-control',
+            'api/plugin/landing-pages',
           ],
           'Custom Plugins': [
             'integrations/plugins',

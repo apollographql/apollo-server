@@ -17,7 +17,7 @@ You can also [create custom plugins](./integrations/plugins/).
 | [Schema reporting](./api/plugin/schema-reporting/) | `apollo-server-core` | Automatically reports the server's schema to [Apollo Studio](https://www.apollographql.com/docs/studio/) on startup to enable schema history and up-to-date metrics. |
 | [Inline trace](./api/plugin/inline-trace/) | `apollo-server-core` | Used primarily by [federated subgraphs](https://www.apollographql.com/docs/federation/) to include operation trace data in responses to the gateway. |
 | [Cache control](./api/plugin/cache-control/) | `apollo-server-core` | Calculates caching behavior for operation responses. |
-| Landing page (multiple) | `apollo-server-core` | Handle displaying a default or custom landing page at Apollo Server's base URL. |
+| [Landing page (multiple)](./api/plugin/landing-pages) | `apollo-server-core` | Handle displaying a default or custom landing page at Apollo Server's base URL. |
 | [Response cache](./performance/caching/#caching-with-responsecacheplugin-advanced) | `apollo-server-plugin-response-cache`| Caches operation responses in a back-end store (in-memory, Redis, etc.) |
 
 ## Installing plugins
