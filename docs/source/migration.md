@@ -2,6 +2,8 @@
 title: Migrating to Apollo Server 3
 ---
 
+import { ExpansionPanel } from 'gatsby-theme-apollo-docs';
+
 **Apollo Server 3 is generally available.** The focus of this major-version release is to provide a lighter, nimbler core library as a foundation for future features and improved extensibility.
 
 **Many Apollo Server 2 users don't need to make any code changes to upgrade to Apollo Server 3**, especially if you use the "batteries-included" `apollo-server` library (as opposed to a [middleware-specific library](./integrations/middleware/)).
@@ -54,105 +56,103 @@ You cannot integrate the batteries-included `apollo-server` package with `subscr
 
 > *Note:* Currently, these instructions are only for the Express integration. It is likely possible to integrate `subscriptions-transport-ws` with other integrations. PRs to this migration guide are certainly welcome!
 
- 1. Install `subscriptions-transport-ws` and `@graphql-tools/schema`.
-
-        npm install subscriptions-transport-ws @graphql-tools/schema
-
- 2. Import `SubscriptionServer` from `subscriptions-transport-ws`.
-
-    ```javascript
-    import { SubscriptionServer } from 'subscriptions-transport-ws';
+1. Install `subscriptions-transport-ws` and `@graphql-tools/schema`.
+    ```sh
+    npm install subscriptions-transport-ws @graphql-tools/schema
     ```
 
- 3. Import `makeExecutableSchema` from `@graphql-tools/schema`.
-
-    > Your server may already be using `makeExecutableSchema`, so adding this
-    > import may not be necessary.  More on why and how in the next step!
-
+1. Add the following imports in the module where your Apollo Server is currently instantiated. We'll use these in the subsequent steps.
     ```javascript
+    import { createServer } from 'http';
+    import { execute, subscribe } from 'graphql';
+    import { SubscriptionServer } from 'subscriptions-transport-ws';
     import { makeExecutableSchema } from '@graphql-tools/schema';
     ```
 
- 4. Import the `execute` and `subscribe` functions from `graphql`.
+1. Create an `http.Server` instance with your Express `app`.
 
-    The `graphql` package should already be installed, so simply import them for
-    usage:
+    In order to setup both the HTTP and WebSocket servers, we'll need to create an `http.Server`. Do this by passing your Express `app` to the `createServer` function which we imported from the Node.js `http` module.
 
     ```javascript
-    import { execute, subscribe } from 'graphql';
+    // This `app` is the returned value from `express()`.
+    const httpServer = createServer(app);
     ```
 
-    We will pass these to the creation of the `SubscriptionServer` in Step 9.
+1. Create an instance of `GraphQLSchema` (if one doesn't already exist).
+    > Your server may already pass a `schema` to the `ApolloServer` constructor. If it does, this step can be skipped. You'll use the existing `schema` instance in a later step.
 
- 5. Have an instance of `GraphQLSchema` available.
-
-    The `SubscriptionServer` (which we'll initiate in a later step) doesn't
-    accept `typeDefs` and `resolvers` directly; it instead only accepts
-    an executable `GraphQLSchema` as `schema`, so we need to make one of those.
-    We can then pass the same object to `new ApolloServer` instead of `typeDefs`
-    and `resolvers` so it's clear that the same schema is being used in both
-    places.
-
-    > Your server may already pass a `schema` to `new ApolloServer`.  If it
-    > does, this step can be skipped.  You'll use the your existing schema in
-    > Step 8 below.
+    The `SubscriptionServer` (which we'll instantiate next) doesn't accept `typeDefs` and `resolvers` directly, but rather an executable `GraphQLSchema`. We can pass this `schema` object to both the `SubscriptionServer` and `ApolloServer`. This way, it's clear that the same schema is being used in both places.
 
     ```javascript
     const schema = makeExecutableSchema({ typeDefs, resolvers });
+    // ...
+    const server = new ApolloServer({
+      schema,
+    });
     ```
 
-    > While not necessary, this `schema` can be passed into the `ApolloServer`
-    > constructor options, rather than `typeDefs` and `resolvers`:
-    >
-    > ```javascript
-    > const server = new ApolloServer({
-    >   schema,
-    > });
-    > ```
-
- 6. Import Node.js's `createServer` from the `http` module.
-
-    ```javascript
-    import { createServer } from 'http';
-    ```
-
-
-7. Get an `http.Server` instance with the Express app, prior to `listen`-ing.
-
-     In order to setup both the HTTP and WebSocket servers prior to listening,
-     we'll need to get the `http.Server`.  Do this by passing the Express `app`
-     to the `createServer` we imported from Node.js' `http` module.
-
-     ```javascript
-     // This `app` is the returned value from `express()`.
-     const httpServer = createServer(app);
-     ```
-
-8. Create the `SubscriptionsServer`.
+1. Create the `SubscriptionsServer`.
 
     ```javascript
     SubscriptionServer.create({
-       // This is the `schema` created in Step 6 above.
+       // This is the `schema` we just created.
        schema,
-
-       // These were imported from `graphql` in Step 5 above.
+       // These are imported from `graphql`.
        execute,
        subscribe,
     }, {
-       // This is the `httpServer` created in Step 9 above.
+       // This is the `httpServer` we created in a previous step.
        server: httpServer,
-
        // This `server` is the instance returned from `new ApolloServer`.
        path: server.graphqlPath,
     });
     ```
 
-9. Finally, adjust the existing `listen`.
+1. Finally, adjust the existing `listen`.
 
-    Previously, most applications will be doing `app.listen(...)`.
+    Most applications will be calling `app.listen(...)` on their `Express` app. **This should be changed to `httpServer.listen(...)`** using the same arguments. This will begin listening on the HTTP and WebSocket transports simultaneously.
 
-    **This should be changed to `httpServer.listen(...)`** (same arguments) to
-    start listening on the HTTP and WebSocket transports simultaneously.
+Expand for a completed example of adding subscriptions
+<ExpansionPanel title="Click to expand">
+
+```js
+import { createServer } from "http";
+import { execute, subscribe } from "graphql";
+import { SubscriptionServer } from "subscriptions-transport-ws";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import express from "express";
+import { ApolloServer } from "apollo-server-express";
+import resolvers from "./resolvers";
+import typeDefs from "./typeDefs";
+
+(async function () {
+  const app = express();
+
+  const httpServer = createServer(app);
+
+  const schema = makeExecutableSchema({
+    typeDefs,
+    resolvers,
+  });
+
+  const server = new ApolloServer({
+    schema,
+  });
+  await server.start();
+  server.applyMiddleware({ app });
+
+  SubscriptionServer.create(
+    { schema, execute, subscribe },
+    { server: httpServer, path: server.graphqlPath }
+  );
+
+  const PORT = 4000;
+  httpServer.listen(PORT, () =>
+    console.log(`Server is now running on http://localhost:${PORT}/graphql`)
+  );
+})();
+```
+</ExpansionPanel>
 
 ### File uploads
 
