@@ -648,6 +648,54 @@ export default ({
         });
       });
 
+      // Micro does not have built-in support for CORS.
+      if (integrationName !== 'micro') {
+        describe('cors enabled by default', () => {
+          const origin = 'https://my-origin.test/';
+          it('for POST request', async () => {
+            app = await createApp();
+            const expected = {
+              testString: 'it works',
+            };
+            const res = await request(app)
+              .post('/graphql')
+              .set('origin', origin)
+              .send({
+                query: 'query test{ testString }',
+              });
+            expect(res.status).toEqual(200);
+            expect(res.body.data).toEqual(expected);
+            expect(res.header['access-control-allow-origin']).toEqual('*');
+          });
+
+          it('for OPTIONS preflight request', async () => {
+            app = await createApp();
+            const res = await request(app)
+              .options('/graphql')
+              .set('origin', origin)
+              .set('access-control-request-headers', 'content-type')
+              .set('access-control-request-method', 'POST');
+            expect(res.status).toEqual(204);
+            expect(res.text).toEqual('');
+            expect(res.header['access-control-allow-origin']).toEqual('*');
+            expect(res.header['access-control-allow-origin']).toEqual('*');
+            expect(
+              res.header['access-control-allow-headers']?.toLowerCase(),
+            ).toContain('content-type');
+            expect(res.header['access-control-allow-methods']).toContain(
+              'POST',
+            );
+            // It would be nice if Hapi and Koa properly set Vary here, but
+            // their cors support modules do not. Oh well.
+            if (integrationName !== 'hapi' && integrationName !== 'koa') {
+              expect(res.header['vary']).toContain(
+                'Access-Control-Request-Headers',
+              );
+            }
+          });
+        });
+      }
+
       it('can handle a request with variables', async () => {
         app = await createApp();
         const expected = {
@@ -1276,12 +1324,10 @@ export default ({
           },
         });
 
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testString }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testString }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(403);
           expect(res.body.data).toEqual({
             testString: 'it works',

@@ -39,27 +39,28 @@ export class ApolloServer extends ApolloServerBase {
         if (typeof cors.methods === 'string') {
           staticCorsHeaders['Access-Control-Allow-Methods'] = cors.methods;
         } else if (Array.isArray(cors.methods)) {
-          staticCorsHeaders['Access-Control-Allow-Methods'] = cors.methods.join(',');
+          staticCorsHeaders['Access-Control-Allow-Methods'] =
+            cors.methods.join(',');
         }
       }
 
       if (cors.allowedHeaders) {
         if (typeof cors.allowedHeaders === 'string') {
-          staticCorsHeaders['Access-Control-Allow-Headers'] = cors.allowedHeaders;
+          staticCorsHeaders['Access-Control-Allow-Headers'] =
+            cors.allowedHeaders;
         } else if (Array.isArray(cors.allowedHeaders)) {
-          staticCorsHeaders[
-            'Access-Control-Allow-Headers'
-          ] = cors.allowedHeaders.join(',');
+          staticCorsHeaders['Access-Control-Allow-Headers'] =
+            cors.allowedHeaders.join(',');
         }
       }
 
       if (cors.exposedHeaders) {
         if (typeof cors.exposedHeaders === 'string') {
-          staticCorsHeaders['Access-Control-Expose-Headers'] = cors.exposedHeaders;
+          staticCorsHeaders['Access-Control-Expose-Headers'] =
+            cors.exposedHeaders;
         } else if (Array.isArray(cors.exposedHeaders)) {
-          staticCorsHeaders[
-            'Access-Control-Expose-Headers'
-          ] = cors.exposedHeaders.join(',');
+          staticCorsHeaders['Access-Control-Expose-Headers'] =
+            cors.exposedHeaders.join(',');
         }
       }
 
@@ -81,8 +82,18 @@ export class ApolloServer extends ApolloServerBase {
             landingPage = this.getLandingPage();
           }
 
-          const corsHeaders: HttpResponse['headers'] = {...staticCorsHeaders};
-          const originHeader = req.headers['Origin'] || req.headers['origin'];
+          // HTTP header names are case-insensitive. It seems like most of the
+          // time, Azure Functions gives us headers lower-cased, but it's not
+          // explicitly documented. Let's be conservative and change to
+          // lower-case for our own use.
+          // https://github.com/apollographql/apollo-server/issues/4178#issuecomment-812093050
+          const requestHeaders = Object.create(null);
+          for (const [name, value] of Object.entries(req.headers)) {
+            requestHeaders[name.toLowerCase()] = value;
+          }
+
+          const corsHeaders: HttpResponse['headers'] = { ...staticCorsHeaders };
+          const originHeader = requestHeaders['origin'];
           if (cors === undefined) {
             corsHeaders['Access-Control-Allow-Origin'] = '*';
           } else if (cors && cors.origin) {
@@ -96,14 +107,26 @@ export class ApolloServer extends ApolloServerBase {
             ) {
               corsHeaders['Access-Control-Allow-Origin'] = originHeader;
             }
-
-            if (!cors.allowedHeaders) {
-              corsHeaders['Access-Control-Allow-Headers'] =
-                req.headers['Access-Control-Request-Headers'];
-            }
           }
 
           if (req.method === 'OPTIONS') {
+            if (
+              requestHeaders['access-control-request-headers'] &&
+              (cors === undefined || (cors && !cors.allowedHeaders))
+            ) {
+              corsHeaders['Access-Control-Allow-Headers'] =
+                requestHeaders['access-control-request-headers'];
+              corsHeaders['Vary'] = 'Access-Control-Request-Headers';
+            }
+
+            if (
+              requestHeaders['access-control-request-method'] &&
+              (cors === undefined || (cors && !cors.methods))
+            ) {
+              corsHeaders['Access-Control-Allow-Methods'] =
+                requestHeaders['access-control-request-method'];
+            }
+
             context.done(null, {
               body: '',
               status: 204,
@@ -115,9 +138,7 @@ export class ApolloServer extends ApolloServerBase {
           if (
             landingPage &&
             req.method === 'GET' &&
-            (req.headers['Accept'] || req.headers['accept'])?.includes(
-              'text/html',
-            )
+            requestHeaders['accept']?.includes('text/html')
           ) {
             context.done(null, {
               body: landingPage.html,
