@@ -46,7 +46,7 @@ Apollo Server 3 no longer contains this built-in integration. However, you can s
 
 We hope to add more fully-integrated subscription support to Apollo Server in a future version.
 
-**Please note that the `subscriptions-transport-ws` library is not actively maintained.** However, as this is written, this protocol is exclusively supported by both GraphQL Playground and Apollo Sandbox. An alternative, actively-maintained [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) package exists which we intend to support in the future.
+Please note that the `subscriptions-transport-ws` library is not actively maintained. An alternative, actively-maintained `graphql-ws` package exists which we intend to support in the future. These libraries implement different protocols for GraphQL subscriptions over websockets, so you will need to adjust your client to support `graphql-ws`. At the time of release of Apollo Server 3, the `graphql-ws` protocol is not yet supported by GraphQL Playground or Apollo Explorer.
 
 #### Reenabling subscriptions
 
@@ -71,7 +71,7 @@ You cannot integrate the batteries-included `apollo-server` package with `subscr
 
 1. Create an `http.Server` instance with your Express `app`.
 
-    In order to setup both the HTTP and WebSocket servers, we'll need to create an `http.Server`. Do this by passing your Express `app` to the `createServer` function which we imported from the Node.js `http` module.
+    In order to set up both the HTTP and WebSocket servers, we'll need to create an `http.Server`. Do this by passing your Express `app` to the `createServer` function which we imported from the Node.js `http` module.
 
     ```javascript
     // This `app` is the returned value from `express()`.
@@ -112,7 +112,7 @@ You cannot integrate the batteries-included `apollo-server` package with `subscr
 
     Most applications will be calling `app.listen(...)` on their `Express` app. **This should be changed to `httpServer.listen(...)`** using the same arguments. This will begin listening on the HTTP and WebSocket transports simultaneously.
 
-Expand for a completed example of adding subscriptions
+A completed example of migrating subscriptions is shown below:
 <ExpansionPanel title="Click to expand">
 
 ```js

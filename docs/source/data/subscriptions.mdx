@@ -11,7 +11,6 @@ import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 Because subscription updates are usually pushed by the server (instead of polled by the client), they usually use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP. To support this, Apollo Server lets you [set a subscription-specific endpoint](#setting-a-subscription-endpoint) that's separate from the default endpoint for queries and mutations.
 
-// FIXME: not the case anymore
 You can use subscriptions with the core `apollo-server` library, or with any of Apollo Server's supported [middleware integrations](#using-with-middleware-integrations).
 
 > **Important:** Compared to queries and mutations, subscriptions are significantly more complex to implement. Before you begin, [confirm that your use case requires subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/#when-to-use-subscriptions).
