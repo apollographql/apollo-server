@@ -11,6 +11,7 @@ This includes plugins for:
 * The default landing page for [non-production environments](#default-non-production-landing-page) (`ApolloServerPluginLandingPageLocalDefault`)
 * The default landing page for [production](#default-production-landing-page) (`ApolloServerPluginLandingPageProductionDefault`)
 * Using [GraphQL Playground](#graphql-playground-landing-page) as a landing page (`ApolloServerPluginLandingPageGraphQLPlayground`)
+* [Disabling the landing page entirely](#disabling-the-landing-page)
 
 These plugins work by implementing the [`renderLandingPage`](../../integrations/plugins-event-reference/#renderlandingpage) plugin event, which serves an HTML page whenever a browser includes an `accept: text/html` header. Aside from these, you can also create a  [custom plugin](../../integrations/plugins/) that renders a [custom landing page](../../testing/build-run-queries/#custom-landing-page).
  
@@ -176,7 +177,7 @@ To enable this link, you need to provide `graphRef` here even if you already pro
 
 ## GraphQL Playground landing page
 
-The `ApolloServerPluginLandingPageGraphQLPlayground` serves the [GraphQL Playground IDE](https://github.com/graphql/graphql-playground) as a landing page.
+The `ApolloServerPluginLandingPageGraphQLPlayground` plugin serves the [GraphQL Playground IDE](https://github.com/graphql/graphql-playground) as a landing page.
 
 > **Note:** The GraphQL Playground project is [retired](https://github.com/graphql/graphql-playground/issues/1143) in favor of GraphiQL. This functionality is provided to help developers migrating from Apollo Server 2.
 
@@ -260,3 +261,24 @@ If specified, allows you to override the default values of GraphQL Playground's 
 
 </tbody>
 </table>
+
+## Disabling the landing page
+
+The `ApolloServerPluginLandingPageDisabled` plugin serves _no_ landing page from Apollo Server's base URL. Install it to disable the default landing page in some or all environments:
+
+```js
+import { ApolloServer } from "apollo-server";
+import {
+  ApolloServerPluginLandingPageDisabled
+} from "apollo-server-core";
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [
+    ApolloServerPluginLandingPageDisabled(),
+  ],
+});
+```
+
+This plugin takes no arguments.
