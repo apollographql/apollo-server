@@ -29,8 +29,6 @@ async function StartServer() {
     app,
   });
 
-  await server.installSubscriptionHandlers(app.listener);
-
   await app.start();
 }
 

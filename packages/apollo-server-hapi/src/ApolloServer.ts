@@ -69,7 +69,7 @@ export class ApolloServer extends ApolloServerBase {
         method: '*',
         path: '/.well-known/apollo/server-health',
         options: {
-          cors: cors !== undefined ? cors : true,
+          cors: cors !== undefined ? cors : { origin: 'ignore' },
         },
         handler: async function (request, h) {
           if (onHealthCheck) {
@@ -93,7 +93,7 @@ export class ApolloServer extends ApolloServerBase {
       method: ['GET', 'POST'],
       path,
       options: route ?? {
-        cors: cors ?? true,
+        cors: cors ?? { origin: 'ignore' },
       },
       handler: async (request, h) => {
         try {
@@ -113,10 +113,8 @@ export class ApolloServer extends ApolloServerBase {
 
           const response = h.response(graphqlResponse);
           if (responseInit.headers) {
-            Object.entries(
-              responseInit.headers,
-            ).forEach(([headerName, value]) =>
-              response.header(headerName, value),
+            Object.entries(responseInit.headers).forEach(
+              ([headerName, value]) => response.header(headerName, value),
             );
           }
           response.code(responseInit.status || 200);

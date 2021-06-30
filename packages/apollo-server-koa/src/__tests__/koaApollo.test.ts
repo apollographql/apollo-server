@@ -40,5 +40,5 @@ describe('koaApollo', () => {
 });
 
 describe('integration:Koa', () => {
-  testSuite({ createApp, destroyApp });
+  testSuite({ createApp, destroyApp, integrationName: 'koa' });
 });
