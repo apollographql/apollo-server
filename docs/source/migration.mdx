@@ -110,7 +110,7 @@ You cannot integrate the batteries-included `apollo-server` package with `subscr
 
 1. Finally, adjust the existing `listen`.
 
-    Most applications will be calling `app.listen(...)` on their `Express` app. **This should be changed to `httpServer.listen(...)`** using the same arguments. This will begin listening on the HTTP and WebSocket transports simultaneously.
+    Most applications will be calling `app.listen(...)` on their Express app. **This should be changed to `httpServer.listen(...)`** using the same arguments. This will begin listening on the HTTP and WebSocket transports simultaneously.
 
 A completed example of migrating subscriptions is shown below:
 <ExpansionPanel title="Click to expand">
