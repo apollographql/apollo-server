@@ -85,7 +85,7 @@ $ git commit -m "initial apollo server deployment"
 $ git push heroku # specify your branch name, if necessary
 ```
 
-After deployment completes, your Apollo Server project is up and running! You can send a query to your Heroku-hosted GraphQL endpoint at `<HEROKU\_APP\_NAME>.herokuapp.com`.
+After deployment completes, your Apollo Server project is up and running! You can send a query to your Heroku-hosted GraphQL endpoint at `<HEROKU_APP_NAME>.herokuapp.com`.
 
 Some things to note:
 - `git push heroku` does _not_ push to your `origin` remote or any other remote. You must run `git push` again separately.
@@ -97,7 +97,7 @@ Some things to note:
 
     Alternatively, you can [configure environment variables](./heroku/#configuring-environment-variables) through the Heroku dashboard.
 
-- Remember that [GraphQL Playground](../testing/graphql-playground) is disabled by default when Apollo Server is in a production environment.
+- Remember that introspection is disabled by default when Apollo Server is in a production environment, which prevents tools like Apollo Sandbox from working.
 
 ### Automatically deploying with GitHub
 
@@ -115,6 +115,6 @@ To enable the production mode of Apollo Server, you need to set the `NODE_ENV` v
 
 Under your Heroku app's Settings tab, click **Reveal Config Vars**. Next, set `NODE_ENV` to `production` and copy your graph API key from [Apollo Studio](http://studio.apollographql.com/) as the value for `APOLLO_KEY`.
 
-![Add Studio API Key Screenshot](../images/deployment/heroku/config-vars.png)
+<img class="screenshot" src="../images/deployment/heroku/config-vars.jpg" alt="Adding config vars" />
 
-Send a query to your Heroku app's GraphQL service at **<HEROKU\_APP\_NAME>.herokuapp.com** and then check out the tracing data in [Apollo Studio](http://studio.apollographql.com/).
+Send a query to your Heroku app's GraphQL service at `<HEROKU_APP_NAME>.herokuapp.com` and then check out the tracing data in [Apollo Studio](http://studio.apollographql.com/).
