@@ -166,7 +166,7 @@ To use `graphql-upload` with Apollo Server 3, see the [documentation on enabling
 
 By default, Apollo Server 2 serves the (now-[retired](https://github.com/graphql/graphql-playground/issues/1143)) [GraphQL Playground](https://github.com/graphql/graphql-playground) IDE from its base URL (unless it's running in production). You can override this default behavior with the `playground` option (for example, `playground:true` enables GraphQL Playground even in production).
 
-Apollo Server 3 removes this option in favor of a new [landing page API](../integrations/plugins-event-reference/#renderlandingpage), which enables you to serve a custom landing page (or multiple landing pages). The default landing page is a splash page (TODO #5373: link to splash page docs), which is served in every environment but has a different appearance depending on the value of `NODE_ENV`. When `NODE_ENV` is not `production`, this splash page links to the Apollo Sandbox IDE.
+Apollo Server 3 removes this option in favor of a new [landing page API](./integrations/plugins-event-reference/#renderlandingpage), which enables you to serve a custom landing page (or multiple landing pages). The default landing page is a splash page (TODO #5373: link to splash page docs), which is served in every environment but has a different appearance depending on the value of `NODE_ENV`. When `NODE_ENV` is not `production`, this splash page links to the Apollo Sandbox IDE.
 
 #### Reenabling GraphQL Playground
 
@@ -552,7 +552,7 @@ Several small features have been removed from Apollo Server 3.
 Apollo Server 2 had a deprecated field `ApolloServer.schema` (which never worked when the server was a gateway). Apollo Server 3 does not contain this field. If you want to access your server's schema, you have a few options:
 
 - Just construct the schema yourself (eg, with `const schema = makeExecutableSchema({typeDefs, resolvers})` from `@graphql-tools/schema`), pass it in as `new ApolloServer({schema})`, and use the same value you've passed in elsewhere. (Apollo Server 3 won't modify the schema you passed in.)
-- Write a plugin that uses the [`serverWillStart` event](../integrations/plugins-event-reference/#serverwillstart) to learn the schema. Note that if your server is a gateway, this will receive the first schema loaded on startup but will not receive any subsequent schemas if it updates later.
+- Write a plugin that uses the [`serverWillStart` event](./integrations/plugins-event-reference/#serverwillstart) to learn the schema. Note that if your server is a gateway, this will receive the first schema loaded on startup but will not receive any subsequent schemas if it updates later.
 - If your server is a gateway, register a callback with `gateway.onSchemaChange`. Note that this API has some inconsistent behavior; we are considering [adding an Apollo Server plugin event that receives all schema updates](https://github.com/apollographql/apollo-server/pull/5187) to resolve this.
 
 ### `apollo-server-testing`
@@ -614,7 +614,7 @@ class MyDataSource extends RESTDataSource {
 
 #### Almost all plugin events are now async
 
-In Apollo Server 2, some [plugin events](../integrations/plugins-event-reference/) are synchronous (their return value is not a `Promise`), and some are "maybe-asynchronous" (they could return a `Promise` if they wanted, but didn't have to). This meant that you couldn't do asynchronous work in the former events, and the typings for the latter events were somewhat complex.
+In Apollo Server 2, some [plugin events](./integrations/plugins-event-reference/) are synchronous (their return value is not a `Promise`), and some are "maybe-asynchronous" (they could return a `Promise` if they wanted, but didn't have to). This meant that you couldn't do asynchronous work in the former events, and the typings for the latter events were somewhat complex.
 
 In Apollo Server 3, almost all plugin methods are always asynchronous: they always return a `Promise` type. This includes [end hooks](../integrations/plugins/#end-hooks) as well. (The one exception is `willResolveField` and its end hook, which are always synchronous.)
 
