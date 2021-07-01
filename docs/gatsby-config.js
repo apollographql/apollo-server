@@ -16,6 +16,13 @@ module.exports = {
           '1': 'version-1',
           '3': 'release-3.0',
         },
+        // This link shows up inside the v3 docs and doesn't work in this
+        // context, but will work once v3 is default and v2 is old.
+        checkLinksOptions: {
+          exceptions: [
+            '/v2/migration-engine-plugins/',
+          ],
+        },
         sidebarCategories: {
           null: [
             'index',
