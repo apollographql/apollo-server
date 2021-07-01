@@ -117,7 +117,7 @@ After you get up and running with the "batteries-included" `apollo-server` packa
 
 In this case, we recommend you swap out `apollo-server` for `apollo-server-express` (unless you are confident that you want to use a different Node.js framework). This change requires only a few lines and has a minimal effect on your server's existing behavior (`apollo-server` uses `apollo-server-express` under the hood).
 
-> We recommend Express because it's the most popular Node.js web framework, and it integrates well with many _other_ popular frameworks. It does have its limitations (for example, Express async support is not built around `Promise`s and `async` functions), but backward incompatible changes to the framework are rarer than in newer frameworks.
+> We recommend Express because it's the most popular Node.js web framework, and it integrates well with many _other_ popular libraries. It does have its limitations (for example, Express async support is not built around `Promise`s and `async` functions), but backward incompatible changes to the framework are rarer than in newer libraries.
 
 ### Handling server shutdown
 
@@ -187,7 +187,6 @@ async function startApolloServer(typeDefs, resolvers) {
   await server.start();
   const app = express();
   server.applyMiddleware({ app });
-  const { url } = await server.listen();
   await new Promise(resolve => app.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 }
