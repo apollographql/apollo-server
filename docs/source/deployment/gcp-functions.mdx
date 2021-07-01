@@ -28,14 +28,9 @@ const resolvers = {
   },
 };
 
-// Because `NODE_ENV` is a reserved environment variable in Google Cloud
-// Functions and it defaults to "production", you need to set the
-// `introspection` option to `true` for a UI like Apollo Sandbox or GraphQL
-// Playground to work correctly.
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  introspection: true,
 });
 
 exports.handler = server.createHandler();
@@ -54,7 +49,11 @@ Click **Create Function**. Give the function a name and set the **Trigger type**
 
 For quick setup and access to the GraphQL endpoint/landing page, choose to **Allow unauthenticated invocations**. To require authentication for this endpoint, you can manage authorized users via [Cloud IAM](https://console.cloud.google.com/iam-admin/iam).
 
-Save your configuration changes in the Trigger section. Copy the trigger's URL for later and click **Next**.
+Save your configuration changes in the Trigger section. Copy the trigger's URL for later.
+
+Expand the "Runtime, Build, and Connections Settings" panel and add a runtime environment variable named `NODE_ENV` with value `development`. (This overrides Cloud Function's default of `production` and will allow you to easily test your graph with Apollo Sandbox. You can delete this environment variable once you're ready for your app to be considered a production app.)
+
+Now click **Next**.
 
 ### 2. Write the API handlers and deploy
 
@@ -65,10 +64,10 @@ Paste the example code at the top of this page into the contents of `index.js` i
 Edit `package.json` so that it lists `apollo-server-cloud-functions` and `graphql` in its dependencies:
 
 ```json:title=package.json
-"dependencies": {
-  "apollo-server-cloud-functions": "^2.24.0",
-  "graphql": "^15.5.0"
-}
+  "dependencies": {
+    "apollo-server-cloud-functions": "3.x",
+    "graphql": "^15.5.0"
+  }
 ```
 
 Click **Deploy** to initiate deployment. Then, proceed to [Testing the function](#testing-the-function).
@@ -100,7 +99,7 @@ At this point, your `package.json` should resemble the following:
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "apollo-server-cloud-functions": "^2.24.0",
+    "apollo-server-cloud-functions": "3.x",
     "graphql": "^15.5.0"
   }
 }
@@ -122,9 +121,9 @@ For more information, see the official [Cloud Functions docs](https://cloud.goog
 
 ## Testing the function
 
-After deployment completes, navigate to your function's trigger URL. If deployment succeeded, you should see your server's landing page.
+After deployment completes, navigate to your function's trigger URL, with `/graphql` added to the end. If deployment succeeded, you should see your server's landing page.
 
-> If you can't access your trigger URL, you might need to [add `allAuthenticatedUsers` or `allUsers` permissions](https://cloud.google.com/iam/docs/overview#all-authenticated-users) to your function.
+> If you can't access your trigger URL, you might need to [give `allAuthenticatedUsers` or `allUsers` the `Cloud Functions Invoker` role](https://cloud.google.com/iam/docs/overview#all-authenticated-users) on the Permissions tab.
 
 Click <q>Query your Server</q> and use Apollo Sandbox to test the following query:
 
