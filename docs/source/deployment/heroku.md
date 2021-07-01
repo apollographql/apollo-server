@@ -30,7 +30,7 @@ Choose a name your app (this will be your `<HEROKU_APP_NAME>`) and click **Creat
 
 ## Setting up the project
 
-For Heroku, you can set up your project using Apollo Server's core library or any of its [supported middleware](../integrations/middleware) (such as Express or Hapi).
+For Heroku, you can set up your project using the "batteries-included" `apollo-server` library or any of Apollo Server's [framework-specific packages](../integrations/middleware) (Express, Hapi, etc.).
 
 ### Manually setting the port
 
