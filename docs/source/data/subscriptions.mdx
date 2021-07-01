@@ -504,3 +504,7 @@ The following are community-created `PubSub` libraries for popular event-publish
 - [Ably Realtime](https://github.com/ably-labs/graphql-ably-pubsub)
 
 If none of these libraries fits your use case, you can also create your own `PubSubEngine` subclass. If you create a new open-source library, click **Edit on GitHub** to let us know about it!
+
+## The `graphql-ws` transport library
+
+This page explains how to connect the `subscriptions-transport-ws` library to your Apollo Server. However, as of 2021, this library is not actively maintained. A newer alternative to `subscriptions-transport-ws` called [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) is currently more actively maintained, and its README explains how to use it with Apollo Server. The two libraries implement different protocols for GraphQL subscriptions over websockets, so you will need to adjust your client to support `graphql-ws`. At the time of release of Apollo Server 3, the protocol used in the `graphql-ws` library is not yet supported by GraphQL Playground or Apollo Explorer, which is why we do not yet document it as our main recommendation for a subscriptions library. If the ability to interact with subscriptions in GraphQL Playground or Apollo Explorer is not important to you, you may prefer using `graphql-ws` over `subscriptions-transport-ws`.
