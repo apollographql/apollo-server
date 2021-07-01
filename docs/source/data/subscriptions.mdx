@@ -477,36 +477,6 @@ The example above validates the user's token that is sent with the first initial
 
 In case of an authentication error, the `Promise` will be rejected, which prevents the client's connection.
 
-
-## Using with middleware integrations
-
-You can use subscriptions with any of Apollo Server's supported [middleware integrations](../integrations/middleware/). To do so, you call `installSubscriptionHandlers` on your `ApolloServer` instance.
-
-This example enables subscriptions for an Express server that uses `apollo-server-express`:
-
-```js
-const http = require('http');
-const { ApolloServer } = require('apollo-server-express');
-const express = require('express');
-
-async function startApolloServer() {
-  const PORT = 4000;
-  const app = express();
-  const server = new ApolloServer({ typeDefs, resolvers });
-  await server.start();
-  server.applyMiddleware({app})
-
-  const httpServer = http.createServer(app);
-  server.installSubscriptionHandlers(httpServer); // highlight-line
-
-  // Make sure to call listen on httpServer, NOT on app.
-  await new Promise(resolve => httpServer.listen(PORT, resolve));
-  console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`);
-  console.log(`🚀 Subscriptions ready at ws://localhost:${PORT}${server.subscriptionsPath}`);
-  return { server, app, httpServer };
-}
-```
-
 ## Production `PubSub` libraries
 
 [As mentioned above](#the-pubsub-class), the `PubSub` class is _not_ recommended for production environments, because its event-publishing system is in-memory. This means that events published by _one_ instance of your GraphQL server are not received by subscriptions that are handled by _other_ instances.
