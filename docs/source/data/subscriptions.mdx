@@ -11,7 +11,7 @@ import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 Because subscription updates are usually pushed by the server (instead of polled by the client), they usually use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP.
 
-Subscriptions are no longer internally supported by Apollo Server, however they can still be introduced in [just a few steps](#introducing-subscriptions-to-your-apollo-server) listed below.
+Subscriptions are no longer internally supported by Apollo Server. They can still be introduced in [just a few steps](#introducing-subscriptions-to-your-apollo-server) listed below.
 
 > **Important:** Compared to queries and mutations, subscriptions are significantly more complex to implement. Before you begin, [confirm that your use case requires subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/#when-to-use-subscriptions).
 
@@ -42,7 +42,7 @@ subscription PostFeed {
 
 ## Introducing subscriptions to your Apollo Server
 
-> Subscriptions are **not** supported by the "batteries-included" `apollo-server` package. In order to implement subscriptions, you must first "eject" (TODO: link to ejecting docs) and use the `apollo-server-express` package (or any other Apollo Server integration package which supports subscriptions). The following steps assume you've already ejected and are using `apollo-server-express`.
+> Subscriptions are **not** supported by the "batteries-included" `apollo-server` package. In order to implement subscriptions, you must first (swap to the `apollo-server-express` package)[/integrations/middleware/#swapping-out-apollo-server] (or any other Apollo Server integration package which supports subscriptions). The following steps assume you've already made the switch and are using `apollo-server-express`.
 
 In order to run both an Express app and a separate subscription server, we're going to create an `http.Server` instance which will effectively wrap the two and become our new `listen`er. We will also create a `SubscriptionServer` which will require a few tweaks in our existing code.
 
@@ -83,7 +83,7 @@ In order to run both an Express app and a separate subscription server, we're go
 1. Create the `SubscriptionServer`.
 
     ```javascript
-    SubscriptionServer.create({
+    const subscriptionServer = SubscriptionServer.create({
        // This is the `schema` we just created.
        schema,
        // These are imported from `graphql`.
@@ -95,6 +95,13 @@ In order to run both an Express app and a separate subscription server, we're go
        // This `server` is the instance returned from `new ApolloServer`.
        path: server.graphqlPath,
     });
+
+    // Shut down in the case of interrupt and termination signals
+    // We expect to handle this more cleanly in the future. See (#5074)[https://github.com/apollographql/apollo-server/issues/5074] for reference.
+    ['SIGINT', 'SIGTERM'].forEach(signal => {
+      process.on(signal, () => subscriptionServer.close();
+    });
+
     ```
 
 1. Finally, adjust the existing `listen`.
@@ -168,13 +175,17 @@ The `subscribe` function must return an object of type `AsyncIterator`, a standa
 
 Apollo Server uses a **publish-subscribe** (**pub/sub**) model to track events that update active subscriptions. The [`graphql-subscriptions` library](https://github.com/apollographql/graphql-subscriptions) provides the `PubSub` class as a basic in-memory event bus to help you get started:
 
+In order to use the `graphql-subscriptions` package, first install it to your project:
+```sh
+npm install graphql-subscriptions
+```
+
+A `PubSub` instance enables your server code to both `publish` events to a particular label and listen for events associated with a particular label. We can create a `PubSub` instance like so:
 ```js
 import { PubSub } from 'graphql-subscriptions';
 
 const pubsub = new PubSub();
 ```
-
-A `PubSub` instance enables your server code to both `publish` events to a particular label and listen for events associated with a particular label.
 
 ### Publishing an event
 
@@ -316,13 +327,19 @@ Use `withFilter` to make sure clients get exactly the subscription updates they 
 
 An example server is available on [GitHub](https://github.com/apollographql/docs-examples/blob/main/server-subscriptions-as3/index.js) and CodeSandbox:
 
-<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/server-subscriptions-as3?fontsize=14&hidenavigation=1&theme=dark">
-  <img alt="Edit server-subscriptions" src="https://codesandbox.io/static/img/play-codesandbox.svg"></img>
+<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/server-subscriptions-as3?initialpath=/graphql">
+  <img alt="Edit server-subscriptions-as3" src="https://codesandbox.io/static/img/play-codesandbox.svg">
 </a>
 
-The server exposes one subscription (`numberIncremented`) that returns an integer that's incremented on the server every second.
+The server exposes one subscription (`numberIncremented`) that returns an integer that's incremented on the server every second. Here's an example subscription that you can run against your server:
 
-After you start up this server locally, you can visit `http://localhost:4000` to test out running the `numberIncremented` subscription in Apollo Sandbox. You will most likely need to configure the subscriptions endpoint (ws://localhost:4000/graphql) as well in the settings menu. You'll see the subscription's value update every second.
+```graphql
+subscription IncrementingNumber {
+  numberIncremented
+}
+```
+
+After you start up this server locally, you can visit (http://localhost:4000/graphql)[http://localhost:4000/graphql] to test out running the `numberIncremented` subscription in Apollo Explorer. You will most likely need to configure the subscriptions endpoint (wss://localhost:4000/graphql) as well in the settings menu. You'll see the subscription's value update every second.
 
 ## Operation context
 
@@ -365,7 +382,7 @@ You provide these function definitions to the constructor object of a `Subscript
 SubscriptionServer.create({
   schema,
   execute,
-  subscribe
+  subscribe,
   onConnect(connectionParams, webSocket, context) {
     console.log('Connected!')
   },
@@ -446,14 +463,8 @@ The `connectionParams` argument in the `onConnect` callback contains the informa
 The GraphQL context can also be extended with the authenticated user data to enable fine grain authorization.
 
 ```js
-async function validateToken(authToken) {
-  // ... validate token and return a Promise, rejects in case of an error
-};
-
-function findUser(authToken) {
-  return async function (tokenValidationResult) {
-    // ... finds user by auth token and return a Promise, rejects in case of an error
-  };
+async function findUser(authToken) {
+  // find a user by auth token
 };
 
 SubscriptionServer.create({
@@ -462,11 +473,8 @@ SubscriptionServer.create({
   subscribe,
   async onConnect(connectionParams, webSocket) {
     if (connectionParams.authToken) {
-      try {
-        const validationResult = await validateToken(connectionParams.authToken);
-        const currentUser = await findUser(connectionParams.authToken)(validation);
-        return { currentUser };
-      }
+      const currentUser = await findUser(connectionParams.authToken);
+      return { currentUser };
     }
     throw new Error('Missing auth token!');
   },
