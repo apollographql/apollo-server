@@ -99,7 +99,7 @@ In order to run both an Express app and a separate subscription server, we're go
     // Shut down in the case of interrupt and termination signals
     // We expect to handle this more cleanly in the future. See (#5074)[https://github.com/apollographql/apollo-server/issues/5074] for reference.
     ['SIGINT', 'SIGTERM'].forEach(signal => {
-      process.on(signal, () => subscriptionServer.close();
+      process.on(signal, () => subscriptionServer.close());
     });
 
     ```
@@ -328,7 +328,7 @@ Use `withFilter` to make sure clients get exactly the subscription updates they 
 An example server is available on [GitHub](https://github.com/apollographql/docs-examples/blob/main/server-subscriptions-as3/index.js) and CodeSandbox:
 
 <a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/server-subscriptions-as3?initialpath=/graphql">
-  <img alt="Edit server-subscriptions-as3" src="https://codesandbox.io/static/img/play-codesandbox.svg">
+  <img alt="Edit server-subscriptions-as3" src="https://codesandbox.io/static/img/play-codesandbox.svg" />
 </a>
 
 The server exposes one subscription (`numberIncremented`) that returns an integer that's incremented on the server every second. Here's an example subscription that you can run against your server:
@@ -339,7 +339,7 @@ subscription IncrementingNumber {
 }
 ```
 
-After you start up this server locally, you can visit (http://localhost:4000/graphql)[http://localhost:4000/graphql] to test out running the `numberIncremented` subscription in Apollo Explorer. You will most likely need to configure the subscriptions endpoint (wss://localhost:4000/graphql) as well in the settings menu. You'll see the subscription's value update every second.
+After you start up the server in CodeSandbox, follow the instructions in the browser to test out running the `numberIncremented` subscription in Apollo Explorer. You will most likely need to configure the subscriptions endpoint (wss://<your sandbox id>.sse.codesandbox.io/graphql) as well in the settings menu. You'll see the subscription's value update every second.
 
 ## Operation context
 
@@ -482,7 +482,7 @@ SubscriptionServer.create({
 });
 ```
 
-The example above validates the user's token that is sent with the first initialization message on the transport, then it looks up the user and returns the user object as a `Promise`. The user object found will be available as `context.currentUser` in your GraphQL resolvers.
+The example above looks up a user based on the auth token that is sent with the first initialization message on the transport, then returns the user object as a `Promise`. The user object found will be available as `context.currentUser` in your GraphQL resolvers.
 
 In case of an authentication error, the `Promise` will be rejected, which prevents the client's connection.
 
