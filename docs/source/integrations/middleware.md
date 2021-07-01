@@ -8,7 +8,9 @@ Apollo Server is distributed as a collection of different packages for different
 
 ## Which package should I use?
 
-**In most cases, you should get started with the "batteries-included" `apollo-server` package.** Here's a flowchart with recommended guidance:
+**In most cases,** you should get started with the "batteries-included" `apollo-server` package.
+
+If your project has specific requirements, we recommend choosing a package based on this flowchart:
 
 ```mermaid
 graph TB;
@@ -119,6 +121,58 @@ In this case, we recommend you swap out `apollo-server` for `apollo-server-expre
 
 > We recommend Express because it's the most popular Node.js web framework, and it integrates well with many _other_ popular libraries. It does have its limitations (for example, Express async support is not built around `Promise`s and `async` functions), but backward incompatible changes to the framework are rarer than in newer libraries.
 
+### Example
+
+Let's say our `apollo-server` implementation uses the following code:
+
+```javascript:title=index.js
+import { ApolloServer } from 'apollo-server';
+
+async function startApolloServer(typeDefs, resolvers) {
+  const server = new ApolloServer({ typeDefs, resolvers });
+  const { url } = await server.listen();
+  console.log(`🚀 Server ready at ${url}`);
+}
+```
+
+To swap this out for `apollo-server-express`, we first install the following required packages:
+
+```bash
+npm install apollo-server-express express graphql
+```
+
+We can (and should) also _uninstall_ `apollo-server`.
+
+Next, we can modify our code to match the following:
+
+```javascript:title=index.js
+import { ApolloServer } from 'apollo-server-express';
+import express from 'express';
+
+async function startApolloServer(typeDefs, resolvers) {
+
+  // Same ApolloServer initialization as before
+  const server = new ApolloServer({ typeDefs, resolvers });
+
+  // Required logic for integrating with Express
+  await server.start();
+  const app = express();
+  server.applyMiddleware({
+     app,
+
+     // By default, apollo-server hosts its GraphQL endpoint at the
+     // server root. However, *other* Apollo Server packages host it at
+     // /graphql. Optionally provide this to match apollo-server.
+     path: '/'
+  });
+
+  // Modified server startup
+  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
+}
+```
+
+
 ### Handling server shutdown
 
 The `apollo-server` package does provide one feature that isn't straightforward to implement with other packages: because `apollo-server` handles making its HTTP server listen for requests, its [`stop`](../api/apollo-server/#stop) method handles _stopping_ the HTTP server. This means it can make sure to stop accepting new requests _before_ it begins to shut down the machinery that processes GraphQL operations.
@@ -137,6 +191,14 @@ All Apollo Server packages depend on `apollo-server-core`, which contains the co
 All Apollo Server packages (and `apollo-server-core`) are published to npm with the same version number, even if certain packages have no changes for a particular version. This makes it more straightforward to discuss a particular version of Apollo Server without needing to specify a package name.
 
 Certain support libraries (such as `apollo-server-caching`, `apollo-server-types`, and `apollo-server-plugin-base`) use their own versioning and are published only when they change or one of their dependencies changes.
+
+### Common options
+
+Most Apollo Server packages require calling a method named `applyMiddleware`, `getMiddleware`, or `createHandler` (depending on the package). These methods accept a (mostly) common set of options (not every package accepts every option).
+
+For descriptions of these options, see the [API reference](../api/apollo-server/#options-1).
+
+The set of common options supported by each package is listed under [Basic usage](#basic-usage).
 
 ## Basic usage
 
@@ -162,7 +224,7 @@ async function startApolloServer(typeDefs, resolvers) {
 }
 ```
 
-Although `apollo-server` helps you get started fast, you can't configure its behavior as much as you can other Apollo Server packages. For example, you can't serve other endpoints from the same HTTP server.
+Although `apollo-server` helps you get started quickly, you can't configure its behavior as much as you can other Apollo Server packages. For example, you can't serve other endpoints from the same HTTP server.
 
 If you want to do something with your server that isn't supported by `apollo-server`, you can [swap to `apollo-server-express`](#swapping-out-apollo-server).
 
@@ -172,13 +234,13 @@ If you want to do something with your server that isn't supported by `apollo-ser
 
 `apollo-server` uses `apollo-server-express` under the hood. If you start with `apollo-server` and later need to modify how it serves over HTTP, you can [swap `apollo-server` to `apollo-server-express`](#swapping-out-apollo-server).
 
-The following function is roughly equivalent to the `apollo-server` sample code above.
+The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```bash
 npm install apollo-server-express express graphql
 ```
 
-```javascript
+```javascript:title=index.js
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 
@@ -194,9 +256,9 @@ async function startApolloServer(typeDefs, resolvers) {
 
 You _must_ `await server.start()` before calling `server.applyMiddleware`. You can add other middleware to `app` before or after calling `applyMiddleware`.
 
-You can call `server.getMiddleware` instead of `server.applyMiddleware` if you want to do something with the middleware function besides directly applying it to your app.  (`server.applyMiddleware({ app, ...rest })` is shorthand for `app.use(server.getMiddleware(rest))`.)
+You can call `server.getMiddleware` instead of `server.applyMiddleware` if you want to do something with the middleware function besides apply it directly to your app.  (`server.applyMiddleware({ app, ...rest })` is shorthand for `app.use(server.getMiddleware(rest))`.)
 
-`applyMiddleware` (along with `getMiddleware`) takes a few options, including: 
+`applyMiddleware` (along with `getMiddleware`) accepts the following [common options](#common-options):
 
 * `path`
 * `cors`
@@ -208,7 +270,7 @@ You can call `server.getMiddleware` instead of `server.applyMiddleware` if you w
 
 `apollo-server-fastify` is the GraphQL server for [Fastify](https://www.fastify.io/), a Node.js web framework. Apollo Server 3 supports Fastify v3.
 
-The following function is roughly equivalent to the `apollo-server` sample code above.
+The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
 $ npm install apollo-server-fastify fastify graphql
@@ -230,7 +292,7 @@ async function startApolloServer(typeDefs, resolvers) {
 
 You _must_ `await server.start()` before calling `server.createHandler`. You can call other functions on `app` before or after calling `createHandler`.
 
-`createHandler` takes a few options, including:
+`createHandler` accepts the following [common options](#common-options):
 
 * `path`
 * `cors`
@@ -239,9 +301,9 @@ You _must_ `await server.start()` before calling `server.createHandler`. You can
 
 ### `apollo-server-hapi`
 
-`apollo-server-hapi` is the GraphQL server for [hapi](https://hapi.dev/), a Node.js web framework. Apollo Server 3 is only tested with `@hapi/hapi` v20.1.2 and newer (the minimum version which supports Node 16).
+`apollo-server-hapi` is the GraphQL server for [hapi](https://hapi.dev/), a Node.js web framework. Apollo Server 3 is only tested with `@hapi/hapi` v20.1.2 and later (the minimum version that supports Node.js 16).
 
-The following function is roughly equivalent to the `apollo-server` sample code above.
+The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
 $ npm install apollo-server-hapi @hapi/hapi graphql
@@ -264,16 +326,22 @@ async function startApolloServer(typeDefs, resolvers) {
 }
 ```
 
-You must `await server.start()` before calling `server.applyMiddleware`; however, you may call other functions on `app` before or after calling `applyMiddleware`.
+You _must_ `await server.start()` before calling `server.applyMiddleware`. You can call other functions on `app` before or after calling `applyMiddleware`.
 
-`applyMiddleware` takes a few options, such as `path`, `route`, `cors`, `onHealthCheck`, and `disableHealthCheck`.
+`applyMiddleware` accepts the following [common options](#common-options):
+
+* `path`
+* `route`
+* `cors`
+* `onHealthCheck`
+* `disableHealthCheck`
 
 
 ### `apollo-server-koa`
 
 `apollo-server-koa` is the GraphQL server for [Koa](https://koajs.com/), a Node.js web framework.
 
-The following function is roughly equivalent to the `apollo-server` sample code above.
+The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
 $ npm install apollo-server-koa koa graphql
@@ -294,24 +362,30 @@ async function startApolloServer(typeDefs, resolvers) {
 }
 ```
 
-You must `await server.start()` before calling `server.applyMiddleware`; however, you may call other functions on `app` before or after calling `applyMiddleware`.
+You _must_ `await server.start()` before calling `server.applyMiddleware`. You can call other functions on `app` before or after calling `applyMiddleware`.
 
-You may also call `server.getMiddleware` instead of `server.applyMiddleware` if you'd like to do something else with the middleware function other than directly apply it to your app.  (`server.applyMiddleware({ app, ...rest })` is shorthand for `app.use(server.getMiddleware(rest))`.)
+You can call `server.getMiddleware` instead of `server.applyMiddleware` if you want to do something with the middleware function besides apply it directly to your app. (`server.applyMiddleware({ app, ...rest })` is shorthand for `app.use(server.getMiddleware(rest))`.)
 
-`applyMiddleware` (and `getMiddleware`) takes a few options, such as `path`, `cors`, `bodyParserConfig`, `onHealthCheck`, and `disableHealthCheck`.
+`applyMiddleware` (along with `getMiddleware`) accepts the following [common options](#common-options):
+
+* `path`
+* `cors`
+* `bodyParserConfig`
+* `onHealthCheck`
+* `disableHealthCheck`
 
 
 ### `apollo-server-micro`
 
 `apollo-server-micro` is the GraphQL server for [Micro](https://www.npmjs.com/package/micro), a Node.js web framework.
 
-The following file is roughly equivalent to the `apollo-server` sample code above. You should put your JS in a file called `index.js` in order for the `micro` CLI to find it.
+The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above. You should put this code in a file called `index.js` in order for the `micro` CLI to find it.
 
 ```
 $ npm install apollo-server-micro micro graphql
 ```
 
-```javascript
+```javascript:title=index.js
 import { ApolloServer } from 'apollo-server-micro';
 
 const server = new ApolloServer({ typeDefs, resolvers });
@@ -321,16 +395,22 @@ module.exports = server.start().then(() => server.createHandler());
 
 Then run the web server with `npx micro`.
 
-`createHandler` takes a few options, such as `path`, `onHealthCheck`, and `disableHealthCheck`. Note that `apollo-server-micro` does not have a built-in way of setting CORS headers.
+`createHandler` accepts the following [common options](#common-options):
+
+* `path`
+* `onHealthCheck`
+* `disableHealthCheck`.
+
+Note that `apollo-server-micro` does _not_ have a built-in way of setting CORS headers.
 
 
 ### `apollo-server-lambda`
 
 `apollo-server-lambda` is the GraphQL server for [AWS Lambda](https://aws.amazon.com/lambda/), Amazon's serverless compute service.
 
-It is a layer around `apollo-server-express`, which uses the [`@vendia/serverless-express`](https://www.npmjs.com/package/@vendia/serverless-express) package to translate Lambda events into Express requests. (This package is not related to the [Serverless framework](https://www.serverless.com/).) It supports API Gateway and ALB.
+This package is a layer around `apollo-server-express`, which uses the [`@vendia/serverless-express`](https://www.npmjs.com/package/@vendia/serverless-express) package to translate Lambda events into Express requests. (This package is not related to the [Serverless framework](https://www.serverless.com/).) It supports API Gateway and ALB.
 
-The following file is roughly equivalent to the `apollo-server` sample code above.
+The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
 $ npm install apollo-server-lambda graphql
@@ -350,9 +430,9 @@ For more details on using `apollo-server-lambda`, see the [documentation on depl
 
 `apollo-server-cloud-functions` is the GraphQL server for [Cloud Functions](https://cloud.google.com/functions), Google's serverless compute service.
 
-Because Cloud Function's Node.js runtime uses Express, `apollo-server-cloud-functions` is a layer around `apollo-server-express`.
+Because the Cloud Functions Node.js runtime uses Express, `apollo-server-cloud-functions` is a layer around `apollo-server-express`.
 
-The following file is roughly equivalent to the `apollo-server` sample code above.
+The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
 $ npm install apollo-server-cloud-functions graphql
@@ -373,7 +453,7 @@ For more details on using `apollo-server-cloud-functions`, see the [documentatio
 
 `apollo-server-azure-functions` is the GraphQL server for [Azure Functions](https://azure.microsoft.com/en-us/services/functions/), Microsoft's serverless compute service.
 
-The following file is roughly equivalent to the `apollo-server` sample code above.
+The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
 $ npm install apollo-server-azure-functions graphql
