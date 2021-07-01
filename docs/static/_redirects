@@ -1,5 +1,9 @@
 / /docs/apollo-server/
 
+# This page which is new in the AS3 docs is linked from the default server
+# splash page. Until AS3 is out, let's just fix the URL.
+/docs/apollo-server/api/plugin/landing-pages/ /docs/apollo-server/v3/api/plugin/landing-pages/
+
 # The v2 docs were beta for a while, and non-default, but now that they are
 # default, the v2 docs don't exist anymore.  So redirect them to the default!
 /docs/apollo-server/v2 /docs/apollo-server/
