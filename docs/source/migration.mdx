@@ -106,11 +106,17 @@ You cannot integrate the batteries-included `apollo-server` package with `subscr
        // This `server` is the instance returned from `new ApolloServer`.
        path: server.graphqlPath,
     });
+
+    // Shut down in the case of interrupt and termination signals
+    // We expect to handle this more cleanly in the future. See (#5074)[https://github.com/apollographql/apollo-server/issues/5074] for reference.
+    ['SIGINT', 'SIGTERM'].forEach(signal => {
+      process.on(signal, () => subscriptionServer.close());
+    });
     ```
 
 1. Finally, adjust the existing `listen`.
 
-    Most applications will be calling `app.listen(...)` on their `Express` app. **This should be changed to `httpServer.listen(...)`** using the same arguments. This will begin listening on the HTTP and WebSocket transports simultaneously.
+    Most applications will be calling `app.listen(...)` on their Express app. **This should be changed to `httpServer.listen(...)`** using the same arguments. This will begin listening on the HTTP and WebSocket transports simultaneously.
 
 A completed example of migrating subscriptions is shown below:
 <ExpansionPanel title="Click to expand">
