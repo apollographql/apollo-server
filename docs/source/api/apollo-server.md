@@ -43,7 +43,7 @@ const server = new ApolloServer({
 <tr class="required">
 <td>
 
-#### `typeDefs`
+##### `typeDefs`
 
 `DocumentNode` or `Array<DocumentNode>`
 </td>
@@ -61,7 +61,7 @@ For an example, see [Define your GraphQL schema](../getting-started/#step-3-defi
 <tr class="required">
 <td>
 
-#### `resolvers`
+##### `resolvers`
 
 `Object` or `Array`
 </td>
@@ -79,7 +79,7 @@ For details, see [Resolvers](../data/resolvers/).
 <tr>
 <td>
 
-#### `context`
+##### `context`
 
 `Object` or `Function`
 </td>
@@ -97,7 +97,7 @@ For more details, see [The `context` argument](../data/resolvers/#the-context-ar
 <tr>
 <td>
 
-#### `dataSources`
+##### `dataSources`
 
 `Function`
 </td>
@@ -113,7 +113,7 @@ For more details, see [Adding data sources to Apollo Server](../data/data-source
 <tr>
 <td>
 
-#### `introspection`
+##### `introspection`
 
 `Boolean`
 </td>
@@ -130,7 +130,7 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 <tr>
 <td>
 
-#### `schema`
+##### `schema`
 
 `Object`
 </td>
@@ -147,7 +147,7 @@ This field is most commonly used with [Apollo Federation](https://www.apollograp
 <tr>
 <td>
 
-#### `persistedQueries`
+##### `persistedQueries`
 
 `Object` or `false`
 </td>
@@ -162,7 +162,7 @@ If you're using [automated persisted queries (APQ)](../performance/apq/), you ca
 <tr>
 <td>
 
-#### `rootValue`
+##### `rootValue`
 
 `Any` or `Function`
 </td>
@@ -178,7 +178,7 @@ Providing a function is useful if you want to use a different root value dependi
 <tr>
 <td>
 
-#### `validationRules`
+##### `validationRules`
 
 `Object`
 </td>
@@ -199,7 +199,7 @@ An object containing custom functions to use as additional [validation rules](ht
 <tr>
 <td>
 
-#### `cors`
+##### `cors`
 
 `Object` or `Boolean`
 </td>
@@ -214,7 +214,7 @@ This option is used only by the `apollo-server` package. If you're integrating w
 <tr>
 <td>
 
-#### `formatError`
+##### `formatError`
 
 `Function`
 </td>
@@ -227,7 +227,7 @@ Provide this function to transform the structure of error objects before they're
 <tr>
 <td>
 
-#### `formatResponse`
+##### `formatResponse`
 
 `Function`
 </td>
@@ -240,7 +240,7 @@ Provide this function to transform the structure of GraphQL response objects bef
 <tr>
 <td>
 
-#### `apollo`
+##### `apollo`
 
 `Object`
 <td>
@@ -266,7 +266,7 @@ An object containing configuration options for connecting Apollo Server to [Apol
 <tr>
 <td>
 
-#### `plugins`
+##### `plugins`
 
 `Array`
 </td>
@@ -283,7 +283,7 @@ In certain cases, Apollo Server installs some of its built-in plugins automatica
 <tr>
 <td>
 
-#### `stopOnTerminationSignals`
+##### `stopOnTerminationSignals`
 
 `Boolean`
 </td>
@@ -301,7 +301,7 @@ You can also manually call `stop()` in other contexts. Note that `stop()` is asy
 <tr>
 <td>
 
-#### `stopGracePeriodMillis`
+##### `stopGracePeriodMillis`
 
 `number`
 </td>
@@ -327,7 +327,7 @@ The default value is `10_000` (10 seconds).
 <tr>
 <td>
 
-#### `debug`
+##### `debug`
 
 `Boolean`
 </td>
@@ -344,7 +344,7 @@ Defaults to `true` unless the `NODE_ENV` environment variable is `production` or
 <tr>
 <td>
 
-#### `logger`
+##### `logger`
 
 [`Logger`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L178-L184)
 </td>
@@ -362,7 +362,7 @@ This logger is automatically added to the `GraphQLRequestContext` object that's 
 <tr>
 <td>
 
-#### `mocks`
+##### `mocks`
 
 `Boolean` or `Object`
 </td>
@@ -376,7 +376,7 @@ If `true`, enables [default mock resolvers](../testing/mocking/#default-mock-exa
 <tr>
 <td>
 
-#### `mockEntireSchema`
+##### `mockEntireSchema`
 
 `Boolean`
 </td>
@@ -406,7 +406,7 @@ The default value is `true`. Set this to `false` to use mocked resolvers only fo
 <tr>
 <td>
 
-#### `experimental_approximateDocumentStoreMiB`
+##### `experimental_approximateDocumentStoreMiB`
 
 `number`
 </td>
@@ -464,7 +464,7 @@ Returns a `Promise` that resolves to an object containing the following properti
 <tr>
 <td>
 
-#### `url`
+##### `url`
 
 `String`
 </td>
@@ -478,7 +478,7 @@ The URL that the server is listening on.
 <tr>
 <td>
 
-#### `server`
+##### `server`
 
 [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)
 </td>
@@ -534,11 +534,11 @@ If you're using a [middleware package](../integrations/middleware/) instead of `
 
 ## Framework-specific middleware function
 
-Framework integrations define functions with names such as `applyMiddleware`, `getMiddleware`, `createHandler` which are used to connect your server to your web framework.
+[Framework-specific Apollo Server packages](../integrations/middleware/) (such as `apollo-server-express`) each define a method that you use to connect Apollo Server to your web framework. Depending on the package, this function is `applyMiddleware`, `getMiddleware`, or `createHandler`.
 
-You call this method instead of [`listen`](#listen) if you're using a [middleware integration](../integrations/middleware/), such as `apollo-server-express`. For non-serverless frameworks (Express, Fastify, Hapi, Koa, and Micro), you must call [`await server.start()`](#start) _before_ calling this method.
+You call this method instead of [`listen`](#listen) if you're using a framework-specific package. For non-serverless frameworks (Express, Fastify, Hapi, Koa, and Micro), you _must_ call [`await server.start()`](#start) _before_ calling this method.
 
-These functions take an `options` object as a parameter. Some supported fields of this object are described below. Note that not all integrations support all options. See [your integration's description](../integrations/middleware/) to see what the name of the function is and which options are supported.
+These functions take an `options` object as a parameter. Some supported fields of this object are described below. **Not all packages support all options.** See [your package's description](../integrations/middleware/#basic-usage) to see what the name of the function is and which options are supported.
 
 ### Example
 
@@ -581,7 +581,7 @@ async function startApolloServer() {
 <tr class="required">
 <td>
 
-#### `app`
+##### `app`
 
 `HttpServer`
 </td>
@@ -595,7 +595,7 @@ async function startApolloServer() {
 <tr>
 <td>
 
-#### `path`
+##### `path`
 
 `String`
 </td>
@@ -611,7 +611,7 @@ The default value is `/graphql`.
 <tr>
 <td>
 
-#### `cors`
+##### `cors`
 
 `Object` or `Boolean`
 </td>
@@ -629,7 +629,7 @@ The default value is `true`.
 <tr>
 <td>
 
-#### `bodyParserConfig`
+##### `bodyParserConfig`
 
 `Object` or `Boolean`
 </td>
@@ -643,6 +643,38 @@ The default value is `true`.
 </td>
 </tr>
 
+
+<tr>
+<td>
+
+##### `onHealthCheck`
+
+`Function`
+</td>
+<td>
+
+A custom function to execute when Apollo Server receives a request at its health checks endpoint.
+
+For details, see [Health checks](../monitoring/health-checks/).
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+##### `disableHealthCheck`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, Apollo Server disables its [health checks endpoint](../monitoring/health-checks/).
+
+The default value is `false`.
+</td>
+</tr>
+
 </tbody>
 </table>
-
