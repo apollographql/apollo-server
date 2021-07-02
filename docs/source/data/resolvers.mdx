@@ -164,7 +164,13 @@ Note that you can define your resolvers across as many different files and objec
 
 ## Resolver chains
 
-Whenever a query asks for a field that contains an object type, the query _also_ asks for _at least one field_ of that object (if it didn't, there would be no reason to include the object in the query). A query always "bottoms out" on fields that contain either a scalar or a list of scalars. FIXME technically can also be things like "list of list of scalars", not to mention non-nullable, and also there are enums which aren't technically scalars.
+Whenever a query asks for a field that contains an object type, the query _also_ asks for _at least one field_ of that object (if it didn't, there would be no reason to include the object in the query). A query always "bottoms out" on fields that contain either a scalar or an enum, of any list depth and nullability, for example:
+
+```graphql
+type Product {
+  variants: [String!]
+}
+```
 
 Therefore, whenever Apollo Server _resolves_ a field that contains an object type, it always then resolves one or more fields of that object. Those subfields might in turn _also_ contain object types. Depending on your schema, this object-field pattern can continue to an arbitrary depth, creating what's called a **resolver chain**.
 
