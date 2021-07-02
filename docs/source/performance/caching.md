@@ -6,6 +6,8 @@ description: Configure caching behavior on a per-field basis
 
 > **New in Apollo Server 3**: You must manually define the `@cacheControl` directive in your schema to use static cache hints. [See below.](#in-your-schema-static)
 
+FIXME should note that federation doesn't support caching well though maybe link to something that explains workarounds?
+
 Apollo Server enables you to define cache control settings (`maxAge` and `scope`) for each field in your schema:
 
 ```graphql{5,7}
@@ -306,7 +308,7 @@ If you run Apollo Server behind a CDN or another caching proxy, you can configur
 
 Because CDNs and caching proxies only cache GET requests (not POST requests, which Apollo Client sends for all operations by default), we recommend enabling [automatic persisted queries](./apq/) and the [`useGETForHashedQueries` option](./apq/) in Apollo Client.
 
-Alternatively, you can set the `useGETForQueries` option of [HttpLink](https://www.apollographql.com/docs/react/api/link/apollo-link-http) in your `ApolloClient` instance, but **this is less secure** because your query string and GraphQL variables are sent as plaintext URL query parameters.
+Alternatively, you can set the `useGETForQueries` option of [HttpLink](https://www.apollographql.com/docs/react/api/link/apollo-link-http) in your `ApolloClient` instance, but **this may be less secure** because your query string and GraphQL variables are sent as plaintext URL query parameters which are more likely to be saved in logs by some server or proxy between the user and your GraphQL server.  FIXME I tried to improve this but it still doesn't make that much sense because `useGETForHashedQueries` certainly puts variables in the URL... I think the real reason to avoid useGETForQueries is that GETs have a length limit!
 
 ## Disabling cache control
 

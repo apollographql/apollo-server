@@ -13,7 +13,7 @@ When you define a union type, you declare which object types are included in the
 union Media = Book | Movie
 ```
 
-A field can have a union as its return type. In this case, it can return any object type that's included in the union:
+A field can have a union as its return type. (FIXME: but this field doesn't! it has a list of unions as its return type!) In this case, it can return any object type that's included in the union:
 
 ```graphql
 type Query {
@@ -65,6 +65,7 @@ query GetSearchResults {
 ```
 
 This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Result`'s `title` (if it's a `Book`) or its `name` (if it's an `Author`).
+FIXME it would be helpful to show what the result looks like (eg, it's not obvious that there isn't an extra level of nesting in the output corresponding to the union). Also practically speaking you almost certainly want to query `__typename` with your union, and this page doesn't mention `__typename` at all!
 
 For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
 
@@ -72,8 +73,9 @@ For more information, see [Using fragments with unions and interfaces](https://w
 ### Resolving a union
 
 To fully resolve a union, Apollo Server needs to specify _which_ of the union's types is being returned. To achieve this, you define a `__resolveType` function for the union in your resolver map.
+FIXME If you're reading the docs in order, this is more or less the first reference to resolvers / resolver maps other than in "get started" (this schema section comes before resolvers). Not sure what I think about that.
 
-The `__resolveType` function uses a returned object's fields to determine its type. It then returns the name of that type as a string.
+The `__resolveType` function uses a returned object's fields to determine its type. (FIXME: I mean it doesn't have to use its fields? It may use something like `instanceof`?) It then returns the name of that type as a string.
 
 Here's an example `__resolveType` function for the `Result` union defined above:
 
@@ -129,6 +131,7 @@ type Textbook implements Book {
 ```
 
 A field can have an interface as its return type. In this case, it can return any object type that `implements` that interface:
+FIXME (again, this doesn't have an interface as the return type, it has a list of interface)
 
 ```graphql
 type Query {
@@ -199,6 +202,7 @@ query GetBooks {
 ```
 
 This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Book`'s `courses` (if it's a `Textbook`) or its `colors` (if it's a `ColoringBook`).
+FIXME again, probably should show output, and maybe mention `__typename`
 
 For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
 
@@ -208,6 +212,7 @@ For more information, see [Using fragments with unions and interfaces](https://w
 [As with union types](#resolving-a-union), Apollo Server requires interfaces to define a `__resolveType` function to determine which implementing object type is being returned.
 
 Here's an example `__resolveType` function for the `Book` interface defined above:
+FIXME this approach to `__resolveType` seems odd given that courses and colors are both defined as nullable.
 
 ```js{3-11}
 const resolvers = {

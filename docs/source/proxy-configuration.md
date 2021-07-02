@@ -5,6 +5,8 @@ description: Configuring proxy settings for outgoing requests
 
 Certain features of the Apollo platform require Apollo Server to make outgoing requests to Apollo Studio.  These include:
 
+FIXME: could mention usage reporting and schema reporting too, though for them should just override fetcher...
+
 * Managed federation
 * Operation registry
 

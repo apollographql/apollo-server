@@ -24,13 +24,15 @@ type Author {
 }
 ```
 
-A schema defines a collection of types and the relationships _between_ those types. In the example schema above, every `Book` has an `author`, and every `Author` has a list of `books`. By defining these type relationships in a unified schema, we enable client developers to see exactly what data is available and request a specific subset of that data with a single optimized query.
+A schema defines a collection of types and the relationships _between_ those types. In the example schema above, every `Book` has an `author`, and every `Author` has a list of `books`. (FIXME: would it be better to say something like "every `Book` may have an `author`" here to indicate that these are nullable? I mean you can query `author` on any `Book` but you may not get a `Book` back. Alternatively we could add `!`s to the schema.) By defining these type relationships in a unified schema, we enable client developers to see exactly what data is available and request a specific subset of that data with a single optimized query.
 
 Note that the schema is **not** responsible for defining where data comes from or how it's stored. It is entirely implementation-agnostic.
 
 ## Supported types
 
 Every type definition in a GraphQL schema belongs to one of the following categories:
+
+FIXME: This list is inaccurate in a few ways. (a) The Query and Mutation types *are* object types. (b) It doesn't include interface or union types. (c) If you're going to call out Query and Mutation, why not Subscription too (which has a minimal section below)? (c) This page alludes to list types in various places but doesn't actually explain anything about them (though technically they wouldn't go on the list of "kinds of types of schema definitions"). (d) similarly, non-null (`!`) isn't really explained anywhere.
 
 * [Scalar types](#scalar-types)
 * [Object types](#object-types)
@@ -41,6 +43,7 @@ Every type definition in a GraphQL schema belongs to one of the following catego
 
 Each of these is defined in detail below.
 
+FIXME This is an odd placement for this call-out. We haven't mentioned the concept of "fields" in this section. Should this go under "object types"?
 You can monitor the performance and usage of each field within these declarations with [Apollo Studio](https://studio.apollographql.com/), providing you with data that helps inform decisions about changes to your graph.
 
 ### Scalar types
@@ -59,7 +62,7 @@ These primitive types cover the majority of use cases. For more specific use cas
 
 ### Object types
 
-Most of the types you define in a GraphQL schema are object types. An object type contains a collection of fields, each of which can be either a scalar type or _another_ object type.
+Most of the types you define in a GraphQL schema are object types. An object type contains a collection of fields, each of which can be either a scalar type or _another_ object type. FIXME again, fields can also be interfaces or unions. (Also enums.)
 
 Two object types _can_ include each other as fields, as is the case in our example schema from earlier:
 
@@ -78,6 +81,7 @@ type Author {
 ### The `Query` type
 
 The `Query` type defines all of the top-level **entry points** for queries that clients execute against your data graph. It resembles an [object type](#object-types), but its name is always `Query`.
+FIXME It is just a normal object type, it doesn't just resemble one? Also technically its name does not have to be query; you can use the `schema {...}` declaration to provide a different name (however, in the specific case of federation we always rename to `Query` during composition).
 
 Each field of the `Query` type defines the name and return type of a different entry point. The `Query` type for our example schema might resemble the following:
 
@@ -208,7 +212,7 @@ As with queries, our server would respond to this mutation with a result that ma
 }
 ```
 
-A single client request can include multiple mutations to execute. To prevent race conditions, mutations are executed serially in the order they're listed.
+A single client request can include multiple mutations to execute. To prevent race conditions, mutations are executed serially in the order they're listed. FIXME I'm not sure it's normal to refer to "top-level fields of `Mutation`" as "mutations"? Maybe I'm being overly pedantic though. Also it might be nice if we had previously mentioned that fields in queries can run in parallel, so that we're contrasting against something here? Or at least mention it here?
 
 [Learn more about designing mutations](#designing-mutations)
 
@@ -229,6 +233,7 @@ type Mutation {
 ```
 
 Instead of accepting three arguments, this mutation could accept a _single_ input type that includes all of these fields. This comes in extra handy if we decide to accept an additional argument in the future, such as an `author`.
+FIXME I don't think this is a really compelling argument, because in GraphQL all arguments are given by explicit name and argument order is igonred. So the analogy to JS (made in the previous paragraph) doesn't really hold up since "pass args by keyword" is how it already works! To me, the main reasons for input objects are (a) if you want to reuse a set of arguments in multiple fields or (b) if the arguments naturally have a more deeply nested structure. The example here doesn't show either of those.
 
 An input type's definition is similar to an object type's, but it uses the `input` keyword:
 
@@ -245,6 +250,7 @@ input PostAndMediaInput {
 ```
 
 Not only does this facilitate passing the `PostAndMediaInput` type around within our schema, it also provides a basis for annotating fields with descriptions that are automatically exposed by GraphQL-enabled tools:
+FIXME this is also not a super compelling argument for input objects because field arguments can have descriptions (there's even an example of that below)
 
 ```graphql
 input PostAndMediaInput {
@@ -260,6 +266,7 @@ input PostAndMediaInput {
 Input types can sometimes be useful when multiple operations require the exact same set of information, but you should reuse them sparingly. Operations might eventually diverge in their sets of required arguments.
 
 > **Do not use the same input type for both queries and mutations**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query.
+FIXME this seems unnecessarily strong? maybe more just like "think carefully about whether fields on input types should be nullable or not"? Also we haven't mentioned nullability or optionality at all yet so that seems like it might be confusing.
 
 ### Enum types
 
@@ -341,14 +348,15 @@ Most _additive_ changes to a schema are safe and backward compatible. However, c
 
 * Removing a type or field
 * Renaming a type or field
-* Adding nullability to a field
+* Adding nullability to a field FIXME this is the first mention of nullability in all the docs, maybe it should at least have some kind of link?
 * Removing a field's arguments
 
 A graph management tool such as [Apollo Studio](https://studio.apollographql.com/) helps you understand whether a potential schema change will impact any of your active clients. Studio also provides field-level performance metrics, schema history tracking, and advanced security via operation safelisting.
 
 ## Documentation strings
 
-GraphQL's schema definition language (SDL) supports markdown-enabled documentation strings. These help consumers of your data graph discover fields and learn how to use them.
+FIXME These are actually called "descriptions" in the GraphQL spec (we use the term above). If we want to call them doc strings that might be OK but we should at least also use the official term?
+GraphQL's schema definition language (SDL) supports Markdown-enabled documentation strings. These help consumers of your data graph discover fields and learn how to use them.
 
 The following snippet shows how to use both single-line string literals and multi-line blocks:
 
@@ -370,7 +378,7 @@ type MyObjectType {
 
 A well-documented schema offers an enhanced development experience since GraphQL development tools (such as the
 [Apollo VS Code extension](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo)
-and GraphQL Playground) auto-complete field names along with descriptions when they're provided. Furthermore, [Apollo Studio](https://studio.apollographql.com/) displays descriptions alongside field-usage and performance details when using its metrics reporting and client-awareness features.
+and GraphQL Playground) auto-complete field names along with descriptions when they're provided. (FIXME reference Explorer?) Furthermore, [Apollo Studio](https://studio.apollographql.com/) displays descriptions alongside field-usage and performance details when using its metrics reporting and client-awareness features.
 
 ## Naming conventions
 
@@ -412,6 +420,7 @@ query EventList {
 ```
 
 Because we know this is the structure of data that would be helpful for our client, that can inform the structure of our schema:
+(FIXME should we have some `!` in this?)
 
 ```graphql
 type Query {
@@ -490,7 +499,7 @@ A single mutation can modify multiple types, or multiple instances of the _same_
 
 Additionally, mutations are much more likely than queries to cause errors, because they modify data. A mutation might even result in a _partial_ error, in which it successfully modifies one piece of data and fails to modify another. Regardless of the type of error, it's important that the error is communicated back to the client in a consistent way.
 
-To help resolve both of these concerns, we recommend defining a `MutationResponse` interface in your schema, along with a collection of object types that _implement_ that interface (one for each of your mutations).
+To help resolve both of these concerns, we recommend defining a `MutationResponse` interface in your schema, along with a collection of object types that _implement_ that interface (one for each of your mutations). FIXME this is the first reference to interfaces in the docs (other than a brief link to the interfaces page), should we at least add a link to the interfaces page? (Also the first use of non-nullable types, without explanation.)
 
 Here's what the `MutationResponse` interface looks like:
 

@@ -8,6 +8,7 @@ Health checks are often used by load balancers to determine if a server is avail
 This basic health check may not be comprehensive enough for some applications and depending on individual circumstances, it may be beneficial to provide a more thorough implementation by defining an `onHealthCheck` function to the `ApolloServer` constructor options.  If defined, this `onHealthCheck` function should return a `Promise` which _rejects_ if there is an error, or _resolves_ if the server is deemed _ready_.  A `Promise` _rejection_ will result in an HTTP status code of 503, and a _resolution_ will result in an HTTP status code of 200, which is generally desired by most health-check tooling (e.g. Kubernetes, AWS, etc.).
 
 > **Note:** Alternatively, the `onHealthCheck` can be defined as an `async` function which `throw`s if it encounters an error and returns when conditions are considered normal.
+FIXME we should just document this as being an async function and use an async function in the example
 
 ```js{10-19}
 const { ApolloServer, gql } = require('apollo-server');

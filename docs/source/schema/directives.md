@@ -25,6 +25,7 @@ This example shows the `@deprecated` directive, which is a [default directive](#
 Each directive can only appear in _certain_ locations within a GraphQL schema or operation. These locations are listed in the directive's definition.
 
 For example, here's the GraphQL spec's definition of the `@deprecated` directive:
+FIXME I believe this is now outdated as `@deprecated` can appear in more places now.
 
 ```graphql
 directive @deprecated(

@@ -2,6 +2,8 @@
 title: Terminating SSL
 ---
 
+FIXME not super clear why we need this file rather than just linking to somebody else's docs about how to add https to an arbitrary Express app
+
 Most production environments use a load balancer or HTTP proxy (such as nginx) to perform SSL termination on behalf of web applications in that environment.
 
 If you're using Apollo Server in an application that must perform its _own_ SSL termination, you can use the `https` module with the `apollo-server-express` [middleware

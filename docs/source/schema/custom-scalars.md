@@ -12,7 +12,7 @@ To define a custom scalar, add it to your schema like so:
 scalar MyCustomScalar
 ```
 
-Object types in your schema can now contain fields of type `MyCustomScalar`. However, Apollo Server still needs to know how to interact with values of this new scalar type.
+Object types in your schema can now contain fields of type `MyCustomScalar`. (FIXME: and also it can be an argument or input type field!) However, Apollo Server still needs to know how to interact with values of this new scalar type.
 
 ## Defining custom scalar logic
 
@@ -70,13 +70,14 @@ In the example above, the `Date` scalar is represented on the backend by the `Da
 
 ### `parseValue`
 
-The `parseValue` method converts the scalar's `serialize`d JSON value to its back-end representation before it's added to a resolver's `args`.
+The `parseValue` method converts the scalar's `serialize`d JSON value to its back-end representation before it's added to a resolver's `args`. FIXME it's not really the serialized value: serialize always outputs strings, but this can be any JSON value.
 
 Apollo Server calls this method when the scalar is provided by a client as a [GraphQL variable](https://graphql.org/learn/queries/#variables) for an argument. (When a scalar is provided as a hard-coded argument in the operation string, [`parseLiteral`](#parseliteral) is called instead.)
 
 ### `parseLiteral`
 
 When an incoming query string includes the scalar as a hard-coded argument value, that value is part of the query document's abstract syntax tree (AST). Apollo Server calls the `parseLiteral` method to convert the value's AST representation (which is always a string) to the scalar's back-end representation.
+(FIXME re "always a string", sorta? you can use other AST node types like int values (like you show above?), it's just that the int value node does internally store its int value as a string. but this kinda makes it sound like scalars *must* always be provided as things wrapped in double quotes?)
 
 In [the example above](#example-the-date-scalar), `parseLiteral` converts the AST value from a string to an integer, and _then_ converts from integer to `Date` to match the result of `parseValue`.
 
@@ -162,6 +163,9 @@ server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
 });
 ```
+
+FIXME: A few concerns with this example. (a) It doesn't actually run: no `Query` defined, but no indicator that this is a partial example. (b) No resolver for the oddValue field. (c) It doesn't explain what "can only contain odd integers means" and the answer is actually kinda strange: if a field would return something that is not an odd number then it just gets converted to `null` in the output, and ditto in input, but there's no errors. (d) This "null" is basically "the way we represent this non-null value in JSON"; if you have a field declared as `Odd!` (input or output) and you put an even number there, it'll happily turn it into `null` *with no error despite the `!`*! (e) You can put floating-point odd numbers and it'll work too. (f) Also you can put a string containing an odd number and it works.
+I changed oddValue above to throw instead of return null, which helps with c and d.
 
 ## Importing a third-party custom scalar
 
