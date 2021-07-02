@@ -69,7 +69,6 @@ query GetSearchResults {
 ```
 
 This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Result`'s `title` (if it's a `Book`) or its `name` (if it's an `Author`).
-FIXME it would be helpful to show what the result looks like (eg, it's not obvious that there isn't an extra level of nesting in the output corresponding to the union). Also practically speaking you almost certainly want to query `__typename` with your union, and this page doesn't mention `__typename` at all!
 
 Here's a valid result for the above query:
 
@@ -99,7 +98,6 @@ For more information, see [Using fragments with unions and interfaces](https://w
 > Before reading this section, [learn about resolvers](../data/resolvers/).
 
 To fully resolve a union, Apollo Server needs to specify _which_ of the union's types is being returned. To achieve this, you define a `__resolveType` function for the union in your resolver map.
-FIXME If you're reading the docs in order, this is more or less the first reference to resolvers / resolver maps other than in "get started" (this schema section comes before resolvers). Not sure what I think about that.
 
 The `__resolveType` function is responsible for determining an object's corresponding GraphQL type and returning the name of that type as a string. It can use any logic to do so, such as:
 
@@ -234,7 +232,6 @@ query GetBooks {
 ```
 
 This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Book`'s `courses` (if it's a `Textbook`) or its `colors` (if it's a `ColoringBook`).
-FIXME again, probably should show output, and maybe mention `__typename`
 
 Here's a valid result for the above query:
 
@@ -273,7 +270,6 @@ For more information, see [Using fragments with unions and interfaces](https://w
 [As with union types](#resolving-a-union), Apollo Server requires interfaces to define a `__resolveType` function to determine which implementing object type is being returned.
 
 Here's an example `__resolveType` function for the `Book` interface defined above:
-FIXME this approach to `__resolveType` seems odd given that courses and colors are both defined as nullable.
 
 ```js{3-13}
 const resolvers = {
