@@ -6,6 +6,7 @@ import {
   runHttpQuery,
   HttpQueryError,
   throwHttpGraphQLError,
+  cloneObject,
 } from '../runHttpQuery';
 import {
   PersistedQueryNotFoundError,
@@ -84,6 +85,18 @@ describe('runHttpQuery', () => {
       } catch (err) {
         expect(err.headers).toEqual({ 'Content-Type': 'application/json' });
       }
+    });
+  });
+
+  describe('cloneObject', () => {
+    it('clone object clones properly', () => {
+      let obj = {};
+      Object.defineProperty(obj, "ip", {
+          value: "test",
+          writable: false
+      });
+      const clone = cloneObject(obj);
+      expect(clone.ip).toBe('test')
     });
   });
 });

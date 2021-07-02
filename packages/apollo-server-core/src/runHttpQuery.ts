@@ -456,5 +456,8 @@ function prettyJSONStringify(value: any) {
 }
 
 export function cloneObject<T extends Object>(object: T): T {
-  return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
+  return Object.create(
+    Object.getPrototypeOf(object),
+    Object.getOwnPropertyDescriptors(object)
+  );
 }
