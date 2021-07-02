@@ -4,7 +4,7 @@ sidebar_title: Choosing which package to use
 description: Use the right package for your project
 ---
 
-> **Apollo Server 3 is currently available as a release candidate. To install the current release candidate, specify `@rc` after the name of the Apollo Server package you are installing; for example, `npm install apollo-server@rc`.**
+> **Apollo Server 3 is currently available as a release candidate.** To install the current release candidate, specify `@rc` after the name of the Apollo Server package you are installing (for example, `npm install apollo-server@rc`).
 
 Apollo Server is distributed as a collection of different packages for different environments and web frameworks. You can choose which package to use based on your project.
 
