@@ -394,7 +394,7 @@ const server = new ApolloServer({
 }
 ```
 
-> The fields of the object passed to your `context` function differ if you're using middleware besides Express. [See the API reference for details.](/api/apollo-server/#middleware-specific-context-fields) FIXME it's not really clear here that `apollo-server` wraps Express and so it gets the Express context args. Also we've barely mentioned middleware so far in the docs.
+> This example assumes you are using either the `apollo-server` or `apollo-server-express` package, both of which use Express. The fields of the object passed to your `context` function may differ if you're using middleware other than Express. [See the API reference for details.](/api/apollo-server/#middleware-specific-context-fields) For more information on middleware in general, see the [integrations page](/integrations/middleware).
 
 Context initialization can be asynchronous, allowing database connections and other operations to complete:
 
@@ -417,7 +417,7 @@ A resolver function's return value is treated differently by Apollo Server depen
 |---|---|
 | Scalar / object | <p>A resolver can return a single value or an object, as shown in [Defining a resolver](#defining-a-resolver). This return value is passed down to any nested resolvers via the `parent` argument.</p> |
 | `Array` | <p>Return an array if and only if your schema indicates that the resolver's associated field contains a list.</p><p>After you return an array, Apollo Server executes nested resolvers for each item in the array. </p>|
-| `null` / `undefined` | <p>Indicates that the value for the field could not be found.</p> <p>If your schema indicates that this resolver's field is nullable, then the operation result has a `null` value at the field's position.</p><p>If this resolver's field is _not_ nullable, Apollo Server sets the field's _parent_ to `null`. If necessary, this process continues up the resolver chain until it reaches a field that _is_ nullable. This ensures that a response never includes a `null` value for a non-nullable field. FIXME this should mention that if this happens, an error is returned too!</p>|
+| `null` / `undefined` | <p>Indicates that the value for the field could not be found.</p> <p>If your schema indicates that this resolver's field is nullable, then the operation result has a `null` value at the field's position.</p><p>If this resolver's field is _not_ nullable, Apollo Server sets the field's _parent_ to `null`. If necessary, this process continues up the resolver chain until it reaches a field that _is_ nullable. This ensures that a response never includes a `null` value for a non-nullable field. When this happens, the response's `errors` property will be populated with relevant errors concerning the nullability of that field.</p>|
 | [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) | <p>Resolvers often perform asynchronous actions, such as fetching from a database or back-end API. To support this, a resolver can return a promise that resolves to any other supported return type.</p> |
 
 
