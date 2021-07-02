@@ -25,20 +25,40 @@ This example shows the `@deprecated` directive, which is a [default directive](#
 Each directive can only appear in _certain_ locations within a GraphQL schema or operation. These locations are listed in the directive's definition.
 
 For example, here's the GraphQL spec's definition of the `@deprecated` directive:
-FIXME I believe this is now outdated as `@deprecated` can appear in more places now.
 
 ```graphql
 directive @deprecated(
   reason: String = "No longer supported"
-) on FIELD_DEFINITION | ENUM_VALUE
+) on FIELD_DEFINITION | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION | ENUM_VALUE
 ```
 
-This indicates that `@deprecated` can decorate either a schema  `FIELD_DEFINITION` (as shown at the top of the article) or a schema `ENUM_VALUE` definition (as shown here):
+This indicates that `@deprecated` can decorate any of the four listed locations. Also note that its `reason` argument is optional and provides a default value. Usage examples of each location are provided below:
 
 ```graphql:title=schema.graphql
+# ARGUMENT_DEFINITION
+# Note: @deprecated arguments _must_ be optional.
+directive @withDeprecatedArgs(
+  deprecatedArg: String @deprecated(reason: "Use `newArg`"),
+  newArg: String
+) on FIELD
+
+type MyType {
+  # ARGUMENT_DEFINITION (alternate example on a field's args)
+  fieldWithDeprecatedArgs(name: String! @deprecated): String
+  # FIELD_DEFINITION
+  deprecatedField: String @deprecated
+}
+
 enum MyEnum {
+  # ENUM_VALUE
   OLD_VALUE @deprecated(reason: "Use `NEW_VALUE`.")
   NEW_VALUE
+}
+
+input SomeInputType {
+  nonDeprecated: String
+  # INPUT_FIELD_DEFINITION
+  deprecated: String @deprecated
 }
 ```
 
