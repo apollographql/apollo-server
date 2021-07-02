@@ -59,7 +59,6 @@ module.exports = {
           Deployment: [
             'deployment/heroku',
             'deployment/lambda',
-            'deployment/netlify',
             'deployment/azure-functions',
             'deployment/gcp-functions'
           ],
