@@ -4,7 +4,13 @@ title: Migrating to Apollo Server 3
 
 import { ExpansionPanel } from 'gatsby-theme-apollo-docs';
 
-Apollo Server 3 is generally available. The focus of this major-version release is to provide a lighter, nimbler core library as a foundation for future features and improved extensibility.
+<!--
+Apollo Server 3 is generally available.
+-->
+
+> **Apollo Server 3 is currently available as a release candidate. To install the current release candidate, specify `@rc` after the name of the Apollo Server package you are installing; for example, `npm install apollo-server@rc`.**
+
+The focus of this major-version release is to provide a lighter, nimbler core library as a foundation for future features and improved extensibility.
 
 **Many Apollo Server 2 users don't need to make any code changes to upgrade to Apollo Server 3!** This is especially likely if you use the "batteries-included" `apollo-server` library (as opposed to a [middleware-specific library](./integrations/middleware/)).
 
@@ -800,7 +806,7 @@ However, this is not the case in Apollo Server 2 for `apollo-server-lambda`, `ap
 
 In Apollo Server 3, all implementations of `ApolloServer` that support CORS configuration have the same default of `access-control-allow-origin: *`.
 
-To use your framework's Apollo Server 2 default CORS behavior in your Apollo Server 3 application, provide the options specified below to the `createHandler`/`getMiddleware` method. 
+To use your framework's Apollo Server 2 default CORS behavior in your Apollo Server 3 application, provide the options specified below to the `createHandler`/`getMiddleware` method.
 
 #### Lambda / Cloud Functions
 
@@ -846,7 +852,7 @@ For example, instead of:
 server.createHandler({onHealthCheck})
 ```
 
-you now write 
+you now write
 
 ```js
 server.createHandler({expressGetMiddlewareOptions: {onHealthCheck}})`
