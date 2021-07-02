@@ -13,11 +13,11 @@ When you define a union type, you declare which object types are included in the
 union Media = Book | Movie
 ```
 
-A field can have a union as its return type. (FIXME: but this field doesn't! it has a list of unions as its return type!) In this case, it can return any object type that's included in the union:
+A field can have a union (or a list of that union) as its return type. In this case, it can return any object type that's included in the union:
 
 ```graphql
 type Query {
-  allMedia: [Media] # This list can include both Books and Movies
+  allMedia: [Media] # This list can include both Book and Movie objects
 }
 ```
 
@@ -25,25 +25,25 @@ All of a union's included types must be [object types](./schema/#object-types) (
 
 ### Example
 
-The following schema defines a `Result` union type that can return either a `Book` or an `Author`:
+The following schema defines a `SearchResult` union type that can return either a `Book` or an `Author`:
 
 ```graphql
-union Result = Book | Author
+union SearchResult = Book | Author
 
 type Book {
-  title: String
+  title: String!
 }
 
 type Author {
-  name: String
+  name: String!
 }
 
 type Query {
-  search(contains: String): [Result]
+  search(contains: String): [SearchResult!]
 }
 ```
 
-The `Result` union enables `Query.search` to return a list that includes both `Book`s and `Author`s.
+The `SearchResult` union enables `Query.search` to return a list that includes both `Book`s and `Author`s.
 
 ### Querying a union
 
@@ -54,6 +54,10 @@ Here's a valid query for the schema above:
 ```graphql
 query GetSearchResults {
   search(contains: "Shakespeare") {
+    # Querying for __typename is almost always recommended,
+    # but it's even more important when querying a field that
+    # might return one of multiple types.
+    __typename
     ... on Book {
       title
     }
@@ -67,25 +71,52 @@ query GetSearchResults {
 This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Result`'s `title` (if it's a `Book`) or its `name` (if it's an `Author`).
 FIXME it would be helpful to show what the result looks like (eg, it's not obvious that there isn't an extra level of nesting in the output corresponding to the union). Also practically speaking you almost certainly want to query `__typename` with your union, and this page doesn't mention `__typename` at all!
 
+Here's a valid result for the above query:
+
+```json
+{
+  "data": {
+    "search": [
+      {
+        "__typename": "Book",
+        "title": "The Complete Works of William Shakespeare"
+      },
+      {
+        "__typename": "Author",
+        "name": "William Shakespeare"
+      }
+    ]
+  }
+}
+```
+
+
 For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
 
 
 ### Resolving a union
 
+> Before reading this section, [learn about resolvers](../data/resolvers/).
+
 To fully resolve a union, Apollo Server needs to specify _which_ of the union's types is being returned. To achieve this, you define a `__resolveType` function for the union in your resolver map.
 FIXME If you're reading the docs in order, this is more or less the first reference to resolvers / resolver maps other than in "get started" (this schema section comes before resolvers). Not sure what I think about that.
 
-The `__resolveType` function uses a returned object's fields to determine its type. (FIXME: I mean it doesn't have to use its fields? It may use something like `instanceof`?) It then returns the name of that type as a string.
+The `__resolveType` function is responsible for determining an object's corresponding GraphQL type and returning the name of that type as a string. It can use any logic to do so, such as:
 
-Here's an example `__resolveType` function for the `Result` union defined above:
+* Checking for the presence or absence of fields that are unique to a particular type in the union
+* Using `instanceof`, if the _JavaScript_ object's type is related to its _GraphQL_ object type
 
-```js{3-11}
+Here's a basic `__resolveType` function for the `SearchResult` union defined above:
+
+```js{3-13}
 const resolvers = {
-  Result: {
+  SearchResult: {
     __resolveType(obj, context, info){
+      // Only Author has a name field
       if(obj.name){
         return 'Author';
       }
+      // Only Book has a title field
       if(obj.title){
         return 'Book';
       }
@@ -115,8 +146,8 @@ An interface specifies a set of fields that multiple object types can include:
 
 ```graphql
 interface Book {
-  title: String
-  author: Author
+  title: String!
+  author: Author!
 }
 ```
 
@@ -124,18 +155,17 @@ If an object type `implements` an interface, it _must_ include _all_ of that int
 
 ```graphql
 type Textbook implements Book {
-  title: String # Must be present
-  author: Author # Must be present
-  courses: [Course]
+  title: String! # Must be present
+  author: Author! # Must be present
+  courses: [Course!]!
 }
 ```
 
-A field can have an interface as its return type. In this case, it can return any object type that `implements` that interface:
-FIXME (again, this doesn't have an interface as the return type, it has a list of interface)
+A field can have an interface (or a list of that interface) as its return type. In this case, it can return any object type that `implements` that interface:
 
 ```graphql
 type Query {
-  schoolBooks: [Book] # Can include Textbooks
+  books: [Book!] # Can include Textbook objects
 }
 ```
 
@@ -145,24 +175,24 @@ The following schema defines a `Book` interface, along with two object types tha
 
 ```graphql
 interface Book {
-  title: String
-  author: Author
+  title: String!
+  author: Author!
 }
 
 type Textbook implements Book {
-  title: String
-  author: Author
-  courses: [Course]
+  title: String!
+  author: Author!
+  courses: [Course!]!
 }
 
 type ColoringBook implements Book {
-  title: String
-  author: Author
-  colors: [Color]
+  title: String!
+  author: Author!
+  colors: [String!]!
 }
 
 type Query {
-  schoolBooks: [Book]
+  books: [Book!]!
 }
 ```
 
@@ -174,7 +204,7 @@ If a field's return type is an interface, clients can query that field for any s
 
 ```graphql
 query GetBooks {
-  schoolBooks {
+  books {
     title
     author
   }
@@ -185,17 +215,19 @@ Clients can _also_ query for subfields that _aren't_ included in the interface:
 
 ```graphql
 query GetBooks {
-  schoolBooks {
-    title # Always present (part of Book interface)
+  books {
+    # Querying for __typename is almost always recommended,
+    # but it's even more important when querying a field that
+    # might return one of multiple types.
+    __typename
+    title
     ... on Textbook {
       courses { # Only present in Textbook
         name
       }
     }
     ... on ColoringBook {
-      colors { # Only present in ColoringBook
-        name
-      }
+      colors # Only present in ColoringBook
     }
   }
 }
@@ -204,23 +236,54 @@ query GetBooks {
 This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Book`'s `courses` (if it's a `Textbook`) or its `colors` (if it's a `ColoringBook`).
 FIXME again, probably should show output, and maybe mention `__typename`
 
+Here's a valid result for the above query:
+
+```json
+{
+  "data": {
+    "books": [
+      {
+        "__typename": "Textbook",
+        "title": "Wheelock's Latin",
+        "courses": [
+          {
+            "name": "Latin I"
+          }
+        ]
+      },
+      {
+        "__typename": "ColoringBook",
+        "title": "Oops All Water",
+        "colors": [
+          "Blue"
+        ]
+      }
+    ]
+  }
+}
+```
+
 For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
 
 
 ### Resolving an interface
+
+> Before reading this section, [learn about resolvers](../data/resolvers/).
 
 [As with union types](#resolving-a-union), Apollo Server requires interfaces to define a `__resolveType` function to determine which implementing object type is being returned.
 
 Here's an example `__resolveType` function for the `Book` interface defined above:
 FIXME this approach to `__resolveType` seems odd given that courses and colors are both defined as nullable.
 
-```js{3-11}
+```js{3-13}
 const resolvers = {
   Book: {
     __resolveType(book, context, info){
+      // Only Textbook has a courses field
       if(book.courses){
         return 'Textbook';
       }
+      // Only ColoringBook has a colors field
       if(book.colors){
         return 'ColoringBook';
       }
