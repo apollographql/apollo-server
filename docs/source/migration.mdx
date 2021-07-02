@@ -4,14 +4,13 @@ title: Migrating to Apollo Server 3
 
 import { ExpansionPanel } from 'gatsby-theme-apollo-docs';
 
-**Apollo Server 3 is generally available.** The focus of this major-version release is to provide a lighter, nimbler core library as a foundation for future features and improved extensibility.
+Apollo Server 3 is generally available. The focus of this major-version release is to provide a lighter, nimbler core library as a foundation for future features and improved extensibility.
 
-**Many Apollo Server 2 users don't need to make any code changes to upgrade to Apollo Server 3**, especially if you use the "batteries-included" `apollo-server` library (as opposed to a [middleware-specific library](./integrations/middleware/)).
+**Many Apollo Server 2 users don't need to make any code changes to upgrade to Apollo Server 3!** This is especially likely if you use the "batteries-included" `apollo-server` library (as opposed to a [middleware-specific library](./integrations/middleware/)).
 
-This document explains which features _do_ require code changes and how to make them.
+This document explains which features _do_ require code changes and how to make them. If you encounter issues while migrating, please [create an issue](https://github.com/apollographql/apollo-server/issues/new/choose).
 
 > For a list of all breaking changes, [see the changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md).
-
 
 
 ## Bumped dependencies
@@ -20,7 +19,7 @@ This document explains which features _do_ require code changes and how to make 
 
 **Apollo Server 3 supports Node.js 12 and later.** (Apollo Server 2 supports back to Node.js 6.) This includes [all LTS and Current versions at the time of release](https://nodejs.org/about/releases/).
 
-If you're using an older version of Node, you should upgrade your Node runtime before upgrading to Apollo Server 3.
+If you're using an older version of Node.js, upgrade your runtime before upgrading to Apollo Server 3.
 
 ### `graphql`
 
@@ -28,7 +27,7 @@ Apollo Server has a peer dependency on [`graphql`](https://www.npmjs.com/package
 
 **Apollo Server 3 supports `graphql` v15.3.0 and later.** (Apollo Server 2 supported `graphql` v0.12 through v15.)
 
-If you're using an older version of `graphql`, you should upgrade it to the latest version before upgrading to Apollo Server 3.
+If you're using an older version of `graphql`, upgrade it to a supported version before upgrading to Apollo Server 3.
 
 ## Removed integrations
 
@@ -46,15 +45,15 @@ Apollo Server 3 no longer contains this built-in integration. However, you can s
 
 We hope to add more fully-integrated subscription support to Apollo Server in a future version.
 
-Please note that the `subscriptions-transport-ws` library is not actively maintained. An alternative, actively-maintained `graphql-ws` package exists which we intend to support in the future. These libraries implement different protocols for GraphQL subscriptions over websockets, so you will need to adjust your client to support `graphql-ws`. At the time of release of Apollo Server 3, the `graphql-ws` protocol is not yet supported by GraphQL Playground or Apollo Explorer.
+> Note that the `subscriptions-transport-ws` library is not actively maintained. An alternative, actively-maintained `graphql-ws` package exists, which we intend to support in a future release. These libraries implement different protocols for GraphQL subscriptions over WebSocket, so you need to adjust your client to support `graphql-ws`. At the time of release of Apollo Server 3, the `graphql-ws` protocol is not yet supported by GraphQL Playground or the Apollo Studio Explorer.
 
 #### Reenabling subscriptions
 
-> The steps below assume you want to continue using `subscriptions-transport-ws`, which requires fewer changes to existing code.
+> Currently, these instructions are only for Apollo Server's Express integration. It is likely possible to integrate `subscriptions-transport-ws` with other integrations. PRs to this migration guide are certainly welcome!
 
-You cannot integrate the batteries-included `apollo-server` package with `subscriptions-transport-ws`; if you were using `apollo-server` with subscriptions, first [eject to `apollo-server-express`](./integrations/middleware/#apollo-server-express).
+In Apollo Server 3, you can't use `subscriptions-transport-ws` with the "batteries-included" `apollo-server` package. If your project uses `apollo-server` with subscriptions, first [swap to `apollo-server-express`](./integrations/middleware/#swapping-out-apollo-server).
 
-> *Note:* Currently, these instructions are only for the Express integration. It is likely possible to integrate `subscriptions-transport-ws` with other integrations. PRs to this migration guide are certainly welcome!
+Then, complete the following:
 
 1. Install `subscriptions-transport-ws` and `@graphql-tools/schema`.
     ```sh
@@ -162,17 +161,19 @@ import typeDefs from "./typeDefs";
 
 ### File uploads
 
-Apollo Server 2 provides built-in support for file uploads via an outdated version of the `graphql-upload` library. Using an updated version of `graphql-upload` required you to disable this built-in support due to backward incompatible changes.
+Apollo Server 2 provides built-in support for file uploads via an outdated version of the `graphql-upload` library. Using an updated version of `graphql-upload` requires you to disable this built-in support due to backward incompatible changes.
 
-This built-in support is removed in Apollo Server 3. To use `graphql-upload`, you can choose an appropriate version and integrate it yourself. Note that `graphql-upload` does not support federation or every Node.js framework supported by Apollo Server.
+This built-in support is removed in Apollo Server 3. To use `graphql-upload`, you can choose an appropriate version and integrate it yourself. Note that `graphql-upload` does not support federation or every [Node.js framework](./integrations/middleware/) supported by Apollo Server.
 
-To use `graphql-upload` with Apollo Server 3, see the [documentation on enabling file uploads in Apollo Server](../data/file-uploads/). Note that if you were using uploads with the  "batteries-included" `apollo-server` package, you must first [eject to `apollo-server-express`](./integrations/middleware/#apollo-server-express).
+To use `graphql-upload` with Apollo Server 3, see the [documentation on enabling file uploads in Apollo Server](../data/file-uploads/). Note that if your project currently uses uploads with the "batteries-included" `apollo-server` package, you must first [swap to `apollo-server-express`](./integrations/middleware/#swapping-out-apollo-server).
 
 ### GraphQL Playground
 
-By default, Apollo Server 2 serves the (now-[retired](https://github.com/graphql/graphql-playground/issues/1143)) [GraphQL Playground](https://github.com/graphql/graphql-playground) IDE from its base URL (unless it's running in production). You can override this default behavior with the `playground` option (for example, `playground:true` enables GraphQL Playground even in production).
+By default, Apollo Server 2 serves the (now-[retired](https://github.com/graphql/graphql-playground/issues/1143)) [GraphQL Playground](https://github.com/graphql/graphql-playground) IDE from its base URL in non-production environments. In production, it serves no landing page. Apollo Server 2 also accepts a `playground` constructor option to override this default behavior (for example, to enable GraphQL Playground even in production).
 
-Apollo Server 3 removes this option in favor of a new [landing page API](./integrations/plugins-event-reference/#renderlandingpage), which enables you to serve a custom landing page (or multiple landing pages). The default landing page is a splash page (TODO #5373: link to splash page docs), which is served in every environment but has a different appearance depending on the value of `NODE_ENV`. When `NODE_ENV` is not `production`, this splash page links to the Apollo Sandbox IDE.
+Apollo Server 3 removes GraphQL Playground (and its associated constructor option) in favor of a landing page that links to Apollo Sandbox in non-production environments. In production, it serves a simplified landing page instead.
+
+You can customize your Apollo Server 3 landing page, as described in [Build and run queries](./testing/build-run-queries/).
 
 #### Reenabling GraphQL Playground
 
@@ -231,13 +232,13 @@ new ApolloServer({
 
 In Apollo Server 2, the default value of GraphQL Playground's `endpoint` option is determined in different ways by different Node.js framework integrations. In many cases, it's necessary to manually specify `playground: {endpoint}`.
 
-In Apollo Server 3, the default endpoint used by GraphQL Playground is the browser's current URL. In many cases, this means that you don't have to specify `endpoint` any more. If your Apollo Server 2 app specified `playground: {endpoint}` (and you wish to continue using GraphQL Playground), try removing `endpoint` from the options passed to `ApolloServerPluginLandingPageGraphQLPlayground` and see if it works for you.
+In Apollo Server 3, the default endpoint used by GraphQL Playground is the browser's current URL. In many cases, this means that you don't have to specify `endpoint` anymore. If your Apollo Server 2 app specified `playground: {endpoint}` (and you wish to continue using GraphQL Playground), try removing `endpoint` from the options passed to `ApolloServerPluginLandingPageGraphQLPlayground` and see if it works for you.
 
 ##### Specifying `settings`
 
-In Apollo Server 2, the behavior of the `settings` GraphQL Playground option is surprising. If you don't explicitly pass `{playground: {settings: {...}}}` then GraphQL Playground always uses settings that are built into its React application (some of which can be adjusted by the user in their browser). However, if you pass _any object_ as `playground: {settings: {...}}`, [several default value overrides](https://github.com/apollographql/apollo-server/blob/70a431212bd2d07d68c962cb5ded63ecc6a21963/packages/apollo-server-core/src/playground.ts#L38-L46) take effect.
+In Apollo Server 2, the behavior of the `settings` GraphQL Playground option can be surprising. If you don't explicitly pass `{playground: {settings: {...}}}` then GraphQL Playground always uses settings that are built into its React application (some of which can be adjusted by the user in their browser). However, if you pass _any object_ as `playground: {settings: {...}}`, [several default value overrides](https://github.com/apollographql/apollo-server/blob/70a431212bd2d07d68c962cb5ded63ecc6a21963/packages/apollo-server-core/src/playground.ts#L38-L46) take effect.
 
-This confusing behavior is removed in Apollo Server 3. All `settings` use default values from the GraphQL Playground React app if they aren't specified in the `settings` option to `ApolloServerPluginLandingPageGraphQLPlayground`.
+This surprising behavior is removed in Apollo Server 3. All `settings` use default values from the GraphQL Playground React app if they aren't specified in the `settings` option to `ApolloServerPluginLandingPageGraphQLPlayground`.
 
 If your app does pass in `playground: {settings: {...}}` and you want to make sure the settings used in your GraphQL Playground do not change, you should copy any relevant settings from [the Apollo Server 2 code](https://github.com/apollographql/apollo-server/blob/70a431212bd2d07d68c962cb5ded63ecc6a21963/packages/apollo-server-core/src/playground.ts#L38-L46) into your app.
 
@@ -347,7 +348,7 @@ new ApolloServer({
 
 In Apollo Server 2, [cache policy support](../performance/caching/) is configured via the `cacheControl` constructor option. There are several improvements to the semantics of cache policies in Apollo Server 3, as well as changes to how caching is configured.
 
-The `cacheControl` constructor option is removed in Apollo Server 3. To customize cache control, you instead manually install the cache control plugin (TODO #5374: link) and provide custom options to it.
+The `cacheControl` constructor option is removed in Apollo Server 3. To customize cache control, you instead manually install the [cache control plugin](./api/plugin/cache-control/) and provide custom options to it.
 
 For example, if you currently provide `defaultMaxAge` and/or `calculateHttpHeaders` to `cacheControl` like so:
 
@@ -442,11 +443,13 @@ See [GraphQL Playground](#graphql-playground).
 
 In Apollo Server 2, `apollo-server` and framework integration packages such as `apollo-server-express` import many symbols from third-party packages and re-export them. This effectively ties the API of Apollo Server to a specific version of those third-party packages and makes it challenging to upgrade to a newer version or for you to upgrade those packages yourself.
 
-In Apollo Server 3, most of these "re-exports" are removed. If you want to use these exports, you should import them directly from their originating package
+In Apollo Server 3, most of these "re-exports" are removed. If you want to use these exports, you should import them directly from their originating package.
 
 ### Exports from `graphql-tools`
 
-Apollo Server 2 exported every symbol exported by [`graphql-tools`](https://www.graphql-tools.com/) v4. If you're importing any of the following symbols from an Apollo Server package, you should instead run `npm install graphql-tools@4.x` and import the symbol from `graphql-tools` instead. Alternatively, read the [GraphQL Tools docs](https://www.graphql-tools.com/docs/introduction) and find out which `@graphql-tools/subpackage` the symbol is exported from in more modern versions of GraphQL Tools.
+Apollo Server 2 exports every symbol exported by [`graphql-tools`](https://www.graphql-tools.com/) v4. If you're importing any of the following symbols from an Apollo Server package, you should instead run `npm install graphql-tools@4.x` and import the symbol from `graphql-tools`.
+
+> Alternatively, read the [GraphQL Tools docs](https://www.graphql-tools.com/docs/introduction) and find out which `@graphql-tools/subpackage` the symbol is exported from in more modern versions of GraphQL Tools.
 
 - `AddArgumentsAsVariables`
 - `AddTypenameToAbstract`
@@ -546,24 +549,25 @@ Apollo Server 2 exports the `GraphQLUpload` symbol from (our fork of) `graphql-u
 
 ### Exports related to GraphQL Playground
 
-Apollo Server 2 exported a `defaultPlaygroundOptions` object, along with `PlaygroundConfig` and `PlaygroundRenderPageOptions` types to support the `playground` top-level constructor argument.
+Apollo Server 2 exports a `defaultPlaygroundOptions` object, along with `PlaygroundConfig` and `PlaygroundRenderPageOptions` types to support the `playground` top-level constructor argument.
 
 In Apollo Server 3, GraphQL Playground is one of several landing pages implemented via plugins, and there are no default options for it. The `ApolloServerPluginLandingPageGraphQLPlaygroundOptions` type exported from `apollo-server-core` plays a similar role to `PlaygroundConfig` and `PlaygroundRenderPageOptions`. See [the section on `playground` above](#graphql-playground) for more details on configuring GraphQL Playground in Apollo Server 3.
 
 ## Removed features
 
 Several small features have been removed from Apollo Server 3.
+
 ### `ApolloServer.schema` field
 
-Apollo Server 2 had a deprecated field `ApolloServer.schema` (which never worked when the server was a gateway). Apollo Server 3 does not contain this field. If you want to access your server's schema, you have a few options:
+Apollo Server 2 has a deprecated field `ApolloServer.schema` (which doesn't work when the server is a federated gateway). Apollo Server 3 does not contain this field. To access your server's schema, you have a few options:
 
-- Just construct the schema yourself (eg, with `const schema = makeExecutableSchema({typeDefs, resolvers})` from `@graphql-tools/schema`), pass it in as `new ApolloServer({schema})`, and use the same value you've passed in elsewhere. (Apollo Server 3 won't modify the schema you passed in.)
-- Write a plugin that uses the [`serverWillStart` event](./integrations/plugins-event-reference/#serverwillstart) to learn the schema. Note that if your server is a gateway, this will receive the first schema loaded on startup but will not receive any subsequent schemas if it updates later.
-- If your server is a gateway, register a callback with `gateway.onSchemaChange`. Note that this API has some inconsistent behavior; we are considering [adding an Apollo Server plugin event that receives all schema updates](https://github.com/apollographql/apollo-server/pull/5187) to resolve this.
+- Construct the schema yourself (e.g., with `const schema = makeExecutableSchema({typeDefs, resolvers})` from `@graphql-tools/schema`), pass it in as `new ApolloServer({schema})`, and refer to this same `schema` value elsewhere. Apollo Server 3 won't modify the schema you pass in.
+- Write a plugin that uses the [`serverWillStart` event](./integrations/plugins-event-reference/#serverwillstart) to obtain the schema. Note that if your server is a gateway, this receives the _first_ schema that's loaded on startup but doesn't receive any subsequent schemas if it updates dynamically.
+- If your server is a gateway, register a callback with `gateway.onSchemaChange`. Note that this API has some inconsistent behavior. To resolve this, we are considering [adding an Apollo Server plugin event that receives all schema updates](https://github.com/apollographql/apollo-server/pull/5187).
 
 ### `apollo-server-testing`
 
-Apollo Server 2 contained a package `apollo-server-testing`. This package was a very thin wrapper around the `server.executeOperation` method. As of Apollo Server 2.25.0, we no longer document this package and instead [document using `executeOperation` directly](../testing/testing/).
+Apollo Server 2 contains a package `apollo-server-testing`. This package is a thin wrapper around the `server.executeOperation` method. As of Apollo Server 2.25.0, we no longer document this package and instead [document using `executeOperation` directly](../testing/testing/).
 
 In Apollo Server 3, we no longer publish this package. It's possible that the Apollo Server 2 version of this package might work with Apollo Server 3 servers. If you do use `apollo-server-testing`, we suggest that you migrate to using `executeOperation` directly (with at least 2.25.0 of Apollo Server) before upgrading to Apollo Server 3.
 
@@ -583,13 +587,13 @@ await server.executeOperation({ query: QUERY });
 await server.executeOperation({ query: MUTATION });
 ```
 
-(Note that before Apollo Server 2.25.0, the `apollo-server-testing` functions allowed you to pass your operation as a string or a `DocumentNode` as returned from `gql`, but `executeOperation` only supported strings. As of v2.25.0, `executeOperation` takes `string` or `DocumentNode`, which makes the change shown above simple in all cases.)
+> Note that prior to Apollo Server 2.25.0, `apollo-server-testing` functions allowed you to pass your operation as a string or a `DocumentNode` as returned from `gql`, but `executeOperation` only supported strings. As of v2.25.0, `executeOperation` takes `string` or `DocumentNode`, which makes the change shown above straightforward in all cases.
 
 ### `apollo-datasource-rest`: `baseURL` override change
 
 When you create a [`RESTDataSource`](../data/data-sources/) subclass, you need to provide its `baseURL`. This can be done via `this.baseURL = ...` in the constructor or `resolveURL`, or via `baseURL = ...` at the class level.
 
-In Apollo Server 2 you can also provide `baseURL` via a getter like `get baseURL() { ... }`. Apollo Server 3 is compiled with TypeScript 4, which [no longer supports overriding a property with an accessor](https://devblogs.microsoft.com/typescript/announcing-typescript-4-0/#properties-overriding-accessors-and-vice-versa-is-an-error) so this is no longer allowed.
+In Apollo Server 2 you can _also_ provide `baseURL` via a getter like `get baseURL() { ... }`. Apollo Server 3 is compiled with TypeScript 4, which [no longer supports overriding a property with an accessor](https://devblogs.microsoft.com/typescript/announcing-typescript-4-0/#properties-overriding-accessors-and-vice-versa-is-an-error), so this is no longer allowed.
 
 If you used a getter in order to provide a dynamic URL, like this:
 
@@ -620,36 +624,63 @@ class MyDataSource extends RESTDataSource {
 
 #### Almost all plugin events are now async
 
-In Apollo Server 2, some [plugin events](./integrations/plugins-event-reference/) are synchronous (their return value is not a `Promise`), and some are "maybe-asynchronous" (they could return a `Promise` if they wanted, but didn't have to). This meant that you couldn't do asynchronous work in the former events, and the typings for the latter events were somewhat complex.
+In Apollo Server 2, some [plugin events](./integrations/plugins-event-reference/) are synchronous (their return value is not a `Promise`), and some are "maybe-asynchronous" (they could return a `Promise` if they wanted, but didn't have to). This means that you can't do asynchronous work in the former events, and the typings for the latter events are somewhat complex.
 
-In Apollo Server 3, almost all plugin methods are always asynchronous: they always return a `Promise` type. This includes [end hooks](../integrations/plugins/#end-hooks) as well. (The one exception is `willResolveField` and its end hook, which are always synchronous.)
+In Apollo Server 3, _almost_ all plugin methods are always asynchronous: they always return a `Promise` type. This includes [end hooks](../integrations/plugins/#end-hooks) as well. The exception is `willResolveField` and its end hook, which are always synchronous.
 
-In practice, this means that all of your plugin events should use `async` functions or methods. If you are using TypeScript, you will need to do this in order for your code to compile.
+In practice, this means that all of your plugin events should use `async` functions or methods. If you are using TypeScript, you need to do this for your code to compile.
 
-(In practice, Apollo Server generally uses `await` or `Promise.all` on the values returned by plugin methods rather than an explicit `.then`; these constructs accept both `Promise`s and normal values. So if you are not using TypeScript you may be able to get away with plugin methods that are synchronous for now.)
+> In practice, Apollo Server generally uses `await` or `Promise.all` on values returned by plugin methods instead of an explicit `.then`. These constructs accept both `Promise`s and normal values. If you aren't using TypeScript, you might be able to get away with synchronous plugin methods for the time being.
 
 #### `willSendResponse` is called more consistently
 
-In Apollo Server 2, some errors related to [persisted queries](../performance/apq/) invoke the `requestDidStart` and `didEncounterError` plugin events without invoking the `willSendResponse` event afterwards. In Apollo Server 3, any request that makes it far enough to invoke `requestDidStart` will also invoke `willSendResponse`. See [this PR](https://github.com/apollographql/apollo-server/pull/5287) for details.
+In Apollo Server 2, some errors related to [persisted queries](../performance/apq/) invoke the `requestDidStart` and `didEncounterError` plugin events _without_ invoking the `willSendResponse` event afterwards.
+
+In Apollo Server 3, any request that makes it far enough to invoke `requestDidStart` also invokes `willSendResponse`. See [this PR](https://github.com/apollographql/apollo-server/pull/5287) for details.
 
 
 #### Gateway interface renamed and simplified
 
-In Apollo Server 2, the TypeScript type used for the `gateway` constructor option is called `GraphQLService`. In Apollo Server 3, it is called `GatewayInterface`. (For now, an identical interface named `GraphQLService` continues to be exported.)
+In Apollo Server 2, the TypeScript type used for the `gateway` constructor option is called `GraphQLService`. In Apollo Server 3, it's called `GatewayInterface`. (For now, an identical interface named `GraphQLService` continues to be exported.)
 
-This interface now requires the `stop` method to exist, requires `executor` to be async, and requires you to always pass `apollo` to `load`. (All recent versions of `@apollo/gateway` satisfy these stronger requirements.)
+This interface now requires the following:
+
+* The `stop` method must be present.
+* The `executor` method must async
+* The `apollo` option must always be passed to the `load` method.
+
+> All recent versions of `@apollo/gateway` satisfy these stronger requirements.
 
 ### Bad request errors more consistently return 4xx
 
-In Apollo Server 2, some poorly-formatted requests could receive HTTP responses with a 5xx status (indicating a server error) rather than 4xx (indicating a client error). For example, this occurred in some integrations for a missing POST body or JSON parse error. In Apollo Server 3, these errors are handled in a more consistent manner across integrations and consistently return HTTP responses with a 4xx status.
+In Apollo Server 2, certain poorly formatted requests receive HTTP responses with a 5xx status (indicating a server error) instead of 4xx (indicating a client error). For example, this occurs in some integrations for a missing POST body or a JSON parse error.
+
+In Apollo Server 3, these errors are handled in a more consistent manner across integrations and consistently return HTTP responses with a 4xx status.
 
 ### Extensions (custom details) on `ApolloError`
 
-In Apollo Server 2, [error extensions](http://localhost:8000/data/errors/#including-custom-error-details) could be passed either as the third argument to the constructor, *or* as the `extensions` option on the third argument. That is, `new ApolloError(message, code, {key: 'value'})` was equivalent to `new ApolloError(message, code, {extensions: {key: 'value'}})`. No other "options" were recognized on the third argument. In Apollo Server 3, only the first form is supported. (If you try to use the second form, the constructor will throw an error.) Replace any code using the second form with the first form; you can do this before upgrading.
+#### Initializing an error
 
-In Apollo Server 2, an error extension `foo` would show up on an error object `e` both as `e.foo` and as `e.extensions.foo`; when serialized for JSON error responses, it would show up both as `extensions.foo` and `extensions.exception.foo`. In Apollo Server 3, it only shows up in one place: on `e.extensions.foo` on the error object, and in `extensions.foo` when serialized. See [the PR](https://github.com/apollographql/apollo-server/pull/5294) for more details.
+In Apollo Server 2, [error extensions](http://localhost:8000/data/errors/#including-custom-error-details) can be passed to the `ApolloError` constructor either as the third argument, *or* as an `extensions` option on the third argument.
 
-### Mocking has changed due to `graphql-tools` upgrade
+In other words, these two lines are equivalent with Apollo Server 2:
+
+```js
+new ApolloError(message, code, {key: 'value'}
+new ApolloError(message, code, {extensions: {key: 'value'}})
+```
+
+In Apollo Server 3, only the first line above is supported. If you try to use the second line, the constructor throws an error. Before upgrading, replace any code using the second form with the first form.
+
+#### Reading error extensions
+
+In Apollo Server 2, an error extension (`foo`) is present in two locations on an `ApolloError` object (`error`): `error.foo` _and_ `error.extensions.foo`. When that object is serialized for a JSON response, the extension is _also_ present in two locations in the JSON: `extensions.foo` and `extensions.exception.foo`.
+
+In Apollo Server 3, an error extension is present in _one_ `ApolloError` location: `error.extensions.foo`. When the error is serialized to JSON, the extension is present only in `extensions.foo`.
+
+See [this PR](https://github.com/apollographql/apollo-server/pull/5294) for more details.
+
+### Mocking
 
 In Apollo Server 2, the `mocks` and `mockEntireSchema` constructor options are essentially implemented as follows:
 
@@ -667,7 +698,7 @@ const schemaWithMocks = addMockFunctionsToSchema({
 });
 ```
 
-In Apollo Server 3, we've upgraded from `graphql-tools` v4 to `@graphql-tools/mock` v8. The details of how mocking works in GraphQL Tools has changed, and the name of the function that implements it has changed too. Our implementation is as follows:
+In Apollo Server 3, we've upgraded from `graphql-tools` v4 to `@graphql-tools/mock` v8. The details of how mocking works in GraphQL Tools has changed, and the name of the function that implements it has changed too. The new implementation is as follows:
 
 ```javascript
 import { addMocksToSchema } from '@graphql-tools/mock';  // v8.x
@@ -681,9 +712,9 @@ const schemaWithMocks = addMocksToSchema({
 });
 ```
 
-So the name of the function has changed, and additionally, the semantics of the function has changed. You can [read the GraphQL Tools migration docs](https://www.graphql-tools.com/docs/mocking/#migration-from-v7-and-below) to see if you use any of the features of mocking that have changed between v4 and v8, and adjust the value of your `mocks` argument if so.
+So the name of the function has changed, and additionally, the semantics of the function have changed. You can [read the GraphQL Tools migration docs](https://www.graphql-tools.com/docs/mocking/#migration-from-v7-and-below) to see if you use any mocking features that have changed between v4 and v8, and adjust the value of your `mocks` argument if so.
 
-If you'd like to use features of `addMocksToSchema` that require passing more options to it than the three that `ApolloServer` passes through, just use it directly. To do this, run `npm install @graphql-tools/mock @graphql-tools/schema` in your app, and replace
+To use features of `addMocksToSchema` that require passing more options to it than the three that `ApolloServer` passes through, you can use the library directly. To do so, run `npm install @graphql-tools/mock @graphql-tools/schema` in your app, and replace
 
 ```javascript
 new ApolloServer({ typeDefs, resolvers, mocks });
@@ -703,7 +734,6 @@ new ApolloServer({
   }),
 });
 ```
-
 
 Alternatively, to keep the current behavior without changing your mock functions at all, you can continue to use `graphql-tools` v4. To do this, run `npm install graphql-tools@v4.x` in your app, and replace
 
@@ -728,7 +758,9 @@ new ApolloServer({
 
 ### `apollo-server-caching` test suite helpers
 
-In Apollo Server 2, the `apollo-server-caching` package exports functions like `testKeyValueCache`, `testKeyValueCache_Basic`, and `testKeyValueCache_Expiration` which define Jest test suites, and a `TestableKeyValueCache` type required for these test suites to be able to flush and close the cache. You could use this to define Jest test suites for your own implementation of the `KeyValueCache` interface, though this required some intricate Jest and TypeScript config to get working properly. (Or at least the README claims you could do this; the functions are not actually included in the package's `dist` directory but maybe you figured out how to pull them out of the `src/__tests__` directory? Anyway, you definitely could implement `TestableKeyValueCache` if you wanted.)
+In Apollo Server 2, the `apollo-server-caching` package exports functions like `testKeyValueCache`, `testKeyValueCache_Basic`, and `testKeyValueCache_Expiration`, which define Jest test suites. The package also exports a `TestableKeyValueCache` type that's required for these test suites to be able to flush and close the cache.
+
+You can use this to define Jest test suites for your own implementation of the `KeyValueCache` interface, although this requires intricate Jest and TypeScript config to set up.
 
 In Apollo Server 3, these functions and type are removed. Instead, a `runKeyValueCacheTests` function is exported which can be run in any test suite (without any Jest-specific behavior). See the `apollo-server-caching` README for more details.
 
@@ -750,56 +782,85 @@ If any plugin `serverWillStart` events throw, or if the server fails to load its
 
 In Apollo Server 2, calling this method was optional. If you didn't call it, you could still call methods like `applyMiddleware` and start listening. If a startup failure occurred, all GraphQL requests would fail.
 
-In Apollo Server 3, you *must* `await server.start()` immediately after `new ApolloServer` before calling `applyMiddleware` (or `getMiddleware` or `getHandler`, depending on the integration). (Note that you don't have to call it before calling the testing method `executeOperation`.) Otherwise, that method will throw.
+In Apollo Server 3, you *must* `await server.start()` immediately after `new ApolloServer` before calling `applyMiddleware` (or `getMiddleware` or `getHandler`, depending on the integration). Note that you don't have to call it before calling the testing method `executeOperation`. Otherwise, that method will throw.
 
 This does not apply to the batteries-included `apollo-server` package (the server is started as part of the async method `server.listen()`) or to serverless framework integrations.
 
-### Peer deps rather than direct deps
+### Peer deps instead of direct deps
 
-In Apollo Server 2, the `apollo-server-express`, `apollo-server-koa`, and `apollo-server-micro` packages has *direct* dependencies on `express`, `koa`, and `micro` respectively, and `apollo-server-fastify` and `apollo-server-hapi` has no dependency on `fastify` or `hapi` or `@hapi/hapi`.
+In Apollo Server 2, the `apollo-server-express`, `apollo-server-koa`, and `apollo-server-micro` packages have *direct* dependencies on `express`, `koa`, and `micro` respectively, and `apollo-server-fastify` and `apollo-server-hapi` have no dependency on `fastify`, `hapi`, or `@hapi/hapi`.
 
 In Apollo Server 3, these packages have *peer* dependencies on their corresponding framework packages. This means that you need to install a version of that package of your choice yourself in your app (though most likely that was already the case).
+
 ### CORS `*` is now the default
 
-In Apollo Server 2, the default CORS configuration for most packages is to serve a `access-control-allow-origin: *` header for all responses.
+In Apollo Server 2, the default CORS configuration for most packages is to serve an `access-control-allow-origin: *` header for all responses.
 
-However, this is not the case in Apollo Server 2 for `apollo-server-lambda`, `apollo-server-cloud-functions`, or `apollo-server-azure-functions`, which serve no CORS headers by default; or for `apollo-server-koa`, which serves an `access-control-allow-origin` header with a value matching the request's origin by default.
+However, this is not the case in Apollo Server 2 for `apollo-server-lambda`, `apollo-server-cloud-functions`, or `apollo-server-azure-functions` (these serve no CORS headers by default), or for `apollo-server-koa` (this serves an `access-control-allow-origin` header with a value matching the request's origin by default).
 
 In Apollo Server 3, all implementations of `ApolloServer` that support CORS configuration have the same default of `access-control-allow-origin: *`.
 
-If you use `apollo-server-lambda` or `apollo-server-cloud-functions` with the default `cors` configuration and you want to keep serving no CORS headers, call `server.createHandler({expressGetMiddlewareOptions: {cors: false}})` instead.
+To use your framework's Apollo Server 2 default CORS behavior in your Apollo Server 3 application, provide the options specified below to the `createHandler`/`getMiddleware` method. 
 
-If you use `apollo-server-azure-functions` with the default `cors` configuration and you want to keep serving no CORS headers, call `server.createHandler({cors: false})` instead.
+#### Lambda / Cloud Functions
 
-If you use `apollo-server-koa` with the default `cors` configuration and you want to keep serving a "reflected" `access-control-allow-origin`, call `server.getMiddleware({cors: {}})` instead.
+```js
+server.createHandler({expressGetMiddlewareOptions: {cors: false}})
+```
 
-Note that `apollo-server-micro` and `apollo-server-cloudflare` do not support CORS configuration in Apollo Server 2 or 3.
+#### Azure Functions
+
+```js
+server.createHandler({cors: false})
+```
+
+#### Koa
+
+```js
+server.getMiddleware({cors: {}})
+```
+
+> `apollo-server-micro` and `apollo-server-cloudflare` do not support CORS configuration in Apollo Server 2 _or_ 3.
 
 ### `apollo-server-express`
 
 In Apollo Server 2, `apollo-server-express` officially supports both the `express` framework and the older [`connect`](https://www.npmjs.com/package/connect) framework.
 
-In Apollo Server 3, we no longer promise that we will continue to support `connect`. We do still run a test suite against it and we will try to not _accidentally_ break functionality under `connect`, but if future changes are easier to implement in an Express-only fashion, we reserve the right to break `connect` compatibility within Apollo Server 3.
+In Apollo Server 3, we no longer guarantee future support for `connect`. We do still run a test suite against it and we will try not to _unintentionally_ break functionality under `connect`, but if future changes are easier to implement in an Express-only fashion, we reserve the right to break `connect` compatibility within Apollo Server 3.
 
 ### `apollo-server-lambda`
 
-#### Now based on Express; `createHandler` arguments changed
+#### Now based on Express
 
-In Apollo Server 2, `apollo-server-lambda` implements parsing AWS Lambda events and performing standard web framework logic inside the package itself. As Lambda added new capabilities, the logic had to adapt, and as Apollo Server added new features, they had to be implemented from scratch in `apollo-server-lambda`. Additionally, there was no way to add additional HTTP functionality (eg "middleware") to `apollo-server-lambda`.
+In Apollo Server 2, `apollo-server-lambda` implements parsing AWS Lambda events and performing standard web framework logic inside the package itself. As Lambda added new capabilities, the logic had to adapt, and as Apollo Server added new features, they had to be implemented from scratch in `apollo-server-lambda`. Additionally, there was no way to add additional HTTP functionality (e.g., "middleware") to `apollo-server-lambda`.
 
-In Apollo Server 3, `apollo-server-lambda` is implemented as a wrapper around `apollo-server-express`, using an [actively maintained package](https://www.npmjs.com/package/@vendia/serverless-express) to parse AWS Lambda events into Express requests. This simplifies the implementation and enables us to support new Lambda integrations such as Application Load Balancers. Additionally, because it now uses Express internally, you can add additional HTTP functionality via Express middleware using the new `expressAppFromMiddleware` option to `createHandler`.
+In Apollo Server 3, `apollo-server-lambda` is implemented as a wrapper around `apollo-server-express`, using an [actively maintained package](https://www.npmjs.com/package/@vendia/serverless-express) to parse AWS Lambda events into Express requests. This simplifies the implementation and enables us to support new Lambda integrations such as Application Load Balancers. Additionally, because it now uses Express internally, you can extend HTTP functionality via Express middleware using the new `expressAppFromMiddleware` option to `createHandler`.
 
-As part of this, the arguments to `createHandler` have changed. Instead of taking only `cors` and `onHealthCheck`, it takes an `expressGetMiddlewareOptions` option, which is an object taking any of the options that the `apollo-server-express` `applyMiddleware` and `getMiddleware` can take (other than `app`). For example, instead of `server.createHandler({onHealthCheck})`, you now write `server.createHandler({expressGetMiddlewareOptions: {onHealthCheck}})`.
+#### `createHandler` arguments changed
+
+As part of the update described [above](#now-based-on-express), the arguments to `createHandler` have changed. Instead of taking only `cors` and `onHealthCheck`, the method takes an `expressGetMiddlewareOptions` option, which is an object that supports any of the options that the `apollo-server-express` `applyMiddleware` and `getMiddleware` can take (other than `app`).
+
+For example, instead of:
+
+```js
+server.createHandler({onHealthCheck})
+```
+
+you now write 
+
+```js
+server.createHandler({expressGetMiddlewareOptions: {onHealthCheck}})`
+```
 
 #### Handler is always async
 
 In Apollo Server 2, the handler returned by `createHandler` can be called either as a function that takes a callback as a third argument, or (starting with Apollo Server v2.21.2) as an async function that returns a `Promise`.
 
-In Apollo Server 3, the handler returned by `createHandler` is always an async function that returns a `Promise`; any callback passed in will be ignored.
+In Apollo Server 3, the handler returned by `createHandler` is always an async function that returns a `Promise`. Any callback passed in will be ignored.
 
-All currently supported Lambda runtimes support async handlers; however, if you were wrapping the handler returned from `createHandler` in your own larger handler and passing a callback into it, this will no longer work. You should rewrite your outer handler to be an async function and `await` the `Promise` returned from the handler returned by `createHandler`.
+All currently supported Lambda runtimes support async handlers. However, if you are currently wrapping the handler returned from `createHandler` in your own larger handler and passing a callback into it, this no longer works. Rewrite your outer handler to be an async function and `await` the `Promise` returned from the handler returned by `createHandler`.
 
-For example, if your server looked like:
+For example, if your server looked like this:
 
 ```javascript
 const apolloHandler = server.createHandler();
@@ -813,7 +874,7 @@ exports.handler = function (event, context, callback) {
 }
 ```
 
-you should change it to look like:
+you can change it to look like this:
 
 ```javascript
 const apolloHandler = server.createHandler();
@@ -830,20 +891,30 @@ exports.handler = async function (event, context) {
 
 ### `apollo-server-cloud-functions`
 
-In Apollo Server 2, `apollo-server-cloud-functions` implements standard web framework logic inside the package itself. Even though the Node API for Google Cloud Functions provides its request and response in the form of Express request and response objects, Apollo Server 2 had a bespoke implementation unrelated to `apollo-server-express` and did not support all features supported by `apollo-server-express`. Additionally, there was no way to add additional HTTP functionality (eg "middleware") to `apollo-server-cloud-functions`.
+In Apollo Server 2, `apollo-server-cloud-functions` implements standard web framework logic inside the package itself. Even though the Node.js API for Google Cloud Functions provides its request and response in the form of Express request and response objects, Apollo Server 2 has a bespoke implementation unrelated to `apollo-server-express` and does not support all features supported by `apollo-server-express`. Additionally, there is no way to add additional HTTP functionality (e.g., "middleware") to `apollo-server-cloud-functions`.
 
 In Apollo Server 3, `apollo-server-cloud-functions` is implemented on top of `apollo-server-express` and supports all features supported by `apollo-server-express`. You can add additional HTTP functionality via Express middleware using the new `expressAppFromMiddleware` option to `createHandler`.
 
-As part of this, the arguments to `createHandler` have changed. Instead of taking only `cors`, it takes an `expressGetMiddlewareOptions` option, which is an object taking any of the options that the `apollo-server-express` `applyMiddleware` and `getMiddleware` can take (other than `app`). For example, instead of `server.createHandler({cors})`, you now write `server.createHandler({expressGetMiddlewareOptions: {cors}})`.
+As part of this, the arguments to `createHandler` have changed. Instead of taking only `cors`, it takes an `expressGetMiddlewareOptions` option, which is an object taking any of the options that the `apollo-server-express` `applyMiddleware` and `getMiddleware` can take (other than `app`). For example, instead of:
+
+```js
+server.createHandler({cors})
+```
+
+you now write:
+
+```js
+server.createHandler({expressGetMiddlewareOptions: {cors}})
+```
 
 ### `apollo-server-fastify`
 
-In Apollo Server 2, `apollo-server-fastify` supports Fastify v2 and did not support Fastify v3. There was no dependency or peer dependency making this requirement clear.
+In Apollo Server 2, `apollo-server-fastify` supports Fastify v2 and does _not_ support Fastify v3. There is no dependency or peer dependency making this requirement clear.
 
 In Apollo Server 3, `apollo-server-fastify` supports Fastify v3. It has not been tested with versions of Fastify older than v3. There is a peer dependency on `fastify` v3.
 
 ### `apollo-server-hapi`
 
-We are not certain precisely which versions of Hapi are supported by `apollo-server-hapi` Apollo Server 2, but we do know that only `@hapi/hapi` v20.1.2 and higher are supported by Node 16, and Apollo Server 2 was not tested with versions of `hapi` newer than v17.8.5. (Hapi's package name changed from `hapi` to `@hapi/hapi` between v18.1.0 and v18.2.0.)
+We are not certain exactly which versions of Hapi are supported by `apollo-server-hapi` in Apollo Server 2. We _are_ certain that only `@hapi/hapi` v20.1.2 and higher are supported by Node 16, and Apollo Server 2 was not tested with versions of `hapi` newer than v17.8.5. (Hapi's package name changed from `hapi` to `@hapi/hapi` between v18.1.0 and v18.2.0.)
 
-In Apollo Server 3, `apollo-server-hapi` works with `@hapi/hapi` v20.1.2 and Node 16; it is not tested with older versions of Hapi. Note that the Hapi project believes that [all versions older than v20 have security issues](https://github.com/hapijs/hapi/issues/4114).
+In Apollo Server 3, `apollo-server-hapi` works with `@hapi/hapi` v20.1.2 and Node 16. It is not tested with older versions of Hapi. Note that the Hapi project believes that [all versions older than v20 have security issues](https://github.com/hapijs/hapi/issues/4114).
