@@ -6,7 +6,7 @@ description: Configure caching behavior on a per-field basis
 
 > **New in Apollo Server 3**: You must manually define the `@cacheControl` directive in your schema to use static cache hints. [See below.](#in-your-schema-static)
 
-FIXME should note that federation doesn't support caching well though maybe link to something that explains workarounds?
+> Note: Apollo Federation doesn't currently support @cacheControl out-of-the-box. There is [an issue](https://github.com/apollographql/federation/issues/356) on the Federation repo which discusses this and proposes possible workarounds.
 
 Apollo Server enables you to define cache control settings (`maxAge` and `scope`) for each field in your schema:
 
