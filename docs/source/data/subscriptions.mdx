@@ -1,17 +1,18 @@
 ---
-title: Subscriptions
+title: Subscriptions in Apollo Server
+sidebar_title: Subscriptions
 description: Persistent GraphQL read operations
 ---
 
 import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
+> **Apollo Server 3 removes built-in support for subscriptions.** You can reenable support as [described below](#enabling-subscriptions).
+>
 > **Subscriptions are not currently supported in [Apollo Federation](https://www.apollographql.com/docs/federation/).**
 
 **Subscriptions** are long-lasting GraphQL read operations that can update their result whenever a particular server-side event occurs. Most commonly, updated results are _pushed_ from the server to subscribing clients. For example, a chat application's server might use a subscription to push newly received messages to all clients in a particular chat room.
 
 Because subscription updates are usually pushed by the server (instead of polled by the client), they usually use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP.
-
-Subscriptions are no longer internally supported by Apollo Server. They can still be introduced in [just a few steps](#introducing-subscriptions-to-your-apollo-server) listed below.
 
 > **Important:** Compared to queries and mutations, subscriptions are significantly more complex to implement. Before you begin, [confirm that your use case requires subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/#when-to-use-subscriptions).
 
@@ -40,49 +41,52 @@ subscription PostFeed {
 
 > Each subscription operation can subscribe to only _one_ field of the `Subscription` type.
 
-## Introducing subscriptions to your Apollo Server
+## Enabling subscriptions
 
-> Subscriptions are **not** supported by the "batteries-included" `apollo-server` package. In order to implement subscriptions, you must first (swap to the `apollo-server-express` package)[/integrations/middleware/#swapping-out-apollo-server] (or any other Apollo Server integration package which supports subscriptions). The following steps assume you've already made the switch and are using `apollo-server-express`.
+> Beginning in Apollo Server 3, subscriptions are **not** supported by the "batteries-included" `apollo-server` package. To enable subscriptions, you must first [swap to the `apollo-server-express` package](/integrations/middleware/#swapping-out-apollo-server) (or any other Apollo Server integration package that supports subscriptions).
+>
+> The following steps assume you've already swapped to `apollo-server-express`.
 
-In order to run both an Express app and a separate subscription server, we're going to create an `http.Server` instance which will effectively wrap the two and become our new `listen`er. We will also create a `SubscriptionServer` which will require a few tweaks in our existing code.
+To run both an Express app _and_ a separate subscription server, we'll create an `http.Server` instance that effectively wraps the two and becomes our new `listen`er. We'll also create a `SubscriptionServer`, which requires a few tweaks to our existing code.
 
-1. Install `subscriptions-transport-ws` and `@graphql-tools/schema`.
-    ```sh
+1. Install `subscriptions-transport-ws` and `@graphql-tools/schema`:
+    ```bash
     npm install subscriptions-transport-ws @graphql-tools/schema
     ```
 
-1. Add the following imports in the module where your Apollo Server is currently instantiated. We'll use these in the subsequent steps.
-    ```javascript
+2. Add the following imports to the file where you initialize your `ApolloServer` instance (we'll use these in later steps):
+
+    ```javascript:title=index.js
     import { createServer } from 'http';
     import { execute, subscribe } from 'graphql';
     import { SubscriptionServer } from 'subscriptions-transport-ws';
     import { makeExecutableSchema } from '@graphql-tools/schema';
     ```
 
-1. Create an `http.Server` instance with your Express `app`.
+3. Next, in order to set up both the HTTP and WebSocket servers, we need to create an `http.Server`. Do this by passing your Express `app` to the `createServer` function, which we imported from the `http` module:
 
-    In order to set up both the HTTP and WebSocket servers, we'll need to create an `http.Server`. Do this by passing your Express `app` to the `createServer` function which we imported from the Node.js `http` module.
-
-    ```javascript
+    ```javascript:title=index.js
     // This `app` is the returned value from `express()`.
     const httpServer = createServer(app);
     ```
 
-1. Create an instance of `GraphQLSchema` (if one doesn't already exist).
-    > Your server may already pass a `schema` to the `ApolloServer` constructor. If it does, this step can be skipped. You'll use the existing `schema` instance in a later step.
+4. Create an instance of `GraphQLSchema` (if you don't already).
 
-    The `SubscriptionServer` (which we'll instantiate next) doesn't accept `typeDefs` and `resolvers` directly, but rather an executable `GraphQLSchema`. We can pass this `schema` object to both the `SubscriptionServer` and `ApolloServer`. This way, it's clear that the same schema is being used in both places.
+    > If you already pass the `schema` option to the `ApolloServer` constructor (instead of `typeDefs` and `resolvers`), you can skip this step.
 
-    ```javascript
+    The `SubscriptionServer` (which we'll instantiate next) doesn't take `typeDefs` and `resolvers` options. Instead, it takes an executable `GraphQLSchema`. We can pass this `schema` object to both the `SubscriptionServer` and `ApolloServer`. This way, we make sure that the same schema is being used in both places.
+
+    ```javascript:title=index.js
     const schema = makeExecutableSchema({ typeDefs, resolvers });
     // ...
     const server = new ApolloServer({
       schema,
     });
     ```
-1. Create the `SubscriptionServer`.
 
-    ```javascript
+5. Create the `SubscriptionServer`.
+
+    ```javascript:title=index.js
     const subscriptionServer = SubscriptionServer.create({
        // This is the `schema` we just created.
        schema,
@@ -104,11 +108,12 @@ In order to run both an Express app and a separate subscription server, we're go
 
     ```
 
-1. Finally, adjust the existing `listen`.
+6. Finally, we need to adjust our existing `listen` call.
 
-    Most applications will be calling `app.listen(...)` on their Express app **This should be changed to `httpServer.listen(...)`** using the same arguments. This will begin listening on the HTTP and WebSocket transports simultaneously.
+    Most Express applications call `app.listen(...)`. **Change this to `httpServer.listen(...)`** with the same arguments. This way, the server starts listening on the HTTP and WebSocket transports simultaneously.
 
 A completed example of migrating subscriptions is shown below:
+
 <ExpansionPanel title="Click to expand">
 
 ```js
@@ -175,7 +180,8 @@ The `subscribe` function must return an object of type `AsyncIterator`, a standa
 
 Apollo Server uses a **publish-subscribe** (**pub/sub**) model to track events that update active subscriptions. The [`graphql-subscriptions` library](https://github.com/apollographql/graphql-subscriptions) provides the `PubSub` class as a basic in-memory event bus to help you get started:
 
-In order to use the `graphql-subscriptions` package, first install it to your project:
+To use the `graphql-subscriptions` package, first install it like so:
+
 ```sh
 npm install graphql-subscriptions
 ```
@@ -339,7 +345,7 @@ subscription IncrementingNumber {
 }
 ```
 
-After you start up the server in CodeSandbox, follow the instructions in the browser to test out running the `numberIncremented` subscription in Apollo Explorer. You will most likely need to configure the subscriptions endpoint (wss://YOUR_SANDBOX_ID.sse.codesandbox.io/graphql) as well in the settings menu. You'll see the subscription's value update every second.
+After you start up the server in CodeSandbox, follow the instructions in the browser to test out running the `numberIncremented` subscription in Apollo Sandbox. You'll probably need to configure the subscriptions endpoint (`wss://YOUR_SANDBOX_ID.sse.codesandbox.io/graphql`) in Sandbox's Settings tab. You'll see the subscription's value update every second.
 
 ## Operation context
 
