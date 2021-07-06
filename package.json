@@ -67,7 +67,7 @@
     "@types/aws-lambda": "8.10.78",
     "@types/body-parser": "1.19.1",
     "@types/bunyan": "1.8.7",
-    "@types/connect": "3.4.34",
+    "@types/connect": "3.4.35",
     "@types/cors": "2.8.10",
     "@types/express": "4.17.12",
     "@types/express-serve-static-core": "4.17.22",
