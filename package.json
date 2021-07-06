@@ -63,7 +63,7 @@
     "@hapi/hapi": "20.1.5",
     "@josephg/resolvable": "1.0.1",
     "@sinonjs/fake-timers": "7.1.2",
-    "@types/async-retry": "1.4.2",
+    "@types/async-retry": "1.4.3",
     "@types/aws-lambda": "8.10.77",
     "@types/body-parser": "1.19.0",
     "@types/bunyan": "1.8.6",
