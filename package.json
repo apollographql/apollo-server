@@ -79,7 +79,7 @@
     "@types/lodash": "4.14.171",
     "@types/lodash.sortby": "4.7.6",
     "@types/lodash.xorby": "4.7.6",
-    "@types/lru-cache": "5.1.0",
+    "@types/lru-cache": "5.1.1",
     "@types/memcached": "2.2.6",
     "@types/micro": "7.3.5",
     "@types/node": "12.20.15",
