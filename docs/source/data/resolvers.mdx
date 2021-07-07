@@ -394,7 +394,7 @@ const server = new ApolloServer({
 }
 ```
 
-> This example assumes you are using either the `apollo-server` or `apollo-server-express` package, both of which use Express. The fields of the object passed to your `context` function may differ if you're using middleware other than Express. [See the API reference for details.](/api/apollo-server/#middleware-specific-context-fields) For more information on middleware in general, see the [integrations page](/integrations/middleware).
+> This example assumes you are using either the `apollo-server` or `apollo-server-express` package, both of which use Express. The fields of the object passed to your `context` function may differ if you're using middleware other than Express. [See the API reference for details.](../api/apollo-server/#middleware-specific-context-fields) For more information on middleware in general, see the [integrations page](../integrations/middleware/).
 
 Context initialization can be asynchronous, allowing database connections and other operations to complete:
 
