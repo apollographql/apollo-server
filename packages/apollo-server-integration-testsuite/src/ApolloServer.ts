@@ -1875,6 +1875,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             resolve();
           });
         });
+
         async function closeServer() {
           await new Promise<void>((resolve) =>
             fakeUsageReportingServer.close(() => resolve()),
@@ -1993,6 +1994,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }
           }
         }
+
         it('with retryable error', async () => {
           await testWithStatus(500, 3);
         });
@@ -2107,6 +2109,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         let earliestStartOffset = Infinity;
         let latestEndOffset = -Infinity;
+
         function walk(node: Trace.Node) {
           if (node.startTime !== 0 && node.endTime !== 0) {
             earliestStartOffset = Math.min(earliestStartOffset, node.startTime);
@@ -2114,6 +2117,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           }
           node.child.forEach((n) => walk(n as Trace.Node));
         }
+
         walk(trace.root as Trace.Node);
         expect(earliestStartOffset).toBeLessThan(Infinity);
         expect(latestEndOffset).toBeGreaterThan(-Infinity);
@@ -2314,6 +2318,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           response.parsed.httpHeaders = response.headers;
           next();
         });
+
         // Use 'any' because we're sneaking httpHeaders onto response.parsed.
         function httpHeader(result: any, header: string): string | null {
           const value = (result.httpHeaders as Headers).get(header);
@@ -2324,6 +2329,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           }
           return value;
         }
+
         // Just for the typing.
         function doFetch(
           options: GraphQLRequest & { headers?: Record<string, string> },
@@ -2740,23 +2746,27 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
 
-      // Serverless frameworks execute ApolloServer.start() in a dangling
-      // promise in the server constructor. Since ApolloServer.stop() was not
-      // designed to be executed concurrently with start(), the following test
-      // can fail for serverless frameworks. Specifically, stop() may be
-      // executed before the gateway schema update unsubscriber is registered
-      // for disposal.
-      if (!options.serverlessFramework) {
-        it('unsubscribes from schema update on close', async () => {
-          const unsubscribeSpy = jest.fn();
-          const {gateway, triggers} = makeGatewayMock({unsubscribeSpy});
-          triggers.resolveLoad({schema, executor: async () => ({})});
-          await createApolloServer({gateway});
-          expect(unsubscribeSpy).not.toHaveBeenCalled();
-          await stopServer();
-          expect(unsubscribeSpy).toHaveBeenCalled();
-        });
-      }
+      it('unsubscribes from schema update on close', async () => {
+        const unsubscribeSpy = jest.fn();
+        const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
+        triggers.resolveLoad({ schema, executor: async () => ({}) });
+        const server = (await createApolloServer({ gateway })).server;
+        if (options.serverlessFramework) {
+          // Serverless frameworks execute ApolloServer.start() in a dangling
+          // promise in the server constructor. To ensure that the server has
+          // started in the case of serverless, we make a query against it,
+          // which forces us to wait until after start.
+          //
+          // This is also required because ApolloServer.stop() was not designed
+          // to be executed concurrently with start(). (Without this query,
+          // stop() may be executed before the gateway schema update
+          // unsubscriber is registered for disposal, causing the test to fail.)
+          await server.executeOperation({ query: '{__typename}' });
+        }
+        expect(unsubscribeSpy).not.toHaveBeenCalled();
+        await stopServer();
+        expect(unsubscribeSpy).toHaveBeenCalled();
+      });
 
       it('waits until gateway has resolved a schema to respond to queries', async () => {
         let startPromiseResolver: any, endPromiseResolver: any;
@@ -2879,6 +2889,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       function getWithoutAcceptHeader(url: string) {
         return request(httpServer).get(url);
       }
+
       function get(url: string) {
         return getWithoutAcceptHeader(url).set('accept', 'text/html');
       }
