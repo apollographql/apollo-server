@@ -308,7 +308,10 @@ If you run Apollo Server behind a CDN or another caching proxy, you can configur
 
 Because CDNs and caching proxies only cache GET requests (not POST requests, which Apollo Client sends for all operations by default), we recommend enabling [automatic persisted queries](./apq/) and the [`useGETForHashedQueries` option](./apq/) in Apollo Client.
 
-Alternatively, you can set the `useGETForQueries` option of [HttpLink](https://www.apollographql.com/docs/react/api/link/apollo-link-http) in your `ApolloClient` instance, but **this may be less secure** because your query string and GraphQL variables are sent as plaintext URL query parameters which are more likely to be saved in logs by some server or proxy between the user and your GraphQL server.  FIXME I tried to improve this but it still doesn't make that much sense because `useGETForHashedQueries` certainly puts variables in the URL... I think the real reason to avoid useGETForQueries is that GETs have a length limit!
+Alternatively, you can set the `useGETForQueries` option of [HttpLink](https://www.apollographql.com/docs/react/api/link/apollo-link-http) in your `ApolloClient` instance. However, this has the following disadvantages:
+
+* Your query string is sent as a plaintext URL query parameter, which might be saved in logs by intermediary systems (e.g., a CDN or proxy) between the client and server.
+* Most browsers enforce a size limit on `GET` requests, and large query strings might exceed this limit.
 
 ## Disabling cache control
 

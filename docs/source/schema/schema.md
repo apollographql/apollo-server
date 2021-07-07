@@ -132,7 +132,7 @@ type Author {
 
 ### The `Query` type
 
-The `Query` type is a special object type that defines all of the top-level **entry points** for queries that clients execute against your data graph.
+The `Query` type is a special object type that defines all of the top-level **entry points** for queries that clients execute against your server.
 
 Each field of the `Query` type defines the name and return type of a different entry point. The `Query` type for our example schema might resemble the following:
 
@@ -263,7 +263,7 @@ As with queries, our server would respond to this mutation with a result that ma
 }
 ```
 
-A single mutation operation can include multiple top-level fields of the `Mutation` type. This usually means that the operation will execute multiple back-end writes (at least one for each field). To prevent race conditions, top-level `Mutation` fields are resolved serially in the order they're listed.
+A single mutation operation can include multiple top-level fields of the `Mutation` type. This usually means that the operation will execute multiple back-end writes (at least one for each field). To prevent race conditions, top-level `Mutation` fields are [resolved](../data/resolvers/) serially in the order they're listed (top-level `Query` fields can be resolved in parallel).
 
 [Learn more about designing mutations](#designing-mutations)
 
@@ -273,51 +273,49 @@ See [Subscriptions](../data/subscriptions).
 
 ### Input types
 
-Input types are special object types that allow you to pass objects as arguments to queries and mutations (as opposed to passing only scalar types). Input types help keep operation signatures clean, much like how accepting a single `options` object in a JavaScript function can be cleaner than repeatedly adding arguments to the function's signature.
-
-Consider this mutation that creates a blog post:
-
-```graphql
-type Mutation {
-  createPost(title: String, body: String, mediaUrls: [String]): Post
-}
-```
-
-Instead of accepting three arguments, this mutation could accept a _single_ input type that includes all of these fields. This comes in extra handy if we decide to accept an additional argument in the future, such as an `author`.
-FIXME I don't think this is a really compelling argument, because in GraphQL all arguments are given by explicit name and argument order is igonred. So the analogy to JS (made in the previous paragraph) doesn't really hold up since "pass args by keyword" is how it already works! To me, the main reasons for input objects are (a) if you want to reuse a set of arguments in multiple fields or (b) if the arguments naturally have a more deeply nested structure. The example here doesn't show either of those.
+Input types are special object types that allow you to provide hierarchical data as **arguments** to fields (as opposed to providing only flat scalar arguments).
 
 An input type's definition is similar to an object type's, but it uses the `input` keyword:
 
 ```graphql
-type Mutation {
-  createPost(post: PostAndMediaInput): Post
-}
-
-input PostAndMediaInput {
+input BlogPostContent {
   title: String
   body: String
-  mediaUrls: [String]
 }
 ```
 
-Not only does this facilitate passing the `PostAndMediaInput` type around within our schema, it also provides a basis for annotating fields with descriptions that are automatically exposed by GraphQL-enabled tools:
-FIXME this is also not a super compelling argument for input objects because field arguments can have descriptions (there's even an example of that below)
+Each field of an input type can be only a [scalar](#scalar-types), an [enum](#enum-types), or _another_ input type:
 
 ```graphql
-input PostAndMediaInput {
-  "A main title for the post"
+input BlogPostContent {
   title: String
-  "The text body of the post."
   body: String
-  "A list of URLs to render in the post."
-  mediaUrls: [String]
+  media: [MediaDetails!]
+}
+
+input MediaDetails {
+  format: MediaFormat!
+  url: String!
+}
+
+enum MediaFormat {
+  IMAGE
+  VIDEO
+}
+```
+
+After you define an input type, any number of different object fields can accept that type as an argument:
+
+```graphql
+type Mutation {
+  createBlogPost(content: BlogPostContent!): Post
+  updateBlogPost(id: ID!, content: BlogPostContent!): Post
 }
 ```
 
 Input types can sometimes be useful when multiple operations require the exact same set of information, but you should reuse them sparingly. Operations might eventually diverge in their sets of required arguments.
 
-> **Do not use the same input type for both queries and mutations**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query.
-FIXME this seems unnecessarily strong? maybe more just like "think carefully about whether fields on input types should be nullable or not"? Also we haven't mentioned nullability or optionality at all yet so that seems like it might be confusing.
+> **Take care if using the same input type for fields of both `Query` and `Mutation`**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query. You might want to create separate input types for each operation type.
 
 ### Enum types
 
@@ -404,10 +402,9 @@ Most _additive_ changes to a schema are safe and backward compatible. However, c
 
 A graph management tool such as [Apollo Studio](https://studio.apollographql.com/) helps you understand whether a potential schema change will impact any of your active clients. Studio also provides field-level performance metrics, schema history tracking, and advanced security via operation safelisting.
 
-## Documentation strings
+## Descriptions (docstrings)
 
-FIXME These are actually called "descriptions" in the GraphQL spec (we use the term above). If we want to call them doc strings that might be OK but we should at least also use the official term?
-GraphQL's schema definition language (SDL) supports Markdown-enabled documentation strings. These help consumers of your data graph discover fields and learn how to use them.
+GraphQL's schema definition language (SDL) supports Markdown-enabled documentation strings, called **descriptions**. These help consumers of your data graph discover fields and learn how to use them.
 
 The following snippet shows how to use both single-line string literals and multi-line blocks:
 
@@ -547,9 +544,9 @@ A single mutation can modify multiple types, or multiple instances of the _same_
 
 Additionally, mutations are much more likely than queries to cause errors, because they modify data. A mutation might even result in a _partial_ error, in which it successfully modifies one piece of data and fails to modify another. Regardless of the type of error, it's important that the error is communicated back to the client in a consistent way.
 
-To help resolve both of these concerns, we recommend defining a `MutationResponse` interface in your schema, along with a collection of object types that _implement_ that interface (one for each of your mutations). FIXME this is the first reference to interfaces in the docs (other than a brief link to the interfaces page), should we at least add a link to the interfaces page? (Also the first use of non-nullable types, without explanation.)
+To help resolve both of these concerns, we recommend defining a `MutationResponse` [interface](../schema/unions-interfaces/#interface-type) in your schema, along with a collection of object types that _implement_ that interface (one for each of your mutations).
 
-Here's what the `MutationResponse` interface looks like:
+Here's what a `MutationResponse` interface might look like:
 
 ```graphql
 interface MutationResponse {
@@ -559,7 +556,7 @@ interface MutationResponse {
 }
 ```
 
-And here's what an implementing object type looks like:
+And here's what an object that _implements_ `MutationResponse` might look like:
 
 ```graphql
 type UpdateUserEmailMutationResponse implements MutationResponse {
