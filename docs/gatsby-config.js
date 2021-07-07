@@ -20,6 +20,8 @@ module.exports = {
           : {
               2: 'main',
             },
+        // WATCH OUT: gatsby-theme-apollo-docs does some weird parsing to the source below
+        // when loaded as an "old version". eg, you can't put comments in it!
         sidebarCategories: {
           null: [
             'index',
@@ -29,7 +31,6 @@ module.exports = {
           ],
           'New in v3': [
             'migration',
-            // TODO: revert to main after release
             '[Changelog](https://github.com/apollographql/apollo-server/blob/release-3.0/CHANGELOG.md)',
           ],
           'Defining a Schema': [
@@ -61,7 +62,7 @@ module.exports = {
             'deployment/heroku',
             'deployment/lambda',
             'deployment/azure-functions',
-            'deployment/gcp-functions'
+            'deployment/gcp-functions',
           ],
           Monitoring: ['monitoring/metrics', 'monitoring/health-checks'],
           'API Reference': [
