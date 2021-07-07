@@ -1,18 +1,19 @@
 ---
-title: Schema basics
+title: GraphQL schema basics
+sidebar_title: Schema basics
 ---
 
-Your GraphQL server uses a **schema** to describe the shape of your data graph. This schema defines a hierarchy of **types** with fields that are populated from your back-end data stores. The schema also specifies exactly which **queries** and **mutations** are available for clients to execute against your data graph.
+Your GraphQL server uses a **schema** to describe the shape of your available data. This schema defines a hierarchy of **types** with **fields** that are populated from your back-end data stores. The schema also specifies exactly which **queries** and **mutations** are available for clients to execute.
 
 This article describes the fundamental building blocks of a schema and how to create one for your GraphQL server.
 
 ## The schema definition language
 
-The GraphQL specification includes a human-readable **schema definition language** (or **SDL**) that you use to define your schema and store it as a string.
+The GraphQL specification defines a human-readable **schema definition language** (or **SDL**) that you use to define your schema and store it as a string.
 
-Here's a short example schema that defines two object types: `Book` and `Author`:
+Here's a short example schema that defines two **object types**: `Book` and `Author`:
 
-```graphql
+```graphql:title=schema.graphql
 type Book {
   title: String
   author: Author
@@ -24,27 +25,78 @@ type Author {
 }
 ```
 
-A schema defines a collection of types and the relationships _between_ those types. In the example schema above, every `Book` has an `author`, and every `Author` has a list of `books`. (FIXME: would it be better to say something like "every `Book` may have an `author`" here to indicate that these are nullable? I mean you can query `author` on any `Book` but you may not get a `Book` back. Alternatively we could add `!`s to the schema.) By defining these type relationships in a unified schema, we enable client developers to see exactly what data is available and request a specific subset of that data with a single optimized query.
+A schema defines a collection of types and the relationships _between_ those types. In the example schema above, a `Book` can have an associated `author`, and an `Author` can have a **list** of `books`.
+
+Because these relationships are defined in a unified schema, client developers can see exactly what data is available and then request a specific subset of that data with a single optimized query.
 
 Note that the schema is **not** responsible for defining where data comes from or how it's stored. It is entirely implementation-agnostic.
+
+## Field definitions
+
+_Most_ of the schema types you define have one or more **fields**:
+
+```graphql
+# This Book type has two fields: title and author
+type Book {
+  title: String  # returns a String
+  author: Author # returns an Author
+}
+```
+
+Each field returns data of the type specified. A field's return type can be a [scalar](#scalar-types), [object](#object-types), [enum](#enum-types), [union](#union-and-interface-types), or [interface](#union-and-interface-types) (all described below).
+
+### List fields
+
+A field can return a **list** containing items of a particular type. You indicate list fields with square brackets `[]`, like so:
+
+```graphql{3}
+type Author {
+  name: String
+  books: [Book] # A list of Books
+}
+```
+
+### Field nullability
+
+By default, it's valid for any field in your schema to return `null` instead of its specified type. You can require that a particular field _doesn't_ return `null` with an exclamation mark `!`, like so:
+
+```graphql{2}
+type Author {
+  name: String! # Can't return null
+  books: [Book]
+}
+```
+
+These fields are **non-nullable**. If your server attempts to return `null` for a non-nullable field, an error is thrown.
+
+#### Nullability and lists
+
+With a list field, an exclamation mark `!` can appear in any combination of _two_ locations:
+
+```graphql{2}
+type Author {
+  books: [Book!]! # This list can't be null AND its list *items* can't be null
+}
+```
+
+* If `!` appears _inside_ the square brackets, the returned list can't include _items_ that are `null`.
+* If `!` appears _outside_ the square brackets, _the list itself_ can't be `null`.
+* In _any_ case, it's valid for a list field to return an _empty_ list.
+
 
 ## Supported types
 
 Every type definition in a GraphQL schema belongs to one of the following categories:
 
-FIXME: This list is inaccurate in a few ways. (a) The Query and Mutation types *are* object types. (b) It doesn't include interface or union types. (c) If you're going to call out Query and Mutation, why not Subscription too (which has a minimal section below)? (c) This page alludes to list types in various places but doesn't actually explain anything about them (though technically they wouldn't go on the list of "kinds of types of schema definitions"). (d) similarly, non-null (`!`) isn't really explained anywhere.
+* [Scalar](#scalar-types)
+* [Object](#object-types)
+  * This includes the three special **root operation types**: [`Query`](#the-query-type), [`Mutation`](#the-mutation-type), and [`Subscription`](#the-subscription-type).
+* [Input](#input-types)
+* [Enum](#enum-types)
+* [Union](#union-and-interface-types)
+* [Interface](#union-and-interface-types)
 
-* [Scalar types](#scalar-types)
-* [Object types](#object-types)
-* [The `Query` type](#the-query-type)
-* [The `Mutation` type](#the-mutation-type)
-* [Input types](#input-types)
-* [Enum types](#enum-types)
-
-Each of these is defined in detail below.
-
-FIXME This is an odd placement for this call-out. We haven't mentioned the concept of "fields" in this section. Should this go under "object types"?
-You can monitor the performance and usage of each field within these declarations with [Apollo Studio](https://studio.apollographql.com/), providing you with data that helps inform decisions about changes to your graph.
+Each of these is described below.
 
 ### Scalar types
 
@@ -62,7 +114,7 @@ These primitive types cover the majority of use cases. For more specific use cas
 
 ### Object types
 
-Most of the types you define in a GraphQL schema are object types. An object type contains a collection of fields, each of which can be either a scalar type or _another_ object type. FIXME again, fields can also be interfaces or unions. (Also enums.)
+Most of the types you define in a GraphQL schema are object types. An object type contains a collection of [fields](#field-definitions), each of which has its _own_ type.
 
 Two object types _can_ include each other as fields, as is the case in our example schema from earlier:
 
@@ -80,8 +132,7 @@ type Author {
 
 ### The `Query` type
 
-The `Query` type defines all of the top-level **entry points** for queries that clients execute against your data graph. It resembles an [object type](#object-types), but its name is always `Query`.
-FIXME It is just a normal object type, it doesn't just resemble one? Also technically its name does not have to be query; you can use the `schema {...}` declaration to provide a different name (however, in the specific case of federation we always rename to `Query` during composition).
+The `Query` type is a special object type that defines all of the top-level **entry points** for queries that clients execute against your data graph.
 
 Each field of the `Query` type defines the name and return type of a different entry point. The `Query` type for our example schema might resemble the following:
 
@@ -212,7 +263,7 @@ As with queries, our server would respond to this mutation with a result that ma
 }
 ```
 
-A single client request can include multiple mutations to execute. To prevent race conditions, mutations are executed serially in the order they're listed. FIXME I'm not sure it's normal to refer to "top-level fields of `Mutation`" as "mutations"? Maybe I'm being overly pedantic though. Also it might be nice if we had previously mentioned that fields in queries can run in parallel, so that we're contrasting against something here? Or at least mention it here?
+A single mutation operation can include multiple top-level fields of the `Mutation` type. This usually means that the operation will execute multiple back-end writes (at least one for each field). To prevent race conditions, top-level `Mutation` fields are resolved serially in the order they're listed.
 
 [Learn more about designing mutations](#designing-mutations)
 
@@ -348,7 +399,7 @@ Most _additive_ changes to a schema are safe and backward compatible. However, c
 
 * Removing a type or field
 * Renaming a type or field
-* Adding nullability to a field FIXME this is the first mention of nullability in all the docs, maybe it should at least have some kind of link?
+* Adding [nullability](#field-nullability) to a field
 * Removing a field's arguments
 
 A graph management tool such as [Apollo Studio](https://studio.apollographql.com/) helps you understand whether a potential schema change will impact any of your active clients. Studio also provides field-level performance metrics, schema history tracking, and advanced security via operation safelisting.
@@ -376,9 +427,7 @@ type MyObjectType {
 }
 ```
 
-A well-documented schema offers an enhanced development experience since GraphQL development tools (such as the
-[Apollo VS Code extension](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo)
-and GraphQL Playground) auto-complete field names along with descriptions when they're provided. (FIXME reference Explorer?) Furthermore, [Apollo Studio](https://studio.apollographql.com/) displays descriptions alongside field-usage and performance details when using its metrics reporting and client-awareness features.
+A well documented schema helps provide an enhanced development experience, because GraphQL development tools (such as [Apollo Explorer](https://www.apollographql.com/docs/studio/explorer/)) auto-complete field names along with descriptions when they're provided. Furthermore, [Apollo Studio](https://studio.apollographql.com/) displays descriptions alongside field usage and performance details when using its metrics reporting and client awareness features.
 
 ## Naming conventions
 
@@ -420,21 +469,20 @@ query EventList {
 ```
 
 Because we know this is the structure of data that would be helpful for our client, that can inform the structure of our schema:
-(FIXME should we have some `!` in this?)
 
 ```graphql
 type Query {
-  upcomingEvents: [Event]
+  upcomingEvents: [Event!]!
 }
 
 type Event {
-  name: String
-  date: String
+  name: String!
+  date: String!
   location: Location
 }
 
 type Location {
-  name: String
+  name: String!
   weather: WeatherInfo
 }
 
