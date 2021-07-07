@@ -29,7 +29,8 @@ module.exports = {
           ],
           'New in v3': [
             'migration',
-            '[Changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)',
+            // TODO: revert to main after release
+            '[Changelog](https://github.com/apollographql/apollo-server/blob/release-3.0/CHANGELOG.md)',
           ],
           'Defining a Schema': [
             'schema/schema',
