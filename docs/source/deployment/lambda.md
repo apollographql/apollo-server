@@ -27,7 +27,7 @@ Setting up a project to work with Lambda isn't that different from a typical Nod
 First, install the `apollo-server-lambda` package:
 
 ```shell
-npm install apollo-server-lambda graphql
+npm install apollo-server-lambda@3.x graphql
 ```
 
 Next, set up the schema's type definitions and resolvers, and pass them to the `ApolloServer` constructor like normal. Here, `ApolloServer` must be imported from `apollo-server-lambda`. It's also important to note that this file must be named `graphql.js`, as the config example in a later step depends on the filename.

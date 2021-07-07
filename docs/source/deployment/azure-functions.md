@@ -66,7 +66,7 @@ We will now install the dependencies and test our azure function app using apoll
 
 ```shell
 cd apollo-example
-npm install apollo-server-azure-functions graphql
+npm install apollo-server-azure-functions@3.x graphql
 ```
 
 Replace the context of the file `graphql/index.js` with the following:

@@ -24,7 +24,7 @@ Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./
 
 To get started with Apollo Server:
 
-* Install with `npm install apollo-server-<integration> graphql`
+* Install with `npm install apollo-server-<integration>@3.x graphql`
 * Write a GraphQL schema
 * Use one of the following snippets
 
@@ -39,7 +39,7 @@ For more info, please refer to the [Apollo Server docs](https://www.apollographq
 
 In a new project, install the `apollo-server` and `graphql` dependencies using:
 
-    npm install apollo-server graphql
+    npm install apollo-server@3.x graphql
 
 Then, create an `index.js` which defines the schema and its functionality (i.e. resolvers):
 

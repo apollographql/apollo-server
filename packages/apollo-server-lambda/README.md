@@ -7,7 +7,7 @@
 This is the AWS Lambda integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/v2). [Read the CHANGELOG](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md).
 
 ```shell
-npm install apollo-server-lambda graphql
+npm install apollo-server-lambda@3.x graphql
 ```
 
 ## Deploying with AWS Serverless Application Model (SAM)
