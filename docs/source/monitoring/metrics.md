@@ -125,3 +125,7 @@ const server = new ApolloServer({
   ]
 });
 ```
+
+## OpenTelemetry support
+
+See [OpenTelemetry in Apollo Server](https://www.apollographql.com/docs/federation/opentelemetry/).
