@@ -75,7 +75,7 @@
     "@types/hapi__hapi": "20.0.9",
     "@types/ioredis": "4.26.5",
     "@types/jest": "26.0.24",
-    "@types/koa-router": "7.4.3",
+    "@types/koa-router": "7.4.4",
     "@types/lodash": "4.14.171",
     "@types/lodash.sortby": "4.7.6",
     "@types/lodash.xorby": "4.7.6",
