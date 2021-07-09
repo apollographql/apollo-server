@@ -1,18 +1,19 @@
 ---
-title: Schema basics
+title: GraphQL schema basics
+sidebar_title: Schema basics
 ---
 
-Your GraphQL server uses a **schema** to describe the shape of your data graph. This schema defines a hierarchy of **types** with fields that are populated from your back-end data stores. The schema also specifies exactly which **queries** and **mutations** are available for clients to execute against your data graph.
+Your GraphQL server uses a **schema** to describe the shape of your available data. This schema defines a hierarchy of **types** with **fields** that are populated from your back-end data stores. The schema also specifies exactly which **queries** and **mutations** are available for clients to execute.
 
 This article describes the fundamental building blocks of a schema and how to create one for your GraphQL server.
 
 ## The schema definition language
 
-The GraphQL specification includes a human-readable **schema definition language** (or **SDL**) that you use to define your schema and store it as a string.
+The GraphQL specification defines a human-readable **schema definition language** (or **SDL**) that you use to define your schema and store it as a string.
 
-Here's a short example schema that defines two object types: `Book` and `Author`:
+Here's a short example schema that defines two **object types**: `Book` and `Author`:
 
-```graphql
+```graphql:title=schema.graphql
 type Book {
   title: String
   author: Author
@@ -24,24 +25,78 @@ type Author {
 }
 ```
 
-A schema defines a collection of types and the relationships _between_ those types. In the example schema above, every `Book` has an `author`, and every `Author` has a list of `books`. By defining these type relationships in a unified schema, we enable client developers to see exactly what data is available and request a specific subset of that data with a single optimized query.
+A schema defines a collection of types and the relationships _between_ those types. In the example schema above, a `Book` can have an associated `author`, and an `Author` can have a **list** of `books`.
+
+Because these relationships are defined in a unified schema, client developers can see exactly what data is available and then request a specific subset of that data with a single optimized query.
 
 Note that the schema is **not** responsible for defining where data comes from or how it's stored. It is entirely implementation-agnostic.
+
+## Field definitions
+
+_Most_ of the schema types you define have one or more **fields**:
+
+```graphql
+# This Book type has two fields: title and author
+type Book {
+  title: String  # returns a String
+  author: Author # returns an Author
+}
+```
+
+Each field returns data of the type specified. A field's return type can be a [scalar](#scalar-types), [object](#object-types), [enum](#enum-types), [union](#union-and-interface-types), or [interface](#union-and-interface-types) (all described below).
+
+### List fields
+
+A field can return a **list** containing items of a particular type. You indicate list fields with square brackets `[]`, like so:
+
+```graphql{3}
+type Author {
+  name: String
+  books: [Book] # A list of Books
+}
+```
+
+### Field nullability
+
+By default, it's valid for any field in your schema to return `null` instead of its specified type. You can require that a particular field _doesn't_ return `null` with an exclamation mark `!`, like so:
+
+```graphql{2}
+type Author {
+  name: String! # Can't return null
+  books: [Book]
+}
+```
+
+These fields are **non-nullable**. If your server attempts to return `null` for a non-nullable field, an error is thrown.
+
+#### Nullability and lists
+
+With a list field, an exclamation mark `!` can appear in any combination of _two_ locations:
+
+```graphql{2}
+type Author {
+  books: [Book!]! # This list can't be null AND its list *items* can't be null
+}
+```
+
+* If `!` appears _inside_ the square brackets, the returned list can't include _items_ that are `null`.
+* If `!` appears _outside_ the square brackets, _the list itself_ can't be `null`.
+* In _any_ case, it's valid for a list field to return an _empty_ list.
+
 
 ## Supported types
 
 Every type definition in a GraphQL schema belongs to one of the following categories:
 
-* [Scalar types](#scalar-types)
-* [Object types](#object-types)
-* [The `Query` type](#the-query-type)
-* [The `Mutation` type](#the-mutation-type)
-* [Input types](#input-types)
-* [Enum types](#enum-types)
+* [Scalar](#scalar-types)
+* [Object](#object-types)
+  * This includes the three special **root operation types**: [`Query`](#the-query-type), [`Mutation`](#the-mutation-type), and [`Subscription`](#the-subscription-type).
+* [Input](#input-types)
+* [Enum](#enum-types)
+* [Union](#union-and-interface-types)
+* [Interface](#union-and-interface-types)
 
-Each of these is defined in detail below.
-
-You can monitor the performance and usage of each field within these declarations with [Apollo Studio](https://studio.apollographql.com/), providing you with data that helps inform decisions about changes to your graph.
+Each of these is described below.
 
 ### Scalar types
 
@@ -59,7 +114,7 @@ These primitive types cover the majority of use cases. For more specific use cas
 
 ### Object types
 
-Most of the types you define in a GraphQL schema are object types. An object type contains a collection of fields, each of which can be either a scalar type or _another_ object type.
+Most of the types you define in a GraphQL schema are object types. An object type contains a collection of [fields](#field-definitions), each of which has its _own_ type.
 
 Two object types _can_ include each other as fields, as is the case in our example schema from earlier:
 
@@ -77,7 +132,7 @@ type Author {
 
 ### The `Query` type
 
-The `Query` type defines all of the top-level **entry points** for queries that clients execute against your data graph. It resembles an [object type](#object-types), but its name is always `Query`.
+The `Query` type is a special object type that defines all of the top-level **entry points** for queries that clients execute against your server.
 
 Each field of the `Query` type defines the name and return type of a different entry point. The `Query` type for our example schema might resemble the following:
 
@@ -208,7 +263,7 @@ As with queries, our server would respond to this mutation with a result that ma
 }
 ```
 
-A single client request can include multiple mutations to execute. To prevent race conditions, mutations are executed serially in the order they're listed.
+A single mutation operation can include multiple top-level fields of the `Mutation` type. This usually means that the operation will execute multiple back-end writes (at least one for each field). To prevent race conditions, top-level `Mutation` fields are [resolved](../data/resolvers/) serially in the order they're listed (all other fields can be resolved in parallel).
 
 [Learn more about designing mutations](#designing-mutations)
 
@@ -218,48 +273,49 @@ See [Subscriptions](../data/subscriptions).
 
 ### Input types
 
-Input types are special object types that allow you to pass objects as arguments to queries and mutations (as opposed to passing only scalar types). Input types help keep operation signatures clean, much like how accepting a single `options` object in a JavaScript function can be cleaner than repeatedly adding arguments to the function's signature.
-
-Consider this mutation that creates a blog post:
-
-```graphql
-type Mutation {
-  createPost(title: String, body: String, mediaUrls: [String]): Post
-}
-```
-
-Instead of accepting three arguments, this mutation could accept a _single_ input type that includes all of these fields. This comes in extra handy if we decide to accept an additional argument in the future, such as an `author`.
+Input types are special object types that allow you to provide hierarchical data as **arguments** to fields (as opposed to providing only flat scalar arguments).
 
 An input type's definition is similar to an object type's, but it uses the `input` keyword:
 
 ```graphql
-type Mutation {
-  createPost(post: PostAndMediaInput): Post
-}
-
-input PostAndMediaInput {
+input BlogPostContent {
   title: String
   body: String
-  mediaUrls: [String]
 }
 ```
 
-Not only does this facilitate passing the `PostAndMediaInput` type around within our schema, it also provides a basis for annotating fields with descriptions that are automatically exposed by GraphQL-enabled tools:
+Each field of an input type can be only a [scalar](#scalar-types), an [enum](#enum-types), or _another_ input type:
 
 ```graphql
-input PostAndMediaInput {
-  "A main title for the post"
+input BlogPostContent {
   title: String
-  "The text body of the post."
   body: String
-  "A list of URLs to render in the post."
-  mediaUrls: [String]
+  media: [MediaDetails!]
+}
+
+input MediaDetails {
+  format: MediaFormat!
+  url: String!
+}
+
+enum MediaFormat {
+  IMAGE
+  VIDEO
+}
+```
+
+After you define an input type, any number of different object fields can accept that type as an argument:
+
+```graphql
+type Mutation {
+  createBlogPost(content: BlogPostContent!): Post
+  updateBlogPost(id: ID!, content: BlogPostContent!): Post
 }
 ```
 
 Input types can sometimes be useful when multiple operations require the exact same set of information, but you should reuse them sparingly. Operations might eventually diverge in their sets of required arguments.
 
-> **Do not use the same input type for both queries and mutations**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query.
+> **Take care if using the same input type for fields of both `Query` and `Mutation`**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query. You might want to create separate input types for each operation type.
 
 ### Enum types
 
@@ -341,14 +397,14 @@ Most _additive_ changes to a schema are safe and backward compatible. However, c
 
 * Removing a type or field
 * Renaming a type or field
-* Adding nullability to a field
+* Adding [nullability](#field-nullability) to a field
 * Removing a field's arguments
 
 A graph management tool such as [Apollo Studio](https://studio.apollographql.com/) helps you understand whether a potential schema change will impact any of your active clients. Studio also provides field-level performance metrics, schema history tracking, and advanced security via operation safelisting.
 
-## Documentation strings
+## Descriptions (docstrings)
 
-GraphQL's schema definition language (SDL) supports markdown-enabled documentation strings. These help consumers of your data graph discover fields and learn how to use them.
+GraphQL's schema definition language (SDL) supports Markdown-enabled documentation strings, called **descriptions**. These help consumers of your data graph discover fields and learn how to use them.
 
 The following snippet shows how to use both single-line string literals and multi-line blocks:
 
@@ -368,9 +424,7 @@ type MyObjectType {
 }
 ```
 
-A well-documented schema offers an enhanced development experience since GraphQL development tools (such as the
-[Apollo VS Code extension](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo)
-and GraphQL Playground) auto-complete field names along with descriptions when they're provided. Furthermore, [Apollo Studio](https://studio.apollographql.com/) displays descriptions alongside field-usage and performance details when using its metrics reporting and client-awareness features.
+A well documented schema helps provide an enhanced development experience, because GraphQL development tools (such as [Apollo Explorer](https://www.apollographql.com/docs/studio/explorer/)) auto-complete field names along with descriptions when they're provided. Furthermore, [Apollo Studio](https://studio.apollographql.com/) displays descriptions alongside field usage and performance details when using its metrics reporting and client awareness features.
 
 ## Naming conventions
 
@@ -415,17 +469,17 @@ Because we know this is the structure of data that would be helpful for our clie
 
 ```graphql
 type Query {
-  upcomingEvents: [Event]
+  upcomingEvents: [Event!]!
 }
 
 type Event {
-  name: String
-  date: String
+  name: String!
+  date: String!
   location: Location
 }
 
 type Location {
-  name: String
+  name: String!
   weather: WeatherInfo
 }
 
@@ -490,9 +544,9 @@ A single mutation can modify multiple types, or multiple instances of the _same_
 
 Additionally, mutations are much more likely than queries to cause errors, because they modify data. A mutation might even result in a _partial_ error, in which it successfully modifies one piece of data and fails to modify another. Regardless of the type of error, it's important that the error is communicated back to the client in a consistent way.
 
-To help resolve both of these concerns, we recommend defining a `MutationResponse` interface in your schema, along with a collection of object types that _implement_ that interface (one for each of your mutations).
+To help resolve both of these concerns, we recommend defining a `MutationResponse` [interface](../schema/unions-interfaces/#interface-type) in your schema, along with a collection of object types that _implement_ that interface (one for each of your mutations).
 
-Here's what the `MutationResponse` interface looks like:
+Here's what a `MutationResponse` interface might look like:
 
 ```graphql
 interface MutationResponse {
@@ -502,7 +556,7 @@ interface MutationResponse {
 }
 ```
 
-And here's what an implementing object type looks like:
+And here's what an object that _implements_ `MutationResponse` might look like:
 
 ```graphql
 type UpdateUserEmailMutationResponse implements MutationResponse {

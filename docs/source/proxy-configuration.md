@@ -3,20 +3,15 @@ title: Proxy configuration
 description: Configuring proxy settings for outgoing requests
 ---
 
-Certain features of the Apollo platform require Apollo Server to make outgoing requests to Apollo Studio.  These include:
+Certain features of the Apollo platform (such as [managed federation](https://www.apollographql.com/docs/federation/managed-federation/overview/)) require Apollo Server to make outgoing requests to Apollo Studio. Depending on security policies, you might need to configure an outgoing HTTP proxy in order to allow these requests.
 
-* Managed federation
-* Operation registry
+Although Apollo Server supports standard Node.js "agent" configuration via [`https.globalAgent`](https://nodejs.org/api/https.html#https_https_globalagent) and [`http.globalAgent`](https://nodejs.org/api/http.html#http_http_globalagent) directly, we recommend using the [`global-agent`](https://github.com/gajus/global-agent#global-agent) package to reduce the amount of necessary configuration involved with [creating a custom agent](https://nodejs.org/api/http.html#http_class_http_agent).
 
-Depending on security policies, you might need to configure an outgoing HTTP proxy in order to allow these requests.
-
-While Apollo Server supports standard Node.js "agent" configuration via [`https.globalAgent`](https://nodejs.org/api/https.html#https_https_globalagent) and [`http.globalAgent`](https://nodejs.org/api/http.html#http_http_globalagent) directly, we recommend using the [`global-agent`](https://github.com/gajus/global-agent#global-agent) package to reduce the amount of necessary configuration involved with [creating a custom agent](https://nodejs.org/api/http.html#http_class_http_agent).
-
-The `global-agent` package allows support for the common technique of setting proxy settings using environment variables (e.g. `HTTP_PROXY`, `NO_AGENT`, etc.), which is not supported by Node.js itself (and [may never be](https://github.com/nodejs/node/issues/15620)).
+The `global-agent` package enables the common technique of setting proxy settings using environment variables (e.g. `HTTP_PROXY`, `NO_AGENT`, etc.), which is not supported by Node.js itself (and [may never be](https://github.com/nodejs/node/issues/15620)).
 
 ## Configuring the proxy agent
 
-This guide covers the `global-agent` package which is supported by Node.js versions v10 and higher.  When using Node.js versions _prior_ to v10, consider using the [`global-tunnel-ng`](https://github.com/np-maintain/global-tunnel) which behaves similarly, but is configured differently.
+This guide covers the `global-agent` package, which is supported by Node.js version 10 and later.
 
 ### Installing the `global-agent` dependency
 
@@ -98,6 +93,6 @@ This can be done [via Node.js' `NODE_EXTRA_CA_CERTS` environment variable](https
 
    ```shell
    $ NODE_EXTRA_CA_CERTS=/full/path/to/certificate.pem \
-       GLOBAL_AGENT_HTTP_PROXY=http://proxy:3128/ \
-       node index.js
+      GLOBAL_AGENT_HTTP_PROXY=http://proxy:3128/ \
+      node index.js
    ```
