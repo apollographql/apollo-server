@@ -263,7 +263,7 @@ As with queries, our server would respond to this mutation with a result that ma
 }
 ```
 
-A single mutation operation can include multiple top-level fields of the `Mutation` type. This usually means that the operation will execute multiple back-end writes (at least one for each field). To prevent race conditions, top-level `Mutation` fields are [resolved](../data/resolvers/) serially in the order they're listed (top-level `Query` fields can be resolved in parallel).
+A single mutation operation can include multiple top-level fields of the `Mutation` type. This usually means that the operation will execute multiple back-end writes (at least one for each field). To prevent race conditions, top-level `Mutation` fields are [resolved](../data/resolvers/) serially in the order they're listed (all other fields can be resolved in parallel).
 
 [Learn more about designing mutations](#designing-mutations)
 

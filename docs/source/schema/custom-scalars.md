@@ -78,7 +78,7 @@ Apollo Server calls this method when the scalar is provided by a client as a [Gr
 
 ### `parseLiteral`
 
-When an incoming query string includes the scalar as a hard-coded argument value, that value is part of the query document's abstract syntax tree (AST). Apollo Server calls the `parseLiteral` method to convert the value's AST representation (this always starts as a string that you can parse as needed) to the scalar's back-end representation.
+When an incoming query string includes the scalar as a hard-coded argument value, that value is part of the query document's abstract syntax tree (AST). Apollo Server calls the `parseLiteral` method to convert the value's AST representation to the scalar's back-end representation.
 
 In [the example above](#example-the-date-scalar), `parseLiteral` converts the AST value from a string to an integer, and _then_ converts from integer to `Date` to match the result of `parseValue`.
 
