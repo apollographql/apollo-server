@@ -18,7 +18,7 @@ module.exports = {
         versions: process.env.OFFLINE
           ? {}
           : {
-              2: 'main',
+              2: 'version-2',
             },
         // WATCH OUT: gatsby-theme-apollo-docs does some weird parsing to the source below
         // when loaded as an "old version". eg, you can't put comments in it!
@@ -31,7 +31,7 @@ module.exports = {
           ],
           'New in v3': [
             'migration',
-            '[Changelog](https://github.com/apollographql/apollo-server/blob/release-3.0/CHANGELOG.md)',
+            '[Changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)',
           ],
           'Defining a Schema': [
             'schema/schema',

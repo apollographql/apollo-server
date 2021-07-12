@@ -4,8 +4,6 @@ sidebar_title: Choosing which package to use
 description: Use the right package for your project
 ---
 
-> **Apollo Server 3 has been released, but is not yet installed by default.** To install Apollo Server 3, specify `@3.x` after the name of the Apollo Server package you are installing (for example, `npm install apollo-server@3.x`).
-
 Apollo Server is distributed as a collection of different packages for different environments and web frameworks. You can choose which package to use based on your project.
 
 ## Which package should I use?
@@ -140,7 +138,7 @@ async function startApolloServer(typeDefs, resolvers) {
 To swap this out for `apollo-server-express`, we first install the following required packages:
 
 ```bash
-npm install apollo-server-express@3.x express graphql
+npm install apollo-server-express express graphql
 ```
 
 We can (and should) also _uninstall_ `apollo-server`.
@@ -213,7 +211,7 @@ Each section also lists the options supported by each package's `applyMiddleware
 `apollo-server` is the "batteries-included" Apollo Server package. It enables you to spin up a GraphQL server without thinking about web frameworks or URLs or middleware, and its main entry point (`listen`) is an `async` function instead of a callback-based function.
 
 ```bash
-npm install apollo-server@3.x graphql
+npm install apollo-server graphql
 ```
 
 ```javascript:title=index.js
@@ -239,7 +237,7 @@ If you want to do something with your server that isn't supported by `apollo-ser
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```bash
-npm install apollo-server-express@3.x express graphql
+npm install apollo-server-express express graphql
 ```
 
 ```javascript:title=index.js
@@ -275,7 +273,7 @@ You can call `server.getMiddleware` instead of `server.applyMiddleware` if you w
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-fastify@3.x fastify graphql
+$ npm install apollo-server-fastify fastify graphql
 ```
 
 ```javascript
@@ -308,7 +306,7 @@ You _must_ `await server.start()` before calling `server.createHandler`. You can
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-hapi@3.x @hapi/hapi graphql
+$ npm install apollo-server-hapi @hapi/hapi graphql
 ```
 
 ```javascript
@@ -346,7 +344,7 @@ You _must_ `await server.start()` before calling `server.applyMiddleware`. You c
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-koa@3.x koa graphql
+$ npm install apollo-server-koa koa graphql
 ```
 
 ```javascript
@@ -384,7 +382,7 @@ You can call `server.getMiddleware` instead of `server.applyMiddleware` if you w
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above. You should put this code in a file called `index.js` in order for the `micro` CLI to find it.
 
 ```
-$ npm install apollo-server-micro@3.x micro graphql
+$ npm install apollo-server-micro micro graphql
 ```
 
 ```javascript:title=index.js
@@ -415,7 +413,7 @@ This package is a layer around `apollo-server-express`, which uses the [`@vendia
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-lambda@3.x graphql
+$ npm install apollo-server-lambda graphql
 ```
 
 ```javascript
@@ -437,7 +435,7 @@ Because the Cloud Functions Node.js runtime uses Express, `apollo-server-cloud-f
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-cloud-functions@3.x graphql
+$ npm install apollo-server-cloud-functions graphql
 ```
 
 ```javascript
@@ -458,7 +456,7 @@ For more details on using `apollo-server-cloud-functions`, see the [documentatio
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-azure-functions@3.x graphql
+$ npm install apollo-server-azure-functions graphql
 ```
 
 ```javascript

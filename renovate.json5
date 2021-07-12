@@ -2,12 +2,6 @@
   "extends": [
     "apollo-open-source"
   ],
-  /* During the last stages of v3, we are running Renovate against
-   * release-3.0 instead of main. Note that Renovate config still lives
-   * on main! Also for now let's run Renovate as much as possible rather
-   * than batching on the weekends like apollo-open-source does.
-   */
-  "baseBranches": ["release-3.0"],
   "schedule": null,
   // Disable circleci manager; see apollographql/federation's renovate file for details.
   "enabledManagers": ["npm"],
@@ -43,7 +37,7 @@
       // of Apollo Server.  "Past" major versions should be added here!
       "baseBranches": [
         "main",
-        "release-3.0"
+        "version-2"
       ]
     },
     // The current Apollo Gatsby theme does not support a version of Gatsby
