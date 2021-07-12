@@ -437,6 +437,8 @@ In Apollo Server 2, fields returning a union type are treated similarly to field
 
 In Apollo Server 2, the `@cacheControl` is honored on type definitions but not on type extensions. That is, if you write `type SomeType @cacheControl(maxAge: 123)` it takes effect but if you write `extend type SomeType @cacheControl(maxAge: 123)` it does not take effect. In Apollo Server 3, `@cacheControl` is honored on object, interface, and union extensions. If your schema accidentally contained `@cacheControl` on an `extend`, that directive will start having an effect when you upgrade to Apollo Server 3.
 
+In Apollo Server 2, most of the logic related to cache control lives in the `apollo-cache-control` package. This package exports a function called `plugin` as well as TypeScript types `CacheControlFormat`, `CacheHint`, `CacheScope`, and `CacheControlExtensionOptions`. In Apollo Server 3, this logic lives in `apollo-server-core` and the `apollo-cache-control` package is no longer published. `apollo-server-core` exports `ApolloServerPluginCacheControl` and `ApolloServerPluginCacheControlOptions` (which are similar to `plugin` and `CacheControlExtensionOptions`). `apollo-server-types` exports `CacheHint` and `CacheScope`. There is no equivalent export to `CacheControlFormat` because as described above, the code to write the `cacheControl` response extension is not part of Apollo Server 3.
+
 ### `playground`
 
 See [GraphQL Playground](#graphql-playground).
