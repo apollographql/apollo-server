@@ -7,9 +7,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
-## v3.0.0 (PRERELEASE)
+## vNEXT
 
-> The changes in this `v3.0.0` section are not final. This section aims to track all changes that are going into the 3.0 release, but it is not comprehensive until the release is final.
+## v3.0.0
 
 ### BREAKING CHANGES
 
@@ -125,8 +125,6 @@ Certain undersupported and underused Apollo Server features have been removed in
 - `apollo-server-hapi` is now only tested with Hapi v20.1.2 and higher (the minimum version that supports Node 16).
 - The non-serverless integrations now depend on their corresponding web frameworks via peer dependencies rather than direct dependencies.
 - All integrations that allow CORS headers to be customized now default to `access-control-allow-origin: *`. This was already the case for `apollo-server`, Express, Fastify, and Hapi; it is now also the same for Koa (which previously reflected the request's origin), Lambda, Cloud Functions, and Azure Functions as well (which did not set CORS by default). Micro and CloudFlare do not have a built-in way of setting CORS headers.
-
-## vNEXT
 
 ## v2.25.2
 
