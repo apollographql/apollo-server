@@ -11,31 +11,33 @@ module.exports = {
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
         githubRepo: 'apollographql/apollo-server',
-        defaultVersion: '2',
-        versions: {
-          '1': 'version-1',
-          '3': 'release-3.0',
-        },
-        // This link shows up inside the v3 docs and doesn't work in this
-        // context, but will work once v3 is default and v2 is old.
-        checkLinksOptions: {
-          exceptions: [
-            '/v2/migration-engine-plugins/',
-          ],
-        },
+        defaultVersion: '3',
+        // We build our docs including older versions which are synced from
+        // GitHub at build time. If you want to be able to work on docs while
+        // offline, set $OFFLINE and we won't include the old versions.
+        versions: process.env.OFFLINE
+          ? {}
+          : {
+              2: 'main',
+            },
+        // WATCH OUT: gatsby-theme-apollo-docs does some weird parsing to the source below
+        // when loaded as an "old version". eg, you can't put comments in it!
         sidebarCategories: {
           null: [
             'index',
             'getting-started',
-            '[Changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)',
+            'integrations/middleware',
             '[Apollo Federation](https://www.apollographql.com/docs/federation/)',
+          ],
+          'New in v3': [
+            'migration',
+            '[Changelog](https://github.com/apollographql/apollo-server/blob/release-3.0/CHANGELOG.md)',
           ],
           'Defining a Schema': [
             'schema/schema',
             'schema/unions-interfaces',
             'schema/custom-scalars',
             'schema/directives',
-            'schema/creating-directives',
           ],
           'Fetching Data': [
             'data/resolvers',
@@ -44,40 +46,41 @@ module.exports = {
             'data/file-uploads',
             'data/subscriptions',
           ],
-          Testing: [
+          'Development Workflow': [
+            'testing/build-run-queries',
             'testing/mocking',
             'testing/testing',
             '[Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/)',
-            'testing/graphql-playground'
           ],
           Performance: ['performance/caching', 'performance/apq'],
-          Security: ['security/authentication', 'security/terminating-ssl'],
-          Integrations: [
-            'integrations/middleware',
-            'integrations/plugins',
+          Security: [
+            'security/authentication',
+            'security/terminating-ssl',
+            'proxy-configuration',
           ],
           Deployment: [
             'deployment/heroku',
             'deployment/lambda',
-            'deployment/netlify',
             'deployment/azure-functions',
-            'deployment/gcp-functions'
+            'deployment/gcp-functions',
           ],
           Monitoring: ['monitoring/metrics', 'monitoring/health-checks'],
           'API Reference': [
             'api/apollo-server',
-            'api/plugin/usage-reporting',
-            'api/plugin/schema-reporting',
-            'api/plugin/inline-trace',
-            'api/graphql-tools',
             '[@apollo/federation](https://www.apollographql.com/docs/federation/api/apollo-federation/)',
             '[@apollo/gateway](https://www.apollographql.com/docs/federation/api/apollo-gateway/)',
           ],
-          Appendices: [
-            'proxy-configuration',
-            'migration-two-dot',
-            'migration-file-uploads',
-            'migration-engine-plugins',
+          'Built-in Plugins': [
+            'builtin-plugins',
+            'api/plugin/usage-reporting',
+            'api/plugin/schema-reporting',
+            'api/plugin/inline-trace',
+            'api/plugin/cache-control',
+            'api/plugin/landing-pages',
+          ],
+          'Custom Plugins': [
+            'integrations/plugins',
+            'integrations/plugins-event-reference',
           ],
         },
       },

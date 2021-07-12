@@ -1,16 +1,18 @@
-jest.mock('ioredis');
+jest.mock('ioredis', () => require('./mockIoredis'));
 
 import { RedisCache } from '../index';
-import {
-  testKeyValueCache_Basics,
-  testKeyValueCache_Expiration,
-} from '../../../apollo-server-caching/src/__tests__/testsuite';
+import { runKeyValueCacheTests } from 'apollo-server-caching';
+import FakeTimers from '@sinonjs/fake-timers';
 
 describe('Redis', () => {
-  const cache = new RedisCache();
-  afterAll(async () => {
-    await cache.close();
-  })
-  testKeyValueCache_Basics(cache);
-  testKeyValueCache_Expiration(cache);
+  it('run apollo-server-caching test suite', async () => {
+    const cache = new RedisCache();
+    const clock = FakeTimers.install();
+    try {
+      await runKeyValueCacheTests(cache, (ms: number) => clock.tick(ms));
+    } finally {
+      clock.uninstall();
+      await cache.close();
+    }
+  });
 });

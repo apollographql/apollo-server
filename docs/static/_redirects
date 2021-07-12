@@ -1,13 +1,12 @@
 / /docs/apollo-server/
 
-# This page which is new in the AS3 docs is linked from the default server
-# splash page. Until AS3 is out, let's just fix the URL.
-/docs/apollo-server/api/plugin/landing-pages/ /docs/apollo-server/v3/api/plugin/landing-pages/
+# The v3 docs were beta for a while, and non-default, but now that they are
+# default, the v3 docs don't exist anymore.  So redirect them to the default!
+/docs/apollo-server/v3 /docs/apollo-server
+/docs/apollo-server/v3/* /docs/apollo-server/:splat
 
-# The v2 docs were beta for a while, and non-default, but now that they are
-# default, the v2 docs don't exist anymore.  So redirect them to the default!
-/docs/apollo-server/v2 /docs/apollo-server/
-/docs/apollo-server/v2/* /docs/apollo-server/:splat
+# Updating URLs for v3
+/docs/apollo-server/testing/graphql-playground/ /docs/apollo-server/testing/landing-page/#graphql-playground
 
 # Removing old hidden documentation
 /docs/apollo-server/features/schema-stitching/ /docs/apollo-server/
@@ -22,6 +21,9 @@
 /docs/apollo-server/federation/core-concepts/ /docs/apollo-server/federation/entities/
 /docs/apollo-server/federation/advanced-features/ /docs/apollo-server/federation/entities/
 /docs/apollo-server/federation/concerns/ /docs/apollo-server/federation/introduction/#separation-of-concerns
+
+/docs/apollo-server/schema/creating-directives /docs/apollo-server/schema/directives/
+/docs/apollo-server/api/graphql-tools /docs/apollo-server/
 
 # Redirects associated with revamp of Apollo Server information architecture
 /docs/apollo-server/whats-new https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md

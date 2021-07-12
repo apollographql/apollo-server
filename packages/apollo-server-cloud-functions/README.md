@@ -7,7 +7,7 @@
 This is the Google Cloud Function integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/v2). [Read the CHANGELOG](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md).
 
 ```shell
-npm install apollo-server-cloud-functions graphql
+npm install apollo-server-cloud-functions@3.x graphql
 ```
 
 # Deploying with Google Cloud Functions
@@ -31,15 +31,13 @@ const resolvers = {
   },
 };
 
-/*
-Because `NODE_ENV` is a reserved environment variable in Google Cloud Functions
-and it defaults to "production", you need to set both the `playground` and 
-`introspection` options to `true` for GraphQL Playground to work correctly.
-*/
+// Because `NODE_ENV` is a reserved environment variable in Google Cloud
+// Functions and it defaults to "production", you need to set the
+// `introspection` option to `true` for a UI like Apollo Sandbox or GraphQL
+// Playground to work correctly.
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  playground: true,
   introspection: true,
 });
 
@@ -54,7 +52,7 @@ From your Google Cloud Console, go to the [Cloud Functions page](https://console
 
 Click **Create Function**. Give the function a name and set the **Trigger type** to `HTTP`.
 
-For quick setup and access to the GraphQL endpoint/playground, choose to **Allow unauthenticated invocations**. To require authentication for this endpoint, you can manage authorized users via [Cloud IAM](https://console.cloud.google.com/iam-admin/iam).
+For quick setup and access to the GraphQL endpoint/landing page, choose to **Allow unauthenticated invocations**. To require authentication for this endpoint, you can manage authorized users via [Cloud IAM](https://console.cloud.google.com/iam-admin/iam).
 
 Save your configuration changes in the Trigger section. Copy the trigger's URL for later and click **Next**.
 
@@ -86,7 +84,7 @@ Before proceeding, you need to set up the gcloud SDK:
 
 Next, initialize a new Node.js project by running `npm init` in an empty directory.
 
-Run `npm install apollo-server-cloud-functions graphql` to install the necessary dependencies and to include them in the `package.json` file.
+Run `npm install apollo-server-cloud-functions@3.x graphql` to install the necessary dependencies and to include them in the `package.json` file.
 
 At this point, your `package.json` should resemble the following:
 
@@ -124,11 +122,11 @@ For more information, see the official [Cloud Functions docs](https://cloud.goog
 
 ## Testing the function
 
-After deployment completes, navigate to your function's trigger URL. If deployment succeeded, GraphQL Playground opens.
+After deployment completes, navigate to your function's trigger URL. If deployment succeeded, you should see your server's landing page.
 
 > If you can't access your trigger URL, you might need to [add `allAuthenticatedUsers` or `allUsers` permissions](https://cloud.google.com/iam/docs/overview#all-authenticated-users) to your function.
 
-You can use GraphQL Playground to test the following query:
+Click <q>Query your Server</q> and use Apollo Sandbox to test the following query:
 
 ```graphql
 query TestQuery {

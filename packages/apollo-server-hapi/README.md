@@ -7,16 +7,15 @@
 This is the Hapi integration of Apollo Server. Apollo Server is a community-maintained open-source Apollo Server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)
 
 ```shell
-npm install apollo-server-hapi graphql
+npm install apollo-server-hapi@3.x graphql
 ```
 
+This package has only been tested with `@hapi/hapi` 20.1.2 and higher; that is the minimum version of Hapi that supports Node 16.
 ## Usage
-
-The code below requires Hapi 17 or higher.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-hapi');
-const Hapi = require('hapi');
+const Hapi = require('@hapi/hapi');
 
 async function StartServer() {
   const server = new ApolloServer({ typeDefs, resolvers });
@@ -29,8 +28,6 @@ async function StartServer() {
   await server.applyMiddleware({
     app,
   });
-
-  await server.installSubscriptionHandlers(app.listener);
 
   await app.start();
 }

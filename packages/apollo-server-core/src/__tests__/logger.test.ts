@@ -7,9 +7,6 @@ import * as winston from "winston";
 import WinstonTransport from 'winston-transport';
 import * as bunyan from "bunyan";
 import * as loglevel from "loglevel";
-// We are testing an older version of `log4js` which uses older ECMAScript
-// in order to still support testing on Node.js 6.
-// This should be updated when bump the semver major for AS3.
 import * as log4js from "log4js";
 
 const LOWEST_LOG_LEVEL = "debug";
@@ -17,7 +14,7 @@ const LOWEST_LOG_LEVEL = "debug";
 const KNOWN_DEBUG_MESSAGE = "The request has started.";
 
 async function triggerLogMessage(loggerToUse: Logger) {
-  await (new ApolloServerBase({
+  const server = new ApolloServerBase({
     typeDefs: gql`
       type Query {
         field: String!
@@ -26,13 +23,15 @@ async function triggerLogMessage(loggerToUse: Logger) {
     logger: loggerToUse,
     plugins: [
       {
-        requestDidStart({ logger }) {
+        async requestDidStart({ logger }) {
           logger.debug(KNOWN_DEBUG_MESSAGE);
-        }
-      }
-    ]
-  })).executeOperation({
-    query: '{ field }'
+        },
+      },
+    ],
+  });
+  await server.start();
+  await server.executeOperation({
+    query: '{ field }',
   });
 }
 
@@ -46,7 +45,7 @@ describe("logger", () => {
         });
       }
 
-      log(info: any) {
+      override log(info: any) {
         sink(info);
       }
     };

@@ -3,22 +3,16 @@ import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
-import {
-  ApolloError,
-  formatApolloErrors,
-  PersistedQueryNotSupportedError,
-  PersistedQueryNotFoundError,
-  hasPersistedQueryError,
-} from 'apollo-server-errors';
+import { ApolloError, formatApolloErrors } from 'apollo-server-errors';
 import {
   processGraphQLRequest,
   GraphQLRequest,
-  InvalidGraphQLRequestError,
   GraphQLRequestContext,
   GraphQLResponse,
 } from './requestPipeline';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { WithRequired, GraphQLExecutionResult } from 'apollo-server-types';
+import { newCachePolicy } from './cachePolicy';
 
 export interface HttpQueryRequest {
   method: string;
@@ -34,14 +28,14 @@ export interface HttpQueryRequest {
   request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
-export interface ApolloServerHttpResponse {
+interface ApolloServerHttpResponse {
   headers?: Record<string, string>;
+  status?: number;
   // ResponseInit contains the follow, which we do not use
-  // status?: number;
   // statusText?: string;
 }
 
-export interface HttpQueryResponse {
+interface HttpQueryResponse {
   // TODO: This isn't actually an individual GraphQL response, but the body
   // of the HTTP response, which could contain multiple GraphQL responses
   // when using batching.
@@ -76,19 +70,20 @@ export function throwHttpGraphQLError<E extends Error>(
   errors: Array<E>,
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
   extensions?: GraphQLExecutionResult['extensions'],
+  headers?: Headers,
 ): never {
-  const defaultHeaders = { 'Content-Type': 'application/json' };
-  // force no-cache on PersistedQuery errors
-  const headers = hasPersistedQueryError(errors)
-    ? {
-        ...defaultHeaders,
-        'Cache-Control': 'private, no-cache, must-revalidate',
-      }
-    : defaultHeaders;
+  const allHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (headers) {
+    for (const [name, value] of headers) {
+      allHeaders[name] = value;
+    }
+  }
 
-  type Result =
-   & Pick<GraphQLExecutionResult, 'extensions'>
-   & { errors: E[] | ApolloError[] }
+  type Result = Pick<GraphQLExecutionResult, 'extensions'> & {
+    errors: E[] | ApolloError[];
+  };
 
   const result: Result = {
     errors: options
@@ -107,7 +102,7 @@ export function throwHttpGraphQLError<E extends Error>(
     statusCode,
     prettyJSONStringify(result),
     true,
-    headers,
+    allHeaders,
   );
 }
 
@@ -115,10 +110,11 @@ export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
-  let options: GraphQLOptions;
-  const debugDefault =
-    process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+  function debugFromNodeEnv(nodeEnv: string | undefined) {
+    return nodeEnv !== 'production' && nodeEnv !== 'test';
+  }
 
+  let options: GraphQLOptions;
   try {
     options = await resolveGraphqlOptions(request.options, ...handlerArguments);
   } catch (e) {
@@ -126,10 +122,17 @@ export async function runHttpQuery(
     // the normal options provided by the user, such as: formatError,
     // debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
-    return throwHttpGraphQLError(500, [e], { debug: debugDefault });
+    return throwHttpGraphQLError(500, [e], {
+      debug: debugFromNodeEnv(process.env.NODE_ENV),
+    });
   }
+
   if (options.debug === undefined) {
-    options.debug = debugDefault;
+    const nodeEnv =
+      '__testing_nodeEnv__' in options
+        ? options.__testing_nodeEnv__
+        : process.env.NODE_ENV;
+    options.debug = debugFromNodeEnv(nodeEnv);
   }
 
   // TODO: Errors thrown while resolving the context in
@@ -176,9 +179,7 @@ export async function runHttpQuery(
     dataSources: options.dataSources,
     documentStore: options.documentStore,
 
-    extensions: options.extensions,
     persistedQueries: options.persistedQueries,
-    tracing: options.tracing,
 
     formatError: options.formatError,
     formatResponse: options.formatResponse,
@@ -201,10 +202,15 @@ export async function processHTTPRequest<TContext>(
 
   switch (httpRequest.method) {
     case 'POST':
-      if (!httpRequest.query || Object.keys(httpRequest.query).length === 0) {
+      if (
+        !httpRequest.query ||
+        typeof httpRequest.query === 'string' ||
+        Buffer.isBuffer(httpRequest.query) ||
+        Object.keys(httpRequest.query).length === 0
+      ) {
         throw new HttpQueryError(
-          500,
-          'POST body missing. Did you forget use body-parser middleware?',
+          400,
+          'POST body missing, invalid Content-Type, or JSON object has no keys.',
         );
       }
 
@@ -264,6 +270,7 @@ export async function processHTTPRequest<TContext>(
       cache: options.cache,
       debug: options.debug,
       metrics: {},
+      overallCachePolicy: newCachePolicy(),
     };
   }
 
@@ -278,15 +285,28 @@ export async function processHTTPRequest<TContext>(
   try {
     if (Array.isArray(requestPayload)) {
       // We're processing a batch request
-      const requests = requestPayload.map(requestParams =>
+      const requests = requestPayload.map((requestParams) =>
         parseGraphQLRequest(httpRequest.request, requestParams),
       );
 
       const responses = await Promise.all(
-        requests.map(async request => {
+        requests.map(async (request) => {
           try {
             const requestContext = buildRequestContext(request);
-            return await processGraphQLRequest(options, requestContext);
+            const response = await processGraphQLRequest(
+              options,
+              requestContext,
+            );
+            if (response.http) {
+              for (const [name, value] of response.http.headers) {
+                responseInit.headers![name] = value;
+              }
+
+              if (response.http.status) {
+                responseInit.status = response.http.status;
+              }
+            }
+            return response;
           } catch (error) {
             // A batch can contain another query that returns data,
             // so we don't error out the entire request with an HttpError
@@ -302,42 +322,34 @@ export async function processHTTPRequest<TContext>(
       // We're processing a normal request
       const request = parseGraphQLRequest(httpRequest.request, requestPayload);
 
-      try {
-        const requestContext = buildRequestContext(request);
+      const requestContext = buildRequestContext(request);
 
-        const response = await processGraphQLRequest(options, requestContext);
+      const response = await processGraphQLRequest(options, requestContext);
 
-        // This code is run on parse/validation errors and any other error that
-        // doesn't reach GraphQL execution
-        if (response.errors && typeof response.data === 'undefined') {
-          // don't include options, since the errors have already been formatted
-          return throwHttpGraphQLError(
-            (response.http && response.http.status) || 400,
-            response.errors as any,
-            undefined,
-            response.extensions,
-          );
+      // This code is run on parse/validation errors and any other error that
+      // doesn't reach GraphQL execution
+      if (response.errors && typeof response.data === 'undefined') {
+        // don't include options, since the errors have already been formatted
+        return throwHttpGraphQLError(
+          (response.http && response.http.status) || 400,
+          response.errors as any,
+          undefined,
+          response.extensions,
+          response.http?.headers,
+        );
+      }
+
+      if (response.http) {
+        for (const [name, value] of response.http.headers) {
+          responseInit.headers![name] = value;
         }
 
-        if (response.http) {
-          for (const [name, value] of response.http.headers) {
-            responseInit.headers![name] = value;
-          }
-        }
-
-        body = prettyJSONStringify(serializeGraphQLResponse(response));
-      } catch (error) {
-        if (error instanceof InvalidGraphQLRequestError) {
-          throw new HttpQueryError(400, error.message);
-        } else if (
-          error instanceof PersistedQueryNotSupportedError ||
-          error instanceof PersistedQueryNotFoundError
-        ) {
-          return throwHttpGraphQLError(200, [error], options);
-        } else {
-          throw error;
+        if (response.http.status) {
+          responseInit.status = response.http.status;
         }
       }
+
+      body = prettyJSONStringify(serializeGraphQLResponse(response));
     }
   } catch (error) {
     if (error instanceof HttpQueryError) {
@@ -418,9 +430,9 @@ function parseGraphQLRequest(
 // GET operations should only be queries (not mutations). We want to throw
 // a particular HTTP error in that case.
 const checkOperationPlugin: ApolloServerPlugin = {
-  requestDidStart() {
+  async requestDidStart() {
     return {
-      didResolveOperation({ request, operation }) {
+      async didResolveOperation({ request, operation }) {
         if (!request.http) return;
 
         if (request.http.method === 'GET' && operation.operation !== 'query') {

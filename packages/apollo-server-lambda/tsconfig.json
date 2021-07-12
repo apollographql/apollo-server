@@ -5,9 +5,9 @@
     "outDir": "./dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__"],
+  "exclude": ["**/__tests__"],
   "references": [
     { "path": "../apollo-server-core" },
-    { "path": "../apollo-server-types" },
+    { "path": "../apollo-server-express" },
   ]
 }

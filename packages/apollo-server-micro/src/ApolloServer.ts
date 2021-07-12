@@ -1,20 +1,17 @@
-import {
-  ApolloServerBase,
-  GraphQLOptions,
-  processFileUploads,
-} from 'apollo-server-core';
+import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
-import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
-import { parseAll } from 'accept';
+import { parseAll } from '@hapi/accept';
 
 import { graphqlMicro } from './microApollo';
 import { MicroRequest } from './types';
+import { LandingPage } from 'apollo-server-plugin-base';
 
 export interface ServerRegistration {
   path?: string;
   disableHealthCheck?: boolean;
   onHealthCheck?: (req: MicroRequest) => Promise<any>;
+  __testing__microSuppressErrorLog?: boolean;
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -32,39 +29,45 @@ export class ApolloServer extends ApolloServerBase {
     path,
     disableHealthCheck,
     onHealthCheck,
+    __testing__microSuppressErrorLog,
   }: ServerRegistration = {}) {
-    // In case the user didn't bother to call and await the `start` method, we
-    // kick it off in the background (with any errors getting logged
-    // and also rethrown from graphQLServerOptions during later requests).
-    this.ensureStarting();
+    this.assertStarted('createHandler');
 
-    return async (req, res) => {
-      this.graphqlPath = path || '/graphql';
+    this.graphqlPath = path || '/graphql';
 
-      if (typeof processFileUploads === 'function') {
-        await this.handleFileUploads(req, res);
-      }
+    const landingPage = this.getLandingPage();
 
-      (await this.handleHealthCheck({
-        req,
-        res,
-        disableHealthCheck,
-        onHealthCheck,
-      })) ||
-        this.handleGraphqlRequestsWithPlayground({ req, res }) ||
-        (await this.handleGraphqlRequestsWithServer({ req, res })) ||
+    return async (req: MicroRequest, res: ServerResponse) => {
+      try {
+        if (
+          await this.handleHealthCheck({
+            req,
+            res,
+            disableHealthCheck,
+            onHealthCheck,
+          })
+        ) {
+          return;
+        }
+        if (
+          landingPage &&
+          this.handleGraphqlRequestsWithLandingPage({ req, res, landingPage })
+        ) {
+          return;
+        }
+        if (await this.handleGraphqlRequestsWithServer({ req, res })) {
+          return;
+        }
         send(res, 404, null);
+      } catch (errorObj) {
+        if (!__testing__microSuppressErrorLog) {
+          throw errorObj;
+        }
+        // Like Micro's sendError but without the logging.
+        const statusCode = errorObj.statusCode || errorObj.status;
+        send(res, statusCode || 500, errorObj.stack);
+      }
     };
-  }
-
-  // This integration supports file uploads.
-  protected supportsUploads(): boolean {
-    return true;
-  }
-
-  // This integration supports subscriptions.
-  protected supportsSubscriptions(): boolean {
-    return true;
   }
 
   // If health checking is enabled, trigger the `onHealthCheck`
@@ -108,34 +111,28 @@ export class ApolloServer extends ApolloServerBase {
     return handled;
   }
 
-  // If the `playgroundOptions` are set, register a `graphql-playground` instance
-  // (not available in production) that is then used to handle all
-  // incoming GraphQL requests.
-  private handleGraphqlRequestsWithPlayground({
+  private handleGraphqlRequestsWithLandingPage({
     req,
     res,
+    landingPage,
   }: {
     req: MicroRequest;
     res: ServerResponse;
+    landingPage: LandingPage;
   }): boolean {
     let handled = false;
 
-    if (this.playgroundOptions && req.method === 'GET') {
+    if (req.method === 'GET') {
       const accept = parseAll(req.headers);
       const types = accept.mediaTypes as string[];
-      const prefersHTML =
+      const prefersHtml =
         types.find(
           (x: string) => x === 'text/html' || x === 'application/json',
         ) === 'text/html';
 
-      if (prefersHTML) {
-        const middlewareOptions = {
-          endpoint: this.graphqlPath,
-          subscriptionEndpoint: this.subscriptionsPath,
-          ...this.playgroundOptions,
-        };
+      if (prefersHtml) {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        send(res, 200, renderPlaygroundPage(middlewareOptions));
+        send(res, 200, landingPage.html);
         handled = true;
       }
     }
@@ -152,7 +149,7 @@ export class ApolloServer extends ApolloServerBase {
     res: ServerResponse;
   }): Promise<boolean> {
     let handled = false;
-    const url = req.url.split('?')[0];
+    const url = req.url!.split('?')[0];
     if (url === this.graphqlPath) {
       const graphqlHandler = graphqlMicro(() => {
         return this.createGraphQLServerOptions(req, res);
@@ -162,22 +159,5 @@ export class ApolloServer extends ApolloServerBase {
       handled = true;
     }
     return handled;
-  }
-
-  // If file uploads are detected, prepare them for easier handling with
-  // the help of `graphql-upload`.
-  private async handleFileUploads(req: MicroRequest, res: ServerResponse) {
-    if (typeof processFileUploads !== 'function') {
-      return;
-    }
-
-    const contentType = req.headers['content-type'];
-    if (
-      this.uploadsConfig &&
-      contentType &&
-      contentType.startsWith('multipart/form-data')
-    ) {
-      req.filePayload = await processFileUploads(req, res, this.uploadsConfig);
-    }
   }
 }

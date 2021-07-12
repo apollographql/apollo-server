@@ -2,29 +2,25 @@ import express from 'express';
 import corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
-import {
   GraphQLOptions,
-  FileUploadOptions,
   ApolloServerBase,
-  formatApolloErrors,
-  processFileUploads,
   ContextFunction,
   Context,
   Config,
+  runHttpQuery,
+  HttpQueryError,
+  convertNodeHttpToRequest,
 } from 'apollo-server-core';
-import type { ExecutionParams } from 'subscriptions-transport-ws';
 import accepts from 'accepts';
-import typeis from 'type-is';
-import { graphqlExpress } from './expressApollo';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions } from 'apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;
-  cors?: corsMiddleware.CorsOptions | corsMiddleware.CorsOptionsDelegate | boolean;
+  cors?:
+    | corsMiddleware.CorsOptions
+    | corsMiddleware.CorsOptionsDelegate
+    | boolean;
   bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
@@ -40,43 +36,9 @@ export interface ServerRegistration extends GetMiddlewareOptions {
   app: express.Application;
 }
 
-const fileUploadMiddleware = (
-  uploadsConfig: FileUploadOptions,
-  server: ApolloServerBase,
-) => (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-) => {
-  // Note: we use typeis directly instead of via req.is for connect support.
-  if (
-    typeof processFileUploads === 'function' &&
-    typeis(req, ['multipart/form-data'])
-  ) {
-    processFileUploads(req, res, uploadsConfig)
-      .then(body => {
-        req.body = body;
-        next();
-      })
-      .catch(error => {
-        if (error.status && error.expose) res.status(error.status);
-
-        next(
-          formatApolloErrors([error], {
-            formatter: server.requestOptions.formatError,
-            debug: server.requestOptions.debug,
-          }),
-        );
-      });
-  } else {
-    next();
-  }
-};
-
 export interface ExpressContext {
   req: express.Request;
   res: express.Response;
-  connection?: ExecutionParams;
 }
 
 export interface ApolloServerExpressConfig extends Config {
@@ -98,15 +60,10 @@ export class ApolloServer extends ApolloServerBase {
     return super.graphQLServerOptions({ req, res });
   }
 
-  protected supportsSubscriptions(): boolean {
-    return true;
-  }
-
-  protected supportsUploads(): boolean {
-    return true;
-  }
-
   public applyMiddleware({ app, ...rest }: ServerRegistration) {
+    // getMiddleware calls this too, but we want the right method name in the error
+    this.assertStarted('applyMiddleware');
+
     app.use(this.getMiddleware(rest));
   }
 
@@ -122,11 +79,11 @@ export class ApolloServer extends ApolloServerBase {
   }: GetMiddlewareOptions = {}): express.Router {
     if (!path) path = '/graphql';
 
-    // In case the user didn't bother to call and await the `start` method, we
-    // kick it off in the background (with any errors getting logged
-    // and also rethrown from graphQLServerOptions during later requests).
-    this.ensureStarting();
+    this.assertStarted('getMiddleware');
 
+    // Note that even though we use Express's router here, we still manage to be
+    // Connect-compatible because express.Router just implements the same
+    // middleware interface that Connect and Express share!
     const router = express.Router();
 
     if (!disableHealthCheck) {
@@ -148,11 +105,6 @@ export class ApolloServer extends ApolloServerBase {
       });
     }
 
-    let uploadsMiddleware;
-    if (this.uploadsConfig && typeof processFileUploads === 'function') {
-      uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
-    }
-
     // XXX multiple paths?
     this.graphqlPath = path;
 
@@ -170,47 +122,91 @@ export class ApolloServer extends ApolloServerBase {
       router.use(path, json(bodyParserConfig));
     }
 
-    if (uploadsMiddleware) {
-      router.use(path, uploadsMiddleware);
-    }
-
-    // Note: if you enable playground in production and expect to be able to see your
-    // schema, you'll need to manually specify `introspection: true` in the
-    // ApolloServer constructor; by default, the introspection query is only
-    // enabled in dev.
+    const landingPage = this.getLandingPage();
     router.use(path, (req, res, next) => {
-      if (this.playgroundOptions && req.method === 'GET') {
-        // perform more expensive content-type check only if necessary
-        // XXX We could potentially move this logic into the GuiOptions lambda,
-        // but I don't think it needs any overriding
-        const accept = accepts(req);
-        const types = accept.types() as string[];
-        const prefersHTML =
-          types.find(
-            (x: string) => x === 'text/html' || x === 'application/json',
-          ) === 'text/html';
-
-        if (prefersHTML) {
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: req.originalUrl,
-            subscriptionEndpoint: this.subscriptionsPath,
-            ...this.playgroundOptions,
-          };
-          res.setHeader('Content-Type', 'text/html');
-          const playground = renderPlaygroundPage(playgroundRenderPageOptions);
-          res.write(playground);
-          res.end();
-          return;
-        }
+      if (landingPage && prefersHtml(req)) {
+        res.setHeader('Content-Type', 'text/html');
+        res.write(landingPage.html);
+        res.end();
+        return;
       }
 
-      return graphqlExpress(() => this.createGraphQLServerOptions(req, res))(
-        req,
-        res,
-        next,
+      if (!req.body) {
+        // The json body-parser *always* sets req.body to {} if it's unset (even
+        // if the Content-Type doesn't match), so if it isn't set, you probably
+        // forgot to set up body-parser.
+        res.status(500);
+        if (bodyParserConfig === false) {
+          res.send(
+            '`res.body` is not set; you passed `bodyParserConfig: false`, ' +
+              'but you still need to use `body-parser` middleware yourself.',
+          );
+        } else {
+          res.send(
+            '`res.body` is not set even though Apollo Server installed ' +
+              "`body-parser` middleware; this shouldn't happen!",
+          );
+        }
+        return;
+      }
+
+      runHttpQuery([], {
+        method: req.method,
+        options: () => this.createGraphQLServerOptions(req, res),
+        query: req.method === 'POST' ? req.body : req.query,
+        request: convertNodeHttpToRequest(req),
+      }).then(
+        ({ graphqlResponse, responseInit }) => {
+          if (responseInit.headers) {
+            for (const [name, value] of Object.entries(responseInit.headers)) {
+              res.setHeader(name, value);
+            }
+          }
+          res.statusCode = responseInit.status || 200;
+
+          // Using `.send` is a best practice for Express, but we also just use
+          // `.end` for compatibility with `connect`.
+          if (typeof res.send === 'function') {
+            res.send(graphqlResponse);
+          } else {
+            res.end(graphqlResponse);
+          }
+        },
+        (error: HttpQueryError) => {
+          if ('HttpQueryError' !== error.name) {
+            return next(error);
+          }
+
+          if (error.headers) {
+            for (const [name, value] of Object.entries(error.headers)) {
+              res.setHeader(name, value);
+            }
+          }
+
+          res.statusCode = error.statusCode;
+          if (typeof res.send === 'function') {
+            // Using `.send` is a best practice for Express, but we also just use
+            // `.end` for compatibility with `connect`.
+            res.send(error.message);
+          } else {
+            res.end(error.message);
+          }
+        },
       );
     });
 
     return router;
   }
+}
+
+function prefersHtml(req: express.Request): boolean {
+  if (req.method !== 'GET') {
+    return false;
+  }
+  const accept = accepts(req);
+  const types = accept.types() as string[];
+  return (
+    types.find((x: string) => x === 'text/html' || x === 'application/json') ===
+    'text/html'
+  );
 }

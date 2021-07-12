@@ -10,9 +10,9 @@ import fetcher from 'make-fetch-happen';
 import { HttpRequestCache } from './cache';
 
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import { OperationManifest } from "./ApolloServerPluginOperationRegistry";
-import { Logger, ApolloConfig, WithRequired } from "apollo-server-types";
-import { Response, RequestInit, fetch } from "apollo-server-env";
+import { OperationManifest } from './ApolloServerPluginOperationRegistry';
+import { Logger, ApolloConfig, WithRequired } from 'apollo-server-types';
+import { Response, RequestInit, fetch } from 'apollo-server-env';
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
@@ -21,7 +21,7 @@ export interface AgentOptions {
   logger?: Logger;
   fetcher?: typeof fetch;
   pollSeconds?: number;
-  apollo: WithRequired<ApolloConfig, 'keyHash' | 'graphId'>;
+  apollo: WithRequired<ApolloConfig, 'keyHash' | 'graphRef'>;
   store: InMemoryLRUCache;
 }
 
@@ -43,9 +43,25 @@ export default class Agent {
   private lastOperationSignatures: SignatureStore = new Set();
   private readonly options: AgentOptions = Object.create(null);
 
+  // We've made most of our protocols capable of just taking a graph ref,
+  // meaning that we can later iterate on the semantics of graph refs without
+  // needing to make changes to Apollo Server. But not the operation registry!
+  // We really need to know the pieces separately. *sigh*
+  private readonly graphId: string;
+  readonly graphVariant: string;
+
   constructor(options: AgentOptions) {
     Object.assign(this.options, options);
 
+    const { graphRef } = this.options.apollo;
+    const at = graphRef.indexOf('@');
+    if (at === -1) {
+      this.graphId = graphRef;
+      this.graphVariant = 'current';
+    } else {
+      this.graphId = graphRef.substring(0, at);
+      this.graphVariant = graphRef.substring(at + 1);
+    }
     this.logger = this.options.logger || loglevel.getLogger(pluginName);
     this.fetcher = this.options.fetcher || getDefaultGcsFetcher();
   }
@@ -77,12 +93,12 @@ export default class Agent {
     // Afterward, keep the pulse going.
     this.timer =
       this.timer ||
-      setInterval(function() {
+      setInterval(function () {
         // Errors in the interval indicate that the manifest might have failed
         // to update, but we've still got the seed update so we will continue
         // serving based on the previous manifest until we gain sync again.
         // These errors will be logged, but not crash the server.
-        pulse().catch(err => console.error(err.message || err));
+        pulse().catch((err) => console.error(err.message || err));
       }, this.pollSeconds() * 1000);
 
     // Prevent the Node.js event loop from remaining active (and preventing,
@@ -117,7 +133,7 @@ export default class Agent {
 
   private async fetchAndUpdateStorageSecret(): Promise<string | undefined> {
     const storageSecretUrl = getStorageSecretUrl(
-      this.options.apollo.graphId,
+      this.graphId,
       this.options.apollo.keyHash,
     );
 
@@ -151,25 +167,28 @@ export default class Agent {
     const storageSecret = await this.fetchAndUpdateStorageSecret();
 
     if (!storageSecret) {
-      throw new Error("No storage secret found");
+      throw new Error('No storage secret found');
     }
 
     const storageSecretManifestUrl = getOperationManifestUrl(
-      this.options.apollo.graphId,
+      this.graphId,
       storageSecret,
-      this.options.apollo.graphVariant,
+      this.graphVariant,
     );
 
     this.logger.debug(
       `Checking for manifest changes at ${storageSecretManifestUrl}`,
     );
-    const response =
-      await this.fetcher(storageSecretManifestUrl, this.fetchOptions);
+    const response = await this.fetcher(
+      storageSecretManifestUrl,
+      this.fetchOptions,
+    );
 
     if (response.status === 404 || response.status === 403) {
       throw new Error(
-        `No manifest found for tag "${this.options.apollo.graphVariant}" at ` +
-        `${storageSecretManifestUrl}. ${callToAction}`);
+        `No manifest found for tag "${this.graphVariant}" at ` +
+          `${storageSecretManifestUrl}. ${callToAction}`,
+      );
     }
     return response;
   }
@@ -203,7 +222,7 @@ export default class Agent {
         throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
       }
     } catch (err) {
-      const ourErrorPrefix = `Unable to fetch operation manifest for graph ID '${this.options.apollo.graphId}': ${err}`;
+      const ourErrorPrefix = `Unable to fetch operation manifest for graph ID '${this.graphId}': ${err}`;
 
       err.message = `${ourErrorPrefix}: ${err}`;
 
@@ -230,13 +249,13 @@ export default class Agent {
     const resetRequestInFlight = () => (this.requestInFlight = null);
 
     return this.requestInFlight
-      .then(result => {
+      .then((result) => {
         // Mark this for reporting and monitoring reasons.
         this.lastSuccessfulCheck = new Date();
         resetRequestInFlight();
         return result;
       })
-      .catch(err => {
+      .catch((err) => {
         // We don't want to handle any errors, but we do want to erase the
         // current Promise reference.
         resetRequestInFlight();
@@ -300,7 +319,7 @@ function getDefaultGcsFetcher() {
     headers: {
       'user-agent': [
         require('../package.json').name,
-        require('../package.json').version
+        require('../package.json').version,
       ].join('/'),
     },
     retry: {

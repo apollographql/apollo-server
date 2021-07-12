@@ -1,6 +1,6 @@
 {
   "name": "apollo-server",
-  "version": "2.25.2",
+  "version": "3.0.0",
   "description": "Production ready GraphQL Server",
   "author": "Apollo <opensource@apollographql.com>",
   "main": "dist/index.js",
@@ -24,12 +24,13 @@
   "dependencies": {
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-express": "file:../apollo-server-express",
-    "express": "^4.0.0",
-    "graphql-subscriptions": "^1.0.0",
-    "graphql-tools": "^4.0.8",
+    "express": "^4.17.1",
     "stoppable": "^1.1.0"
   },
+  "devDependencies": {
+    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
+  },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
+    "graphql": "^15.3.0"
   }
 }

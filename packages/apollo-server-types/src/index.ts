@@ -58,9 +58,9 @@ export interface ApolloConfigInput {
   // Your Apollo API key. Environment variable: APOLLO_KEY.
   key?: string;
   // The graph ref for your graph, eg `my-graph@my-variant` or `my-graph` to use
-  // your graph's default variant. Environment variable: APOLLO_GRAPH_REF. If
-  // you specify `key`, you should specify either `graphRef` or both `graphId`
-  // and `graphVariant`.
+  // your graph's default variant. Environment variable: APOLLO_GRAPH_REF. For
+  // backwards compatibility, may alternatively specify the ref as graphId and
+  // graphVariant separately.
   graphRef?: string;
   // The graph ID of your graph, eg `my-graph`. Environment variable:
   // APOLLO_GRAPH_ID.
@@ -76,11 +76,9 @@ export interface ApolloConfig {
   key?: string;
   keyHash?: string;
   graphRef?: string;
-  graphId?: string;
-  graphVariant: string;
 }
 
- export interface GraphQLServiceContext {
+export interface GraphQLServiceContext {
   logger: Logger;
   schema: GraphQLSchema;
   schemaHash: SchemaHash;
@@ -89,11 +87,6 @@ export interface ApolloConfig {
     cache: KeyValueCache;
   };
   serverlessFramework: boolean;
-  // For backwards compatibility only; prefer to use `apollo`.
-  engine: {
-    serviceID?: string;
-    apiKeyHash?: string;
-  };
 }
 
 export interface GraphQLRequest {
@@ -159,15 +152,15 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly metrics: GraphQLRequestMetrics;
 
   debug?: boolean;
+
+  readonly overallCachePolicy: CachePolicy;
 }
 
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;
 
-export class InvalidGraphQLRequestError extends GraphQLError {}
-
 export type GraphQLExecutor<TContext = Record<string, any>> = (
   requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-) => ValueOrPromise<GraphQLExecutionResult>;
+) => Promise<GraphQLExecutionResult>;
 
 export type GraphQLExecutionResult = {
   data?: Record<string, any> | null;
@@ -249,3 +242,50 @@ export type GraphQLRequestContextWillSendResponse<TContext> =
     | 'metrics'
     | 'response'
   >;
+
+/**
+ * CacheHint represents a contribution to an overall cache policy. It can
+ * specify a maxAge and/or a scope.
+ */
+export interface CacheHint {
+  maxAge?: number;
+  scope?: CacheScope;
+}
+
+/**
+ * CacheAnnotation represents the contents of a `@cacheControl` directive.
+ * (`inheritMaxAge` is part of this interface and not CacheHint, because
+ * `inheritMaxAge` isn't a contributing piece of a cache policy: it just means
+ * to not apply default values in some contexts.)
+ */
+export interface CacheAnnotation extends CacheHint {
+  inheritMaxAge?: true;
+}
+
+export enum CacheScope {
+  Public = 'PUBLIC',
+  Private = 'PRIVATE',
+}
+
+/**
+ * CachePolicy is a mutable CacheHint with helpful methods for updating its
+ * fields.
+ */
+export interface CachePolicy extends CacheHint {
+  /**
+   * Mutate this CachePolicy by replacing each field defined in `hint`. This can
+   * make the policy more restrictive or less restrictive.
+   */
+  replace(hint: CacheHint): void;
+  /**
+   * Mutate this CachePolicy by restricting each field defined in `hint`. This
+   * can only make the policy more restrictive: a previously defined `maxAge`
+   * can only be reduced, and a previously Private scope cannot be made Public.
+   */
+  restrict(hint: CacheHint): void;
+  /**
+   * If this policy has a positive `maxAge`, then return a copy of itself as a
+   * `CacheHint` with both fields defined. Otherwise return null.
+   */
+  policyIfCacheable(): Required<CacheHint> | null;
+}

@@ -3,6 +3,7 @@ import { sha256 } from 'js-sha256';
 import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
+import loglevel from 'loglevel';
 
 import { Report, Trace } from 'apollo-reporting-protobuf';
 
@@ -13,27 +14,20 @@ import {
   GraphQLError,
   ValidationContext,
   FieldDefinitionNode,
-  getIntrospectionQuery,
+  ResponsePath,
 } from 'graphql';
 
-import { PubSub } from 'graphql-subscriptions';
-import { SubscriptionClient } from 'subscriptions-transport-ws';
-import WebSocket from 'ws';
-import resolvable from '@josephg/resolvable';
-
-import { execute } from 'apollo-link';
-import { createHttpLink } from 'apollo-link-http';
-import {
-  createPersistedQueryLink as createPersistedQuery,
-  VERSION,
-} from 'apollo-link-persisted-queries';
+// Note that by doing deep imports here we don't need to install React.
+import { execute } from '@apollo/client/link/core';
+import { createHttpLink } from '@apollo/client/link/http';
+import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 
 import {
   createApolloFetch,
   ApolloFetch,
   GraphQLRequest,
   ParsedResponse,
-} from 'apollo-fetch';
+} from './apolloFetch';
 import {
   AuthenticationError,
   UserInputError,
@@ -41,26 +35,39 @@ import {
   Config,
   ApolloServerBase,
   PluginDefinition,
-  GraphQLService,
+  GatewayInterface,
   GraphQLExecutor,
+  GraphQLServiceConfig,
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
   ApolloServerPluginUsageReportingOptions,
-  GraphQLServiceConfig,
+  ApolloServerPluginLandingPageDisabled,
+  ApolloServerPluginLandingPageGraphQLPlayground,
+  ApolloError,
+  ApolloServerPluginLandingPageLocalDefault,
 } from 'apollo-server-core';
-import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
-import { TracingFormat } from 'apollo-tracing';
+import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
-import { GraphQLRequestContext } from 'apollo-server-types';
+import {
+  BaseContext,
+  GraphQLRequestContext,
+  GraphQLRequestContextExecutionDidStart,
+} from 'apollo-server-types';
 
-import { mockDate, unmockDate, advanceTimeBy } from '../../../__mocks__/date';
+import resolvable, { Resolvable } from '@josephg/resolvable';
+import FakeTimers from '@sinonjs/fake-timers';
+import { AddressInfo } from 'net';
+import request from 'supertest';
+
+const quietLogger = loglevel.getLogger('quiet');
+quietLogger.setLevel(loglevel.levels.WARN);
 
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
   httpServer: http.Server,
 ): ServerInfo<AS> {
   const serverInfo: any = {
-    ...httpServer.address(),
+    ...(httpServer.address() as AddressInfo),
     server,
     httpServer,
   };
@@ -117,9 +124,9 @@ const schema = new GraphQLSchema({
 });
 
 const makeGatewayMock = ({
-  optionsSpy = _options => {},
+  optionsSpy = (_options) => {},
   unsubscribeSpy = () => {},
-  executor = () => ({}),
+  executor = async () => ({}),
 }: {
   optionsSpy?: (_options: any) => void;
   unsubscribeSpy?: () => void;
@@ -134,27 +141,28 @@ const makeGatewayMock = ({
     rejectLoad: (err: Error) => {
       rejection = err;
     },
-    triggerSchemaChange: null as (newSchema) => void,
+    triggerSchemaChange: null as ((newSchema: GraphQLSchema) => void) | null,
   };
 
-  const mockedGateway: GraphQLService = {
+  const mockedGateway: GatewayInterface = {
     executor,
     load: async (options) => {
       optionsSpy(options);
       // Make sure it's async
-      await new Promise(res => setImmediate(res));
+      await new Promise((res) => setImmediate(res));
       if (rejection) {
         throw rejection;
       }
       if (resolution) {
         return resolution;
       }
-      throw Error("Neither resolving nor rejecting?");
+      throw Error('Neither resolving nor rejecting?');
     },
-    onSchemaChange: callback => {
+    onSchemaChange: (callback) => {
       eventuallyAssigned.triggerSchemaChange = callback;
       return unsubscribeSpy;
     },
+    stop: async () => {},
   };
 
   return { gateway: mockedGateway, triggers: eventuallyAssigned };
@@ -170,7 +178,10 @@ export interface ServerInfo<AS extends ApolloServerBase> {
 }
 
 export interface CreateServerFunc<AS extends ApolloServerBase> {
-  (config: Config, suppressStartCall?: boolean): Promise<ServerInfo<AS>>;
+  (
+    config: Config,
+    options?: { suppressStartCall?: boolean; graphqlPath?: string },
+  ): Promise<ServerInfo<AS>>;
 }
 
 export interface StopServerFunc {
@@ -180,6 +191,7 @@ export interface StopServerFunc {
 export function testApolloServer<AS extends ApolloServerBase>(
   createApolloServer: CreateServerFunc<AS>,
   stopServer: StopServerFunc,
+  options: { serverlessFramework?: boolean } = {},
 ) {
   describe('ApolloServer', () => {
     afterEach(stopServer);
@@ -197,7 +209,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           });
 
-          const formatError = jest.fn(error => {
+          const formatError = jest.fn((error) => {
             expect(error instanceof Error).toBe(true);
             return error;
           });
@@ -233,12 +245,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         it('allows introspection by default', async () => {
-          const nodeEnv = process.env.NODE_ENV;
-          delete process.env.NODE_ENV;
-
           const { url: uri } = await createApolloServer({
             schema,
             stopOnTerminationSignals: false,
+            __testing_nodeEnv__: undefined,
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -246,17 +256,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
           expect(result.data).toBeDefined();
           expect(result.errors).toBeUndefined();
-
-          process.env.NODE_ENV = nodeEnv;
         });
 
         it('prevents introspection by default during production', async () => {
-          const nodeEnv = process.env.NODE_ENV;
-          process.env.NODE_ENV = 'production';
-
           const { url: uri } = await createApolloServer({
             schema,
             stopOnTerminationSignals: false,
+            __testing_nodeEnv__: 'production',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -268,18 +274,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.errors[0].extensions.code).toEqual(
             'GRAPHQL_VALIDATION_FAILED',
           );
-
-          process.env.NODE_ENV = nodeEnv;
         });
 
         it('allows introspection to be enabled explicitly', async () => {
-          const nodeEnv = process.env.NODE_ENV;
-          process.env.NODE_ENV = 'production';
-
           const { url: uri } = await createApolloServer({
             schema,
             introspection: true,
             stopOnTerminationSignals: false,
+            __testing_nodeEnv__: 'production',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -287,65 +289,34 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
           expect(result.data).toBeDefined();
           expect(result.errors).toBeUndefined();
-
-          process.env.NODE_ENV = nodeEnv;
         });
 
         it('prohibits providing a gateway in addition to schema/typedefs/resolvers', async () => {
           const { gateway } = makeGatewayMock();
 
           const incompatibleArgsSpy = jest.fn();
-          await createApolloServer({ gateway, schema }).catch(err =>
+          await createApolloServer({ gateway, schema }).catch((err) =>
             incompatibleArgsSpy(err.message),
           );
           expect(incompatibleArgsSpy.mock.calls[0][0]).toMatch(
             /Cannot define both/,
           );
 
-          await createApolloServer({ gateway, modules: {} as any }).catch(err =>
-            incompatibleArgsSpy(err.message),
-          );
+          await createApolloServer({
+            gateway,
+            modules: {} as any,
+          }).catch((err) => incompatibleArgsSpy(err.message));
           expect(incompatibleArgsSpy.mock.calls[1][0]).toMatch(
             /Cannot define both/,
           );
 
-          await createApolloServer({ gateway, typeDefs: {} as any }).catch(
-            err => incompatibleArgsSpy(err.message),
-          );
+          await createApolloServer({
+            gateway,
+            typeDefs: {} as any,
+          }).catch((err) => incompatibleArgsSpy(err.message));
           expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(
             /Cannot define both/,
           );
-        });
-
-        it('prohibits providing a gateway in addition to subscription options', async () => {
-          const { gateway } = makeGatewayMock();
-
-          const expectedError =
-            'Subscriptions are not yet compatible with the gateway';
-
-          const incompatibleArgsSpy = jest.fn();
-          await createApolloServer({
-            gateway,
-            subscriptions: 'pathToSubscriptions',
-          }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[0][0]).toMatch(expectedError);
-
-          await createApolloServer({
-            gateway,
-            subscriptions: true as any,
-          }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[1][0]).toMatch(expectedError);
-
-          await createApolloServer({
-            gateway,
-            subscriptions: { path: '' } as any,
-          }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(expectedError);
-
-          await createApolloServer({
-            gateway,
-          }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[3][0]).toMatch(expectedError);
         });
       });
 
@@ -366,7 +337,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
         expect(result.data).toBeUndefined();
         expect(result.errors).toBeDefined();
-        expect(result.errors[0].message).toMatch(/got invalid value 2; Expected type String/);
+        expect(result.errors[0].message).toMatch(
+          /got invalid value 2; String cannot represent a non string value: 2/,
+        );
         expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
       });
 
@@ -402,7 +375,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const { url: uri } = await createApolloServer({
             gateway,
-            subscriptions: false,
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -413,63 +385,33 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(executor).toHaveBeenCalled();
         });
 
-        it("rejected load promise is thrown by server.start", async () => {
-          const { gateway, triggers } = makeGatewayMock();
+        if (!options.serverlessFramework) {
+          // You don't have to call start on serverless frameworks (or in
+          // `apollo-server` which does not currently use this test suite).
+          it('rejected load promise is thrown by server.start', async () => {
+            const { gateway, triggers } = makeGatewayMock();
 
-          const loadError = new Error("load error which should be be thrown by start");
-          triggers.rejectLoad(loadError);
+            const loadError = new Error(
+              'load error which should be be thrown by start',
+            );
+            triggers.rejectLoad(loadError);
 
-          expect(createApolloServer({
-            gateway,
-            subscriptions: false,
-          })).rejects.toThrowError(loadError);
-        });
-
-        it("rejected load promise acts as an error boundary", async () => {
-          const executor = jest.fn();
-          executor.mockResolvedValueOnce(
-            { data: { testString: 'should not get this' } }
-          );
-
-          executor.mockRejectedValueOnce(
-            { errors: [{errorWhichShouldNot: "ever be triggered"}] }
-          );
-
-          const consoleErrorSpy =
-            jest.spyOn(console, 'error').mockImplementation();
-
-          const { gateway, triggers } = makeGatewayMock({ executor });
-
-          triggers.rejectLoad(new Error("load error which should be masked"));
-
-          const { url: uri } = await createApolloServer({
-            gateway,
-            subscriptions: false,
-          }, true);
-
-          const apolloFetch = createApolloFetch({ uri });
-          const result = await apolloFetch({ query: '{testString}' });
-
-          expect(result.data).toBeUndefined();
-          expect(result.errors).toContainEqual(
-            expect.objectContaining({
-              extensions: expect.objectContaining({
-                code: "INTERNAL_SERVER_ERROR",
+            await expect(
+              createApolloServer({
+                gateway,
               }),
-              message: "This data graph is missing a valid configuration. " +
-                "More details may be available in the server logs."
-            })
-          );
-          expect(consoleErrorSpy).toHaveBeenCalledWith(
-            'Apollo Server was started implicitly and an error occurred during startup. ' +
-              '(Consider calling `await server.start()` immediately after ' +
-              '`server = new ApolloServer()` so you can handle these errors directly before ' +
-              'starting your web server.) All GraphQL requests will now fail. The startup error ' +
-              'was: ' +
-              'load error which should be masked',
-          );
-          expect(executor).not.toHaveBeenCalled();
-        });
+            ).rejects.toThrowError(loadError);
+          });
+
+          it('not calling start causes a clear error', async () => {
+            await expect(
+              createApolloServer(
+                { typeDefs: 'type Query{x: ID}' },
+                { suppressStartCall: true },
+              ),
+            ).rejects.toThrow('You must `await server.start()`');
+          });
+        }
 
         it('uses schema over resolvers + typeDefs', async () => {
           const typeDefs = gql`
@@ -567,46 +509,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           expect(result.errors).toBeUndefined();
         });
-
-        // Need to fix bug in graphql-tools to enable mocks to override the existing resolvers
-        it.skip('allows mocks as an object with overriding the existing resolvers', async () => {
-          const typeDefs = gql`
-            type User {
-              first: String
-              last: String
-            }
-            type Query {
-              user: User
-            }
-          `;
-          const resolvers = {
-            Query: {
-              user: () => ({
-                first: 'James',
-                last: 'Heinlen',
-              }),
-            },
-          };
-          const { url: uri } = await createApolloServer({
-            typeDefs,
-            resolvers,
-            mocks: {
-              User: () => ({
-                last: () => 'mock city',
-              }),
-            },
-            mockEntireSchema: false,
-          });
-
-          const apolloFetch = createApolloFetch({ uri });
-          const result = await apolloFetch({
-            query: '{user{first last}}',
-          });
-          expect(result.data).toEqual({
-            user: { first: 'James', last: 'mock city' },
-          });
-          expect(result.errors).toBeUndefined();
-        });
       });
     });
 
@@ -640,12 +542,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       // Test for https://github.com/apollographql/apollo-server/issues/4170
       it('works when using executeOperation', async () => {
-        const encounteredFields = [];
-        const encounteredContext = [];
+        const encounteredFields: ResponsePath[] = [];
+        const encounteredContext: BaseContext[] = [];
         await setupApolloServerAndFetchPairForPlugins([
           {
-            requestDidStart: () => ({
-              executionDidStart: () => ({
+            requestDidStart: async () => ({
+              executionDidStart: async () => ({
                 willResolveField({ info, context }) {
                   encounteredFields.push(info.path);
                   encounteredContext.push(context);
@@ -674,8 +576,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         expect(encounteredFields).toStrictEqual([
-          { key: 'justAField', prev: undefined },
-          { key: 'justAField', prev: undefined },
+          { key: 'justAField', prev: undefined, typename: 'Query' },
+          { key: 'justAField', prev: undefined, typename: 'Query' },
         ]);
 
         // This bit is just to ensure that nobody removes `context` from the
@@ -683,8 +585,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         // When a custom context is not provided, a new one is initialized
         // on each request.
         expect(encounteredContext).toStrictEqual([
-          expect.objectContaining({customContext: true}),
-          expect.objectContaining({customContext: true}),
+          expect.objectContaining({ customContext: true }),
+          expect.objectContaining({ customContext: true }),
         ]);
       });
 
@@ -699,14 +601,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
       it('allows setting a custom status code for an error', async () => {
         await setupApolloServerAndFetchPairForPlugins([
           {
-            requestDidStart() {
+            async requestDidStart() {
               return {
-                didResolveOperation() {
+                async didResolveOperation() {
                   throw new Error('known_error');
                 },
-                willSendResponse({ response: { http, errors } }) {
-                  if (errors[0].message === 'known_error') {
-                    http.status = 403;
+                async willSendResponse({ response: { http, errors } }) {
+                  if (errors![0].message === 'known_error') {
+                    http!.status = 403;
                   }
                 },
               };
@@ -722,9 +624,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
       it('preserves user-added "extensions" in the response when parsing errors occur', async () => {
         await setupApolloServerAndFetchPairForPlugins([
           {
-            requestDidStart() {
+            async requestDidStart() {
               return {
-                willSendResponse({ response }) {
+                async willSendResponse({ response }) {
                   response.extensions = { myExtension: true };
                 },
               };
@@ -732,20 +634,21 @@ export function testApolloServer<AS extends ApolloServerBase>(
           },
         ]);
 
-        const result =
-          await apolloFetch({ query: '{ 🦠' });
+        const result = await apolloFetch({ query: '{ 🦠' });
         expect(result.errors).toBeDefined();
-        expect(result.extensions).toEqual(expect.objectContaining({
-          myExtension: true
-        }));
+        expect(result.extensions).toEqual(
+          expect.objectContaining({
+            myExtension: true,
+          }),
+        );
       });
 
       it('preserves user-added "extensions" in the response when validation errors occur', async () => {
         await setupApolloServerAndFetchPairForPlugins([
           {
-            requestDidStart() {
+            async requestDidStart() {
               return {
-                willSendResponse({ response }) {
+                async willSendResponse({ response }) {
                   response.extensions = { myExtension: true };
                 },
               };
@@ -753,12 +656,15 @@ export function testApolloServer<AS extends ApolloServerBase>(
           },
         ]);
 
-        const result =
-          await apolloFetch({ query: '{ missingFieldWhichWillNotValidate }' });
+        const result = await apolloFetch({
+          query: '{ missingFieldWhichWillNotValidate }',
+        });
         expect(result.errors).toBeDefined();
-        expect(result.extensions).toEqual(expect.objectContaining({
-          myExtension: true
-        }));
+        expect(result.extensions).toEqual(
+          expect.objectContaining({
+            myExtension: true,
+          }),
+        );
       });
     });
 
@@ -768,7 +674,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           throw new Error('nope');
         });
 
-        const formatError = jest.fn(error => {
+        const formatError = jest.fn((error) => {
           expect(error instanceof Error).toBe(true);
           expect(error.constructor.name).toEqual('Error');
           return error;
@@ -844,7 +750,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           throw yuppieError;
         });
 
-        const formatError = jest.fn(error => {
+        const formatError = jest.fn((error) => {
           expect(error instanceof Error).toBe(true);
           expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
           expect(error.extensions.exception.name).toEqual('ValidationError');
@@ -890,18 +796,17 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
     describe('lifecycle', () => {
       describe('for Apollo usage reporting', () => {
-        let nodeEnv: string;
         let reportIngress: MockReportIngress;
 
         class MockReportIngress {
           private app: express.Application;
-          private server: http.Server;
+          private server?: http.Server;
           private reports: Report[] = [];
           public readonly promiseOfReports: Promise<Report[]>;
 
           constructor() {
             let reportResolver: (reports: Report[]) => void;
-            this.promiseOfReports = new Promise<Report[]>(resolve => {
+            this.promiseOfReports = new Promise<Report[]>((resolve) => {
               reportResolver = resolve;
             });
 
@@ -929,7 +834,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           }
 
           async listen(): Promise<http.Server> {
-            return await new Promise(resolve => {
+            return await new Promise((resolve) => {
               const server = (this.server = this.app.listen(
                 0,
                 // Intentionally IPv4.
@@ -946,7 +851,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               return;
             }
 
-            return new Promise(resolve => {
+            return new Promise((resolve) => {
               this.server && this.server.close(() => resolve());
             });
           }
@@ -955,7 +860,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
             if (!this.server) {
               throw new Error('must listen before getting URL');
             }
-            const { family, address, port } = this.server.address();
+            const { family, address, port } =
+              this.server.address() as AddressInfo;
 
             if (family !== 'IPv4') {
               throw new Error(`The family was unexpectedly ${family}.`);
@@ -965,129 +871,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         beforeEach(async () => {
-          nodeEnv = process.env.NODE_ENV;
-          delete process.env.NODE_ENV;
           reportIngress = new MockReportIngress();
           return await reportIngress.listen();
         });
 
-        afterEach(done => {
-          process.env.NODE_ENV = nodeEnv;
-
+        afterEach((done) => {
           (reportIngress.stop() || Promise.resolve()).then(done);
-        });
-
-        describe('extensions', () => {
-          // While it's been broken down quite a bit, this test is still
-          // overloaded and is a prime candidate for de-composition!
-          it('calls formatError and other overloaded client identity tests', async () => {
-            const throwError = jest.fn(() => {
-              throw new Error('nope');
-            });
-
-            const validationRule = jest.fn(() => {
-              // formatError should be called after validation
-              expect(formatError).not.toBeCalled();
-              // extension should be called after validation
-              expect(willSendResponseInExtension).not.toBeCalled();
-              return true;
-            });
-
-            const willSendResponseInExtension = jest.fn();
-
-            const formatError = jest.fn(error => {
-              try {
-                expect(error).toBeInstanceOf(Error);
-                // extension should be called before formatError
-                expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
-                // validationRules should be called before formatError
-                expect(validationRule).toHaveBeenCalledTimes(1);
-              } finally {
-                error.message = 'masked';
-                return error;
-              }
-            });
-
-            class Extension<TContext = any> extends GraphQLExtension {
-              willSendResponse(o: {
-                graphqlResponse: GraphQLResponse;
-                context: TContext;
-              }) {
-                expect(o.graphqlResponse.errors.length).toEqual(1);
-                // formatError should be called before willSendResponse
-                expect(formatError).toHaveBeenCalledTimes(1);
-                // validationRule should be called before willSendResponse
-                expect(validationRule).toHaveBeenCalledTimes(1);
-                willSendResponseInExtension();
-              }
-            }
-
-            const { url: uri } = await createApolloServer({
-              typeDefs: gql`
-                type Query {
-                  fieldWhichWillError: String
-                }
-              `,
-              resolvers: {
-                Query: {
-                  fieldWhichWillError: () => {
-                    throwError();
-                  },
-                },
-              },
-              validationRules: [validationRule],
-              extensions: [() => new Extension()],
-              apollo: {
-                key: 'service:my-app:secret',
-                graphRef: 'my-app@current',
-              },
-              plugins: [
-                ApolloServerPluginUsageReporting({
-                  endpointUrl: reportIngress.getUrl(),
-                  maxUncompressedReportSize: 1,
-                  generateClientInfo: () => ({
-                    clientName: 'testing',
-                    clientReferenceId: '1234',
-                    clientVersion: 'v1.0.1',
-                  }),
-                }),
-              ],
-              formatError,
-              debug: true,
-              stopOnTerminationSignals: false,
-            });
-
-            const apolloFetch = createApolloFetch({ uri });
-
-            const result = await apolloFetch({
-              query: `{fieldWhichWillError}`,
-            });
-            expect(result.data).toEqual({
-              fieldWhichWillError: null,
-            });
-            expect(result.errors).toBeDefined();
-            expect(result.errors[0].message).toEqual('masked');
-
-            expect(validationRule).toHaveBeenCalledTimes(1);
-            expect(throwError).toHaveBeenCalledTimes(1);
-            expect(formatError).toHaveBeenCalledTimes(1);
-            expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
-
-            const reports = await reportIngress.promiseOfReports;
-
-            expect(reports.length).toBe(1);
-
-            const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0];
-
-            expect(trace.clientReferenceId).toMatch(/1234/);
-            expect(trace.clientName).toMatch(/testing/);
-            expect(trace.clientVersion).toEqual('v1.0.1');
-
-            expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
-            expect(trace.root!.child![0].error![0].message).not.toMatch(
-              /masked/,
-            );
-          });
         });
 
         describe('traces', () => {
@@ -1099,15 +888,27 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
 
           const setupApolloServerAndFetchPair = async (
-            usageReportingOptions: Partial<ApolloServerPluginUsageReportingOptions<any>> = {},
+            usageReportingOptions: Partial<
+              ApolloServerPluginUsageReportingOptions<any>
+            > = {},
             constructorOptions: Partial<CreateServerFunc<AS>> = {},
             plugins: PluginDefinition[] = [],
           ) => {
             const { url: uri } = await createApolloServer({
               typeDefs: gql`
+                enum CacheControlScope {
+                  PUBLIC
+                  PRIVATE
+                }
+
+                directive @cacheControl(
+                  maxAge: Int
+                  scope: CacheControlScope
+                ) on FIELD_DEFINITION | OBJECT | INTERFACE
+
                 type Query {
                   fieldWhichWillError: String
-                  justAField: String
+                  justAField: String @cacheControl(maxAge: 5, scope: PRIVATE)
                 }
               `,
               resolvers: {
@@ -1126,17 +927,42 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 ApolloServerPluginUsageReporting({
                   endpointUrl: reportIngress.getUrl(),
                   maxUncompressedReportSize: 1,
+                  logger: quietLogger,
                   ...usageReportingOptions,
                 }),
                 ...plugins,
               ],
               debug: true,
               stopOnTerminationSignals: false,
+              __testing_nodeEnv__: undefined,
               ...constructorOptions,
             });
 
             apolloFetch = createApolloFetch({ uri });
           };
+
+          it('cachePolicy', async () => {
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `{justAField}`,
+            });
+            expect(result.errors).toBeUndefined();
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+            const trace = Object.values(reports[0].tracesPerQuery)[0]
+              .trace![0] as Trace;
+
+            expect(trace.cachePolicy).toBeDefined();
+            expect(trace.cachePolicy?.maxAgeNs).toBe(5e9);
+            expect(trace.cachePolicy?.scope).toBe(
+              Trace.CachePolicy.Scope.PRIVATE,
+            );
+          });
 
           it('does not expose stack', async () => {
             throwError.mockImplementationOnce(() => {
@@ -1159,18 +985,19 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
             const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
-            const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0];
+            const trace = Object.values(reports[0].tracesPerQuery)[0]
+              .trace![0] as Trace;
 
             // There should be no error at the root, our error is a child.
-            expect(trace.root.error).toStrictEqual([]);
+            expect(trace.root!.error).toStrictEqual([]);
 
             // There should only be one child.
-            expect(trace.root.child.length).toBe(1);
+            expect(trace.root!.child!.length).toBe(1);
 
             // The error should not have the stack in it.
-            expect(trace.root.child[0].error[0]).not.toHaveProperty('stack');
+            expect(trace.root!.child![0].error![0]).not.toHaveProperty('stack');
             expect(
-              JSON.parse(trace.root.child[0].error[0].json),
+              JSON.parse(trace.root!.child![0].error![0].json!),
             ).not.toHaveProperty('stack');
           });
 
@@ -1198,13 +1025,15 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
             await apolloFetch({
               query: `query notQ {justAField}`,
-              operationName: 'q'
+              operationName: 'q',
             });
 
             const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
 
-            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe('## GraphQLUnknownOperationName\n',);
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe(
+              '## GraphQLUnknownOperationName\n',
+            );
           });
 
           it('sets the trace key to parse failure when non-parseable gql', async () => {
@@ -1217,7 +1046,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
             const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
 
-            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe('## GraphQLParseFailure\n',);
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe(
+              '## GraphQLParseFailure\n',
+            );
           });
 
           it('sets the trace key to validation failure when invalid operation', async () => {
@@ -1230,9 +1061,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
             const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
 
-            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe('## GraphQLValidationFailure\n',);
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe(
+              '## GraphQLValidationFailure\n',
+            );
           });
-
 
           it('sets the trace key to "-" when operationName is undefined', async () => {
             await setupApolloServerAndFetchPair();
@@ -1254,7 +1086,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
             await setupApolloServerAndFetchPair({}, {}, [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return {
                     didResolveOperation() {
                       throw new Error('known_error');
@@ -1285,27 +1117,17 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
             const TEST_STRING_QUERY = `
               { onlyForThisApqTest${
-                Math.random()
-                  .toString()
-                  .split('.')[1]
+                Math.random().toString().split('.')[1]
               }: justAField }
             `;
-            const hash = sha256
-              .create()
-              .update(TEST_STRING_QUERY)
-              .hex();
+            const hash = sha256.create().update(TEST_STRING_QUERY).hex();
 
             const result = await apolloFetch({
-            // @ts-ignore The `ApolloFetch` types don't allow `extensions` to be
-            // passed in, in the same way as `variables`, with a request. This
-            // is a typing omission in `apollo-fetch`, as can be seen here:
-            // https://git.io/Jeb63  This will all be going away soon (and
-            // that package is already archived and deprecated.
               extensions: {
                 persistedQuery: {
-                  version: VERSION,
+                  version: 1,
                   sha256Hash: hash,
-                }
+                },
               },
             });
 
@@ -1313,20 +1135,19 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(result.errors).toContainEqual(
               expect.objectContaining({
                 extensions: expect.objectContaining({
-                  code: "PERSISTED_QUERY_NOT_FOUND",
-                })
-              })
+                  code: 'PERSISTED_QUERY_NOT_FOUND',
+                }),
+              }),
             );
 
             // However, having an internal server error is not okay!
             expect(result.errors).not.toContainEqual(
               expect.objectContaining({
                 extensions: expect.objectContaining({
-                  code: "INTERNAL_SERVER_ERROR",
-                })
-              })
+                  code: 'INTERNAL_SERVER_ERROR',
+                }),
+              }),
             );
-
           });
 
           describe('error munging', () => {
@@ -1356,19 +1177,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 const reports = await reportIngress.promiseOfReports;
                 expect(reports.length).toBe(1);
                 const trace = Object.values(reports[0].tracesPerQuery)[0]
-                  .trace[0];
+                  .trace![0] as Trace;
                 // There should be no error at the root, our error is a child.
-                expect(trace.root.error).toStrictEqual([]);
+                expect(trace.root!.error).toStrictEqual([]);
 
                 // There should only be one child.
-                expect(trace.root.child.length).toBe(1);
+                expect(trace.root!.child!.length).toBe(1);
 
                 // The child should maintain the path, but have its message
                 // rewritten.
-                expect(trace.root.child[0].error).toMatchObject([
+                expect(trace.root!.child![0].error).toMatchObject([
                   {
-                    json:
-                      '{"message":"rewritten as a new error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                    json: '{"message":"rewritten as a new error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
                     message: 'rewritten as a new error',
                     location: [{ column: 2, line: 1 }],
                   },
@@ -1381,7 +1201,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 });
 
                 await setupApolloServerAndFetchPair({
-                  rewriteError: err => {
+                  rewriteError: (err) => {
                     err.message = 'rewritten as a modified error';
                     return err;
                   },
@@ -1402,19 +1222,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 const reports = await reportIngress.promiseOfReports;
                 expect(reports.length).toBe(1);
                 const trace = Object.values(reports[0].tracesPerQuery)[0]
-                  .trace[0];
+                  .trace![0] as Trace;
                 // There should be no error at the root, our error is a child.
-                expect(trace.root.error).toStrictEqual([]);
+                expect(trace.root!.error).toStrictEqual([]);
 
                 // There should only be one child.
-                expect(trace.root.child.length).toBe(1);
+                expect(trace.root!.child!.length).toBe(1);
 
                 // The child should maintain the path, but have its message
                 // rewritten.
-                expect(trace.root.child[0].error).toMatchObject([
+                expect(trace.root!.child![0].error).toMatchObject([
                   {
-                    json:
-                      '{"message":"rewritten as a modified error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                    json: '{"message":"rewritten as a modified error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
                     message: 'rewritten as a modified error',
                     location: [{ column: 2, line: 1 }],
                   },
@@ -1445,16 +1264,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 const reports = await reportIngress.promiseOfReports;
                 expect(reports.length).toBe(1);
                 const trace = Object.values(reports[0].tracesPerQuery)[0]
-                  .trace[0];
+                  .trace![0] as Trace;
 
                 // There should be no error at the root, our error is a child.
-                expect(trace.root.error).toStrictEqual([]);
+                expect(trace.root!.error).toStrictEqual([]);
 
                 // There should only be one child.
-                expect(trace.root.child.length).toBe(1);
+                expect(trace.root!.child!.length).toBe(1);
 
                 // There should be no error in the trace for this property!
-                expect(trace.root.child[0].error).toStrictEqual([]);
+                expect(trace.root!.child![0].error).toStrictEqual([]);
               });
             });
 
@@ -1464,7 +1283,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               });
 
               await setupApolloServerAndFetchPair({
-                rewriteError: () => undefined,
+                rewriteError: () => undefined as any,
               });
 
               const result = await apolloFetch({
@@ -1482,20 +1301,19 @@ export function testApolloServer<AS extends ApolloServerBase>(
               const reports = await reportIngress.promiseOfReports;
               expect(reports.length).toBe(1);
               const trace = Object.values(reports[0].tracesPerQuery)[0]
-                .trace[0];
+                .trace![0] as Trace;
 
               // There should be no error at the root, our error is a child.
-              expect(trace.root.error).toStrictEqual([]);
+              expect(trace.root!.error).toStrictEqual([]);
 
               // There should only be one child.
-              expect(trace.root.child.length).toBe(1);
+              expect(trace.root!.child!.length).toBe(1);
 
               // The child should maintain the path, but have its message
               // rewritten.
-              expect(trace.root.child[0].error).toMatchObject([
+              expect(trace.root!.child![0].error).toMatchObject([
                 {
-                  json:
-                    '{"message":"rewriteError undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                  json: '{"message":"rewriteError undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
                   message: 'rewriteError undefined whoops',
                   location: [{ column: 2, line: 1 }],
                 },
@@ -1505,31 +1323,17 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
 
-      it('errors thrown in extensions call formatError and are wrapped', async () => {
-        const extension = jest.fn(() => {
+      it('errors thrown in plugins call formatError and are wrapped', async () => {
+        const pluginCalled = jest.fn(() => {
           throw new Error('nope');
         });
-
-        const formatError = jest.fn(error => {
+        const formatError = jest.fn((error) => {
           expect(error instanceof Error).toBe(true);
           // extension should be called before formatError
-          expect(extension).toHaveBeenCalledTimes(1);
-
+          expect(pluginCalled).toHaveBeenCalledTimes(1);
           error.message = 'masked';
           return error;
         });
-
-        class Extension<TContext = any> extends GraphQLExtension {
-          willSendResponse(_o: {
-            graphqlResponse: GraphQLResponse;
-            context: TContext;
-          }) {
-            // formatError should be called after extensions
-            expect(formatError).not.toBeCalled();
-            extension();
-          }
-        }
-
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
@@ -1541,13 +1345,23 @@ export function testApolloServer<AS extends ApolloServerBase>(
               fieldWhichWillError: () => {},
             },
           },
-          extensions: [() => new Extension()],
+          plugins: [
+            {
+              async requestDidStart() {
+                return {
+                  async willSendResponse() {
+                    // formatError should be called after plugins
+                    expect(formatError).not.toBeCalled();
+                    pluginCalled();
+                  },
+                };
+              },
+            },
+          ],
           formatError,
           debug: true,
         });
-
         const apolloFetch = createApolloFetch({ uri });
-
         const result = await apolloFetch({
           query: `{fieldWhichWillError}`,
         });
@@ -1720,8 +1534,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
 
           it('returns thrown context error as a valid graphql result', async () => {
-            const nodeEnv = process.env.NODE_ENV;
-            delete process.env.NODE_ENV;
             const typeDefs = gql`
               type Query {
                 hello: String
@@ -1738,6 +1550,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               typeDefs,
               resolvers,
               stopOnTerminationSignals: false,
+              __testing_nodeEnv__: undefined,
               context: () => {
                 throw new AuthenticationError('valid result');
               },
@@ -1754,8 +1567,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(e.extensions).toBeDefined();
             expect(e.extensions.code).toEqual('UNAUTHENTICATED');
             expect(e.extensions.exception.stacktrace).toBeDefined();
-
-            process.env.NODE_ENV = nodeEnv;
           });
         });
 
@@ -1783,9 +1594,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('propagates error codes in production', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'production';
-
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
@@ -1800,6 +1608,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
           stopOnTerminationSignals: false,
+          __testing_nodeEnv__: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1812,14 +1621,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
-
-        process.env.NODE_ENV = nodeEnv;
       });
 
       it('propagates error codes with null response in production', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'production';
-
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
@@ -1834,6 +1638,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
           stopOnTerminationSignals: false,
+          __testing_nodeEnv__: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1845,457 +1650,40 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
-
-        process.env.NODE_ENV = nodeEnv;
-      });
-    });
-
-    describe('subscriptions', () => {
-      const SOMETHING_CHANGED_TOPIC = 'something_changed';
-      const pubsub = new PubSub();
-      let subscription:
-        | {
-            unsubscribe: () => void;
-          }
-        | undefined;
-
-      function createEvent(num: number) {
-        return setTimeout(
-          () =>
-            pubsub.publish(SOMETHING_CHANGED_TOPIC, {
-              num,
-            }),
-          num + 10,
-        );
-      }
-
-      afterEach(async () => {
-        if (subscription) {
-          try {
-            await subscription.unsubscribe();
-          } catch (e) {}
-          subscription = null;
-        }
       });
 
-      it('enables subscriptions after creating subscriptions server', done => {
-        const typeDefs = gql`
-          type Query {
-            hi: String
-          }
-
-          type Subscription {
-            num: Int
-          }
-        `;
-
-        const query = `
-        subscription {
-          num
-        }
-      `;
-
-        const resolvers = {
-          Query: {
-            hi: () => 'here to placate graphql-js',
-          },
-          Subscription: {
-            num: {
-              subscribe: () => {
-                createEvent(1);
-                createEvent(2);
-                createEvent(3);
-                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
-              },
-            },
-          },
-        };
-
-        createApolloServer({
-          typeDefs,
-          resolvers,
-        }).then(({ port, server, httpServer }) => {
-          server.installSubscriptionHandlers(httpServer);
-
-          const client = new SubscriptionClient(
-            `ws://localhost:${port}${server.subscriptionsPath}`,
-            {},
-            WebSocket,
-          );
-
-          const observable = client.request({ query });
-
-          let i = 1;
-          subscription = observable.subscribe({
-            next: ({ data }) => {
-              try {
-                expect(data.num).toEqual(i);
-                if (i === 3) {
-                  done();
-                }
-                i++;
-              } catch (e) {
-                done.fail(e);
-              }
-            },
-            error: done.fail,
-            complete: () => {
-              done.fail(new Error('should not complete'));
-            },
-          });
-        });
-      });
-      it('disables subscriptions when option set to false', done => {
-        const typeDefs = gql`
-          type Query {
-            "graphql-js forces there to be a query type"
-            hi: String
-          }
-
-          type Subscription {
-            num: Int
-          }
-        `;
-
-        const query = `
-        subscription {
-          num
-        }
-      `;
-
-        const resolvers = {
-          Query: {
-            hi: () => 'here to placate graphql-js',
-          },
-          Subscription: {
-            num: {
-              subscribe: () => {
-                createEvent(1);
-                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
-              },
-            },
-          },
-        };
-
-        createApolloServer({
-          typeDefs,
-          resolvers,
-          subscriptions: false,
-        }).then(({ port, server, httpServer }) => {
-          try {
-            server.installSubscriptionHandlers(httpServer);
-            done.fail(
-              'subscription server creation should fail, since subscriptions are disabled',
-            );
-          } catch (e) {
-            expect(e.message).toMatch(/disabled/);
-          }
-
-          const client = new SubscriptionClient(
-            `ws://localhost:${port}${server.subscriptionsPath || ''}`,
-            {},
-            WebSocket,
-          );
-
-          const observable = client.request({ query });
-
-          subscription = observable.subscribe({
-            next: () => {
-              done.fail(new Error('should not call next'));
-            },
-            error: () => {
-              done.fail(new Error('should not notify of error'));
-            },
-            complete: () => {
-              done.fail(new Error('should not complete'));
-            },
-          });
-
-          // Unfortunately the error connection is not propagated to the
-          // observable. What should happen is we provide a default onError
-          // function that notifies the returned observable and can customize
-          // the behavior with an option in the client constructor. If you're
-          // available to make a PR to the following please do!
-          // https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts
-          client.onError((_: Error) => {
-            done();
-          });
-        });
-      });
-      it('accepts subscriptions configuration', done => {
-        const onConnect = jest.fn(connectionParams => ({
-          ...connectionParams,
-        }));
-        const typeDefs = gql`
-          type Query {
-            hi: String
-          }
-
-          type Subscription {
-            num: Int
-          }
-        `;
-
-        const query = `
-        subscription {
-          num
-        }
-      `;
-
-        const resolvers = {
-          Query: {
-            hi: () => 'here to placate graphql-js',
-          },
-          Subscription: {
-            num: {
-              subscribe: () => {
-                createEvent(1);
-                createEvent(2);
-                createEvent(3);
-                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
-              },
-            },
-          },
-        };
-
-        const path = '/sub';
-        createApolloServer({
-          typeDefs,
-          resolvers,
-          subscriptions: { onConnect, path },
-        })
-          .then(({ port, server, httpServer }) => {
-            server.installSubscriptionHandlers(httpServer);
-            expect(onConnect).not.toBeCalled();
-
-            expect(server.subscriptionsPath).toEqual(path);
-            const client = new SubscriptionClient(
-              `ws://localhost:${port}${server.subscriptionsPath}`,
-              {},
-              WebSocket,
-            );
-
-            const observable = client.request({ query });
-
-            let i = 1;
-            subscription = observable.subscribe({
-              next: ({ data }) => {
-                try {
-                  expect(onConnect).toHaveBeenCalledTimes(1);
-                  expect(data.num).toEqual(i);
-                  if (i === 3) {
-                    done();
-                  }
-                  i++;
-                } catch (e) {
-                  done.fail(e);
-                }
-              },
-              error: done.fail,
-              complete: () => {
-                done.fail(new Error('should not complete'));
-              },
-            });
-          })
-          .catch(done.fail);
-      });
-
-      it('takes websocket server subscriptions configuration', async () => {
-        const onConnect = jest.fn((connectionParams) => ({
-          ...connectionParams,
-        }));
-        const typeDefs = gql`
-          type Query {
-            hi: String
-          }
-
-          type Subscription {
-            num: Int
-          }
-        `;
-
-        const query = `
-        subscription {
-          num
-        }
-      `;
-
-        const resolvers = {
-          Query: {
-            hi: () => 'here to placate graphql-js',
-          },
-          Subscription: {
-            num: {
-              subscribe: () => {
-                createEvent(1);
-                createEvent(2);
-                createEvent(3);
-                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
-              },
-            },
-          },
-        };
-
-        const path = '/sub';
-        const { server } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          subscriptions: { onConnect, path },
-        });
-        const listening = resolvable();
-        const websocketServer = new WebSocket.Server({ port: 0 }, () =>
-          listening.resolve(),
-        );
-        await listening;
-        server.installSubscriptionHandlers(websocketServer);
-        expect(onConnect).not.toBeCalled();
-
-        expect(server.subscriptionsPath).toEqual(path);
-        const client = new SubscriptionClient(
-          `ws://localhost:${
-            (websocketServer.address() as WebSocket.AddressInfo).port
-          }${server.subscriptionsPath}`,
-          {},
-          WebSocket,
-        );
-
-        const observable = client.request({ query });
-
-        const p = resolvable();
-
-        let i = 1;
-        subscription = observable.subscribe({
-          next: ({ data }) => {
-            try {
-              expect(onConnect).toHaveBeenCalledTimes(1);
-              expect(data.num).toEqual(i);
-              if (i === 3) {
-                p.resolve();
-              }
-              i++;
-            } catch (e) {
-              p.reject(e);
+      it('shows ApolloError extensions in extensions (only!)', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: gql`
+            type Query {
+              fieldWhichWillError: String
             }
-          },
-          error: p.reject,
-          complete: () => {
-            p.reject(new Error('should not complete'));
-          },
-        });
-        await p;
-      });
-
-      it('allows introspection when introspection is enabled on ApolloServer', done => {
-        const typeDefs = gql`
-          type Query {
-            hi: String
-          }
-
-          type Subscription {
-            num: Int
-          }
-        `;
-
-        const query = getIntrospectionQuery();
-
-        const resolvers = {
-          Query: {
-            hi: () => 'here to placate graphql-js',
-          },
-          Subscription: {
-            num: {
-              subscribe: () => {
-                createEvent(1);
-                createEvent(2);
-                createEvent(3);
-                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
+          `,
+          resolvers: {
+            Query: {
+              fieldWhichWillError: () => {
+                throw new ApolloError('Some message', 'SOME_CODE', {
+                  ext1: 'myext',
+                });
               },
             },
           },
-        };
-
-        createApolloServer({
-          typeDefs,
-          resolvers,
-          introspection: true,
-        }).then(({ port, server, httpServer }) => {
-          server.installSubscriptionHandlers(httpServer);
-
-          const client = new SubscriptionClient(
-            `ws://localhost:${port}${server.subscriptionsPath}`,
-            {},
-            WebSocket,
-          );
-
-          const observable = client.request({ query });
-
-          subscription = observable.subscribe({
-            next: ({ data }) => {
-              try {
-                expect(data).toMatchObject({ __schema: expect.any(Object) })
-              } catch (e) {
-                done.fail(e);
-              }
-              done();
-            }
-          });
+          stopOnTerminationSignals: false,
+          __testing_nodeEnv__: 'development',
         });
-      });
-      it('disallows introspection when it\'s disabled on ApolloServer', done => {
-        const typeDefs = gql`
-          type Query {
-            hi: String
-          }
 
-          type Subscription {
-            num: Int
-          }
-        `;
+        const apolloFetch = createApolloFetch({ uri });
 
-        const query = getIntrospectionQuery();
+        const result = await apolloFetch({ query: `{fieldWhichWillError}` });
+        expect(result.data).toEqual({ fieldWhichWillError: null });
 
-        const resolvers = {
-          Query: {
-            hi: () => 'here to placate graphql-js',
-          },
-          Subscription: {
-            num: {
-              subscribe: () => {
-                createEvent(1);
-                createEvent(2);
-                createEvent(3);
-                return pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC);
-              },
-            },
-          },
-        };
-
-        createApolloServer({
-          typeDefs,
-          resolvers,
-          introspection: false,
-        }).then(({ port, server, httpServer }) => {
-          server.installSubscriptionHandlers(httpServer);
-
-          const client = new SubscriptionClient(
-            `ws://localhost:${port}${server.subscriptionsPath}`,
-            {},
-            WebSocket,
-          );
-
-          const observable = client.request({ query });
-
-          subscription = observable.subscribe({
-            next: ({ data }) => {
-              try {
-                expect(data).toBeUndefined();
-              } catch (e) {
-                done.fail(e);
-              }
-              done();
-            }
-          });
-        });
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].message).toEqual('Some message');
+        expect(result.errors[0].extensions.code).toEqual('SOME_CODE');
+        expect(result.errors[0].extensions.ext1).toEqual('myext');
+        expect(result.errors[0].extensions.exception).toBeDefined();
+        expect(result.errors[0].extensions.exception.ext1).toBeUndefined();
       });
     });
 
@@ -2304,13 +1692,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
       const query = gql`
         ${TEST_STRING_QUERY}
       `;
-      const hash = sha256
-        .create()
-        .update(TEST_STRING_QUERY)
-        .hex();
+      const hash = sha256.create().update(TEST_STRING_QUERY).hex();
       const extensions = {
         persistedQuery: {
-          version: VERSION,
+          version: 1,
           sha256Hash: hash,
         },
       };
@@ -2387,9 +1772,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           await apolloFetch({
             extensions: {
               persistedQuery: {
-                version: VERSION,
-                sha:
-                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                version: 1,
+                sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
               },
             },
             query: TEST_STRING_QUERY,
@@ -2401,25 +1785,26 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
       });
 
-      it('returns correct result for persisted query link', done => {
+      it('returns correct result for persisted query link', (done) => {
         const variables = { id: 1 };
-        const link = createPersistedQuery().concat(
+        const link = createPersistedQueryLink({ sha256 }).concat(
           createHttpLink({ uri, fetch } as any),
         );
 
-        execute(link, { query, variables } as any).subscribe(result => {
+        execute(link, { query, variables } as any).subscribe((result) => {
           expect(result.data).toEqual({ testString: 'test string' });
           done();
         }, done.fail);
       });
 
-      it('returns correct result for persisted query link using get request', done => {
+      it('returns correct result for persisted query link using get request', (done) => {
         const variables = { id: 1 };
-        const link = createPersistedQuery({
+        const link = createPersistedQueryLink({
+          sha256,
           useGETForHashedQueries: true,
         }).concat(createHttpLink({ uri, fetch } as any));
 
-        execute(link, { query, variables } as any).subscribe(result => {
+        execute(link, { query, variables } as any).subscribe((result) => {
           expect(result.data).toEqual({ testString: 'test string' });
           done();
         }, done.fail);
@@ -2427,47 +1812,46 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('usage reporting', () => {
-      async function makeFakeTestableEngineServer({
+      async function makeFakeUsageReportingServer({
         status,
         waitWriteResponse = false,
       }: {
         status: number;
         waitWriteResponse?: boolean;
       }) {
-        let writeResponseResolve: () => void;
-        const writeResponsePromise = new Promise(
-          resolve => (writeResponseResolve = resolve),
-        );
-        const fakeEngineServer = http.createServer(async (_, res) => {
+        const writeResponsePromise = resolvable();
+        const fakeUsageReportingServer = http.createServer(async (_, res) => {
           await writeResponsePromise;
           res.writeHead(status);
           res.end('Important text in the body');
         });
-        await new Promise(resolve => {
-          fakeEngineServer.listen(0, '127.0.0.1', () => {
+        await new Promise<void>((resolve) => {
+          fakeUsageReportingServer.listen(0, '127.0.0.1', () => {
             resolve();
           });
         });
         async function closeServer() {
-          await new Promise(resolve => fakeEngineServer.close(() => resolve()));
+          await new Promise<void>((resolve) =>
+            fakeUsageReportingServer.close(() => resolve()),
+          );
         }
 
-        const { family, address, port } = fakeEngineServer.address();
+        const { family, address, port } =
+          fakeUsageReportingServer.address() as AddressInfo;
         if (family !== 'IPv4') {
           throw new Error(`The family was unexpectedly ${family}.`);
         }
 
-        const fakeEngineUrl = `http://${address}:${port}`;
+        const fakeUsageReportingUrl = `http://${address}:${port}`;
 
         if (!waitWriteResponse) {
-          writeResponseResolve();
+          writeResponsePromise.resolve();
         }
 
         return {
           closeServer,
-          fakeEngineServer,
-          fakeEngineUrl,
-          writeResponseResolve,
+          fakeUsageReportingUrl,
+          writeResponseResolve: () => writeResponsePromise.resolve(),
         };
       }
 
@@ -2478,14 +1862,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
         ) {
           const networkError = status === 0;
 
-          const {
-            closeServer,
-            fakeEngineUrl,
-            writeResponseResolve,
-          } = await makeFakeTestableEngineServer({
-            status,
-            waitWriteResponse: true,
-          });
+          const { closeServer, fakeUsageReportingUrl, writeResponseResolve } =
+            await makeFakeUsageReportingServer({
+              status,
+              waitWriteResponse: true,
+            });
 
           try {
             // To simulate a network error, we create and close the server.
@@ -2497,14 +1878,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
             let requestCount = 0;
             const requestAgent = new http.Agent({ keepAlive: false });
             const realCreateConnection = (requestAgent as any).createConnection;
-            (requestAgent as any).createConnection = function() {
+            (requestAgent as any).createConnection = function () {
               requestCount++;
               return realCreateConnection.apply(this, arguments);
             };
 
             let reportErrorPromiseResolve: (error: Error) => void;
             const reportErrorPromise = new Promise<Error>(
-              resolve => (reportErrorPromiseResolve = resolve),
+              (resolve) => (reportErrorPromiseResolve = resolve),
             );
             const { url: uri } = await createApolloServer({
               typeDefs: gql`
@@ -2519,10 +1900,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
               },
               plugins: [
                 ApolloServerPluginUsageReporting({
-                  endpointUrl: fakeEngineUrl,
+                  endpointUrl: fakeUsageReportingUrl,
                   reportIntervalMs: 1,
                   maxAttempts: 3,
                   requestAgent,
+                  logger: quietLogger,
                   reportErrorFunction(error: Error) {
                     reportErrorPromiseResolve(error);
                   },
@@ -2578,68 +1960,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
-    describe('Tracing', () => {
-      const typeDefs = gql`
-        type Book {
-          title: String
-          author: String
-        }
-
-        type Movie {
-          title: String
-        }
-
-        type Query {
-          books: [Book]
-          movies: [Movie]
-        }
-      `;
-
-      const resolvers = {
-        Query: {
-          books: () =>
-            new Promise(resolve =>
-              setTimeout(() => resolve([{ title: 'H', author: 'J' }]), 10),
-            ),
-          movies: () =>
-            new Promise(resolve =>
-              setTimeout(() => resolve([{ title: 'H' }]), 12),
-            ),
-        },
-      };
-
-      it('reports a total duration that is longer than the duration of its resolvers', async () => {
-        const { url: uri } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          tracing: true,
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-        const result = await apolloFetch({
-          query: `{ books { title author } }`,
-        });
-
-        const tracing: TracingFormat = result.extensions.tracing;
-
-        const earliestStartOffset = tracing.execution.resolvers
-          .map(resolver => resolver.startOffset)
-          .reduce((currentEarliestOffset, nextOffset) =>
-            Math.min(currentEarliestOffset, nextOffset),
-          );
-
-        const latestEndOffset = tracing.execution.resolvers
-          .map(resolver => resolver.startOffset + resolver.duration)
-          .reduce((currentLatestEndOffset, nextEndOffset) =>
-            Math.max(currentLatestEndOffset, nextEndOffset),
-          );
-
-        const resolverDuration = latestEndOffset - earliestStartOffset;
-
-        expect(resolverDuration).not.toBeGreaterThan(tracing.duration);
-      });
-    });
-
     describe('Federated tracing', () => {
       // Enable federated tracing by pretending to be federated.
       const federationTypeDefs = gql`
@@ -2670,11 +1990,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
       const resolvers = {
         Query: {
           books: () =>
-            new Promise(resolve =>
+            new Promise((resolve) =>
               setTimeout(() => resolve([{ title: 'H', author: 'J' }]), 10),
             ),
           movies: () =>
-            new Promise(resolve =>
+            new Promise((resolve) =>
               setTimeout(() => resolve([{ title: 'H' }]), 12),
             ),
           error: () => {
@@ -2694,6 +2014,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: allTypeDefs,
           resolvers,
+          logger: quietLogger,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -2721,9 +2042,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('reports a total duration that is longer than the duration of its resolvers', async () => {
-        const { url: uri, server } = await createApolloServer({
+        const { url: uri } = await createApolloServer({
           typeDefs: allTypeDefs,
           resolvers,
+          logger: quietLogger,
         });
 
         const apolloFetch = createApolloFetchAsIfFromGateway(uri);
@@ -2740,26 +2062,26 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         let earliestStartOffset = Infinity;
         let latestEndOffset = -Infinity;
-        function walk(node: Trace.INode) {
+        function walk(node: Trace.Node) {
           if (node.startTime !== 0 && node.endTime !== 0) {
             earliestStartOffset = Math.min(earliestStartOffset, node.startTime);
             latestEndOffset = Math.max(latestEndOffset, node.endTime);
           }
-          node.child.forEach(n => walk(n));
+          node.child.forEach((n) => walk(n as Trace.Node));
         }
-        walk(trace.root);
+        walk(trace.root as Trace.Node);
         expect(earliestStartOffset).toBeLessThan(Infinity);
         expect(latestEndOffset).toBeGreaterThan(-Infinity);
         const resolverDuration = latestEndOffset - earliestStartOffset;
         expect(resolverDuration).toBeGreaterThan(0);
         expect(trace.durationNs).toBeGreaterThanOrEqual(resolverDuration);
 
-        expect(trace.startTime.seconds).toBeLessThanOrEqual(
-          trace.endTime.seconds,
+        expect(trace.startTime!.seconds).toBeLessThanOrEqual(
+          trace.endTime!.seconds!,
         );
-        if (trace.startTime.seconds === trace.endTime.seconds) {
-          expect(trace.startTime.nanos).toBeLessThanOrEqual(
-            trace.endTime.nanos,
+        if (trace.startTime!.seconds === trace.endTime!.seconds) {
+          expect(trace.startTime!.nanos).toBeLessThanOrEqual(
+            trace.endTime!.nanos!,
           );
         }
       });
@@ -2772,12 +2094,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
             err.message = `Formatted: ${err.message}`;
             return err;
           },
-          plugins: [ApolloServerPluginInlineTrace({
-            rewriteError(err) {
-              err.message = `Rewritten for Engine: ${err.message}`;
-              return err;
-            },
-          })],
+          plugins: [
+            ApolloServerPluginInlineTrace({
+              rewriteError(err) {
+                err.message = `Rewritten for Usage Reporting: ${err.message}`;
+                return err;
+              },
+            }),
+          ],
         });
 
         const apolloFetch = createApolloFetchAsIfFromGateway(uri);
@@ -2796,19 +2120,20 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(ftv1).toBeTruthy();
         const encoded = Buffer.from(ftv1, 'base64');
         const trace = Trace.decode(encoded);
-        expect(trace.root.child[0].error[0].message).toBe(
-          'Rewritten for Engine: It broke',
+        expect(trace.root!.child![0].error![0].message).toBe(
+          'Rewritten for Usage Reporting: It broke',
         );
       });
     });
 
     describe('Response caching', () => {
+      let clock: FakeTimers.Clock;
       beforeAll(() => {
-        mockDate();
+        clock = FakeTimers.install();
       });
 
       afterAll(() => {
-        unmockDate();
+        clock.uninstall();
       });
 
       it('basic caching', async () => {
@@ -2821,23 +2146,44 @@ export function testApolloServer<AS extends ApolloServerBase>(
             uncached: String
             private: String @cacheControl(maxAge: 9, scope: PRIVATE)
           }
+
+          enum CacheControlScope {
+            PUBLIC
+            PRIVATE
+          }
+
+          directive @cacheControl(
+            maxAge: Int
+            scope: CacheControlScope
+          ) on FIELD_DEFINITION | OBJECT | INTERFACE
         `;
 
-        type FieldName = 'cached'| 'asynccached' | 'asyncuncached' | 'asyncnowrite' | 'uncached' | 'private';
-        const fieldNames: FieldName[] = ['cached', 'asynccached', 'asyncuncached', 'asyncnowrite', 'uncached', 'private'];
-        const resolverCallCount: Partial<Record<FieldName, number>> = {};
-        const expectedResolverCallCount: Partial<
-          Record<FieldName, number>
-        > = {};
+        type FieldName =
+          | 'cached'
+          | 'asynccached'
+          | 'asyncuncached'
+          | 'asyncnowrite'
+          | 'uncached'
+          | 'private';
+        const fieldNames: FieldName[] = [
+          'cached',
+          'asynccached',
+          'asyncuncached',
+          'asyncnowrite',
+          'uncached',
+          'private',
+        ];
+        const resolverCallCount = {} as Record<FieldName, number>;
+        const expectedResolverCallCount = {} as Record<FieldName, number>;
         const expectCacheHit = (fn: FieldName) =>
           expect(resolverCallCount[fn]).toBe(expectedResolverCallCount[fn]);
         const expectCacheMiss = (fn: FieldName) =>
           expect(resolverCallCount[fn]).toBe(++expectedResolverCallCount[fn]);
 
         const resolvers = {
-          Query: {},
+          Query: {} as Record<FieldName, () => string>,
         };
-        fieldNames.forEach(name => {
+        fieldNames.forEach((name) => {
           resolverCallCount[name] = 0;
           expectedResolverCallCount[name] = 0;
           resolvers.Query[name] = () => {
@@ -2853,14 +2199,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
             ApolloServerPluginResponseCache({
               sessionId: (requestContext: GraphQLRequestContext<any>) => {
                 return (
-                  requestContext.request.http.headers.get('session-id') || null
+                  requestContext.request.http!.headers.get('session-id') || null
                 );
               },
               extraCacheKeyData: (
                 requestContext: GraphQLRequestContext<any>,
               ) => {
                 return (
-                  requestContext.request.http.headers.get(
+                  requestContext.request.http!.headers.get(
                     'extra-cache-key-data',
                   ) || null
                 );
@@ -2868,15 +2214,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
               shouldReadFromCache: (
                 requestContext: GraphQLRequestContext<any>,
               ) => {
-                console.debug('shouldReadFromCache', requestContext.request.query);
-                if (requestContext.request.http.headers.get('no-read-from-cache'))
+                if (
+                  requestContext.request.http!.headers.get('no-read-from-cache')
+                )
                   return false;
 
-                if (requestContext.request.query.indexOf('asynccached') >= 0) {
+                if (requestContext.request.query!.indexOf('asynccached') >= 0) {
                   return new Promise((resolve) => resolve(true));
                 }
 
-                if (requestContext.request.query.indexOf('asyncuncached') >= 0) {
+                if (
+                  requestContext.request.query!.indexOf('asyncuncached') >= 0
+                ) {
                   return new Promise((resolve) => resolve(false));
                 }
 
@@ -2885,10 +2234,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
               shouldWriteToCache: (
                 requestContext: GraphQLRequestContext<any>,
               ) => {
-                if (requestContext.request.http.headers.get('no-write-to-cache'))
+                if (
+                  requestContext.request.http!.headers.get('no-write-to-cache')
+                )
                   return false;
 
-                if (requestContext.request.query.indexOf('asyncnowrite') >= 0) {
+                if (
+                  requestContext.request.query!.indexOf('asyncnowrite') >= 0
+                ) {
                   return new Promise((resolve) => resolve(false));
                 }
 
@@ -2906,7 +2259,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               options.headers = {};
             }
             for (const k in headers) {
-              options.headers[k] = headers[k];
+              (options.headers as any)[k] = headers[k];
             }
           }
           next();
@@ -2963,7 +2316,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         // Cache hit partway to ttl.
-        advanceTimeBy(5 * 1000);
+        clock.tick(5 * 1000);
         {
           const result = await fetch();
           expectCacheHit('cached');
@@ -2974,7 +2327,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         // Cache miss after ttl.
-        advanceTimeBy(6 * 1000);
+        clock.tick(6 * 1000);
         {
           const result = await fetch();
           expectCacheMiss('cached');
@@ -3012,7 +2365,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         // Even we cache read, we did not write (async)
         {
-          const asyncNoWriteQuery = '{asyncnowrite}'
+          const asyncNoWriteQuery = '{asyncnowrite}';
           await doFetch({
             query: asyncNoWriteQuery,
           });
@@ -3251,7 +2604,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         // Let's expire the cache, and run again, not writing to the cache.
-        advanceTimeBy(15 * 1000);
+        clock.tick(15 * 1000);
         {
           const result = await doFetch({
             query: basicQuery,
@@ -3280,7 +2633,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
     describe('Gateway', () => {
       it('receives schema updates from the gateway', async () => {
-        const makeQueryTypeWithField = fieldName =>
+        const makeQueryTypeWithField = (fieldName: string) =>
           new GraphQLSchema({
             query: new GraphQLObjectType({
               name: 'QueryType',
@@ -3292,7 +2645,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }),
           });
 
-        const executor = req =>
+        const executor = (req: GraphQLRequestContextExecutionDidStart<any>) =>
           (req.source as string).match(/1/)
             ? Promise.resolve({ data: { testString1: 'hello' } })
             : Promise.resolve({ data: { testString2: 'aloha' } });
@@ -3306,7 +2659,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const { url: uri } = await createApolloServer({
           gateway,
-          subscriptions: false,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -3315,22 +2667,22 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result1.data).toEqual({ testString1: 'hello' });
         expect(result1.errors).toBeUndefined();
 
-        triggers.triggerSchemaChange(makeQueryTypeWithField('testString2'));
+        triggers.triggerSchemaChange!(makeQueryTypeWithField('testString2'));
 
         const result2 = await apolloFetch({ query: '{testString2}' });
         expect(result2.data).toEqual({ testString2: 'aloha' });
         expect(result2.errors).toBeUndefined();
       });
 
-      it('passes apollo and engine data to the gateway', async () => {
+      it('passes apollo data to the gateway', async () => {
         const optionsSpy = jest.fn();
 
         const { gateway, triggers } = makeGatewayMock({ optionsSpy });
-        triggers.resolveLoad({ schema, executor: () => {} });
-        const { server } = await createApolloServer({
+        triggers.resolveLoad({ schema, executor: async () => ({}) });
+        await createApolloServer({
           gateway,
-          subscriptions: false,
           apollo: { key: 'service:tester:1234abc', graphRef: 'tester@staging' },
+          logger: quietLogger,
         });
 
         expect(optionsSpy).toHaveBeenLastCalledWith({
@@ -3339,14 +2691,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             keyHash:
               '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',
             graphRef: 'tester@staging',
-            graphId: 'tester',
-            graphVariant: 'staging',
-          },
-          engine: {
-            apiKeyHash:
-              '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',
-            graphId: 'tester',
-            graphVariant: 'staging',
           },
         });
       });
@@ -3354,8 +2698,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
       it('unsubscribes from schema update on close', async () => {
         const unsubscribeSpy = jest.fn();
         const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
-        triggers.resolveLoad({ schema, executor: () => {} });
-        await createApolloServer({ gateway, subscriptions: false });
+        triggers.resolveLoad({ schema, executor: async () => ({}) });
+        await createApolloServer({ gateway });
         expect(unsubscribeSpy).not.toHaveBeenCalled();
         await stopServer();
         expect(unsubscribeSpy).toHaveBeenCalled();
@@ -3363,10 +2707,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       it('waits until gateway has resolved a schema to respond to queries', async () => {
         let startPromiseResolver: any, endPromiseResolver: any;
-        const startPromise = new Promise(res => {
+        const startPromise = new Promise((res) => {
           startPromiseResolver = res;
         });
-        const endPromise = new Promise(res => {
+        const endPromise = new Promise((res) => {
           endPromiseResolver = res;
         });
         const executor = async () => {
@@ -3380,11 +2724,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
         triggers.resolveLoad({ schema, executor });
         const { url: uri } = await createApolloServer({
           gateway,
-          subscriptions: false,
         });
         const fetchComplete = jest.fn();
         const apolloFetch = createApolloFetch({ uri });
-        const result = apolloFetch({ query: '{testString}' }).then(result => {
+        const result = apolloFetch({ query: '{testString}' }).then((result) => {
           fetchComplete(result);
           return result;
         });
@@ -3399,7 +2742,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('can serve multiple active schemas simultaneously during a schema rollover', async () => {
-        const makeQueryTypeWithField = fieldName =>
+        const makeQueryTypeWithField = (fieldName: string) =>
           new GraphQLSchema({
             query: new GraphQLObjectType({
               name: 'QueryType',
@@ -3411,30 +2754,29 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }),
           });
 
-        const executorData = {};
-        [1, 2, 3].forEach(i => {
-          const query = `{testString${i}}`;
-          let startPromiseResolver: any, endPromiseResolver: any;
-          const startPromise = new Promise(res => {
-            startPromiseResolver = res;
-          });
-          const endPromise = new Promise(res => {
-            endPromiseResolver = res;
-          });
-          executorData[query] = {
-            startPromiseResolver,
-            endPromiseResolver,
-            startPromise,
-            endPromise,
-            i,
+        const executorData: Record<
+          string,
+          {
+            startPromise: Resolvable<void>;
+            endPromise: Resolvable<void>;
+            i: number;
           }
+        > = Object.create(null);
+        [1, 2, 3].forEach((i) => {
+          const query = `{testString${i}}`;
+          executorData[query] = {
+            startPromise: resolvable(),
+            endPromise: resolvable(),
+            i,
+          };
         });
 
-        const executor = async (req) => {
+        const executor = async (
+          req: GraphQLRequestContextExecutionDidStart<any>,
+        ) => {
           const source = req.source as string;
-          const {startPromiseResolver, endPromise, i} =
-            executorData[source];
-          startPromiseResolver();
+          const { startPromise, endPromise, i } = executorData[source];
+          startPromise.resolve();
           await endPromise;
           return { data: { [`testString${i}`]: `${i}` } };
         };
@@ -3448,25 +2790,24 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const { url: uri, server } = await createApolloServer({
           gateway,
-          subscriptions: false,
         });
 
         const apolloFetch = createApolloFetch({ uri });
         const result1 = apolloFetch({ query: '{testString1}' });
         await executorData['{testString1}'].startPromise;
-        triggers.triggerSchemaChange(makeQueryTypeWithField('testString2'));
+        triggers.triggerSchemaChange!(makeQueryTypeWithField('testString2'));
         // Hacky, but: executeOperation awaits schemaDerivedData, so when it
         // finishes we know the new schema is loaded.
-        await server.executeOperation({query: '{__typename}'});
+        await server.executeOperation({ query: '{__typename}' });
         const result2 = apolloFetch({ query: '{testString2}' });
         await executorData['{testString2}'].startPromise;
-        triggers.triggerSchemaChange(makeQueryTypeWithField('testString3'));
-        await server.executeOperation({query: '{__typename}'});
+        triggers.triggerSchemaChange!(makeQueryTypeWithField('testString3'));
+        await server.executeOperation({ query: '{__typename}' });
         const result3 = apolloFetch({ query: '{testString3}' });
         await executorData['{testString3}'].startPromise;
-        executorData['{testString3}'].endPromiseResolver();
-        executorData['{testString1}'].endPromiseResolver();
-        executorData['{testString2}'].endPromiseResolver();
+        executorData['{testString3}'].endPromise.resolve();
+        executorData['{testString1}'].endPromise.resolve();
+        executorData['{testString2}'].endPromise.resolve();
 
         await Promise.all([result1, result2, result3]).then(([v1, v2, v3]) => {
           expect(v1.errors).toBeUndefined();
@@ -3477,6 +2818,148 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(v3.data).toEqual({ testString3: '3' });
         });
       });
+    });
+
+    describe('renderLandingPage', () => {
+      let httpServer: http.Server;
+
+      function getWithoutAcceptHeader(url: string) {
+        return request(httpServer).get(url);
+      }
+      function get(url: string) {
+        return getWithoutAcceptHeader(url).set('accept', 'text/html');
+      }
+
+      function makeServerConfig(htmls: string[]): Config {
+        return {
+          typeDefs: 'type Query {x: ID}',
+          plugins: [
+            ...htmls.map((html) => ({
+              async serverWillStart() {
+                return {
+                  async renderLandingPage() {
+                    return {
+                      html,
+                    };
+                  },
+                };
+              },
+            })),
+          ],
+          // dev mode, so we get the local landing page
+          __testing_nodeEnv__: undefined,
+        };
+      }
+
+      // Pass this to expect in the "not LandingPage, you are trying to do GraphQL
+      // but didn't send a query" case, which we should maybe change to
+      // something nicer than an ugly 400.
+      const serveNoLandingPage = 400;
+
+      it('defaults to LocalDefault', async () => {
+        httpServer = (await createApolloServer(makeServerConfig([])))
+          .httpServer;
+        await get('/graphql').expect(
+          200,
+          /apollo-server-landing-page.cdn.apollographql.com\/_latest.*isProd[^t]+false/s,
+        );
+      });
+
+      it('can specify version for LocalDefault', async () => {
+        httpServer = (
+          await createApolloServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [
+              ApolloServerPluginLandingPageLocalDefault({ version: 'abcdef' }),
+            ],
+          })
+        ).httpServer;
+        await get('/graphql').expect(
+          200,
+          /apollo-server-landing-page.cdn.apollographql.com\/abcdef.*isProd[^t]+false/s,
+        );
+      });
+
+      it('can install playground with specific version', async () => {
+        httpServer = (
+          await createApolloServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [
+              ApolloServerPluginLandingPageGraphQLPlayground({
+                version: '9.8.7',
+              }),
+            ],
+          })
+        ).httpServer;
+        await get('/graphql')
+          .expect(/Playground/)
+          .expect(/react@9\.8\.7/);
+      });
+
+      it('can be disabled', async () => {
+        httpServer = (
+          await createApolloServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [ApolloServerPluginLandingPageDisabled()],
+          })
+        ).httpServer;
+        await get('/graphql').expect(serveNoLandingPage);
+      });
+
+      describe('basic functionality', () => {
+        describe('with non-root graphqlPath', () => {
+          beforeEach(async () => {
+            httpServer = (
+              await createApolloServer(makeServerConfig(['BAZ']), {
+                graphqlPath: '/goofql',
+              })
+            ).httpServer;
+          });
+
+          it('basic GET works', async () => {
+            await get('/goofql').expect(200, 'BAZ');
+          });
+          it('only mounts under graphqlPath', async () => {
+            await get('/foo').expect(404);
+          });
+          it('needs the header', async () => {
+            await getWithoutAcceptHeader('/goofql').expect(serveNoLandingPage);
+          });
+          it('trailing slash works', async () => {
+            await get('/goofql/').expect(200, 'BAZ');
+          });
+        });
+
+        describe('with root graphqlPath', () => {
+          beforeEach(async () => {
+            httpServer = (
+              await createApolloServer(makeServerConfig(['BAZ']), {
+                graphqlPath: '/',
+              })
+            ).httpServer;
+          });
+
+          it('basic GET works', async () => {
+            await get('/').expect(200, 'BAZ');
+          });
+          it('needs the header', async () => {
+            await getWithoutAcceptHeader('/').expect(serveNoLandingPage);
+          });
+        });
+      });
+
+      // Serverless frameworks don't have startup errors because they don't
+      // have a startup phase.
+      options.serverlessFramework ||
+        describe('startup errors', () => {
+          it('only one plugin can implement renderLandingPage', async () => {
+            await expect(
+              createApolloServer(makeServerConfig(['x', 'y'])),
+            ).rejects.toThrow(
+              'Only one plugin can implement renderLandingPage.',
+            );
+          });
+        });
     });
   });
 }

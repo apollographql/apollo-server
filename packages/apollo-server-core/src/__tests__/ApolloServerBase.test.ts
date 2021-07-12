@@ -1,9 +1,9 @@
 import { ApolloServerBase } from '../ApolloServer';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { gql } from '../';
-import { Logger } from 'apollo-server-types';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type { GraphQLSchema } from 'graphql';
+import { Logger } from 'apollo-server-types';
 
 const typeDefs = gql`
   type Query {
@@ -42,48 +42,28 @@ describe('ApolloServerBase construction', () => {
   });
 
   it('succeeds when passed a graphVariant in construction', () => {
+    const warn = jest.fn();
+    const logger: Logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn,
+      error: jest.fn(),
+    };
     expect(() =>
       new ApolloServerBase({
         typeDefs,
         resolvers,
-        engine: {
+        apollo: {
           graphVariant: 'foo',
-          apiKey: 'service:real:key',
+          key: 'service:real:key',
         },
+        logger,
       }).stop(),
     ).not.toThrow();
-  });
-
-  it('spits out a deprecation warning when passed a schemaTag in construction', () => {
-    const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
-    expect(() =>
-      new ApolloServerBase({
-        typeDefs,
-        resolvers,
-        engine: {
-          schemaTag: 'foo',
-          apiKey: 'service:real:key',
-        },
-      }).stop(),
-    ).not.toThrow();
-    expect(spyConsoleWarn).toBeCalledWith(
-      expect.stringMatching(/schemaTag.*graphVariant/),
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toMatch(
+      /Apollo key but have not specified a graph ref/,
     );
-    spyConsoleWarn.mockRestore();
-  });
-
-  it('throws when passed a schemaTag and graphVariant in construction', () => {
-    expect(
-      () =>
-        new ApolloServerBase({
-          schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema,
-          engine: {
-            schemaTag: 'foo',
-            graphVariant: 'heck',
-            apiKey: 'service:real:key',
-          },
-        }),
-    ).toThrow();
   });
 
   it('throws when a GraphQLSchema is not provided to the schema configuration option', () => {
@@ -123,7 +103,9 @@ describe('ApolloServerBase start', () => {
     await expect(server.start()).rejects.toThrow('nope');
   });
 
-  it('execute throws redacted message on implicit startup error', async () => {
+  // This is specific to serverless because on server-ful frameworks, you can't
+  // get to executeOperation without server.start().
+  it('execute throws redacted message on serverless startup error', async () => {
     const error = jest.fn();
     const logger: Logger = {
       debug: jest.fn(),
@@ -132,28 +114,36 @@ describe('ApolloServerBase start', () => {
       error,
     };
 
-    const server = new ApolloServerBase({
+    class ServerlessApolloServer extends ApolloServerBase {
+      override serverlessFramework() {
+        return true;
+      }
+    }
+
+    const server = new ServerlessApolloServer({
       typeDefs,
       resolvers,
       plugins: [failToStartPlugin],
       logger,
     });
-    // Run the operation twice (the first will kick off the start process). We
-    // want to see the same error thrown and log message for the "kick it off"
-    // call as the subsequent call.
+    // Run the operation twice. We want to see the same error thrown and log
+    // message for the "kick it off" call as the subsequent call.
     await expect(
       server.executeOperation({ query: '{__typename}' }),
     ).rejects.toThrow(redactedMessage);
     await expect(
       server.executeOperation({ query: '{__typename}' }),
     ).rejects.toThrow(redactedMessage);
-    expect(error).toHaveBeenCalledTimes(2);
-    expect(error.mock.calls[0][0]).toMatch(
-      /Apollo Server was started implicitly.*nope/,
-    );
-    expect(error.mock.calls[1][0]).toMatch(
-      /Apollo Server was started implicitly.*nope/,
-    );
+
+    // Three times: once for the actual background _start call, twice for the
+    // two operations.
+    expect(error).toHaveBeenCalledTimes(3);
+    for (const [message] of error.mock.calls) {
+      expect(message).toBe(
+        'An error occurred during Apollo Server startup. All ' +
+          'GraphQL requests will now fail. The startup error was: nope',
+      );
+    }
   });
 });
 
@@ -163,6 +153,7 @@ describe('ApolloServerBase executeOperation', () => {
       typeDefs,
       resolvers,
     });
+    await server.start();
 
     const result = await server.executeOperation({ query: 'query { error }' });
 
@@ -178,6 +169,7 @@ describe('ApolloServerBase executeOperation', () => {
       resolvers,
       debug: true,
     });
+    await server.start();
 
     const result = await server.executeOperation({ query: 'query { error }' });
 
@@ -191,6 +183,7 @@ describe('ApolloServerBase executeOperation', () => {
       typeDefs,
       resolvers,
     });
+    await server.start();
 
     const result = await server.executeOperation({ query: '{ hello }' });
     expect(result.errors).toBeUndefined();
@@ -202,6 +195,7 @@ describe('ApolloServerBase executeOperation', () => {
       typeDefs,
       resolvers,
     });
+    await server.start();
 
     const result = await server.executeOperation({
       query: gql`
@@ -219,6 +213,7 @@ describe('ApolloServerBase executeOperation', () => {
       typeDefs,
       resolvers,
     });
+    await server.start();
 
     const result = await server.executeOperation({ query: '{' });
     expect(result.errors).toHaveLength(1);
@@ -231,6 +226,7 @@ describe('ApolloServerBase executeOperation', () => {
       resolvers,
       context: ({ fooIn }) => ({ foo: fooIn }),
     });
+    await server.start();
 
     const result = await server.executeOperation(
       { query: '{ contextFoo }' },
@@ -238,67 +234,5 @@ describe('ApolloServerBase executeOperation', () => {
     );
     expect(result.errors).toBeUndefined();
     expect(result.data?.contextFoo).toBe('bla');
-  });
-});
-
-describe('environment variables', () => {
-  const OLD_ENV = process.env;
-
-  beforeEach(() => {
-    jest.resetModules();
-    process.env = { ...OLD_ENV };
-    delete process.env.ENGINE_API_KEY;
-    delete process.env.APOLLO_KEY;
-  });
-
-  afterEach(() => {
-    process.env = OLD_ENV;
-  });
-
-  it('constructs a reporting agent with the ENGINE_API_KEY (deprecated) environment variable and warns', async () => {
-    // set the variables
-    process.env.ENGINE_API_KEY = 'service:fake:stuff';
-    const warn = jest.fn();
-    const mockLogger: Logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn,
-      error: jest.fn(),
-    };
-
-    const server = new ApolloServerBase({
-      typeDefs,
-      resolvers,
-      apollo: { graphRef: 'fake@xxx' },
-      logger: mockLogger,
-    });
-
-    await server.stop();
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toMatch(/deprecated.*ENGINE_API_KEY/);
-  });
-
-  it('warns with both the legacy env var and new env var set', async () => {
-    // set the variables
-    process.env.ENGINE_API_KEY = 'just:fake:stuff';
-    process.env.APOLLO_KEY = 'service:fake:stuff';
-    const warn = jest.fn();
-    const mockLogger: Logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn,
-      error: jest.fn(),
-    };
-
-    const server = new ApolloServerBase({
-      typeDefs,
-      resolvers,
-      apollo: { graphRef: 'fake@xxx' },
-      logger: mockLogger,
-    });
-
-    await server.stop();
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toMatch(/Using.*APOLLO_KEY.*ENGINE_API_KEY/);
   });
 });

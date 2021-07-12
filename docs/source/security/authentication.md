@@ -224,7 +224,7 @@ const typeDefs = `
 
 The `@auth` directive can be called directly on the type, or on the fields if you want to limit access to specific fields as shown in the example above. The logic behind authorization is hidden away in the directive implementation.
 
-One way of implementing the `@auth` directive is via the [SchemaDirectiveVisitor](https://www.apollographql.com/docs/graphql-tools/schema-directives.html) class from [graphql-tools](https://github.com/apollographql/graphql-tools). Ben Newman covered creating a sample `@deprecated` and `@rest` directive in this [excellent article](https://www.apollographql.com/blog/graphql/directives/eusable-graphql-schema-directives/). You can draw inspiration from these examples.
+One way of implementing the `@auth` directive is by constructing your schema using the [`schemaTransforms` option of the `makeExecutableSchema`](https://www.graphql-tools.com/docs/schema-directives/) function from the [graphql-tools](https://www.graphql-tools.com/) project. You can read the `graphql-tools` docs for details on how to write `schemaTransforms`; then just create your server with `new ApolloServer({ schema: makeExecutableSchema({ typeDefs, resolvers, schemaTransforms }) })`.
 
 ### Outside of GraphQL
 

@@ -1,4 +1,4 @@
-import { ApolloServer } from '../ApolloServer';
+import { ApolloServer, CreateHandlerOptions } from '../ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
@@ -26,10 +26,13 @@ const simulateGcfMiddleware = (
   next();
 };
 
-const createCloudFunction = (options: CreateAppOptions = {}) => {
+const createCloudFunction = async (
+  options: CreateAppOptions = {},
+  createHandlerOptions: CreateHandlerOptions = {},
+) => {
   const handler = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
-  ).createHandler();
+  ).createHandler(createHandlerOptions);
 
   const app = express();
   app.use(bodyParser.json());
@@ -40,14 +43,15 @@ const createCloudFunction = (options: CreateAppOptions = {}) => {
 
 describe('googleCloudApollo', () => {
   it('handles requests with path set to null', async () => {
-    const app = await createCloudFunction();
-    const res = await request(app)
-      .get('/')
-      .set('Accept', 'text/html');
-    expect(res.statusCode).toEqual(200);
+    const app = await createCloudFunction(
+      {},
+      { expressGetMiddlewareOptions: { path: '/' } },
+    );
+    const res = await request(app).get('/').set('Accept', 'text/html');
+    expect(res.status).toEqual(200);
   });
 });
 
 describe('integration:CloudFunction', () => {
-  testSuite(createCloudFunction);
+  testSuite({ createApp: createCloudFunction, serverlessFramework: true });
 });

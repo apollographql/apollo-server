@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-lambda",
-  "version": "2.25.2",
+  "version": "3.0.0",
   "description": "Production-ready Node.js GraphQL server for AWS Lambda",
   "keywords": [
     "GraphQL",
@@ -23,20 +23,19 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=6"
+    "node": ">=12.0"
   },
   "dependencies": {
-    "@apollographql/graphql-playground-html": "1.6.27",
-    "@types/aws-lambda": "^8.10.31",
+    "@types/aws-lambda": "^8.10.76",
+    "@vendia/serverless-express": "^4.3.9",
     "apollo-server-core": "file:../apollo-server-core",
-    "apollo-server-env": "file:../apollo-server-env",
-    "apollo-server-types": "file:../apollo-server-types",
-    "graphql-tools": "^4.0.8"
+    "apollo-server-express": "file:../apollo-server-express",
+    "express": "^4.17.1"
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
+    "graphql": "^15.3.0"
   }
 }

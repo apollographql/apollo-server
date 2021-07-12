@@ -1,11 +1,11 @@
 import {
-  TestableKeyValueCache,
+  KeyValueCache,
   KeyValueCacheSetOptions,
 } from 'apollo-server-caching';
 import Memcached from 'memcached';
 import { promisify } from 'util';
 
-export class MemcachedCache implements TestableKeyValueCache {
+export class MemcachedCache implements KeyValueCache {
   // TODO: Replace any with proper promisified type
   readonly client: any;
   readonly defaultSetOptions: KeyValueCacheSetOptions = {

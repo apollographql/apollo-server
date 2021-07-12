@@ -11,10 +11,8 @@ import {
 } from 'graphql';
 
 import {
-  GraphQLExtensionStack,
-  GraphQLExtension,
   GraphQLResponse,
-} from 'graphql-extensions';
+} from 'apollo-server-types';
 
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
 import { Request } from 'apollo-server-env';
@@ -31,7 +29,7 @@ import {
 } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { generateSchemaHash } from "../utils/schemaHash";
-import { Logger } from "apollo-server-types";
+import { newCachePolicy } from '../cachePolicy';
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
 // GraphQLRequestProcessor refactoring.
@@ -46,7 +44,6 @@ function runQuery(
     query: options.queryString,
     operationName: options.operationName,
     variables: options.variables,
-    extensions: options.extensions,
     http: options.request,
   };
 
@@ -61,6 +58,7 @@ function runQuery(
     context: options.context || {},
     debug: options.debug,
     cache: {} as any,
+    overallCachePolicy: newCachePolicy(),
     ...requestContextExtra,
   });
 }
@@ -68,22 +66,18 @@ function runQuery(
 interface QueryOptions
   extends Pick<
     GraphQLOptions<GraphQLContext<any>>,
-    | 'cacheControl'
     | 'context'
     | 'debug'
     | 'documentStore'
-    | 'extensions'
     | 'fieldResolver'
     | 'formatError'
     | 'formatResponse'
     | 'plugins'
     | 'rootValue'
     | 'schema'
-    | 'tracing'
     | 'validationRules'
   > {
   queryString?: string;
-  parsedQuery?: DocumentNode;
   variables?: { [key: string]: any };
   operationName?: string;
   request: Pick<Request, 'url' | 'method' | 'headers'>;
@@ -160,18 +154,6 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: query,
-      request: new MockReq(),
-    }).then(res => {
-      expect(res.data).toEqual(expected);
-    });
-  });
-
-  it.skip('returns the right result when query is a document', () => {
-    const query = parse(`{ testString }`);
-    const expected = { testString: 'it works' };
-    return runQuery({
-      schema,
-      parsedQuery: query,
       request: new MockReq(),
     }).then(res => {
       expect(res.data).toEqual(expected);
@@ -393,163 +375,6 @@ describe('runQuery', () => {
     });
   });
 
-  describe('graphql extensions', () => {
-    class CustomExtension implements GraphQLExtension<any> {
-      format(): [string, any] {
-        return ['customExtension', { foo: 'bar' }];
-      }
-    }
-
-    describe('deprecation warnings', () => {
-      const queryString = `{ testString }`;
-      async function runWithExtAndReturnLogger(
-        extensions: QueryOptions['extensions'],
-      ): Promise<Logger> {
-        const logger = {
-          warn: jest.fn(() => {}),
-          info: console.info,
-          debug: console.debug,
-          error: console.error,
-        };
-
-        await runQuery(
-          {
-            schema,
-            queryString,
-            extensions,
-            request: new MockReq(),
-          },
-          {
-            logger,
-          },
-        );
-
-        return logger;
-      }
-
-      it('warns about named extensions', async () => {
-        const logger = await runWithExtAndReturnLogger([
-          () => new (class NamedExtension implements GraphQLExtension<any> {})(),
-        ]);
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "NamedExtension" was/));
-      });
-
-      it('warns about anonymous extensions', async () => {
-        const logger = await runWithExtAndReturnLogger([
-          () => new (class implements GraphQLExtension<any> {})(),
-        ]);
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] An anonymous extension was/));
-      });
-
-      it('warns about anonymous class expressions', async () => {
-        // In other words, when the name is the name of the variable.
-        const anon = class implements GraphQLExtension<any> {};
-        const logger = await runWithExtAndReturnLogger([
-          () => new anon(),
-        ]);
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "anon" was/));
-      });
-
-      it('warns for multiple extensions', async () => {
-        const logger = await runWithExtAndReturnLogger([
-          () => new (class Name1Ext implements GraphQLExtension<any> {})(),
-          () => new (class Name2Ext implements GraphQLExtension<any> {})(),
-        ]);
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "Name1Ext" was/));
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "Name2Ext" was/));
-      });
-
-      it('warns only once', async () => {
-        // Will use the same extension across two invocations.
-        class NameExt implements GraphQLExtension<any> {};
-
-        const logger1 = await runWithExtAndReturnLogger([
-          () => new NameExt,
-        ]);
-        expect(logger1.warn).toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "NameExt" was/));
-
-        const logger2 = await runWithExtAndReturnLogger([
-          () => new NameExt,
-        ]);
-        expect(logger2.warn).not.toHaveBeenCalledWith(
-          expect.stringMatching(/^\[deprecated\] A "NameExt" was/));
-      });
-    });
-
-    it('creates the extension stack', async () => {
-      const queryString = `{ testString }`;
-      const extensions = [() => new CustomExtension()];
-      return runQuery({
-        schema: new GraphQLSchema({
-          query: new GraphQLObjectType({
-            name: 'QueryType',
-            fields: {
-              testString: {
-                type: GraphQLString,
-                resolve(_parent, _args, context) {
-                  expect(context._extensionStack).toBeInstanceOf(
-                    GraphQLExtensionStack,
-                  );
-                  expect(context._extensionStack.extensions[0]).toBeInstanceOf(
-                    CustomExtension,
-                  );
-                },
-              },
-            },
-          }),
-        }),
-        queryString,
-        extensions,
-        request: new MockReq(),
-      });
-    });
-
-    it('runs format response from extensions', async () => {
-      const queryString = `{ testString }`;
-      const expected = { testString: 'it works' };
-      const extensions = [() => new CustomExtension()];
-      return runQuery({
-        schema,
-        queryString,
-        extensions,
-        request: new MockReq(),
-      }).then(res => {
-        expect(res.data).toEqual(expected);
-        expect(res.extensions).toEqual({
-          customExtension: { foo: 'bar' },
-        });
-      });
-    });
-
-    it('runs willSendResponse with extensions context', async () => {
-      class CustomExtension implements GraphQLExtension<any> {
-        willSendResponse(o: any) {
-          expect(o).toHaveProperty('context.baz', 'always here');
-          return o;
-        }
-      }
-
-      const queryString = `{ testString }`;
-      const expected = { testString: 'it works' };
-      const extensions = [() => new CustomExtension()];
-      return runQuery({
-        schema,
-        queryString,
-        context: { baz: 'always here' },
-        extensions,
-        request: new MockReq(),
-      }).then(res => {
-        expect(res.data).toEqual(expected);
-      });
-    });
-  });
-
   describe('request pipeline life-cycle hooks', () => {
     describe('requestDidStart', () => {
       const requestDidStart = jest.fn();
@@ -587,7 +412,7 @@ describe('runQuery', () => {
         const invocation = requestDidStart.mock.calls[0][0];
         expect(invocation).toHaveProperty('schema', schema);
         expect(invocation).toHaveProperty( /* Shorter as a RegExp */
-          'schemaHash', expect.stringMatching(/^8ff87f3e0/));
+          'schemaHash', expect.stringMatching(/^1a1814b60b/));
       });
     });
 
@@ -608,7 +433,7 @@ describe('runQuery', () => {
           queryString: '{ testString }',
           plugins: [
             {
-              requestDidStart() {
+              async requestDidStart() {
                 return {
                   didResolveSource,
                 };
@@ -632,7 +457,7 @@ describe('runQuery', () => {
           queryString: '{ testStringWithParseError: }',
           plugins: [
             {
-              requestDidStart() {
+              async requestDidStart() {
                 return {
                   parsingDidStart,
                 };
@@ -651,7 +476,7 @@ describe('runQuery', () => {
           queryString: '{ testString }',
           plugins: [
             {
-              requestDidStart() {
+              async requestDidStart() {
                 return {
                   parsingDidStart,
                 };
@@ -673,7 +498,7 @@ describe('runQuery', () => {
           queryString: '{ testString }',
           plugins: [
             {
-              requestDidStart() {
+              async requestDidStart() {
                 return {
                   executionDidStart,
                 };
@@ -687,35 +512,11 @@ describe('runQuery', () => {
       });
 
       describe('executionDidEnd', () => {
-        it('works as a function returned from "executionDidStart"', async () => {
-          const executionDidEnd = jest.fn();
-          const executionDidStart = jest.fn(
-            (): GraphQLRequestListenerExecutionDidEnd => executionDidEnd);
-
-          await runQuery({
-            schema,
-            queryString: '{ testString }',
-            plugins: [
-              {
-                requestDidStart() {
-                  return {
-                    executionDidStart,
-                  };
-                },
-              },
-            ],
-            request: new MockReq(),
-          });
-
-          expect(executionDidStart).toHaveBeenCalledTimes(1);
-          expect(executionDidEnd).toHaveBeenCalledTimes(1);
-        });
-
         it('works as a listener on an object returned from "executionDidStart"',
           async () => {
             const executionDidEnd = jest.fn();
             const executionDidStart = jest.fn(
-              (): GraphQLRequestExecutionListener => ({
+              async (): Promise<GraphQLRequestExecutionListener> => ({
                 executionDidEnd,
               }),
             );
@@ -725,7 +526,7 @@ describe('runQuery', () => {
               queryString: '{ testString }',
               plugins: [
                 {
-                  requestDidStart() {
+                  async requestDidStart() {
                     return {
                       executionDidStart,
                     };
@@ -747,7 +548,7 @@ describe('runQuery', () => {
           const willResolveField = jest.fn();
           const executionDidEnd = jest.fn();
           const executionDidStart = jest.fn(
-            (): GraphQLRequestExecutionListener => ({
+            async (): Promise<GraphQLRequestExecutionListener> => ({
               willResolveField,
               executionDidEnd,
             }),
@@ -758,7 +559,7 @@ describe('runQuery', () => {
             queryString: '{ testString }',
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return {
                     executionDidStart,
                   };
@@ -777,7 +578,7 @@ describe('runQuery', () => {
           const willResolveField = jest.fn();
           const executionDidEnd = jest.fn();
           const executionDidStart = jest.fn(
-            (): GraphQLRequestExecutionListener => ({
+            async (): Promise<GraphQLRequestExecutionListener> => ({
               willResolveField,
               executionDidEnd,
             }),
@@ -788,7 +589,7 @@ describe('runQuery', () => {
             queryString: '{ testString again:testString }',
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return {
                     executionDidStart,
                   };
@@ -812,9 +613,9 @@ describe('runQuery', () => {
               queryString: '{ testString }',
               plugins: [
                 {
-                  requestDidStart() {
+                  async requestDidStart() {
                     return {
-                      executionDidStart: () => ({
+                      executionDidStart: async () => ({
                         willResolveField,
                       }),
                     };
@@ -840,9 +641,9 @@ describe('runQuery', () => {
               queryString: '{ testObject { testString } }',
               plugins: [
                 {
-                  requestDidStart() {
+                  async requestDidStart() {
                     return {
-                      executionDidStart: () => ({
+                      executionDidStart: async () => ({
                         willResolveField,
                       }),
                     };
@@ -866,6 +667,7 @@ describe('runQuery', () => {
             expect(secondCall[0]).toHaveProperty('info.path.prev', {
               key: 'testObject',
               prev: undefined,
+              typename: 'QueryType',
             });
           });
 
@@ -878,9 +680,9 @@ describe('runQuery', () => {
               queryString: '{ testString }',
               plugins: [
                 {
-                  requestDidStart() {
+                  async requestDidStart() {
                     return {
-                      executionDidStart: () => ({
+                      executionDidStart: async () => ({
                         willResolveField,
                       }),
                     };
@@ -904,9 +706,9 @@ describe('runQuery', () => {
               queryString: '{ testArgumentValue(base: 99) }',
               plugins: [
                 {
-                  requestDidStart() {
+                  async requestDidStart() {
                     return {
-                      executionDidStart: () => ({
+                      executionDidStart: async () => ({
                         willResolveField,
                       }),
                     };
@@ -928,7 +730,7 @@ describe('runQuery', () => {
           const willResolveField = jest.fn(() => didResolveField);
           const executionDidEnd = jest.fn();
           const executionDidStart = jest.fn(
-            (): GraphQLRequestExecutionListener => ({
+            async (): Promise<GraphQLRequestExecutionListener> => ({
               willResolveField,
               executionDidEnd,
             }),
@@ -939,7 +741,7 @@ describe('runQuery', () => {
             queryString: '{ testString }',
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return {
                     executionDidStart,
                   };
@@ -961,7 +763,7 @@ describe('runQuery', () => {
           const willResolveField = jest.fn(() => didResolveField);
           const executionDidEnd = jest.fn();
           const executionDidStart = jest.fn(
-            (): GraphQLRequestExecutionListener => ({
+            async (): Promise<GraphQLRequestExecutionListener> => ({
               willResolveField,
               executionDidEnd,
             }),
@@ -972,7 +774,7 @@ describe('runQuery', () => {
             queryString: '{ testString again: testString }',
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return {
                     executionDidStart,
                   };
@@ -1024,8 +826,8 @@ describe('runQuery', () => {
 
           const plugins: ApolloServerPlugin[] = [
             {
-              requestDidStart: () => ({
-                executionDidStart: () => ({
+              requestDidStart: async () => ({
+                executionDidStart: async () => ({
                   willResolveField,
                 }),
               })
@@ -1070,7 +872,7 @@ describe('runQuery', () => {
       const didEncounterErrors = jest.fn();
       const plugins: ApolloServerPlugin[] = [
         {
-          requestDidStart() {
+          async requestDidStart() {
             return { didEncounterErrors };
           },
         },
@@ -1130,24 +932,29 @@ describe('runQuery', () => {
         let stopAwaiting: Function;
         const toBeAwaited = new Promise(resolve => stopAwaiting = resolve);
 
-        const parsingDidEnd: GraphQLRequestListenerParsingDidEnd =
-          jest.fn(() => callOrder.push('parsingDidEnd'));
+        const parsingDidEnd: GraphQLRequestListenerParsingDidEnd = jest.fn(
+          async () => {
+            callOrder.push('parsingDidEnd');
+          },
+        );
         const parsingDidStart: GraphQLRequestListener['parsingDidStart'] =
-          jest.fn(() => {
+          jest.fn(async () => {
             callOrder.push('parsingDidStart');
             return parsingDidEnd;
           });
 
         const validationDidEnd: GraphQLRequestListenerValidationDidEnd =
-          jest.fn(() => callOrder.push('validationDidEnd'));
+          jest.fn(async () => {
+            callOrder.push('validationDidEnd');
+          });
         const validationDidStart: GraphQLRequestListener['validationDidStart'] =
-          jest.fn(() => {
+          jest.fn(async () => {
             callOrder.push('validationDidStart');
             return validationDidEnd;
           });
 
         const didResolveSource: GraphQLRequestListener['didResolveSource'] =
-          jest.fn(() => { callOrder.push('didResolveSource') });
+          jest.fn(async () => { callOrder.push('didResolveSource') });
 
         const didResolveField: GraphQLRequestListenerDidResolveField =
           jest.fn(() => callOrder.push("didResolveField"));
@@ -1157,11 +964,14 @@ describe('runQuery', () => {
           return didResolveField;
         });
 
-        const executionDidEnd: GraphQLRequestListenerExecutionDidEnd =
-          jest.fn(() => callOrder.push('executionDidEnd'));
+        const executionDidEnd: GraphQLRequestListenerExecutionDidEnd = jest.fn(
+          async () => {
+            callOrder.push('executionDidEnd');
+          },
+        );
 
         const executionDidStart = jest.fn(
-          (): GraphQLRequestExecutionListener => {
+          async (): Promise<GraphQLRequestExecutionListener> => {
             callOrder.push("executionDidStart");
             return { willResolveField, executionDidEnd };
           },
@@ -1191,7 +1001,7 @@ describe('runQuery', () => {
           queryString: '{ testString }',
           plugins: [
             {
-              requestDidStart() {
+              async requestDidStart() {
                 return {
                   parsingDidStart,
                   validationDidStart,
@@ -1235,7 +1045,7 @@ describe('runQuery', () => {
 
       const plugins: ApolloServerPlugin[] = [
         {
-          requestDidStart() {
+          async requestDidStart() {
             return {
               validationDidStart,
               parsingDidStart,

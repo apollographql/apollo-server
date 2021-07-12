@@ -274,7 +274,6 @@ This results in a response like the following:
         "argumentName": "id",
         "code": "BAD_USER_INPUT",
         "exception": {
-          "argumentName": "id",
           "stacktrace": [
             "UserInputError: Invalid argument value",
             "    at userWithID (/my-project/index.js:25:13)",
@@ -314,7 +313,7 @@ throw new MyError('My error message')
 ```ts
 import { ApolloError } from 'apollo-server-errors';
 
-throw new ApolloError('My error message', 'MY_ERROR_CODE', myCustomDetailsObject);
+throw new ApolloError('My error message', 'MY_ERROR_CODE', myCustomExtensions);
 ```
 
 ## Omitting or including `stacktrace`
@@ -335,7 +334,7 @@ You can edit Apollo Server error details before they're passed to a client or re
 
 The `ApolloServer` constructor accepts a `formatError` function that is run on each error before it's passed back to the client. You can use this function to mask particular errors, as well as for logging.
 
-> The `formatError` function does _not_ modify errors that are sent to Apollo Studio as part of metrics reporting. See [For Apollo Studio reporting](#for-apollo-studio-reporting).
+> The `formatError` function does _not_ modify errors that are sent to Apollo Studio as part of usage reporting. See [For Apollo Studio reporting](#for-apollo-studio-reporting).
 
 This example returns a more generic error whenever the original error's message begins with `Database Error: `:
 
@@ -370,7 +369,7 @@ The error instance received by `formatError` (a `GraphQLError`) contains an `ori
   },
 ```
 
-> To make context-specific adjustments to the error received by `formatError` (such as localization or personalization), consider [creating a plugin](../integrations/plugins/) that uses the [`didEncounterErrors` lifecycle event](../integrations/plugins/#didencountererrors) to attach additional properties to the error. These properties can be accessed from `formatError`.
+> To make context-specific adjustments to the error received by `formatError` (such as localization or personalization), consider [creating a plugin](../integrations/plugins/) that uses the [`didEncounterErrors` lifecycle event](../integrations/plugins-event-reference/#didencountererrors) to attach additional properties to the error. These properties can be accessed from `formatError`.
 
 ### For Apollo Studio reporting
 

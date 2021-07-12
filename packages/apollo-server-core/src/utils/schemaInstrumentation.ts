@@ -9,7 +9,7 @@ import {
 import { defaultFieldResolver } from "graphql/execution";
 import { FieldNode } from "graphql/language";
 import { GraphQLRequestExecutionListener } from "apollo-server-plugin-base";
-import { GraphQLObjectResolver } from "@apollographql/apollo-tools";
+import type { GraphQLObjectResolver } from "@apollographql/apollo-tools";
 
 export const symbolExecutionDispatcherWillResolveField =
   Symbol("apolloServerExecutionDispatcherWillResolveField");
@@ -68,7 +68,7 @@ function wrapField(field: GraphQLField<any, any>): void {
     const resolveObject: GraphQLObjectResolver<
       any,
       any
-    > = (info.parentType as any).resolveObject;
+    > | undefined = (info.parentType as any).resolveObject;
 
     let whenObjectResolved: Promise<any> | undefined;
 

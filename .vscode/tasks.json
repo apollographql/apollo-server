@@ -1,42 +1,38 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "TypeScript watch",
-			"type": "shell",
-			"command": "./node_modules/.bin/tsc",
-			"args": [
-				"--build",
-				"tsconfig.build.json",
-				"--watch"
-			],
-			"isBackground": true,
-			"problemMatcher": [
-				"$tsc-watch"
-			],
-			"presentation": {
-        "group": "tsc-and-shell"
-			}
-		},
+  "version": "2.0.0",
+  "tasks": [
     {
-			"label": "Shell",
-			"type": "shell",
-			"command": "bash",
-			"args": [
-				"-l",
-			],
-			"isBackground": true,
-			"presentation": {
+      "label": "TypeScript watch",
+      "type": "typescript",
+      "tsconfig": "tsconfig.json",
+      "option": "watch",
+      "problemMatcher": ["$tsc-watch"],
+      "presentation": {
+        "clear": true,
         "group": "tsc-and-shell"
-			}
-		},
+      },
+      "isBackground": true
+    },
+    {
+      "label": "Shell",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-l"],
+      "isBackground": true,
+      "presentation": {
+        "group": "tsc-and-shell"
+      }
+    },
     {
       "label": "TS and shell",
       "dependsOn": ["TypeScript watch", "Shell"],
       "group": {
-				"kind": "build",
-				"isDefault": true
-			}
+        "kind": "build",
+        "isDefault": true
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
     }
-	]
+  ]
 }

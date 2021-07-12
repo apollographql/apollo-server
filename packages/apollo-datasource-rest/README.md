@@ -127,19 +127,7 @@ class PersonalizationAPI extends RESTDataSource {
 
 ### Resolving URLs dynamically
 
-In some cases, you'll want to set the URL based on the environment or other contextual values. You can use a getter for this:
-
-```javascript
-get baseURL() {
-  if (this.context.env === 'development') {
-    return 'https://movies-api-dev.example.com/';
-  } else {
-    return 'https://movies-api.example.com/';
-  }
-}
-```
-
-If you need more customization, including the ability to resolve a URL asynchronously, you can also override `resolveURL`:
+In some cases, you'll want to set the URL based on the environment or other contextual values. To do this, you can override `resolveURL`:
 
 ```javascript
 async resolveURL(request: RequestOptions) {

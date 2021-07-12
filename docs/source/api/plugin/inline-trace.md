@@ -1,6 +1,6 @@
 ---
 title: "API Reference: Inline trace plugin"
-sidebar_title: Inline trace plugin
+sidebar_title: Inline trace
 api_reference: true
 ---
 
@@ -44,9 +44,7 @@ const server = new ApolloServer({
 
 Note that when this plugin is installed in your app, any client can request a trace for any operation they run, which may reveal information about your server that you consider sensitive (such as how long each individual field takes to execute). Federated subgraphs generally should not be directly exposed to the public Internet.
 
-(Note: in addition to this plugin (which adds a base64-encoded trace to the `ftv1` extension of responses), Apollo Server also contains support for an older JSON-based format which is enabled if you pass `tracing: true` to the `ApolloServer` constructor. This format was designed for use with a no longer supported tool called `engineproxy`, and also is recognized by graphql-playground.  This format was more verbose due to its use of JSON and the way that it represented trace node IDs. Enabling it is not recommended.)
-
-This plugin was introduced in Apollo Server 2.18. In previous versions, inline tracing was configured using the `engine` option to the `ApolloServer` constructor. That option continues to work; see [the migration guide](../../migration-engine-plugins/) for details.
+(Note: in addition to this plugin (which adds a base64-encoded trace to the `ftv1` extension of responses), the Apollo platform used to have support for an older JSON-based format which added a `tracing` extension to responses. This support was enabled in Apollo Server 2 by passing `tracing: true` to the `ApolloServer` constructor; that option has been removed from Apollo Server 3. That format was designed for use with a no longer supported tool called `engineproxy`, and also is recognized by graphql-playground.  That format was more verbose due to its use of JSON and the way that it represented trace node IDs.)
 
 ## Options
 

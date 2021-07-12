@@ -4,8 +4,8 @@ import {
 } from 'apollo-server-plugin-base';
 import { GraphQLRequestContext, GraphQLResponse } from 'apollo-server-types';
 import { KeyValueCache, PrefixingKeyValueCache } from 'apollo-server-caching';
-import { ValueOrPromise } from 'apollo-server-types';
-import { CacheHint, CacheScope } from 'apollo-cache-control';
+import type { CacheHint, ValueOrPromise } from 'apollo-server-types';
+import { CacheScope } from 'apollo-server-types';
 
 // XXX This should use createSHA from apollo-server-core in order to work on
 // non-Node environments. I'm not sure where that should end up ---
@@ -88,9 +88,7 @@ enum SessionMode {
 }
 
 function sha(s: string) {
-  return createHash('sha256')
-    .update(s)
-    .digest('hex');
+  return createHash('sha256').update(s).digest('hex');
 }
 
 interface BaseCacheKey {
@@ -137,9 +135,9 @@ export default function plugin(
   options: Options = Object.create(null),
 ): ApolloServerPlugin {
   return {
-    requestDidStart(
+    async requestDidStart(
       outerRequestContext: GraphQLRequestContext<any>,
-    ): GraphQLRequestListener<any> {
+    ): Promise<GraphQLRequestListener<any>> {
       const cache = new PrefixingKeyValueCache(
         options.cache || outerRequestContext.cache!,
         'fqc:',
@@ -174,7 +172,7 @@ export default function plugin(
             const value: CacheValue = JSON.parse(serializedValue);
             // Use cache policy from the cache (eg, to calculate HTTP response
             // headers).
-            requestContext.overallCachePolicy = value.cachePolicy;
+            requestContext.overallCachePolicy.replace(value.cachePolicy);
             requestContext.metrics.responseCacheHit = true;
             age = Math.round((+new Date() - value.cacheTime) / 1000);
             return { data: value.data };
@@ -201,7 +199,9 @@ export default function plugin(
           // check, so that we can still write the result to the cache even if
           // we are told not to read from the cache.
           if (options.shouldReadFromCache) {
-            const shouldReadFromCache = await options.shouldReadFromCache(requestContext);
+            const shouldReadFromCache = await options.shouldReadFromCache(
+              requestContext,
+            );
             if (!shouldReadFromCache) return null;
           }
 
@@ -235,17 +235,17 @@ export default function plugin(
           }
 
           if (options.shouldWriteToCache) {
-            const shouldWriteToCache = await options.shouldWriteToCache(requestContext);
+            const shouldWriteToCache = await options.shouldWriteToCache(
+              requestContext,
+            );
             if (!shouldWriteToCache) return;
           }
 
-          const { response, overallCachePolicy } = requestContext;
-          if (
-            response.errors ||
-            !response.data ||
-            !overallCachePolicy ||
-            overallCachePolicy.maxAge <= 0
-          ) {
+          const { response } = requestContext;
+          const { data } = response;
+          const policyIfCacheable =
+            requestContext.overallCachePolicy.policyIfCacheable();
+          if (response.errors || !data || !policyIfCacheable) {
             // This plugin never caches errors or anything without a cache policy.
             //
             // There are two reasons we don't cache errors. The user-level
@@ -260,8 +260,6 @@ export default function plugin(
             return;
           }
 
-          const data = response.data!;
-
           // We're pretty sure that any path that calls willSendResponse with a
           // non-error response will have already called our execute hook above,
           // but let's just double-check that, since accidentally ignoring
@@ -272,16 +270,16 @@ export default function plugin(
             );
           }
 
-          function cacheSetInBackground(
+          const cacheSetInBackground = (
             contextualCacheKeyFields: ContextualCacheKey,
-          ) {
+          ): void => {
             const key = cacheKeyString({
               ...baseCacheKey!,
               ...contextualCacheKeyFields,
             });
             const value: CacheValue = {
               data,
-              cachePolicy: overallCachePolicy!,
+              cachePolicy: policyIfCacheable,
               cacheTime: +new Date(),
             };
             const serializedValue = JSON.stringify(value);
@@ -293,11 +291,11 @@ export default function plugin(
             // still calls `cache.set` synchronously (ie, that it writes to
             // InMemoryLRUCache synchronously).
             cache
-              .set(key, serializedValue, { ttl: overallCachePolicy!.maxAge })
+              .set(key, serializedValue, { ttl: policyIfCacheable.maxAge })
               .catch(logger.warn);
-          }
+          };
 
-          const isPrivate = overallCachePolicy.scope === CacheScope.Private;
+          const isPrivate = policyIfCacheable.scope === CacheScope.Private;
           if (isPrivate) {
             if (!options.sessionId) {
               logger.warn(

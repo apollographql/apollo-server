@@ -1,25 +1,18 @@
-import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
-import { Accepts } from 'accepts';
 import {
   ApolloServerBase,
-  FileUploadOptions,
-  formatApolloErrors,
-  PlaygroundRenderPageOptions,
-  processFileUploads,
+  convertNodeHttpToRequest,
   GraphQLOptions,
+  runHttpQuery,
 } from 'apollo-server-core';
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { IncomingMessage, OutgoingMessage, ServerResponse, Server } from 'http';
-import { graphqlFastify } from './fastifyApollo';
-import type { GraphQLOperation } from '@apollographql/graphql-upload-8-fork';
-
-const kMultipart = Symbol('multipart');
-const fastJson = require('fast-json-stringify');
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import accepts from 'fastify-accepts';
+import fastifyCors from 'fastify-cors';
+import fastJson from 'fast-json-stringify';
 
 export interface ServerRegistration {
   path?: string;
-  cors?: object | boolean;
-  onHealthCheck?: (req: FastifyRequest<IncomingMessage>) => Promise<any>;
+  cors?: Record<string, unknown> | boolean;
+  onHealthCheck?: (req: FastifyRequest) => Promise<any>;
   disableHealthCheck?: boolean;
 }
 
@@ -32,50 +25,12 @@ const stringifyHealthCheck = fastJson({
   },
 });
 
-const fileUploadMiddleware = (
-  uploadsConfig: FileUploadOptions,
-  server: ApolloServerBase,
-) => (
-  req: FastifyRequest<IncomingMessage>,
-  reply: FastifyReply<ServerResponse>,
-  done: (err: Error | null, body?: any) => void,
-) => {
-  if (
-    (req.req as any)[kMultipart] &&
-    typeof processFileUploads === 'function'
-  ) {
-    processFileUploads(req.req, reply.res, uploadsConfig)
-      .then((body: GraphQLOperation | GraphQLOperation[]) => {
-        req.body = body;
-        done(null);
-      })
-      .catch((error: any) => {
-        if (error.status && error.expose) reply.status(error.status);
-
-        throw formatApolloErrors([error], {
-          formatter: server.requestOptions.formatError,
-          debug: server.requestOptions.debug,
-        });
-      });
-  } else {
-    done(null);
-  }
-};
-
 export class ApolloServer extends ApolloServerBase {
-  protected supportsSubscriptions(): boolean {
-    return true;
-  }
-
-  protected supportsUploads(): boolean {
-    return true;
-  }
-
   async createGraphQLServerOptions(
-    request?: FastifyRequest<IncomingMessage>,
-    reply?: FastifyReply<OutgoingMessage>,
+    request?: FastifyRequest,
+    reply?: FastifyReply,
   ): Promise<GraphQLOptions> {
-     return this.graphQLServerOptions({ request, reply });
+    return this.graphQLServerOptions({ request, reply });
   }
 
   public createHandler({
@@ -84,42 +39,38 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration = {}) {
-    this.graphqlPath = path ? path : '/graphql';
+    this.graphqlPath = path || '/graphql';
 
-    // In case the user didn't bother to call and await the `start` method, we
-    // kick it off in the background (with any errors getting logged
-    // and also rethrown from graphQLServerOptions during later requests).
-    this.ensureStarting();
+    this.assertStarted('createHandler');
 
-    return async (
-      app: FastifyInstance<Server, IncomingMessage, ServerResponse>,
-    ) => {
+    const landingPage = this.getLandingPage();
+
+    return async (app: FastifyInstance) => {
       if (!disableHealthCheck) {
-        app.get('/.well-known/apollo/server-health', async (req, res) => {
+        app.get('/.well-known/apollo/server-health', async (request, reply) => {
           // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
-          res.type('application/health+json');
+          reply.type('application/health+json');
 
           if (onHealthCheck) {
             try {
-              await onHealthCheck(req);
-              res.send(stringifyHealthCheck({ status: 'pass' }));
+              await onHealthCheck(request);
+              reply.send(stringifyHealthCheck({ status: 'pass' }));
             } catch (e) {
-              res.status(503).send(stringifyHealthCheck({ status: 'fail' }));
+              reply.status(503).send(stringifyHealthCheck({ status: 'fail' }));
             }
           } else {
-            res.send(stringifyHealthCheck({ status: 'pass' }));
+            reply.send(stringifyHealthCheck({ status: 'pass' }));
           }
         });
       }
 
       app.register(
-        async instance => {
-          instance.register(require('fastify-accepts'));
-
+        async (instance) => {
+          instance.register(accepts);
           if (cors === true) {
-            instance.register(require('fastify-cors'));
+            instance.register(fastifyCors);
           } else if (cors !== false) {
-            instance.register(require('fastify-cors'), cors);
+            instance.register(fastifyCors, cors);
           }
 
           instance.setNotFoundHandler((_request, reply) => {
@@ -128,63 +79,70 @@ export class ApolloServer extends ApolloServerBase {
             reply.send();
           });
 
-          const beforeHandlers = [
-            (
-              req: FastifyRequest<IncomingMessage>,
-              reply: FastifyReply<ServerResponse>,
-              done: () => void,
-            ) => {
-              // Note: if you enable playground in production and expect to be able to see your
-              // schema, you'll need to manually specify `introspection: true` in the
-              // ApolloServer constructor; by default, the introspection query is only
-              // enabled in dev.
-              if (this.playgroundOptions && req.req.method === 'GET') {
-                // perform more expensive content-type check only if necessary
-                const accept = (req as any).accepts() as Accepts;
-                const types = accept.types() as string[];
-                const prefersHTML =
-                  types.find(
-                    (x: string) =>
-                      x === 'text/html' || x === 'application/json',
-                  ) === 'text/html';
+          const preHandler = landingPage
+            ? async (request: FastifyRequest, reply: FastifyReply) => {
+                if (request.raw.method === 'GET') {
+                  const accept = request.accepts();
+                  const types = accept.types() as string[];
+                  const prefersHtml =
+                    types.find(
+                      (x: string) =>
+                        x === 'text/html' || x === 'application/json',
+                    ) === 'text/html';
 
-                if (prefersHTML) {
-                  const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-                    endpoint: this.graphqlPath,
-                    subscriptionEndpoint: this.subscriptionsPath,
-                    ...this.playgroundOptions,
-                  };
-                  reply.type('text/html');
-                  const playground = renderPlaygroundPage(
-                    playgroundRenderPageOptions,
-                  );
-                  reply.send(playground);
-                  return;
+                  if (prefersHtml) {
+                    reply.type('text/html');
+                    reply.send(landingPage.html);
+                  }
                 }
               }
-              done();
-            },
-          ];
-
-          if (typeof processFileUploads === 'function' && this.uploadsConfig) {
-            instance.addContentTypeParser(
-              'multipart',
-              (
-                request: IncomingMessage,
-                done: (err: Error | null, body?: any) => void,
-              ) => {
-                (request as any)[kMultipart] = true;
-                done(null);
-              },
-            );
-            beforeHandlers.push(fileUploadMiddleware(this.uploadsConfig, this));
-          }
+            : undefined;
 
           instance.route({
             method: ['GET', 'POST'],
             url: '/',
-            beforeHandler: beforeHandlers,
-            handler: await graphqlFastify(this.createGraphQLServerOptions.bind(this)),
+            preHandler,
+            handler: async (request: FastifyRequest, reply: FastifyReply) => {
+              try {
+                const { graphqlResponse, responseInit } = await runHttpQuery(
+                  [],
+                  {
+                    method: request.raw.method as string,
+                    options: () =>
+                      this.createGraphQLServerOptions(request, reply),
+                    query: (request.raw.method === 'POST'
+                      ? request.body
+                      : request.query) as any,
+                    request: convertNodeHttpToRequest(request.raw),
+                  },
+                );
+
+                if (responseInit.headers) {
+                  for (const [name, value] of Object.entries<string>(
+                    responseInit.headers,
+                  )) {
+                    reply.header(name, value);
+                  }
+                }
+                reply.status(responseInit.status || 200)
+                reply.serializer((payload: string) => payload);
+                reply.send(graphqlResponse);
+              } catch (error) {
+                if ('HttpQueryError' !== error.name) {
+                  throw error;
+                }
+
+                if (error.headers) {
+                  Object.keys(error.headers).forEach((header) => {
+                    reply.header(header, error.headers[header]);
+                  });
+                }
+
+                reply.code(error.statusCode);
+                reply.serializer((payload: string) => payload);
+                reply.send(error.message);
+              }
+            },
           });
         },
         {

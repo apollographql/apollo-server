@@ -7,7 +7,7 @@
 This is the AWS Lambda integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/v2). [Read the CHANGELOG](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md).
 
 ```shell
-npm install apollo-server-lambda graphql
+npm install apollo-server-lambda@3.x graphql
 ```
 
 ## Deploying with AWS Serverless Application Model (SAM)
@@ -20,6 +20,7 @@ In a file named `graphql.js`, place the following code:
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
+const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -43,9 +44,9 @@ const server = new ApolloServer({
   // is disabled in "production" (i.e. when `process.env.NODE_ENV` is `production`).
   //
   // If you'd like to have GraphQL Playground and introspection enabled in production,
-  // the `playground` and `introspection` options must be set explicitly to `true`.
-  playground: true,
+  // install the Playground plugin and set the `introspection` option explicitly to `true`.
   introspection: true,
+  plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
 });
 
 exports.handler = server.createHandler();
@@ -75,7 +76,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: graphql.handler
-      Runtime: nodejs12.x
+      Runtime: nodejs14.x
       Events:
         AnyRequest:
           Type: Api
@@ -106,9 +107,30 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_IAM
 ```
 
+
+## Customizing HTTP serving
+
+`apollo-server-lambda` is built on top of `apollo-server-express`. It combines the HTTP server framework `express` with a package called `@vendia/serverless-express` that translates between Lambda events and Express requests. By default, this is entirely behind the scenes, but you can also provide your own express app with the `expressAppFromMiddleware` option to `createHandler`:
+
+```js
+const { ApolloServer } = require('apollo-server-lambda');
+const express = require('express');
+
+exports.handler = server.createHandler({
+  expressAppFromMiddleware(middleware) {
+    const app = express();
+    app.use(someOtherMiddleware);
+    app.use(middleware);
+    return app;
+  }
+});
+```
+
 ## Getting request info
 
-To read information about the current request from the API Gateway event (HTTP headers, HTTP method, body, path, ...) or the current Lambda Context (Function Name, Function Version, awsRequestId, time remaining, ...) use the options function. This way they can be passed to your schema resolvers using the context option.
+Your ApolloServer's `context` function can read information about the current operation from both the original Lambda data structures and the Express request and response created by `@vendia/serverless-express`. These are provided to your `context` function as `event`, `context`, and `express` options.
+
+The `event` object contains the API Gateway event (HTTP headers, HTTP method, body, path, ...). The `context` object (not to be confused with the `context` function itself!) contains the current Lambda Context (Function Name, Function Version, awsRequestId, time remaining, ...). `express` contains `req` and `res` fields with the Express request and response. The object returned from your `context` function is provided to all of your schema resolvers in the third `context` argument.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
@@ -130,15 +152,16 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ event, context }) => ({
+  context: ({ event, context, express }) => ({
     headers: event.headers,
     functionName: context.functionName,
     event,
     context,
+    expressRequest: express.req,
   }),
 });
 
-exports.handler = server.createHandler();
+exports.graphqlHandler = server.createHandler();
 ```
 
 ## Modifying the Lambda Response (Enable CORS)
@@ -168,9 +191,11 @@ const server = new ApolloServer({
 });
 
 exports.handler = server.createHandler({
-  cors: {
-    origin: '*',
-    credentials: true,
+  expressGetMiddlewareOptions: {
+    cors: {
+      origin: '*',
+      credentials: true,
+    }
   },
 });
 ```
@@ -200,9 +225,11 @@ const server = new ApolloServer({
 });
 
 exports.handler = server.createHandler({
-  cors: {
-    origin: true,
-    credentials: true,
+  expressGetMiddlewareOptions: {
+    cors: {
+      origin: true,
+      credentials: true,
+    }
   },
 });
 ```

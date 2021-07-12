@@ -28,7 +28,7 @@ export function graphqlAzureFunction(
     if (request.method === 'POST' && !request.body) {
       callback(null, {
         body: 'POST body missing.',
-        status: 500,
+        status: 400,
       });
       return;
     }
@@ -48,7 +48,7 @@ export function graphqlAzureFunction(
       ({ graphqlResponse, responseInit }) => {
         callback(null, {
           body: graphqlResponse,
-          status: 200,
+          status: responseInit.status || 200,
           headers: responseInit.headers,
         });
       },

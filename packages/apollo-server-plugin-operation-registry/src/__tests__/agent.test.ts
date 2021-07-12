@@ -213,7 +213,7 @@ describe('Agent', () => {
         const storeSetSpy = jest.spyOn(store, 'set');
         const storeDeleteSpy = jest.spyOn(store, 'delete');
         const agent = createAgent({ store });
-        jest.useFakeTimers();
+        jest.useFakeTimers("legacy");
         await agent.start();
 
         // Three additions, no deletions.
@@ -324,7 +324,10 @@ describe('Agent', () => {
         it('fetches manifests for the corresponding variant', async () => {
           nockStorageSecret(genericServiceID, genericApiKeyHash);
           const agent = createAgent({
-            apollo: { ...defaultAgentOptions.apollo, graphVariant },
+            apollo: {
+              ...defaultAgentOptions.apollo,
+              graphRef: `${genericServiceID}@${graphVariant}`,
+            },
           });
           const nockedManifest = nockBase()
             .get(

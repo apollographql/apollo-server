@@ -22,6 +22,7 @@ describe('ApolloServerBase dataSources', () => {
       },
       dataSources: () => ({ x: { initialize }, y: { initialize } })
     });
+    await server.start();
 
     await server.executeOperation({ query: "query { hello }"});
 
@@ -75,6 +76,7 @@ describe('ApolloServerBase dataSources', () => {
         }
       })
     });
+    await server.start();
 
     await server.executeOperation({ query: "query { hello }"});
 
@@ -96,6 +98,7 @@ describe('ApolloServerBase dataSources', () => {
       },
       dataSources: () => ({ x: { initialize() {}, getData } })
     });
+    await server.start();
 
     const res = await server.executeOperation({ query: "query { hello }"});
 

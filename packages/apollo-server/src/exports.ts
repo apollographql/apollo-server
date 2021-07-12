@@ -1,11 +1,6 @@
-export * from 'graphql-tools';
-export * from 'graphql-subscriptions';
-
 export {
   gql,
-  GraphQLUpload,
   GraphQLOptions,
-  GraphQLExtension,
   Config,
   GraphQLSchemaModule,
   // Errors
@@ -16,10 +11,6 @@ export {
   AuthenticationError,
   ForbiddenError,
   UserInputError,
-  // playground
-  defaultPlaygroundOptions,
-  PlaygroundConfig,
-  PlaygroundRenderPageOptions,
 } from 'apollo-server-core';
 
 export { CorsOptions } from 'apollo-server-express';

@@ -4,10 +4,10 @@
 [![Read CHANGELOG](https://img.shields.io/badge/read-changelog-blue)](https://github.com/apollographql/apollo-server/blob/HEAD/CHANGELOG.md)
 
 
-This is the Express and Connect integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)
+This is the Express integration of Apollo Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)
 
 ```shell
-npm install apollo-server-express graphql
+npm install apollo-server-express@3.x graphql
 ```
 
 ## Express
@@ -45,51 +45,7 @@ async function startApolloServer() {
 
 ## Connect
 
-> We recommend using `express` rather than `connect`.  However, if you wish to
-> use `connect`, please install [`connect`](https://www.npmjs.com/package/connect)
-> and [`qs-middleware`](https://www.npmjs.com/package/qs-middleware), in addition
-> to `apollo-server-express`.
-
-```shell
-npm install --save connect qs-middleware apollo-server-express graphql
-```
-
-```js
-const connect = require('connect');
-const { ApolloServer, gql } = require('apollo-server-express');
-const query = require('qs-middleware');
-
-async function startApolloServer() {
-  // Construct a schema, using GraphQL schema language
-  const typeDefs = gql`
-    type Query {
-      hello: String
-    }
-  `;
-
-  // Provide resolver functions for your schema fields
-  const resolvers = {
-    Query: {
-      hello: () => 'Hello world!',
-    },
-  };
-
-  const server = new ApolloServer({ typeDefs, resolvers });
-  await server.start();
-
-  const app = connect();
-  const path = '/graphql';
-
-  app.use(query());
-  server.applyMiddleware({ app, path });
-
-  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
-  return { server, app };
-}
-```
-
-> Note: `qs-middleware` is only required if running outside of Meteor
+Before Apollo Server 3, we officially supported using this package with `connect` as well. `connect` is an older framework that `express` evolved from. For now, we believe that this package is still compatible with `connect` and we even run tests against `connect`, but we may choose to break this compatibility at some point without a major version bump. If you rely on the ability to use Apollo Server with `connect`, you may wish to make your own integration.
 
 ## Principles
 

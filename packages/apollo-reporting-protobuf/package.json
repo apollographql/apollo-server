@@ -1,14 +1,13 @@
 {
   "name": "apollo-reporting-protobuf",
-  "version": "0.8.0",
+  "version": "3.0.0",
   "description": "Protobuf format for Apollo usage reporting",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "generated/index.js",
+  "types": "generated/index.d.ts",
   "scripts": {
-    "clean": "git clean -fdX -- dist",
-    "prepare": "npm run clean && mkdir dist && npm run pbjs && npm run pbts && cp src/* dist",
-    "pbjs": "apollo-pbjs --target static-module --out dist/protobuf.js --wrap commonjs --force-number --no-from-object src/reports.proto",
-    "pbts": "apollo-pbts -o dist/protobuf.d.ts dist/protobuf.js",
+    "generate": "rm -rf generated && mkdir generated && npm run pbjs && npm run pbts && cp src/* generated",
+    "pbjs": "apollo-pbjs --target static-module --out generated/protobuf.js --wrap commonjs --force-number --no-from-object src/reports.proto",
+    "pbts": "apollo-pbts -o generated/protobuf.d.ts generated/protobuf.js",
     "update-proto": "curl -sSfo src/reports.proto https://usage-reporting.api.apollographql.com/proto/reports.proto"
   },
   "repository": {

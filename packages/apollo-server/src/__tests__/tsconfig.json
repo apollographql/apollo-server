@@ -3,5 +3,6 @@
   "include": ["**/*"],
   "references": [
     { "path": "../../" },
+    { "path": "../../../apollo-server-integration-testsuite" },
   ]
 }

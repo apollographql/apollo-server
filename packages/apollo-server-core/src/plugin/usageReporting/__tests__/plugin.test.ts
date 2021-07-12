@@ -1,16 +1,21 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import { addMocksToSchema } from '@graphql-tools/mock';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import { graphql } from 'graphql';
 import { Request } from 'node-fetch';
+import loglevel from 'loglevel';
 import {
   makeHTTPRequestHeaders,
   ApolloServerPluginUsageReporting,
 } from '../plugin';
 import { Headers } from 'apollo-server-env';
 import { Trace, Report, ITrace } from 'apollo-reporting-protobuf';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
+import pluginTestHarness from '../../../utils/pluginTestHarness';
 import nock from 'nock';
 import { gunzipSync } from 'zlib';
 import { ApolloServerPluginUsageReportingOptions } from '../options';
+
+const quietLogger = loglevel.getLogger('quiet');
+quietLogger.setLevel(loglevel.levels.WARN);
 
 describe('end-to-end', () => {
   async function runTest({
@@ -73,12 +78,14 @@ describe('end-to-end', () => {
           return 'ok';
         });
     }
-    const schema = makeExecutableSchema({ typeDefs });
-    addMockFunctionsToSchema({ schema });
+    const schema = addMocksToSchema({
+      schema: makeExecutableSchema({ typeDefs }),
+    });
 
     const pluginInstance = ApolloServerPluginUsageReporting({
       ...pluginOptions,
       sendReportsImmediately: true,
+      logger: quietLogger,
     });
 
     const context = await pluginTestHarness({

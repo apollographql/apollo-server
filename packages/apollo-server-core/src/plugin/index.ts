@@ -17,25 +17,16 @@
 // require calls.
 import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
-import type {
-  ApolloServerPluginUsageReportingOptions,
-  EngineReportingOptions,
-} from './usageReporting';
+//#region Usage reporting
+import type { ApolloServerPluginUsageReportingOptions } from './usageReporting';
 export type {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
   VariableValueOptions,
   ClientInfo,
   GenerateClientInfo,
-  EngineReportingOptions, // deprecated
 } from './usageReporting';
 
-import type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting';
-export type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting';
-import type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
-export type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
-
-//#region Usage reporting
 export function ApolloServerPluginUsageReporting<TContext>(
   options: ApolloServerPluginUsageReportingOptions<TContext> = Object.create(
     null,
@@ -46,16 +37,12 @@ export function ApolloServerPluginUsageReporting<TContext>(
 export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin {
   return require('./usageReporting').ApolloServerPluginUsageReportingDisabled();
 }
-export function ApolloServerPluginUsageReportingFromLegacyOptions<TContext>(
-  options: EngineReportingOptions<TContext> = Object.create(null),
-): ApolloServerPlugin {
-  return require('./usageReporting').ApolloServerPluginUsageReportingFromLegacyOptions(
-    options,
-  );
-}
 //#endregion
 
 //#region Schema reporting
+import type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting';
+export type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting';
+
 export function ApolloServerPluginSchemaReporting(
   options: ApolloServerPluginSchemaReportingOptions = Object.create(null),
 ): ApolloServerPlugin {
@@ -66,6 +53,9 @@ export function ApolloServerPluginSchemaReporting(
 //#endregion
 
 //#region Inline trace
+import type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
+export type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
+
 export function ApolloServerPluginInlineTrace(
   options: ApolloServerPluginInlineTraceOptions = Object.create(null),
 ): ApolloServerPlugin {
@@ -73,5 +63,67 @@ export function ApolloServerPluginInlineTrace(
 }
 export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin {
   return require('./inlineTrace').ApolloServerPluginInlineTraceDisabled();
+}
+//#endregion
+
+//#region Cache control
+import type { ApolloServerPluginCacheControlOptions } from './cacheControl';
+export type { ApolloServerPluginCacheControlOptions } from './cacheControl';
+
+export function ApolloServerPluginCacheControl(
+  options: ApolloServerPluginCacheControlOptions = Object.create(null),
+): ApolloServerPlugin {
+  return require('./cacheControl').ApolloServerPluginCacheControl(options);
+}
+export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin {
+  return require('./cacheControl').ApolloServerPluginCacheControlDisabled();
+}
+//#endregion
+
+//#region LandingPage
+import type { InternalApolloServerPlugin } from '../internalPlugin';
+export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin {
+  const plugin: InternalApolloServerPlugin = {
+    __internal_plugin_id__() {
+      return 'LandingPageDisabled';
+    },
+  };
+  return plugin;
+}
+
+import type {
+  ApolloServerPluginLandingPageLocalDefaultOptions,
+  ApolloServerPluginLandingPageProductionDefaultOptions,
+} from './landingPage/default';
+export type {
+  ApolloServerPluginLandingPageDefaultBaseOptions,
+  ApolloServerPluginLandingPageLocalDefaultOptions,
+  ApolloServerPluginLandingPageProductionDefaultOptions,
+} from './landingPage/default';
+export function ApolloServerPluginLandingPageLocalDefault(
+  options?: ApolloServerPluginLandingPageLocalDefaultOptions,
+): ApolloServerPlugin {
+  return require('./landingPage/default').ApolloServerPluginLandingPageLocalDefault(
+    options,
+  );
+}
+export function ApolloServerPluginLandingPageProductionDefault(
+  options?: ApolloServerPluginLandingPageProductionDefaultOptions,
+): ApolloServerPlugin {
+  return require('./landingPage/default').ApolloServerPluginLandingPageProductionDefault(
+    options,
+  );
+}
+
+import type { ApolloServerPluginLandingPageGraphQLPlaygroundOptions } from './landingPage/graphqlPlayground';
+export type { ApolloServerPluginLandingPageGraphQLPlaygroundOptions } from './landingPage/graphqlPlayground';
+export function ApolloServerPluginLandingPageGraphQLPlayground(
+  options: ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Object.create(
+    null,
+  ),
+): ApolloServerPlugin {
+  return require('./landingPage/graphqlPlayground').ApolloServerPluginLandingPageGraphQLPlayground(
+    options,
+  );
 }
 //#endregion

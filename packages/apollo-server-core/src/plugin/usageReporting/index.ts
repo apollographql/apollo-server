@@ -9,7 +9,3 @@ export {
   ClientInfo,
   GenerateClientInfo,
 } from './options';
-export {
-  ApolloServerPluginUsageReportingFromLegacyOptions,
-  EngineReportingOptions,
-} from './legacyOptions';

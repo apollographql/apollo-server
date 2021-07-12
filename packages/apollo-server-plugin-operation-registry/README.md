@@ -9,7 +9,7 @@ In order to enable safelisting, follow the [step by step guide in the Apollo doc
 The following example shows basic usage of the plugin with Apollo Server. First, add the plugin to your project's `package.json`:
 
 ```bash
-npm install apollo-server-plugin-operation-registry
+npm install apollo-server-plugin-operation-registry@3.x
 ```
 
 Then, ensure Apollo Server has access to an [API key](https://www.apollographql.com/docs/studio/operation-registry/#6-start-apollo-server-with-apollo-studio-enabled), for example as the `APOLLO_KEY` environment variable:

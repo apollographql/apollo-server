@@ -3,6 +3,7 @@ import {
   ApolloServerBase,
   ApolloServerPluginUsageReportingDisabled,
 } from 'apollo-server-core';
+
 import {
   /**
    * We alias these to different names entirely since the user-facing values
@@ -16,6 +17,7 @@ import {
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { print } from 'graphql';
+import loglevel from 'loglevel';
 import {
   hashApiKey,
   nockStorageSecret,
@@ -40,6 +42,13 @@ const mockHttpRequestContextForExecuteOperation: Required<Pick<
   http: { method: 'GET', headers: new Headers(), url: '/mocked' },
 };
 
+// Hacky way of turning off debug and info logs during tests.
+beforeEach(() => {
+  loglevel
+  .getLogger('apollo-server:apollo-server-plugin-operation-registry')
+  .setLevel(loglevel.levels.WARN);
+});
+
 describe('Operation registry plugin', () => {
   it('will instantiate when not called with options', () => {
     expect(plugin()()).toHaveProperty('serverWillStart');
@@ -57,7 +66,8 @@ describe('Operation registry plugin', () => {
     const hashedApiKey = hashApiKey(apiKey);
     const apollo: ApolloConfigInput = {
       key: apiKey,
-      variant: 'current',
+      graphId,
+      graphVariant: 'current',
     };
     const typeDefs = gql`
       type Query {
@@ -81,11 +91,9 @@ describe('Operation registry plugin', () => {
       it('is called when unregistered operation received', async () => {
         const onUnregisteredOperation: Options['onUnregisteredOperation'] = jest.fn();
         nockStorageSecret(graphId, hashedApiKey);
-        nockGoodManifestsUnderStorageSecret(
-          graphId,
-          genericStorageSecret,
-          [ /* Intentionally empty! */ ],
-        );
+        nockGoodManifestsUnderStorageSecret(graphId, genericStorageSecret, [
+          /* Intentionally empty! */
+        ]);
         const server = new ApolloServerBase({
           typeDefs,
           mockEntireSchema: true,
@@ -118,7 +126,7 @@ describe('Operation registry plugin', () => {
           // Second argument: operation registry context.
           expect.objectContaining({
             signature: expect.stringMatching(/^[a-f0-9]+$/),
-            normalizedDocument: expect.stringMatching(/^query HelloFam/)
+            normalizedDocument: expect.stringMatching(/^query HelloFam/),
           }),
         );
         await server.stop();
@@ -127,16 +135,12 @@ describe('Operation registry plugin', () => {
       it('is not called when registered operation received', async () => {
         const onUnregisteredOperation: Options['onUnregisteredOperation'] = jest.fn();
         nockStorageSecret(graphId, hashedApiKey);
-        nockGoodManifestsUnderStorageSecret(
-          graphId,
-          genericStorageSecret,
-          [
-            {
-              document: normalizedQueryDocument,
-              signature: queryHash,
-            },
-          ],
-        );
+        nockGoodManifestsUnderStorageSecret(graphId, genericStorageSecret, [
+          {
+            document: normalizedQueryDocument,
+            signature: queryHash,
+          },
+        ]);
         const server = new ApolloServerBase({
           typeDefs,
           mockEntireSchema: true,
@@ -169,11 +173,9 @@ describe('Operation registry plugin', () => {
         // Returning true from this predicate enables the enforcement.
         const forbidUnregisteredOperations = jest.fn(() => true);
         nockStorageSecret(graphId, hashedApiKey);
-        nockGoodManifestsUnderStorageSecret(
-          graphId,
-          genericStorageSecret,
-          [ /* Intentionally empty! */ ],
-        );
+        nockGoodManifestsUnderStorageSecret(graphId, genericStorageSecret, [
+          /* Intentionally empty! */
+        ]);
         const server = new ApolloServerBase({
           typeDefs,
           mockEntireSchema: true,
@@ -210,7 +212,7 @@ describe('Operation registry plugin', () => {
           // Second argument: operation registry context.
           expect.objectContaining({
             signature: expect.stringMatching(/^[a-f0-9]+$/),
-            normalizedDocument: expect.stringMatching(/^query HelloFam/)
+            normalizedDocument: expect.stringMatching(/^query HelloFam/),
           }),
         );
         expect(forbidUnregisteredOperations).toHaveBeenCalledTimes(1);
@@ -223,11 +225,9 @@ describe('Operation registry plugin', () => {
         // Returning true from this predicate enables the enforcement.
         const forbidUnregisteredOperations = jest.fn(() => false);
         nockStorageSecret(graphId, hashedApiKey);
-        nockGoodManifestsUnderStorageSecret(
-          graphId,
-          genericStorageSecret,
-          [ /* Intentionally empty! */ ],
-        );
+        nockGoodManifestsUnderStorageSecret(graphId, genericStorageSecret, [
+          /* Intentionally empty! */
+        ]);
         const server = new ApolloServerBase({
           typeDefs,
           mockEntireSchema: true,
@@ -257,16 +257,12 @@ describe('Operation registry plugin', () => {
       it('is not called when registered operation received', async () => {
         const onForbiddenOperation = jest.fn();
         nockStorageSecret(graphId, hashedApiKey);
-        nockGoodManifestsUnderStorageSecret(
-          graphId,
-          genericStorageSecret,
-          [
-            {
-              document: normalizedQueryDocument,
-              signature: queryHash,
-            },
-          ],
-        );
+        nockGoodManifestsUnderStorageSecret(graphId, genericStorageSecret, [
+          {
+            document: normalizedQueryDocument,
+            signature: queryHash,
+          },
+        ]);
         const server = new ApolloServerBase({
           typeDefs,
           mockEntireSchema: true,

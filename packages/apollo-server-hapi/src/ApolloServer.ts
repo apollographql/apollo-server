@@ -1,37 +1,15 @@
-import hapi from 'hapi';
-import { parseAll } from 'accept';
-import {
-  renderPlaygroundPage,
-  RenderPageOptions as PlaygroundRenderPageOptions,
-} from '@apollographql/graphql-playground-html';
+import type hapi from '@hapi/hapi';
+import { parseAll } from '@hapi/accept';
 
-import { graphqlHapi } from './hapiApollo';
-
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions } from 'apollo-server-core';
 import {
   ApolloServerBase,
+  convertNodeHttpToRequest,
   GraphQLOptions,
-  FileUploadOptions,
-  processFileUploads,
+  HttpQueryError,
+  runHttpQuery,
 } from 'apollo-server-core';
-
-function handleFileUploads(uploadsConfig: FileUploadOptions) {
-  return async (request: hapi.Request, _h?: hapi.ResponseToolkit) => {
-    if (
-      typeof processFileUploads === 'function' &&
-      request.mime === 'multipart/form-data'
-    ) {
-      Object.defineProperty(request, 'payload', {
-        value: await processFileUploads(
-          request.raw.req,
-          request.raw.res,
-          uploadsConfig,
-        ),
-        writable: false,
-      });
-    }
-  };
-}
+import Boom from '@hapi/boom';
 
 export class ApolloServer extends ApolloServerBase {
   // This translates the arguments from the middleware into graphQL options It
@@ -44,14 +22,6 @@ export class ApolloServer extends ApolloServerBase {
     return super.graphQLServerOptions({ request, h });
   }
 
-  protected supportsSubscriptions(): boolean {
-    return true;
-  }
-
-  protected supportsUploads(): boolean {
-    return true;
-  }
-
   public async applyMiddleware({
     app,
     cors,
@@ -60,59 +30,48 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration) {
-    // In case the user didn't bother to call and await the `start` method, we
-    // kick it off in the background (with any errors getting logged
-    // and also rethrown from graphQLServerOptions during later requests).
-    this.ensureStarting();
+    this.assertStarted('applyMiddleware');
 
     if (!path) path = '/graphql';
 
-    await app.ext({
-      type: 'onRequest',
-      method: async function(request, h) {
-        if (request.path !== path) {
-          return h.continue;
-        }
+    const landingPage = this.getLandingPage();
 
-        if (this.uploadsConfig && typeof processFileUploads === 'function') {
-          await handleFileUploads(this.uploadsConfig)(request);
-        }
-
-        if (this.playgroundOptions && request.method === 'get') {
-          // perform more expensive content-type check only if necessary
-          const accept = parseAll(request.headers);
-          const types = accept.mediaTypes as string[];
-          const prefersHTML =
-            types.find(
-              (x: string) => x === 'text/html' || x === 'application/json',
-            ) === 'text/html';
-
-          if (prefersHTML) {
-            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-              endpoint: path,
-              subscriptionEndpoint: this.subscriptionsPath,
-              version: this.playgroundVersion,
-              ...this.playgroundOptions,
-            };
-
-            return h
-              .response(renderPlaygroundPage(playgroundRenderPageOptions))
-              .type('text/html')
-              .takeover();
+    if (landingPage) {
+      app.ext({
+        type: 'onRequest',
+        method: async (request, h) => {
+          // Note that this path check is stricter than other integrations,
+          // which return landingPage for arbitrary URLs under the given path.
+          if (request.path !== path && request.path !== `${path}/`) {
+            return h.continue;
           }
-        }
-        return h.continue;
-      }.bind(this),
-    });
+
+          if (request.method === 'get') {
+            // perform more expensive content-type check only if necessary
+            const accept = parseAll(request.headers);
+            const types = accept.mediaTypes as string[];
+            const prefersHtml =
+              types.find(
+                (x: string) => x === 'text/html' || x === 'application/json',
+              ) === 'text/html';
+
+            if (prefersHtml) {
+              return h.response(landingPage.html).type('text/html').takeover();
+            }
+          }
+          return h.continue;
+        },
+      });
+    }
 
     if (!disableHealthCheck) {
-      await app.route({
+      app.route({
         method: '*',
         path: '/.well-known/apollo/server-health',
         options: {
-          cors: cors !== undefined ? cors : true,
+          cors: cors !== undefined ? cors : { origin: 'ignore' },
         },
-        handler: async function(request, h) {
+        handler: async function (request, h) {
           if (onHealthCheck) {
             try {
               await onHealthCheck(request);
@@ -130,17 +89,66 @@ export class ApolloServer extends ApolloServerBase {
       });
     }
 
-    await app.register({
-      plugin: graphqlHapi,
-      options: {
-        path,
-        graphqlOptions: this.createGraphQLServerOptions.bind(this),
-        route:
-          route !== undefined
-            ? route
-            : {
-                cors: cors !== undefined ? cors : true,
-              },
+    app.route({
+      method: ['GET', 'POST'],
+      path,
+      options: route ?? {
+        cors: cors ?? { origin: 'ignore' },
+      },
+      handler: async (request, h) => {
+        try {
+          const { graphqlResponse, responseInit } = await runHttpQuery(
+            [request, h],
+            {
+              method: request.method.toUpperCase(),
+              options: () => this.createGraphQLServerOptions(request, h),
+              query:
+                request.method === 'post'
+                  ? // TODO type payload as string or Record
+                    (request.payload as any)
+                  : request.query,
+              request: convertNodeHttpToRequest(request.raw.req),
+            },
+          );
+
+          const response = h.response(graphqlResponse);
+          if (responseInit.headers) {
+            Object.entries(responseInit.headers).forEach(
+              ([headerName, value]) => response.header(headerName, value),
+            );
+          }
+          response.code(responseInit.status || 200);
+          return response;
+        } catch (e: unknown) {
+          const error = e as HttpQueryError;
+          if ('HttpQueryError' !== error.name) {
+            throw Boom.boomify(error);
+          }
+
+          if (true === error.isGraphQLError) {
+            const response = h.response(error.message);
+            if (error.headers) {
+              Object.entries(error.headers).forEach(([headerName, value]) => {
+                response.header(headerName, value);
+              });
+            }
+            response.code(error.statusCode);
+            response.type('application/json');
+            return response;
+          }
+
+          const err = new Boom.Boom(error.message, {
+            statusCode: error.statusCode,
+          });
+          if (error.headers) {
+            Object.entries(error.headers).forEach(([headerName, value]) => {
+              err.output.headers[headerName] = value;
+            });
+          }
+          // Boom hides the error when status code is 500
+          err.output.payload.message = error.message;
+          throw err;
+        }
       },
     });
 
@@ -149,11 +157,10 @@ export class ApolloServer extends ApolloServerBase {
 }
 
 export interface ServerRegistration {
-  app?: hapi.Server;
+  app: hapi.Server;
   path?: string;
   cors?: boolean | hapi.RouteOptionsCors;
   route?: hapi.RouteOptions;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  uploads?: boolean | Record<string, any>;
 }

@@ -11,6 +11,8 @@ import {
   CorsOptions,
   ApolloServerExpressConfig,
 } from 'apollo-server-express';
+import type { AddressInfo } from 'net';
+import { format as urlFormat } from 'url';
 
 export * from './exports';
 
@@ -18,9 +20,7 @@ export interface ServerInfo {
   address: string;
   family: string;
   url: string;
-  subscriptionsUrl: string;
   port: number | string;
-  subscriptionsPath: string;
   server: http.Server;
 }
 
@@ -43,59 +43,39 @@ export class ApolloServer extends ApolloServerBase {
     this.stopGracePeriodMillis = config?.stopGracePeriodMillis ?? 10_000;
   }
 
-  private createServerInfo(
-    server: http.Server,
-    subscriptionsPath?: string,
-  ): ServerInfo {
-    const serverInfo: any = {
-      // TODO: Once we bump to `@types/node@10` or higher, we can replace cast
-      // with the `net.AddressInfo` type, rather than this custom interface.
-      // Unfortunately, prior to the 10.x types, this type existed on `dgram`,
-      // but not on `net`, and in later types, the `server.address()` signature
-      // can also be a string.
-      ...(server.address() as {
-        address: string;
-        family: string;
-        port: number;
-      }),
-      server,
-      subscriptionsPath,
-    };
+  private createServerInfo(server: http.Server): ServerInfo {
+    const addressInfo = server.address() as AddressInfo;
 
     // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
-    // corresponding loopback ip. Note that the url field we're setting is
-    // primarily for consumption by our test suite. If this heuristic is wrong
-    // for your use case, explicitly specify a frontend host (in the `host`
-    // option to ApolloServer.listen).
-    let hostForUrl = serverInfo.address;
-    if (serverInfo.address === '' || serverInfo.address === '::')
+    // corresponding loopback ip. If this heuristic is wrong for your use case,
+    // explicitly specify a frontend host (in the `host` option to
+    // ApolloServer.listen).
+    let hostForUrl = addressInfo.address;
+    if (hostForUrl === '' || hostForUrl === '::') {
       hostForUrl = 'localhost';
+    }
 
-    serverInfo.url = require('url').format({
+    const url = urlFormat({
       protocol: 'http',
       hostname: hostForUrl,
-      port: serverInfo.port,
+      port: addressInfo.port,
       pathname: this.graphqlPath,
     });
 
-    serverInfo.subscriptionsUrl = require('url').format({
-      protocol: 'ws',
-      hostname: hostForUrl,
-      port: serverInfo.port,
-      slashes: true,
-      pathname: subscriptionsPath,
-    });
-
-    return serverInfo;
+    return {
+      ...addressInfo,
+      server,
+      url,
+    };
   }
 
-  public applyMiddleware() {
+  public override applyMiddleware() {
     throw new Error(
       'To use Apollo Server with an existing express application, please use apollo-server-express',
     );
   }
 
-  public async start(): Promise<void> {
+  public override async start(): Promise<void> {
     throw new Error(
       "When using the `apollo-server` package, you don't need to call start(); just call listen().",
     );
@@ -140,10 +120,6 @@ export class ApolloServer extends ApolloServerBase {
     // apollo-server.
     this.httpServer = stoppable(httpServer, this.stopGracePeriodMillis);
 
-    if (this.subscriptionServerOptions) {
-      this.installSubscriptionHandlers(httpServer);
-    }
-
     await new Promise((resolve) => {
       httpServer.once('listening', resolve);
       // If the user passed a callback to listen, it'll get called in addition
@@ -152,10 +128,10 @@ export class ApolloServer extends ApolloServerBase {
       httpServer.listen(...(opts.length ? opts : [{ port: 4000 }]));
     });
 
-    return this.createServerInfo(httpServer, this.subscriptionsPath);
+    return this.createServerInfo(httpServer);
   }
 
-  public async stop() {
+  public override async stop() {
     if (this.httpServer) {
       const httpServer = this.httpServer;
       await new Promise<void>((resolve) => httpServer.stop(() => resolve()));

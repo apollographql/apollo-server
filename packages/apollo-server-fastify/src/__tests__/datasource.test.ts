@@ -2,16 +2,15 @@ import fastify, { FastifyInstance } from 'fastify';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
-import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServer } from '../ApolloServer';
 
-import { createServerInfo } from 'apollo-server-integration-testsuite';
+import { createServerInfo, createApolloFetch } from 'apollo-server-integration-testsuite';
 import { gql } from '../index';
 
 const restPort = 4003;
 
 export class IdAPI extends RESTDataSource {
-  baseURL = `http://localhost:${restPort}/`;
+  override baseURL = `http://localhost:${restPort}/`;
 
   async getId(id: string) {
     return this.get(`id/${id}`);
@@ -31,10 +30,10 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    id: async (_source, _args, { dataSources }) => {
+    id: async (_source: any, _args: any, { dataSources }: any) => {
       return (await dataSources.id.getId('hi')).id;
     },
-    stringId: async (_source, _args, { dataSources }) => {
+    stringId: async (_source: any, _args: any, { dataSources }: any) => {
       return dataSources.id.getStringId('hi');
     },
   },
@@ -43,20 +42,20 @@ const resolvers = {
 let restCalls = 0;
 const restAPI = fastify();
 
-restAPI.get('/id/:id', (req, res) => {
-  const id = req.params.id;
+restAPI.get<any>('/id/:id', (request, reply) => {
+  const id = request.params.id;
   restCalls++;
-  res.header('Content-Type', 'application/json');
-  res.header('Cache-Control', 'max-age=2000, public');
-  res.send({ id });
+  reply.header('Content-Type', 'application/json');
+  reply.header('Cache-Control', 'max-age=2000, public');
+  reply.send({ id });
 });
 
-restAPI.get('/str/:id', (req, res) => {
-  const id = req.params.id;
+restAPI.get<any>('/str/:id', (request, reply) => {
+  const id = request.params.id;
   restCalls++;
-  res.header('Content-Type', 'text/plain');
-  res.header('Cache-Control', 'max-age=2000, public');
-  res.send(id);
+  reply.header('Content-Type', 'text/plain');
+  reply.header('Cache-Control', 'max-age=2000, public');
+  reply.send(id);
 });
 
 describe('apollo-server-fastify', () => {
@@ -67,7 +66,7 @@ describe('apollo-server-fastify', () => {
   });
 
   afterAll(async () => {
-    await new Promise<void>(resolve => restAPI.close(() => resolve()));
+    await new Promise<void>((resolve) => restAPI.close(() => resolve()));
   });
 
   let server: ApolloServer;
@@ -78,7 +77,7 @@ describe('apollo-server-fastify', () => {
 
   afterEach(async () => {
     await server.stop();
-    await new Promise<void>(resolve => app.close(() => resolve()));
+    await new Promise<void>((resolve) => app.close(() => resolve()));
   });
 
   it('uses the cache', async () => {

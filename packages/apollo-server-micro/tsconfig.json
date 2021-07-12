@@ -3,11 +3,9 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "noImplicitAny": false,
-    "strictNullChecks": false
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__"],
+  "exclude": ["**/__tests__"],
   "references": [
     { "path": "../apollo-server-core" },
     { "path": "../apollo-server-types" },

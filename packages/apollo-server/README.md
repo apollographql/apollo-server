@@ -1,12 +1,12 @@
 # <a href='https://www.apollographql.com/'><img src='https://user-images.githubusercontent.com/841294/53402609-b97a2180-39ba-11e9-8100-812bab86357c.png' height='100' alt='Apollo Server'></a>
-## GraphQL Server for Express, Koa, Hapi, Lambda, and more.
+## A TypeScript GraphQL Server for Express, Koa, Hapi, Lambda, and more.
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
 [![Build Status](https://circleci.com/gh/apollographql/apollo-server/tree/main.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server/tree/main)
 [![Join the community forum](https://img.shields.io/badge/join%20the%20community-forum-blueviolet)](https://community.apollographql.com)
 [![Read CHANGELOG](https://img.shields.io/badge/read-changelog-blue)](https://github.com/apollographql/apollo-server/blob/HEAD/CHANGELOG.md)
 
-Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs to add more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js)--or define a schema's type definitions using schema definition language (SDL).
+Apollo Server is a community-maintained open-source GraphQL server. It works with many Node.js HTTP server frameworks, or can run on its own with a built-in Express server. Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js)--or define a schema's type definitions using schema definition language (SDL).
 
 [Read the documentation](https://www.apollographql.com/docs/apollo-server/) for information on getting started and many other use cases and [follow the CHANGELOG](https://github.com/apollographql/apollo-server/blob/HEAD/CHANGELOG.md) for updates.
 
@@ -24,7 +24,7 @@ Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./
 
 To get started with Apollo Server:
 
-* Install with `npm install apollo-server-<integration> graphql`
+* Install with `npm install apollo-server-<integration>@3.x graphql`
 * Write a GraphQL schema
 * Use one of the following snippets
 
@@ -39,7 +39,7 @@ For more info, please refer to the [Apollo Server docs](https://www.apollographq
 
 In a new project, install the `apollo-server` and `graphql` dependencies using:
 
-    npm install apollo-server graphql
+    npm install apollo-server@3.x graphql
 
 Then, create an `index.js` which defines the schema and its functionality (i.e. resolvers):
 
@@ -162,4 +162,5 @@ Are you stuck? Want to contribute? Come visit us in the [Apollo community forum!
 
 ## Maintainers
 
-- [@abernix](https://github.com/abernix) (Apollo)
+- [David Glasser](https://github.com/glasser/)
+- [Trevor Scheer](https://github.com/trevorscheer/)

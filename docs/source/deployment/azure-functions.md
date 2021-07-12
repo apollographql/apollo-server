@@ -12,8 +12,8 @@ All examples below was created using Linux environments, if you are working with
 The following must be done before following this guide:
 
 - Setup an [Azure](https://azure.com) account.
-- Install [Azure Functions Core Tools CLI version 2.x](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local#v2).
-- [Install the Azure CLI 2.0.x](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) to deploy to Azure.
+- Install [Azure Functions Core Tools CLI version 3.x](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local#v2).
+- [Install the Azure CLI 2.x](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) to deploy to Azure.
 
 ## Setting up the project
 
@@ -28,16 +28,22 @@ func new --template "Http Trigger" --name graphql
 Now, our project is prepared to start! Run `func host start` command to see the output below.
 
 ```shell
-Hosting environment: Production
-Content root path: /root/apollo-example
-Now listening on: http://0.0.0.0:7071
-Application started. Press Ctrl+C to shut down.
+Azure Functions Core Tools
+Core Tools Version:       3.0.3477 Commit hash: 5fbb9a76fc00e4168f2cc90d6ff0afe5373afc6d  (64-bit)
+Function Runtime Version: 3.0.15584.0
 
-Http Functions:
-        graphql: http://localhost:7071/api/graphql
+[2021-06-30T19:22:21.077Z] Worker process started and initialized.
+
+Functions:
+
+	graphql: [GET,POST] http://localhost:7071/api/graphql
+
+For detailed output, run func with --verbose flag.
 ```
 
 Go to [http://localhost:7071/api/graphql?name=Apollo](http://localhost:7071/api/graphql?name=Apollo) and verify if the text with the content: **Hello Apollo** is appearing at your browser.
+
+(If you see an error about "Incompatible Node.js version", you may need to ensure that the version of `node` on your `PATH` is a version supported by Azure Functions by using a tool like [nvm](https://github.com/nvm-sh/nvm). For example, as of June 2021, Azure Functions does not yet support Node 16.)
 
 If you would like to remove the `api` from the url structure, set the prefix in your `host.json` file like below:
 
@@ -60,11 +66,10 @@ We will now install the dependencies and test our azure function app using apoll
 
 ```shell
 cd apollo-example
-npm init -y
-npm install apollo-server-azure-functions graphql
+npm install apollo-server-azure-functions@3.x graphql
 ```
 
-Copy the code below and paste in your **index.js** file.
+Replace the context of the file `graphql/index.js` with the following:
 
 ```javascript
 const { ApolloServer, gql } = require('apollo-server-azure-functions');
@@ -87,11 +92,10 @@ const server = new ApolloServer({ typeDefs, resolvers });
 exports.graphqlHandler = server.createHandler();
 ```
 
-It is important to set output binding name to **$return** to work correctly at the `function.json` file.
+Make two changes to `graphql/function.json`: make the output name `$return`, and add `options` to the list of supported methods so that CORS works. Your file should look like:
 
 ```json
 {
-  "disabled": false,
   "bindings": [
     {
       "authLevel": "function",
@@ -100,7 +104,8 @@ It is important to set output binding name to **$return** to work correctly at t
       "name": "req",
       "methods": [
         "get",
-        "post"
+        "post",
+        "options"
       ]
     },
     {
@@ -112,54 +117,28 @@ It is important to set output binding name to **$return** to work correctly at t
 }
 ```
 
-Finally, we need to return to the base folder and run the `func host start` command again after that, go back to your browser and refresh your page to see the apollo server running.
+Finally, we need to return to the base folder and run the `func host start` command again after that, go back to your browser and refresh your page to see the Apollo Server running. You can then run operations against your graph with Apollo Sandbox.
 
 ```shell
 func host start
 ```
 
-![Apollo server running locally](../images/deployment/azure-functions/apollo-server.png)
-
-## Debugging the project locally in VS Code
-
-### Prerequisites
-
-You will need to install the [Azure Functions](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions) extension in VS Code (extension is currently in preview from Microsoft).
-
-### Configuring the project
-
-In VS Code, open the root folder of your project and accept dialogs about setting up your project to work with VS Code. You should have one available debug configuration automatically created for you Attach to JavaScript Functions. If not, make sure your launch.json in the .vscode folder is setup correctly to launch the functions runtime:
-
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Attach to JavaScript Functions",
-      "type": "node",
-      "request": "attach",
-      "port": 5858,
-      "preLaunchTask": "runFunctionsHost"
-    }
-  ]
-}
-```
 
 ## Deploying the project to Azure using the Azure CLI
 
 ### Setting up resources in Azure for deployment
 
-Before deploying, a new application must be setup. To do this, we need to create some azure requirements. First, you will need a resource group, to create one run the code below on your terminal, where the **--name** is the name for the group and **--location** the region.
+Before deploying, a new application must be set up. To do this, we need to create some azure requirements. First, you will need a resource group. To create one run the code below on your terminal, where the **--name** is the name for the group and **--location** the region.
 
 ```shell
 az group create --name apollo-examples --location eastus
 ```
 
-After creating a resource group, we need to create a storage account to store our code on Azure.
+After creating a resource group, we need to create a storage account to store our code on Azure. You will need to choose a unique name.
 
 ```shell
 az storage account create \
-    --name apolloexample \
+    --name apolloexampleYOURNAME \
     --location eastus \
     --resource-group apollo-examples \
     --sku Standard_LRS
@@ -167,15 +146,16 @@ az storage account create \
 
 We will publish our application to Azure now using the CLI as well. We need to create a `functionapp` running the following command.
 
-Note: The your function name must be unique.
+Note: The function name must be unique.
 
 ```shell
 az functionapp create \
     --resource-group apollo-examples \
-    --name apollo-example \
+    --name apollo-example-YOURNAME \
     --consumption-plan-location eastus \
     --runtime node \
-    --storage-account apolloexample
+    --functions-version 3 \
+    --storage-account apolloexampleYOURNAME
 ```
 
 ### Publishing our project to the function app
@@ -183,7 +163,7 @@ az functionapp create \
 After creating a functionapp, it is just to publish our function to azure. The command below could be used to perform releases to all of your functions.
 
 ```shell
-func azure functionapp publish apollo-example
+func azure functionapp publish apollo-example-YOURNAME
 ```
 
 ```shell
@@ -200,46 +180,16 @@ Functions in apollo-example:
 
 Finally, going to the Invoke URL shown at the output above, we will see our result.
 
-Note: When GraphQL Playground starts, It won't have the correct URL containing the security `code`, and a message **"Server cannot be reached"** as shown at your browser.
-
-![Apollo server running on azure with error](../images/deployment/azure-functions/apollo-server-on-azure.png)
-
-We just need to put the full URL that includes the security `code` in the Playground url box. The background polling should refresh the screen momentarily. Click the **Schema** button to see if the docs are loaded correctly as shown in the image below.
-
-![Apollo server running on azure with success](../images/deployment/azure-functions/apollo-server-on-azure-sucess.png)
-
 ### Cleaning Up
 
-After completing this tutorial, you can delete all the resources you created during this example from your Azure account by removing the Azure Resource Group called **apollo-examples** with the **az group** commmand. We can manually delete each resource using the following commands:
+After completing this tutorial, you can delete all the resources you created during this example from your Azure account by removing the Azure Resource Group called **apollo-examples** with the **az group** commmand:
 
 ```shell
-az functionapp delete \
-    --resource-group apollo-examples \
-    --name apollo-example
-
-az storage account delete \
-    --name apolloexample \
-    --resource-group apollo-examples \
-    --yes
-
-az group delete \
-    --name apollo-examples \
-    --yes
+az group delete --name apollo-examples --yes
 ```
 
 ## Deploying to Azure from VS Code
 
 It is also possible to publish your project from VS Code using the Azure Functions Extension, we recommend referring to [Microsoft's documentation on publishing to Azure from VS Code](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-vs-code#publish-the-project-to-azure).
 
-Once deployment is complete, view the output in VS Code and you should be able to see the url of your GraphQL endpoint. It will look something like **https://our-graphql-project.azurewebsites.net/api/graphql**. Navigate to the url and you should find GraphQL Playground.
-
-Note: When GraphQL Playground starts, It won't have the correct URL containing the security `code`, and a message **"Server cannot be reached"** as shown at your browser.
-
-![Apollo server running on azure with error](../images/deployment/azure-functions/apollo-server-on-azure.png)
-
-We just need to put the full URL that includes the security `code` in the Playground url box. The background polling should refresh the screen momentarily. Click the **Schema** button to see if the docs are loaded correctly as the image below.
-
-Need more details? See the [Docs](https://www.npmjs.com/package/apollo-server-azure-functions)
- at the NPM repository.
-
-See ya!
+Need more details? See the [README](https://www.npmjs.com/package/apollo-server-azure-functions) for `apollo-server-azure-functions`.

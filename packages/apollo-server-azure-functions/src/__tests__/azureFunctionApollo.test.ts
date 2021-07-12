@@ -6,8 +6,9 @@ import testSuite, {
 import { Config } from 'apollo-server-core';
 import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
+import typeis from 'type-is';
 
-const createAzureFunction = (options: CreateAppOptions = {}) => {
+const createAzureFunction = async (options: CreateAppOptions = {}) => {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
@@ -16,24 +17,39 @@ const createAzureFunction = (options: CreateAppOptions = {}) => {
 
   return (req: IncomingMessage, res: ServerResponse) => {
     // return 404 if path is /bogus-route to pass the test, azure doesn't have paths
-    if (req.url.includes('/bogus-route')) {
+    if (req.url!.includes('/bogus-route')) {
       res.statusCode = 404;
       return res.end();
     }
 
     let body = '';
-    req.on('data', chunk => (body += chunk));
+    req.on('data', (chunk) => (body += chunk));
     req.on('end', () => {
-      const urlObject = url.parse(req.url, true);
+      const urlObject = url.parse(req.url!, true);
+      const contentType = req.headers['content-type'];
       const request = {
         method: req.method,
-        body: body && JSON.parse(body),
+        body,
         path: req.url,
         query: urlObject.query,
         headers: req.headers,
       };
+      if (
+        body &&
+        contentType &&
+        req.headers['content-length'] &&
+        req.headers['content-length'] !== '0' &&
+        typeis.is(contentType, 'application/json')
+      ) {
+        try {
+          request.body = JSON.parse(body);
+        } catch (e) {
+          // Leaving body as string seems to be what Azure Functions does.
+          // https://github.com/Azure/azure-functions-host/blob/ba408f522b59228f7fcf9c64223d2ef109ca810d/src/WebJobs.Script.Grpc/MessageExtensions/GrpcMessageConversionExtensions.cs#L251-L264
+        }
+      }
       const context = {
-        done(error, result) {
+        done(error: any, result: any) {
           if (error) throw error;
           res.statusCode = result.status;
           for (let key in result.headers) {
@@ -51,7 +67,11 @@ const createAzureFunction = (options: CreateAppOptions = {}) => {
 };
 
 describe('integration:AzureFunctions', () => {
-  testSuite(createAzureFunction);
+  testSuite({
+    createApp: createAzureFunction,
+    serverlessFramework: true,
+    integrationName: 'azure-functions',
+  });
 
   it('can append CORS headers to GET request', async () => {
     const server = new ApolloServer({ schema: Schema });
@@ -124,7 +144,7 @@ describe('integration:AzureFunctions', () => {
       headers: {},
     };
     const context = {
-      done(error, result) {
+      done(error: any, result: any) {
         if (error) throw error;
         expect(result.status).toEqual(204);
         expect(result.headers['Access-Control-Allow-Headers']).toEqual(
@@ -135,7 +155,7 @@ describe('integration:AzureFunctions', () => {
     handler(context as any, request as any);
   });
 
-  it('can return playground html', () => {
+  it('can return landing page', (done) => {
     const server = new ApolloServer({ schema: Schema });
     const handler = server.createHandler({});
     const request = {
@@ -148,11 +168,19 @@ describe('integration:AzureFunctions', () => {
       },
     };
     const context = {
-      done(error, result) {
-        if (error) throw error;
-        expect(result.status).toEqual(200);
-        expect(result.body).toMatch(/GraphQL Playground/gi);
-        expect(result.headers['Content-Type']).toEqual('text/html');
+      done(error: any, result: any) {
+        if (error) {
+          done(error);
+          return;
+        }
+        try {
+          expect(result.status).toEqual(200);
+          expect(result.body).toMatch(/apollo-server-landing-page.cdn.apollographql.com\/_latest/);
+          expect(result.headers['Content-Type']).toEqual('text/html');
+          done();
+        } catch (e) {
+          done(e);
+        }
       },
     };
     handler(context as any, request as any);

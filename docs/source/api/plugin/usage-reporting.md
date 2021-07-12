@@ -1,18 +1,18 @@
 ---
 title: "API Reference: Usage reporting plugin"
-sidebar_title: Usage reporting plugin
+sidebar_title: Usage reporting
 api_reference: true
 ---
 
 Apollo Server has a built-in usage reporting plugin that gathers data on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing this usage data to [Apollo Studio](https://www.apollographql.com/docs/studio/), as described in [Metrics and logging](../../monitoring/metrics/).
 
-> This plugin was introduced in Apollo Server 2.18. In previous versions, usage reporting is configured by providing the `engine` option to the `ApolloServer` constructor. That option continues to work (but is now deprecated). See [the migration guide](../../migration-engine-plugins/) for details.
-
 ## Default installation
 
-Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key to Apollo Server](https://www.apollographql.com/docs/apollo-server/monitoring/metrics/#connecting-to-apollo-studio) (usually by setting the value of the `APOLLO_KEY` environment variable). No other action is required.
+Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](https://www.apollographql.com/docs/apollo-server/monitoring/metrics/#connecting-to-apollo-studio) (usually by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables). No other action is required.
 
-If you don't provide an API key, this plugin is not installed.
+If you don't provide an API key and graph ref, this plugin is not installed.
+
+If you provide an API key but do not provide a graph ref, a warning is logged; you can [disable the plugin](#disabling-the-plugin) to hide the warning.
 
 ## Custom installation
 
@@ -113,7 +113,7 @@ The only properties of the reported error you can modify are its `message` and i
 
 Specify this asynchronous function to configure which requests are included in usage reports sent to Apollo Studio. For example, you can omit requests that execute a particular operation or requests that include a particular HTTP header.
 
-This function is called for each received request. It takes a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L115-L150) object and must return a `Promise<Boolean>` that indicates whether to include the request. It's called either after the operation is successfully resolved (via [the `didResolveOperation` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)), or after it generates an error (via [the `didEncounterErrors` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didencountererrors)).
+This function is called for each received request. It takes a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L115-L150) object and must return a `Promise<Boolean>` that indicates whether to include the request. It's called either after the operation is successfully resolved (via [the `didResolveOperation` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)), or when sending the final error response if the operation was not successfully resolved (via [the `willSendResponse` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#willsendresponse)).
 
 By default, all requests are included in usage reports.
 
@@ -400,3 +400,5 @@ const server = new ApolloServer({
   plugins: [ApolloServerPluginUsageReportingDisabled()],
 });
 ```
+
+This also disables the warning log if you provide an API key but do not provide a graph ref.

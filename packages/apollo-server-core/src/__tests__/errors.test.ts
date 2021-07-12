@@ -8,9 +8,6 @@ import {
   ValidationError,
   UserInputError,
   SyntaxError,
-  hasPersistedQueryError,
-  PersistedQueryNotFoundError,
-  PersistedQueryNotSupportedError,
 } from 'apollo-server-errors';
 
 describe('Errors', () => {
@@ -23,11 +20,12 @@ describe('Errors', () => {
     });
     it('allows code setting and additional properties', () => {
       const code = 'CODE';
-      const key = 'key';
+      const key = 'value';
       const error = new ApolloError(message, code, { key });
       expect(error.message).toEqual(message);
-      expect(error.key).toEqual(key);
+      expect(error.key).toBeUndefined();
       expect(error.extensions.code).toEqual(code);
+      expect(error.extensions.key).toEqual(key);
     });
   });
 
@@ -40,7 +38,7 @@ describe('Errors', () => {
       | ((options?: Record<string, any>) => Record<string, any>);
     const message = 'message';
     const code = 'CODE';
-    const key = 'key';
+    const key = 'value';
 
     const createFormattedError: CreateFormatError = (
       options?: Record<string, any>,
@@ -69,7 +67,8 @@ describe('Errors', () => {
     it('exposes a stacktrace in debug mode', () => {
       const error = createFormattedError({ debug: true });
       expect(error.message).toEqual(message);
-      expect(error.extensions.exception.key).toEqual(key);
+      expect(error.extensions.key).toEqual(key);
+      expect(error.extensions.exception.key).toBeUndefined();
       expect(error.extensions.code).toEqual(code);
       // stacktrace should exist under exception
       expect(error.extensions.exception.stacktrace).toBeDefined();
@@ -96,10 +95,9 @@ describe('Errors', () => {
     it('exposes fields on error under exception field and provides code', () => {
       const error = createFormattedError();
       expect(error.message).toEqual(message);
-      expect(error.extensions.exception.key).toEqual(key);
+      expect(error.extensions.key).toEqual(key);
+      expect(error.extensions.exception).toBeUndefined();
       expect(error.extensions.code).toEqual(code);
-      // stacktrace should exist under exception
-      expect(error.extensions.exception.stacktrace).toBeUndefined();
     });
     it('calls formatter after exposing the code and stacktrace', () => {
       const error = new ApolloError(message, code, { key });
@@ -109,7 +107,8 @@ describe('Errors', () => {
         debug: true,
       });
       expect(error.message).toEqual(message);
-      expect(error.key).toEqual(key);
+      expect(error.extensions.key).toEqual(key);
+      expect(error.key).toBeUndefined();
       expect(error.extensions.code).toEqual(code);
       expect(error instanceof ApolloError).toBe(true);
       expect(formatter).toHaveBeenCalledTimes(1);
@@ -187,41 +186,9 @@ describe('Errors', () => {
         ),
       ])[0];
 
-      expect(formattedError.extensions.exception.field1).toEqual('property1');
-      expect(formattedError.extensions.exception.field2).toEqual('property2');
-    });
-  });
-  describe('hasPersistedQueryError', () => {
-    it('should return true if errors contain error of type PersistedQueryNotFoundError', () => {
-      const errors = [
-        new PersistedQueryNotFoundError(),
-        new AuthenticationError('401'),
-      ];
-      const result = hasPersistedQueryError(errors);
-      expect(result).toBe(true);
-    });
-
-    it('should return true if errors contain error of type PersistedQueryNotSupportedError', () => {
-      const errors = [
-        new PersistedQueryNotSupportedError(),
-        new AuthenticationError('401'),
-      ];
-      const result = hasPersistedQueryError(errors);
-      expect(result).toBe(true);
-    });
-
-    it('should return false if errors does not contain PersistedQuery error', () => {
-      const errors = [
-        new ForbiddenError('401'),
-        new AuthenticationError('401'),
-      ];
-      const result = hasPersistedQueryError(errors);
-      expect(result).toBe(false);
-    });
-
-    it('should return false if an error is thrown', () => {
-      const result = hasPersistedQueryError({});
-      expect(result).toBe(false);
+      expect(formattedError.extensions.field1).toEqual('property1');
+      expect(formattedError.extensions.field2).toEqual('property2');
+      expect(formattedError.extensions.exception).toBeUndefined();
     });
   });
 });

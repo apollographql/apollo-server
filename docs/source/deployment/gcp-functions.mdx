@@ -28,16 +28,9 @@ const resolvers = {
   },
 };
 
-/*
-Because `NODE_ENV` is a reserved environment variable in Google Cloud Functions
-and it defaults to "production", you need to set both the `playground` and 
-`introspection` options to `true` for GraphQL Playground to work correctly.
-*/
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  playground: true,
-  introspection: true,
 });
 
 exports.handler = server.createHandler();
@@ -54,9 +47,13 @@ From your Google Cloud Console, go to the [Cloud Functions page](https://console
 
 Click **Create Function**. Give the function a name and set the **Trigger type** to `HTTP`.
 
-For quick setup and access to the GraphQL endpoint/playground, choose to **Allow unauthenticated invocations**. To require authentication for this endpoint, you can manage authorized users via [Cloud IAM](https://console.cloud.google.com/iam-admin/iam).
+For quick setup and access to the GraphQL endpoint/landing page, choose to **Allow unauthenticated invocations**. To require authentication for this endpoint, you can manage authorized users via [Cloud IAM](https://console.cloud.google.com/iam-admin/iam).
 
-Save your configuration changes in the Trigger section. Copy the trigger's URL for later and click **Next**.
+Save your configuration changes in the Trigger section. Copy the trigger's URL for later.
+
+Expand the "Runtime, Build, and Connections Settings" panel and add a runtime environment variable named `NODE_ENV` with value `development`. (This overrides Cloud Function's default of `production` and will allow you to easily test your graph with Apollo Sandbox. You can delete this environment variable once you're ready for your app to be considered a production app.)
+
+Now click **Next**.
 
 ### 2. Write the API handlers and deploy
 
@@ -67,10 +64,10 @@ Paste the example code at the top of this page into the contents of `index.js` i
 Edit `package.json` so that it lists `apollo-server-cloud-functions` and `graphql` in its dependencies:
 
 ```json:title=package.json
-"dependencies": {
-  "apollo-server-cloud-functions": "^2.24.0",
-  "graphql": "^15.5.0"
-}
+  "dependencies": {
+    "apollo-server-cloud-functions": "3.x",
+    "graphql": "^15.5.0"
+  }
 ```
 
 Click **Deploy** to initiate deployment. Then, proceed to [Testing the function](#testing-the-function).
@@ -86,7 +83,7 @@ Before proceeding, you need to set up the gcloud SDK:
 
 Next, initialize a new Node.js project by running `npm init` in an empty directory.
 
-Run `npm install apollo-server-cloud-functions graphql` to install the necessary dependencies and to include them in the `package.json` file.
+Run `npm install apollo-server-cloud-functions@3.x graphql` to install the necessary dependencies and to include them in the `package.json` file.
 
 At this point, your `package.json` should resemble the following:
 
@@ -102,7 +99,7 @@ At this point, your `package.json` should resemble the following:
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "apollo-server-cloud-functions": "^2.24.0",
+    "apollo-server-cloud-functions": "3.x",
     "graphql": "^15.5.0"
   }
 }
@@ -124,11 +121,11 @@ For more information, see the official [Cloud Functions docs](https://cloud.goog
 
 ## Testing the function
 
-After deployment completes, navigate to your function's trigger URL. If deployment succeeded, GraphQL Playground opens.
+After deployment completes, navigate to your function's trigger URL, with `/graphql` added to the end. If deployment succeeded, you should see your server's landing page.
 
-> If you can't access your trigger URL, you might need to [add `allAuthenticatedUsers` or `allUsers` permissions](https://cloud.google.com/iam/docs/overview#all-authenticated-users) to your function.
+> If you can't access your trigger URL, you might need to [give `allAuthenticatedUsers` or `allUsers` the `Cloud Functions Invoker` role](https://cloud.google.com/iam/docs/overview#all-authenticated-users) on the Permissions tab.
 
-You can use GraphQL Playground to test the following query:
+Click <q>Query your Server</q> and use Apollo Sandbox to test the following query:
 
 ```graphql
 query TestQuery {
@@ -180,81 +177,6 @@ const server = new ApolloServer({
 exports.handler = server.createHandler();
 ```
 
-## Modifying the GCF Response (CORS)
+## Enabling production mode
 
-To enable CORS, you need to modify your HTTP response headers. To do so, use the `cors` option:
-
-```javascript{23-26}
-const { ApolloServer, gql } = require('apollo-server-cloud-functions');
-
-// Construct a schema, using GraphQL schema language
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-// Provide resolver functions for your schema fields
-const resolvers = {
-  Query: {
-    hello: () => 'Hello world!',
-  },
-};
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-exports.handler = server.createHandler({
-  cors: {
-    origin: '*',
-    credentials: true,
-  },
-});
-```
-
-To enable CORS response for requests with credentials (cookies, HTTP authentication) the allow origin header must equal the request origin and the allow credential header must be set to `true`.
-
-```javascript
-const { ApolloServer, gql } = require('apollo-server-cloud-functions');
-
-// Construct a schema, using GraphQL schema language
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-// Provide resolver functions for your schema fields
-const resolvers = {
-  Query: {
-    hello: () => 'Hello world!',
-  },
-};
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-exports.handler = server.createHandler({
-  cors: {
-    origin: true,
-    credentials: true,
-  },
-});
-```
-
-### CORS Options
-
-The options correspond to the [express `cors` configuration](https://github.com/expressjs/cors#configuration-options) with the following fields(all are optional):
-
-| Option | Type(s) |
-|--------|---------|
-| `origin` | boolean \| string \| string[] |
-| `methods` | string \| string[] |
-| `allowedHeaders` | string \| string[] |
-| `exposedHeaders` | string \| string[] |
-| `credentials` | boolean |
-| `maxAge` | number |
+When you consider your app to be production-ready, you should remember to edit it to remove the `NODE_ENV` environment variable you set at the beginning. Among other things, this will change its landing page to be more discreet, and will mask error details from the end user.

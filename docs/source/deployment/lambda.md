@@ -6,7 +6,7 @@ description: How to deploy Apollo Server with AWS Lambda
 
 AWS Lambda is a service that allows users to run code without provisioning or managing servers. Cost is based on the compute time that is consumed, and there is no charge when code is not running.
 
-This guide explains how to setup Apollo Server 2 to run on AWS Lambda.
+This guide explains how to setup Apollo Server 2 to run on AWS Lambda using Serverless Framework. To use CDK and SST instead, [follow this tutorial](https://serverless-stack.com/examples/how-to-create-an-apollo-graphql-api-with-serverless.html).
 
 ## Prerequisites
 
@@ -27,7 +27,7 @@ Setting up a project to work with Lambda isn't that different from a typical Nod
 First, install the `apollo-server-lambda` package:
 
 ```shell
-npm install apollo-server-lambda graphql
+npm install apollo-server-lambda@3.x graphql
 ```
 
 Next, set up the schema's type definitions and resolvers, and pass them to the `ApolloServer` constructor like normal. Here, `ApolloServer` must be imported from `apollo-server-lambda`. It's also important to note that this file must be named `graphql.js`, as the config example in a later step depends on the filename.
@@ -74,7 +74,7 @@ For the sake of this example, the following file can just be copied and pasted i
 service: apollo-lambda
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs14.x
 functions:
   graphql:
     # this is formatted as <FILENAME>.<HANDLER>
@@ -133,9 +133,29 @@ The resulting S3 buckets and Lambda functions can be viewed and managed after lo
 - To find the created S3 bucket, search the listed services for S3. For this example, the bucket created by Serverless was named `apollo-lambda-dev-serverlessdeploymentbucket-1s10e00wvoe5f`
 - To find the created Lambda function, search the listed services for `Lambda`. If the list of Lambda functions is empty, or missing the newly created function, double check the region at the top right of the screen. The default region for Serverless deployments is `us-east-1` (N. Virginia)
 
+## Customizing HTTP serving
+
+`apollo-server-lambda` is built on top of `apollo-server-express`. It combines the HTTP server framework `express` with a package called `@vendia/serverless-express` that translates between Lambda events and Express requests. By default, this is entirely behind the scenes, but you can also provide your own express app with the `expressAppFromMiddleware` option to `createHandler`:
+
+```js
+const { ApolloServer } = require('apollo-server-lambda');
+const express = require('express');
+
+exports.handler = server.createHandler({
+  expressAppFromMiddleware(middleware) {
+    const app = express();
+    app.use(someOtherMiddleware);
+    app.use(middleware);
+    return app;
+  }
+});
+```
+
 ## Getting request info
 
-To read information about the current request from the API Gateway event `(HTTP headers, HTTP method, body, path, ...)` or the current Lambda Context `(Function Name, Function Version, awsRequestId, time remaining, ...)`, use the options function. This way, they can be passed to your schema resolvers via the context option.
+Your ApolloServer's `context` function can read information about the current operation from both the original Lambda data structures and the Express request and response created by `@vendia/serverless-express`. These are provided to your `context` function as `event`, `context`, and `express` options.
+
+The `event` object contains the API Gateway event (HTTP headers, HTTP method, body, path, ...). The `context` object (not to be confused with the `context` function itself!) contains the current Lambda Context (Function Name, Function Version, awsRequestId, time remaining, ...). `express` contains `req` and `res` fields with the Express request and response. The object returned from your `context` function is provided to all of your schema resolvers in the third `context` argument.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
@@ -157,93 +177,14 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ event, context }) => ({
+  context: ({ event, context, express }) => ({
     headers: event.headers,
     functionName: context.functionName,
     event,
     context,
+    expressRequest: express.req,
   }),
 });
 
 exports.graphqlHandler = server.createHandler();
 ```
-
-## Modifying the Lambda response (Enable CORS)
-
-To enable CORS, the response HTTP headers need to be modified. To accomplish this, use the `cors` options.
-
-```js
-const { ApolloServer, gql } = require('apollo-server-lambda');
-
-// Construct a schema, using GraphQL schema language
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-// Provide resolver functions for your schema fields
-const resolvers = {
-  Query: {
-    hello: () => 'Hello world!',
-  },
-};
-
-const server = new ApolloServer({ typeDefs, resolvers });
-
-exports.graphqlHandler = server.createHandler({
-  cors: {
-    origin: '*',
-    credentials: true,
-  },
-});
-```
-
-Furthermore, to enable CORS response for requests with credentials (cookies, http authentication), the `allow origin` and `credentials` header must be set to true.
-
-```js
-const { ApolloServer, gql } = require('apollo-server-lambda');
-
-// Construct a schema, using GraphQL schema language
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-// Provide resolver functions for your schema fields
-const resolvers = {
-  Query: {
-    hello: () => 'Hello world!',
-  },
-};
-
-const server = new ApolloServer({ typeDefs, resolvers });
-
-exports.graphqlHandler = server.createHandler({
-  cors: {
-    origin: true,
-    credentials: true,
-  },
-});
-```
-
-## Setting up GraphQL Playground
-
-By default, `serverless` will deploy to AWS with the `stage` set to `development` resulting in an API endpoint at `/dev/graphql`.
-
-To allow GraphQL Playground to correctly use the `dev` endpoint, add a new `endpoint` configuration within the `playground` option to the `ApolloServer` instantiation options:
-
-```js
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  // highlight-start
-  playground: {
-    endpoint: "/dev/graphql"
-  }
-  // highlight-end
-});
-```
-
-For information on additional configuration options, see [GraphQL Playground](https://www.apollographql.com/docs/apollo-server/testing/graphql-playground/).

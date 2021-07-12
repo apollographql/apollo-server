@@ -1,6 +1,5 @@
 // persisted query tests
 import { sha256 } from 'js-sha256';
-import { VERSION } from 'apollo-link-persisted-queries';
 
 import {
   GraphQLSchema,
@@ -14,9 +13,11 @@ import {
   BREAK,
   DocumentNode,
   getOperationAST,
+  ValidationContext,
 } from 'graphql';
 
 import request from 'supertest';
+import type { HTTPError } from 'superagent';
 import resolvable from '@josephg/resolvable';
 
 import {
@@ -24,18 +25,15 @@ import {
   Config,
   PersistedQueryOptions,
   KeyValueCache,
+  ApolloServerPluginCacheControl,
 } from 'apollo-server-core';
 import gql from 'graphql-tag';
-import { ValueOrPromise } from 'apollo-server-types';
-import { GraphQLRequestListener } from "apollo-server-plugin-base";
-import { PersistedQueryNotFoundError } from "apollo-server-errors";
+import { GraphQLResponse, ValueOrPromise } from 'apollo-server-types';
+import { GraphQLRequestListener } from 'apollo-server-plugin-base';
+import { PersistedQueryNotFoundError } from 'apollo-server-errors';
 
 export * from './ApolloServer';
-
-export const NODE_MAJOR_VERSION: number = parseInt(
-  process.versions.node.split('.', 1)[0],
-  10,
-);
+export { createApolloFetch } from './apolloFetch';
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
@@ -61,7 +59,7 @@ const QueryRootType = new GraphQLObjectType({
         foo: {
           type: new GraphQLScalarType({
             name: 'Foo',
-            serialize: v => v,
+            serialize: (v) => v,
             parseValue: () => {
               throw new Error('Something bad happened');
             },
@@ -119,13 +117,20 @@ const queryType = new GraphQLObjectType({
         return { firstName: 'Jane', lastName: 'Doe' };
       },
     },
+    testPersonWithCacheControl: {
+      type: personType,
+      resolve(_source, _args, _context, info) {
+        info.cacheControl.setCacheHint({ maxAge: 11 });
+        return { firstName: 'Jane', lastName: 'Doe' };
+      },
+    },
     testStringWithDelay: {
       type: GraphQLString,
       args: {
         delay: { type: new GraphQLNonNull(GraphQLInt) },
       },
       resolve(_, args) {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           setTimeout(() => resolve('it works'), args['delay']);
         });
       },
@@ -203,22 +208,32 @@ export interface CreateAppOptions {
 }
 
 export interface CreateAppFunc {
-  (options?: CreateAppOptions): ValueOrPromise<any>;
+  (options?: CreateAppOptions): Promise<any>;
 }
 
 export interface DestroyAppFunc {
   (app: any): ValueOrPromise<void>;
 }
 
-export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
+export default ({
+  createApp,
+  destroyApp,
+  serverlessFramework,
+  integrationName,
+}: {
+  createApp: CreateAppFunc;
+  destroyApp?: DestroyAppFunc;
+  serverlessFramework?: boolean;
+  integrationName?: string;
+}) => {
   describe('apolloServer', () => {
-    let app;
-    let didEncounterErrors: jest.Mock<
-      ReturnType<GraphQLRequestListener['didEncounterErrors']>,
-      Parameters<GraphQLRequestListener['didEncounterErrors']>
+    let app: any;
+    let didEncounterErrors: jest.MockedFunction<
+      NonNullable<GraphQLRequestListener['didEncounterErrors']>
     >;
 
     afterEach(async () => {
+      // XXX nothing calls server.stop?
       if (app) {
         if (destroyApp) {
           await destroyApp(app);
@@ -232,32 +247,101 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
     describe('graphqlHTTP', () => {
       it('rejects the request if the method is not POST or GET', async () => {
         app = await createApp();
-        const req = request(app)
-          .head('/graphql')
-          .send();
-        return req.then(res => {
+        const req = request(app).head('/graphql').send();
+        return req.then((res) => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('GET, POST');
         });
       });
 
-      it('throws an error if POST body is missing', async () => {
+      it('throws an error if POST body is empty', async () => {
+        app = await createApp();
+        const req = request(app).post('/graphql').type('text/plain').send('  ');
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch('POST body missing');
+        });
+      });
+
+      it('throws an error if POST body is missing even with content-type', async () => {
         app = await createApp();
         const req = request(app)
           .post('/graphql')
+          .type('application/json')
           .send();
-        return req.then(res => {
-          expect(res.status).toEqual(500);
-          expect(res.error.text).toMatch('POST body missing.');
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch(
+            integrationName === 'fastify'
+              ? "Body cannot be empty when content-type is set to 'application/json'"
+              : 'POST body missing',
+          );
+        });
+      });
+
+      it('throws an error if invalid content-type', async () => {
+        app = await createApp();
+        const req = request(app)
+          .post('/graphql')
+          .type('text/plain')
+          .send(
+            JSON.stringify({
+              query: 'query test{ testString }',
+            }),
+          );
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch('invalid Content-Type');
+        });
+      });
+
+      it('throws an error if POST operation is missing', async () => {
+        app = await createApp();
+        const req = request(app).post('/graphql').send({});
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch('has no keys');
+        });
+      });
+
+      it('throws an error if POST operation is empty', async () => {
+        app = await createApp();
+        const req = request(app).post('/graphql').send({ query: '' });
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch('non-empty `query`');
+        });
+      });
+
+      it('throws an error if POST JSON is malformed', async () => {
+        app = await createApp();
+        const req = request(app)
+          .post('/graphql')
+          .type('application/json')
+          .send('{foo');
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect((res.error as HTTPError).text).toMatch(
+            integrationName === 'hapi'
+              ? 'Invalid request payload JSON format'
+              : integrationName === 'micro'
+              ? 'Invalid JSON'
+              : integrationName === 'azure-functions'
+              ? // This is not really the right message but AF does its parsing
+                // outside of our handlers and getting it actually right was too
+                // much of a pain.
+                'POST body missing, invalid Content-Type, or JSON object has no keys.'
+              : 'Unexpected token f',
+          );
         });
       });
 
       it('throws an error if GET query is missing', async () => {
         app = await createApp();
         const req = request(app).get(`/graphql`);
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(400);
-          expect(res.error.text).toMatch('GET query missing.');
+          expect((res.error as HTTPError).text).toMatch('GET query missing.');
         });
       });
 
@@ -269,10 +353,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const query = {
           query: 'query test{ testString }',
         };
-        const req = request(app)
-          .get('/graphql')
-          .query(query);
-        return req.then(res => {
+        const req = request(app).get('/graphql').query(query);
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -286,10 +368,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const query = {
           query: '{ testString }',
         };
-        const req = request(app)
-          .get('/graphql')
-          .query(query);
-        return req.then(res => {
+        const req = request(app).get('/graphql').query(query);
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -302,31 +382,33 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             schema,
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return { didEncounterErrors };
-                }
-              }
-            ]
-          }
+                },
+              },
+            ],
+          },
         });
         const query = {
           query: 'mutation test{ testMutation(echo: "ping") }',
         };
-        const req = request(app)
-          .get('/graphql')
-          .query(query);
+        const req = request(app).get('/graphql').query(query);
 
-        await req.then(res => {
+        await req.then((res) => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
-          expect(res.error.text).toMatch('GET supports only query operation');
+          expect((res.error as HTTPError).text).toMatch(
+            'GET supports only query operation',
+          );
         });
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'GET supports only query operation',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'GET supports only query operation',
+              }),
+            ]),
           }),
         );
       });
@@ -338,12 +420,12 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             schema,
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return { didEncounterErrors };
-                }
-              }
-            ]
-          }
+                },
+              },
+            ],
+          },
         });
         const query = {
           query: `fragment PersonDetails on PersonType {
@@ -356,20 +438,22 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               }
             }`,
         };
-        const req = request(app)
-          .get('/graphql')
-          .query(query);
-        await req.then(res => {
+        const req = request(app).get('/graphql').query(query);
+        await req.then((res) => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
-          expect(res.error.text).toMatch('GET supports only query operation');
+          expect((res.error as HTTPError).text).toMatch(
+            'GET supports only query operation',
+          );
         });
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'GET supports only query operation',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'GET supports only query operation',
+              }),
+            ]),
           }),
         );
       });
@@ -383,10 +467,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const expected = {
           testArgument: 'hello world',
         };
-        const req = request(app)
-          .get('/graphql')
-          .query(query);
-        return req.then(res => {
+        const req = request(app).get('/graphql').query(query);
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -397,69 +479,69 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const expected = {
           testString: 'it works',
         };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testString }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testString }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
       });
 
-      it('can handle a basic request with cacheControl', async () => {
+      it('cache-control not set without any hints', async () => {
         app = await createApp({
-          graphqlOptions: { schema, cacheControl: true },
+          graphqlOptions: { schema },
         });
         const expected = {
           testPerson: { firstName: 'Jane' },
         };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testPerson { firstName } }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testPerson { firstName } }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
-          expect(res.body.extensions).toEqual({
-            cacheControl: {
-              version: 1,
-              hints: [{ maxAge: 0, path: ['testPerson'] }],
-            },
-          });
+          // hapi defaults to no-cache, so we have to allow that.
+          expect([undefined, 'no-cache']).toContain(
+            res.headers['cache-control'],
+          );
         });
       });
 
-      it('can handle a basic request with cacheControl and defaultMaxAge', async () => {
+      it('cache-control set with dynamic hint', async () => {
+        app = await createApp({
+          graphqlOptions: { schema },
+        });
+        const expected = {
+          testPersonWithCacheControl: { firstName: 'Jane' },
+        };
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testPersonWithCacheControl { firstName } }',
+        });
+        return req.then((res) => {
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual(expected);
+          expect(res.headers['cache-control']).toBe('max-age=11, public');
+        });
+      });
+
+      it('cache-control set with defaultMaxAge', async () => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            cacheControl: {
-              defaultMaxAge: 5,
-              stripFormattedExtensions: false,
-              calculateHttpHeaders: false,
-            },
+            plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
           },
         });
         const expected = {
           testPerson: { firstName: 'Jane' },
         };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testPerson { firstName } }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testPerson { firstName } }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
-          expect(res.body.extensions).toEqual({
-            cacheControl: {
-              version: 1,
-              hints: [{ maxAge: 5, path: ['testPerson'] }],
-            },
-          });
+          expect(res.headers['cache-control']).toBe('max-age=5, public');
         });
       });
 
@@ -478,11 +560,14 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               },
             }),
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors[0].message).toEqual(
             'PersistedQueryNotSupported',
+          );
+          expect(res.headers['cache-control']).toBe(
+            'private, no-cache, must-revalidate',
           );
         });
       });
@@ -502,12 +587,15 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               },
             },
           });
-        return req.then(res => {
-          expect(res.statusCode).toEqual(200);
+        return req.then((res) => {
+          expect(res.status).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual(
             'PersistedQueryNotSupported',
+          );
+          expect(res.headers['cache-control']).toBe(
+            'private, no-cache, must-revalidate',
           );
         });
       });
@@ -525,11 +613,14 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               },
             }),
           });
-        return req.then(res => {
-          expect(res.statusCode).toEqual(200);
+        return req.then((res) => {
+          expect(res.status).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual('PersistedQueryNotFound');
+          expect(res.headers['cache-control']).toBe(
+            'private, no-cache, must-revalidate',
+          );
         });
       });
 
@@ -546,13 +637,64 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               },
             },
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual('PersistedQueryNotFound');
+          expect(res.headers['cache-control']).toBe(
+            'private, no-cache, must-revalidate',
+          );
         });
       });
+
+      // Micro does not have built-in support for CORS.
+      if (integrationName !== 'micro') {
+        describe('cors enabled by default', () => {
+          const origin = 'https://my-origin.test/';
+          it('for POST request', async () => {
+            app = await createApp();
+            const expected = {
+              testString: 'it works',
+            };
+            const res = await request(app)
+              .post('/graphql')
+              .set('origin', origin)
+              .send({
+                query: 'query test{ testString }',
+              });
+            expect(res.status).toEqual(200);
+            expect(res.body.data).toEqual(expected);
+            expect(res.header['access-control-allow-origin']).toEqual('*');
+          });
+
+          it('for OPTIONS preflight request', async () => {
+            app = await createApp();
+            const res = await request(app)
+              .options('/graphql')
+              .set('origin', origin)
+              .set('access-control-request-headers', 'content-type')
+              .set('access-control-request-method', 'POST');
+            expect(res.status).toEqual(204);
+            expect(res.text).toEqual('');
+            expect(res.header['access-control-allow-origin']).toEqual('*');
+            expect(res.header['access-control-allow-origin']).toEqual('*');
+            expect(
+              res.header['access-control-allow-headers']?.toLowerCase(),
+            ).toContain('content-type');
+            expect(res.header['access-control-allow-methods']).toContain(
+              'POST',
+            );
+            // It would be nice if Hapi and Koa properly set Vary here, but
+            // their cors support modules do not. Oh well.
+            if (integrationName !== 'hapi' && integrationName !== 'koa') {
+              expect(res.header['vary']).toContain(
+                'Access-Control-Request-Headers',
+              );
+            }
+          });
+        });
+      }
 
       it('can handle a request with variables', async () => {
         app = await createApp();
@@ -565,7 +707,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             query: 'query test($echo: String){ testArgument(echo: $echo) }',
             variables: { echo: 'world' },
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -576,13 +718,11 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const expected = {
           testArgument: 'hello world',
         };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test($echo: String!){ testArgument(echo: $echo) }',
-            variables: '{ "echo": "world" }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test($echo: String!){ testArgument(echo: $echo) }',
+          variables: '{ "echo": "world" }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -590,15 +730,15 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('can handle a request with variables as an invalid string', async () => {
         app = await createApp();
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test($echo: String!){ testArgument(echo: $echo) }',
-            variables: '{ echo: "world" }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test($echo: String!){ testArgument(echo: $echo) }',
+          variables: '{ echo: "world" }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(400);
-          expect(res.error.text).toMatch('Variables are invalid JSON.');
+          expect((res.error as HTTPError).text).toMatch(
+            'Variables are invalid JSON.',
+          );
         });
       });
 
@@ -616,7 +756,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             variables: { echo: 'world' },
             operationName: 'test2',
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -627,7 +767,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const req = request(app)
           .post('/graphql')
           .send({ query: getIntrospectionQuery() });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.__schema.types[0].fields[0].name).toEqual(
             'testString',
@@ -646,7 +786,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               }
             `,
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(400);
           expect(res.text).toMatch('GraphQL queries must be strings');
         });
@@ -683,7 +823,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               operationName: 'testX',
             },
           ]);
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
         });
@@ -709,13 +849,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               operationName: 'test2',
             },
           ]);
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
         });
       });
 
-      it('can handle batch requests in parallel', async function() {
+      it('can handle batch requests in parallel', async function () {
         const parallels = 100;
         const delayPerReq = 40;
 
@@ -732,7 +872,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               variables: { delay: delayPerReq },
             }),
           );
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
         });
@@ -767,7 +907,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               query: 'query test{ testContext }',
             },
           ]);
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
         });
@@ -806,7 +946,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               query: 'query test{ testContext }',
             },
           ]);
-        return req.then(res => {
+        return req.then((res) => {
           // XXX In AS 1.0 we ran context once per GraphQL operation (so this
           // was 2) rather than once per HTTP request. Was this actually
           // helpful? Honestly we're not sure why you'd use a function in the
@@ -831,7 +971,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             query: 'mutation test($echo: String){ testMutation(echo: $echo) }',
             variables: { echo: 'world' },
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
         });
@@ -841,7 +981,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatResponse(response) {
+            formatResponse(response: GraphQLResponse) {
               response['extensions'] = { it: 'works' };
               return response;
             },
@@ -854,7 +994,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             query: 'mutation test($echo: String){ testMutation(echo: $echo) }',
             variables: { echo: 'world' },
           });
-        return req.then(res => {
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.extensions).toEqual(expected);
         });
@@ -868,12 +1008,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             context: { testField: expected },
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testContext }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testContext }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testContext).toEqual(expected);
         });
@@ -887,12 +1025,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             rootValue: expected,
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testRootValue }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testRootValue }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testRootValue).toEqual(expected);
         });
@@ -906,27 +1042,23 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             schema,
             rootValue: (documentNode: DocumentNode) => {
               const op = getOperationAST(documentNode, undefined);
-              return op.operation === 'query'
+              return op!.operation === 'query'
                 ? expectedQuery
                 : expectedMutation;
             },
           },
         });
-        const queryReq = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testRootValue }',
-          });
-        return queryReq.then(res => {
+        const queryReq = request(app).post('/graphql').send({
+          query: 'query test{ testRootValue }',
+        });
+        return queryReq.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testRootValue).toEqual(expectedQuery);
         });
-        const mutationReq = request(app)
-          .post('/graphql')
-          .send({
-            query: 'mutation test{ testMutation(echo: "ping") }',
-          });
-        return mutationReq.then(res => {
+        const mutationReq = request(app).post('/graphql').send({
+          query: 'mutation test{ testMutation(echo: "ping") }',
+        });
+        return mutationReq.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testRootValue).toEqual(expectedMutation);
         });
@@ -939,12 +1071,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             schema,
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testError }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testError }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors[0].message).toEqual(expected);
         });
@@ -955,18 +1085,16 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatError: error => {
+            formatError: (error) => {
               expect(error instanceof Error).toBe(true);
               return { message: expected };
             },
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testError }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testError }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors[0].message).toEqual(expected);
         });
@@ -977,19 +1105,17 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatError: error => {
+            formatError: (error) => {
               expect(error instanceof Error).toBe(true);
               expect(error instanceof GraphQLError).toBe(true);
               return { message: expected };
             },
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testError }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testError }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.errors[0].message).toEqual(expected);
         });
@@ -1005,11 +1131,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           },
         });
 
-        const response = await request(app)
-          .post('/graphql')
-          .send({
-            query: '{thrower}',
-          });
+        const response = await request(app).post('/graphql').send({
+          query: '{thrower}',
+        });
 
         expect(response.status).toEqual(200);
         expect(JSON.parse(response.text)).toEqual({
@@ -1036,11 +1160,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           },
         });
 
-        const response = await request(app)
-          .post('/graphql')
-          .send({
-            query: '{thrower}',
-          });
+        const response = await request(app).post('/graphql').send({
+          query: '{thrower}',
+        });
 
         expect(response.status).toEqual(200);
         expect(JSON.parse(response.text)).toEqual({
@@ -1064,19 +1186,17 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             },
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testError }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testError }',
+        });
+        return req.then((res) => {
           expect(res.body.errors[0].message).toEqual('Internal server error');
         });
       });
 
       it('applies additional validationRules', async () => {
         const expected = 'alwaysInvalidRule was really invalid!';
-        const alwaysInvalidRule = function(context) {
+        const alwaysInvalidRule = function (context: ValidationContext) {
           return {
             enter() {
               context.reportError(new GraphQLError(expected));
@@ -1090,12 +1210,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             validationRules: [alwaysInvalidRule],
           },
         });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testString }',
-          });
-        return req.then(res => {
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testString }',
+        });
+        return req.then((res) => {
           expect(res.status).toEqual(400);
           expect(res.body.errors[0].message).toEqual(expected);
         });
@@ -1109,84 +1227,111 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const query = {
           query: '{ testString }',
         };
-        const req = request(app)
-          .get('/bogus-route')
-          .query(query);
-        return req.then(res => {
+        const req = request(app).get('/bogus-route').query(query);
+        return req.then((res) => {
           expect(res.status).toEqual(404);
         });
       });
     });
 
-    describe('request pipeline plugins', () => {
-      describe('lifecycle hooks', () => {
-        // This tests the backwards-compatibility behavior that ensures
-        // that even if you don't call server.start() yourself, the first
-        // GraphQL request will result in starting the server before
-        // serving the first request
-        it('calls serverWillStart before serving a request', async () => {
-          // We'll use this to determine the order in which
-          // the events we're expecting to happen actually occur and validate
-          // those expectations in various stages of this test.
-          const calls: string[] = [];
+    if (serverlessFramework) {
+      // This tests the serverless-specific behavior that ensures that startup
+      // finishes before serving a request. Non-serverless frameworks don't have
+      // this behavior: they assert that you've done `await server.start()`
+      // earlier in the process.
+      it('calls serverWillStart before serving a request', async () => {
+        // We'll use this to determine the order in which
+        // the events we're expecting to happen actually occur and validate
+        // those expectations in various stages of this test.
+        const calls: string[] = [];
 
-          const pluginStartedBarrier = resolvable();
-          const letPluginFinishBarrier = resolvable();
+        const pluginStartedBarrier = resolvable();
+        const letPluginFinishBarrier = resolvable();
 
-          // We want this to create the app as fast as `createApp` will allow.
-          // for integrations whose `applyMiddleware` currently returns a
-          // Promise we want them to resolve at whatever eventual pace they
-          // will so we can make sure that things are happening in order.
-          const unawaitedApp = createApp({
-            graphqlOptions: {
-              schema,
-              plugins: [
-                {
-                  async serverWillStart() {
-                    calls.push('zero');
-                    pluginStartedBarrier.resolve();
-                    await letPluginFinishBarrier;
-                    calls.push('one');
-                  },
+        // We want this to create the app as fast as `createApp` will allow.
+        // for integrations whose `applyMiddleware` currently returns a
+        // Promise we want them to resolve at whatever eventual pace they
+        // will so we can make sure that things are happening in order.
+        const unawaitedApp = createApp({
+          graphqlOptions: {
+            schema,
+            plugins: [
+              {
+                async serverWillStart() {
+                  calls.push('zero');
+                  pluginStartedBarrier.resolve();
+                  await letPluginFinishBarrier;
+                  calls.push('one');
                 },
-              ],
-            },
+              },
+            ],
+          },
+        });
+
+        // Account for the fact that `createApp` might return a Promise,
+        // and might not, depending on the integration's implementation of
+        // createApp.  This is entirely to account for the fact that
+        // non-async implementations of `applyMiddleware` leverage a
+        // middleware as the technique for yielding to `startWillStart`
+        // hooks while their `async` counterparts simply `await` those same
+        // hooks.  In a future where we make the behavior of `applyMiddleware`
+        // the same across all integrations, this should be changed to simply
+        // `await unawaitedApp`.
+        app = 'then' in unawaitedApp ? await unawaitedApp : unawaitedApp;
+
+        // Intentionally fire off the request asynchronously, without await.
+        const res = request(app)
+          .get('/graphql')
+          .query({
+            query: 'query test{ testString }',
+          })
+          .then((res) => {
+            calls.push('two');
+            return res;
           });
 
-          // Account for the fact that `createApp` might return a Promise,
-          // and might not, depending on the integration's implementation of
-          // createApp.  This is entirely to account for the fact that
-          // non-async implementations of `applyMiddleware` leverage a
-          // middleware as the technique for yielding to `startWillStart`
-          // hooks while their `async` counterparts simply `await` those same
-          // hooks.  In a future where we make the behavior of `applyMiddleware`
-          // the same across all integrations, this should be changed to simply
-          // `await unawaitedApp`.
-          app = 'then' in unawaitedApp ? await unawaitedApp : unawaitedApp;
+        // At this point calls might be [] or ['zero'] because the back-compat
+        // code kicks off start() asynchronously. We can safely wait on
+        // the plugin's serverWillStart to begin.
+        await pluginStartedBarrier;
+        expect(calls).toEqual(['zero']);
+        letPluginFinishBarrier.resolve();
 
-          // Intentionally fire off the request asynchronously, without await.
-          const res = request(app)
-            .get('/graphql')
-            .query({
-              query: 'query test{ testString }',
-            })
-            .then(res => {
-              calls.push('two');
-              return res;
-            });
+        // Now, wait for the request to finish.
+        await res;
 
-          // At this point calls might be [] or ['zero'] because the back-compat
-          // code kicks off start() asynchronously. We can safely wait on
-          // the plugin's serverWillStart to begin.
-          await pluginStartedBarrier;
-          expect(calls).toEqual(['zero']);
-          letPluginFinishBarrier.resolve();
+        // Finally, ensure that the order we expected was achieved.
+        expect(calls).toEqual(['zero', 'one', 'two']);
+      });
+    }
 
-          // Now, wait for the request to finish.
-          await res;
+    describe('status code', () => {
+      it('allows setting a custom status code', async () => {
+        const app = await createApp({
+          graphqlOptions: {
+            schema,
+            plugins: [
+              {
+                async requestDidStart() {
+                  return {
+                    async willSendResponse({ response: { http } }) {
+                      http!.status = 403;
+                    },
+                  };
+                },
+              },
+            ],
+          },
+        });
 
-          // Finally, ensure that the order we expected was achieved.
-          expect(calls).toEqual(['zero', 'one', 'two']);
+        const req = request(app).post('/graphql').send({
+          query: 'query test{ testString }',
+        });
+        return req.then((res) => {
+          expect(res.status).toEqual(403);
+          expect(res.body.data).toEqual({
+            testString: 'it works',
+          });
         });
       });
     });
@@ -1195,24 +1340,18 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       const query = '{testString}';
       const query2 = '{ testString }';
 
-      const hash = sha256
-        .create()
-        .update(query)
-        .hex();
+      const hash = sha256.create().update(query).hex();
       const extensions = {
         persistedQuery: {
-          version: VERSION,
+          version: 1,
           sha256Hash: hash,
         },
       };
 
       const extensions2 = {
         persistedQuery: {
-          version: VERSION,
-          sha256Hash: sha256
-            .create()
-            .update(query2)
-            .hex(),
+          version: 1,
+          sha256Hash: sha256.create().update(query2).hex(),
         },
       };
 
@@ -1222,19 +1361,17 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           set: jest.fn(async (key, val) => {
             await map.set(key, val);
           }),
-          get: jest.fn(async key => map.get(key)),
-          delete: jest.fn(async key => map.delete(key)),
+          get: jest.fn(async (key) => map.get(key)),
+          delete: jest.fn(async (key) => map.delete(key)),
         };
       }
 
-      let didEncounterErrors: jest.Mock<
-        ReturnType<GraphQLRequestListener['didEncounterErrors']>,
-        Parameters<GraphQLRequestListener['didEncounterErrors']>
+      let didEncounterErrors: jest.MockedFunction<
+        NonNullable<GraphQLRequestListener['didEncounterErrors']>
       >;
 
-      let didResolveSource: jest.Mock<
-        ReturnType<GraphQLRequestListener['didResolveSource']>,
-        Parameters<GraphQLRequestListener['didResolveSource']>
+      let didResolveSource: jest.MockedFunction<
+        NonNullable<GraphQLRequestListener['didResolveSource']>
       >;
 
       function createApqApp(apqOptions: PersistedQueryOptions = {}) {
@@ -1243,13 +1380,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             schema,
             plugins: [
               {
-                requestDidStart() {
+                async requestDidStart() {
                   return {
                     didResolveSource,
                     didEncounterErrors,
                   };
-                }
-              }
+                },
+              },
             ],
             persistedQueries: {
               cache,
@@ -1270,12 +1407,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('when ttlSeconds is set, passes ttl to the apq cache set call', async () => {
         app = await createApqApp({ ttl: 900 });
 
-        await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-            query,
-          });
+        await request(app).post('/graphql').send({
+          extensions,
+          query,
+        });
 
         expect(cache.set).toHaveBeenCalledWith(
           expect.stringMatching(/^apq:/),
@@ -1284,32 +1419,32 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             ttl: 900,
           }),
         );
-        expect(didResolveSource.mock.calls[0][0])
-          .toHaveProperty('source', query);
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          query,
+        );
       });
 
-      it('when ttlSeconds is unset, ttl is not passed to apq cache',
-        async () => {
-          app = await createApqApp();
+      it('when ttlSeconds is unset, ttl is not passed to apq cache', async () => {
+        app = await createApqApp();
 
-          await request(app)
-            .post('/graphql')
-            .send({
-              extensions,
-              query,
-            });
+        await request(app).post('/graphql').send({
+          extensions,
+          query,
+        });
 
-          expect(cache.set).toHaveBeenCalledWith(
-            expect.stringMatching(/^apq:/),
-            '{testString}',
-            expect.not.objectContaining({
-              ttl: 900,
-            }),
-          );
-          expect(didResolveSource.mock.calls[0][0])
-            .toHaveProperty('source', query);
-        }
-      );
+        expect(cache.set).toHaveBeenCalledWith(
+          expect.stringMatching(/^apq:/),
+          '{testString}',
+          expect.not.objectContaining({
+            ttl: 900,
+          }),
+        );
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          query,
+        );
+      });
 
       it('errors when version is not specified', async () => {
         app = await createApqApp();
@@ -1322,7 +1457,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               persistedQuery: {
                 // Version intentionally omitted.
                 sha256Hash: extensions.persistedQuery.sha256Hash,
-              }
+              },
             }),
           });
 
@@ -1337,9 +1472,11 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'Unsupported persisted query version',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'Unsupported persisted query version',
+              }),
+            ]),
           }),
         );
       });
@@ -1354,9 +1491,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             extensions: JSON.stringify({
               persistedQuery: {
                 // Version intentionally wrong.
-                version: VERSION + 1,
+                version: 2,
                 sha256Hash: extensions.persistedQuery.sha256Hash,
-              }
+              },
             }),
           });
 
@@ -1371,9 +1508,11 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'Unsupported persisted query version',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'Unsupported persisted query version',
+              }),
+            ]),
           }),
         );
       });
@@ -1389,8 +1528,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               persistedQuery: {
                 version: 1,
                 // Sha intentionally wrong.
-                sha256Hash: extensions.persistedQuery.sha256Hash.substr(0,5),
-              }
+                sha256Hash: extensions.persistedQuery.sha256Hash.substr(0, 5),
+              },
             }),
           });
 
@@ -1405,9 +1544,11 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'provided sha does not match query',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'provided sha does not match query',
+              }),
+            ]),
           }),
         );
 
@@ -1417,11 +1558,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('returns PersistedQueryNotFound on the first try', async () => {
         app = await createApqApp();
 
-        const result = await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-          });
+        const result = await request(app).post('/graphql').send({
+          extensions,
+        });
 
         expect(result.body.data).toBeUndefined();
         expect(result.body.errors.length).toEqual(1);
@@ -1433,7 +1572,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
-              expect.any(PersistedQueryNotFoundError)
+              expect.any(PersistedQueryNotFoundError),
             ]),
           }),
         );
@@ -1443,38 +1582,36 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('returns result on the second try', async () => {
         app = await createApqApp();
 
-        await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-          });
+        await request(app).post('/graphql').send({
+          extensions,
+        });
 
         // Only the first request should result in an error.
         expect(didEncounterErrors).toHaveBeenCalledTimes(1);
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
-              expect.any(PersistedQueryNotFoundError)
+              expect.any(PersistedQueryNotFoundError),
             ]),
           }),
         );
 
         expect(didResolveSource).not.toHaveBeenCalled();
 
-        const result = await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-            query,
-          });
+        const result = await request(app).post('/graphql').send({
+          extensions,
+          query,
+        });
 
         // There should be no additional errors now.  In other words, we'll
         // re-assert that we've been called the same single time that we
         // asserted above.
         expect(didEncounterErrors).toHaveBeenCalledTimes(1);
 
-        expect(didResolveSource.mock.calls[0][0])
-          .toHaveProperty('source', query);
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          query,
+        );
 
         expect(result.body.data).toEqual({ testString: 'it works' });
         expect(result.body.errors).toBeUndefined();
@@ -1530,28 +1667,24 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('returns result on the persisted query', async () => {
         app = await createApqApp();
 
-        await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-          });
+        await request(app).post('/graphql').send({
+          extensions,
+        });
 
         expect(didResolveSource).not.toHaveBeenCalled();
 
-        await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-            query,
-          });
-        const result = await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-          });
+        await request(app).post('/graphql').send({
+          extensions,
+          query,
+        });
+        const result = await request(app).post('/graphql').send({
+          extensions,
+        });
 
-        expect(didResolveSource.mock.calls[0][0])
-          .toHaveProperty('source', query);
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          query,
+        );
 
         expect(result.body.data).toEqual({ testString: 'it works' });
         expect(result.body.errors).toBeUndefined();
@@ -1565,36 +1698,36 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .send({
             extensions: {
               persistedQuery: {
-                version: VERSION,
-                sha:
-                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                version: 1,
+                sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
               },
             },
             query,
           });
         expect(response.status).toEqual(400);
-        expect(response.error.text).toMatch(/does not match query/);
+        expect((response.error as HTTPError).text).toMatch(
+          /does not match query/,
+        );
         expect(didResolveSource).not.toHaveBeenCalled();
       });
 
       it('returns correct result using get request', async () => {
         app = await createApqApp();
 
-        await request(app)
-          .post('/graphql')
-          .send({
-            extensions,
-            query,
-          });
+        await request(app).post('/graphql').send({
+          extensions,
+          query,
+        });
         const result = await request(app)
           .get('/graphql')
           .query({
             extensions: JSON.stringify(extensions),
           });
         expect(result.body.data).toEqual({ testString: 'it works' });
-        expect(didResolveSource.mock.calls[0][0])
-          .toHaveProperty('source', query);
-
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          query,
+        );
       });
     });
   });

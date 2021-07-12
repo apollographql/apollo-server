@@ -2,8 +2,8 @@ import {
   ApolloServerPluginSchemaReporting,
   ApolloServerPluginSchemaReportingOptions,
 } from '..';
-import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
-import { makeExecutableSchema } from 'graphql-tools';
+import pluginTestHarness from '../../../utils/pluginTestHarness';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import { graphql } from 'graphql';
 
 describe('end-to-end', () => {
@@ -36,7 +36,7 @@ describe('end-to-end', () => {
         },
       }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The schema provided to overrideReportedSchema failed to parse or validate: Syntax Error: Expected Name, found <EOF>"`,
+      `"The schema provided to overrideReportedSchema failed to parse or validate: Syntax Error: Expected Name, found <EOF>."`,
     );
   });
 

@@ -21,7 +21,7 @@ import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
-import { fetch } from "apollo-server-env";
+import { fetch } from 'apollo-server-env';
 
 type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,
@@ -49,9 +49,6 @@ export interface Options {
     | boolean
     | ForbidUnregisteredOperationsPredicate;
   dryRun?: boolean;
-  // Deprecated; configure via `new ApolloServer({apollo: {graphVariant}})`
-  // or $APOLLO_GRAPH_VARIANT instead.
-  graphVariant?: string;
   onUnregisteredOperation?: (
     requestContext: GraphQLRequestContext,
     operationRegistryRequestContext: OperationRegistryRequestContext,
@@ -95,46 +92,27 @@ for observability purposes, but all operations will be permitted.`,
   // time depending on the usecase.
   Object.freeze(options);
 
-  let graphVariant: string;
-
   return (): ApolloServerPlugin => ({
     async serverWillStart({
       apollo,
-      engine,
     }: GraphQLServiceContext): Promise<GraphQLServerListener> {
-      if (!apollo) {
-        // Older version of apollo-server-core that isn't passing 'apollo' yet.
-        apollo = {
-          graphId: engine.serviceID,
-          // no 'key' because it's not on this part of the API, but
-          // this plugin doesn't need it.
-          keyHash: engine.apiKeyHash,
-          graphVariant: process.env.APOLLO_GRAPH_VARIANT || 'current',
-        };
-      }
-      // Deprecated way of passing variant directly to the plugin instead of
-      // just getting it from serverWillStart.
-      if (options.graphVariant) {
-        apollo = {
-          ...apollo,
-          graphVariant: options.graphVariant,
-        };
-      }
-
       // Make available to requestDidStart.
-      graphVariant = apollo.graphVariant;
       logger.debug('Initializing operation registry plugin.');
 
-      const {graphId, keyHash} = apollo;
+      const { graphRef, keyHash } = apollo;
 
-      if (!(graphId && keyHash)) {
+      if (!keyHash) {
         const messageApolloConfigurationRequired =
           'The Apollo API key must be set to use the operation registry.';
         throw new Error(`${pluginName}: ${messageApolloConfigurationRequired}`);
       }
+      if (!graphRef) {
+        const messageApolloConfigurationRequired =
+          'APOLLO_GRAPH_REF must be set to use the operation registry.';
+        throw new Error(`${pluginName}: ${messageApolloConfigurationRequired}`);
+      }
 
-      logger.debug(
-        `Operation registry is configured for '${apollo.graphId}'.`);
+      logger.debug(`Operation registry is configured for '${graphRef}'.`);
 
       // An LRU store with no `maxSize` is effectively an InMemoryStore and
       // exactly what we want for this purpose.
@@ -146,8 +124,8 @@ for observability purposes, but all operations will be permitted.`,
         apollo: {
           ...apollo,
           // Convince TypeScript that these fields are not undefined.
-          graphId,
-          keyHash
+          graphRef,
+          keyHash,
         },
         store,
         logger,
@@ -157,13 +135,13 @@ for observability purposes, but all operations will be permitted.`,
       await agent.start();
 
       return {
-        serverWillStop() {
+        async serverWillStop() {
           agent.stop();
         },
       };
     },
 
-    requestDidStart(): GraphQLRequestListener<any> {
+    async requestDidStart(): Promise<GraphQLRequestListener<any>> {
       return {
         async didResolveOperation(requestContext) {
           const documentFromRequestContext = requestContext.document;
@@ -248,9 +226,8 @@ for observability purposes, but all operations will be permitted.`,
             );
 
             try {
-              const predicateResult = options.forbidUnregisteredOperations(
-                requestContext,
-              );
+              const predicateResult =
+                options.forbidUnregisteredOperations(requestContext);
 
               logger.debug(
                 `${logSignature}: The 'forbidUnregisteredOperations' predicate function returned ${predicateResult}`,
@@ -328,7 +305,7 @@ for observability purposes, but all operations will be permitted.`,
           Object.assign(error.extensions, {
             operationSignature: signature,
             exception: {
-              message: `Please register your operation with \`npx apollo client:push --variant="${graphVariant}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
+              message: `Please register your operation with \`npx apollo client:push --variant="${agent.graphVariant}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
             },
           });
           throw error;

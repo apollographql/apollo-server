@@ -12,7 +12,9 @@ To define a custom scalar, add it to your schema like so:
 scalar MyCustomScalar
 ```
 
-Object types in your schema can now contain fields of type `MyCustomScalar`. However, Apollo Server still needs to know how to interact with values of this new scalar type.
+You can now use `MyCustomScalar` in your schema anywhere you can use a default scalar (e.g., as the type of an object field, input type field, or argument).
+
+However, Apollo Server still needs to know how to interact with values of this new scalar type.
 
 ## Defining custom scalar logic
 
@@ -70,13 +72,13 @@ In the example above, the `Date` scalar is represented on the backend by the `Da
 
 ### `parseValue`
 
-The `parseValue` method converts the scalar's `serialize`d JSON value to its back-end representation before it's added to a resolver's `args`.
+The `parseValue` method converts the scalar's JSON value to its back-end representation before it's added to a resolver's `args`.
 
 Apollo Server calls this method when the scalar is provided by a client as a [GraphQL variable](https://graphql.org/learn/queries/#variables) for an argument. (When a scalar is provided as a hard-coded argument in the operation string, [`parseLiteral`](#parseliteral) is called instead.)
 
 ### `parseLiteral`
 
-When an incoming query string includes the scalar as a hard-coded argument value, that value is part of the query document's abstract syntax tree (AST). Apollo Server calls the `parseLiteral` method to convert the value's AST representation (which is always a string) to the scalar's back-end representation.
+When an incoming query string includes the scalar as a hard-coded argument value, that value is part of the query document's abstract syntax tree (AST). Apollo Server calls the `parseLiteral` method to convert the value's AST representation to the scalar's back-end representation.
 
 In [the example above](#example-the-date-scalar), `parseLiteral` converts the AST value from a string to an integer, and _then_ converts from integer to `Date` to match the result of `parseValue`.
 
@@ -120,22 +122,26 @@ const server = new ApolloServer({
 
 In this example, we create a custom scalar called `Odd` that can only contain odd integers:
 
-```js{19-30}
-const { ApolloServer, gql } = require('apollo-server');
+```js:title=index.js
+const { ApolloServer, gql, UserInputError } = require('apollo-server');
 const { GraphQLScalarType, Kind } = require('graphql');
 
 // Basic schema
 const typeDefs = gql`
   scalar Odd
 
-  type MyType {
-    oddValue: Odd
+  type Query {
+    # Echoes the provided odd integer
+    echoOdd(odd: Odd!): Odd!
   }
 `;
 
-// Validation function
+// Validation function for checking "oddness"
 function oddValue(value) {
-  return value % 2 === 1 ? value : null;
+  if (typeof value === "number" && Number.isInteger(value) && value % 2 !== 0) {
+    return value;
+  }
+  throw new UserInputError("Provided value is not an odd integer");
 }
 
 const resolvers = {
@@ -148,9 +154,14 @@ const resolvers = {
       if (ast.kind === Kind.INT) {
         return oddValue(parseInt(ast.value, 10));
       }
-      return null;
+      throw new UserInputError("Provided value is not an odd integer");
     },
   }),
+  Query: {
+    echoOdd(_, {odd}) {
+      return odd;
+    }
+  }
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });

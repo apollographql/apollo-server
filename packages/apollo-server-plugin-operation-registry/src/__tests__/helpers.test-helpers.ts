@@ -21,9 +21,8 @@ export const defaultTestAgentPollSeconds = 60;
 
 export const defaultAgentOptions: AgentOptions = {
   apollo: {
-    graphId: genericServiceID,
+    graphRef: genericServiceID,
     keyHash: genericApiKeyHash,
-    graphVariant: 'current',
   },
   store: defaultStore(),
   pollSeconds: defaultTestAgentPollSeconds,
@@ -103,8 +102,3 @@ export function hashedServiceId(serviceID: string): string {
     .update(serviceID)
     .digest('hex');
 }
-
-function pathForServiceAndSchema(serviceID: string, schemaHash: string): string {
-  return `/${hashedServiceId(serviceID)}/${schemaHash}.v2.json`;
-}
-

@@ -7,6 +7,8 @@ import {
   ExpansionPanel,
 } from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
+> **Apollo Server 3 has been released, but is not yet installed by default.** To install Apollo Server 3, specify `@3.x` after the name of the Apollo Server package you are installing (for example, `npm install apollo-server@3.x`).
+
 > This tutorial walks you through installing and configuring Apollo Server.
 > If you're just getting started with GraphQL or the Apollo
 > platform, we recommend first completing the [full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/).
@@ -50,7 +52,7 @@ Run the following command to install both of these dependencies and save them in
 your project's `node_modules` directory:
 
 ```bash
-npm install apollo-server graphql
+npm install apollo-server@3.x graphql
 ```
 
 Also create an empty `index.js` file in your project's root directory:
@@ -120,18 +122,13 @@ const books = [
 ];
 ```
 
-This snippet defines a simple data set that clients can query. Notice that the two
-objects in the array each match the structure of the `Book` type we defined in our schema.
+This snippet defines a simple data set that clients can query. Notice that the two objects in the array each match the structure of the `Book` type we defined in our schema.
 
 ## Step 5: Define a resolver
 
-We've defined our data set, but Apollo Server doesn't know that it should
- _use_ that data set when it's executing a query. To fix this, we create a
- **resolver**.
+We've defined our data set, but Apollo Server doesn't know that it should _use_ that data set when it's executing a query. To fix this, we create a **resolver**.
 
-Resolvers tell Apollo Server _how_ to fetch the data associated with a particular
-type. Because our `Book` array is hardcoded, the corresponding resolver is
-straightforward.
+Resolvers tell Apollo Server _how_ to fetch the data associated with a particular type. Because our `Book` array is hardcoded, the corresponding resolver is straightforward.
 
 Add the following to the bottom of `index.js`:
 
@@ -182,18 +179,27 @@ We're up and running!
 
 ## Step 8: Execute your first query
 
-We can now execute GraphQL queries on our server. To execute our first query,
-we can use **Apollo Sandbox**.
+We can now execute GraphQL queries on our server. To execute our first query, we can use **Apollo Sandbox**.
 
-With your server still running, visit [studio.apollographql.com/sandbox](https://studio.apollographql.com/sandbox) to open Sandbox:
+Visit `http://localhost:4000` in your browser. Apollo Server's default landing page appears:
+
+<img class="screenshot" src="./images/as-landing-page.jpg" alt="Apollo Server default landing page" width="350"/>
+
+Click **Query your server** to open Sandbox.
+
+> You can also:
+>
+> * Select **Automatically redirect to Studio next time** if you want to open Sandbox automatically whenever you visit `localhost:4000`
+> * Open Sandbox directly at [studio.apollographql.com/sandbox](https://studio.apollographql.com/sandbox)
 
 <img class="screenshot" src="./images/sandbox.jpg" alt="Apollo Sandbox"/>
 
 The Sandbox UI includes:
 
-* An Operations panel (in the middle) for writing and executing queries
-* A Response panel (to the right) for viewing query results
+* An Operations panel for writing and executing queries (in the middle)
+* A Response panel for viewing query results (on the right)
 * Tabs for schema exploration, search, and settings (on the left)
+* A URL bar for connecting to other GraphQL servers (in the upper left)
 
 Our server supports a single query named `books`. Let's execute it!
 

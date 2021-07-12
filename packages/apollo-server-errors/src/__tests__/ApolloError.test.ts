@@ -1,4 +1,4 @@
-import { ApolloError } from '..';
+import { ApolloError, ForbiddenError, AuthenticationError } from '..';
 
 describe('ApolloError', () => {
   it("doesn't overwrite extensions when provided in the constructor", () => {
@@ -37,13 +37,40 @@ describe('ApolloError', () => {
     );
   });
 
-  it('(back-compat) sets extensions correctly for users who use an extensions key in the third constructor argument', () => {
-    const error = new ApolloError('My original message', 'A_CODE', {
-      extensions: {
-        arbitrary: 'user_data',
-      },
-    });
-
-    expect(error.extensions.arbitrary).toEqual('user_data');
+  it('throws for users who use an extensions key in the third constructor argument', () => {
+    expect(
+      () =>
+        new ApolloError('My original message', 'A_CODE', {
+          extensions: {
+            arbitrary: 'user_data',
+          },
+        }),
+    ).toThrow(/Pass extensions directly/);
   });
 });
+
+describe("ForbiddenError", () => {
+  it("supports abritrary data being passed", () => {
+    const error = new ForbiddenError('My message', {
+      arbitrary: 'user_data',
+    });
+
+    expect(error.extensions).toEqual({
+      code: 'FORBIDDEN',
+      arbitrary: 'user_data',
+    });
+  })
+})
+
+describe("AuthenticationError", () => {
+  it("supports abritrary data being passed", () => {
+    const error = new AuthenticationError('My message', {
+      arbitrary: 'user_data',
+    });
+
+    expect(error.extensions).toEqual({
+      code: 'UNAUTHENTICATED',
+      arbitrary: 'user_data',
+    });
+  })
+})

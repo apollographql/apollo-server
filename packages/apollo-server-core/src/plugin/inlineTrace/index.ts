@@ -1,7 +1,7 @@
 import { Trace } from 'apollo-reporting-protobuf';
 import { TraceTreeBuilder } from '../traceTreeBuilder';
 import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
-import type { InternalApolloServerPlugin } from '../internalPlugin';
+import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { schemaIsFederated } from '../schemaIsFederated';
 
 export interface ApolloServerPluginInlineTraceOptions {
@@ -38,7 +38,7 @@ export function ApolloServerPluginInlineTrace(
     __internal_plugin_id__() {
       return 'InlineTrace';
     },
-    serverWillStart({ schema, logger }) {
+    async serverWillStart({ schema, logger }) {
       // Handle the case that the plugin was implicitly installed. We only want it
       // to actually be active if the schema appears to be federated. If you don't
       // like the log line, just install `ApolloServerPluginInlineTrace()` in
@@ -53,7 +53,7 @@ export function ApolloServerPluginInlineTrace(
         }
       }
     },
-    requestDidStart({ request: { http } }) {
+    async requestDidStart({ request: { http } }) {
       if (!enabled) {
         return;
       }
@@ -70,17 +70,19 @@ export function ApolloServerPluginInlineTrace(
       treeBuilder.startTiming();
 
       return {
-        executionDidStart: () => ({
-          willResolveField({ info }) {
-            return treeBuilder.willResolveField(info);
-          },
-        }),
+        async executionDidStart() {
+          return {
+            willResolveField({ info }) {
+              return treeBuilder.willResolveField(info);
+            },
+          };
+        },
 
-        didEncounterErrors({ errors }) {
+        async didEncounterErrors({ errors }) {
           treeBuilder.didEncounterErrors(errors);
         },
 
-        willSendResponse({ response }) {
+        async willSendResponse({ response }) {
           // We record the end time at the latest possible time: right before serializing the trace.
           // If we wait any longer, the time we record won't actually be sent anywhere!
           treeBuilder.stopTiming();
