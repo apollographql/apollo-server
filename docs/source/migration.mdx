@@ -622,6 +622,12 @@ class MyDataSource extends RESTDataSource {
 }
 ```
 
+### `apollo-server-env`'s global type definitions
+
+Global TypeScript definitions have been removed from `apollo-server-env` since they conflicted with similar global types provided by `@types/supertest`, which we use in Apollo Server's test suite.  These removed types include types which resemble those of [the Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) including, e.g., `fetch`, `RequestInfo`, `Headers`, `Request`, `Response`, `ResponseInit`, and more.  [See the full list prior to removal here](https://github.com/apollographql/apollo-server/blob/32cfdcfdbd44f4f4e826f347f47fdcbc0475b5cc/packages/apollo-server-env/src/global.d.ts).
+
+We don't expect this to affect many users and we have not publicly suggested using these types in the past, but it's possible that implementations may be using them inadvertently (e.g., from auto-import on `apollo-server-env`).  While other type definition sets provide similar hand-curated types, for the time being, we have chosen to rely the same-named types from TypeScript's `lib.dom.d.ts` — e.g., [its `RequestInfo` type definition](https://github.com/microsoft/TypeScript/blob/3c604f1c0a412ef41f58c3f9b239b25e8d725751/lib/lib.dom.d.ts#L1470).  Even if those types are more appropriate for browsers, they're a reliable and well-maintained source.  For more details, including our plan for adjusting this again in the future, [see PR #5165](https://github.com/apollographql/apollo-server/pull/5165).
+
 ## Changed features
 
 ### Plugin API
