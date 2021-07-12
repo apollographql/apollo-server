@@ -191,7 +191,7 @@ Examples for supported data stores are provided below.
 ### Memcached
 
 ```shell
-$ npm install apollo-server-cache-memcached@3.x
+$ npm install apollo-server-cache-memcached
 ```
 
 ```javascript
@@ -215,7 +215,7 @@ const server = new ApolloServer({
 ### Redis (single instance)
 
 ```shell
-$ npm install apollo-server-cache-redis@3.x ioredis
+$ npm install apollo-server-cache-redis ioredis
 ```
 
 ```javascript
@@ -240,7 +240,7 @@ const server = new ApolloServer({
 ### Redis (Sentinel)
 
 ```shell
-$ npm install apollo-server-cache-redis@3.x ioredis
+$ npm install apollo-server-cache-redis ioredis
 ```
 
 ```javascript
@@ -270,7 +270,7 @@ const server = new ApolloServer({
 ### Redis Cluster
 
 ```shell
-$ npm install apollo-server-cache-redis@3.x ioredis
+$ npm install apollo-server-cache-redis ioredis
 ```
 
 ```javascript
