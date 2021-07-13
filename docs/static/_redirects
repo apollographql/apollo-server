@@ -6,7 +6,8 @@
 /docs/apollo-server/v3/* /docs/apollo-server/:splat
 
 # Updating URLs for v3
-/docs/apollo-server/testing/graphql-playground/ /docs/apollo-server/testing/landing-page/#graphql-playground
+/docs/apollo-server/testing/graphql-playground/ /docs/apollo-server/testing/build-run-queries/#graphql-playground
+/docs/apollo-server/deployment /docs/apollo-server/deployment/heroku
 
 # Removing old hidden documentation
 /docs/apollo-server/features/schema-stitching/ /docs/apollo-server/
