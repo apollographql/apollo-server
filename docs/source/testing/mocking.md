@@ -180,7 +180,7 @@ const { makeExecutableSchema } = require('@graphql-tools/schema');
 
 const server = new ApolloServer({
   schema: addMocksToSchema({
-    schema: makeExecutableSchema({ typedefs, resolvers }),
+    schema: makeExecutableSchema({ typeDefs, resolvers }),
   }),
 });
 ```
