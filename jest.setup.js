@@ -18,7 +18,9 @@ if (!process.env.ALLOW_CONSOLE) {
   afterEach(() => {
     if (usedConsole) {
       usedConsole = false;
-      throw Error('To keep unit test output readable, tests should not write to the console. To test logging behavior, pass a logger to the class under test.');
+      throw Error(
+        'To keep unit test output readable, tests should not write to the console. To test logging behavior, pass a logger to the class under test.',
+      );
     }
   });
 }

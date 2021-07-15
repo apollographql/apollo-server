@@ -27,20 +27,17 @@ describe('apollo-server-hapi', () => {
   }
   afterEach(cleanup);
 
-  testApolloServer(
-    async (config: any, options) => {
-      server = new ApolloServer(config);
-      app = new Server({ host: 'localhost', port });
-      if (!options?.suppressStartCall) {
-        await server.start();
-      }
-      await server.applyMiddleware({ app, path: options?.graphqlPath });
-      await app.start();
-      const httpServer = app.listener;
-      return createServerInfo(server, httpServer);
-    },
-    cleanup,
-  );
+  testApolloServer(async (config: any, options) => {
+    server = new ApolloServer(config);
+    app = new Server({ host: 'localhost', port });
+    if (!options?.suppressStartCall) {
+      await server.start();
+    }
+    await server.applyMiddleware({ app, path: options?.graphqlPath });
+    await app.start();
+    const httpServer = app.listener;
+    return createServerInfo(server, httpServer);
+  }, cleanup);
 
   //Non-integration tests
   const typeDefs = gql`
@@ -120,7 +117,10 @@ describe('apollo-server-hapi', () => {
           'accept',
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         )
-        .expect(200, /apollo-server-landing-page.cdn.apollographql.com\/_latest/);
+        .expect(
+          200,
+          /apollo-server-landing-page.cdn.apollographql.com\/_latest/,
+        );
     });
 
     it('accepts cors configuration', async () => {

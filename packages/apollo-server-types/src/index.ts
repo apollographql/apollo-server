@@ -38,18 +38,18 @@ export type AnyFunctionMap = { [key: string]: AnyFunction | undefined };
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
- // By default, TypeScript uses structural typing (as opposed to nominal typing)
- // Put another way, if it looks like the type and walks like that type, then
- // TypeScript lets it be a type.
- //
- // That's often okay, but it leaves a lot to be desired since a `string` of one
- // type can just be passed in as `string` for that type and TypeScript won't
- // complain.  Flow offers opaque types which solve this, but TypeScript doesn't
- // offer this (yet?).  This Faux-paque type can be used to gain nominal-esque
- // typing, which is incredibly beneficial during re-factors!
- type Fauxpaque<K, T> = K & { __fauxpaque: T };
+// By default, TypeScript uses structural typing (as opposed to nominal typing)
+// Put another way, if it looks like the type and walks like that type, then
+// TypeScript lets it be a type.
+//
+// That's often okay, but it leaves a lot to be desired since a `string` of one
+// type can just be passed in as `string` for that type and TypeScript won't
+// complain.  Flow offers opaque types which solve this, but TypeScript doesn't
+// offer this (yet?).  This Faux-paque type can be used to gain nominal-esque
+// typing, which is incredibly beneficial during re-factors!
+type Fauxpaque<K, T> = K & { __fauxpaque: T };
 
- export type SchemaHash = Fauxpaque<string, 'SchemaHash'>;
+export type SchemaHash = Fauxpaque<string, 'SchemaHash'>;
 
 // Configuration for how Apollo Server talks to the Apollo registry, as passed
 // to the ApolloServer constructor. Each field can also be provided as an
@@ -174,7 +174,7 @@ export type Logger = {
   info(message?: any): void;
   warn(message?: any): void;
   error(message?: any): void;
-}
+};
 
 /**
  * This is an object form of the parameters received by typical
@@ -189,7 +189,7 @@ export type Logger = {
 export type GraphQLFieldResolverParams<
   TSource,
   TContext,
-  TArgs = { [argName: string]: any }
+  TArgs = { [argName: string]: any },
 > = {
   source: TSource;
   args: TArgs;
@@ -197,51 +197,38 @@ export type GraphQLFieldResolverParams<
   info: GraphQLResolveInfo;
 };
 
-export type GraphQLRequestContextDidResolveSource<TContext> =
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'metrics'
-    | 'source'
-    | 'queryHash'
-  >;
+export type GraphQLRequestContextDidResolveSource<TContext> = WithRequired<
+  GraphQLRequestContext<TContext>,
+  'metrics' | 'source' | 'queryHash'
+>;
 export type GraphQLRequestContextParsingDidStart<TContext> =
   GraphQLRequestContextDidResolveSource<TContext>;
 export type GraphQLRequestContextValidationDidStart<TContext> =
   GraphQLRequestContextParsingDidStart<TContext> &
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'document'
-  >;
+    WithRequired<GraphQLRequestContext<TContext>, 'document'>;
 export type GraphQLRequestContextDidResolveOperation<TContext> =
   GraphQLRequestContextValidationDidStart<TContext> &
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'operation'
-    | 'operationName'
-  >;
-export type GraphQLRequestContextDidEncounterErrors<TContext> =
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'metrics'
-    | 'errors'
-  >;
-export type GraphQLRequestContextResponseForOperation<TContext> =
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'metrics'
-    | 'source'
-    | 'document'
-    | 'operation'
-    | 'operationName'
-  >;
+    WithRequired<
+      GraphQLRequestContext<TContext>,
+      'operation' | 'operationName'
+    >;
+export type GraphQLRequestContextDidEncounterErrors<TContext> = WithRequired<
+  GraphQLRequestContext<TContext>,
+  'metrics' | 'errors'
+>;
+export type GraphQLRequestContextResponseForOperation<TContext> = WithRequired<
+  GraphQLRequestContext<TContext>,
+  'metrics' | 'source' | 'document' | 'operation' | 'operationName'
+>;
 export type GraphQLRequestContextExecutionDidStart<TContext> =
   GraphQLRequestContextParsingDidStart<TContext> &
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'document'
-    | 'operation'
-    | 'operationName'
-  >;
+    WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'operation' | 'operationName'
+    >;
 export type GraphQLRequestContextWillSendResponse<TContext> =
   GraphQLRequestContextDidResolveSource<TContext> &
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'metrics'
-    | 'response'
-  >;
+    WithRequired<GraphQLRequestContext<TContext>, 'metrics' | 'response'>;
 
 /**
  * CacheHint represents a contribution to an overall cache policy. It can

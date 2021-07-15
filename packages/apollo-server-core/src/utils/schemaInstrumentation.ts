@@ -6,16 +6,16 @@ import {
   GraphQLObjectType,
   GraphQLFieldResolver,
 } from 'graphql/type';
-import { defaultFieldResolver } from "graphql/execution";
-import { FieldNode } from "graphql/language";
-import { GraphQLRequestExecutionListener } from "apollo-server-plugin-base";
-import type { GraphQLObjectResolver } from "@apollographql/apollo-tools";
+import { defaultFieldResolver } from 'graphql/execution';
+import { FieldNode } from 'graphql/language';
+import { GraphQLRequestExecutionListener } from 'apollo-server-plugin-base';
+import type { GraphQLObjectResolver } from '@apollographql/apollo-tools';
 
-export const symbolExecutionDispatcherWillResolveField =
-  Symbol("apolloServerExecutionDispatcherWillResolveField");
-export const symbolUserFieldResolver =
-  Symbol("apolloServerUserFieldResolver");
-export const symbolPluginsEnabled = Symbol("apolloServerPluginsEnabled");
+export const symbolExecutionDispatcherWillResolveField = Symbol(
+  'apolloServerExecutionDispatcherWillResolveField',
+);
+export const symbolUserFieldResolver = Symbol('apolloServerUserFieldResolver');
+export const symbolPluginsEnabled = Symbol('apolloServerPluginsEnabled');
 
 export function enablePluginsForSchemaResolvers(
   schema: GraphQLSchema & { [symbolPluginsEnabled]?: boolean },
@@ -45,15 +45,13 @@ function wrapField(field: GraphQLField<any, any>): void {
       __whenObjectResolved?: Promise<any>;
     };
 
-    const willResolveField =
-      context?.[symbolExecutionDispatcherWillResolveField] as
-        | GraphQLRequestExecutionListener['willResolveField']
-        | undefined;
+    const willResolveField = context?.[
+      symbolExecutionDispatcherWillResolveField
+    ] as GraphQLRequestExecutionListener['willResolveField'] | undefined;
 
-    const userFieldResolver =
-      context?.[symbolUserFieldResolver] as
-        | GraphQLFieldResolver<any, any>
-        | undefined;
+    const userFieldResolver = context?.[symbolUserFieldResolver] as
+      | GraphQLFieldResolver<any, any>
+      | undefined;
 
     // The technique for implementing a  "did resolve field" is accomplished by
     // returning a function from the `willResolveField` handler.  While there
@@ -65,10 +63,9 @@ function wrapField(field: GraphQLField<any, any>): void {
       typeof willResolveField === 'function' &&
       willResolveField({ source, args, context, info });
 
-    const resolveObject: GraphQLObjectResolver<
-      any,
-      any
-    > | undefined = (info.parentType as any).resolveObject;
+    const resolveObject: GraphQLObjectResolver<any, any> | undefined = (
+      info.parentType as any
+    ).resolveObject;
 
     let whenObjectResolved: Promise<any> | undefined;
 
@@ -106,7 +103,7 @@ function wrapField(field: GraphQLField<any, any>): void {
       // Call the stack's handlers either immediately (if result is not a
       // Promise) or once the Promise is done. Then return that same
       // maybe-Promise value.
-      if (typeof didResolveField === "function") {
+      if (typeof didResolveField === 'function') {
         whenResultIsFinished(result, didResolveField);
       }
       return result;
@@ -114,12 +111,12 @@ function wrapField(field: GraphQLField<any, any>): void {
       // Normally it's a bad sign to see an error both handled and
       // re-thrown. But it is useful to allow extensions to track errors while
       // still handling them in the normal GraphQL way.
-      if (typeof didResolveField === "function") {
+      if (typeof didResolveField === 'function') {
         didResolveField(error);
       }
       throw error;
     }
-  };;
+  };
 }
 
 function isPromise(x: any): boolean {
@@ -134,7 +131,10 @@ export function whenResultIsFinished(
   callback: (err: Error | null, result?: any) => void,
 ) {
   if (isPromise(result)) {
-    result.then((r: any) => callback(null, r), (err: Error) => callback(err));
+    result.then(
+      (r: any) => callback(null, r),
+      (err: Error) => callback(err),
+    );
   } else if (Array.isArray(result)) {
     if (result.some(isPromise)) {
       Promise.all(result).then(
@@ -152,7 +152,6 @@ export function whenResultIsFinished(
 function forEachField(schema: GraphQLSchema, fn: FieldIteratorFn): void {
   const typeMap = schema.getTypeMap();
   Object.entries(typeMap).forEach(([typeName, type]) => {
-
     if (
       !getNamedType(type).name.startsWith('__') &&
       type instanceof GraphQLObjectType

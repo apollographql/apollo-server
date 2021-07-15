@@ -213,7 +213,10 @@ describe('apollo-server', () => {
           'accept',
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         )
-        .expect(200, /apollo-server-landing-page.cdn.apollographql.com\/_latest/);
+        .expect(
+          200,
+          /apollo-server-landing-page.cdn.apollographql.com\/_latest/,
+        );
     });
 
     it('configures cors', async () => {
@@ -263,8 +266,8 @@ describe('apollo-server', () => {
 
       const { server: httpServer } = await server.listen({ port: 0 });
       await request(httpServer)
-      .get('/.well-known/apollo/server-health')
-      .expect(200, { status: 'pass' });
+        .get('/.well-known/apollo/server-health')
+        .expect(200, { status: 'pass' });
     });
   });
 });

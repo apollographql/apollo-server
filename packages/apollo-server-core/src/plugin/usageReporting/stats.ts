@@ -34,9 +34,8 @@ export class SizeEstimator {
 }
 export class OurReport implements Required<IReport> {
   constructor(readonly header: ReportHeader) {}
-  readonly tracesPerQuery: Record<string, OurTracesAndStats> = Object.create(
-    null,
-  );
+  readonly tracesPerQuery: Record<string, OurTracesAndStats> =
+    Object.create(null);
   endTime: google.protobuf.ITimestamp | null = null;
 
   // A rough estimate of the number of bytes currently in the report. We start

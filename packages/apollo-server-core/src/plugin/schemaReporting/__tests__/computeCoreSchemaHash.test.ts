@@ -49,9 +49,7 @@ describe('Executable Schema Id', () => {
         printSchema(buildSchema(unsortedGQLSchemaDocument)),
       ),
     ).not.toEqual(
-      computeCoreSchemaHash(
-        printSchema(buildSchema(sortedGQLSchemaDocument)),
-      ),
+      computeCoreSchemaHash(printSchema(buildSchema(sortedGQLSchemaDocument))),
     );
   });
   it('does not normalize strings', () => {

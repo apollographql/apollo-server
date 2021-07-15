@@ -6,7 +6,10 @@ import { RESTDataSource } from 'apollo-datasource-rest';
 
 import { ApolloServer } from '../ApolloServer';
 
-import { createServerInfo, createApolloFetch } from 'apollo-server-integration-testsuite';
+import {
+  createServerInfo,
+  createApolloFetch,
+} from 'apollo-server-integration-testsuite';
 import { gql } from '../index';
 import { AddressInfo } from 'net';
 import type { GraphQLResolverMap } from 'apollo-graphql';
@@ -31,7 +34,7 @@ const typeDefs = gql`
   }
 `;
 
-const resolvers: GraphQLResolverMap<{dataSources: {id: IdAPI}}> = {
+const resolvers: GraphQLResolverMap<{ dataSources: { id: IdAPI } }> = {
   Query: {
     id: async (_source, _args, { dataSources }) => {
       return (await dataSources.id.getId('hi')).id;
@@ -67,9 +70,9 @@ describe('apollo-server-express', () => {
   let restUrl: string;
 
   beforeAll(async () => {
-    restUrl = await new Promise(resolve => {
+    restUrl = await new Promise((resolve) => {
       restServer = restAPI.listen(0, () => {
-        const { port } = (restServer.address() as AddressInfo);
+        const { port } = restServer.address() as AddressInfo;
         resolve(`http://localhost:${port}`);
       });
     });
@@ -96,16 +99,16 @@ describe('apollo-server-express', () => {
       typeDefs,
       resolvers,
       dataSources: () => ({
-        id: new class extends IdAPI {
+        id: new (class extends IdAPI {
           override baseURL = restUrl;
-        },
+        })(),
       }),
     });
     await server.start();
     const app = express();
 
     server.applyMiddleware({ app });
-    httpServer = await new Promise<http.Server>(resolve => {
+    httpServer = await new Promise<http.Server>((resolve) => {
       const s: Server = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
@@ -129,16 +132,16 @@ describe('apollo-server-express', () => {
       typeDefs,
       resolvers,
       dataSources: () => ({
-        id: new class extends IdAPI {
+        id: new (class extends IdAPI {
           override baseURL = restUrl;
-        },
+        })(),
       }),
     });
     await server.start();
     const app = express();
 
     server.applyMiddleware({ app });
-    httpServer = await new Promise(resolve => {
+    httpServer = await new Promise((resolve) => {
       const s: Server = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);

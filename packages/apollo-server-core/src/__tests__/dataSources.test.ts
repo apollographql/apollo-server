@@ -17,28 +17,23 @@ describe('ApolloServerBase dataSources', () => {
         Query: {
           hello() {
             return 'world';
-          }
-        }
+          },
+        },
       },
-      dataSources: () => ({ x: { initialize }, y: { initialize } })
+      dataSources: () => ({ x: { initialize }, y: { initialize } }),
     });
     await server.start();
 
-    await server.executeOperation({ query: "query { hello }"});
+    await server.executeOperation({ query: 'query { hello }' });
 
     expect(initialize).toHaveBeenCalledTimes(2);
   });
 
   it('initializes all async and sync datasources before calling resolvers', async () => {
-    const INITIALIZE = "datasource initializer call";
-    const METHOD_CALL = "datasource method call";
+    const INITIALIZE = 'datasource initializer call';
+    const METHOD_CALL = 'datasource method call';
 
-    const expectedCallOrder = [
-      INITIALIZE,
-      INITIALIZE,
-      INITIALIZE,
-      METHOD_CALL
-    ];
+    const expectedCallOrder = [INITIALIZE, INITIALIZE, INITIALIZE, METHOD_CALL];
 
     const actualCallOrder: string[] = [];
 
@@ -48,22 +43,24 @@ describe('ApolloServerBase dataSources', () => {
         Query: {
           hello(_, __, context) {
             context.dataSources.x.getData();
-            return "world";
-          }
+            return 'world';
+          },
         },
       },
       dataSources: () => ({
         x: {
           initialize() {
-            return Promise.resolve().then(
-              () => { actualCallOrder.push(INITIALIZE); }
-            );
+            return Promise.resolve().then(() => {
+              actualCallOrder.push(INITIALIZE);
+            });
           },
-          getData() { actualCallOrder.push(METHOD_CALL); }
+          getData() {
+            actualCallOrder.push(METHOD_CALL);
+          },
         },
         y: {
           initialize() {
-            return new Promise(res => {
+            return new Promise((res) => {
               setTimeout(() => {
                 actualCallOrder.push(INITIALIZE);
                 res();
@@ -72,13 +69,15 @@ describe('ApolloServerBase dataSources', () => {
           },
         },
         z: {
-          initialize() { actualCallOrder.push(INITIALIZE); }
-        }
-      })
+          initialize() {
+            actualCallOrder.push(INITIALIZE);
+          },
+        },
+      }),
     });
     await server.start();
 
-    await server.executeOperation({ query: "query { hello }"});
+    await server.executeOperation({ query: 'query { hello }' });
 
     expect(actualCallOrder).toEqual(expectedCallOrder);
   });
@@ -93,14 +92,14 @@ describe('ApolloServerBase dataSources', () => {
         Query: {
           hello(_, __, context) {
             return context.dataSources.x.getData();
-          }
+          },
         },
       },
-      dataSources: () => ({ x: { initialize() {}, getData } })
+      dataSources: () => ({ x: { initialize() {}, getData } }),
     });
     await server.start();
 
-    const res = await server.executeOperation({ query: "query { hello }"});
+    const res = await server.executeOperation({ query: 'query { hello }' });
 
     expect(getData).toHaveBeenCalled();
     expect(res.data?.hello).toBe(message);

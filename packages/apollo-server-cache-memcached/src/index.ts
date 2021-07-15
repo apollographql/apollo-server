@@ -1,7 +1,4 @@
-import {
-  KeyValueCache,
-  KeyValueCacheSetOptions,
-} from 'apollo-server-caching';
+import { KeyValueCache, KeyValueCacheSetOptions } from 'apollo-server-caching';
 import Memcached from 'memcached';
 import { promisify } from 'util';
 

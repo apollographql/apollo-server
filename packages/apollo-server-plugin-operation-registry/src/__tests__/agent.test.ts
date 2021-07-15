@@ -13,10 +13,15 @@ import {
   nockStorageSecretOperationManifest,
   genericApiKeyHash,
 } from './helpers.test-helpers';
-import Agent, { AgentOptions } from "../agent";
-import { Operation } from "../ApolloServerPluginOperationRegistry";
-import { fakeTestBaseUrl, getStoreKey, getOperationManifestUrl, urlOperationManifestBase } from "../common";
-import { Logger } from "apollo-server-types";
+import Agent, { AgentOptions } from '../agent';
+import { Operation } from '../ApolloServerPluginOperationRegistry';
+import {
+  fakeTestBaseUrl,
+  getStoreKey,
+  getOperationManifestUrl,
+  urlOperationManifestBase,
+} from '../common';
+import { Logger } from 'apollo-server-types';
 
 // These get a bit verbose within the tests below, so we use this as a
 // sample store to pick and grab from.
@@ -100,7 +105,7 @@ describe('Agent', () => {
         spy: jest.SpyInstance,
         letters: string[],
       ) {
-        letters.forEach(letter => {
+        letters.forEach((letter) => {
           const { signature, document } = sampleManifestRecords[letter];
           expect(spy).toHaveBeenCalledWith(getStoreKey(signature), document);
         });
@@ -157,7 +162,11 @@ describe('Agent', () => {
         expect(relevantLogs[0][0]).toBe(
           `Checking for manifest changes at ${urlResolve(
             fakeTestBaseUrl,
-            getOperationManifestUrl(genericServiceID, genericStorageSecret, 'current'),
+            getOperationManifestUrl(
+              genericServiceID,
+              genericStorageSecret,
+              'current',
+            ),
           )}`,
         );
 
@@ -213,7 +222,7 @@ describe('Agent', () => {
         const storeSetSpy = jest.spyOn(store, 'set');
         const storeDeleteSpy = jest.spyOn(store, 'delete');
         const agent = createAgent({ store });
-        jest.useFakeTimers("legacy");
+        jest.useFakeTimers('legacy');
         await agent.start();
 
         // Three additions, no deletions.
@@ -280,7 +289,7 @@ describe('Agent', () => {
         expect(storeDeleteSpy).toBeCalledTimes(0);
         await expectStoreHasOperationEach(store, ['a', 'b', 'c']);
 
-        nockStorageSecret(genericServiceID, genericApiKeyHash)
+        nockStorageSecret(genericServiceID, genericApiKeyHash);
         nockGoodManifestsUnderStorageSecret(
           genericServiceID,
           genericStorageSecret,
@@ -295,11 +304,11 @@ describe('Agent', () => {
           store.get(getStoreKey(sampleManifestRecords.c.signature)),
         ).resolves.toBeUndefined();
 
-        nockStorageSecret(genericServiceID, genericApiKeyHash)
+        nockStorageSecret(genericServiceID, genericApiKeyHash);
         nockGoodManifestsUnderStorageSecret(
           genericServiceID,
           genericStorageSecret,
-          [sampleManifestRecords.a]
+          [sampleManifestRecords.a],
         ); // Just A in this manifest.
         await agent.checkForUpdate();
         expect(agent._timesChecked).toBe(3);

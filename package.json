@@ -20,7 +20,8 @@
     "test:ci": "npm run coverage -- --ci --maxWorkers=2  --reporters=default --reporters=jest-junit",
     "coverage": "npm test -- --coverage",
     "coverage:upload": "codecov",
-    "codegen": "graphql-codegen"
+    "codegen": "graphql-codegen",
+    "prettier-check": "prettier --check ."
   },
   "engines": {
     "node": ">=12",

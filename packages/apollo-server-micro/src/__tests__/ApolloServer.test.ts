@@ -18,7 +18,10 @@ const resolvers = {
   },
 };
 
-async function createServer(options: object = {}, config: Config = {}): Promise<any> {
+async function createServer(
+  options: object = {},
+  config: Config = {},
+): Promise<any> {
   const apolloServer = new ApolloServer({
     typeDefs,
     resolvers,
@@ -34,15 +37,15 @@ async function createServer(options: object = {}, config: Config = {}): Promise<
   };
 }
 
-describe('apollo-server-micro', function() {
-  describe('constructor', function() {
-    it('should accepts typeDefs and resolvers', function() {
+describe('apollo-server-micro', function () {
+  describe('constructor', function () {
+    it('should accepts typeDefs and resolvers', function () {
       const apolloServer = new ApolloServer({ typeDefs, resolvers });
       expect(apolloServer).toBeDefined();
     });
   });
 
-  describe('#createHandler', function() {
+  describe('#createHandler', function () {
     describe('querying', function () {
       it(
         'should be queryable using the default /graphql path, if no path ' +
@@ -95,20 +98,22 @@ describe('apollo-server-micro', function() {
               'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
           },
         });
-        expect(body).toMatch(/apollo-server-landing-page.cdn.apollographql.com\/_latest/);
+        expect(body).toMatch(
+          /apollo-server-landing-page.cdn.apollographql.com\/_latest/,
+        );
         service.close();
       });
     });
 
-    describe('health checks', function() {
-      it('should create a healthcheck endpoint', async function() {
+    describe('health checks', function () {
+      it('should create a healthcheck endpoint', async function () {
         const { service, uri } = await createServer();
         const body = await rp(`${uri}/.well-known/apollo/server-health`);
         expect(body).toEqual(JSON.stringify({ status: 'pass' }));
         service.close();
       });
 
-      it('should support a health check callback', async function() {
+      it('should support a health check callback', async function () {
         const { service, uri } = await createServer({
           async onHealthCheck() {
             throw Error("can't connect to DB");
@@ -127,7 +132,7 @@ describe('apollo-server-micro', function() {
         service.close();
       });
 
-      it('should be able to disable the health check', async function() {
+      it('should be able to disable the health check', async function () {
         const { service, uri } = await createServer({
           disableHealthCheck: true,
         });

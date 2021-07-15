@@ -1,7 +1,11 @@
 export type Maybe<T> = T | null;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type Exact<T extends { [key: string]: unknown }> = {
+  [K in keyof T]: T[K];
+};
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> &
+  { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> &
+  { [SubKey in K]: Maybe<T[SubKey]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -25,7 +29,6 @@ export type Scalars = {
   /** A lowercase hexadecimal SHA-256 */
   SHA256: any;
 };
-
 
 export type Account = {
   __typename?: 'Account';
@@ -106,32 +109,26 @@ export type Account = {
   experimentalFeatures: AccountExperimentalFeatures;
 };
 
-
 export type AccountAvatarUrlArgs = {
   size?: Scalars['Int'];
 };
-
 
 export type AccountGraphIdAvailableArgs = {
   id: Scalars['ID'];
 };
 
-
 export type AccountInvitationsArgs = {
   includeAccepted?: Scalars['Boolean'];
 };
-
 
 export type AccountRequestsArgs = {
   from: Scalars['Timestamp'];
   to: Scalars['Timestamp'];
 };
 
-
 export type AccountServicesArgs = {
   includeDeleted?: Maybe<Scalars['Boolean']>;
 };
-
 
 export type AccountStatsArgs = {
   from: Scalars['Timestamp'];
@@ -150,7 +147,7 @@ export enum AccountEdgeServerInfosColumn {
   ServerId = 'SERVER_ID',
   ServiceId = 'SERVICE_ID',
   Timestamp = 'TIMESTAMP',
-  UserVersion = 'USER_VERSION'
+  UserVersion = 'USER_VERSION',
 }
 
 export type AccountEdgeServerInfosDimensions = {
@@ -302,7 +299,7 @@ export enum AccountEnumStatsColumn {
   SchemaTag = 'SCHEMA_TAG',
   ServiceId = 'SERVICE_ID',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type AccountEnumStatsDimensions = {
@@ -483,7 +480,7 @@ export enum AccountErrorStatsColumn {
   SchemaTag = 'SCHEMA_TAG',
   ServiceId = 'SERVICE_ID',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type AccountErrorStatsDimensions = {
@@ -660,7 +657,7 @@ export enum AccountFieldStatsColumn {
   SchemaTag = 'SCHEMA_TAG',
   ServiceId = 'SERVICE_ID',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type AccountFieldStatsDimensions = {
@@ -834,7 +831,7 @@ export enum AccountInputStatsColumn {
   SchemaTag = 'SCHEMA_TAG',
   ServiceId = 'SERVICE_ID',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type AccountInputStatsDimensions = {
@@ -1116,97 +1113,78 @@ export type AccountMutation = {
   updateUserPermission?: Maybe<User>;
 };
 
-
 export type AccountMutationCreateStaticInvitationArgs = {
   role: UserPermission;
 };
 
-
 export type AccountMutationExtendTrialArgs = {
   to: Scalars['Timestamp'];
 };
-
 
 export type AccountMutationInviteArgs = {
   email: Scalars['String'];
   role?: Maybe<UserPermission>;
 };
 
-
 export type AccountMutationRemoveInvitationArgs = {
   id?: Maybe<Scalars['ID']>;
 };
-
 
 export type AccountMutationRemoveMemberArgs = {
   id: Scalars['ID'];
 };
 
-
 export type AccountMutationResendInvitationArgs = {
   id?: Maybe<Scalars['ID']>;
 };
-
 
 export type AccountMutationRevokeStaticInvitationArgs = {
   token: Scalars['String'];
 };
 
-
 export type AccountMutationSetPlanArgs = {
   id: Scalars['ID'];
 };
-
 
 export type AccountMutationStartTeamSubscriptionArgs = {
   billingPeriod: BillingPeriod;
 };
 
-
 export type AccountMutationSubmitTeamCancellationFeedbackArgs = {
   feedback: Scalars['String'];
 };
-
 
 export type AccountMutationUpdateBillingAddressArgs = {
   billingAddress: BillingAddressInput;
 };
 
-
 export type AccountMutationUpdateBillingInfoArgs = {
   token: Scalars['String'];
 };
-
 
 export type AccountMutationUpdateEmailArgs = {
   email: Scalars['String'];
 };
 
-
 export type AccountMutationUpdateIdArgs = {
   id: Scalars['ID'];
 };
-
 
 export type AccountMutationUpdateInviteLinkRoleArgs = {
   role: UserPermission;
 };
 
-
 export type AccountMutationUpdateNameArgs = {
   name: Scalars['String'];
 };
-
 
 export type AccountMutationUpdatePingOneSsoidpidArgs = {
   idpid?: Maybe<Scalars['String']>;
 };
 
-
 export type AccountMutationUpdateSsoDefaultRoleArgs = {
   role: UserPermission;
 };
-
 
 export type AccountMutationUpdateUserPermissionArgs = {
   permission: UserPermission;
@@ -1233,7 +1211,7 @@ export enum AccountQueryStatsColumn {
   ServiceVersion = 'SERVICE_VERSION',
   Timestamp = 'TIMESTAMP',
   UncachedHistogram = 'UNCACHED_HISTOGRAM',
-  UncachedRequestsCount = 'UNCACHED_REQUESTS_COUNT'
+  UncachedRequestsCount = 'UNCACHED_REQUESTS_COUNT',
 }
 
 export type AccountQueryStatsDimensions = {
@@ -1433,7 +1411,7 @@ export enum AccountState {
   Active = 'ACTIVE',
   Closed = 'CLOSED',
   Unknown = 'UNKNOWN',
-  Unprovisioned = 'UNPROVISIONED'
+  Unprovisioned = 'UNPROVISIONED',
 }
 
 /** A time window with a specified granularity over a given account. */
@@ -1453,14 +1431,12 @@ export type AccountStatsWindow = {
   traceRefs: Array<AccountTraceRefsRecord>;
 };
 
-
 /** A time window with a specified granularity over a given account. */
 export type AccountStatsWindowEdgeServerInfosArgs = {
   filter?: Maybe<AccountEdgeServerInfosFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<AccountEdgeServerInfosOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity over a given account. */
 export type AccountStatsWindowEnumStatsArgs = {
@@ -1469,14 +1445,12 @@ export type AccountStatsWindowEnumStatsArgs = {
   orderBy?: Maybe<Array<AccountEnumStatsOrderBySpec>>;
 };
 
-
 /** A time window with a specified granularity over a given account. */
 export type AccountStatsWindowErrorStatsArgs = {
   filter?: Maybe<AccountErrorStatsFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<AccountErrorStatsOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity over a given account. */
 export type AccountStatsWindowFieldStatsArgs = {
@@ -1485,14 +1459,12 @@ export type AccountStatsWindowFieldStatsArgs = {
   orderBy?: Maybe<Array<AccountFieldStatsOrderBySpec>>;
 };
 
-
 /** A time window with a specified granularity over a given account. */
 export type AccountStatsWindowInputStatsArgs = {
   filter?: Maybe<AccountInputStatsFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<AccountInputStatsOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity over a given account. */
 export type AccountStatsWindowQueryStatsArgs = {
@@ -1501,14 +1473,12 @@ export type AccountStatsWindowQueryStatsArgs = {
   orderBy?: Maybe<Array<AccountQueryStatsOrderBySpec>>;
 };
 
-
 /** A time window with a specified granularity over a given account. */
 export type AccountStatsWindowTracePathErrorsRefsArgs = {
   filter?: Maybe<AccountTracePathErrorsRefsFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<AccountTracePathErrorsRefsOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity over a given account. */
 export type AccountStatsWindowTraceRefsArgs = {
@@ -1537,7 +1507,7 @@ export enum AccountTracePathErrorsRefsColumn {
   TraceHttpStatusCode = 'TRACE_HTTP_STATUS_CODE',
   TraceId = 'TRACE_ID',
   TraceSizeBytes = 'TRACE_SIZE_BYTES',
-  TraceStartsAt = 'TRACE_STARTS_AT'
+  TraceStartsAt = 'TRACE_STARTS_AT',
 }
 
 export type AccountTracePathErrorsRefsDimensions = {
@@ -1751,7 +1721,7 @@ export enum AccountTraceRefsColumn {
   ServiceVersion = 'SERVICE_VERSION',
   Timestamp = 'TIMESTAMP',
   TraceId = 'TRACE_ID',
-  TraceSizeBytes = 'TRACE_SIZE_BYTES'
+  TraceSizeBytes = 'TRACE_SIZE_BYTES',
 }
 
 export type AccountTraceRefsDimensions = {
@@ -1932,7 +1902,7 @@ export enum ActorType {
   Graph = 'GRAPH',
   InternalIdentity = 'INTERNAL_IDENTITY',
   Synchronization = 'SYNCHRONIZATION',
-  User = 'USER'
+  User = 'USER',
 }
 
 export type AffectedClient = {
@@ -1988,7 +1958,7 @@ export type AvatarDeleteError = {
 };
 
 export enum AvatarDeleteErrorCode {
-  SsoUsersCannotDeleteSelfAvatar = 'SSO_USERS_CANNOT_DELETE_SELF_AVATAR'
+  SsoUsersCannotDeleteSelfAvatar = 'SSO_USERS_CANNOT_DELETE_SELF_AVATAR',
 }
 
 export type AvatarUploadError = {
@@ -1999,7 +1969,7 @@ export type AvatarUploadError = {
 };
 
 export enum AvatarUploadErrorCode {
-  SsoUsersCannotUploadSelfAvatar = 'SSO_USERS_CANNOT_UPLOAD_SELF_AVATAR'
+  SsoUsersCannotUploadSelfAvatar = 'SSO_USERS_CANNOT_UPLOAD_SELF_AVATAR',
 }
 
 export type AvatarUploadResult = AvatarUploadError | MediaUploadInfo;
@@ -2037,7 +2007,7 @@ export type BillingInfo = {
 
 export enum BillingModel {
   RequestBased = 'REQUEST_BASED',
-  SeatBased = 'SEAT_BASED'
+  SeatBased = 'SEAT_BASED',
 }
 
 export type BillingMonth = {
@@ -2051,7 +2021,7 @@ export enum BillingPeriod {
   Monthly = 'MONTHLY',
   Quarterly = 'QUARTERLY',
   SemiAnnually = 'SEMI_ANNUALLY',
-  Yearly = 'YEARLY'
+  Yearly = 'YEARLY',
 }
 
 export type BillingPlan = {
@@ -2104,13 +2074,13 @@ export enum BillingPlanKind {
   EnterprisePaid = 'ENTERPRISE_PAID',
   EnterprisePilot = 'ENTERPRISE_PILOT',
   TeamPaid = 'TEAM_PAID',
-  TeamTrial = 'TEAM_TRIAL'
+  TeamTrial = 'TEAM_TRIAL',
 }
 
 export enum BillingPlanTier {
   Community = 'COMMUNITY',
   Enterprise = 'ENTERPRISE',
-  Team = 'TEAM'
+  Team = 'TEAM',
 }
 
 export type BillingSubscription = {
@@ -2150,12 +2120,11 @@ export type BillingSubscriptionAddon = {
   quantity: Scalars['Int'];
 };
 
-
 export enum CacheScope {
   Private = 'PRIVATE',
   Public = 'PUBLIC',
   Unknown = 'UNKNOWN',
-  Unrecognized = 'UNRECOGNIZED'
+  Unrecognized = 'UNRECOGNIZED',
 }
 
 export type Change = {
@@ -2193,7 +2162,7 @@ export enum ChangeCategory {
   Addition = 'ADDITION',
   Edit = 'EDIT',
   Removal = 'REMOVAL',
-  Deprecation = 'DEPRECATION'
+  Deprecation = 'DEPRECATION',
 }
 
 /**
@@ -2277,7 +2246,7 @@ export enum ChangeCode {
   /** Repeatable flag was removed for directive. */
   DirectiveRepeatableRemoved = 'DIRECTIVE_REPEATABLE_REMOVED',
   /** Non-nullable argument added to directive. */
-  RequiredDirectiveArgAdded = 'REQUIRED_DIRECTIVE_ARG_ADDED'
+  RequiredDirectiveArgAdded = 'REQUIRED_DIRECTIVE_ARG_ADDED',
 }
 
 /**
@@ -2302,7 +2271,7 @@ export type ChangeOnOperation = {
 
 export enum ChangeSeverity {
   Failure = 'FAILURE',
-  Notice = 'NOTICE'
+  Notice = 'NOTICE',
 }
 
 /**
@@ -2331,7 +2300,7 @@ export type ChangeSummary = {
 
 export enum ChangeType {
   Failure = 'FAILURE',
-  Notice = 'NOTICE'
+  Notice = 'NOTICE',
 }
 
 /** Destination for notifications */
@@ -2395,7 +2364,7 @@ export type CheckFilterInput = {
 export enum CheckFilterInputStatusOption {
   Failed = 'FAILED',
   Pending = 'PENDING',
-  Passed = 'PASSED'
+  Passed = 'PASSED',
 }
 
 export type CheckPartialSchemaResult = {
@@ -2447,7 +2416,6 @@ export type CheckWorkflow = {
   completedAt?: Maybe<Scalars['Timestamp']>;
 };
 
-
 export type CheckWorkflowRerunsArgs = {
   limit?: Scalars['Int'];
 };
@@ -2469,7 +2437,7 @@ export type CheckWorkflowRerunResult = {
 export enum CheckWorkflowStatus {
   Pending = 'PENDING',
   Passed = 'PASSED',
-  Failed = 'FAILED'
+  Failed = 'FAILED',
 }
 
 export type CheckWorkflowTask = {
@@ -2485,7 +2453,7 @@ export enum CheckWorkflowTaskStatus {
   Pending = 'PENDING',
   Passed = 'PASSED',
   Failed = 'FAILED',
-  Blocked = 'BLOCKED'
+  Blocked = 'BLOCKED',
 }
 
 /** Client filter configuration for a graph. */
@@ -2534,7 +2502,7 @@ export enum ComparisonOperator {
   LessThan = 'LESS_THAN',
   LessThanOrEqualTo = 'LESS_THAN_OR_EQUAL_TO',
   NotEquals = 'NOT_EQUALS',
-  Unrecognized = 'UNRECOGNIZED'
+  Unrecognized = 'UNRECOGNIZED',
 }
 
 /** Metadata about the result of composition run in the cloud, combined with removing an implementing service */
@@ -2724,14 +2692,13 @@ export type CronJob = {
   recentExecutions: Array<CronExecution>;
 };
 
-
 export type CronJobRecentExecutionsArgs = {
   n?: Maybe<Scalars['Int']>;
 };
 
 export enum DatadogApiRegion {
   Eu = 'EU',
-  Us = 'US'
+  Us = 'US',
 }
 
 export type DatadogMetricsConfig = {
@@ -2750,7 +2717,7 @@ export type DeleteSchemaTagResult = {
 
 export enum DeletionTargetType {
   Account = 'ACCOUNT',
-  User = 'USER'
+  User = 'USER',
 }
 
 export type DurationHistogram = {
@@ -2763,7 +2730,6 @@ export type DurationHistogram = {
   totalCount: Scalars['Long'];
   totalDurationMs: Scalars['Float'];
 };
-
 
 export type DurationHistogramDurationMsArgs = {
   percentile: Scalars['Float'];
@@ -2826,7 +2792,7 @@ export enum EdgeServerInfosColumn {
   ServerId = 'SERVER_ID',
   ServiceId = 'SERVICE_ID',
   Timestamp = 'TIMESTAMP',
-  UserVersion = 'USER_VERSION'
+  UserVersion = 'USER_VERSION',
 }
 
 export type EdgeServerInfosDimensions = {
@@ -2964,7 +2930,7 @@ export type EdgeServerInfosRecord = {
 };
 
 export enum EmailCategory {
-  Educational = 'EDUCATIONAL'
+  Educational = 'EDUCATIONAL',
 }
 
 export type EmailPreferences = {
@@ -2990,7 +2956,7 @@ export enum EnumStatsColumn {
   SchemaTag = 'SCHEMA_TAG',
   ServiceId = 'SERVICE_ID',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type EnumStatsDimensions = {
@@ -3187,7 +3153,7 @@ export enum ErrorStatsColumn {
   SchemaTag = 'SCHEMA_TAG',
   ServiceId = 'SERVICE_ID',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type ErrorStatsDimensions = {
@@ -3355,7 +3321,7 @@ export type ErrorStatsRecord = {
 export enum EventEnum {
   ClickCheckList = 'CLICK_CHECK_LIST',
   ClickGoToGraphSettings = 'CLICK_GO_TO_GRAPH_SETTINGS',
-  RunExplorerOperation = 'RUN_EXPLORER_OPERATION'
+  RunExplorerOperation = 'RUN_EXPLORER_OPERATION',
 }
 
 /** Excluded operation for a graph. */
@@ -3462,7 +3428,7 @@ export enum FieldStatsColumn {
   SchemaTag = 'SCHEMA_TAG',
   ServiceId = 'SERVICE_ID',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type FieldStatsDimensions = {
@@ -3653,7 +3619,7 @@ export type GitContextInput = {
 export enum GitRemoteHost {
   Github = 'GITHUB',
   Gitlab = 'GITLAB',
-  Bitbucket = 'BITBUCKET'
+  Bitbucket = 'BITBUCKET',
 }
 
 export type GraphApiKey = ApiKey & {
@@ -3667,8 +3633,9 @@ export type GraphApiKey = ApiKey & {
 };
 
 /** A union of all combinations that can comprise the implementingServices for a Service */
-export type GraphImplementors = NonFederatedImplementingService | FederatedImplementingServices;
-
+export type GraphImplementors =
+  | NonFederatedImplementingService
+  | FederatedImplementingServices;
 
 /** A variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariant = {
@@ -3712,19 +3679,16 @@ export type GraphVariant = {
   usageLastReportedAt?: Maybe<Scalars['Timestamp']>;
 };
 
-
 /** A variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantChecksArgs = {
   limit?: Scalars['Int'];
   branch?: Maybe<Scalars['String']>;
 };
 
-
 /** A variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantChecksPerBranchArgs = {
   limit?: Scalars['Int'];
 };
-
 
 /** A variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantCheckArgs = {
@@ -3752,48 +3716,40 @@ export type GraphVariantMutation = {
   updateVariantIsPublic?: Maybe<GraphVariant>;
 };
 
-
 /** Modifies a variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantMutationUpdateUrlArgs = {
   url?: Maybe<Scalars['String']>;
 };
-
 
 /** Modifies a variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantMutationUpdateSubscriptionUrlArgs = {
   subscriptionUrl?: Maybe<Scalars['String']>;
 };
 
-
 /** Modifies a variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantMutationUpdateSendCookiesArgs = {
   sendCookies: Scalars['Boolean'];
 };
-
 
 /** Modifies a variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantMutationUpdateIsProtectedArgs = {
   isProtected: Scalars['Boolean'];
 };
 
-
 /** Modifies a variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantMutationUpdatePreflightScriptArgs = {
   preflightScript?: Maybe<Scalars['String']>;
 };
-
 
 /** Modifies a variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantMutationUpdateDefaultHeadersArgs = {
   defaultHeaders?: Maybe<Scalars['String']>;
 };
 
-
 /** Modifies a variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantMutationSetIsFavoriteOfCurrentUserArgs = {
   favorite: Scalars['Boolean'];
 };
-
 
 /** Modifies a variant of a graph, also called a schema tag in parts of our product. */
 export type GraphVariantMutationUpdateVariantIsPublicArgs = {
@@ -3844,7 +3800,7 @@ export enum HttpMethod {
   Put = 'PUT',
   Trace = 'TRACE',
   Unknown = 'UNKNOWN',
-  Unrecognized = 'UNRECOGNIZED'
+  Unrecognized = 'UNRECOGNIZED',
 }
 
 export type Identity = {
@@ -3898,7 +3854,7 @@ export enum InputStatsColumn {
   SchemaTag = 'SCHEMA_TAG',
   ServiceId = 'SERVICE_ID',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type InputStatsDimensions = {
@@ -4107,7 +4063,7 @@ export enum InternalMdgAdminRole {
   InternalMdgReadOnly = 'INTERNAL_MDG_READ_ONLY',
   InternalMdgSales = 'INTERNAL_MDG_SALES',
   InternalMdgSuperAdmin = 'INTERNAL_MDG_SUPER_ADMIN',
-  InternalMdgSupport = 'INTERNAL_MDG_SUPPORT'
+  InternalMdgSupport = 'INTERNAL_MDG_SUPPORT',
 }
 
 export type IntrospectionDirective = {
@@ -4165,7 +4121,7 @@ export enum IntrospectionDirectiveLocation {
   /** Location adjacent to an input object type definition. */
   InputObject = 'INPUT_OBJECT',
   /** Location adjacent to an input object field definition. */
-  InputFieldDefinition = 'INPUT_FIELD_DEFINITION'
+  InputFieldDefinition = 'INPUT_FIELD_DEFINITION',
 }
 
 /** Values associated with introspection result for an enum value */
@@ -4236,7 +4192,6 @@ export type IntrospectionSchema = {
   directives: Array<IntrospectionDirective>;
 };
 
-
 export type IntrospectionSchemaTypesArgs = {
   filter?: Maybe<TypeFilterConfig>;
 };
@@ -4268,7 +4223,6 @@ export type IntrospectionType = {
   inputFields?: Maybe<Array<IntrospectionInputValue>>;
   ofType?: Maybe<IntrospectionType>;
 };
-
 
 /** Object containing all possible values for an introspectionType */
 export type IntrospectionTypeEnumValuesArgs = {
@@ -4308,7 +4262,7 @@ export enum IntrospectionTypeKind {
   /** Indicates this type is a list. 'ofType' is a valid field. */
   List = 'LIST',
   /** Indicates this type is a non-null. 'ofType' is a valid field. */
-  NonNull = 'NON_NULL'
+  NonNull = 'NON_NULL',
 }
 
 /** Shallow __Type introspection type */
@@ -4345,9 +4299,8 @@ export enum InvoiceState {
   Failed = 'FAILED',
   Open = 'OPEN',
   PastDue = 'PAST_DUE',
-  Unknown = 'UNKNOWN'
+  Unknown = 'UNKNOWN',
 }
-
 
 export type MarkChangesForOperationAsSafeResult = {
   __typename?: 'MarkChangesForOperationAsSafeResult';
@@ -4404,28 +4357,23 @@ export type Mutation = {
   user?: Maybe<UserMutation>;
 };
 
-
 export type MutationAccountArgs = {
   id: Scalars['ID'];
 };
-
 
 export type MutationFinalizePasswordResetArgs = {
   newPassword: Scalars['String'];
   resetToken: Scalars['String'];
 };
 
-
 export type MutationJoinAccountArgs = {
   accountId: Scalars['ID'];
   joinToken: Scalars['String'];
 };
 
-
 export type MutationNewAccountArgs = {
   id: Scalars['ID'];
 };
-
 
 export type MutationNewServiceArgs = {
   accountId: Scalars['ID'];
@@ -4437,33 +4385,27 @@ export type MutationNewServiceArgs = {
   title?: Maybe<Scalars['String']>;
 };
 
-
 export type MutationReportSchemaArgs = {
   coreSchema?: Maybe<Scalars['String']>;
   report: SchemaReport;
 };
 
-
 export type MutationResetPasswordArgs = {
   email: Scalars['String'];
 };
-
 
 export type MutationResolveAllInternalCronExecutionsArgs = {
   group?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
 };
 
-
 export type MutationResolveInternalCronExecutionArgs = {
   id: Scalars['ID'];
 };
 
-
 export type MutationServiceArgs = {
   id: Scalars['ID'];
 };
-
 
 export type MutationSetSubscriptionsArgs = {
   email: Scalars['String'];
@@ -4471,11 +4413,9 @@ export type MutationSetSubscriptionsArgs = {
   token: Scalars['String'];
 };
 
-
 export type MutationSetUserSettingsArgs = {
   newSettings?: Maybe<UserSettingsInput>;
 };
-
 
 export type MutationSignUpArgs = {
   email: Scalars['String'];
@@ -4488,13 +4428,11 @@ export type MutationSignUpArgs = {
   utmSource?: Maybe<Scalars['String']>;
 };
 
-
 export type MutationSubmitPostDeletionFeedbackArgs = {
   feedback: Scalars['String'];
   targetIdentifier: Scalars['ID'];
   targetType: DeletionTargetType;
 };
-
 
 export type MutationTrackArgs = {
   event: EventEnum;
@@ -4502,12 +4440,10 @@ export type MutationTrackArgs = {
   graphVariant?: Scalars['String'];
 };
 
-
 export type MutationUnsubscribeFromAllArgs = {
   email: Scalars['String'];
   token: Scalars['String'];
 };
-
 
 export type MutationUserArgs = {
   id: Scalars['ID'];
@@ -4580,7 +4516,6 @@ export type NonFederatedImplementingService = {
    */
   graphVariant: Scalars['String'];
 };
-
 
 export type OdysseyCourse = {
   __typename?: 'OdysseyCourse';
@@ -4678,7 +4613,7 @@ export type OperationValidationError = {
 
 export enum Ordering {
   Ascending = 'ASCENDING',
-  Descending = 'DESCENDING'
+  Descending = 'DESCENDING',
 }
 
 /** A reusable invite link for an organization. */
@@ -4699,7 +4634,7 @@ export type OrganizationSso = {
 };
 
 export enum OrganizationSsoProvider {
-  Pingone = 'PINGONE'
+  Pingone = 'PINGONE',
 }
 
 /** PagerDuty notification channel */
@@ -4761,7 +4696,7 @@ export type PromoteSchemaError = {
 };
 
 export enum PromoteSchemaErrorCode {
-  CannotPromoteSchemaForFederatedGraph = 'CANNOT_PROMOTE_SCHEMA_FOR_FEDERATED_GRAPH'
+  CannotPromoteSchemaForFederatedGraph = 'CANNOT_PROMOTE_SCHEMA_FOR_FEDERATED_GRAPH',
 }
 
 export type PromoteSchemaResponse = {
@@ -4772,10 +4707,12 @@ export type PromoteSchemaResponse = {
 
 export enum PromoteSchemaResponseCode {
   PromotionSuccess = 'PROMOTION_SUCCESS',
-  NoChangesDetected = 'NO_CHANGES_DETECTED'
+  NoChangesDetected = 'NO_CHANGES_DETECTED',
 }
 
-export type PromoteSchemaResponseOrError = PromoteSchemaResponse | PromoteSchemaError;
+export type PromoteSchemaResponseOrError =
+  | PromoteSchemaResponse
+  | PromoteSchemaError;
 
 export type Protobuf = {
   __typename?: 'Protobuf';
@@ -4838,48 +4775,39 @@ export type Query = {
   variant?: Maybe<GraphVariantLookup>;
 };
 
-
 export type QueryAccountArgs = {
   id: Scalars['ID'];
 };
 
-
 export type QueryAccountIdAvailableArgs = {
   id: Scalars['ID'];
 };
-
 
 export type QueryAllAccountsArgs = {
   search?: Maybe<Scalars['String']>;
   tier?: Maybe<BillingPlanTier>;
 };
 
-
 export type QueryAllServicesArgs = {
   search?: Maybe<Scalars['String']>;
 };
 
-
 export type QueryAllUsersArgs = {
   search?: Maybe<Scalars['String']>;
 };
-
 
 export type QueryEmailPreferencesArgs = {
   email: Scalars['String'];
   token: Scalars['String'];
 };
 
-
 export type QueryPlanArgs = {
   id?: Maybe<Scalars['ID']>;
 };
 
-
 export type QueryServiceArgs = {
   id: Scalars['ID'];
 };
-
 
 export type QueryStatsArgs = {
   from: Scalars['Timestamp'];
@@ -4887,16 +4815,13 @@ export type QueryStatsArgs = {
   to?: Maybe<Scalars['Timestamp']>;
 };
 
-
 export type QueryTeamPlanArgs = {
   billingPeriod: BillingPeriod;
 };
 
-
 export type QueryUserArgs = {
   id: Scalars['ID'];
 };
-
 
 export type QueryVariantArgs = {
   ref: Scalars['ID'];
@@ -4928,7 +4853,7 @@ export enum QueryStatsColumn {
   ServiceVersion = 'SERVICE_VERSION',
   Timestamp = 'TIMESTAMP',
   UncachedHistogram = 'UNCACHED_HISTOGRAM',
-  UncachedRequestsCount = 'UNCACHED_REQUESTS_COUNT'
+  UncachedRequestsCount = 'UNCACHED_REQUESTS_COUNT',
 }
 
 export type QueryStatsDimensions = {
@@ -5146,13 +5071,13 @@ export enum QueryTriggerMetric {
   /** Number of requests within the window. Ignores `percentile`. */
   RequestCount = 'REQUEST_COUNT',
   /** Request latency in ms. Requires `percentile`. */
-  RequestServiceTime = 'REQUEST_SERVICE_TIME'
+  RequestServiceTime = 'REQUEST_SERVICE_TIME',
 }
 
 export enum QueryTriggerScope {
   All = 'ALL',
   Any = 'ANY',
-  Unrecognized = 'UNRECOGNIZED'
+  Unrecognized = 'UNRECOGNIZED',
 }
 
 /** Query trigger state */
@@ -5176,7 +5101,7 @@ export enum QueryTriggerWindow {
   FifteenMinutes = 'FIFTEEN_MINUTES',
   FiveMinutes = 'FIVE_MINUTES',
   OneMinute = 'ONE_MINUTE',
-  Unrecognized = 'UNRECOGNIZED'
+  Unrecognized = 'UNRECOGNIZED',
 }
 
 export type RegisteredClientIdentityInput = {
@@ -5254,7 +5179,7 @@ export enum ReportSchemaErrorCode {
   SchemaIsNotParsable = 'SCHEMA_IS_NOT_PARSABLE',
   SchemaIsNotValid = 'SCHEMA_IS_NOT_VALID',
   ServerIdIsTooLong = 'SERVER_ID_IS_TOO_LONG',
-  UserVersionIsTooLong = 'USER_VERSION_IS_TOO_LONG'
+  UserVersionIsTooLong = 'USER_VERSION_IS_TOO_LONG',
 }
 
 export type ReportSchemaResponse = ReportSchemaResult & {
@@ -5293,7 +5218,7 @@ export enum Resolution {
   R1H = 'R1H',
   R1M = 'R1M',
   R5M = 'R5M',
-  R6H = 'R6H'
+  R6H = 'R6H',
 }
 
 export enum ResponseHints {
@@ -5301,7 +5226,7 @@ export enum ResponseHints {
   SampleResponses = 'SAMPLE_RESPONSES',
   Subgraphs = 'SUBGRAPHS',
   Timings = 'TIMINGS',
-  TraceTimings = 'TRACE_TIMINGS'
+  TraceTimings = 'TRACE_TIMINGS',
 }
 
 export type RoleOverride = {
@@ -5337,7 +5262,6 @@ export type Schema = {
   createTemporaryURL?: Maybe<TemporaryUrl>;
 };
 
-
 export type SchemaCreateTemporaryUrlArgs = {
   expiresInSeconds?: Scalars['Int'];
 };
@@ -5358,11 +5282,9 @@ export type SchemaCheck = {
   relatedChecks?: Maybe<Array<SchemaCheck>>;
 };
 
-
 export type SchemaCheckRerunsArgs = {
   limit?: Scalars['Int'];
 };
-
 
 export type SchemaCheckRelatedChecksArgs = {
   limit?: Scalars['Int'];
@@ -5559,12 +5481,10 @@ export type SchemaTag = {
   webhookNotificationBody: Scalars['String'];
 };
 
-
 export type SchemaTagHistoryArgs = {
   limit?: Scalars['Int'];
   offset?: Maybe<Scalars['Int']>;
 };
-
 
 export type SchemaTagSlackNotificationBodyArgs = {
   graphDisplayName: Scalars['String'];
@@ -5719,32 +5639,26 @@ export type Service = Identity & {
   checksSubgraphOptions: Array<Scalars['String']>;
 };
 
-
 export type ServiceAvatarUrlArgs = {
   size?: Scalars['Int'];
 };
-
 
 export type ServiceChannelsArgs = {
   channelIds?: Maybe<Array<Scalars['ID']>>;
 };
 
-
 export type ServiceLastReportedAtArgs = {
   graphVariant?: Maybe<Scalars['String']>;
 };
-
 
 export type ServiceQueryTriggersArgs = {
   graphVariant?: Maybe<Scalars['String']>;
   operationNames?: Maybe<Array<Scalars['String']>>;
 };
 
-
 export type ServiceRegistrySubscriptionsEnabledArgs = {
   graphVariant?: Maybe<Scalars['String']>;
 };
-
 
 export type ServiceStatsArgs = {
   from: Scalars['Timestamp'];
@@ -5752,107 +5666,87 @@ export type ServiceStatsArgs = {
   to?: Maybe<Scalars['Timestamp']>;
 };
 
-
 export type ServiceStatsWindowArgs = {
   from: Scalars['Timestamp'];
   resolution?: Maybe<Resolution>;
   to?: Maybe<Scalars['Timestamp']>;
 };
 
-
 export type ServiceTraceArgs = {
   id: Scalars['ID'];
 };
-
 
 export type ServiceVariantArgs = {
   name: Scalars['String'];
 };
 
-
 export type ServiceOperationArgs = {
   id: Scalars['ID'];
 };
-
 
 export type ServiceSchemaArgs = {
   hash?: Maybe<Scalars['ID']>;
   tag?: Maybe<Scalars['String']>;
 };
 
-
 export type ServiceSchemaTagsArgs = {
   tags?: Maybe<Array<Scalars['String']>>;
 };
-
 
 export type ServiceSchemaTagArgs = {
   tag: Scalars['String'];
 };
 
-
 export type ServiceSchemaTagByIdArgs = {
   id: Scalars['ID'];
 };
-
 
 export type ServiceImplementingServicesArgs = {
   graphVariant: Scalars['String'];
   includeDeleted?: Maybe<Scalars['Boolean']>;
 };
 
-
 export type ServiceMostRecentCompositionPublishArgs = {
   graphVariant: Scalars['String'];
 };
 
-
 export type ServiceCompositionResultByIdArgs = {
   id: Scalars['ID'];
 };
-
 
 export type ServiceOperationsAcceptedChangesArgs = {
   checkID: Scalars['ID'];
   operationID: Scalars['String'];
 };
 
-
 export type ServiceCheckArgs = {
   id: Scalars['ID'];
 };
 
-
 export type ServiceCheckWorkflowArgs = {
   id: Scalars['ID'];
 };
-
 
 export type ServiceCheckWorkflowsArgs = {
   limit?: Scalars['Int'];
   filter?: Maybe<CheckFilterInput>;
 };
 
-
 export type ServiceOperationsCheckArgs = {
   checkID: Scalars['ID'];
 };
-
 
 export type ServiceTestSchemaPublishBodyArgs = {
   variant: Scalars['String'];
 };
 
-
 export type ServiceChecksAuthorOptionsArgs = {
   filter?: Maybe<CheckFilterInput>;
 };
 
-
 export type ServiceChecksBranchOptionsArgs = {
   filter?: Maybe<CheckFilterInput>;
 };
-
 
 export type ServiceChecksSubgraphOptionsArgs = {
   filter?: Maybe<CheckFilterInput>;
@@ -5868,7 +5762,7 @@ export enum ServiceEdgeServerInfosColumn {
   SchemaTag = 'SCHEMA_TAG',
   ServerId = 'SERVER_ID',
   Timestamp = 'TIMESTAMP',
-  UserVersion = 'USER_VERSION'
+  UserVersion = 'USER_VERSION',
 }
 
 export type ServiceEdgeServerInfosDimensions = {
@@ -6008,7 +5902,7 @@ export enum ServiceEnumStatsColumn {
   SchemaHash = 'SCHEMA_HASH',
   SchemaTag = 'SCHEMA_TAG',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type ServiceEnumStatsDimensions = {
@@ -6177,7 +6071,7 @@ export enum ServiceErrorStatsColumn {
   SchemaHash = 'SCHEMA_HASH',
   SchemaTag = 'SCHEMA_TAG',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type ServiceErrorStatsDimensions = {
@@ -6333,7 +6227,7 @@ export enum ServiceFieldStatsColumn {
   SchemaHash = 'SCHEMA_HASH',
   SchemaTag = 'SCHEMA_TAG',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type ServiceFieldStatsDimensions = {
@@ -6495,7 +6389,7 @@ export enum ServiceInputStatsColumn {
   SchemaHash = 'SCHEMA_HASH',
   SchemaTag = 'SCHEMA_TAG',
   ServiceVersion = 'SERVICE_VERSION',
-  Timestamp = 'TIMESTAMP'
+  Timestamp = 'TIMESTAMP',
 }
 
 export type ServiceInputStatsDimensions = {
@@ -6798,67 +6692,55 @@ export type ServiceMutation = {
   unignoreOperationsInChecks?: Maybe<UnignoreOperationsInChecksResult>;
 };
 
-
 export type ServiceMutationCreateCompositionStatusSubscriptionArgs = {
   channelID: Scalars['ID'];
   variant: Scalars['String'];
 };
-
 
 export type ServiceMutationCreateSchemaPublishSubscriptionArgs = {
   channelID: Scalars['ID'];
   variant: Scalars['String'];
 };
 
-
 export type ServiceMutationDeleteChannelArgs = {
   id: Scalars['ID'];
 };
-
 
 export type ServiceMutationDeleteQueryTriggerArgs = {
   id: Scalars['ID'];
 };
 
-
 export type ServiceMutationDeleteRegistrySubscriptionArgs = {
   id: Scalars['ID'];
 };
-
 
 export type ServiceMutationDeleteRegistrySubscriptionsArgs = {
   variant: Scalars['String'];
 };
 
-
 export type ServiceMutationDeleteScheduledSummaryArgs = {
   id: Scalars['ID'];
 };
-
 
 export type ServiceMutationDeleteTracesArgs = {
   from: Scalars['Timestamp'];
   to?: Maybe<Scalars['Timestamp']>;
 };
 
-
 export type ServiceMutationNewKeyArgs = {
   keyName?: Maybe<Scalars['String']>;
   role?: UserPermission;
 };
-
 
 export type ServiceMutationOverrideUserPermissionArgs = {
   permission?: Maybe<UserPermission>;
   userID: Scalars['ID'];
 };
 
-
 export type ServiceMutationRemoveKeyArgs = {
   key?: Maybe<Scalars['String']>;
   token?: Maybe<Scalars['String']>;
 };
-
 
 export type ServiceMutationRenameKeyArgs = {
   key?: Maybe<Scalars['String']>;
@@ -6866,29 +6748,24 @@ export type ServiceMutationRenameKeyArgs = {
   token?: Maybe<Scalars['String']>;
 };
 
-
 export type ServiceMutationReportServerInfoArgs = {
   executableSchema?: Maybe<Scalars['String']>;
   info: EdgeServerInfo;
 };
-
 
 export type ServiceMutationTestSlackChannelArgs = {
   id: Scalars['ID'];
   notification: SlackNotificationInput;
 };
 
-
 export type ServiceMutationTestSubscriptionForChannelArgs = {
   channelID: Scalars['ID'];
   subscriptionID: Scalars['ID'];
 };
 
-
 export type ServiceMutationTransferArgs = {
   to: Scalars['String'];
 };
-
 
 export type ServiceMutationUpdateDatadogMetricsConfigArgs = {
   apiKey?: Maybe<Scalars['String']>;
@@ -6896,26 +6773,22 @@ export type ServiceMutationUpdateDatadogMetricsConfigArgs = {
   enabled?: Maybe<Scalars['Boolean']>;
 };
 
-
 export type ServiceMutationUpdateDescriptionArgs = {
   description: Scalars['String'];
 };
 
-
-export type ServiceMutationUpdateHiddenFromUninvitedNonAdminAccountMembersArgs = {
-  hiddenFromUninvitedNonAdminAccountMembers: Scalars['Boolean'];
-};
-
+export type ServiceMutationUpdateHiddenFromUninvitedNonAdminAccountMembersArgs =
+  {
+    hiddenFromUninvitedNonAdminAccountMembers: Scalars['Boolean'];
+  };
 
 export type ServiceMutationUpdateSubgraphFeaturesEnabledArgs = {
   subgraphFeaturesEnabled: Scalars['Boolean'];
 };
 
-
 export type ServiceMutationUpdateTitleArgs = {
   title: Scalars['String'];
 };
-
 
 export type ServiceMutationUpsertChannelArgs = {
   id?: Maybe<Scalars['ID']>;
@@ -6924,18 +6797,15 @@ export type ServiceMutationUpsertChannelArgs = {
   webhookChannel?: Maybe<WebhookChannelInput>;
 };
 
-
 export type ServiceMutationUpsertPagerDutyChannelArgs = {
   channel: PagerDutyChannelInput;
   id?: Maybe<Scalars['ID']>;
 };
 
-
 export type ServiceMutationUpsertQueryTriggerArgs = {
   id?: Maybe<Scalars['ID']>;
   trigger: QueryTriggerInput;
 };
-
 
 export type ServiceMutationUpsertRegistrySubscriptionArgs = {
   channelID?: Maybe<Scalars['ID']>;
@@ -6943,7 +6813,6 @@ export type ServiceMutationUpsertRegistrySubscriptionArgs = {
   options?: Maybe<SubscriptionOptionsInput>;
   variant?: Maybe<Scalars['String']>;
 };
-
 
 export type ServiceMutationUpsertScheduledSummaryArgs = {
   channelID?: Maybe<Scalars['ID']>;
@@ -6954,12 +6823,10 @@ export type ServiceMutationUpsertScheduledSummaryArgs = {
   variant?: Maybe<Scalars['String']>;
 };
 
-
 export type ServiceMutationUpsertSlackChannelArgs = {
   channel: SlackChannelInput;
   id?: Maybe<Scalars['ID']>;
 };
-
 
 export type ServiceMutationUpsertWebhookChannelArgs = {
   id?: Maybe<Scalars['ID']>;
@@ -6968,23 +6835,19 @@ export type ServiceMutationUpsertWebhookChannelArgs = {
   url: Scalars['String'];
 };
 
-
 export type ServiceMutationCreateApiKeyAndWriteStorageSecretArgs = {
   keyName?: Maybe<Scalars['String']>;
 };
 
-
 export type ServiceMutationVariantArgs = {
   name: Scalars['String'];
 };
-
 
 export type ServiceMutationValidateOperationsArgs = {
   operations: Array<OperationDocumentInput>;
   tag?: Maybe<Scalars['String']>;
   gitContext?: Maybe<GitContextInput>;
 };
-
 
 export type ServiceMutationRegisterOperationsWithResponseArgs = {
   clientIdentity?: Maybe<RegisteredClientIdentityInput>;
@@ -6993,7 +6856,6 @@ export type ServiceMutationRegisterOperationsWithResponseArgs = {
   manifestVersion?: Maybe<Scalars['Int']>;
   graphVariant?: Scalars['String'];
 };
-
 
 export type ServiceMutationUploadSchemaArgs = {
   schema?: Maybe<IntrospectionSchemaInput>;
@@ -7005,11 +6867,9 @@ export type ServiceMutationUploadSchemaArgs = {
   errorOnBadRequest?: Scalars['Boolean'];
 };
 
-
 export type ServiceMutationStoreSchemaDocumentArgs = {
   schemaDocument: Scalars['String'];
 };
-
 
 export type ServiceMutationPromoteSchemaArgs = {
   sha256: Scalars['SHA256'];
@@ -7017,7 +6877,6 @@ export type ServiceMutationPromoteSchemaArgs = {
   historicParameters?: Maybe<HistoricQueryParameters>;
   overrideComposedSchema?: Scalars['Boolean'];
 };
-
 
 export type ServiceMutationCheckSchemaArgs = {
   proposedSchema?: Maybe<IntrospectionSchemaInput>;
@@ -7030,45 +6889,41 @@ export type ServiceMutationCheckSchemaArgs = {
   frontend?: Maybe<Scalars['String']>;
 };
 
-
 export type ServiceMutationCheckArgs = {
   id: Scalars['ID'];
 };
-
 
 export type ServiceMutationCheckWorkflowArgs = {
   id: Scalars['ID'];
 };
 
-
 export type ServiceMutationDeleteSchemaTagArgs = {
   tag: Scalars['String'];
 };
 
+export type ServiceMutationUpsertImplementingServiceAndTriggerCompositionArgs =
+  {
+    graphVariant: Scalars['String'];
+    name: Scalars['String'];
+    url?: Maybe<Scalars['String']>;
+    revision: Scalars['String'];
+    activePartialSchema: PartialSchemaInput;
+    gitContext?: Maybe<GitContextInput>;
+  };
 
-export type ServiceMutationUpsertImplementingServiceAndTriggerCompositionArgs = {
-  graphVariant: Scalars['String'];
-  name: Scalars['String'];
-  url?: Maybe<Scalars['String']>;
-  revision: Scalars['String'];
-  activePartialSchema: PartialSchemaInput;
-  gitContext?: Maybe<GitContextInput>;
-};
+export type ServiceMutationValidatePartialSchemaOfImplementingServiceAgainstGraphArgs =
+  {
+    graphVariant: Scalars['String'];
+    implementingServiceName: Scalars['String'];
+    partialSchema: PartialSchemaInput;
+  };
 
-
-export type ServiceMutationValidatePartialSchemaOfImplementingServiceAgainstGraphArgs = {
-  graphVariant: Scalars['String'];
-  implementingServiceName: Scalars['String'];
-  partialSchema: PartialSchemaInput;
-};
-
-
-export type ServiceMutationRemoveImplementingServiceAndTriggerCompositionArgs = {
-  graphVariant: Scalars['String'];
-  name: Scalars['String'];
-  dryRun?: Scalars['Boolean'];
-};
-
+export type ServiceMutationRemoveImplementingServiceAndTriggerCompositionArgs =
+  {
+    graphVariant: Scalars['String'];
+    name: Scalars['String'];
+    dryRun?: Scalars['Boolean'];
+  };
 
 export type ServiceMutationCheckPartialSchemaArgs = {
   graphVariant: Scalars['String'];
@@ -7080,7 +6935,6 @@ export type ServiceMutationCheckPartialSchemaArgs = {
   useMaximumRetention?: Maybe<Scalars['Boolean']>;
 };
 
-
 export type ServiceMutationUpdateCheckConfigurationArgs = {
   excludedOperations?: Maybe<Array<ExcludedOperationInput>>;
   excludedClients?: Maybe<Array<ClientFilterInput>>;
@@ -7091,23 +6945,19 @@ export type ServiceMutationUpdateCheckConfigurationArgs = {
   includeBaseVariant?: Maybe<Scalars['Boolean']>;
 };
 
-
 export type ServiceMutationMarkChangesForOperationAsSafeArgs = {
   checkID: Scalars['ID'];
   operationID: Scalars['ID'];
 };
-
 
 export type ServiceMutationUnmarkChangesForOperationAsSafeArgs = {
   checkID: Scalars['ID'];
   operationID: Scalars['ID'];
 };
 
-
 export type ServiceMutationIgnoreOperationsInChecksArgs = {
   ids: Array<Scalars['ID']>;
 };
-
 
 export type ServiceMutationUnignoreOperationsInChecksArgs = {
   ids: Array<Scalars['ID']>;
@@ -7132,7 +6982,7 @@ export enum ServiceQueryStatsColumn {
   ServiceVersion = 'SERVICE_VERSION',
   Timestamp = 'TIMESTAMP',
   UncachedHistogram = 'UNCACHED_HISTOGRAM',
-  UncachedRequestsCount = 'UNCACHED_REQUESTS_COUNT'
+  UncachedRequestsCount = 'UNCACHED_REQUESTS_COUNT',
 }
 
 export type ServiceQueryStatsDimensions = {
@@ -7337,14 +7187,12 @@ export type ServiceStatsWindow = {
   traceRefs: Array<ServiceTraceRefsRecord>;
 };
 
-
 /** A time window with a specified granularity over a given service. */
 export type ServiceStatsWindowEdgeServerInfosArgs = {
   filter?: Maybe<ServiceEdgeServerInfosFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<ServiceEdgeServerInfosOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity over a given service. */
 export type ServiceStatsWindowEnumStatsArgs = {
@@ -7353,14 +7201,12 @@ export type ServiceStatsWindowEnumStatsArgs = {
   orderBy?: Maybe<Array<ServiceEnumStatsOrderBySpec>>;
 };
 
-
 /** A time window with a specified granularity over a given service. */
 export type ServiceStatsWindowErrorStatsArgs = {
   filter?: Maybe<ServiceErrorStatsFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<ServiceErrorStatsOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity over a given service. */
 export type ServiceStatsWindowFieldStatsArgs = {
@@ -7369,14 +7215,12 @@ export type ServiceStatsWindowFieldStatsArgs = {
   orderBy?: Maybe<Array<ServiceFieldStatsOrderBySpec>>;
 };
 
-
 /** A time window with a specified granularity over a given service. */
 export type ServiceStatsWindowInputStatsArgs = {
   filter?: Maybe<ServiceInputStatsFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<ServiceInputStatsOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity over a given service. */
 export type ServiceStatsWindowQueryStatsArgs = {
@@ -7385,14 +7229,12 @@ export type ServiceStatsWindowQueryStatsArgs = {
   orderBy?: Maybe<Array<ServiceQueryStatsOrderBySpec>>;
 };
 
-
 /** A time window with a specified granularity over a given service. */
 export type ServiceStatsWindowTracePathErrorsRefsArgs = {
   filter?: Maybe<ServiceTracePathErrorsRefsFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<ServiceTracePathErrorsRefsOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity over a given service. */
 export type ServiceStatsWindowTraceRefsArgs = {
@@ -7420,7 +7262,7 @@ export enum ServiceTracePathErrorsRefsColumn {
   TraceHttpStatusCode = 'TRACE_HTTP_STATUS_CODE',
   TraceId = 'TRACE_ID',
   TraceSizeBytes = 'TRACE_SIZE_BYTES',
-  TraceStartsAt = 'TRACE_STARTS_AT'
+  TraceStartsAt = 'TRACE_STARTS_AT',
 }
 
 export type ServiceTracePathErrorsRefsDimensions = {
@@ -7622,7 +7464,7 @@ export enum ServiceTraceRefsColumn {
   ServiceVersion = 'SERVICE_VERSION',
   Timestamp = 'TIMESTAMP',
   TraceId = 'TRACE_ID',
-  TraceSizeBytes = 'TRACE_SIZE_BYTES'
+  TraceSizeBytes = 'TRACE_SIZE_BYTES',
 }
 
 export type ServiceTraceRefsDimensions = {
@@ -7779,7 +7621,6 @@ export type ServiceTraceRefsRecord = {
   timestamp: Scalars['Timestamp'];
 };
 
-
 /** Slack notification channel */
 export type SlackChannel = Channel & {
   __typename?: 'SlackChannel';
@@ -7836,14 +7677,12 @@ export type StatsWindow = {
   traceRefs: Array<TraceRefsRecord>;
 };
 
-
 /** A time window with a specified granularity. */
 export type StatsWindowEdgeServerInfosArgs = {
   filter?: Maybe<EdgeServerInfosFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<EdgeServerInfosOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity. */
 export type StatsWindowEnumStatsArgs = {
@@ -7852,14 +7691,12 @@ export type StatsWindowEnumStatsArgs = {
   orderBy?: Maybe<Array<EnumStatsOrderBySpec>>;
 };
 
-
 /** A time window with a specified granularity. */
 export type StatsWindowErrorStatsArgs = {
   filter?: Maybe<ErrorStatsFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<ErrorStatsOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity. */
 export type StatsWindowFieldStatsArgs = {
@@ -7868,14 +7705,12 @@ export type StatsWindowFieldStatsArgs = {
   orderBy?: Maybe<Array<FieldStatsOrderBySpec>>;
 };
 
-
 /** A time window with a specified granularity. */
 export type StatsWindowInputStatsArgs = {
   filter?: Maybe<InputStatsFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<InputStatsOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity. */
 export type StatsWindowQueryStatsArgs = {
@@ -7884,14 +7719,12 @@ export type StatsWindowQueryStatsArgs = {
   orderBy?: Maybe<Array<QueryStatsOrderBySpec>>;
 };
 
-
 /** A time window with a specified granularity. */
 export type StatsWindowTracePathErrorsRefsArgs = {
   filter?: Maybe<TracePathErrorsRefsFilter>;
   limit?: Maybe<Scalars['Int']>;
   orderBy?: Maybe<Array<TracePathErrorsRefsOrderBySpec>>;
 };
-
 
 /** A time window with a specified granularity. */
 export type StatsWindowTraceRefsArgs = {
@@ -7916,7 +7749,7 @@ export type StoreSchemaError = {
 
 export enum StoreSchemaErrorCode {
   SchemaIsNotParsable = 'SCHEMA_IS_NOT_PARSABLE',
-  SchemaIsNotValid = 'SCHEMA_IS_NOT_VALID'
+  SchemaIsNotValid = 'SCHEMA_IS_NOT_VALID',
 }
 
 export type StoreSchemaResponse = {
@@ -7925,7 +7758,6 @@ export type StoreSchemaResponse = {
 };
 
 export type StoreSchemaResponseOrError = StoreSchemaResponse | StoreSchemaError;
-
 
 export type StringToString = {
   __typename?: 'StringToString';
@@ -7966,7 +7798,7 @@ export enum SubscriptionState {
   PastDue = 'PAST_DUE',
   Paused = 'PAUSED',
   Pending = 'PENDING',
-  Unknown = 'UNKNOWN'
+  Unknown = 'UNKNOWN',
 }
 
 export type TemporaryUrl = {
@@ -7976,14 +7808,14 @@ export type TemporaryUrl = {
 
 export enum ThemeName {
   Dark = 'DARK',
-  Light = 'LIGHT'
+  Light = 'LIGHT',
 }
 
 export enum TicketPriority {
   P0 = 'P0',
   P1 = 'P1',
   P2 = 'P2',
-  P3 = 'P3'
+  P3 = 'P3',
 }
 
 export enum TicketStatus {
@@ -7992,9 +7824,8 @@ export enum TicketStatus {
   New = 'NEW',
   Open = 'OPEN',
   Pending = 'PENDING',
-  Solved = 'SOLVED'
+  Solved = 'SOLVED',
 }
-
 
 export type TimezoneOffset = {
   __typename?: 'TimezoneOffset';
@@ -8106,7 +7937,7 @@ export enum TracePathErrorsRefsColumn {
   TraceHttpStatusCode = 'TRACE_HTTP_STATUS_CODE',
   TraceId = 'TRACE_ID',
   TraceSizeBytes = 'TRACE_SIZE_BYTES',
-  TraceStartsAt = 'TRACE_STARTS_AT'
+  TraceStartsAt = 'TRACE_STARTS_AT',
 }
 
 export type TracePathErrorsRefsDimensions = {
@@ -8321,7 +8152,7 @@ export enum TraceRefsColumn {
   ServiceVersion = 'SERVICE_VERSION',
   Timestamp = 'TIMESTAMP',
   TraceId = 'TRACE_ID',
-  TraceSizeBytes = 'TRACE_SIZE_BYTES'
+  TraceSizeBytes = 'TRACE_SIZE_BYTES',
 }
 
 export type TraceRefsDimensions = {
@@ -8599,11 +8430,9 @@ export type User = Identity & {
   experimentalFeatures: UserExperimentalFeatures;
 };
 
-
 export type UserApiKeysArgs = {
   includeCookies?: Maybe<Scalars['Boolean']>;
 };
-
 
 export type UserAvatarUrlArgs = {
   size?: Scalars['Int'];
@@ -8674,40 +8503,33 @@ export type UserMutation = {
   createOdysseyCourses?: Maybe<Array<OdysseyCourse>>;
 };
 
-
 export type UserMutationChangePasswordArgs = {
   newPassword: Scalars['String'];
   previousPassword: Scalars['String'];
 };
 
-
 export type UserMutationNewKeyArgs = {
   keyName: Scalars['String'];
 };
-
 
 export type UserMutationProvisionKeyArgs = {
   keyName?: Scalars['String'];
 };
 
-
 export type UserMutationRemoveKeyArgs = {
   key: Scalars['String'];
 };
-
 
 export type UserMutationRenameKeyArgs = {
   key: Scalars['String'];
   newKeyName: Scalars['String'];
 };
 
-
 export type UserMutationSubmitZendeskTicketArgs = {
   collaborators?: Maybe<Array<Scalars['String']>>;
   email: Scalars['String'];
   ticket: ZendeskTicketInput;
 };
-
 
 export type UserMutationUpdateArgs = {
   email?: Maybe<Scalars['String']>;
@@ -8719,41 +8541,33 @@ export type UserMutationUpdateArgs = {
   utmSource?: Maybe<Scalars['String']>;
 };
 
-
 export type UserMutationUpdateBetaFeaturesOnArgs = {
   betaFeaturesOn: Scalars['Boolean'];
 };
-
 
 export type UserMutationUpdateFeatureIntrosArgs = {
   newFeatureIntros?: Maybe<FeatureIntrosInput>;
 };
 
-
 export type UserMutationUpdateRoleArgs = {
   newRole?: Maybe<InternalMdgAdminRole>;
 };
-
 
 export type UserMutationVerifyEmailArgs = {
   token: Scalars['String'];
 };
 
-
 export type UserMutationSetOdysseyTaskArgs = {
   task: OdysseyTaskInput;
 };
-
 
 export type UserMutationCreateOdysseyTasksArgs = {
   tasks: Array<OdysseyTaskInput>;
 };
 
-
 export type UserMutationSetOdysseyCourseArgs = {
   course: OdysseyCourseInput;
 };
-
 
 export type UserMutationCreateOdysseyCoursesArgs = {
   courses: Array<OdysseyCourseInput>;
@@ -8766,7 +8580,7 @@ export enum UserPermission {
   GraphAdmin = 'GRAPH_ADMIN',
   LegacyGraphKey = 'LEGACY_GRAPH_KEY',
   Observer = 'OBSERVER',
-  OrgAdmin = 'ORG_ADMIN'
+  OrgAdmin = 'ORG_ADMIN',
 }
 
 export enum UserSegment {
@@ -8774,7 +8588,7 @@ export enum UserSegment {
   LocalDevelopment = 'LOCAL_DEVELOPMENT',
   NotSpecified = 'NOT_SPECIFIED',
   ProductionGraphs = 'PRODUCTION_GRAPHS',
-  TryTeam = 'TRY_TEAM'
+  TryTeam = 'TRY_TEAM',
 }
 
 export type UserSettings = {
@@ -8803,7 +8617,7 @@ export type UserSettingsInput = {
 export enum UserType {
   Apollo = 'APOLLO',
   Github = 'GITHUB',
-  Sso = 'SSO'
+  Sso = 'SSO',
 }
 
 export type ValidateOperationsResult = {
@@ -8814,13 +8628,13 @@ export type ValidateOperationsResult = {
 export enum ValidationErrorCode {
   NonParseableDocument = 'NON_PARSEABLE_DOCUMENT',
   InvalidOperation = 'INVALID_OPERATION',
-  DeprecatedField = 'DEPRECATED_FIELD'
+  DeprecatedField = 'DEPRECATED_FIELD',
 }
 
 export enum ValidationErrorType {
   Failure = 'FAILURE',
   Warning = 'WARNING',
-  Invalid = 'INVALID'
+  Invalid = 'INVALID',
 }
 
 /**
@@ -8838,7 +8652,6 @@ export type ValidationResult = {
   /** The operation related to this validation result */
   operation: OperationDocument;
 };
-
 
 /** Webhook notification channel */
 export type WebhookChannel = Channel & {
@@ -8884,14 +8697,15 @@ export type SchemaReportMutationVariables = Exact<{
   coreSchema?: Maybe<Scalars['String']>;
 }>;
 
-
-export type SchemaReportMutation = (
-  { __typename?: 'Mutation' }
-  & { reportSchema?: Maybe<(
-    { __typename: 'ReportSchemaError' }
-    & Pick<ReportSchemaError, 'message' | 'code'>
-  ) | (
-    { __typename: 'ReportSchemaResponse' }
-    & Pick<ReportSchemaResponse, 'inSeconds' | 'withCoreSchema'>
-  )> }
-);
+export type SchemaReportMutation = { __typename?: 'Mutation' } & {
+  reportSchema?: Maybe<
+    | ({ __typename: 'ReportSchemaError' } & Pick<
+        ReportSchemaError,
+        'message' | 'code'
+      >)
+    | ({ __typename: 'ReportSchemaResponse' } & Pick<
+        ReportSchemaResponse,
+        'inSeconds' | 'withCoreSchema'
+      >)
+  >;
+};

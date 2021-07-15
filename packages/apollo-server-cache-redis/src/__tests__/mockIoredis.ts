@@ -1,5 +1,8 @@
 class Redis {
-  private keyValue = new Map<string, {value: string, ttl: number | undefined}>();
+  private keyValue = new Map<
+    string,
+    { value: string; ttl: number | undefined }
+  >();
   private timeouts = new Set<NodeJS.Timer>();
 
   async del(key: string) {
@@ -17,7 +20,7 @@ class Redis {
   }
 
   async set(key: string, value: string, _: string, ttl: number | undefined) {
-    this.keyValue.set(key,  {
+    this.keyValue.set(key, {
       value,
       ttl,
     });

@@ -15,7 +15,7 @@ interface FetchMock extends jest.MockedFunction<typeof fetch> {
   mockJSONResponseOnce(data?: object, headers?: HeadersInit): this;
 }
 
-const mockFetch = (jest.fn(fetch) as unknown) as FetchMock;
+const mockFetch = jest.fn(fetch) as unknown as FetchMock;
 
 mockFetch.mockResponseOnce = (
   data?: BodyInit,

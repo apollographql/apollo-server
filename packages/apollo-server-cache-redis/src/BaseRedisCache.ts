@@ -1,7 +1,4 @@
-import {
-  KeyValueCache,
-  KeyValueCacheSetOptions,
-} from 'apollo-server-caching';
+import { KeyValueCache, KeyValueCacheSetOptions } from 'apollo-server-caching';
 import DataLoader from 'dataloader';
 
 interface BaseRedisClient {
@@ -60,7 +57,9 @@ export class BaseRedisCache implements KeyValueCache<string> {
       this.client = noMgetClient;
       this.loader = new DataLoader(
         (keys) =>
-          Promise.all(keys.map((key) => noMgetClient.get(key).catch(() => null))),
+          Promise.all(
+            keys.map((key) => noMgetClient.get(key).catch(() => null)),
+          ),
         {
           cache: false,
         },

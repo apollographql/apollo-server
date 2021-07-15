@@ -38,7 +38,9 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      expect((fetch.mock.calls[0][0] as Request).url).toEqual('https://api.example.com/foo');
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual(
+        'https://api.example.com/foo',
+      );
     });
 
     it('interprets paths with a leading slash relative to the base URL', async () => {
@@ -78,7 +80,9 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      expect((fetch.mock.calls[0][0] as Request).url).toEqual('https://example.com/api/foo');
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual(
+        'https://example.com/api/foo',
+      );
     });
 
     it('allows resolving a base URL asynchronously', async () => {
@@ -101,7 +105,9 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      expect((fetch.mock.calls[0][0] as Request).url).toEqual('https://api.example.com/foo');
+      expect((fetch.mock.calls[0][0] as Request).url).toEqual(
+        'https://api.example.com/foo',
+      );
     });
 
     it('allows passing in query string parameters', async () => {
@@ -203,9 +209,9 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(fetch).toBeCalledTimes(1);
-      expect((fetch.mock.calls[0][0] as Request).headers.get('Authorization')).toEqual(
-        'secret',
-      );
+      expect(
+        (fetch.mock.calls[0][0] as Request).headers.get('Authorization'),
+      ).toEqual('secret');
     });
 
     function expectJSONFetch(url: string, bodyJSON: unknown) {
@@ -217,9 +223,7 @@ describe('RESTDataSource', () => {
       expect((request as any).body.toString()).toEqual(
         JSON.stringify(bodyJSON),
       );
-      expect(request.headers.get('Content-Type')).toEqual(
-        'application/json',
-      );
+      expect(request.headers.get('Content-Type')).toEqual('application/json');
     }
 
     it('serializes a request body that is an object as JSON', async () => {
@@ -284,7 +288,7 @@ describe('RESTDataSource', () => {
 
       await dataSource.postFoo(model);
 
-      expectJSONFetch('https://api.example.com/foo', {foo: 'bar'});
+      expectJSONFetch('https://api.example.com/foo', { foo: 'bar' });
     });
 
     it('does not serialize a request body that is not an object', async () => {
@@ -346,7 +350,9 @@ describe('RESTDataSource', () => {
 
         fetch.mockJSONResponseOnce({ foo: 'bar' });
 
-        const data = await ((dataSource as any)[`${method.toLocaleLowerCase()}Foo`])();
+        const data = await (dataSource as any)[
+          `${method.toLocaleLowerCase()}Foo`
+        ]();
 
         expect(data).toEqual({ foo: 'bar' });
 
@@ -728,7 +734,7 @@ describe('RESTDataSource', () => {
 
   describe('trace', () => {
     it('is called once per request', async () => {
-      const traceMock = jest.fn()
+      const traceMock = jest.fn();
       const dataSource = new (class extends RESTDataSource {
         override baseURL = 'https://api.example.com';
 
@@ -746,7 +752,10 @@ describe('RESTDataSource', () => {
       await dataSource.getFoo();
 
       expect(traceMock).toBeCalledTimes(1);
-      expect(traceMock).toBeCalledWith(expect.any(Object),expect.any(Function));
+      expect(traceMock).toBeCalledWith(
+        expect.any(Object),
+        expect.any(Function),
+      );
     });
-  })
+  });
 });

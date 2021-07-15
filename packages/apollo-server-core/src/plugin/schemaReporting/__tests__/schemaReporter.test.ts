@@ -61,9 +61,9 @@ describe('Schema reporter', () => {
       withCoreSchema: false,
     });
 
-    expect(await schemaReporter.reportSchema(false)).toEqual<
-      ReportSchemaResponse
-    >({
+    expect(
+      await schemaReporter.reportSchema(false),
+    ).toEqual<ReportSchemaResponse>({
       __typename: 'ReportSchemaResponse',
       inSeconds: 30,
       withCoreSchema: false,
@@ -75,9 +75,9 @@ describe('Schema reporter', () => {
       withCoreSchema: true,
     });
 
-    expect(await schemaReporter.reportSchema(false)).toEqual<
-      ReportSchemaResponse
-    >({
+    expect(
+      await schemaReporter.reportSchema(false),
+    ).toEqual<ReportSchemaResponse>({
       __typename: 'ReportSchemaResponse',
       inSeconds: 60,
       withCoreSchema: true,

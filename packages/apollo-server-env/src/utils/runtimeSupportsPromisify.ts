@@ -8,7 +8,7 @@ const runtimeSupportsPromisify = (() => {
   ) {
     const [nodeMajor] = process.versions.node
       .split('.', 1)
-      .map(segment => parseInt(segment, 10));
+      .map((segment) => parseInt(segment, 10));
 
     if (nodeMajor >= 8) {
       return true;

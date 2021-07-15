@@ -2,7 +2,12 @@ import http from 'http';
 
 import request from 'supertest';
 
-import { gql, AuthenticationError, Config, ApolloServerPluginCacheControlDisabled } from 'apollo-server-core';
+import {
+  gql,
+  AuthenticationError,
+  Config,
+  ApolloServerPluginCacheControlDisabled,
+} from 'apollo-server-core';
 
 import {
   testApolloServer,
@@ -36,7 +41,7 @@ describe('apollo-server-koa', () => {
       }
       const app = new Koa();
       server.applyMiddleware({ app, path: options?.graphqlPath });
-      httpServer = await new Promise<http.Server>(resolve => {
+      httpServer = await new Promise<http.Server>((resolve) => {
         const s = app.listen({ port: 0 }, () => resolve(s));
       });
       return createServerInfo(server, httpServer);
@@ -59,13 +64,16 @@ describe('apollo-server-koa', () => {
     serverOptions: Config,
     options: Partial<import('../ApolloServer').ServerRegistration> = {},
   ) {
-    server = new ApolloServer({ stopOnTerminationSignals: false, ...serverOptions });
+    server = new ApolloServer({
+      stopOnTerminationSignals: false,
+      ...serverOptions,
+    });
     await server.start();
     app = new Koa();
 
     server.applyMiddleware({ ...options, app });
 
-    httpServer = await new Promise(resolve => {
+    httpServer = await new Promise((resolve) => {
       const l: http.Server = app.listen({ port: 0 }, () => resolve(l));
     });
 
@@ -109,7 +117,10 @@ describe('apollo-server-koa', () => {
           'accept',
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         )
-        .expect(200, /apollo-server-landing-page.cdn.apollographql.com\/_latest/);
+        .expect(
+          200,
+          /apollo-server-landing-page.cdn.apollographql.com\/_latest/,
+        );
     });
     it('accepts cors configuration', async () => {
       const { url: uri } = await createServer(
@@ -156,7 +167,7 @@ describe('apollo-server-koa', () => {
       return new Promise<void>((resolve, reject) => {
         apolloFetch({ query: '{hello}' })
           .then(reject)
-          .catch(error => {
+          .catch((error) => {
             expect(error.response).toBeDefined();
             expect(error.response.status).toEqual(413);
             expect(error.toString()).toMatch('Payload Too Large');
@@ -461,6 +472,5 @@ describe('apollo-server-koa', () => {
         });
       });
     });
-
   });
 });

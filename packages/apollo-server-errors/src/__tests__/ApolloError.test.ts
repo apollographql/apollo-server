@@ -49,8 +49,8 @@ describe('ApolloError', () => {
   });
 });
 
-describe("ForbiddenError", () => {
-  it("supports abritrary data being passed", () => {
+describe('ForbiddenError', () => {
+  it('supports abritrary data being passed', () => {
     const error = new ForbiddenError('My message', {
       arbitrary: 'user_data',
     });
@@ -59,11 +59,11 @@ describe("ForbiddenError", () => {
       code: 'FORBIDDEN',
       arbitrary: 'user_data',
     });
-  })
-})
+  });
+});
 
-describe("AuthenticationError", () => {
-  it("supports abritrary data being passed", () => {
+describe('AuthenticationError', () => {
+  it('supports abritrary data being passed', () => {
     const error = new AuthenticationError('My message', {
       arbitrary: 'user_data',
     });
@@ -72,5 +72,5 @@ describe("AuthenticationError", () => {
       code: 'UNAUTHENTICATED',
       arbitrary: 'user_data',
     });
-  })
-})
+  });
+});

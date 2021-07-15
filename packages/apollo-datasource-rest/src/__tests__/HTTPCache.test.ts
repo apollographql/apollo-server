@@ -399,7 +399,9 @@ describe('HTTPCache', () => {
     );
 
     expect(fetch.mock.calls.length).toEqual(2);
-    expect((fetch.mock.calls[1][0] as Request).headers.get('If-None-Match')).toEqual('foo');
+    expect(
+      (fetch.mock.calls[1][0] as Request).headers.get('If-None-Match'),
+    ).toEqual('foo');
 
     expect(response.status).toEqual(200);
     expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
@@ -444,7 +446,9 @@ describe('HTTPCache', () => {
     );
 
     expect(fetch.mock.calls.length).toEqual(2);
-    expect((fetch.mock.calls[1][0] as Request).headers.get('If-None-Match')).toEqual('foo');
+    expect(
+      (fetch.mock.calls[1][0] as Request).headers.get('If-None-Match'),
+    ).toEqual('foo');
 
     expect(response.status).toEqual(200);
     expect(await response.json()).toEqual({ name: 'Alan Turing' });

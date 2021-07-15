@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { AgentOptions } from "../agent";
+import { AgentOptions } from '../agent';
 import {
   getStorageSecretUrl,
   urlStorageSecretBase,
@@ -8,8 +8,11 @@ import {
   fakeTestBaseUrl,
 } from '../common';
 import nock from 'nock';
-import { InMemoryLRUCache } from "apollo-server-caching";
-import { Operation, OperationManifest } from "../ApolloServerPluginOperationRegistry";
+import { InMemoryLRUCache } from 'apollo-server-caching';
+import {
+  Operation,
+  OperationManifest,
+} from '../ApolloServerPluginOperationRegistry';
 
 export const defaultStore = () => new InMemoryLRUCache();
 
@@ -41,10 +44,7 @@ export function nockGoodManifestsUnderStorageSecret(
   });
 }
 
-export function getStorageSecretPath(
-  graphId: string,
-  apiKeyHash: string,
-) {
+export function getStorageSecretPath(graphId: string, apiKeyHash: string) {
   return getStorageSecretUrl(graphId, apiKeyHash).replace(
     new RegExp(`^${urlStorageSecretBase}`),
     '',
@@ -68,11 +68,10 @@ export function getOperationManifestPath(
   storageSecret: string,
 ): string {
   // Strip off the host for testing purposes with `nock`.
-  return getOperationManifestUrl(
-    graphId,
-    storageSecret,
-    'current',
-  ).replace(new RegExp(`^${urlOperationManifestBase}`), '');
+  return getOperationManifestUrl(graphId, storageSecret, 'current').replace(
+    new RegExp(`^${urlOperationManifestBase}`),
+    '',
+  );
 }
 
 export function nockStorageSecretOperationManifest(
@@ -86,19 +85,14 @@ export function nockStorageSecretOperationManifest(
     .reply(status, body);
 }
 
-
 export function nockBase() {
   return nock(fakeTestBaseUrl);
 }
 
 export function hashApiKey(apiKey: string): string {
-  return createHash('sha512')
-    .update(apiKey)
-    .digest('hex');
+  return createHash('sha512').update(apiKey).digest('hex');
 }
 
 export function hashedServiceId(serviceID: string): string {
-  return createHash('sha512')
-    .update(serviceID)
-    .digest('hex');
+  return createHash('sha512').update(serviceID).digest('hex');
 }

@@ -26,7 +26,5 @@ export async function generateSchemaHash(
   // layer, varying orders of the properties in the introspection
   const stringifiedSchema = stableStringify(introspectionSchema);
 
-  return createHash('sha512')
-    .update(stringifiedSchema)
-    .digest('hex');
+  return createHash('sha512').update(stringifiedSchema).digest('hex');
 }
