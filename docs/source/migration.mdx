@@ -45,6 +45,8 @@ Apollo Server 2 provides limited, built-in support for WebSocket-based GraphQL s
 
 Apollo Server 3 no longer contains this built-in integration. However, you can still use `subscriptions-transport-ws` for subscriptions if you depend on this implementation. Note that as with Apollo Server 2, this integration won't work with the plugin system or Studio usage reporting.
 
+Additionally, Apollo Server 3 [no longer re-exports all of the exports from the `graphql-subscriptions` package](#exports-from-graphql-subscriptions) such as `PubSub`.
+
 We hope to add more fully-integrated subscription support to Apollo Server in a future version.
 
 > Note that the `subscriptions-transport-ws` library is not actively maintained. An alternative, actively-maintained `graphql-ws` package exists, which we intend to support in a future release. These libraries implement different protocols for GraphQL subscriptions over WebSocket, so you need to adjust your client to support `graphql-ws`. At the time of release of Apollo Server 3, the `graphql-ws` protocol is not yet supported by GraphQL Playground or the Apollo Studio Explorer.
@@ -168,6 +170,8 @@ Apollo Server 2 provides built-in support for file uploads via an outdated versi
 This built-in support is removed in Apollo Server 3. To use `graphql-upload`, you can choose an appropriate version and integrate it yourself. Note that `graphql-upload` does not support federation or every [Node.js framework](./integrations/middleware/) supported by Apollo Server.
 
 To use `graphql-upload` with Apollo Server 3, see the [documentation on enabling file uploads in Apollo Server](../data/file-uploads/). Note that if your project currently uses uploads with the "batteries-included" `apollo-server` package, you must first [swap to `apollo-server-express`](./integrations/middleware/#swapping-out-apollo-server).
+
+Additionally, Apollo Server 3 [no longer re-exports the `GraphQLUpload` symbol from the `graphql-uploads` package](#exports-from-graphql-upload).
 
 ### GraphQL Playground
 
