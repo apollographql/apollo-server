@@ -407,10 +407,7 @@ export async function processGraphQLRequest<TContext>(
 
       await executionDispatcher.invokeHook('executionDidEnd');
     } catch (executionError) {
-      await executionDispatcher.invokeHook(
-        'executionDidEnd',
-        executionError,
-      );
+      await executionDispatcher.invokeHook('executionDidEnd', executionError);
       return await sendErrorResponse(executionError);
     }
   }

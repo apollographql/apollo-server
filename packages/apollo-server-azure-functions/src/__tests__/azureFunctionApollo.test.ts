@@ -175,7 +175,9 @@ describe('integration:AzureFunctions', () => {
         }
         try {
           expect(result.status).toEqual(200);
-          expect(result.body).toMatch(/apollo-server-landing-page.cdn.apollographql.com\/_latest/);
+          expect(result.body).toMatch(
+            /apollo-server-landing-page.cdn.apollographql.com\/_latest/,
+          );
           expect(result.headers['Content-Type']).toEqual('text/html');
           done();
         } catch (e) {

@@ -97,7 +97,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     _request: Request,
   ): Promise<TResult> {
     if (response.ok) {
-      return (this.parseBody(response) as any) as Promise<TResult>;
+      return this.parseBody(response) as any as Promise<TResult>;
     } else {
       throw await this.errorFromResponse(response);
     }
@@ -282,7 +282,6 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     request: Request,
     fn: () => Promise<TResult>,
   ): Promise<TResult> {
-
     if (process && process.env && process.env.NODE_ENV === 'development') {
       // We're not using console.time because that isn't supported on Cloudflare
       const startTime = Date.now();

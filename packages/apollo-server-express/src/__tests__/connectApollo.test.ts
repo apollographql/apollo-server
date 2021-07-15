@@ -25,5 +25,5 @@ async function createConnectApp(options: CreateAppOptions = {}) {
 }
 
 describe('integration:Connect', () => {
-  testSuite({createApp: createConnectApp});
+  testSuite({ createApp: createConnectApp });
 });

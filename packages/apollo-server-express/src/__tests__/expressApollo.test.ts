@@ -17,7 +17,7 @@ async function createApp(options: CreateAppOptions = {}) {
 }
 
 describe('expressApollo', () => {
-  it('throws error if called without schema', function() {
+  it('throws error if called without schema', function () {
     expect(() => new ApolloServer(undefined as any)).toThrow(
       'ApolloServer requires options.',
     );
@@ -25,5 +25,5 @@ describe('expressApollo', () => {
 });
 
 describe('integration:Express', () => {
-  testSuite({createApp});
+  testSuite({ createApp });
 });

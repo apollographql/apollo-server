@@ -36,7 +36,7 @@ import {
  */
 export interface GraphQLServerOptions<
   TContext = Record<string, any>,
-  TRootValue = any
+  TRootValue = any,
 > {
   schema: GraphQLSchema;
   schemaHash: SchemaHash;

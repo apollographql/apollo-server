@@ -24,9 +24,7 @@ export class ApolloServer extends ApolloServerExpress {
     return true;
   }
 
-  public createHandler(
-    options?: CreateHandlerOptions,
-  ): express.Handler {
+  public createHandler(options?: CreateHandlerOptions): express.Handler {
     let realHandler: express.Handler;
     return async (req, ...args) => {
       await this.ensureStarted();

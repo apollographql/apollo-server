@@ -157,7 +157,10 @@ describe('apollo-server-fastify', () => {
           'accept',
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         )
-        .expect(200, /apollo-server-landing-page.cdn.apollographql.com\/_latest/);
+        .expect(
+          200,
+          /apollo-server-landing-page.cdn.apollographql.com\/_latest/,
+        );
     });
 
     it('accepts cors configuration', async () => {

@@ -10,9 +10,7 @@ import {
   DocumentNode,
 } from 'graphql';
 
-import {
-  GraphQLResponse,
-} from 'apollo-server-types';
+import { GraphQLResponse } from 'apollo-server-types';
 
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
 import { Request } from 'apollo-server-env';
@@ -28,7 +26,7 @@ import {
   GraphQLRequestContext,
 } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import { generateSchemaHash } from "../utils/schemaHash";
+import { generateSchemaHash } from '../utils/schemaHash';
 import { newCachePolicy } from '../cachePolicy';
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
@@ -155,7 +153,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.data).toEqual(expected);
     });
   });
@@ -168,7 +166,7 @@ describe('runQuery', () => {
       queryString: query,
       variables: { base: 1 },
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.data).toBeUndefined();
       expect(res.errors!.length).toEqual(1);
       expect(res.errors![0].message).toMatch(expected);
@@ -212,7 +210,7 @@ describe('runQuery', () => {
       queryString: query,
       variables: { base: 1 },
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.data).toBeUndefined();
       expect(res.errors!.length).toEqual(1);
       expect(res.errors![0].message).toEqual(expected);
@@ -227,7 +225,7 @@ describe('runQuery', () => {
       queryString: query,
       rootValue: 'it also',
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.data).toEqual(expected);
     });
   });
@@ -243,7 +241,7 @@ describe('runQuery', () => {
         return 'it also';
       },
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.data).toEqual(expected);
     });
   });
@@ -256,7 +254,7 @@ describe('runQuery', () => {
       queryString: query,
       context: { s: 'it still' },
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.data).toEqual(expected);
     });
   });
@@ -273,7 +271,7 @@ describe('runQuery', () => {
         return response;
       },
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.data).toEqual(expected);
       expect(res['extensions']).toEqual('it still');
     });
@@ -287,7 +285,7 @@ describe('runQuery', () => {
       queryString: query,
       variables: { base: 1 },
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.data).toEqual(expected);
     });
   });
@@ -300,7 +298,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.errors![0].message).toEqual(expected);
     });
   });
@@ -310,7 +308,7 @@ describe('runQuery', () => {
       schema,
       queryString: `{ testAwaitedValue }`,
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.data).toEqual({
         testAwaitedValue: 'it works',
       });
@@ -333,7 +331,7 @@ describe('runQuery', () => {
       queryString: query,
       operationName: 'Q1',
       request: new MockReq(),
-    }).then(res => {
+    }).then((res) => {
       expect(res.data).toEqual(expected);
     });
   });
@@ -411,8 +409,11 @@ describe('runQuery', () => {
 
         const invocation = requestDidStart.mock.calls[0][0];
         expect(invocation).toHaveProperty('schema', schema);
-        expect(invocation).toHaveProperty( /* Shorter as a RegExp */
-          'schemaHash', expect.stringMatching(/^1a1814b60b/));
+        expect(invocation).toHaveProperty(
+          /* Shorter as a RegExp */
+          'schemaHash',
+          expect.stringMatching(/^1a1814b60b/),
+        );
       });
     });
 
@@ -444,8 +445,10 @@ describe('runQuery', () => {
         });
 
         expect(didResolveSource).toHaveBeenCalled();
-        expect(didResolveSource.mock.calls[0][0])
-          .toHaveProperty('source', '{ testString }');
+        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+          'source',
+          '{ testString }',
+        );
       });
     });
 
@@ -512,35 +515,32 @@ describe('runQuery', () => {
       });
 
       describe('executionDidEnd', () => {
-        it('works as a listener on an object returned from "executionDidStart"',
-          async () => {
-            const executionDidEnd = jest.fn();
-            const executionDidStart = jest.fn(
-              async (): Promise<GraphQLRequestExecutionListener> => ({
-                executionDidEnd,
-              }),
-            );
-
-            await runQuery({
-              schema,
-              queryString: '{ testString }',
-              plugins: [
-                {
-                  async requestDidStart() {
-                    return {
-                      executionDidStart,
-                    };
-                  },
-                },
-              ],
-              request: new MockReq(),
-            }
+        it('works as a listener on an object returned from "executionDidStart"', async () => {
+          const executionDidEnd = jest.fn();
+          const executionDidStart = jest.fn(
+            async (): Promise<GraphQLRequestExecutionListener> => ({
+              executionDidEnd,
+            }),
           );
 
-        expect(executionDidStart).toHaveBeenCalledTimes(1);
-        expect(executionDidEnd).toHaveBeenCalledTimes(1);
-      });
+          await runQuery({
+            schema,
+            queryString: '{ testString }',
+            plugins: [
+              {
+                async requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+            request: new MockReq(),
+          });
 
+          expect(executionDidStart).toHaveBeenCalledTimes(1);
+          expect(executionDidEnd).toHaveBeenCalledTimes(1);
+        });
       });
 
       describe('willResolveField', () => {
@@ -628,9 +628,9 @@ describe('runQuery', () => {
             // It is called only once.
             expect(willResolveField).toHaveBeenCalledTimes(1);
             const call = willResolveField.mock.calls[0];
-            expect(call[0]).toHaveProperty("source", undefined);
-            expect(call[0]).toHaveProperty("info.path.key", "testString");
-            expect(call[0]).toHaveProperty("info.path.prev", undefined);
+            expect(call[0]).toHaveProperty('source', undefined);
+            expect(call[0]).toHaveProperty('info.path.key', 'testString');
+            expect(call[0]).toHaveProperty('info.path.prev', undefined);
           });
 
           it('receives the parent when there is one', async () => {
@@ -656,14 +656,14 @@ describe('runQuery', () => {
             // It is called 1st for `testObject` and then 2nd for `testString`.
             expect(willResolveField).toHaveBeenCalledTimes(2);
             const [firstCall, secondCall] = willResolveField.mock.calls;
-            expect(firstCall[0]).toHaveProperty("source", undefined);
-            expect(firstCall[0]).toHaveProperty("info.path.key", "testObject");
-            expect(firstCall[0]).toHaveProperty("info.path.prev", undefined);
+            expect(firstCall[0]).toHaveProperty('source', undefined);
+            expect(firstCall[0]).toHaveProperty('info.path.key', 'testObject');
+            expect(firstCall[0]).toHaveProperty('info.path.prev', undefined);
 
             expect(secondCall[0]).toHaveProperty('source', {
               testString: 'a very test string',
             });
-            expect(secondCall[0]).toHaveProperty("info.path.key", "testString");
+            expect(secondCall[0]).toHaveProperty('info.path.key', 'testString');
             expect(secondCall[0]).toHaveProperty('info.path.prev', {
               key: 'testObject',
               prev: undefined,
@@ -693,7 +693,8 @@ describe('runQuery', () => {
             });
 
             expect(willResolveField).toHaveBeenCalledTimes(1);
-            expect(willResolveField.mock.calls[0][0]).toHaveProperty("context",
+            expect(willResolveField.mock.calls[0][0]).toHaveProperty(
+              'context',
               expect.objectContaining({ ourSpecialContext: true }),
             );
           });
@@ -719,8 +720,10 @@ describe('runQuery', () => {
             });
 
             expect(willResolveField).toHaveBeenCalledTimes(1);
-            expect(willResolveField.mock.calls[0][0])
-              .toHaveProperty("args.base", 99);
+            expect(willResolveField.mock.calls[0][0]).toHaveProperty(
+              'args.base',
+              99,
+            );
           });
         });
 
@@ -798,11 +801,11 @@ describe('runQuery', () => {
                 testString: {
                   type: GraphQLString,
                   resolve() {
-                    return "using schema-defined resolver";
+                    return 'using schema-defined resolver';
                   },
                 },
-              }
-            })
+              },
+            }),
           });
 
           const schemaWithoutResolver = new GraphQLSchema({
@@ -812,8 +815,8 @@ describe('runQuery', () => {
                 testString: {
                   type: GraphQLString,
                 },
-              }
-            })
+              },
+            }),
           });
 
           const differentFieldResolver = () => "I'm diffrnt, ya, I'm diffrnt.";
@@ -830,7 +833,7 @@ describe('runQuery', () => {
                 executionDidStart: async () => ({
                   willResolveField,
                 }),
-              })
+              }),
             },
           ];
 
@@ -846,7 +849,7 @@ describe('runQuery', () => {
           expect(didResolveField).toHaveBeenCalledTimes(1);
 
           expect(resultFromSchemaWithResolver.data).toEqual({
-            testString: "using schema-defined resolver"
+            testString: 'using schema-defined resolver',
           });
 
           const resultFromSchemaWithoutResolver = await runQuery({
@@ -861,12 +864,11 @@ describe('runQuery', () => {
           expect(didResolveField).toHaveBeenCalledTimes(2);
 
           expect(resultFromSchemaWithoutResolver.data).toEqual({
-            testString: "I'm diffrnt, ya, I'm diffrnt."
+            testString: "I'm diffrnt, ya, I'm diffrnt.",
           });
         });
       });
     });
-
 
     describe('didEncounterErrors', () => {
       const didEncounterErrors = jest.fn();
@@ -902,14 +904,18 @@ describe('runQuery', () => {
         });
 
         expect(response).toHaveProperty(
-          'errors.0.message','Secret error message');
+          'errors.0.message',
+          'Secret error message',
+        );
         expect(response).toHaveProperty('data.testError', null);
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
-            errors: expect.arrayContaining([expect.objectContaining({
-              message: 'Secret error message',
-            })]),
+            errors: expect.arrayContaining([
+              expect.objectContaining({
+                message: 'Secret error message',
+              }),
+            ]),
           }),
         );
       });
@@ -926,11 +932,11 @@ describe('runQuery', () => {
       });
     });
 
-    describe("ordering", () => {
+    describe('ordering', () => {
       it('calls hooks in the expected order', async () => {
         const callOrder: string[] = [];
         let stopAwaiting: Function;
-        const toBeAwaited = new Promise(resolve => stopAwaiting = resolve);
+        const toBeAwaited = new Promise((resolve) => (stopAwaiting = resolve));
 
         const parsingDidEnd: GraphQLRequestListenerParsingDidEnd = jest.fn(
           async () => {
@@ -954,13 +960,16 @@ describe('runQuery', () => {
           });
 
         const didResolveSource: GraphQLRequestListener['didResolveSource'] =
-          jest.fn(async () => { callOrder.push('didResolveSource') });
+          jest.fn(async () => {
+            callOrder.push('didResolveSource');
+          });
 
-        const didResolveField: GraphQLRequestListenerDidResolveField =
-          jest.fn(() => callOrder.push("didResolveField"));
+        const didResolveField: GraphQLRequestListenerDidResolveField = jest.fn(
+          () => callOrder.push('didResolveField'),
+        );
 
         const willResolveField = jest.fn(() => {
-          callOrder.push("willResolveField");
+          callOrder.push('willResolveField');
           return didResolveField;
         });
 
@@ -972,7 +981,7 @@ describe('runQuery', () => {
 
         const executionDidStart = jest.fn(
           async (): Promise<GraphQLRequestExecutionListener> => {
-            callOrder.push("executionDidStart");
+            callOrder.push('executionDidStart');
             return { willResolveField, executionDidEnd };
           },
         );
@@ -984,14 +993,14 @@ describe('runQuery', () => {
               testString: {
                 type: GraphQLString,
                 async resolve() {
-                  callOrder.push("beforeAwaiting");
+                  callOrder.push('beforeAwaiting');
                   await toBeAwaited;
-                  callOrder.push("afterAwaiting");
-                  return "it works";
+                  callOrder.push('afterAwaiting');
+                  return 'it works';
                 },
               },
-            }
-          })
+            },
+          }),
         });
 
         Promise.resolve().then(() => stopAwaiting());
@@ -1022,20 +1031,20 @@ describe('runQuery', () => {
         expect(willResolveField).toHaveBeenCalledTimes(1);
         expect(didResolveField).toHaveBeenCalledTimes(1);
         expect(callOrder).toStrictEqual([
-          "didResolveSource",
-          "parsingDidStart",
-          "parsingDidEnd",
-          "validationDidStart",
-          "validationDidEnd",
-          "executionDidStart",
-          "willResolveField",
-          "beforeAwaiting",
-          "afterAwaiting",
-          "didResolveField",
-          "executionDidEnd",
+          'didResolveSource',
+          'parsingDidStart',
+          'parsingDidEnd',
+          'validationDidStart',
+          'validationDidEnd',
+          'executionDidStart',
+          'willResolveField',
+          'beforeAwaiting',
+          'afterAwaiting',
+          'didResolveField',
+          'executionDidEnd',
         ]);
       });
-    })
+    });
   });
 
   describe('parsing and validation cache', () => {

@@ -69,8 +69,7 @@ export interface GraphQLService extends GatewayInterface {}
 
 // This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
-export interface Config<ContextFunctionParams = any>
-  extends BaseConfig {
+export interface Config<ContextFunctionParams = any> extends BaseConfig {
   modules?: GraphQLSchemaModule[];
   typeDefs?: DocumentNode | Array<DocumentNode> | string | Array<string>;
   parseOptions?: ParseOptions;

@@ -35,18 +35,17 @@ import { ApolloConfigInput } from 'apollo-server-types';
 // when building the traces.  Therefore, we'll need to make sure that we provide
 // a fake HTTP context to `executeOperation` when testing with Engine enabled,
 // to ensure that it doesn't fail.
-const mockHttpRequestContextForExecuteOperation: Required<Pick<
-  GraphQLRequest,
-  'http'
->> = {
+const mockHttpRequestContextForExecuteOperation: Required<
+  Pick<GraphQLRequest, 'http'>
+> = {
   http: { method: 'GET', headers: new Headers(), url: '/mocked' },
 };
 
 // Hacky way of turning off debug and info logs during tests.
 beforeEach(() => {
   loglevel
-  .getLogger('apollo-server:apollo-server-plugin-operation-registry')
-  .setLevel(loglevel.levels.WARN);
+    .getLogger('apollo-server:apollo-server-plugin-operation-registry')
+    .setLevel(loglevel.levels.WARN);
 });
 
 describe('Operation registry plugin', () => {
@@ -89,7 +88,8 @@ describe('Operation registry plugin', () => {
 
     describe('onUnregisterOperation', () => {
       it('is called when unregistered operation received', async () => {
-        const onUnregisteredOperation: Options['onUnregisteredOperation'] = jest.fn();
+        const onUnregisteredOperation: Options['onUnregisteredOperation'] =
+          jest.fn();
         nockStorageSecret(graphId, hashedApiKey);
         nockGoodManifestsUnderStorageSecret(graphId, genericStorageSecret, [
           /* Intentionally empty! */
@@ -133,7 +133,8 @@ describe('Operation registry plugin', () => {
       });
 
       it('is not called when registered operation received', async () => {
-        const onUnregisteredOperation: Options['onUnregisteredOperation'] = jest.fn();
+        const onUnregisteredOperation: Options['onUnregisteredOperation'] =
+          jest.fn();
         nockStorageSecret(graphId, hashedApiKey);
         nockGoodManifestsUnderStorageSecret(graphId, genericStorageSecret, [
           {

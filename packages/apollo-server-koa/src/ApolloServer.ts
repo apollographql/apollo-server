@@ -26,16 +26,18 @@ export interface ServerRegistration extends GetMiddlewareOptions {
   app: Koa;
 }
 
-const middlewareFromPath = <StateT, CustomT>(
-  path: string,
-  middleware: compose.Middleware<ParameterizedContext<StateT, CustomT>>,
-) => (ctx: ParameterizedContext<StateT, CustomT>, next: () => Promise<any>) => {
-  if (ctx.path === path || ctx.path === `${path}/`) {
-    return middleware(ctx, next);
-  } else {
-    return next();
-  }
-};
+const middlewareFromPath =
+  <StateT, CustomT>(
+    path: string,
+    middleware: compose.Middleware<ParameterizedContext<StateT, CustomT>>,
+  ) =>
+  (ctx: ParameterizedContext<StateT, CustomT>, next: () => Promise<any>) => {
+    if (ctx.path === path || ctx.path === `${path}/`) {
+      return middleware(ctx, next);
+    } else {
+      return next();
+    }
+  };
 
 export class ApolloServer extends ApolloServerBase {
   // This translates the arguments from the middleware into graphQL options It
@@ -99,7 +101,9 @@ export class ApolloServer extends ApolloServerBase {
       // Unlike the express `cors` package, `fastify-cors`, or Hapi, Koa's cors
       // handling defaults to reflecting the incoming origin instead of '*'.
       // Let's make it match.
-      middlewares.push(middlewareFromPath(path, corsMiddleware({origin: '*'})));
+      middlewares.push(
+        middlewareFromPath(path, corsMiddleware({ origin: '*' })),
+      );
     } else if (cors !== false) {
       middlewares.push(middlewareFromPath(path, corsMiddleware(cors)));
     }
@@ -148,9 +152,9 @@ export class ApolloServer extends ApolloServerBase {
             request: convertNodeHttpToRequest(ctx.req),
           });
           if (responseInit.headers) {
-            Object.entries(
-              responseInit.headers,
-            ).forEach(([headerName, value]) => ctx.set(headerName, value));
+            Object.entries(responseInit.headers).forEach(
+              ([headerName, value]) => ctx.set(headerName, value),
+            );
           }
           ctx.body = graphqlResponse;
           ctx.status = responseInit.status || 200;

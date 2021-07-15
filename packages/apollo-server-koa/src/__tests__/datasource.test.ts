@@ -31,7 +31,7 @@ const typeDefs = gql`
   }
 `;
 
-const resolvers: GraphQLResolverMap<{dataSources: {id: IdAPI}}> = {
+const resolvers: GraphQLResolverMap<{ dataSources: { id: IdAPI } }> = {
   Query: {
     id: async (_source, _args, { dataSources }) => {
       return (await dataSources.id.getId('hi')).id;
@@ -71,9 +71,9 @@ describe('apollo-server-koa', () => {
   let restUrl: string;
 
   beforeAll(async () => {
-    restUrl = await new Promise(resolve => {
+    restUrl = await new Promise((resolve) => {
       restServer = restAPI.listen(0, () => {
-        const { port } = (restServer.address() as AddressInfo);
+        const { port } = restServer.address() as AddressInfo;
         resolve(`http://localhost:${port}`);
       });
     });
@@ -100,16 +100,16 @@ describe('apollo-server-koa', () => {
       typeDefs,
       resolvers,
       dataSources: () => ({
-        id: new class extends IdAPI {
+        id: new (class extends IdAPI {
           override baseURL = restUrl;
-        },
+        })(),
       }),
     });
     await server.start();
     const app = new Koa();
 
     server.applyMiddleware({ app });
-    httpServer = await new Promise<http.Server>(resolve => {
+    httpServer = await new Promise<http.Server>((resolve) => {
       const s = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
@@ -133,16 +133,16 @@ describe('apollo-server-koa', () => {
       typeDefs,
       resolvers,
       dataSources: () => ({
-        id: new class extends IdAPI {
+        id: new (class extends IdAPI {
           override baseURL = restUrl;
-        },
+        })(),
       }),
     });
     await server.start();
     const app = new Koa();
 
     server.applyMiddleware({ app });
-    httpServer = await new Promise<http.Server>(resolve => {
+    httpServer = await new Promise<http.Server>((resolve) => {
       const s = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);

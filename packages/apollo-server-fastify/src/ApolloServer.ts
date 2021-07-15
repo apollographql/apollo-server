@@ -124,7 +124,7 @@ export class ApolloServer extends ApolloServerBase {
                     reply.header(name, value);
                   }
                 }
-                reply.status(responseInit.status || 200)
+                reply.status(responseInit.status || 200);
                 reply.serializer((payload: string) => payload);
                 reply.send(graphqlResponse);
               } catch (error) {

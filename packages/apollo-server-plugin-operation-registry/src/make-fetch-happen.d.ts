@@ -46,9 +46,10 @@ declare module 'make-fetch-happen' {
    * @see: https://git.io/JvBwX
    */
   export interface Fetcher {
-    (input: RequestInfo, init?: RequestInit & FetcherOptions): Promise<
-      Response
-    >;
+    (
+      input: RequestInfo,
+      init?: RequestInit & FetcherOptions,
+    ): Promise<Response>;
   }
 
   let fetch: Fetcher & {
