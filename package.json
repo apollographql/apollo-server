@@ -65,7 +65,7 @@
     "@josephg/resolvable": "1.0.1",
     "@sinonjs/fake-timers": "7.1.2",
     "@types/async-retry": "1.4.3",
-    "@types/aws-lambda": "8.10.78",
+    "@types/aws-lambda": "8.10.79",
     "@types/body-parser": "1.19.1",
     "@types/bunyan": "1.8.7",
     "@types/connect": "3.4.35",
