@@ -14,13 +14,18 @@ commands:
   # to merge objects), every version of Node must use the exact same steps,
   # or these steps would need to be repeated in a version of Node that needs
   # something different.  Probably best to avoid that, out of principle, though.
-  common_test_steps:
-    description: "Commands to run on every Node.js environment"
+  common_node_steps:
+    description: "Set up Node.js environment and install dependencies"
     steps:
       - oss/install_specific_npm_version:
           version: '7'
       - checkout
       - oss/npm_clean_install_with_caching
+
+  common_test_steps:
+    description: "Set up Node.js environment and run tests"
+    steps:
+      - common_node_steps
       - run:
           command: npm run test:ci
           environment:
@@ -64,6 +69,13 @@ jobs:
     - image: cimg/node:16.0.0
     steps:
       - common_test_steps
+
+  Prettier:
+    docker:
+    - image: cimg/node:16.0.0
+    steps:
+      - common_node_steps
+      - run: npm run prettier-check
 
   # We make CI fail if any file contains FIX and ME right next to each other.
   # This means that when working on a big PR, you can throw in notes that you
@@ -116,6 +128,7 @@ workflows:
       - NodeJS 16:
           <<: *common_non_publish_filters
       - "Check for FIXM\x45"
+      - Prettier
       - oss/lerna_tarballs:
           name: Package tarballs
           <<: *common_non_publish_filters
@@ -123,6 +136,7 @@ workflows:
             - NodeJS 12
             - NodeJS 14
             - NodeJS 16
+            - Prettier
       - oss/dry_run:
           name: Dry-run
           <<: *common_publish_filters
@@ -130,6 +144,7 @@ workflows:
             - NodeJS 12
             - NodeJS 14
             - NodeJS 16
+            - Prettier
       - oss/confirmation:
           name: Confirmation
           type: approval
