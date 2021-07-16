@@ -94,7 +94,7 @@ The default value is `{ none: true }`, which means **no** header names or values
 </td>
 <td>
 
-Specify this function to modify GraphQL operation errors before Apollo Server reports those errors to Apollo Studio. The function takes a [`GraphQLError`](https://github.com/graphql/graphql-js/blob/master/src/error/GraphQLError.js) object and must also return one (or `null` to prevent Apollo Server from reporting a particular error entirely).
+Specify this function to modify GraphQL operation errors before Apollo Server reports those errors to Apollo Studio. The function takes a [`GraphQLError`](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts) object and must also return one (or `null` to prevent Apollo Server from reporting a particular error entirely).
 
 The only properties of the reported error you can modify are its `message` and its `extensions`.
 
