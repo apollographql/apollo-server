@@ -1221,17 +1221,20 @@ export default ({
     });
 
     describe('server setup', () => {
-      it('throws error on 404 routes', async () => {
-        app = await createApp();
+      // Serverless frameworks default listening on all paths so there's no 404.
+      if (!serverlessFramework) {
+        it('throws error on 404 routes', async () => {
+          app = await createApp();
 
-        const query = {
-          query: '{ testString }',
-        };
-        const req = request(app).get('/bogus-route').query(query);
-        return req.then((res) => {
-          expect(res.status).toEqual(404);
+          const query = {
+            query: '{ testString }',
+          };
+          const req = request(app).get('/bogus-route').query(query);
+          return req.then((res) => {
+            expect(res.status).toEqual(404);
+          });
         });
-      });
+      }
     });
 
     if (serverlessFramework) {

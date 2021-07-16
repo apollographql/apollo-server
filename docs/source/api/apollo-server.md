@@ -603,7 +603,9 @@ async function startApolloServer() {
 
 The path for Apollo Server to listen on.
 
-The default value is `/graphql`.
+The default value for framework-specific packages (`apollo-server-express`, `apollo-server-fastify`, etc) is `/graphql`.
+
+The default value for `apollo-server` and serverless-specific packages (`apollo-server-lambda`, etc) is `/`.
 </td>
 </tr>
 
