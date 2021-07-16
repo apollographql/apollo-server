@@ -81,11 +81,11 @@ functions:
     handler: graphql.graphqlHandler
     events:
     - http:
-        path: graphql
+        path: /
         method: post
         cors: true
     - http:
-        path: graphql
+        path: /
         method: get
         cors: true
 ```
@@ -116,8 +116,8 @@ stack: apollo-lambda-dev
 api keys:
   None
 endpoints:
-  POST - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/graphql
-  GET - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/graphql
+  POST - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/
+  GET - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/
 functions:
   graphql: apollo-lambda-dev-graphql
 ```
@@ -132,6 +132,8 @@ The resulting S3 buckets and Lambda functions can be viewed and managed after lo
 
 - To find the created S3 bucket, search the listed services for S3. For this example, the bucket created by Serverless was named `apollo-lambda-dev-serverlessdeploymentbucket-1s10e00wvoe5f`
 - To find the created Lambda function, search the listed services for `Lambda`. If the list of Lambda functions is empty, or missing the newly created function, double check the region at the top right of the screen. The default region for Serverless deployments is `us-east-1` (N. Virginia)
+
+If you changed your mind, you can remove everything from your AWS account with `npx serverless remove`.
 
 ## Customizing HTTP serving
 
@@ -150,6 +152,17 @@ exports.handler = server.createHandler({
   }
 });
 ```
+
+## Configuring the underlying Express integration
+
+Because `apollo-server-lambda` is built on top of `apollo-server-express`, you can specify the same options that `apollo-server-express` accepts in `getMiddleware` (or `applyMiddleware`, other than `app`) as the `expressGetMiddlewareOptions` option to `createHandler. The default value of this option is `{path: '/'}` (and this value of `path` will be used unless you explicitly override it). For example:
+
+```js
+exports.handler = server.createHandle({
+  expressGetMiddlewareOptions: {
+    disableHealthCheck: true,
+  }
+});
 
 ## Getting request info
 

@@ -43,7 +43,13 @@ export class ApolloServer extends ApolloServerExpress<LambdaContextFunctionParam
       await this.ensureStarted();
       if (!realHandler) {
         const middleware = this.getMiddleware(
-          options?.expressGetMiddlewareOptions,
+          // By default, serverless integrations serve on root rather than
+          // /graphql, since serverless handlers tend to just do one thing and
+          // paths are generally configured as part of deploying the app.
+          {
+            path: '/',
+            ...options?.expressGetMiddlewareOptions,
+          },
         );
         const app = (
           options?.expressAppFromMiddleware ?? defaultExpressAppFromMiddleware
