@@ -32,10 +32,10 @@ Certain undersupported and underused Apollo Server features have been removed in
 
 - Dropped built-in partial support for subscriptions via the `subscriptions-transport-ws` package.
   - This integration did not support many Apollo Server features, and `subscriptions-transport-ws` has not been actively maintained.
-  - To re-enable subscriptions in Apollo Server 3 as they're supported in v2, [see the migration guide](./docs/source/migration.md#Subscriptions).
+  - To re-enable subscriptions in Apollo Server 3 as they're supported in v2, [see the migration guide](./docs/source/migration.mdx#Subscriptions).
   - We hope to provide more deeply integrated subscription support in a future release.
 - Dropped built-in support for file uploads via the `graphql-upload` package.
-  - To re-enable file uploads in Apollo Server 3 as they're supported in v2, [see the migration guide](./docs/source/migration.md#File-uploads).
+  - To re-enable file uploads in Apollo Server 3 as they're supported in v2, [see the migration guide](./docs/source/migration.mdx#File-uploads).
 - Dropped support for the `graphql-extensions` API (e.g., `GraphQLExtensions`, `extensions`) in favor of the Apollo Server [plugins API](https://www.apollographql.com/docs/apollo-server/integrations/plugins/).
 - Dropped support for passing the `schemaDirectives` option to the `ApolloServer` constructor.
   - This option was passed directly to the `graphql-tools` function `makeExecutableSchema`. To continue using it, you can import `makeExecutableSchema` from `@graphql-tools/schema` and call it yourself:
