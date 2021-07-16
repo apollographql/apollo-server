@@ -186,28 +186,6 @@ export function ApolloServerPluginCacheControl(
                 fieldPolicy.replace(fieldAnnotation);
               }
 
-              // If this field returns a composite type or is a root field and
-              // we haven't seen an explicit maxAge hint, set the maxAge to 0
-              // (uncached) or the default if specified in the constructor.
-              // (Non-object fields by default are assumed to inherit their
-              // cacheability from their parents. But on the other hand, while
-              // root non-object fields can get explicit hints from their
-              // definition on the Query/Mutation object, if that doesn't exist
-              // then there's no parent field that would assign the default
-              // maxAge, so we do it here.)
-              //
-              // You can disable this on a non-root field by writing
-              // `@cacheControl(inheritMaxAge: true)` on it. If you do this,
-              // then its children will be treated like root paths, since there
-              // is no parent maxAge to inherit.
-              if (
-                fieldPolicy.maxAge === undefined &&
-                ((isCompositeType(targetType) && !inheritMaxAge) ||
-                  !info.path.prev)
-              ) {
-                fieldPolicy.restrict({ maxAge: defaultMaxAge });
-              }
-
               info.cacheControl = {
                 setCacheHint: (dynamicHint: CacheHint) => {
                   fieldPolicy.replace(dynamicHint);
@@ -221,6 +199,35 @@ export function ApolloServerPluginCacheControl(
               // "undo" the effect on overallCachePolicy of a static hint that
               // gets refined by a dynamic hint.
               return () => {
+                // If this field returns a composite type or is a root field and
+                // we haven't seen an explicit maxAge hint, set the maxAge to 0
+                // (uncached) or the default if specified in the constructor.
+                // (Non-object fields by default are assumed to inherit their
+                // cacheability from their parents. But on the other hand, while
+                // root non-object fields can get explicit hints from their
+                // definition on the Query/Mutation object, if that doesn't
+                // exist then there's no parent field that would assign the
+                // default maxAge, so we do it here.)
+                //
+                // You can disable this on a non-root field by writing
+                // `@cacheControl(inheritMaxAge: true)` on it. If you do this,
+                // then its children will be treated like root paths, since
+                // there is no parent maxAge to inherit.
+                //
+                // We do this in the end hook so that dynamic cache control
+                // prevents it from happening (eg,
+                // `info.cacheControl.cacheHint.restrict({maxAge: 60})` should
+                // work rather than doing nothing because we've already set the
+                // max age to the default of 0). This also lets resolvers assume
+                // any hint in `info.cacheControl.cacheHint` was explicitly set.
+                if (
+                  fieldPolicy.maxAge === undefined &&
+                  ((isCompositeType(targetType) && !inheritMaxAge) ||
+                    !info.path.prev)
+                ) {
+                  fieldPolicy.restrict({ maxAge: defaultMaxAge });
+                }
+
                 if (__testing__cacheHints && isRestricted(fieldPolicy)) {
                   const path = responsePathAsArray(info.path).join('.');
                   if (__testing__cacheHints.has(path)) {
