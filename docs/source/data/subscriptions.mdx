@@ -349,6 +349,8 @@ After you start up the server in CodeSandbox, follow the instructions in the bro
 
 ## Operation context
 
+(Oops! This section hasn't been updated for Apollo Server 3. [We'll fix it soon!](https://github.com/apollographql/apollo-server/issues/5472))
+
 When [initializing context](../data/resolvers/#the-context-argument) for a query or mutation, you usually extract HTTP headers and other request metadata from the `req` object provided to the `context` function.
 
 **For subscriptions,** you extract this metadata from the `connection` object instead. This object adheres to the [`ExecutionParams` interface](https://github.com/apollographql/subscriptions-transport-ws/blob/817e7de3a23db2b4d64eb846724175dba74025d0/src/server.ts#L24-L33).
