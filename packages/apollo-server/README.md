@@ -143,6 +143,7 @@ If you wish to develop or contribute to Apollo Server, we suggest the following:
 ```
 git clone https://github.com/[your-user]/apollo-server
 cd apollo-server
+nvm use
 npm install
 cd packages/apollo-server-<integration>/
 npm link
