@@ -1,5 +1,5 @@
-import { Request, Response } from 'apollo-server-env';
-import {
+import type { Request, Response } from 'apollo-server-env';
+import type {
   GraphQLSchema,
   ValidationContext,
   ASTVisitor,
@@ -8,11 +8,12 @@ import {
   DocumentNode,
   GraphQLError,
   GraphQLResolveInfo,
+  GraphQLCompositeType,
 } from 'graphql';
 
 // This seems like it could live in this package too.
-import { KeyValueCache } from 'apollo-server-caching';
-import { Trace } from 'apollo-reporting-protobuf';
+import type { KeyValueCache } from 'apollo-server-caching';
+import type { Trace } from 'apollo-reporting-protobuf';
 
 export type BaseContext = Record<string, any>;
 
@@ -275,4 +276,22 @@ export interface CachePolicy extends CacheHint {
    * `CacheHint` with both fields defined. Otherwise return null.
    */
   policyIfCacheable(): Required<CacheHint> | null;
+}
+
+/**
+ * When using Apollo Server with the cache control plugin (on by default), an
+ * object of this kind is available to resolvers on `info.cacheControl`.
+ */
+export interface ResolveInfoCacheControl {
+  cacheHint: CachePolicy;
+  // Shorthand for `cacheHint.replace(hint)`; also for compatibility with
+  // the Apollo Server 2.x API.
+  setCacheHint(hint: CacheHint): void;
+  cacheHintFromType(t: GraphQLCompositeType): CacheHint | undefined;
+}
+
+declare module 'graphql/type/definition' {
+  interface GraphQLResolveInfo {
+    cacheControl: ResolveInfoCacheControl;
+  }
 }

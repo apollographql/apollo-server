@@ -9,6 +9,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+- `apollo-server-types`: TypeScript typings for `info.cacheControl` are now added to `GraphQLResolveInfo` as part of `apollo-server-types` rather than a nested file in `apollo-server-core`, and the field now has a named type, `ResolveInfoCacheControl`. [PR #5512](https://github.com/apollographql/apollo-server/pull/5512)
+
 ## v3.0.1
 
 - `apollo-server-core`: The default `maxAge` (which defaults to 0) for a field should only be applied if no dynamic cache control hint is set. Specifically, if you call the (new in 3.0.0) function `info.cacheControl.cacheHint.restrict({ maxAge: 60 })`, it should set `maxAge` to 60 even if the default max age is lower. (This bug fix is the behavior that was intended for 3.0.0, and primarily affects the behavior of functions added in Apollo Server 3. This does mean that checking `info.cacheControl.cacheHint` now only shows explicitly-set `maxAge` and not the default, but this seems like it will be helpful since it lets you differentiate between the two similar circumstances.) [PR #5492](https://github.com/apollographql/apollo-server/pull/5492)
