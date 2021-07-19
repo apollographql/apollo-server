@@ -1,8 +1,4 @@
-import type {
-  CacheAnnotation,
-  CacheHint,
-  CachePolicy,
-} from 'apollo-server-types';
+import type { CacheAnnotation, CacheHint } from 'apollo-server-types';
 import { CacheScope } from 'apollo-server-types';
 import {
   DirectiveNode,
@@ -35,18 +31,6 @@ export interface ApolloServerPluginCacheControlOptions {
   calculateHttpHeaders?: boolean;
   // For testing only.
   __testing__cacheHints?: Map<string, CacheHint>;
-}
-
-declare module 'graphql/type/definition' {
-  interface GraphQLResolveInfo {
-    cacheControl: {
-      cacheHint: CachePolicy;
-      // Shorthand for `cacheHint.replace(hint)`; also for compatibility with
-      // the Apollo Server 2.x API.
-      setCacheHint(hint: CacheHint): void;
-      cacheHintFromType(t: GraphQLCompositeType): CacheHint | undefined;
-    };
-  }
 }
 
 export function ApolloServerPluginCacheControl(
