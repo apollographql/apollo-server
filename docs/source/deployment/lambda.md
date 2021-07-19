@@ -163,6 +163,7 @@ exports.handler = server.createHandle({
     disableHealthCheck: true,
   }
 });
+```
 
 ## Getting request info
 
