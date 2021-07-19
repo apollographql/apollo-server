@@ -138,23 +138,24 @@ If you wish to develop or contribute to Apollo Server, we suggest the following:
 
 - Fork this repository
 
+- Install [Direnv](https://direnv.net/) (a tool that automatically sets up environment variables in project directories) or [nvm](https://github.com/nvm-sh/nvm)
+
 - Install the Apollo Server project on your computer
 
 ```
 git clone https://github.com/[your-user]/apollo-server
 cd apollo-server
-nvm use
+direnv allow  # sets up nvm for you; if you installed nvm yourself, try `nvm install` instead
+```
+
+- Build and test
+
+```
 npm install
-cd packages/apollo-server-<integration>/
-npm link
+npm test
 ```
 
-- Install your local Apollo Server in the other App
-
-```
-cd ~/myApp
-npm link apollo-server-<integration>
-```
+- To run individual test files, run `npm run pretest && npx jest packages/apollo-server-foo/src/__tests__/bar.test.ts`. Note that you do need to re-compile TypeScript before each time you run a test, or changes across packages may not be picked up.  Instead of running `npm run pretest` from scratch before each test run, you can also run `tsc --build tsconfig.json --watch` in another shell, or use the VSCode `Run Build Task` to run that for you.
 
 ## Community
 
