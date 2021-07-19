@@ -138,7 +138,7 @@ If you wish to develop or contribute to Apollo Server, we suggest the following:
 
 - Fork this repository
 
-- Install [Direnv](https://direnv.net/) (a tool that automatically sets up environment variables in project directories) or [nvm](https://github.com/nvm-sh/nvm)
+- Install [Direnv](https://direnv.net/) (a tool that automatically sets up environment variables in project directories) or [nvm](https://github.com/nvm-sh/nvm). We use nvm to ensure we're running the expected version of Node (and we use Direnv to install and run nvm automatically).
 
 - Install the Apollo Server project on your computer
 
