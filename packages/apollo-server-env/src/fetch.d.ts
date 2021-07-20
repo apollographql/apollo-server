@@ -37,9 +37,9 @@ export declare class Body {
 export declare class Request extends Body {
   constructor(input: Request | string, init?: RequestInit);
 
-  readonly method: string;
-  readonly url: string;
-  readonly headers: Headers;
+  method: string;
+  url: string;
+  headers: Headers;
 
   clone(): Request;
 }
