@@ -10,6 +10,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## vNEXT
 
 - `apollo-server-types`: TypeScript typings for `info.cacheControl` are now added to `GraphQLResolveInfo` as part of `apollo-server-types` rather than a nested file in `apollo-server-core`, and the field now has a named type, `ResolveInfoCacheControl`. [PR #5512](https://github.com/apollographql/apollo-server/pull/5512)
+- `apollo-server-micro`: Like the other framework integrations, only serve landing pages from the GraphQL path (`/graphql` by default, configurable via the `path` option to `createHandler`). [PR #5516](https://github.com/apollographql/apollo-server/pull/5516)
 
 ## v3.0.1
 
