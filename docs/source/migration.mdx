@@ -573,7 +573,9 @@ In Apollo Server 2, if you specify an Apollo API key (e.g., with the `APOLLO_KEY
 
 In Apollo Server 3, you should instead specify your Studio graph ID explicitly when using features that connect to Studio. You can specify the graph ID by itself in the `APOLLO_GRAPH_ID` environment variable (or via `new ApolloServer({apollo: {graphId}}))`, or alongside the variant in a string like `your-graph-id@your-graph-variant` in the `APOLLO_GRAPH_REF` environment variable (or via `new ApolloServer({apollo: {graphRef}})`). See [the `apollo` constructor option](./api/apollo-server/#apollo) for more details.
 
-> If you set your API key but do _not_ set your graph ref or ID, then if you explicitly set up features like the usage reporting plugin or managed federation, Apollo Server 3 throws an error on startup. If you don't explicitly [set up or disable the usage reporting plugin](./api/plugin/usage-reporting/), Apollo Server 3 logs a warning suggesting that you either set your graph ref or disable the usage reporting plugin.
+> If you set your API key but do _not_ set your graph ref or ID:
+> - If you explicitly set up features like the usage reporting plugin or managed federation, Apollo Server 3 throws an error on startup.
+> - If you don't explicitly [set up or disable the usage reporting plugin](./api/plugin/usage-reporting/), Apollo Server 3 logs a warning suggesting that you either set your graph ref or disable the usage reporting plugin.
 
 ### `ApolloServer.schema` field
 
