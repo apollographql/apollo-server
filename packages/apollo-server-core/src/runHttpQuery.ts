@@ -1,4 +1,4 @@
-import { Request, Headers, ValueOrPromise } from 'apollo-server-env';
+import { Request, Headers } from 'apollo-server-env';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
@@ -11,7 +11,11 @@ import {
   GraphQLResponse,
 } from './requestPipeline';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { WithRequired, GraphQLExecutionResult } from 'apollo-server-types';
+import {
+  WithRequired,
+  GraphQLExecutionResult,
+  ValueOrPromise,
+} from 'apollo-server-types';
 import { newCachePolicy } from './cachePolicy';
 
 export interface HttpQueryRequest {
