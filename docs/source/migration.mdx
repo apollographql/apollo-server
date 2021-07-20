@@ -292,13 +292,13 @@ If you've written your own extensions (passed to `new ApolloServer({extensions: 
 
 ### `engine`
 
-"Engine" is a previous name of [Apollo Studio](https://www.apollographql.com/docs/studio/). Prior to Apollo Server v2.18.0, you passed the `engine` constructor option to configure how Apollo Server communicates with Studio. One option for specifying your Apollo API key was the `ENGINE_API_KEY` environment variable; one way to specify your variant was the `ENGINE_SCHEMA_TAG` environment variable.
+"Engine" is a previous name of [Apollo Studio](https://www.apollographql.com/docs/studio/). Prior to Apollo Server v2.18.0, you passed the `engine` constructor option to configure how Apollo Server communicates with Studio. Additionally, you could specifying your Apollo API key with the `ENGINE_API_KEY` environment variable, and you could specify a graph variant with the `ENGINE_SCHEMA_TAG` environment variable.
 
 In later versions of Apollo Server (including Apollo Server 3), you instead provide this configuration via a combination of the `apollo` constructor option, plugins, and `APOLLO_`-prefixed environment variables. Apollo Server 3 does not support the `engine` constructor option or the `ENGINE_`-prefixed environment variables.
 
 If your project still uses the `engine` option or the `ENGINE_`-prefixed environment variables, see [Migrating from the `engine` option](../v2/migration-engine-plugins) before upgrading to Apollo Server 3.
 
-Note that if you are using Studio, you will also want to be sure to [set your graph ref or graph ID](#guessing-apollo-studio-graph-id-from-api-key).
+Note that if you are using Studio, make sure to [set your graph ref or graph ID](#guessing-apollo-studio-graph-id-from-api-key).
 
 ### `schemaDirectives`
 
@@ -569,11 +569,13 @@ Several small features have been removed from Apollo Server 3.
 
 ### Guessing Apollo Studio graph ID from API key
 
-In Apollo Server 2, if you specify an Apollo API key (eg, with the `APOLLO_KEY` environment variable) that starts with `service:your-graph-id:`, Apollo Server will automatically guess that your Studio graph ID (used for usage reporting, schema reporting, managed federation, and so on) is `your-graph-id`.
+In Apollo Server 2, if you specify an Apollo API key (e.g., with the `APOLLO_KEY` environment variable) that starts with `service:your-graph-id:`, Apollo Server automatically guesses that your Studio graph ID (used for usage reporting, schema reporting, managed federation, and so on) is `your-graph-id`.
 
-In Apollo Server 3, you should specify your Studio graph ID explicitly when using features that connect to Studio. You can specify the graph ID by itself in the `APOLLO_GRAPH_ID` environment variable (or via `new ApolloServer({apollo: {graphId}}))`, or alongside the variant in a string like `your-graph-id@your-graph-variant` in the `APOLLO_GRAPH_REF` environment variable (or via `new ApolloServer({apollo: {graphRef}})`). See [the `apollo` constructor option](./api/apollo-server/#apollo) for more details.
+In Apollo Server 3, you should instead specify your Studio graph ID explicitly when using features that connect to Studio. You can specify the graph ID by itself in the `APOLLO_GRAPH_ID` environment variable (or via `new ApolloServer({apollo: {graphId}}))`, or alongside the variant in a string like `your-graph-id@your-graph-variant` in the `APOLLO_GRAPH_REF` environment variable (or via `new ApolloServer({apollo: {graphRef}})`). See [the `apollo` constructor option](./api/apollo-server/#apollo) for more details.
 
-(If you set your API key but do not set your graph ref or ID, then if you explicitly set up features like the usage reporting plugin or managed federation, Apollo Server 3 will throw an error on startup; and if you don't explicitly [set up or disable the usage reporting plugin](./api/plugin/usage-reporting/), Apollo Server 3 will log a warning suggesting that you set your graph ref or disable the usage reporting plugin.)
+> If you set your API key but do _not_ set your graph ref or ID:
+> - If you explicitly set up features like the usage reporting plugin or managed federation, Apollo Server 3 throws an error on startup.
+> - If you don't explicitly [set up or disable the usage reporting plugin](./api/plugin/usage-reporting/), Apollo Server 3 logs a warning suggesting that you either set your graph ref or disable the usage reporting plugin.
 
 ### `ApolloServer.schema` field
 
