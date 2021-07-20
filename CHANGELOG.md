@@ -99,6 +99,7 @@ Certain undersupported and underused Apollo Server features have been removed in
 - Stopped publishing the deprecated `apollo-server-testing` package. This package is just a wrapper around `server.executeOperation`, which you can use directly.
 - `apollo-server-caching`: The test suite helper works differently, and the `TestableKeyValueCache` interface is removed.
 - The `engine` constructor option, `ENGINE_API_KEY` environment variable, and `ENGINE_SCHEMA_TAG` environment variables are no longer supported. Use the `apollo` constructor option, `APOLLO_KEY` environment variable, and `APOLLO_GRAPH_VARIANT` environment variable instead, as described in [the `engine` option migration guide from v2.18)[https://www.apollographql.com/docs/apollo-server/v2/migration-engine-plugins/].
+- When you supply an Apollo API key via the `APOLLO_KEY` environment variable or `new ApolloServer({apollo: {key}})`, Apollo Server 3 no longer parses the key to guess your Studio graph ID. You must specify it yourself, either via the `APOLLO_GRAPH_ID` environment variable (or `new ApolloServer({apollo: {graphId}})`), or as a graph ref along with the variant (eg, `your-graph-id@your-graph-variant`) in the `APOLLO_GRAPH_REF` environment variable (or `new ApolloServer({apollo: {graphRef}})`).
 
 #### Modified functionality
 
