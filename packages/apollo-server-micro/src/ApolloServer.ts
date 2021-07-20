@@ -122,7 +122,8 @@ export class ApolloServer extends ApolloServerBase {
   }): boolean {
     let handled = false;
 
-    if (req.method === 'GET') {
+    const url = req.url!.split('?')[0];
+    if (req.method === 'GET' && url === this.graphqlPath) {
       const accept = parseAll(req.headers);
       const types = accept.mediaTypes as string[];
       const prefersHtml =

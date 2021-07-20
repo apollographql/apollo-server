@@ -91,7 +91,7 @@ describe('apollo-server-micro', function () {
         );
 
         const body = await rp({
-          uri,
+          uri: `${uri}/graphql`,
           method: 'GET',
           headers: {
             accept:
