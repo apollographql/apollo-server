@@ -39,7 +39,7 @@ export declare class Request extends Body {
 
   method: string;
   url: string;
-  headers: Headers;
+  readonly headers: Headers;
 
   clone(): Request;
 }
