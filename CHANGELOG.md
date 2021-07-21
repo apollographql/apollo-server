@@ -9,6 +9,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+- `apollo-server-core`: If a client does not provide a value or provides null for a variable declared to be non-null, this is now reported as an error with an `extensions.code` of `BAD_USER_INPUT` rather than `INTERNAL_SERVER_ERROR`. (This is similar to a change we made in v2.23.0 for variables that are sent as the wrong type.) [PR #5508](https://github.com/apollographql/apollo-server/pull/5508) [Issue #5353](https://github.com/apollographql/apollo-server/issues/5353)
+
+
 ## v3.0.2
 
 - `apollo-server-types`: TypeScript typings for `info.cacheControl` are now added to `GraphQLResolveInfo` as part of `apollo-server-types` rather than a nested file in `apollo-server-core`, and the field now has a named type, `ResolveInfoCacheControl`. [PR #5512](https://github.com/apollographql/apollo-server/pull/5512)

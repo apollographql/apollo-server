@@ -360,7 +360,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.data).toBeUndefined();
         expect(result.errors).toBeDefined();
         expect(result.errors[0].message).toMatch(
-          `Variable "$x" of required type "String!" was not provided.`
+          `Variable "$x" of required type "String!" was not provided.`,
         );
         expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
       });
@@ -383,7 +383,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.data).toBeUndefined();
         expect(result.errors).toBeDefined();
         expect(result.errors[0].message).toMatch(
-          `Variable "$x" of non-null type "String!" must not be null.`
+          `Variable "$x" of non-null type "String!" must not be null.`,
         );
         expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
       });
