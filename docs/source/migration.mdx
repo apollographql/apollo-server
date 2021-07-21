@@ -97,7 +97,7 @@ Then, complete the following:
 1. Create the `SubscriptionServer`.
 
     ```javascript
-    SubscriptionServer.create({
+    const subscriptionServer = SubscriptionServer.create({
        // This is the `schema` we just created.
        schema,
        // These are imported from `graphql`.
@@ -150,10 +150,16 @@ import typeDefs from "./typeDefs";
   await server.start();
   server.applyMiddleware({ app });
 
-  SubscriptionServer.create(
+  const subscriptionServer = SubscriptionServer.create(
     { schema, execute, subscribe },
     { server: httpServer, path: server.graphqlPath }
   );
+  
+  // Shut down in the case of interrupt and termination signals
+  // We expect to handle this more cleanly in the future. See (#5074)[https://github.com/apollographql/apollo-server/issues/5074] for reference.
+  ['SIGINT', 'SIGTERM'].forEach(signal => {
+    process.on(signal, () => subscriptionServer.close());
+  });
 
   const PORT = 4000;
   httpServer.listen(PORT, () =>
