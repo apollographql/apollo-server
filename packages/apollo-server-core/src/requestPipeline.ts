@@ -378,16 +378,32 @@ export async function processGraphQLRequest<TContext>(
 
       // The first thing that execution does is coerce the request's variables
       // to the types declared in the operation, which can lead to errors if
-      // they are of the wrong type. We change any such errors into
-      // UserInputError so that their code doesn't end up being
-      // INTERNAL_SERVER_ERROR, since these are client errors.
+      // they are of the wrong type. It also makes sure that all non-null
+      // variables are required and get non-null values. If any of these thingss
+      // lead to errors, we change them into UserInputError so that their code
+      // doesn't end up being INTERNAL_SERVER_ERROR, since these are client
+      // errors.
+      //
+      // This is hacky! Hopefully graphql-js will give us a way to separate
+      // variable resolution from execution later; see
+      // https://github.com/graphql/graphql-js/issues/3169
       const resultErrors = result.errors?.map((e) => {
         if (
           e.nodes?.length === 1 &&
           e.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
-          e.message.startsWith(
+          (e.message.startsWith(
             `Variable "$${e.nodes[0].variable.name.value}" got invalid value `,
-          )
+          ) ||
+            (e.nodes[0].type.kind === Kind.NON_NULL_TYPE &&
+              e.nodes[0].type.type.kind === Kind.NAMED_TYPE &&
+              (e.message.startsWith(
+                `Variable "$${e.nodes[0].variable.name.value}" of required ` +
+                  `type "${e.nodes[0].type.type.name.value}!" was not provided.`,
+              ) ||
+                e.message.startsWith(
+                  `Variable "$${e.nodes[0].variable.name.value}" of non-null ` +
+                    `type "${e.nodes[0].type.type.name.value}!" must not be null.`,
+                ))))
         ) {
           return fromGraphQLError(e, {
             errorClass: UserInputError,
