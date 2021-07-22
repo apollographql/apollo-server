@@ -645,6 +645,12 @@ export class ApolloServerBase<
     };
   }
 
+  /**
+   * XXX: Note that stop() was designed to be called after start() has finished,
+   * and should not be called concurrently with start() or before start(), or
+   * else unexpected behavior may occur (e.g. some dependencies may not be
+   * stopped).
+   */
   public async stop() {
     // Calling stop more than once should have the same result as the first time.
     if (this.state.phase === 'stopped') {
