@@ -173,7 +173,7 @@ should not return a value.
 
 ### `schemaDidLoadOrUpdate`
 
-The `schemaDidLoadOrUpdate` event fires whenever Apollo Server initially loads the schema or updates the schema. A `schemaDidLoadOrUpdate` handler is given the new API schema and optionally the new core schema (if using a gateway). If you provide a gateway and it is older than FIXME , attempting to register a `schemaDidLoadOrUpdate` handler will fail.
+The `schemaDidLoadOrUpdate` event fires whenever Apollo Server initially loads the schema or updates the schema. A `schemaDidLoadOrUpdate` handler is given the new API schema and optionally the new core schema (if using a gateway). If you provide a gateway and it is older than `@apollo/gateway@0.35.0`, attempting to register a `schemaDidLoadOrUpdate` handler will fail.
 
 `schemaDidLoadOrUpdate` is a synchronous plugin API (i.e., it does not return a `Promise`).
 

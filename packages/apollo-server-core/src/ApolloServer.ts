@@ -430,14 +430,11 @@ export class ApolloServerBase<
               schemaManager.onSchemaLoadOrUpdate(schemaDidLoadOrUpdate);
             } catch (e) {
               if (e instanceof GatewayIsTooOldError) {
-                // FIXME: Once a gateway version providing the core schema to
-                //        callbacks has been released, update this message to
-                //        state the specific version needed.
                 throw new Error(
                   [
                     `One of your plugins uses the 'schemaDidLoadOrUpdate' hook,`,
                     `but your gateway version is too old to support this hook.`,
-                    `Please update your gateway version to latest.`,
+                    `Please update your version of @apollo/gateway to at least 0.35.0.`,
                   ].join(' '),
                 );
               }
