@@ -6,8 +6,6 @@ description: Configure caching behavior on a per-field basis
 
 > **New in Apollo Server 3**: You must manually define the `@cacheControl` directive in your schema to use static cache hints. [See below.](#in-your-schema-static)
 
-> Note: Apollo Federation doesn't currently support @cacheControl out-of-the-box. There is [an issue](https://github.com/apollographql/federation/issues/356) on the Federation repo which discusses this and proposes possible workarounds.
-
 Apollo Server enables you to define cache control settings (`maxAge` and `scope`) for each field in your schema:
 
 ```graphql{5,7}
@@ -291,6 +289,46 @@ query GetReaderBookTitle {
   }
 }
 ```
+
+## Using with federation
+
+When using [Apollo Federation](https://www.apollographql.com/docs/federation), the `@cacheControl` directive and `CacheControlScope` enum may be defined in a subgraph's schema. An Apollo Server-based subgraph will calculate and set the cache hint for the response that it sends to the gateway as it would for a non-federated Apollo Server sending a response to a client. The gateway will then calculate the cache hint for the overall response based on the most restrictive settings among all of the responses received from the subgraphs involved in query plan execution.
+
+### Setting entity cache hints
+
+Subgraph schemas contain an `_entities` root field on the `Query` type, so all query plans that require entity resolution will have a [`maxAge` of `0` set by default](#default-maxage). To override this default behavior, you can add a `@cacheControl` directive to an entity's definition:
+
+```graphql
+type Book @key(fields: "isbn") @cacheControl(maxAge: 30) {
+  isbn: String!
+  title: String
+}
+```
+
+When the `_entities` field is resolved it will check the applicable concrete type for a cache hint (which would be the `Book` type in the example above) and apply that hint instead.
+
+To set cache hints dynamically, the [`cacheControl` object and its methods](#in-your-resolvers-dynamic) are also available in the `info` parameter of the `__resolveReference` resolver.
+
+### Overriding subgraph cache hints in the gateway
+
+If a subgraph does not specify a `max-age`, the gateway will assume its response (and
+in turn, the overall response) cannot be cached. To override this behavior, you can set the `Cache-Control` header in the `didReceiveResponse` method of a `RemoteGraphQLDataSource`.
+
+Additionally, if the gateway should ignore `Cache-Control` response headers from subgraphs that will affect the operation's cache policy, then you can set the `honorSubgraphCacheControlHeader` property of a `RemoteGraphQLDataSource` to `false` (this value is `true` by default):
+
+```javascript
+const gateway = new ApolloGateway({
+  // ...
+  buildService({ url }) {
+    return new RemoteGraphQLDataSource({
+      url,
+      honorSubgraphCacheControlHeader: false;
+    });
+  }
+});
+```
+
+The effect of setting `honorSubgraphCacheControlHeader` to `false` is to have no impact on the cacheability of the response in either direction. In other words, this property won’t determine whether the response can be cached, but it does exclude a subgraph's `Cache-Control` header from consideration in the gateway's calculation. If all subgraphs are excluded from consideration when calculating the overall `Cache-Control` header, the response sent to the client will not be cached.
 
 ## Caching with a CDN
 
