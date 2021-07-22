@@ -741,19 +741,17 @@ export class ApolloServerBase<
       const alreadyHavePlugin =
         alreadyHavePluginWithInternalId('SchemaReporting');
       const enabledViaEnvVar = process.env.APOLLO_SCHEMA_REPORTING === 'true';
-      if (!alreadyHavePlugin) {
-        if (!this.apolloConfig.key) {
-          if (enabledViaEnvVar) {
-            throw new Error(
-              "You've enabled schema reporting by setting the APOLLO_SCHEMA_REPORTING " +
-                'environment variable to true, but you also need to provide your ' +
-                'Apollo API key, via the APOLLO_KEY environment ' +
-                'variable or via `new ApolloServer({apollo: {key})',
-            );
-          }
-        } else if (enabledViaEnvVar) {
+      if (!alreadyHavePlugin && enabledViaEnvVar) {
+        if (this.apolloConfig.key) {
           const options: ApolloServerPluginSchemaReportingOptions = {};
           this.plugins.push(ApolloServerPluginSchemaReporting(options));
+        } else {
+          throw new Error(
+            "You've enabled schema reporting by setting the APOLLO_SCHEMA_REPORTING " +
+              'environment variable to true, but you also need to provide your ' +
+              'Apollo API key, via the APOLLO_KEY environment ' +
+              'variable or via `new ApolloServer({apollo: {key})',
+          );
         }
       }
     }
