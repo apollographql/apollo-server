@@ -149,7 +149,7 @@ The GraphQL specification allows clients to introspect the schema with a [specia
 
 This helps when you need to mock a schema defined in a language other than JS, for example Go, Ruby, or Python.
 
-To convert an [introspection query](https://github.com/graphql/graphql-js/blob/master/src/utilities/getIntrospectionQuery.js) result to a `GraphQLSchema` object, you can use the `buildClientSchema` utility from the `graphql` package.
+To convert an [introspection query](https://github.com/graphql/graphql-js/blob/main/src/utilities/getIntrospectionQuery.ts) result to a `GraphQLSchema` object, you can use the `buildClientSchema` utility from the `graphql` package.
 
 ```js
 const { buildClientSchema } = require('graphql');
