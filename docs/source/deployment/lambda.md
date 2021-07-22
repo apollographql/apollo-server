@@ -158,7 +158,7 @@ exports.handler = server.createHandler({
 Because `apollo-server-lambda` is built on top of `apollo-server-express`, you can specify the same options that `apollo-server-express` accepts in `getMiddleware` (or `applyMiddleware`, other than `app`) as the `expressGetMiddlewareOptions` option to `createHandler`. The default value of this option is `{path: '/'}` (and this value of `path` will be used unless you explicitly override it). For example:
 
 ```js
-exports.handler = server.createHandle({
+exports.handler = server.createHandler({
   expressGetMiddlewareOptions: {
     disableHealthCheck: true,
   }
