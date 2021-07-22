@@ -145,7 +145,7 @@ server.listen().then(({ url }) => {
 
 ## Mocking a schema using introspection
 
-The GraphQL specification allows clients to introspect the schema with a [special set of types and fields](https://facebook.github.io/graphql/#sec-Introspection) that every schema must include. The results of a [standard introspection query](https://github.com/graphql/graphql-js/blob/master/src/utilities/getIntrospectionQuery.js) can be used to generate an instance of GraphQLSchema which can be mocked as explained above.
+The GraphQL specification allows clients to introspect the schema with a [special set of types and fields](https://facebook.github.io/graphql/#sec-Introspection) that every schema must include. The results of a [standard introspection query](https://github.com/graphql/graphql-js/blob/main/src/utilities/getIntrospectionQuery.ts) can be used to generate an instance of GraphQLSchema which can be mocked as explained above.
 
 This helps when you need to mock a schema defined in a language other than JS, for example Go, Ruby, or Python.
 
