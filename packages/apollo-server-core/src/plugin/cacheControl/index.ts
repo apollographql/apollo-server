@@ -74,26 +74,26 @@ export function ApolloServerPluginCacheControl(
       return 'CacheControl';
     },
 
-    async serverWillStart() {
-      return {
-        async schemaDidLoadOrUpdate({ apiSchema }) {
-          // Set the size of the caches to be equal to the number of composite types
-          // and fields in the schema respectively. This generally means that the
-          // cache will always have room for all the cache hints in the active
-          // schema but we won't have a memory leak as schemas are replaced in a
-          // gateway.
-          typeAnnotationCache.max = Object.values(
-            apiSchema.getTypeMap(),
-          ).filter(isCompositeType).length;
-          fieldAnnotationCache.max =
-            Object.values(apiSchema.getTypeMap())
-              .filter(isObjectType)
-              .flatMap((t) => Object.values(t.getFields())).length +
-            Object.values(apiSchema.getTypeMap())
-              .filter(isInterfaceType)
-              .flatMap((t) => Object.values(t.getFields())).length;
-        },
-      };
+    async serverWillStart({ schema }) {
+      // Set the size of the caches to be equal to the number of composite types
+      // and fields in the schema respectively. This generally means that the
+      // cache will always have room for all the cache hints in the active
+      // schema but we won't have a memory leak as schemas are replaced in a
+      // gateway. (Once we're comfortable breaking compatibility with
+      // versions of Gateway older than 0.35.0, we should also run this code
+      // from a schemaDidLoadOrUpdate instead of serverWillStart. Using
+      // schemaDidLoadOrUpdate throws when combined with old gateways.)
+      typeAnnotationCache.max = Object.values(schema.getTypeMap()).filter(
+        isCompositeType,
+      ).length;
+      fieldAnnotationCache.max =
+        Object.values(schema.getTypeMap())
+          .filter(isObjectType)
+          .flatMap((t) => Object.values(t.getFields())).length +
+        Object.values(schema.getTypeMap())
+          .filter(isInterfaceType)
+          .flatMap((t) => Object.values(t.getFields())).length;
+      return undefined;
     },
 
     async requestDidStart(requestContext) {
