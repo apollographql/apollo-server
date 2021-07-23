@@ -6,3 +6,9 @@
 [build.environment]
   NODE_VERSION = "16"
   NPM_VERSION  = "7"
+
+# for debugging algolia indexing
+[dev]
+  command = "npm run build"
+[context.dev.environment]
+  SKIP_INDEXING = "false"
