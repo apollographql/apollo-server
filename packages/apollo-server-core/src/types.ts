@@ -5,8 +5,6 @@ import type {
   ApolloConfig,
   ValueOrPromise,
   GraphQLExecutor,
-  GraphQLExecutionResult,
-  GraphQLRequestContextExecutionDidStart,
   ApolloConfigInput,
 } from 'apollo-server-types';
 
@@ -50,7 +48,7 @@ export type SchemaChangeCallback = (apiSchema: GraphQLSchema) => void;
 
 export type GraphQLServiceConfig = {
   schema: GraphQLSchema;
-  executor: GraphQLExecutor;
+  executor: GraphQLExecutor | null;
 };
 
 export interface GatewayInterface {
@@ -71,13 +69,12 @@ export interface GatewayInterface {
     }) => void,
   ): Unsubscriber;
 
-  // Note: The `TContext` typing here is not conclusively behaving as we expect:
-  // https://github.com/apollographql/apollo-server/pull/3811#discussion_r387381605
-  executor<TContext>(
-    requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ): Promise<GraphQLExecutionResult>;
-
   stop(): Promise<void>;
+
+  // Note: this interface used to have an `executor` method, and also return the
+  // executor from `load()`. ApolloServer would only use the former. We dropped
+  // this method and now use the latter, which allows you to make a "mock
+  // gateway" that updates the schema over time but uses normal execution.
 }
 
 // This was the name used for GatewayInterface in AS2; continue to export it so

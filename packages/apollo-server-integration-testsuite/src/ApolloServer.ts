@@ -36,7 +36,6 @@ import {
   ApolloServerBase,
   PluginDefinition,
   GatewayInterface,
-  GraphQLExecutor,
   GraphQLServiceConfig,
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
@@ -126,11 +125,9 @@ const schema = new GraphQLSchema({
 const makeGatewayMock = ({
   optionsSpy = (_options) => {},
   unsubscribeSpy = () => {},
-  executor = async () => ({}),
 }: {
   optionsSpy?: (_options: any) => void;
   unsubscribeSpy?: () => void;
-  executor?: GraphQLExecutor;
 } = {}) => {
   let resolution: GraphQLServiceConfig | null = null;
   let rejection: Error | null = null;
@@ -145,7 +142,6 @@ const makeGatewayMock = ({
   };
 
   const mockedGateway: GatewayInterface = {
-    executor,
     load: async (options) => {
       optionsSpy(options);
       // Make sure it's async
@@ -414,7 +410,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             Promise.resolve({ data: { testString: 'hi - but federated!' } }),
           );
 
-          const { gateway, triggers } = makeGatewayMock({ executor });
+          const { gateway, triggers } = makeGatewayMock();
 
           triggers.resolveLoad({ schema, executor });
 
@@ -2701,7 +2697,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             ? Promise.resolve({ data: { testString1: 'hello' } })
             : Promise.resolve({ data: { testString2: 'aloha' } });
 
-        const { gateway, triggers } = makeGatewayMock({ executor });
+        const { gateway, triggers } = makeGatewayMock();
 
         triggers.resolveLoad({
           schema: makeQueryTypeWithField('testString1'),
@@ -2782,7 +2778,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           return { data: { testString: 'hi - but federated!' } };
         };
 
-        const { gateway, triggers } = makeGatewayMock({ executor });
+        const { gateway, triggers } = makeGatewayMock();
 
         triggers.resolveLoad({ schema, executor });
         const { url: uri } = await createApolloServer({
@@ -2844,7 +2840,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           return { data: { [`testString${i}`]: `${i}` } };
         };
 
-        const { gateway, triggers } = makeGatewayMock({ executor });
+        const { gateway, triggers } = makeGatewayMock();
 
         triggers.resolveLoad({
           schema: makeQueryTypeWithField('testString1'),

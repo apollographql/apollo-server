@@ -1,6 +1,7 @@
 import { GraphQLSchema } from 'graphql';
 import {
   ApolloConfig,
+  GraphQLExecutor,
   GraphQLSchemaContext,
   Logger,
 } from 'apollo-server-types';
@@ -81,8 +82,9 @@ export class SchemaManager {
    * - Initialize schema-derived data.
    * - Synchronously notify onSchemaLoadOrUpdate() listeners of schema load, and
    *   asynchronously notify them of schema updates.
+   * - If we started a gateway, returns the gateway's executor; otherwise null.
    */
-  public async start(): Promise<void> {
+  public async start(): Promise<GraphQLExecutor | null> {
     if (this.modeSpecificState.mode === 'gateway') {
       const gateway = this.modeSpecificState.gateway;
       if (gateway.onSchemaLoadOrUpdate) {
@@ -115,10 +117,12 @@ export class SchemaManager {
       if (!this.schemaDerivedData) {
         this.processSchemaLoadOrUpdateEvent({ apiSchema: config.schema });
       }
+      return config.executor;
     } else {
       this.processSchemaLoadOrUpdateEvent({
         apiSchema: this.modeSpecificState.apiSchema,
       });
+      return null;
     }
   }
 
