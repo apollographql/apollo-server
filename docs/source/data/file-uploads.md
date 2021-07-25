@@ -67,6 +67,7 @@ const resolvers = {
 
 async function startServer() {
   const server = new ApolloServer({
+    uploads: false,
     typeDefs,
     resolvers,
   });
