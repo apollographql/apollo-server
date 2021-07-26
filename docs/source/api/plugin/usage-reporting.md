@@ -376,7 +376,7 @@ Specify this function to create a signature for a query. This option is not reco
 | Object | Description |
 |--------|-------------|
 | `{ none: true }` | If you provide this object, no request header names or values are sent to Apollo Studio. This is the default behavior. |
-| `{ all: true }` |  If you provide this object, **all** GraphQL header names and values are sent to Apollo Studio, except for the protected headers listed above. |
+| `{ all: true }` |  If you provide this object, **all** GraphQL header names and values are sent to Apollo Studio, except for the protected headers listed below. |
 | `{ onlyNames: ["apple", "orange"]}`| If you provide an object with this structure, only names and values of the request headers with names that appear in the array are sent to Apollo Studio. Case-insensitive. |
 | `{ exceptNames: ["apple", "orange"]}`| If you provide an object with this structure, all GraphQL header values **except** values of headers with names that appear in the array are sent to Apollo Studio. Case-insensitive. |
 

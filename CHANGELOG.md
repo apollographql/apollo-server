@@ -11,6 +11,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet! Stay tuned!_
 
+## v3.1.1
+
+- `apollo-server-env`: Update `Headers.values()` type to match what `node-fetch` actually does and what the Fetch spec says it should be, and what `@types/node-fetch` [finally](https://github.com/DefinitelyTyped/DefinitelyTyped/pull/54674) gets correct. [PR #5537](https://github.com/apollographql/apollo-server/pull/5537)
+
 ## v3.1.0
 
 - `apollo-server-core`: If a client does not provide a value or provides null for a variable declared to be non-null, this is now reported as an error with an `extensions.code` of `BAD_USER_INPUT` rather than `INTERNAL_SERVER_ERROR`. (This is similar to a change we made in v2.23.0 for variables that are sent as the wrong type.) [PR #5508](https://github.com/apollographql/apollo-server/pull/5508) [Issue #5353](https://github.com/apollographql/apollo-server/issues/5353)
