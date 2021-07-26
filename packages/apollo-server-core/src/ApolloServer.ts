@@ -281,14 +281,6 @@ export class ApolloServerBase<
           logger: this.logger,
         }),
       };
-
-      // The main thing that the Gateway does is replace execution with
-      // its own executor. It would be awkward if you always had to pass
-      // `gateway: gateway, executor: gateway` to this constructor, so
-      // we let specifying `gateway` be a shorthand for the above.
-      // (We won't actually invoke the executor until after we're successfully
-      // called `gateway.load`.)
-      this.requestOptions.executor = gateway.executor;
     } else {
       // We construct the schema synchronously so that we can fail fast if the
       // schema can't be constructed. (This used to be more important because we
@@ -376,10 +368,15 @@ export class ApolloServerBase<
       schemaManager,
     };
     try {
-      await schemaManager.start();
+      const executor = await schemaManager.start();
       this.toDispose.add(async () => {
         await schemaManager.stop();
       });
+      if (executor) {
+        // If we loaded an executor from a gateway, use it to execute
+        // operations.
+        this.requestOptions.executor = executor;
+      }
 
       const schemaDerivedData = schemaManager.getSchemaDerivedData();
       const service: GraphQLServiceContext = {

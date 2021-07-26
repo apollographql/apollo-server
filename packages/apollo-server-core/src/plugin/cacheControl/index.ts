@@ -79,9 +79,10 @@ export function ApolloServerPluginCacheControl(
       // and fields in the schema respectively. This generally means that the
       // cache will always have room for all the cache hints in the active
       // schema but we won't have a memory leak as schemas are replaced in a
-      // gateway. (Once https://github.com/apollographql/apollo-server/pull/5187
-      // lands we should also run this code from a schemaDidLoadOrUpdate
-      // callback.)
+      // gateway. (Once we're comfortable breaking compatibility with
+      // versions of Gateway older than 0.35.0, we should also run this code
+      // from a schemaDidLoadOrUpdate instead of serverWillStart. Using
+      // schemaDidLoadOrUpdate throws when combined with old gateways.)
       typeAnnotationCache.max = Object.values(schema.getTypeMap()).filter(
         isCompositeType,
       ).length;
@@ -175,7 +176,7 @@ export function ApolloServerPluginCacheControl(
                   fieldPolicy.replace(dynamicHint);
                 },
                 cacheHint: fieldPolicy,
-                cacheHintFromType: cacheAnnotationFromType,
+                cacheHintFromType: memoizedCacheAnnotationFromType,
               };
 
               // When the resolver is done, call restrict once. By calling

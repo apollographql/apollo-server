@@ -9,13 +9,19 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+- _Nothing yet! Stay tuned!_
+
+## v3.1.1
+
 - `apollo-server-env`: Update `Headers.values()` type to match what `node-fetch` actually does and what the Fetch spec says it should be, and what `@types/node-fetch` [finally](https://github.com/DefinitelyTyped/DefinitelyTyped/pull/54674) gets correct. [PR #5537](https://github.com/apollographql/apollo-server/pull/5537)
 
-
+## v3.1.0
 
 - `apollo-server-core`: If a client does not provide a value or provides null for a variable declared to be non-null, this is now reported as an error with an `extensions.code` of `BAD_USER_INPUT` rather than `INTERNAL_SERVER_ERROR`. (This is similar to a change we made in v2.23.0 for variables that are sent as the wrong type.) [PR #5508](https://github.com/apollographql/apollo-server/pull/5508) [Issue #5353](https://github.com/apollographql/apollo-server/issues/5353)
 - `apollo-server-core`/`apollo-server-plugin-base`: Add support for `schemaDidLoadOrUpdate` event hooks, to be specified by the `serverWillStart` event hook. Plugins listening for this event will receive the API schema (and core schema for gateways) when the server's schema is initially loaded and when the server's schema is updated. For more information about this plugin event, see [the plugin event reference documentation](https://www.apollographql.com/docs/apollo-server/integrations/plugins-event-reference/). [PR #5187](https://github.com/apollographql/apollo-server/pull/5187)
 - `apollo-server-core`: Add support for schema reporting when using Apollo Gateway. At the time of this package's release, Apollo Studio does not yet support schema reporting from gateways, so you should not use this feature yet for gateways (unless instructed otherwise by Apollo staff or by the Studio docs). If you do enable schema reporting for a gateway, the version of `@apollo/gateway` must be at least `0.35.0` , or else `start()` will error. [PR #5187](https://github.com/apollographql/apollo-server/pull/5187)
+- `apollo-server-core`: Support gateways without executors, to help with mocking gateways. Note that if you have a custom `GatewayInterface` implementation, Apollo Server will now honor the `executor` returned from `load` and will ignore the `executor` method on the gateway itself. See the PR for details. [PR #5539](https://github.com/apollographql/apollo-server/pull/5539)
+- `apollo-server-plugin-response-cache`, `apollo-server-plugin-operation-registry`: Change how the  default export from the package is set up to fix errors with some build tools. [PR #5542](https://github.com/apollographql/apollo-server/pull/5542)
 
 ## v3.0.2
 
