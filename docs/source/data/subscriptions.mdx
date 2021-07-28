@@ -352,7 +352,7 @@ After you start up the server in CodeSandbox, follow the instructions in the bro
 
 When [initializing context](../data/resolvers/#the-context-argument) for a query or mutation, you usually extract HTTP headers and other request metadata from the `req` object provided to the `context` function.
 
-**For subscriptions,** you provide an `onConnect` function to the `SubscriptionServer` constructor. This function receives the [`connectionParams`](#connectionParams) in an object as the first argument, as well as the [`WebSocket`](#websocket) and [`ConnectionContext`](#context) as the second and third arguments, respectively. If your `onConnect` function returns an object, it will be passed to your resolvers as the `context` argument.
+**For subscriptions,** you provide an `onConnect` function to the `SubscriptionServer` constructor. This function receives the [`connectionParams`](#connectionparams) in an object as the first argument, as well as the [`WebSocket`](#websocket) and [`ConnectionContext`](#context) as the second and third arguments, respectively. If your `onConnect` function returns an object, it will be passed to your resolvers as the `context` argument.
 
 ```js
 SubscriptionServer.create({
