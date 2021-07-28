@@ -350,27 +350,20 @@ After you start up the server in CodeSandbox, follow the instructions in the bro
 
 ## Operation context
 
-> Oops! This section hasn't been updated for Apollo Server 3. [We'll fix it soon!](https://github.com/apollographql/apollo-server/issues/5472)
-
 When [initializing context](../data/resolvers/#the-context-argument) for a query or mutation, you usually extract HTTP headers and other request metadata from the `req` object provided to the `context` function.
 
-**For subscriptions,** you extract this metadata from the `connection` object instead. This object adheres to the [`ExecutionParams` interface](https://github.com/apollographql/subscriptions-transport-ws/blob/817e7de3a23db2b4d64eb846724175dba74025d0/src/server.ts#L24-L33).
-
-Because all operation types use the same `context` initialization function, you should check which of `req` or `connection` is present for each incoming request:
+**For subscriptions,** you provide an `onConnect` function to the `SubscriptionServer` constructor. This function receives the [`connectionParams`](#connectionparams) in an object as the first argument, as well as the [`WebSocket`](#websocket) and [`ConnectionContext`](#context) as the second and third arguments, respectively. If your `onConnect` function returns an object, it's passed to your resolvers as the `context` argument.
 
 ```js
-const server = new ApolloServer({
-  context: ({ req, connection }) => {
-    if (connection) { // Operation is a Subscription
-      // Obtain connectionParams-provided token from connection.context
-      const token = connection.context.authorization || "";
-      return { token };
-    } else { // Operation is a Query/Mutation
-      // Obtain header-provided token from req.headers
-      const token = req.headers.authorization || "";
-      return { token };
+SubscriptionServer.create({
+  // ...other options
+  async onConnect(connectionParams) {
+    if (connectionParams.authorization) {
+      const currentUser = await findUser(connectionParams.authorization);
+      return { currentUser };
     }
-  },
+    throw new Error('Missing auth token!');
+  }
 });
 ```
 
@@ -383,7 +376,7 @@ You can define functions that the subscription server executes whenever a subscr
 Defining an `onConnect` function provides the following benefits:
 
 * You can reject a particular incoming connection by throwing an exception or returning `false` in `onConnect`. This is especially useful for [authentication](#example-authentication-with-onconnect).
-* If `onConnect` returns an object, that object's fields are added to the WebSocket connection's `context` object. This is _not_ the _operation_ `context` that's passed between resolvers. However, you can transfer these values from the `connection`'s `context` when you [initialize operation context](#operation-context).
+* If `onConnect` returns an object, that object is passed as the _operation_ `context` to your resolvers.
 
 You provide these function definitions to the constructor object of a `SubscriptionServer`, like so:
 
@@ -466,10 +459,22 @@ Context object for the WebSocket connection. This is _not_ the `context` object 
 
 ### Example: Authentication with `onConnect`
 
-On the client, `SubscriptionsClient` supports adding token information to `connectionParams` ([example](https://www.apollographql.com/docs/react/advanced/subscriptions/#authentication-over-websocket)) that will be sent with the first WebSocket message. On the server, all GraphQL subscriptions are delayed until the connection has been fully authenticated and the `onConnect` callback returns a truthy value.
+On the client, `SubscriptionsClient` supports adding information to `connectionParams` ([example](https://www.apollographql.com/docs/react/data/subscriptions/#5-authenticate-over-websocket-optional)) that will be sent with the first WebSocket message. On the server, all GraphQL subscriptions are delayed until the connection has been fully authenticated and the `onConnect` callback returns a truthy value.
 
-The `connectionParams` argument in the `onConnect` callback contains the information passed by the client and can be used to validate user credentials.
-The GraphQL context can also be extended with the authenticated user data to enable fine grain authorization.
+Let's suppose we have our `SubscriptionClient` configured like so:
+
+```js
+new SubscriptionClient(subscriptionUrl, {
+  // ...other options
+  connectionParams: {
+    authorization: clientToken,
+  },
+})
+```
+
+The `connectionParams` argument in the `SubscriptionServer`'s `onConnect` callback contains the information passed by the client and can be used to validate user credentials.
+
+From the `onConnect` function, we can then return an object which is passed into our resolvers as the `context` argument during execution. For our example, we can use the `authorization` token provided by the client to look up the related user and pass that user along to our resolvers.
 
 ```js
 async function findUser(authToken) {
@@ -481,8 +486,8 @@ SubscriptionServer.create({
   execute,
   subscribe,
   async onConnect(connectionParams, webSocket) {
-    if (connectionParams.authToken) {
-      const currentUser = await findUser(connectionParams.authToken);
+    if (connectionParams.authorization) {
+      const currentUser = await findUser(connectionParams.authorization);
       return { currentUser };
     }
     throw new Error('Missing auth token!');
