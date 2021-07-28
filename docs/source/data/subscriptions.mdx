@@ -376,7 +376,6 @@ You can define functions that the subscription server executes whenever a subscr
 Defining an `onConnect` function provides the following benefits:
 
 * You can reject a particular incoming connection by throwing an exception or returning `false` in `onConnect`. This is especially useful for [authentication](#example-authentication-with-onconnect).
-
 * If `onConnect` returns an object, that object will be passed as the _operation_ `context` to your resolvers.
 
 You provide these function definitions to the constructor object of a `SubscriptionServer`, like so:
