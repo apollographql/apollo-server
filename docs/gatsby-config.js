@@ -38,6 +38,7 @@ module.exports = {
             'schema/unions-interfaces',
             'schema/custom-scalars',
             'schema/directives',
+            'schema/creating-directives',
           ],
           'Fetching Data': [
             'data/resolvers',
