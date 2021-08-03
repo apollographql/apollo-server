@@ -58,5 +58,16 @@
       "matchUpdateTypes": ["patch", "minor"],
       "groupSlug": "all-minor-patch",
     },
+    // Two projects with related packages that often go major in parallel.
+    {
+      groupName: "graphql-code-generator major versions",
+      matchUpdateTypes: ["major"],
+      matchPackagePrefixes: ["@graphql-code-generator"],
+    },
+    {
+      groupName: "graphql-tools major versions",
+      matchUpdateTypes: ["major"],
+      matchPackagePrefixes: ["@graphql-tools"],
+    },
   ]
 }
