@@ -292,6 +292,8 @@ query GetReaderBookTitle {
 
 ## Using with federation
 
+> Using cache control with Apollo Federation requires v0.28 of `@apollo/federation` in your subgraph, v0.36 of `@apollo/gateway` in your router, and v3.0.2 of Apollo Server in both servers.
+
 When using [Apollo Federation](https://www.apollographql.com/docs/federation), the `@cacheControl` directive and `CacheControlScope` enum may be defined in a subgraph's schema. An Apollo Server-based subgraph will calculate and set the cache hint for the response that it sends to the gateway as it would for a non-federated Apollo Server sending a response to a client. The gateway will then calculate the cache hint for the overall response based on the most restrictive settings among all of the responses received from the subgraphs involved in query plan execution.
 
 ### Setting entity cache hints
