@@ -7370,13 +7370,4 @@ export type SchemaReportMutationVariables = Exact<{
 }>;
 
 
-export type SchemaReportMutation = (
-  { __typename?: 'Mutation' }
-  & { reportSchema?: Maybe<(
-    { __typename: 'ReportSchemaError' }
-    & Pick<ReportSchemaError, 'message' | 'code'>
-  ) | (
-    { __typename: 'ReportSchemaResponse' }
-    & Pick<ReportSchemaResponse, 'inSeconds' | 'withCoreSchema'>
-  )> }
-);
+export type SchemaReportMutation = { __typename?: 'Mutation', reportSchema?: Maybe<{ __typename: 'ReportSchemaError', message: string, code: ReportSchemaErrorCode } | { __typename: 'ReportSchemaResponse', inSeconds: number, withCoreSchema: boolean }> };
