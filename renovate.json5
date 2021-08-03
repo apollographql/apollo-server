@@ -1,6 +1,8 @@
 {
   "extends": [
-    "apollo-open-source"
+    "apollo-open-source",
+    "group:graphqlcodegeneratorMonorepo",
+    "group:graphql-toolsMonorepo",
   ],
   "schedule": null,
   // Disable circleci manager; see apollographql/federation's renovate file for details.
@@ -57,17 +59,6 @@
       "groupName": "all non-major dependencies",
       "matchUpdateTypes": ["patch", "minor"],
       "groupSlug": "all-minor-patch",
-    },
-    // Two projects with related packages that often go major in parallel.
-    {
-      groupName: "graphql-codegen major versions",
-      matchUpdateTypes: ["major"],
-      matchPackagePrefixes: ["@graphql-codegen"],
-    },
-    {
-      groupName: "graphql-tools major versions",
-      matchUpdateTypes: ["major"],
-      matchPackagePrefixes: ["@graphql-tools"],
     },
   ]
 }
