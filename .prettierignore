@@ -10,3 +10,4 @@ docs/.cache/
 
 # Don't format generated files!
 packages/apollo-reporting-protobuf/generated/
+packages/apollo-server-core/src/plugin/schemaReporting/operations.d.ts
