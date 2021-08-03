@@ -60,9 +60,9 @@
     },
     // Two projects with related packages that often go major in parallel.
     {
-      groupName: "graphql-code-generator major versions",
+      groupName: "graphql-codegen major versions",
       matchUpdateTypes: ["major"],
-      matchPackagePrefixes: ["@graphql-code-generator"],
+      matchPackagePrefixes: ["@graphql-codegen"],
     },
     {
       groupName: "graphql-tools major versions",
