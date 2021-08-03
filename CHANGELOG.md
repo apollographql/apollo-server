@@ -11,6 +11,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet! Stay tuned!_
 
+## v3.1.2
+
+- `apollo-server-core`: Update versions of `@graphql-tools/schema` and `@graphql-tools/utils` from v7 to v8. While there is no change in behavior in these versions, a recently-released version of `@graphql-tools/mock` depends on them, and so without this change, you tpyically end up with two copies of them installed.
+
 ## v3.1.1
 
 - `apollo-server-env`: Update `Headers.values()` type to match what `node-fetch` actually does and what the Fetch spec says it should be, and what `@types/node-fetch` [finally](https://github.com/DefinitelyTyped/DefinitelyTyped/pull/54674) gets correct. [PR #5537](https://github.com/apollographql/apollo-server/pull/5537)
