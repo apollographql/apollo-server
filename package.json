@@ -74,7 +74,7 @@
     "@types/express-serve-static-core": "4.17.24",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/hapi__hapi": "20.0.9",
-    "@types/ioredis": "4.26.6",
+    "@types/ioredis": "4.26.7",
     "@types/jest": "26.0.24",
     "@types/koa-router": "7.4.4",
     "@types/lodash": "4.14.172",
