@@ -1,4 +1,4 @@
-import type { Handler } from 'aws-lambda';
+import type { Callback, Context } from 'aws-lambda';
 import {
   ApolloServer as ApolloServerExpress,
   ExpressContext,
@@ -30,6 +30,13 @@ function defaultExpressAppFromMiddleware(
   app.use(middleware);
   return app;
 }
+
+type Handler<TEvent = any, TResult = any> = (
+  event: TEvent,
+  context: Context,
+  callback?: Callback<TResult>,
+) => void | Promise<TResult>
+
 export class ApolloServer extends ApolloServerExpress<LambdaContextFunctionParams> {
   protected override serverlessFramework(): boolean {
     return true;
