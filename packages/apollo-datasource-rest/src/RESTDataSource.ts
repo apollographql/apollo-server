@@ -211,7 +211,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
       init.params = new URLSearchParams(init.params);
     }
 
-    if (!(init.headers && init.headers instanceof Headers)) {
+    if (!(init.headers instanceof Headers)) {
       init.headers = new Headers(init.headers || Object.create(null));
     }
 

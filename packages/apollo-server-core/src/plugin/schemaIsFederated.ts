@@ -18,7 +18,7 @@ import { GraphQLSchema, isObjectType, isScalarType } from 'graphql';
 //    it's attempted.
 export function schemaIsFederated(schema: GraphQLSchema): boolean {
   const serviceType = schema.getType('_Service');
-  if (!(serviceType && isObjectType(serviceType))) {
+  if (!isObjectType(serviceType)) {
     return false;
   }
   const sdlField = serviceType.getFields().sdl;
