@@ -111,7 +111,7 @@ export class HTTPCache {
       cacheOptions = cacheOptions(response, request);
     }
 
-    let ttlOverride = cacheOptions && cacheOptions.ttl;
+    let ttlOverride = cacheOptions?.ttl;
 
     if (
       // With a TTL override, only cache succesful responses but otherwise ignore method and response headers

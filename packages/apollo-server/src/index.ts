@@ -38,8 +38,8 @@ export class ApolloServer extends ApolloServerExpress {
     },
   ) {
     super(config);
-    this.cors = config && config.cors;
-    this.onHealthCheck = config && config.onHealthCheck;
+    this.cors = config?.cors;
+    this.onHealthCheck = config?.onHealthCheck;
     this.stopGracePeriodMillis = config?.stopGracePeriodMillis ?? 10_000;
   }
 

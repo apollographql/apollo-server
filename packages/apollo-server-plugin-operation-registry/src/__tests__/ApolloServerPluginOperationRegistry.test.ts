@@ -113,7 +113,7 @@ describe('Operation registry plugin', () => {
         });
         expect(result.data).toBeDefined();
         expect(result.errors).not.toBeDefined();
-        expect(result.data && result.data.hello).toBeDefined();
+        expect(result.data?.hello).toBeDefined();
         expect(onUnregisteredOperation).toHaveBeenCalledTimes(1);
         expect(onUnregisteredOperation).toHaveBeenCalledWith(
           // First argument: request pipeline context.
@@ -161,7 +161,7 @@ describe('Operation registry plugin', () => {
         });
         expect(result.data).toBeDefined();
         expect(result.errors).not.toBeDefined();
-        expect(result.data && result.data.hello).toBeDefined();
+        expect(result.data?.hello).toBeDefined();
         expect(onUnregisteredOperation).toHaveBeenCalledTimes(0);
         await server.stop();
       });
@@ -198,9 +198,7 @@ describe('Operation registry plugin', () => {
         expect(result.data).not.toBeDefined();
         expect(result.errors).toBeDefined();
         expect(result.errors).toHaveLength(1);
-        expect(result.errors && result.errors[0].message).toContain(
-          'forbidden',
-        );
+        expect(result.errors?.[0].message).toContain('forbidden');
         expect(onForbiddenOperation).toHaveBeenCalledTimes(1);
         expect(onForbiddenOperation).toHaveBeenCalledWith(
           // First argument: request pipeline context.
@@ -249,7 +247,7 @@ describe('Operation registry plugin', () => {
         });
         expect(result.data).toBeDefined();
         expect(result.errors).not.toBeDefined();
-        expect(result.data && result.data.hello).toBeDefined();
+        expect(result.data?.hello).toBeDefined();
         expect(onForbiddenOperation).toHaveBeenCalledTimes(0);
         expect(forbidUnregisteredOperations).toHaveBeenCalledTimes(1);
         await server.stop();
@@ -283,7 +281,7 @@ describe('Operation registry plugin', () => {
         });
         expect(result.data).toBeDefined();
         expect(result.errors).not.toBeDefined();
-        expect(result.data && result.data.hello).toBeDefined();
+        expect(result.data?.hello).toBeDefined();
         expect(onForbiddenOperation).toHaveBeenCalledTimes(0);
         await server.stop();
       });

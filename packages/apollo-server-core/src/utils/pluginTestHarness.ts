@@ -116,7 +116,7 @@ export default async function pluginTestHarness<TContext>({
         graphRef: 'graph@current',
       },
     });
-    if (maybeServerListener && maybeServerListener.serverWillStop) {
+    if (maybeServerListener?.serverWillStop) {
       serverListener = maybeServerListener;
     }
   }
@@ -228,8 +228,7 @@ export default async function pluginTestHarness<TContext>({
   // usage reporting relies on the fact that the requestContext passed
   // to requestDidStart is mutated to add this field before requestDidEnd is
   // called
-  requestContext.operationName =
-    (operation && operation.name && operation.name.value) || null;
+  requestContext.operationName = operation?.name?.value || null;
 
   await dispatcher.invokeHook(
     'didResolveOperation',

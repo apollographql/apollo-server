@@ -252,7 +252,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
       return this.trace(request, async () => {
         const cacheOptions = options.cacheOptions
           ? options.cacheOptions
-          : this.cacheOptionsFor && this.cacheOptionsFor.bind(this);
+          : this.cacheOptionsFor?.bind(this);
         try {
           const response = await this.httpCache.fetch(request, {
             cacheKey,
@@ -282,7 +282,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     request: Request,
     fn: () => Promise<TResult>,
   ): Promise<TResult> {
-    if (process && process.env && process.env.NODE_ENV === 'development') {
+    if (process?.env?.NODE_ENV === 'development') {
       // We're not using console.time because that isn't supported on Cloudflare
       const startTime = Date.now();
       try {

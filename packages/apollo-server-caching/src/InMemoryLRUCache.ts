@@ -35,7 +35,7 @@ export class InMemoryLRUCache<V = string> implements KeyValueCache<V> {
     return this.store.get(key);
   }
   async set(key: string, value: V, options?: { ttl?: number }) {
-    const maxAge = options && options.ttl && options.ttl * 1000;
+    const maxAge = options?.ttl && options.ttl * 1000;
     this.store.set(key, value, maxAge);
   }
   async delete(key: string) {

@@ -128,7 +128,7 @@ export async function processGraphQLRequest<TContext>(
   metrics.persistedQueryHit = false;
   metrics.persistedQueryRegister = false;
 
-  if (extensions && extensions.persistedQuery) {
+  if (extensions?.persistedQuery) {
     // It looks like we've received a persisted query. Check if we
     // support them.
     if (!config.persistedQueries || !config.persistedQueries.cache) {
@@ -217,7 +217,7 @@ export async function processGraphQLRequest<TContext>(
     } catch (err) {
       logger.warn(
         'An error occurred while attempting to read from the documentStore. ' +
-          (err && err.message) || err,
+          err?.message || err,
       );
     }
   }
@@ -269,7 +269,7 @@ export async function processGraphQLRequest<TContext>(
         config.documentStore.set(queryHash, requestContext.document),
       ).catch((err) =>
         logger.warn(
-          'Could not store validated document. ' + (err && err.message) || err,
+          'Could not store validated document. ' + err?.message || err,
         ),
       );
     }
@@ -286,8 +286,7 @@ export async function processGraphQLRequest<TContext>(
 
   requestContext.operation = operation || undefined;
   // We'll set `operationName` to `null` for anonymous operations.
-  requestContext.operationName =
-    (operation && operation.name && operation.name.value) || null;
+  requestContext.operationName = operation?.name?.value || null;
 
   try {
     await dispatcher.invokeHook(

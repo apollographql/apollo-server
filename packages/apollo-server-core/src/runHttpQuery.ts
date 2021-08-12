@@ -335,7 +335,7 @@ export async function processHTTPRequest<TContext>(
       if (response.errors && typeof response.data === 'undefined') {
         // don't include options, since the errors have already been formatted
         return throwHttpGraphQLError(
-          (response.http && response.http.status) || 400,
+          response.http?.status || 400,
           response.errors as any,
           undefined,
           response.extensions,

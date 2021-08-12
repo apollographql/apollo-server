@@ -52,7 +52,7 @@ describe('apollo-server-fastify', () => {
     async () => {
       if (server) await server.stop();
       if (app) await new Promise<void>((resolve) => app.close(() => resolve()));
-      if (httpServer && httpServer.listening) await httpServer.close();
+      if (httpServer?.listening) await httpServer.close();
     },
   );
 });

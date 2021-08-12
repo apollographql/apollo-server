@@ -84,7 +84,7 @@ export class TraceTreeBuilder {
       // XXX This probably shouldn't skip query or validation errors, which are
       //      not in nested Traces because format() isn't called in this case! Or
       //      maybe format() should be called in that case?
-      if (err.extensions && err.extensions.serviceName) {
+      if (err.extensions?.serviceName) {
         return;
       }
 

@@ -48,7 +48,7 @@ describe('apollo-server-koa', () => {
     },
     async () => {
       if (server) await server.stop();
-      if (httpServer && httpServer.listening) await httpServer.close();
+      if (httpServer?.listening) await httpServer.close();
     },
   );
 });

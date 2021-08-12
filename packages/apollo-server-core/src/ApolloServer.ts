@@ -569,7 +569,7 @@ export class ApolloServerBase<
     this.logger.error(
       'An error occurred during Apollo Server startup. All GraphQL requests ' +
         'will now fail. The startup error was: ' +
-        ((err && err.message) || err),
+        (err?.message || err),
     );
   }
 
