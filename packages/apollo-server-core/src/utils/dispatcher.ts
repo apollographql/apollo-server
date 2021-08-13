@@ -17,7 +17,7 @@ export class Dispatcher<T extends AnyFunctionMap> {
   ): ReturnType<AsFunction<T[TMethodName]>>[] {
     return targets.map((target) => {
       const method = target[methodName];
-      if (method && typeof method === 'function') {
+      if (typeof method === 'function') {
         return method.apply(target, args);
       }
     });
@@ -39,7 +39,7 @@ export class Dispatcher<T extends AnyFunctionMap> {
   ): Promise<StripPromise<ReturnType<AsFunction<T[TMethodName]>>> | null> {
     for (const target of this.targets) {
       const method = target[methodName];
-      if (!(method && typeof method === 'function')) {
+      if (typeof method !== 'function') {
         continue;
       }
       const value = await method.apply(target, args);
@@ -85,7 +85,7 @@ export class Dispatcher<T extends AnyFunctionMap> {
 
     for (const target of this.targets) {
       const method = target[methodName];
-      if (method && typeof method === 'function') {
+      if (typeof method === 'function') {
         const didEndHook = method.apply(target, args);
         if (didEndHook) {
           didEndHooks.push(didEndHook);

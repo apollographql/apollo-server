@@ -107,7 +107,7 @@ export class HTTPCache {
       | CacheOptions
       | ((response: Response, request: Request) => CacheOptions | undefined),
   ): Promise<Response> {
-    if (cacheOptions && typeof cacheOptions === 'function') {
+    if (typeof cacheOptions === 'function') {
       cacheOptions = cacheOptions(response, request);
     }
 
