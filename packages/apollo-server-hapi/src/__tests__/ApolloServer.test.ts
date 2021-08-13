@@ -75,28 +75,16 @@ describe('apollo-server-hapi', () => {
 
   describe('constructor', () => {
     it('accepts typeDefs and resolvers', async () => {
-      const app = new Server();
-      const server = new ApolloServer({ typeDefs, resolvers });
-      await server.start();
-      return server.applyMiddleware({ app });
+      return createServer({ typeDefs, resolvers });
     });
   });
 
   describe('applyMiddleware', () => {
     it('can be queried', async () => {
-      server = new ApolloServer({
+      const { url: uri } = await createServer({
         typeDefs,
         resolvers,
       });
-      await server.start();
-      app = new Server({ port });
-
-      await server.applyMiddleware({ app });
-      await app.start();
-
-      httpServer = app.listener;
-      const uri = app.info.uri + '/graphql';
-
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
 
@@ -124,32 +112,24 @@ describe('apollo-server-hapi', () => {
     });
 
     it('accepts cors configuration', async () => {
-      server = new ApolloServer({
-        typeDefs,
-        resolvers,
-      });
-      await server.start();
-      app = new Server({
-        port,
-      });
-
-      await server.applyMiddleware({
-        app,
-        cors: {
-          additionalExposedHeaders: ['X-Apollo'],
-          exposedHeaders: [
-            'Accept',
-            'Authorization',
-            'Content-Type',
-            'If-None-Match',
-            'Another-One',
-          ],
+      const { url: uri } = await createServer(
+        {
+          typeDefs,
+          resolvers,
         },
-      });
-      await app.start();
-
-      httpServer = app.listener;
-      const uri = app.info.uri + '/graphql';
+        {
+          cors: {
+            additionalExposedHeaders: ['X-Apollo'],
+            exposedHeaders: [
+              'Accept',
+              'Authorization',
+              'Content-Type',
+              'If-None-Match',
+              'Another-One',
+            ],
+          },
+        },
+      );
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
@@ -165,35 +145,26 @@ describe('apollo-server-hapi', () => {
     });
 
     it('accepts custom route configuration', async () => {
-      server = new ApolloServer({
-        typeDefs,
-        resolvers,
-      });
-      await server.start();
-      app = new Server({
-        port,
-      });
-
-      await server.applyMiddleware({
-        app,
-        route: {
-          cors: {
-            additionalExposedHeaders: ['X-Apollo'],
-            exposedHeaders: [
-              'Accept',
-              'Authorization',
-              'Content-Type',
-              'If-None-Match',
-              'Another-One',
-            ],
+      const { url: uri } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        {
+          route: {
+            cors: {
+              additionalExposedHeaders: ['X-Apollo'],
+              exposedHeaders: [
+                'Accept',
+                'Authorization',
+                'Content-Type',
+                'If-None-Match',
+                'Another-One',
+              ],
+            },
           },
         },
-      });
-
-      await app.start();
-
-      httpServer = app.listener;
-      const uri = app.info.uri + '/graphql';
+      );
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
@@ -216,19 +187,11 @@ describe('apollo-server-hapi', () => {
         return {};
       };
 
-      server = new ApolloServer({
+      const { url: uri } = await createServer({
         typeDefs,
         resolvers,
         context,
       });
-      await server.start();
-      app = new Server({ port });
-
-      await server.applyMiddleware({ app });
-      await app.start();
-
-      httpServer = app.listener;
-      const uri = app.info.uri + '/graphql';
 
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
