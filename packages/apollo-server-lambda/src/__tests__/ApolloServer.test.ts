@@ -44,7 +44,7 @@ describe('apollo-server-lambda', () => {
       return createServerInfo(server, httpServer);
     },
     async () => {
-      if (httpServer && httpServer.listening) {
+      if (httpServer?.listening) {
         await new Promise<void>((resolve) => {
           httpServer.close(() => resolve());
         });

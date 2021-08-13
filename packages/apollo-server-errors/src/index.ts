@@ -78,10 +78,9 @@ function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
 
   expanded.extensions = {
     ...error.extensions,
-    code:
-      (error.extensions && error.extensions.code) || 'INTERNAL_SERVER_ERROR',
+    code: error.extensions?.code || 'INTERNAL_SERVER_ERROR',
     exception: {
-      ...(error.extensions && error.extensions.exception),
+      ...error.extensions?.exception,
       ...(error.originalError as any),
     },
   };
@@ -91,11 +90,8 @@ function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
   // https://github.com/graphql/graphql-js/blob/0bb47b2/src/error/GraphQLError.js#L138
   delete expanded.extensions.exception.extensions;
   if (debug && !expanded.extensions.exception.stacktrace) {
-    expanded.extensions.exception.stacktrace =
-      (error.originalError &&
-        error.originalError.stack &&
-        error.originalError.stack.split('\n')) ||
-      (error.stack && error.stack.split('\n'));
+    const stack = error.originalError?.stack || error.stack;
+    expanded.extensions.exception.stacktrace = stack?.split('\n');
   }
 
   if (Object.keys(expanded.extensions.exception).length === 0) {
@@ -127,10 +123,9 @@ export interface ErrorOptions {
 }
 
 export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
-  const copy: ApolloError =
-    options && options.errorClass
-      ? new options.errorClass(error.message)
-      : new ApolloError(error.message);
+  const copy: ApolloError = options?.errorClass
+    ? new options.errorClass(error.message)
+    : new ApolloError(error.message);
 
   // copy enumerable keys
   Object.entries(error).forEach(([key, value]) => {
@@ -145,7 +140,7 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
 
   // Fallback on default for code
   if (!copy.extensions.code) {
-    copy.extensions.code = (options && options.code) || 'INTERNAL_SERVER_ERROR';
+    copy.extensions.code = options?.code || 'INTERNAL_SERVER_ERROR';
   }
 
   // copy the original error, while keeping all values non-enumerable, so they

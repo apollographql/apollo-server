@@ -893,7 +893,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }
 
             return new Promise((resolve) => {
-              this.server && this.server.close(() => resolve());
+              this.server?.close(() => resolve());
             });
           }
 

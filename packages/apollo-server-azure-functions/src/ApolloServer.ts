@@ -96,7 +96,7 @@ export class ApolloServer extends ApolloServerBase {
           const originHeader = requestHeaders['origin'];
           if (cors === undefined) {
             corsHeaders['Access-Control-Allow-Origin'] = '*';
-          } else if (cors && cors.origin) {
+          } else if (cors?.origin) {
             if (typeof cors.origin === 'string') {
               corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
             } else if (

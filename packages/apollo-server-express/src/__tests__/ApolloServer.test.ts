@@ -50,7 +50,7 @@ describe('apollo-server-express', () => {
       return createServerInfo(server, httpServer);
     },
     async () => {
-      if (httpServer && httpServer.listening) await httpServer.close();
+      if (httpServer?.listening) await httpServer.close();
       if (server) await server.stop();
     },
   );

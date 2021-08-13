@@ -23,7 +23,7 @@ describe('apollo-server-hapi', () => {
   async function cleanup() {
     if (server) await server.stop();
     if (app) await app.stop();
-    if (httpServer && httpServer.listening) httpServer.close();
+    if (httpServer?.listening) httpServer.close();
   }
   afterEach(cleanup);
 
