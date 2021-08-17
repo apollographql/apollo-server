@@ -1,4 +1,4 @@
-import type { Callback, Context } from 'aws-lambda';
+import type { Context } from 'aws-lambda';
 import {
   ApolloServer as ApolloServerExpress,
   ExpressContext,
@@ -34,7 +34,6 @@ function defaultExpressAppFromMiddleware(
 type Handler<TEvent = any, TResult = any> = (
   event: TEvent,
   context: Context,
-  callback?: Callback<TResult>,
 ) => void | Promise<TResult>
 
 export class ApolloServer extends ApolloServerExpress<LambdaContextFunctionParams> {
