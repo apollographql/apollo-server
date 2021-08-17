@@ -360,6 +360,21 @@ export default ({
         });
       });
 
+      it('can handle a basic GET request on a nested path', async () => {
+        app = await createApp();
+        const expected = {
+          testString: 'it works',
+        };
+        const query = {
+          query: 'query test{ testString }',
+        };
+        const req = request(app).get('/graphql/something/nested').query(query);
+        return req.then((res) => {
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual(expected);
+        });
+      });
+
       it('can handle a basic implicit GET request', async () => {
         app = await createApp();
         const expected = {
@@ -480,6 +495,20 @@ export default ({
           testString: 'it works',
         };
         const req = request(app).post('/graphql').send({
+          query: 'query test{ testString }',
+        });
+        return req.then((res) => {
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual(expected);
+        });
+      });
+
+      it('can handle a basic request on a nested path', async () => {
+        app = await createApp();
+        const expected = {
+          testString: 'it works',
+        };
+        const req = request(app).post('/graphql/something/nested').send({
           query: 'query test{ testString }',
         });
         return req.then((res) => {
