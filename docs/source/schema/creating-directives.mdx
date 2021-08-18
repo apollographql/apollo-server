@@ -26,8 +26,7 @@ type Query {
 >   <img alt="Edit upper-case-directive" src="https://codesandbox.io/static/img/play-codesandbox.svg" />
 > </a>
 
-
-When Apollo Server loads your schema on startup, it can execute custom logic wherever it encounters a particular directive. For example, it can modify the resolver function for a decorated field (for the schema above, it could transform the `hello` resolver's original result to uppercase).
+When you start up your app, you can use directives to transform your executable schema's behavior before you provide that schema to Apollo Server. For example, you can modify the resolver function for any decorated field (for the schema above, it could transform the `hello` resolver's original result to uppercase).
 
 ## Defining
 
@@ -49,10 +48,10 @@ Your custom directive can appear _only_ in the schema locations you list after t
 
 The table below lists all available locations in a GraphQL schema. Your directive can support any combination of these locations.
 
-<table class="field-table">
+<table class="field-table api-ref">
   <thead>
     <tr>
-      <th>Name /<br/>Visitor Method</th>
+      <th>Name /<br/>MapperKind</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -63,7 +62,7 @@ The table below lists all available locations in a GraphQL schema. Your directiv
 
 ###### `SCALAR`
 
-`visitScalar(scalar: GraphQLScalarType)`
+`SCALAR_TYPE`
 </td>
 <td>
 
@@ -77,7 +76,7 @@ The definition of a [custom scalar](./custom-scalars/)
 
 ###### `OBJECT`
 
-`visitObject(object: GraphQLObjectType)`
+`OBJECT_TYPE`
 </td>
 <td>
 
@@ -91,7 +90,7 @@ The definition of an [object type](./schema/#object-types/)
 
 ###### `FIELD_DEFINITION`
 
-`visitFieldDefinition(field: GraphQLField<any, any>)`
+`OBJECT_FIELD`
 </td>
 <td>
 
@@ -105,7 +104,7 @@ The definition of a field within any defined type _except_ an [input type](./sch
 
 ###### `ARGUMENT_DEFINITION`
 
-`visitArgumentDefinition(argument: GraphQLArgument)`
+`ARGUMENT`
 </td>
 <td>
 
@@ -119,7 +118,7 @@ The definition of a field argument
 
 ###### `INTERFACE`
 
-`visitInterface(iface: GraphQLInterfaceType)`
+`INTERFACE_TYPE`
 </td>
 <td>
 
@@ -133,7 +132,7 @@ The definition of an [interface](unions-interfaces/#interface-type)
 
 ###### `UNION`
 
-`visitUnion(union: GraphQLUnionType)`
+`UNION_TYPE`
 </td>
 <td>
 
@@ -147,7 +146,7 @@ The definition of a [union](./unions-interfaces/#union-type)
 
 ###### `ENUM`
 
-`visitEnum(type: GraphQLEnumType)`
+`ENUM_TYPE`
 </td>
 <td>
 
@@ -161,7 +160,7 @@ The definition of an [enum](./schema/#enum-types)
 
 ###### `ENUM_VALUE`
 
-`visitEnumValue(value: GraphQLEnumValue)`
+`ENUM_VALUE`
 </td>
 <td>
 
@@ -175,7 +174,7 @@ The definition of one value within an [enum](./schema/#enum-types)
 
 ###### `INPUT_OBJECT`
 
-`visitInputObject(object: GraphQLInputObjectType)`
+`INPUT_OBJECT_TYPE`
 </td>
 <td>
 
@@ -189,7 +188,7 @@ The definition of an [input type](./schema/#input-types)
 
 ###### `INPUT_FIELD_DEFINITION`
 
-`visitInputFieldDefinition(field: GraphQLInputField)`
+`INPUT_OBJECT_FIELD`
 </td>
 <td>
 
@@ -204,7 +203,7 @@ The definition of a field within an [input type](./schema/#input-types)
 
 ###### `SCHEMA`
 
-`visitSchema(schema: GraphQLSchema)`
+`ROOT_OBJECT`
 </td>
 <td>
 
@@ -219,102 +218,54 @@ The top-level `schema` object declaration with `query`, `mutation`, and/or `subs
 
 > **Important:** Apollo Server 3 does not provide built-in support for custom directives. To enable this support, you need to install certain `@graphql-tools` libraries.
 >
-> To define custom directive logic, this article uses the `SchemaDirectiveVisitor` class, which is available only in `@graphql-tools` version 7 and _earlier_. To create custom directives with version 8 and later, [see the `@graphql-tools` docs](https://www.graphql-tools.com/docs/schema-directives#implementing-schema-directives).
+> This article uses `@graphql-tools` version 8. Previous versions use a different API for custom directives. If you're using an earlier version of `@graphql-tools`, see the [Apollo Server v2 docs](/v2/schema/creating-directives/).
 
 After you define your directive and its valid locations, you still need to define the logic that Apollo Server executes whenever it _encounters_ the directive in your schema.
 
-### 1. Install required libraries
+To define custom directive logic with `@graphql-tools` v8 and later, you can create **transformer functions** that transform an executable schema's behavior based on the directives that are present in it.
 
-First, install version 7 of the following `@graphql-tools` libraries:
+#### 1. Install required libraries
+
+First, install the following `@graphql-tools` libraries:
 
 ```bash
-# These are the latest v7 versions as of article publication
-npm install @graphql-tools/schema@7.1.5 @graphql-tools/utils@7.10.0
+npm install @graphql-tools/schema @graphql-tools/utils
 ```
 
-> Again, `@graphql-tools` version 8 and later uses a [different API](https://www.graphql-tools.com/docs/schema-directives#implementing-schema-directives) for custom directives.
+#### 2. Define directive logic
 
-### 2. Define directive logic
+To define what Apollo Server does when it encounters your directive, you can create a **transformer function**. This function uses the `mapSchema` function to iterate through locations in your schema (field definitions, type definitions, etc.) and perform transformations wherever it encounters a particular directive (or set of directives).
 
-To define what Apollo Server does when it encounters your directive, you create a subclass of `SchemaDirectiveVisitor` (provided by `@graphql-tools/utils`).
+For example, here's a possible transformer function for the default `@deprecated` directive:
 
-In your subclass, you override the **visitor method** for _each location_ your directive can appear in. You can see each valid location's corresponding visitor method in [the table above](#supported-locations).
+```js:title=directives.js
+const { mapSchema, getDirective, MapperKind } = require('@graphql-tools/utils');
 
-For example, here's a possible implementation of the default `@deprecated` directive:
+function deprecatedDirectiveTransformer(schema, directiveName) {
+  return  mapSchema(schema, {
 
-```js:title=DeprecatedDirective.js
-const { SchemaDirectiveVisitor } = require("@graphql-tools/utils");
+    // Executes once for each object field definition in the schema
+    [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+      const deprecatedDirective = getDirective(schema, fieldConfig, directiveName)?.[0];
+      if (deprecatedDirective) {
+        fieldConfig.deprecationReason = deprecatedDirective['reason'];
+        return fieldConfig;
+      }
+    },
 
-// Subclass of SchemaDirectiveVisitor
-export class DeprecatedDirective extends SchemaDirectiveVisitor {
-
-  // Visitor methods:
-
-  // Called when an object field is @deprecated
-  public visitFieldDefinition(field: GraphQLField<any, any>) {
-    field.isDeprecated = true;
-    field.deprecationReason = this.args.reason;
-  }
-
-  // Called when an enum value is @deprecated
-  public visitEnumValue(value: GraphQLEnumValue) {
-    value.isDeprecated = true;
-    value.deprecationReason = this.args.reason;
-  }
-}
-```
-
-This subclass adds two fields to the executable schema's representation of a deprecated field or enum value: a boolean indicating that the item `isDeprecated`, and a string indicating the `deprecationReason`. The reason is taken directly from the directive's [`reason` argument](#defining).
-
-To add this logic to Apollo Server, you first call `makeExecutableSchema` (provided by `@graphql-tools/schema`), which you pass your `typeDefs`, `resolvers`, _and_ `schemaDirectives`. You then pass the resulting schema to the `ApolloServer` constructor via the `schema` option:
-
-```js{13-20}:title=index.js
-const { ApolloServer, gql } = require("apollo-server");
-const { DeprecatedDirective } = require("./DeprecatedDirective");
-const { makeExecutableSchema } = require("@graphql-tools/schema");
-
-const typeDefs = gql`
-  type ExampleType {
-    newField: String
-    oldField: String @deprecated(reason: "Use \`newField\`.")
-  }
-`;
-
-const server = new ApolloServer({
-  schema: makeExecutableSchema({
-    typeDefs,
-    resolvers,
-    schemaDirectives: {
-      // Object key must match directive name, minus '@'
-      deprecated: DeprecatedDirective
+    // Executes once for each enum value definition in the schema
+    [MapperKind.ENUM_VALUE]: (enumValueConfig) => {
+      const deprecatedDirective = getDirective(schema, enumValueConfig, directiveName)?.[0];
+      if (deprecatedDirective) {
+        enumValueConfig.deprecationReason = deprecatedDirective['reason'];
+        return enumValueConfig;
+      }
     }
-  })
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
+  });
+};
 ```
 
-> Notice that you _don't_ provide `typeDefs` and `resolvers` to `ApolloServer` directly in this case.
-
-When Apollo Server parses your schema SDL to create your executable schema, it automatically initializes a separate `DeprecatedDirective` for _each instance_ of `@deprecated` it encounters. It then calls the appropriate visitor method for the current location.
-
-> You can give your `SchemaDirectiveVisitor` subclass any name. It doesn't need to match the name of the directive it's used for (you can even use the same subclass for multiple directives).
-
-### Running directive logic on an executable schema
-
-If Apollo Server has _already_ parsed your SDL string into an executable schema, you can still execute directive logic by calling the static method `SchemaDirectiveVisitor.visitSchemaDirectives`. This method takes your executable schema, along with the same form of directive map you provide to the `schemaDirectives` constructor option:
-
-```js
-SchemaDirectiveVisitor.visitSchemaDirectives(schema, {
-  deprecated: DeprecatedDirective
-});
-```
-
-## Transforming resolved fields
-
-A custom directive can transform a resolved GraphQL field's value _before_ it's returned to the requesting client.
+As shown, the second parameter you pass `mapSchema` is an object with keys that represent one or more locations in your schema. The `MapperKind` enum value for each supported location is listed in [the table above](#supported-locations).
 
 ### Example: Uppercasing strings
 
@@ -327,9 +278,10 @@ This example defines an `@uppercase` directive for this purpose:
 ```js:title=index.js
 const { ApolloServer, gql } = require('apollo-server');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
-const { SchemaDirectiveVisitor } = require ('@graphql-tools/utils');
+const { mapSchema, getDirective, MapperKind } = require('@graphql-tools/utils');
 const { defaultFieldResolver } = require('graphql');
 
+// Our GraphQL schema
 const typeDefs = gql`
   directive @upper on FIELD_DEFINITION
 
@@ -338,6 +290,7 @@ const typeDefs = gql`
   }
 `;
 
+// Our resolvers (notice the hard-coded string is *not* all-caps)
 const resolvers = {
   Query: {
     hello() {
@@ -346,36 +299,49 @@ const resolvers = {
   }
 };
 
-class UpperCaseDirective extends SchemaDirectiveVisitor {
+// This function takes in a schema and adds upper-casing logic
+// to every resolver for an object field that has a directive with
+// the specified name (we're using `upper`)
+function upperDirectiveTransformer(schema, directiveName) {
+  return mapSchema(schema, {
 
-  // Called on server startup for each @upper field
-  visitFieldDefinition(field) {
+    // Executes once for each object field in the schema
+    [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
 
-    // Obtain the field's resolver
-    const { resolve = defaultFieldResolver } = field;
+      // Check whether this field has the specified directive
+      const upperDirective = getDirective(schema, fieldConfig, directiveName)?.[0];
 
-    // *Replace* the field's resolver with a function
-    // that calls the *original* resolver, then converts
-    // the result to uppercase before returning
-    field.resolve = async function (...args) {
-      const result = await resolve.apply(this, args);
-      if (typeof result === 'string') {
-        return result.toUpperCase();
+      if (upperDirective) {
+
+        // Get this field's original resolver
+        const { resolve = defaultFieldResolver } = fieldConfig;
+
+        // Replace the original resolver with a function that *first* calls
+        // the original resolver, then converts its result to upper case
+        fieldConfig.resolve = async function (source, args, context, info) {
+          const result = await resolve(source, args, context, info);
+          if (typeof result === 'string') {
+            return result.toUpperCase();
+          }
+          return result;
+        }
+        return fieldConfig;
       }
-      return result;
-    };
-  }
+    }
+  });
 }
 
-const server = new ApolloServer({
-  schema: makeExecutableSchema({
-    typeDefs,
-    resolvers,
-    schemaDirectives: {
-      upper: UpperCaseDirective,
-    }
-  })
+// Create the base executable schema
+let schema = makeExecutableSchema({
+  typeDefs,
+  resolvers
 });
+
+// Transform the schema by applying directive logic
+schema = upperDirectiveTransformer(schema, 'upper');
+
+// Provide the schema to the ApolloServer constructor
+const server = new ApolloServer({schema});
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
@@ -383,548 +349,15 @@ server.listen().then(({ url }) => {
 ```
 
 </ExpansionPanel>
-
-<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v3/custom-directives/upper-case-directive?fontsize=14&hidenavigation=1&theme=dark">
-  <img alt="Edit upper-case-directive" src="https://codesandbox.io/static/img/play-codesandbox.svg" />
-</a>
 
 This code _replaces_ the resolver of an `@uppercase` field with a new function. This new function first calls the _original_ resolver, then transforms its result to uppercase (assuming it's a string) before returning it.
 
-### Example: Formatting dates
+### Additional examples
 
-Suppose your schema defines a `Date` custom scalar, and you want querying clients to be able to specify a string format for the returned date (e.g., specify `dd/mm/yyyy HH:MM:ss` for a string like `10/03/2021 14:53:03`).
-
-This example defines a `@date` directive for this purpose:
-
-<ExpansionPanel title="Click to expand">
-
-```js
-const { ApolloServer, gql } = require('apollo-server');
-const { makeExecutableSchema } = require('@graphql-tools/schema');
-const { SchemaDirectiveVisitor } = require('@graphql-tools/utils');
-const { defaultFieldResolver } = require('graphql');
-const formatDate = require('dateformat');
-
-const typeDefs = gql`
-
-  # Define the directive with a default date format
-  directive @date(
-    defaultFormat: String = "dd/mm/yyyy HH:MM:ss"
-  ) on FIELD_DEFINITION
-
-  scalar Date
-
-  type Post {
-    # You can override the defaultFormat for individual fields
-    published: Date @date(defaultFormat: "dd/mm/yyyy")
-  }
-`;
-
-class FormattableDateDirective extends SchemaDirectiveVisitor {
-  public visitFieldDefinition(field) {
-
-    // Get the field's resolver
-    const { resolve = defaultFieldResolver } = field;
-
-    // Get the default date format
-    const { defaultFormat } = this.args;
-
-    // *Add* a `format` argument to the GraphQL field for
-    // clients to use
-    field.args.push({
-      name: 'format',
-      type: GraphQLString
-    });
-
-    // *Replace* the field's resolver with this function, which
-    // first calls the *original* resolver, then formats the
-    // returned date
-    field.resolve = async function (
-      source,
-      { format, ...otherArgs },
-      context,
-      info,
-    ) {
-      const date = await resolve.call(this, source, otherArgs, context, info);
-      // If the client does not specify a format, use defaultFormat
-      return formatDate(date, format || defaultFormat);
-    };
-
-    // The field now returns a String instead of a Date.
-    // Update it accordingly.
-    field.type = GraphQLString;
-  }
-}
-
-const server = new ApolloServer({
-  schema: makeExecutableSchema({
-    typeDefs,
-    schemaDirectives: {
-      date: FormattableDateDirective
-    }
-  })
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
-```
-
-</ExpansionPanel>
-
-Now the client can specify a desired `format` argument when requesting the `Post.published` field, or omit the argument to use the `defaultFormat` string specified in the schema.
-
-## Additional examples
-
-### Fetching data from a REST API
-
-Suppose you've defined an object type that corresponds to a [REST](https://en.wikipedia.org/wiki/Representational_state_transfer) resource, and you want to avoid implementing resolver functions for every field:
-
-```js
-const { ApolloServer, gql } = require("apollo-server");
-const { makeExecutableSchema } = require('@graphql-tools/schema');
-const { SchemaDirectiveVisitor } = require('@graphql-tools/utils');
-
-const typeDefs = gql`
-  directive @rest(url: String) on FIELD_DEFINITION
-
-  type Query {
-    people: [Person] @rest(url: "/api/v1/people")
-  }
-`;
-
-class RestDirective extends SchemaDirectiveVisitor {
-  public visitFieldDefinition(field) {
-    const { url } = this.args;
-    field.resolve = () => fetch(url);
-  }
-}
-
-const server = new ApolloServer({
-  schema: makeExecutableSchema({
-    typeDefs,
-    schemaDirectives: {
-      rest: RestDirective
-    }
-  })
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
-```
-
-There are many more issues to consider when implementing a real GraphQL wrapper over a REST endpoint (such as how to do caching or pagination), but this example demonstrates the basic structure.
-
-
-### Marking strings for internationalization
-
-Suppose you have a function called `translate` that takes a string, a path identifying that string's role in your application, and a target locale for the translation.
-
-Here's how you might make sure `translate` is used to localize the `greeting` field of a `Query` type:
-
-```js
-const { ApolloServer, gql } = require("apollo-server");
-const { makeExecutableSchema } = require('@graphql-tools/schema');
-const { SchemaDirectiveVisitor } = require('@graphql-tools/utils');
-const { defaultFieldResolver } = require('graphql');
-
-const typeDefs = gql`
-  directive @intl on FIELD_DEFINITION
-
-  type Query {
-    greeting: String @intl
-  }
-`;
-
-class IntlDirective extends SchemaDirectiveVisitor {
-  visitFieldDefinition(field, details) {
-    const { resolve = defaultFieldResolver } = field;
-    field.resolve = async function (...args) {
-      const context = args[2];
-      const defaultText = await resolve.apply(this, args);
-      // In this example, path would be ["Query", "greeting"]:
-      const path = [details.objectType.name, field.name];
-      return translate(defaultText, path, context.locale);
-    };
-  }
-}
-
-const server = new ApolloServer({
-  schema: makeExecutableSchema({
-    typeDefs,
-    schemaDirectives: {
-      intl: IntlDirective
-    }
-  })
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
-```
-
-GraphQL is great for internationalization, since a GraphQL server can access unlimited translation data, and clients can simply ask for the translations they need.
-
-### Enforcing access permissions
-
-Imagine a hypothetical `@auth` directive that takes an argument `requires` of type `Role`, which defaults to `ADMIN`. This `@auth` directive can appear on an `OBJECT` like `User` to set default access permissions for all `User` fields, as well as appearing on individual fields, to enforce field-specific `@auth` restrictions:
-
-```graphql
-directive @auth(
-  requires: Role = ADMIN,
-) on OBJECT | FIELD_DEFINITION
-
-enum Role {
-  ADMIN
-  REVIEWER
-  USER
-  UNKNOWN
-}
-
-type User @auth(requires: USER) {
-  name: String
-  banned: Boolean @auth(requires: ADMIN)
-  canPost: Boolean @auth(requires: REVIEWER)
-}
-```
-
-What makes this example tricky is that the `OBJECT` version of the directive needs to wrap all fields of the object, even though some of those fields may be individually wrapped by `@auth` directives at the `FIELD_DEFINITION` level, and we would prefer not to rewrap resolvers if we can help it:
-
-```js
-const { ApolloServer, gql } = require("apollo-server");
-const { makeExecutableSchema } = require('@graphql-tools/schema');
-const { SchemaDirectiveVisitor } = require('@graphql-tools/utils');
-const { defaultFieldResolver } = require('graphql');
-
-class AuthDirective extends SchemaDirectiveVisitor {
-  visitObject(type) {
-    this.ensureFieldsWrapped(type);
-    type._requiredAuthRole = this.args.requires;
-  }
-  // Visitor methods for nested types like fields and arguments
-  // also receive a details object that provides information about
-  // the parent and grandparent types.
-  visitFieldDefinition(field, details) {
-    this.ensureFieldsWrapped(details.objectType);
-    field._requiredAuthRole = this.args.requires;
-  }
-
-  ensureFieldsWrapped(objectType) {
-    // Mark the GraphQLObjectType object to avoid re-wrapping:
-    if (objectType._authFieldsWrapped) return;
-    objectType._authFieldsWrapped = true;
-
-    const fields = objectType.getFields();
-
-    Object.keys(fields).forEach(fieldName => {
-      const field = fields[fieldName];
-      const { resolve = defaultFieldResolver } = field;
-      field.resolve = async function (...args) {
-        // Get the required Role from the field first, falling back
-        // to the objectType if no Role is required by the field:
-        const requiredRole =
-          field._requiredAuthRole ||
-          objectType._requiredAuthRole;
-
-        if (! requiredRole) {
-          return resolve.apply(this, args);
-        }
-
-        const context = args[2];
-        const user = await getUser(context.headers.authToken);
-        if (! user.hasRole(requiredRole)) {
-          throw new Error("not authorized");
-        }
-
-        return resolve.apply(this, args);
-      };
-    });
-  }
-}
-
-const server = new ApolloServer({
-  schema: makeExecutableSchema({
-    typeDefs,
-    schemaDirectives: {
-      auth: AuthDirective,
-      authorized: AuthDirective,
-      authenticated: AuthDirective
-    }
-  })
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
-```
-
-One drawback of this approach is that it does not guarantee fields will be wrapped if they are added to the schema after `AuthDirective` is applied, and the whole `getUser(context.headers.authToken)` is a made-up API that would need to be fleshed out. In other words, we’ve glossed over some of the details that would be required for a production-ready implementation of this directive, though we hope the basic structure shown here inspires you to find clever solutions to the remaining problems.
-
-### Enforcing value restrictions
-
-Suppose you want to enforce a maximum length for a string-valued field:
-
-```js
-const { ApolloServer, gql } = require('apollo-server');
-const { makeExecutableSchema } = require('@graphql-tools/schema');
-const { SchemaDirectiveVisitor } = require('@graphql-tools/utils');
-const { GraphQLScalarType, GraphQLNonNull } = require('graphql');
-
-const typeDefs = gql`
-  directive @length(max: Int) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
-
-  type Query {
-    books: [Book]
-  }
-
-  type Book {
-    title: String @length(max: 50)
-  }
-
-  type Mutation {
-    createBook(book: BookInput): Book
-  }
-
-  input BookInput {
-    title: String! @length(max: 50)
-  }
-`;
-
-class LengthDirective extends SchemaDirectiveVisitor {
-  visitInputFieldDefinition(field) {
-    this.wrapType(field);
-  }
-
-  visitFieldDefinition(field) {
-    this.wrapType(field);
-  }
-
-  // Replace field.type with a custom GraphQLScalarType that enforces the
-  // length restriction.
-  wrapType(field) {
-    if (
-      field.type instanceof GraphQLNonNull &&
-      field.type.ofType instanceof GraphQLScalarType
-    ) {
-      field.type = new GraphQLNonNull(
-        new LimitedLengthType(field.type.ofType, this.args.max),
-      );
-    } else if (field.type instanceof GraphQLScalarType) {
-      field.type = new LimitedLengthType(field.type, this.args.max);
-    } else {
-      throw new Error(`Not a scalar type: ${field.type}`);
-    }
-  }
-}
-
-class LimitedLengthType extends GraphQLScalarType {
-  constructor(type, maxLength) {
-    super({
-      name: `LengthAtMost${maxLength}`,
-
-      // For more information about GraphQLScalar type (de)serialization,
-      // see the graphql-js implementation:
-      // https://github.com/graphql/graphql-js/blob/31ae8a8e8312/src/type/definition.js#L425-L446
-
-      serialize(value) {
-        value = type.serialize(value);
-        assert.isAtMost(value.length, maxLength);
-        return value;
-      },
-
-      parseValue(value) {
-        return type.parseValue(value);
-      },
-
-      parseLiteral(ast) {
-        return type.parseLiteral(ast);
-      },
-    });
-  }
-}
-
-const server = new ApolloServer({
-  schema: makeExecutableSchema({
-    typeDefs,
-    schemaDirectives: {
-      length: LengthDirective,
-    }
-  })
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
-```
-
-### Synthesizing unique IDs
-
-Suppose your database uses incrementing IDs for each resource type, so IDs are not unique across all resource types. Here’s how you might synthesize a field called `uid` that combines the object type with various field values to produce an ID that’s unique across your schema:
-
-```js
-const { ApolloServer, gql } = require("apollo-server");
-const { makeExecutableSchema } = require('@graphql-tools/schema');
-const { SchemaDirectiveVisitor } = require('@graphql-tools/utils');
-const { GraphQLID } = require("graphql");
-const { createHash } = require("crypto");
-
-const typeDefs = gql`
-  directive @uniqueID(
-    # The name of the new ID field, "uid" by default:
-    name: String = "uid"
-
-    # Which fields to include in the new ID:
-    from: [String] = ["id"]
-  ) on OBJECT
-
-  # Since this type just uses the default values of name and from,
-  # we don't have to pass any arguments to the directive:
-  type Location @uniqueID {
-    id: Int
-    address: String
-  }
-
-  # This type uses both the person's name and the personID field,
-  # in addition to the "Person" type name, to construct the ID:
-  type Person @uniqueID(from: ["name", "personID"]) {
-    personID: Int
-    name: String
-  }
-`;
-
-class UniqueIdDirective extends SchemaDirectiveVisitor {
-  visitObject(type) {
-    const { name, from } = this.args;
-    const fields = type.getFields();
-    if (name in fields) {
-      throw new Error(`Conflicting field name ${name}`);
-    }
-    fields[name] = {
-      name,
-      type: GraphQLID,
-      description: 'Unique ID',
-      args: [],
-      resolve(object) {
-        const hash = createHash("sha1");
-        hash.update(type.name);
-        from.forEach(fieldName => {
-          hash.update(String(object[fieldName]));
-        });
-        return hash.digest("hex");
-      }
-    };
-  }
-}
-
-const server = new ApolloServer({
-  schema: makeExecutableSchema({
-    typeDefs,
-    schemaDirectives: {
-      uniqueID: UniqueIdDirective
-    }
-  })
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
-```
-
-## Declaring schema directives
-
-While the above examples should be sufficient to implement any `@directive` used in your schema, SDL syntax also supports declaring the names, argument types, default argument values, and permissible locations of any available directives:
-
-```js
-directive @auth(
-  requires: Role = ADMIN,
-) on OBJECT | FIELD_DEFINITION
-
-enum Role {
-  ADMIN
-  REVIEWER
-  USER
-  UNKNOWN
-}
-
-type User @auth(requires: USER) {
-  name: String
-  banned: Boolean @auth(requires: ADMIN)
-  canPost: Boolean @auth(requires: REVIEWER)
-}
-```
-
-This hypothetical `@auth` directive takes an argument named `requires` of type `Role`, which defaults to `ADMIN` if `@auth` is used without passing an explicit `requires` argument. The `@auth` directive can appear on an `OBJECT` like `User` to set a default access control for all `User` fields, and also on individual fields, to enforce field-specific `@auth` restrictions.
-
-Enforcing the requirements of the declaration is something a `SchemaDirectiveVisitor` implementation could do itself, in theory, but the SDL syntax is easer to read and write, and provides value even if you're not using the `SchemaDirectiveVisitor` abstraction.
-
-However, if you're implementing a reusable `SchemaDirectiveVisitor` for public consumption, you will probably not be the person writing the SDL syntax, so you may not have control over which directives the schema author decides to declare, and how. That's why a well-implemented, reusable `SchemaDirectiveVisitor` should consider overriding the `getDirectiveDeclaration` method:
-
-```js
-const { ApolloServer, gql } = require("apollo-server");
-const { SchemaDirectiveVisitor } = require('@graphql-tools/utils');
-const { DirectiveLocation, GraphQLDirective, GraphQLEnumType } = require("graphql");
-
-class AuthDirective extends SchemaDirectiveVisitor {
-  public visitObject(object: GraphQLObjectType) {...}
-  public visitFieldDefinition(field: GraphQLField<any, any>) {...}
-
-  public static getDirectiveDeclaration(
-    directiveName: string,
-    schema: GraphQLSchema,
-  ): GraphQLDirective {
-    const previousDirective = schema.getDirective(directiveName);
-    if (previousDirective) {
-      // If a previous directive declaration exists in the schema, it may be
-      // better to modify it than to return a new GraphQLDirective object.
-      previousDirective.args.forEach(arg => {
-        if (arg.name === 'requires') {
-          // Lower the default minimum Role from ADMIN to REVIEWER.
-          arg.defaultValue = 'REVIEWER';
-        }
-      });
-
-      return previousDirective;
-    }
-
-    // If a previous directive with this name was not found in the schema,
-    // there are several options:
-    //
-    // 1. Construct a new GraphQLDirective (see below).
-    // 2. Throw an exception to force the client to declare the directive.
-    // 3. Return null, and forget about declaring this directive.
-    //
-    // All three are valid options, since the visitor will still work without
-    // any declared directives. In fact, unless you're publishing a directive
-    // implementation for public consumption, you can probably just ignore
-    // getDirectiveDeclaration altogether.
-
-    return new GraphQLDirective({
-      name: directiveName,
-      locations: [
-        DirectiveLocation.OBJECT,
-        DirectiveLocation.FIELD_DEFINITION,
-      ],
-      args: {
-        requires: {
-          // Having the schema available here is important for obtaining
-          // references to existing type objects, such as the Role enum.
-          type: (schema.getType('Role') as GraphQLEnumType),
-          // Set the default minimum Role to REVIEWER.
-          defaultValue: 'REVIEWER',
-        }
-      }]
-    });
-  }
-}
-```
-
-Since the `getDirectiveDeclaration` method receives not only the name of the directive but also the `GraphQLSchema` object, it can modify and/or reuse previous declarations found in the schema, as an alternative to returning a totally new `GraphQLDirective` object. Either way, if the visitor returns a non-null `GraphQLDirective` from `getDirectiveDeclaration`, that declaration will be used to check arguments and permissible locations.
+For additional examples of transforming executable schemas with directives and `mapSchema`, see the [`@graphql-tools` docs](https://www.graphql-tools.com/docs/schema-directives#implementing-schema-directives).
 
 ## What about query directives?
 
-As its name suggests, the `SchemaDirectiveVisitor` abstraction is specifically designed to enable transforming GraphQL schemas based on directives that appear in your SDL text.
+Although directive syntax can also appear in GraphQL queries sent from the client, implementing query directives requires runtime transformation of query documents. We have deliberately restricted this implementation to transformations that take place at server construction time.
 
-While directive syntax can also appear in GraphQL queries sent from the client, implementing query directives would require runtime transformation of query documents. We have deliberately restricted this implementation to transformations that take place at server construction time.
-
-We believe confining this logic to your schema is more sustainable than burdening your clients with it, though you can probably imagine a similar sort of abstraction for implementing query directives. If that possibility becomes a desire that becomes a need for you, let us know, and we may consider supporting query directives in a future version of these tools.
+We believe confining this logic to your schema is more sustainable than burdening your clients with it, though you can probably imagine a similar sort of abstraction for implementing query directives. If that possibility becomes a need for you, let us know.
