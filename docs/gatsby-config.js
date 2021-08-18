@@ -46,6 +46,7 @@ module.exports = {
             'data/errors',
             'data/file-uploads',
             'data/subscriptions',
+            'requests',
           ],
           'Development Workflow': [
             'testing/build-run-queries',
