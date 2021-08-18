@@ -182,7 +182,7 @@ Finally, going to the Invoke URL shown at the output above, we will see our resu
 
 ### Cleaning Up
 
-After completing this tutorial, you can delete all the resources you created during this example from your Azure account by removing the Azure Resource Group called **apollo-examples** with the **az group** commmand:
+After completing this tutorial, you can delete all the resources you created during this example from your Azure account by removing the Azure Resource Group called **apollo-examples** with the **az group** command:
 
 ```shell
 az group delete --name apollo-examples --yes
