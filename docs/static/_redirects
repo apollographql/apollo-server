@@ -1,5 +1,3 @@
-/ /docs/apollo-server/
-
 # The v3 docs were beta for a while, and non-default, but now that they are
 # default, the v3 docs don't exist anymore.  So redirect them to the default!
 /docs/apollo-server/v3 /docs/apollo-server
