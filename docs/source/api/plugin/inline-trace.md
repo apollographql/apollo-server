@@ -23,7 +23,7 @@ const server = new ApolloServer({
   resolvers,
   plugins: [
     ApolloServerPluginInlineTrace({
-      rewriteError: (err) => err.message.match(SENSTIVE_REGEX) ? null : err,
+      rewriteError: (err) => err.message.match(SENSITIVE_REGEX) ? null : err,
     }),
   ],
 });
