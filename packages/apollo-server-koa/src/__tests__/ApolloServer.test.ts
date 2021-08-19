@@ -1,5 +1,5 @@
 import http from 'http';
-
+import Koa from 'koa';
 import request from 'supertest';
 
 import {
@@ -7,6 +7,7 @@ import {
   AuthenticationError,
   Config,
   ApolloServerPluginCacheControlDisabled,
+  ApolloServerPluginDrainHttpServer,
 } from 'apollo-server-core';
 
 import {
@@ -30,25 +31,34 @@ const resolvers = {
 
 describe('apollo-server-koa', () => {
   const { ApolloServer } = require('../ApolloServer');
-  const Koa = require('koa');
-  let server: ApolloServer;
-  let httpServer: http.Server;
+  let serverToCleanUp: ApolloServer | null = null;
   testApolloServer(
     async (config: any, options) => {
-      server = new ApolloServer(config);
+      serverToCleanUp = null;
+      const httpServer = http.createServer();
+      const server = new ApolloServer({
+        ...config,
+        plugins: [
+          ...(config.plugins ?? []),
+          ApolloServerPluginDrainHttpServer({
+            httpServer: httpServer,
+          }),
+        ],
+      });
       if (!options?.suppressStartCall) {
         await server.start();
+        serverToCleanUp = server;
       }
       const app = new Koa();
       server.applyMiddleware({ app, path: options?.graphqlPath });
-      httpServer = await new Promise<http.Server>((resolve) => {
-        const s = app.listen({ port: 0 }, () => resolve(s));
+      httpServer.on('request', app.callback());
+      await new Promise<void>((resolve) => {
+        httpServer.listen({ port: 0 }, () => resolve());
       });
       return createServerInfo(server, httpServer);
     },
     async () => {
-      if (server) await server.stop();
-      if (httpServer?.listening) await httpServer.close();
+      await serverToCleanUp?.stop();
     },
   );
 });

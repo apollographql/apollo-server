@@ -49,16 +49,17 @@ describe('ApolloServerBase construction', () => {
       warn,
       error: jest.fn(),
     };
-    expect(() =>
-      new ApolloServerBase({
-        typeDefs,
-        resolvers,
-        apollo: {
-          graphVariant: 'foo',
-          key: 'service:real:key',
-        },
-        logger,
-      }).stop(),
+    expect(
+      () =>
+        new ApolloServerBase({
+          typeDefs,
+          resolvers,
+          apollo: {
+            graphVariant: 'foo',
+            key: 'service:real:key',
+          },
+          logger,
+        }),
     ).not.toThrow();
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toMatch(

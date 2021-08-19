@@ -1,8 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fastify from 'fastify';
-
-import http from 'http';
-
 import request from 'supertest';
 
 import {
@@ -10,6 +7,7 @@ import {
   AuthenticationError,
   Config,
   ApolloServerPluginCacheControlDisabled,
+  ApolloServerPluginDrainHttpServer,
 } from 'apollo-server-core';
 import { ApolloServer, ServerRegistration } from '../ApolloServer';
 
@@ -18,6 +16,7 @@ import {
   createServerInfo,
   createApolloFetch,
 } from 'apollo-server-integration-testsuite';
+import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 const typeDefs = gql`
   type Query {
@@ -33,34 +32,59 @@ const resolvers = {
 
 const port = 9999;
 
+function fastifyAppClosePlugin(app: FastifyInstance): ApolloServerPlugin {
+  return {
+    async serverWillStart() {
+      return {
+        async drainServer() {
+          await app.close();
+        },
+      };
+    },
+  };
+}
+
 describe('apollo-server-fastify', () => {
-  let server: ApolloServer;
-  let httpServer: http.Server;
-  let app: FastifyInstance;
+  let serverToCleanUp: ApolloServer | null = null;
 
   testApolloServer(
     async (config: any, options) => {
-      server = new ApolloServer(config);
+      serverToCleanUp = null;
+      const app = fastify();
+      const server = new ApolloServer({
+        ...config,
+        plugins: [
+          ...(config.plugins ?? []),
+          // I *think* racing these two plugins against each other works.
+          // They will both end up calling server.close, and one will
+          // get ERR_SERVER_NOT_RUNNING, but our stoppable implementation
+          // ignores errors from close. An alternative would be to use
+          // Fastify's serverFactory to return a server whose 'close' actually
+          // does the stoppable stuff. (The tests do seem to pass without this
+          // close call, but it seems like a good idea to invoke app.close in
+          // case the user registered any onClose hooks?)
+          fastifyAppClosePlugin(app),
+          ApolloServerPluginDrainHttpServer({
+            httpServer: app.server,
+          }),
+        ],
+      });
       if (!options?.suppressStartCall) {
         await server.start();
+        serverToCleanUp = server;
       }
-      app = fastify();
       app.register(server.createHandler({ path: options?.graphqlPath }));
       await app.listen(port);
       return createServerInfo(server, app.server);
     },
     async () => {
-      if (server) await server.stop();
-      if (app) await new Promise<void>((resolve) => app.close(() => resolve()));
-      if (httpServer?.listening) await httpServer.close();
+      await serverToCleanUp?.stop();
     },
   );
 });
 
 describe('apollo-server-fastify', () => {
   let server: ApolloServer;
-  let app: FastifyInstance;
-  let httpServer: http.Server;
   let replyDecorator: jest.Mock | undefined;
   let requestDecorator: jest.Mock | undefined;
 
@@ -69,12 +93,19 @@ describe('apollo-server-fastify', () => {
     options: Partial<ServerRegistration> = {},
     mockDecorators: boolean = false,
   ) {
+    const app = fastify();
     server = new ApolloServer({
       stopOnTerminationSignals: false,
       ...serverOptions,
+      plugins: [
+        ...(serverOptions.plugins ?? []),
+        fastifyAppClosePlugin(app),
+        ApolloServerPluginDrainHttpServer({
+          httpServer: app.server,
+        }),
+      ],
     });
     await server.start();
-    app = fastify();
 
     if (mockDecorators) {
       replyDecorator = jest.fn();
@@ -91,9 +122,7 @@ describe('apollo-server-fastify', () => {
   }
 
   afterEach(async () => {
-    if (server) await server.stop();
-    if (app) await new Promise<void>((resolve) => app.close(() => resolve()));
-    if (httpServer) await httpServer.close();
+    await server?.stop();
   });
 
   describe('constructor', () => {

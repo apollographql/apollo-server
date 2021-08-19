@@ -2,7 +2,11 @@ import http from 'http';
 import request from 'supertest';
 import express from 'express';
 import { createMockServer } from './mockAPIGatewayServer';
-import { Config, gql } from 'apollo-server-core';
+import {
+  ApolloServerPluginDrainHttpServer,
+  Config,
+  gql,
+} from 'apollo-server-core';
 import {
   ApolloServer,
   CreateHandlerOptions,
@@ -26,30 +30,46 @@ const resolvers = {
 };
 
 describe('apollo-server-lambda', () => {
-  let server: ApolloServer;
-  let httpServer: http.Server;
+  let serverToCleanUp: ApolloServer | null = null;
   testApolloServer(
     async (config: Config, options) => {
-      server = new ApolloServer(config);
+      serverToCleanUp = null;
+      const httpServer = http.createServer();
+      const server = new ApolloServer({
+        ...config,
+        plugins: [
+          ...(config.plugins ?? []),
+          ApolloServerPluginDrainHttpServer({
+            httpServer: httpServer,
+          }),
+        ],
+      });
       // Ignore suppressStartCall because serverless ApolloServers don't
-      // get `start`ed.
+      // get manually `start`ed. However, if no requests will be made then
+      // it won't get `start`ed and that's the condition we need to use to
+      // decide whether or not to `stop`.
+      if (!options?.noRequestsMade) {
+        serverToCleanUp = server;
+      }
       const lambdaHandler = server.createHandler({
         expressGetMiddlewareOptions: { path: options?.graphqlPath },
       });
-      const httpHandler = createMockServer(lambdaHandler);
-      httpServer = new http.Server(httpHandler);
+      httpServer.on('request', createMockServer(lambdaHandler));
       await new Promise<void>((resolve) => {
         httpServer.listen({ port: 0 }, () => resolve());
       });
-      return createServerInfo(server, httpServer);
+      const serverInfo = createServerInfo(server, httpServer);
+      if (options?.noRequestsMade) {
+        // Since no requests will be made (and the server won't even start), we
+        // immediately close the HTTP server. (We made it at all so we can have
+        // a typesafe return value from this function, though the only test that
+        // uses this mode ignores the return value from this function.)
+        await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+      }
+      return serverInfo;
     },
     async () => {
-      if (httpServer?.listening) {
-        await new Promise<void>((resolve) => {
-          httpServer.close(() => resolve());
-        });
-      }
-      if (server) await server.stop();
+      await serverToCleanUp?.stop();
     },
     { serverlessFramework: true },
   );

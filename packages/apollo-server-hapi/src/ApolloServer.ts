@@ -10,6 +10,7 @@ import {
   runHttpQuery,
 } from 'apollo-server-core';
 import Boom from '@hapi/boom';
+import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 export class ApolloServer extends ApolloServerBase {
   // This translates the arguments from the middleware into graphQL options It
@@ -163,4 +164,21 @@ export interface ServerRegistration {
   route?: hapi.RouteOptions;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
+}
+
+// hapi's app.stop() works similarly to ApolloServerPluginDrainHttpServer by
+// default (as long as cleanStop has its default value of true) so we just use
+// it instead of our own HTTP-server-draining implementation.
+export function ApolloServerPluginStopHapiServer(options: {
+  hapiServer: hapi.Server;
+}): ApolloServerPlugin {
+  return {
+    async serverWillStart() {
+      return {
+        async drainServer() {
+          await options.hapiServer.stop();
+        },
+      };
+    },
+  };
 }

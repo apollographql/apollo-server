@@ -69,6 +69,9 @@ export interface GraphQLServerListener {
   // a landing page, you probably should just define a handler in your web
   // framework.
   renderLandingPage?(): Promise<LandingPage>;
+
+  // FIXME docs
+  drainServer?(): Promise<void>;
 }
 
 // The page served to clients with `accept: text/html` headers.
