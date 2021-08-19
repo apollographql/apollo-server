@@ -9,7 +9,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
-- _Nothing yet! Stay tuned!_
+- `apollo-server-core`: Fix `experimental_approximateDocumentStoreMiB` option, which seems to have never worked before. [PR #5629](https://github.com/apollographql/apollo-server/pull/5629)
 
 ## v3.1.2
 
