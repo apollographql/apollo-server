@@ -44,11 +44,39 @@ const server = new ApolloServer({
 })
 ```
 
+### `drainServer`
+
+The `drainServer` event fires when Apollo Server is starting to shut down because [`ApolloServer.stop()`](../api/apollo-server/#stop) has been invoked (either explicitly by your code, or by one of the [termination signal handlers](../api/apollo-server/#stoponterminationsignals)). While `drainServer` handlers run, GraphQL operations can still execute successfully. This hook is designed to allow you to stop accepting new connections and close existing connections. Apollo Server has a [built-in plugin](../api/plugin/drain-http-server) which uses this event to drain a [Node `http.Server`](https://nodejs.org/api/http.html#http_class_http_server).
+
+You define your `drainServer` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, because the two handlers usually interact with the same data. Currently, `drainServer` handlers do not take arguments (this might change in the future).
+
+#### Example
+
+```js
+const server = new ApolloServer({
+  /* ... other necessary configuration ... */
+
+  plugins: [
+    {
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            await myCustomServer.drain();
+          }
+        }
+      }
+    }
+  ]
+})
+```
+
 ### `serverWillStop`
 
 The `serverWillStop` event fires when Apollo Server is starting to shut down because [`ApolloServer.stop()`](../api/apollo-server/#stop) has been invoked (either explicitly by your code, or by one of the [termination signal handlers](../api/apollo-server/#stoponterminationsignals)). If your plugin is running any background tasks, this is a good place to shut them down.
 
 You define your `serverWillStop` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, because the two handlers usually interact with the same data. Currently, `serverWillStop` handlers do not take arguments (this might change in the future).
+
+When your `serverWillStart` handler is called, Apollo Server is in a state where it will no longer start to execute new GraphQL operations, so it's a good place to flush observability data. If you are looking for a hook that runs while operations can still execute, try [`drainServer`](#drainserver).
 
 #### Example
 

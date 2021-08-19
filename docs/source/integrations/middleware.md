@@ -138,7 +138,7 @@ async function startApolloServer(typeDefs, resolvers) {
 To swap this out for `apollo-server-express`, we first install the following required packages:
 
 ```bash
-npm install apollo-server-express express graphql
+npm install apollo-server-express apollo-server-core express graphql
 ```
 
 We can (and should) also _uninstall_ `apollo-server`.
@@ -147,16 +147,24 @@ Next, we can modify our code to match the following:
 
 ```javascript:title=index.js
 import { ApolloServer } from 'apollo-server-express';
+import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import express from 'express';
+import http from 'http';
 
 async function startApolloServer(typeDefs, resolvers) {
-
-  // Same ApolloServer initialization as before
-  const server = new ApolloServer({ typeDefs, resolvers });
-
   // Required logic for integrating with Express
-  await server.start();
   const app = express();
+  const httpServer = http.createServer(app);
+
+  // Same ApolloServer initialization as before, plus the drain plugin.
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  });
+
+  // More required logic for integrating with Express
+  await server.start();
   server.applyMiddleware({
      app,
 
@@ -167,19 +175,11 @@ async function startApolloServer(typeDefs, resolvers) {
   });
 
   // Modified server startup
-  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
+  await new Promise(resolve => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 }
 ```
 
-
-### Handling server shutdown
-
-The `apollo-server` package does provide one feature that isn't straightforward to implement with other packages: because `apollo-server` handles making its HTTP server listen for requests, its [`stop`](../api/apollo-server/#stop) method handles _stopping_ the HTTP server. This means it can make sure to stop accepting new requests _before_ it begins to shut down the machinery that processes GraphQL operations.
-
-If you want this behavior in another package, you need to make sure to stop your web server *before* calling `stop()` on your `ApolloServer` instance. This can be challenging if `stop` is being called due to the [signal handlers](../api/apollo-server/#stoponterminationsignals) that Apollo Server installs by default.
-
-We intend to improve this behavior discrepancy, as described in [this GitHub issue](https://github.com/apollographql/apollo-server/issues/5074).
 
 
 ## Package conventions
@@ -232,24 +232,31 @@ If you want to do something with your server that isn't supported by `apollo-ser
 
 `apollo-server-express` is the Apollo Server package for [Express](https://expressjs.com/), the most popular Node.js web framework. It enables you to attach a GraphQL server to an existing Express server.
 
-`apollo-server` uses `apollo-server-express` under the hood. If you start with `apollo-server` and later need to modify how it serves over HTTP, you can [swap `apollo-server` to `apollo-server-express`](#swapping-out-apollo-server).
+The batteries-included `apollo-server` library uses `apollo-server-express` under the hood. If you start with `apollo-server` and later need to modify how it serves over HTTP, you can [swap `apollo-server` to `apollo-server-express`](#swapping-out-apollo-server).
 
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```bash
-npm install apollo-server-express express graphql
+npm install apollo-server-express apollo-server-core express graphql
 ```
 
 ```javascript:title=index.js
 import { ApolloServer } from 'apollo-server-express';
+import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import express from 'express';
+import http from 'http';
 
 async function startApolloServer(typeDefs, resolvers) {
-  const server = new ApolloServer({ typeDefs, resolvers });
-  await server.start();
   const app = express();
+  const httpServer = http.createServer(app);
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  });
+  await server.start();
   server.applyMiddleware({ app });
-  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
+  await new Promise(resolve => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 }
 ```
@@ -273,17 +280,37 @@ You can call `server.getMiddleware` instead of `server.applyMiddleware` if you w
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-fastify fastify graphql
+$ npm install apollo-server-fastify apollo-server-core fastify graphql
 ```
 
 ```javascript
 import { ApolloServer } from 'apollo-server-fastify';
+import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import fastify from 'fastify';
 
+function fastifyAppClosePlugin(app: FastifyInstance): ApolloServerPlugin {
+  return {
+    async serverWillStart() {
+      return {
+        async drainServer() {
+          await app.close();
+        },
+      };
+    },
+  };
+}
+
 async function startApolloServer(typeDefs, resolvers) {
-  const server = new ApolloServer({ typeDefs, resolvers });
-  await server.start();
   const app = fastify();
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [
+      fastifyAppClosePlugin(app),
+      ApolloServerPluginDrainHttpServer({ httpServer: app.server }),
+    ],
+  });
+  await server.start();
   app.register(server.createHandler());
   await app.listen(4000);
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
@@ -299,6 +326,8 @@ You _must_ `await server.start()` before calling `server.createHandler`. You can
 * `onHealthCheck`
 * `disableHealthCheck`
 
+> See [this issue](https://github.com/apollographql/apollo-server/issues/5642) for details about draining Fastify servers. The pattern suggested here isn't perfect; we look forward to suggestions from Fastify users.
+
 ### `apollo-server-hapi`
 
 `apollo-server-hapi` is the GraphQL server for [hapi](https://hapi.dev/), a Node.js web framework. Apollo Server 3 is only tested with `@hapi/hapi` v20.1.2 and later (the minimum version that supports Node.js 16).
@@ -310,18 +339,20 @@ $ npm install apollo-server-hapi @hapi/hapi graphql
 ```
 
 ```javascript
-import { ApolloServer } from 'apollo-server-hapi';
+import { ApolloServer, ApolloServerPluginStopHapiServer } from 'apollo-server-hapi';
 import Hapi from '@hapi/hapi';
 
 async function startApolloServer(typeDefs, resolvers) {
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const app = Hapi.server({ port: 4000 });
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [
+      ApolloServerPluginStopHapiServer({ hapiServer: app }),
+    ],
+  });
   await server.start();
-  const app = new Hapi.server({
-    port: 4000
-  });
-  await server.applyMiddleware({
-    app,
-  });
+  await server.applyMiddleware({ app });
   await app.start();
 }
 ```
@@ -344,19 +375,27 @@ You _must_ `await server.start()` before calling `server.applyMiddleware`. You c
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-koa koa graphql
+$ npm install apollo-server-koa apollo-server-core koa graphql
 ```
 
 ```javascript
 import { ApolloServer } from 'apollo-server-koa';
+import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import Koa from 'koa';
+import http from 'http';
 
 async function startApolloServer(typeDefs, resolvers) {
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const httpServer = http.createServer();
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  });
   await server.start();
   const app = new Koa();
   server.applyMiddleware({ app });
-  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
+  httpServer.on('request', app.callback());
+  await new Promise(resolve => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
   return { server, app };
 }
@@ -402,6 +441,8 @@ Then run the web server with `npx micro`.
 * `disableHealthCheck`.
 
 Note that `apollo-server-micro` does _not_ have a built-in way of setting CORS headers.
+
+> We do not have a recommended `drainServer` implementation for `apollo-server-micro`. If you use `apollo-server-micro`, feel free to [contribute one](https://github.com/apollographql/apollo-server/pulls)!
 
 
 ### `apollo-server-lambda`

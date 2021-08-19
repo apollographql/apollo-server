@@ -517,22 +517,22 @@ The `start` method triggers the following actions:
 
 ## `stop`
 
-`ApolloServer.stop()` is an async method that tells all of Apollo Server's background tasks to complete. It calls and awaits all [`serverWillStop` plugin handlers](../integrations/plugins-event-reference/#serverwillstop) (including the [usage reporting plugin](./plugin/usage-reporting/)'s handler, which sends a final usage report to Apollo Studio). This method takes no arguments. You should only call it after [`start()`](#start) returns successfully (or [`listen()`](#listen) if you're using the batteries-included `apollo-server` package).
+`ApolloServer.stop()` is an async method that tells all of Apollo Server's background tasks to complete. Specifically, it:
 
-If your server is a [federated gateway](https://www.apollographql.com/docs/federation/gateway/), `stop` also stops gateway-specific background activities, such as polling for updated service configuration.
+- Calls and awaits all [`drainServer` plugin handlers](../integrations/plugins-event-reference/#drainserver). These should generally:
+  * Stop listening for new connections
+  * Closes idle connections (i.e., connections with no current HTTP request)
+  * Closes active connections whenever they become idle
+  * Waits for all connections to be closed
+  * After a grace period, if any connections remain active, forcefully close them.
+  If you're using the batteries-included `apollo-server` package, it does this by default. (You can configure the grace period with the [`stopGracePeriodMillis` constructor option](#stopgraceperiodmillis).) Otherwise, you can use the [drain HTTP server plugin](./plugin/drain-http-server/) to drain your HTTP server.
+- Transitions the server to a state where it will not start executing more GraphQL operations.
+- Calls and awaits all [`serverWillStop` plugin handlers](../integrations/plugins-event-reference/#serverwillstop) (including the [usage reporting plugin](./plugin/usage-reporting/)'s handler, which sends a final usage report to Apollo Studio).
+- If your server is a [federated gateway](https://www.apollographql.com/docs/federation/gateway/), `stop` also stops gateway-specific background activities, such as polling for updated service configuration.
+
+This method takes no arguments. You should only call it after [`start()`](#start) returns successfully (or [`listen()`](#listen) if you're using the batteries-included `apollo-server` package).
 
 In some circumstances, Apollo Server calls `stop` automatically when the process receives a `SIGINT` or `SIGTERM` signal. See the [`stopOnTerminationSignals` constructor option](#stoponterminationsignals) for details.
-
-If you're using the `apollo-server` package (which handles setting up an HTTP server for you), this method first stops the HTTP server. Specifically, it:
-
-* Stops listening for new connections
-* Closes idle connections (i.e., connections with no current HTTP request)
-* Closes active connections whenever they become idle
-* Waits for all connections to be closed
-
-If any connections remain active after a grace period (10 seconds by default), Apollo Server forcefully closes those connections. You can configure this grace period with the [`stopGracePeriodMillis` constructor option](#stopgraceperiodmillis).
-
-If you're using a [middleware package](../integrations/middleware/) instead of `apollo-server`, you should stop your HTTP server before calling `ApolloServer.stop()`.
 
 ## Framework-specific middleware function
 
@@ -547,23 +547,25 @@ These functions take an `options` object as a parameter. Some supported fields o
 ```js
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
+const { ApolloServerPluginDrainHttpServer } = require('apollo-server-core');
 const { typeDefs, resolvers } = require('./schema');
 
 async function startApolloServer() {
+  const app = express();
+  const httpServer = http.createServer(app);
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
   await server.start();
-
-  const app = express();
 
   // Additional middleware can be mounted at this point to run before Apollo.
   app.use('*', jwtCheck, requireAuth, checkScope);
 
   // Mount Apollo middleware here.
   server.applyMiddleware({ app, path: '/specialUrl' });
-  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
+  await new Promise(resolve => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
   return { server, app };
 }

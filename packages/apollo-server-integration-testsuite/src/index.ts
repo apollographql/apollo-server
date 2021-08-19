@@ -1310,7 +1310,7 @@ export default ({
 
     describe('status code', () => {
       it('allows setting a custom status code', async () => {
-        const app = await createApp({
+        app = await createApp({
           graphqlOptions: {
             schema,
             plugins: [

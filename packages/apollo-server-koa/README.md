@@ -6,44 +6,8 @@
 
 This is the Koa integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)
 
-```shell
-npm install apollo-server-koa graphql
-```
+A full example of how to use `apollo-server-koa` can be found in [the docs](https://www.apollographql.com/docs/apollo-server/integrations/middleware/#apollo-server-koa).
 
-## Koa
-
-```js
-const Koa = require('koa');
-const { ApolloServer, gql } = require('apollo-server-koa');
-
-async function startApolloServer() {
-  // Construct a schema, using GraphQL schema language
-  const typeDefs = gql`
-    type Query {
-      hello: String
-    }
-  `;
-
-  // Provide resolver functions for your schema fields
-  const resolvers = {
-    Query: {
-      hello: () => 'Hello world!',
-    },
-  };
-
-  const server = new ApolloServer({ typeDefs, resolvers });
-  await server.start();
-
-  const app = new Koa();
-  server.applyMiddleware({ app });
-  // alternatively you can get a composed middleware from the apollo server
-  // app.use(server.getMiddleware());
-
-  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
-  return { server, app };
-}
-```
 
 ## Principles
 

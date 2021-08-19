@@ -12,7 +12,7 @@ import {
 } from 'apollo-server-express';
 import type { AddressInfo } from 'net';
 import { format as urlFormat } from 'url';
-import { Stopper } from './stoppable';
+import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 
 export * from './exports';
 
@@ -25,10 +25,9 @@ export interface ServerInfo {
 }
 
 export class ApolloServer extends ApolloServerExpress {
-  private stopper?: Stopper;
   private cors?: CorsOptions | boolean;
   private onHealthCheck?: (req: express.Request) => Promise<any>;
-  private stopGracePeriodMillis: number;
+  private httpServer: http.Server;
 
   constructor(
     config: ApolloServerExpressConfig & {
@@ -37,14 +36,25 @@ export class ApolloServer extends ApolloServerExpress {
       stopGracePeriodMillis?: number;
     },
   ) {
-    super(config);
-    this.cors = config?.cors;
-    this.onHealthCheck = config?.onHealthCheck;
-    this.stopGracePeriodMillis = config?.stopGracePeriodMillis ?? 10_000;
+    const httpServer = http.createServer();
+    super({
+      ...config,
+      plugins: [
+        ...(config.plugins ?? []),
+        ApolloServerPluginDrainHttpServer({
+          httpServer: httpServer,
+          stopGracePeriodMillis: config.stopGracePeriodMillis,
+        }),
+      ],
+    });
+
+    this.httpServer = httpServer;
+    this.cors = config.cors;
+    this.onHealthCheck = config.onHealthCheck;
   }
 
-  private createServerInfo(server: http.Server): ServerInfo {
-    const addressInfo = server.address() as AddressInfo;
+  private createServerInfo(): ServerInfo {
+    const addressInfo = this.httpServer.address() as AddressInfo;
 
     // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
     // corresponding loopback ip. If this heuristic is wrong for your use case,
@@ -64,7 +74,7 @@ export class ApolloServer extends ApolloServerExpress {
 
     return {
       ...addressInfo,
-      server,
+      server: this.httpServer,
       url,
     };
   }
@@ -90,12 +100,13 @@ export class ApolloServer extends ApolloServerExpress {
     // This class is the easy mode for people who don't create their own express
     // object, so we have to create it.
     const app = express();
+    this.httpServer.on('request', app);
 
     app.disable('x-powered-by');
 
     // provide generous values for the getting started experience
     super.applyMiddleware({
-      app,
+      app: app,
       path: '/',
       bodyParserConfig: { limit: '50mb' },
       onHealthCheck: this.onHealthCheck,
@@ -107,41 +118,14 @@ export class ApolloServer extends ApolloServerExpress {
             },
     });
 
-    const httpServer = http.createServer(app);
-
-    this.stopper = new Stopper(httpServer);
-
     await new Promise((resolve) => {
-      httpServer.once('listening', resolve);
+      this.httpServer.once('listening', resolve);
       // If the user passed a callback to listen, it'll get called in addition
       // to our resolver. They won't have the ability to get the ServerInfo
       // object unless they use our Promise, though.
-      httpServer.listen(...(opts.length ? opts : [{ port: 4000 }]));
+      this.httpServer.listen(...(opts.length ? opts : [{ port: 4000 }]));
     });
 
-    return this.createServerInfo(httpServer);
-  }
-
-  public override async stop() {
-    // First drain the HTTP server. (See #5074 for a plan to generalize this to
-    // the web framework integrations.)
-    //
-    // `Stopper.stop` is an async function which:
-    // - closes the server (ie, stops listening)
-    // - closes all connections with no active requests
-    // - continues to close connections when their active request count drops to
-    //   zero
-    // - in 10 seconds (configurable), closes all remaining active connections
-    // - returns (async) once there are no remaining active connections
-    //
-    // If you don't like this behavior, use apollo-server-express instead of
-    // apollo-server.
-    const { stopper } = this;
-    if (stopper) {
-      this.stopper = undefined;
-      await stopper.stop(this.stopGracePeriodMillis);
-    }
-
-    await super.stop();
+    return this.createServerInfo();
   }
 }

@@ -80,19 +80,36 @@ export type SchemaDerivedData = {
 };
 
 type ServerState =
-  | { phase: 'initialized'; schemaManager: SchemaManager }
+  | {
+      phase: 'initialized';
+      schemaManager: SchemaManager;
+    }
   | {
       phase: 'starting';
       barrier: Resolvable<void>;
       schemaManager: SchemaManager;
     }
-  | { phase: 'failed to start'; error: Error }
+  | {
+      phase: 'failed to start';
+      error: Error;
+    }
   | {
       phase: 'started';
       schemaManager: SchemaManager;
     }
-  | { phase: 'stopping'; barrier: Resolvable<void> }
-  | { phase: 'stopped'; stopError: Error | null };
+  | {
+      phase: 'draining';
+      schemaManager: SchemaManager;
+      barrier: Resolvable<void>;
+    }
+  | {
+      phase: 'stopping';
+      barrier: Resolvable<void>;
+    }
+  | {
+      phase: 'stopped';
+      stopError: Error | null;
+    };
 
 // Throw this in places that should be unreachable (because all other cases have
 // been handled, reducing the type of the argument to `never`). TypeScript will
@@ -121,6 +138,7 @@ export class ApolloServerBase<
   private state: ServerState;
   private toDispose = new Set<() => Promise<void>>();
   private toDisposeLast = new Set<() => Promise<void>>();
+  private drainServers: (() => Promise<void>) | null = null;
   private experimental_approximateDocumentStoreMiB: Config['experimental_approximateDocumentStoreMiB'];
   private stopOnTerminationSignals: boolean;
   private landingPage: LandingPage | null = null;
@@ -137,13 +155,15 @@ export class ApolloServerBase<
       typeDefs,
       parseOptions = {},
       introspection,
-      mocks,
-      mockEntireSchema,
       plugins,
       gateway,
-      experimental_approximateDocumentStoreMiB,
-      stopOnTerminationSignals,
       apollo,
+      stopOnTerminationSignals,
+      // These next options aren't used in this function but they don't belong in
+      // requestOptions.
+      mocks,
+      mockEntireSchema,
+      experimental_approximateDocumentStoreMiB,
       ...requestOptions
     } = config;
 
@@ -425,6 +445,17 @@ export class ApolloServerBase<
         });
       }
 
+      const drainServerCallbacks = taggedServerListeners.flatMap((l) =>
+        l.serverListener.drainServer ? [l.serverListener.drainServer] : [],
+      );
+      if (drainServerCallbacks.length) {
+        this.drainServers = async () => {
+          await Promise.all(
+            drainServerCallbacks.map((drainServer) => drainServer()),
+          );
+        };
+      }
+
       // Find the renderLandingPage callback, if one is provided. If the user
       // installed ApolloServerPluginLandingPageDisabled then there may be none
       // found. On the other hand, if the user installed a landingPage plugin,
@@ -537,6 +568,7 @@ export class ApolloServerBase<
             'This data graph is missing a valid configuration. More details may be available in the server logs.',
           );
         case 'started':
+        case 'draining': // We continue to run operations while draining.
           return this.state.schemaManager.getSchemaDerivedData();
         case 'stopping':
           throw new Error(
@@ -559,7 +591,7 @@ export class ApolloServerBase<
   }
 
   protected assertStarted(methodName: string) {
-    if (this.state.phase !== 'started') {
+    if (this.state.phase !== 'started' && this.state.phase !== 'draining') {
       throw new Error(
         'You must `await server.start()` before calling `server.' +
           methodName +
@@ -648,45 +680,67 @@ export class ApolloServerBase<
     };
   }
 
-  /**
-   * XXX: Note that stop() was designed to be called after start() has finished,
-   * and should not be called concurrently with start() or before start(), or
-   * else unexpected behavior may occur (e.g. some dependencies may not be
-   * stopped).
-   */
   public async stop() {
-    // Calling stop more than once should have the same result as the first time.
-    if (this.state.phase === 'stopped') {
-      if (this.state.stopError) {
-        throw this.state.stopError;
+    switch (this.state.phase) {
+      case 'initialized':
+      case 'starting':
+      case 'failed to start':
+        throw Error(
+          'apolloServer.stop() should only be called after `await apolloServer.start()` has succeeded',
+        );
+
+      // Calling stop more than once should have the same result as the first time.
+      case 'stopped':
+        if (this.state.stopError) {
+          throw this.state.stopError;
+        }
+        return;
+
+      // Two parallel calls to stop; just wait for the other one to finish and
+      // do whatever it did.
+      case 'stopping':
+      case 'draining': {
+        await this.state.barrier;
+        // The cast here is because TS doesn't understand that this.state can
+        // change during the await
+        // (https://github.com/microsoft/TypeScript/issues/9998).
+        const state = this.state as ServerState;
+        if (state.phase !== 'stopped') {
+          throw Error(`Surprising post-stopping state ${state.phase}`);
+        }
+        if (state.stopError) {
+          throw state.stopError;
+        }
+        return;
       }
-      return;
+
+      case 'started':
+        // This is handled by the rest of the function.
+        break;
+
+      default:
+        throw new UnreachableCaseError(this.state);
     }
 
-    // Two parallel calls to stop; just wait for the other one to finish and
-    // do whatever it did.
-    if (this.state.phase === 'stopping') {
-      await this.state.barrier;
-      // The cast here is because TS doesn't understand that this.state can
-      // change during the await
-      // (https://github.com/microsoft/TypeScript/issues/9998).
-      const state = this.state as ServerState;
-      if (state.phase !== 'stopped') {
-        throw Error(`Surprising post-stopping state ${state.phase}`);
-      }
-      if (state.stopError) {
-        throw state.stopError;
-      }
-      return;
-    }
+    const barrier = resolvable();
 
-    // Commit to stopping, actually stop, and update the phase.
+    // Commit to stopping and start draining servers.
+    this.state = {
+      phase: 'draining',
+      schemaManager: this.state.schemaManager,
+      barrier,
+    };
+
+    await this.drainServers?.();
+
+    // Servers are drained. Prevent further operations from starting and call
+    // stop handlers.
     this.state = { phase: 'stopping', barrier: resolvable() };
     try {
       // We run shutdown handlers in two phases because we don't want to turn
-      // off our signal listeners until we've done the important parts of shutdown
-      // like running serverWillStop handlers. (We can make this more generic later
-      // if it's helpful.)
+      // off our signal listeners (ie, allow signals to kill the process) until
+      // we've done the important parts of shutdown like running serverWillStop
+      // handlers. (We can make this more generic later if it's helpful.)
       await Promise.all([...this.toDispose].map((dispose) => dispose()));
       await Promise.all([...this.toDisposeLast].map((dispose) => dispose()));
     } catch (stopError) {

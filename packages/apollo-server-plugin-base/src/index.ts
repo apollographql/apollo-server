@@ -60,6 +60,19 @@ export interface ApolloServerPlugin<
 export interface GraphQLServerListener {
   schemaDidLoadOrUpdate?(schemaContext: GraphQLSchemaContext): void;
 
+  // When your server is stopped (by calling `stop()` or via the
+  // `SIGINT`/`SIGTERM` handlers), Apollo Server first awaits all `drainServer`
+  // hooks in parallel. GraphQL operations can still execute while `drainServer`
+  // is in progress. A typical use is to stop listening for new connections and
+  // wait until all current connections are idle. The built-in
+  // ApolloServerPluginDrainHttpServer implements this method.
+  drainServer?(): Promise<void>;
+
+  // When your server is stopped (by calling `stop()` or via the
+  // `SIGINT`/`SIGTERM` handlers) then (after the `drainServer` phase finishes)
+  // Apollo Server transitions into a state where no new operations will run and
+  // then awaits all `drainServer` hooks in parallel. A typical use is to flush
+  // outstanding observability data.
   serverWillStop?(): Promise<void>;
 
   // At most one plugin's serverWillStart may return a GraphQLServerListener

@@ -6,55 +6,7 @@
 
 This is the [Micro](https://github.com/zeit/micro) integration for the Apollo community GraphQL Server. [Read the docs.](https://www.apollographql.com/docs/apollo-server/) [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)
 
-## Basic GraphQL Microservice
-
-This example demonstrates how to setup a simple microservice, using Micro, that
-handles incoming GraphQL requests via the default `/graphql` endpoint.
-
-1) Package installation.
-
-```shell
-npm install micro apollo-server-micro graphql
-```
-
-2) `index.js`
-
-```js
-const { ApolloServer, gql } = require('apollo-server-micro');
-
-const typeDefs = gql`
-  type Query {
-    sayHello: String
-  }
-`;
-
-const resolvers = {
-  Query: {
-    sayHello(parent, args, context) {
-      return 'Hello World!';
-    },
-  },
-};
-
-const apolloServer = new ApolloServer({ typeDefs, resolvers });
-module.exports = apolloServer.start().then(() => apolloServer.createHandler());
-```
-
-3) `package.json`
-
-```json
-{
-  "main": "index.js",
-  "scripts": {
-    "start": "micro"
-  }
-}
-```
-
-4) After an `npm start`, access `http://localhost:3000/graphql` in your
-browser to run queries using
-[`graphql-playground`](https://github.com/prismagraphql/graphql-playground),
-or send GraphQL requests directly to the same URL.
+A full example of how to use `apollo-server-micro` can be found in [the docs](https://www.apollographql.com/docs/apollo-server/integrations/middleware/#apollo-server-micro).
 
 ## CORS Example
 

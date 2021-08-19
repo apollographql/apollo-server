@@ -4,42 +4,60 @@ import {
   createApolloFetch,
 } from 'apollo-server-integration-testsuite';
 
-import http = require('http');
 import request from 'supertest';
 
-import { Server } from '@hapi/hapi';
+import Hapi from '@hapi/hapi';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';
-import { ApolloServer, ServerRegistration } from '../ApolloServer';
+import {
+  ApolloServer,
+  ApolloServerPluginStopHapiServer,
+  ServerRegistration,
+} from '../ApolloServer';
 
 const port = 0;
 
 describe('apollo-server-hapi', () => {
-  let server: ApolloServer;
+  let serverToCleanUp: ApolloServer | null = null;
 
-  let app: Server;
-  let httpServer: http.Server;
+  testApolloServer(
+    async (config: any, options) => {
+      serverToCleanUp = null;
+      const app = Hapi.server({ host: 'localhost', port });
+      const server = new ApolloServer({
+        ...config,
+        plugins: [
+          ...(config.plugins ?? []),
+          ApolloServerPluginStopHapiServer({
+            hapiServer: app,
+          }),
+        ],
+      });
+      if (!options?.suppressStartCall) {
+        await server.start();
+        serverToCleanUp = server;
+      }
+      await server.applyMiddleware({ app, path: options?.graphqlPath });
+      await app.start();
+      const httpServer = app.listener;
+      return createServerInfo(server, httpServer);
+    },
+    async () => {
+      await serverToCleanUp?.stop();
+    },
+  );
+});
 
-  async function cleanup() {
-    if (server) await server.stop();
-    if (app) await app.stop();
-    if (httpServer?.listening) httpServer.close();
-  }
-  afterEach(cleanup);
+describe('non-integration tests', () => {
+  let serverToCleanUp: ApolloServer | null = null;
 
-  testApolloServer(async (config: any, options) => {
-    server = new ApolloServer(config);
-    app = new Server({ host: 'localhost', port });
-    if (!options?.suppressStartCall) {
-      await server.start();
-    }
-    await server.applyMiddleware({ app, path: options?.graphqlPath });
-    await app.start();
-    const httpServer = app.listener;
-    return createServerInfo(server, httpServer);
-  }, cleanup);
+  beforeEach(() => {
+    serverToCleanUp = null;
+  });
+  afterEach(async () => {
+    await serverToCleanUp?.stop();
+  });
 
-  //Non-integration tests
   const typeDefs = gql`
     type Query {
       hello: String
@@ -56,22 +74,24 @@ describe('apollo-server-hapi', () => {
     serverOptions: Config,
     options: Partial<ServerRegistration> = {},
   ) {
-    server = new ApolloServer({
+    const app = Hapi.server({ port: 0 });
+    const server = new ApolloServer({
       stopOnTerminationSignals: false,
       ...serverOptions,
+      plugins: [
+        ...(serverOptions.plugins ?? []),
+        ApolloServerPluginStopHapiServer({
+          hapiServer: app,
+        }),
+      ],
     });
     await server.start();
-    app = new Server({ port: 0 });
+    serverToCleanUp = server;
     await server.applyMiddleware({ ...options, app });
     await app.start();
 
     return createServerInfo(server, app.listener);
   }
-
-  afterEach(async () => {
-    if (server) await server.stop();
-    if (httpServer) await httpServer.close();
-  });
 
   describe('constructor', () => {
     it('accepts typeDefs and resolvers', async () => {
@@ -201,10 +221,6 @@ describe('apollo-server-hapi', () => {
     });
 
     describe('healthchecks', () => {
-      afterEach(async () => {
-        await server.stop();
-      });
-
       it('creates a healthcheck endpoint', async () => {
         const { httpServer } = await createServer({
           typeDefs,

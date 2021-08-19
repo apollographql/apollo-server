@@ -99,16 +99,26 @@ To run both an Express app _and_ a separate subscription server, we'll create an
        // This `server` is the instance returned from `new ApolloServer`.
        path: server.graphqlPath,
     });
-
-    // Shut down in the case of interrupt and termination signals
-    // We expect to handle this more cleanly in the future. See (#5074)[https://github.com/apollographql/apollo-server/issues/5074] for reference.
-    ['SIGINT', 'SIGTERM'].forEach(signal => {
-      process.on(signal, () => subscriptionServer.close());
-    });
-
     ```
 
-6. Finally, we need to adjust our existing `listen` call.
+6. Add a plugin to your `ApolloServer` constructor to close the `SubscriptionServer`.
+
+    ```javascript:title=index.js
+    const server = new ApolloServer({
+      schema,
+      plugins: [{
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              subscriptionServer.close();
+            }
+          };
+        }
+      }],
+    });
+    ```
+
+7. Finally, we need to adjust our existing `listen` call.
 
     Most Express applications call `app.listen(...)`. **Change this to `httpServer.listen(...)`** with the same arguments. This way, the server starts listening on the HTTP and WebSocket transports simultaneously.
 
@@ -136,16 +146,25 @@ import typeDefs from "./typeDefs";
     resolvers,
   });
 
-  const server = new ApolloServer({
-    schema,
-  });
-  await server.start();
-  server.applyMiddleware({ app });
-
-  SubscriptionServer.create(
+  const subscriptionServer = SubscriptionServer.create(
     { schema, execute, subscribe },
     { server: httpServer, path: server.graphqlPath }
   );
+
+  const server = new ApolloServer({
+    schema,
+    plugins: [{
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            subscriptionServer.close();
+          }
+        };
+      }
+    }],
+  });
+  await server.start();
+  server.applyMiddleware({ app });
 
   const PORT = 4000;
   httpServer.listen(PORT, () =>

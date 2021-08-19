@@ -8,6 +8,7 @@ import {
   gql,
   AuthenticationError,
   ApolloServerPluginCacheControlDisabled,
+  ApolloServerPluginDrainHttpServer,
 } from 'apollo-server-core';
 import {
   ApolloServer,
@@ -34,24 +35,34 @@ const resolvers = {
 };
 
 describe('apollo-server-express', () => {
-  let server: ApolloServer;
-  let httpServer: http.Server;
+  let serverToCleanUp: ApolloServer | null = null;
   testApolloServer(
     async (config: ApolloServerExpressConfig, options) => {
-      server = new ApolloServer(config);
+      serverToCleanUp = null;
+      const app = express();
+      const httpServer = http.createServer(app);
+      const server = new ApolloServer({
+        ...config,
+        plugins: [
+          ...(config.plugins ?? []),
+          ApolloServerPluginDrainHttpServer({
+            httpServer: httpServer,
+          }),
+        ],
+      });
       if (!options?.suppressStartCall) {
         await server.start();
+        serverToCleanUp = server;
       }
-      const app = express();
       server.applyMiddleware({ app, path: options?.graphqlPath });
-      httpServer = await new Promise<http.Server>((resolve) => {
-        const s: http.Server = app.listen({ port: 0 }, () => resolve(s));
+      await new Promise((resolve) => {
+        httpServer.once('listening', resolve);
+        httpServer.listen({ port: 0 });
       });
       return createServerInfo(server, httpServer);
     },
     async () => {
-      if (httpServer?.listening) await httpServer.close();
-      if (server) await server.stop();
+      await serverToCleanUp?.stop();
     },
   );
 });

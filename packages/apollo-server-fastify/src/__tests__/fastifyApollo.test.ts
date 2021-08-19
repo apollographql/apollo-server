@@ -1,32 +1,11 @@
-import fastify from 'fastify';
-import { Server } from 'http';
+import fastify, { FastifyInstance } from 'fastify';
 import { ApolloServer } from '../ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 import { Config } from 'apollo-server-core';
-
-async function createApp(options: CreateAppOptions = {}) {
-  const app = fastify();
-
-  const server = new ApolloServer(
-    (options.graphqlOptions as Config) || { schema: Schema },
-  );
-  await server.start();
-
-  app.register(server.createHandler());
-  await app.listen(0);
-
-  return app.server;
-}
-
-async function destroyApp(app: Server) {
-  if (!app || !app.close) {
-    return;
-  }
-  await new Promise((resolve) => app.close(resolve));
-}
+import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 describe('fastifyApollo', () => {
   it('throws error if called without schema', function () {
@@ -36,6 +15,40 @@ describe('fastifyApollo', () => {
   });
 });
 
+function fastifyAppClosePlugin(app: FastifyInstance): ApolloServerPlugin {
+  return {
+    async serverWillStart() {
+      return {
+        async drainServer() {
+          await app.close();
+        },
+      };
+    },
+  };
+}
+
 describe('integration:Fastify', () => {
-  testSuite({ createApp, destroyApp, integrationName: 'fastify' });
+  let serverToCleanUp: ApolloServer | null = null;
+  let app: FastifyInstance | null = null;
+  testSuite({
+    async createApp(options: CreateAppOptions = {}) {
+      serverToCleanUp = null;
+      app = fastify();
+      const config = (options.graphqlOptions as Config) || { schema: Schema };
+      const server = new ApolloServer({
+        ...config,
+        plugins: [...(config.plugins ?? []), fastifyAppClosePlugin(app)],
+      });
+      await server.start();
+      serverToCleanUp = server;
+      app.register(server.createHandler());
+      await app.listen(0);
+
+      return app.server;
+    },
+    async destroyApp() {
+      await serverToCleanUp?.stop();
+    },
+    integrationName: 'fastify',
+  });
 });

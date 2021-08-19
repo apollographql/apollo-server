@@ -77,6 +77,7 @@ module.exports = {
             'api/plugin/usage-reporting',
             'api/plugin/schema-reporting',
             'api/plugin/inline-trace',
+            'api/plugin/drain-http-server',
             'api/plugin/cache-control',
             'api/plugin/landing-pages',
           ],
