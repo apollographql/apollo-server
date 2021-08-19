@@ -1,11 +1,13 @@
 [build]
-  base    = "docs/"
-  publish = "docs/public/"
-  command = "gatsby build --prefix-paths && mkdir -p docs/apollo-server && mv public/* docs/apollo-server && mv docs public/ && mv public/docs/apollo-server/_redirects public"
+  base    = "docs"
+  publish = "docs/public"
+  command = "gatsby build"
 
 [build.environment]
   NODE_VERSION = "16"
   NPM_VERSION  = "7"
 
-[context.deploy-preview]
-  command = "gatsby build"
+[context.production.environment]
+  PREFIX_PATHS = "true"
+[context.branch-deploy.environment]
+  PREFIX_PATHS = "true"
