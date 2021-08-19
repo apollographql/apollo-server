@@ -177,6 +177,8 @@ export class ApolloServerBase<
 
     this.parseOptions = parseOptions;
     this.context = context;
+    this.experimental_approximateDocumentStoreMiB =
+      experimental_approximateDocumentStoreMiB;
 
     // Allow tests to override process.env.NODE_ENV. As a bonus, this means
     // we're only reading the env var once in the constructor, which is faster
