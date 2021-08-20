@@ -4,7 +4,9 @@ sidebar_title: Request format
 description: How to send requests to Apollo Server over HTTP
 ---
 
-> By default, almost every GraphQL IDE and client library takes care of sending operations in a format that Apollo Server supports. This article describes that format.
+By default, almost every GraphQL IDE and client library takes care of sending operations in a format that Apollo Server supports. This article describes that format.
+
+> This format is also described on [graphql.org](https://graphql.org/learn/serving-over-http/) and in [this preliminary spec](https://github.com/graphql/graphql-over-http).
 
 Apollo Server accepts queries and mutations sent as POST requests. It also accepts queries sent as GET requests.
 
