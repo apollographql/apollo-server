@@ -4,7 +4,7 @@ sidebar_title: Request format
 description: How to send requests to Apollo Server over HTTP
 ---
 
-> By default, almost every GraphQL client library takes care of sending operations in a format that Apollo Server supports. This article describes that format.
+> By default, almost every GraphQL IDE and client library takes care of sending operations in a format that Apollo Server supports. This article describes that format.
 
 Apollo Server accepts queries and mutations sent as POST requests. It also accepts queries sent as GET requests.
 
@@ -32,23 +32,20 @@ query GetBestSellers($category:ProductCategory) {
 }
 ```
 
-The `variables` field can be an object or a JSON-encoded string. The following is equivalent to the previous body:
+Note that `operationName` _isn't_ required for this particular request body, because `query` includes only one operation definition.
 
-```json{4}
-{
-  "query":"query GetBestSellers($category:ProductCategory){bestSellers(category: $category){title}}",
-  "operationName": "GetBestSellers",
-  "variables": "{ \"category\": \"BOOKS\" }"
-}
-```
+You can execute this query against an Apollo-hosted example server right now with the following `curl` command:
 
-You can try this query out right now with the following `curl` command:
-
-```bash
+```sh
 curl --request POST \
+  -H 'Content-Type: application/json' \
   --data '{"query":"query GetBestSellers($category:ProductCategory){bestSellers(category: $category){title}}", "operationName":"GetBestSellers", "variables":{"category":"BOOKS"}}' \
   https://rover.apollo.dev/quickstart/products/graphql
 ```
+
+> Apollo Server's default landing page provides a `curl` command you can use to execute a test query on your own server:
+>
+> <img class="screenshot" src="./images/as-landing-page-production.jpg" width="500" />
 
 ### Batching
 
@@ -56,10 +53,10 @@ You can send a batch of queries in a single POST request by providing a JSON-enc
 
 ```json
 [
-  { 
-    "query": "query { testString }" 
-  }, 
-  { 
+  {
+    "query": "query { testString }"
+  },
+  {
     "query": "query AnotherQuery{ test(who: \"you\" ) }"
   }
 ]
@@ -69,7 +66,7 @@ If you send a batched request, Apollo Server responds with a corresponding array
 
 ## GET requests
 
-Apollo Server also accepts GET requests for queries (but not mutations). With a GET request, query details (`query`, `operationName`, `variables`) are provided as URL query parameters.
+Apollo Server also accepts GET requests for queries (but not mutations). With a GET request, query details (`query`, `operationName`, `variables`) are provided as URL query parameters. The `variables` option is a URL-escaped JSON object.
 
 > Sending queries as GET requests can help with [CDN caching](./performance/caching/#caching-with-a-cdn).
 

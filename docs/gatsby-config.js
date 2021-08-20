@@ -46,10 +46,10 @@ module.exports = {
             'data/errors',
             'data/file-uploads',
             'data/subscriptions',
-            'requests',
           ],
           'Development Workflow': [
             'testing/build-run-queries',
+            'requests',
             'testing/mocking',
             'testing/testing',
             '[Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/)',
