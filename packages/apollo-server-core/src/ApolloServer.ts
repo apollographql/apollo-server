@@ -122,6 +122,7 @@ export class ApolloServerBase<
   private toDispose = new Set<() => Promise<void>>();
   private toDisposeLast = new Set<() => Promise<void>>();
   private experimental_approximateDocumentStoreMiB: Config['experimental_approximateDocumentStoreMiB'];
+  private stopOnTerminationSignals: boolean;
   private landingPage: LandingPage | null = null;
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
@@ -191,6 +192,15 @@ export class ApolloServerBase<
         : process.env.NODE_ENV;
     const isDev = nodeEnv !== 'production';
 
+    // We handle signals if it was explicitly requested, or if we're in Node,
+    // not in a test, not in a serverless framework, and it wasn't explicitly
+    // turned off. (We only actually register the signal handlers once we've
+    // successfully started up, because there's nothing to stop otherwise.)
+    this.stopOnTerminationSignals =
+      typeof stopOnTerminationSignals === 'boolean'
+        ? stopOnTerminationSignals
+        : isNodeLike && nodeEnv !== 'test' && !this.serverlessFramework();
+
     // if this is local dev, introspection should turned on
     // in production, we can manually turn introspection on by passing {
     // introspection: true } to the constructor of ApolloServer
@@ -226,47 +236,6 @@ export class ApolloServerBase<
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
     this.ensurePluginInstantiation(plugins, isDev);
-
-    // We handle signals if it was explicitly requested, or if we're in Node,
-    // not in a test, and it wasn't explicitly turned off.
-    if (
-      typeof stopOnTerminationSignals === 'boolean'
-        ? stopOnTerminationSignals
-        : isNodeLike && nodeEnv !== 'test'
-    ) {
-      const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
-      let receivedSignal = false;
-      signals.forEach((signal) => {
-        // Note: Node only started sending signal names to signal events with
-        // Node v10 so we can't use that feature here.
-        const handler: NodeJS.SignalsListener = async () => {
-          if (receivedSignal) {
-            // If we receive another SIGINT or SIGTERM while we're waiting
-            // for the server to stop, just ignore it.
-            return;
-          }
-          receivedSignal = true;
-          try {
-            await this.stop();
-          } catch (e) {
-            this.logger.error(`stop() threw during ${signal} shutdown`);
-            this.logger.error(e);
-            // Can't rely on the signal handlers being removed.
-            process.exit(1);
-          }
-          // Note: this.stop will call the toDisposeLast handlers below, so at
-          // this point this handler will have been removed and we can re-kill
-          // ourself to die with the appropriate signal exit status. this.stop
-          // takes care to call toDisposeLast last, so the signal handler isn't
-          // removed until after the rest of shutdown happens.
-          process.kill(process.pid, signal);
-        };
-        process.on(signal, handler);
-        this.toDisposeLast.add(async () => {
-          process.removeListener(signal, handler);
-        });
-      });
-    }
 
     if (gateway) {
       // ApolloServer has been initialized but we have not yet tried to load the
@@ -483,12 +452,50 @@ export class ApolloServerBase<
         phase: 'started',
         schemaManager,
       };
+      this.maybeRegisterTerminationSignalHandlers(['SIGINT', 'SIGTERM']);
     } catch (error) {
       this.state = { phase: 'failed to start', error };
       throw error;
     } finally {
       barrier.resolve();
     }
+  }
+
+  private maybeRegisterTerminationSignalHandlers(signals: NodeJS.Signals[]) {
+    if (!this.stopOnTerminationSignals) {
+      return;
+    }
+
+    let receivedSignal = false;
+    const signalHandler: NodeJS.SignalsListener = async (signal) => {
+      if (receivedSignal) {
+        // If we receive another SIGINT or SIGTERM while we're waiting
+        // for the server to stop, just ignore it.
+        return;
+      }
+      receivedSignal = true;
+      try {
+        await this.stop();
+      } catch (e) {
+        this.logger.error(`stop() threw during ${signal} shutdown`);
+        this.logger.error(e);
+        // Can't rely on the signal handlers being removed.
+        process.exit(1);
+      }
+      // Note: this.stop will call the toDisposeLast handlers below, so at
+      // this point this handler will have been removed and we can re-kill
+      // ourself to die with the appropriate signal exit status. this.stop
+      // takes care to call toDisposeLast last, so the signal handler isn't
+      // removed until after the rest of shutdown happens.
+      process.kill(process.pid, signal);
+    };
+
+    signals.forEach((signal) => {
+      process.on(signal, signalHandler);
+      this.toDisposeLast.add(async () => {
+        process.removeListener(signal, signalHandler);
+      });
+    });
   }
 
   // This method is called at the beginning of each GraphQL request by
