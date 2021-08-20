@@ -289,9 +289,11 @@ In certain cases, Apollo Server installs some of its built-in plugins automatica
 </td>
 <td>
 
-By default (when running in Node and when the `NODE_ENV` environment variable does not equal `test`), whenever Apollo Server receives a `SIGINT` or `SIGTERM` signal, it calls `await this.stop()` on itself. (While this call to `this.stop()` is running, it ignores all `SIGINT` and `SIGTERM` signals.) It then sends that same signal to itself to continue process shutdown.
+By default (when running in Node when the `NODE_ENV` environment variable does not equal `test` and not using a [serverless-specific package](../integrations/middleware/#all-supported-packages)), whenever Apollo Server receives a `SIGINT` or `SIGTERM` signal, it calls `await this.stop()` on itself. (While this call to `this.stop()` is running, it ignores all `SIGINT` and `SIGTERM` signals.) It then sends that same signal to itself to continue process shutdown.
 
 Set this option to `false` to disable this default behavior, or to `true` to enable the behavior even when `NODE_ENV` _does_ equal `test`.
+
+The signal handler is installed after [`start()`](#start) returns successfully.
 
 You can also manually call `stop()` in other contexts. Note that `stop()` is asynchronous, so it isn't useful in a `process.on('exit')` handler.
 
@@ -515,7 +517,7 @@ The `start` method triggers the following actions:
 
 ## `stop`
 
-`ApolloServer.stop()` is an async method that tells all of Apollo Server's background tasks to complete. It calls and awaits all [`serverWillStop` plugin handlers](../integrations/plugins-event-reference/#serverwillstop) (including the [usage reporting plugin](./plugin/usage-reporting/)'s handler, which sends a final usage report to Apollo Studio). This method takes no arguments.
+`ApolloServer.stop()` is an async method that tells all of Apollo Server's background tasks to complete. It calls and awaits all [`serverWillStop` plugin handlers](../integrations/plugins-event-reference/#serverwillstop) (including the [usage reporting plugin](./plugin/usage-reporting/)'s handler, which sends a final usage report to Apollo Studio). This method takes no arguments. You should only call it after [`start()`](#start) returns successfully (or [`listen()`](#listen) if you're using the batteries-included `apollo-server` package).
 
 If your server is a [federated gateway](https://www.apollographql.com/docs/federation/gateway/), `stop` also stops gateway-specific background activities, such as polling for updated service configuration.
 
