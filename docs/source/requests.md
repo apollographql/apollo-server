@@ -1,52 +1,80 @@
 ---
-title: POST and GET format
-description: How to send requests to Apollo Server over HTTP.
+title: Operation request format
+sidebar_title: Request format
+description: How to send requests to Apollo Server over HTTP
 ---
 
-Apollo Server accepts both GET and POST requests.
+By default, almost every GraphQL IDE and client library takes care of sending operations in a format that Apollo Server supports. This article describes that format.
+
+> This format is also described on [graphql.org](https://graphql.org/learn/serving-over-http/) and in [this preliminary spec](https://github.com/graphql/graphql-over-http).
+
+Apollo Server accepts queries and mutations sent as POST requests. It also accepts queries sent as GET requests.
 
 ## POST requests
 
-Apollo Server accepts POST requests with a JSON body. A valid request must contain either a `query` or an `operationName` (or both, in case of a named query), and may include `variables.` Here's an example for a valid body of a post request:
+Apollo Server accepts POST requests with a JSON body. A valid request contains a `query` field, along with optional `variables` and an `operationName` (if `query` contains multiple possible operations).
 
-```js
-{
-  "query": "query aTest($arg1: String!) { test(who: $arg1) }",
-  "operationName": "aTest",
-  "variables": { "arg1": "me" }
+Let's say we want to execute the following query:
+
+```graphql
+query GetBestSellers($category:ProductCategory) {
+  bestSellers(category: $category) {
+    title
+  }
 }
 ```
 
-Variables can be an object or a JSON-encoded string. I.e. the following is equivalent to the previous query:
+ Here's an example of a valid POST request body for that query:
 
-```js
+```json
 {
-  "query": "query aTest($arg1: String!) { test(who: $arg1) }",
-  "operationName": "aTest",
-  "variables": "{ \"arg1\": \"me\" }"
+  "query":"query GetBestSellers($category:ProductCategory){bestSellers(category: $category){title}}",
+  "operationName": "GetBestSellers",
+  "variables": { "category": "BOOKS" }
 }
 ```
+
+Note that `operationName` _isn't_ required for this particular request body, because `query` includes only one operation definition.
+
+You can execute this query against an Apollo-hosted example server right now with the following `curl` command:
+
+```sh
+curl --request POST \
+  -H 'Content-Type: application/json' \
+  --data '{"query":"query GetBestSellers($category:ProductCategory){bestSellers(category: $category){title}}", "operationName":"GetBestSellers", "variables":{"category":"BOOKS"}}' \
+  https://rover.apollo.dev/quickstart/products/graphql
+```
+
+> Apollo Server's default landing page provides a `curl` command you can use to execute a test query on your own server:
+>
+> <img class="screenshot" src="./images/as-landing-page-production.jpg" width="500" />
 
 ### Batching
 
-A batch of queries can be sent by simply sending a JSON-encoded array of queries, e.g.
+You can send a batch of queries in a single POST request by providing a JSON-encoded array of query objects, like so:
 
-```js
-[{ query: '{ testString }' }, { query: 'query q2{ test(who: "you" ) }' }];
+```json
+[
+  {
+    "query": "query { testString }"
+  },
+  {
+    "query": "query AnotherQuery{ test(who: \"you\" ) }"
+  }
+]
 ```
 
-If a batch of queries is sent, the response will be an array of GraphQL responses.
-
-If Apollo Server is running under a different origin than your client, you will need to enable CORS support on the server, or proxy the GraphQL requests through a web server under the main origin.
+If you send a batched request, Apollo Server responds with a corresponding array of GraphQL responses.
 
 ## GET requests
 
-Apollo Server also accepts GET requests. A GET request must pass query and optionally variables and operationName in the URL.
+Apollo Server also accepts GET requests for queries (but not mutations). With a GET request, query details (`query`, `operationName`, `variables`) are provided as URL query parameters. The `variables` option is a URL-escaped JSON object.
 
-Here is the same query from above in a well-formatted GET request to Apollo Server:
+> Sending queries as GET requests can help with [CDN caching](./performance/caching/#caching-with-a-cdn).
 
+Here's the same query from [POST requests](#post-requests) formatted for a `curl` GET request:
+
+```sh
+curl --request GET \
+  https://rover.apollo.dev/quickstart/products/graphql?query=query%20GetBestSellers%28%24category%3AProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D
 ```
-GET /graphql?query=query%20aTest(%24arg1%3A%20String!)%20%7B%20test(who%3A%20%24arg1)%20%7D&operationName=aTest&variables=me
-```
-
-caveat: Mutations cannot be executed via GET requests.

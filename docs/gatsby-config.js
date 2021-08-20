@@ -49,6 +49,7 @@ module.exports = {
           ],
           'Development Workflow': [
             'testing/build-run-queries',
+            'requests',
             'testing/mocking',
             'testing/testing',
             '[Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/)',
