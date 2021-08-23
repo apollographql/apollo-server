@@ -61,5 +61,10 @@
       "matchPackageNames": ["react", "react-dom"],
       "allowedVersions": "16.x",
     },
+    {
+      // Override this value set in apollo-open-source and apollo-docs back to the default.
+      // It's nice to be able to see PRs for everything in the Dependency Dashboard.
+      prCreation: "immediate",
+    }
   ]
 }
