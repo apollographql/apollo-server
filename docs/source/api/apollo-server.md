@@ -190,6 +190,22 @@ An array containing custom functions to use as additional [validation rules](htt
 
 
 <tr>
+<td>
+
+##### `documentStore`
+
+`KeyValueCache<DocumentNode>` or `boolean`
+</td>
+<td>
+
+The server checks the SHA-256 hash of each incoming operation against DocumentNodes cached in the `documentStore` and skips unnecessary parsing and validation if a match is found. The `documentStore` does not store the results of queries. Set this value when you want to change the cache size or store the cache information in an alternate location. Do not re-use a cache between multiple `ApolloServer` instances unless you prefix the entries uniquely per `ApolloServer` (for example using [PrefixingKeyValueCache](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/PrefixingKeyValueCache.ts)).
+
+The default value is an [InMemoryLRUCache](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/InMemoryLRUCache.ts) with a default size of 30MiB, which is usually sufficient unless the server processes a large number of unique operations. Pass `false` to disable caching entirely.
+</td>
+</tr>
+
+
+<tr>
 <td colspan="2">
 
 **Networking options**

@@ -28,6 +28,7 @@ import type {
   Config,
   Context,
   ContextFunction,
+  DocumentStore,
   PluginDefinition,
 } from './types';
 
@@ -81,7 +82,7 @@ export type SchemaDerivedData = {
   // A store that, when enabled (default), will store the parsed and validated
   // versions of operations in-memory, allowing subsequent parses/validates
   // on the same operation to be executed immediately.
-  documentStore?: InMemoryLRUCache<DocumentNode>;
+  documentStore?: DocumentStore;
 };
 
 type ServerState =
@@ -172,6 +173,7 @@ export class ApolloServerBase<
       mocks,
       mockEntireSchema,
       experimental_approximateDocumentStoreMiB,
+      documentStore,
       ...requestOptions
     } = this.config;
 
@@ -671,8 +673,14 @@ export class ApolloServerBase<
   private generateSchemaDerivedData(schema: GraphQLSchema): SchemaDerivedData {
     const schemaHash = generateSchemaHash(schema!);
 
-    // Initialize the document store.  This cannot currently be disabled.
-    const documentStore = this.initializeDocumentStore();
+    // normalize documentStore so it's either a DocumentStore or undefined
+    const configValue = this.config.documentStore;
+    const documentStore =
+      configValue === undefined || configValue === true
+        ? this.initializeDocumentStore()
+        : configValue === false
+        ? undefined
+        : configValue;
 
     return {
       schema,
