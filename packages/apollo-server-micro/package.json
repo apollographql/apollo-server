@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-micro",
-  "version": "3.1.2",
+  "version": "3.2.0",
   "description": "Production-ready Node.js GraphQL server for Micro",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
