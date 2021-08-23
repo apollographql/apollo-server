@@ -9,6 +9,16 @@
   "enabledManagers": ["npm"],
   "dependencyDashboard": true,
   "packageRules": [
+    // Bunch up all non-major dependencies into a single PR.  In the common case
+    // where the upgrades apply cleanly, this causes less noise and is resolved faster
+    // than starting a bunch of upgrades in parallel for what may turn out to be
+    // a suite of related packages all released at once. (This is above the docs sections
+    // so that the docs groupNames defined in renovate-config-apollo-docs take precedence.)
+    {
+      "groupName": "all non-major dependencies",
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupSlug": "all-minor-patch",
+    },
     {
       "matchPackageNames": ["@types/node"],
       "allowedVersions": "12.x"
@@ -50,15 +60,6 @@
       ],
       "matchPackageNames": ["react", "react-dom"],
       "allowedVersions": "16.x",
-    },
-    // Bunch up all non-major dependencies into a single PR.  In the common case
-    // where the upgrades apply cleanly, this causes less noise and is resolved faster
-    // than starting a bunch of upgrades in parallel for what may turn out to be
-    // a suite of related packages all released at once.
-    {
-      "groupName": "all non-major dependencies",
-      "matchUpdateTypes": ["patch", "minor"],
-      "groupSlug": "all-minor-patch",
     },
   ]
 }
