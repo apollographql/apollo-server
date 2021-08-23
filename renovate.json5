@@ -8,6 +8,10 @@
   // Disable circleci manager; see apollographql/federation's renovate file for details.
   "enabledManagers": ["npm"],
   "dependencyDashboard": true,
+  // Override this value set in apollo-open-source back to the default.
+  // It's nice to be able to see PRs for everything in the Dependency Dashboard.
+  // We need to override the apollo-docs setting of it later as well.
+  prCreation: "immediate",
   "packageRules": [
     // Bunch up all non-major dependencies into a single PR.  In the common case
     // where the upgrades apply cleanly, this causes less noise and is resolved faster
@@ -50,7 +54,8 @@
       "baseBranches": [
         "main",
         "version-2"
-      ]
+      ],
+      prCreation: "immediate",
     },
     // The current Apollo Gatsby theme does not support a version of Gatsby
     // that supports React 17.
@@ -61,10 +66,5 @@
       "matchPackageNames": ["react", "react-dom"],
       "allowedVersions": "16.x",
     },
-    {
-      // Override this value set in apollo-open-source and apollo-docs back to the default.
-      // It's nice to be able to see PRs for everything in the Dependency Dashboard.
-      prCreation: "immediate",
-    }
   ]
 }
