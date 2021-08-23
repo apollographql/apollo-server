@@ -80,6 +80,18 @@ export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin {
 }
 //#endregion
 
+//#region Drain HTTP server
+import type { ApolloServerPluginDrainHttpServerOptions } from './drainHttpServer';
+export type { ApolloServerPluginDrainHttpServerOptions } from './drainHttpServer';
+export function ApolloServerPluginDrainHttpServer(
+  options: ApolloServerPluginDrainHttpServerOptions,
+): ApolloServerPlugin {
+  return require('./drainHttpServer').ApolloServerPluginDrainHttpServer(
+    options,
+  );
+}
+//#endregion
+
 //#region LandingPage
 import type { InternalApolloServerPlugin } from '../internalPlugin';
 export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin {

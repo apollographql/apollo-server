@@ -1,0 +1,90 @@
+---
+title: "API Reference: Drain HTTP server plugin"
+sidebar_title: Drain HTTP server
+api_reference: true
+---
+
+## Using the plugin
+
+This API reference documents the `ApolloServerPluginDrainHttpServer` plugin.
+
+This plugin is designed for use with [`apollo-server-express` and other framework-specific packages](../../integrations/middleware/#all-supported-packages) which are built on top of [Node `http.Server`s](https://nodejs.org/api/http.html#http_class_http_server). It is highly recommended that you use this plugin with packages like `apollo-server-express` if you want your server to shut down gracefully.
+
+You do not need to explicitly use this plugin with the batteries-included `apollo-server` package: that package automatically uses this plugin internally.
+
+When you use this plugin, Apollo Server will drain your HTTP server when you call the `stop()` method (which is also called for you when the `SIGTERM` and `SIGINT` signals are received, unless disabled with the [`stopOnTerminationSignals` constructor option](../apollo-server/#stoponterminationsignals)). Specifically, it will:
+
+* Stop listening for new connections
+* Close idle connections (i.e., connections with no current HTTP request)
+* Close active connections whenever they become idle
+* Wait for all connections to be closed
+* After a grace period, if any connections remain active, forcefully close them.
+
+This plugin is exported from the `apollo-server-core` package. It is tested with `apollo-server-express`, `apollo-server-koa`, and `apollo-server-fastify`. (If you're using Hapi, you should instead use the `ApolloServerPluginStopHapiServer` plugin exported from the `apollo-server-hapi` package.)
+
+Here's a basic example of how to use it with Express. See the [framework integrations docs](../../integrations/middleware/) for examples of how to use it with other frameworks.
+
+```js
+const express = require('express');
+const { ApolloServer } = require('apollo-server-express');
+const { ApolloServerPluginDrainHttpServer } = require('apollo-server-core');
+const { typeDefs, resolvers } = require('./schema');
+
+async function startApolloServer() {
+  const app = express();
+  const httpServer = http.createServer(app);
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  });
+  await server.start();
+
+  // Mount Apollo middleware here.
+  server.applyMiddleware({ app });
+  await new Promise(resolve => httpServer.listen({ port: 4000 }, resolve));
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
+  return { server, app };
+}
+```
+
+## Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `httpServer`
+
+[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)
+</td>
+<td>
+
+The server to drain; required.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `stopGracePeriodMillis`
+
+`number`
+</td>
+<td>
+
+How long to wait before forcefully closing non-idle connections. Defaults to `10_000` (ten seconds).
+</td>
+</tr>
+
+</tbody>
+</table>

@@ -1,5 +1,7 @@
 const http = require('http');
-const { Stopper } = require('../../../dist/stoppable.js');
+const {
+  Stopper,
+} = require('../../../../../dist/plugin/drainHttpServer/stoppable.js');
 
 const grace = Number(process.argv[2] || Infinity);
 let stopper;

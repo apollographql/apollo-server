@@ -5,17 +5,6 @@ import testSuite, {
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 
-async function createApp(options: CreateAppOptions = {}) {
-  const app = express();
-
-  const server = new ApolloServer(
-    (options.graphqlOptions as ApolloServerExpressConfig) || { schema: Schema },
-  );
-  await server.start();
-  server.applyMiddleware({ app });
-  return app;
-}
-
 describe('expressApollo', () => {
   it('throws error if called without schema', function () {
     expect(() => new ApolloServer(undefined as any)).toThrow(
@@ -25,5 +14,23 @@ describe('expressApollo', () => {
 });
 
 describe('integration:Express', () => {
-  testSuite({ createApp });
+  let serverToCleanUp: ApolloServer | null = null;
+  testSuite({
+    createApp: async function createApp(options: CreateAppOptions = {}) {
+      serverToCleanUp = null;
+      const app = express();
+      const server = new ApolloServer(
+        (options.graphqlOptions as ApolloServerExpressConfig) || {
+          schema: Schema,
+        },
+      );
+      await server.start();
+      serverToCleanUp = server;
+      server.applyMiddleware({ app });
+      return app;
+    },
+    destroyApp: async function () {
+      await serverToCleanUp?.stop();
+    },
+  });
 });

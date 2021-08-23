@@ -176,7 +176,11 @@ export interface ServerInfo<AS extends ApolloServerBase> {
 export interface CreateServerFunc<AS extends ApolloServerBase> {
   (
     config: Config,
-    options?: { suppressStartCall?: boolean; graphqlPath?: string },
+    options?: {
+      suppressStartCall?: boolean;
+      graphqlPath?: string;
+      noRequestsMade?: boolean;
+    },
   ): Promise<ServerInfo<AS>>;
 }
 
@@ -2174,7 +2178,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
     describe('Response caching', () => {
       let clock: FakeTimers.Clock;
       beforeAll(() => {
-        clock = FakeTimers.install();
+        // These tests use the default InMemoryLRUCache, which is backed by the
+        // lru-cache npm module, whose maxAge feature is based on `Date.now()`
+        // (no setTimeout or anything like that). So we want to use fake timers
+        // just for Date. (Faking all the timer methods messes up things like a
+        // setImmediate in ApolloServerPluginDrainHttpServer.)
+        clock = FakeTimers.install({ toFake: ['Date'] });
       });
 
       afterAll(() => {
@@ -2726,11 +2735,17 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const { gateway, triggers } = makeGatewayMock({ optionsSpy });
         triggers.resolveLoad({ schema, executor: async () => ({}) });
-        await createApolloServer({
-          gateway,
-          apollo: { key: 'service:tester:1234abc', graphRef: 'tester@staging' },
-          logger: quietLogger,
-        });
+        await createApolloServer(
+          {
+            gateway,
+            apollo: {
+              key: 'service:tester:1234abc',
+              graphRef: 'tester@staging',
+            },
+            logger: quietLogger,
+          },
+          { noRequestsMade: true },
+        );
 
         expect(optionsSpy).toHaveBeenLastCalledWith({
           apollo: {

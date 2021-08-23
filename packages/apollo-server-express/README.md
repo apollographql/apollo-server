@@ -6,44 +6,8 @@
 
 This is the Express integration of Apollo Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)
 
-```shell
-npm install apollo-server-express graphql
-```
 
-## Express
-
-```js
-const express = require('express');
-const { ApolloServer, gql } = require('apollo-server-express');
-
-async function startApolloServer() {
-  // Construct a schema, using GraphQL schema language
-  const typeDefs = gql`
-    type Query {
-      hello: String
-    }
-  `;
-
-  // Provide resolver functions for your schema fields
-  const resolvers = {
-    Query: {
-      hello: () => 'Hello world!',
-    },
-  };
-
-  const server = new ApolloServer({ typeDefs, resolvers });
-  await server.start();
-
-  const app = express();
-  server.applyMiddleware({ app });
-
-  await new Promise(resolve => app.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
-  return { server, app };
-}
-```
-
-## Connect
+A full example of how to use `apollo-server-express` can be found in [the docs](https://www.apollographql.com/docs/apollo-server/integrations/middleware/#apollo-server-express).
 
 Before Apollo Server 3, we officially supported using this package with `connect` as well. `connect` is an older framework that `express` evolved from. For now, we believe that this package is still compatible with `connect` and we even run tests against `connect`, but we may choose to break this compatibility at some point without a major version bump. If you rely on the ability to use Apollo Server with `connect`, you may wish to make your own integration.
 

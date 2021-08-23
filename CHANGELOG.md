@@ -9,6 +9,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+- `apollo-server-core`: Previously, only the batteries-included `apollo-server` package supported a graceful shutdown. Now the integrations support it as well, if you tell your `ApolloServer` which HTTP server to drain with the new `ApolloServerPluginDrainHttpServer` plugin. This plugin implements a new `drainServer` plugin hook. For `apollo-server-hapi` you can use `ApolloServerPluginStopHapiServer` instead. [PR #5635](https://github.com/apollographql/apollo-server/pull/5635)
 - `apollo-server-core`: Fix `experimental_approximateDocumentStoreMiB` option, which seems to have never worked before. [PR #5629](https://github.com/apollographql/apollo-server/pull/5629)
 - `apollo-server-core`: Only register `SIGINT` and `SIGTERM` handlers once the server successfully starts up; trying to call `stop` on a server that hasn't successfully started had undefined behavior. By default, don't register the handlers in serverless integrations, which don't have the same lifecycle as non-serverless integrations (eg, there's no explicit `start` call); you can still explicitly set `stopOnTerminationSignals` to override this default. [PR #5639](https://github.com/apollographql/apollo-server/pull/5639)
 
