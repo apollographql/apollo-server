@@ -9,6 +9,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+## v3.3.0
+
+- `apollo-server-core`: Error handling when a `serverWillStop` callback invoked by `server.stop()` (or `gateway.stop()`) throws is now consistent: the original call to `server.stop()` throws the error, and any concurrent and subsequent calls to `server.stop()` throw the same error. Prior to Apollo Server v2.22.0, the original call threw the error and the behavior of concurrent and subsequent calls was undefined (in practice, it would call shutdown handlers a second time). Apollo Server v2.22.0 intended to put these semantics into place where all three kinds of calls would throw, but due to bugs, the original call would return without error and concurrent calls would hang. (Subsequent calls would correctly throw the error.) In addition, errors thrown by the `drainServer` hook introduced in Apollo Server v3.2.0 are now handled in the same way. [Issue #5649](https://github.com/apollographql/apollo-server/issues/5649) [PR #5653](https://github.com/apollographql/apollo-server/pull/5653)
+
 ## v3.2.0
 
 **If you're using `apollo-server-express` or another framework integration**, we highly recommend that you enable the new graceful shutdown feature after upgrading to 3.2.0. See the docs for [`ApolloServerPluginDrainHttpServer`](https://www.apollographql.com/docs/apollo-server/api/plugin/drain-http-server/) or the [basic usage for your integration of choice](https://www.apollographql.com/docs/apollo-server/integrations/middleware/#basic-usage).

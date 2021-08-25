@@ -731,12 +731,13 @@ export class ApolloServerBase<
       barrier,
     };
 
-    await this.drainServers?.();
-
-    // Servers are drained. Prevent further operations from starting and call
-    // stop handlers.
-    this.state = { phase: 'stopping', barrier: resolvable() };
     try {
+      await this.drainServers?.();
+
+      // Servers are drained. Prevent further operations from starting and call
+      // stop handlers.
+      this.state = { phase: 'stopping', barrier };
+
       // We run shutdown handlers in two phases because we don't want to turn
       // off our signal listeners (ie, allow signals to kill the process) until
       // we've done the important parts of shutdown like running serverWillStop
@@ -745,7 +746,8 @@ export class ApolloServerBase<
       await Promise.all([...this.toDisposeLast].map((dispose) => dispose()));
     } catch (stopError) {
       this.state = { phase: 'stopped', stopError };
-      return;
+      barrier.resolve();
+      throw stopError;
     }
     this.state = { phase: 'stopped', stopError: null };
   }

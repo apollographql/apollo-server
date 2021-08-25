@@ -104,6 +104,33 @@ describe('ApolloServerBase start', () => {
     await expect(server.start()).rejects.toThrow('nope');
   });
 
+  it('stop throws on stop error', async () => {
+    let n = 1;
+    const server = new ApolloServerBase({
+      typeDefs,
+      resolvers,
+      plugins: [
+        {
+          async serverWillStart() {
+            return {
+              async serverWillStop() {
+                throw Error(`no way ${n++}`);
+              },
+            };
+          },
+        },
+      ],
+    });
+    await server.start();
+    const initialStopPromise = server.stop();
+    const concurrentStopPromise = server.stop();
+    await expect(initialStopPromise).rejects.toThrow('no way 1');
+    // A concurrent call will throw the same error again.
+    await expect(concurrentStopPromise).rejects.toThrow('no way 1');
+    // A subsequent call will throw the same error again.
+    await expect(server.stop()).rejects.toThrow('no way 1');
+  });
+
   // This is specific to serverless because on server-ful frameworks, you can't
   // get to executeOperation without server.start().
   it('execute throws redacted message on serverless startup error', async () => {
