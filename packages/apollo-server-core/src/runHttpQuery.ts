@@ -114,6 +114,8 @@ export function throwHttpGraphQLError<E extends Error>(
   );
 }
 
+const NODE_ENV = process.env.NODE_ENV;
+
 export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
@@ -131,15 +133,13 @@ export async function runHttpQuery(
     // debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
     return throwHttpGraphQLError(500, [e as Error], {
-      debug: debugFromNodeEnv(process.env.NODE_ENV),
+      debug: debugFromNodeEnv(NODE_ENV),
     });
   }
 
   if (options.debug === undefined) {
     const nodeEnv =
-      '__testing_nodeEnv__' in options
-        ? options.__testing_nodeEnv__
-        : process.env.NODE_ENV;
+      '__testing_nodeEnv__' in options ? options.__testing_nodeEnv__ : NODE_ENV;
     options.debug = debugFromNodeEnv(nodeEnv);
   }
 
