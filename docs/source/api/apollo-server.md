@@ -180,7 +180,7 @@ Providing a function is useful if you want to use a different root value dependi
 
 ##### `validationRules`
 
-`Array`
+`Array<Function>`
 </td>
 <td>
 
