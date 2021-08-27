@@ -3,7 +3,7 @@ import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
-import { Config } from 'apollo-server-core';
+import type { Config } from 'apollo-server-core';
 import express = require('express');
 import bodyParser = require('body-parser');
 import request from 'supertest';

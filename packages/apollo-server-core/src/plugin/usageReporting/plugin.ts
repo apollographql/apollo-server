@@ -4,7 +4,7 @@ import retry from 'async-retry';
 import { defaultUsageReportingSignature } from 'apollo-graphql';
 import { Report, ReportHeader, Trace } from 'apollo-reporting-protobuf';
 import { Response, fetch, Headers } from 'apollo-server-env';
-import {
+import type {
   GraphQLRequestListener,
   GraphQLServerListener,
 } from 'apollo-server-plugin-base';
@@ -16,7 +16,7 @@ import {
   GraphQLRequestContextWillSendResponse,
 } from 'apollo-server-types';
 import { createSignatureCache, signatureCacheKey } from './signatureCache';
-import {
+import type {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
 } from './options';

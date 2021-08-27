@@ -13,8 +13,8 @@ import {
   Kind,
   ParseOptions,
 } from 'graphql';
-import { DataSource } from 'apollo-datasource';
-import { PersistedQueryOptions } from './graphqlOptions';
+import type { DataSource } from 'apollo-datasource';
+import type { PersistedQueryOptions } from './graphqlOptions';
 import {
   symbolExecutionDispatcherWillResolveField,
   enablePluginsForSchemaResolvers,
@@ -30,7 +30,7 @@ import {
   formatApolloErrors,
   UserInputError,
 } from 'apollo-server-errors';
-import {
+import type {
   GraphQLRequest,
   GraphQLResponse,
   GraphQLRequestContext,
@@ -38,7 +38,7 @@ import {
   GraphQLExecutionResult,
   ValidationRule,
 } from 'apollo-server-types';
-import {
+import type {
   ApolloServerPlugin,
   GraphQLRequestListener,
   GraphQLRequestContextDidResolveSource,

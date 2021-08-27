@@ -1,6 +1,6 @@
 import url from 'url';
-import { IncomingMessage, ServerResponse } from 'http';
-import {
+import type { IncomingMessage, ServerResponse } from 'http';
+import type {
   Context as LambdaContext,
   ALBHandler,
   ALBEvent,

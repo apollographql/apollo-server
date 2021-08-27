@@ -5,7 +5,7 @@
 // specifying `version` when installing the plugin.
 
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
-import {
+import type {
   ApolloServerPlugin,
   GraphQLServerListener,
 } from 'apollo-server-plugin-base';

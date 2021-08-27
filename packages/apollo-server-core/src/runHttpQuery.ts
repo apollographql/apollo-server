@@ -10,8 +10,8 @@ import {
   GraphQLRequestContext,
   GraphQLResponse,
 } from './requestPipeline';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import {
+import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import type {
   WithRequired,
   GraphQLExecutionResult,
   ValueOrPromise,

@@ -47,7 +47,7 @@ import {
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
-import {
+import type {
   BaseContext,
   GraphQLRequestContext,
   GraphQLRequestContextExecutionDidStart,
@@ -55,7 +55,7 @@ import {
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
-import { AddressInfo } from 'net';
+import type { AddressInfo } from 'net';
 import request from 'supertest';
 
 const quietLogger = loglevel.getLogger('quiet');

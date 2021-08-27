@@ -22,9 +22,14 @@ import type {
   LandingPage,
 } from 'apollo-server-plugin-base';
 
-import { GraphQLServerOptions } from './graphqlOptions';
+import type { GraphQLServerOptions } from './graphqlOptions';
 
-import { Config, Context, ContextFunction, PluginDefinition } from './types';
+import type {
+  Config,
+  Context,
+  ContextFunction,
+  PluginDefinition,
+} from './types';
 
 import { generateSchemaHash } from './utils/schemaHash';
 import {
@@ -36,7 +41,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { Logger, SchemaHash, ApolloConfig } from 'apollo-server-types';
+import type { Logger, SchemaHash, ApolloConfig } from 'apollo-server-types';
 import { cloneObject } from './runHttpQuery';
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';

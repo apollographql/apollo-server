@@ -1,8 +1,8 @@
 import { gql } from '../..';
 import { fetch, Headers, Request } from 'apollo-server-env';
-import { GraphQLRequest, Logger } from 'apollo-server-types';
+import type { GraphQLRequest, Logger } from 'apollo-server-types';
 import { print } from 'graphql';
-import {
+import type {
   SchemaReport,
   SchemaReportMutationVariables,
   SchemaReportMutation,

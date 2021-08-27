@@ -3,7 +3,7 @@ import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
-import { Config } from 'apollo-server-core';
+import type { Config } from 'apollo-server-core';
 
 import { ApolloServer } from '../ApolloServer';
 

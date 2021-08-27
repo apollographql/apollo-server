@@ -1,5 +1,5 @@
-import { GraphQLError, DocumentNode } from 'graphql';
-import {
+import type { GraphQLError, DocumentNode } from 'graphql';
+import type {
   GraphQLRequestContextDidResolveOperation,
   Logger,
   GraphQLRequestContext,

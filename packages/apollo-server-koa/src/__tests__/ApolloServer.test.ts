@@ -15,7 +15,7 @@ import {
   createServerInfo,
   createApolloFetch,
 } from 'apollo-server-integration-testsuite';
-import { ApolloServer } from '../ApolloServer';
+import type { ApolloServer } from '../ApolloServer';
 
 const typeDefs = gql`
   type Query {

@@ -41,7 +41,7 @@ export {
 
 // This currently provides the ability to have syntax highlighting as well as
 // consistency between client and server gql tags
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 import gqlTag from 'graphql-tag';
 export const gql: (
   template: TemplateStringsArray | string,

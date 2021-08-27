@@ -1,9 +1,9 @@
-import { Context, HttpRequest } from '@azure/functions';
-import { HttpResponse } from 'azure-functions-ts-essentials';
+import type { Context, HttpRequest } from '@azure/functions';
+import type { HttpResponse } from 'azure-functions-ts-essentials';
 import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLOptions } from 'apollo-server-core';
+import type { GraphQLOptions } from 'apollo-server-core';
 import { graphqlAzureFunction } from './azureFunctionApollo';
-import { LandingPage } from 'apollo-server-plugin-base';
+import type { LandingPage } from 'apollo-server-plugin-base';
 
 export interface CreateHandlerOptions {
   cors?: {

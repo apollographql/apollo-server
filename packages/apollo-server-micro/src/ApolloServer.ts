@@ -1,11 +1,11 @@
 import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
-import { ServerResponse } from 'http';
+import type { ServerResponse } from 'http';
 import { send } from 'micro';
 import { parseAll } from '@hapi/accept';
 
 import { graphqlMicro } from './microApollo';
-import { MicroRequest } from './types';
-import { LandingPage } from 'apollo-server-plugin-base';
+import type { MicroRequest } from './types';
+import type { LandingPage } from 'apollo-server-plugin-base';
 
 export interface ServerRegistration {
   path?: string;

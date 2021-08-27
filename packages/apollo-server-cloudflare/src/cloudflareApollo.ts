@@ -5,7 +5,7 @@ import {
 } from 'apollo-server-core';
 
 import { Request, Response, URL } from 'apollo-server-env';
-import { ValueOrPromise } from 'apollo-server-types';
+import type { ValueOrPromise } from 'apollo-server-types';
 
 // Design principles:
 // - You can issue a GET or POST with your query.

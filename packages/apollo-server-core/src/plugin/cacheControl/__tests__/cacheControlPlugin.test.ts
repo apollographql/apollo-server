@@ -5,7 +5,7 @@ import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
 } from '../';
-import {
+import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLResponse,
 } from 'apollo-server-plugin-base';

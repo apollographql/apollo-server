@@ -10,7 +10,7 @@ import {
   fetch,
 } from 'apollo-server-env';
 
-import { ValueOrPromise } from 'apollo-server-types';
+import type { ValueOrPromise } from 'apollo-server-types';
 
 import { DataSource, DataSourceConfig } from 'apollo-datasource';
 

@@ -1,6 +1,7 @@
 import express from 'express';
 
-import http, { Server } from 'http';
+import type http from 'http';
+import type { Server } from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
@@ -11,7 +12,7 @@ import {
   createApolloFetch,
 } from 'apollo-server-integration-testsuite';
 import { gql } from '../index';
-import { AddressInfo } from 'net';
+import type { AddressInfo } from 'net';
 import type { GraphQLResolverMap } from 'apollo-graphql';
 
 export class IdAPI extends RESTDataSource {

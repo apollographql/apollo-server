@@ -1,4 +1,5 @@
-import http, { Server } from 'http';
+import type http from 'http';
+import type { Server } from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
@@ -9,7 +10,7 @@ import {
 
 import { gql } from 'apollo-server-core';
 import type { GraphQLResolverMap } from 'apollo-graphql';
-import { AddressInfo } from 'net';
+import type { AddressInfo } from 'net';
 
 export class IdAPI extends RESTDataSource {
   // We will set this inside tests.

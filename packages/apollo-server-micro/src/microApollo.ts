@@ -6,11 +6,11 @@ import {
 } from 'apollo-server-core';
 import { send, json, RequestHandler } from 'micro';
 import url from 'url';
-import { IncomingMessage, ServerResponse } from 'http';
+import type { IncomingMessage, ServerResponse } from 'http';
 import typeis from 'type-is';
 
-import { MicroRequest } from './types';
-import { ValueOrPromise } from 'apollo-server-types';
+import type { MicroRequest } from './types';
+import type { ValueOrPromise } from 'apollo-server-types';
 
 // Allowed Micro Apollo Server options.
 export interface MicroGraphQLOptionsFunction {

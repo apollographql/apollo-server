@@ -1,5 +1,5 @@
 import { ApolloServer } from '../ApolloServer';
-import { Config } from 'apollo-server-core';
+import type { Config } from 'apollo-server-core';
 
 import testSuite, {
   schema as Schema,

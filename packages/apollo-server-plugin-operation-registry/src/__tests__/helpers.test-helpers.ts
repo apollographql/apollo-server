@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { AgentOptions } from '../agent';
+import type { AgentOptions } from '../agent';
 import {
   getStorageSecretUrl,
   urlStorageSecretBase,
@@ -9,7 +9,7 @@ import {
 } from '../common';
 import nock from 'nock';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import {
+import type {
   Operation,
   OperationManifest,
 } from '../ApolloServerPluginOperationRegistry';

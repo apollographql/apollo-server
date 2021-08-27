@@ -1,4 +1,4 @@
-import { Trace } from 'apollo-reporting-protobuf';
+import type { Trace } from 'apollo-reporting-protobuf';
 
 /**
  * Iterates over the entire trace, calling `f` on each Trace.Node found. It

@@ -1,5 +1,5 @@
 import { ApolloServerBase } from '../..';
-import { Logger } from 'apollo-server-types';
+import type { Logger } from 'apollo-server-types';
 import { PassThrough } from 'stream';
 import gql from 'graphql-tag';
 

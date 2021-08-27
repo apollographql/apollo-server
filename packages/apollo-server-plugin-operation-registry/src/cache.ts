@@ -1,4 +1,4 @@
-import { CacheManager } from 'make-fetch-happen';
+import type { CacheManager } from 'make-fetch-happen';
 import { Request, Response, Headers } from 'apollo-server-env';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 

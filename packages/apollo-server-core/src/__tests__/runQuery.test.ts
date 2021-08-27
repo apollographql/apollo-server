@@ -10,12 +10,15 @@ import {
   DocumentNode,
 } from 'graphql';
 
-import { GraphQLResponse } from 'apollo-server-types';
+import type { GraphQLResponse } from 'apollo-server-types';
 
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
-import { Request } from 'apollo-server-env';
-import { GraphQLOptions, Context as GraphQLContext } from 'apollo-server-core';
-import {
+import type { Request } from 'apollo-server-env';
+import type {
+  GraphQLOptions,
+  Context as GraphQLContext,
+} from 'apollo-server-core';
+import type {
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
   GraphQLRequestListener,
