@@ -29,13 +29,6 @@
       "matchPackageNames": ["make-fetch-happen"],
       "allowedVersions": "8.x"
     },
-    // Temporarily pull typescript out of "all non-major dependencies" until we
-    // decide how to support TS4.4. See
-    // https://github.com/apollographql/apollo-server/issues/5660
-    {
-      groupName: "typescript",
-      matchPackageNames: ["typescript"],
-    },
     /*
       Docs-related Renovate rules
 

@@ -120,7 +120,7 @@ describe('apollo-server-micro', function () {
           },
         });
 
-        let error;
+        let error: any;
         try {
           await rp(`${uri}/.well-known/apollo/server-health`);
         } catch (err) {
@@ -137,7 +137,7 @@ describe('apollo-server-micro', function () {
           disableHealthCheck: true,
         });
 
-        let error;
+        let error: any;
         try {
           await rp(`${uri}/.well-known/apollo/server-health`);
         } catch (err) {

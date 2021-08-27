@@ -77,7 +77,9 @@ function constructDefaultOptions(
     body = JSON.stringify(request);
   } catch (e) {
     throw new Error(
-      `Network request failed. Payload is not serializable: ${e.message}`,
+      `Network request failed. Payload is not serializable: ${
+        (e as Error).message
+      }`,
     );
   }
 
@@ -154,7 +156,7 @@ export function createApolloFetch(params: FetchOptions = {}): ApolloFetch {
               (response as ParsedResponse).parsed = parsed;
               return <ParsedResponse>response;
             } catch (e) {
-              parseError = e;
+              parseError = e as Error;
 
               //pass parsed raw response onto afterware
               (response as ParsedResponse).raw = raw;

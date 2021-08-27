@@ -2,6 +2,7 @@ import {
   GraphQLOptions,
   runHttpQuery,
   convertNodeHttpToRequest,
+  isHttpQueryError,
 } from 'apollo-server-core';
 import { send, json, RequestHandler } from 'micro';
 import url from 'url';
@@ -66,15 +67,11 @@ export function graphqlMicro(
       send(res, statusCode, graphqlResponse);
       return undefined;
     } catch (error) {
-      if ('HttpQueryError' === error.name && error.headers) {
+      if (isHttpQueryError(error) && error.headers) {
         setHeaders(res, error.headers);
       }
 
-      if (!error.statusCode) {
-        error.statusCode = 500;
-      }
-
-      send(res, error.statusCode, error.message);
+      send(res, (error as any).statusCode || 500, (error as Error).message);
       return undefined;
     }
   };

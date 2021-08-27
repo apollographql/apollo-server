@@ -66,6 +66,10 @@ export class HttpQueryError extends Error {
   }
 }
 
+export function isHttpQueryError(e: unknown): e is HttpQueryError {
+  return (e as any)?.name === 'HttpQueryError';
+}
+
 /**
  * If options is specified, then the errors array will be formatted
  */
@@ -126,7 +130,7 @@ export async function runHttpQuery(
     // the normal options provided by the user, such as: formatError,
     // debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
-    return throwHttpGraphQLError(500, [e], {
+    return throwHttpGraphQLError(500, [e as Error], {
       debug: debugFromNodeEnv(process.env.NODE_ENV),
     });
   }
@@ -149,7 +153,9 @@ export async function runHttpQuery(
   if (typeof options.context === 'function') {
     try {
       (options.context as () => never)();
-    } catch (e) {
+    } catch (e: any) {
+      // XXX `any` isn't ideal, but this is the easiest thing for now, without
+      // introducing a strong `instanceof GraphQLError` requirement.
       e.message = `Context creation failed: ${e.message}`;
       // For errors that are not internal, such as authentication, we
       // should provide a 400 response
@@ -315,7 +321,7 @@ export async function processHTTPRequest<TContext>(
             // A batch can contain another query that returns data,
             // so we don't error out the entire request with an HttpError
             return {
-              errors: formatApolloErrors([error], options),
+              errors: formatApolloErrors([error as Error], options),
             };
           }
         }),
@@ -359,7 +365,7 @@ export async function processHTTPRequest<TContext>(
     if (error instanceof HttpQueryError) {
       throw error;
     }
-    return throwHttpGraphQLError(500, [error], options);
+    return throwHttpGraphQLError(500, [error as Error], options);
   }
 
   responseInit.headers!['Content-Length'] = Buffer.byteLength(

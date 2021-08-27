@@ -6,7 +6,7 @@ import {
   ApolloServerBase,
   convertNodeHttpToRequest,
   GraphQLOptions,
-  HttpQueryError,
+  isHttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
 import Boom from '@hapi/boom';
@@ -120,10 +120,9 @@ export class ApolloServer extends ApolloServerBase {
           }
           response.code(responseInit.status || 200);
           return response;
-        } catch (e: unknown) {
-          const error = e as HttpQueryError;
-          if ('HttpQueryError' !== error.name) {
-            throw Boom.boomify(error);
+        } catch (error) {
+          if (!isHttpQueryError(error)) {
+            throw Boom.boomify(error as Error);
           }
 
           if (true === error.isGraphQLError) {

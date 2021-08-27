@@ -1,7 +1,7 @@
 import { Context, HttpRequest, AzureFunction } from '@azure/functions';
 import {
   GraphQLOptions,
-  HttpQueryError,
+  isHttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
@@ -52,15 +52,15 @@ export function graphqlAzureFunction(
           headers: responseInit.headers,
         });
       },
-      (error: HttpQueryError) => {
-        if ('HttpQueryError' !== error.name) {
-          callback(error);
-        } else {
+      (error: Error) => {
+        if (isHttpQueryError(error)) {
           callback(null, {
             body: error.message,
             status: error.statusCode,
             headers: error.headers,
           });
+        } else {
+          callback(error);
         }
       },
     );

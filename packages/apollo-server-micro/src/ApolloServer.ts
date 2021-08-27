@@ -59,7 +59,7 @@ export class ApolloServer extends ApolloServerBase {
           return;
         }
         send(res, 404, null);
-      } catch (errorObj) {
+      } catch (errorObj: any) {
         if (!__testing__microSuppressErrorLog) {
           throw errorObj;
         }

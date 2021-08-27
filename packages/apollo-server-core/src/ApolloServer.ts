@@ -485,7 +485,7 @@ export class ApolloServerBase<
       };
       this.maybeRegisterTerminationSignalHandlers(['SIGINT', 'SIGTERM']);
     } catch (error) {
-      this.state = { phase: 'failed to start', error };
+      this.state = { phase: 'failed to start', error: error as Error };
       throw error;
     } finally {
       barrier.resolve();
@@ -745,7 +745,7 @@ export class ApolloServerBase<
       await Promise.all([...this.toDispose].map((dispose) => dispose()));
       await Promise.all([...this.toDisposeLast].map((dispose) => dispose()));
     } catch (stopError) {
-      this.state = { phase: 'stopped', stopError };
+      this.state = { phase: 'stopped', stopError: stopError as Error };
       barrier.resolve();
       throw stopError;
     }

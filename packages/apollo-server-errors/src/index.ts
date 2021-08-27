@@ -271,7 +271,8 @@ export function formatApolloErrors(
       return makePrintable(formatter(error));
     } catch (err) {
       if (debug) {
-        return enrichError(err, debug);
+        // XXX: This cast is pretty sketchy, as other error types can be thrown!
+        return enrichError(err as Partial<GraphQLError>, debug);
       } else {
         // obscure error
         const newError = fromGraphQLError(
