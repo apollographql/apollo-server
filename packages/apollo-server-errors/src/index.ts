@@ -40,6 +40,10 @@ export class ApolloError extends Error implements GraphQLError {
 
     this.extensions = { ...extensions, code };
   }
+
+  get [Symbol.toStringTag](): string {
+    return 'Object';
+  }
 }
 
 function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
