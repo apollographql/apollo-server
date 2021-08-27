@@ -8,8 +8,11 @@ import { SchemaHash } from 'apollo-server-types';
 
 export function generateSchemaHash(schema: GraphQLSchema): SchemaHash {
   const introspectionQuery = getIntrospectionQuery();
-  const documentAST = parse(introspectionQuery);
-  const result = execute(schema, documentAST) as ExecutionResult;
+  const document = parse(introspectionQuery);
+  const result = execute({
+    schema,
+    document,
+  }) as ExecutionResult;
 
   // If the execution of an introspection query results in a then-able, it
   // indicates that one or more of its resolvers is behaving in an asynchronous
