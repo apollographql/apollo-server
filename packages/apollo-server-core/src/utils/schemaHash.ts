@@ -1,6 +1,6 @@
 import { parse } from 'graphql/language';
 import { execute, ExecutionResult } from 'graphql/execution';
-import { getIntrospectionQuery, IntrospectionSchema } from 'graphql/utilities';
+import { getIntrospectionQuery, IntrospectionQuery } from 'graphql/utilities';
 import stableStringify from 'fast-json-stable-stringify';
 import { GraphQLSchema } from 'graphql/type';
 import createSHA from './createSHA';
@@ -8,8 +8,11 @@ import { SchemaHash } from 'apollo-server-types';
 
 export function generateSchemaHash(schema: GraphQLSchema): SchemaHash {
   const introspectionQuery = getIntrospectionQuery();
-  const documentAST = parse(introspectionQuery);
-  const result = execute(schema, documentAST) as ExecutionResult;
+  const document = parse(introspectionQuery);
+  const result = execute({
+    schema,
+    document,
+  }) as ExecutionResult<IntrospectionQuery>;
 
   // If the execution of an introspection query results in a then-able, it
   // indicates that one or more of its resolvers is behaving in an asynchronous
@@ -32,7 +35,7 @@ export function generateSchemaHash(schema: GraphQLSchema): SchemaHash {
     throw new Error('Unable to generate server introspection document.');
   }
 
-  const introspectionSchema: IntrospectionSchema = result.data.__schema;
+  const introspectionSchema = result.data.__schema;
 
   // It's important that we perform a deterministic stringification here
   // since, depending on changes in the underlying `graphql-js` execution
