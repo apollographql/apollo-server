@@ -6,7 +6,7 @@ import type { fetch } from 'apollo-server-env';
 import { SchemaReporter } from './schemaReporter';
 import createSHA from '../../utils/createSHA';
 import { schemaIsFederated } from '../schemaIsFederated';
-import { SchemaReport } from './operations';
+import type { SchemaReport } from './operations';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**

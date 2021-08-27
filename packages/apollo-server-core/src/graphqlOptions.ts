@@ -1,4 +1,4 @@
-import {
+import type {
   GraphQLSchema,
   ValidationContext,
   GraphQLFieldResolver,
@@ -7,10 +7,10 @@ import {
   GraphQLFormattedError,
   ParseOptions,
 } from 'graphql';
-import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
-import { DataSource } from 'apollo-datasource';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import {
+import type { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
+import type { DataSource } from 'apollo-datasource';
+import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import type {
   GraphQLExecutor,
   ValueOrPromise,
   GraphQLResponse,

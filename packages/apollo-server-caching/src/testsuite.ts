@@ -1,4 +1,4 @@
-import { KeyValueCache } from './KeyValueCache';
+import type { KeyValueCache } from './KeyValueCache';
 
 /**
  * runKeyValueCacheTests is a function you can call from a test that exercises

@@ -7,7 +7,7 @@ import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
 } from 'apollo-server-caching';
-import { CacheOptions } from './RESTDataSource';
+import type { CacheOptions } from './RESTDataSource';
 
 export class HTTPCache {
   private keyValueCache: KeyValueCache;

@@ -2,9 +2,9 @@ import { parse } from 'graphql/language';
 import { execute, ExecutionResult } from 'graphql/execution';
 import { getIntrospectionQuery, IntrospectionSchema } from 'graphql/utilities';
 import stableStringify from 'fast-json-stable-stringify';
-import { GraphQLSchema } from 'graphql/type';
+import type { GraphQLSchema } from 'graphql/type';
 import createSHA from './createSHA';
-import { SchemaHash } from 'apollo-server-types';
+import type { SchemaHash } from 'apollo-server-types';
 
 export function generateSchemaHash(schema: GraphQLSchema): SchemaHash {
   const introspectionQuery = getIntrospectionQuery();

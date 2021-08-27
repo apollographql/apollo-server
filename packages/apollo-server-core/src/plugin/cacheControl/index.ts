@@ -1,5 +1,5 @@
 import type { CacheAnnotation, CacheHint } from 'apollo-server-types';
-import { CacheScope } from 'apollo-server-types';
+import type { CacheScope } from 'apollo-server-types';
 import {
   DirectiveNode,
   getNamedType,

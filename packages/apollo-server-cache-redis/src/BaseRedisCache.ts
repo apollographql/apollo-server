@@ -1,4 +1,7 @@
-import { KeyValueCache, KeyValueCacheSetOptions } from 'apollo-server-caching';
+import type {
+  KeyValueCache,
+  KeyValueCacheSetOptions,
+} from 'apollo-server-caching';
 import DataLoader from 'dataloader';
 
 interface BaseRedisClient {

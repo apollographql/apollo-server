@@ -1,5 +1,5 @@
 import { pluginName, getStoreKey, signatureForLogging } from './common';
-import {
+import type {
   ApolloServerPlugin,
   GraphQLServiceContext,
   GraphQLRequestListener,
@@ -21,7 +21,7 @@ import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
-import { fetch } from 'apollo-server-env';
+import type { fetch } from 'apollo-server-env';
 
 type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,

@@ -1,5 +1,5 @@
 import url from 'url';
-import { IncomingMessage, ServerResponse } from 'http';
+import type { IncomingMessage, ServerResponse } from 'http';
 import type {
   APIGatewayProxyEventV2,
   APIGatewayProxyStructuredResultV2,

@@ -1,5 +1,5 @@
 import LRUCache from 'lru-cache';
-import { KeyValueCache } from './KeyValueCache';
+import type { KeyValueCache } from './KeyValueCache';
 
 function defaultLengthCalculation(item: any) {
   if (Array.isArray(item) || typeof item === 'string') {

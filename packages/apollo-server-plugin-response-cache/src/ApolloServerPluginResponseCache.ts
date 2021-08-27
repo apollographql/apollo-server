@@ -1,8 +1,11 @@
-import {
+import type {
   ApolloServerPlugin,
   GraphQLRequestListener,
 } from 'apollo-server-plugin-base';
-import { GraphQLRequestContext, GraphQLResponse } from 'apollo-server-types';
+import type {
+  GraphQLRequestContext,
+  GraphQLResponse,
+} from 'apollo-server-types';
 import { KeyValueCache, PrefixingKeyValueCache } from 'apollo-server-caching';
 import type { CacheHint, ValueOrPromise } from 'apollo-server-types';
 import { CacheScope } from 'apollo-server-types';

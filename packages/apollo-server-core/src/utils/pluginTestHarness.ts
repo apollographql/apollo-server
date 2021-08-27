@@ -1,4 +1,4 @@
-import {
+import type {
   CacheHint,
   WithRequired,
   GraphQLRequest,
@@ -17,7 +17,7 @@ import {
   enablePluginsForSchemaResolvers,
   symbolExecutionDispatcherWillResolveField,
 } from './schemaInstrumentation';
-import {
+import type {
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
   GraphQLServerListener,

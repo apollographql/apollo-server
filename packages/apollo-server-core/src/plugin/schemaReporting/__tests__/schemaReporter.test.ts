@@ -1,6 +1,6 @@
 import nock from 'nock';
 import { schemaReportGql, SchemaReporter } from '../schemaReporter';
-import {
+import type {
   SchemaReportMutation,
   ReportSchemaResponse,
   SchemaReportMutationVariables,

@@ -1,4 +1,4 @@
-import { KeyValueCache, KeyValueCacheSetOptions } from './KeyValueCache';
+import type { KeyValueCache, KeyValueCacheSetOptions } from './KeyValueCache';
 
 // PrefixingKeyValueCache wraps another cache and adds a prefix to all keys used
 // by all operations.  This allows multiple features to share the same

@@ -1,11 +1,11 @@
-import { Context, HttpRequest, AzureFunction } from '@azure/functions';
+import type { Context, HttpRequest, AzureFunction } from '@azure/functions';
 import {
   GraphQLOptions,
   isHttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
-import { ValueOrPromise } from 'apollo-server-types';
+import type { ValueOrPromise } from 'apollo-server-types';
 
 export interface AzureFunctionGraphQLOptionsFunction {
   (request: HttpRequest, context: Context): ValueOrPromise<GraphQLOptions>;

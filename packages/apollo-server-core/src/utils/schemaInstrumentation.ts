@@ -7,8 +7,8 @@ import {
   GraphQLFieldResolver,
 } from 'graphql/type';
 import { defaultFieldResolver } from 'graphql/execution';
-import { FieldNode } from 'graphql/language';
-import { GraphQLRequestExecutionListener } from 'apollo-server-plugin-base';
+import type { FieldNode } from 'graphql/language';
+import type { GraphQLRequestExecutionListener } from 'apollo-server-plugin-base';
 import type { GraphQLObjectResolver } from '@apollographql/apollo-tools';
 
 export const symbolExecutionDispatcherWillResolveField = Symbol(

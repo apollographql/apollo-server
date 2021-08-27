@@ -12,7 +12,7 @@ import { Trace, Report, ITrace } from 'apollo-reporting-protobuf';
 import pluginTestHarness from '../../../utils/pluginTestHarness';
 import nock from 'nock';
 import { gunzipSync } from 'zlib';
-import { ApolloServerPluginUsageReportingOptions } from '../options';
+import type { ApolloServerPluginUsageReportingOptions } from '../options';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);

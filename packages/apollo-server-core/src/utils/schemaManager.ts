@@ -1,12 +1,12 @@
-import { GraphQLSchema } from 'graphql';
-import {
+import type { GraphQLSchema } from 'graphql';
+import type {
   ApolloConfig,
   GraphQLExecutor,
   GraphQLSchemaContext,
   Logger,
 } from 'apollo-server-types';
-import { GatewayInterface, Unsubscriber } from '../types';
-import { SchemaDerivedData } from '../ApolloServer';
+import type { GatewayInterface, Unsubscriber } from '../types';
+import type { SchemaDerivedData } from '../ApolloServer';
 
 type SchemaDerivedDataProvider = (
   apiSchema: GraphQLSchema,

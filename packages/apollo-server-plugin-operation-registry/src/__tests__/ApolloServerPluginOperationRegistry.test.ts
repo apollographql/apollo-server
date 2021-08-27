@@ -25,8 +25,8 @@ import {
   genericStorageSecret,
 } from './helpers.test-helpers';
 import { Headers } from 'apollo-server-env';
-import { GraphQLRequest } from 'apollo-server-plugin-base';
-import { ApolloConfigInput } from 'apollo-server-types';
+import type { GraphQLRequest } from 'apollo-server-plugin-base';
+import type { ApolloConfigInput } from 'apollo-server-types';
 
 // While not ideal, today, Apollo Server has a very real expectation of an HTTP
 // request context.  That will change in the future.  While we can sometimes
