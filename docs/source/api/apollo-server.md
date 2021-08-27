@@ -180,11 +180,11 @@ Providing a function is useful if you want to use a different root value dependi
 
 ##### `validationRules`
 
-`Object`
+`Array`
 </td>
 <td>
 
-An object containing custom functions to use as additional [validation rules](https://github.com/graphql/graphql-js/tree/master/src/validation/rules) when validating the schema.
+An array containing custom functions to use as additional [validation rules](https://github.com/graphql/graphql-js/tree/master/src/validation/rules) when validating the schema.
 </td>
 </tr>
 
