@@ -1823,7 +1823,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
             query: TEST_STRING_QUERY,
           } as any);
-        } catch (e) {
+        } catch (e: any) {
           expect(e.response).toBeDefined();
           expect(e.response.status).toEqual(400);
           expect(e.response.raw).toMatch(/does not match query/);

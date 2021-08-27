@@ -167,7 +167,9 @@ export class SchemaManager {
           // ApolloServerBase._start(), so we throw here to alert the user early
           // that their callback is failing.
           throw new Error(
-            `An error was thrown from an 'onSchemaLoadOrUpdate' listener: ${e.message}`,
+            `An error was thrown from an 'onSchemaLoadOrUpdate' listener: ${
+              (e as Error).message
+            }`,
           );
         }
       }

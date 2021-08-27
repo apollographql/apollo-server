@@ -217,7 +217,7 @@ export async function processGraphQLRequest<TContext>(
     } catch (err) {
       logger.warn(
         'An error occurred while attempting to read from the documentStore. ' +
-          err?.message || err,
+          (err as Error)?.message || err,
       );
     }
   }
@@ -234,8 +234,10 @@ export async function processGraphQLRequest<TContext>(
       requestContext.document = parse(query, config.parseOptions);
       parsingDidEnd();
     } catch (syntaxError) {
-      await parsingDidEnd(syntaxError);
-      return await sendErrorResponse(syntaxError, SyntaxError);
+      await parsingDidEnd(syntaxError as Error);
+      // XXX: This cast is pretty sketchy, as other error types can be thrown
+      // by parsingDidEnd!
+      return await sendErrorResponse(syntaxError as GraphQLError, SyntaxError);
     }
 
     const validationDidEnd = await dispatcher.invokeDidStartHook(
@@ -294,7 +296,9 @@ export async function processGraphQLRequest<TContext>(
       requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
     );
   } catch (err) {
-    return await sendErrorResponse(err);
+    // XXX: This cast is pretty sketchy, as other error types can be thrown
+    // by didResolveOperation!
+    return await sendErrorResponse(err as GraphQLError);
   }
 
   // Now that we've gone through the pre-execution phases of the request
@@ -422,8 +426,13 @@ export async function processGraphQLRequest<TContext>(
 
       await executionDispatcher.invokeHook('executionDidEnd');
     } catch (executionError) {
-      await executionDispatcher.invokeHook('executionDidEnd', executionError);
-      return await sendErrorResponse(executionError);
+      await executionDispatcher.invokeHook(
+        'executionDidEnd',
+        executionError as Error,
+      );
+      // XXX: This cast is pretty sketchy, as other error types can be thrown
+      // in the try block!
+      return await sendErrorResponse(executionError as GraphQLError);
     }
   }
 

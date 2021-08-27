@@ -275,7 +275,10 @@ export default async function pluginTestHarness<TContext>({
     );
     await executionDispatcher.invokeHook('executionDidEnd');
   } catch (executionErr) {
-    await executionDispatcher.invokeHook('executionDidEnd', executionErr);
+    await executionDispatcher.invokeHook(
+      'executionDidEnd',
+      executionErr as Error,
+    );
   }
 
   await dispatcher.invokeHook(

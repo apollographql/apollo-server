@@ -260,7 +260,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
           });
           return await this.didReceiveResponse(response, request);
         } catch (error) {
-          this.didEncounterError(error, request);
+          this.didEncounterError(error as Error, request);
         }
       });
     };

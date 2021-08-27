@@ -112,7 +112,7 @@ function wrapField(field: GraphQLField<any, any>): void {
       // re-thrown. But it is useful to allow extensions to track errors while
       // still handling them in the normal GraphQL way.
       if (typeof didResolveField === 'function') {
-        didResolveField(error);
+        didResolveField(error as Error);
       }
       throw error;
     }

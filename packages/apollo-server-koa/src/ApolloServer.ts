@@ -7,7 +7,7 @@ import {
   ApolloServerBase,
   convertNodeHttpToRequest,
   GraphQLOptions,
-  HttpQueryError,
+  isHttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
 import accepts from 'accepts';
@@ -158,9 +158,8 @@ export class ApolloServer extends ApolloServerBase {
           }
           ctx.body = graphqlResponse;
           ctx.status = responseInit.status || 200;
-        } catch (e: unknown) {
-          const error = e as HttpQueryError;
-          if ('HttpQueryError' !== error.name) {
+        } catch (error) {
+          if (!isHttpQueryError(error)) {
             throw error;
           }
 

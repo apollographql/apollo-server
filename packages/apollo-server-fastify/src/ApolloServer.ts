@@ -2,6 +2,7 @@ import {
   ApolloServerBase,
   convertNodeHttpToRequest,
   GraphQLOptions,
+  isHttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
@@ -128,14 +129,14 @@ export class ApolloServer extends ApolloServerBase {
                 reply.serializer((payload: string) => payload);
                 reply.send(graphqlResponse);
               } catch (error) {
-                if ('HttpQueryError' !== error.name) {
+                if (!isHttpQueryError(error)) {
                   throw error;
                 }
 
                 if (error.headers) {
-                  Object.keys(error.headers).forEach((header) => {
-                    reply.header(header, error.headers[header]);
-                  });
+                  for (const [header, value] of Object.entries(error.headers)) {
+                    reply.header(header, value);
+                  }
                 }
 
                 reply.code(error.statusCode);

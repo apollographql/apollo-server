@@ -86,7 +86,7 @@ export default class Agent {
     } catch (err) {
       console.error(
         'The operation manifest could not be fetched. Retries will continue, but requests will be forbidden until the manifest is fetched.',
-        err.message || err,
+        (err as Error).message || err,
       );
     }
 
@@ -224,7 +224,7 @@ export default class Agent {
     } catch (err) {
       const ourErrorPrefix = `Unable to fetch operation manifest for graph ID '${this.graphId}': ${err}`;
 
-      err.message = `${ourErrorPrefix}: ${err}`;
+      (err as Error).message = `${ourErrorPrefix}: ${err}`;
 
       throw err;
     }

@@ -6,8 +6,8 @@ import {
   ApolloServerBase,
   Config,
   runHttpQuery,
-  HttpQueryError,
   convertNodeHttpToRequest,
+  isHttpQueryError,
 } from 'apollo-server-core';
 import accepts from 'accepts';
 
@@ -167,8 +167,8 @@ export class ApolloServer<
             res.end(graphqlResponse);
           }
         },
-        (error: HttpQueryError) => {
-          if ('HttpQueryError' !== error.name) {
+        (error: Error) => {
+          if (!isHttpQueryError(error)) {
             return next(error);
           }
 
