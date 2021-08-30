@@ -116,7 +116,7 @@ describe('non-integration tests', () => {
       const { httpServer } = await createServer({
         typeDefs,
         resolvers,
-        __testing_nodeEnv__: undefined, // default landing page
+        nodeEnv: undefined, // default landing page
       });
 
       await request(httpServer)
@@ -288,7 +288,7 @@ describe('non-integration tests', () => {
             throw new AuthenticationError('valid result');
           },
           // Stack trace not included for NODE_ENV=test
-          __testing_nodeEnv__: undefined,
+          nodeEnv: undefined,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -319,7 +319,7 @@ describe('non-integration tests', () => {
             },
           },
           // Stack trace not included for NODE_ENV=test
-          __testing_nodeEnv__: undefined,
+          nodeEnv: undefined,
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -349,7 +349,7 @@ describe('non-integration tests', () => {
               },
             },
           },
-          __testing_nodeEnv__: 'production',
+          nodeEnv: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -378,7 +378,7 @@ describe('non-integration tests', () => {
               },
             },
           },
-          __testing_nodeEnv__: 'production',
+          nodeEnv: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });

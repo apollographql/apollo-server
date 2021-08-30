@@ -248,7 +248,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const { url: uri } = await createApolloServer({
             schema,
             stopOnTerminationSignals: false,
-            __testing_nodeEnv__: undefined,
+            nodeEnv: undefined,
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -262,7 +262,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const { url: uri } = await createApolloServer({
             schema,
             stopOnTerminationSignals: false,
-            __testing_nodeEnv__: 'production',
+            nodeEnv: 'production',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -281,7 +281,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             schema,
             introspection: true,
             stopOnTerminationSignals: false,
-            __testing_nodeEnv__: 'production',
+            nodeEnv: 'production',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -979,7 +979,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               ],
               debug: true,
               stopOnTerminationSignals: false,
-              __testing_nodeEnv__: undefined,
+              nodeEnv: undefined,
               ...constructorOptions,
             });
 
@@ -1595,7 +1595,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               typeDefs,
               resolvers,
               stopOnTerminationSignals: false,
-              __testing_nodeEnv__: undefined,
+              nodeEnv: undefined,
               context: () => {
                 throw new AuthenticationError('valid result');
               },
@@ -1653,7 +1653,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
           stopOnTerminationSignals: false,
-          __testing_nodeEnv__: 'production',
+          nodeEnv: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1683,7 +1683,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
           stopOnTerminationSignals: false,
-          __testing_nodeEnv__: 'production',
+          nodeEnv: 'production',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1714,7 +1714,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
           stopOnTerminationSignals: false,
-          __testing_nodeEnv__: 'development',
+          nodeEnv: 'development',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -2922,7 +2922,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             })),
           ],
           // dev mode, so we get the local landing page
-          __testing_nodeEnv__: undefined,
+          nodeEnv: undefined,
         };
       }
 

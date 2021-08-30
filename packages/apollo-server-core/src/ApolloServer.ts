@@ -151,7 +151,12 @@ export class ApolloServerBase<
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config<ContextFunctionParams>) {
     if (!config) throw new Error('ApolloServer requires options.');
-    this.config = config;
+
+    this.config = {
+      ...config,
+      nodeEnv: config.nodeEnv ?? process.env.NODE_ENV,
+    };
+
     const {
       context,
       resolvers,
@@ -170,7 +175,7 @@ export class ApolloServerBase<
       mockEntireSchema,
       experimental_approximateDocumentStoreMiB,
       ...requestOptions
-    } = config;
+    } = this.config;
 
     // Setup logging facilities
     if (config.logger) {
@@ -206,16 +211,7 @@ export class ApolloServerBase<
     this.experimental_approximateDocumentStoreMiB =
       experimental_approximateDocumentStoreMiB;
 
-    // Allow tests to override process.env.NODE_ENV. As a bonus, this means
-    // we're only reading the env var once in the constructor, which is faster
-    // than reading it over and over as each read is a syscall. Note that an
-    // explicit `__testing_nodeEnv__: undefined` overrides a set environment
-    // variable!
-    const nodeEnv =
-      '__testing_nodeEnv__' in config
-        ? config.__testing_nodeEnv__
-        : process.env.NODE_ENV;
-    const isDev = nodeEnv !== 'production';
+    const isDev = this.config.nodeEnv !== 'production';
 
     // We handle signals if it was explicitly requested, or if we're in Node,
     // not in a test, not in a serverless framework, and it wasn't explicitly
@@ -224,7 +220,9 @@ export class ApolloServerBase<
     this.stopOnTerminationSignals =
       typeof stopOnTerminationSignals === 'boolean'
         ? stopOnTerminationSignals
-        : isNodeLike && nodeEnv !== 'test' && !this.serverlessFramework();
+        : isNodeLike &&
+          this.config.nodeEnv !== 'test' &&
+          !this.serverlessFramework();
 
     // if this is local dev, introspection should turned on
     // in production, we can manually turn introspection on by passing {
