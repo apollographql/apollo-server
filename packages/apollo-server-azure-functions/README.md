@@ -138,6 +138,26 @@ The options correspond to the [express cors configuration](https://github.com/ex
 * `credentials`: boolean
 * `maxAge`: number
 
+### Request Body / Token
+By default Azure Functions will pass the request object as req.  Pass this into the context of the ApolloServer constructor to access request contents.  For example for passing an auth token to a backend.
+
+```js
+const server = new ApolloServer(
+    { typeDefs,       
+        resolvers,
+        context: (req) => {
+          const authHeader = req.context.bindings.req.headers.authorization || '';
+          if (authHeader === '') throw new AuthenticationError('please send       Bearer token with request');
+          return {
+            token: authHeader,
+          }
+        },
+```
+
+### Optional, helpful packages
+* azure-function-log-intercept - console.* messages appear in teh functions log.
+
+
 ## Principles
 
 GraphQL Server is built with the following principles in mind:
