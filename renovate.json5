@@ -29,6 +29,15 @@
       "matchPackageNames": ["make-fetch-happen"],
       "allowedVersions": "8.x"
     },
+    // node-fetch v3 only ships as ESM. We currently build to CommonJS and even
+    // if we start publishing as ESM (#5627) we're not going to go ESM-only
+    // for a while. (Plus it requires Node v12.20 and we technically support
+    // v12.0.) So let's stay on v2. (Perhaps we could swap to undici instead
+    // if this pin gets to be a problem.)
+    {
+      "matchPackageNames": ["node-fetch"],
+      "allowedVersions": "2.x"
+    },
     /*
       Docs-related Renovate rules
 
