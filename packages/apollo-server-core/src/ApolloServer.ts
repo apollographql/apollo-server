@@ -151,12 +151,10 @@ export class ApolloServerBase<
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config<ContextFunctionParams>) {
     if (!config) throw new Error('ApolloServer requires options.');
-
     this.config = {
       ...config,
-      nodeEnv: config.nodeEnv ?? process.env.NODE_ENV,
+      nodeEnv: 'nodeEnv' in config ? config.nodeEnv : process.env.NODE_ENV,
     };
-
     const {
       context,
       resolvers,

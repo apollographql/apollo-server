@@ -29,6 +29,7 @@ describe('runHttpQuery', () => {
         query: '{ testString }',
       },
       options: {
+        debug: false,
         schema,
         schemaHash: generateSchemaHash(schema),
       },

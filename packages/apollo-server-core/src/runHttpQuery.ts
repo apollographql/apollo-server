@@ -120,7 +120,7 @@ export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
-  function debugFromNodeEnv(nodeEnv: string | undefined = NODE_ENV) {
+  function debugFromNodeEnv(nodeEnv: string | undefined) {
     return nodeEnv !== 'production' && nodeEnv !== 'test';
   }
 
@@ -133,7 +133,7 @@ export async function runHttpQuery(
     // debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
     return throwHttpGraphQLError(500, [e as Error], {
-      debug: debugFromNodeEnv(),
+      debug: debugFromNodeEnv(NODE_ENV),
     });
   }
 
