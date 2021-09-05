@@ -215,13 +215,15 @@ export class UserInputError extends ApolloError {
   }
 }
 
-export function formatApolloErrors(
+export async function formatApolloErrors(
   errors: ReadonlyArray<Error>,
   options?: {
-    formatter?: (error: GraphQLError) => GraphQLFormattedError;
+    formatter?: (
+      error: GraphQLError,
+    ) => GraphQLFormattedError | Promise<GraphQLFormattedError>;
     debug?: boolean;
   },
-): Array<ApolloError> {
+): Promise<Array<ApolloError>> {
   if (!options) {
     return errors.map((error) => enrichError(error));
   }
@@ -266,20 +268,22 @@ export function formatApolloErrors(
     return enrichedErrors;
   }
 
-  return enrichedErrors.map((error) => {
-    try {
-      return makePrintable(formatter(error));
-    } catch (err) {
-      if (debug) {
-        // XXX: This cast is pretty sketchy, as other error types can be thrown!
-        return enrichError(err as Partial<GraphQLError>, debug);
-      } else {
-        // obscure error
-        const newError = fromGraphQLError(
-          new GraphQLError('Internal server error'),
-        );
-        return enrichError(newError, debug);
+  return Promise.all(
+    enrichedErrors.map(async (error) => {
+      try {
+        return makePrintable(await formatter(error));
+      } catch (err) {
+        if (debug) {
+          // XXX: This cast is pretty sketchy, as other error types can be thrown!
+          return enrichError(err as Partial<GraphQLError>, debug);
+        } else {
+          // obscure error
+          const newError = fromGraphQLError(
+            new GraphQLError('Internal server error'),
+          );
+          return enrichError(newError, debug);
+        }
       }
-    }
-  }) as Array<ApolloError>;
+    }),
+  ) as Promise<Array<ApolloError>>;
 }

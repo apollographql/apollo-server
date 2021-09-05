@@ -73,13 +73,13 @@ export function isHttpQueryError(e: unknown): e is HttpQueryError {
 /**
  * If options is specified, then the errors array will be formatted
  */
-export function throwHttpGraphQLError<E extends Error>(
+export async function throwHttpGraphQLError<E extends Error>(
   statusCode: number,
   errors: Array<E>,
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
   extensions?: GraphQLExecutionResult['extensions'],
   headers?: Headers,
-): never {
+): Promise<never> {
   const allHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
   };
@@ -95,7 +95,7 @@ export function throwHttpGraphQLError<E extends Error>(
 
   const result: Result = {
     errors: options
-      ? formatApolloErrors(errors, {
+      ? await formatApolloErrors(errors, {
           debug: options.debug,
           formatter: options.formatError,
         })
@@ -321,7 +321,7 @@ export async function processHTTPRequest<TContext>(
             // A batch can contain another query that returns data,
             // so we don't error out the entire request with an HttpError
             return {
-              errors: formatApolloErrors([error as Error], options),
+              errors: await formatApolloErrors([error as Error], options),
             };
           }
         }),
