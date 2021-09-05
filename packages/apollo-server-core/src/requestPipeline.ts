@@ -87,7 +87,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   formatResponse?: (
     response: GraphQLResponse,
     requestContext: GraphQLRequestContext<TContext>,
-  ) => GraphQLResponse | null;
+  ) => GraphQLResponse | null | Promise<GraphQLResponse | null>;
 
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
@@ -437,7 +437,7 @@ export async function processGraphQLRequest<TContext>(
   }
 
   if (config.formatResponse) {
-    const formattedResponse: GraphQLResponse | null = config.formatResponse(
+    const formattedResponse: GraphQLResponse | null = await config.formatResponse(
       response,
       requestContext,
     );

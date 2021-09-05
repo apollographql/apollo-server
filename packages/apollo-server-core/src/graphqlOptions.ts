@@ -49,7 +49,7 @@ export interface GraphQLServerOptions<
   formatResponse?: (
     response: GraphQLResponse,
     requestContext: GraphQLRequestContext<TContext>,
-  ) => GraphQLResponse | null;
+  ) => GraphQLResponse | null | Promise<GraphQLResponse | null>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
   dataSources?: () => DataSources<TContext>;
