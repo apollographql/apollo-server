@@ -34,8 +34,8 @@ describe('Errors', () => {
       | ((
           options: Record<string, any>,
           errors: Error[],
-        ) => Record<string, any>[])
-      | ((options?: Record<string, any>) => Record<string, any>);
+        ) => Promise<Record<string, any>[]>)
+      | ((options?: Record<string, any>) => Promise<Record<string, any>>);
     const message = 'message';
     const code = 'CODE';
     const key = 'value';
@@ -92,8 +92,8 @@ describe('Errors', () => {
       // stacktrace should exist under exception
       expect(error.extensions.exception.stacktrace).toBeUndefined();
     });
-    it('exposes fields on error under exception field and provides code', () => {
-      const error = createFormattedError();
+    it('exposes fields on error under exception field and provides code', async () => {
+      const error = await createFormattedError();
       expect(error.message).toEqual(message);
       expect(error.extensions.key).toEqual(key);
       expect(error.extensions.exception).toBeUndefined();

@@ -1085,7 +1085,7 @@ export default ({
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatError: (error) => {
+            formatError: (error: GraphQLError) => {
               expect(error instanceof Error).toBe(true);
               return { message: expected };
             },
@@ -1105,7 +1105,7 @@ export default ({
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatError: (error) => {
+            formatError: (error: GraphQLError) => {
               expect(error instanceof Error).toBe(true);
               expect(error instanceof GraphQLError).toBe(true);
               return { message: expected };
@@ -1125,7 +1125,7 @@ export default ({
         app = await createApp({
           graphqlOptions: {
             schema: TestSchema,
-            formatError(error) {
+            formatError(error: GraphQLError) {
               return { message: 'Custom error format: ' + error.message };
             },
           },
@@ -1150,7 +1150,7 @@ export default ({
         app = await createApp({
           graphqlOptions: {
             schema: TestSchema,
-            formatError(error) {
+            formatError(error: GraphQLError) {
               return {
                 message: error.message,
                 locations: error.locations,
