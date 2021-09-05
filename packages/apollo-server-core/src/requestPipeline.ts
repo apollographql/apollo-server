@@ -83,7 +83,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
 
   persistedQueries?: PersistedQueryOptions;
 
-  formatError?: (error: GraphQLError) => GraphQLFormattedError | Promise<GraphQLFormattedError>;
+  formatError?: (error: GraphQLError, requestContext?: GraphQLRequestContext<TContext>) => GraphQLFormattedError | Promise<GraphQLFormattedError>;
   formatResponse?: (
     response: GraphQLResponse,
     requestContext: GraphQLRequestContext<TContext>,
@@ -587,6 +587,7 @@ export async function processGraphQLRequest<TContext>(
   ): Promise<ReadonlyArray<GraphQLFormattedError>> {
     return formatApolloErrors(errors, {
       formatter: config.formatError,
+      requestContext,
       debug: requestContext.debug,
     });
   }

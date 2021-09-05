@@ -79,6 +79,7 @@ export async function throwHttpGraphQLError<E extends Error>(
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
   extensions?: GraphQLExecutionResult['extensions'],
   headers?: Headers,
+  requestContext?: GraphQLRequestContext
 ): Promise<never> {
   const allHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -98,6 +99,7 @@ export async function throwHttpGraphQLError<E extends Error>(
       ? await formatApolloErrors(errors, {
           debug: options.debug,
           formatter: options.formatError,
+          requestContext
         })
       : errors,
   };
@@ -301,8 +303,8 @@ export async function processHTTPRequest<TContext>(
 
       const responses = await Promise.all(
         requests.map(async (request) => {
+          const requestContext = buildRequestContext(request);
           try {
-            const requestContext = buildRequestContext(request);
             const response = await processGraphQLRequest(
               options,
               requestContext,
@@ -321,7 +323,10 @@ export async function processHTTPRequest<TContext>(
             // A batch can contain another query that returns data,
             // so we don't error out the entire request with an HttpError
             return {
-              errors: await formatApolloErrors([error as Error], options),
+              errors: await formatApolloErrors([error as Error], {
+                ...options,
+                requestContext,
+              }),
             };
           }
         }),
@@ -346,6 +351,7 @@ export async function processHTTPRequest<TContext>(
           undefined,
           response.extensions,
           response.http?.headers,
+          requestContext
         );
       }
 
