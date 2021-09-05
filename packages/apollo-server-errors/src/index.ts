@@ -5,7 +5,7 @@ import {
   Source,
   SourceLocation,
 } from 'graphql';
-import type { GraphQLRequestContext } from 'apollo-server-types'
+import type { GraphQLRequestContext } from 'apollo-server-types';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
@@ -216,15 +216,14 @@ export class UserInputError extends ApolloError {
   }
 }
 
-
 export async function formatApolloErrors(
   errors: ReadonlyArray<Error>,
   options?: {
     formatter?: (
       error: GraphQLError,
-      requestContext?: GraphQLRequestContext<any>
+      requestContext?: GraphQLRequestContext<any>,
     ) => GraphQLFormattedError | Promise<GraphQLFormattedError>;
-    requestContext?: GraphQLRequestContext<any>
+    requestContext?: GraphQLRequestContext<any>;
     debug?: boolean;
   },
 ): Promise<Array<ApolloError>> {
@@ -275,7 +274,9 @@ export async function formatApolloErrors(
   return Promise.all(
     enrichedErrors.map(async (error) => {
       try {
-        return makePrintable(await formatter(error, requestContext as GraphQLRequestContext));
+        return makePrintable(
+          await formatter(error, requestContext as GraphQLRequestContext),
+        );
       } catch (err) {
         if (debug) {
           // XXX: This cast is pretty sketchy, as other error types can be thrown!

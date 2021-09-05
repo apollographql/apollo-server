@@ -46,19 +46,21 @@ describe('Errors', () => {
     ) => {
       if (errors === undefined) {
         const error = new ApolloError(message, code, { key });
-        return (await formatApolloErrors(
-          [
-            new GraphQLError(
-              error.message,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              error,
-            ),
-          ],
-          options,
-        ))[0];
+        return (
+          await formatApolloErrors(
+            [
+              new GraphQLError(
+                error.message,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                error,
+              ),
+            ],
+            options,
+          )
+        )[0];
       } else {
         return formatApolloErrors(errors, options);
       }
@@ -76,16 +78,18 @@ describe('Errors', () => {
     it('hides stacktrace by default', async () => {
       const thrown = new Error(message);
       (thrown as any).key = key;
-      const error = (await formatApolloErrors([
-        new GraphQLError(
-          thrown.message,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          thrown,
-        ),
-      ]))[0];
+      const error = (
+        await formatApolloErrors([
+          new GraphQLError(
+            thrown.message,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            thrown,
+          ),
+        ])
+      )[0];
       expect(error.message).toEqual(message);
       expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
       expect(error.extensions.exception.key).toEqual(key);
@@ -175,16 +179,18 @@ describe('Errors', () => {
         name: 'UserInputError',
       });
 
-      const formattedError = (await formatApolloErrors([
-        new GraphQLError(
-          error.message,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          error,
-        ),
-      ]))[0];
+      const formattedError = (
+        await formatApolloErrors([
+          new GraphQLError(
+            error.message,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            error,
+          ),
+        ])
+      )[0];
 
       expect(formattedError.extensions.field1).toEqual('property1');
       expect(formattedError.extensions.field2).toEqual('property2');

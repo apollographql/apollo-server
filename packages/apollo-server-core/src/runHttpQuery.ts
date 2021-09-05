@@ -79,7 +79,7 @@ export async function throwHttpGraphQLError<E extends Error>(
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
   extensions?: GraphQLExecutionResult['extensions'],
   headers?: Headers,
-  requestContext?: GraphQLRequestContext
+  requestContext?: GraphQLRequestContext,
 ): Promise<never> {
   const allHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ export async function throwHttpGraphQLError<E extends Error>(
       ? await formatApolloErrors(errors, {
           debug: options.debug,
           formatter: options.formatError,
-          requestContext
+          requestContext,
         })
       : errors,
   };
@@ -351,7 +351,7 @@ export async function processHTTPRequest<TContext>(
           undefined,
           response.extensions,
           response.http?.headers,
-          requestContext
+          requestContext,
         );
       }
 
