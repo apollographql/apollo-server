@@ -371,6 +371,7 @@ export async function processHTTPRequest<TContext>(
     if (error instanceof HttpQueryError) {
       throw error;
     }
+    // @ts-ignore
     return throwHttpGraphQLError(500, [error as Error], options);
   }
 
