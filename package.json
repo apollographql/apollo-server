@@ -83,7 +83,7 @@
     "@types/lru-cache": "5.1.1",
     "@types/memcached": "2.2.7",
     "@types/micro": "7.3.6",
-    "@types/node": "12.20.23",
+    "@types/node": "12.20.24",
     "@types/node-fetch": "2.5.12",
     "@types/qs-middleware": "1.0.1",
     "@types/request": "2.48.7",
