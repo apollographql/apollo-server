@@ -35,7 +35,7 @@
     // v12.0.) So let's stay on v2. (Perhaps we could swap to undici instead
     // if this pin gets to be a problem.)
     {
-      "matchPackageNames": ["node-fetch"],
+      "matchPackageNames": ["node-fetch", "@types/node-fetch"],
       "allowedVersions": "2.x"
     },
     /*
