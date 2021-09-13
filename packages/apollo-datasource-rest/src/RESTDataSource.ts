@@ -64,7 +64,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   // You can override this to remove query parameters or compute a cache key in any way that makes sense.
   // For example, you could use this to take Vary header fields into account.
   // Although we do validate header fields and don't serve responses from cache when they don't match,
-  // new reponses overwrite old ones with different vary header fields.
+  // new responses overwrite old ones with different vary header fields.
   protected cacheKeyFor(request: Request): string {
     return request.url;
   }

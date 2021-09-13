@@ -86,7 +86,7 @@ DEBUG=lerna NPM_CONFIG_USERCONFIG="$HOME/.npmrc-apollo-bot" npx lerna publish fr
 
 While it would be ideal to have this baked into the Git tag, it's not possible to do this in previous steps since we need to reference the commit hash that is created in Step 2's version bumping.
 
-Therefore, after publishing, add an entry to the CHANGELOG that was published which references the "Release" commit in order to provide easier visibility into what was in that that release.  It should be in the following format, where `COMMIT_HASH` is replaced with the Git reference for the most `Release` commmit found in `git log` and should immediately follow the `### vX.Y.Z` header of the version just published:
+Therefore, after publishing, add an entry to the CHANGELOG that was published which references the "Release" commit in order to provide easier visibility into what was in that that release.  It should be in the following format, where `COMMIT_HASH` is replaced with the Git reference for the most `Release` commit found in `git log` and should immediately follow the `### vX.Y.Z` header of the version just published:
 
 ```
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/COMMIT_HASH)

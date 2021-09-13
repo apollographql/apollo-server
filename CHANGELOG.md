@@ -345,7 +345,7 @@ Certain undersupported and underused Apollo Server features have been removed in
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/2da65ef9204027e43baedf9ce385bb3794fd0c9b)
 
-- `apollo-server-testing`: Ensure that user-provided context is cloned when using `createTestClient`, per the instructions in the [intergration testing]() section of the Apollo Server documentation.  [Issue #4170](https://github.com/apollographql/apollo-server/issues/4170) [PR #4175](https://github.com/apollographql/apollo-server/pull/4175)
+- `apollo-server-testing`: Ensure that user-provided context is cloned when using `createTestClient`, per the instructions in the [integration testing]() section of the Apollo Server documentation.  [Issue #4170](https://github.com/apollographql/apollo-server/issues/4170) [PR #4175](https://github.com/apollographql/apollo-server/pull/4175)
 
 ## v2.14.0
 
@@ -401,7 +401,7 @@ Certain undersupported and underused Apollo Server features have been removed in
 
 - Allow passing a `WebSocket.Server` to `ApolloServer.installSubscriptionHandlers`. [PR #2314](https://github.com/apollographql/apollo-server/pull/2314)
 - `apollo-server-lambda`: Support file uploads on AWS Lambda [Issue #1419](https://github.com/apollographql/apollo-server/issues/1419) [Issue #1703](https://github.com/apollographql/apollo-server/issues/1703) [PR #3926](https://github.com/apollographql/apollo-server/pull/3926)
-- `apollo-engine-reporting`: Fix inadvertant conditional formatting which prevented automated persisted query (APQ) hits and misses from being reported to Apollo Graph Manager. [PR #3986](https://github.com/apollographql/apollo-server/pull/3986)
+- `apollo-engine-reporting`: Fix inadvertent conditional formatting which prevented automated persisted query (APQ) hits and misses from being reported to Apollo Graph Manager. [PR #3986](https://github.com/apollographql/apollo-server/pull/3986)
 - `apollo-engine-reporting`: Deprecate the `ENGINE_API_KEY` environment variable in favor of its new name, `APOLLO_KEY`.  Continued use of `ENGINE_API_KEY` will result in deprecation warnings and support for it will be removed in a future major version. [#3923](https://github.com/apollographql/apollo-server/pull/3923)
 - `apollo-engine-reporting`: Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  Similarly, within the `engine` configuration object, the `schemaTag` property has been renamed `graphVariant`.  The functionality remains otherwise unchanged, but their new names mirror the name used within Apollo Graph Manager.  Continued use of the now-deprecated names will result in deprecation warnings and support will be dropped completely in the next "major" update.  To avoid misconfiguration, a runtime error will be thrown if _both_ new and deprecated names are set. [PR #3855](https://github.com/apollographql/apollo-server/pull/3855)
 - `apollo-engine-reporting-protobuf`: __(This is a breaking change only if you directly depend on `apollo-engine-reporting-protobuf`.)__ Drop legacy fields that were never used by `apollo-engine-reporting`. Added new fields `StatsContext` to allow `apollo-server` to send summary stats instead of full traces, and renamed `FullTracesReport` to `Report` and `Traces` to `TracesAndStats` since reports now can include stats as well as traces.
@@ -421,7 +421,7 @@ Certain undersupported and underused Apollo Server features have been removed in
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/056f083ddaf116633e6f759a2b3d69248bb18f66)
 
-- The range of accepted `peerDepedencies` versions for `graphql` has been widened to include `graphql@^15.0.0-rc.2` so as to accommodate the latest release-candidate of the `graphql@15` package, and an intention to support it when it is finally released on the `latest` npm tag.  While this change will subdue peer dependency warnings for Apollo Server packages, many dependencies from outside of this repository will continue to raise similar warnings until those packages own `peerDependencies` are updated.  It is unlikely that all of those packages will update their ranges prior to the final version of `graphql@15` being released, but if everything is working as expected, the warnings can be safely ignored. [PR #3825](https://github.com/apollographql/apollo-server/pull/3825)
+- The range of accepted `peerDependencies` versions for `graphql` has been widened to include `graphql@^15.0.0-rc.2` so as to accommodate the latest release-candidate of the `graphql@15` package, and an intention to support it when it is finally released on the `latest` npm tag.  While this change will subdue peer dependency warnings for Apollo Server packages, many dependencies from outside of this repository will continue to raise similar warnings until those packages own `peerDependencies` are updated.  It is unlikely that all of those packages will update their ranges prior to the final version of `graphql@15` being released, but if everything is working as expected, the warnings can be safely ignored. [PR #3825](https://github.com/apollographql/apollo-server/pull/3825)
 
 ## v2.10.1
 
@@ -725,7 +725,7 @@ Certain undersupported and underused Apollo Server features have been removed in
 
 - `apollo-server-lambda`: Fix typings which triggered "Module has no default export" errors. [PR #2230](https://github.com/apollographql/apollo-server/pull/2230)
 - `apollo-server-koa`: Support OPTIONS requests [PR #2288](https://github.com/apollographql/apollo-server/pull/2288)
-- Add `req` and `res` typings to the `ContextFunction` argument for apollo-server and apollo-server-express. Update `ContextFunction` return type to allow returning a value syncronously. [PR #2330](https://github.com/apollographql/apollo-server/pull/2330)
+- Add `req` and `res` typings to the `ContextFunction` argument for apollo-server and apollo-server-express. Update `ContextFunction` return type to allow returning a value synchronously. [PR #2330](https://github.com/apollographql/apollo-server/pull/2330)
 - Type the `formatError` function to accept an GraphQLError as an argument and return a GraphQLFormattedError [PR #2343](https://github.com/apollographql/apollo-server/pull/2343)
 
 ## v2.4.2
@@ -905,7 +905,7 @@ the query extensions' `clientInfo` values will be used. [PR #1960](https://githu
 
 - enable engine reporting from lambda [#1313](https://github.com/apollographql/apollo-server/pull/1313)
 - remove flattening of errors [#1288](https://github.com/apollographql/apollo-server/pull/1288)
-- dynamic url in datasourece ([#1277](https://github.com/apollographql/apollo-server/pull/1277))
+- dynamic url in datasource ([#1277](https://github.com/apollographql/apollo-server/pull/1277))
 
 ## v2.0.0-rc.6
 

@@ -250,7 +250,7 @@ export function formatApolloErrors(
   const enrichedErrors = errors.map((error) => enrichError(error, debug));
   const makePrintable = (error: GraphQLFormattedError) => {
     if (error instanceof Error) {
-      // Error defines its `message` and other fields as non-enumerable, meaning JSON.stringigfy does not print them.
+      // Error defines its `message` and other fields as non-enumerable, meaning JSON.stringify does not print them.
       const graphQLError = error as GraphQLFormattedError;
       return {
         message: graphQLError.message,
