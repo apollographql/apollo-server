@@ -101,6 +101,50 @@ By default, the landing page displays a footer that links to the documentation t
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `document`
+
+`string`
+</td>
+<td>
+
+You can pass valid graphql in your config via `document`, and when folks go to your Sandbox, this graphql will prepopulate in the editor pane.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `variables`
+
+`Record<string, string>`
+</td>
+<td>
+
+You can pass variables as a JSON object in your config, and when folks go to your Sandbox, these variables will prepopulate in the variables section of the Sandbox.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `headers`
+
+`Record<string, string>`
+</td>
+<td>
+
+You can pass headers as a JSON object in your config, and when folks go to your Sandbox, these headers will prepopulate in the headers section of the Sandbox.
+
+</td>
+</tr>
+
+
+
 </tbody>
 </table>
 
