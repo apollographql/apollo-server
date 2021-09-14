@@ -37,6 +37,9 @@ interface LandingPageConfig {
   graphRef?: string | undefined;
   isProd?: boolean;
   apolloStudioEnv?: 'staging' | 'prod';
+  document?: string;
+  variables?: Record<string, string>;
+  headers?: Record<string, string>;
   footer?: boolean;
 }
 
