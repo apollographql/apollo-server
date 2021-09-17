@@ -101,7 +101,7 @@
     "connect": "3.7.0",
     "deep-freeze": "0.0.1",
     "express": "4.17.1",
-    "fastify": "3.21.2",
+    "fastify": "3.21.3",
     "form-data": "4.0.0",
     "graphql": "15.5.3",
     "graphql-tag": "2.12.5",
