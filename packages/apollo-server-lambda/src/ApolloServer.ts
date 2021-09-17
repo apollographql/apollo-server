@@ -27,9 +27,20 @@ function defaultExpressAppFromMiddleware(
   middleware: express.RequestHandler,
 ): express.Application {
   const app = express();
+  const apqRouter = express.Router();
+
+  apqRouter.use('/', (req, res, next) => {
+    console.log(req);
+    console.log(res);
+    next();
+  });
+
+  app.use(apqRouter);
   app.use(middleware);
+
   return app;
 }
+
 export class ApolloServer extends ApolloServerExpress<LambdaContextFunctionParams> {
   protected override serverlessFramework(): boolean {
     return true;
@@ -69,12 +80,6 @@ export class ApolloServer extends ApolloServerExpress<LambdaContextFunctionParam
     res: express.Response,
   ): Promise<GraphQLOptions> {
     const { event, context } = getCurrentInvoke();
-    // AWS API Gateway does not pass through APQ query in event structure
-    // https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
-    // For this reason, we need to copy over the APQ query if it exists ontp the express.Request
-    if (req.method == 'GET' && event.query) {
-      req.query = event.query;
-    }
     const contextParams: LambdaContextFunctionParams = {
       event,
       context,
