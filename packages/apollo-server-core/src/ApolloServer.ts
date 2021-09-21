@@ -1005,7 +1005,7 @@ export class ApolloServerBase<
   // requested with `accept: text/html`. If no landing page is defined by any
   // plugin, returns null. (Specifically null and not undefined; some serverless
   // integrations rely on this to tell the difference between "haven't called
-  // renderLandingPage yet" and "there is no landingß page").
+  // renderLandingPage yet" and "there is no landing page").
   protected getLandingPage(): LandingPage | null {
     this.assertStarted('getLandingPage');
 

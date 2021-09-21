@@ -281,7 +281,7 @@ describe('apollo-server-express', () => {
         expect(e.extensions.exception.stacktrace).toBeDefined();
       });
 
-      it('propogates error codes in dev mode', async () => {
+      it('propagates error codes in dev mode', async () => {
         const { url: uri } = await createServer({
           typeDefs: gql`
             type Query {
@@ -312,7 +312,7 @@ describe('apollo-server-express', () => {
         expect(result.errors[0].extensions.exception.stacktrace).toBeDefined();
       });
 
-      it('propogates error codes in production', async () => {
+      it('propagates error codes in production', async () => {
         const { url: uri } = await createServer({
           typeDefs: gql`
             type Query {
@@ -341,7 +341,7 @@ describe('apollo-server-express', () => {
         expect(result.errors[0].extensions.exception).toBeUndefined();
       });
 
-      it('propogates error codes with null response in production', async () => {
+      it('propagates error codes with null response in production', async () => {
         const { url: uri } = await createServer({
           typeDefs: gql`
             type Query {

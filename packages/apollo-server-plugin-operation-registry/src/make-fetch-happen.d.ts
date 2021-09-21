@@ -21,7 +21,7 @@ declare module 'make-fetch-happen' {
       | boolean
       | number
       | {
-          //  The maximum amount of times to retry the operation. Default is 10. Seting this to 1 means do it once, then retry it once
+          //  The maximum amount of times to retry the operation. Default is 10. Setting this to 1 means do it once, then retry it once
           retries?: number;
           // The exponential factor to use. Default is 2.
           factor?: number;

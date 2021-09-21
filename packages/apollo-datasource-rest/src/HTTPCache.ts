@@ -114,7 +114,7 @@ export class HTTPCache {
     let ttlOverride = cacheOptions?.ttl;
 
     if (
-      // With a TTL override, only cache succesful responses but otherwise ignore method and response headers
+      // With a TTL override, only cache successful responses but otherwise ignore method and response headers
       !(ttlOverride && policy._status >= 200 && policy._status <= 299) &&
       // Without an override, we only cache GET requests and respect standard HTTP cache semantics
       !(request.method === 'GET' && policy.storable())

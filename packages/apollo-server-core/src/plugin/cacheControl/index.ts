@@ -19,7 +19,7 @@ export interface ApolloServerPluginCacheControlOptions {
    * All root fields and fields returning objects or interfaces have this value
    * for `maxAge` unless they set a cache hint with a non-undefined `maxAge`
    * using `@cacheControl` or `setCacheHint`. The default is 0, which means "not
-   * cachable". (That is: if you don't set `defaultMaxAge`, then every root
+   * cacheable". (That is: if you don't set `defaultMaxAge`, then every root
    * field in your operation and every field with sub-fields must have a cache
    * hint or the overall operation will not be cacheable.)
    */
