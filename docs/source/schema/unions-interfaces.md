@@ -194,7 +194,7 @@ type Query {
 }
 ```
 
-In this schema, `Query.schoolBooks` returns a list that can include both `Textbook`s and `ColoringBook`s.
+In this schema, `Query.books` returns a list that can include both `Textbook`s and `ColoringBook`s.
 
 ### Querying an interface
 
@@ -287,7 +287,7 @@ const resolvers = {
     },
   },
   Query: {
-    schoolBooks: () => { ... }
+    books: () => { ... }
   },
 };
 ```
