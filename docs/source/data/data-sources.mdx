@@ -179,7 +179,7 @@ class MoviesAPI extends RESTDataSource {
 
   async getMovie(id) {
     // Send a GET request to the specified endpoint
-    return this.get(`movies/${id}`);
+    return this.get(`movies/${encodeURIComponent(id)}`);
   }
 
   async getMostViewedMovies(limit = 10) {
@@ -211,7 +211,7 @@ class MoviesAPI extends RESTDataSource {
   // GET
   async getMovie(id) {
     return this.get(
-      `movies/${id}` // path
+      `movies/${encodeURIComponent(id)}` // path
     );
   }
 
@@ -242,7 +242,7 @@ class MoviesAPI extends RESTDataSource {
   // DELETE
   async deleteMovie(movie) {
     return this.delete(
-      `movies/${movie.id}`, // path
+      `movies/${encodeURIComponent(movie.id)}`, // path
     );
   }
 }
