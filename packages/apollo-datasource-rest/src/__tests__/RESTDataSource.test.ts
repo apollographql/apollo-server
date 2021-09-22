@@ -610,6 +610,27 @@ describe('RESTDataSource', () => {
         'https://api.example.com/foo/1?api_key=secret',
       );
     });
+
+    it('does not memoize failing requests', async () => {
+      const dataSource = new (class extends RESTDataSource {
+        override baseURL = 'https://api.example.com';
+
+        getFoo() {
+          return this.get('foo');
+        }
+      })();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockResponseOnce('Error', undefined, 500);
+      fetch.mockResponseOnce('foo');
+
+      const result = dataSource.getFoo();
+      await expect(result).rejects.toThrow(ApolloError);
+
+      const result2 = dataSource.getFoo();
+      await expect(result2).resolves.toEqual('foo');
+    });
   });
 
   describe('error handling', () => {
