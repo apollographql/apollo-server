@@ -1,5 +1,6 @@
 import {
   ApolloServerBase,
+  Config,
   convertNodeHttpToRequest,
   GraphQLOptions,
   isHttpQueryError,
@@ -17,6 +18,13 @@ export interface ServerRegistration {
   disableHealthCheck?: boolean;
 }
 
+export interface FastifyContext {
+  request: FastifyRequest;
+  reply: FastifyReply;
+}
+
+export type ApolloServerFastifyConfig = Config<FastifyContext>;
+
 const stringifyHealthCheck = fastJson({
   type: 'object',
   properties: {
@@ -26,12 +34,15 @@ const stringifyHealthCheck = fastJson({
   },
 });
 
-export class ApolloServer extends ApolloServerBase {
+export class ApolloServer<
+  ContextFunctionParams = FastifyContext,
+> extends ApolloServerBase<ContextFunctionParams> {
   async createGraphQLServerOptions(
-    request?: FastifyRequest,
-    reply?: FastifyReply,
+    request: FastifyRequest,
+    reply: FastifyReply,
   ): Promise<GraphQLOptions> {
-    return this.graphQLServerOptions({ request, reply });
+    const contextParams: FastifyContext = { request, reply };
+    return this.graphQLServerOptions(contextParams);
   }
 
   public createHandler({
@@ -103,7 +114,7 @@ export class ApolloServer extends ApolloServerBase {
             method: ['GET', 'POST'],
             url: '/',
             preHandler,
-            handler: async (request: FastifyRequest, reply: FastifyReply) => {
+            handler: async (request, reply) => {
               try {
                 const { graphqlResponse, responseInit } = await runHttpQuery(
                   [],
