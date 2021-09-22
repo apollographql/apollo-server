@@ -528,6 +528,40 @@ describe('RESTDataSource', () => {
       );
     });
 
+    it('does not deduplicate request with different headers', async () => {
+      const dataSource = new (class extends RESTDataSource {
+        override baseURL = 'https://api.example.com';
+
+        override willSendRequest(request: RequestOptions) {
+          request.headers.set('Authorization', this.context.token);
+        }
+
+        getFoo() {
+          return this.get('foo');
+        }
+      })();
+
+      dataSource.context = { token: 'secret' };
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+      fetch.mockJSONResponseOnce();
+
+      await dataSource.getFoo();
+
+      dataSource.context = { token: 'new-secret' };
+
+      await dataSource.getFoo();
+
+      expect(fetch).toBeCalledTimes(2);
+      expect(
+        (fetch.mock.calls[0][0] as Request).headers.get('Authorization'),
+      ).toEqual('secret');
+      expect(
+        (fetch.mock.calls[1][0] as Request).headers.get('Authorization'),
+      ).toEqual('new-secret');
+    });
+
     it('does not deduplicate non-GET requests', async () => {
       const dataSource = new (class extends RESTDataSource {
         override baseURL = 'https://api.example.com';
