@@ -405,6 +405,27 @@ describe('RESTDataSource', () => {
       expect(data).toEqual({ foo: 'bar' });
     });
 
+    it('returns data as parsed JSON when Content-Type ends in +json', async () => {
+      const dataSource = new (class extends RESTDataSource {
+        override baseURL = 'https://api.example.com';
+
+        getFoo() {
+          return this.get('foo');
+        }
+      })();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce(
+        { foo: 'bar' },
+        { 'Content-Type': 'application/vnd.api+json' },
+      );
+
+      const data = await dataSource.getFoo();
+
+      expect(data).toEqual({ foo: 'bar' });
+    });
+
     it('returns data as a string when Content-Type is text/plain', async () => {
       const dataSource = new (class extends RESTDataSource {
         override baseURL = 'https://api.example.com';
