@@ -46,6 +46,7 @@ export class SchemaManager {
     | {
         readonly mode: 'schema';
         readonly apiSchema: GraphQLSchema;
+        readonly schemaDerivedData: SchemaDerivedData;
       };
 
   constructor(
@@ -69,10 +70,11 @@ export class SchemaManager {
       this.modeSpecificState = {
         mode: 'schema',
         apiSchema: options.apiSchema,
+        // The caller of the constructor expects us to fail early if the schema
+        // given is invalid/has errors, so we call the provider here. We also
+        // pass the result to start(), as the provider can be expensive to call.
+        schemaDerivedData: options.schemaDerivedDataProvider(options.apiSchema),
       };
-      // The caller of the constructor expects us to fail early if the schema
-      // given is invalid/has errors, so we call the provider here.
-      options.schemaDerivedDataProvider(options.apiSchema);
     }
   }
 
@@ -119,9 +121,12 @@ export class SchemaManager {
       }
       return config.executor;
     } else {
-      this.processSchemaLoadOrUpdateEvent({
-        apiSchema: this.modeSpecificState.apiSchema,
-      });
+      this.processSchemaLoadOrUpdateEvent(
+        {
+          apiSchema: this.modeSpecificState.apiSchema,
+        },
+        this.modeSpecificState.schemaDerivedData,
+      );
       return null;
     }
   }
@@ -209,11 +214,12 @@ export class SchemaManager {
 
   private processSchemaLoadOrUpdateEvent(
     schemaContext: GraphQLSchemaContext,
+    schemaDerivedData?: SchemaDerivedData,
   ): void {
     if (!this.isStopped) {
-      this.schemaDerivedData = this.schemaDerivedDataProvider(
-        schemaContext.apiSchema,
-      );
+      this.schemaDerivedData =
+        schemaDerivedData ??
+        this.schemaDerivedDataProvider(schemaContext.apiSchema);
       this.schemaContext = schemaContext;
       this.onSchemaLoadOrUpdateListeners.forEach((listener) => {
         try {
