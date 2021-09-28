@@ -2176,7 +2176,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('Response caching', () => {
-      let clock: FakeTimers.Clock;
+      let clock: FakeTimers.InstalledClock;
       beforeAll(() => {
         // These tests use the default InMemoryLRUCache, which is backed by the
         // lru-cache npm module, whose maxAge feature is based on `Date.now()`
