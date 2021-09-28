@@ -227,7 +227,7 @@ describe('Check query latency stats when', () => {
       }),
       new SizeEstimator(),
     );
-    for (let _ in [1, 2]) {
+    for (const _ in [1, 2]) {
       contextualizedStats.addTrace(
         new Trace({
           ...baseTrace,
@@ -320,7 +320,7 @@ describe('Check query latency stats when', () => {
       }),
       sizeEstimator,
     );
-    for (let _ in [1, 2]) {
+    for (const _ in [1, 2]) {
       contextualizedStats.addTrace(
         new Trace({
           ...baseTrace,

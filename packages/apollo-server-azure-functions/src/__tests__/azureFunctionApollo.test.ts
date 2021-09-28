@@ -52,7 +52,7 @@ const createAzureFunction = async (options: CreateAppOptions = {}) => {
         done(error: any, result: any) {
           if (error) throw error;
           res.statusCode = result.status;
-          for (let key in result.headers) {
+          for (const key in result.headers) {
             if (result.headers.hasOwnProperty(key)) {
               res.setHeader(key, result.headers[key]);
             }
