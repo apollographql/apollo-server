@@ -55,7 +55,7 @@
     "apollo-server-types": "file:packages/apollo-server-types"
   },
   "devDependencies": {
-    "@apollo/client": "3.4.14",
+    "@apollo/client": "3.4.15",
     "@graphql-codegen/cli": "2.2.0",
     "@graphql-codegen/typescript-operations": "2.1.4",
     "@graphql-tools/mock": "8.4.0",
@@ -77,7 +77,7 @@
     "@types/ioredis": "4.27.4",
     "@types/jest": "27.0.2",
     "@types/koa-router": "7.4.4",
-    "@types/lodash": "4.14.174",
+    "@types/lodash": "4.14.175",
     "@types/lodash.sortby": "4.7.6",
     "@types/lodash.xorby": "4.7.6",
     "@types/lru-cache": "5.1.1",
