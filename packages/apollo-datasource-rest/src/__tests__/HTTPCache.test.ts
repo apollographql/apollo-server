@@ -8,7 +8,7 @@ import { MapKeyValueCache } from './MapKeyValueCache';
 describe('HTTPCache', () => {
   let store: MapKeyValueCache<string>;
   let httpCache: HTTPCache;
-  let clock: FakeTimers.Clock;
+  let clock: FakeTimers.InstalledClock;
 
   beforeAll(() => {
     clock = FakeTimers.install();
