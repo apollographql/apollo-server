@@ -12,6 +12,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 - `apollo-server-koa`: The peer dependency on `koa` (added in v3.0.0) should be a `^` range dependency rather than depending on exactly one version, and it should not be automatically increased when new versions of `koa` are released. [PR #5759](https://github.com/apollographql/apollo-server/pull/5759)
 - `apollo-server-fastify`: Export `ApolloServerFastifyConfig` and `FastifyContext` TypeScript types. [PR #5743](https://github.com/apollographql/apollo-server/pull/5743)
 - `apollo-server-core`: Only generate the schema hash once on startup rather than twice. [PR #5757](https://github.com/apollographql/apollo-server/pull/5757)
+- `apollo-datasource-rest@3.2.1`: When choosing whether or not to parse a response as JSON, treat any `content-type` ending in `+json` as JSON rather than just `application/hal+json` (in addition to `application/json`). [PR #5737](https://github.com/apollographql/apollo-server/pull/5737)
 
 ## v3.3.0
 
