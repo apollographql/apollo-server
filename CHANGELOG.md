@@ -10,6 +10,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## vNEXT
 
 - `apollo-server-koa`: The peer dependency on `koa` (added in v3.0.0) should be a `^` range dependency rather than depending on exactly one version, and it should not be automatically increased when new versions of `koa` are released. [PR #5759](https://github.com/apollographql/apollo-server/pull/5759)
+- `apollo-server-fastify`: Export `ApolloServerFastifyConfig` and `FastifyContext` TypeScript types. [PR #5743](https://github.com/apollographql/apollo-server/pull/5743)
 
 ## v3.3.0
 
