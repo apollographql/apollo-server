@@ -247,6 +247,7 @@ class MoviesAPI extends RESTDataSource {
   }
 }
 ```
+> Note the use of (`encodeURIComponent`)[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent]. This is a standard JavaScript function that encodes special characters in a URI, preventing an attack vector known as "Web Parameter Tampering". For more information on this vulnerability, see [this article](https://owasp.org/www-community/attacks/Web_Parameter_Tampering).
 
 </ExpansionPanel>
 
