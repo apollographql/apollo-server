@@ -9,6 +9,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+- `apollo-server-koa`: The peer dependency on `koa` (added in v3.0.0) should be a `^` range dependency rather than depending on exactly one version, and it should not be automatically increased when new versions of `koa` are released. [PR #5759](https://github.com/apollographql/apollo-server/pull/5759)
+
 ## v3.3.0
 
 - `apollo-server-core`: Error handling when a `serverWillStop` callback invoked by `server.stop()` (or `gateway.stop()`) throws is now consistent: the original call to `server.stop()` throws the error, and any concurrent and subsequent calls to `server.stop()` throw the same error. Prior to Apollo Server v2.22.0, the original call threw the error and the behavior of concurrent and subsequent calls was undefined (in practice, it would call shutdown handlers a second time). Apollo Server v2.22.0 intended to put these semantics into place where all three kinds of calls would throw, but due to bugs, the original call would return without error and concurrent calls would hang. (Subsequent calls would correctly throw the error.) In addition, errors thrown by the `drainServer` hook introduced in Apollo Server v3.2.0 are now handled in the same way. [Issue #5649](https://github.com/apollographql/apollo-server/issues/5649) [PR #5653](https://github.com/apollographql/apollo-server/pull/5653)
