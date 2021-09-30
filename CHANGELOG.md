@@ -142,6 +142,7 @@ Certain undersupported and underused Apollo Server features have been removed in
   - In a future release, `willResolveField` might become "sometimes-`async`" by returning a `ValueOrPromise`.
 - Apollo Server now always fires the `willSendResponse` plugin lifecycle event after firing `didEncounterError`.
   - In certain error cases (mostly related to automated persisted queries), Apollo Server 2 skips firing `willSendResponse`.
+- The `executionDidStart` event can no longer return a function as an "end hook". The "end hook" for this event now must be provided as an async function property called `executionDidEnd` on an object.
 - Renamed the `GraphQLService` interface to `GatewayInterface`.
   - This interface is the type used to provide a federated gateway instance to Apollo Server. Its name has been changed to reduce ambiguity.
   - The previous name is still exported for backward compatibility purposes.
