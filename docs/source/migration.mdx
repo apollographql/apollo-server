@@ -709,6 +709,32 @@ In Apollo Server 2, some errors related to [persisted queries](../performance/ap
 
 In Apollo Server 3, any request that makes it far enough to invoke `requestDidStart` also invokes `willSendResponse`. See [this PR](https://github.com/apollographql/apollo-server/pull/5287) for details.
 
+#### `executionDidStart` can no longer return a function
+
+In Apollo Server 2, the `executionDidStart` plugin event could return nothing, an object, or a function. If a function was provided, it would be called when execution finished (one might imagine an `executionDidEnd`).
+
+In Apollo Server 3, `executionDidStart` must return either nothing or an object. If you previously returned a function, you can now return an object with an `executionDidEnd` field like so:
+
+```javascript{7-11}
+const server = new ApolloServer({
+  schema,
+  plugins: [{
+    async requestDidStart() {
+      return {
+        async executionDidStart() {
+          return {
+            async executionDidEnd() {
+              // your code here
+            }
+          }
+        },
+      };
+    }
+  }],
+});
+```
+
+For more information, you can check out the related plugin documentation on [end hooks](../integrations/plugins/#end-hooks).
 
 #### Gateway interface renamed and simplified
 
