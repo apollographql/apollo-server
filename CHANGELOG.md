@@ -27,6 +27,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 - `apollo-server-fastify`: Export `ApolloServerFastifyConfig` and `FastifyContext` TypeScript types. [PR #5743](https://github.com/apollographql/apollo-server/pull/5743)
 - `apollo-server-core`: Only generate the schema hash once on startup rather than twice. [PR #5757](https://github.com/apollographql/apollo-server/pull/5757)
 - `apollo-datasource-rest@3.2.1`: When choosing whether or not to parse a response as JSON, treat any `content-type` ending in `+json` as JSON rather than just `application/hal+json` (in addition to `application/json`). [PR #5737](https://github.com/apollographql/apollo-server/pull/5737)
+- `apollo-server`: You can now configure the health check URL path with the `healthCheckPath` constructor option, or disable serving health checks by passing `null` for this option. (This option is specific to the batteries-included `apollo-server` package; if you're using a framework integration package and want to serve a health check at a different path, just use your web framework directly.) [PR #5270](https://github.com/apollographql/apollo-server/pull/5270) [Issue #3577](https://github.com/apollographql/apollo-server/issues/3577)
 
 ## v3.3.0
 

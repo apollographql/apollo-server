@@ -22,6 +22,17 @@ export interface GetMiddlewareOptions {
   bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
+  // There's no real point to allowing you to customize the health check path in
+  // an Apollo Server web framework integration package. You're already using
+  // Express --- just define a health check yourself by adding a handler that
+  // returns 200 to the URL path of your choice. This option only exists to
+  // provide a small amount of configuration for `apollo-server`, which doesn't
+  // otherwise give you direct access to the web server. (Honestly, the health
+  // check feature really should *only* exist in `apollo-server`; that it exists
+  // elsewhere (and doesn't even check to see if GraphQL operations can
+  // execute!) is a mistake we're stuck with due to backwards compatibility.)
+  // Passing `null` here implies disableHealthCheck:true.
+  __internal_healthCheckPath?: string | null;
 }
 
 export interface ServerRegistration extends GetMiddlewareOptions {
@@ -71,9 +82,9 @@ export class ApolloServer<
     bodyParserConfig,
     disableHealthCheck,
     onHealthCheck,
+    __internal_healthCheckPath,
   }: GetMiddlewareOptions = {}): express.Router {
     if (!path) path = '/graphql';
-
     this.assertStarted('getMiddleware');
 
     // Note that even though we use Express's router here, we still manage to be
@@ -81,23 +92,26 @@ export class ApolloServer<
     // middleware interface that Connect and Express share!
     const router = express.Router();
 
-    if (!disableHealthCheck) {
-      router.use('/.well-known/apollo/server-health', (req, res) => {
-        // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
-        res.type('application/health+json');
+    if (!disableHealthCheck && __internal_healthCheckPath !== null) {
+      router.use(
+        __internal_healthCheckPath ?? '/.well-known/apollo/server-health',
+        (req, res) => {
+          // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+          res.type('application/health+json');
 
-        if (onHealthCheck) {
-          onHealthCheck(req)
-            .then(() => {
-              res.json({ status: 'pass' });
-            })
-            .catch(() => {
-              res.status(503).json({ status: 'fail' });
-            });
-        } else {
-          res.json({ status: 'pass' });
-        }
-      });
+          if (onHealthCheck) {
+            onHealthCheck(req)
+              .then(() => {
+                res.json({ status: 'pass' });
+              })
+              .catch(() => {
+                res.status(503).json({ status: 'fail' });
+              });
+          } else {
+            res.json({ status: 'pass' });
+          }
+        },
+      );
     }
 
     // XXX multiple paths?
