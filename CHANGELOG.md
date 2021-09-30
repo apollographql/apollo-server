@@ -9,6 +9,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+- `apollo-server-core`: For ease of testing, you can specify the node environment via `new ApolloServer({nodeEnv})` in addition to via the `NODE_ENV` environment variable. The environment variable is now only read during server startup (and in some error cases) rather than on every request. [PR #5657](https://github.com/apollographql/apollo-server/pull/5657)
 - `apollo-server-koa`: The peer dependency on `koa` (added in v3.0.0) should be a `^` range dependency rather than depending on exactly one version, and it should not be automatically increased when new versions of `koa` are released. [PR #5759](https://github.com/apollographql/apollo-server/pull/5759)
 - `apollo-server-fastify`: Export `ApolloServerFastifyConfig` and `FastifyContext` TypeScript types. [PR #5743](https://github.com/apollographql/apollo-server/pull/5743)
 - `apollo-server-core`: Only generate the schema hash once on startup rather than twice. [PR #5757](https://github.com/apollographql/apollo-server/pull/5757)
