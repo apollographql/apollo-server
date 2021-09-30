@@ -247,7 +247,13 @@ class MoviesAPI extends RESTDataSource {
   }
 }
 ```
-> Note the use of (`encodeURIComponent`)[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent]. This is a standard JavaScript function that encodes special characters in a URI, preventing an attack vector known as "Web Parameter Tampering". For more information on this vulnerability, see [this article](https://owasp.org/www-community/attacks/Web_Parameter_Tampering).
+> Note the use of (`encodeURIComponent`)[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent]. This is a standard JavaScript function that encodes special characters in a URI, preventing a possible injection attack vector.
+
+For a simple example, suppose our REST endpoint responded to the following URLs:
+* GET `/movies/:id`
+* GET `/movies/:id/characters`
+
+A "malicious" client could provide an `:id` of `1/characters` to target the `characters` endpoint when it was the singular `movie` endpoint that we were expecting. URI encoding prevents this kind of injection by transforming the `/` into `%2F`. This can then be correctly decoded and interpreted by the server and won't be treated as a path segment.
 
 </ExpansionPanel>
 
