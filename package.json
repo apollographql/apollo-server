@@ -60,7 +60,7 @@
     "@graphql-codegen/typescript-operations": "2.1.5",
     "@graphql-tools/mock": "8.4.0",
     "@graphql-tools/schema": "8.2.0",
-    "@graphql-tools/utils": "8.2.3",
+    "@graphql-tools/utils": "8.2.4",
     "@hapi/hapi": "20.2.0",
     "@josephg/resolvable": "1.0.1",
     "@sinonjs/fake-timers": "8.0.1",
