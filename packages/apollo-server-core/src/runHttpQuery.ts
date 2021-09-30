@@ -114,13 +114,13 @@ export function throwHttpGraphQLError<E extends Error>(
   );
 }
 
-const NODE_ENV = process.env.NODE_ENV;
+const NODE_ENV = process.env.NODE_ENV ?? '';
 
 export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
-  function debugFromNodeEnv(nodeEnv: string | undefined = NODE_ENV) {
+  function debugFromNodeEnv(nodeEnv: string = NODE_ENV) {
     return nodeEnv !== 'production' && nodeEnv !== 'test';
   }
 

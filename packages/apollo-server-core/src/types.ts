@@ -99,5 +99,5 @@ export interface Config<ContextFunctionParams = any> extends BaseConfig {
   experimental_approximateDocumentStoreMiB?: number;
   stopOnTerminationSignals?: boolean;
   apollo?: ApolloConfigInput;
-  nodeEnv?: string | undefined;
+  nodeEnv?: string;
 }

@@ -58,7 +58,7 @@ export interface GraphQLServerOptions<
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
   parseOptions?: ParseOptions;
-  nodeEnv?: string | undefined;
+  nodeEnv?: string;
 }
 
 export type DataSources<TContext> = {
