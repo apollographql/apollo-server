@@ -153,7 +153,7 @@ export class ApolloServerBase<
     if (!config) throw new Error('ApolloServer requires options.');
     this.config = {
       ...config,
-      nodeEnv: 'nodeEnv' in config ? config.nodeEnv : process.env.NODE_ENV,
+      nodeEnv: config.nodeEnv ?? process.env.NODE_ENV,
     };
     const {
       context,

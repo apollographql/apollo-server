@@ -178,7 +178,7 @@ describe('apollo-server-fastify', () => {
       const { httpServer } = await createServer({
         typeDefs,
         resolvers,
-        nodeEnv: undefined, // default landing page
+        nodeEnv: '', // default landing page
       });
 
       await request(httpServer)
@@ -283,7 +283,7 @@ describe('apollo-server-fastify', () => {
             throw new AuthenticationError('valid result');
           },
           // Stack trace not included for NODE_ENV=test
-          nodeEnv: undefined,
+          nodeEnv: '',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -314,7 +314,7 @@ describe('apollo-server-fastify', () => {
             },
           },
           // Stack trace not included for NODE_ENV=test
-          nodeEnv: undefined,
+          nodeEnv: '',
         });
 
         const apolloFetch = createApolloFetch({ uri });

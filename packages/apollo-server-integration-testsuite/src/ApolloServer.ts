@@ -248,7 +248,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const { url: uri } = await createApolloServer({
             schema,
             stopOnTerminationSignals: false,
-            nodeEnv: undefined,
+            nodeEnv: '',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -979,7 +979,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               ],
               debug: true,
               stopOnTerminationSignals: false,
-              nodeEnv: undefined,
+              nodeEnv: '',
               ...constructorOptions,
             });
 
@@ -1595,7 +1595,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               typeDefs,
               resolvers,
               stopOnTerminationSignals: false,
-              nodeEnv: undefined,
+              nodeEnv: '',
               context: () => {
                 throw new AuthenticationError('valid result');
               },
@@ -2922,7 +2922,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             })),
           ],
           // dev mode, so we get the local landing page
-          nodeEnv: undefined,
+          nodeEnv: '',
         };
       }
 
