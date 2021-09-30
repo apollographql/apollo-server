@@ -85,10 +85,7 @@ describe('apollo-server-micro', function () {
       });
 
       it('should render a landing page when a browser sends in a request', async function () {
-        const { service, uri } = await createServer(
-          {},
-          { __testing_nodeEnv__: undefined },
-        );
+        const { service, uri } = await createServer({}, { nodeEnv: '' });
 
         const body = await rp({
           uri: `${uri}/graphql`,

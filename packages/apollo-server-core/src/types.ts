@@ -99,12 +99,5 @@ export interface Config<ContextFunctionParams = any> extends BaseConfig {
   experimental_approximateDocumentStoreMiB?: number;
   stopOnTerminationSignals?: boolean;
   apollo?: ApolloConfigInput;
-  // Apollo Server only uses process.env.NODE_ENV to determine defaults for
-  // other behavior which have other mechanisms of setting explicitly. Sometimes
-  // our tests want to test the exact logic of how NODE_ENV affects defaults;
-  // they can set this parameter, but there's no reason to do so other than for
-  // tests. Note that an explicit `__testing_nodeEnv__: undefined` means "act as
-  // if the environment variable is not set", whereas the absence of
-  // `__testing_nodeEnv__` means to honor the environment variable.
-  __testing_nodeEnv__?: string | undefined;
+  nodeEnv?: string;
 }

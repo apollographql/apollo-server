@@ -203,7 +203,7 @@ describe('apollo-server', () => {
         typeDefs,
         resolvers,
         stopOnTerminationSignals: false,
-        __testing_nodeEnv__: undefined,
+        nodeEnv: '',
       });
 
       const { server: httpServer } = await server.listen({ port: 0 });

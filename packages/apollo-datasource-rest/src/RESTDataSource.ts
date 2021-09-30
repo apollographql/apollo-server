@@ -44,6 +44,8 @@ export interface CacheOptions {
 export type Body = BodyInit | object;
 export { Request };
 
+const NODE_ENV = process.env.NODE_ENV;
+
 export abstract class RESTDataSource<TContext = any> extends DataSource {
   httpCache!: HTTPCache;
   context!: TContext;
@@ -282,7 +284,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     request: Request,
     fn: () => Promise<TResult>,
   ): Promise<TResult> {
-    if (process.env.NODE_ENV === 'development') {
+    if (NODE_ENV === 'development') {
       // We're not using console.time because that isn't supported on Cloudflare
       const startTime = Date.now();
       try {

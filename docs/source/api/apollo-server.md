@@ -390,6 +390,19 @@ The default value is `true`. Set this to `false` to use mocked resolvers only fo
 </td>
 </tr>
 
+<tr>
+<td>
+
+##### `nodeEnv`
+
+`String`
+</td>
+<td>
+
+If this is set to any string value, use that value instead of the environment variable `NODE_ENV` for the features whose defaults depend on `NODE_ENV` (like the [`debug`](#introspection) and [`introspection`](#introspection) options). Note that passing the empty string here is equivalent to running with the `NODE_ENV` environment variable unset. This is primarily meant for testing the effects of the `NODE_ENV` environment variable.
+</td>
+</tr>
+
 </tbody>
 </table>
 
