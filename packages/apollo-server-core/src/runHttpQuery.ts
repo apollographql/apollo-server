@@ -131,7 +131,8 @@ export async function runHttpQuery(
     // The options can be generated asynchronously, so we don't have access to
     // the normal options provided by the user, such as: formatError,
     // debug. Therefore, we need to do some unnatural things, such
-    // as use NODE_ENV to determine the debug settings
+    // as use NODE_ENV to determine the debug settings. Please note that this
+    // will not be sensitive to any runtime changes made to NODE_ENV.
     return throwHttpGraphQLError(500, [e as Error], {
       debug: debugFromNodeEnv(),
     });
