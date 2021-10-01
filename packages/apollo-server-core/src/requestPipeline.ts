@@ -87,7 +87,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   ) => GraphQLResponse | null;
 
   plugins?: ApolloServerPlugin[];
-  documentStore?: DocumentStore;
+  documentStore?: DocumentStore | null;
 
   parseOptions?: ParseOptions;
 }

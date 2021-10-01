@@ -57,7 +57,7 @@ export interface GraphQLServerOptions<
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
   plugins?: ApolloServerPlugin[];
-  documentStore?: DocumentStore;
+  documentStore?: DocumentStore | null;
   parseOptions?: ParseOptions;
   nodeEnv?: string;
 }

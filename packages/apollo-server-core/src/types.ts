@@ -99,9 +99,8 @@ export interface Config<ContextFunctionParams = any> extends BaseConfig {
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
   gateway?: GatewayInterface;
-  experimental_approximateDocumentStoreMiB?: number;
   stopOnTerminationSignals?: boolean;
   apollo?: ApolloConfigInput;
   nodeEnv?: string;
-  documentStore?: DocumentStore | boolean;
+  documentStore?: DocumentStore | null;
 }

@@ -97,41 +97,20 @@ describe('ApolloServerBase documentStore', () => {
     expect(setSpy.mock.calls.length).toBe(1);
   });
 
-  it('documentStore - false', async () => {
+  it('documentStore - null', async () => {
     const server = new ApolloServerObservable({
       typeDefs,
       resolvers,
-      documentStore: false,
+      documentStore: null,
     });
 
     await server.start();
 
     const options = await server.graphQLServerOptions();
-    expect(options.documentStore).toBe(undefined);
+    expect(options.documentStore).toBe(null);
 
     const result = await server.executeOperation(operations.simple.op);
 
     expect(result.data).toEqual({ hello: 'world' });
-  });
-
-  it('documentStore - true', async () => {
-    const server = new ApolloServerObservable({
-      typeDefs,
-      resolvers,
-      documentStore: true,
-    });
-
-    await server.start();
-
-    const options = await server.graphQLServerOptions();
-    const embeddedStore = options.documentStore as any;
-    expect(embeddedStore).toBeInstanceOf(InMemoryLRUCache);
-
-    await server.executeOperation(operations.simple.op);
-
-    expect(await embeddedStore.getTotalSize()).toBe(403);
-    expect(await embeddedStore.get(operations.simple.hash)).toMatchObject(
-      documentNodeMatcher,
-    );
   });
 });

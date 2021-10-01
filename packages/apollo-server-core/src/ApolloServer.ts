@@ -72,17 +72,13 @@ const NoIntrospection = (context: ValidationContext) => ({
   },
 });
 
-function approximateObjectSize<T>(obj: T): number {
-  return Buffer.byteLength(JSON.stringify(obj), 'utf8');
-}
-
 export type SchemaDerivedData = {
   schema: GraphQLSchema;
   schemaHash: SchemaHash;
   // A store that, when enabled (default), will store the parsed and validated
   // versions of operations in-memory, allowing subsequent parses/validates
   // on the same operation to be executed immediately.
-  documentStore?: DocumentStore;
+  documentStore: DocumentStore | null;
 };
 
 type ServerState =
@@ -145,7 +141,6 @@ export class ApolloServerBase<
   private toDispose = new Set<() => Promise<void>>();
   private toDisposeLast = new Set<() => Promise<void>>();
   private drainServers: (() => Promise<void>) | null = null;
-  private experimental_approximateDocumentStoreMiB: Config['experimental_approximateDocumentStoreMiB'];
   private stopOnTerminationSignals: boolean;
   private landingPage: LandingPage | null = null;
 
@@ -172,7 +167,6 @@ export class ApolloServerBase<
       // requestOptions.
       mocks,
       mockEntireSchema,
-      experimental_approximateDocumentStoreMiB,
       documentStore,
       ...requestOptions
     } = this.config;
@@ -208,8 +202,6 @@ export class ApolloServerBase<
 
     this.parseOptions = parseOptions;
     this.context = context;
-    this.experimental_approximateDocumentStoreMiB =
-      experimental_approximateDocumentStoreMiB;
 
     const isDev = this.config.nodeEnv !== 'production';
 
@@ -673,19 +665,18 @@ export class ApolloServerBase<
   private generateSchemaDerivedData(schema: GraphQLSchema): SchemaDerivedData {
     const schemaHash = generateSchemaHash(schema!);
 
-    // normalize documentStore so it's either a DocumentStore or undefined
-    const configValue = this.config.documentStore;
-    const documentStore =
-      configValue === undefined || configValue === true
-        ? this.initializeDocumentStore()
-        : configValue === false
-        ? undefined
-        : configValue;
-
     return {
       schema,
       schemaHash,
-      documentStore,
+      // The DocumentStore is schema-derived because we put documents in it after
+      // checking that they pass GraphQL validation against the schema and use
+      // this to skip validation as well as parsing. So we can't reuse the same
+      // DocumentStore for different schemas because that might make us treat
+      // invalid operations as valid.
+      documentStore:
+        this.config.documentStore === undefined
+          ? this.initializeDocumentStore()
+          : this.config.documentStore,
     };
   }
 
@@ -883,9 +874,10 @@ export class ApolloServerBase<
       // only using JSON.stringify on the DocumentNode (and thus doesn't account
       // for unicode characters, etc.), but it should do a reasonable job at
       // providing a caching document store for most operations.
-      maxSize:
-        Math.pow(2, 20) * (this.experimental_approximateDocumentStoreMiB || 30),
-      sizeCalculator: approximateObjectSize,
+      //
+      // If you want to tweak the max size, pass in your own documentStore.
+      maxSize: Math.pow(2, 20) * 30,
+      sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
     });
   }
 
