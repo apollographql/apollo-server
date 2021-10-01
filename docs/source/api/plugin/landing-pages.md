@@ -138,7 +138,7 @@ You can pass variables as a JSON object in your config, and when folks go to you
 </td>
 <td>
 
-You can pass headers as a JSON object in your config, and when folks go to your Sandbox, these headers will prepopulate in the headers section of the Sandbox.
+A URI-encoded, serialized object containing initial HTTP header values to populate in the Explorer on load.
 
 </td>
 </tr>
