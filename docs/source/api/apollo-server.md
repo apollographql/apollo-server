@@ -198,11 +198,16 @@ An array containing custom functions to use as additional [validation rules](htt
 </td>
 <td>
 
-The server checks the SHA-256 hash of each incoming operation against DocumentNodes cached in the `documentStore` and skips unnecessary parsing and validation if a match is found. The `documentStore` does not store the results of queries, just the operation's abstract syntax tree. Set this value when you want to change the cache size or store the cache information in an alternate location.
+A key-value cache that Apollo Server uses to store previously encountered GraphQL operations (as `DocumentNode`s). It does _not_ store query _results_.
 
-**Do not share a document store between multiple `ApolloServer` instances** unless you prefix the entries uniquely per `ApolloServer` (for example using [PrefixingKeyValueCache](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/PrefixingKeyValueCache.ts)): Apollo Server assumes any operation found in the document store has been validated against the current schema, so if multiple servers with different schemas share the same document store, your server may execute invalid operations.
+Whenever Apollo Server receives an incoming operation, it checks whether that exact operation is present in its `documentStore`. If it's present, Apollo Server can safely skip parsing and validating the operation, thereby improving performance.
 
-The default value is an [InMemoryLRUCache](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/InMemoryLRUCache.ts) with an approximate size of 30MiB, which is usually sufficient unless the server processes a large number of unique operations. If you just want to change the size, pass:
+The default `documentStore` is an [`InMemoryLRUCache`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/InMemoryLRUCache.ts) with an approximate size of 30MiB. This is usually sufficient unless the server processes a large number of unique operations. Provide this option if you want to change the cache size or store the cache information in an alternate location.
+
+To use `InMemoryLRUCache` but change its size to an amount `approximateDocumentStoreMiB`:
+
+<div style="max-width: 400px;">
+
 ```typescript
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import type { DocumentNode } from 'graphql';
@@ -214,7 +219,13 @@ new ApolloServer({
 })
 ```
 
-Pass `null` to disable this document cache entirely.
+</div>
+
+**Do not share a `documentStore` between multiple `ApolloServer` instances**, _unless_ you assign a unique prefix to each instance's entries (for example, using [`PrefixingKeyValueCache`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/PrefixingKeyValueCache.ts)). Apollo Server skips parsing and validating any operation that's present in its `documentStore`, so if servers with _different_ schemas share the _same_ `documentStore`, a server might execute an operation that its schema doesn't support.
+
+Pass `null` to disable this cache entirely.
+
+Available in Apollo Server v3.4.0 and later.
 </td>
 </tr>
 
