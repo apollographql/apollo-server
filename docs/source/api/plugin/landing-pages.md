@@ -126,7 +126,9 @@ If you omit this, the Explorer initially loads an example query based on your sc
 </td>
 <td>
 
-You can pass variables as a JSON object in your config, and when folks go to your Sandbox, these variables will prepopulate in the variables section of the Sandbox.
+A URI-encoded, serialized object containing initial variable values to populate in the Explorer on load.
+
+If provided, these variables should apply to the initial query you provide for document.
 
 </td>
 </tr>
