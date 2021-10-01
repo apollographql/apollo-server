@@ -7,8 +7,21 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
-## vNEXT
+## vNEXT (minor)
 
+- `apollo-server-core`: You can now specify your own `DocumentStore` (a `KeyValueStore<DocumentNode>`) for Apollo Server's cache of parsed and validated GraphQL operation abstract syntax trees via the new `documentStore` constructor option. This replaces the `experimental_approximateDocumentStoreMiB` option. You can replace `new ApolloServer({experimental_approximateDocumentStoreMiB: approximateDocumentStoreMiB, ...moreOptions})` with:
+  ```typescript
+  import { InMemoryLRUCache } from 'apollo-server-caching';
+  import type { DocumentNode } from 'graphql';
+  new ApolloServer({
+    documentStore: new InMemoryLRUCache<DocumentNode>({
+      maxSize: Math.pow(2, 20) * approximateDocumentStoreMiB,
+      sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
+    }),
+    ...moreOptions,
+  })
+  ```
+  [PR #5644](https://github.com/apollographql/apollo-server/pull/5644) [Issue #5634](https://github.com/apollographql/apollo-server/issues/5634)
 - `apollo-server-core`: For ease of testing, you can specify the node environment via `new ApolloServer({nodeEnv})` in addition to via the `NODE_ENV` environment variable. The environment variable is now only read during server startup (and in some error cases) rather than on every request. [PR #5657](https://github.com/apollographql/apollo-server/pull/5657)
 - `apollo-server-koa`: The peer dependency on `koa` (added in v3.0.0) should be a `^` range dependency rather than depending on exactly one version, and it should not be automatically increased when new versions of `koa` are released. [PR #5759](https://github.com/apollographql/apollo-server/pull/5759)
 - `apollo-server-fastify`: Export `ApolloServerFastifyConfig` and `FastifyContext` TypeScript types. [PR #5743](https://github.com/apollographql/apollo-server/pull/5743)

@@ -194,13 +194,27 @@ An array containing custom functions to use as additional [validation rules](htt
 
 ##### `documentStore`
 
-`KeyValueCache<DocumentNode>` or `boolean`
+`KeyValueCache<DocumentNode>` or `null`
 </td>
 <td>
 
-The server checks the SHA-256 hash of each incoming operation against DocumentNodes cached in the `documentStore` and skips unnecessary parsing and validation if a match is found. The `documentStore` does not store the results of queries. Set this value when you want to change the cache size or store the cache information in an alternate location. Do not re-use a cache between multiple `ApolloServer` instances unless you prefix the entries uniquely per `ApolloServer` (for example using [PrefixingKeyValueCache](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/PrefixingKeyValueCache.ts)).
+The server checks the SHA-256 hash of each incoming operation against DocumentNodes cached in the `documentStore` and skips unnecessary parsing and validation if a match is found. The `documentStore` does not store the results of queries, just the operation's abstract syntax tree. Set this value when you want to change the cache size or store the cache information in an alternate location.
 
-The default value is an [InMemoryLRUCache](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/InMemoryLRUCache.ts) with a default size of 30MiB, which is usually sufficient unless the server processes a large number of unique operations. Pass `false` to disable caching entirely.
+**Do not share a document store between multiple `ApolloServer` instances** unless you prefix the entries uniquely per `ApolloServer` (for example using [PrefixingKeyValueCache](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/PrefixingKeyValueCache.ts)): Apollo Server assumes any operation found in the document store has been validated against the current schema, so if multiple servers with different schemas share the same document store, your server may execute invalid operations.
+
+The default value is an [InMemoryLRUCache](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/InMemoryLRUCache.ts) with an approximate size of 30MiB, which is usually sufficient unless the server processes a large number of unique operations. If you just want to change the size, pass:
+```typescript
+import { InMemoryLRUCache } from 'apollo-server-caching';
+import type { DocumentNode } from 'graphql';
+new ApolloServer({
+  documentStore: new InMemoryLRUCache<DocumentNode>({
+    maxSize: Math.pow(2, 20) * approximateDocumentStoreMiB,
+    sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
+  }),
+})
+```
+
+Pass `null` to disable this document cache entirely.
 </td>
 </tr>
 
@@ -419,35 +433,6 @@ If this is set to any string value, use that value instead of the environment va
 </td>
 </tr>
 
-</tbody>
-</table>
-
-### Experimental options
-
-**These options are experimental.**  They might be removed or change at any time, even within a patch release.
-
-<table class="field-table">
-  <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-<td>
-
-##### `experimental_approximateDocumentStoreMiB`
-
-`number`
-</td>
-<td>
-
-Sets the approximate size (in MiB) of the server's `DocumentNode` cache. The server checks the SHA-256 hash of each incoming operation against cached `DocumentNode`s, and skips unnecessary parsing and validation if a match is found.
-
-The cache's default size is 30MiB, which is usually sufficient unless the server processes a large number of unique operations.
-</td>
-</tr>
 </tbody>
 </table>
 
