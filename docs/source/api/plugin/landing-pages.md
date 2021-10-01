@@ -110,7 +110,7 @@ By default, the landing page displays a footer that links to the documentation t
 </td>
 <td>
 
-A URI-encoded operation to populate in the Studio Explorer's editor on load.
+A document to populate in the Studio Explorer's editor on load.
 
 If you omit this, the Explorer initially loads an example query based on your schema.
 
