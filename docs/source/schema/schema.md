@@ -130,6 +130,20 @@ type Author {
 }
 ```
 
+#### The `__typename` field
+
+Every object type in your schema automatically has a field named `__typename` (you don't need to define it). The `__typename` field returns the object type's name as a `String` (e.g., `Book` or `Author`).
+
+GraphQL clients use an object's `__typename` for many purposes, such as to determine which type was returned by a field that can return _multiple_ types (i.e., a [union or interface](./unions-interfaces/)). Apollo Client relies on `__typename` when caching results, so it automatically includes `__typename` in every object of every query.
+
+Because `__typename` is always present, this is a valid query for any GraphQL server:
+
+```graphql
+query UniversalQuery {
+  __typename
+}
+```
+
 ### The `Query` type
 
 The `Query` type is a special object type that defines all of the top-level **entry points** for queries that clients execute against your server.

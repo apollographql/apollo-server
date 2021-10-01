@@ -27,7 +27,7 @@ All of a union's included types must be [object types](./schema/#object-types) (
 
 The following schema defines a `SearchResult` union type that can return either a `Book` or an `Author`:
 
-```graphql
+```graphql{1,12}
 union SearchResult = Book | Author
 
 type Book {
@@ -67,6 +67,8 @@ query GetSearchResults {
   }
 }
 ```
+
+> [What is the `__typename` field?](./schema/#the-__typename-field)
 
 This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Result`'s `title` (if it's a `Book`) or its `name` (if it's an `Author`).
 
@@ -230,6 +232,8 @@ query GetBooks {
   }
 }
 ```
+
+> [What is the `__typename` field?](./schema/#the-__typename-field)
 
 This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Book`'s `courses` (if it's a `Textbook`) or its `colors` (if it's a `ColoringBook`).
 
