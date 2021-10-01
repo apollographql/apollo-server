@@ -142,7 +142,7 @@ If provided, these variables should apply to the initial query you provide for d
 </td>
 <td>
 
-A URI-encoded, serialized object containing initial HTTP header values to populate in the Explorer on load.
+An object containing initial HTTP header values to populate in the Explorer on load.
 
 </td>
 </tr>
