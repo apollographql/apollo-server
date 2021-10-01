@@ -9,6 +9,10 @@ module.exports = {
         root: __dirname,
         pathPrefix: '/docs/apollo-server',
         algoliaIndexName: 'server',
+        algoliaFilters: [
+          'docset:server',
+          ['docset:react', 'docset:federation'],
+        ],
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
         githubRepo: 'apollographql/apollo-server',
