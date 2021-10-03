@@ -196,6 +196,8 @@ export async function runHttpQuery(
     debug: options.debug,
 
     plugins: options.plugins || [],
+
+    allowBatchedHttpRequests: options.allowBatchedHttpRequests,
   };
 
   return processHTTPRequest(config, request);
@@ -297,6 +299,18 @@ export async function processHTTPRequest<TContext>(
       const requests = requestPayload.map((requestParams) =>
         parseGraphQLRequest(httpRequest.request, requestParams),
       );
+
+      if (requests.length > 1 && options.allowBatchedHttpRequests === false) {
+        return throwHttpGraphQLError(
+          500,
+          [
+            new Error(
+              'GraphQL Query Batching is not allowed by Apollo Server, but the request contained multiple queries.',
+            ),
+          ],
+          options,
+        );
+      }
 
       const responses = await Promise.all(
         requests.map(async (request) => {

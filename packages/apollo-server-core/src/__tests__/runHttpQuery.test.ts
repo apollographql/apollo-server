@@ -58,4 +58,96 @@ describe('runHttpQuery', () => {
       });
     });
   });
+
+  describe('when allowBatchedHttpRequests is false', () => {
+    const mockDisabledBatchQueryRequest = {
+      method: 'GET',
+      query: {
+        query: '{ testString }',
+      },
+      options: {
+        debug: false,
+        schema,
+        schemaHash: generateSchemaHash(schema),
+        allowBatchedHttpRequests: false,
+      },
+      request: new MockReq(),
+    };
+
+    it('succeeds when there are multiple queries in the request', async () => {
+      await expect(
+        runHttpQuery([], mockDisabledBatchQueryRequest),
+      ).resolves.not.toThrow();
+    });
+
+    it('throws when there are multiple queries in the request', () => {
+      const multipleQueryRequest = Object.assign(
+        {},
+        mockDisabledBatchQueryRequest,
+        {
+          query: [
+            {
+              query: '{ testString }',
+            },
+            {
+              query: '{ testString }',
+            },
+          ],
+        },
+      );
+      return runHttpQuery([], multipleQueryRequest).catch(
+        (err: HttpQueryError) => {
+          expect(err.statusCode).toEqual(500);
+          expect(err.message).toEqual(
+            JSON.stringify({
+              errors: [
+                {
+                  message:
+                    'GraphQL Query Batching is not allowed by Apollo Server, but the request contained multiple queries.',
+                  extensions: { code: 'INTERNAL_SERVER_ERROR' },
+                },
+              ],
+            }) + '\n',
+          );
+        },
+      );
+    });
+  });
+
+  describe('when allowBatchedHttpRequests is true', () => {
+    const mockEnabledBatchQueryRequest = {
+      method: 'GET',
+      query: {
+        query: '{ testString }',
+      },
+      options: {
+        debug: false,
+        schema,
+        schemaHash: generateSchemaHash(schema),
+        allowBatchedHttpRequests: true,
+      },
+      request: new MockReq(),
+    };
+
+    it('succeeds when there are multiple queries in the request', async () => {
+      const multipleQueryRequest = Object.assign(
+        {},
+        mockEnabledBatchQueryRequest,
+        {
+          query: [
+            {
+              query: '{ testString }',
+            },
+            {
+              query: '{ testString }',
+            },
+          ],
+        },
+      );
+
+      await expect(
+        runHttpQuery([], multipleQueryRequest),
+      ).resolves.not.toThrow();
+    });
+  });
 });

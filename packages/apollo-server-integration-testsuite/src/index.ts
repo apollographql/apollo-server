@@ -878,6 +878,45 @@ export default ({
         });
       }, 3000); // this test will fail due to timeout if running serially.
 
+      it('disables batch requests when allowBatchedHttpRequests is false', async () => {
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            allowBatchedHttpRequests: false,
+          },
+        });
+
+        const req = request(app)
+          .post('/graphql')
+          .send([
+            {
+              query: `
+                      query test($echo: String){ testArgument(echo: $echo) }
+                      query test2{ testString }`,
+              variables: { echo: 'world' },
+              operationName: 'test2',
+            },
+            {
+              query: `
+                      query testX($echo: String){ testArgument(echo: $echo) }`,
+              variables: { echo: 'yellow' },
+              operationName: 'testX',
+            },
+          ]);
+        return req.then((res) => {
+          expect(res.status).toEqual(500);
+          expect(res.body).toEqual({
+            errors: [
+              {
+                message:
+                  'GraphQL Query Batching is not allowed by Apollo Server, but the request contained multiple queries.',
+                extensions: { code: 'INTERNAL_SERVER_ERROR' },
+              },
+            ],
+          });
+        });
+      });
+
       it('clones batch context', async () => {
         app = await createApp({
           graphqlOptions: {
