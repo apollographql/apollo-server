@@ -414,6 +414,16 @@ If this is set to any string value, use that value instead of the environment va
 </td>
 </tr>
 
+##### `allowBatchedHttpRequests`
+
+`Boolean`
+</td>
+<td>
+
+Controls whether to allow batching multiple Queries in a single HTTP Request. Defaults to `true`. If the GraphQL Server has this flag set to `false` and a request comes in with more than one query, an error will be thrown.
+</td>
+</tr>
+
 </tbody>
 </table>
 
