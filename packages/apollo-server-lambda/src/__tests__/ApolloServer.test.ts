@@ -1,7 +1,7 @@
 import http from 'http';
 import request from 'supertest';
 import express from 'express';
-import { createMockServer } from './mockAPIGatewayServer';
+import { createAPIGatewayV2MockServer } from './mockAPIGatewayServer';
 import {
   ApolloServerPluginDrainHttpServer,
   Config,
@@ -57,7 +57,7 @@ describe('apollo-server-lambda', () => {
       const lambdaHandler = server.createHandler({
         expressGetMiddlewareOptions: { path: options?.graphqlPath },
       });
-      httpServer.on('request', createMockServer(lambdaHandler));
+      httpServer.on('request', createAPIGatewayV2MockServer(lambdaHandler));
       await new Promise<void>((resolve) => {
         httpServer.listen({ port: 0 }, () => resolve());
       });
@@ -83,7 +83,7 @@ describe('apollo-server-lambda', () => {
   ) => {
     const server = new ApolloServer(config);
     const handler = server.createHandler(createHandlerOptions);
-    return createMockServer(handler);
+    return createAPIGatewayV2MockServer(handler);
   };
 
   describe('context', () => {

@@ -1,15 +1,19 @@
 import url from 'url';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type {
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
   APIGatewayProxyEventV2,
   APIGatewayProxyStructuredResultV2,
   Context as LambdaContext,
   Handler,
+  APIGatewayProxyEventMultiValueHeaders,
+  APIGatewayProxyEventMultiValueQueryStringParameters,
 } from 'aws-lambda';
 
 // Returns a Node http handler that invokes a Lambda handler as if via
 // APIGatewayProxy with payload version 2.0.
-export function createMockServer(
+export function createAPIGatewayV2MockServer(
   handler: Handler<APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2>,
 ) {
   return (req: IncomingMessage, res: ServerResponse) => {
@@ -18,7 +22,7 @@ export function createMockServer(
     // this is an unawaited async function, but anything that causes it to
     // reject should cause a test to fail
     req.on('end', async () => {
-      const event = eventFromRequest(req, body);
+      const event = eventFromAPIGatewayV2Request(req, body);
       const result = (await handler(
         event,
         { functionName: 'someFunc' } as LambdaContext, // we don't bother with all the fields
@@ -36,11 +40,42 @@ export function createMockServer(
   };
 }
 
+// Returns a Node http handler that invokes a Lambda handler as if via
+// APIGatewayProxy with payload version 2.0.
+export function createAPIGatewayV1MockServer(
+  handler: Handler<APIGatewayProxyEvent, APIGatewayProxyResult>,
+) {
+  return (req: IncomingMessage, res: ServerResponse) => {
+    let body = '';
+    req.on('data', (chunk) => (body += chunk));
+    // this is an unawaited async function, but anything that causes it to
+    // reject should cause a test to fail
+    req.on('end', async () => {
+      const event = eventFromAPIGatewayV1Request(req, body);
+      const result = (await handler(
+        event,
+        { functionName: 'someFunc' } as LambdaContext, // we don't bother with all the fields
+        () => {
+          throw Error("we don't use callback");
+        },
+      )) as APIGatewayProxyResult;
+      res.statusCode = result.statusCode!;
+      Object.entries(result.multiValueHeaders ?? {}).forEach(([key, value]) => {
+        //We need to copy `multiValueHeaders` over
+        if (Array.isArray(value))
+          res.setHeader(key, value[0]?.toString() ?? '');
+      });
+      res.write(result.body);
+      res.end();
+    });
+  };
+}
+
 // Create an APIGatewayProxy V2 event from a Node request. Note that
 // `@vendia/serverless-express` supports a bunch of different kinds of events
 // including gateway V1, but for now we're just testing with this one. Based on
 // https://github.com/vendia/serverless-express/blob/mainline/jest-helpers/api-gateway-v2-event.js
-function eventFromRequest(
+function eventFromAPIGatewayV2Request(
   req: IncomingMessage,
   body: string,
 ): APIGatewayProxyEventV2 {
@@ -84,5 +119,90 @@ function eventFromRequest(
     isBase64Encoded: false,
     rawPath: urlObject.pathname!,
     body,
+  };
+}
+
+// Create an APIGatewayProxy V1 event from a Node request.
+function eventFromAPIGatewayV1Request(
+  req: IncomingMessage,
+  body: string,
+): APIGatewayProxyEvent {
+  const urlObject = url.parse(req.url || '', false);
+  const multiValueHeaders: APIGatewayProxyEventMultiValueHeaders = {};
+  Object.entries(req.headers).forEach(([name, value]) => {
+    if (Array.isArray(value)) {
+      multiValueHeaders[name] = [];
+      value.forEach((value, _index, _array) => {
+        multiValueHeaders[name]?.push(value);
+      });
+    } else {
+      multiValueHeaders[name] = [value ?? ''];
+    }
+  });
+  const multiValueQueryStringParameters: APIGatewayProxyEventMultiValueQueryStringParameters =
+    {};
+
+  if (req.url?.includes('?')) {
+    const urlParams = new URLSearchParams(req.url!.split('?')[1]);
+    urlParams.forEach((value, key, _parent) => {
+      multiValueQueryStringParameters[key] = [value];
+    });
+  }
+  return {
+    resource: '/{proxy+}',
+    path: req.url!,
+    httpMethod: req.method!,
+    headers: Object.fromEntries(
+      Object.entries(req.headers).map(([name, value]) => {
+        if (Array.isArray(value)) {
+          return [name, value.join(',')];
+        } else {
+          return [name, value];
+        }
+      }),
+    ),
+    multiValueHeaders,
+    queryStringParameters: null,
+    multiValueQueryStringParameters,
+    pathParameters: {},
+    stageVariables: {},
+    requestContext: {
+      authorizer: null,
+      resourceId: 'xxxxx',
+      resourcePath: urlObject.search?.replace(/^\?/, '') ?? '',
+      httpMethod: req.method!,
+      extendedRequestId: 'Z2SQlEORIAMFjpA=',
+      requestTime: '17/May/2019:22:08:16 +0000',
+      // Default requestContext.path to `${requestContext.stage}${path}`
+      path: req.url!,
+      accountId: 'xxxxxxxx',
+      protocol: 'HTTP/1.1',
+      stage: 'prod',
+      domainPrefix: 'xxxxxx',
+      requestTimeEpoch: 1558130896565,
+      requestId: '4589cf16-78f0-11e9-9c65-816a9b037cec',
+      identity: {
+        apiKey: null,
+        apiKeyId: null,
+        clientCert: null,
+        cognitoIdentityPoolId: null,
+        accountId: null,
+        cognitoIdentityId: null,
+        caller: null,
+        sourceIp: '11.111.111.111',
+        principalOrgId: null,
+        accessKey: null,
+        cognitoAuthenticationType: null,
+        cognitoAuthenticationProvider: null,
+        userArn: null,
+        userAgent:
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36',
+        user: null,
+      },
+      domainName: 'xxxxxx.execute-api.us-east-1.amazonaws.com',
+      apiId: 'xxxxxx',
+    },
+    body,
+    isBase64Encoded: false,
   };
 }
