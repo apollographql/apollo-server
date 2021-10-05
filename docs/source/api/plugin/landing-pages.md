@@ -110,7 +110,7 @@ By default, the landing page displays a footer that links to the documentation t
 </td>
 <td>
 
-A document to populate in the Studio Explorer's editor on load.
+A GraphQL document (eg, query or mutation) to populate in the Studio Explorer's editor on load.
 
 If you omit this, the Explorer initially loads an example query based on your schema.
 
@@ -128,7 +128,7 @@ If you omit this, the Explorer initially loads an example query based on your sc
 
 An object containing initial variable values to populate in the Explorer on load.
 
-If provided, these variables should apply to the initial query you provide for document.
+If provided, these variables should apply to the initial query you provide in `document`.
 
 </td>
 </tr>
