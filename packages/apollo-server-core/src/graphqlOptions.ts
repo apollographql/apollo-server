@@ -7,7 +7,7 @@ import type {
   GraphQLFormattedError,
   ParseOptions,
 } from 'graphql';
-import type { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
+import type { KeyValueCache } from 'apollo-server-caching';
 import type { DataSource } from 'apollo-datasource';
 import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type {
@@ -18,6 +18,7 @@ import type {
   Logger,
   SchemaHash,
 } from 'apollo-server-types';
+import type { DocumentStore } from './types';
 
 /*
  * GraphQLServerOptions
@@ -56,7 +57,7 @@ export interface GraphQLServerOptions<
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
   plugins?: ApolloServerPlugin[];
-  documentStore?: InMemoryLRUCache<DocumentNode>;
+  documentStore?: DocumentStore | null;
   parseOptions?: ParseOptions;
   nodeEnv?: string;
 }

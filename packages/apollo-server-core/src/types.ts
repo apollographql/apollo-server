@@ -18,7 +18,8 @@ import type { GraphQLSchemaModule } from '@apollographql/apollo-tools';
 
 export type { GraphQLSchemaModule };
 
-export { KeyValueCache } from 'apollo-server-caching';
+import type { KeyValueCache } from 'apollo-server-caching';
+export type { KeyValueCache };
 
 export type Context<T = object> = T;
 export type ContextFunction<FunctionParams = any, ProducedContext = object> = (
@@ -81,6 +82,8 @@ export interface GatewayInterface {
 // that older versions of `@apollo/gateway` build against AS3.
 export interface GraphQLService extends GatewayInterface {}
 
+export type DocumentStore = KeyValueCache<DocumentNode>;
+
 // This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
 export interface Config<ContextFunctionParams = any> extends BaseConfig {
@@ -96,8 +99,8 @@ export interface Config<ContextFunctionParams = any> extends BaseConfig {
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
   gateway?: GatewayInterface;
-  experimental_approximateDocumentStoreMiB?: number;
   stopOnTerminationSignals?: boolean;
   apollo?: ApolloConfigInput;
   nodeEnv?: string;
+  documentStore?: DocumentStore | null;
 }

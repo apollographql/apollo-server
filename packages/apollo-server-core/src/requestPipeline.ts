@@ -53,16 +53,13 @@ import type {
 } from 'apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
-import {
-  InMemoryLRUCache,
-  KeyValueCache,
-  PrefixingKeyValueCache,
-} from 'apollo-server-caching';
+import { KeyValueCache, PrefixingKeyValueCache } from 'apollo-server-caching';
 
 export { GraphQLRequest, GraphQLResponse, GraphQLRequestContext };
 
 import createSHA from './utils/createSHA';
 import { HttpQueryError } from './runHttpQuery';
+import type { DocumentStore } from './types';
 import { Headers } from 'apollo-server-env';
 
 export const APQ_CACHE_PREFIX = 'apq:';
@@ -90,7 +87,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   ) => GraphQLResponse | null;
 
   plugins?: ApolloServerPlugin[];
-  documentStore?: InMemoryLRUCache<DocumentNode>;
+  documentStore?: DocumentStore | null;
 
   parseOptions?: ParseOptions;
 }

@@ -50,4 +50,11 @@ export class InMemoryLRUCache<V = string> implements KeyValueCache<V> {
   async getTotalSize() {
     return this.store.length;
   }
+
+  // This is a size calculator based on the number of bytes in a JSON
+  // encoding of the stored object. It happens to be what ApolloServer
+  // uses for its default DocumentStore and may be helpful to others as well.
+  static jsonBytesSizeCalculator<T>(obj: T): number {
+    return Buffer.byteLength(JSON.stringify(obj), 'utf8');
+  }
 }

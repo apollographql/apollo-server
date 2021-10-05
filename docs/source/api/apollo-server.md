@@ -190,6 +190,47 @@ An array containing custom functions to use as additional [validation rules](htt
 
 
 <tr>
+<td>
+
+##### `documentStore`
+
+`KeyValueCache<DocumentNode>` or `null`
+</td>
+<td>
+
+A key-value cache that Apollo Server uses to store previously encountered GraphQL operations (as `DocumentNode`s). It does _not_ store query _results_.
+
+Whenever Apollo Server receives an incoming operation, it checks whether that exact operation is present in its `documentStore`. If it's present, Apollo Server can safely skip parsing and validating the operation, thereby improving performance.
+
+The default `documentStore` is an [`InMemoryLRUCache`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/InMemoryLRUCache.ts) with an approximate size of 30MiB. This is usually sufficient unless the server processes a large number of unique operations. Provide this option if you want to change the cache size or store the cache information in an alternate location.
+
+To use `InMemoryLRUCache` but change its size to an amount `approximateDocumentStoreMiB`:
+
+<div style="max-width: 400px;">
+
+```typescript
+import { InMemoryLRUCache } from 'apollo-server-caching';
+import type { DocumentNode } from 'graphql';
+new ApolloServer({
+  documentStore: new InMemoryLRUCache<DocumentNode>({
+    maxSize: Math.pow(2, 20) * approximateDocumentStoreMiB,
+    sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
+  }),
+})
+```
+
+</div>
+
+**Do not share a `documentStore` between multiple `ApolloServer` instances**, _unless_ you assign a unique prefix to each instance's entries (for example, using [`PrefixingKeyValueCache`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/PrefixingKeyValueCache.ts)). Apollo Server skips parsing and validating any operation that's present in its `documentStore`, so if servers with _different_ schemas share the _same_ `documentStore`, a server might execute an operation that its schema doesn't support.
+
+Pass `null` to disable this cache entirely.
+
+Available in Apollo Server v3.4.0 and later.
+</td>
+</tr>
+
+
+<tr>
 <td colspan="2">
 
 **Networking options**
@@ -403,35 +444,6 @@ If this is set to any string value, use that value instead of the environment va
 </td>
 </tr>
 
-</tbody>
-</table>
-
-### Experimental options
-
-**These options are experimental.**  They might be removed or change at any time, even within a patch release.
-
-<table class="field-table">
-  <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-<td>
-
-##### `experimental_approximateDocumentStoreMiB`
-
-`number`
-</td>
-<td>
-
-Sets the approximate size (in MiB) of the server's `DocumentNode` cache. The server checks the SHA-256 hash of each incoming operation against cached `DocumentNode`s, and skips unnecessary parsing and validation if a match is found.
-
-The cache's default size is 30MiB, which is usually sufficient unless the server processes a large number of unique operations.
-</td>
-</tr>
 </tbody>
 </table>
 
