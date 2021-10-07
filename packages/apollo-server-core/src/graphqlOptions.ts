@@ -41,7 +41,7 @@ export interface GraphQLServerOptions<
 > {
   schema: GraphQLSchema;
   /**
-   * Deprecated: a not particularly stable or useful hash of the schema.
+   * @deprecated: a not particularly stable or useful hash of the schema.
    */
   schemaHash: SchemaHash;
   logger?: Logger;

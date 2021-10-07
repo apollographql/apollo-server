@@ -83,7 +83,7 @@ export interface GraphQLServiceContext {
   logger: Logger;
   schema: GraphQLSchema;
   /**
-   * Deprecated: a not particularly stable or useful hash of the schema.
+   * @deprecated: a not particularly stable or useful hash of the schema.
    */
   schemaHash: SchemaHash;
   apollo: ApolloConfig;
@@ -134,7 +134,7 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
 
   readonly schema: GraphQLSchema;
   /**
-   * Deprecated: a not particularly stable or useful hash of the schema.
+   * @deprecated: a not particularly stable or useful hash of the schema.
    */
   readonly schemaHash: SchemaHash;
 
