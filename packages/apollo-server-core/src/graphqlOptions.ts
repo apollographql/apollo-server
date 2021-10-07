@@ -40,6 +40,9 @@ export interface GraphQLServerOptions<
   TRootValue = any,
 > {
   schema: GraphQLSchema;
+  /**
+   * @deprecated: a not particularly stable or useful hash of the schema.
+   */
   schemaHash: SchemaHash;
   logger?: Logger;
   formatError?: (error: GraphQLError) => GraphQLFormattedError;

@@ -3,7 +3,7 @@ import MockReq = require('mock-req');
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 
 import { runHttpQuery, HttpQueryError } from '../runHttpQuery';
-import { generateSchemaHash } from '../utils/schemaHash';
+import type { SchemaHash } from 'apollo-server-types';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
@@ -31,7 +31,7 @@ describe('runHttpQuery', () => {
       options: {
         debug: false,
         schema,
-        schemaHash: generateSchemaHash(schema),
+        schemaHash: 'deprecated' as SchemaHash,
       },
       request: new MockReq(),
     };

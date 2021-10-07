@@ -6,6 +6,20 @@ import type { GraphQLSchema } from 'graphql/type';
 import createSHA from './createSHA';
 import type { SchemaHash } from 'apollo-server-types';
 
+/*
+ * This function returns a not particularly stable schema hash derived from a
+ * GraphQLSchema object. It works by running the `graphql-js` default
+ * introspection query against the schema and taking a SHA of a JSON encoding of
+ * the result. It is dependent on the precise introspection query returned by
+ * `graphql-js` and some of the details of how that library returns its data, so
+ * upgrading `graphql-js` can change its value. It was created for use in
+ * apollo-server-plugin-operation-registry but it is no longer used there. It is
+ * *not* the same as the hash used in schema and usage reporting, which is just
+ * a hash of the schema SDL document.
+ *
+ * For backwards-compatibility reasons, it is still calculated and passed to all
+ * plugin hooks, but it is not a good idea to use it for anything.
+ */
 export function generateSchemaHash(schema: GraphQLSchema): SchemaHash {
   const introspectionQuery = getIntrospectionQuery();
   const document = parse(introspectionQuery);

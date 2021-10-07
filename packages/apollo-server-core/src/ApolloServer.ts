@@ -74,6 +74,8 @@ const NoIntrospection = (context: ValidationContext) => ({
 
 export type SchemaDerivedData = {
   schema: GraphQLSchema;
+  // Not a very useful schema hash (not the same one schema and usage reporting
+  // use!) but kept around for backwards compatibility.
   schemaHash: SchemaHash;
   // A store that, when enabled (default), will store the parsed and validated
   // versions of operations in-memory, allowing subsequent parses/validates

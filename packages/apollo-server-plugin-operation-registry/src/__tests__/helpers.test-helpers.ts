@@ -16,7 +16,6 @@ import type {
 
 export const defaultStore = () => new InMemoryLRUCache();
 
-export const genericSchemaHash = 'abc123';
 export const genericStorageSecret = 'someStorageSecret';
 export const genericServiceID = 'test-service';
 export const genericApiKeyHash = 'someapikeyhash123';
