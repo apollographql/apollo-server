@@ -11,6 +11,7 @@ import type {
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
+  SchemaHash,
 } from 'apollo-server-types';
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
 import {
@@ -24,7 +25,6 @@ import type {
 } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { Dispatcher } from './dispatcher';
-import { generateSchemaHash } from './schemaHash';
 import { getOperationAST, parse, validate as graphqlValidate } from 'graphql';
 import { newCachePolicy } from '../cachePolicy';
 
@@ -103,13 +103,12 @@ export default async function pluginTestHarness<TContext>({
     });
   }
 
-  const schemaHash = generateSchemaHash(schema);
   let serverListener: GraphQLServerListener | undefined;
   if (typeof pluginInstance.serverWillStart === 'function') {
     const maybeServerListener = await pluginInstance.serverWillStart({
       logger: logger || console,
       schema,
-      schemaHash,
+      schemaHash: 'deprecated' as SchemaHash,
       serverlessFramework: false,
       apollo: {
         key: 'some-key',
@@ -126,7 +125,7 @@ export default async function pluginTestHarness<TContext>({
   const requestContext: Mutable<GraphQLRequestContext<TContext>> = {
     logger: logger || console,
     schema,
-    schemaHash: generateSchemaHash(schema),
+    schemaHash: 'deprecated' as SchemaHash,
     request: graphqlRequest,
     metrics: Object.create(null),
     source: graphqlRequest.query,

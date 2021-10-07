@@ -82,6 +82,9 @@ export interface ApolloConfig {
 export interface GraphQLServiceContext {
   logger: Logger;
   schema: GraphQLSchema;
+  /**
+   * Deprecated: a not particularly stable or useful hash of the schema.
+   */
   schemaHash: SchemaHash;
   apollo: ApolloConfig;
   persistedQueries?: {
@@ -130,6 +133,9 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   logger: Logger;
 
   readonly schema: GraphQLSchema;
+  /**
+   * Deprecated: a not particularly stable or useful hash of the schema.
+   */
   readonly schemaHash: SchemaHash;
 
   readonly context: TContext;

@@ -10,7 +10,7 @@ import {
   DocumentNode,
 } from 'graphql';
 
-import type { GraphQLResponse } from 'apollo-server-types';
+import type { GraphQLResponse, SchemaHash } from 'apollo-server-types';
 
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
 import type { Request } from 'apollo-server-env';
@@ -29,7 +29,6 @@ import type {
   GraphQLRequestContext,
 } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import { generateSchemaHash } from '../utils/schemaHash';
 import { newCachePolicy } from '../cachePolicy';
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
@@ -48,12 +47,12 @@ function runQuery(
     http: options.request,
   };
 
-  const schemaHash = generateSchemaHash(schema);
-
   return processGraphQLRequest(options, {
     request,
     schema: options.schema,
-    schemaHash,
+    // Relying on specific values for this deprecated field isn't great,
+    // but we at least test that it gets passed through.
+    schemaHash: 'deprecated' as SchemaHash,
     metrics: {},
     logger: console,
     context: options.context || {},
@@ -412,11 +411,7 @@ describe('runQuery', () => {
 
         const invocation = requestDidStart.mock.calls[0][0];
         expect(invocation).toHaveProperty('schema', schema);
-        expect(invocation).toHaveProperty(
-          /* Shorter as a RegExp */
-          'schemaHash',
-          expect.stringMatching(/^1a1814b60b/),
-        );
+        expect(invocation).toHaveProperty('schemaHash', 'deprecated');
       });
     });
 
