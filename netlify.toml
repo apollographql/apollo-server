@@ -5,7 +5,7 @@
 
 [build.environment]
   NODE_VERSION = "16"
-  NPM_VERSION  = "7"
+  NPM_VERSION  = "8"
 
 [context.production.environment]
   PREFIX_PATHS = "true"
