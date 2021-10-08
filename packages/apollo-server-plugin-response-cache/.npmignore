@@ -1,6 +1,7 @@
 *
 !src/**/*
+src/**/__tests__/**
 !dist/**/*
-dist/**/*.test.*
+dist/**/__tests__/**
 !package.json
 !README.md

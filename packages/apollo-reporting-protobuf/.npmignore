@@ -1,6 +1,11 @@
+# Note that this npmignore file differs from the others because this package
+# puts its generated files in "generated" and checks them in to git rather than
+# unversioned in "dist".
+
 *
 !src/**/*
+src/**/__tests__/**
 !generated/**/*
-generated/**/*.test.*
+generated/**/__tests__/**
 !package.json
 !README.md
