@@ -25,7 +25,7 @@
   },
   "engines": {
     "node": ">=12",
-    "npm": "7.x"
+    "npm": "8.x"
   },
   "dependencies": {
     "@apollographql/apollo-tools": "0.5.1",
