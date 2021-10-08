@@ -7,6 +7,8 @@ This is the Azure Functions integration for the Apollo community GraphQL Server.
 
 All examples below was created using Linux environments, if you are working with Windows-based platforms some commands couldn’t work fine.
 
+Note that `apollo-server-azure-functions` does not provide a mechanism for adding arbitrary middleware to your web server (other that by manually wrapping the handler returned by `createHandler` in your own handler).
+
 ## Prerequisites
 
 The following must be done before following this guide:
@@ -102,6 +104,7 @@ Make two changes to `graphql/function.json`: make the output name `$return`, and
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
+      "route": "{*segments}",
       "methods": [
         "get",
         "post",
@@ -117,7 +120,7 @@ Make two changes to `graphql/function.json`: make the output name `$return`, and
 }
 ```
 
-**Note:** To enable the health checks it's necessary to [modify the route template](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-azure-functions/README.md#enabling-health-checks) in the `function.json` file.
+The `route` line is required for the [health checks](../monitoring/health-checks) feature and is not otherwise required.
 
 Finally, we need to return to the base folder and run the `func host start` command again after that, go back to your browser and refresh your page to see the Apollo Server running. You can then run operations against your graph with Apollo Sandbox.
 

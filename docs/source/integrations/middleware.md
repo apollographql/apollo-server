@@ -438,7 +438,7 @@ Then run the web server with `npx micro`.
 
 * `path`
 * `onHealthCheck`
-* `disableHealthCheck`.
+* `disableHealthCheck`
 
 Note that `apollo-server-micro` does _not_ have a built-in way of setting CORS headers.
 
@@ -507,6 +507,14 @@ const server = new ApolloServer({ typeDefs, resolvers });
 
 exports.handler = server.createHandler();
 ```
+
+`createHandler` accepts the following [common options](#common-options):
+
+* `cors`
+* `onHealthCheck`
+* `disableHealthCheck`
+
+Note that `apollo-server-azure-functions` does not provide a mechanism for adding arbitrary middleware to your web server (other that by manually wrapping the handler returned by `createHandler` in your own handler).
 
 For more details on using `apollo-server-azure-functions`, see the [documentation on deploying to Azure Functions](../deployment/azure-functions/).
 

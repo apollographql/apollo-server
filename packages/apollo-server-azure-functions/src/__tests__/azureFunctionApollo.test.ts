@@ -214,7 +214,7 @@ describe('integration:AzureFunctions', () => {
 
       handler(context as any, healthCheckRequest as any);
       const result: any = await p;
-      expect(result.statusCode).toEqual(200);
+      expect(result.status).toEqual(200);
       expect(result.body).toEqual(JSON.stringify({ status: 'pass' }));
       expect(result.headers['Content-Type']).toEqual('application/health+json');
     });
@@ -242,7 +242,7 @@ describe('integration:AzureFunctions', () => {
 
       handler(context as any, healthCheckRequest as any);
       const result: any = await p;
-      expect(result.statusCode).toEqual(200);
+      expect(result.status).toEqual(200);
       expect(result.body).toEqual(JSON.stringify({ status: 'pass' }));
       expect(result.headers['Content-Type']).toEqual('application/health+json');
     });
@@ -260,7 +260,7 @@ describe('integration:AzureFunctions', () => {
       const context = {
         done(error: any, result: any) {
           if (error) throw error;
-          expect(result.statusCode).toEqual(503);
+          expect(result.status).toEqual(503);
           expect(result.body).toEqual(JSON.stringify({ status: 'fail' }));
           expect(result.headers['Content-Type']).toEqual(
             'application/health+json',
