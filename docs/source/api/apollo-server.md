@@ -240,21 +240,6 @@ Available in Apollo Server v3.4.0 and later.
 <tr>
 <td>
 
-##### `cors`
-
-`Object` or `Boolean`
-</td>
-<td>
-
-An `Object` containing [configuration options](https://github.com/expressjs/cors#configuration-options) for the server's CORS behavior. Provide `false` to remove CORS middleware entirely.
-
-This option is used only by the `apollo-server` package. If you're integrating with Node.js middleware via a different package, instead see the [framework-specific middleware function](#framework-specific-middleware-function).
-</td>
-</tr>
-
-<tr>
-<td>
-
 ##### `formatError`
 
 `Function`
@@ -337,24 +322,6 @@ Set this option to `false` to disable this default behavior, or to `true` to ena
 The signal handler is installed after [`start()`](#start) returns successfully.
 
 You can also manually call `stop()` in other contexts. Note that `stop()` is asynchronous, so it isn't useful in a `process.on('exit')` handler.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-##### `stopGracePeriodMillis`
-
-`number`
-</td>
-<td>
-
-The amount of time to wait after [`ApolloServer.stop()`](#stop) is called (including via a [termination signal](#stoponterminationsignals)) before forcefully closing all active connections. If you pass `Infinity`, Apollo Server waits indefinitely for all active connections to go idle.
-
-**This option is used only by the `apollo-server` package.** If you're integrating with [Node.js middleware](../integrations/middleware/) via a different package, it's your responsibility to stop your HTTP server in whatever way is appropriate.
-
-The default value is `10_000` (10 seconds).
 
 </td>
 </tr>
@@ -443,6 +410,82 @@ The default value is `true`. Set this to `false` to use mocked resolvers only fo
 If this is set to any string value, use that value instead of the environment variable `NODE_ENV` for the features whose defaults depend on `NODE_ENV` (like the [`debug`](#introspection) and [`introspection`](#introspection) options). Note that passing the empty string here is equivalent to running with the `NODE_ENV` environment variable unset. This is primarily meant for testing the effects of the `NODE_ENV` environment variable.
 </td>
 </tr>
+
+</tbody>
+</table>
+
+### `apollo-server`-specific options
+
+**These options are only part of the batteries-included `apollo-server` package.**  They do not exist in framework integrations.
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+
+<tr>
+<td>
+
+##### `healthCheckPath`
+
+`string` or `null`
+</td>
+<td>
+
+Disable [HTTP-level health checks](../monitoring/health-checks/#http-level-health-checks) by passing `null`, or change the path on which it is served from the default of `/.well-known/apollo/server-health`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `onHealthCheck`
+
+`Function`
+</td>
+<td>
+
+A custom function to execute when Apollo Server receives a request at the [HTTP-level health check](../monitoring/health-checks/#http-level-health-checks) endpoint.
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+##### `cors`
+
+`Object` or `Boolean`
+</td>
+<td>
+
+An `Object` containing [configuration options](https://github.com/expressjs/cors#configuration-options) for the server's CORS behavior. Provide `false` to remove CORS middleware entirely.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `stopGracePeriodMillis`
+
+`number`
+</td>
+<td>
+
+The amount of time to wait after [`ApolloServer.stop()`](#stop) is called (including via a [termination signal](#stoponterminationsignals)) before forcefully closing all active connections. If you pass `Infinity`, Apollo Server waits indefinitely for all active connections to go idle.
+
+The default value is `10_000` (10 seconds).
+
+</td>
+</tr>
+
 
 </tbody>
 </table>

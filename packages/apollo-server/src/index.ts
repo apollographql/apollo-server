@@ -25,14 +25,16 @@ export interface ServerInfo {
 }
 
 export class ApolloServer extends ApolloServerExpress {
-  private cors?: CorsOptions | boolean;
-  private onHealthCheck?: (req: express.Request) => Promise<any>;
+  private cors: CorsOptions | boolean | undefined;
+  private onHealthCheck: ((req: express.Request) => Promise<any>) | undefined;
+  private healthCheckPath: string | null | undefined;
   private httpServer: http.Server;
 
   constructor(
     config: ApolloServerExpressConfig & {
       cors?: CorsOptions | boolean;
       onHealthCheck?: (req: express.Request) => Promise<any>;
+      healthCheckPath?: string | null;
       stopGracePeriodMillis?: number;
     },
   ) {
@@ -51,6 +53,7 @@ export class ApolloServer extends ApolloServerExpress {
     this.httpServer = httpServer;
     this.cors = config.cors;
     this.onHealthCheck = config.onHealthCheck;
+    this.healthCheckPath = config?.healthCheckPath;
   }
 
   private createServerInfo(): ServerInfo {
@@ -116,6 +119,7 @@ export class ApolloServer extends ApolloServerExpress {
           : {
               origin: '*',
             },
+      __internal_healthCheckPath: this.healthCheckPath,
     });
 
     await new Promise((resolve) => {
