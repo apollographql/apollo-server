@@ -1,4 +1,4 @@
-import gqlTag from 'graphql-tag';
+import { gql } from '../../gql';
 import { fetch, Headers, Request } from 'apollo-server-env';
 import type { GraphQLRequest, Logger } from 'apollo-server-types';
 import { print } from 'graphql';
@@ -9,7 +9,7 @@ import type {
   ReportSchemaResponse,
 } from './operations';
 
-export const schemaReportGql = print(gqlTag`
+export const schemaReportGql = print(gql`
   mutation SchemaReport($report: SchemaReport!, $coreSchema: String) {
     reportSchema(report: $report, coreSchema: $coreSchema) {
       __typename
