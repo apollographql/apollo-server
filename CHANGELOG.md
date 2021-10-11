@@ -7,9 +7,11 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
-## vNEXT (minor)
+## vNEXT
 
-- `apollo-server-core`: You can now specify your own `DocumentStore` (a `KeyValueStore<DocumentNode>`) for Apollo Server's cache of parsed and validated GraphQL operation abstract syntax trees via the new `documentStore` constructor option. This replaces the `experimental_approximateDocumentStoreMiB` option. You can replace `new ApolloServer({experimental_approximateDocumentStoreMiB: approximateDocumentStoreMiB, ...moreOptions})` with:
+## v3.4.0
+
+- `apollo-server-core`: You can now specify your own `DocumentStore` (a `KeyValueStore<DocumentNode>`) for Apollo Server's cache of parsed and validated GraphQL operation abstract syntax trees via the new `documentStore` constructor option. **This replaces the `experimental_approximateDocumentStoreMiB` option.** You can replace `new ApolloServer({experimental_approximateDocumentStoreMiB: approximateDocumentStoreMiB, ...moreOptions})` with:
   ```typescript
   import { InMemoryLRUCache } from 'apollo-server-caching';
   import type { DocumentNode } from 'graphql';
@@ -26,7 +28,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 - `apollo-server-koa`: The peer dependency on `koa` (added in v3.0.0) should be a `^` range dependency rather than depending on exactly one version, and it should not be automatically increased when new versions of `koa` are released. [PR #5759](https://github.com/apollographql/apollo-server/pull/5759)
 - `apollo-server-fastify`: Export `ApolloServerFastifyConfig` and `FastifyContext` TypeScript types. [PR #5743](https://github.com/apollographql/apollo-server/pull/5743)
 - `apollo-server-core`: Only generate the schema hash once on startup rather than twice. [PR #5757](https://github.com/apollographql/apollo-server/pull/5757)
-- `apollo-datasource-rest@3.2.1`: When choosing whether or not to parse a response as JSON, treat any `content-type` ending in `+json` as JSON rather than just `application/hal+json` (in addition to `application/json`). [PR #5737](https://github.com/apollographql/apollo-server/pull/5737)
+- `apollo-datasource-rest@3.3.0`: When choosing whether or not to parse a response as JSON, treat any `content-type` ending in `+json` as JSON rather than just `application/hal+json` (in addition to `application/json`). [PR #5737](https://github.com/apollographql/apollo-server/pull/5737)
 - `apollo-server`: You can now configure the health check URL path with the `healthCheckPath` constructor option, or disable serving health checks by passing `null` for this option. (This option is specific to the batteries-included `apollo-server` package; if you're using a framework integration package and want to serve a health check at a different path, just use your web framework directly.) [PR #5270](https://github.com/apollographql/apollo-server/pull/5270) [Issue #3577](https://github.com/apollographql/apollo-server/issues/3577)
 - `apollo-server-azure-functions`: This package now supports health checks like all of the other supported Apollo Server packages; they are on by default and can be customized with `disableHealthCheck` and `onHealthCheck`. [PR #5003](https:// github.com/apollographql/apollo-server/pull/5003) [Issue #4925](https://github.com/apollographql/apollo-server/issues/4925)
 - Tests are no longer distributed inside published npm modules. [PR #5799](https://github.com/apollographql/apollo-server/pull/5799) [Issue #5781](https://github.com/apollographql/apollo-server/issues/5781)
