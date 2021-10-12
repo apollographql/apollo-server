@@ -101,54 +101,6 @@ By default, the landing page displays a footer that links to the documentation t
 </td>
 </tr>
 
-<tr>
-<td>
-
-###### `document`
-
-`string`
-</td>
-<td>
-
-A GraphQL document (eg, query or mutation) to populate in the Studio Explorer's editor on load.
-
-If you omit this, the Explorer initially loads an example query based on your schema.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `variables`
-
-`Record<string, string>`
-</td>
-<td>
-
-An object containing initial variable values to populate in the Explorer on load.
-
-If provided, these variables should apply to the initial query you provide in `document`.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `headers`
-
-`Record<string, string>`
-</td>
-<td>
-
-An object containing initial HTTP header values to populate in the Explorer on load.
-
-</td>
-</tr>
-
-
-
 </tbody>
 </table>
 
@@ -228,7 +180,9 @@ To enable this link, you need to provide `graphRef` here even if you already pro
 </td>
 <td>
 
-You can pass valid graphql in your config via `document`, and when folks visit your graph, this graphql will prepopulate in the editor pane.
+A GraphQL document (eg, query or mutation) to populate in the Studio Explorer's editor on load.
+
+If you omit this, the Explorer initially loads an example query based on your schema.
 
 </td>
 </tr>
@@ -242,7 +196,9 @@ You can pass valid graphql in your config via `document`, and when folks visit y
 </td>
 <td>
 
-You can pass variables as a JSON object in your config, and when folks visit your graph, these variables will prepopulate in the variables pane.
+An object containing initial variable values to populate in the Explorer on load.
+
+If provided, these variables should apply to the initial query you provide in `document`.
 
 </td>
 </tr>
@@ -256,11 +212,10 @@ You can pass variables as a JSON object in your config, and when folks visit you
 </td>
 <td>
 
-You can pass headers as a JSON object in your config, and when folks visit your graph, these headers will prepopulate in the headers pane.
+An object containing initial HTTP header values to populate in the Explorer on load.
 
 </td>
 </tr>
-
 
 </tbody>
 </table>
