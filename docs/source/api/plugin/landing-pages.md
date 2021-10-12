@@ -101,50 +101,6 @@ By default, the landing page displays a footer that links to the documentation t
 </td>
 </tr>
 
-<tr>
-<td>
-
-###### `document`
-
-`string`
-</td>
-<td>
-
-You can pass valid graphql in your config via `document`, and when folks go to your Sandbox, this graphql will prepopulate in the editor pane.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `variables`
-
-`Record<string, string>`
-</td>
-<td>
-
-You can pass variables as a JSON object in your config, and when folks go to your Sandbox, these variables will prepopulate in the variables section of the Sandbox.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `headers`
-
-`Record<string, string>`
-</td>
-<td>
-
-You can pass headers as a JSON object in your config, and when folks go to your Sandbox, these headers will prepopulate in the headers section of the Sandbox.
-
-</td>
-</tr>
-
-
-
 </tbody>
 </table>
 
@@ -211,6 +167,48 @@ By default, the landing page displays a footer that links to the documentation t
 If provided, the landing page includes a link (with opt-in auto-redirect) to the Apollo Studio page for the graph with the corresponding [graph ref](https://www.apollographql.com/docs/rover/conventions/#graph-refs). An example graph ref is `my-graph@my-variant`.
 
 To enable this link, you need to provide `graphRef` here even if you already provide it elsewhere for usage reporting and other purposes. This is because if your server is publicly accessible, you might not want to display the graph ref publicly.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `document`
+
+`string`
+</td>
+<td>
+
+You can pass valid graphql in your config via `document`, and when folks visit your graph, this graphql will prepopulate in the editor pane.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `variables`
+
+`Record<string, string>`
+</td>
+<td>
+
+You can pass variables as a JSON object in your config, and when folks visit your graph, these variables will prepopulate in the variables pane.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `headers`
+
+`Record<string, string>`
+</td>
+<td>
+
+You can pass headers as a JSON object in your config, and when folks visit your graph, these headers will prepopulate in the headers pane.
 
 </td>
 </tr>
