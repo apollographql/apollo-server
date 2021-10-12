@@ -284,6 +284,19 @@ An object containing configuration options for connecting Apollo Server to [Apol
 </td>
 </tr>
 
+<tr>
+<td>
+
+##### `allowBatchedHttpRequests`
+
+`Boolean`
+</td>
+<td>
+
+Controls whether to allow [Batching Queries](../requests/#batching) in a single HTTP Request. Defaults to `true`. If the GraphQL Server has this flag set to `false` and a request comes in with more than one query, an error will be thrown.
+</td>
+</tr>
+
 
 <tr>
 <td colspan="2">
@@ -411,16 +424,6 @@ The default value is `true`. Set this to `false` to use mocked resolvers only fo
 <td>
 
 If this is set to any string value, use that value instead of the environment variable `NODE_ENV` for the features whose defaults depend on `NODE_ENV` (like the [`debug`](#introspection) and [`introspection`](#introspection) options). Note that passing the empty string here is equivalent to running with the `NODE_ENV` environment variable unset. This is primarily meant for testing the effects of the `NODE_ENV` environment variable.
-</td>
-</tr>
-
-##### `allowBatchedHttpRequests`
-
-`Boolean`
-</td>
-<td>
-
-Controls whether to allow batching multiple Queries in a single HTTP Request. Defaults to `true`. If the GraphQL Server has this flag set to `false` and a request comes in with more than one query, an error will be thrown.
 </td>
 </tr>
 

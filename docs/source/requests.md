@@ -66,6 +66,8 @@ You can send a batch of queries in a single POST request by providing a JSON-enc
 
 If you send a batched request, Apollo Server responds with a corresponding array of GraphQL responses.
 
+Allowing batched requests can be toggled through the `allowBatchedHttpRequests` flag in the Apollo Server Options.
+
 ## GET requests
 
 Apollo Server also accepts GET requests for queries (but not mutations). With a GET request, query details (`query`, `operationName`, `variables`) are provided as URL query parameters. The `variables` option is a URL-escaped JSON object.

@@ -68,20 +68,20 @@ describe('runHttpQuery', () => {
       options: {
         debug: false,
         schema,
-        schemaHash: generateSchemaHash(schema),
+        schemaHash: 'deprecated' as SchemaHash,
         allowBatchedHttpRequests: false,
       },
       request: new MockReq(),
     };
 
-    it('succeeds when there are multiple queries in the request', async () => {
+    it('succeeds when there are no batched queries in the request', async () => {
       await expect(
         runHttpQuery([], mockDisabledBatchQueryRequest),
       ).resolves.not.toThrow();
     });
 
-    it('throws when there are multiple queries in the request', () => {
-      const multipleQueryRequest = Object.assign(
+    it('throws when there are batched queries in the request', () => {
+      const batchedQueryRequest = Object.assign(
         {},
         mockDisabledBatchQueryRequest,
         {
@@ -95,15 +95,14 @@ describe('runHttpQuery', () => {
           ],
         },
       );
-      return runHttpQuery([], multipleQueryRequest).catch(
+      return runHttpQuery([], batchedQueryRequest).catch(
         (err: HttpQueryError) => {
-          expect(err.statusCode).toEqual(500);
+          expect(err.statusCode).toEqual(400);
           expect(err.message).toEqual(
             JSON.stringify({
               errors: [
                 {
-                  message:
-                    'GraphQL Query Batching is not allowed by Apollo Server, but the request contained multiple queries.',
+                  message: 'Operation batching disabled.',
                   extensions: { code: 'INTERNAL_SERVER_ERROR' },
                 },
               ],
@@ -123,7 +122,7 @@ describe('runHttpQuery', () => {
       options: {
         debug: false,
         schema,
-        schemaHash: generateSchemaHash(schema),
+        schemaHash: 'deprecated' as SchemaHash,
         allowBatchedHttpRequests: true,
       },
       request: new MockReq(),

@@ -886,7 +886,7 @@ export default ({
           },
         });
 
-        const req = request(app)
+        const res = await request(app)
           .post('/graphql')
           .send([
             {
@@ -903,17 +903,15 @@ export default ({
               operationName: 'testX',
             },
           ]);
-        return req.then((res) => {
-          expect(res.status).toEqual(500);
-          expect(res.body).toEqual({
-            errors: [
-              {
-                message:
-                  'GraphQL Query Batching is not allowed by Apollo Server, but the request contained multiple queries.',
-                extensions: { code: 'INTERNAL_SERVER_ERROR' },
-              },
-            ],
-          });
+
+        expect(res.status).toEqual(400);
+        expect(res.body).toEqual({
+          errors: [
+            {
+              message: 'Operation batching disabled.',
+              extensions: { code: 'INTERNAL_SERVER_ERROR' },
+            },
+          ],
         });
       });
 

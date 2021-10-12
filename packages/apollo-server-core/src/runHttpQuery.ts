@@ -300,14 +300,10 @@ export async function processHTTPRequest<TContext>(
         parseGraphQLRequest(httpRequest.request, requestParams),
       );
 
-      if (requests.length > 1 && options.allowBatchedHttpRequests === false) {
+      if (options.allowBatchedHttpRequests === false) {
         return throwHttpGraphQLError(
-          500,
-          [
-            new Error(
-              'GraphQL Query Batching is not allowed by Apollo Server, but the request contained multiple queries.',
-            ),
-          ],
+          400,
+          [new Error('Operation batching disabled.')],
           options,
         );
       }
