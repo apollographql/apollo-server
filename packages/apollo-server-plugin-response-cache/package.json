@@ -21,9 +21,7 @@
   },
   "dependencies": {
     "apollo-server-caching": "file:../apollo-server-caching",
-    "apollo-server-plugin-base": "file:../apollo-server-plugin-base"
-  },
-  "devDependencies": {
+    "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-server-types": "file:../apollo-server-types"
   },
   "peerDependencies": {

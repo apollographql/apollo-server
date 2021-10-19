@@ -10,6 +10,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## vNEXT
 
 - `apollo-server-core`: Fix build error when building with `@rollup/plugin-commonjs`. [PR #5797](https://github.com/apollographql/apollo-server/pull/5797)
+- `apollo-server-plugin-response-cache`: Add missing dependency on `apollo-server-types` (broken since v3.0.0). [Issue #5804](https://github.com/apollographql/apollo-server/issues/5804) [PR #5816](https://github.com/apollographql/apollo-server/pull/5816)
+
 ## v3.4.0
 
 - `apollo-server-core`: You can now specify your own `DocumentStore` (a `KeyValueStore<DocumentNode>`) for Apollo Server's cache of parsed and validated GraphQL operation abstract syntax trees via the new `documentStore` constructor option. **This replaces the `experimental_approximateDocumentStoreMiB` option.** You can replace `new ApolloServer({experimental_approximateDocumentStoreMiB: approximateDocumentStoreMiB, ...moreOptions})` with:
