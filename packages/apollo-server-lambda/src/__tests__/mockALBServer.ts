@@ -38,14 +38,9 @@ export function createMockServer(handler: ALBHandler) {
         },
       )) as ALBResult;
       res.statusCode = result.statusCode!;
-      Object.entries(result.multiValueHeaders ?? {}).forEach(
-        ([key, values]) => {
-          res.setHeader(
-            key,
-            values.map((v) => v.toString()),
-          );
-        },
-      );
+      Object.entries(result.headers ?? {}).forEach(([key, value]) => {
+        res.setHeader(key, value.toString());
+      });
       res.write(result.body);
       res.end();
     });
