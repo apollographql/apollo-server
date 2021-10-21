@@ -4,6 +4,8 @@ sidebar_title: Choosing which package to use
 description: Use the right package for your project
 ---
 
+import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
+
 Apollo Server is distributed as a collection of different packages for different environments and web frameworks. You can choose which package to use based on your project.
 
 ## Which package should I use?
@@ -125,8 +127,10 @@ In this case, we recommend you swap out `apollo-server` for `apollo-server-expre
 
 Let's say our `apollo-server` implementation uses the following code:
 
-```javascript:title=index.js
-import { ApolloServer } from 'apollo-server';
+<MultiCodeBlock>
+
+```ts:title=index.ts
+import { ApolloServer } from "apollo-server";
 
 async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({ typeDefs, resolvers });
@@ -134,6 +138,8 @@ async function startApolloServer(typeDefs, resolvers) {
   console.log(`🚀 Server ready at ${url}`);
 }
 ```
+
+</MultiCodeBlock>
 
 To swap this out for `apollo-server-express`, we first install the following required packages:
 
@@ -145,7 +151,9 @@ We can (and should) also _uninstall_ `apollo-server`.
 
 Next, we can modify our code to match the following:
 
-```javascript:title=index.js
+<MultiCodeBlock>
+
+```ts:title=index.ts
 import { ApolloServer } from 'apollo-server-express';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import express from 'express';
@@ -166,19 +174,21 @@ async function startApolloServer(typeDefs, resolvers) {
   // More required logic for integrating with Express
   await server.start();
   server.applyMiddleware({
-     app,
+    app,
 
-     // By default, apollo-server hosts its GraphQL endpoint at the
-     // server root. However, *other* Apollo Server packages host it at
-     // /graphql. Optionally provide this to match apollo-server.
-     path: '/'
+    // By default, apollo-server hosts its GraphQL endpoint at the
+    // server root. However, *other* Apollo Server packages host it at
+    // /graphql. Optionally provide this to match apollo-server.
+    path: '/'
   });
 
   // Modified server startup
-  await new Promise(resolve => httpServer.listen({ port: 4000 }, resolve));
+  await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 }
 ```
+
+</MultiCodeBlock>
 
 
 
@@ -214,7 +224,9 @@ Each section also lists the options supported by each package's `applyMiddleware
 npm install apollo-server graphql
 ```
 
-```javascript:title=index.js
+<MultiCodeBlock>
+
+```ts:title=index.ts
 import { ApolloServer } from 'apollo-server';
 
 async function startApolloServer(typeDefs, resolvers) {
@@ -223,6 +235,8 @@ async function startApolloServer(typeDefs, resolvers) {
   console.log(`🚀 Server ready at ${url}`);
 }
 ```
+
+</MultiCodeBlock>
 
 Although `apollo-server` helps you get started quickly, you can't configure its behavior as much as you can other Apollo Server packages. For example, you can't serve other endpoints from the same HTTP server.
 
@@ -240,7 +254,9 @@ The following example is roughly equivalent to the [`apollo-server` example](#ap
 npm install apollo-server-express apollo-server-core express graphql
 ```
 
-```javascript:title=index.js
+<MultiCodeBlock>
+
+```ts:title=index.ts
 import { ApolloServer } from 'apollo-server-express';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import express from 'express';
@@ -256,10 +272,12 @@ async function startApolloServer(typeDefs, resolvers) {
   });
   await server.start();
   server.applyMiddleware({ app });
-  await new Promise(resolve => httpServer.listen({ port: 4000 }, resolve));
+  await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 }
 ```
+
+</MultiCodeBlock>
 
 You _must_ `await server.start()` before calling `server.applyMiddleware`. You can add other middleware to `app` before or after calling `applyMiddleware`.
 
@@ -283,10 +301,12 @@ The following example is roughly equivalent to the [`apollo-server` example](#ap
 $ npm install apollo-server-fastify apollo-server-core fastify graphql
 ```
 
-```javascript
+<MultiCodeBlock>
+
+```ts:title=index.ts
 import { ApolloServer } from 'apollo-server-fastify';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
-import fastify from 'fastify';
+import fastify, { FastifyInstance } from 'fastify';
 
 function fastifyAppClosePlugin(app: FastifyInstance): ApolloServerPlugin {
   return {
@@ -310,12 +330,15 @@ async function startApolloServer(typeDefs, resolvers) {
       ApolloServerPluginDrainHttpServer({ httpServer: app.server }),
     ],
   });
+
   await server.start();
   app.register(server.createHandler());
   await app.listen(4000);
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 }
 ```
+
+</MultiCodeBlock>
 
 You _must_ `await server.start()` before calling `server.createHandler`. You can call other functions on `app` before or after calling `createHandler`.
 
@@ -338,8 +361,13 @@ The following example is roughly equivalent to the [`apollo-server` example](#ap
 $ npm install apollo-server-hapi @hapi/hapi graphql
 ```
 
-```javascript
-import { ApolloServer, ApolloServerPluginStopHapiServer } from 'apollo-server-hapi';
+<MultiCodeBlock>
+
+```ts:title=index.ts
+import {
+  ApolloServer,
+  ApolloServerPluginStopHapiServer
+} from 'apollo-server-hapi';
 import Hapi from '@hapi/hapi';
 
 async function startApolloServer(typeDefs, resolvers) {
@@ -347,15 +375,16 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    plugins: [
-      ApolloServerPluginStopHapiServer({ hapiServer: app }),
-    ],
+    plugins: [ApolloServerPluginStopHapiServer({ hapiServer: app })],
   });
+
   await server.start();
   await server.applyMiddleware({ app });
   await app.start();
 }
 ```
+
+</MultiCodeBlock>
 
 You _must_ `await server.start()` before calling `server.applyMiddleware`. You can call other functions on `app` before or after calling `applyMiddleware`.
 
@@ -378,7 +407,9 @@ The following example is roughly equivalent to the [`apollo-server` example](#ap
 $ npm install apollo-server-koa apollo-server-core koa graphql
 ```
 
-```javascript
+<MultiCodeBlock>
+
+```ts:title=index.ts
 import { ApolloServer } from 'apollo-server-koa';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import Koa from 'koa';
@@ -391,15 +422,18 @@ async function startApolloServer(typeDefs, resolvers) {
     resolvers,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
+
   await server.start();
   const app = new Koa();
   server.applyMiddleware({ app });
   httpServer.on('request', app.callback());
-  await new Promise(resolve => httpServer.listen({ port: 4000 }, resolve));
+  await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
   return { server, app };
 }
 ```
+
+</MultiCodeBlock>
 
 You _must_ `await server.start()` before calling `server.applyMiddleware`. You can call other functions on `app` before or after calling `applyMiddleware`.
 
@@ -424,13 +458,17 @@ The following example is roughly equivalent to the [`apollo-server` example](#ap
 $ npm install apollo-server-micro micro graphql
 ```
 
-```javascript:title=index.js
+<MultiCodeBlock>
+
+```ts:title=index.ts
 import { ApolloServer } from 'apollo-server-micro';
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
 module.exports = server.start().then(() => server.createHandler());
 ```
+
+</MultiCodeBlock>
 
 Then run the web server with `npx micro`.
 
@@ -457,13 +495,17 @@ The following example is roughly equivalent to the [`apollo-server` example](#ap
 $ npm install apollo-server-lambda graphql
 ```
 
-```javascript
+<MultiCodeBlock>
+
+```ts:title=index.ts
 import { ApolloServer } from 'apollo-server-lambda';
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
 exports.handler = server.createHandler();
 ```
+
+</MultiCodeBlock>
 
 For more details on using `apollo-server-lambda`, see the [documentation on deploying to Lambda](../deployment/lambda/).
 
@@ -479,13 +521,17 @@ The following example is roughly equivalent to the [`apollo-server` example](#ap
 $ npm install apollo-server-cloud-functions graphql
 ```
 
-```javascript
+<MultiCodeBlock>
+
+```ts:title=index.ts
 import { ApolloServer } from 'apollo-server-cloud-functions';
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
 exports.handler = server.createHandler();
 ```
+
+</MultiCodeBlock>
 
 For more details on using `apollo-server-cloud-functions`, see the [documentation on deploying to Cloud Functions](../deployment/gcp-functions/).
 
@@ -500,13 +546,17 @@ The following example is roughly equivalent to the [`apollo-server` example](#ap
 $ npm install apollo-server-azure-functions graphql
 ```
 
-```javascript
+<MultiCodeBlock>
+
+```ts:title=index.ts
 import { ApolloServer } from 'apollo-server-azure-functions';
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
 exports.handler = server.createHandler();
 ```
+
+</MultiCodeBlock>
 
 `createHandler` accepts the following [common options](#common-options):
 
