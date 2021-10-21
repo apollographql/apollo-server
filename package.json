@@ -79,7 +79,7 @@
     "@types/ioredis": "4.27.8",
     "@types/jest": "27.0.2",
     "@types/koa-router": "7.4.4",
-    "@types/lodash": "4.14.175",
+    "@types/lodash": "4.14.176",
     "@types/lodash.sortby": "4.7.6",
     "@types/lodash.xorby": "4.7.6",
     "@types/lru-cache": "5.1.1",
