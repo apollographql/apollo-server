@@ -60,7 +60,7 @@
     "@graphql-codegen/typescript-operations": "2.1.8",
     "@graphql-tools/mock": "8.4.1",
     "@graphql-tools/schema": "8.3.0",
-    "@graphql-tools/utils": "8.4.0",
+    "@graphql-tools/utils": "8.5.0",
     "@hapi/hapi": "20.2.1",
     "@josephg/resolvable": "1.0.1",
     "@rollup/plugin-commonjs": "21.0.1",
