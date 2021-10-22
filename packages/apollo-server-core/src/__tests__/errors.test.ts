@@ -88,9 +88,9 @@ describe('Errors', () => {
       ])[0];
       expect(error.message).toEqual(message);
       expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
-      expect(error.extensions.exception.key).toEqual(key);
+      expect(error.extensions.exception).toHaveProperty('key', key);
       // stacktrace should exist under exception
-      expect(error.extensions.exception.stacktrace).toBeUndefined();
+      expect(error.extensions.exception).not.toHaveProperty('stacktrace');
     });
     it('exposes fields on error under exception field and provides code', () => {
       const error = createFormattedError();
