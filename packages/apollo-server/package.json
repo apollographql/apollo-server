@@ -2,7 +2,7 @@
   "name": "apollo-server",
   "version": "3.4.0",
   "description": "Production ready GraphQL Server",
-  "author": "Apollo <opensource@apollographql.com>",
+  "author": "Apollo <packages@apollographql.com>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
