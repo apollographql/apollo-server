@@ -22,7 +22,7 @@ module.exports = {
           prettierOptions: {
             trailingComma: 'all',
             singleQuote: true,
-          }
+          },
         },
         // We build our docs including older versions which are synced from
         // GitHub at build time. If you want to be able to work on docs while
