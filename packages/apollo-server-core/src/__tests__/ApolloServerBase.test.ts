@@ -202,8 +202,9 @@ describe('ApolloServerBase executeOperation', () => {
     const result = await server.executeOperation({ query: 'query { error }' });
 
     expect(result.errors).toHaveLength(1);
-    expect(result.errors?.[0].extensions?.code).toBe('INTERNAL_SERVER_ERROR');
-    expect(result.errors?.[0].extensions?.exception?.stacktrace).toBeDefined();
+    const extensions = result.errors?.[0].extensions;
+    expect(extensions).toHaveProperty('code', 'INTERNAL_SERVER_ERROR');
+    expect(extensions).toHaveProperty('exception.stacktrace');
   });
 
   it('works with string', async () => {
