@@ -17,6 +17,13 @@ module.exports = {
         description: 'A guide to using Apollo Server',
         githubRepo: 'apollographql/apollo-server',
         defaultVersion: '3',
+        remarkTypescriptOptions: {
+          throwOnError: true,
+          prettierOptions: {
+            trailingComma: 'all',
+            singleQuote: true,
+          }
+        },
         // We build our docs including older versions which are synced from
         // GitHub at build time. If you want to be able to work on docs while
         // offline, set $OFFLINE and we won't include the old versions.
