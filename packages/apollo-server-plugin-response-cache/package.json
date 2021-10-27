@@ -25,6 +25,6 @@
     "apollo-server-types": "file:../apollo-server-types"
   },
   "peerDependencies": {
-    "graphql": "^15.3.0"
+    "graphql": "^15.7.1"
   }
 }
