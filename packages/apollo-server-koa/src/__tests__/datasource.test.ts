@@ -9,8 +9,8 @@ import {
 } from 'apollo-server-integration-testsuite';
 
 import { gql } from 'apollo-server-core';
-import type { GraphQLResolverMap } from 'apollo-graphql';
 import type { AddressInfo } from 'net';
+import type { IResolvers } from '@graphql-tools/utils';
 
 export class IdAPI extends RESTDataSource {
   // We will set this inside tests.
@@ -32,7 +32,7 @@ const typeDefs = gql`
   }
 `;
 
-const resolvers: GraphQLResolverMap<{ dataSources: { id: IdAPI } }> = {
+const resolvers: IResolvers<any, any, { dataSources: { id: IdAPI } }> = {
   Query: {
     id: async (_source, _args, { dataSources }) => {
       return (await dataSources.id.getId('hi')).id;
