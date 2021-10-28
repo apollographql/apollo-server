@@ -14,6 +14,13 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
    * landing page.
    */
   footer?: boolean;
+  /**
+   * Folks can configure their landing page to link to Studio Explorer with a
+   * document, variables and headers loaded in the UI.
+   */
+  document?: string;
+  variables?: Record<string, string>;
+  headers?: Record<string, string>;
   // For Apollo use only.
   __internal_apolloStudioEnv__?: 'staging' | 'prod';
 }
@@ -30,13 +37,6 @@ export interface ApolloServerPluginLandingPageProductionDefaultOptions
    * accessible you may not want to display the graph ref publicly.)
    */
   graphRef?: string;
-  /**
-   * Folks can configure their landing page to link to Studio Explorer with a
-   * document, variables and headers loaded in the UI.
-   */
-  document?: string;
-  variables?: Record<string, string>;
-  headers?: Record<string, string>;
 }
 
 // The actual config object read by the landing page's React component.
