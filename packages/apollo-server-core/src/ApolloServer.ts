@@ -1,29 +1,55 @@
+import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import loglevel from 'loglevel';
-import {
-  GraphQLSchema,
-  GraphQLError,
-  ValidationContext,
-  FieldDefinitionNode,
-  DocumentNode,
-  ParseOptions,
-  print,
-} from 'graphql';
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
 } from 'apollo-server-caching';
+import { Headers } from 'apollo-server-env';
 import type {
   ApolloServerPlugin,
-  GraphQLServiceContext,
   GraphQLServerListener,
+  GraphQLServiceContext,
   LandingPage,
 } from 'apollo-server-plugin-base';
-
+import type {
+  ApolloConfig,
+  GraphQLResponse,
+  Logger,
+  SchemaHash,
+  VariableValues,
+} from 'apollo-server-types';
+import {
+  DocumentNode,
+  FieldDefinitionNode,
+  GraphQLError,
+  GraphQLSchema,
+  ParseOptions,
+  print,
+  ValidationContext,
+} from 'graphql';
+import loglevel from 'loglevel';
+import { newCachePolicy } from './cachePolicy';
+import { determineApolloConfig } from './determineApolloConfig';
 import type { GraphQLServerOptions } from './graphqlOptions';
-
+import { InternalPluginId, pluginIsInternal } from './internalPlugin';
+import {
+  ApolloServerPluginCacheControl,
+  ApolloServerPluginInlineTrace,
+  ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault,
+  ApolloServerPluginSchemaReporting,
+  ApolloServerPluginSchemaReportingOptions,
+  ApolloServerPluginUsageReporting,
+} from './plugin';
+import {
+  APQ_CACHE_PREFIX,
+  GraphQLRequest,
+  GraphQLRequestContext,
+  processGraphQLRequest,
+} from './requestPipeline';
+import { cloneObject } from './runHttpQuery';
 import type {
   Config,
   Context,
@@ -31,32 +57,8 @@ import type {
   DocumentStore,
   PluginDefinition,
 } from './types';
-
-import { generateSchemaHash } from './utils/schemaHash';
-import {
-  processGraphQLRequest,
-  GraphQLRequestContext,
-  GraphQLRequest,
-  APQ_CACHE_PREFIX,
-} from './requestPipeline';
-
-import { Headers } from 'apollo-server-env';
-import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import type { Logger, SchemaHash, ApolloConfig } from 'apollo-server-types';
-import { cloneObject } from './runHttpQuery';
 import isNodeLike from './utils/isNodeLike';
-import { determineApolloConfig } from './determineApolloConfig';
-import {
-  ApolloServerPluginSchemaReporting,
-  ApolloServerPluginSchemaReportingOptions,
-  ApolloServerPluginInlineTrace,
-  ApolloServerPluginUsageReporting,
-  ApolloServerPluginCacheControl,
-  ApolloServerPluginLandingPageLocalDefault,
-  ApolloServerPluginLandingPageProductionDefault,
-} from './plugin';
-import { InternalPluginId, pluginIsInternal } from './internalPlugin';
-import { newCachePolicy } from './cachePolicy';
+import { generateSchemaHash } from './utils/schemaHash';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
 
 const NoIntrospection = (context: ValidationContext) => ({
@@ -942,12 +944,15 @@ export class ApolloServerBase<
    * `{req: express.Request, res: express.Response }` object) and to keep it
    * updated as you upgrade Apollo Server.
    */
-  public async executeOperation(
+  public async executeOperation<
+    TData = Record<string, any>,
+    TVariables = VariableValues,
+  >(
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
-    },
+    } & { variables?: TVariables | VariableValues },
     integrationContextArgument?: ContextFunctionParams,
-  ) {
+  ): Promise<GraphQLResponse & { data?: TData | null }> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
     // `apollo-server` which doesn't support `start()`.)
