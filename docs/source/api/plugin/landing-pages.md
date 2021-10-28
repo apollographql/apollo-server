@@ -171,6 +171,51 @@ To enable this link, you need to provide `graphRef` here even if you already pro
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `document`
+
+`string`
+</td>
+<td>
+
+A GraphQL document (eg, query or mutation) to populate in the Studio Explorer's editor on load.
+
+If you omit this, the Explorer initially loads an example query based on your schema.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `variables`
+
+`Record<string, string>`
+</td>
+<td>
+
+An object containing initial variable values to populate in the Explorer on load.
+
+If provided, these variables should apply to the initial query you provide in `document`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `headers`
+
+`Record<string, string>`
+</td>
+<td>
+
+An object containing initial HTTP header values to populate in the Explorer on load.
+
+</td>
+</tr>
 
 </tbody>
 </table>

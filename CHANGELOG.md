@@ -11,6 +11,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-core`: Fix build error when building with `@rollup/plugin-commonjs`. [PR #5797](https://github.com/apollographql/apollo-server/pull/5797)
 - `apollo-server-plugin-response-cache`: Add missing dependency on `apollo-server-types` (broken since v3.0.0). [Issue #5804](https://github.com/apollographql/apollo-server/issues/5804) [PR #5816](https://github.com/apollographql/apollo-server/pull/5816)
+- `apollo-server-core`: The default landing page plugins now take `document`, `variables`, and `headers` arguments which fill in default values if you click through to Explorer. [PR #5711](https://github.com/apollographql/apollo-server/pull/5711)
 
 ## v3.4.0
 
