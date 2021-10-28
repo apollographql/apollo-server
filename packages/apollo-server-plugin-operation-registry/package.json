@@ -26,6 +26,6 @@
     "make-fetch-happen": "^8.0.9"
   },
   "peerDependencies": {
-    "graphql": "^15.7.1"
+    "graphql": "^15.7.1 || ^16.0.0"
   }
 }

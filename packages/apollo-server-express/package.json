@@ -43,6 +43,6 @@
   },
   "peerDependencies": {
     "express": "^4.17.1",
-    "graphql": "^15.7.1"
+    "graphql": "^15.7.1 || ^16.0.0"
   }
 }

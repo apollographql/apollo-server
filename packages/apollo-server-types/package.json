@@ -16,6 +16,6 @@
     "apollo-server-env": "file:../apollo-server-env"
   },
   "peerDependencies": {
-    "graphql": "^15.7.1"
+    "graphql": "^15.7.1 || ^16.0.0"
   }
 }
