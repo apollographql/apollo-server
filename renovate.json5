@@ -8,6 +8,15 @@
   // Disable circleci manager; see apollographql/federation's renovate file for details.
   "enabledManagers": ["npm"],
   "dependencyDashboard": true,
+  // It seems like a nice idea to let Renovate use GitHub's native "automerge" since PRs
+  // can get merged between Renovate runs. The downsides are:
+  // - Renovate doesn't seem to set up the automerges to use squash-and-merge (this is
+  //   likely going to be fixed, see eg https://github.com/renovatebot/renovate/issues/12290)
+  // - When Renovate does the merge itself, it does its best to ensure that the PR is fully
+  //   rebased on main so that the CI that ran is based on main rather than a possibly slightly
+  //   old branch point. GH auto-merge doesn't have that property so it's a bit more likely that
+  //   a deps update could break the build if there are recent related changes.
+  platformAutomerge: false,
   "packageRules": [
     // Bunch up all non-major dependencies into a single PR.  In the common case
     // where the upgrades apply cleanly, this causes less noise and is resolved faster
