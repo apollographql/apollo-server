@@ -47,12 +47,6 @@
       "matchPackageNames": ["node-fetch", "@types/node-fetch"],
       "allowedVersions": "2.x"
     },
-    // A particular upgrade of this package is failing tests; move it to its
-    // own group so that the rest of the upgrades can merge.
-    {
-      "matchPackageNames": ["@vendia/serverless-express"],
-      "groupName": "@vendia/serverless-express",
-    },
     /*
       Docs-related Renovate rules
 
