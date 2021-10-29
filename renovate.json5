@@ -28,6 +28,12 @@
       "matchUpdateTypes": ["patch", "minor"],
       "groupSlug": "all-minor-patch",
     },
+    // We are currently working on v16 support; let's pin to v15 until we do so.
+    // See #5605 and #5844.
+    {
+      matchPackageNames: ["graphql"],
+      allowedVersions" "15.x"
+    },
     // We need to support Node v12, so we don't allow ourselves to use type definitions
     // that would let us write v14-specific code.
     {
