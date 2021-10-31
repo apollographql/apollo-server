@@ -30,7 +30,7 @@ First, install the `apollo-server-lambda` package:
 npm install apollo-server-lambda graphql
 ```
 
-Next, set up the schema's type definitions and resolvers, and pass them to the `ApolloServer` constructor like normal. Here, `ApolloServer` must be imported from `apollo-server-lambda`. It's also important to note that this file must be named `graphql.js`, as the config example in a later step depends on the filename.
+Next, set up the schema's type definitions and resolvers, and pass them to the `ApolloServer` constructor like normal. Here, `ApolloServer` must be imported from `apollo-server-lambda`. It's also important to note that this file must be named `graphql.js` and be located in the root of your project, as the config example in a later step depends on that filename and path.
 
 ```js
 // graphql.js
@@ -90,9 +90,24 @@ functions:
         cors: true
 ```
 
-### Running the Serverless Framework
+If you're using webpack or typescript you will also need to install [serverless-webpack](https://www.serverless.com/plugins/serverless-plugin-webpack) or [serverless-plugin-typescript](https://www.serverless.com/plugins/serverless-plugin-typescript) respectively. If you are using both then just use the `serverless-webpack` plugin. For webpack (with or without typescript) you'll then need to add the following to your `serverless.yml`
+...
+plugins:
+  - serverless-webpack
+custom:
+  webpack:
+    packager: 'npm'
+    webpackConfig: 'webpack.config.js' # Name of webpack configuration file
+...
+whereas for typescript only you would add:
+...
+plugins:
+  - serverless-plugin-webpack
+...
 
-After configuring the Serverless Framework, all you have to do to deploy is run `serverless deploy`
+### Running the Serverless Framework
+You'll need to setup an [IAM user with the the necessary privileges on AWS](https://www.serverless.com/framework/docs/providers/aws/guide/credentials) to perform the deployment. 
+After configuring the Serverless Framework, all you have to do to deploy is run `serverless deploy`. 
 
 If successful, `serverless` should output something similar to this example:
 
@@ -167,7 +182,7 @@ exports.handler = server.createHandler({
 
 ## Getting request info
 
-Your ApolloServer's `context` function can read information about the current operation from both the original Lambda data structures and the Express request and response created by `@vendia/serverless-express`. These are provided to your `context` function as `event`, `context`, and `express` options.
+Your ApolloServer's `context` function can read information about the current operation from both the original Lambda data structures and the Express request and response created by `@vendia/serverless-express`. These are provided to your `context` function as `event`, `context`, and `express` options. **This differs from what you might be used to with `apollo-server` where the `context` function is provided with express' `req` and `res` arguments.
 
 The `event` object contains the API Gateway event (HTTP headers, HTTP method, body, path, ...). The `context` object (not to be confused with the `context` function itself!) contains the current Lambda Context (Function Name, Function Version, awsRequestId, time remaining, ...). `express` contains `req` and `res` fields with the Express request and response. The object returned from your `context` function is provided to all of your schema resolvers in the third `context` argument.
 
