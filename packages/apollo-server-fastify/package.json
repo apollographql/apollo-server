@@ -37,6 +37,6 @@
   },
   "peerDependencies": {
     "fastify": "^3.17.0",
-    "graphql": "^15.3.0"
+    "graphql": "^15.3.0 || ^16.0.0"
   }
 }
