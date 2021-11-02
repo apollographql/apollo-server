@@ -1,7 +1,7 @@
 import { parse } from 'graphql/language';
 import { execute, ExecutionResult } from 'graphql/execution';
 import { getIntrospectionQuery, IntrospectionQuery } from 'graphql/utilities';
-import stableStringify from 'fast-json-stable-stringify';
+import stableStringify from 'safe-stable-stringify';
 import type { GraphQLSchema } from 'graphql/type';
 import createSHA from './createSHA';
 import type { SchemaHash } from 'apollo-server-types';

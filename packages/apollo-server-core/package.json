@@ -40,10 +40,10 @@
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-server-types": "file:../apollo-server-types",
     "async-retry": "^1.2.1",
-    "fast-json-stable-stringify": "^2.1.0",
     "graphql-tag": "^2.11.0",
     "loglevel": "^1.6.8",
     "lru-cache": "^6.0.0",
+    "safe-stable-stringify": "^2.2.0",
     "sha.js": "^2.4.11",
     "uuid": "^8.0.0"
   },
