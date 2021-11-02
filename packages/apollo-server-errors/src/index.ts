@@ -17,6 +17,8 @@ declare module 'graphql' {
   }
 }
 
+// Note: We'd like to switch to `extends GraphQLError` and look forward to doing so
+// as soon as we drop support for `graphql` bellow `v15.7.0`.
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
   override readonly name!: string;
@@ -165,7 +167,7 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
   // copy enumerable keys
   Object.entries(error).forEach(([key, value]) => {
     if (key === 'extensions') {
-      return; // extensions are handeled bellow
+      return; // extensions are handled bellow
     }
     copy[key] = value;
   });

@@ -47,6 +47,20 @@ describe('ApolloError', () => {
         }),
     ).toThrow(/Pass extensions directly/);
   });
+
+  it('provides toJSON method', () => {
+    const error = new ApolloError('My original message', 'A_CODE', {
+      arbitrary: 'user_data',
+    });
+
+    expect(error.toJSON()).toEqual({
+      message: 'My original message',
+      extensions: {
+        code: 'A_CODE',
+        arbitrary: 'user_data',
+      },
+    });
+  });
 });
 
 describe('ForbiddenError', () => {
