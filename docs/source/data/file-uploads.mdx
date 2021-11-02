@@ -169,7 +169,7 @@ const start = async () => {
         return;
       }
 
-      request.body = await processRequest(request.raw, reply.res);
+      request.body = await processRequest(request.raw, reply.raw);
     });
 
     const server = new ApolloServer({
