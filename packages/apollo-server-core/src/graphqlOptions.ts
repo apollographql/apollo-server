@@ -33,6 +33,7 @@ import type { DocumentStore } from './types';
  * - (optional) fieldResolver: a custom default field resolver
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  * - (optional) parseOptions: options to pass when parsing schemas and queries
+ * - (optional) allowBatchedHttpRequests: a boolean to toggle whether a single request can contain an array of queries. True by default
  *
  */
 export interface GraphQLServerOptions<
@@ -63,6 +64,7 @@ export interface GraphQLServerOptions<
   documentStore?: DocumentStore | null;
   parseOptions?: ParseOptions;
   nodeEnv?: string;
+  allowBatchedHttpRequests?: boolean;
 }
 
 export type DataSources<TContext> = {

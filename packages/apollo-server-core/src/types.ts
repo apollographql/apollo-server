@@ -42,6 +42,7 @@ type BaseConfig = Pick<
   | 'dataSources'
   | 'cache'
   | 'logger'
+  | 'allowBatchedHttpRequests'
 >;
 
 export type Unsubscriber = () => void;

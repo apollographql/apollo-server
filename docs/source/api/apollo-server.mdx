@@ -284,6 +284,19 @@ An object containing configuration options for connecting Apollo Server to [Apol
 </td>
 </tr>
 
+<tr>
+<td>
+
+##### `allowBatchedHttpRequests`
+
+`Boolean`
+</td>
+<td>
+
+Controls whether to allow [Batching Queries](../requests/#batching) in a single HTTP Request. Defaults to `true`. If the GraphQL Server has this flag set to `false` and a request comes in formatted as an array rather than as a single request object, an error will be thrown.
+</td>
+</tr>
+
 
 <tr>
 <td colspan="2">

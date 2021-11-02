@@ -196,6 +196,8 @@ export async function runHttpQuery(
     debug: options.debug,
 
     plugins: options.plugins || [],
+
+    allowBatchedHttpRequests: options.allowBatchedHttpRequests,
   };
 
   return processHTTPRequest(config, request);
@@ -293,6 +295,14 @@ export async function processHTTPRequest<TContext>(
 
   try {
     if (Array.isArray(requestPayload)) {
+      if (options.allowBatchedHttpRequests === false) {
+        return throwHttpGraphQLError(
+          400,
+          [new Error('Operation batching disabled.')],
+          options,
+        );
+      }
+
       // We're processing a batch request
       const requests = requestPayload.map((requestParams) =>
         parseGraphQLRequest(httpRequest.request, requestParams),
