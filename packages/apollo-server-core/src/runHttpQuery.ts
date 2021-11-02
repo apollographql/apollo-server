@@ -295,11 +295,6 @@ export async function processHTTPRequest<TContext>(
 
   try {
     if (Array.isArray(requestPayload)) {
-      // We're processing a batch request
-      const requests = requestPayload.map((requestParams) =>
-        parseGraphQLRequest(httpRequest.request, requestParams),
-      );
-
       if (options.allowBatchedHttpRequests === false) {
         return throwHttpGraphQLError(
           400,
@@ -307,6 +302,11 @@ export async function processHTTPRequest<TContext>(
           options,
         );
       }
+
+      // We're processing a batch request
+      const requests = requestPayload.map((requestParams) =>
+        parseGraphQLRequest(httpRequest.request, requestParams),
+      );
 
       const responses = await Promise.all(
         requests.map(async (request) => {

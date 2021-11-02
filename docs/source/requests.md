@@ -66,7 +66,7 @@ You can send a batch of queries in a single POST request by providing a JSON-enc
 
 If you send a batched request, Apollo Server responds with a corresponding array of GraphQL responses.
 
-Allowing batched requests can be toggled through the `allowBatchedHttpRequests` flag in the Apollo Server Options.
+You can disable the processing of batched requests by passing `allowBatchedHttpRequests: false` to the `ApolloServer` constructor.
 
 ## GET requests
 
