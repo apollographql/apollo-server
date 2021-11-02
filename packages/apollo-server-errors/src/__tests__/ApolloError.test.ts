@@ -61,6 +61,14 @@ describe('ApolloError', () => {
       },
     });
   });
+
+  it('provides toString method', () => {
+    const error = new ApolloError('My original message', 'A_CODE', {
+      arbitrary: 'user_data',
+    });
+
+    expect(error.toString()).toEqual('My original message');
+  });
 });
 
 describe('ForbiddenError', () => {
