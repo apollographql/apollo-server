@@ -9,7 +9,7 @@
 		"Azure",
 		"Javascript"
 	],
-	"author": "Apollo <opensource@apollographql.com>",
+	"author": "Apollo <packages@apollographql.com>",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
