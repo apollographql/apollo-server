@@ -9,6 +9,11 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+
+## v3.4.1
+
+- ⚠️ **SECURITY** `apollo-server-core`: Update default version of the GraphQL Playground React app loaded from the CDN to be `@apollographql/graphql-playground-react@1.7.42`. This patches an XSS vulnerability. Note that if you are pinning the Playground React app version in your app with `new ApolloServer({plugins: [ApolloServerPluginLandingPageGraphQLPlayground({version: 'some version'})]})`, you will need to update the specified version to 1.7.42 or later to avoid this vulnerability. If you do not explicitly enable GraphQL Playground via the `ApolloServerPluginLandingPageGraphQLPlayground` plugin, this vulnerability does not affect you. See [advisory GHSA-qm7x-rc44-rrqw](https://github.com/apollographql/apollo-server/security/advisories/GHSA-qm7x-rc44-rrqw) for more details.
+
 ## v3.4.0
 
 - `apollo-server-core`: You can now specify your own `DocumentStore` (a `KeyValueStore<DocumentNode>`) for Apollo Server's cache of parsed and validated GraphQL operation abstract syntax trees via the new `documentStore` constructor option. **This replaces the `experimental_approximateDocumentStoreMiB` option.** You can replace `new ApolloServer({experimental_approximateDocumentStoreMiB: approximateDocumentStoreMiB, ...moreOptions})` with:
@@ -194,6 +199,10 @@ Certain undersupported and underused Apollo Server features have been removed in
 - `apollo-server-hapi` is now only tested with Hapi v20.1.2 and higher (the minimum version that supports Node 16).
 - The non-serverless integrations now depend on their corresponding web frameworks via peer dependencies rather than direct dependencies.
 - All integrations that allow CORS headers to be customized now default to `access-control-allow-origin: *`. This was already the case for `apollo-server`, Express, Fastify, and Hapi; it is now also the same for Koa (which previously reflected the request's origin), Lambda, Cloud Functions, and Azure Functions as well (which did not set CORS by default). Micro and CloudFlare do not have a built-in way of setting CORS headers.
+
+## v2.25.3
+
+- ⚠️ **SECURITY** `apollo-server-core`: Update default version of the GraphQL Playground React app loaded from the CDN to be `@apollographql/graphql-playground-react@1.7.42`. This patches an XSS vulnerability. Note that if you are pinning the Playground React app version in your app with `new ApolloServer({playground: {version: 'some version'}})`, you will need to update the specified version to 1.7.42 or later to avoid this vulnerability. If you disable GraphQL Playground with `new ApolloServer({playground: false})`, this vulnerability does not affect you. See [advisory GHSA-qm7x-rc44-rrqw](https://github.com/apollographql/apollo-server/security/advisories/GHSA-qm7x-rc44-rrqw) for more details.
 
 ## v2.25.2
 
