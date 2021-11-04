@@ -17,7 +17,7 @@ export {
 // 
 // The version is passed to `@apollographql/graphql-playground-html`'s
 // `renderPlaygroundPage` via the integration packages' `playground` config.
-const playgroundVersion = '1.7.39';
+const playgroundVersion = '1.7.42';
 
 // https://stackoverflow.com/a/51365037
 type RecursivePartial<T> = {

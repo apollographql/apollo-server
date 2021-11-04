@@ -11,6 +11,11 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+
+## v2.25.3
+
+- ⚠️ **SECURITY** `apollo-server-core`: Update default version of the GraphQL Playground React app loaded from the CDN to be `@apollographql/graphql-playground-react@1.7.42`. This patches an XSS vulnerability. Note that if you are pinning the Playground React app version in your app with `new ApolloServer({playground: {version: 'some version'}})`, you will need to update the specified version to 1.7.42 or later to avoid this vulnerability. If you disable GraphQL Playground with `new ApolloServer({playground: false})`, this vulnerability does not affect you. See [advisory GHSA-qm7x-rc44-rrqw](https://github.com/apollographql/apollo-server/security/advisories/GHSA-qm7x-rc44-rrqw) for more details.
+
 ## v2.25.2
 
 - `apollo-server-express`: Update dependencies on `@types/express` and `@types/express-serve-static-core`. [PR #5352](https://github.com/apollographql/apollo-server/pull/5352)
