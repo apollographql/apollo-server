@@ -20,7 +20,7 @@ import type {
 //
 // The version is passed to `@apollographql/graphql-playground-html`'s
 // `renderPlaygroundPage` via the integration packages' `playground` config.
-const defaultPlaygroundVersion = '1.7.41';
+const defaultPlaygroundVersion = '1.7.42';
 
 export type ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Parameters<
   typeof renderPlaygroundPage
