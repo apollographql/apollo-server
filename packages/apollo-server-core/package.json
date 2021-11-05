@@ -48,6 +48,6 @@
     "uuid": "^8.0.0"
   },
   "peerDependencies": {
-    "graphql": "^15.3.0"
+    "graphql": "^15.3.0 || ^16.0.0"
   }
 }

@@ -4,8 +4,21 @@ import {
   GraphQLFormattedError,
   Source,
   SourceLocation,
+  printError,
+  formatError,
 } from 'graphql';
 
+declare module 'graphql' {
+  export interface GraphQLErrorExtensions {
+    exception?: {
+      code?: string;
+      stacktrace?: ReadonlyArray<string>;
+    };
+  }
+}
+
+// Note: We'd like to switch to `extends GraphQLError` and look forward to doing so
+// as soon as we drop support for `graphql` bellow `v15.7.0`.
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
   override readonly name!: string;
@@ -14,7 +27,7 @@ export class ApolloError extends Error implements GraphQLError {
   readonly source: Source | undefined;
   readonly positions: ReadonlyArray<number> | undefined;
   readonly nodes: ReadonlyArray<ASTNode> | undefined;
-  public originalError: Error | null | undefined;
+  public originalError: Error | undefined;
 
   [key: string]: any;
 
@@ -40,6 +53,30 @@ export class ApolloError extends Error implements GraphQLError {
 
     this.extensions = { ...extensions, code };
   }
+
+  toJSON(): GraphQLFormattedError {
+    return formatError(toGraphQLError(this));
+  }
+
+  override toString(): string {
+    return printError(toGraphQLError(this));
+  }
+
+  get [Symbol.toStringTag](): string {
+    return this.name;
+  }
+}
+
+function toGraphQLError(error: ApolloError): GraphQLError {
+  return new GraphQLError(
+    error.message,
+    error.nodes,
+    error.source,
+    error.positions,
+    error.path,
+    error.originalError,
+    error.extensions,
+  );
 }
 
 function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
@@ -129,10 +166,13 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
 
   // copy enumerable keys
   Object.entries(error).forEach(([key, value]) => {
+    if (key === 'extensions') {
+      return; // extensions are handled bellow
+    }
     copy[key] = value;
   });
 
-  // extensions are non enumerable, so copy them directly
+  // merge extensions instead of just copying them
   copy.extensions = {
     ...copy.extensions,
     ...error.extensions,
