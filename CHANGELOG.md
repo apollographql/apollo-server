@@ -9,7 +9,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
-- Apollo Server can now be installed with `graphql@16` without causing peer dependency errors or warnings. [PR #5857](https://github.com/apollographql/apollo-server/pull/5857)
+- Apollo Server now supports `graphql@16`. (There is a very small backwards incompatibility: `ApolloError.originalError` can no longer be `null`, matching the type of `GraphQLError.originalError`. Use `undefined` instead. If this causes challenges, let us know and we can try to adapt.) [PR #5857](https://github.com/apollographql/apollo-server/pull/5857)
 - `apollo-server-core`: Fix build error when building with `@rollup/plugin-commonjs`. [PR #5797](https://github.com/apollographql/apollo-server/pull/5797)
 - `apollo-server-plugin-response-cache`: Add missing dependency on `apollo-server-types` (broken since v3.0.0). [Issue #5804](https://github.com/apollographql/apollo-server/issues/5804) [PR #5816](https://github.com/apollographql/apollo-server/pull/5816)
 - `apollo-server-core`: The default landing page plugins now take `document`, `variables`, and `headers` arguments which fill in default values if you click through to Explorer. [PR #5711](https://github.com/apollographql/apollo-server/pull/5711)
