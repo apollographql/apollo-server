@@ -76,7 +76,7 @@ The `serverWillStop` event fires when Apollo Server is starting to shut down bec
 
 You define your `serverWillStop` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, because the two handlers usually interact with the same data. Currently, `serverWillStop` handlers do not take arguments (this might change in the future).
 
-When your `serverWillStart` handler is called, Apollo Server is in a state where it will no longer start to execute new GraphQL operations, so it's a good place to flush observability data. If you are looking for a hook that runs while operations can still execute, try [`drainServer`](#drainserver).
+When your `serverWillStop` handler is called, Apollo Server is in a state where it will no longer start to execute new GraphQL operations, so it's a good place to flush observability data. If you are looking for a hook that runs while operations can still execute, try [`drainServer`](#drainserver).
 
 #### Example
 
