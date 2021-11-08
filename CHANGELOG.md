@@ -231,7 +231,7 @@ Certain undersupported and underused Apollo Server features have been removed in
 
 ## v2.24.0
 
-- `apollo-server-core`: Apollo Studio usage reporting uses a more efficient format which sends fewer detailed traces to Apollo's server. This change should not have a major effect on the experience of using Apollo Studio. [PR #4142](https://github.com/apollographql/apollo-server/pull/4142)
+- `apollo-server-core`: Apollo Studio usage reporting uses a more efficient format which sends fewer detailed traces to Apollo's server. This change should not have a major effect on the experience of using Apollo Studio. This also fixes a bug in all prior versions where all operations were reported to Studio as "uncached". [PR #4142](https://github.com/apollographql/apollo-server/pull/4142)
 
 ## v2.23.0
 
