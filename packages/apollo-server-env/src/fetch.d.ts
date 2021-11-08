@@ -1,5 +1,6 @@
 import { Agent as HttpAgent } from 'http';
 import { Agent as HttpsAgent } from 'https';
+import type { URL } from './url';
 
 export declare function fetch(
   input: RequestInfo,
@@ -61,7 +62,7 @@ export interface RequestInit {
   timeout?: number;
   compress?: boolean;
   size?: number;
-  agent?: RequestAgent | false;
+  agent?: RequestAgent | ((parsedUrl: URL) => RequestAgent) | false;
 
   // Cloudflare Workers accept a `cf` property to control Cloudflare features
   // See https://developers.cloudflare.com/workers/reference/cloudflare-features/
