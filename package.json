@@ -90,7 +90,7 @@
     "@types/qs-middleware": "1.0.1",
     "@types/request": "2.48.7",
     "@types/request-promise": "4.1.48",
-    "@types/sinonjs__fake-timers": "6.0.4",
+    "@types/sinonjs__fake-timers": "8.1.0",
     "@types/supertest": "2.0.11",
     "@types/test-listen": "1.1.0",
     "@types/type-is": "1.6.3",
