@@ -121,7 +121,6 @@ class StatsByContext {
     const statsContext: IStatsContext = {
       clientName: trace.clientName,
       clientVersion: trace.clientVersion,
-      clientReferenceId: trace.clientReferenceId,
     };
     const statsContextKey = JSON.stringify(statsContext);
 
@@ -135,8 +134,7 @@ class StatsByContext {
     sizeEstimator.bytes +=
       20 +
       estimatedBytesForString(trace.clientName) +
-      estimatedBytesForString(trace.clientVersion) +
-      estimatedBytesForString(trace.clientReferenceId);
+      estimatedBytesForString(trace.clientVersion);
     const contextualizedStats = new OurContextualizedStats(statsContext);
     this.map[statsContextKey] = contextualizedStats;
     return contextualizedStats;

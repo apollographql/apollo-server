@@ -248,7 +248,6 @@ export type VariableValueOptions =
 export interface ClientInfo {
   clientName?: string;
   clientVersion?: string;
-  clientReferenceId?: string;
 }
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,

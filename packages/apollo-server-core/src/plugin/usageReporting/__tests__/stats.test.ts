@@ -4,7 +4,6 @@ import { OurContextualizedStats, SizeEstimator } from '../stats';
 import { DurationHistogram } from '../durationHistogram';
 
 const statsContext = {
-  clientReferenceId: 'reference',
   clientVersion: 'version',
 };
 

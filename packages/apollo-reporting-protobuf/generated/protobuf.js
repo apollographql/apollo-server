@@ -26,7 +26,6 @@ $root.Trace = (function() {
      * @property {string|null} [clientName] Trace clientName
      * @property {string|null} [clientVersion] Trace clientVersion
      * @property {string|null} [clientAddress] Trace clientAddress
-     * @property {string|null} [clientReferenceId] Trace clientReferenceId
      * @property {Trace.IHTTP|null} [http] Trace http
      * @property {Trace.ICachePolicy|null} [cachePolicy] Trace cachePolicy
      * @property {Trace.IQueryPlanNode|null} [queryPlan] Trace queryPlan
@@ -139,14 +138,6 @@ $root.Trace = (function() {
      * @instance
      */
     Trace.prototype.clientAddress = "";
-
-    /**
-     * Trace clientReferenceId.
-     * @member {string} clientReferenceId
-     * @memberof Trace
-     * @instance
-     */
-    Trace.prototype.clientReferenceId = "";
 
     /**
      * Trace http.
@@ -264,8 +255,6 @@ $root.Trace = (function() {
             writer.uint32(/* id 21, wireType 0 =*/168).bool(message.persistedQueryHit);
         if (message.persistedQueryRegister != null && Object.hasOwnProperty.call(message, "persistedQueryRegister"))
             writer.uint32(/* id 22, wireType 0 =*/176).bool(message.persistedQueryRegister);
-        if (message.clientReferenceId != null && Object.hasOwnProperty.call(message, "clientReferenceId"))
-            writer.uint32(/* id 23, wireType 2 =*/186).string(message.clientReferenceId);
         if (message.registeredOperation != null && Object.hasOwnProperty.call(message, "registeredOperation"))
             writer.uint32(/* id 24, wireType 0 =*/192).bool(message.registeredOperation);
         if (message.forbiddenOperation != null && Object.hasOwnProperty.call(message, "forbiddenOperation"))
@@ -342,9 +331,6 @@ $root.Trace = (function() {
                 break;
             case 9:
                 message.clientAddress = reader.string();
-                break;
-            case 23:
-                message.clientReferenceId = reader.string();
                 break;
             case 10:
                 message.http = $root.Trace.HTTP.decode(reader, reader.uint32());
@@ -446,9 +432,6 @@ $root.Trace = (function() {
         if (message.clientAddress != null && message.hasOwnProperty("clientAddress"))
             if (!$util.isString(message.clientAddress))
                 return "clientAddress: string expected";
-        if (message.clientReferenceId != null && message.hasOwnProperty("clientReferenceId"))
-            if (!$util.isString(message.clientReferenceId))
-                return "clientReferenceId: string expected";
         if (message.http != null && message.hasOwnProperty("http")) {
             var error = $root.Trace.HTTP.verify(message.http);
             if (error)
@@ -514,7 +497,6 @@ $root.Trace = (function() {
             object.fullQueryCacheHit = false;
             object.persistedQueryHit = false;
             object.persistedQueryRegister = false;
-            object.clientReferenceId = "";
             object.registeredOperation = false;
             object.forbiddenOperation = false;
             object.queryPlan = null;
@@ -552,8 +534,6 @@ $root.Trace = (function() {
             object.persistedQueryHit = message.persistedQueryHit;
         if (message.persistedQueryRegister != null && message.hasOwnProperty("persistedQueryRegister"))
             object.persistedQueryRegister = message.persistedQueryRegister;
-        if (message.clientReferenceId != null && message.hasOwnProperty("clientReferenceId"))
-            object.clientReferenceId = message.clientReferenceId;
         if (message.registeredOperation != null && message.hasOwnProperty("registeredOperation"))
             object.registeredOperation = message.registeredOperation;
         if (message.forbiddenOperation != null && message.hasOwnProperty("forbiddenOperation"))
@@ -4910,7 +4890,6 @@ $root.StatsContext = (function() {
      * Properties of a StatsContext.
      * @exports IStatsContext
      * @interface IStatsContext
-     * @property {string|null} [clientReferenceId] StatsContext clientReferenceId
      * @property {string|null} [clientName] StatsContext clientName
      * @property {string|null} [clientVersion] StatsContext clientVersion
      */
@@ -4929,14 +4908,6 @@ $root.StatsContext = (function() {
                 if (properties[keys[i]] != null)
                     this[keys[i]] = properties[keys[i]];
     }
-
-    /**
-     * StatsContext clientReferenceId.
-     * @member {string} clientReferenceId
-     * @memberof StatsContext
-     * @instance
-     */
-    StatsContext.prototype.clientReferenceId = "";
 
     /**
      * StatsContext clientName.
@@ -4978,8 +4949,6 @@ $root.StatsContext = (function() {
     StatsContext.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.clientReferenceId != null && Object.hasOwnProperty.call(message, "clientReferenceId"))
-            writer.uint32(/* id 1, wireType 2 =*/10).string(message.clientReferenceId);
         if (message.clientName != null && Object.hasOwnProperty.call(message, "clientName"))
             writer.uint32(/* id 2, wireType 2 =*/18).string(message.clientName);
         if (message.clientVersion != null && Object.hasOwnProperty.call(message, "clientVersion"))
@@ -5018,9 +4987,6 @@ $root.StatsContext = (function() {
         while (reader.pos < end) {
             var tag = reader.uint32();
             switch (tag >>> 3) {
-            case 1:
-                message.clientReferenceId = reader.string();
-                break;
             case 2:
                 message.clientName = reader.string();
                 break;
@@ -5062,9 +5028,6 @@ $root.StatsContext = (function() {
     StatsContext.verify = function verify(message) {
         if (typeof message !== "object" || message === null)
             return "object expected";
-        if (message.clientReferenceId != null && message.hasOwnProperty("clientReferenceId"))
-            if (!$util.isString(message.clientReferenceId))
-                return "clientReferenceId: string expected";
         if (message.clientName != null && message.hasOwnProperty("clientName"))
             if (!$util.isString(message.clientName))
                 return "clientName: string expected";
@@ -5088,12 +5051,9 @@ $root.StatsContext = (function() {
             options = {};
         var object = {};
         if (options.defaults) {
-            object.clientReferenceId = "";
             object.clientName = "";
             object.clientVersion = "";
         }
-        if (message.clientReferenceId != null && message.hasOwnProperty("clientReferenceId"))
-            object.clientReferenceId = message.clientReferenceId;
         if (message.clientName != null && message.hasOwnProperty("clientName"))
             object.clientName = message.clientName;
         if (message.clientVersion != null && message.hasOwnProperty("clientVersion"))

@@ -3,7 +3,6 @@
 exports[`Check query latency stats when adding a forbidden trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -339,7 +338,6 @@ OurContextualizedStats {
 exports[`Check query latency stats when adding a fully cached trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -675,7 +673,6 @@ OurContextualizedStats {
 exports[`Check query latency stats when adding a persisted hit trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -1011,7 +1008,6 @@ OurContextualizedStats {
 exports[`Check query latency stats when adding a persisted miss trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -1347,7 +1343,6 @@ OurContextualizedStats {
 exports[`Check query latency stats when adding a private cached trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -1683,7 +1678,6 @@ OurContextualizedStats {
 exports[`Check query latency stats when adding a public cached trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -2019,7 +2013,6 @@ OurContextualizedStats {
 exports[`Check query latency stats when adding a registered trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -2355,7 +2348,6 @@ OurContextualizedStats {
 exports[`Check query latency stats when adding a single trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -2691,7 +2683,6 @@ OurContextualizedStats {
 exports[`Check query latency stats when adding an errored trace  1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -3033,7 +3024,6 @@ OurContextualizedStats {
 exports[`Check query latency stats when merging errored traces 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -3392,7 +3382,6 @@ OurContextualizedStats {
 exports[`Check query latency stats when merging non-errored traces 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {},
@@ -3728,7 +3717,6 @@ OurContextualizedStats {
 exports[`Check type stats add multiple errored traces trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {
@@ -4337,7 +4325,6 @@ OurContextualizedStats {
 exports[`Check type stats add multiple federated trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {
@@ -4934,7 +4921,6 @@ OurContextualizedStats {
 exports[`Check type stats add multiple non-federated trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {
@@ -5531,7 +5517,6 @@ OurContextualizedStats {
 exports[`Check type stats add single non-federated trace 1`] = `
 OurContextualizedStats {
   "context": Object {
-    "clientReferenceId": "reference",
     "clientVersion": "version",
   },
   "perTypeStat": Object {
