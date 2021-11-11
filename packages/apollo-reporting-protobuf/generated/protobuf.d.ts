@@ -35,9 +35,6 @@ export interface ITrace {
     /** Trace clientAddress */
     clientAddress?: (string|null);
 
-    /** Trace clientReferenceId */
-    clientReferenceId?: (string|null);
-
     /** Trace http */
     http?: (Trace.IHTTP|null);
 
@@ -104,9 +101,6 @@ export class Trace implements ITrace {
 
     /** Trace clientAddress. */
     public clientAddress: string;
-
-    /** Trace clientReferenceId. */
-    public clientReferenceId: string;
 
     /** Trace http. */
     public http?: (Trace.IHTTP|null);
@@ -1875,9 +1869,6 @@ export class QueryLatencyStats implements IQueryLatencyStats {
 /** Properties of a StatsContext. */
 export interface IStatsContext {
 
-    /** StatsContext clientReferenceId */
-    clientReferenceId?: (string|null);
-
     /** StatsContext clientName */
     clientName?: (string|null);
 
@@ -1893,9 +1884,6 @@ export class StatsContext implements IStatsContext {
      * @param [properties] Properties to set
      */
     constructor(properties?: IStatsContext);
-
-    /** StatsContext clientReferenceId. */
-    public clientReferenceId: string;
 
     /** StatsContext clientName. */
     public clientName: string;

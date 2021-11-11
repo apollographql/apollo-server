@@ -456,12 +456,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
             if (clientInfo) {
               // While there is a clientAddress protobuf field, the backend
               // doesn't pay attention to it yet, so we'll ignore it for now.
-              const { clientName, clientVersion, clientReferenceId } =
-                clientInfo;
-              // the backend makes the choice of mapping clientName => clientReferenceId if
-              // no custom reference id is provided
+              const { clientName, clientVersion } = clientInfo;
               treeBuilder.trace.clientVersion = clientVersion || '';
-              treeBuilder.trace.clientReferenceId = clientReferenceId || '';
               treeBuilder.trace.clientName = clientName || '';
             }
           },
@@ -708,7 +704,6 @@ export function makeHTTPRequestHeaders(
 
 function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
   const clientNameHeaderKey = 'apollographql-client-name';
-  const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
   const clientVersionHeaderKey = 'apollographql-client-version';
 
   // Default to using the `apollo-client-x` header fields if present.
@@ -718,13 +713,11 @@ function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
   // set is the empty String for all fields (as per protobuf defaults)
   if (
     request.http?.headers?.get(clientNameHeaderKey) ||
-    request.http?.headers?.get(clientVersionHeaderKey) ||
-    request.http?.headers?.get(clientReferenceIdHeaderKey)
+    request.http?.headers?.get(clientVersionHeaderKey)
   ) {
     return {
       clientName: request.http?.headers?.get(clientNameHeaderKey),
       clientVersion: request.http?.headers?.get(clientVersionHeaderKey),
-      clientReferenceId: request.http?.headers?.get(clientReferenceIdHeaderKey),
     };
   } else if (request.extensions?.clientInfo) {
     return request.extensions.clientInfo;
