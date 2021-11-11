@@ -158,7 +158,7 @@ export class ApolloServer<
           });
         },
         {
-          prefix: this.graphqlPath,
+          prefix: this.graphqlPath === '/' ? undefined : this.graphqlPath,
         },
       );
     };

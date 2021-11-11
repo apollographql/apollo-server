@@ -512,4 +512,43 @@ describe('apollo-server-fastify', () => {
       });
     });
   });
+
+  describe('corner cases', () => {
+    it('should correctly use `/` as handler path combined with fastify plugin prefix', async () => {
+      const app = fastify();
+      server = new ApolloServer({
+        stopOnTerminationSignals: false,
+        typeDefs,
+        resolvers,
+        plugins: [
+          fastifyAppClosePlugin(app),
+          ApolloServerPluginDrainHttpServer({
+            httpServer: app.server,
+          }),
+        ],
+      });
+      await server.start();
+
+      const handler = server.createHandler({ path: '/' });
+      app.register(handler);
+      app.register(handler, { prefix: '/some-prefix' });
+      await app.listen(port);
+
+      const { url } = createServerInfo(server, app.server);
+      // get rid of trailing slash
+      const origin = new URL(url).origin;
+
+      // all cases should work
+      for (const apolloFetch of [
+        createApolloFetch({ uri: origin }),
+        createApolloFetch({ uri: `${origin}/` }),
+        createApolloFetch({ uri: `${origin}/some-prefix` }),
+        createApolloFetch({ uri: `${origin}/some-prefix/` }),
+      ]) {
+        const result = await apolloFetch({ query: '{hello}' });
+        expect(result.data).toEqual({ hello: 'hi' });
+        expect(result.errors).toBeUndefined();
+      }
+    });
+  });
 });
