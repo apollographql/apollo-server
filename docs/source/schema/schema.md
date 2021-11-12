@@ -118,7 +118,7 @@ Most of the types you define in a GraphQL schema are object types. An object typ
 
 Two object types _can_ include each other as fields, as is the case in our example schema from earlier:
 
-```graphql
+```graphql{3,8}
 type Book {
   title: String
   author: Author

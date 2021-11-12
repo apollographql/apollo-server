@@ -7,15 +7,11 @@ import {
   ExpansionPanel,
 } from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
-> **Apollo Server 3 has been released.** Most applications require few or no changes to upgrade. For details, see the [migration guide](../migration/).
->
-> You can also [switch to the v2 docs](https://www.apollographql.com/docs/apollo-server/v2).
-
 Apollo Server needs to know how to populate data for every field in your schema so that it can respond to requests for that data. To accomplish this, it uses resolvers.
 
 **A resolver is a function that's responsible for populating the data for a single field in your schema.** It can populate that data in any way you define, such as by fetching data from a back-end database or a third-party API.
 
-If you _don't_ define a resolver for a particular field, Apollo Server automatically defines a [default resolver](#default-resolvers) for it.
+> If you don't define a resolver for a particular field, Apollo Server automatically defines a [default resolver](#default-resolvers) for it.
 
 ## Defining a resolver
 
@@ -55,7 +51,7 @@ const resolvers = {
 
 ### Handling arguments
 
-Now let's say our server defines the following (slightly longer) schema:
+Now let's say our server defines _this_ schema:
 
 ```graphql
 type User {
@@ -102,11 +98,10 @@ const resolvers = {
 #### As this example shows:
 
 * A resolver can optionally accept four positional arguments: `(parent, args, context, info)`.
-
-    _[Learn more about these arguments](#resolver-arguments)_
+    * [Learn more about these arguments.](#resolver-arguments)
 * The `args` argument is an object that contains all _GraphQL_ arguments that were provided for the field by the GraphQL operation.
 
-> Notice that this example _doesn't_ define resolvers for `User` fields (`id` and `name`). That's because the [default resolver](#default-resolvers) that Apollo Server creates for each of these fields does the right thing: it obtains the value directly from the object returned by the `user` resolver.
+> Notice that this example _doesn't_ define resolvers for `User` fields (`id` and `name`). That's because the [default resolver](#default-resolvers) that Apollo Server creates for these fields does the right thing: it obtains the value directly from the object returned by the `user` resolver.
 
 ## Passing resolvers to Apollo Server
 
@@ -168,15 +163,25 @@ Note that you can define your resolvers across as many different files and objec
 
 ## Resolver chains
 
-Whenever a query asks for a field that contains an object type, the query _also_ asks for _at least one field_ of that object (if it didn't, there would be no reason to include the object in the query). A query always "bottoms out" on fields that contain either a scalar or an enum, of any list depth and nullability, for example:
+Whenever a query asks for a field that returns an object type, the query _also_ asks for _at least one field_ of that object (if it didn't, there would be no reason to include the object in the query). A query always "bottoms out" on fields that return a [scalar](../schema/schema/#scalar-types), an [enum](../schema/schema/#enum-types), or a list of these.
 
-```graphql
+For example, all fields of this `Product` type "bottom out":
+
+```graphql{1-6}
 type Product {
+  id: ID!
+  name: String
   variants: [String!]
+  availability: Availability!
+}
+
+enum Availability {
+  AVAILABLE
+  DISCONTINUED
 }
 ```
 
-Therefore, whenever Apollo Server _resolves_ a field that contains an object type, it always then resolves one or more fields of that object. Those subfields might in turn _also_ contain object types. Depending on your schema, this object-field pattern can continue to an arbitrary depth, creating what's called a **resolver chain**.
+Because of this rule, whenever Apollo Server _resolves_ a field that returns an object type, it always then resolves one or more fields of that object. Those subfields might in turn _also_ contain object types. Depending on your schema, this object-field pattern can continue to an arbitrary depth, creating what's called a **resolver chain**.
 
 ### Example
 
@@ -228,7 +233,7 @@ graph LR;
   author --> name("Author.name()");
 ```
 
-These resolvers execute in the order shown above, passing their return value to the next resolver in the chain via the [`parent` argument](#resolver-arguments).
+These resolvers execute in the order shown above, and they each pass their return value to the next resolver in the chain via the [`parent` argument](#resolver-arguments).
 
 Here's a code sample that can resolve the query above with this resolver chain:
 
@@ -378,7 +383,7 @@ The `context` argument is useful for passing things that any resolver might need
 
 **Resolvers should never destructively modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
 
-To provide a `context` to your resolvers, add a `context` initialization function to the `ApolloServer` constructor. This function is called with every request, so you can set the context based on the request's details (such as HTTP headers).
+To provide an initial `context` to your resolvers, add a `context` initialization function to the `ApolloServer` constructor. This function is called with every request, so you can customize the context based on each request's details (such as HTTP headers).
 
 ```js
 
@@ -398,7 +403,9 @@ const server = new ApolloServer({
 }
 ```
 
-> This example assumes you are using either the `apollo-server` or `apollo-server-express` package, both of which use Express. The fields of the object passed to your `context` function may differ if you're using middleware other than Express. [See the API reference for details.](../api/apollo-server/#middleware-specific-context-fields) For more information on middleware in general, see the [integrations page](../integrations/middleware/).
+> This example assumes you're using either the `apollo-server` or `apollo-server-express` package, both of which use Express. The fields of the object passed to your `context` function might differ if you're using middleware besides Express. [See the API reference for details.](../api/apollo-server/#middleware-specific-context-fields)
+>
+>For more information on middleware in general, see [Choosing an Apollo Server package](../integrations/middleware/).
 
 Context initialization can be asynchronous, allowing database connections and other operations to complete:
 
