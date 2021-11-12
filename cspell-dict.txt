@@ -21,6 +21,7 @@ bwvllq
 cacheability
 cacheable
 Cacheable
+Changesets
 circleci
 codecov
 codegen
@@ -71,6 +72,7 @@ instanceof
 iteratees
 josephg
 jsdelivr
+keyv
 KHTML
 Kubernetes
 linearizability
@@ -136,6 +138,7 @@ Supergraph
 testful
 testonly
 testsuite
+triaging
 tsbuildinfo
 typecheck
 typeis
