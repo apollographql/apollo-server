@@ -56,7 +56,7 @@
   },
   "devDependencies": {
     "@apollo/client": "3.4.17",
-    "@graphql-codegen/cli": "2.2.2",
+    "@graphql-codegen/cli": "2.3.0",
     "@graphql-codegen/typescript-operations": "2.2.0",
     "@graphql-tools/mock": "8.4.3",
     "@graphql-tools/schema": "8.3.1",
@@ -79,7 +79,7 @@
     "@types/ioredis": "4.28.1",
     "@types/jest": "27.0.2",
     "@types/koa-router": "7.4.4",
-    "@types/lodash": "4.14.176",
+    "@types/lodash": "4.14.177",
     "@types/lodash.sortby": "4.7.6",
     "@types/lodash.xorby": "4.7.6",
     "@types/lru-cache": "5.1.1",
