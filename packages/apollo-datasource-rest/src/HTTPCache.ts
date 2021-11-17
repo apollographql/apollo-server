@@ -10,8 +10,8 @@ import {
 import type { CacheOptions } from './RESTDataSource';
 
 export class HTTPCache {
-  private keyValueCache: KeyValueCache;
-  private httpFetch: typeof fetch;
+  keyValueCache: KeyValueCache;
+  httpFetch: typeof fetch;
 
   constructor(
     keyValueCache: KeyValueCache = new InMemoryLRUCache(),
@@ -40,8 +40,8 @@ export class HTTPCache {
       const response = await this.httpFetch(request);
 
       const policy = new CachePolicy(
-        policyRequestFrom(request),
-        policyResponseFrom(response),
+        this.policyRequestFrom(request),
+        this.policyResponseFrom(response),
       );
 
       return this.storeResponseAndReturnClone(
@@ -62,7 +62,7 @@ export class HTTPCache {
     if (
       (ttlOverride && policy.age() < ttlOverride) ||
       (!ttlOverride &&
-        policy.satisfiesWithoutRevalidation(policyRequestFrom(request)))
+        policy.satisfiesWithoutRevalidation(this.policyRequestFrom(request)))
     ) {
       const headers = policy.responseHeaders();
       return new Response(body, {
@@ -72,7 +72,7 @@ export class HTTPCache {
       });
     } else {
       const revalidationHeaders = policy.revalidationHeaders(
-        policyRequestFrom(request),
+        this.policyRequestFrom(request),
       );
       const revalidationRequest = new Request(request, {
         headers: revalidationHeaders,
@@ -80,8 +80,8 @@ export class HTTPCache {
       const revalidationResponse = await this.httpFetch(revalidationRequest);
 
       const { policy: revalidatedPolicy, modified } = policy.revalidatedPolicy(
-        policyRequestFrom(revalidationRequest),
-        policyResponseFrom(revalidationResponse),
+        this.policyRequestFrom(revalidationRequest),
+        this.policyResponseFrom(revalidationResponse),
       );
 
       return this.storeResponseAndReturnClone(
@@ -98,7 +98,7 @@ export class HTTPCache {
     }
   }
 
-  private async storeResponseAndReturnClone(
+  async storeResponseAndReturnClone(
     response: Response,
     request: Request,
     policy: CachePolicy,
@@ -130,7 +130,7 @@ export class HTTPCache {
 
     // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
     // We may be able to use better heuristics here, but for now we'll take the max-age times 2.
-    if (canBeRevalidated(response)) {
+    if (this.canBeRevalidated(response)) {
       ttl *= 2;
     }
 
@@ -156,31 +156,31 @@ export class HTTPCache {
       headers: response.headers,
     });
   }
-}
 
-function canBeRevalidated(response: Response): boolean {
-  return response.headers.has('ETag');
-}
-
-function policyRequestFrom(request: Request) {
-  return {
-    url: request.url,
-    method: request.method,
-    headers: headersToObject(request.headers),
-  };
-}
-
-function policyResponseFrom(response: Response) {
-  return {
-    status: response.status,
-    headers: headersToObject(response.headers),
-  };
-}
-
-function headersToObject(headers: Headers) {
-  const object = Object.create(null);
-  for (const [name, value] of headers) {
-    object[name] = value;
+  protected canBeRevalidated(response: Response): boolean {
+    return response.headers.has('ETag');
   }
-  return object;
+
+  protected policyRequestFrom(request: Request) {
+    return {
+      url: request.url,
+      method: request.method,
+      headers: this.headersToObject(request.headers),
+    };
+  }
+
+  protected policyResponseFrom(response: Response) {
+    return {
+      status: response.status,
+      headers: this.headersToObject(response.headers),
+    };
+  }
+
+  protected headersToObject(headers: Headers) {
+    const object = Object.create(null);
+    for (const [name, value] of headers) {
+      object[name] = value;
+    }
+    return object;
+  }
 }
