@@ -94,7 +94,7 @@
     "@types/supertest": "2.0.11",
     "@types/test-listen": "1.1.0",
     "@types/type-is": "1.6.3",
-    "@types/uuid": "8.3.1",
+    "@types/uuid": "8.3.3",
     "@vendia/serverless-express": "4.5.2",
     "awaiting": "3.0.0",
     "azure-functions-ts-essentials": "1.3.2",
@@ -129,7 +129,7 @@
     "supertest": "6.1.6",
     "test-listen": "1.1.0",
     "ts-jest": "27.0.7",
-    "typescript": "4.4.4",
+    "typescript": "4.5.2",
     "winston": "3.3.3",
     "winston-transport": "4.4.0"
   },
