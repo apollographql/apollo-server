@@ -96,8 +96,9 @@ To run both an Express app _and_ a separate subscription server, we'll create an
     }, {
        // This is the `httpServer` we created in a previous step.
        server: httpServer,
-       // This `server` is the instance returned from `new ApolloServer`.
-       path: server.graphqlPath,
+       // Pass a different path here if your ApolloServer serves at
+       // a different path.
+       path: '/graphql',
     });
     ```
 
@@ -148,7 +149,7 @@ import typeDefs from "./typeDefs";
 
   const subscriptionServer = SubscriptionServer.create(
     { schema, execute, subscribe },
-    { server: httpServer, path: server.graphqlPath }
+    { server: httpServer, path: '/graphql' }
   );
 
   const server = new ApolloServer({
