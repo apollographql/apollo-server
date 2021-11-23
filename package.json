@@ -108,7 +108,7 @@
     "form-data": "4.0.0",
     "graphql": "15.7.2",
     "graphql-tag": "2.12.6",
-    "ioredis": "4.28.0",
+    "ioredis": "4.28.1",
     "jest": "27.3.1",
     "jest-config": "27.3.1",
     "jest-junit": "13.0.0",
