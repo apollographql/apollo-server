@@ -26,7 +26,7 @@
 		"node": ">=12.0"
 	},
 	"dependencies": {
-		"@azure/functions": "1.2.3",
+		"@azure/functions": "2.0.0",
 		"apollo-server-core": "file:../apollo-server-core",
 		"apollo-server-env": "file:../apollo-server-env",
 		"apollo-server-types": "file:../apollo-server-types"
