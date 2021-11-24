@@ -58,7 +58,7 @@
     "@apollo/client": "3.5.5",
     "@graphql-codegen/cli": "2.3.0",
     "@graphql-codegen/typescript-operations": "2.2.1",
-    "@graphql-tools/mock": "8.4.3",
+    "@graphql-tools/mock": "8.4.4",
     "@graphql-tools/schema": "8.3.1",
     "@graphql-tools/utils": "8.5.3",
     "@hapi/hapi": "20.2.1",
