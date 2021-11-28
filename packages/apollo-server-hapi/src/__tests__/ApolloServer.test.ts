@@ -209,7 +209,7 @@ describe('non-integration tests', () => {
         {
           route: {
             payload: {
-              maxBytes: 8192 // limit bytes to 8K
+              maxBytes: 8192, // limit bytes to 8K
             },
           },
         },
@@ -222,7 +222,7 @@ describe('non-integration tests', () => {
         },
       );
 
-      await apolloFetch({query: '{hello}'});
+      await apolloFetch({ query: '{hello}' });
     });
 
     it('passes each request and response toolkit through to the context function', async () => {

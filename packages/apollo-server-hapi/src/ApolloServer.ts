@@ -1,5 +1,5 @@
 import type hapi from '@hapi/hapi';
-import type {Request} from '@hapi/hapi';
+import type { Request } from '@hapi/hapi';
 import { parseAll } from '@hapi/accept';
 
 export { GraphQLOptions } from 'apollo-server-core';
@@ -101,7 +101,7 @@ export class ApolloServer extends ApolloServerBase {
             query:
               request.method === 'post'
                 ? // TODO type payload as string or Record
-                (request.payload as any)
+                  (request.payload as any)
                 : request.query,
             request: convertNodeHttpToRequest(request.raw.req),
           },
@@ -109,8 +109,8 @@ export class ApolloServer extends ApolloServerBase {
 
         const response = h.response(graphqlResponse);
         if (responseInit.headers) {
-          Object.entries(responseInit.headers).forEach(
-            ([headerName, value]) => response.header(headerName, value),
+          Object.entries(responseInit.headers).forEach(([headerName, value]) =>
+            response.header(headerName, value),
           );
         }
         response.code(responseInit.status || 200);
@@ -150,9 +150,9 @@ export class ApolloServer extends ApolloServerBase {
       method: ['POST'],
       path,
       options: route ?? {
-        cors: cors ?? { origin: 'ignore' }
+        cors: cors ?? { origin: 'ignore' },
       },
-      handler
+      handler,
     });
 
     // clear the payload route options for GET configuration
@@ -166,7 +166,7 @@ export class ApolloServer extends ApolloServerBase {
       options: route ?? {
         cors: cors ?? { origin: 'ignore' },
       },
-      handler
+      handler,
     });
 
     this.graphqlPath = path;
