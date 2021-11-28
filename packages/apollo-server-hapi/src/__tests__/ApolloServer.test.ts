@@ -200,6 +200,35 @@ describe('non-integration tests', () => {
       await apolloFetch({ query: '{hello}' });
     });
 
+    it('accepts custom payload configuration', async () => {
+      const { url: uri } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        {
+          route: {
+            payload: {
+              maxBytes: 8192 // limit bytes to 8K
+            },
+          },
+        },
+      );
+
+      const apolloFetch = createApolloFetch({ uri }).useAfter(
+        (response, next) => {
+          expect(
+            response.response.headers.get('access-control-expose-headers'),
+          ).toEqual(
+            'Accept,Authorization,Content-Type,If-None-Match,Another-One,X-Apollo',
+          );
+          next();
+        },
+      );
+
+      await apolloFetch({ query: '{hello}' });
+    });
+
     it('passes each request and response toolkit through to the context function', async () => {
       const context = async ({ request, h }: any) => {
         expect(request).toBeDefined();

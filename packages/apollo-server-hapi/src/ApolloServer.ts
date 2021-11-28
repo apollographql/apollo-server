@@ -1,4 +1,5 @@
 import type hapi from '@hapi/hapi';
+import type {Request} from '@hapi/hapi';
 import { parseAll } from '@hapi/accept';
 
 export { GraphQLOptions } from 'apollo-server-core';
@@ -90,66 +91,82 @@ export class ApolloServer extends ApolloServerBase {
       });
     }
 
+    const handler = async (request: Request, h: hapi.ResponseToolkit) => {
+      try {
+        const { graphqlResponse, responseInit } = await runHttpQuery(
+          [request, h],
+          {
+            method: request.method.toUpperCase(),
+            options: () => this.createGraphQLServerOptions(request, h),
+            query:
+              request.method === 'post'
+                ? // TODO type payload as string or Record
+                (request.payload as any)
+                : request.query,
+            request: convertNodeHttpToRequest(request.raw.req),
+          },
+        );
+
+        const response = h.response(graphqlResponse);
+        if (responseInit.headers) {
+          Object.entries(responseInit.headers).forEach(
+            ([headerName, value]) => response.header(headerName, value),
+          );
+        }
+        response.code(responseInit.status || 200);
+        return response;
+      } catch (error) {
+        if (!isHttpQueryError(error)) {
+          throw Boom.boomify(error as Error);
+        }
+
+        if (true === error.isGraphQLError) {
+          const response = h.response(error.message);
+          if (error.headers) {
+            Object.entries(error.headers).forEach(([headerName, value]) => {
+              response.header(headerName, value);
+            });
+          }
+          response.code(error.statusCode);
+          response.type('application/json');
+          return response;
+        }
+
+        const err = new Boom.Boom(error.message, {
+          statusCode: error.statusCode,
+        });
+        if (error.headers) {
+          Object.entries(error.headers).forEach(([headerName, value]) => {
+            err.output.headers[headerName] = value;
+          });
+        }
+        // Boom hides the error when status code is 500
+        err.output.payload.message = error.message;
+        throw err;
+      }
+    };
+
     app.route({
-      method: ['GET', 'POST'],
+      method: ['POST'],
+      path,
+      options: route ?? {
+        cors: cors ?? { origin: 'ignore' }
+      },
+      handler
+    });
+
+    // clear the payload route options for GET configuration
+    if (!!route) {
+      delete route.payload;
+    }
+
+    app.route({
+      method: ['GET'],
       path,
       options: route ?? {
         cors: cors ?? { origin: 'ignore' },
       },
-      handler: async (request, h) => {
-        try {
-          const { graphqlResponse, responseInit } = await runHttpQuery(
-            [request, h],
-            {
-              method: request.method.toUpperCase(),
-              options: () => this.createGraphQLServerOptions(request, h),
-              query:
-                request.method === 'post'
-                  ? // TODO type payload as string or Record
-                    (request.payload as any)
-                  : request.query,
-              request: convertNodeHttpToRequest(request.raw.req),
-            },
-          );
-
-          const response = h.response(graphqlResponse);
-          if (responseInit.headers) {
-            Object.entries(responseInit.headers).forEach(
-              ([headerName, value]) => response.header(headerName, value),
-            );
-          }
-          response.code(responseInit.status || 200);
-          return response;
-        } catch (error) {
-          if (!isHttpQueryError(error)) {
-            throw Boom.boomify(error as Error);
-          }
-
-          if (true === error.isGraphQLError) {
-            const response = h.response(error.message);
-            if (error.headers) {
-              Object.entries(error.headers).forEach(([headerName, value]) => {
-                response.header(headerName, value);
-              });
-            }
-            response.code(error.statusCode);
-            response.type('application/json');
-            return response;
-          }
-
-          const err = new Boom.Boom(error.message, {
-            statusCode: error.statusCode,
-          });
-          if (error.headers) {
-            Object.entries(error.headers).forEach(([headerName, value]) => {
-              err.output.headers[headerName] = value;
-            });
-          }
-          // Boom hides the error when status code is 500
-          err.output.payload.message = error.message;
-          throw err;
-        }
-      },
+      handler
     });
 
     this.graphqlPath = path;
