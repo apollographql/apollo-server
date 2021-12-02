@@ -29,6 +29,8 @@ export class ApolloServer extends ApolloServerBase {
     cors,
     path,
     route,
+    routeGet,
+    routePost,
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration) {
@@ -146,26 +148,43 @@ export class ApolloServer extends ApolloServerBase {
       }
     };
 
+    // POST ROUTE
+    let postOptions = Object.assign({}, routePost);
+    postOptions = Object.assign(postOptions, route);
+
+    // if we have post route options which contain no cors options, but have
+    // specified cors options separately, then merge them in
+    if (!!postOptions && !!cors && postOptions.cors == null) {
+      postOptions.cors = cors;
+    // else if we have no cors options as all, default them
+    } else if (!!postOptions && postOptions.cors == null) {
+      postOptions.cors = { origin: 'ignore' };
+    }
+
     app.route({
       method: ['POST'],
       path,
-      options: route ?? {
-        cors: cors ?? { origin: 'ignore' },
-      },
+      options: postOptions,
       handler,
     });
 
-    // clear the payload route options for GET configuration
-    if (!!route) {
-      delete route.payload;
+    // GET ROUTE
+    let getOptions = Object.assign({}, routeGet);
+    getOptions = Object.assign(getOptions, route);
+
+    // if we have get route options which contain no cors options, but have
+    // specified cors options separately, then merge them in
+    if (!!getOptions && !!cors && getOptions.cors == null) {
+      getOptions.cors = cors;
+      // else if we have no cors options as all, default them
+    } else if (!!getOptions && getOptions.cors == null) {
+      getOptions.cors = { origin: 'ignore' };
     }
 
     app.route({
       method: ['GET'],
       path,
-      options: route ?? {
-        cors: cors ?? { origin: 'ignore' },
-      },
+      options: getOptions,
       handler,
     });
 
@@ -178,6 +197,8 @@ export interface ServerRegistration {
   path?: string;
   cors?: boolean | hapi.RouteOptionsCors;
   route?: hapi.RouteOptions;
+  routeGet?: hapi.RouteOptions;
+  routePost?: hapi.RouteOptions;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
 }
