@@ -6,7 +6,7 @@ import {
 
 import request from 'supertest';
 
-import Hapi, {RequestRoute} from '@hapi/hapi';
+import Hapi, { RequestRoute } from '@hapi/hapi';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';
 import {
@@ -92,7 +92,7 @@ describe('non-integration tests', () => {
 
     return {
       hapiServer: app,
-      apolloServerInfo: createServerInfo(server, app.listener)
+      apolloServerInfo: createServerInfo(server, app.listener),
     };
   }
 
@@ -104,10 +104,12 @@ describe('non-integration tests', () => {
 
   describe('applyMiddleware', () => {
     it('can be queried', async () => {
-      const { url: uri } = (await createServer({
-        typeDefs,
-        resolvers,
-      })).apolloServerInfo;
+      const { url: uri } = (
+        await createServer({
+          typeDefs,
+          resolvers,
+        })
+      ).apolloServerInfo;
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
 
@@ -116,11 +118,13 @@ describe('non-integration tests', () => {
     });
 
     it('renders landing page by default when browser requests', async () => {
-      const { httpServer } = (await createServer({
-        typeDefs,
-        resolvers,
-        nodeEnv: '', // default landing page
-      })).apolloServerInfo;
+      const { httpServer } = (
+        await createServer({
+          typeDefs,
+          resolvers,
+          nodeEnv: '', // default landing page
+        })
+      ).apolloServerInfo;
 
       await request(httpServer)
         .get('/graphql')
@@ -135,24 +139,26 @@ describe('non-integration tests', () => {
     });
 
     it('accepts cors configuration', async () => {
-      const { url: uri } = (await createServer(
-        {
-          typeDefs,
-          resolvers,
-        },
-        {
-          cors: {
-            additionalExposedHeaders: ['X-Apollo'],
-            exposedHeaders: [
-              'Accept',
-              'Authorization',
-              'Content-Type',
-              'If-None-Match',
-              'Another-One',
-            ],
+      const { url: uri } = (
+        await createServer(
+          {
+            typeDefs,
+            resolvers,
           },
-        },
-      )).apolloServerInfo;
+          {
+            cors: {
+              additionalExposedHeaders: ['X-Apollo'],
+              exposedHeaders: [
+                'Accept',
+                'Authorization',
+                'Content-Type',
+                'If-None-Match',
+                'Another-One',
+              ],
+            },
+          },
+        )
+      ).apolloServerInfo;
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
@@ -168,26 +174,28 @@ describe('non-integration tests', () => {
     });
 
     it('accepts custom route configuration', async () => {
-      const { url: uri } = (await createServer(
-        {
-          typeDefs,
-          resolvers,
-        },
-        {
-          route: {
-            cors: {
-              additionalExposedHeaders: ['X-Apollo'],
-              exposedHeaders: [
-                'Accept',
-                'Authorization',
-                'Content-Type',
-                'If-None-Match',
-                'Another-One',
-              ],
+      const { url: uri } = (
+        await createServer(
+          {
+            typeDefs,
+            resolvers,
+          },
+          {
+            route: {
+              cors: {
+                additionalExposedHeaders: ['X-Apollo'],
+                exposedHeaders: [
+                  'Accept',
+                  'Authorization',
+                  'Content-Type',
+                  'If-None-Match',
+                  'Another-One',
+                ],
+              },
             },
           },
-        },
-      )).apolloServerInfo;
+        )
+      ).apolloServerInfo;
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
@@ -204,40 +212,45 @@ describe('non-integration tests', () => {
     });
 
     it('accepts custom payload configuration', async () => {
-      const { apolloServerInfo: info, hapiServer: hapiServer } = (await createServer(
-        {
-          typeDefs,
-          resolvers,
-        },
-        {
-          route: {
-            cors: true
+      const { apolloServerInfo: info, hapiServer: hapiServer } =
+        await createServer(
+          {
+            typeDefs,
+            resolvers,
           },
-          routeGet: {
-            description: 'Get Route'
-          },
-          routePost: {
-            description: 'Post Route',
-            payload: {
-              maxBytes: 8192, // limit bytes to 8K
+          {
+            route: {
+              cors: true,
+            },
+            routeGet: {
+              description: 'Get Route',
+            },
+            routePost: {
+              description: 'Post Route',
+              payload: {
+                maxBytes: 8192, // limit bytes to 8K
+              },
             },
           },
-        },
-      ));
+        );
 
       const table: RequestRoute[] = hapiServer.table();
 
       // find the get route and verify route config
-      const getRoute = table.find(r => r.method === 'get');
+      const getRoute = table.find((r) => r.method === 'get');
       expect(getRoute?.settings.description).toEqual('Get Route');
       expect(getRoute?.settings.cors).toBeDefined();
-      expect((getRoute?.settings.cors as Hapi.RouteOptionsCors)?.['origin']).toEqual(['*']);
+      expect(
+        (getRoute?.settings.cors as Hapi.RouteOptionsCors)?.['origin'],
+      ).toEqual(['*']);
 
       // find the post route and verify route config
-      const postRoute = table.find(r => r.method === 'post');
+      const postRoute = table.find((r) => r.method === 'post');
       expect(postRoute?.settings.description).toEqual('Post Route');
       expect(postRoute?.settings.cors).toBeDefined();
-      expect((postRoute?.settings.cors as Hapi.RouteOptionsCors)?.['origin']).toEqual(['*']);
+      expect(
+        (postRoute?.settings.cors as Hapi.RouteOptionsCors)?.['origin'],
+      ).toEqual(['*']);
       expect(postRoute?.settings.payload?.maxBytes).toEqual(8192);
 
       const apolloFetch = createApolloFetch({ uri: info.url }).useAfter(
@@ -257,11 +270,13 @@ describe('non-integration tests', () => {
         return {};
       };
 
-      const { url: uri } = (await createServer({
-        typeDefs,
-        resolvers,
-        context,
-      })).apolloServerInfo;
+      const { url: uri } = (
+        await createServer({
+          typeDefs,
+          resolvers,
+          context,
+        })
+      ).apolloServerInfo;
 
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
@@ -292,8 +307,13 @@ describe('non-integration tests', () => {
             onHealthCheck: async () => {
               throw Error("can't connect to DB");
             },
-          },
-        )).apolloServerInfo;
+            {
+              onHealthCheck: async () => {
+                throw Error("can't connect to DB");
+              },
+            },
+          )
+        ).apolloServerInfo;
 
         await request(httpServer)
           .get('/.well-known/apollo/server-health')
@@ -301,15 +321,17 @@ describe('non-integration tests', () => {
       });
 
       it('can disable the healthCheck', async () => {
-        const { httpServer } = (await createServer(
-          {
-            typeDefs,
-            resolvers,
-          },
-          {
-            disableHealthCheck: true,
-          },
-        )).apolloServerInfo;
+        const { httpServer } = (
+          await createServer(
+            {
+              typeDefs,
+              resolvers,
+            },
+            {
+              disableHealthCheck: true,
+            },
+          )
+        ).apolloServerInfo;
 
         await request(httpServer)
           .get('/.well-known/apollo/server-health')
@@ -331,15 +353,17 @@ describe('non-integration tests', () => {
             },
           },
         };
-        const { url: uri } = (await createServer({
-          typeDefs,
-          resolvers,
-          context: () => {
-            throw new AuthenticationError('valid result');
-          },
-          // Stack trace not included for NODE_ENV=test
-          nodeEnv: '',
-        })).apolloServerInfo;
+        const { url: uri } = (
+          await createServer({
+            typeDefs,
+            resolvers,
+            context: () => {
+              throw new AuthenticationError('valid result');
+            },
+            // Stack trace not included for NODE_ENV=test
+            nodeEnv: '',
+          })
+        ).apolloServerInfo;
 
         const apolloFetch = createApolloFetch({ uri });
 
@@ -355,22 +379,24 @@ describe('non-integration tests', () => {
       });
 
       it('propagates error codes in dev mode', async () => {
-        const { url: uri } = (await createServer({
-          typeDefs: gql`
-            type Query {
-              error: String
-            }
-          `,
-          resolvers: {
-            Query: {
-              error: () => {
-                throw new AuthenticationError('we the best music');
+        const { url: uri } = (
+          await createServer({
+            typeDefs: gql`
+              type Query {
+                error: String
+              }
+            `,
+            resolvers: {
+              Query: {
+                error: () => {
+                  throw new AuthenticationError('we the best music');
+                },
               },
             },
-          },
-          // Stack trace not included for NODE_ENV=test
-          nodeEnv: '',
-        })).apolloServerInfo;
+            // Stack trace not included for NODE_ENV=test
+            nodeEnv: '',
+          })
+        ).apolloServerInfo;
 
         const apolloFetch = createApolloFetch({ uri });
 
@@ -386,21 +412,23 @@ describe('non-integration tests', () => {
       });
 
       it('propagates error codes in production', async () => {
-        const { url: uri } = (await createServer({
-          typeDefs: gql`
-            type Query {
-              error: String
-            }
-          `,
-          resolvers: {
-            Query: {
-              error: () => {
-                throw new AuthenticationError('we the best music');
+        const { url: uri } = (
+          await createServer({
+            typeDefs: gql`
+              type Query {
+                error: String
+              }
+            `,
+            resolvers: {
+              Query: {
+                error: () => {
+                  throw new AuthenticationError('we the best music');
+                },
               },
             },
-          },
-          nodeEnv: 'production',
-        })).apolloServerInfo;
+            nodeEnv: 'production',
+          })
+        ).apolloServerInfo;
 
         const apolloFetch = createApolloFetch({ uri });
 
@@ -415,21 +443,23 @@ describe('non-integration tests', () => {
       });
 
       it('propagates error codes with null response in production', async () => {
-        const { url: uri } = (await createServer({
-          typeDefs: gql`
-            type Query {
-              error: String!
-            }
-          `,
-          resolvers: {
-            Query: {
-              error: () => {
-                throw new AuthenticationError('we the best music');
+        const { url: uri } = (
+          await createServer({
+            typeDefs: gql`
+              type Query {
+                error: String!
+              }
+            `,
+            resolvers: {
+              Query: {
+                error: () => {
+                  throw new AuthenticationError('we the best music');
+                },
               },
             },
-          },
-          nodeEnv: 'production',
-        })).apolloServerInfo;
+            nodeEnv: 'production',
+          })
+        ).apolloServerInfo;
 
         const apolloFetch = createApolloFetch({ uri });
 

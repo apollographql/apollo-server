@@ -156,7 +156,7 @@ export class ApolloServer extends ApolloServerBase {
     // specified cors options separately, then merge them in
     if (!!postOptions && !!cors && postOptions.cors == null) {
       postOptions.cors = cors;
-    // else if we have no cors options as all, default them
+      // else if we have no cors options as all, default them
     } else if (!!postOptions && postOptions.cors == null) {
       postOptions.cors = { origin: 'ignore' };
     }
