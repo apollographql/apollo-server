@@ -32,9 +32,6 @@ export interface ITrace {
     /** Trace clientVersion */
     clientVersion?: (string|null);
 
-    /** Trace clientAddress */
-    clientAddress?: (string|null);
-
     /** Trace http */
     http?: (Trace.IHTTP|null);
 
@@ -98,9 +95,6 @@ export class Trace implements ITrace {
 
     /** Trace clientVersion. */
     public clientVersion: string;
-
-    /** Trace clientAddress. */
-    public clientAddress: string;
 
     /** Trace http. */
     public http?: (Trace.IHTTP|null);
@@ -2323,179 +2317,90 @@ export class TypeStat implements ITypeStat {
     public toJSON(): { [k: string]: any };
 }
 
-/** Properties of a Field. */
-export interface IField {
+/** Properties of a ReferencedFieldsForType. */
+export interface IReferencedFieldsForType {
 
-    /** Field name */
-    name?: (string|null);
+    /** ReferencedFieldsForType fieldNames */
+    fieldNames?: (string[]|null);
 
-    /** Field returnType */
-    returnType?: (string|null);
+    /** ReferencedFieldsForType isInterface */
+    isInterface?: (boolean|null);
 }
 
-/** Represents a Field. */
-export class Field implements IField {
+/** Represents a ReferencedFieldsForType. */
+export class ReferencedFieldsForType implements IReferencedFieldsForType {
 
     /**
-     * Constructs a new Field.
+     * Constructs a new ReferencedFieldsForType.
      * @param [properties] Properties to set
      */
-    constructor(properties?: IField);
+    constructor(properties?: IReferencedFieldsForType);
 
-    /** Field name. */
-    public name: string;
+    /** ReferencedFieldsForType fieldNames. */
+    public fieldNames: string[];
 
-    /** Field returnType. */
-    public returnType: string;
+    /** ReferencedFieldsForType isInterface. */
+    public isInterface: boolean;
 
     /**
-     * Creates a new Field instance using the specified properties.
+     * Creates a new ReferencedFieldsForType instance using the specified properties.
      * @param [properties] Properties to set
-     * @returns Field instance
+     * @returns ReferencedFieldsForType instance
      */
-    public static create(properties?: IField): Field;
+    public static create(properties?: IReferencedFieldsForType): ReferencedFieldsForType;
 
     /**
-     * Encodes the specified Field message. Does not implicitly {@link Field.verify|verify} messages.
-     * @param message Field message or plain object to encode
+     * Encodes the specified ReferencedFieldsForType message. Does not implicitly {@link ReferencedFieldsForType.verify|verify} messages.
+     * @param message ReferencedFieldsForType message or plain object to encode
      * @param [writer] Writer to encode to
      * @returns Writer
      */
-    public static encode(message: IField, writer?: $protobuf.Writer): $protobuf.Writer;
+    public static encode(message: IReferencedFieldsForType, writer?: $protobuf.Writer): $protobuf.Writer;
 
     /**
-     * Encodes the specified Field message, length delimited. Does not implicitly {@link Field.verify|verify} messages.
-     * @param message Field message or plain object to encode
+     * Encodes the specified ReferencedFieldsForType message, length delimited. Does not implicitly {@link ReferencedFieldsForType.verify|verify} messages.
+     * @param message ReferencedFieldsForType message or plain object to encode
      * @param [writer] Writer to encode to
      * @returns Writer
      */
-    public static encodeDelimited(message: IField, writer?: $protobuf.Writer): $protobuf.Writer;
+    public static encodeDelimited(message: IReferencedFieldsForType, writer?: $protobuf.Writer): $protobuf.Writer;
 
     /**
-     * Decodes a Field message from the specified reader or buffer.
+     * Decodes a ReferencedFieldsForType message from the specified reader or buffer.
      * @param reader Reader or buffer to decode from
      * @param [length] Message length if known beforehand
-     * @returns Field
+     * @returns ReferencedFieldsForType
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Field;
+    public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): ReferencedFieldsForType;
 
     /**
-     * Decodes a Field message from the specified reader or buffer, length delimited.
+     * Decodes a ReferencedFieldsForType message from the specified reader or buffer, length delimited.
      * @param reader Reader or buffer to decode from
-     * @returns Field
+     * @returns ReferencedFieldsForType
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): Field;
+    public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): ReferencedFieldsForType;
 
     /**
-     * Verifies a Field message.
+     * Verifies a ReferencedFieldsForType message.
      * @param message Plain object to verify
      * @returns `null` if valid, otherwise the reason why it is not
      */
     public static verify(message: { [k: string]: any }): (string|null);
 
     /**
-     * Creates a plain object from a Field message. Also converts values to other types if specified.
-     * @param message Field
+     * Creates a plain object from a ReferencedFieldsForType message. Also converts values to other types if specified.
+     * @param message ReferencedFieldsForType
      * @param [options] Conversion options
      * @returns Plain object
      */
-    public static toObject(message: Field, options?: $protobuf.IConversionOptions): { [k: string]: any };
+    public static toObject(message: ReferencedFieldsForType, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
     /**
-     * Converts this Field to JSON.
-     * @returns JSON object
-     */
-    public toJSON(): { [k: string]: any };
-}
-
-/** Properties of a Type. */
-export interface IType {
-
-    /** Type name */
-    name?: (string|null);
-
-    /** Type field */
-    field?: (IField[]|null);
-}
-
-/** Represents a Type. */
-export class Type implements IType {
-
-    /**
-     * Constructs a new Type.
-     * @param [properties] Properties to set
-     */
-    constructor(properties?: IType);
-
-    /** Type name. */
-    public name: string;
-
-    /** Type field. */
-    public field: IField[];
-
-    /**
-     * Creates a new Type instance using the specified properties.
-     * @param [properties] Properties to set
-     * @returns Type instance
-     */
-    public static create(properties?: IType): Type;
-
-    /**
-     * Encodes the specified Type message. Does not implicitly {@link Type.verify|verify} messages.
-     * @param message Type message or plain object to encode
-     * @param [writer] Writer to encode to
-     * @returns Writer
-     */
-    public static encode(message: IType, writer?: $protobuf.Writer): $protobuf.Writer;
-
-    /**
-     * Encodes the specified Type message, length delimited. Does not implicitly {@link Type.verify|verify} messages.
-     * @param message Type message or plain object to encode
-     * @param [writer] Writer to encode to
-     * @returns Writer
-     */
-    public static encodeDelimited(message: IType, writer?: $protobuf.Writer): $protobuf.Writer;
-
-    /**
-     * Decodes a Type message from the specified reader or buffer.
-     * @param reader Reader or buffer to decode from
-     * @param [length] Message length if known beforehand
-     * @returns Type
-     * @throws {Error} If the payload is not a reader or valid buffer
-     * @throws {$protobuf.util.ProtocolError} If required fields are missing
-     */
-    public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Type;
-
-    /**
-     * Decodes a Type message from the specified reader or buffer, length delimited.
-     * @param reader Reader or buffer to decode from
-     * @returns Type
-     * @throws {Error} If the payload is not a reader or valid buffer
-     * @throws {$protobuf.util.ProtocolError} If required fields are missing
-     */
-    public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): Type;
-
-    /**
-     * Verifies a Type message.
-     * @param message Plain object to verify
-     * @returns `null` if valid, otherwise the reason why it is not
-     */
-    public static verify(message: { [k: string]: any }): (string|null);
-
-    /**
-     * Creates a plain object from a Type message. Also converts values to other types if specified.
-     * @param message Type
-     * @param [options] Conversion options
-     * @returns Plain object
-     */
-    public static toObject(message: Type, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-    /**
-     * Converts this Type to JSON.
+     * Converts this ReferencedFieldsForType to JSON.
      * @returns JSON object
      */
     public toJSON(): { [k: string]: any };
@@ -2700,6 +2605,9 @@ export interface ITracesAndStats {
     /** TracesAndStats statsWithContext */
     statsWithContext?: ($protobuf.ToArray<IContextualizedStats>|IContextualizedStats[]|null);
 
+    /** TracesAndStats referencedFieldsByType */
+    referencedFieldsByType?: ({ [k: string]: IReferencedFieldsForType }|null);
+
     /** TracesAndStats internalTracesContributingToStats */
     internalTracesContributingToStats?: ((ITrace|Uint8Array)[]|null);
 }
@@ -2718,6 +2626,9 @@ export class TracesAndStats implements ITracesAndStats {
 
     /** TracesAndStats statsWithContext. */
     public statsWithContext: IContextualizedStats[];
+
+    /** TracesAndStats referencedFieldsByType. */
+    public referencedFieldsByType: { [k: string]: IReferencedFieldsForType };
 
     /** TracesAndStats internalTracesContributingToStats. */
     public internalTracesContributingToStats: (ITrace|Uint8Array)[];

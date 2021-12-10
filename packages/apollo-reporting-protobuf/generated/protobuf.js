@@ -25,7 +25,6 @@ $root.Trace = (function() {
      * @property {Trace.IDetails|null} [details] Trace details
      * @property {string|null} [clientName] Trace clientName
      * @property {string|null} [clientVersion] Trace clientVersion
-     * @property {string|null} [clientAddress] Trace clientAddress
      * @property {Trace.IHTTP|null} [http] Trace http
      * @property {Trace.ICachePolicy|null} [cachePolicy] Trace cachePolicy
      * @property {Trace.IQueryPlanNode|null} [queryPlan] Trace queryPlan
@@ -132,14 +131,6 @@ $root.Trace = (function() {
     Trace.prototype.clientVersion = "";
 
     /**
-     * Trace clientAddress.
-     * @member {string} clientAddress
-     * @memberof Trace
-     * @instance
-     */
-    Trace.prototype.clientAddress = "";
-
-    /**
      * Trace http.
      * @member {Trace.IHTTP|null|undefined} http
      * @memberof Trace
@@ -237,8 +228,6 @@ $root.Trace = (function() {
             writer.uint32(/* id 7, wireType 2 =*/58).string(message.clientName);
         if (message.clientVersion != null && Object.hasOwnProperty.call(message, "clientVersion"))
             writer.uint32(/* id 8, wireType 2 =*/66).string(message.clientVersion);
-        if (message.clientAddress != null && Object.hasOwnProperty.call(message, "clientAddress"))
-            writer.uint32(/* id 9, wireType 2 =*/74).string(message.clientAddress);
         if (message.http != null && Object.hasOwnProperty.call(message, "http"))
             $root.Trace.HTTP.encode(message.http, writer.uint32(/* id 10, wireType 2 =*/82).fork()).ldelim();
         if (message.durationNs != null && Object.hasOwnProperty.call(message, "durationNs"))
@@ -328,9 +317,6 @@ $root.Trace = (function() {
                 break;
             case 8:
                 message.clientVersion = reader.string();
-                break;
-            case 9:
-                message.clientAddress = reader.string();
                 break;
             case 10:
                 message.http = $root.Trace.HTTP.decode(reader, reader.uint32());
@@ -429,9 +415,6 @@ $root.Trace = (function() {
         if (message.clientVersion != null && message.hasOwnProperty("clientVersion"))
             if (!$util.isString(message.clientVersion))
                 return "clientVersion: string expected";
-        if (message.clientAddress != null && message.hasOwnProperty("clientAddress"))
-            if (!$util.isString(message.clientAddress))
-                return "clientAddress: string expected";
         if (message.http != null && message.hasOwnProperty("http")) {
             var error = $root.Trace.HTTP.verify(message.http);
             if (error)
@@ -484,7 +467,6 @@ $root.Trace = (function() {
             object.details = null;
             object.clientName = "";
             object.clientVersion = "";
-            object.clientAddress = "";
             object.http = null;
             if ($util.Long) {
                 var long = new $util.Long(0, 0, true);
@@ -513,8 +495,6 @@ $root.Trace = (function() {
             object.clientName = message.clientName;
         if (message.clientVersion != null && message.hasOwnProperty("clientVersion"))
             object.clientVersion = message.clientVersion;
-        if (message.clientAddress != null && message.hasOwnProperty("clientAddress"))
-            object.clientAddress = message.clientAddress;
         if (message.http != null && message.hasOwnProperty("http"))
             object.http = $root.Trace.HTTP.toObject(message.http, options);
         if (message.durationNs != null && message.hasOwnProperty("durationNs"))
@@ -5978,25 +5958,26 @@ $root.TypeStat = (function() {
     return TypeStat;
 })();
 
-$root.Field = (function() {
+$root.ReferencedFieldsForType = (function() {
 
     /**
-     * Properties of a Field.
-     * @exports IField
-     * @interface IField
-     * @property {string|null} [name] Field name
-     * @property {string|null} [returnType] Field returnType
+     * Properties of a ReferencedFieldsForType.
+     * @exports IReferencedFieldsForType
+     * @interface IReferencedFieldsForType
+     * @property {Array.<string>|null} [fieldNames] ReferencedFieldsForType fieldNames
+     * @property {boolean|null} [isInterface] ReferencedFieldsForType isInterface
      */
 
     /**
-     * Constructs a new Field.
-     * @exports Field
-     * @classdesc Represents a Field.
-     * @implements IField
+     * Constructs a new ReferencedFieldsForType.
+     * @exports ReferencedFieldsForType
+     * @classdesc Represents a ReferencedFieldsForType.
+     * @implements IReferencedFieldsForType
      * @constructor
-     * @param {IField=} [properties] Properties to set
+     * @param {IReferencedFieldsForType=} [properties] Properties to set
      */
-    function Field(properties) {
+    function ReferencedFieldsForType(properties) {
+        this.fieldNames = [];
         if (properties)
             for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                 if (properties[keys[i]] != null)
@@ -6004,283 +5985,91 @@ $root.Field = (function() {
     }
 
     /**
-     * Field name.
-     * @member {string} name
-     * @memberof Field
+     * ReferencedFieldsForType fieldNames.
+     * @member {Array.<string>} fieldNames
+     * @memberof ReferencedFieldsForType
      * @instance
      */
-    Field.prototype.name = "";
+    ReferencedFieldsForType.prototype.fieldNames = $util.emptyArray;
 
     /**
-     * Field returnType.
-     * @member {string} returnType
-     * @memberof Field
+     * ReferencedFieldsForType isInterface.
+     * @member {boolean} isInterface
+     * @memberof ReferencedFieldsForType
      * @instance
      */
-    Field.prototype.returnType = "";
+    ReferencedFieldsForType.prototype.isInterface = false;
 
     /**
-     * Creates a new Field instance using the specified properties.
+     * Creates a new ReferencedFieldsForType instance using the specified properties.
      * @function create
-     * @memberof Field
+     * @memberof ReferencedFieldsForType
      * @static
-     * @param {IField=} [properties] Properties to set
-     * @returns {Field} Field instance
+     * @param {IReferencedFieldsForType=} [properties] Properties to set
+     * @returns {ReferencedFieldsForType} ReferencedFieldsForType instance
      */
-    Field.create = function create(properties) {
-        return new Field(properties);
+    ReferencedFieldsForType.create = function create(properties) {
+        return new ReferencedFieldsForType(properties);
     };
 
     /**
-     * Encodes the specified Field message. Does not implicitly {@link Field.verify|verify} messages.
+     * Encodes the specified ReferencedFieldsForType message. Does not implicitly {@link ReferencedFieldsForType.verify|verify} messages.
      * @function encode
-     * @memberof Field
+     * @memberof ReferencedFieldsForType
      * @static
-     * @param {IField} message Field message or plain object to encode
+     * @param {IReferencedFieldsForType} message ReferencedFieldsForType message or plain object to encode
      * @param {$protobuf.Writer} [writer] Writer to encode to
      * @returns {$protobuf.Writer} Writer
      */
-    Field.encode = function encode(message, writer) {
+    ReferencedFieldsForType.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-            writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
-        if (message.returnType != null && Object.hasOwnProperty.call(message, "returnType"))
-            writer.uint32(/* id 3, wireType 2 =*/26).string(message.returnType);
+        if (message.fieldNames != null && message.fieldNames.length)
+            for (var i = 0; i < message.fieldNames.length; ++i)
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.fieldNames[i]);
+        if (message.isInterface != null && Object.hasOwnProperty.call(message, "isInterface"))
+            writer.uint32(/* id 2, wireType 0 =*/16).bool(message.isInterface);
         return writer;
     };
 
     /**
-     * Encodes the specified Field message, length delimited. Does not implicitly {@link Field.verify|verify} messages.
+     * Encodes the specified ReferencedFieldsForType message, length delimited. Does not implicitly {@link ReferencedFieldsForType.verify|verify} messages.
      * @function encodeDelimited
-     * @memberof Field
+     * @memberof ReferencedFieldsForType
      * @static
-     * @param {IField} message Field message or plain object to encode
+     * @param {IReferencedFieldsForType} message ReferencedFieldsForType message or plain object to encode
      * @param {$protobuf.Writer} [writer] Writer to encode to
      * @returns {$protobuf.Writer} Writer
      */
-    Field.encodeDelimited = function encodeDelimited(message, writer) {
+    ReferencedFieldsForType.encodeDelimited = function encodeDelimited(message, writer) {
         return this.encode(message, writer).ldelim();
     };
 
     /**
-     * Decodes a Field message from the specified reader or buffer.
+     * Decodes a ReferencedFieldsForType message from the specified reader or buffer.
      * @function decode
-     * @memberof Field
+     * @memberof ReferencedFieldsForType
      * @static
      * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
      * @param {number} [length] Message length if known beforehand
-     * @returns {Field} Field
+     * @returns {ReferencedFieldsForType} ReferencedFieldsForType
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    Field.decode = function decode(reader, length) {
+    ReferencedFieldsForType.decode = function decode(reader, length) {
         if (!(reader instanceof $Reader))
             reader = $Reader.create(reader);
-        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.Field();
-        while (reader.pos < end) {
-            var tag = reader.uint32();
-            switch (tag >>> 3) {
-            case 2:
-                message.name = reader.string();
-                break;
-            case 3:
-                message.returnType = reader.string();
-                break;
-            default:
-                reader.skipType(tag & 7);
-                break;
-            }
-        }
-        return message;
-    };
-
-    /**
-     * Decodes a Field message from the specified reader or buffer, length delimited.
-     * @function decodeDelimited
-     * @memberof Field
-     * @static
-     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-     * @returns {Field} Field
-     * @throws {Error} If the payload is not a reader or valid buffer
-     * @throws {$protobuf.util.ProtocolError} If required fields are missing
-     */
-    Field.decodeDelimited = function decodeDelimited(reader) {
-        if (!(reader instanceof $Reader))
-            reader = new $Reader(reader);
-        return this.decode(reader, reader.uint32());
-    };
-
-    /**
-     * Verifies a Field message.
-     * @function verify
-     * @memberof Field
-     * @static
-     * @param {Object.<string,*>} message Plain object to verify
-     * @returns {string|null} `null` if valid, otherwise the reason why it is not
-     */
-    Field.verify = function verify(message) {
-        if (typeof message !== "object" || message === null)
-            return "object expected";
-        if (message.name != null && message.hasOwnProperty("name"))
-            if (!$util.isString(message.name))
-                return "name: string expected";
-        if (message.returnType != null && message.hasOwnProperty("returnType"))
-            if (!$util.isString(message.returnType))
-                return "returnType: string expected";
-        return null;
-    };
-
-    /**
-     * Creates a plain object from a Field message. Also converts values to other types if specified.
-     * @function toObject
-     * @memberof Field
-     * @static
-     * @param {Field} message Field
-     * @param {$protobuf.IConversionOptions} [options] Conversion options
-     * @returns {Object.<string,*>} Plain object
-     */
-    Field.toObject = function toObject(message, options) {
-        if (!options)
-            options = {};
-        var object = {};
-        if (options.defaults) {
-            object.name = "";
-            object.returnType = "";
-        }
-        if (message.name != null && message.hasOwnProperty("name"))
-            object.name = message.name;
-        if (message.returnType != null && message.hasOwnProperty("returnType"))
-            object.returnType = message.returnType;
-        return object;
-    };
-
-    /**
-     * Converts this Field to JSON.
-     * @function toJSON
-     * @memberof Field
-     * @instance
-     * @returns {Object.<string,*>} JSON object
-     */
-    Field.prototype.toJSON = function toJSON() {
-        return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-    };
-
-    return Field;
-})();
-
-$root.Type = (function() {
-
-    /**
-     * Properties of a Type.
-     * @exports IType
-     * @interface IType
-     * @property {string|null} [name] Type name
-     * @property {Array.<IField>|null} [field] Type field
-     */
-
-    /**
-     * Constructs a new Type.
-     * @exports Type
-     * @classdesc Represents a Type.
-     * @implements IType
-     * @constructor
-     * @param {IType=} [properties] Properties to set
-     */
-    function Type(properties) {
-        this.field = [];
-        if (properties)
-            for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                if (properties[keys[i]] != null)
-                    this[keys[i]] = properties[keys[i]];
-    }
-
-    /**
-     * Type name.
-     * @member {string} name
-     * @memberof Type
-     * @instance
-     */
-    Type.prototype.name = "";
-
-    /**
-     * Type field.
-     * @member {Array.<IField>} field
-     * @memberof Type
-     * @instance
-     */
-    Type.prototype.field = $util.emptyArray;
-
-    /**
-     * Creates a new Type instance using the specified properties.
-     * @function create
-     * @memberof Type
-     * @static
-     * @param {IType=} [properties] Properties to set
-     * @returns {Type} Type instance
-     */
-    Type.create = function create(properties) {
-        return new Type(properties);
-    };
-
-    /**
-     * Encodes the specified Type message. Does not implicitly {@link Type.verify|verify} messages.
-     * @function encode
-     * @memberof Type
-     * @static
-     * @param {IType} message Type message or plain object to encode
-     * @param {$protobuf.Writer} [writer] Writer to encode to
-     * @returns {$protobuf.Writer} Writer
-     */
-    Type.encode = function encode(message, writer) {
-        if (!writer)
-            writer = $Writer.create();
-        if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-            writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
-        if (message.field != null && message.field.length)
-            for (var i = 0; i < message.field.length; ++i)
-                $root.Field.encode(message.field[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-        return writer;
-    };
-
-    /**
-     * Encodes the specified Type message, length delimited. Does not implicitly {@link Type.verify|verify} messages.
-     * @function encodeDelimited
-     * @memberof Type
-     * @static
-     * @param {IType} message Type message or plain object to encode
-     * @param {$protobuf.Writer} [writer] Writer to encode to
-     * @returns {$protobuf.Writer} Writer
-     */
-    Type.encodeDelimited = function encodeDelimited(message, writer) {
-        return this.encode(message, writer).ldelim();
-    };
-
-    /**
-     * Decodes a Type message from the specified reader or buffer.
-     * @function decode
-     * @memberof Type
-     * @static
-     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-     * @param {number} [length] Message length if known beforehand
-     * @returns {Type} Type
-     * @throws {Error} If the payload is not a reader or valid buffer
-     * @throws {$protobuf.util.ProtocolError} If required fields are missing
-     */
-    Type.decode = function decode(reader, length) {
-        if (!(reader instanceof $Reader))
-            reader = $Reader.create(reader);
-        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.Type();
+        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.ReferencedFieldsForType();
         while (reader.pos < end) {
             var tag = reader.uint32();
             switch (tag >>> 3) {
             case 1:
-                message.name = reader.string();
+                if (!(message.fieldNames && message.fieldNames.length))
+                    message.fieldNames = [];
+                message.fieldNames.push(reader.string());
                 break;
             case 2:
-                if (!(message.field && message.field.length))
-                    message.field = [];
-                message.field.push($root.Field.decode(reader, reader.uint32()));
+                message.isInterface = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -6291,86 +6080,84 @@ $root.Type = (function() {
     };
 
     /**
-     * Decodes a Type message from the specified reader or buffer, length delimited.
+     * Decodes a ReferencedFieldsForType message from the specified reader or buffer, length delimited.
      * @function decodeDelimited
-     * @memberof Type
+     * @memberof ReferencedFieldsForType
      * @static
      * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-     * @returns {Type} Type
+     * @returns {ReferencedFieldsForType} ReferencedFieldsForType
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    Type.decodeDelimited = function decodeDelimited(reader) {
+    ReferencedFieldsForType.decodeDelimited = function decodeDelimited(reader) {
         if (!(reader instanceof $Reader))
             reader = new $Reader(reader);
         return this.decode(reader, reader.uint32());
     };
 
     /**
-     * Verifies a Type message.
+     * Verifies a ReferencedFieldsForType message.
      * @function verify
-     * @memberof Type
+     * @memberof ReferencedFieldsForType
      * @static
      * @param {Object.<string,*>} message Plain object to verify
      * @returns {string|null} `null` if valid, otherwise the reason why it is not
      */
-    Type.verify = function verify(message) {
+    ReferencedFieldsForType.verify = function verify(message) {
         if (typeof message !== "object" || message === null)
             return "object expected";
-        if (message.name != null && message.hasOwnProperty("name"))
-            if (!$util.isString(message.name))
-                return "name: string expected";
-        if (message.field != null && message.hasOwnProperty("field")) {
-            if (!Array.isArray(message.field))
-                return "field: array expected";
-            for (var i = 0; i < message.field.length; ++i) {
-                var error = $root.Field.verify(message.field[i]);
-                if (error)
-                    return "field." + error;
-            }
+        if (message.fieldNames != null && message.hasOwnProperty("fieldNames")) {
+            if (!Array.isArray(message.fieldNames))
+                return "fieldNames: array expected";
+            for (var i = 0; i < message.fieldNames.length; ++i)
+                if (!$util.isString(message.fieldNames[i]))
+                    return "fieldNames: string[] expected";
         }
+        if (message.isInterface != null && message.hasOwnProperty("isInterface"))
+            if (typeof message.isInterface !== "boolean")
+                return "isInterface: boolean expected";
         return null;
     };
 
     /**
-     * Creates a plain object from a Type message. Also converts values to other types if specified.
+     * Creates a plain object from a ReferencedFieldsForType message. Also converts values to other types if specified.
      * @function toObject
-     * @memberof Type
+     * @memberof ReferencedFieldsForType
      * @static
-     * @param {Type} message Type
+     * @param {ReferencedFieldsForType} message ReferencedFieldsForType
      * @param {$protobuf.IConversionOptions} [options] Conversion options
      * @returns {Object.<string,*>} Plain object
      */
-    Type.toObject = function toObject(message, options) {
+    ReferencedFieldsForType.toObject = function toObject(message, options) {
         if (!options)
             options = {};
         var object = {};
         if (options.arrays || options.defaults)
-            object.field = [];
+            object.fieldNames = [];
         if (options.defaults)
-            object.name = "";
-        if (message.name != null && message.hasOwnProperty("name"))
-            object.name = message.name;
-        if (message.field && message.field.length) {
-            object.field = [];
-            for (var j = 0; j < message.field.length; ++j)
-                object.field[j] = $root.Field.toObject(message.field[j], options);
+            object.isInterface = false;
+        if (message.fieldNames && message.fieldNames.length) {
+            object.fieldNames = [];
+            for (var j = 0; j < message.fieldNames.length; ++j)
+                object.fieldNames[j] = message.fieldNames[j];
         }
+        if (message.isInterface != null && message.hasOwnProperty("isInterface"))
+            object.isInterface = message.isInterface;
         return object;
     };
 
     /**
-     * Converts this Type to JSON.
+     * Converts this ReferencedFieldsForType to JSON.
      * @function toJSON
-     * @memberof Type
+     * @memberof ReferencedFieldsForType
      * @instance
      * @returns {Object.<string,*>} JSON object
      */
-    Type.prototype.toJSON = function toJSON() {
+    ReferencedFieldsForType.prototype.toJSON = function toJSON() {
         return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
     };
 
-    return Type;
+    return ReferencedFieldsForType;
 })();
 
 $root.Report = (function() {
@@ -6853,6 +6640,7 @@ $root.TracesAndStats = (function() {
      * @interface ITracesAndStats
      * @property {Array.<ITrace|Uint8Array>|null} [trace] TracesAndStats trace
      * @property {$protobuf.ToArray.<IContextualizedStats>|Array.<IContextualizedStats>|null} [statsWithContext] TracesAndStats statsWithContext
+     * @property {Object.<string,IReferencedFieldsForType>|null} [referencedFieldsByType] TracesAndStats referencedFieldsByType
      * @property {Array.<ITrace|Uint8Array>|null} [internalTracesContributingToStats] TracesAndStats internalTracesContributingToStats
      */
 
@@ -6867,6 +6655,7 @@ $root.TracesAndStats = (function() {
     function TracesAndStats(properties) {
         this.trace = [];
         this.statsWithContext = [];
+        this.referencedFieldsByType = {};
         this.internalTracesContributingToStats = [];
         if (properties)
             for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
@@ -6889,6 +6678,14 @@ $root.TracesAndStats = (function() {
      * @instance
      */
     TracesAndStats.prototype.statsWithContext = $util.emptyArray;
+
+    /**
+     * TracesAndStats referencedFieldsByType.
+     * @member {Object.<string,IReferencedFieldsForType>} referencedFieldsByType
+     * @memberof TracesAndStats
+     * @instance
+     */
+    TracesAndStats.prototype.referencedFieldsByType = $util.emptyObject;
 
     /**
      * TracesAndStats internalTracesContributingToStats.
@@ -6944,6 +6741,11 @@ $root.TracesAndStats = (function() {
                     writer.bytes(message.internalTracesContributingToStats[i]);
                 } else
                     $root.Trace.encode(message.internalTracesContributingToStats[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+        if (message.referencedFieldsByType != null && Object.hasOwnProperty.call(message, "referencedFieldsByType"))
+            for (var keys = Object.keys(message.referencedFieldsByType), i = 0; i < keys.length; ++i) {
+                writer.uint32(/* id 4, wireType 2 =*/34).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
+                $root.ReferencedFieldsForType.encode(message.referencedFieldsByType[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+            }
         return writer;
     };
 
@@ -6974,7 +6776,7 @@ $root.TracesAndStats = (function() {
     TracesAndStats.decode = function decode(reader, length) {
         if (!(reader instanceof $Reader))
             reader = $Reader.create(reader);
-        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.TracesAndStats();
+        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.TracesAndStats(), key;
         while (reader.pos < end) {
             var tag = reader.uint32();
             switch (tag >>> 3) {
@@ -6987,6 +6789,14 @@ $root.TracesAndStats = (function() {
                 if (!(message.statsWithContext && message.statsWithContext.length))
                     message.statsWithContext = [];
                 message.statsWithContext.push($root.ContextualizedStats.decode(reader, reader.uint32()));
+                break;
+            case 4:
+                reader.skip().pos++;
+                if (message.referencedFieldsByType === $util.emptyObject)
+                    message.referencedFieldsByType = {};
+                key = reader.string();
+                reader.pos++;
+                message.referencedFieldsByType[key] = $root.ReferencedFieldsForType.decode(reader, reader.uint32());
                 break;
             case 3:
                 if (!(message.internalTracesContributingToStats && message.internalTracesContributingToStats.length))
@@ -7052,6 +6862,16 @@ $root.TracesAndStats = (function() {
                     return "statsWithContext." + error;
             }
         }
+        if (message.referencedFieldsByType != null && message.hasOwnProperty("referencedFieldsByType")) {
+            if (!$util.isObject(message.referencedFieldsByType))
+                return "referencedFieldsByType: object expected";
+            var key = Object.keys(message.referencedFieldsByType);
+            for (var i = 0; i < key.length; ++i) {
+                var error = $root.ReferencedFieldsForType.verify(message.referencedFieldsByType[key[i]]);
+                if (error)
+                    return "referencedFieldsByType." + error;
+            }
+        }
         if (message.internalTracesContributingToStats != null && message.hasOwnProperty("internalTracesContributingToStats")) {
             if (!Array.isArray(message.internalTracesContributingToStats))
                 return "internalTracesContributingToStats: array expected";
@@ -7083,6 +6903,8 @@ $root.TracesAndStats = (function() {
             object.statsWithContext = [];
             object.internalTracesContributingToStats = [];
         }
+        if (options.objects || options.defaults)
+            object.referencedFieldsByType = {};
         if (message.trace && message.trace.length) {
             object.trace = [];
             for (var j = 0; j < message.trace.length; ++j)
@@ -7097,6 +6919,12 @@ $root.TracesAndStats = (function() {
             object.internalTracesContributingToStats = [];
             for (var j = 0; j < message.internalTracesContributingToStats.length; ++j)
                 object.internalTracesContributingToStats[j] = $root.Trace.toObject(message.internalTracesContributingToStats[j], options);
+        }
+        var keys2;
+        if (message.referencedFieldsByType && (keys2 = Object.keys(message.referencedFieldsByType)).length) {
+            object.referencedFieldsByType = {};
+            for (var j = 0; j < keys2.length; ++j)
+                object.referencedFieldsByType[keys2[j]] = $root.ReferencedFieldsForType.toObject(message.referencedFieldsByType[keys2[j]], options);
         }
         return object;
     };
