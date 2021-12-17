@@ -120,4 +120,81 @@ describe('calculateReferencedFieldsByType', () => {
       }
     `);
   });
+
+  it('interface with fragment', () => {
+    expect(
+      calculateReferencedFieldsByType({
+        document: gql`
+          query {
+            myInterface {
+              x
+              ... on A {
+                y
+              }
+            }
+          }
+        `,
+        schema,
+        resolvedOperationName: null,
+      }),
+    ).toMatchInlineSnapshot(`
+      Object {
+        "A": Object {
+          "fieldNames": Array [
+            "y",
+          ],
+          "isInterface": false,
+        },
+        "MyInterface": Object {
+          "fieldNames": Array [
+            "x",
+          ],
+          "isInterface": true,
+        },
+        "Query": Object {
+          "fieldNames": Array [
+            "myInterface",
+          ],
+          "isInterface": false,
+        },
+      }
+    `);
+  });
+});
+
+it('interface with fragment that uses interface field', () => {
+  expect(
+    calculateReferencedFieldsByType({
+      document: gql`
+        query {
+          myInterface {
+            ... on A {
+              # Even though x exists on the interface, we only want this to
+              # count towards A.x below, because this operation would work just
+              # as well if x were removed from the interface as long as it was
+              # left on A.
+              x
+            }
+          }
+        }
+      `,
+      schema,
+      resolvedOperationName: null,
+    }),
+  ).toMatchInlineSnapshot(`
+    Object {
+      "A": Object {
+        "fieldNames": Array [
+          "x",
+        ],
+        "isInterface": false,
+      },
+      "Query": Object {
+        "fieldNames": Array [
+          "myInterface",
+        ],
+        "isInterface": false,
+      },
+    }
+  `);
 });
