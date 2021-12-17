@@ -15,7 +15,11 @@ import {
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextWillSendResponse,
 } from 'apollo-server-types';
-import { createSignatureCache, signatureCacheKey } from './signatureCache';
+import {
+  createOperationDerivedDataCache,
+  OperationDerivedData,
+  operationDerivedDataCacheKey,
+} from './operationDerivedDataCache';
 import type {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
@@ -27,6 +31,11 @@ import { computeCoreSchemaHash } from '../schemaReporting';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { OurReport } from './stats';
 import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
+import {
+  calculateReferencedFieldsByType,
+  ReferencedFieldsByType,
+} from './referencedFields';
+import type LRUCache from 'lru-cache';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -110,10 +119,15 @@ export function ApolloServerPluginUsageReporting<TContext>(
       const sendReportsImmediately =
         options.sendReportsImmediately ?? serverlessFramework;
 
-      // Since calculating the signature for usage reporting is potentially an
-      // expensive operation, we'll cache the signatures we generate and re-use
-      // them based on repeated traces for the same `queryHash`.
-      const signatureCache = createSignatureCache({ logger });
+      // Since calculating the signature and referenced fields for usage
+      // reporting is potentially an expensive operation, we'll cache the data
+      // we generate and re-use them for repeated operations for the same
+      // `queryHash`. However, because referenced fields depend on the current
+      // schema, we want to throw it out entirely any time the schema changes.
+      let operationDerivedDataCache: {
+        forSchema: GraphQLSchema;
+        cache: LRUCache<string, OperationDerivedData>;
+      } | null = null;
 
       const reportDataByExecutableSchemaId: {
         [executableSchemaId: string]: ReportData | undefined;
@@ -561,6 +575,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
               const { trace } = treeBuilder;
 
               let statsReportKey: string | undefined = undefined;
+              let referencedFieldsByType: ReferencedFieldsByType;
               if (!requestContext.document) {
                 statsReportKey = `## GraphQLParseFailure\n`;
               } else if (graphqlValidationFailure) {
@@ -577,11 +592,14 @@ export function ApolloServerPluginUsageReporting<TContext>(
                   trace.unexecutedOperationName =
                     requestContext.request.operationName || '';
                 }
+                referencedFieldsByType = Object.create(null);
               } else {
-                const signature = getTraceSignature();
-                statsReportKey = `# ${
-                  requestContext.operationName || '-'
-                }\n${signature}`;
+                const operationDerivedData = getOperationDerivedData();
+                statsReportKey = `# ${requestContext.operationName || '-'}\n${
+                  operationDerivedData.signature
+                }`;
+                referencedFieldsByType =
+                  operationDerivedData.referencedFieldsByType;
               }
 
               const protobufError = Trace.verify(trace);
@@ -596,6 +614,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
                   graphMightSupportTraces &&
                   sendOperationAsTrace(trace, statsReportKey),
                 includeTracesContributingToStats,
+                referencedFieldsByType,
               });
 
               // If the buffer gets big (according to our estimate), send.
@@ -608,36 +627,61 @@ export function ApolloServerPluginUsageReporting<TContext>(
               }
             }
 
-            function getTraceSignature(): string {
+            // Calculates signature and referenced fields for the current document.
+            // Only call this when the document properly parses and validates and
+            // the given operation name (if any) is known!
+            function getOperationDerivedData(): OperationDerivedData {
               if (!requestContext.document) {
                 // This shouldn't happen: no document means parse failure, which
                 // uses its own special statsReportKey.
                 throw new Error('No document?');
               }
 
-              const cacheKey = signatureCacheKey(
+              const cacheKey = operationDerivedDataCacheKey(
                 requestContext.queryHash,
                 requestContext.operationName || '',
               );
 
+              // Ensure that the cache we have is for the right schema.
+              if (
+                !operationDerivedDataCache ||
+                operationDerivedDataCache.forSchema !== schema
+              ) {
+                operationDerivedDataCache = {
+                  forSchema: schema,
+                  cache: createOperationDerivedDataCache({ logger }),
+                };
+              }
+
               // If we didn't have the signature in the cache, we'll resort to
               // calculating it.
-              const cachedSignature = signatureCache.get(cacheKey);
-
-              if (cachedSignature) {
-                return cachedSignature;
+              const cachedOperationDerivedData =
+                operationDerivedDataCache.cache.get(cacheKey);
+              if (cachedOperationDerivedData) {
+                return cachedOperationDerivedData;
               }
 
               const generatedSignature = (
                 options.calculateSignature || defaultUsageReportingSignature
               )(requestContext.document, requestContext.operationName || '');
 
+              const generatedOperationDerivedData: OperationDerivedData = {
+                signature: generatedSignature,
+                referencedFieldsByType: calculateReferencedFieldsByType({
+                  document: requestContext.document,
+                  schema,
+                  resolvedOperationName: requestContext.operationName ?? null,
+                }),
+              };
+
               // Note that this cache is always an in-memory cache.
               // If we replace it with a more generic async cache, we should
               // not await the write operation.
-              signatureCache.set(cacheKey, generatedSignature);
-
-              return generatedSignature;
+              operationDerivedDataCache.cache.set(
+                cacheKey,
+                generatedOperationDerivedData,
+              );
+              return generatedOperationDerivedData;
             }
           },
         };

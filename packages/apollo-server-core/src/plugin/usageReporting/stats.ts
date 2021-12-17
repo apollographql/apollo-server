@@ -13,6 +13,7 @@ import {
   IReport,
 } from 'apollo-reporting-protobuf';
 import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace';
+import type { ReferencedFieldsByType } from './referencedFields';
 
 // protobuf.js exports both a class and an interface (starting with I) for each
 // message type. The class is what it produces when it decodes the message; the
@@ -54,13 +55,18 @@ export class OurReport implements Required<IReport> {
     trace,
     asTrace,
     includeTracesContributingToStats,
+    referencedFieldsByType,
   }: {
     statsReportKey: string;
     trace: Trace;
     asTrace: boolean;
     includeTracesContributingToStats: boolean;
+    referencedFieldsByType: ReferencedFieldsByType;
   }) {
-    const tracesAndStats = this.getTracesAndStats(statsReportKey);
+    const tracesAndStats = this.getTracesAndStats({
+      statsReportKey,
+      referencedFieldsByType,
+    });
     if (asTrace) {
       const encodedTrace = Trace.encode(trace).finish();
       tracesAndStats.trace.push(encodedTrace);
@@ -80,17 +86,47 @@ export class OurReport implements Required<IReport> {
     }
   }
 
-  private getTracesAndStats(statsReportKey: string) {
+  private getTracesAndStats({
+    statsReportKey,
+    referencedFieldsByType,
+  }: {
+    statsReportKey: string;
+    referencedFieldsByType: ReferencedFieldsByType;
+  }) {
     const existing = this.tracesPerQuery[statsReportKey];
     if (existing) {
       return existing;
     }
     this.sizeEstimator.bytes += estimatedBytesForString(statsReportKey);
-    return (this.tracesPerQuery[statsReportKey] = new OurTracesAndStats());
+
+    // Update the size estimator for the referenced field structure.
+    for (const [typeName, referencedFieldsForType] of Object.entries(
+      referencedFieldsByType,
+    )) {
+      // Two bytes each for the map entry and for the ReferencedFieldsForType,
+      // and for the isInterface bool if it's set.
+      this.sizeEstimator.bytes += 2 + 2;
+      if (referencedFieldsForType.isInterface) {
+        this.sizeEstimator.bytes += 2;
+      }
+      this.sizeEstimator.bytes += estimatedBytesForString(typeName);
+      for (const fieldName of referencedFieldsForType.fieldNames) {
+        this.sizeEstimator.bytes += estimatedBytesForString(fieldName);
+      }
+    }
+
+    // Include the referenced fields map in the report. (In an ideal world we
+    // could have a slightly more sophisticated protocol and ingestion pipeline
+    // that allowed us to only have to send this data once for each
+    // schema/operation pair.)
+    return (this.tracesPerQuery[statsReportKey] = new OurTracesAndStats(
+      referencedFieldsByType,
+    ));
   }
 }
 
 class OurTracesAndStats implements Required<ITracesAndStats> {
+  constructor(readonly referencedFieldsByType: ReferencedFieldsByType) {}
   readonly trace: Uint8Array[] = [];
   readonly statsWithContext = new StatsByContext();
   readonly internalTracesContributingToStats: Uint8Array[] = [];
