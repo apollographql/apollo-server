@@ -655,16 +655,17 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
               // If we didn't have the signature in the cache, we'll resort to
               // calculating it.
-              const cached = operationDerivedDataCache.cache.get(cacheKey);
-              if (cached) {
-                return cached;
+              const cachedOperationDerivedData =
+                operationDerivedDataCache.cache.get(cacheKey);
+              if (cachedOperationDerivedData) {
+                return cachedOperationDerivedData;
               }
 
               const generatedSignature = (
                 options.calculateSignature || defaultUsageReportingSignature
               )(requestContext.document, requestContext.operationName || '');
 
-              const generated: OperationDerivedData = {
+              const generatedOperationDerivedData: OperationDerivedData = {
                 signature: generatedSignature,
                 referencedFieldsByType: calculateReferencedFieldsByType({
                   document: requestContext.document,
@@ -676,8 +677,11 @@ export function ApolloServerPluginUsageReporting<TContext>(
               // Note that this cache is always an in-memory cache.
               // If we replace it with a more generic async cache, we should
               // not await the write operation.
-              operationDerivedDataCache.cache.set(cacheKey, generated);
-              return generated;
+              operationDerivedDataCache.cache.set(
+                cacheKey,
+                generatedOperationDerivedData,
+              );
+              return generatedOperationDerivedData;
             }
           },
         };
