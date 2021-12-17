@@ -10,6 +10,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## vNEXT (minor!)
 
 - `apollo-server-core`: Usage reporting no longer sends a "client reference ID" to Apollo Studio (along with the client name and client version). This little-used feature has not been documented [since 2019](https://github.com/apollographql/apollo-server/pull/3180) and is currently entirely ignored by Apollo Studio. This is technically incompatible as the interface `ClientInfo` no longer has the field `clientReferenceId`; if you were one of the few users who explicitly set this field and you get a TypeScript compilation failure upon upgrading to v3.6.0, just stop using the field. [PR #5890](https://github.com/apollographql/apollo-server/pull/5890)
+- `apollo-server-core`: Remove dependency on `apollo-graphql` package (by inlining the code which generates usage reporting signatures). That package has not yet been published with a `graphql@16` peer dependency, so Apollo Server v3.5 did not fully support `graphql@16` without overriding peer dependencies. [Issue #5941](https://github.com/apollographql/apollo-server/issues/5941) [PR #5955](https://github.com/apollographql/apollo-server/pull/5955)
 
 ## v3.5.0
 
