@@ -1,4 +1,4 @@
-import { buildASTSchema } from 'graphql';
+import { buildASTSchema, DocumentNode, validate } from 'graphql';
 import gql from 'graphql-tag';
 import { calculateReferencedFieldsByType } from '../referencedFields';
 
@@ -21,17 +21,53 @@ const schema = buildASTSchema(gql`
   }
 `);
 
+function validateAndCalculate({
+  document,
+  resolvedOperationName = null,
+}: {
+  document: DocumentNode;
+  resolvedOperationName?: string | null;
+}) {
+  // First validate the document, since calculateReferencedFieldsByType expects
+  // that.
+  expect(validate(schema, document)).toStrictEqual([]);
+  return calculateReferencedFieldsByType({
+    schema,
+    document,
+    resolvedOperationName,
+  });
+}
+
 describe('calculateReferencedFieldsByType', () => {
   it('basic', () => {
     expect(
-      calculateReferencedFieldsByType({
+      validateAndCalculate({
         document: gql`
           {
             f1
           }
         `,
-        schema,
-        resolvedOperationName: null,
+      }),
+    ).toMatchInlineSnapshot(`
+      Object {
+        "Query": Object {
+          "fieldNames": Array [
+            "f1",
+          ],
+          "isInterface": false,
+        },
+      }
+    `);
+  });
+
+  it('aliases use actual field name', () => {
+    expect(
+      validateAndCalculate({
+        document: gql`
+          {
+            aliased: f1
+          }
+        `,
       }),
     ).toMatchInlineSnapshot(`
       Object {
@@ -47,7 +83,7 @@ describe('calculateReferencedFieldsByType', () => {
 
   it('multiple operations and fragments', () => {
     expect(
-      calculateReferencedFieldsByType({
+      validateAndCalculate({
         document: gql`
           query Q1 {
             f1
@@ -68,7 +104,6 @@ describe('calculateReferencedFieldsByType', () => {
             y
           }
         `,
-        schema,
         resolvedOperationName: 'Q1',
       }),
     ).toMatchInlineSnapshot(`
@@ -92,7 +127,7 @@ describe('calculateReferencedFieldsByType', () => {
 
   it('interfaces', () => {
     expect(
-      calculateReferencedFieldsByType({
+      validateAndCalculate({
         document: gql`
           query {
             myInterface {
@@ -100,8 +135,6 @@ describe('calculateReferencedFieldsByType', () => {
             }
           }
         `,
-        schema,
-        resolvedOperationName: null,
       }),
     ).toMatchInlineSnapshot(`
       Object {
@@ -123,7 +156,7 @@ describe('calculateReferencedFieldsByType', () => {
 
   it('interface with fragment', () => {
     expect(
-      calculateReferencedFieldsByType({
+      validateAndCalculate({
         document: gql`
           query {
             myInterface {
@@ -134,8 +167,6 @@ describe('calculateReferencedFieldsByType', () => {
             }
           }
         `,
-        schema,
-        resolvedOperationName: null,
       }),
     ).toMatchInlineSnapshot(`
       Object {
@@ -164,7 +195,7 @@ describe('calculateReferencedFieldsByType', () => {
 
 it('interface with fragment that uses interface field', () => {
   expect(
-    calculateReferencedFieldsByType({
+    validateAndCalculate({
       document: gql`
         query {
           myInterface {
@@ -178,8 +209,6 @@ it('interface with fragment that uses interface field', () => {
           }
         }
       `,
-      schema,
-      resolvedOperationName: null,
     }),
   ).toMatchInlineSnapshot(`
     Object {
@@ -188,6 +217,44 @@ it('interface with fragment that uses interface field', () => {
           "x",
         ],
         "isInterface": false,
+      },
+      "Query": Object {
+        "fieldNames": Array [
+          "myInterface",
+        ],
+        "isInterface": false,
+      },
+    }
+  `);
+});
+
+it('using field both with interface and object should work', () => {
+  expect(
+    validateAndCalculate({
+      document: gql`
+        query {
+          myInterface {
+            x
+            ... on A {
+              x
+            }
+          }
+        }
+      `,
+    }),
+  ).toMatchInlineSnapshot(`
+    Object {
+      "A": Object {
+        "fieldNames": Array [
+          "x",
+        ],
+        "isInterface": false,
+      },
+      "MyInterface": Object {
+        "fieldNames": Array [
+          "x",
+        ],
+        "isInterface": true,
       },
       "Query": Object {
         "fieldNames": Array [
