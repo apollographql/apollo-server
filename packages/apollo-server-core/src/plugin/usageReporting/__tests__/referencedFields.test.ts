@@ -265,3 +265,35 @@ it('using field both with interface and object should work', () => {
     }
   `);
 });
+
+it('using field multiple times (same level or otherwise) de-dups', () => {
+  expect(
+    validateAndCalculate({
+      document: gql`
+        query {
+          a1: a {
+            y
+          }
+          a2: a {
+            y
+          }
+        }
+      `,
+    }),
+  ).toMatchInlineSnapshot(`
+    Object {
+      "A": Object {
+        "fieldNames": Array [
+          "y",
+        ],
+        "isInterface": false,
+      },
+      "Query": Object {
+        "fieldNames": Array [
+          "a",
+        ],
+        "isInterface": false,
+      },
+    }
+  `);
+});
