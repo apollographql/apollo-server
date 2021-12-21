@@ -55,6 +55,9 @@ export interface ITrace {
 
     /** Trace forbiddenOperation */
     forbiddenOperation?: (boolean|null);
+
+    /** Trace fieldExecutionScaleFactor */
+    fieldExecutionScaleFactor?: (number|null);
 }
 
 /** Represents a Trace. */
@@ -119,6 +122,9 @@ export class Trace implements ITrace {
 
     /** Trace forbiddenOperation. */
     public forbiddenOperation: boolean;
+
+    /** Trace fieldExecutionScaleFactor. */
+    public fieldExecutionScaleFactor: number;
 
     /**
      * Creates a new Trace instance using the specified properties.
@@ -1749,6 +1755,9 @@ export interface IQueryLatencyStats {
 
     /** QueryLatencyStats forbiddenOperationCount */
     forbiddenOperationCount?: (number|null);
+
+    /** QueryLatencyStats requestsWithoutFieldInstrumentation */
+    requestsWithoutFieldInstrumentation?: (number|null);
 }
 
 /** Represents a QueryLatencyStats. */
@@ -1795,6 +1804,9 @@ export class QueryLatencyStats implements IQueryLatencyStats {
 
     /** QueryLatencyStats forbiddenOperationCount. */
     public forbiddenOperationCount: number;
+
+    /** QueryLatencyStats requestsWithoutFieldInstrumentation. */
+    public requestsWithoutFieldInstrumentation: number;
 
     /**
      * Creates a new QueryLatencyStats instance using the specified properties.
@@ -2136,8 +2148,11 @@ export interface IFieldStat {
     /** FieldStat errorsCount */
     errorsCount?: (number|null);
 
-    /** FieldStat count */
-    count?: (number|null);
+    /** FieldStat observedExecutionCount */
+    observedExecutionCount?: (number|null);
+
+    /** FieldStat estimatedExecutionCount */
+    estimatedExecutionCount?: (number|null);
 
     /** FieldStat requestsWithErrorsCount */
     requestsWithErrorsCount?: (number|null);
@@ -2161,8 +2176,11 @@ export class FieldStat implements IFieldStat {
     /** FieldStat errorsCount. */
     public errorsCount: number;
 
-    /** FieldStat count. */
-    public count: number;
+    /** FieldStat observedExecutionCount. */
+    public observedExecutionCount: number;
+
+    /** FieldStat estimatedExecutionCount. */
+    public estimatedExecutionCount: number;
 
     /** FieldStat requestsWithErrorsCount. */
     public requestsWithErrorsCount: number;

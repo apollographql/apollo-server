@@ -50,11 +50,83 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * by modifying it and returning the modified error.
    */
   rewriteError?: (err: GraphQLError) => GraphQLError | null;
+
+  // We should strongly consider changing the default to false in AS4.
+
+  /**
+   * This option allows you to choose if Apollo Server should calculate detailed
+   * per-field statistics for a particular request. It is only called for
+   * executable operations: operations which parse and validate properly and
+   * which do not have an unknown operation name. It is not called if an
+   * `includeRequest` hook is provided and returns false.
+   *
+   * You can either pass an async function or a number. The function receives a
+   * `GraphQLRequestContext`. (The effect of passing a number is described
+   * later.) Your function can return a boolean or a number; returning false is
+   * equivalent to returning 0 and returning true is equivalent to returning 1.
+   *
+   * Returning false (or 0) means that Apollo Server will only pay attention to
+   * overall properties of the operation, like what GraphQL operation is
+   * executing and how long the entire operation takes to execute, and not
+   * anything about field-by-field execution.
+   *
+   * If you return false (or 0), this operation *will* still contribute to most
+   * features of Studio, such as schema checks, the Operations page, and the
+   * "referencing operations" statistic on the Fields page, etc.
+   *
+   * If you return false (or 0), this operation will *not* contribute to the
+   * "field executions" statistic on the Fields page or to the execution timing
+   * hints optionally displayed in Studio Explorer or in vscode-graphql.
+   * Additionally, this operation will not produce a trace that can be viewed on
+   * the Traces section of the Operations page.
+   *
+   * Returning false (or 0) here for some or all operations can improve your
+   * server's performance, as the overhead of calculating complete traces is not
+   * always negligible. This is especially the case if this server is an Apollo
+   * Gateway, as captured traces are transmitted from the subgraph to the
+   * Gateway in-band inside the actual GraphQL response.
+   *
+   * Returning a positive number means that Apollo Server will track each field
+   * execution and send Apollo Studio statistics on how many times each field
+   * was executed and what the per-field performance was. If the number returned
+   * is less than 1, Apollo Server will also send a scaled "estimate" count for
+   * each field, equal to the number of observed field executions divided by the
+   * number returned by the hook.
+   *
+   * Passing a number `n` (which should be between 0 and 1 inclusive) for
+   * `fieldLevelInstrumentation` is equivalent to passing the function
+   * `async () => Math.random() < n ? n : 0`.  For example, if you pass 0.01,
+   * then 99% of the time Apollo Server will not track field executions, and 1%
+   * of the time Apollo Server will track field executions and send them to
+   * Apollo Studio both as an exact observed count and as an "estimated" count
+   * which is 100 times higher.
+   *
+   * (Note that returning true here does *not* mean that the data derived from
+   * field-level instrumentation must be transmitted to Apollo Studio's servers
+   * in the form of a trace; it may still be aggregated locally to statistics.
+   * But either way this operation will contribute to the "field executions"
+   * statistic and timing hints.)
+   *
+   * The default `fieldLevelInstrumentation` is a function that always returns
+   * true.
+
+   */
+  fieldLevelInstrumentation?:
+    | number
+    | ((
+        request: GraphQLRequestContextDidResolveOperation<TContext>,
+      ) => Promise<boolean>);
+
   /**
    * This option allows you to choose if a particular request should be
    * represented in the usage reporting sent to Apollo servers. By default, all
    * requests are included. If this async predicate function is specified, its
    * return value will determine whether a given request is included.
+   *
+   * Note that returning false here means that the operation will be completely
+   * ignored by all Apollo Studio features. If you merely want to improve
+   * performance by skipping the field-level execution trace, set the
+   * `fieldLevelInstrumentation` option instead of this one.
    *
    * The predicate function receives the request context. If validation and
    * parsing of the request succeeds, the function will receive the request
@@ -66,8 +138,8 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * [`GraphQLRequestContextWillSendResponse`](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#willsendresponse)
    * phase:
    *
-   * (If you don't want any usage reporting, don't use this plugin; if you are
-   * using other plugins that require you to configure an Apollo API key, use
+   * (If you don't want any usage reporting at all, don't use this option:
+   * instead, either avoid specifying an Apollo API key, or use
    * ApolloServerPluginUsageReportingDisabled to prevent this plugin from being
    * created by default.)
    *

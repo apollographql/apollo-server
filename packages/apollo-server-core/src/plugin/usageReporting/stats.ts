@@ -50,6 +50,12 @@ export class OurReport implements Required<IReport> {
   // methods which increment it.
   readonly sizeEstimator = new SizeEstimator();
 
+  ensureCountsAreIntegers() {
+    for (const tracesAndStats of Object.values(this.tracesPerQuery)) {
+      tracesAndStats.ensureCountsAreIntegers();
+    }
+  }
+
   addTrace({
     statsReportKey,
     trace,
@@ -130,6 +136,10 @@ class OurTracesAndStats implements Required<ITracesAndStats> {
   readonly trace: Uint8Array[] = [];
   readonly statsWithContext = new StatsByContext();
   readonly internalTracesContributingToStats: Uint8Array[] = [];
+
+  ensureCountsAreIntegers() {
+    this.statsWithContext.ensureCountsAreIntegers();
+  }
 }
 
 class StatsByContext {
@@ -141,6 +151,12 @@ class StatsByContext {
    */
   toArray(): IContextualizedStats[] {
     return Object.values(this.map);
+  }
+
+  ensureCountsAreIntegers() {
+    for (const contextualizedStats of Object.values(this.map)) {
+      contextualizedStats.ensureCountsAreIntegers();
+    }
   }
 
   addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
@@ -183,11 +199,22 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
 
   constructor(readonly context: IStatsContext) {}
 
+  ensureCountsAreIntegers() {
+    for (const typeStat of Object.values(this.perTypeStat)) {
+      typeStat.ensureCountsAreIntegers();
+    }
+  }
+
   // Extract statistics from the trace, and increment the estimated report size.
   // We only add to the estimate when adding whole sub-messages. If it really
   // mattered, we could do a lot more careful things like incrementing it
   // whenever a numeric field on queryLatencyStats gets incremented over 0.
   addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
+    const { fieldExecutionScaleFactor } = trace;
+    if (!fieldExecutionScaleFactor) {
+      this.queryLatencyStats.requestsWithoutFieldInstrumentation++;
+    }
+
     this.queryLatencyStats.requestCount++;
     if (trace.fullQueryCacheHit) {
       this.queryLatencyStats.cacheLatencyCount.incrementDuration(
@@ -250,48 +277,56 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
         currPathErrorStats.errorsCount += node.error.length;
       }
 
-      // The actual field name behind the node; originalFieldName is set
-      // if an alias was used, otherwise responseName. (This is falsey for
-      // nodes that are not fields (root, array index, etc).)
-      const fieldName = node.originalFieldName || node.responseName;
+      if (fieldExecutionScaleFactor) {
+        // The actual field name behind the node; originalFieldName is set
+        // if an alias was used, otherwise responseName. (This is falsey for
+        // nodes that are not fields (root, array index, etc).)
+        const fieldName = node.originalFieldName || node.responseName;
 
-      // Protobuf doesn't really differentiate between "unset" and "falsey" so
-      // we're mostly actually checking that these things are non-empty string /
-      // non-zero numbers. The time fields represent the number of nanoseconds
-      // since the beginning of the entire trace, so let's pretend for the
-      // moment that it's plausible for a node to start or even end exactly when
-      // the trace started (ie, for the time values to be 0). This is unlikely
-      // in practice (everything should take at least 1ns). In practice we only
-      // write `type` and `parentType` on a Node when we write `startTime`, so
-      // the main thing we're looking out for by checking the time values is
-      // whether we somehow failed to write `endTime` at the end of the field;
-      // in this case, the `endTime >= startTime` check won't match.
-      if (
-        node.parentType &&
-        fieldName &&
-        node.type &&
-        node.endTime != null &&
-        node.startTime != null &&
-        node.endTime >= node.startTime
-      ) {
-        const typeStat = this.getTypeStat(node.parentType, sizeEstimator);
+        // Protobuf doesn't really differentiate between "unset" and "falsey" so
+        // we're mostly actually checking that these things are non-empty string /
+        // non-zero numbers. The time fields represent the number of nanoseconds
+        // since the beginning of the entire trace, so let's pretend for the
+        // moment that it's plausible for a node to start or even end exactly when
+        // the trace started (ie, for the time values to be 0). This is unlikely
+        // in practice (everything should take at least 1ns). In practice we only
+        // write `type` and `parentType` on a Node when we write `startTime`, so
+        // the main thing we're looking out for by checking the time values is
+        // whether we somehow failed to write `endTime` at the end of the field;
+        // in this case, the `endTime >= startTime` check won't match.
+        if (
+          node.parentType &&
+          fieldName &&
+          node.type &&
+          node.endTime != null &&
+          node.startTime != null &&
+          node.endTime >= node.startTime
+        ) {
+          const typeStat = this.getTypeStat(node.parentType, sizeEstimator);
 
-        const fieldStat = typeStat.getFieldStat(
-          fieldName,
-          node.type,
-          sizeEstimator,
-        );
+          const fieldStat = typeStat.getFieldStat(
+            fieldName,
+            node.type,
+            sizeEstimator,
+          );
 
-        fieldStat.errorsCount += node.error?.length ?? 0;
-        fieldStat.count++;
-        // Note: this is actually counting the number of resolver calls for this
-        // field that had at least one error, not the number of overall GraphQL
-        // queries that had at least one error for this field. That doesn't seem
-        // to match the name, but it does match the other implementations of this
-        // logic.
-        fieldStat.requestsWithErrorsCount +=
-          (node.error?.length ?? 0) > 0 ? 1 : 0;
-        fieldStat.latencyCount.incrementDuration(node.endTime - node.startTime);
+          fieldStat.errorsCount += node.error?.length ?? 0;
+          fieldStat.observedExecutionCount++;
+          fieldStat.estimatedExecutionCount += fieldExecutionScaleFactor;
+          // Note: this is actually counting the number of resolver calls for this
+          // field that had at least one error, not the number of overall GraphQL
+          // queries that had at least one error for this field. That doesn't seem
+          // to match the name, but it does match the other implementations of this
+          // logic.
+          fieldStat.requestsWithErrorsCount +=
+            (node.error?.length ?? 0) > 0 ? 1 : 0;
+          fieldStat.latencyCount.incrementDuration(
+            node.endTime - node.startTime,
+            // The latency histogram is always "estimated"; we don't track
+            // "observed" and "estimated" separately.
+            fieldExecutionScaleFactor,
+          );
+        }
       }
 
       return false;
@@ -318,6 +353,7 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
 class OurQueryLatencyStats implements Required<IQueryLatencyStats> {
   latencyCount: DurationHistogram = new DurationHistogram();
   requestCount: number = 0;
+  requestsWithoutFieldInstrumentation: number = 0;
   cacheHits: number = 0;
   persistedQueryHits: number = 0;
   persistedQueryMisses: number = 0;
@@ -369,15 +405,30 @@ class OurTypeStat implements Required<ITypeStat> {
     this.perFieldStat[fieldName] = fieldStat;
     return fieldStat;
   }
+
+  ensureCountsAreIntegers() {
+    for (const fieldStat of Object.values(this.perFieldStat)) {
+      fieldStat.ensureCountsAreIntegers();
+    }
+  }
 }
 
 class OurFieldStat implements Required<IFieldStat> {
   errorsCount: number = 0;
-  count: number = 0;
+  observedExecutionCount: number = 0;
+  // Note that this number isn't necessarily an integer while it is being
+  // aggregated. Before encoding as a protobuf we call ensureCountsAreIntegers
+  // which floors it.
+  estimatedExecutionCount: number = 0;
   requestsWithErrorsCount: number = 0;
   latencyCount: DurationHistogram = new DurationHistogram();
 
   constructor(readonly returnType: string) {}
+
+  ensureCountsAreIntegers() {
+    // This is the only one that ever can receive non-integers.
+    this.estimatedExecutionCount = Math.floor(this.estimatedExecutionCount);
+  }
 }
 
 function estimatedBytesForString(s: string) {

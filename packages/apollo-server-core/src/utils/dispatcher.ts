@@ -11,16 +11,21 @@ export class Dispatcher<T extends AnyFunctionMap> {
   constructor(protected targets: T[]) {}
 
   private callTargets<TMethodName extends keyof T>(
-    targets: T[],
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>
   ): ReturnType<AsFunction<T[TMethodName]>>[] {
-    return targets.map((target) => {
+    return this.targets.map((target) => {
       const method = target[methodName];
       if (typeof method === 'function') {
         return method.apply(target, args);
       }
     });
+  }
+
+  public hasHook(methodName: keyof T): boolean {
+    return this.targets.some(
+      (target) => typeof target[methodName] === 'function',
+    );
   }
 
   public async invokeHook<
@@ -30,7 +35,7 @@ export class Dispatcher<T extends AnyFunctionMap> {
     methodName: TMethodName,
     ...args: Args<T[TMethodName]>
   ): Promise<THookReturn[]> {
-    return Promise.all(this.callTargets(this.targets, methodName, ...args));
+    return Promise.all(this.callTargets(methodName, ...args));
   }
 
   public async invokeHooksUntilNonNull<TMethodName extends keyof T>(
@@ -60,7 +65,7 @@ export class Dispatcher<T extends AnyFunctionMap> {
     ...args: Args<T[TMethodName]>
   ): Promise<AsyncDidEndHook<TEndHookArgs>> {
     const hookReturnValues: (AsyncDidEndHook<TEndHookArgs> | void)[] =
-      await Promise.all(this.callTargets(this.targets, methodName, ...args));
+      await Promise.all(this.callTargets(methodName, ...args));
 
     const didEndHooks = hookReturnValues.filter(
       (hook): hook is AsyncDidEndHook<TEndHookArgs> => !!hook,

@@ -68,6 +68,21 @@ export function ApolloServerPluginUsageReporting<TContext>(
     null,
   ),
 ): InternalApolloServerPlugin {
+  // Note: We'd like to change the default to false in Apollo Server 4, so that
+  // the default usage reporting experience doesn't include *anything* that
+  // could potentially be PII (like error messages) --- just operations and
+  // numbers.
+  const fieldLevelInstrumentationOption = options.fieldLevelInstrumentation;
+  const fieldLevelInstrumentation =
+    typeof fieldLevelInstrumentationOption === 'number'
+      ? async () =>
+          Math.random() < fieldLevelInstrumentationOption
+            ? fieldLevelInstrumentationOption
+            : 0
+      : fieldLevelInstrumentationOption
+      ? fieldLevelInstrumentationOption
+      : async () => true;
+
   let requestDidStartHandler: (
     requestContext: GraphQLRequestContext<TContext>,
   ) => GraphQLRequestListener<TContext>;
@@ -225,6 +240,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
         // associated with the summarized statistics.
         report.endTime = dateToProtoTimestamp(new Date());
 
+        report.ensureCountsAreIntegers();
+
         const protobufError = Report.verify(report);
         if (protobufError) {
           throw new Error(`Error encoding report: ${protobufError}`);
@@ -380,6 +397,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
         metrics.startHrTime = treeBuilder.startHrTime;
         let graphqlValidationFailure = false;
         let graphqlUnknownOperationName = false;
+        let includeOperationInUsageReporting: boolean | null = null;
 
         if (http) {
           treeBuilder.trace.http = new Trace.HTTP({
@@ -407,31 +425,33 @@ export function ApolloServerPluginUsageReporting<TContext>(
           }
         }
 
-        // After this function completes, metrics.captureTraces is defined.
-        async function shouldIncludeRequest(
+        // After this function completes, includeOperationInUsageReporting is
+        // defined.
+        async function maybeCallIncludeRequestHook(
           requestContext:
             | GraphQLRequestContextDidResolveOperation<TContext>
             | GraphQLRequestContextWillSendResponse<TContext>,
         ): Promise<void> {
           // If this is the second call in `willSendResponse` after
           // `didResolveOperation`, we're done.
-          if (metrics.captureTraces !== undefined) return;
+          if (includeOperationInUsageReporting !== null) return;
 
           if (typeof options.includeRequest !== 'function') {
             // Default case we always report
-            metrics.captureTraces = true;
+            includeOperationInUsageReporting = true;
             return;
           }
-
-          metrics.captureTraces = await options.includeRequest(requestContext);
+          includeOperationInUsageReporting = await options.includeRequest(
+            requestContext,
+          );
 
           // Help the user understand they've returned an unexpected value,
           // which might be a subtle mistake.
-          if (typeof metrics.captureTraces !== 'boolean') {
+          if (typeof includeOperationInUsageReporting !== 'boolean') {
             logger.warn(
               "The 'includeRequest' async predicate function must return a boolean value.",
             );
-            metrics.captureTraces = true;
+            includeOperationInUsageReporting = true;
           }
         }
 
@@ -487,12 +507,53 @@ export function ApolloServerPluginUsageReporting<TContext>(
             // and an unknown operation was specified.
             graphqlUnknownOperationName =
               requestContext.operation === undefined;
-            await shouldIncludeRequest(requestContext);
+            await maybeCallIncludeRequestHook(requestContext);
+
+            if (
+              includeOperationInUsageReporting &&
+              // No need to capture traces if the operation is going to
+              // immediately fail due to unknown operation name.
+              !graphqlUnknownOperationName
+            ) {
+              // We're not completely ignoring the operation. But should we
+              // calculate a detailed trace of every field while we do so (either
+              // directly in this plugin, or in a subgraph by sending the
+              // apollo-federation-include-trace header)? That will allow this
+              // operation to contribute to the "field executions" column in the
+              // Studio Fields page, to the timing hints in Explorer and
+              // vscode-graphql, and to the traces visible under Operations. (Note
+              // that `true` here does not imply that this operation will
+              // necessarily be *sent* to the usage-reporting endpoint in the form
+              // of a trace --- it still might be aggregated into stats first. But
+              // capturing a trace will mean we can understand exactly what fields
+              // were executed and what their performance was, at the tradeoff of
+              // some overhead for tracking the trace (and transmitting it between
+              // subgraph and gateway).
+              const fieldLevelInstrumentationResult =
+                await fieldLevelInstrumentation(requestContext);
+              if (
+                typeof fieldLevelInstrumentationResult === 'number' &&
+                fieldLevelInstrumentationResult > 0
+              ) {
+                treeBuilder.trace.fieldExecutionScaleFactor =
+                  1 / fieldLevelInstrumentationResult;
+              } else if (fieldLevelInstrumentationResult) {
+                treeBuilder.trace.fieldExecutionScaleFactor = 1;
+              } else {
+                treeBuilder.trace.fieldExecutionScaleFactor = 0;
+              }
+
+              metrics.captureTraces =
+                !!treeBuilder.trace.fieldExecutionScaleFactor;
+            }
           },
           async executionDidStart() {
-            // If we stopped tracing early, return undefined so we don't trace
-            // an object
-            if (metrics.captureTraces === false) return;
+            // If we're not capturing traces, don't return a willResolveField so
+            // that we don't build up a detailed trace inside treeBuilder. (We still
+            // will use treeBuilder as a convenient place to put top-level facts
+            // about the operation which can end up aggregated as stats, and we do
+            // eventually put *errors* onto the trace tree.)
+            if (!metrics.captureTraces) return;
 
             return {
               willResolveField({ info }) {
@@ -513,11 +574,11 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
             // If we got an error before we called didResolveOperation (eg parse or
             // validation error), check to see if we should include the request.
-            await shouldIncludeRequest(requestContext);
+            await maybeCallIncludeRequestHook(requestContext);
 
             treeBuilder.stopTiming();
 
-            if (metrics.captureTraces === false) return;
+            if (includeOperationInUsageReporting === false) return;
 
             treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
             treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
@@ -610,8 +671,14 @@ export function ApolloServerPluginUsageReporting<TContext>(
               report.addTrace({
                 statsReportKey,
                 trace,
+                // We include the operation as a trace (rather than aggregated
+                // into stats) only if we believe it's possible that our
+                // organization's plan allows for viewing traces *and* we
+                // actually captured this as a full trace *and*
+                // sendOperationAsTrace says so.
                 asTrace:
                   graphMightSupportTraces &&
+                  !!metrics.captureTraces &&
                   sendOperationAsTrace(trace, statsReportKey),
                 includeTracesContributingToStats,
                 referencedFieldsByType,
