@@ -306,6 +306,7 @@ $ npm install apollo-server-fastify apollo-server-core fastify graphql
 ```ts:title=index.ts
 import { ApolloServer } from 'apollo-server-fastify';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import fastify, { FastifyInstance } from 'fastify';
 
 function fastifyAppClosePlugin(app: FastifyInstance): ApolloServerPlugin {
