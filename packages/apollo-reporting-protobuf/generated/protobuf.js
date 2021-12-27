@@ -33,7 +33,7 @@ $root.Trace = (function() {
      * @property {boolean|null} [persistedQueryRegister] Trace persistedQueryRegister
      * @property {boolean|null} [registeredOperation] Trace registeredOperation
      * @property {boolean|null} [forbiddenOperation] Trace forbiddenOperation
-     * @property {number|null} [fieldExecutionScaleFactor] Trace fieldExecutionScaleFactor
+     * @property {number|null} [fieldExecutionWeight] Trace fieldExecutionWeight
      */
 
     /**
@@ -196,12 +196,12 @@ $root.Trace = (function() {
     Trace.prototype.forbiddenOperation = false;
 
     /**
-     * Trace fieldExecutionScaleFactor.
-     * @member {number} fieldExecutionScaleFactor
+     * Trace fieldExecutionWeight.
+     * @member {number} fieldExecutionWeight
      * @memberof Trace
      * @instance
      */
-    Trace.prototype.fieldExecutionScaleFactor = 0;
+    Trace.prototype.fieldExecutionWeight = 0;
 
     /**
      * Creates a new Trace instance using the specified properties.
@@ -263,8 +263,8 @@ $root.Trace = (function() {
             writer.uint32(/* id 27, wireType 2 =*/218).string(message.unexecutedOperationBody);
         if (message.unexecutedOperationName != null && Object.hasOwnProperty.call(message, "unexecutedOperationName"))
             writer.uint32(/* id 28, wireType 2 =*/226).string(message.unexecutedOperationName);
-        if (message.fieldExecutionScaleFactor != null && Object.hasOwnProperty.call(message, "fieldExecutionScaleFactor"))
-            writer.uint32(/* id 31, wireType 1 =*/249).double(message.fieldExecutionScaleFactor);
+        if (message.fieldExecutionWeight != null && Object.hasOwnProperty.call(message, "fieldExecutionWeight"))
+            writer.uint32(/* id 31, wireType 1 =*/249).double(message.fieldExecutionWeight);
         return writer;
     };
 
@@ -354,7 +354,7 @@ $root.Trace = (function() {
                 message.forbiddenOperation = reader.bool();
                 break;
             case 31:
-                message.fieldExecutionScaleFactor = reader.double();
+                message.fieldExecutionWeight = reader.double();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -459,9 +459,9 @@ $root.Trace = (function() {
         if (message.forbiddenOperation != null && message.hasOwnProperty("forbiddenOperation"))
             if (typeof message.forbiddenOperation !== "boolean")
                 return "forbiddenOperation: boolean expected";
-        if (message.fieldExecutionScaleFactor != null && message.hasOwnProperty("fieldExecutionScaleFactor"))
-            if (typeof message.fieldExecutionScaleFactor !== "number")
-                return "fieldExecutionScaleFactor: number expected";
+        if (message.fieldExecutionWeight != null && message.hasOwnProperty("fieldExecutionWeight"))
+            if (typeof message.fieldExecutionWeight !== "number")
+                return "fieldExecutionWeight: number expected";
         return null;
     };
 
@@ -501,7 +501,7 @@ $root.Trace = (function() {
             object.queryPlan = null;
             object.unexecutedOperationBody = "";
             object.unexecutedOperationName = "";
-            object.fieldExecutionScaleFactor = 0;
+            object.fieldExecutionWeight = 0;
         }
         if (message.endTime != null && message.hasOwnProperty("endTime"))
             object.endTime = $root.google.protobuf.Timestamp.toObject(message.endTime, options);
@@ -542,8 +542,8 @@ $root.Trace = (function() {
             object.unexecutedOperationBody = message.unexecutedOperationBody;
         if (message.unexecutedOperationName != null && message.hasOwnProperty("unexecutedOperationName"))
             object.unexecutedOperationName = message.unexecutedOperationName;
-        if (message.fieldExecutionScaleFactor != null && message.hasOwnProperty("fieldExecutionScaleFactor"))
-            object.fieldExecutionScaleFactor = options.json && !isFinite(message.fieldExecutionScaleFactor) ? String(message.fieldExecutionScaleFactor) : message.fieldExecutionScaleFactor;
+        if (message.fieldExecutionWeight != null && message.hasOwnProperty("fieldExecutionWeight"))
+            object.fieldExecutionWeight = options.json && !isFinite(message.fieldExecutionWeight) ? String(message.fieldExecutionWeight) : message.fieldExecutionWeight;
         return object;
     };
 

@@ -235,9 +235,11 @@ message Trace {
   // Some servers don't do field-level instrumentation for every request and assign
   // each request a "weight" for each request that they do instrument. When this
   // trace is aggregated into field usage stats, it should count as this value
-  // towards the estimated_execution_count rather than just 1. 0 is treated as
-  // 1 for backwards compatibility.
-  double field_execution_scale_factor = 31;
+  // towards the estimated_execution_count rather than just 1. This value should
+  // typically be at least 1.
+  //
+  // 0 is treated as 1 for backwards compatibility.
+  double field_execution_weight = 31;
 
 
 
@@ -326,8 +328,8 @@ message FieldStat {
   // Number of errors whose path is this field. Note that we assume that error
   // tracking does *not* require field-level instrumentation so this *will*
   // include errors from requests that don't contribute to the
-  // `observed_execution_count` field (and does not need to be scaled by a
-  // sampling rate).
+  // `observed_execution_count` field (and does not need to be scaled by
+  // field_execution_weight).
   uint64 errors_count = 4;
   // Number of times that the resolver for this field is directly observed being
   // executed.
@@ -336,7 +338,10 @@ message FieldStat {
   // performing field-level instrumentation on a sampling of operations.  For
   // example, if the server randomly instruments 1% of requests for this
   // operation, this number will be 100 times greater than
-  // `observed_execution_count`.
+  // `observed_execution_count`. (When aggregating a Trace into FieldStats,
+  // this number goes up by the trace's `field_execution_weight` for each
+  // observed field execution, while `observed_execution_count` above goes
+  // up by 1.)
   uint64 estimated_execution_count = 10;
   // Number of times the resolver for this field is executed that resulted in
   // at least one error. "Request" is a misnomer here as this corresponds to
@@ -346,7 +351,7 @@ message FieldStat {
   uint64 requests_with_errors_count = 6;
   // Duration histogram for the latency of this field. Note that it is scaled in
   // the same way as estimated_execution_count so its "total count" might be
-  // great than `observed_execution_count` and may not exactly equal
+  // greater than `observed_execution_count` and may not exactly equal
   // `estimated_execution_count` due to rounding.
   repeated sint64 latency_count = 9 [(js_use_toArray)=true];
   reserved 1, 2, 7, 8;

@@ -56,8 +56,8 @@ export interface ITrace {
     /** Trace forbiddenOperation */
     forbiddenOperation?: (boolean|null);
 
-    /** Trace fieldExecutionScaleFactor */
-    fieldExecutionScaleFactor?: (number|null);
+    /** Trace fieldExecutionWeight */
+    fieldExecutionWeight?: (number|null);
 }
 
 /** Represents a Trace. */
@@ -123,8 +123,8 @@ export class Trace implements ITrace {
     /** Trace forbiddenOperation. */
     public forbiddenOperation: boolean;
 
-    /** Trace fieldExecutionScaleFactor. */
-    public fieldExecutionScaleFactor: number;
+    /** Trace fieldExecutionWeight. */
+    public fieldExecutionWeight: number;
 
     /**
      * Creates a new Trace instance using the specified properties.
