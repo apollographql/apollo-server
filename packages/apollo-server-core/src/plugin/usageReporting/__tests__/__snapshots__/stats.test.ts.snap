@@ -326,6 +326,7 @@ OurContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -661,6 +662,7 @@ OurContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -996,6 +998,7 @@ OurContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -1331,6 +1334,7 @@ OurContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -1666,6 +1670,7 @@ OurContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -2001,6 +2006,7 @@ OurContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -2336,6 +2342,7 @@ OurContextualizedStats {
     "registeredOperationCount": 1,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -2671,6 +2678,7 @@ OurContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -3006,6 +3014,7 @@ OurContextualizedStats {
     "registeredOperationCount": 1,
     "requestCount": 1,
     "requestsWithErrorsCount": 1,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {
         "user": OurPathErrorStats {
@@ -3347,6 +3356,7 @@ OurContextualizedStats {
     "registeredOperationCount": 4,
     "requestCount": 4,
     "requestsWithErrorsCount": 4,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {
         "account": OurPathErrorStats {
@@ -3705,6 +3715,7 @@ OurContextualizedStats {
     "registeredOperationCount": 0,
     "requestCount": 6,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -3723,8 +3734,8 @@ OurContextualizedStats {
     "Query": OurTypeStat {
       "perFieldStat": Object {
         "user": OurFieldStat {
-          "count": 2,
           "errorsCount": 0,
+          "estimatedExecutionCount": 2,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               0,
@@ -3803,6 +3814,7 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 2,
           "requestsWithErrorsCount": 0,
           "returnType": "User!",
         },
@@ -3811,8 +3823,8 @@ OurContextualizedStats {
     "User": OurTypeStat {
       "perFieldStat": Object {
         "email": OurFieldStat {
-          "count": 2,
           "errorsCount": 4,
+          "estimatedExecutionCount": 2,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               2,
@@ -3891,12 +3903,13 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 2,
           "requestsWithErrorsCount": 2,
           "returnType": "String!",
         },
         "friends": OurFieldStat {
-          "count": 2,
           "errorsCount": 0,
+          "estimatedExecutionCount": 2,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               2,
@@ -3975,6 +3988,7 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 2,
           "requestsWithErrorsCount": 0,
           "returnType": "[String!]!",
         },
@@ -4301,6 +4315,7 @@ OurContextualizedStats {
     "registeredOperationCount": 2,
     "requestCount": 2,
     "requestsWithErrorsCount": 2,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {
         "user": OurPathErrorStats {
@@ -4331,8 +4346,8 @@ OurContextualizedStats {
     "Query": OurTypeStat {
       "perFieldStat": Object {
         "user": OurFieldStat {
-          "count": 2,
           "errorsCount": 0,
+          "estimatedExecutionCount": 2,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               0,
@@ -4411,6 +4426,7 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 2,
           "requestsWithErrorsCount": 0,
           "returnType": "User!",
         },
@@ -4419,8 +4435,8 @@ OurContextualizedStats {
     "User": OurTypeStat {
       "perFieldStat": Object {
         "email": OurFieldStat {
-          "count": 2,
           "errorsCount": 0,
+          "estimatedExecutionCount": 2,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               2,
@@ -4499,12 +4515,13 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 2,
           "requestsWithErrorsCount": 0,
           "returnType": "String!",
         },
         "friends": OurFieldStat {
-          "count": 2,
           "errorsCount": 0,
+          "estimatedExecutionCount": 2,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               2,
@@ -4583,6 +4600,7 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 2,
           "requestsWithErrorsCount": 0,
           "returnType": "[String!]!",
         },
@@ -4909,6 +4927,7 @@ OurContextualizedStats {
     "registeredOperationCount": 2,
     "requestCount": 2,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -4927,8 +4946,8 @@ OurContextualizedStats {
     "Query": OurTypeStat {
       "perFieldStat": Object {
         "user": OurFieldStat {
-          "count": 2,
           "errorsCount": 0,
+          "estimatedExecutionCount": 2,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               0,
@@ -5007,6 +5026,7 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 2,
           "requestsWithErrorsCount": 0,
           "returnType": "User!",
         },
@@ -5015,8 +5035,8 @@ OurContextualizedStats {
     "User": OurTypeStat {
       "perFieldStat": Object {
         "email": OurFieldStat {
-          "count": 2,
           "errorsCount": 0,
+          "estimatedExecutionCount": 2,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               2,
@@ -5095,12 +5115,13 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 2,
           "requestsWithErrorsCount": 0,
           "returnType": "String!",
         },
         "friends": OurFieldStat {
-          "count": 2,
           "errorsCount": 0,
+          "estimatedExecutionCount": 2,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               2,
@@ -5179,6 +5200,7 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 2,
           "requestsWithErrorsCount": 0,
           "returnType": "[String!]!",
         },
@@ -5505,6 +5527,7 @@ OurContextualizedStats {
     "registeredOperationCount": 2,
     "requestCount": 2,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,
@@ -5523,8 +5546,8 @@ OurContextualizedStats {
     "Query": OurTypeStat {
       "perFieldStat": Object {
         "user": OurFieldStat {
-          "count": 1,
           "errorsCount": 0,
+          "estimatedExecutionCount": 1,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               0,
@@ -5603,6 +5626,7 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 1,
           "requestsWithErrorsCount": 0,
           "returnType": "User!",
         },
@@ -5611,8 +5635,8 @@ OurContextualizedStats {
     "User": OurTypeStat {
       "perFieldStat": Object {
         "email": OurFieldStat {
-          "count": 1,
           "errorsCount": 0,
+          "estimatedExecutionCount": 1,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               1,
@@ -5691,12 +5715,13 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 1,
           "requestsWithErrorsCount": 0,
           "returnType": "String!",
         },
         "friends": OurFieldStat {
-          "count": 1,
           "errorsCount": 0,
+          "estimatedExecutionCount": 1,
           "latencyCount": DurationHistogram {
             "buckets": Array [
               1,
@@ -5775,6 +5800,7 @@ OurContextualizedStats {
               0,
             ],
           },
+          "observedExecutionCount": 1,
           "requestsWithErrorsCount": 0,
           "returnType": "[String!]!",
         },
@@ -6101,6 +6127,7 @@ OurContextualizedStats {
     "registeredOperationCount": 1,
     "requestCount": 1,
     "requestsWithErrorsCount": 0,
+    "requestsWithoutFieldInstrumentation": 0,
     "rootErrorStats": OurPathErrorStats {
       "children": Object {},
       "errorsCount": 0,

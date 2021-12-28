@@ -8,11 +8,21 @@ import {
   ApolloServerPluginUsageReporting,
 } from '../plugin';
 import { Headers } from 'apollo-server-env';
-import { Trace, Report, ITrace } from 'apollo-reporting-protobuf';
+import {
+  Trace,
+  Report,
+  ITrace,
+  ITracesAndStats,
+  ContextualizedStats,
+} from 'apollo-reporting-protobuf';
 import pluginTestHarness from '../../../utils/pluginTestHarness';
+import { pluginsEnabledForSchemaResolvers } from '../../../utils/schemaInstrumentation';
 import nock from 'nock';
+import sumBy from 'lodash.sumby';
+import { mockRandom, resetMockRandom } from 'jest-mock-random';
 import { gunzipSync } from 'zlib';
 import type { ApolloServerPluginUsageReportingOptions } from '../options';
+import type { GraphQLRequestContextDidResolveOperation } from 'apollo-server-types';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -23,11 +33,13 @@ describe('end-to-end', () => {
     expectReport = true,
     query,
     operationName,
+    schemaShouldBeInstrumented = true,
   }: {
     pluginOptions?: ApolloServerPluginUsageReportingOptions<any>;
     expectReport?: boolean;
     query?: string;
     operationName?: string | null;
+    schemaShouldBeInstrumented?: boolean;
   }) {
     const typeDefs = `
       type User {
@@ -121,6 +133,11 @@ describe('end-to-end', () => {
         })
       : null;
     nockScope.done();
+
+    expect(pluginsEnabledForSchemaResolvers(schema)).toBe(
+      schemaShouldBeInstrumented,
+    );
+
     return { report, context };
   }
 
@@ -141,17 +158,23 @@ describe('end-to-end', () => {
   [
     {
       testName: 'fails parse for non-parseable gql',
-      op: { query: 'random text' },
+      op: { query: 'random text', schemaShouldBeInstrumented: false },
       statsReportKey: '## GraphQLParseFailure\n',
     },
     {
       testName: 'validation fails for invalid operation',
-      op: { query: 'query q { nonExistentField }' },
+      op: {
+        query: 'query q { nonExistentField }',
+        schemaShouldBeInstrumented: false,
+      },
       statsReportKey: '## GraphQLValidationFailure\n',
     },
     {
       testName: 'unknown operation error if not specified',
-      op: { query: 'query notQ { aString }' },
+      op: {
+        query: 'query notQ { aString }',
+        schemaShouldBeInstrumented: false,
+      },
       statsReportKey: '## GraphQLUnknownOperationName\n',
     },
     {
@@ -176,8 +199,22 @@ describe('end-to-end', () => {
       const queryEntries = Object.entries(report!.tracesPerQuery);
       expect(queryEntries).toHaveLength(1);
       expect(queryEntries[0][0]).toBe(statsReportKey);
-      const traces = queryEntries[0][1]!.trace;
-      expect(traces).toHaveLength(1);
+      const tracesAndStats = queryEntries[0][1];
+      const operationsSentAsTrace = tracesAndStats.trace?.length ?? 0;
+      if (
+        tracesAndStats.statsWithContext &&
+        'toArray' in tracesAndStats.statsWithContext
+      ) {
+        throw Error(
+          "we shouldn't get something that needs to be converted when we decode a report",
+        );
+      }
+      const operationsSentAsStats = sumBy(
+        tracesAndStats.statsWithContext,
+        (contextualizedStats) =>
+          contextualizedStats.queryLatencyStats?.requestCount ?? 0,
+      );
+      expect(operationsSentAsTrace + operationsSentAsStats).toBe(1);
     }),
   );
 
@@ -190,9 +227,10 @@ describe('end-to-end', () => {
             return request.request.operationName === 'q';
           },
         },
+        schemaShouldBeInstrumented: true,
       });
       expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
-      expect(context.metrics.captureTraces).toBeTruthy();
+      expect(context.metrics.captureTraces).toBe(true);
     });
     it('exclude based on operation name', async () => {
       const { context } = await runTest({
@@ -203,8 +241,141 @@ describe('end-to-end', () => {
           },
         },
         expectReport: false,
+        schemaShouldBeInstrumented: false,
       });
       expect(context.metrics.captureTraces).toBeFalsy();
+    });
+  });
+
+  describe('fieldLevelInstrumentation', () => {
+    function containsFieldExecutionData(
+      tracesAndStats: ITracesAndStats,
+    ): boolean {
+      for (const trace of tracesAndStats.trace ?? []) {
+        if (trace instanceof Uint8Array) {
+          throw Error(
+            "test shouldn't have a pre-encoded trace after decoding!",
+          );
+        }
+        if (trace.root?.child?.length) {
+          // We found an actual field inside a trace.
+          return true;
+        }
+      }
+
+      if (
+        tracesAndStats.statsWithContext &&
+        'toArray' in tracesAndStats.statsWithContext
+      ) {
+        throw Error(
+          "we shouldn't get something that needs to be converted when we decode a report",
+        );
+      }
+      for (const statsWithContext of tracesAndStats.statsWithContext ?? []) {
+        if (Object.keys(statsWithContext.perTypeStat ?? {}).length > 0) {
+          // We found a TypeStat, showing that we have field execution stats.
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    it('include based on operation name', async () => {
+      const { report, context } = await runTest({
+        pluginOptions: {
+          fieldLevelInstrumentation: async (
+            requestContext: GraphQLRequestContextDidResolveOperation<any>,
+          ) => {
+            await new Promise<void>((res) => setTimeout(() => res(), 1));
+            return requestContext.request.operationName === 'q';
+          },
+        },
+      });
+      expect(context.metrics.captureTraces).toBe(true);
+      expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+      expect(
+        containsFieldExecutionData(Object.values(report!.tracesPerQuery)[0]!),
+      ).toBe(true);
+    });
+
+    it('exclude based on operation name', async () => {
+      const { report, context } = await runTest({
+        pluginOptions: {
+          fieldLevelInstrumentation: async (
+            requestContext: GraphQLRequestContextDidResolveOperation<any>,
+          ) => {
+            await new Promise<void>((res) => setTimeout(() => res(), 1));
+            return requestContext.request.operationName === 'not_q';
+          },
+        },
+        schemaShouldBeInstrumented: false,
+      });
+      // We do get a report about this operation; we just don't have field
+      // execution data (as trace or as TypeStat).
+      expect(context.metrics.captureTraces).toBe(false);
+      expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+      expect(
+        containsFieldExecutionData(Object.values(report!.tracesPerQuery)[0]!),
+      ).toBe(false);
+    });
+
+    describe('passing a number', () => {
+      afterEach(() => resetMockRandom());
+
+      const fieldLevelInstrumentation = 0.015;
+      it('RNG returns a small number', async () => {
+        mockRandom(fieldLevelInstrumentation * 0.99);
+        const { report, context } = await runTest({
+          pluginOptions: {
+            fieldLevelInstrumentation,
+            // Want to see this in stats so we can see the scaling.
+            experimental_sendOperationAsTrace: () => false,
+          },
+          schemaShouldBeInstrumented: true,
+        });
+        expect(context.metrics.captureTraces).toBe(true);
+        expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+        expect(
+          containsFieldExecutionData(Object.values(report!.tracesPerQuery)[0]!),
+        ).toBe(true);
+        const statsWithContext = (
+          Object.values(report!.tracesPerQuery)[0]!
+            .statsWithContext as ContextualizedStats[]
+        )[0];
+        expect(
+          statsWithContext.queryLatencyStats
+            ?.requestsWithoutFieldInstrumentation,
+        ).toBe(0);
+        const fieldStat =
+          statsWithContext.perTypeStat['Query'].perFieldStat!['aBoolean'];
+        expect(fieldStat.observedExecutionCount).toBe(1);
+        expect(fieldStat.estimatedExecutionCount).toBe(
+          Math.floor(1 / fieldLevelInstrumentation),
+        );
+        // There should be exactly one latency bucket used, and its size should
+        // be scaled in the same way as estimatedExecutionCount. (The
+        // representation of duration histograms uses 0 and negative numbers for
+        // empty buckets; we're not going to stress about making sure the
+        // correct bucket is the one that's full.)
+        expect(
+          (fieldStat.latencyCount as number[]).filter((n) => n > 0),
+        ).toStrictEqual([Math.floor(1 / fieldLevelInstrumentation)]);
+      });
+      it('RNG returns a large number', async () => {
+        mockRandom(fieldLevelInstrumentation * 1.01);
+        const { report, context } = await runTest({
+          pluginOptions: {
+            fieldLevelInstrumentation,
+          },
+          schemaShouldBeInstrumented: false,
+        });
+        expect(context.metrics.captureTraces).toBe(false);
+        expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+        expect(
+          containsFieldExecutionData(Object.values(report!.tracesPerQuery)[0]!),
+        ).toBe(false);
+      });
     });
   });
 });

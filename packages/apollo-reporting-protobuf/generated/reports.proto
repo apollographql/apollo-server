@@ -232,6 +232,15 @@ message Trace {
   // Was this operation forbidden due to lack of safelisting?
   bool forbidden_operation = 25;
 
+  // Some servers don't do field-level instrumentation for every request and assign
+  // each request a "weight" for each request that they do instrument. When this
+  // trace is aggregated into field usage stats, it should count as this value
+  // towards the estimated_execution_count rather than just 1. This value should
+  // typically be at least 1.
+  //
+  // 0 is treated as 1 for backwards compatibility.
+  double field_execution_weight = 31;
+
 
 
   // removed: Node parse = 12; Node validate = 13;
@@ -289,6 +298,10 @@ message QueryLatencyStats {
   repeated sint64 private_cache_ttl_count = 16 [(js_use_toArray)=true];
   uint64 registered_operation_count = 11;
   uint64 forbidden_operation_count = 12;
+  // The number of requests that were executed without field-level
+  // instrumentation (and thus do not contribute to `observed_execution_count`
+  // fields on this message's cousin-twice-removed FieldStats).
+  uint64 requests_without_field_instrumentation = 17;
   // 1, 6, 9, and 10 were old int64 histograms
   reserved 1, 6, 9, 10;
 }
@@ -312,15 +325,35 @@ message ContextualizedTypeStats {
 
 message FieldStat {
   string return_type = 3; // required; eg "String!" for User.email:String!
-  // Number of errors whose path is this field.
+  // Number of errors whose path is this field. Note that we assume that error
+  // tracking does *not* require field-level instrumentation so this *will*
+  // include errors from requests that don't contribute to the
+  // `observed_execution_count` field (and does not need to be scaled by
+  // field_execution_weight).
   uint64 errors_count = 4;
-  // Number of times that the resolver for this field is executed.
-  uint64 count = 5;
+  // Number of times that the resolver for this field is directly observed being
+  // executed.
+  uint64 observed_execution_count = 5;
+  // Same as `count` but potentially scaled upwards if the server was only
+  // performing field-level instrumentation on a sampling of operations.  For
+  // example, if the server randomly instruments 1% of requests for this
+  // operation, this number will be 100 times greater than
+  // `observed_execution_count`. (When aggregating a Trace into FieldStats,
+  // this number goes up by the trace's `field_execution_weight` for each
+  // observed field execution, while `observed_execution_count` above goes
+  // up by 1.)
+  uint64 estimated_execution_count = 10;
   // Number of times the resolver for this field is executed that resulted in
   // at least one error. "Request" is a misnomer here as this corresponds to
-  // resolver calls, not overall operations.
+  // resolver calls, not overall operations. Like `errors_count` above, this
+  // includes all requests rather than just requests with field-level
+  // instrumentation.
   uint64 requests_with_errors_count = 6;
-  repeated sint64 latency_count = 9 [(js_use_toArray)=true]; // Duration histogram; see docs/histograms.md
+  // Duration histogram for the latency of this field. Note that it is scaled in
+  // the same way as estimated_execution_count so its "total count" might be
+  // greater than `observed_execution_count` and may not exactly equal
+  // `estimated_execution_count` due to rounding.
+  repeated sint64 latency_count = 9 [(js_use_toArray)=true];
   reserved 1, 2, 7, 8;
 }
 
@@ -370,7 +403,8 @@ message Report {
 message ContextualizedStats {
   StatsContext context = 1;
   QueryLatencyStats query_latency_stats = 2;
-  // Key is type name.
+  // Key is type name. This structure provides data for the count and latency of individual
+  // field executions and thus only reflects operations for which field-level tracing occurred.
   map<string, TypeStat> per_type_stat = 3;
 
 }
