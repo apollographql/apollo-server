@@ -126,9 +126,9 @@ For example, a model file for `User` would include all the logic for operating o
 
 ```js
 export const User = {
- getAll: () => { /* fetching/transform logic for all users */ },
- getById: (id) => { /* fetching/transform logic for a single user */ },
- getByGroupId: (id) => { /* fetching/transform logic for a group of users */ },
+ getAll: () => { /* fetching/transformation logic for all users */ },
+ getById: (id) => { /* fetching/transformation logic for a single user */ },
+ getByGroupId: (id) => { /* fetching/transformation logic for a group of users */ },
 };
 ```
 
