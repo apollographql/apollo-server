@@ -5,6 +5,10 @@ export interface DurationHistogramOptions {
 export class DurationHistogram {
   // Note that it's legal for the values in "buckets" to be non-integers; they
   // will be floored by toArray (which is called by the protobuf encoder).
+  // (We take advantage of this for field latencies specifically, because
+  // the ability to return a non-1 weight from fieldLevelInstrumentation
+  // means we want to build up our histograms as floating-point rather than
+  // rounding after every operation.)
   private readonly buckets: number[];
   static readonly BUCKET_COUNT = 384;
   static readonly EXPONENT_LOG = Math.log(1.1);

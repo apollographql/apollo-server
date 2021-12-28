@@ -210,8 +210,8 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
   // mattered, we could do a lot more careful things like incrementing it
   // whenever a numeric field on queryLatencyStats gets incremented over 0.
   addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
-    const { fieldExecutionScaleFactor } = trace;
-    if (!fieldExecutionScaleFactor) {
+    const { fieldExecutionWeight } = trace;
+    if (!fieldExecutionWeight) {
       this.queryLatencyStats.requestsWithoutFieldInstrumentation++;
     }
 
@@ -277,7 +277,7 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
         currPathErrorStats.errorsCount += node.error.length;
       }
 
-      if (fieldExecutionScaleFactor) {
+      if (fieldExecutionWeight) {
         // The actual field name behind the node; originalFieldName is set
         // if an alias was used, otherwise responseName. (This is falsey for
         // nodes that are not fields (root, array index, etc).)
@@ -312,7 +312,7 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
 
           fieldStat.errorsCount += node.error?.length ?? 0;
           fieldStat.observedExecutionCount++;
-          fieldStat.estimatedExecutionCount += fieldExecutionScaleFactor;
+          fieldStat.estimatedExecutionCount += fieldExecutionWeight;
           // Note: this is actually counting the number of resolver calls for this
           // field that had at least one error, not the number of overall GraphQL
           // queries that had at least one error for this field. That doesn't seem
@@ -324,7 +324,7 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
             node.endTime - node.startTime,
             // The latency histogram is always "estimated"; we don't track
             // "observed" and "estimated" separately.
-            fieldExecutionScaleFactor,
+            fieldExecutionWeight,
           );
         }
       }

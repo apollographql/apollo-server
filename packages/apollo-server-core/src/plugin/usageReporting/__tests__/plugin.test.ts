@@ -323,12 +323,12 @@ describe('end-to-end', () => {
     describe('passing a number', () => {
       afterEach(() => resetMockRandom());
 
-      const samplingFactor = 0.015;
+      const fieldLevelInstrumentation = 0.015;
       it('RNG returns a small number', async () => {
-        mockRandom(samplingFactor * 0.99);
+        mockRandom(fieldLevelInstrumentation * 0.99);
         const { report, context } = await runTest({
           pluginOptions: {
-            fieldLevelInstrumentation: samplingFactor,
+            fieldLevelInstrumentation,
             // Want to see this in stats so we can see the scaling.
             experimental_sendOperationAsTrace: () => false,
           },
@@ -339,20 +339,34 @@ describe('end-to-end', () => {
         expect(
           containsFieldExecutionData(Object.values(report!.tracesPerQuery)[0]!),
         ).toBe(true);
-        const fieldStat = (
+        const statsWithContext = (
           Object.values(report!.tracesPerQuery)[0]!
             .statsWithContext as ContextualizedStats[]
-        )[0].perTypeStat['Query'].perFieldStat!['aBoolean'];
+        )[0];
+        expect(
+          statsWithContext.queryLatencyStats
+            ?.requestsWithoutFieldInstrumentation,
+        ).toBe(0);
+        const fieldStat =
+          statsWithContext.perTypeStat['Query'].perFieldStat!['aBoolean'];
         expect(fieldStat.observedExecutionCount).toBe(1);
         expect(fieldStat.estimatedExecutionCount).toBe(
-          Math.floor(1 / samplingFactor),
+          Math.floor(1 / fieldLevelInstrumentation),
         );
+        // There should be exactly one latency bucket used, and its size should
+        // be scaled in the same way as estimatedExecutionCount. (The
+        // representation of duration histograms uses 0 and negative numbers for
+        // empty buckets; we're not going to stress about making sure the
+        // correct bucket is the one that's full.)
+        expect(
+          (fieldStat.latencyCount as number[]).filter((n) => n > 0),
+        ).toStrictEqual([Math.floor(1 / fieldLevelInstrumentation)]);
       });
       it('RNG returns a large number', async () => {
-        mockRandom(samplingFactor * 1.01);
+        mockRandom(fieldLevelInstrumentation * 1.01);
         const { report, context } = await runTest({
           pluginOptions: {
-            fieldLevelInstrumentation: samplingFactor,
+            fieldLevelInstrumentation,
           },
           schemaShouldBeInstrumented: false,
         });

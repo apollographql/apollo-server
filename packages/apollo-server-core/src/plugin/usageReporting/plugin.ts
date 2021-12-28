@@ -77,7 +77,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
     typeof fieldLevelInstrumentationOption === 'number'
       ? async () =>
           Math.random() < fieldLevelInstrumentationOption
-            ? fieldLevelInstrumentationOption
+            ? 1 / fieldLevelInstrumentationOption
             : 0
       : fieldLevelInstrumentationOption
       ? fieldLevelInstrumentationOption
@@ -529,22 +529,11 @@ export function ApolloServerPluginUsageReporting<TContext>(
               // were executed and what their performance was, at the tradeoff of
               // some overhead for tracking the trace (and transmitting it between
               // subgraph and gateway).
-              const fieldLevelInstrumentationResult =
-                await fieldLevelInstrumentation(requestContext);
-              if (
-                typeof fieldLevelInstrumentationResult === 'number' &&
-                fieldLevelInstrumentationResult > 0
-              ) {
-                treeBuilder.trace.fieldExecutionScaleFactor =
-                  1 / fieldLevelInstrumentationResult;
-              } else if (fieldLevelInstrumentationResult) {
-                treeBuilder.trace.fieldExecutionScaleFactor = 1;
-              } else {
-                treeBuilder.trace.fieldExecutionScaleFactor = 0;
-              }
+              const rawWeight = await fieldLevelInstrumentation(requestContext);
+              treeBuilder.trace.fieldExecutionWeight =
+                typeof rawWeight === 'number' ? rawWeight : rawWeight ? 1 : 0;
 
-              metrics.captureTraces =
-                !!treeBuilder.trace.fieldExecutionScaleFactor;
+              metrics.captureTraces = !!treeBuilder.trace.fieldExecutionWeight;
             }
           },
           async executionDidStart() {
