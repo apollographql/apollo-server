@@ -121,6 +121,8 @@ If you return false (or 0), this operation *will* still contribute to most featu
 
 If you return false (or 0), this operation will *not* contribute to the "field executions" statistic on the Fields page or to the execution timing hints optionally displayed in Studio Explorer or in vscode-graphql. Additionally, this operation will not produce a trace that can be viewed on the Traces section of the Operations page.
 
+(For more information about the difference between the "referencing operations" and "field executions" statistics, see [the Studio Fields page documentation](https://apollographql.com/docs/studio/metrics/field-usage/).)
+
 Returning false (or 0) for some or all operations can improve your server's performance, as the overhead of calculating complete traces is not always negligible. This is especially the case if this server is an Apollo Gateway, as captured traces are transmitted from the subgraph to the Gateway in-band inside the actual GraphQL response.
 
 Returning a positive number means that Apollo Server will track each field execution and send Apollo Studio statistics on how many times each field was executed and what the per-field performance was. Apollo Server sends both a precise observed execution count and an estimated execution count. The former is calculated by counting each field execution as 1, and the latter is calculated by counting each field execution as the number returned from this hook, which can be thought of as a weight.
