@@ -89,7 +89,7 @@ export type DocumentStore = KeyValueCache<DocumentNode>;
 // fields that are not specific to a single integration
 export interface Config<ContextFunctionParams = any> extends BaseConfig {
   modules?: GraphQLSchemaModule[];
-  typeDefs?: DocumentNode | Array<DocumentNode> | string | Array<string>;
+  typeDefs?: DocumentNode | string | Array<DocumentNode | string>;
   parseOptions?: ParseOptions;
   resolvers?: IResolvers | Array<IResolvers>;
   schema?: GraphQLSchema;
