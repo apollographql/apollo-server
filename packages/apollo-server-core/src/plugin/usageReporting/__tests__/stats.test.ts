@@ -16,6 +16,7 @@ const baseTrace = new Trace({
   root: null,
   signature: 'signature',
   details: null,
+  fieldExecutionWeight: 1,
 });
 // TODO: add a federated trace
 describe('Check query latency stats when', () => {

@@ -344,32 +344,44 @@ export async function processGraphQLRequest<TContext>(
 
     const executionDispatcher = new Dispatcher(executionListeners);
 
-    // Create a callback that will trigger the execution dispatcher's
-    // `willResolveField` hook.  We will attach this to the context on a
-    // symbol so it can be invoked by our `wrapField` method during execution.
-    const invokeWillResolveField: GraphQLRequestExecutionListener<TContext>['willResolveField'] =
-      (...args) =>
-        executionDispatcher.invokeSyncDidStartHook('willResolveField', ...args);
+    if (executionDispatcher.hasHook('willResolveField')) {
+      // Create a callback that will trigger the execution dispatcher's
+      // `willResolveField` hook.  We will attach this to the context on a
+      // symbol so it can be invoked by our `wrapField` method during execution.
+      const invokeWillResolveField: GraphQLRequestExecutionListener<TContext>['willResolveField'] =
+        (...args) =>
+          executionDispatcher.invokeSyncDidStartHook(
+            'willResolveField',
+            ...args,
+          );
 
-    Object.defineProperty(
-      requestContext.context,
-      symbolExecutionDispatcherWillResolveField,
-      { value: invokeWillResolveField },
-    );
+      Object.defineProperty(
+        requestContext.context,
+        symbolExecutionDispatcherWillResolveField,
+        { value: invokeWillResolveField },
+      );
 
-    // If the user has provided a custom field resolver, we will attach
-    // it to the context so we can still invoke it after we've wrapped the
-    // fields with `wrapField` within `enablePluginsForSchemaResolvers` of
-    // the `schemaInstrumentation` module.
-    if (config.fieldResolver) {
-      Object.defineProperty(requestContext.context, symbolUserFieldResolver, {
-        value: config.fieldResolver,
-      });
+      // If the user has provided a custom field resolver, we will attach
+      // it to the context so we can still invoke it after we've wrapped the
+      // fields with `wrapField` within `enablePluginsForSchemaResolvers` of
+      // the `schemaInstrumentation` module.
+      if (config.fieldResolver) {
+        Object.defineProperty(requestContext.context, symbolUserFieldResolver, {
+          value: config.fieldResolver,
+        });
+      }
+
+      // If the schema is already enabled, this is a no-op.  Otherwise, the
+      // schema will be augmented so it is able to invoke willResolveField. Note
+      // that if we never see a plugin with willResolveField then we will never
+      // need to instrument the schema, which might be a small performance gain.
+      // (For example, this can happen if you pass `fieldLevelInstrumentation:
+      // () => false` to the usage reporting plugin and disable the cache
+      // control plugin. We can consider changing the cache control plugin to
+      // have a "static cache control only" mode that doesn't use
+      // willResolveField too if this proves to be helpful in practice.)
+      enablePluginsForSchemaResolvers(config.schema);
     }
-
-    // If the schema is already enabled, this is a no-op.  Otherwise, the
-    // schema will be augmented so it is able to invoke willResolveField.
-    enablePluginsForSchemaResolvers(config.schema);
 
     try {
       const result = await execute(

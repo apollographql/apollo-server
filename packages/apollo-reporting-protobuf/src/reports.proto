@@ -202,13 +202,8 @@ message Trace {
 
   Details details = 6;
 
-  // Note: engineproxy always sets client_name, client_version, and client_address to "none".
-  // apollo-engine-reporting allows for them to be set by the user.
   string client_name = 7;
   string client_version = 8;
-  string client_address = 9;
-  // string client_reference_id = 23;
-  reserved 23;
 
   HTTP http = 10;
 
@@ -237,11 +232,21 @@ message Trace {
   // Was this operation forbidden due to lack of safelisting?
   bool forbidden_operation = 25;
 
+  // Some servers don't do field-level instrumentation for every request and assign
+  // each request a "weight" for each request that they do instrument. When this
+  // trace is aggregated into field usage stats, it should count as this value
+  // towards the estimated_execution_count rather than just 1. This value should
+  // typically be at least 1.
+  //
+  // 0 is treated as 1 for backwards compatibility.
+  double field_execution_weight = 31;
+
 
 
   // removed: Node parse = 12; Node validate = 13;
   //          Id128 server_id = 1; Id128 client_id = 2;
-  reserved 12, 13, 1, 2;
+	//          String client_reference_id = 23; String client_address = 9;
+  reserved 1, 2, 9, 12, 13, 23;
 }
 
 // The `service` value embedded within the header key is not guaranteed to contain an actual service,
@@ -293,6 +298,10 @@ message QueryLatencyStats {
   repeated sint64 private_cache_ttl_count = 16 [(js_use_toArray)=true];
   uint64 registered_operation_count = 11;
   uint64 forbidden_operation_count = 12;
+  // The number of requests that were executed without field-level
+  // instrumentation (and thus do not contribute to `observed_execution_count`
+  // fields on this message's cousin-twice-removed FieldStats).
+  uint64 requests_without_field_instrumentation = 17;
   // 1, 6, 9, and 10 were old int64 histograms
   reserved 1, 6, 9, 10;
 }
@@ -316,10 +325,35 @@ message ContextualizedTypeStats {
 
 message FieldStat {
   string return_type = 3; // required; eg "String!" for User.email:String!
+  // Number of errors whose path is this field. Note that we assume that error
+  // tracking does *not* require field-level instrumentation so this *will*
+  // include errors from requests that don't contribute to the
+  // `observed_execution_count` field (and does not need to be scaled by
+  // field_execution_weight).
   uint64 errors_count = 4;
-  uint64 count = 5;
+  // Number of times that the resolver for this field is directly observed being
+  // executed.
+  uint64 observed_execution_count = 5;
+  // Same as `count` but potentially scaled upwards if the server was only
+  // performing field-level instrumentation on a sampling of operations.  For
+  // example, if the server randomly instruments 1% of requests for this
+  // operation, this number will be 100 times greater than
+  // `observed_execution_count`. (When aggregating a Trace into FieldStats,
+  // this number goes up by the trace's `field_execution_weight` for each
+  // observed field execution, while `observed_execution_count` above goes
+  // up by 1.)
+  uint64 estimated_execution_count = 10;
+  // Number of times the resolver for this field is executed that resulted in
+  // at least one error. "Request" is a misnomer here as this corresponds to
+  // resolver calls, not overall operations. Like `errors_count` above, this
+  // includes all requests rather than just requests with field-level
+  // instrumentation.
   uint64 requests_with_errors_count = 6;
-  repeated sint64 latency_count = 9 [(js_use_toArray)=true]; // Duration histogram; see docs/histograms.md
+  // Duration histogram for the latency of this field. Note that it is scaled in
+  // the same way as estimated_execution_count so its "total count" might be
+  // greater than `observed_execution_count` and may not exactly equal
+  // `estimated_execution_count` due to rounding.
+  repeated sint64 latency_count = 9 [(js_use_toArray)=true];
   reserved 1, 2, 7, 8;
 }
 
@@ -329,16 +363,14 @@ message TypeStat {
   reserved 1, 2;
 }
 
-
-message Field {
-  string name = 2; // required; eg "email" for User.email:String!
-  string return_type = 3; // required; eg "String!" for User.email:String!
+message ReferencedFieldsForType {
+  // Contains (eg) "email" for User.email:String!
+  repeated string field_names = 1;
+  // True if this type is an interface.
+  bool is_interface = 2;
 }
 
-message Type {
-  string name = 1; // required; eg "User" for User.email:String!
-  repeated Field field = 2;
-}
+
 
 // This is the top-level message used by the new traces ingress. This
 // is designed for the apollo-engine-reporting TypeScript agent and will
@@ -371,15 +403,24 @@ message Report {
 message ContextualizedStats {
   StatsContext context = 1;
   QueryLatencyStats query_latency_stats = 2;
-  // Key is type name.
+  // Key is type name. This structure provides data for the count and latency of individual
+  // field executions and thus only reflects operations for which field-level tracing occurred.
   map<string, TypeStat> per_type_stat = 3;
 
 }
 
-// A sequence of traces and stats. An individual trace should either be counted as a stat or trace
+// A sequence of traces and stats. An individual operation should either be described as a trace
+// or as part of stats, but not both.
 message TracesAndStats {
   repeated Trace trace = 1 [(js_preEncoded)=true];
   repeated ContextualizedStats stats_with_context = 2 [(js_use_toArray)=true];
+  // This describes the fields referenced in the operation. Note that this may
+  // include fields that don't show up in FieldStats (due to being interface fields,
+  // being nested under null fields or empty lists or non-matching fragments or
+  // `@include` or `@skip`, etc). It also may be missing fields that show up in FieldStats
+  // (as FieldStats will include the concrete object type for fields referenced
+  // via an interface type).
+  map<string, ReferencedFieldsForType> referenced_fields_by_type = 4;
   // This field is used to validate that the algorithm used to construct `stats_with_context`
   // matches similar algorithms in Apollo's servers. It is otherwise ignored and should not
   // be included in reports.
