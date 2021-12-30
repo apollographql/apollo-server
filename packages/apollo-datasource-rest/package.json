@@ -1,6 +1,6 @@
 {
   "name": "apollo-datasource-rest",
-  "version": "3.5.0-alpha.1",
+  "version": "3.5.0",
   "author": "Apollo <packages@apollographql.com>",
   "license": "MIT",
   "repository": {
