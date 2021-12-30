@@ -111,11 +111,17 @@ The only properties of the reported error you can modify are its `message` and i
 </td>
 <td>
 
-This option enables you to configure whether Apollo Server calculates detailed per-field statistics for each operation. It is used only for operations that parse and validate properly. It is _not_ used if you provide an [`includeRequest`](#includerequest) hook that returns `false`.
+This option enables you to configure whether Apollo Server calculates detailed per-field statistics for each operation. It is used only for operations that reach execution without encountering an error (such as during parsing, validation, or resolving the operation name). It is _not_ used if you provide an [`includeRequest`](#includerequest) hook that returns `false`.
 
-This option can be either a number or an an async function.
+You can provide either a number or an an async function.
 
 **If you provide a number**, that number must be between `0` and `1`, inclusive. This number specifies the probability that Apollo Server calculates per-field statistics for each incoming operation. For example, if you pass `0.01`, then Apollo Server calculates statistics for approximately 1% of operations. When Apollo Server reports these statistics to Apollo Studio, it also provides an "estimation multiplier" of each field's actual number of executions (for example, with a probability of `0.01`, the estimation multiplier is `100`).
+
+Providing a number `x` is equivalent to passing this function:
+
+`async () => Math.random() < x ? 1/x : 0`
+
+For example, if you pass `0.01`, then 99% of the time this function returns `0`, and 1% of the time it returns `100`. So 99% of the time, Apollo Server _does not_ track field executions. The other 1% of the time, it _does_ track field executions and sends them to Apollo Studio, both as an exact observed count _and_ as an "estimated" count that's 100 times higher.
 
 **If you pass a function**, the function is called once for each operation, and it's passed a corresponding `GraphQLRequestContext` object. The function can return either a boolean or a number. Returning `false` is equivalent to returning `0`, and returning `true` is equivalent to returning `1`.
 
@@ -137,9 +143,11 @@ Returning `false` (or `0`) for some or all operations can improve your server's 
 * The _observed_ execution count is exactly how many times each field was resolved in the associated operation.
 * The _estimated total_ execution count is the _observed_ execution count, _multiplied by the number returned by this function_. You can think of this returned number as an "estimation multiplier".
 
-The number you return from the function should be approximately the reciprocal of the probability that the function returns a non-zero number. For example, if the function returns `0` with a probability of `0.1`, then it should return `10` the rest of the time. However, you can craft a more sophisticated function, such as one that uses a higher probability for rarer operations and a lower probability for more common operations.
+To determine the "estimation multiplier" that the function should return, take the reciprocal of the frequency with which the function returns a non-zero number for the associated operation.
 
-(Note that returning true here does *not* mean that the data derived from field-level instrumentation must be transmitted to Apollo Studio's servers in the form of a trace. The data can still be aggregated locally to statistics. Either way, this operation contributes to the "field executions" statistic in Studio, along with timing hints.)
+For example, if the function returns a non-zero number one out of every ten times for a particular operation, then the number it returns should be `10`. Your function can use different logic for different operations, such as to more frequently report rare operations than common operations.
+
+Note that returning `true` here does *not* mean that the data derived from field-level instrumentation must be transmitted to Apollo Studio's servers in the form of a trace. The data can still be aggregated locally to statistics. Either way, this operation contributes to the "field executions" statistic in Studio, along with timing hints.
 
 The default value is a function that always returns `true`.
 
