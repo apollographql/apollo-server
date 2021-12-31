@@ -7,6 +7,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
+## v3.6.1
+
+- Correctly remove dependency on `apollo-graphql` as intended in v3.6.0. [Issue #5981](https://github.com/apollographql/apollo-server/issues/5981) [PR #5981](https://github.com/apollographql/apollo-server/pull/5981)
+
 ## v3.6.0
 
 - `apollo-server-core`: Studio usage reporting now reports "referenced operations" for fields in addition to "field executions", which can be seen on the Studio Fields page. This new statistic provides visibility into uses of fields that are not executed. It is also more efficient to generate and (for Apollo Gateways) does not require subgraphs to support federated tracing. Additionally, the new `fieldLevelInstrumentation` option to `ApolloServerPluginUsageReporting` allows you to disable field-level tracing on a per-operation basis, and to report weights for operations to allow for estimates of the field execution count even when not all operations are instrumented. Note that the semantics of the `requestContext.metrics.captureTraces` field have changed. See the [Studio Fields page docs](https://www.apollographql.com/docs/studio/metrics/field-usage/) and the [`fieldLevelInstrumentation` docs](https://www.apollographql.com/docs/apollo-server/api/plugin/usage-reporting/#fieldlevelinstrumentation) for more details. [Issue #5708](https://github.com/apollographql/apollo-server/issues/5708) [PR #5956](https://github.com/apollographql/apollo-server/pull/5956) [PR #5963](https://github.com/apollographql/apollo-server/pull/5963)
