@@ -1,7 +1,6 @@
 import os from 'os';
 import { gzip } from 'zlib';
 import retry from 'async-retry';
-import { defaultUsageReportingSignature } from 'apollo-graphql';
 import { Report, ReportHeader, Trace } from 'apollo-reporting-protobuf';
 import { Response, fetch, Headers } from 'apollo-server-env';
 import type {
@@ -20,6 +19,7 @@ import {
   OperationDerivedData,
   operationDerivedDataCacheKey,
 } from './operationDerivedDataCache';
+import { defaultUsageReportingSignature } from './defaultUsageReportingSignature';
 import type {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
