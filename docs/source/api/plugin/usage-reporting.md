@@ -4,15 +4,15 @@ sidebar_title: Usage reporting
 api_reference: true
 ---
 
-Apollo Server has a built-in usage reporting plugin that gathers data on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing this usage data to [Apollo Studio](https://www.apollographql.com/docs/studio/), as described in [Metrics and logging](../../monitoring/metrics/).
+Apollo Server's built-in usage reporting plugin gathers data on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing this usage data to [Apollo Studio](https://www.apollographql.com/docs/studio/), as described in [Metrics and logging](../../monitoring/metrics/).
 
 ## Default installation
 
-Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](https://www.apollographql.com/docs/apollo-server/monitoring/metrics/#connecting-to-apollo-studio) (usually by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables). No other action is required.
+Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](/monitoring/metrics/#connecting-to-apollo-studio). You usually do this by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables. No other action is required.
 
 If you don't provide an API key and graph ref, this plugin is not installed.
 
-If you provide an API key but do not provide a graph ref, a warning is logged; you can [disable the plugin](#disabling-the-plugin) to hide the warning.
+If you provide an API key but _don't_ provide a graph ref, a warning is logged. You can [disable the plugin](#disabling-the-plugin) to hide the warning.
 
 ## Custom installation
 
@@ -111,27 +111,45 @@ The only properties of the reported error you can modify are its `message` and i
 </td>
 <td>
 
-This option allows you to choose if Apollo Server should calculate detailed per-field statistics for a particular request. It is only called for executable operations: operations which parse and validate properly and which do not have an unknown operation name. It is not called if an [`includeRequest`](#includerequest) hook is provided and returns false.
+This option enables you to configure whether Apollo Server calculates detailed per-field statistics for each operation. It is used only for operations that reach execution without encountering an error (such as during parsing, validation, or resolving the operation name). It is _not_ used if you provide an [`includeRequest`](#includerequest) hook that returns `false`.
 
-You can either pass an async function or a number. The function receives a `GraphQLRequestContext`. (The effect of passing a number is described later.) Your function can return a boolean or a number; returning false is equivalent to returning 0 and returning true is equivalent to returning 1.
+You can provide either a number or an an async function.
 
-Returning false (or 0) means that Apollo Server will only pay attention to overall properties of the operation, like what GraphQL operation is executing and how long the entire operation takes to execute, and not anything about field-by-field execution.
+**If you provide a number**, that number must be between `0` and `1`, inclusive. This number specifies the probability that Apollo Server calculates per-field statistics for each incoming operation. For example, if you pass `0.01`, then Apollo Server calculates statistics for approximately 1% of operations. When Apollo Server reports these statistics to Apollo Studio, it also provides an "estimation multiplier" of each field's actual number of executions (for example, with a probability of `0.01`, the estimation multiplier is `100`).
 
-If you return false (or 0), this operation *will* still contribute to most features of Studio, such as schema checks, the Operations page, and the "referencing operations" statistic on the Fields page, etc.
+Providing a number `x` is equivalent to passing this function:
 
-If you return false (or 0), this operation will *not* contribute to the "field executions" statistic on the Fields page or to the execution timing hints optionally displayed in Studio Explorer or in vscode-graphql. Additionally, this operation will not produce a trace that can be viewed on the Traces section of the Operations page.
+`async () => Math.random() < x ? 1/x : 0`
+
+For example, if you pass `0.01`, then 99% of the time this function returns `0`, and 1% of the time it returns `100`. So 99% of the time, Apollo Server _does not_ track field executions. The other 1% of the time, it _does_ track field executions and sends them to Apollo Studio, both as an exact observed count _and_ as an "estimated" count that's 100 times higher.
+
+**If you pass a function**, the function is called once for each operation, and it's passed a corresponding `GraphQLRequestContext` object. The function can return either a boolean or a number. Returning `false` is equivalent to returning `0`, and returning `true` is equivalent to returning `1`.
+
+**If the function returns `false` (or `0`):**
+
+* Apollo Server _doesn't_ calculate per-field statistics for the associated operation.
+* The operation _doesn't_ contribute to the "field executions" statistic on the Fields page in Studio, or to the execution timing hints displayed in the Explorer or in VS Code.
+* The operation _doesn't_ produce a trace that can be viewed in the Traces section of the Operations page in Studio.
+* The operation _does_ still contribute to most features of Studio, such as schema checks, the Operations page, and the "referencing operations" statistic on the Fields page.
 
 (For more information about the difference between the "referencing operations" and "field executions" statistics, see [the Studio Fields page documentation](https://apollographql.com/docs/studio/metrics/field-usage/).)
 
-Returning false (or 0) for some or all operations can improve your server's performance, as the overhead of calculating complete traces is not always negligible. This is especially the case if this server is an Apollo Gateway, as captured traces are transmitted from the subgraph to the Gateway in-band inside the actual GraphQL response.
+Returning `false` (or `0`) for some or all operations can improve your server's performance, because calculating complete traces can introduce significant overhead. This is especially true for a federated graph, because traces are transmitted from the subgraph to the Gateway in-band inside the actual GraphQL response.
 
-Returning a positive number means that Apollo Server will track each field execution and send Apollo Studio statistics on how many times each field was executed and what the per-field performance was. Apollo Server sends both a precise observed execution count and an estimated execution count. The former is calculated by counting each field execution as 1, and the latter is calculated by counting each field execution as the number returned from this hook, which can be thought of as a weight.
+**If the function returns a positive number:**
 
-Passing a number `x` (which should be between 0 and 1 inclusive) for `fieldLevelInstrumentation` is equivalent to passing the function `async () => Math.random() < x ? 1/x : 0`.  For example, if you pass 0.01, then 99% of the time this function will return 0, and 1% of the time this function will return 100. So 99% of the time Apollo Server will not track field executions, and 1% of the time Apollo Server will track field executions and send them to Apollo Studio both as an exact observed count and as an "estimated" count which is 100 times higher.  Generally, the weights you return should be roughly the reciprocal of the probability that the function returns non-zero; however, you're welcome to craft a more sophisticated function, such as one that uses a higher probability for rarer operations and a lower probability for more common operations.
+* Apollo Server _does_ calculate per-field statistics for the associated operation, and it sends those statistics to Apollo Studio.
+* Apollo Server sends Studio both an _observed_ execution count and an _estimated total_ execution count for each field.
+* The _observed_ execution count is exactly how many times each field was resolved in the associated operation.
+* The _estimated total_ execution count is the _observed_ execution count, _multiplied by the number returned by this function_. You can think of this returned number as an "estimation multiplier".
 
-(Note that returning true here does *not* mean that the data derived from field-level instrumentation must be transmitted to Apollo Studio's servers in the form of a trace; it may still be aggregated locally to statistics. But either way this operation will contribute to the "field executions" statistic and timing hints.)
+To determine the "estimation multiplier" that the function should return, take the reciprocal of the frequency with which the function returns a non-zero number for the associated operation.
 
-The default `fieldLevelInstrumentation` is a function that always returns true.
+For example, if the function returns a non-zero number one out of every ten times for a particular operation, then the number it returns should be `10`. Your function can use different logic for different operations, such as to more frequently report rare operations than common operations.
+
+Note that returning `true` here does *not* mean that the data derived from field-level instrumentation must be transmitted to Apollo Studio's servers in the form of a trace. The data can still be aggregated locally to statistics. Either way, this operation contributes to the "field executions" statistic in Studio, along with timing hints.
+
+The default value is a function that always returns `true`.
 
 </td>
 </tr>
@@ -147,7 +165,7 @@ The default `fieldLevelInstrumentation` is a function that always returns true.
 
 Specify this asynchronous function to configure which requests are included in usage reports sent to Apollo Studio. For example, you can omit requests that execute a particular operation or requests that include a particular HTTP header.
 
- Note that returning false here means that the operation will be completely ignored by all Apollo Studio features. If you merely want to improve performance by skipping the field-level execution trace, set the [`fieldLevelInstrumentation`](#fieldlevelinstrumentation) option instead of this one.
+ Note that returning `false` here means that the operation is completely ignored by all Apollo Studio features. If you want to improve performance by skipping the field-level execution trace, set the [`fieldLevelInstrumentation`](#fieldlevelinstrumentation) option instead of this one.
 
 This function is called for each received request. It takes a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L115-L150) object and must return a `Promise<Boolean>` that indicates whether to include the request. It's called either after the operation is successfully resolved (via [the `didResolveOperation` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)), or when sending the final error response if the operation was not successfully resolved (via [the `willSendResponse` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#willsendresponse)).
 
