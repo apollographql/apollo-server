@@ -3,22 +3,17 @@ title: GraphQL Playground
 description: Visually explore Apollo Server
 ---
 
-import {
-  ExpansionPanel,
-} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
-import { Button } from '@apollo/space-kit/Button';
-import { Link } from 'gatsby';
-import { colors } from 'gatsby-theme-apollo-core';
-
 <ExpansionPanel title="📣 The Apollo Studio Explorer now supports local development">
 
 **Apollo Sandbox** is a special instance of the Apollo Studio Explorer that you can use for local development without an Apollo account.
 
 <p>
   <Button
-    size="large"
-    color={colors.primary}
-    as={<Link to="https://studio.apollographql.com/sandbox/" target="_blank" />}
+    size="lg"
+    colorScheme="indigo"
+    as="lg"
+    to="https://studio.apollographql.com/sandbox/"
+    target="_blank"
   >
     Launch Sandbox
   </Button>

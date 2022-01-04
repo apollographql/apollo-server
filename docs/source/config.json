@@ -1,0 +1,15 @@
+{
+  "title": "Apollo Server",
+  "version": "v2",
+  "sidebar": {
+    "Introduction": "/",
+    "Get started": "/getting-started",
+    "Choosing which package to use": "/integrations/middleware",
+    "Defining a Schema": {
+      "Schema basics": "/schema/schema",
+      "nested": {
+        "should work": "/schema/advanced"
+      }
+    }
+  }
+}
