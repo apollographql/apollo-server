@@ -7,6 +7,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
+## vNEXT
+
+- `apollo-server-fastify`: Drop dependency on `fast-json-stringify`. [PR #5988](https://github.com/apollographql/apollo-server/pull/5988)
+
 ## v3.6.1
 
 - Correctly remove dependency on `apollo-graphql` as intended in v3.6.0. [Issue #5981](https://github.com/apollographql/apollo-server/issues/5981) [PR #5981](https://github.com/apollographql/apollo-server/pull/5981)

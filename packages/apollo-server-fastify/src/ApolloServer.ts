@@ -9,7 +9,6 @@ import {
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import accepts from 'fastify-accepts';
 import fastifyCors from 'fastify-cors';
-import fastJson from 'fast-json-stringify';
 
 export interface ServerRegistration {
   path?: string;
@@ -24,15 +23,6 @@ export interface FastifyContext {
 }
 
 export type ApolloServerFastifyConfig = Config<FastifyContext>;
-
-const stringifyHealthCheck = fastJson({
-  type: 'object',
-  properties: {
-    status: {
-      type: 'string',
-    },
-  },
-});
 
 export class ApolloServer<
   ContextFunctionParams = FastifyContext,
@@ -66,12 +56,12 @@ export class ApolloServer<
           if (onHealthCheck) {
             try {
               await onHealthCheck(request);
-              reply.send(stringifyHealthCheck({ status: 'pass' }));
+              reply.send('{"status":"pass"}');
             } catch (e) {
-              reply.status(503).send(stringifyHealthCheck({ status: 'fail' }));
+              reply.status(503).send('{"status":"fail"}');
             }
           } else {
-            reply.send(stringifyHealthCheck({ status: 'pass' }));
+            reply.send('{"status":"pass"}');
           }
         });
       }
