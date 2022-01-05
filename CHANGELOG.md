@@ -10,6 +10,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## vNEXT
 
 - `apollo-server-fastify`: Drop dependency on `fast-json-stringify`. [PR #5988](https://github.com/apollographql/apollo-server/pull/5988)
+- `apollo-server-azure-functions`: Update TypeScript types package `@azure/functions` from v1 to v3 and change it to a dev dependency. (We were advised to change it to a dev dependency [by the authors of the package](https://github.com/Azure/azure-functions-nodejs-worker/pull/467#issuecomment-967737890); if this turns out to be problematic we can revert this part of the change. They also do not believe this is a backwards-incompatible change despite the major version bump; this package does a major version bump when the underlying Azure Functions runtime has a major version bump.) [PR #5919](https://github.com/apollographql/apollo-server/pull/5919)
 
 ## v3.6.1
 
