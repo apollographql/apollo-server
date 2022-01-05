@@ -27,7 +27,8 @@ const createAzureFunction = async (options: CreateAppOptions = {}) => {
     // return 404 if path is /bogus-route to pass the test, azure doesn't have paths
     if (req.url!.includes('/bogus-route')) {
       res.statusCode = 404;
-      return res.end();
+      res.end();
+      return;
     }
 
     let body = '';
