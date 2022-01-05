@@ -247,7 +247,7 @@ class MoviesAPI extends RESTDataSource {
   }
 }
 ```
-> Note the use of (`encodeURIComponent`)[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent]. This is a standard JavaScript function that encodes special characters in a URI, preventing a possible injection attack vector.
+> Note the use of [`encodeURIComponent`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent). This is a standard JavaScript function that encodes special characters in a URI, preventing a possible injection attack vector.
 
 For a simple example, suppose our REST endpoint responded to the following URLs:
 * DELETE `/movies/:id`
