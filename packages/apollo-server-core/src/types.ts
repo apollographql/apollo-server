@@ -1,6 +1,6 @@
-import type { GraphQLSchema, DocumentNode, ParseOptions } from 'graphql';
+import type { GraphQLSchema, DocumentNode } from 'graphql';
 import type { IMocks } from '@graphql-tools/mock';
-import type { IResolvers } from '@graphql-tools/utils';
+import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type {
   ApolloConfig,
   ValueOrPromise,
@@ -89,9 +89,14 @@ export type DocumentStore = KeyValueCache<DocumentNode>;
 // fields that are not specific to a single integration
 export interface Config<ContextFunctionParams = any> extends BaseConfig {
   modules?: GraphQLSchemaModule[];
-  typeDefs?: DocumentNode | Array<DocumentNode> | string | Array<string>;
-  parseOptions?: ParseOptions;
-  resolvers?: IResolvers | Array<IResolvers>;
+
+  // These three options are always only passed directly through to
+  // makeExecutableSchema. (If you don't want to use makeExecutableSchema, pass
+  // `schema` instead.)
+  typeDefs?: IExecutableSchemaDefinition['typeDefs'];
+  resolvers?: IExecutableSchemaDefinition['resolvers'];
+  parseOptions?: IExecutableSchemaDefinition['parseOptions'];
+
   schema?: GraphQLSchema;
   context?: Context | ContextFunction<ContextFunctionParams>;
   introspection?: boolean;
