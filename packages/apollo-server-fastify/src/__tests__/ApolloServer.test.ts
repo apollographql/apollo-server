@@ -215,8 +215,8 @@ describe('apollo-server-fastify', () => {
       await apolloFetch({ query: '{hello}' });
     });
 
-    describe('healthchecks', () => {
-      it('creates a healthcheck endpoint', async () => {
+    describe('health checks', () => {
+      it('creates a health check endpoint', async () => {
         const { httpServer } = await createServer({
           typeDefs,
           resolvers,
@@ -227,7 +227,7 @@ describe('apollo-server-fastify', () => {
           .expect(200, { status: 'pass' });
       });
 
-      it('provides a callback for the healthcheck', async () => {
+      it('provides a callback for the health check', async () => {
         const { httpServer } = await createServer(
           {
             typeDefs,

@@ -266,7 +266,7 @@ it('using field both with interface and object should work', () => {
   `);
 });
 
-it('using field multiple times (same level or otherwise) de-dups', () => {
+it('using field multiple times (same level or otherwise) de-dupes', () => {
   expect(
     validateAndCalculate({
       document: gql`

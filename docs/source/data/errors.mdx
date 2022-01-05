@@ -3,6 +3,8 @@ title: Error handling
 description: Making errors actionable on the client and server
 ---
 
+<!-- cSpell:ignore typenam -->
+
 import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 Whenever Apollo Server encounters errors while processing a GraphQL operation, its response to the client includes an `errors` array that contains each error that occurred. Each error in the array has an `extensions` field that provides additional useful information, including an error `code` and (while in development mode) an `exception.stacktrace`.

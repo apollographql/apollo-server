@@ -1,0 +1,38 @@
+# Configuration for the cspell command-line tool and the Code Spell Checker
+# VSCode extension
+# (https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker).
+
+# Add a repo-specific dictionary. Any new real words can be added to
+# cspell-dict.txt, one per line.
+dictionaryDefinitions:
+  - name: workspace
+    path: './cspell-dict.txt'
+    description: Custom Workspace Dictionary
+    addWords: true
+    scope: workspace
+dictionaries:
+  - workspace
+
+# Ignore files that aren't check in to git as well as files that aren't written
+# by hand. Note that we do want to check, say, JSON files (as package.json
+# contains English text like package descriptions).
+useGitignore: true
+ignorePaths:
+  - '**/generated/**'
+  - '**/*.sketch'
+  - '**/*.svg'
+  - cspell.yaml
+
+ignoreRegExpList:
+  # GitHub Security Advisories
+  - GHSA-[-\w]+
+
+overrides:
+  # Ignore anything in a changelog file that looks like a GitHub username.
+  - filename: '**/CHANGELOG.md'
+    ignoreRegExpList:
+      - "@[-\\w]+"
+  # Ignore the targets of links in Markdown/MDX files.
+  - filename: '**/*.md*'
+    ignoreRegExpList:
+      - "\\]\\([^)]+\\)"

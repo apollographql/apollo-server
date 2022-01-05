@@ -156,8 +156,8 @@ describe('apollo-server-lambda', () => {
     await request(app).get('/lambda-test').expect(200, 'some body');
   });
 
-  describe('healthchecks', () => {
-    it('creates a healthcheck endpoint', async () => {
+  describe('health checks', () => {
+    it('creates a health check endpoint', async () => {
       const app = createLambda();
 
       const req = request(app).get('/.well-known/apollo/server-health');
@@ -171,7 +171,7 @@ describe('apollo-server-lambda', () => {
       });
     });
 
-    it('provides a callback for the healthcheck', async () => {
+    it('provides a callback for the health check', async () => {
       const app = createLambda({
         expressGetMiddlewareOptions: {
           onHealthCheck: async () => {
@@ -193,7 +193,7 @@ describe('apollo-server-lambda', () => {
       });
     });
 
-    it('returns a 503 if healthcheck fails', async () => {
+    it('returns a 503 if health check fails', async () => {
       const app = createLambda({
         expressGetMiddlewareOptions: {
           onHealthCheck: async () => {

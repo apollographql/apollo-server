@@ -187,7 +187,7 @@ Object.keys(schemes).forEach((schemeName) => {
         expect(closed).toBe(1);
         expect(gracefully).toBe(true);
 
-        expect(stopper['reqsPerSocket'].size).toBe(0);
+        expect(stopper['requestCountPerSocket'].size).toBe(0);
       });
     });
 
@@ -218,7 +218,7 @@ Object.keys(schemes).forEach((schemeName) => {
       expect(gracefully).toBe(false);
       // It takes a moment for the `finish` events to happen.
       await a.delay(20);
-      expect(stopper['reqsPerSocket'].size).toBe(0);
+      expect(stopper['requestCountPerSocket'].size).toBe(0);
     });
 
     it('with requests in-flight', async () => {

@@ -64,7 +64,7 @@ describe('apollo-server-micro', function () {
           'is provided',
         async function () {
           const { service, uri } = await createServer();
-          const apolloFetch = createApolloFetch({ uri: `${uri}/nopath` });
+          const apolloFetch = createApolloFetch({ uri: `${uri}/no-path` });
           let errorThrown = false;
           try {
             await apolloFetch({ query: '{hello}' });
@@ -103,7 +103,7 @@ describe('apollo-server-micro', function () {
     });
 
     describe('health checks', function () {
-      it('should create a healthcheck endpoint', async function () {
+      it('should create a health check endpoint', async function () {
         const { service, uri } = await createServer();
         const body = await rp(`${uri}/.well-known/apollo/server-health`);
         expect(body).toEqual(JSON.stringify({ status: 'pass' }));

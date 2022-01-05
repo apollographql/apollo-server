@@ -89,7 +89,7 @@ for observability purposes, but all operations will be permitted.`,
 
   // Options shouldn't be changed after the plugin has been initiated.
   // If this proves to be necessary in the future, we can relax this at that
-  // time depending on the usecase.
+  // time depending on the use case.
   Object.freeze(options);
 
   return (): ApolloServerPlugin => ({

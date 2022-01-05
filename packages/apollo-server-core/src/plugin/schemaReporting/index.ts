@@ -6,7 +6,7 @@ import type { fetch } from 'apollo-server-env';
 import { SchemaReporter } from './schemaReporter';
 import createSHA from '../../utils/createSHA';
 import { schemaIsFederated } from '../schemaIsFederated';
-import type { SchemaReport } from './operations';
+import type { SchemaReport } from './generated/operations';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**
@@ -132,7 +132,7 @@ export function ApolloServerPluginSchemaReporting(
         platform: process.env.APOLLO_SERVER_PLATFORM || 'local',
         runtimeVersion: `node ${process.version}`,
         // An identifier used to distinguish the version of the server code such as git or docker sha.
-        // Length must be <= 256 charecters
+        // Length must be <= 256 characters
         userVersion: process.env.APOLLO_SERVER_USER_VERSION,
         // "An identifier for the server instance. Length must be <= 256 characters.
         serverId:

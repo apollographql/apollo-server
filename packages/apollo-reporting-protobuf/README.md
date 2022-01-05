@@ -25,7 +25,7 @@ specifically for this package) based on the `reports.proto` file. The output is
 generated with the `generate` npm script.
 
 The root of the repository provides some `devDependencies` necessary to build
-these definitions qand the `prepare` npm script is invoked programmatically via
+these definitions and the `prepare` npm script is invoked programmatically via
 the monorepo tooling (e.g. Lerna) thanks to _this_ module's `postinstall`
 script.  Therefore, when making changes to this module, run scripts via `npx
 lerna run SCRIPTNAME` in the **root** of this monorepo in order to update the

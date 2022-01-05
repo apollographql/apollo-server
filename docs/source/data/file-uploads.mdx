@@ -157,7 +157,7 @@ const app = require('fastify')({
 
 const start = async () => {
   try {
-    // Handle all requests that have the `Content-Type` header set as mutlipart
+    // Handle all requests that have the `Content-Type` header set as multipart
     app.addContentTypeParser('multipart', (request, payload, done) => {
       request.isMultipart = true;
       done();

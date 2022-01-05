@@ -197,8 +197,8 @@ describe('apollo-server-express', () => {
         .expect(500, /need to use `body-parser`/);
     });
 
-    describe('healthchecks', () => {
-      it('creates a healthcheck endpoint', async () => {
+    describe('health checks', () => {
+      it('creates a health check endpoint', async () => {
         const { httpServer } = await createServer({
           typeDefs,
           resolvers,
@@ -209,7 +209,7 @@ describe('apollo-server-express', () => {
           .expect(200, { status: 'pass' });
       });
 
-      it('provides a callback for the healthcheck', async () => {
+      it('provides a callback for the health check', async () => {
         const { httpServer } = await createServer(
           {
             typeDefs,
@@ -438,7 +438,7 @@ describe('apollo-server-express', () => {
         expect(result.data).toEqual({ cooks: books });
       });
 
-      it('contains no cacheControl Headers when uncachable', async () => {
+      it('contains no cacheControl Headers when uncacheable', async () => {
         const { url: uri } = await createServer({ typeDefs, resolvers });
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(

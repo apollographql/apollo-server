@@ -9,7 +9,7 @@ Health checks are often used by load balancers to determine if a server is avail
 
 The most natural way to determine if your GraphQL server is healthy is to run a GraphQL operation!
 
-Every GraphQL server supports the trival query that asks for the "type name" of the top-level query.  So you can run a health check as a GET against an URL like:
+Every GraphQL server supports the trivial query that asks for the "type name" of the top-level query.  So you can run a health check as a GET against an URL like:
 
 ```
 https://your.server/graphql?query=%7B__typename%7D

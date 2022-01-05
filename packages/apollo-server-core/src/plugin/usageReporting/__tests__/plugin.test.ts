@@ -157,7 +157,7 @@ describe('end-to-end', () => {
 
   [
     {
-      testName: 'fails parse for non-parseable gql',
+      testName: 'fails parse for non-parsable gql',
       op: { query: 'random text', schemaShouldBeInstrumented: false },
       statsReportKey: '## GraphQLParseFailure\n',
     },
@@ -441,7 +441,7 @@ describe('sendHeaders makeHTTPRequestHeaders helper', () => {
   });
 
   it('test sendHeaders.exceptNames', () => {
-    const except: String[] = ['name', 'notinheaders'];
+    const except: String[] = ['name', 'not-in-headers'];
     const http = makeTestHTTP();
     makeHTTPRequestHeaders(http, headers, { exceptNames: except });
     expect(http.requestHeaders).toEqual({});
@@ -449,7 +449,7 @@ describe('sendHeaders makeHTTPRequestHeaders helper', () => {
 
   it('test sendHeaders.onlyNames', () => {
     // headers that should never be sent (such as "authorization") should still be removed if in includeHeaders
-    const include: String[] = ['name', 'authorization', 'notinheaders'];
+    const include: String[] = ['name', 'authorization', 'not-in-headers'];
     const http = makeTestHTTP();
     makeHTTPRequestHeaders(http, headers, { onlyNames: include });
     expect(http.requestHeaders).toEqual(headersOutput);

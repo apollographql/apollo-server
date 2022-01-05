@@ -83,6 +83,13 @@ jobs:
       - common_node_steps
       - run: npm run prettier-check
 
+  Spell check:
+    docker:
+    - image: cimg/node:16.10.0
+    steps:
+      - common_node_steps
+      - run: npm run spell-check
+
   # We make CI fail if any file contains FIX and ME right next to each other.
   # This means that when working on a big PR, you can throw in notes that you
   # are forced to come back to before merging the PR.  Note that we don't block
@@ -137,6 +144,7 @@ workflows:
           <<: *common_non_publish_filters
       - "Check for FIXM\x45"
       - Prettier
+      - Spell check
       - oss/lerna_tarballs:
           name: Package tarballs
           <<: *common_non_publish_filters

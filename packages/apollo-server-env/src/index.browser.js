@@ -24,9 +24,9 @@ if (!global.process.version) {
 if (!global.process.hrtime) {
   // Adapted from https://github.com/kumavis/browser-process-hrtime
   global.process.hrtime = function hrtime(previousTimestamp) {
-    var clocktime = Date.now() * 1e-3;
-    var seconds = Math.floor(clocktime);
-    var nanoseconds = Math.floor((clocktime % 1) * 1e9);
+    var clockTime = Date.now() * 1e-3;
+    var seconds = Math.floor(clockTime);
+    var nanoseconds = Math.floor((clockTime % 1) * 1e9);
     if (previousTimestamp) {
       seconds = seconds - previousTimestamp[0];
       nanoseconds = nanoseconds - previousTimestamp[1];

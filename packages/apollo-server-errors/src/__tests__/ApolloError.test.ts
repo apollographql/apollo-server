@@ -72,7 +72,7 @@ describe('ApolloError', () => {
 });
 
 describe('ForbiddenError', () => {
-  it('supports abritrary data being passed', () => {
+  it('supports arbitrary data being passed', () => {
     const error = new ForbiddenError('My message', {
       arbitrary: 'user_data',
     });
@@ -85,7 +85,7 @@ describe('ForbiddenError', () => {
 });
 
 describe('AuthenticationError', () => {
-  it('supports abritrary data being passed', () => {
+  it('supports arbitrary data being passed', () => {
     const error = new AuthenticationError('My message', {
       arbitrary: 'user_data',
     });

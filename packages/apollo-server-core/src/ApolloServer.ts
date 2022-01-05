@@ -394,7 +394,7 @@ export class ApolloServerBase<
           this.plugins.map(async (plugin) => ({
             serverListener:
               plugin.serverWillStart && (await plugin.serverWillStart(service)),
-            installedImplicity:
+            installedImplicitly:
               isImplicitlyInstallablePlugin(plugin) &&
               plugin.__internal_installed_implicitly__,
           })),
@@ -404,7 +404,7 @@ export class ApolloServerBase<
           maybeTaggedServerListener,
         ): maybeTaggedServerListener is {
           serverListener: GraphQLServerListener;
-          installedImplicity: boolean;
+          installedImplicitly: boolean;
         } => typeof maybeTaggedServerListener.serverListener === 'object',
       );
 
@@ -464,7 +464,7 @@ export class ApolloServerBase<
       if (taggedServerListenersWithRenderLandingPage.length > 1) {
         taggedServerListenersWithRenderLandingPage =
           taggedServerListenersWithRenderLandingPage.filter(
-            (l) => !l.installedImplicity,
+            (l) => !l.installedImplicitly,
           );
       }
       if (taggedServerListenersWithRenderLandingPage.length > 1) {

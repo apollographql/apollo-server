@@ -191,7 +191,7 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * Whether to include the entire document in the trace if the operation
    * was a GraphQL parse or validation error (i.e. failed the GraphQL parse or
    * validation phases). This will be included as a separate field on the trace
-   * and the operation name and signature will always be reported with a cosntant
+   * and the operation name and signature will always be reported with a constant
    * identifier. Whether the operation was a parse failure or a validation
    * failure will be embedded within the stats report key itself.
    */

@@ -1,6 +1,6 @@
 schema: https://graphql.api.apollographql.com/api/graphql
 generates:
-  ./packages/apollo-server-core/src/plugin/schemaReporting/operations.d.ts:
+  ./packages/apollo-server-core/src/plugin/schemaReporting/generated/operations.d.ts:
     documents: packages/apollo-server-core/src/plugin/schemaReporting/schemaReporter.ts
     plugins:
     - typescript

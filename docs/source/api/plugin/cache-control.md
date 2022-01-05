@@ -84,7 +84,7 @@ By default, root fields and fields that return a composite type (object, interfa
 </td>
 <td>
 
-By default, the cache control plugin sets the `cache-control` HTTP response header to `max-age=MAXAGE, public` or `max-age=MAXAGE, private` if the request is cacheable. If you specify `caclculateHttpHeaders: false`, it will not set this header. The `requestContext.overallCachePolicy` field will still be calculated, and the [response cache plugin](../../performance/caching/#caching-with-responsecacheplugin-advanced) will still work.
+By default, the cache control plugin sets the `cache-control` HTTP response header to `max-age=MAXAGE, public` or `max-age=MAXAGE, private` if the request is cacheable. If you specify `calculateHttpHeaders: false`, it will not set this header. The `requestContext.overallCachePolicy` field will still be calculated, and the [response cache plugin](../../performance/caching/#caching-with-responsecacheplugin-advanced) will still work.
 
 </td>
 </tr>
