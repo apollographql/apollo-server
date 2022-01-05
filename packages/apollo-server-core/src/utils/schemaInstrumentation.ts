@@ -15,12 +15,12 @@ export const symbolExecutionDispatcherWillResolveField = Symbol(
   'apolloServerExecutionDispatcherWillResolveField',
 );
 export const symbolUserFieldResolver = Symbol('apolloServerUserFieldResolver');
-export const symbolPluginsEnabled = Symbol('apolloServerPluginsEnabled');
+const symbolPluginsEnabled = Symbol('apolloServerPluginsEnabled');
 
 export function enablePluginsForSchemaResolvers(
   schema: GraphQLSchema & { [symbolPluginsEnabled]?: boolean },
 ) {
-  if (schema[symbolPluginsEnabled]) {
+  if (pluginsEnabledForSchemaResolvers(schema)) {
     return schema;
   }
   Object.defineProperty(schema, symbolPluginsEnabled, {
@@ -30,6 +30,12 @@ export function enablePluginsForSchemaResolvers(
   forEachField(schema, wrapField);
 
   return schema;
+}
+
+export function pluginsEnabledForSchemaResolvers(
+  schema: GraphQLSchema & { [symbolPluginsEnabled]?: boolean },
+): boolean {
+  return !!schema[symbolPluginsEnabled];
 }
 
 function wrapField(field: GraphQLField<any, any>): void {

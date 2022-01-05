@@ -250,22 +250,24 @@ export default async function pluginTestHarness<TContext>({
 
   const executionDispatcher = new Dispatcher(executionListeners);
 
-  // Create a callback that will trigger the execution dispatcher's
-  // `willResolveField` hook.  We will attach this to the context on a
-  // symbol so it can be invoked by our `wrapField` method during execution.
-  const invokeWillResolveField: GraphQLRequestExecutionListener<TContext>['willResolveField'] =
-    (...args) =>
-      executionDispatcher.invokeSyncDidStartHook('willResolveField', ...args);
+  if (executionDispatcher.hasHook('willResolveField')) {
+    // Create a callback that will trigger the execution dispatcher's
+    // `willResolveField` hook.  We will attach this to the context on a
+    // symbol so it can be invoked by our `wrapField` method during execution.
+    const invokeWillResolveField: GraphQLRequestExecutionListener<TContext>['willResolveField'] =
+      (...args) =>
+        executionDispatcher.invokeSyncDidStartHook('willResolveField', ...args);
 
-  Object.defineProperty(
-    requestContext.context,
-    symbolExecutionDispatcherWillResolveField,
-    { value: invokeWillResolveField },
-  );
+    Object.defineProperty(
+      requestContext.context,
+      symbolExecutionDispatcherWillResolveField,
+      { value: invokeWillResolveField },
+    );
 
-  // If the schema is already enabled, this is a no-op.  Otherwise, the
-  // schema will be augmented so it is able to invoke willResolveField.
-  enablePluginsForSchemaResolvers(schema);
+    // If the schema is already enabled, this is a no-op.  Otherwise, the
+    // schema will be augmented so it is able to invoke willResolveField.
+    enablePluginsForSchemaResolvers(schema);
+  }
 
   try {
     // `response` is readonly, so we'll cast to `any` to assign to it.
