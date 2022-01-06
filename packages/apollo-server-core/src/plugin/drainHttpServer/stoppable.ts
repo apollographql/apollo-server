@@ -31,16 +31,16 @@ import https from 'https';
 import type { Socket } from 'net';
 
 export class Stopper {
-  private reqsPerSocket = new Map<Socket, number>();
+  private requestCountPerSocket = new Map<Socket, number>();
   private stopped = false;
 
   constructor(private server: http.Server | https.Server) {
-    // Keep a number in reqsPerSocket for each current connection.
+    // Keep a number in requestCountPerSocket for each current connection.
     server.on(
       server instanceof https.Server ? 'secureConnection' : 'connection',
       (socket: Socket) => {
-        this.reqsPerSocket.set(socket, 0);
-        socket.once('close', () => this.reqsPerSocket.delete(socket));
+        this.requestCountPerSocket.set(socket, 0);
+        socket.once('close', () => this.requestCountPerSocket.delete(socket));
       },
     );
 
@@ -48,13 +48,13 @@ export class Stopper {
     server.on(
       'request',
       (req: http.IncomingMessage, res: http.ServerResponse) => {
-        this.reqsPerSocket.set(
+        this.requestCountPerSocket.set(
           req.socket,
-          (this.reqsPerSocket.get(req.socket) ?? 0) + 1,
+          (this.requestCountPerSocket.get(req.socket) ?? 0) + 1,
         );
         res.once('finish', () => {
-          const pending = (this.reqsPerSocket.get(req.socket) ?? 0) - 1;
-          this.reqsPerSocket.set(req.socket, pending);
+          const pending = (this.requestCountPerSocket.get(req.socket) ?? 0) - 1;
+          this.requestCountPerSocket.set(req.socket, pending);
           // If we're in the process of stopping and it's gone idle, close the
           // socket.
           if (this.stopped && pending === 0) {
@@ -80,11 +80,11 @@ export class Stopper {
     if (stopGracePeriodMillis < Infinity) {
       timeout = setTimeout(() => {
         gracefully = false;
-        this.reqsPerSocket.forEach((_, socket) => socket.end());
+        this.requestCountPerSocket.forEach((_, socket) => socket.end());
         // (FYI, when importing from upstream, not sure why we need setImmediate
         // here.)
         setImmediate(() => {
-          this.reqsPerSocket.forEach((_, socket) => socket.destroy());
+          this.requestCountPerSocket.forEach((_, socket) => socket.destroy());
         });
       }, stopGracePeriodMillis);
     }
@@ -102,7 +102,7 @@ export class Stopper {
     );
 
     // Immediately close any idle sockets.
-    this.reqsPerSocket.forEach((requests, socket) => {
+    this.requestCountPerSocket.forEach((requests, socket) => {
       if (requests === 0) socket.end();
     });
 

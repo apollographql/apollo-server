@@ -73,7 +73,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## v3.1.2
 
-- `apollo-server-core`: Update versions of `@graphql-tools/schema` and `@graphql-tools/utils` from v7 to v8. While there is no change in behavior in these versions, a recently-released version of `@graphql-tools/mock` depends on them, and so without this change, you tpyically end up with two copies of them installed.
+- `apollo-server-core`: Update versions of `@graphql-tools/schema` and `@graphql-tools/utils` from v7 to v8. While there is no change in behavior in these versions, a recently-released version of `@graphql-tools/mock` depends on them, and so without this change, you typically end up with two copies of them installed.
 
 ## v3.1.1
 
@@ -363,7 +363,7 @@ Certain undersupported and underused Apollo Server features have been removed in
 ## v2.16.0
 
 - `apollo-server-fastify`: Pass Fastify's `request` and `reply` objects into the `context` function, which previously had been receiving nothing. [Issue #3156](https://github.com/apollographql/apollo-server/issues/3156) [PR #3895(https://github.com/apollographql/apollo-server/pull/3895)
-- `apollo-server-lamdbda`: Automatically decode payloads which are Base64-encoded when the `isBase64Encoded` boolean is present on Lambda `event` payloads. [PR #4311](https://github.com/apollographql/apollo-server/pull/4311)
+- `apollo-server-lambda`: Automatically decode payloads which are Base64-encoded when the `isBase64Encoded` boolean is present on Lambda `event` payloads. [PR #4311](https://github.com/apollographql/apollo-server/pull/4311)
 
 ## v2.15.1
 
@@ -811,7 +811,7 @@ Certain undersupported and underused Apollo Server features have been removed in
 ## v2.3.2
 
 - Switch from `json-stable-stringify` to `fast-json-stable-stringify`. [PR #2065](https://github.com/apollographql/apollo-server/pull/2065)
-- Fix cache hints of `maxAge: 0` to mean "uncachable". [#2197](https://github.com/apollographql/apollo-server/pull/2197)
+- Fix cache hints of `maxAge: 0` to mean "uncacheable". [#2197](https://github.com/apollographql/apollo-server/pull/2197)
 - Apply `defaultMaxAge` to scalar fields on the root object. [#2210](https://github.com/apollographql/apollo-server/pull/2210)
 - Don't write to the persisted query cache until execution will begin. [PR #2227](https://github.com/apollographql/apollo-server/pull/2227)
 
@@ -1024,7 +1024,7 @@ Data sources
 ## v2.0.0-beta.3
 
 - remove registerServer configuration from `apollo-server`'s listen ([#1090](https://github.com/apollographql/apollo-server/pull/1090))
-- move healthcheck into variants ([#1086](https://github.com/apollographql/apollo-server/pull/1086))
+- move health check into variants ([#1086](https://github.com/apollographql/apollo-server/pull/1086))
 - Add file uploads, **breaking** requires removing `scalar Upload` from the typeDefs ([#1071](https://github.com/apollographql/apollo-server/pull/1071))
 - Add reporting to Engine as apollo-engine-reporting ([#1105](https://github.com/apollographql/apollo-server/pull/1105))
 - Allow users to define extensions ([#1105](https://github.com/apollographql/apollo-server/pull/1105))
@@ -1049,7 +1049,7 @@ ListenOptions:
 - add hapi 16 next() invocation [PR #743](https://github.com/apollographql/apollo-server/pull/743)
 - Add skipValidation option [PR #839](https://github.com/apollographql/apollo-server/pull/839)
 - `apollo-server-module-graphiql`: adds an option to the constructor to disable url rewriting when editing a query [PR #1047](https://github.com/apollographql/apollo-server/pull/1047)
-- Upgrade `subscription-transport-ws` to 0.9.9 for Graphiql
+- Upgrade `subscription-transport-ws` to 0.9.9 for GraphiQL
 
 ## v1.3.6
 
@@ -1060,7 +1060,7 @@ ListenOptions:
 - `apollo-server-adonis`: The `Content-type` of an operation response will now be correctly set to `application/json`. [PR #842](https://github.com/apollographql/apollo-server/pull/842) [PR #910](https://github.com/apollographql/apollo-server/pull/910)
 - `apollo-server-azure-functions`: Fix non-functional Azure Functions implementation and update examples in Azure Functions' `README.md`. [PR #753](https://github.com/apollographql/apollo-server/pull/753) [Issue #684](https://github.com/apollographql/apollo-server/issues/684)
 - Fix `TypeError` on GET requests with missing `query` parameter. [PR #964](https://github.com/apollographql/apollo-server/pull/964)
-- The typing on the context of `GraphQLServerOptions` now matches the equivilent type used by `graphql-tools`. [PR #919](https://github.com/apollographql/apollo-server/pull/919)
+- The typing on the context of `GraphQLServerOptions` now matches the equivalent type used by `graphql-tools`. [PR #919](https://github.com/apollographql/apollo-server/pull/919)
 - Middleware handlers now used named (rather than anonymous) functions to enable easier identification during debugging/profiling. [PR #827](https://github.com/apollographql/apollo-server/pull/827)
 - The `npm-check-updates` package has been removed as a "dev dependency" which was resulting in an _older_ version of `npm` being used during testing. [PR #959](https://github.com/apollographql/apollo-server/pull/959)
 - The typing on `HttpQueryRequest`'s `query` attribute now enforces that its object properties' keys be `String`s. [PR #834](https://github.com/apollographql/apollo-server/pull/834)
@@ -1185,7 +1185,7 @@ ListenOptions:
 
 ## v0.7.1
 
-- Fix graphiql fetcher to use endpointURL parameter instead of hardcoded URI.[#365](https://github.com/apollographql/graphql-server/issues/356)
+- Fix GraphiQL fetcher to use endpointURL parameter instead of hardcoded URI.[#365](https://github.com/apollographql/graphql-server/issues/356)
 
 ## v0.7.0
 
@@ -1255,7 +1255,7 @@ ListenOptions:
   [PR #127](https://github.com/apollostack/apollo-server/pull/127)
 - Add support for route options in Hapi integration. Issue #97. ([@nnance](https://github.com/nnance)) in
   [PR #127](https://github.com/apollostack/apollo-server/pull/127)
-- Camelcase Hapi. Issue #129. ([@nnance](https://github.com/nnance)) in
+- CamelCase Hapi. Issue #129. ([@nnance](https://github.com/nnance)) in
   [PR #132](https://github.com/apollostack/apollo-server/pull/132)
 - Fix error handling when parsing variables parameter. Issue #130. ([@nnance](https://github.com/nnance)) in
   [PR #131](https://github.com/apollostack/apollo-server/pull/131)

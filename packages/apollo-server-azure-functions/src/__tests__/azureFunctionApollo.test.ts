@@ -197,8 +197,8 @@ describe('integration:AzureFunctions', () => {
     handler(context as any, request as any);
   });
 
-  describe('healthchecks', () => {
-    it('creates a healthcheck endpoint', async () => {
+  describe('health checks', () => {
+    it('creates a health check endpoint', async () => {
       const server = new ApolloServer({ schema: Schema });
       const handler = server.createHandler({});
 
@@ -220,7 +220,7 @@ describe('integration:AzureFunctions', () => {
       expect(result.headers['Content-Type']).toEqual('application/health+json');
     });
 
-    it('provides a callback for the healthcheck', async () => {
+    it('provides a callback for the health check', async () => {
       const server = new ApolloServer({ schema: Schema });
       const handler = server.createHandler({
         onHealthCheck: async () => {
@@ -248,7 +248,7 @@ describe('integration:AzureFunctions', () => {
       expect(result.headers['Content-Type']).toEqual('application/health+json');
     });
 
-    it('returns a 503 if healthcheck fails', async () => {
+    it('returns a 503 if health check fails', async () => {
       const server = new ApolloServer({ schema: Schema });
       const handler = server.createHandler({
         onHealthCheck: async () => {

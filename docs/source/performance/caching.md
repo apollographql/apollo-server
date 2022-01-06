@@ -416,14 +416,14 @@ import responseCachePlugin from 'apollo-server-plugin-response-cache';
 const server = new ApolloServer({
   // ...other settings...
   plugins: [responseCachePlugin({
-    sessionId: (requestContext) => (requestContext.request.http.headers.get('sessionid') || null),
+    sessionId: (requestContext) => (requestContext.request.http.headers.get('session-id') || null),
   })],
 });
 ```
 
 > **Important:** If you don't define a `sessionId` function, `PRIVATE` responses are not cached at all.
 
-The cache uses the return value of this function to identify the user who can later access the cached `PRIVATE` response. In the example above, the function uses a `sessionid` header from the original operation request.
+The cache uses the return value of this function to identify the user who can later access the cached `PRIVATE` response. In the example above, the function uses a `session-id` header from the original operation request.
 
 If a client later executes the exact same query _and_ has the same identifier, Apollo Server returns the `PRIVATE` cached response if it's still available.
 

@@ -291,7 +291,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.errors).toBeUndefined();
         });
 
-        it('prohibits providing a gateway in addition to schema/typedefs/resolvers', async () => {
+        it('prohibits providing a gateway in addition to schema/typeDefs/resolvers', async () => {
           const { gateway } = makeGatewayMock();
 
           const incompatibleArgsSpy = jest.fn();
@@ -531,7 +531,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             Query: {
               user: () => ({
                 first: 'James',
-                last: 'Heinlen',
+                last: 'Heinlein',
               }),
             },
           };
@@ -1081,7 +1081,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             );
           });
 
-          it('sets the trace key to parse failure when non-parseable gql', async () => {
+          it('sets the trace key to parse failure when non-parsable gql', async () => {
             await setupApolloServerAndFetchPair();
 
             await apolloFetch({
@@ -1708,7 +1708,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             Query: {
               fieldWhichWillError: () => {
                 throw new ApolloError('Some message', 'SOME_CODE', {
-                  ext1: 'myext',
+                  ext1: 'myExt',
                 });
               },
             },
@@ -1726,7 +1726,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].message).toEqual('Some message');
         expect(result.errors[0].extensions.code).toEqual('SOME_CODE');
-        expect(result.errors[0].extensions.ext1).toEqual('myext');
+        expect(result.errors[0].extensions.ext1).toEqual('myExt');
         expect(result.errors[0].extensions.exception).toBeDefined();
         expect(result.errors[0].extensions.exception.ext1).toBeUndefined();
       });
@@ -2194,9 +2194,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const typeDefs = gql`
           type Query {
             cached: String @cacheControl(maxAge: 10)
-            asynccached: String @cacheControl(maxAge: 10)
-            asyncuncached: String @cacheControl(maxAge: 10)
-            asyncnowrite: String @cacheControl(maxAge: 10)
+            asyncCached: String @cacheControl(maxAge: 10)
+            asyncUncached: String @cacheControl(maxAge: 10)
+            asyncNoWrite: String @cacheControl(maxAge: 10)
             uncached: String
             private: String @cacheControl(maxAge: 9, scope: PRIVATE)
           }
@@ -2214,16 +2214,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         type FieldName =
           | 'cached'
-          | 'asynccached'
-          | 'asyncuncached'
-          | 'asyncnowrite'
+          | 'asyncCached'
+          | 'asyncUncached'
+          | 'asyncNoWrite'
           | 'uncached'
           | 'private';
         const fieldNames: FieldName[] = [
           'cached',
-          'asynccached',
-          'asyncuncached',
-          'asyncnowrite',
+          'asyncCached',
+          'asyncUncached',
+          'asyncNoWrite',
           'uncached',
           'private',
         ];
@@ -2273,12 +2273,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 )
                   return false;
 
-                if (requestContext.request.query!.indexOf('asynccached') >= 0) {
+                if (requestContext.request.query!.indexOf('asyncCached') >= 0) {
                   return new Promise((resolve) => resolve(true));
                 }
 
                 if (
-                  requestContext.request.query!.indexOf('asyncuncached') >= 0
+                  requestContext.request.query!.indexOf('asyncUncached') >= 0
                 ) {
                   return new Promise((resolve) => resolve(false));
                 }
@@ -2294,7 +2294,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                   return false;
 
                 if (
-                  requestContext.request.query!.indexOf('asyncnowrite') >= 0
+                  requestContext.request.query!.indexOf('asyncNoWrite') >= 0
                 ) {
                   return new Promise((resolve) => resolve(false));
                 }
@@ -2396,41 +2396,41 @@ export function testApolloServer<AS extends ApolloServerBase>(
         // Cache hit async
         {
           await doFetch({
-            query: '{asynccached}',
+            query: '{asyncCached}',
           });
-          expectCacheMiss('asynccached');
+          expectCacheMiss('asyncCached');
 
           await doFetch({
-            query: '{asynccached}',
+            query: '{asyncCached}',
           });
-          expectCacheHit('asynccached');
+          expectCacheHit('asyncCached');
         }
 
         // Cache Miss async
         {
           await doFetch({
-            query: '{asyncuncached}',
+            query: '{asyncUncached}',
           });
-          expectCacheMiss('asyncuncached');
+          expectCacheMiss('asyncUncached');
 
           await doFetch({
-            query: '{asyncuncached}',
+            query: '{asyncUncached}',
           });
-          expectCacheMiss('asyncuncached');
+          expectCacheMiss('asyncUncached');
         }
 
         // Even we cache read, we did not write (async)
         {
-          const asyncNoWriteQuery = '{asyncnowrite}';
+          const asyncNoWriteQuery = '{asyncNoWrite}';
           await doFetch({
             query: asyncNoWriteQuery,
           });
-          expectCacheMiss('asyncnowrite');
+          expectCacheMiss('asyncNoWrite');
 
           const result = await doFetch({
             query: asyncNoWriteQuery,
           });
-          expectCacheMiss('asyncnowrite');
+          expectCacheMiss('asyncNoWrite');
           expect(httpHeader(result, 'cache-control')).toBe(
             'max-age=10, public',
           );

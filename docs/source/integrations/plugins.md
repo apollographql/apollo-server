@@ -25,7 +25,7 @@ const myPlugin = {
 You can define a plugin in the same file where you initialize Apollo Server, or
 you can export it as a separate module:
 
-```js:title=myplugin.js
+```js:title=myPlugin.js
 module.exports = {
   async serverWillStart() {
     console.log('Server starting up!');
@@ -36,7 +36,7 @@ module.exports = {
 To create a plugin that accepts options, create a function that accepts an
 `options` object and returns a properly structured plugin object, like so:
 
-```js:title=myplugin.js
+```js:title=myPlugin.js
 module.exports = (options) => {
   return {
     async serverWillStart() {
@@ -145,7 +145,7 @@ Event handlers for the following events can optionally return a function that is
 
 ([`executionDidStart`](./plugins-event-reference/#executiondidstart) returns an _object_ containing an `executionDidEnd` function instead of just a function as an end hook. This is because the returned object can also contain `willResolveField`.)
 
-Just like the event handers themselves, these end hooks are async functions (except for the end hook for `willResolveField`).
+Just like the event handlers themselves, these end hooks are async functions (except for the end hook for `willResolveField`).
 
 End hooks are passed any errors that occurred during the execution of that lifecycle phase. For example, the following plugin logs any errors that occur during any of the above lifecycle events:
 

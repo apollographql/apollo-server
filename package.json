@@ -21,7 +21,8 @@
     "coverage": "npm test -- --coverage",
     "coverage:upload": "codecov",
     "codegen": "graphql-codegen",
-    "prettier-check": "prettier --check ."
+    "prettier-check": "prettier --check .",
+    "spell-check": "cspell lint '**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)"
   },
   "engines": {
     "node": ">=12",
@@ -103,6 +104,7 @@
     "bunyan": "1.8.15",
     "codecov": "3.8.3",
     "connect": "3.7.0",
+    "cspell": "5.14.0",
     "deep-freeze": "0.0.1",
     "express": "4.17.2",
     "fastify": "3.25.3",

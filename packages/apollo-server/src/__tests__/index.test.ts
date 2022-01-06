@@ -258,7 +258,7 @@ describe('apollo-server', () => {
       await apolloFetch({ query: '{hello}' });
     });
 
-    it('creates a healthcheck endpoint', async () => {
+    it('creates a health check endpoint', async () => {
       server = new ApolloServer({
         typeDefs,
         resolvers,

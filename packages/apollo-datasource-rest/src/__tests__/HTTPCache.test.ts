@@ -171,7 +171,7 @@ describe('HTTPCache', () => {
       expect(response.headers.get('Age')).toEqual('0');
     });
 
-    it('does not store a response with an overriden TTL and a non-success status code', async () => {
+    it('does not store a response with an overridden TTL and a non-success status code', async () => {
       fetch.mockResponseOnce(
         'Internal server error',
         { 'Cache-Control': 'max-age=30' },

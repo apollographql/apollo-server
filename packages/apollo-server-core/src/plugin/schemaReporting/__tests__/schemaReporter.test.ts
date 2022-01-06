@@ -4,7 +4,7 @@ import type {
   SchemaReportMutation,
   ReportSchemaResponse,
   SchemaReportMutationVariables,
-} from '../operations';
+} from '../generated/operations';
 
 function mockReporterRequest(
   url: any,

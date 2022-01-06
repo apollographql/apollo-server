@@ -817,7 +817,8 @@ describe('runQuery', () => {
             }),
           });
 
-          const differentFieldResolver = () => "I'm diffrnt, ya, I'm diffrnt.";
+          const differentFieldResolver = () =>
+            "I'm different, ya, I'm different.";
 
           const queryString = `{ testString } `;
 
@@ -862,7 +863,7 @@ describe('runQuery', () => {
           expect(didResolveField).toHaveBeenCalledTimes(2);
 
           expect(resultFromSchemaWithoutResolver.data).toEqual({
-            testString: "I'm diffrnt, ya, I'm diffrnt.",
+            testString: "I'm different, ya, I'm different.",
           });
         });
       });

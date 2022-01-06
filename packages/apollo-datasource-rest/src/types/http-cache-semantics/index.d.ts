@@ -34,7 +34,7 @@ declare module 'http-cache-semantics' {
 
     _url: string | undefined;
     _status: number;
-    _rescc: { [key: string]: any };
+    _rescc: { [key: string]: any }; // cSpell:disable-line
   }
 
   export = CachePolicy;

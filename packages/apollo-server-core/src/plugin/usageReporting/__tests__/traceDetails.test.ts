@@ -160,7 +160,7 @@ describe('variableJson output for sendVariableValues transform: custom function 
     });
     // remove the first key, and then add a new key
     delete out[firstKey];
-    out['newkey'] = 'blah';
+    out['newKey'] = 'blah';
     return out;
   };
 
