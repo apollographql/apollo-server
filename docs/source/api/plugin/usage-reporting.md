@@ -115,13 +115,13 @@ This option enables you to configure whether Apollo Server calculates detailed p
 
 You can provide either a number or an an async function.
 
-**If you provide a number**, that number must be between `0` and `1`, inclusive. This number specifies the probability that Apollo Server calculates per-field statistics for each incoming operation. For example, if you pass `0.01`, then Apollo Server calculates statistics for approximately 1% of operations. When Apollo Server reports these statistics to Apollo Studio, it also provides an "estimation multiplier" of each field's actual number of executions (for example, with a probability of `0.01`, the estimation multiplier is `100`).
+**If you provide a number**, that number must be between `0` and `1`, inclusive. This number specifies the probability that Apollo Server calculates per-field statistics for each incoming operation.
+
+For example, if you pass `0.01`, then Apollo Server calculates statistics for approximately 1% of operations. When Apollo Server reports these statistics to Apollo Studio, it also provides an "estimation multiplier" of each field's actual number of executions (for example, with a probability of `0.01`, the estimation multiplier is `100`).
 
 Providing a number `x` is equivalent to passing this function:
 
 `async () => Math.random() < x ? 1/x : 0`
-
-For example, if you pass `0.01`, then 99% of the time this function returns `0`, and 1% of the time it returns `100`. So 99% of the time, Apollo Server _does not_ track field executions. The other 1% of the time, it _does_ track field executions and sends them to Apollo Studio, both as an exact observed count _and_ as an "estimated" count that's 100 times higher.
 
 **If you pass a function**, the function is called once for each operation, and it's passed a corresponding `GraphQLRequestContext` object. The function can return either a boolean or a number. Returning `false` is equivalent to returning `0`, and returning `true` is equivalent to returning `1`.
 
