@@ -135,8 +135,8 @@
     "test-listen": "1.1.0",
     "ts-jest": "27.1.2",
     "typescript": "4.5.4",
-    "winston": "3.3.3",
-    "winston-transport": "4.4.1"
+    "winston": "3.3.4",
+    "winston-transport": "4.4.2"
   },
   "jest": {
     "projects": [
