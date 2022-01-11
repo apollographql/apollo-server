@@ -1,7 +1,6 @@
 {
   "buildCommand": "compile",
   "packages": [
-    "packages/apollo-cache-control",
     "packages/apollo-datasource",
     "packages/apollo-datasource-rest",
     "packages/apollo-reporting-protobuf",
@@ -24,9 +23,7 @@
     "packages/apollo-server-plugin-base",
     "packages/apollo-server-plugin-operation-registry",
     "packages/apollo-server-plugin-response-cache",
-    "packages/apollo-server-testing",
     "packages/apollo-server-types",
-    "packages/apollo-tracing",
     "packages/graphql-extensions"
   ],
   "sandboxes": ["apollo-server"],
