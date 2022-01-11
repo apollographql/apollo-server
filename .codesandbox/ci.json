@@ -23,8 +23,7 @@
     "packages/apollo-server-plugin-base",
     "packages/apollo-server-plugin-operation-registry",
     "packages/apollo-server-plugin-response-cache",
-    "packages/apollo-server-types",
-    "packages/graphql-extensions"
+    "packages/apollo-server-types"
   ],
   "sandboxes": ["apollo-server"],
   "node": "16"
