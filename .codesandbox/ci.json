@@ -1,4 +1,6 @@
 {
+  "buildCommand": "compile",
+  "packages": ["packages/!(apollo-server-integration-testsuite)"],
   "sandboxes": ["apollo-server"],
   "node": "16"
 }
