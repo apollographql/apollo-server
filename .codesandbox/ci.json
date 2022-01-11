@@ -1,0 +1,4 @@
+{
+  "sandboxes": ["apollo-server"],
+  "node": 16
+}
