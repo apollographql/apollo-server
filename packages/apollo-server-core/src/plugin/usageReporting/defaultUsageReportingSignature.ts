@@ -16,10 +16,10 @@
 // default function used for this purpose: defaultUsageReportingSignature
 // (formerly known as defaultEngineReportingSignature).
 //
-// This module utilizes several AST transformations from the adjacent
-// 'transforms' file. (You could use them to build your own `calculateSignature`
-// callback, but as mentioned above, you shouldn't really define that callback,
-// so they are not exported from the package.)
+// This module utilizes several AST transformations. (You could use them to
+// build your own `calculateSignature` callback, but as mentioned above, you
+// shouldn't really define that callback, so they are not exported from the
+// package.)
 
 // - dropUnusedDefinitions, which removes operations and fragments that aren't
 //   going to be used in execution
@@ -27,8 +27,11 @@
 //   list and object input values with "empty" values
 // - removeAliases, which removes field aliasing from the query
 // - sortAST, which sorts the children of most multi-child nodes consistently
-// - printWithReducedWhitespace, a variant on graphql-js's 'print' which gets
-//   rid of unneeded whitespace
+// - stripIgnoredCharacters, a function from graphql-js itself which removes
+//   ignored characters like comments, whitespace, and commas. (Note that
+//   stripIgnoredCharacters does preserve block strings including newlines,
+//   which means that theoretically we could end up with a multi-line signature,
+//   but since we've already run hideLiterals it doesn't happen in practice.)
 //
 // defaultUsageReportingSignature consists of applying all of these building
 // blocks.
@@ -71,6 +74,7 @@ import {
   SelectionSetNode,
   separateOperations,
   StringValueNode,
+  stripIgnoredCharacters,
   visit,
 } from 'graphql';
 import sortBy from 'lodash.sortby';
@@ -79,49 +83,12 @@ export function defaultUsageReportingSignature(
   ast: DocumentNode,
   operationName: string,
 ): string {
-  return printWithReducedWhitespace(
-    sortAST(
-      removeAliases(hideLiterals(dropUnusedDefinitions(ast, operationName))),
+  return stripIgnoredCharacters(
+    print(
+      sortAST(
+        removeAliases(hideLiterals(dropUnusedDefinitions(ast, operationName))),
+      ),
     ),
-  );
-}
-
-// Like the graphql-js print function, but deleting whitespace wherever
-// feasible. Specifically, all whitespace (outside of string literals) is
-// reduced to at most one space, and even that space is removed anywhere except
-// for between two alphanumerics.
-//
-// Note that recent versions of graphql-js contain a stripIgnoredCharacters
-// function; it would be better to use that instead, though whenever we change
-// the signature algorithm it does make every operation appear to change in
-// Studio.
-//
-// In a GraphQL AST (which notably does not contain comments), the only place
-// where meaningful whitespace (or double quotes) can exist is in StringNodes.
-// So to print with reduced whitespace, we:
-// - temporarily sanitize strings by replacing their contents with hex
-// - use the default GraphQL printer
-// - minimize the whitespace with a simple regexp replacement
-// - convert strings back to their actual value We normalize all strings to
-//   non-block strings for simplicity.
-// (Unlike stripIgnoredCharacters, this does not remove commas.)
-function printWithReducedWhitespace(ast: DocumentNode): string {
-  const sanitizedAST = visit(ast, {
-    StringValue(node: StringValueNode): StringValueNode {
-      return {
-        ...node,
-        value: Buffer.from(node.value, 'utf8').toString('hex'),
-        block: false,
-      };
-    },
-  });
-  const withWhitespace = print(sanitizedAST);
-  const minimizedButStillHex = withWhitespace
-    .replace(/\s+/g, ' ')
-    .replace(/([^_a-zA-Z0-9]) /g, (_, c) => c)
-    .replace(/ ([^_a-zA-Z0-9])/g, (_, c) => c);
-  return minimizedButStillHex.replace(/"([a-f0-9]+)"/g, (_, hex) =>
-    JSON.stringify(Buffer.from(hex, 'hex').toString('utf8')),
   );
 }
 

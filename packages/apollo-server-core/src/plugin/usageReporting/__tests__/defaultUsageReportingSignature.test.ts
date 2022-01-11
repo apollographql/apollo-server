@@ -1,3 +1,4 @@
+import type { DocumentNode } from 'graphql';
 import { default as gql, disableFragmentWarnings } from 'graphql-tag';
 import { defaultUsageReportingSignature } from '../defaultUsageReportingSignature';
 
@@ -5,8 +6,10 @@ import { defaultUsageReportingSignature } from '../defaultUsageReportingSignatur
 // breaks if you turn it off in tests.
 disableFragmentWarnings();
 
+type TestCase = { name: string; operationName: string; input: DocumentNode };
+
 describe('defaultUsageReportingSignature', () => {
-  const cases = [
+  const cases: TestCase[] = [
     // Test cases borrowed from optics-agent-js.
     {
       name: 'basic test',
@@ -130,6 +133,22 @@ describe('defaultUsageReportingSignature', () => {
 
         fragment Nested on User {
           blah
+        }
+      `,
+    },
+    {
+      name: 'block strings convert to normal (empty) strings',
+      operationName: '',
+      input: gql`
+        query {
+          foo(
+            str: """
+            hello
+            world
+
+            hooray
+            """
+          )
         }
       `,
     },
