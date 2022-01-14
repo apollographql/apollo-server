@@ -1,0 +1,30 @@
+{
+  "buildCommand": "compile",
+  "packages": [
+    "packages/apollo-datasource",
+    "packages/apollo-datasource-rest",
+    "packages/apollo-reporting-protobuf",
+    "packages/apollo-server",
+    "packages/apollo-server-azure-functions",
+    "packages/apollo-server-cache-memcached",
+    "packages/apollo-server-cache-redis",
+    "packages/apollo-server-caching",
+    "packages/apollo-server-cloud-functions",
+    "packages/apollo-server-cloudflare",
+    "packages/apollo-server-core",
+    "packages/apollo-server-env",
+    "packages/apollo-server-errors",
+    "packages/apollo-server-express",
+    "packages/apollo-server-fastify",
+    "packages/apollo-server-hapi",
+    "packages/apollo-server-koa",
+    "packages/apollo-server-lambda",
+    "packages/apollo-server-micro",
+    "packages/apollo-server-plugin-base",
+    "packages/apollo-server-plugin-operation-registry",
+    "packages/apollo-server-plugin-response-cache",
+    "packages/apollo-server-types"
+  ],
+  "sandboxes": ["apollo-server-typescript-3opde","apollo-server"],
+  "node": "16"
+}
