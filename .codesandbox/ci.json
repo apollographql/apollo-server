@@ -25,6 +25,6 @@
     "packages/apollo-server-plugin-response-cache",
     "packages/apollo-server-types"
   ],
-  "sandboxes": ["apollo-server"],
+  "sandboxes": ["apollo-server-typescript-3opde","apollo-server"],
   "node": "16"
 }
