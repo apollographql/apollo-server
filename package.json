@@ -133,7 +133,7 @@
     "rollup": "2.64.0",
     "supertest": "6.2.1",
     "test-listen": "1.1.0",
-    "ts-jest": "27.1.2",
+    "ts-jest": "27.1.3",
     "typescript": "4.5.4",
     "winston": "3.4.0",
     "winston-transport": "4.4.2"
