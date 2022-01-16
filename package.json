@@ -125,7 +125,7 @@
     "memcached-mock": "0.1.0",
     "mock-req": "0.2.0",
     "nock": "13.2.2",
-    "node-fetch": "2.6.6",
+    "node-fetch": "2.6.7",
     "prettier": "2.5.1",
     "qs-middleware": "1.0.3",
     "request-promise": "4.2.6",
