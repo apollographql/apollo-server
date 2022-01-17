@@ -388,7 +388,7 @@ import responseCachePlugin from 'apollo-server-plugin-response-cache';
 
 const server = new ApolloServer({
   // ...other options...
-  plugins: [responseCachePlugin()],
+  plugins: [responseCachePlugin.default()],
 });
 ```
 
