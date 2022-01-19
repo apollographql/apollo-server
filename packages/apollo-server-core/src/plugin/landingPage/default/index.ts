@@ -21,6 +21,7 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
   document?: string;
   variables?: Record<string, string>;
   headers?: Record<string, string>;
+  includeCookies?: boolean;
   // For Apollo use only.
   __internal_apolloStudioEnv__?: 'staging' | 'prod';
 }
