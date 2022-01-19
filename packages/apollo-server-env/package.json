@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-env",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "author": "Apollo <packages@apollographql.com>",
   "license": "MIT",
   "repository": {
@@ -24,6 +24,6 @@
     "node": ">=12.0"
   },
   "dependencies": {
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.7"
   }
 }
