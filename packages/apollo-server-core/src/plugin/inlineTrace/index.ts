@@ -53,7 +53,7 @@ export function ApolloServerPluginInlineTrace(
         }
       }
     },
-    async requestDidStart({ request: { http } }) {
+    async requestDidStart({ request: { http }, metrics }) {
       if (!enabled) {
         return;
       }
@@ -66,6 +66,17 @@ export function ApolloServerPluginInlineTrace(
       if (http?.headers.get('apollo-federation-include-trace') !== 'ftv1') {
         return;
       }
+
+      // If some other (user-written?) plugin already decided that we are not
+      // capturing traces, then we should not capture traces.
+      if (metrics.captureTraces === false) {
+        return;
+      }
+
+      // Note that this will override any `fieldLevelInstrumentation` parameter
+      // to the usage reporting plugin for requests with the
+      // `apollo-federation-include-trace` header set.
+      metrics.captureTraces = true;
 
       treeBuilder.startTiming();
 
@@ -86,6 +97,14 @@ export function ApolloServerPluginInlineTrace(
           // We record the end time at the latest possible time: right before serializing the trace.
           // If we wait any longer, the time we record won't actually be sent anywhere!
           treeBuilder.stopTiming();
+
+          // If we're in a gateway, include the query plan (and subgraph traces)
+          // in the inline trace. This is designed more for manually querying
+          // your graph while running locally to see what the query planner is
+          // doing rather than for running in production.
+          if (metrics.queryPlanTrace) {
+            treeBuilder.trace.queryPlan = metrics.queryPlanTrace;
+          }
 
           const encodedUint8Array = Trace.encode(treeBuilder.trace).finish();
           const encodedBuffer = Buffer.from(
