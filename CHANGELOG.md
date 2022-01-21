@@ -7,6 +7,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
+## vNEXT
+
+- `apollo-server-core`: The inline trace plugin will now include the full query plan and subgraph traces if manually installed in an Apollo Gateway. (Previously, you technically could install this plugin in a Gateway but it would not have any real trace data.) This is recommended for development use only and not in production servers. [PR #6017](https://github.com/apollographql/apollo-server/pull/6017)
+
 ## v3.6.2
 
 - ⚠️ **SECURITY** `apollo-server-env`: Update dependency on `node-fetch` to require v2.6.7 rather than v2.6.1. This includes the fix to [CVE-2022-0235](https://nvd.nist.gov/vuln/detail/CVE-2022-0235), a vulnerability where credentials sent along with a request could be sent to a different origin if the fetched URL responds with an attacker-controlled HTTP redirect. This is the default fetcher used by `apollo-datasource-rest`, usage reporting, schema reporting, and `@apollo/gateway` in versions prior to v0.46.0. We do not believe that the way that this is used by usage reporting or schema reporting is vulnerable to the exploit, but if you use `apollo-datasource-rest` in such a way that the servers you talk to might serve a surprising redirect, this upgrade would be helpful. Note that to ensure you're using the appropriate version of `apollo-server-env` with `apollo-datasource-rest`, you need to be using v3.5.1 of that package. (We plan to separate the release process of `apollo-datasource-rest` from Apollo Server soon so that it can have a more reasonable changelog.) If upgrading to this version is challenging, you can also work around this by ensuring that `node-fetch@2.6.7` is the version used in your project, or by specifying a `fetcher` explicitly to your older Gateway, REST datasource, etc.
