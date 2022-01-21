@@ -216,6 +216,21 @@ An object containing initial HTTP header values to populate in the Explorer on l
 
 </td>
 </tr>
+<tr>
+<td>
+
+###### `includeCookies`
+
+`boolean`
+</td>
+<td>
+
+A boolean used to set whether cookies are included in the Studio Explorer's editor on load.
+
+If you omit this, the Explorer defaults includeCookies to 'false' or the current user setting.
+
+</td>
+</tr>
 
 </tbody>
 </table>
