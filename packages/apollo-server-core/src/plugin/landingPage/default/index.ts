@@ -29,7 +29,7 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
    * headers loaded in the UI.
    */
   headers?: Record<string, string>;
- /**
+  /**
    * Users can configure their landing page to link to Studio Explorer with the
    * setting to include/exclude cookies loaded in the UI.
    */
@@ -70,7 +70,16 @@ export function ApolloServerPluginLandingPageLocalDefault(
   // We list known keys explicitly to get better typechecking, but we pass
   // through extras in case we've added new keys to the splash page and haven't
   // quite updated the plugin yet.
-  const { version, __internal_apolloStudioEnv__, footer, document, variables, headers, includeCookies, ...rest } = options;
+  const {
+    version,
+    __internal_apolloStudioEnv__,
+    footer,
+    document,
+    variables,
+    headers,
+    includeCookies,
+    ...rest
+  } = options;
   return ApolloServerPluginLandingPageDefault(
     version,
     encodeConfig({
@@ -92,8 +101,17 @@ export function ApolloServerPluginLandingPageProductionDefault(
   // We list known keys explicitly to get better typechecking, but we pass
   // through extras in case we've added new keys to the splash page and haven't
   // quite updated the plugin yet.
-  const { version, __internal_apolloStudioEnv__, footer, document, variables, headers, includeCookies, graphRef, ...rest } =
-    options;
+  const {
+    version,
+    __internal_apolloStudioEnv__,
+    footer,
+    document,
+    variables,
+    headers,
+    includeCookies,
+    graphRef,
+    ...rest
+  } = options;
   return ApolloServerPluginLandingPageDefault(
     version,
     encodeConfig({
