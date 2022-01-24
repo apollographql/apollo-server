@@ -3,7 +3,7 @@ title: Integration testing
 description: Utilities for testing Apollo Server
 ---
 
-Integration testing a GraphQL server means testing the combination of many interlocking parts at once. Testing your setup of `apollo-server` can be done in a variety of ways. One simple way is to use `ApolloServer`'s `executeOperation` method to directly execute a GraphQL operation without going through a full HTTP operation.
+Integration testing a GraphQL server means testing the combination of many interlocking parts at once. One  way to test your setup of `apollo-server` is to use `ApolloServer`'s `executeOperation` method to directly execute a GraphQL operation without going through a full HTTP operation.
 
 ## Testing using `executeOperation`
 
