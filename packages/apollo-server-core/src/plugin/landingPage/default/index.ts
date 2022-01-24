@@ -15,22 +15,22 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
    */
   footer?: boolean;
   /**
-   * Folks can configure their landing page to link to Studio Explorer with a
+   * Users can configure their landing page to link to Studio Explorer with a
    * document loaded in the UI.
    */
   document?: string;
   /**
-   * Folks can configure their landing page to link to Studio Explorer with
+   * Users can configure their landing page to link to Studio Explorer with
    * variables loaded in the UI.
    */
   variables?: Record<string, string>;
   /**
-   * Folks can configure their landing page to link to Studio Explorer with
+   * Users can configure their landing page to link to Studio Explorer with
    * headers loaded in the UI.
    */
   headers?: Record<string, string>;
  /**
-   * Folks can configure their landing page to link to Studio Explorer with the
+   * Users can configure their landing page to link to Studio Explorer with the
    * setting to include/exclude cookies loaded in the UI.
    */
   includeCookies?: boolean;

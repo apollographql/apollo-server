@@ -225,9 +225,9 @@ An object containing initial HTTP header values to populate in the Explorer on l
 </td>
 <td>
 
-A boolean used to set whether cookies are included in the Studio Explorer's editor on load.
+A boolean used to set whether Studio Explorer should include cookies in its GraphQL requests to your server.
 
-If you omit this, the Explorer defaults includeCookies to 'false' or the current user setting.
+If you omit this, the Explorer defaults `includeCookies` to `false` or the current user setting.
 
 </td>
 </tr>
