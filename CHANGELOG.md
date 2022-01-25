@@ -10,6 +10,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## vNEXT
 
 - `apollo-server-core`: The inline trace plugin will now include the full query plan and subgraph traces if manually installed in an Apollo Gateway. (Previously, you technically could install this plugin in a Gateway but it would not have any real trace data.) This is recommended for development use only and not in production servers. [PR #6017](https://github.com/apollographql/apollo-server/pull/6017)
+- `apollo-server-core`: The default landing page plugins now take an `includeCookies` option which allows you to specify that Explorer should send cookies to your server. [PR #6014](https://github.com/apollographql/apollo-server/pull/6014)
 
 ## v3.6.2
 
