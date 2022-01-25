@@ -9,7 +9,7 @@ Mocking enables frontend developers to build out and test UI components and feat
 
 ## Using the default mocks
 
-You can turn on `apollo-server`'s default mocking logic by passing in a `mocks` option to the configuration of a new `ApolloServer` instance and setting that option to `true`. 
+You can turn on `apollo-server`'s default mocking logic by passing in a `mocks` option to the configuration of a new `ApolloServer` instance and setting that option to true. 
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
@@ -22,7 +22,7 @@ const typeDefs = gql`
 
 const server = new ApolloServer({
   typeDefs,
-  mocks: true, 
+  mocks: true
 });
 
 server.listen().then(({ url }) => {
@@ -36,13 +36,13 @@ Mocking logic looks at the types expected by your schema's fields and returns va
 
 When using mocks your existing resolvers are **ignored** by default. See the ["Using existing resolvers with mocks"](#using-existing-resolvers-with-mocks) section below to see how to change this behavior.
 
-For more sophisticated testing, mocks can be further customized to return user-specified data.
+For more sophisticated testing, you can customize your mocks to return user-specified data.
 
 ## Customizing mocks
 
-The `mocks` option can also be assigned to an object describing custom mocking logic, allowing you to specify the values to return for specific field types. The `mocks` object allows you to define functions for field types, which will be invoked when that field type is expected. 
+The `mocks` option can be assigned to an object describing custom mocking logic, allowing you to specify the values to return for specific field types. The `mocks` object allows you to define functions for field types, which will be invoked when that field type is expected. 
 
-By default, the functions in `mocks` will overwrite any currently defined resolvers. In the below example, both `hello` and `resolved` will return `'Hello'`.
+By default, the functions in `mocks` will overwrite any currently defined resolvers. In the below example, both `hello` and `resolved` will return `Hello`.
 
 ```js{16-20}
 const { ApolloServer, gql } = require('apollo-server');
@@ -56,20 +56,20 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    resolved: () => 'Resolved',
+    resolved: () => 'Resolved'
   },
 };
 
 const mocks = {
   Int: () => 6,
   Float: () => 22.1,
-  String: () => 'Hello',
+  String: () => 'Hello'
 };
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  mocks,
+  mocks
 });
 
 server.listen().then(({ url }) => {
@@ -77,7 +77,9 @@ server.listen().then(({ url }) => {
 });
 ```
 
-You can also use `mocks` to define object types and the fields belonging to those object types (much like a [resolver map](#../data/resolvers)). In the below example, take note that our `mocks`' `Person` object will invoke a function returning an object with fields pointing at more functions:
+You can also use `mocks` to define object types and the fields belonging to those object types (much like a [resolver map](../data/resolvers/#base-syntax)). 
+
+In the below example, take note that our `mocks`' `Person` object will invoke a function returning an object with fields pointing at more functions:
 
 ```js
 // importing the casual library 
@@ -86,7 +88,7 @@ const casual = require('casual');
 const mocks = {
   Person: () => ({
     name: casual.name,
-    age: () => casual.integer(0, 120),
+    age: () => casual.integer(0, 120)
   }),
 };
 ```
@@ -106,7 +108,7 @@ const mocks = {
     // to generate a random integer
     friends: [...new Array(casual.integer(2, 6))],
     // a list of three lists of two items: [[1, 1], [2, 2], [3, 3]]
-    listOfLists: () => [...new Array(3)].map((i) => [...new Array(2)]),
+    listOfLists: () => [...new Array(3)].map((i) => [...new Array(2)])
   }),
 };
 ```
@@ -128,21 +130,21 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    resolved: () => 'Resolved',
+    resolved: () => 'Resolved'
   },
 };
 
 const mocks = {
   Int: () => 6,
   Float: () => 22.1,
-  String: () => 'Hello',
+  String: () => 'Hello'
 };
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   mocks,
-  mockEntireSchema: false, // highlight-line
+  mockEntireSchema: false // highlight-line
 });
 
 server.listen().then(({ url }) => {
@@ -150,7 +152,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-Running the above example, with the `mockEntireSchema` option set to false, `Query.resolved` will now return the string "Resolved".
+Running the above example, with the `mockEntireSchema` option set to false, `resolved` will now return the string `Resolved`.
 
 ## Mocking a schema using introspection
 
@@ -169,7 +171,7 @@ const schema = buildClientSchema(introspectionResult.data);  // highlight-line
 
 const server = new ApolloServer({
   schema,
-  mocks: true,
+  mocks: true
 });
 
 server.listen().then(({ url }) => {
@@ -189,7 +191,7 @@ const { makeExecutableSchema } = require('@graphql-tools/schema');
 
 const server = new ApolloServer({
   schema: addMocksToSchema({
-    schema: makeExecutableSchema({ typeDefs, resolvers }),
-  }),
+    schema: makeExecutableSchema({ typeDefs, resolvers })
+  })
 });
 ```
