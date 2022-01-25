@@ -1,8 +1,4 @@
 {
-  "engines": {
-    "node": ">=16 <17",
-    "npm": "8.x"
-  },
   "scripts": {
     "prestart": "gatsby clean",
     "start": "gatsby develop",
@@ -10,8 +6,8 @@
     "serve": "gatsby serve"
   },
   "dependencies": {
-    "gatsby": "2.32.13",
-    "gatsby-theme-apollo-docs": "5.3.8",
+    "gatsby": "^3.14.6",
+    "gatsby-theme-apollo-docs": "^6.0.0",
     "react": "16.14.0",
     "react-dom": "16.14.0"
   }
