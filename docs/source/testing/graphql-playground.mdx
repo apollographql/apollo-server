@@ -3,12 +3,7 @@ title: GraphQL Playground
 description: Visually explore Apollo Server
 ---
 
-import {
-  ExpansionPanel,
-} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
-import { Button } from '@apollo/space-kit/Button';
 import { Link } from 'gatsby';
-import { colors } from 'gatsby-theme-apollo-core';
 
 <ExpansionPanel title="📣 The Apollo Studio Explorer now supports local development">
 
@@ -16,9 +11,11 @@ import { colors } from 'gatsby-theme-apollo-core';
 
 <p>
   <Button
-    size="large"
-    color={colors.primary}
-    as={<Link to="https://studio.apollographql.com/sandbox/" target="_blank" />}
+    size="lg"
+    color="indigo"
+    as={Link}
+    to="https://studio.apollographql.com/sandbox/"
+    isExternal
   >
     Launch Sandbox
   </Button>

@@ -1,6 +1,5 @@
 ---
 title: Deploying with Netlify Functions
-sidebar_title: Netlify
 description: How to run your API using Netlify Functions on AWS Lambda
 ---
 

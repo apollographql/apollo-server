@@ -1,11 +1,6 @@
 ---
 title: Deploying with Google Cloud Functions
-sidebar_title: Google Cloud Functions
 ---
-
-import {
-  ExpansionPanel,
-} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
 This tutorial helps you deploy Apollo Server to Google Cloud Functions. It uses the following example function handler:
 
@@ -30,7 +25,7 @@ const resolvers = {
 
 /*
 Because `NODE_ENV` is a reserved environment variable in Google Cloud Functions
-and it defaults to "production", you need to set both the `playground` and 
+and it defaults to "production", you need to set both the `playground` and
 `introspection` options to `true` for GraphQL Playground to work correctly.
 */
 const server = new ApolloServer({

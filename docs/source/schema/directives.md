@@ -1,6 +1,5 @@
 ---
 title: Directives
-sidebar_title: Directives
 description: Configure GraphQL types, fields, and arguments
 ---
 

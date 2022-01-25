@@ -1,6 +1,5 @@
 ---
 title: Deploying with Heroku
-sidebar_title: Heroku
 description: Deploying your GraphQL server to Heroku
 ---
 

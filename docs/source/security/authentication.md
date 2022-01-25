@@ -1,6 +1,5 @@
 ---
 title: Authentication and authorization
-sidebar_title: Auth
 description: Control access to your GraphQL API
 ---
 

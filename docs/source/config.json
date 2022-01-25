@@ -1,0 +1,68 @@
+{
+  "title": "Apollo Server",
+  "version": "v2",
+  "sidebar": {
+    "Introduction": "/",
+    "Get started": "/getting-started",
+    "Changelog": "https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md",
+    "Apollo Federation": "https://www.apollographql.com/docs/federation/",
+    "Defining a Schema": {
+      "Schema basics": "/schema/schema",
+      "Unions and interfaces": "/schema/unions-interfaces",
+      "Custom scalars": "/schema/custom-scalars",
+      "Directives": "/schema/directives",
+      "Creating directives": "/schema/creating-directives"
+    },
+    "Fetching Data": {
+      "Resolvers": "/data/resolvers",
+      "Data sources": "/data/data-sources",
+      "Error handling": "/data/errors",
+      "File uploads": "/data/file-uploads",
+      "Subscriptions": "/data/subscriptions"
+    },
+    "Testing": {
+      "Mocking": "/testing/mocking",
+      "Integration testing": "/testing/testing",
+      "Apollo Studio Explorer": "https://www.apollographql.com/docs/studio/explorer/",
+      "GraphQL Playground": "/testing/graphql-playground"
+    },
+    "Performance": {
+      "Caching": "/performance/caching",
+      "Automatic persisted queries": "/performance/apq"
+    },
+    "Security": {
+      "Auth": "/security/authentication",
+      "Terminating SSL": "/security/terminating-ssl"
+    },
+    "Integrations": {
+      "Node.js middleware": "/integrations/middleware",
+      "Plugins": "/integrations/plugins"
+    },
+    "Deployment": {
+      "Heroku": "/deployment/heroku",
+      "Lambda": "/deployment/lambda",
+      "Netlify": "/deployment/netlify",
+      "Azure Functions": "/deployment/azure-functions",
+      "Google Cloud Functions": "/deployment/gcp-functions"
+    },
+    "Monitoring": {
+      "Metrics and logging": "/monitoring/metrics",
+      "Health checks": "/monitoring/health-checks"
+    },
+    "API Reference": {
+      "apollo-server": "/api/apollo-server",
+      "Usage reporting plugin": "/api/plugin/usage-reporting",
+      "Schema reporting plugin": "/api/plugin/schema-reporting",
+      "Inline trace plugin": "/api/plugin/inline-trace",
+      "graphql-tools": "/api/graphql-tools",
+      "@apollo/federation": "https://www.apollographql.com/docs/federation/api/apollo-federation/",
+      "@apollo/gateway": "https://www.apollographql.com/docs/federation/api/apollo-gateway/"
+    },
+    "Appendices": {
+      "Proxy configuration": "/proxy-configuration",
+      "Installing graphql-tools": "/installing-graphql-tools",
+      "File uploads in Node.js < v8.5.0": "/migration-file-uploads",
+      "Migrating from the \"engine\" option": "/migration-engine-plugins"
+    }
+  }
+}
