@@ -7,7 +7,7 @@ Mocking allows Apollo Server to return simulated data for GraphQL operations bas
 
 Mocking enables frontend developers to build out and test UI components and features without having to wait for a full backend implementation. Mocking is also valuable when using a UI tool like [Storybook](https://storybook.js.org/), because you won't need to start a real GraphQL server.
 
-## Using the default mocks
+## Using default mocks
 
 You can turn on `apollo-server`'s default mocking logic by passing in a `mocks` option to the configuration of a new `ApolloServer` instance and setting that option to true. 
 
