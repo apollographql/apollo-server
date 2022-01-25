@@ -1,6 +1,5 @@
 ---
 title: Apollo Server plugin event reference
-sidebar_title: Event reference
 ---
 
 > **New in Apollo Server 3:** All plugin lifecycle methods are `async`, _except for [`willResolveField`](#willresolvefield) and [`schemaDidLoadOrUpdate`](#schemadidloadorupdate)_.

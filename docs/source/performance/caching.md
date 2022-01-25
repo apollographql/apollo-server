@@ -1,6 +1,5 @@
 ---
 title: Server-side caching
-sidebar_title: Caching
 description: Configure caching behavior on a per-field basis
 ---
 

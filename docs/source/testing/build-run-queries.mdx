@@ -1,6 +1,5 @@
 ---
 title: Build and run queries against Apollo Server
-sidebar_title: Build and run queries
 ---
 
 In non-production environments, Apollo Server 3 serves the following landing page from its base URL (`http://localhost:4000` by default):
@@ -43,7 +42,7 @@ You can install either of these plugins manually to configure its behavior.
 This sample replicates Apollo Server's default behavior, except it removes the footer that each landing page displays:
 
 ```js{1-4,10-12}:title=index.js
-const { 
+const {
   ApolloServerPluginLandingPageProductionDefault
   ApolloServerPluginLandingPageLocalDefault,
 } = require('apollo-server-core');

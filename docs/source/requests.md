@@ -1,6 +1,5 @@
 ---
 title: Operation request format
-sidebar_title: Request format
 description: How to send requests to Apollo Server over HTTP
 ---
 

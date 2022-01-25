@@ -1,6 +1,5 @@
 ---
 title: "API Reference: Schema reporting plugin"
-sidebar_title: Schema reporting
 api_reference: true
 ---
 

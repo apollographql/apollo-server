@@ -1,6 +1,5 @@
 ---
 title: Deploying with Heroku
-sidebar_title: Heroku
 ---
 
 Heroku is a common platform-as-a-service solution that enables you to deploy Apollo Server and have a running GraphQL endpoint in a matter of minutes.

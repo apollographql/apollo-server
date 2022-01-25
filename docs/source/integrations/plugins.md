@@ -1,6 +1,5 @@
 ---
 title: Creating Apollo Server plugins
-sidebar_title: Creating plugins
 description: Extend Apollo Server with custom functionality
 ---
 
