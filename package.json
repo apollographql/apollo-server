@@ -56,7 +56,7 @@
     "apollo-server-types": "file:packages/apollo-server-types"
   },
   "devDependencies": {
-    "@apollo/client": "3.5.7",
+    "@apollo/client": "3.5.8",
     "@graphql-codegen/cli": "2.4.0",
     "@graphql-codegen/typescript-operations": "2.2.2",
     "@graphql-tools/mock": "8.5.1",
@@ -68,7 +68,7 @@
     "@rollup/plugin-json": "4.1.0",
     "@sinonjs/fake-timers": "8.1.0",
     "@types/async-retry": "1.4.3",
-    "@types/aws-lambda": "8.10.91",
+    "@types/aws-lambda": "8.10.92",
     "@types/body-parser": "1.19.2",
     "@types/bunyan": "1.8.8",
     "@types/connect": "3.4.35",
