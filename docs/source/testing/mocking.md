@@ -22,7 +22,7 @@ const typeDefs = gql`
 
 const server = new ApolloServer({
   typeDefs,
-  mocks: true
+  mocks: true,
 });
 
 server.listen().then(({ url }) => {
@@ -56,20 +56,20 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    resolved: () => 'Resolved'
+    resolved: () => 'Resolved',
   },
 };
 
 const mocks = {
   Int: () => 6,
   Float: () => 22.1,
-  String: () => 'Hello'
+  String: () => 'Hello',
 };
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  mocks
+  mocks,
 });
 
 server.listen().then(({ url }) => {
@@ -88,7 +88,7 @@ const casual = require('casual');
 const mocks = {
   Person: () => ({
     name: casual.name,
-    age: () => casual.integer(0, 120)
+    age: () => casual.integer(0, 120),
   }),
 };
 ```
@@ -108,7 +108,7 @@ const mocks = {
     // to generate a random integer
     friends: [...new Array(casual.integer(2, 6))],
     // a list of three lists of two items: [[1, 1], [2, 2], [3, 3]]
-    listOfLists: () => [...new Array(3)].map((i) => [...new Array(2)])
+    listOfLists: () => [...new Array(3)].map((i) => [...new Array(2)]),
   }),
 };
 ```
@@ -130,21 +130,21 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    resolved: () => 'Resolved'
+    resolved: () => 'Resolved',
   },
 };
 
 const mocks = {
   Int: () => 6,
   Float: () => 22.1,
-  String: () => 'Hello'
+  String: () => 'Hello',
 };
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   mocks,
-  mockEntireSchema: false // highlight-line
+  mockEntireSchema: false, // highlight-line
 });
 
 server.listen().then(({ url }) => {
@@ -171,7 +171,7 @@ const schema = buildClientSchema(introspectionResult.data);  // highlight-line
 
 const server = new ApolloServer({
   schema,
-  mocks: true
+  mocks: true,
 });
 
 server.listen().then(({ url }) => {
@@ -191,7 +191,7 @@ const { makeExecutableSchema } = require('@graphql-tools/schema');
 
 const server = new ApolloServer({
   schema: addMocksToSchema({
-    schema: makeExecutableSchema({ typeDefs, resolvers })
-  })
+    schema: makeExecutableSchema({ typeDefs, resolvers }),
+  }),
 });
 ```
