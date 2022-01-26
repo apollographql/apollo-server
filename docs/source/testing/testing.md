@@ -11,8 +11,8 @@ The `apollo-server` library has a request pipeline that can support many plugins
 
 The [`executeOperation` method](../api/apollo-server/#executeoperation) can accept the following arguments: 
 * An object containing configuration options which must include a `query` key specifying the GraphQL operation to be run. 
-  * You can use `executeOperation` to execute both queries and mutations, but both will use the `query` key. 
-* An argument that will be passed in to the `ApolloServer` instance's [`context` function](../data/resolvers/#the-context-argument).
+  * You can use `executeOperation` to execute both queries and mutations, but both use the `query` key. 
+* An argument that is passed in to the `ApolloServer` instance's [`context` function](../data/resolvers/#the-context-argument).
 
 Below is a simplified example of setting up a test using the JavaScript testing library [Jest](https://jestjs.io/):
 ```js:title=index.test.js
@@ -47,7 +47,7 @@ it('returns hello with the provided name', async () => {
 ```
 Note that when testing, any errors in parsing, validating, and executing your GraphQL operation are returned in the `errors` field of the result rather than thrown (just like a normal GraphQL response).
 
-Unlike with a normal instance of `ApolloServer`,  you don't have to call [`start`](../../api/apollo-server/#start) before calling `executeOperation`. The server instance will call `start` automatically for you if it has not been called, and any startup errors will be thrown.
+Unlike with a normal instance of `ApolloServer`,  you don't need to call [`start`](../../api/apollo-server/#start) before calling `executeOperation`. The server instance will call `start` automatically for you if it has not been called, and any startup errors will be thrown.
 
 To expand on the example above, here is a full integration test being run against a test instance of `ApolloServer`. This test imports all of the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `ApolloServer`.
 
@@ -80,7 +80,7 @@ it('fetches single launch', async () => {
 
 The example above includes a test-specific [`context` function](../data/resolvers/#the-context-argument) which provides data directly to the `ApolloServer` instance, instead of calculating it from the request's context. 
 
-If you'd like to use your server's real `context` function, you can pass a second argument into `executeOperation` which is then passed to your server's `context` function. Note that in order to use your server's `context` function you will need to put together an object with the correct [middleware-specific context fields](../api/apollo-server/#middleware-specific-context-fields) for your implementation.
+If you'd like to use your server's real `context` function, you can pass a second argument into `executeOperation` which is then passed to your server's `context` function. Note that in order to use your server's `context` function you need to put together an object with the correct [middleware-specific context fields](../api/apollo-server/#middleware-specific-context-fields) for your implementation.
 
 For examples of both integration and end-to-end testing we recommend checking out the [tests included in the Apollo fullstack tutorial](https://github.com/apollographql/fullstack-tutorial/tree/master/final/server/src/__tests__).
 ## End-to-end testing
