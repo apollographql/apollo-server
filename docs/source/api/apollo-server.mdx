@@ -602,9 +602,9 @@ The `start` method triggers the following actions:
 
 ## `executeOperation`
 
-The async `executeOperation` method is used primarily for [testing GraphQL operations](../testing/#testing-using-executeoperation) through the server's request pipeline without going through a full HTTP operation.
+The async `executeOperation` method is used primarily for [testing GraphQL operations](../testing/testing/#testing-using-executeoperation) through the server's request pipeline without going through a full HTTP operation.
 
-The `executeOperation` method takes two arguments: 
+The `executeOperation` method takes two arguments:
 * The first argument is a configuration options object
 * The second argument will be passed in to the current `ApolloServer` instance's `context` function
 
@@ -629,7 +629,7 @@ Below are the available configuration options for the first argument of `execute
 
 <td>
 
-The GraphQL operation to be run. Note you must use the `query` key even if the operation is a mutation. 
+The GraphQL operation to be run. Note you must use the `query` key even if the operation is a mutation.
 </td>
 </tr>
 
@@ -642,7 +642,7 @@ The GraphQL operation to be run. Note you must use the `query` key even if the o
 </td>
 <td>
 
-You can optionally provide variables to be passed in as arguments to the `query`. 
+You can optionally provide variables to be passed in as arguments to the `query`.
 </td>
 </tr>
 
