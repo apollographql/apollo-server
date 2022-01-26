@@ -599,6 +599,69 @@ The `start` method triggers the following actions:
 1. If your server is a [federated gateway](https://www.apollographql.com/docs/federation/managed-federation/overview/), it attempts to fetch its schema. If the fetch fails, `start` throws an error.
 2. Your server calls all of the [`serverWillStart` handlers](../integrations/plugins-event-reference/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
 
+
+## `executeOperation`
+
+The async `executeOperation` method is used primarily for [testing GraphQL operations](../testing/#testing-using-executeoperation) through the server's request pipeline without going through a full HTTP operation.
+
+The `executeOperation` method takes two arguments: 
+* The first argument is a configuration options object
+* The second argument will be passed in to the current `ApolloServer` instance's `context` function
+
+Below are the available configuration options for the first argument of `executeOperation`:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr class="required">
+<td>
+
+##### `query`
+
+`String` or `<DocumentNode>`
+</td>
+
+<td>
+
+The GraphQL operation to be run. Note you must use the `query` key even if the operation is a mutation. 
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `variables`
+
+`Object`
+</td>
+<td>
+
+You can optionally provide variables to be passed in as arguments to the `query`. 
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `operationName`
+
+`String`
+</td>
+<td>
+
+Optional, but if included the `operationName` must be present in the provided `query`.
+</td>
+</tr>
+
+</tbody>
+</table>
+
 ## `stop`
 
 `ApolloServer.stop()` is an async method that tells all of Apollo Server's background tasks to complete. Specifically, it:
