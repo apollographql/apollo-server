@@ -64,7 +64,7 @@ Returns a random positive or negative integer.
 </td>
 <td>
 
-Returns "Hello world".
+Returns `Hello world`.
 </td>
 </tr>
 
@@ -110,7 +110,7 @@ Returns a randomized UUID containing a combination of integers and letters.
 </tbody>
 </table>
 
-By default when using mocks, your existing resolvers are **ignored** in favor of `mocks`. To configure this behavior, see [Using existing resolvers with mocks](#using-existing-resolvers-with-mocks).
+When using mocks, you don't have to specify `resolvers`. By default, any `resolvers` you specify are **ignored** when you enable `mocks`. To configure this behavior, see [Using existing resolvers with mocks](#using-existing-resolvers-with-mocks).
 
 >Note: If `typeDefs` has any [custom scalar types](../schema/custom-scalars/#providing-custom-scalars-to-apollo-server), you will need to specify what your server should return for those types. You can do this by creating a customized mock with resolvers for each custom scalar type, as described below.
 
@@ -120,7 +120,7 @@ For more sophisticated testing, you can customize your mocks to return user-spec
 
 Instead of providing a boolean to the `mocks` option, you can provide an object that defines custom mocking logic. This enables you to specify values to return for different return types.
 
-By default, the functions in `mocks` will take precedence over any currently defined resolvers. In the below example, both `hello` and `resolved` return `Hello`.
+By default, the functions in `mocks` take precedence over any currently defined resolvers. In the below example, both `Query.hello` and `Query.resolved` return `Hello`.
 
 ```js{16-20}
 const { ApolloServer, gql } = require('apollo-server');
@@ -157,7 +157,7 @@ server.listen().then(({ url }) => {
 
 You can also use `mocks` to define object types and the fields belonging to those object types (much like a [resolver map](../data/resolvers/#base-syntax)).
 
-In the below example, note that our mocked `Person` object calls a function returning an object with fields pointing at _other_ functions:
+In the below example, note that our mocked `Person` object calls a function returning an object with fields that contain _other_ functions:
 
 ```js
 // importing the casual library
@@ -171,7 +171,7 @@ const mocks = {
 };
 ```
 
-The previous example uses [casual](https://github.com/boo1ean/casual), a fake data generator for JavaScript which returns a different result every time the function is called. In other scenarios, such as testing, a collection of fake objects or a generator that always uses a consistent seed are often necessary to provide consistent data.
+The previous example uses [casual](https://github.com/boo1ean/casual), a fake data generator for JavaScript that returns a different result every time the function is called. In other scenarios, such as testing, a collection of fake objects or a generator that always uses a consistent seed are often necessary to provide consistent data.
 
 ### Using lists in mocks
 
@@ -194,7 +194,7 @@ const mocks = {
 
 The default behavior for mocks is to overwrite the resolvers already present in the schema. To use your server's existing resolvers while mocking, set the `mockEntireSchema` option to `false`.
 
-> Note: Mocking resolvers doesn't work if the `mocks` option is `false`, even if `mockEntireSchema` is true.
+> Note: Mocking resolvers doesn't work if the `mocks` option is `false`, even if `mockEntireSchema` is `true`.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
@@ -230,7 +230,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-Running the above example with the `mockEntireSchema` option set to false, the `resolved` field now returns the string `Resolved`.
+Running the above example with the `mockEntireSchema` option set to `false`, the `resolved` field now returns the string `Resolved`.
 
 ## Mocking a schema using introspection
 
@@ -261,7 +261,7 @@ server.listen().then(({ url }) => {
 
 Under the hood, Apollo Server's mocking functionality is provided by the function [`addMocksToSchema`](https://www.graphql-tools.com/docs/mocking/) from the `@graphql-tools/mock` package. The `mocks` object is passed directly to the `addMocksToSchema` function, and `preserveResolvers` is the inverse of `mockEntireSchema`.
 
-Apollo Server does not support all of the arguments to `addMocksToSchema`, such as `resolvers`. If you'd like to use the features of `@graphql-tools/mock` that aren't supported by Apollo Server, you can install and use `@graphql-tools/mock` directly:
+Apollo Server does not support all of the arguments to `addMocksToSchema`, such as `resolvers`. To use features of `@graphql-tools/mock` that aren't supported by Apollo Server, you can install and use `@graphql-tools/mock` directly:
 
 ```js
 const { addMocksToSchema } = require('@graphql-tools/mock')
