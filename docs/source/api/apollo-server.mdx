@@ -600,68 +600,6 @@ The `start` method triggers the following actions:
 2. Your server calls all of the [`serverWillStart` handlers](../integrations/plugins-event-reference/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
 
 
-## `executeOperation`
-
-The async `executeOperation` method is used primarily for [testing GraphQL operations](../testing/testing/#testing-using-executeoperation) through the server's request pipeline without going through a full HTTP operation.
-
-The `executeOperation` method takes two arguments:
-* The first argument is a configuration options object
-* The second argument will be passed in to the current `ApolloServer` instance's `context` function
-
-Below are the available configuration options for the first argument of `executeOperation`:
-
-<table class="field-table">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-
-<tbody>
-<tr class="required">
-<td>
-
-##### `query`
-
-`String` or `<DocumentNode>`
-</td>
-
-<td>
-
-The GraphQL operation to be run. Note you must use the `query` key even if the operation is a mutation.
-</td>
-</tr>
-
-<tr>
-<td>
-
-##### `variables`
-
-`Object`
-</td>
-<td>
-
-You can optionally provide variables to be passed in as arguments to the `query`.
-</td>
-</tr>
-
-<tr>
-<td>
-
-##### `operationName`
-
-`String`
-</td>
-<td>
-
-Optional, but if included the `operationName` must be present in the provided `query`.
-</td>
-</tr>
-
-</tbody>
-</table>
-
 ## `stop`
 
 `ApolloServer.stop()` is an async method that tells all of Apollo Server's background tasks to complete. Specifically, it:
@@ -680,6 +618,78 @@ Optional, but if included the `operationName` must be present in the provided `q
 This method takes no arguments. You should only call it after [`start()`](#start) returns successfully (or [`listen()`](#listen) if you're using the batteries-included `apollo-server` package).
 
 In some circumstances, Apollo Server calls `stop` automatically when the process receives a `SIGINT` or `SIGTERM` signal. See the [`stopOnTerminationSignals` constructor option](#stoponterminationsignals) for details.
+
+
+## `executeOperation`
+
+The async `executeOperation` method is used primarily for [testing GraphQL operations](../testing/testing/#testing-using-executeoperation) through Apollo Server's request pipeline _without_ sending an HTTP request.
+
+```js
+const result = await server.executeOperation({
+  query: 'query SayHelloWorld($name: String) { hello(name: $name) }',
+  variables: { name: 'world' },
+});
+```
+
+The `executeOperation` method takes two arguments:
+* The first argument is a configuration options object.
+  * Supported options are listed in the table below.
+* The second argument is passed to `ApolloServer`'s `context` function.
+  * This is helpful when [testing](../testing/testing/) that your server's `context` is correctly gathering the values needed from a request.
+
+Below are the available configuration options for the first argument of `executeOperation`:
+
+### Options
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr class="required">
+<td>
+
+##### `query`
+
+`string` or `DocumentNode`
+</td>
+
+<td>
+
+**Required**. The GraphQL operation to run. Note that you must use the `query` option even if the operation is a mutation.
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `variables`
+
+`object`
+</td>
+<td>
+An object containing any GraphQL variables to use as argument values for the executed operation.
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `operationName`
+
+`string`
+</td>
+<td>
+
+If `query` contains more than one operation definition, you must provide this option to indicate which operation to execute.
+</td>
+</tr>
+
+</tbody>
+</table>
 
 ## Framework-specific middleware function
 
