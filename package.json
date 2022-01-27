@@ -104,7 +104,7 @@
     "bunyan": "1.8.15",
     "codecov": "3.8.3",
     "connect": "3.7.0",
-    "cspell": "5.16.0",
+    "cspell": "5.17.0",
     "deep-freeze": "0.0.1",
     "express": "4.17.2",
     "fastify": "3.27.0",
