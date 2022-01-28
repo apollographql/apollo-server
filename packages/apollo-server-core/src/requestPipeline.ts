@@ -406,16 +406,20 @@ export async function processGraphQLRequest<TContext>(
           (e.message.startsWith(
             `Variable "$${e.nodes[0].variable.name.value}" got invalid value `,
           ) ||
-            (e.nodes[0].type.kind === Kind.NON_NULL_TYPE &&
-              e.nodes[0].type.type.kind === Kind.NAMED_TYPE &&
-              (e.message.startsWith(
-                `Variable "$${e.nodes[0].variable.name.value}" of required ` +
-                  `type "${e.nodes[0].type.type.name.value}!" was not provided.`,
-              ) ||
-                e.message.startsWith(
-                  `Variable "$${e.nodes[0].variable.name.value}" of non-null ` +
-                    `type "${e.nodes[0].type.type.name.value}!" must not be null.`,
-                ))))
+            e.message.match(
+              new RegExp(
+                '^Variable "\\$' +
+                  e.nodes[0].variable.name.value +
+                  '" of required type ".*!" was not provided.',
+              ),
+            ) ||
+            e.message.match(
+              new RegExp(
+                '^Variable "\\$' +
+                  e.nodes[0].variable.name.value +
+                  '" of non-null type ".*!" must not be null.',
+              ),
+            ))
         ) {
           return fromGraphQLError(e, {
             errorClass: UserInputError,
