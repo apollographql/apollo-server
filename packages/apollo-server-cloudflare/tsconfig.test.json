@@ -1,8 +1,0 @@
-{
-  "extends": "../../tsconfig.test.base",
-  "include": ["src/**/__tests__"],
-  "references": [
-    { "path": "./" },
-    { "path": "../apollo-server-integration-testsuite" },
-  ]
-}
