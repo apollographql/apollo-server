@@ -5,12 +5,7 @@
   "files": [],
   "include": [],
   "references": [
-    { "path": "./packages/apollo-datasource" },
-    { "path": "./packages/apollo-datasource-rest" },
     { "path": "./packages/apollo-server" },
-    { "path": "./packages/apollo-server-cache-memcached" },
-    { "path": "./packages/apollo-server-cache-redis" },
-    { "path": "./packages/apollo-server-caching" },
     { "path": "./packages/apollo-server-core" },
     { "path": "./packages/apollo-server-errors" },
     { "path": "./packages/apollo-server-express" },

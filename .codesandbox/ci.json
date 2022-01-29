@@ -1,13 +1,8 @@
 {
   "buildCommand": "compile",
   "packages": [
-    "packages/apollo-datasource",
-    "packages/apollo-datasource-rest",
     "packages/apollo-reporting-protobuf",
     "packages/apollo-server",
-    "packages/apollo-server-cache-memcached",
-    "packages/apollo-server-cache-redis",
-    "packages/apollo-server-caching",
     "packages/apollo-server-core",
     "packages/apollo-server-env",
     "packages/apollo-server-errors",
