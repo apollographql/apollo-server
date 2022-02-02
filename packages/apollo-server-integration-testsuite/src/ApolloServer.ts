@@ -433,6 +433,30 @@ export function testApolloServer<AS extends ApolloServerBase>(
           );
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
+
+        it('catches List of non-null type variable error and returns UserInputError', async () => {
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+              type Query {
+                hello(x: [String!]!): String
+              }
+            `,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            query: `query ($x:[String!]!) {hello(x:$x)}`,
+            variables: { x: [null] },
+          });
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toBeDefined();
+          expect(result.errors[0].message).toBe(
+            `Variable "$x" got invalid value null at "x[0]"; ` +
+              `Expected non-nullable type "String!" not to be null.`,
+          );
+          expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
+        });
       });
 
       describe('schema creation', () => {
