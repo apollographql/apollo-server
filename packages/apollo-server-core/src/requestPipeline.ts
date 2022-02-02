@@ -98,6 +98,22 @@ export type DataSources<TContext> = {
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
+function isBadUserInputGraphQLError(error: GraphQLError): Boolean {
+  return (
+    error.nodes?.length === 1 &&
+    error.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
+    (error.message.startsWith(
+      `Variable "$${error.nodes[0].variable.name.value}" got invalid value `,
+    ) ||
+      error.message.startsWith(
+        `Variable "$${error.nodes[0].variable.name.value}" of required type `,
+      ) ||
+      error.message.startsWith(
+        `Variable "$${error.nodes[0].variable.name.value}" of non-null type `,
+      ))
+  );
+}
+
 export async function processGraphQLRequest<TContext>(
   config: GraphQLRequestPipelineConfig<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
@@ -400,23 +416,7 @@ export async function processGraphQLRequest<TContext>(
       // variable resolution from execution later; see
       // https://github.com/graphql/graphql-js/issues/3169
       const resultErrors = result.errors?.map((e) => {
-        if (
-          e.nodes?.length === 1 &&
-          e.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
-          (e.message.startsWith(
-            `Variable "$${e.nodes[0].variable.name.value}" got invalid value `,
-          ) ||
-            (e.nodes[0].type.kind === Kind.NON_NULL_TYPE &&
-              e.nodes[0].type.type.kind === Kind.NAMED_TYPE &&
-              (e.message.startsWith(
-                `Variable "$${e.nodes[0].variable.name.value}" of required ` +
-                  `type "${e.nodes[0].type.type.name.value}!" was not provided.`,
-              ) ||
-                e.message.startsWith(
-                  `Variable "$${e.nodes[0].variable.name.value}" of non-null ` +
-                    `type "${e.nodes[0].type.type.name.value}!" must not be null.`,
-                ))))
-        ) {
+        if (isBadUserInputGraphQLError(e)) {
           return fromGraphQLError(e, {
             errorClass: UserInputError,
           });

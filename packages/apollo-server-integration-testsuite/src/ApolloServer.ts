@@ -320,72 +320,143 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
 
-      it('variable coercion errors', async () => {
-        const { url: uri } = await createApolloServer({
-          typeDefs: gql`
-            type Query {
-              hello(x: String): String
-            }
-          `,
+      describe('appropriate error for bad user input', () => {
+        it('variable coercion errors', async () => {
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+              type Query {
+                hello(x: String): String
+              }
+            `,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            query: `query ($x:String) {hello(x:$x)}`,
+            variables: { x: 2 },
+          });
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toBeDefined();
+          expect(result.errors[0].message).toMatch(
+            /got invalid value 2; String cannot represent a non string value: 2/,
+          );
+          expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
-        const apolloFetch = createApolloFetch({ uri });
+        it('catches required type variable error and returns UserInputError', async () => {
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+              type Query {
+                hello(x: String!): String
+              }
+            `,
+          });
 
-        const result = await apolloFetch({
-          query: `query ($x:String) {hello(x:$x)}`,
-          variables: { x: 2 },
-        });
-        expect(result.data).toBeUndefined();
-        expect(result.errors).toBeDefined();
-        expect(result.errors[0].message).toMatch(
-          /got invalid value 2; String cannot represent a non string value: 2/,
-        );
-        expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
-      });
+          const apolloFetch = createApolloFetch({ uri });
 
-      it('catches required type variable error and returns UserInputError', async () => {
-        const { url: uri } = await createApolloServer({
-          typeDefs: gql`
-            type Query {
-              hello(x: String!): String
-            }
-          `,
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-
-        const result = await apolloFetch({
-          query: `query ($x:String!) {hello(x:$x)}`,
-        });
-        expect(result.data).toBeUndefined();
-        expect(result.errors).toBeDefined();
-        expect(result.errors[0].message).toMatch(
-          `Variable "$x" of required type "String!" was not provided.`,
-        );
-        expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
-      });
-
-      it('catches non-null type variable error and returns UserInputError', async () => {
-        const { url: uri } = await createApolloServer({
-          typeDefs: gql`
-            type Query {
-              hello(x: String!): String
-            }
-          `,
+          const result = await apolloFetch({
+            query: `query ($x:String!) {hello(x:$x)}`,
+          });
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toBeDefined();
+          expect(result.errors[0].message).toMatch(
+            `Variable "$x" of required type "String!" was not provided.`,
+          );
+          expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
-        const apolloFetch = createApolloFetch({ uri });
+        it('catches required List type variable error and returns UserInputError', async () => {
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+              type Query {
+                hello(x: [String]!): String
+              }
+            `,
+          });
 
-        const result = await apolloFetch({
-          query: `query ($x:String!) {hello(x:$x)}`,
-          variables: { x: null },
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            query: `query ($x:[String]!) {hello(x:$x)}`,
+          });
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toBeDefined();
+          expect(result.errors[0].message).toMatch(
+            `Variable "$x" of required type "[String]!" was not provided.`,
+          );
+          expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
-        expect(result.data).toBeUndefined();
-        expect(result.errors).toBeDefined();
-        expect(result.errors[0].message).toMatch(
-          `Variable "$x" of non-null type "String!" must not be null.`,
-        );
-        expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
+
+        it('catches non-null type variable error and returns UserInputError', async () => {
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+              type Query {
+                hello(x: String!): String
+              }
+            `,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            query: `query ($x:String!) {hello(x:$x)}`,
+            variables: { x: null },
+          });
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toBeDefined();
+          expect(result.errors[0].message).toMatch(
+            `Variable "$x" of non-null type "String!" must not be null.`,
+          );
+          expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
+        });
+
+        it('catches non-null List type variable error and returns UserInputError', async () => {
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+              type Query {
+                hello(x: [String]!): String
+              }
+            `,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            query: `query ($x:[String]!) {hello(x:$x)}`,
+            variables: { x: null },
+          });
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toBeDefined();
+          expect(result.errors[0].message).toMatch(
+            `Variable "$x" of non-null type "[String]!" must not be null.`,
+          );
+          expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
+        });
+
+        it('catches List of non-null type variable error and returns UserInputError', async () => {
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+              type Query {
+                hello(x: [String!]!): String
+              }
+            `,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            query: `query ($x:[String!]!) {hello(x:$x)}`,
+            variables: { x: [null] },
+          });
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toBeDefined();
+          expect(result.errors[0].message).toBe(
+            `Variable "$x" got invalid value null at "x[0]"; ` +
+              `Expected non-nullable type "String!" not to be null.`,
+          );
+          expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
+        });
       });
 
       describe('schema creation', () => {
