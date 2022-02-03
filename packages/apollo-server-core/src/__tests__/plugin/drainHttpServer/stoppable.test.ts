@@ -31,10 +31,10 @@ import https from 'https';
 const a: any = require('awaiting');
 const request: any = require('requisition');
 import fs from 'fs';
-import { Stopper } from '../stoppable';
+import { Stopper } from '../../../plugin/drainHttpServer/stoppable';
 import child from 'child_process';
 import path from 'path';
-import { AddressInfo } from 'net';
+import type { AddressInfo } from 'net';
 
 function port(s: http.Server) {
   return (s.address() as AddressInfo).port;

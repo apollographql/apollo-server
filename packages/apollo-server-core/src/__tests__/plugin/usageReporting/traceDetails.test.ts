@@ -1,4 +1,4 @@
-import { makeTraceDetails } from '../traceDetails';
+import { makeTraceDetails } from '../../../plugin/usageReporting/traceDetails';
 import { Trace } from 'apollo-reporting-protobuf';
 import { GraphQLError } from 'graphql';
 

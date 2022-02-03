@@ -1,6 +1,6 @@
 import { buildASTSchema, DocumentNode, validate } from 'graphql';
 import gql from 'graphql-tag';
-import { calculateReferencedFieldsByType } from '../referencedFields';
+import { calculateReferencedFieldsByType } from '../../../plugin/usageReporting/referencedFields';
 
 const schema = buildASTSchema(gql`
   type Query {

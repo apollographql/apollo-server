@@ -3,7 +3,7 @@ import type { CacheHint } from 'apollo-server-types';
 import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
-} from '../';
+} from '../../..';
 import pluginTestHarness from '../../../utils/pluginTestHarness';
 
 export async function collectCacheControlHintsAndPolicyIfCacheable(

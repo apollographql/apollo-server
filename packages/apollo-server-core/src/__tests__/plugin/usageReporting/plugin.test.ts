@@ -6,7 +6,7 @@ import loglevel from 'loglevel';
 import {
   makeHTTPRequestHeaders,
   ApolloServerPluginUsageReporting,
-} from '../plugin';
+} from '../../../plugin/usageReporting/plugin';
 import { Headers } from 'apollo-server-env';
 import {
   Trace,
@@ -21,7 +21,7 @@ import nock from 'nock';
 import sumBy from 'lodash.sumby';
 import { mockRandom, resetMockRandom } from 'jest-mock-random';
 import { gunzipSync } from 'zlib';
-import type { ApolloServerPluginUsageReportingOptions } from '../options';
+import type { ApolloServerPluginUsageReportingOptions } from '../../../plugin/usageReporting/options';
 import type { GraphQLRequestContextDidResolveOperation } from 'apollo-server-types';
 
 const quietLogger = loglevel.getLogger('quiet');

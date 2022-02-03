@@ -1,4 +1,4 @@
-import { DurationHistogram } from '../durationHistogram';
+import { DurationHistogram } from '../../../plugin/usageReporting/durationHistogram';
 
 describe('Duration histogram tests', () => {
   it('generateEmptyHistogram', () => {

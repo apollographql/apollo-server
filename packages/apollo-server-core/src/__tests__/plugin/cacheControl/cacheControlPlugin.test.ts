@@ -4,7 +4,7 @@ import { CacheHint, CacheScope } from 'apollo-server-types';
 import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
-} from '../';
+} from '../../..';
 import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLResponse,

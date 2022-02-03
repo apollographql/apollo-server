@@ -1,7 +1,10 @@
 import { Trace } from 'apollo-reporting-protobuf';
-import { dateToProtoTimestamp } from '../../traceTreeBuilder';
-import { OurContextualizedStats, SizeEstimator } from '../stats';
-import { DurationHistogram } from '../durationHistogram';
+import { dateToProtoTimestamp } from '../../../plugin/traceTreeBuilder';
+import {
+  OurContextualizedStats,
+  SizeEstimator,
+} from '../../../plugin/usageReporting/stats';
+import { DurationHistogram } from '../../../plugin/usageReporting/durationHistogram';
 
 const statsContext = {
   clientVersion: 'version',

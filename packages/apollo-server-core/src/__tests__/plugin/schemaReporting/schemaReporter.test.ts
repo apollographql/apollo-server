@@ -1,10 +1,13 @@
 import nock from 'nock';
-import { schemaReportGql, SchemaReporter } from '../schemaReporter';
+import {
+  schemaReportGql,
+  SchemaReporter,
+} from '../../../plugin/schemaReporting/schemaReporter';
 import type {
   SchemaReportMutation,
   ReportSchemaResponse,
   SchemaReportMutationVariables,
-} from '../generated/operations';
+} from '../../../plugin/schemaReporting/generated/operations';
 
 function mockReporterRequest(
   url: any,

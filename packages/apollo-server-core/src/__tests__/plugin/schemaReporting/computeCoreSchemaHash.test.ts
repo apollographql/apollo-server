@@ -1,4 +1,4 @@
-import { computeCoreSchemaHash } from '..';
+import { computeCoreSchemaHash } from '../../../plugin/schemaReporting';
 import { printSchema, buildSchema } from 'graphql';
 
 describe('Executable Schema Id', () => {

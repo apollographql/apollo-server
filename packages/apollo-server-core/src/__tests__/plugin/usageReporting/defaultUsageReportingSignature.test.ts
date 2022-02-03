@@ -1,5 +1,5 @@
 import { default as gql, disableFragmentWarnings } from 'graphql-tag';
-import { defaultUsageReportingSignature } from '../defaultUsageReportingSignature';
+import { defaultUsageReportingSignature } from '../../../plugin/usageReporting/defaultUsageReportingSignature';
 
 // The gql duplicate fragment warning feature really is just warnings; nothing
 // breaks if you turn it off in tests.

@@ -1,4 +1,4 @@
-import { operationDerivedDataCacheKey } from '../operationDerivedDataCache';
+import { operationDerivedDataCacheKey } from '../../../plugin/usageReporting/operationDerivedDataCache';
 
 describe('operation-derived data cache key', () => {
   it('generates without the operationName', () => {
