@@ -38,8 +38,6 @@
     "apollo-server-express": "file:packages/apollo-server-express",
     "apollo-server-integration-testsuite": "file:packages/apollo-server-integration-testsuite",
     "apollo-server-plugin-base": "file:packages/apollo-server-plugin-base",
-    "apollo-server-plugin-operation-registry": "file:packages/apollo-server-plugin-operation-registry",
-    "apollo-server-plugin-response-cache": "file:packages/apollo-server-plugin-response-cache",
     "apollo-server-types": "file:packages/apollo-server-types"
   },
   "devDependencies": {
@@ -52,7 +50,6 @@
     "@josephg/resolvable": "1.0.1",
     "@rollup/plugin-commonjs": "21.0.1",
     "@rollup/plugin-json": "4.1.0",
-    "@sinonjs/fake-timers": "9.0.0",
     "@types/async-retry": "1.4.3",
     "@types/body-parser": "1.19.2",
     "@types/bunyan": "1.8.8",
@@ -72,7 +69,6 @@
     "@types/qs-middleware": "1.0.1",
     "@types/request": "2.48.8",
     "@types/request-promise": "4.1.48",
-    "@types/sinonjs__fake-timers": "8.1.1",
     "@types/superagent": "4.1.13",
     "@types/supertest": "2.0.11",
     "@types/test-listen": "1.1.0",

@@ -11,7 +11,5 @@
     { "path": "./packages/apollo-server-core/src/plugin/usageReporting/__tests__/" },
     { "path": "./packages/apollo-server-errors/src/__tests__/" },
     { "path": "./packages/apollo-server-express/src/__tests__/" },
-    { "path": "./packages/apollo-server-plugin-operation-registry/src/__tests__/" },
-    { "path": "./packages/apollo-server-plugin-response-cache/src/__tests__/" },
   ]
 }

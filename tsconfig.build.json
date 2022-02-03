@@ -10,7 +10,5 @@
     { "path": "./packages/apollo-server-errors" },
     { "path": "./packages/apollo-server-express" },
     { "path": "./packages/apollo-server-plugin-base" },
-    { "path": "./packages/apollo-server-plugin-operation-registry" },
-    { "path": "./packages/apollo-server-plugin-response-cache" },
   ]
 }
