@@ -114,12 +114,13 @@ export function ApolloServerPluginUsageReporting<TContext>(
       const logger = options.logger ?? serverLogger;
       const { key, graphRef } = apollo;
       if (!(key && graphRef)) {
-        throw new Error(
+        logger.error(
           "You've enabled usage reporting via ApolloServerPluginUsageReporting, " +
             'but you also need to provide your Apollo API key and graph ref, via ' +
             'the APOLLO_KEY/APOLLO_GRAPH_REF environment ' +
             'variables or via `new ApolloServer({apollo: {key, graphRef})`.',
         );
+        return {};
       }
 
       logger.info(
