@@ -15,7 +15,7 @@ import {
   ITracesAndStats,
   ContextualizedStats,
 } from 'apollo-reporting-protobuf';
-import pluginTestHarness from '../../../utils/pluginTestHarness';
+import pluginTestHarness from '../../pluginTestHarness';
 import { pluginsEnabledForSchemaResolvers } from '../../../utils/schemaInstrumentation';
 import nock from 'nock';
 import sumBy from 'lodash.sumby';

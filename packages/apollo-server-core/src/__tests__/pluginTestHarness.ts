@@ -17,14 +17,14 @@ import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
 import {
   enablePluginsForSchemaResolvers,
   symbolExecutionDispatcherWillResolveField,
-} from './schemaInstrumentation';
+} from '../utils/schemaInstrumentation';
 import type {
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
   GraphQLServerListener,
 } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import { Dispatcher } from './dispatcher';
+import { Dispatcher } from '../utils/dispatcher';
 import { getOperationAST, parse, validate as graphqlValidate } from 'graphql';
 import { newCachePolicy } from '../cachePolicy';
 

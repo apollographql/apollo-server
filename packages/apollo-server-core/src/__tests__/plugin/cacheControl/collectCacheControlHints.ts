@@ -4,7 +4,7 @@ import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
 } from '../../..';
-import pluginTestHarness from '../../../utils/pluginTestHarness';
+import pluginTestHarness from '../../pluginTestHarness';
 
 export async function collectCacheControlHintsAndPolicyIfCacheable(
   schema: GraphQLSchema,

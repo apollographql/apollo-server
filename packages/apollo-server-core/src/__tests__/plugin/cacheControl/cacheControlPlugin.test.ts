@@ -9,7 +9,7 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLResponse,
 } from 'apollo-server-plugin-base';
-import pluginTestHarness from '../../../utils/pluginTestHarness';
+import pluginTestHarness from '../../pluginTestHarness';
 
 describe('plugin', () => {
   describe('willSendResponse', () => {
