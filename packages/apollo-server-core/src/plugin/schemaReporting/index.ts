@@ -73,19 +73,21 @@ export function ApolloServerPluginSchemaReporting(
     async serverWillStart({ apollo, schema, logger }) {
       const { key, graphRef } = apollo;
       if (!key) {
-        throw Error(
+        logger.error(
           'To use ApolloServerPluginSchemaReporting, you must provide an Apollo API ' +
             'key, via the APOLLO_KEY environment variable or via `new ApolloServer({apollo: {key})`',
         );
+        return;
       }
       if (!graphRef) {
         // This error is a bit imprecise as you can also specify ID and variant separately,
         // or rely on API-key parsing (before AS3), but this is "best practices".
-        throw Error(
+        logger.error(
           'To use ApolloServerPluginSchemaReporting, you must provide your graph ref (eg, ' +
             "'my-graph-id@my-graph-variant'). Try setting the APOLLO_GRAPH_REF environment " +
             'variable or passing `new ApolloServer({apollo: {graphRef}})`.',
         );
+        return;
       }
 
       // Ensure a provided override schema can be parsed and validated

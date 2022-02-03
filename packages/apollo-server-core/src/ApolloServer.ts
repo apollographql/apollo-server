@@ -813,7 +813,7 @@ export class ApolloServerBase<
           const options: ApolloServerPluginSchemaReportingOptions = {};
           this.plugins.push(ApolloServerPluginSchemaReporting(options));
         } else {
-          throw new Error(
+          this.logger.error(
             "You've enabled schema reporting by setting the APOLLO_SCHEMA_REPORTING " +
               'environment variable to true, but you also need to provide your ' +
               'Apollo API key, via the APOLLO_KEY environment ' +
