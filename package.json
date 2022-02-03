@@ -116,7 +116,7 @@
   },
   "jest": {
     "projects": [
-      "<rootDir>/packages/*"
+      "<rootDir>/packages/*/jest.config.js"
     ]
   }
 }
