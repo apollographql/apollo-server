@@ -26,11 +26,11 @@ import {
   PersistedQueryOptions,
   KeyValueCache,
   ApolloServerPluginCacheControl,
+  PersistedQueryNotFoundError,
 } from 'apollo-server-core';
 import gql from 'graphql-tag';
 import type { GraphQLResponse, ValueOrPromise } from 'apollo-server-types';
 import type { GraphQLRequestListener } from 'apollo-server-plugin-base';
-import { PersistedQueryNotFoundError } from 'apollo-server-errors';
 
 export * from './ApolloServer';
 export { createApolloFetch } from './apolloFetch';

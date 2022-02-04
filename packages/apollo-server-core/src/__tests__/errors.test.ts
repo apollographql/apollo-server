@@ -8,7 +8,7 @@ import {
   ValidationError,
   UserInputError,
   SyntaxError,
-} from 'apollo-server-errors';
+} from '../errors';
 
 describe('Errors', () => {
   describe('ApolloError', () => {

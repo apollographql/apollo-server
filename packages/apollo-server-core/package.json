@@ -34,7 +34,6 @@
     "apollo-reporting-protobuf": "file:../apollo-reporting-protobuf",
     "apollo-server-caching": "^3.3.0",
     "apollo-server-env": "file:../apollo-server-env",
-    "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-server-types": "file:../apollo-server-types",
     "async-retry": "^1.2.1",

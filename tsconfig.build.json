@@ -6,7 +6,6 @@
   "include": [],
   "references": [
     { "path": "./packages/apollo-server-core" },
-    { "path": "./packages/apollo-server-errors" },
     { "path": "./packages/apollo-server-express" },
     { "path": "./packages/apollo-server-plugin-base" },
   ]

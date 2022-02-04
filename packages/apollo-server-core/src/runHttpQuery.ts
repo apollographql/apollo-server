@@ -3,7 +3,7 @@ import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
-import { ApolloError, formatApolloErrors } from 'apollo-server-errors';
+import { ApolloError, formatApolloErrors } from './errors';
 import {
   processGraphQLRequest,
   GraphQLRequest,

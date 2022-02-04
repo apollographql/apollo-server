@@ -1,4 +1,4 @@
-import { ApolloError, ForbiddenError, AuthenticationError } from '..';
+import { ApolloError, ForbiddenError, AuthenticationError } from '../errors';
 
 describe('ApolloError', () => {
   it("doesn't overwrite extensions when provided in the constructor", () => {

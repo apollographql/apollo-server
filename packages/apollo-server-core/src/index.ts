@@ -20,7 +20,10 @@ export {
   ForbiddenError,
   UserInputError,
   formatApolloErrors,
-} from 'apollo-server-errors';
+  // note: this wasn't exported from AS3 apollo-server-core, just apollo-server-errors,
+  // but we've (temporarily) added it for apollo-server-integration-testsuite
+  PersistedQueryNotFoundError,
+} from './errors';
 
 export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 

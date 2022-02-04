@@ -29,7 +29,7 @@ import {
   PersistedQueryNotFoundError,
   formatApolloErrors,
   UserInputError,
-} from 'apollo-server-errors';
+} from './errors';
 import type {
   GraphQLRequest,
   GraphQLResponse,
