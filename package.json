@@ -75,7 +75,6 @@
     "@types/uuid": "8.3.4",
     "@vendia/serverless-express": "4.5.3",
     "apollo-datasource": "3.3.1",
-    "apollo-datasource-rest": "3.5.1",
     "apollo-server-caching": "3.3.0",
     "awaiting": "3.0.0",
     "body-parser": "1.19.1",
