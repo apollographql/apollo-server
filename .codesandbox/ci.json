@@ -2,7 +2,6 @@
   "buildCommand": "compile",
   "packages": [
     "packages/apollo-reporting-protobuf",
-    "packages/apollo-server",
     "packages/apollo-server-core",
     "packages/apollo-server-env",
     "packages/apollo-server-errors",
