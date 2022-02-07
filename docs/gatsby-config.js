@@ -77,6 +77,7 @@ module.exports = {
             'deployment/lambda',
             'deployment/azure-functions',
             'deployment/gcp-functions',
+            'deployment/koyeb',
           ],
           Monitoring: ['monitoring/metrics', 'monitoring/health-checks'],
           'API Reference': [
