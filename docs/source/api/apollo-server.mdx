@@ -632,9 +632,9 @@ const result = await server.executeOperation({
 ```
 
 The `executeOperation` method takes two arguments:
-* The first argument is a configuration options object.
+* The first argument is a configuration options object describing the GraphQL operation to be performed.
   * Supported options are listed in the table below.
-* The second argument is passed to `ApolloServer`'s `context` function.
+* The second optional argument is passed to `ApolloServer`'s `context` function.
   * This is helpful when [testing](../testing/testing/) that your server's `context` is correctly gathering the values needed from a request.
 
 Below are the available configuration options for the first argument of `executeOperation`:
