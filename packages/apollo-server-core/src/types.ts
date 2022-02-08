@@ -39,7 +39,6 @@ type BaseConfig = Pick<
   | 'executor'
   | 'formatResponse'
   | 'fieldResolver'
-  | 'dataSources'
   | 'cache'
   | 'logger'
   | 'allowBatchedHttpRequests'

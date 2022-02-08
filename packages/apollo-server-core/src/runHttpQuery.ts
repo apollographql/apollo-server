@@ -185,7 +185,6 @@ export async function runHttpQuery(
     // cacheControl defaults will also have been set if a boolean argument is
     // passed in.
     cache: options.cache!,
-    dataSources: options.dataSources,
     documentStore: options.documentStore,
 
     persistedQueries: options.persistedQueries,

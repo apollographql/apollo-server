@@ -8,7 +8,6 @@ import type {
   ParseOptions,
 } from 'graphql';
 import type { KeyValueCache } from 'apollo-server-caching';
-import type { DataSource } from 'apollo-datasource';
 import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type {
   GraphQLExecutor,
@@ -57,7 +56,6 @@ export interface GraphQLServerOptions<
   ) => GraphQLResponse | null;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
-  dataSources?: () => DataSources<TContext>;
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
   plugins?: ApolloServerPlugin[];
@@ -66,10 +64,6 @@ export interface GraphQLServerOptions<
   nodeEnv?: string;
   allowBatchedHttpRequests?: boolean;
 }
-
-export type DataSources<TContext> = {
-  [name: string]: DataSource<TContext>;
-};
 
 export interface PersistedQueryOptions {
   cache?: KeyValueCache;

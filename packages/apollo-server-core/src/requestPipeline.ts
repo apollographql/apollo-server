@@ -13,7 +13,6 @@ import {
   Kind,
   ParseOptions,
 } from 'graphql';
-import type { DataSource } from 'apollo-datasource';
 import type { PersistedQueryOptions } from './graphqlOptions';
 import {
   symbolExecutionDispatcherWillResolveField,
@@ -76,8 +75,6 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   executor?: GraphQLExecutor;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
 
-  dataSources?: () => DataSources<TContext>;
-
   persistedQueries?: PersistedQueryOptions;
 
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
@@ -91,10 +88,6 @@ export interface GraphQLRequestPipelineConfig<TContext> {
 
   parseOptions?: ParseOptions;
 }
-
-export type DataSources<TContext> = {
-  [name: string]: DataSource<TContext>;
-};
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
@@ -113,7 +106,6 @@ export async function processGraphQLRequest<TContext>(
     requestContext.metrics || Object.create(null));
 
   const dispatcher = await initializeRequestListenerDispatcher();
-  await initializeDataSources();
 
   const request = requestContext.request;
 
@@ -614,35 +606,5 @@ export async function processGraphQLRequest<TContext>(
       }
     }
     return new Dispatcher(requestListeners);
-  }
-
-  async function initializeDataSources() {
-    if (config.dataSources) {
-      const context = requestContext.context;
-
-      const dataSources = config.dataSources();
-
-      const initializers: any[] = [];
-      for (const dataSource of Object.values(dataSources)) {
-        if (dataSource.initialize) {
-          initializers.push(
-            dataSource.initialize({
-              context,
-              cache: requestContext.cache,
-            }),
-          );
-        }
-      }
-
-      await Promise.all(initializers);
-
-      if ('dataSources' in context) {
-        throw new Error(
-          'Please use the dataSources config option instead of putting dataSources on the context yourself.',
-        );
-      }
-
-      (context as any).dataSources = dataSources;
-    }
   }
 }
