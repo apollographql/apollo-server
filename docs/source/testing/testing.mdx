@@ -95,8 +95,8 @@ The example above includes a test-specific [`context` function](../data/resolver
 To use your server's defined `context` function, you can pass a second argument to `executeOperation`, which is then passed to your server's `context` function. Note that to use your server's `context` function you need to put together an object with the correct [middleware-specific context fields](../api/apollo-server/#middleware-specific-context-fields) for your implementation.
 
 >For examples of both integration and end-to-end testing we recommend checking out the [tests included in the Apollo fullstack tutorial](https://github.com/apollographql/fullstack-tutorial/tree/master/final/server/src/__tests__).
-## End-to-end testing
 
+## End-to-end testing
 
 Instead of bypassing the HTTP layer, you might want to fully run your server and test it with a real HTTP client. Apollo Server doesn't provide built-in support for this at this time.
 
