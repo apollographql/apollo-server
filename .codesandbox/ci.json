@@ -3,7 +3,6 @@
   "packages": [
     "packages/apollo-reporting-protobuf",
     "packages/apollo-server-core",
-    "packages/apollo-server-env",
     "packages/apollo-server-express",
     "packages/apollo-server-plugin-base",
     "packages/apollo-server-types"

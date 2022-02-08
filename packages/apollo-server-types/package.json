@@ -13,7 +13,7 @@
   "dependencies": {
     "apollo-reporting-protobuf": "file:../apollo-reporting-protobuf",
     "apollo-server-caching": "^3.3.0",
-    "apollo-server-env": "file:../apollo-server-env"
+    "@types/node-fetch": "^2.5.12"
   },
   "peerDependencies": {
     "graphql": "^15.3.0 || ^16.0.0"

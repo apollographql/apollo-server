@@ -59,7 +59,7 @@ export { GraphQLRequest, GraphQLResponse, GraphQLRequestContext };
 import createSHA from './utils/createSHA';
 import { HttpQueryError } from './runHttpQuery';
 import type { DocumentStore } from './types';
-import { Headers } from 'apollo-server-env';
+import { Headers } from 'node-fetch';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 

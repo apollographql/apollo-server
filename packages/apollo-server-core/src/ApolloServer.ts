@@ -40,7 +40,7 @@ import {
   APQ_CACHE_PREFIX,
 } from './requestPipeline';
 
-import { Headers } from 'apollo-server-env';
+import { Headers } from 'node-fetch';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import type { Logger, SchemaHash, ApolloConfig } from 'apollo-server-types';
 import { cloneObject } from './runHttpQuery';

@@ -2,7 +2,7 @@ import os from 'os';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { v4 as uuidv4 } from 'uuid';
 import { printSchema, validateSchema, buildSchema } from 'graphql';
-import type { fetch } from 'apollo-server-env';
+import type fetch from 'node-fetch';
 import { SchemaReporter } from './schemaReporter';
 import createSHA from '../../utils/createSHA';
 import { schemaIsFederated } from '../schemaIsFederated';

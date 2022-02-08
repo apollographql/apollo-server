@@ -2,7 +2,7 @@ import os from 'os';
 import { gzip } from 'zlib';
 import retry from 'async-retry';
 import { Report, ReportHeader, Trace } from 'apollo-reporting-protobuf';
-import { Response, fetch, Headers } from 'apollo-server-env';
+import fetch, { Response, Headers } from 'node-fetch';
 import type {
   GraphQLRequestListener,
   GraphQLServerListener,
@@ -308,7 +308,15 @@ export function ApolloServerPluginUsageReporting<TContext>(
                   accept: 'application/json',
                 },
                 body: compressed,
-                agent: options.requestAgent,
+                // The node-fetch types (which have been deleted from DefinitelyTyped
+                // because v3 has it built in) don't allow `boolean` but it passes
+                // it to http.request which does, so for the sake of type-checking
+                // we remove `boolean`. We should instead figure out a better story
+                // around these types in general.
+                agent: options.requestAgent as Exclude<
+                  ApolloServerPluginUsageReportingOptions<TContext>['requestAgent'],
+                  boolean
+                >,
               },
             );
 

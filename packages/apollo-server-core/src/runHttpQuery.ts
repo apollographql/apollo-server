@@ -1,4 +1,4 @@
-import { Request, Headers } from 'apollo-server-env';
+import { Request, Headers } from 'node-fetch';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,

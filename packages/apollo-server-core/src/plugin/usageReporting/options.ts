@@ -5,7 +5,9 @@ import type {
   GraphQLRequestContext,
   GraphQLRequestContextWillSendResponse,
 } from 'apollo-server-types';
-import type { fetch, RequestAgent } from 'apollo-server-env';
+import type fetch from 'node-fetch';
+import type { Agent as HttpAgent } from 'http';
+import type { Agent as HttpsAgent } from 'https';
 import type { Trace } from 'apollo-reporting-protobuf';
 
 export interface ApolloServerPluginUsageReportingOptions<TContext> {
@@ -232,7 +234,7 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    * HTTP(s) agent to be used on the `fetch` call when sending reports to
    * Apollo.
    */
-  requestAgent?: RequestAgent | false;
+  requestAgent?: HttpAgent | HttpsAgent | false;
   /**
    * Specifies which Fetch API implementation to use when sending usage reports.
    */

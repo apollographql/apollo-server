@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Headers } from 'apollo-server-env';
+import { Headers } from 'node-fetch';
 import { CacheHint, CacheScope } from 'apollo-server-types';
 import {
   ApolloServerPluginCacheControl,

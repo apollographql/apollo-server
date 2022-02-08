@@ -40,7 +40,7 @@ import {
   ApolloError,
   ApolloServerPluginLandingPageLocalDefault,
 } from 'apollo-server-core';
-import { fetch } from 'apollo-server-env';
+import fetch from 'node-fetch';
 import type {
   BaseContext,
   GraphQLRequestContextExecutionDidStart,

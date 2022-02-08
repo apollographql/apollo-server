@@ -1,4 +1,4 @@
-import type { Request, Response } from 'apollo-server-env';
+import type { Request, Response } from 'node-fetch';
 import type {
   GraphQLSchema,
   ValidationContext,

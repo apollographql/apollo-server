@@ -1,5 +1,5 @@
 import { gql } from '../../gql';
-import { fetch, Headers, Request } from 'apollo-server-env';
+import fetch, { Headers, Request } from 'node-fetch';
 import type { GraphQLRequest, Logger } from 'apollo-server-types';
 import { print } from 'graphql';
 import type {

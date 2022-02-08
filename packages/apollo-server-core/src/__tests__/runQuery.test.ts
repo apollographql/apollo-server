@@ -13,7 +13,7 @@ import {
 import type { GraphQLResponse, SchemaHash } from 'apollo-server-types';
 
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
-import type { Request } from 'apollo-server-env';
+import type { Request } from 'node-fetch';
 import type {
   GraphQLOptions,
   Context as GraphQLContext,

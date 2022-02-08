@@ -7,7 +7,7 @@ import {
   makeHTTPRequestHeaders,
   ApolloServerPluginUsageReporting,
 } from '../../../plugin/usageReporting/plugin';
-import { Headers } from 'apollo-server-env';
+import { Headers } from 'node-fetch';
 import {
   Trace,
   Report,

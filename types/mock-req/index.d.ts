@@ -1,4 +1,4 @@
-import { Request, Headers } from 'apollo-server-env';
+import type { Request, Headers } from 'node-fetch';
 
 declare class MockReq implements Pick<Request, 'method' | 'url' | 'headers'> {
   constructor();
