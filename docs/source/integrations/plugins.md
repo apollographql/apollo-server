@@ -17,7 +17,7 @@ with each request that's sent to Apollo Server.
 Plugins are JavaScript objects that implement one or more functions that respond to
 events. Here's a basic plugin that responds to the `serverWillStart` event:
 
-```js:title=index.js
+```js title="index.js"
 const myPlugin = {
   serverWillStart() {
     console.log('Server starting up!');
@@ -30,7 +30,7 @@ const myPlugin = {
 You can define a plugin in the same file where you initialize Apollo Server, or
 you can export it as a separate module:
 
-```js:title=myplugin.js
+```js title="myplugin.js"
 module.exports = {
   serverWillStart() {
     console.log('Server starting up!');
@@ -41,7 +41,7 @@ module.exports = {
 To create a plugin that accepts options, create a function that accepts an
 `options` object and returns a properly structured plugin object, like so:
 
-```js:title=myplugin.js
+```js title="myplugin.js"
 module.exports = (options) => {
   return {
     serverWillStart() {

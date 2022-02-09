@@ -8,7 +8,7 @@ Apollo Server includes `graphql-tools` version 4 by default. If you want to use 
 
 2. Update your `ApolloServer` constructor to provide the `schema` option _instead of_ `typeDefs`, `resolvers`, and `schemaDirectives`. You instead pass these options to the `makeExecutableSchema` function, which you provide as the value of `schema`:
 
-    ```js:title=index.js
+    ```js title="index.js"
     const { ApolloServer, gql } = require("apollo-server");
     const { makeExecutableSchema } = require("@graphql-tools/schema");
 
@@ -26,7 +26,7 @@ Apollo Server includes `graphql-tools` version 4 by default. If you want to use 
 
 3. Add the following definitions to your schema `typeDefs`:
 
-    ```graphql:title=schema.graphql
+    ```graphql title="schema.graphql"
     enum CacheControlScope {
       PUBLIC
       PRIVATE

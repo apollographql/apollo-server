@@ -5,7 +5,7 @@ description: Configure caching behavior on a per-field basis
 
 Apollo Server enables you to define cache control settings (`maxAge` and `scope`) for each field in your schema:
 
-```graphql{5,7}
+```graphql {5,7}
 type Post {
   id: ID!
   title: String
@@ -51,7 +51,7 @@ Use `@cacheControl` for fields that should always be cached with the same settin
 
 This example defines cache control settings for two fields of the `Post` type: `votes` and `readByCurrentUser`:
 
-```graphql{5,7}:title=schema.graphql
+```graphql {5,7} title="schema.graphql"
 type Post {
   id: ID!
   title: String
@@ -71,7 +71,7 @@ In this example:
 
 This example defines cache control settings for _all_ schema fields that return a `Post` object:
 
-```graphql:title=schema.graphql
+```graphql title="schema.graphql"
 type Post @cacheControl(maxAge: 240) {
   id: Int!
   title: String
@@ -84,7 +84,7 @@ type Post @cacheControl(maxAge: 240) {
 
 If another object type in this schema includes a field of type `Post` (or a list of `Post`s), that field's value is cached for a maximum of 240 seconds:
 
-```graphql:title=schema.graphql
+```graphql title="schema.graphql"
 type Comment {
   post: Post! # Cached for up to 240 seconds
   body: String!
@@ -93,7 +93,7 @@ type Comment {
 
 **Note that [field-level settings](#field-level-definitions) override type-level settings.** In the following case, `Comment.post` is cached for a maximum of 120 seconds, _not_ 240 seconds:
 
-```graphql:title=schema.graphql
+```graphql title="schema.graphql"
 type Comment {
   post: Post! @cacheControl(maxAge: 120)
   body: String!
