@@ -16,7 +16,7 @@ There are two main options for integration testing with Apollo Server:
 Apollo Server's `executeOperation` method enables you to run operations through the request pipeline _without_ sending an HTTP request.
 
 The [`executeOperation` method](../api/apollo-server/#executeoperation) accepts the following arguments:
-* An object containing configuration options describing the GraphQL operation to preform.
+* An object containing the options describing the GraphQL operation to perform.
   * This object must include a `query` option specifying the GraphQL operation to run. You can use `executeOperation` to execute both queries and mutations, but both use the `query` option.
 * An optional argument that is passed in to the `ApolloServer` instance's [`context` function](../data/resolvers/#the-context-argument).
 
