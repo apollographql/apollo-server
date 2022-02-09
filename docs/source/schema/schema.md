@@ -12,7 +12,7 @@ The GraphQL specification defines a human-readable **schema definition language*
 
 Here's a short example schema that defines two **object types**: `Book` and `Author`:
 
-```graphql:title=schema.graphql
+```graphql title="schema.graphql"
 type Book {
   title: String
   author: Author
@@ -48,7 +48,7 @@ Each field returns data of the type specified. A field's return type can be a [s
 
 A field can return a **list** containing items of a particular type. You indicate list fields with square brackets `[]`, like so:
 
-```graphql{3}
+```graphql {3}
 type Author {
   name: String
   books: [Book] # A list of Books
@@ -59,7 +59,7 @@ type Author {
 
 By default, it's valid for any field in your schema to return `null` instead of its specified type. You can require that a particular field _doesn't_ return `null` with an exclamation mark `!`, like so:
 
-```graphql{2}
+```graphql {2}
 type Author {
   name: String! # Can't return null
   books: [Book]
@@ -72,7 +72,7 @@ These fields are **non-nullable**. If your server attempts to return `null` for 
 
 With a list field, an exclamation mark `!` can appear in any combination of _two_ locations:
 
-```graphql{2}
+```graphql {2}
 type Author {
   books: [Book!]! # This list can't be null AND its list *items* can't be null
 }
@@ -117,7 +117,7 @@ Most of the types you define in a GraphQL schema are object types. An object typ
 
 Two object types _can_ include each other as fields, as is the case in our example schema from earlier:
 
-```graphql{3,8}
+```graphql {3,8}
 type Book {
   title: String
   author: Author

@@ -50,7 +50,7 @@ If none of these implementations applies to your use case, you can create your o
 
 You provide your `DataSource` subclasses to the `ApolloServer` constructor, like so:
 
-```js{4-9}:title=index.js
+```js {4-9} title="index.js"
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -69,7 +69,7 @@ const server = new ApolloServer({
 
 Your resolvers can now access your data sources from the shared `context` object and use them to fetch data:
 
-```js:title=resolvers.js
+```js title="resolvers.js"
 const resolvers = {
   Query: {
     movie: async (_, { id }, { dataSources }) => {
@@ -119,7 +119,7 @@ For the options you can pass to the underlying Memcached client, [see the docume
 
 #### Redis
 
-```js:title=Redis
+```js title="Redis"
 const { BaseRedisCache } = require('apollo-server-cache-redis');
 const Redis = require('ioredis');
 
@@ -162,7 +162,7 @@ You then extend the `RESTDataSource` class and implement whatever data-fetching 
 
 Here's an example `RESTDataSource` subclass that defines two data-fetching methods, `getMovie` and `getMostViewedMovies`:
 
-```js:title=movies-api.js
+```js title="movies-api.js"
 const { RESTDataSource } = require('apollo-datasource-rest');
 
 class MoviesAPI extends RESTDataSource {

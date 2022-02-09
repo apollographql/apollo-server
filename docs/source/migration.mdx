@@ -122,7 +122,7 @@ Then, complete the following:
 
 1. Add a plugin to your `ApolloServer` constructor to close the `SubscriptionServer`.
 
-    ```javascript:title=index.js-10
+    ```javascript title="index.js-10"
     const server = new ApolloServer({
       schema,
       plugins: [{
@@ -718,7 +718,7 @@ In Apollo Server 2, the `executionDidStart` plugin event could return nothing, a
 
 In Apollo Server 3, `executionDidStart` must return either nothing or an object. If you previously returned a function, you can now return an object with an `executionDidEnd` field like so:
 
-```javascript{7-11}
+```javascript {7-11}
 const server = new ApolloServer({
   schema,
   plugins: [{

@@ -50,7 +50,7 @@ server.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
 
 By default, Heroku apps look for a [Procfile](https://devcenter.heroku.com/articles/procfile) in your root directory that contains commands run by the app on startup. For a basic Apollo Server application, this file should at least contain a line similar to the following:
 
-```shell:title=Procfile
+```shell title="Procfile"
 web: node index.js
 ```
 

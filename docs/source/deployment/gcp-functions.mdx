@@ -6,7 +6,7 @@ This tutorial helps you deploy Apollo Server to Google Cloud Functions. It uses 
 
 <ExpansionPanel title="Click to expand">
 
-```javascript:title=index.js
+```javascript title="index.js"
 const { ApolloServer, gql } = require('apollo-server-cloud-functions');
 
 // Construct a schema, using GraphQL schema language
@@ -58,7 +58,7 @@ Paste the example code at the top of this page into the contents of `index.js` i
 
 Edit `package.json` so that it lists `apollo-server-cloud-functions` and `graphql` in its dependencies:
 
-```json:title=package.json
+```json title="package.json"
   "dependencies": {
     "apollo-server-cloud-functions": "3.x",
     "graphql": "^15.5.0"

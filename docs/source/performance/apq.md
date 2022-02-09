@@ -33,7 +33,7 @@ Apollo Server supports APQ without any additional configuration. However, some _
 
 To set up APQ in Apollo Client, first import the `createPersistedQueryLink` function in the same file where you initialize `ApolloClient`:
 
-```js:title=index.js
+```js title="index.js"
 import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
 ```
 

@@ -29,7 +29,7 @@ You can pass a string `healthCheckPath` to the `ApolloServer` constructor to cha
 
 If you'd like the health check to do more than just "always return success", you can pass an async function `onHealthCheck` function to the `ApolloServer` constructor. If defined, this `onHealthCheck` async function should return if the server is deemed _ready_ or `throw` if there is an error. Returning (resolving the `Promise`) will result in an HTTP status code of 200, which is generally desired by most health-check tooling (e.g. Kubernetes, AWS, etc.), while `throw`ing (rejecting the `Promise`) will result in an HTTP status code of 503.
 
-```js{10-17}
+```js {10-17}
 import { ApolloServer, gql } from 'apollo-server';
 
 // Undefined for brevity.

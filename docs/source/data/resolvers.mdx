@@ -163,7 +163,7 @@ Whenever a query asks for a field that returns an object type, the query _also_ 
 
 For example, all fields of this `Product` type "bottom out":
 
-```graphql{1-6}
+```graphql {1-6}
 type Product {
   id: ID!
   name: String
@@ -335,7 +335,7 @@ server.listen().then(({ url }) => {
 
 If we now update our query to also ask for each book's `title`:
 
-```graphql{4}
+```graphql {4}
 query GetBooksByLibrary {
   libraries {
     books {

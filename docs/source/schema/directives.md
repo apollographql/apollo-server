@@ -7,7 +7,7 @@ A **directive** decorates part of a GraphQL schema or operation with additional 
 
 Directives are preceded by the `@` character, like so:
 
-```graphql{2}:title=schema.graphql
+```graphql {2} title="schema.graphql"
 type ExampleType {
   oldField: String @deprecated(reason: "Use `newField`.")
   newField: String
@@ -33,7 +33,7 @@ directive @deprecated(
 
 This indicates that `@deprecated` can decorate any of the four listed locations. Also note that its `reason` argument is optional and provides a default value. Usage examples of each location are provided below:
 
-```graphql:title=schema.graphql
+```graphql title="schema.graphql"
 # ARGUMENT_DEFINITION
 # Note: @deprecated arguments _must_ be optional.
 directive @withDeprecatedArgs(
