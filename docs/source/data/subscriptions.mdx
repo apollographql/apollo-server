@@ -8,9 +8,9 @@ import {ExpansionPanel, MultiCodeBlock} from 'gatsby-theme-apollo-docs';
 
 > **Apollo Server 3 removes built-in support for subscriptions.** You can reenable support as [described below](#enabling-subscriptions).
 >
-> This article has been updated to use the `graphql-ws` library. We strongly recommend against using `subscriptions-transport-ws`, as this library is not longer being actively maintained. The [previous version of this article can be found here](https://github.com/apollographql/apollo-server/blob/4b82967c10a69aa104848a8c9d15c591b528918c/docs/source/data/subscriptions.mdx). If you plan to sure subscriptions with Apollo Client, ensure you setup [for the subscription protocol you are using](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol).
->
 > **Subscriptions are not currently supported in [Apollo Federation](https://www.apollographql.com/docs/federation/).**
+>
+> This article has been updated to use the `graphql-ws` library with Apollo Server. We no longer recommend using the previously documented `subscriptions-transport-ws`, because this library is no longer actively maintained. For more information, see [The old `subscriptions-transport-ws` library](#the-old-subscriptions-transport-ws-library).
 
 **Subscriptions** are long-lasting GraphQL read operations that can update their result whenever a particular server-side event occurs. Most commonly, updated results are _pushed_ from the server to subscribing clients. For example, a chat application's server might use a subscription to push newly received messages to all clients in a particular chat room.
 
@@ -49,7 +49,7 @@ subscription PostFeed {
 >
 > The following steps assume you've already swapped to `apollo-server-express`.
 
-To run both an Express app _and_ a separate subscription server (using ws's WebSocketServer), we'll create an `http.Server` instance that effectively wraps the two and becomes our new `listen`er.
+To run both an Express app _and_ a separate WebSocket server for subscriptions, we'll create an `http.Server` instance that effectively wraps the two and becomes our new `listen`er.
 
 1. Install `graphql-ws`, `ws`, and `@graphql-tools/schema`:
     ```bash
@@ -65,7 +65,7 @@ To run both an Express app _and_ a separate subscription server (using ws's WebS
     import { useServer } from 'graphql-ws/lib/use/ws';
     ```
 
-3. Next, in order to set up both the HTTP and WebSocket servers, we need to create an `http.Server`. Do this by passing your Express `app` to the `createServer` function, which we imported from the `http` module:
+3. Next, in order to set up both the HTTP and subscription servers, we need to first create an `http.Server`. Do this by passing your Express `app` to the `createServer` function, which we imported from the `http` module:
 
     ```ts:title=index.ts
     // This `app` is the returned value from `express()`.
@@ -415,7 +415,7 @@ Defining an `onConnect` function provides the following benefits:
 
 You provide these function definitions to the constructor object of a `SubscriptionServer`, like so:
 
-```js{4,9}
+```js{4,7}
 useServer(
   {
     schema,
@@ -495,6 +495,8 @@ Context object for the WebSocket connection. This is _not_ the `context` object 
 
 ### Example: Authentication with `onConnect`
 
+>If you plan to use subscriptions with Apollo Client, ensure your subscription protocol [is consistent with the subscription library you are using](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol).
+
 On the client, `SubscriptionsClient` supports adding information to `connectionParams` ([example](https://www.apollographql.com/docs/react/data/subscriptions/#5-authenticate-over-websocket-optional)) that will be sent with the first WebSocket message. On the server, all GraphQL subscriptions are delayed until the connection has been fully authenticated and the `onConnect` callback returns a truthy value.
 
 Let's suppose we have our `SubscriptionClient` configured like so:
@@ -558,6 +560,10 @@ The following are community-created `PubSub` libraries for popular event-publish
 
 If none of these libraries fits your use case, you can also create your own `PubSubEngine` subclass. If you create a new open-source library, click **Edit on GitHub** to let us know about it!
 
-## The `graphql-ws` transport library
+## The old `subscriptions-transport-ws` library
 
-<!-- This page explains how to connect the `subscriptions-transport-ws` library to your Apollo Server. However, as of 2021, this library is not actively maintained. A newer alternative to `subscriptions-transport-ws` called [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) is currently more actively maintained, and its README explains how to use it with Apollo Server. The two libraries implement different protocols for GraphQL subscriptions over websockets, so you will need to adjust your client to support `graphql-ws`. At the time of release of Apollo Server 3, the protocol used in the `graphql-ws` library is not yet supported by GraphQL Playground or Apollo Explorer, which is why we do not yet document it as our main recommendation for a subscriptions library. If the ability to interact with subscriptions in GraphQL Playground or Apollo Explorer is not important to you, you may prefer using `graphql-ws` over `subscriptions-transport-ws`. -->
+This article details hows to setup the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library with Apollo Server. Previously this article recommended using the `subscriptions-transport-ws` library, however this library is no longer actively maintained.
+
+The two libraries implement different protocols for GraphQL subscriptions over websockets. If you do decide to switch from one library to another you will need to ensure your [Apollo Client subscription protocol](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol) is coordinated with the subscription library you are using. Note that you may also need to [adjust the Apollo Sandbox settings to use the subscription protocol for the library you are using](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support).
+
+You can find the [previous version of this article using `subscriptions-transport-ws` here](https://github.com/apollographql/apollo-server/blob/4b82967c10a69aa104848a8c9d15c591b528918c/docs/source/data/subscriptions.mdx).
