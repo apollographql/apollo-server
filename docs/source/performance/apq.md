@@ -76,7 +76,7 @@ ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38
 1. Attempt to execute this query on your running server by providing its hash in a `curl` command, like so:
 
     ```shell
-    curl -g http://localhost:4000/graphql \
+    curl --get http://localhost:4000/graphql \
       --data-urlencode 'extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
     ```
 
