@@ -17,7 +17,7 @@ Apollo Server's `executeOperation` method enables you to run operations through 
 
 The [`executeOperation` method](../api/apollo-server/#executeoperation) accepts the following arguments:
 * An object that describes the GraphQL operation to execute.
-  * This object must include a `query` option specifying the GraphQL operation to run. You can use `executeOperation` to execute both queries and mutations, but both use the `query` option.
+  * This object must include a `query` field specifying the GraphQL operation to run. You can use `executeOperation` to execute both queries and mutations, but both use the `query` field.
 * An optional argument that is passed in to the `ApolloServer` instance's [`context` function](../data/resolvers/#the-context-argument).
 
 Below is a simplified example of setting up a test using the JavaScript testing library [Jest](https://jestjs.io/):
