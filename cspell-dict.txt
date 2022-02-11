@@ -148,6 +148,7 @@ unawaited
 uncacheable
 undersupported
 undici
+urlencode
 unexecutable
 uninstrumented
 unparsable

@@ -76,7 +76,8 @@ ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38
 1. Attempt to execute this query on your running server by providing its hash in a `curl` command, like so:
 
     ```shell
-    curl -g 'http://localhost:4000/graphql?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+    curl --get http://localhost:4000/graphql \
+      --data-urlencode 'extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
     ```
 
     The first time you try this, Apollo Server responds with an error with the code `PERSISTED_QUERY_NOT_FOUND`. This tells us that Apollo Server hasn't yet received the associated query string.
@@ -84,7 +85,9 @@ ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38
 2. Send a followup request that includes both the query string _and_ its hash, like so:
 
     ```shell
-    curl -g 'http://localhost:4000/graphql?query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+    curl --get http://localhost:4000/graphql \
+      --data-urlencode 'query={__typename}' \
+      --data-urlencode 'extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
     ```
 
     This time, the server persists the query string and then responds with the query result as we'd expect.
@@ -94,8 +97,8 @@ ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38
 3. Finally, attempt the request from step 1 again:
 
     ```shell
-    curl -g 'http://localhost:4000/graphql?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
-    ```
+    curl --get http://localhost:4000/graphql \
+      --data-urlencode 'extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'    ```
 
    This time, the server responds with the query result because it successfully located the associated query string in its cache.
 
