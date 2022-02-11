@@ -10,7 +10,7 @@ import {ExpansionPanel, MultiCodeBlock} from 'gatsby-theme-apollo-docs';
 >
 > **Subscriptions are not currently supported in [Apollo Federation](https://www.apollographql.com/docs/federation/).**
 >
-> This article has been updated to use the `graphql-ws` library with Apollo Server. We no longer recommend using the previously documented `subscriptions-transport-ws`, because this library is no longer actively maintained. For more information, see [The old `subscriptions-transport-ws` library](#the-old-subscriptions-transport-ws-library).
+> This article has been updated to use the `graphql-ws` library to add support for subscriptions to Apollo Server. We no longer recommend using the previously documented `subscriptions-transport-ws`, because this library is no longer actively maintained. For more information about the differences between the two libraries, see [Old `subscriptions-transport-ws` library](#old-subscriptions-transport-ws-library).
 
 **Subscriptions** are long-lasting GraphQL read operations that can update their result whenever a particular server-side event occurs. Most commonly, updated results are _pushed_ from the server to subscribing clients. For example, a chat application's server might use a subscription to push newly received messages to all clients in a particular chat room.
 
@@ -30,7 +30,7 @@ type Subscription {
 
 The `postCreated` field will update its value whenever a new `Post` is created on the backend, thus pushing the `Post` to subscribing clients.
 
-Clients can subscribe to the `postCreated` field with a GraphQL string like this:
+Clients can subscribe to the `postCreated` field with a GraphQL string, like this:
 
 ```graphql
 subscription PostFeed {
@@ -86,10 +86,10 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
     });
     ```
 
-5. Create a `WebSocketServer` to serve as our subscription server.
+5. Create a `WebSocketServer` to use as your subscription server.
 
     ```ts:title=index.ts
-      // This will be the websocket server we use for our subscriptions
+      // Creating the WebSocket server
       const wsServer = new WebSocketServer({
         // This is the `httpServer` we created in a previous step.
         server: httpServer,
@@ -98,20 +98,21 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
         path: '/graphql',
       });
 
-      // Hand in the schema we just create and start the WebSocketServer
+      // Hand in the schema we just created and have the
+      // WebSocketServer start listening.
       useServer({ schema }, wsServer);
     ```
 
-6. Add a plugin to your `ApolloServer` constructor to close the `SubscriptionServer`.
+6. Add [a plugin](../integrations/plugins) to your `ApolloServer` constructor to close the `WebSocketServer`:
 
-    ```javascript:title=index.ts
+    ```ts:title=index.ts
     const server = new ApolloServer({
       schema,
       plugins: [{
         async serverWillStart() {
           return {
             async drainServer() {
-              wsServer.close();
+              await wsServer.close();
             }
           };
         }
@@ -119,7 +120,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
     });
     ```
 
-7. Finally, we need to adjust our existing `listen` call.
+7. Finally, ensure you are `listen`ing to your `httpServer`.
 
     Most Express applications call `app.listen(...)`. **Change this to `httpServer.listen(...)`** with the same arguments. This way, the server starts listening on the HTTP and WebSocket transports simultaneously.
 
@@ -136,8 +137,8 @@ import express from 'express';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
-import resolvers from "./resolvers";
-import typeDefs from "./typeDefs";
+import resolvers from './resolvers';
+import typeDefs from './typeDefs';
 
 // Create the schema, which will be used separately by ApolloServer and
 // the websocket server.
@@ -151,7 +152,7 @@ const server = new ApolloServer({
       async serverWillStart() {
         return {
           async drainServer() {
-            subscriptionServer.close();
+            await wsServer.close();
           },
         };
       },
@@ -166,7 +167,7 @@ const app = express();
 const httpServer = createServer(app);
 server.applyMiddleware({ app });
 
-// Create our websocket server using the HTTP server we just set up.
+// Create our WebSocket server using the HTTP server we just set up.
 const wsServer = new WebSocketServer({
   server: httpServer,
   path: '/graphql',
@@ -187,7 +188,7 @@ httpServer.listen(PORT, () => {
 
 ## Resolving a subscription
 
-Resolvers for `Subscription` fields differ from resolvers for fields of other types. Specifically, `Subscription` field resolvers are _objects_ that define a `subscribe` function:
+Resolvers for `Subscription` fields differ from resolvers for fields of other types. Specifically, `Subscription` field resolvers are **objects** that define a `subscribe` function:
 
 ```ts:title=index.ts
 const resolvers = {
@@ -201,7 +202,7 @@ const resolvers = {
 };
 ```
 
-The `subscribe` function must return an object of type `AsyncIterator`, a standard interface for iterating over asynchronous results. In the example above, an `AsyncIterator` is generated by `pubsub.asyncIterator` (more on this below).
+The `subscribe` function **must** return an object of type `AsyncIterator`, a standard interface for iterating over asynchronous results. In the example above, an `AsyncIterator` is generated by `pubsub.asyncIterator` (more on this below).
 
 
 ### The `PubSub` class
@@ -225,7 +226,7 @@ const pubsub = new PubSub();
 
 ### Publishing an event
 
-You publish an event with the `publish` method of a `PubSub` instance:
+You can publish an event using the `publish` method of a `PubSub` instance:
 
 ```js
 pubsub.publish('POST_CREATED', {
@@ -283,15 +284,17 @@ Next, we can listen for this event in our `Subscription` field's resolver.
 
 ### Listening for events
 
-An [`AsyncIterator`](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-async-iterator.ts) object listens for events that are associated with a particular label (or set of labels) and adds them to a queue for processing. You create an `AsyncIterator` by calling the `asyncIterator` method of `PubSub`:
+An [`AsyncIterator`](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-async-iterator.ts) object listens for events that are associated with a particular label (or set of labels) and adds them to a queue for processing.
+
+You can create an `AsyncIterator` by calling the `asyncIterator` method of `PubSub` and passing in an array containing the names of the event labels that this `AsyncIterator` should listen for.
 
 ```js
 pubsub.asyncIterator(['POST_CREATED']);
 ```
 
-You pass this method an array containing the names of all event labels that the `AsyncIterator` should listen for.
+Every `Subscription` field resolver's `subscribe` function must return an `AsyncIterator` object.
 
-Every `Subscription` field resolver's `subscribe` function must return an `AsyncIterator` object. This brings us back to the code sample at the top of [Resolving a subscription](#resolving-a-subscription):
+This brings us back to the code sample at the top of [Resolving a subscription](#resolving-a-subscription):
 
 ```js:title=index.js
 const resolvers = {
@@ -376,168 +379,150 @@ subscription IncrementingNumber {
 }
 ```
 
-After you start up the server in CodeSandbox, follow the instructions in the browser to test out running the `numberIncremented` subscription in Apollo Sandbox. You'll see the subscription's value update every second.
+After you start up the server in CodeSandbox, follow the instructions in the browser to test running the `numberIncremented` subscription in Apollo Sandbox. You should see the subscription's value update every second.
 
-> Note, if you run into problems you might need to [adjust your Sandbox settings to use the `graphql-ws` protocol](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support).
+> If you don't see the result of your subscription operation you might need to [adjust your Sandbox settings to use the `graphql-ws` protocol](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support).
 
 ## Operation context
 
 When [initializing context](../data/resolvers/#the-context-argument) for a query or mutation, you usually extract HTTP headers and other request metadata from the `req` object provided to the `context` function.
 
-<!-- **For subscriptions,** you provide server options to  `onConnect` function to the `useServer` method from . This function receives the [`connectionParams`](#connectionparams) in an object as the first argument, as well as the [`WebSocket`](#websocket) and [`ConnectionContext`](#context) as the second and third arguments, respectively. If your `onConnect` function returns an object, it's passed to your resolvers as the `context` argument. -->
-
-```js
+**For subscriptions,** you can extract information from a client's request by adding [options](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.ServerOptions.md) to the first argument passed to the `useServer` function. For example, can supply a `context` option to dynamically add values of your [GraphQL `context` function](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.ServerOptions.md#context):
+```ts
+// ...
 useServer(
   {
+    // Our GraphQL schema.
     schema,
-    async onConnect (connectionParams) {
-      if (connectionParams.authorization) {
-        const currentUser = await findUser(connectionParams.authorization);
-        return { currentUser };
-      }
-      throw new Error('Missing auth token!');
+    // Adding a context option allows you to add data to your GraphQL context
+     context: (ctx, msg, args) => {
+       // You can define your own function for setting a dynamic context
+       // or provide a static value
+      return getDynamicContext(ctx, msg, args);
     },
   },
   wsServer,
 );
 ```
 
-This is especially important because metadata like auth tokens are sent differently depending on the transport.
+Now here is where things might get a little bit confusing, notice above that the `context` option's first argument is `ctx`, also known as context. _What?_ The [`Context`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.Context.md) type in `graphql-ws` is **not the same thing** as the GraphQL `context` function passed to your resolvers.
 
-## `onConnect` and `onDisconnect`
+The `Context` type from `graphql-ws` is where information about your subscription server and its requests resides. You can access any incoming parameters from a client `subscription` request by checking the `Context.connectionParams`.
 
-You can define functions that the subscription server executes whenever a subscription request connects (`onConnect`) or disconnects (`onDisconnect`).
+Below is an example of the common use case of extracting an authentication token from a client `subscription` request and using it to find the current user:
 
-Defining an `onConnect` function provides the following benefits:
+```ts
+const getDynamicContext = (ctx, msg, args) => {
+  // ctx is the graphql-ws Context where connectionParams live
+ if (ctx.connectionParams.authorization) {
+    const currentUser = await findUser(connectionParams.authorization);
+    return { currentUser };
+  }
+  // Otherwise let our resolvers know we don't have a current user
+  return { currentUser: null };
+};
 
-* You can reject a particular incoming connection by throwing an exception or returning `false` in `onConnect`. This is especially useful for [authentication](#example-authentication-with-onconnect).
-* If `onConnect` returns an object, that object is passed as the _operation_ `context` to your resolvers.
-
-You provide these function definitions to the constructor object of a `SubscriptionServer`, like so:
-
-```js{4,7}
 useServer(
   {
     schema,
-    onConnect(connectionParams, webSocket, context) {
-      console.log('Connected!');
+     context: (ctx, msg, args) => {
+       // Returning an object will add that information to our
+       // GraphQL context, which all of our resolvers have access to.
+      return getDynamicContext(ctx, msg, args);
     },
-    onDisconnect(webSocket, context) {
+  },
+  wsServer,
+);
+```
+Putting it all together, if the `useServer.context` property returns an object, that object is passed to the GraphQL operation `context` of your resolvers.
+
+Note that the `context` option is called once per `subscription` request, not once per event emission. Meaning that in the above example, every time a client sends a `subscription` GraphQL operation we would check their authentication status.
+
+### `onConnect` and `onDisconnect`
+
+Expanding on the above, you can add additional options for the subscription server to execute whenever a client connects (`onConnect`) or disconnects (`onDisconnect`).
+
+Defining an `onConnect` function allows you to reject a particular incoming connection by returning false or by throwing an exception. This can be helpful if you'd like to check authentication when a client connects to your subscription server.
+
+You provide these functions as options to the first argument of `useServer`, like so:
+
+```ts{4,7}
+useServer(
+  {
+    schema,
+    // As before, ctx is the graphql-ws Context where connectionParams live.
+    onConnect: async (ctx) => {
+      // Check authentication every time a client connects.
+      if (tokenIsNotValid(ctx.connectionParams)) {
+        // You can return false to close the connect or throw an explicit error
+        throw new Error('Auth token missing!');
+      }
+    },
+    onDisconnect(ctx, code, reason) {
       console.log('Disconnected!');
     },
   },
   wsServer,
 );
 ```
+For more information and examples of using `onConnect` and `onDisconnect`, see the [`graphql-ws` documentation](https://github.com/enisdenjo/graphql-ws#ws-auth-handling).
 
-These functions are passed the following parameters:
+### Example: Authentication with the Server and Client
 
-<table class="field-table">
-  <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+>If you plan to use subscriptions with Apollo Client, ensure **[both your client and server subscription protocols are consistent](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol)** for the subscription library you are using (this example uses the `graphql-ws` library).
 
-<tbody>
-<tr>
-<td>
+On the client side, the `GraphQLWsLink` constructor supports adding information to `connectionParams` ([example](https://www.apollographql.com/docs/react/data/subscriptions/#5-authenticate-over-websocket-optional)). Those `connectionParams` are sent to your server when it connects, allowing you to extract information from the client request by accessing `Context.connectionParams`.
 
-###### `connectionParams`
-
-`object`
-
-</td>
-<td>
-
-**Passed to `onConnect` only.**
-
-An object containing parameters included in the request, such as an [authentication token](#example-authentication-with-onconnect).
-
-For details, see [Authenticate over WebSocket](https://www.apollographql.com/docs/react/data/subscriptions/#4-authenticate-over-websocket-optional) in the Apollo Client documentation.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `webSocket`
-
-`WebSocket`
-</td>
-<td>
-
-The connecting or disconnecting [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket).
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `context`
-
-`ConnectionContext`
-</td>
-<td>
-
-Context object for the WebSocket connection. This is _not_ the `context` object for the associated subscription operation.
-
-[See fields](https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/server.ts#L35-L43)
-
-</td>
-</tr>
-
-</tbody>
-</table>
-
-### Example: Authentication with `onConnect`
-
->If you plan to use subscriptions with Apollo Client, ensure your subscription protocol [is consistent with the subscription library you are using](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol).
-
-On the client, `SubscriptionsClient` supports adding information to `connectionParams` ([example](https://www.apollographql.com/docs/react/data/subscriptions/#5-authenticate-over-websocket-optional)) that will be sent with the first WebSocket message. On the server, all GraphQL subscriptions are delayed until the connection has been fully authenticated and the `onConnect` callback returns a truthy value.
-
-Let's suppose we have our `SubscriptionClient` configured like so:
+Let's suppose we create our subscription client like so:
 
 ```js
-new SubscriptionClient(subscriptionUrl, {
-  // ...other options
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+
+const wsLink = new GraphQLWsLink(createClient({
+  url: 'ws://localhost:4000/subscriptions',
   connectionParams: {
-    authorization: clientToken,
+    authorization: user.authToken,
   },
-})
+}));
 ```
 
-The `connectionParams` argument in the `SubscriptionServer`'s `onConnect` callback contains the information passed by the client and can be used to validate user credentials.
+The `connectionParams` argument, containing the information provided in by the client, will be passed to your server allowing you to validate the user's credentials.
 
-From the `onConnect` function, we can then return an object which is passed into our resolvers as the `context` argument during execution. For our example, we can use the `authorization` token provided by the client to look up the related user and pass that user along to our resolvers.
+From there you can use the [`useServer.context` property](#operation-context) to try and authenticate the user, returning an object which will be passed into your resolvers as the `context` argument during execution.
+
+For our example, we can use the `connectionParams.authentication` value provided by the client to look up the related user and pass that user along to our resolvers:
 
 ```js
 async function findUser(authToken) {
   // find a user by auth token
 };
 
+const getDynamicContext = (ctx, msg, args) => {
+ if (ctx.connectionParams.authentication) {
+    const currentUser = await findUser(connectionParams.authentication);
+    return { currentUser };
+  }
+  // Let the resolvers know we don't have a current user so they can
+  // throw the appropriate error
+  return { currentUser: null };
+};
 
+// ...
 useServer(
   {
+    // Our GraphQL schema.
     schema,
-    async onConnect (connectionParams, webSocket) {
-      if (connectionParams.authorization) {
-        const currentUser = await findUser(connectionParams.authorization);
-        return { currentUser };
-      }
-      throw new Error('Missing auth token!');
+     context: (ctx, msg, args) => {
+       // This will be run every time a subscription request from the client is made
+      return getDynamicContext(ctx, msg, args);
     },
   },
   wsServer,
 );
 ```
 
-The example above looks up a user based on the auth token that is sent with the first initialization message on the transport, then returns the user object as a `Promise`. The user object found will be available as `context.currentUser` in your GraphQL resolvers.
-
-In case of an authentication error, the `Promise` will be rejected, which prevents the client's connection.
+The example above looks up a user based on the authentication token that is sent with each subscription request, then returns the user object to be used by our resolvers. If no user exists or if lookup fails, our resolvers can throw an error and the corresponding `subscription` operation is not executed.
 
 ## Production `PubSub` libraries
 
@@ -560,10 +545,12 @@ The following are community-created `PubSub` libraries for popular event-publish
 
 If none of these libraries fits your use case, you can also create your own `PubSubEngine` subclass. If you create a new open-source library, click **Edit on GitHub** to let us know about it!
 
-## The old `subscriptions-transport-ws` library
+## Old `subscriptions-transport-ws` library
 
-This article details hows to setup the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library with Apollo Server. Previously this article recommended using the `subscriptions-transport-ws` library, however this library is no longer actively maintained.
+>If use subscriptions with Apollo Client you must ensure **[both your client and server subscription protocols are consistent](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol)** for the subscription library you are using.
 
-The two libraries implement different protocols for GraphQL subscriptions over websockets. If you do decide to switch from one library to another you will need to ensure your [Apollo Client subscription protocol](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol) is coordinated with the subscription library you are using. Note that you may also need to [adjust the Apollo Sandbox settings to use the subscription protocol for the library you are using](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support).
+This article details how to setup the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library to add support for subscriptions to Apollo Server. Previously this article recommended using the `subscriptions-transport-ws` library, however this library is no longer actively maintained. Apollo Client does support both `graphql-ws` and `subscriptions-transport-ws`, but we recommend using the currently maintained `graphql-ws` library.
 
-You can find the [previous version of this article using `subscriptions-transport-ws` here](https://github.com/apollographql/apollo-server/blob/4b82967c10a69aa104848a8c9d15c591b528918c/docs/source/data/subscriptions.mdx).
+The two libraries implement different protocols for GraphQL subscriptions over websockets. If you do decide to switch from one library to another, you will need to ensure your [Apollo Client subscription protocol](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol) is **consistent** with the subscription library you are using within Apollo Server and vice versa. Note that you might need to [adjust the Apollo Sandbox settings to use the same subscription protocol as the library you are using](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support).
+
+For more information on using Apollo Server with `subscriptions-transport-ws`, you can view the [previous version of this article here](https://github.com/apollographql/apollo-server/blob/4b82967c10a69aa104848a8c9d15c591b528918c/docs/source/data/subscriptions.mdx).
