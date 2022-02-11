@@ -1,4 +1,4 @@
-import { CacheHint, CachePolicy, CacheScope } from 'apollo-server-types';
+import type { CacheHint, CachePolicy } from 'apollo-server-types';
 
 export function newCachePolicy(): CachePolicy {
   return {
@@ -11,7 +11,7 @@ export function newCachePolicy(): CachePolicy {
       ) {
         this.maxAge = hint.maxAge;
       }
-      if (hint.scope !== undefined && this.scope !== CacheScope.Private) {
+      if (hint.scope !== undefined && this.scope !== 'PRIVATE') {
         this.scope = hint.scope;
       }
     },
@@ -27,7 +27,7 @@ export function newCachePolicy(): CachePolicy {
       if (this.maxAge === undefined || this.maxAge === 0) {
         return null;
       }
-      return { maxAge: this.maxAge, scope: this.scope ?? CacheScope.Public };
+      return { maxAge: this.maxAge, scope: this.scope ?? 'PUBLIC' };
     },
   };
 }

@@ -8,7 +8,7 @@ import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import type {
   ApolloServerPlugin,
   GraphQLServerListener,
-} from 'apollo-server-plugin-base';
+} from 'apollo-server-types';
 
 // This specifies the React version of our fork of GraphQL Playground,
 // `@apollographql/graphql-playground-react`.  It is related to, but not to

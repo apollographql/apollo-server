@@ -1,5 +1,5 @@
 import type http from 'http';
-import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import type { ApolloServerPlugin } from 'apollo-server-types';
 import { Stopper } from './stoppable';
 
 /**

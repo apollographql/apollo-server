@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Headers } from 'node-fetch';
-import { CacheHint, CacheScope } from 'apollo-server-types';
+import type { CacheHint } from 'apollo-server-types';
 import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
@@ -8,7 +8,7 @@ import {
 import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLResponse,
-} from 'apollo-server-plugin-base';
+} from 'apollo-server-types';
 import pluginTestHarness from '../../pluginTestHarness';
 
 describe('plugin', () => {
@@ -53,7 +53,7 @@ describe('plugin', () => {
     describe('HTTP cache-control header', () => {
       const overallCachePolicy: Required<CacheHint> = {
         maxAge: 300,
-        scope: CacheScope.Public,
+        scope: 'PUBLIC',
       };
 
       it('is set when calculateHttpHeaders is set to true', async () => {

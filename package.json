@@ -34,7 +34,6 @@
     "apollo-server-core": "file:packages/apollo-server-core",
     "apollo-server-express": "file:packages/apollo-server-express",
     "apollo-server-integration-testsuite": "file:packages/apollo-server-integration-testsuite",
-    "apollo-server-plugin-base": "file:packages/apollo-server-plugin-base",
     "apollo-server-types": "file:packages/apollo-server-types"
   },
   "devDependencies": {

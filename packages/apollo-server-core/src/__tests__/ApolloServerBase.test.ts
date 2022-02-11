@@ -1,9 +1,8 @@
 import { ApolloServerBase } from '../ApolloServer';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { gql } from '../';
-import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type { GraphQLSchema } from 'graphql';
-import type { Logger } from 'apollo-server-types';
+import type { ApolloServerPlugin, Logger } from 'apollo-server-types';
 
 const typeDefs = gql`
   type Query {

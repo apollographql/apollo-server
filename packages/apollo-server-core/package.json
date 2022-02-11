@@ -32,7 +32,6 @@
     "@josephg/resolvable": "^1.0.0",
     "apollo-reporting-protobuf": "file:../apollo-reporting-protobuf",
     "apollo-server-caching": "^3.3.0",
-    "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-server-types": "file:../apollo-server-types",
     "async-retry": "^1.2.1",
     "fast-json-stable-stringify": "^2.1.0",

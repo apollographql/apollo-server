@@ -7,6 +7,6 @@
   "references": [
     { "path": "./packages/apollo-server-core" },
     { "path": "./packages/apollo-server-express" },
-    { "path": "./packages/apollo-server-plugin-base" },
+    { "path": "./packages/apollo-server-types" },
   ]
 }

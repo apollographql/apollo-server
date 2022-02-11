@@ -36,8 +36,6 @@ import type {
   GraphQLExecutor,
   GraphQLExecutionResult,
   ValidationRule,
-} from 'apollo-server-types';
-import type {
   ApolloServerPlugin,
   GraphQLRequestListener,
   GraphQLRequestContextDidResolveSource,
@@ -49,7 +47,7 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
-} from 'apollo-server-plugin-base';
+} from 'apollo-server-types';
 
 import { Dispatcher } from './utils/dispatcher';
 import { KeyValueCache, PrefixingKeyValueCache } from 'apollo-server-caching';

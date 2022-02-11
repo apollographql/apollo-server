@@ -3,7 +3,6 @@ import {
   makeExecutableSchemaWithCacheControlSupport,
 } from './cacheControlSupport';
 
-import { CacheScope } from 'apollo-server-types';
 import {
   collectCacheControlHints,
   collectCacheControlHintsAndPolicyIfCacheable,
@@ -244,7 +243,7 @@ describe('@cacheControl directives', () => {
     );
 
     expect(hints).toStrictEqual(
-      new Map([['droid', { maxAge: 120, scope: CacheScope.Private }]]),
+      new Map([['droid', { maxAge: 120, scope: 'PRIVATE' }]]),
     );
   });
 
@@ -273,7 +272,7 @@ describe('@cacheControl directives', () => {
     );
 
     expect(hints).toStrictEqual(
-      new Map([['droid', { maxAge: 60, scope: CacheScope.Private }]]),
+      new Map([['droid', { maxAge: 60, scope: 'PRIVATE' }]]),
     );
   });
 
@@ -313,7 +312,7 @@ describe('@cacheControl directives', () => {
       );
       expect(policyIfCacheable).toStrictEqual({
         maxAge: 30,
-        scope: CacheScope.Public,
+        scope: 'PUBLIC',
       });
     }
 
@@ -420,13 +419,13 @@ describe('@cacheControl directives', () => {
     expect(hints).toStrictEqual(
       new Map([
         ['topLevel', { maxAge: 500 }],
-        ['topLevel.foo', { scope: CacheScope.Private }],
+        ['topLevel.foo', { scope: 'PRIVATE' }],
         ['topLevel.foo.bar', { maxAge: 5 }],
       ]),
     );
     expect(policyIfCacheable).toStrictEqual({
       maxAge: 5,
-      scope: CacheScope.Private,
+      scope: 'PRIVATE',
     });
   });
 
@@ -455,7 +454,7 @@ describe('@cacheControl directives', () => {
     expect(hints).toStrictEqual(new Map([['topLevel', { maxAge: 500 }]]));
     expect(policyIfCacheable).toStrictEqual({
       maxAge: 500,
-      scope: CacheScope.Public,
+      scope: 'PUBLIC',
     });
   });
 

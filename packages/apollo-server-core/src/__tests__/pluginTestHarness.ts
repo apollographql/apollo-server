@@ -12,17 +12,15 @@ import type {
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
   SchemaHash,
+  ApolloServerPlugin,
+  GraphQLRequestExecutionListener,
+  GraphQLServerListener,
 } from 'apollo-server-types';
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
 import {
   enablePluginsForSchemaResolvers,
   symbolExecutionDispatcherWillResolveField,
 } from '../utils/schemaInstrumentation';
-import type {
-  ApolloServerPlugin,
-  GraphQLRequestExecutionListener,
-  GraphQLServerListener,
-} from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { Dispatcher } from '../utils/dispatcher';
 import { getOperationAST, parse, validate as graphqlValidate } from 'graphql';

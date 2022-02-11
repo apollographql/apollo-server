@@ -10,8 +10,6 @@ import {
   DocumentNode,
 } from 'graphql';
 
-import type { GraphQLResponse, SchemaHash } from 'apollo-server-types';
-
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
 import type { Request } from 'node-fetch';
 import type {
@@ -19,6 +17,8 @@ import type {
   Context as GraphQLContext,
 } from 'apollo-server-core';
 import type {
+  GraphQLResponse,
+  SchemaHash,
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
   GraphQLRequestListener,
@@ -27,7 +27,7 @@ import type {
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
   GraphQLRequestContext,
-} from 'apollo-server-plugin-base';
+} from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { newCachePolicy } from '../cachePolicy';
 

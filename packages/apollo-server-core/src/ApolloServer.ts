@@ -20,7 +20,10 @@ import type {
   GraphQLServiceContext,
   GraphQLServerListener,
   LandingPage,
-} from 'apollo-server-plugin-base';
+  Logger,
+  SchemaHash,
+  ApolloConfig,
+} from 'apollo-server-types';
 
 import type { GraphQLServerOptions } from './graphqlOptions';
 
@@ -42,7 +45,6 @@ import {
 
 import { Headers } from 'node-fetch';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import type { Logger, SchemaHash, ApolloConfig } from 'apollo-server-types';
 import { cloneObject } from './runHttpQuery';
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';

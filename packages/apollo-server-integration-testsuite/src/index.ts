@@ -29,8 +29,11 @@ import {
   PersistedQueryNotFoundError,
 } from 'apollo-server-core';
 import gql from 'graphql-tag';
-import type { GraphQLResponse, ValueOrPromise } from 'apollo-server-types';
-import type { GraphQLRequestListener } from 'apollo-server-plugin-base';
+import type {
+  GraphQLResponse,
+  ValueOrPromise,
+  GraphQLRequestListener,
+} from 'apollo-server-types';
 
 export * from './ApolloServer';
 export { createApolloFetch } from './apolloFetch';

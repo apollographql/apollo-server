@@ -6,9 +6,6 @@ import fetch, { Response, Headers } from 'node-fetch';
 import type {
   GraphQLRequestListener,
   GraphQLServerListener,
-} from 'apollo-server-plugin-base';
-import {
-  CacheScope,
   GraphQLRequestContext,
   GraphQLServiceContext,
   GraphQLRequestContextDidResolveOperation,
@@ -597,9 +594,9 @@ export function ApolloServerPluginUsageReporting<TContext>(
             if (policyIfCacheable) {
               treeBuilder.trace.cachePolicy = new Trace.CachePolicy({
                 scope:
-                  policyIfCacheable.scope === CacheScope.Private
+                  policyIfCacheable.scope === 'PRIVATE'
                     ? Trace.CachePolicy.Scope.PRIVATE
-                    : policyIfCacheable.scope === CacheScope.Public
+                    : policyIfCacheable.scope === 'PUBLIC'
                     ? Trace.CachePolicy.Scope.PUBLIC
                     : Trace.CachePolicy.Scope.UNKNOWN,
                 // Convert from seconds to ns.

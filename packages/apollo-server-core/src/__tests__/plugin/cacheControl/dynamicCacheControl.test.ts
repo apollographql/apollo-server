@@ -6,7 +6,6 @@ import type {
 } from 'graphql';
 import { makeExecutableSchemaWithCacheControlSupport } from './cacheControlSupport';
 
-import { CacheScope } from 'apollo-server-types';
 import { collectCacheControlHints } from './collectCacheControlHints';
 
 export interface GraphQLResolvers {
@@ -128,7 +127,7 @@ describe('dynamic cache control', () => {
     const resolvers: GraphQLResolvers = {
       Query: {
         droid: (_source, _args, _context, { cacheControl }) => {
-          cacheControl.setCacheHint({ scope: CacheScope.Private });
+          cacheControl.setCacheHint({ scope: 'PRIVATE' });
           return {
             id: 2001,
             name: 'R2-D2',
@@ -155,7 +154,7 @@ describe('dynamic cache control', () => {
     );
 
     expect(hints).toStrictEqual(
-      new Map([['droid', { maxAge: 60, scope: CacheScope.Private }]]),
+      new Map([['droid', { maxAge: 60, scope: 'PRIVATE' }]]),
     );
   });
 

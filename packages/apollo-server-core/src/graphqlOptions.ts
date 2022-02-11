@@ -8,7 +8,6 @@ import type {
   ParseOptions,
 } from 'graphql';
 import type { KeyValueCache } from 'apollo-server-caching';
-import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type {
   GraphQLExecutor,
   ValueOrPromise,
@@ -16,6 +15,7 @@ import type {
   GraphQLRequestContext,
   Logger,
   SchemaHash,
+  ApolloServerPlugin,
 } from 'apollo-server-types';
 import type { DocumentStore } from './types';
 

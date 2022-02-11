@@ -1,4 +1,4 @@
-import { CachePolicy, CacheScope } from 'apollo-server-types';
+import type { CachePolicy } from 'apollo-server-types';
 import { newCachePolicy } from '../cachePolicy';
 
 describe('newCachePolicy', () => {
@@ -21,7 +21,7 @@ describe('newCachePolicy', () => {
   });
 
   it('restricting scope to private makes restricted', () => {
-    cachePolicy.restrict({ scope: CacheScope.Private });
+    cachePolicy.restrict({ scope: 'PRIVATE' });
   });
 
   it('returns lowest max age value', () => {
@@ -62,48 +62,48 @@ describe('newCachePolicy', () => {
   it('returns PRIVATE scope if any cache hint has PRIVATE scope', () => {
     cachePolicy.restrict({
       maxAge: 10,
-      scope: CacheScope.Public,
+      scope: 'PUBLIC',
     });
     cachePolicy.restrict({
       maxAge: 10,
-      scope: CacheScope.Private,
+      scope: 'PRIVATE',
     });
 
-    expect(cachePolicy).toHaveProperty('scope', CacheScope.Private);
+    expect(cachePolicy).toHaveProperty('scope', 'PRIVATE');
   });
 
   it('policyIfCacheable', () => {
     expect(cachePolicy.policyIfCacheable()).toBeNull();
 
-    cachePolicy.restrict({ scope: CacheScope.Private });
-    expect(cachePolicy.scope).toBe(CacheScope.Private);
+    cachePolicy.restrict({ scope: 'PRIVATE' });
+    expect(cachePolicy.scope).toBe('PRIVATE');
     expect(cachePolicy.policyIfCacheable()).toBeNull();
 
     cachePolicy.restrict({ maxAge: 10 });
     expect(cachePolicy).toMatchObject({
       maxAge: 10,
-      scope: CacheScope.Private,
+      scope: 'PRIVATE',
     });
     expect(cachePolicy.policyIfCacheable()).toStrictEqual({
       maxAge: 10,
-      scope: CacheScope.Private,
+      scope: 'PRIVATE',
     });
 
     cachePolicy.restrict({ maxAge: 0 });
     expect(cachePolicy).toMatchObject({
       maxAge: 0,
-      scope: CacheScope.Private,
+      scope: 'PRIVATE',
     });
     expect(cachePolicy.policyIfCacheable()).toBeNull();
   });
 
   it('replace', () => {
-    cachePolicy.restrict({ maxAge: 10, scope: CacheScope.Private });
-    cachePolicy.replace({ maxAge: 20, scope: CacheScope.Public });
+    cachePolicy.restrict({ maxAge: 10, scope: 'PRIVATE' });
+    cachePolicy.replace({ maxAge: 20, scope: 'PUBLIC' });
 
     expect(cachePolicy).toMatchObject({
       maxAge: 20,
-      scope: CacheScope.Public,
+      scope: 'PUBLIC',
     });
   });
 });

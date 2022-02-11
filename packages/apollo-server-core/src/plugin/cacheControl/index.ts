@@ -280,9 +280,14 @@ function cacheAnnotationFromDirectives(
     (argument) => argument.name.value === 'inheritMaxAge',
   );
 
-  const scope =
+  const scopeString =
     scopeArgument?.value?.kind === 'EnumValue'
-      ? (scopeArgument.value.value as CacheScope)
+      ? scopeArgument.value.value
+      : undefined;
+
+  const scope: CacheScope | undefined =
+    scopeString === 'PUBLIC' || scopeString === 'PRIVATE'
+      ? scopeString
       : undefined;
 
   if (

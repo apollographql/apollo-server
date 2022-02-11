@@ -10,11 +10,11 @@ import {
   GraphQLRequestContext,
   GraphQLResponse,
 } from './requestPipeline';
-import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type {
   WithRequired,
   GraphQLExecutionResult,
   ValueOrPromise,
+  ApolloServerPlugin,
 } from 'apollo-server-types';
 import { newCachePolicy } from './cachePolicy';
 

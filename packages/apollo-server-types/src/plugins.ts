@@ -3,9 +3,7 @@ import type {
   BaseContext,
   GraphQLServiceContext,
   GraphQLRequestContext,
-  GraphQLRequest,
   GraphQLResponse,
-  WithRequired,
   GraphQLFieldResolverParams,
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
@@ -16,34 +14,7 @@ import type {
   GraphQLRequestContextExecutionDidStart,
   GraphQLRequestContextWillSendResponse,
   GraphQLSchemaContext,
-} from 'apollo-server-types';
-
-// We re-export all of these so plugin authors only need to depend on a single
-// package.  The overall concept of `apollo-server-types` and this package
-// is that they not depend directly on "core", in order to avoid close
-// coupling of plugin support with server versions.  They are duplicated
-// concepts right now where one package is intended to be for public plugin
-// exposure, while the other (`-types`) is meant to be used internally.
-// In the future, `apollo-server-types` and `apollo-server-plugin-base` will
-// probably roll into the same "types" package, but that is not today!
-export {
-  BaseContext,
-  GraphQLServiceContext,
-  GraphQLRequestContext,
-  GraphQLRequest,
-  GraphQLResponse,
-  WithRequired,
-  GraphQLFieldResolverParams,
-  GraphQLRequestContextDidResolveSource,
-  GraphQLRequestContextParsingDidStart,
-  GraphQLRequestContextValidationDidStart,
-  GraphQLRequestContextDidResolveOperation,
-  GraphQLRequestContextDidEncounterErrors,
-  GraphQLRequestContextResponseForOperation,
-  GraphQLRequestContextExecutionDidStart,
-  GraphQLRequestContextWillSendResponse,
-  GraphQLSchemaContext,
-};
+} from './types';
 
 export interface ApolloServerPlugin<
   TContext extends BaseContext = BaseContext,

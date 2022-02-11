@@ -6,13 +6,13 @@ import type {
   ValueOrPromise,
   GraphQLExecutor,
   ApolloConfigInput,
+  ApolloServerPlugin,
 } from 'apollo-server-types';
 
 import type {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
-import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 import type { GraphQLSchemaModule } from '@apollographql/apollo-tools';
 
