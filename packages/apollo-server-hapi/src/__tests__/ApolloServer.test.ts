@@ -287,10 +287,12 @@ describe('non-integration tests', () => {
 
     describe('health checks', () => {
       it('creates a health check endpoint', async () => {
-        const { httpServer } = (await createServer({
-          typeDefs,
-          resolvers,
-        })).apolloServerInfo;
+        const { httpServer } = (
+          await createServer({
+            typeDefs,
+            resolvers,
+          })
+        ).apolloServerInfo;
 
         await request(httpServer)
           .get('/.well-known/apollo/server-health')
@@ -298,7 +300,8 @@ describe('non-integration tests', () => {
       });
 
       it('provides a callback for the health check', async () => {
-        const {httpServer} = (await createServer(
+        const { httpServer } = (
+          await createServer(
             {
               typeDefs,
               resolvers,
@@ -306,8 +309,8 @@ describe('non-integration tests', () => {
             {
               onHealthCheck: async () => {
                 throw Error("can't connect to DB");
-              }
-            }
+              },
+            },
           )
         ).apolloServerInfo;
 
