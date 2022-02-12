@@ -377,25 +377,24 @@ async function startApolloServer(typeDefs, resolvers) {
     typeDefs,
     resolvers,
     plugins: [ApolloServerPluginStopHapiServer({ hapiServer: app })],
-    // shared route options
-    route: {
+  });
+
+  await server.start();
+  await server.applyMiddleware({
+    app,
+    route: {            // shared route options for GET & POST requests
       cors: true
     },
-    // route options for get method
-    routeGet: {
+    routeGet: {         // route options for GET requests
       description: 'Get Route Description'
     },
-    // route options for post method
-    routePost: {
+    routePost: {        // route options for POST requests
       description: 'Post Route Description',
       payload: {
         maxBytes: 8192, // limit bytes to 8K
       },
     },
   });
-
-  await server.start();
-  await server.applyMiddleware({ app });
   await app.start();
 }
 ```
@@ -414,8 +413,8 @@ You _must_ `await server.start()` before calling `server.applyMiddleware`. You c
 
 `applyMiddleware` also accepts the following options:
 
-* `routeGet` - get specific route options
-* `routePost` - post specific route options
+* `routeGet` - GET specific route options
+* `routePost` - POST specific route options
 
 ### `apollo-server-koa`
 

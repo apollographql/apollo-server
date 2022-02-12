@@ -149,15 +149,14 @@ export class ApolloServer extends ApolloServerBase {
     };
 
     // POST ROUTE
-    let postOptions = Object.assign({}, routePost);
-    postOptions = Object.assign(postOptions, route);
+    const postOptions = { ...route, ...routePost };
 
     // if we have post route options which contain no cors options, but have
     // specified cors options separately, then merge them in
-    if (!!postOptions && !!cors && postOptions.cors == null) {
+    if (!!cors && postOptions.cors == null) {
       postOptions.cors = cors;
       // else if we have no cors options as all, default them
-    } else if (!!postOptions && postOptions.cors == null) {
+    } else if (postOptions.cors == null) {
       postOptions.cors = { origin: 'ignore' };
     }
 
@@ -169,8 +168,7 @@ export class ApolloServer extends ApolloServerBase {
     });
 
     // GET ROUTE
-    let getOptions = Object.assign({}, routeGet);
-    getOptions = Object.assign(getOptions, route);
+    const getOptions = { ...route, ...routeGet };
 
     // if we have get route options which contain no cors options, but have
     // specified cors options separately, then merge them in
