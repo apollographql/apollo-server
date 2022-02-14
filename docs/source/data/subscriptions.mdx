@@ -51,15 +51,16 @@ subscription PostFeed {
 
 To run both an Express app _and_ a separate WebSocket server for subscriptions, we'll create an `http.Server` instance that effectively wraps the two and becomes our new `listen`er.
 
-1. Install `graphql-ws`, `ws`, and `@graphql-tools/schema`:
+1. Install `graphql-ws`, `ws`, `@graphql-tools/schema`, and 'apollo-server-core':
     ```bash
-    npm install graphql-ws ws @graphql-tools/schema
+    npm install graphql-ws ws @graphql-tools/schema apollo-server-core
     ```
 
 2. Add the following imports to the file where you initialize your `ApolloServer` instance (we'll use these in later steps):
 
     ```ts:title=index.ts
     import { createServer } from 'http';
+    import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
     import { makeExecutableSchema } from '@graphql-tools/schema';
     import { WebSocketServer } from 'ws';
     import { useServer } from 'graphql-ws/lib/use/ws';
@@ -100,24 +101,30 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
 
       // Hand in the schema we just created and have the
       // WebSocketServer start listening.
-      useServer({ schema }, wsServer);
+      const serverCleanup = useServer({ schema }, wsServer);
     ```
 
-6. Add [a plugin](../integrations/plugins) to your `ApolloServer` constructor to close the `WebSocketServer`:
+6. Add [plugins](../integrations/plugins) to your `ApolloServer` constructor to shutdown both the HTTP server and the `WebSocketServer`:
 
     ```ts:title=index.ts
-    const server = new ApolloServer({
-      schema,
-      plugins: [{
-        async serverWillStart() {
-          return {
-            async drainServer() {
-              await wsServer.close();
-            }
-          };
-        }
-      }],
-    });
+      const server = new ApolloServer({
+        schema,
+        plugins: [
+          // Proper shutdown for the HTTP server.
+          ApolloServerPluginDrainHttpServer({ httpServer }),
+
+          // Proper shutdown for the WebSocket server.
+          {
+            async serverWillStart() {
+              return {
+                async drainServer() {
+                  await serverCleanup.dispose();
+                },
+              };
+            },
+          },
+        ],
+      });
     ```
 
 7. Finally, ensure you are `listen`ing to your `httpServer`.
@@ -134,6 +141,7 @@ A completed example of setting up subscriptions is shown below:
 import { ApolloServer } from 'apollo-server-express';
 import { createServer } from 'http';
 import express from 'express';
+import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
@@ -141,18 +149,35 @@ import resolvers from './resolvers';
 import typeDefs from './typeDefs';
 
 // Create the schema, which will be used separately by ApolloServer and
-// the websocket server.
+// the WebSocket server.
 const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+// Create an Express app and HTTP server; we will attach both the WebSocket
+// server and the ApolloServer to this HTTP server.
+const app = express();
+const httpServer = createServer(app);
+
+// Create our WebSocket server using the HTTP server we just set up.
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: '/graphql',
+});
+// Save the returned server's info so we can shutdown this server later
+const serverCleanup = useServer({ schema }, wsServer);
 
 // Set up ApolloServer.
 const server = new ApolloServer({
   schema,
   plugins: [
+    // Proper shutdown for the HTTP server.
+    ApolloServerPluginDrainHttpServer({ httpServer }),
+
+    // Proper shutdown for the WebSocket server.
     {
       async serverWillStart() {
         return {
           async drainServer() {
-            await wsServer.close();
+            await serverCleanup.dispose();
           },
         };
       },
@@ -160,21 +185,10 @@ const server = new ApolloServer({
   ],
 });
 await server.start();
-
-
-// Set up HTTP.
-const app = express();
-const httpServer = createServer(app);
 server.applyMiddleware({ app });
 
-// Create our WebSocket server using the HTTP server we just set up.
-const wsServer = new WebSocketServer({
-  server: httpServer,
-  path: '/graphql',
-});
-useServer({ schema }, wsServer);
-
 const PORT = 4000;
+// Now that our HTTP server is fully set up, we can listen to it.
 httpServer.listen(PORT, () => {
   console.log(
     `Server is now running on http://localhost:${PORT}${server.graphqlPath}`,
@@ -415,7 +429,7 @@ The `Context` type from `graphql-ws` is where information about your subscriptio
 Below is an example of the common use case of extracting an authentication token from a client `subscription` request and using it to find the current user:
 
 ```ts
-const getDynamicContext = (ctx, msg, args) => {
+const getDynamicContext = async (ctx, msg, args) => {
   // ctx is the graphql-ws Context where connectionParams live
  if (ctx.connectionParams.authentication) {
     const currentUser = await findUser(connectionParams.authentication);
@@ -498,11 +512,11 @@ From there you can use the [`useServer.context` property](#operation-context) to
 For our example, we can use the `connectionParams.authentication` value provided by the client to look up the related user before passing that user along to our resolvers:
 
 ```js
-async function findUser(authToken) {
-  // find a user by auth token
+const findUser = async (authToken) => {
+  // Find a user by their auth token
 };
 
-const getDynamicContext = (ctx, msg, args) => {
+const getDynamicContext = async (ctx, msg, args) => {
  if (ctx.connectionParams.authentication) {
     const currentUser = await findUser(connectionParams.authentication);
     return { currentUser };
@@ -551,15 +565,20 @@ If none of these libraries fits your use case, you can also create your own `Pub
 
 ## Old `subscriptions-transport-ws` library
 
->If use subscriptions with Apollo Client you must ensure **[both your client and server subscription protocols are consistent](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol)** for the subscription library you are using.
+>If you use subscriptions with Apollo Client you must ensure **[both your client and server subscription protocols are consistent](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol)** for the subscription library you are using.
 
-This article details how to setup the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library to add support for subscriptions to Apollo Server. Previously this article recommended using the `subscriptions-transport-ws` library, however this library is no longer actively maintained.
+This article details how to set up the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library to add support for subscriptions to Apollo Server. Previously this article recommended using the `subscriptions-transport-ws` library; however, this library is no longer actively maintained.
 
-Apollo Server supports both `graphql-ws` and `subscriptions-transport-ws`, but we strongly recommend using the currently maintained `graphql-ws` library.
+Apollo Server can be combined with both `graphql-ws` and `subscriptions-transport-ws`, but we strongly recommend using the currently maintained `graphql-ws` library.
 
-Both `graphql-ws` and `subscriptions-transport-ws` implement different protocols for GraphQL subscriptions over websockets. Meaning, if you do decide to switch from one library to another you will need to ensure your [Apollo Client subscription protocol](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol) is **consistent** with the subscription library you are using within Apollo Server and vice versa.
+If you intend to switch from `subscriptions-transport-ws` to `graphql-ws` you will need to:
+* [Adjust Apollo Studio Explorer settings](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support)
+* Migrate to [Apollo Client 3.6 or later](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol)
+  * Replace usage of [`WebSocketLink` with `GraphQLWsLink` ](https://www.apollographql.com/docs/react/api/link/apollo-link-subscriptions/).
+* [Customize your WebSocket protocol](https://www.apollographql.com/docs/kotlin/essentials/subscriptions/#customizing-your-websocket-protocol) if using Apollo Kotlin
 
-Note that you might need to [adjust the Apollo Sandbox settings to use the same subscription protocol as the subscription library you are using](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support).
+<!-- TODO: This may need updating depending on whether iOS supports or not.  -->
+Note that [Apollo iOS](https://www.apollographql.com/docs/ios/) does not currently support using the  `graphql-ws` library.
 
 For more information on using Apollo Server with `subscriptions-transport-ws`, you can view the [previous version of this article here](https://github.com/apollographql/apollo-server/blob/4b82967c10a69aa104848a8c9d15c591b528918c/docs/source/data/subscriptions.mdx).
 
