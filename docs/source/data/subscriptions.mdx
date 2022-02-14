@@ -422,7 +422,7 @@ useServer(
 );
 ```
 
-Notice that the first parameter passed to the `context` function above is `ctx`. The [`ctx object`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.Context.md) represents the context of your _subscription_ server, not the _GraphQL operation context_ that's passed to your resolvers.
+Notice that the first parameter passed to the `context` function above is `ctx`. The [`ctx object`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.Context.md) represents the context of your _subscription server_, not the _GraphQL operation context_ that's passed to your resolvers.
 
 You can access the parameters of a client's `subscription` request to your WebSocket server via the `ctx.connectionParams` property.
 
