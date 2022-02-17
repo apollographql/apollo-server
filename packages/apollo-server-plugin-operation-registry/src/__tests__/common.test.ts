@@ -8,7 +8,7 @@ describe('common', () => {
   describe('urlOperationManifestBase', () => {
     const OLD_ENV = process.env;
     beforeEach(() => {
-      jest.resetModules()
+      jest.resetModules();
       process.env = { ...OLD_ENV };
     });
     afterAll(() => {
@@ -29,26 +29,32 @@ describe('common', () => {
 
     it('evals to the test url when testing', () => {
       process.env.__APOLLO_OPERATION_REGISTRY_TESTS__ = 'true';
-      const { urlOperationManifestBase, fakeTestBaseUrl } = require('../common');
+      const {
+        urlOperationManifestBase,
+        fakeTestBaseUrl,
+      } = require('../common');
       expect(urlOperationManifestBase).toStrictEqual(fakeTestBaseUrl);
     });
 
     it('evals to the default value when not overridden or testing', () => {
+      process.env.__APOLLO_OPERATION_REGISTRY_TESTS__ = 'false';
       const { urlOperationManifestBase } = require('../common');
-      expect(urlOperationManifestBase).toStrictEqual('https://operations.api.apollographql.com');
+      expect(urlOperationManifestBase).toStrictEqual(
+        'https://operations.api.apollographql.com',
+      );
     });
   });
 
   describe('urlStorageSecretBase', () => {
     const OLD_ENV = process.env;
     beforeEach(() => {
-      jest.resetModules()
+      jest.resetModules();
       process.env = { ...OLD_ENV };
     });
     afterAll(() => {
       process.env = OLD_ENV;
     });
-    
+
     it('evals to the override url when overridden', () => {
       process.env.APOLLO_STORAGE_SECRET_BASE_URL = 'override';
       const { urlStorageSecretBase } = require('../common');
@@ -68,8 +74,11 @@ describe('common', () => {
     });
 
     it('evals to the default value when not overridden or testing', () => {
+      process.env.__APOLLO_OPERATION_REGISTRY_TESTS__ = 'false';
       const { urlStorageSecretBase } = require('../common');
-      expect(urlStorageSecretBase).toStrictEqual('https://storage-secrets.api.apollographql.com');
+      expect(urlStorageSecretBase).toStrictEqual(
+        'https://storage-secrets.api.apollographql.com',
+      );
     });
   });
 });
