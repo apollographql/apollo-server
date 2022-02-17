@@ -12,18 +12,18 @@ export const urlOperationManifestBase: string =
   // Remove trailing slash if any.
   process.env[envOverrideOperationManifest]?.replace(/\/$/, '') ||
   // See src/__tests__/jestSetup.ts for more details on this env. variable.
-  process.env['__APOLLO_OPERATION_REGISTRY_TESTS__'] === 'true'
+  (process.env['__APOLLO_OPERATION_REGISTRY_TESTS__'] === 'true'
     ? fakeTestBaseUrl
-    : 'https://operations.api.apollographql.com';
+    : 'https://operations.api.apollographql.com');
 
 // Generate and cache our desired storage secret URL.
 export const urlStorageSecretBase: string =
   // Remove trailing slash if any.
   process.env[envOverrideStorageSecretBaseUrl]?.replace(/\/$/, '') ||
   // See src/__tests__/jestSetup.ts for more details on this env. variable.
-  process.env['__APOLLO_OPERATION_REGISTRY_TESTS__'] === 'true'
+  (process.env['__APOLLO_OPERATION_REGISTRY_TESTS__'] === 'true'
     ? fakeTestBaseUrl
-    : 'https://storage-secrets.api.apollographql.com';
+    : 'https://storage-secrets.api.apollographql.com');
 
 export const getStoreKey = (signature: string) => `${signature}`;
 
