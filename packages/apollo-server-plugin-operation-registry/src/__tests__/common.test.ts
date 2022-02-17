@@ -15,7 +15,7 @@ describe('common', () => {
       process.env = OLD_ENV;
     });
 
-    it('evals to the override url when overridden', () => {
+    it('evaluates to the override url when overridden', () => {
       process.env.APOLLO_OPERATION_MANIFEST_BASE_URL = 'override';
       const { urlOperationManifestBase } = require('../common');
       expect(urlOperationManifestBase).toStrictEqual('override');
@@ -27,7 +27,7 @@ describe('common', () => {
       expect(urlOperationManifestBase).toStrictEqual('override');
     });
 
-    it('evals to the test url when testing', () => {
+    it('evaluates to the test url when testing', () => {
       process.env.__APOLLO_OPERATION_REGISTRY_TESTS__ = 'true';
       const {
         urlOperationManifestBase,
@@ -36,7 +36,7 @@ describe('common', () => {
       expect(urlOperationManifestBase).toStrictEqual(fakeTestBaseUrl);
     });
 
-    it('evals to the default value when not overridden or testing', () => {
+    it('evaluates to the default value when not overridden or testing', () => {
       process.env.__APOLLO_OPERATION_REGISTRY_TESTS__ = 'false';
       const { urlOperationManifestBase } = require('../common');
       expect(urlOperationManifestBase).toStrictEqual(
@@ -55,7 +55,7 @@ describe('common', () => {
       process.env = OLD_ENV;
     });
 
-    it('evals to the override url when overridden', () => {
+    it('evaluates to the override url when overridden', () => {
       process.env.APOLLO_STORAGE_SECRET_BASE_URL = 'override';
       const { urlStorageSecretBase } = require('../common');
       expect(urlStorageSecretBase).toStrictEqual('override');
@@ -67,13 +67,13 @@ describe('common', () => {
       expect(urlStorageSecretBase).toStrictEqual('override');
     });
 
-    it('evals to the test url when testing', () => {
+    it('evaluates to the test url when testing', () => {
       process.env.__APOLLO_OPERATION_REGISTRY_TESTS__ = 'true';
       const { urlStorageSecretBase, fakeTestBaseUrl } = require('../common');
       expect(urlStorageSecretBase).toStrictEqual(fakeTestBaseUrl);
     });
 
-    it('evals to the default value when not overridden or testing', () => {
+    it('evaluates to the default value when not overridden or testing', () => {
       process.env.__APOLLO_OPERATION_REGISTRY_TESTS__ = 'false';
       const { urlStorageSecretBase } = require('../common');
       expect(urlStorageSecretBase).toStrictEqual(
