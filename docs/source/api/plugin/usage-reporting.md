@@ -418,6 +418,8 @@ Specify this function to create a signature for a query. This option is not reco
 </table>
 
 #### Valid `sendVariableValues` object signatures
+Note that we are referring to [GraphQL variables](https://graphql.org/learn/queries/#variables) below (e.g. `$variableName`).
+
 
 | Object | Description |
 |--------|-------------|
