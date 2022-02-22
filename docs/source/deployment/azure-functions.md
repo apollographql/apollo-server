@@ -5,9 +5,9 @@ description: Deploying your GraphQL server to Azure Functions
 ---
 This is the Azure Functions integration for the Apollo community GraphQL Server. [Read Docs](https://www.npmjs.com/package/apollo-server-azure-functions)
 
-All examples below was created using Linux environments, if you are working with Windows-based platforms some commands couldn’t work fine.
+Note that all examples below were created using Linux environments. If you are in a Windows environment you may need to alter some commands, [reference the Azure documentation](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli) for more details.
 
-Note that `apollo-server-azure-functions` does not provide a mechanism for adding arbitrary middleware to your web server (other that by manually wrapping the handler returned by `createHandler` in your own handler).
+Note that `apollo-server-azure-functions` does not provide a mechanism for adding arbitrary middleware to your web server (other than by manually wrapping the handler returned by `createHandler` in your own handler).
 
 ## Prerequisites
 
@@ -195,6 +195,6 @@ az group delete --name apollo-examples --yes
 
 ## Deploying to Azure from VS Code
 
-It is also possible to publish your project from VS Code using the Azure Functions Extension, we recommend referring to [Microsoft's documentation on publishing to Azure from VS Code](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-vs-code#publish-the-project-to-azure).
+It is also possible to publish your project from VS Code using the Azure Functions Extension. If you'd like to do this we recommend referring to [Microsoft's documentation on publishing to Azure from VS Code](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-vs-code#publish-the-project-to-azure).
 
 Need more details? See the [README](https://www.npmjs.com/package/apollo-server-azure-functions) for `apollo-server-azure-functions`.
