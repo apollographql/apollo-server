@@ -5,7 +5,7 @@
   "files": [],
   "include": [],
   "references": [
-    { "path": "./packages/apollo-server-core" },
-    { "path": "./packages/apollo-server-types" },
+    { "path": "./packages/server" },
+    { "path": "./packages/server-types" },
   ]
 }

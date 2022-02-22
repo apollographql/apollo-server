@@ -1,9 +1,9 @@
 {
   "buildCommand": "compile",
   "packages": [
-    "packages/apollo-reporting-protobuf",
-    "packages/apollo-server-core",
-    "packages/apollo-server-types"
+    "packages/usage-reporting-protobuf",
+    "packages/server",
+    "packages/server-types"
   ],
   "sandboxes": ["apollo-server-typescript-3opde","apollo-server"],
   "node": "16"
