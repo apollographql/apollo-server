@@ -8,9 +8,6 @@
     "compile": "tsc --build tsconfig.build.json",
     "compile:clean": "tsc --build tsconfig.build.json --clean",
     "watch": "tsc --build tsconfig.build.json --watch",
-    "release:version-bump": "lerna version",
-    "release:version-bump:server": "npm run release:version-bump -- --force-publish=apollo-server,apollo-server-core",
-    "release:start-ci-publish": "node -p '`Publish (dist-tag:${process.env.APOLLO_DIST_TAG || \"latest\"})`' | git tag -F - \"publish/$(date -u '+%Y%m%d%H%M%S')\" && git push origin \"$(git describe --match='publish/*' --tags --exact-match HEAD)\"",
     "postinstall": "npm run compile",
     "pretest": "tsc --build tsconfig.json",
     "test": "jest --verbose",
@@ -24,17 +21,15 @@
     "prettier-check": "prettier --check .",
     "spell-check": "cspell lint '**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "node": ">=12",
-    "npm": "8.x"
-  },
-  "dependencies": {
-    "@apollographql/apollo-tools": "0.5.2",
-    "apollo-reporting-protobuf": "file:packages/apollo-reporting-protobuf",
-    "apollo-server-core": "file:packages/apollo-server-core",
-    "apollo-server-types": "file:packages/apollo-server-types"
+    "npm": "^8.5.0"
   },
   "devDependencies": {
+    "@apollographql/apollo-tools": "0.5.2",
     "@apollo/client": "3.5.8",
     "@graphql-codegen/cli": "2.4.0",
     "@graphql-codegen/typescript-operations": "2.2.2",
@@ -84,7 +79,6 @@
     "jest-junit": "13.0.0",
     "jest-mock-random": "1.1.1",
     "js-sha256": "0.9.0",
-    "lerna": "4.0.0",
     "lodash.sumby": "4.6.0",
     "log4js": "6.4.1",
     "mock-req": "0.2.0",
@@ -106,5 +100,9 @@
     "projects": [
       "<rootDir>/packages/*/jest.config.js"
     ]
+  },
+  "volta": {
+    "node": "16.14.0",
+    "npm": "8.5.1"
   }
 }

@@ -29,5 +29,8 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
     "@apollo/protobufjs": "1.2.2"
+  },
+  "volta": {
+    "extends": "../../package.json"
   }
 }
