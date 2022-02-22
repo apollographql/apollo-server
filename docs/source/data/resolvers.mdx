@@ -461,13 +461,15 @@ type Author {
 
 If the resolver for the `books` field returns an array of objects that each contain a `title` field, then you can use a default resolver for the `title` field. The default resolver will correctly return `parent.title`.
 
-## Resolving types
+## Resolving unions and interfaces
 
 There are GraphQL types that enable you to define a field that returns one of multiple possible object types (i.e. [unions and interfaces](../schema/unions-interfaces/#resolving-a-union)). To resolve a field that can return different object types, you must define a `__resolveType` function to inform Apollo Server _which_ object type to return.
 
 > [See examples of the `__resolveType` function](../schema/unions-interfaces/#resolving-a-union).
 
-If you using Apollo Federation and looking for more information on resolving entity types, see [Resolving Entities](https://www.apollographql.com/docs/federation/entities/#resolving-entities).
+## Resolving federated entities
+
+See [Resolving Entities](https://www.apollographql.com/docs/federation/entities/#resolving-entities).
 
 ## Monitoring resolver performance
 
