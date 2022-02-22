@@ -6,6 +6,5 @@
   "include": [],
   "references": [
     { "path": "./packages/apollo-server-core/src/__tests__/" },
-    { "path": "./packages/apollo-server-express/src/__tests__/" },
   ]
 }

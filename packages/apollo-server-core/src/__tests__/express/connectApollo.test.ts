@@ -1,11 +1,8 @@
 import connect from 'connect';
 import query from 'qs-middleware';
-import { ApolloServer, ApolloServerExpressConfig } from '../ApolloServer';
+import { ApolloServerExpress, ApolloServerExpressConfig } from '../../express';
 
-import testSuite, {
-  schema as Schema,
-  CreateAppOptions,
-} from 'apollo-server-integration-testsuite';
+import testSuite, { schema as Schema, CreateAppOptions } from '../integration';
 
 async function createConnectApp(options: CreateAppOptions = {}) {
   const app = connect();
@@ -15,7 +12,7 @@ async function createConnectApp(options: CreateAppOptions = {}) {
   // think many folks use connect outside of Meteor anyway, and anyone using
   // connect is probably already using connect-query or qs-middleware.
   app.use(query() as any);
-  const server = new ApolloServer(
+  const server = new ApolloServerExpress(
     (options.graphqlOptions as ApolloServerExpressConfig) || { schema: Schema },
   );
   await server.start();

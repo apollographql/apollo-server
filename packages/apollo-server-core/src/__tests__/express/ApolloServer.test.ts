@@ -9,18 +9,18 @@ import {
   AuthenticationError,
   ApolloServerPluginCacheControlDisabled,
   ApolloServerPluginDrainHttpServer,
-} from 'apollo-server-core';
+} from '../..';
 import {
-  ApolloServer,
+  ApolloServerExpress,
   ApolloServerExpressConfig,
   ServerRegistration,
-} from '../ApolloServer';
+} from '../../express';
 
 import {
   testApolloServer,
   createServerInfo,
   createApolloFetch,
-} from 'apollo-server-integration-testsuite';
+} from '../integration';
 
 const typeDefs = gql`
   type Query {
@@ -35,13 +35,13 @@ const resolvers = {
 };
 
 describe('apollo-server-express', () => {
-  let serverToCleanUp: ApolloServer | null = null;
+  let serverToCleanUp: ApolloServerExpress | null = null;
   testApolloServer(
     async (config: ApolloServerExpressConfig, options) => {
       serverToCleanUp = null;
       const app = express();
       const httpServer = http.createServer(app);
-      const server = new ApolloServer({
+      const server = new ApolloServerExpress({
         ...config,
         plugins: [
           ...(config.plugins ?? []),
@@ -68,7 +68,7 @@ describe('apollo-server-express', () => {
 });
 
 describe('apollo-server-express', () => {
-  let server: ApolloServer;
+  let server: ApolloServerExpress;
 
   let app: express.Application;
   let httpServer: http.Server;
@@ -77,7 +77,7 @@ describe('apollo-server-express', () => {
     serverOptions: ApolloServerExpressConfig,
     options: Partial<ServerRegistration> = {},
   ) {
-    server = new ApolloServer({
+    server = new ApolloServerExpress({
       stopOnTerminationSignals: false,
       ...serverOptions,
     });

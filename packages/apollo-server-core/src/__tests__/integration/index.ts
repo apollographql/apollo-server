@@ -26,8 +26,8 @@ import {
   PersistedQueryOptions,
   KeyValueCache,
   ApolloServerPluginCacheControl,
-  PersistedQueryNotFoundError,
-} from 'apollo-server-core';
+} from '../..';
+import { PersistedQueryNotFoundError } from '../../errors';
 import gql from 'graphql-tag';
 import type {
   GraphQLResponse,

@@ -39,7 +39,7 @@ import {
   ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloError,
   ApolloServerPluginLandingPageLocalDefault,
-} from 'apollo-server-core';
+} from '../..';
 import fetch from 'node-fetch';
 import type {
   BaseContext,

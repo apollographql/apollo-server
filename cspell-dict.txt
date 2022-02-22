@@ -94,6 +94,7 @@ npmrc
 nsolid
 oneof
 onwarn
+opde
 paque
 parseurl
 pbjs

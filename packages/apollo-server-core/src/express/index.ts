@@ -8,10 +8,8 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
   isHttpQueryError,
-} from 'apollo-server-core';
+} from '..';
 import accepts from 'accepts';
-
-export { GraphQLOptions } from 'apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;
@@ -52,7 +50,9 @@ export interface ExpressContext {
 
 export type ApolloServerExpressConfig = Config<ExpressContext>;
 
-export class ApolloServer<
+// Renaming this temporarily. We'll remove the concept of subclassing ApolloServer
+// soon.
+export class ApolloServerExpress<
   ContextFunctionParams = ExpressContext,
 > extends ApolloServerBase<ContextFunctionParams> {
   // This translates the arguments from the middleware into graphQL options It

@@ -12,10 +12,7 @@ import {
 
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
 import type { Request } from 'node-fetch';
-import type {
-  GraphQLOptions,
-  Context as GraphQLContext,
-} from 'apollo-server-core';
+import type { GraphQLOptions, Context as GraphQLContext } from '..';
 import type {
   GraphQLResponse,
   SchemaHash,
