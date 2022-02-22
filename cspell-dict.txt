@@ -22,6 +22,7 @@ cacheability
 cacheable
 Cacheable
 Changesets
+cimg
 circleci
 codecov
 codegen
@@ -56,6 +57,7 @@ fauxpaque
 Fauxpaque
 Firestore
 Fitzwilliam
+FIXM
 functionapp
 Fuzzer
 gcloud
