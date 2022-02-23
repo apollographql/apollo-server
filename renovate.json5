@@ -62,11 +62,17 @@
       allowedVersions: "14.x"
     },
     // The changes required to upgrade to v7 aren't 100% trivial, so they're not worth
-    // doing on main, just on version-4.
+    // doing on main, just on version-4. (Oddly, @types/lru-cache skipped directly from
+    // v5 to v6.)
     {
       matchPackageNames: ["lru-cache"],
       matchBaseBranches: ["main"],
       allowedVersions: "6.x"
+    },
+    {
+      matchPackageNames: ["@types/lru-cache"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "5.x"
     },
     // make-fetch-happen is used by the op reg plugin, which uses a cache API
     // that is removed in v9.
