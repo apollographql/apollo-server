@@ -23,7 +23,7 @@ describe('integration:Express', () => {
       );
       await server.start();
       serverToCleanUp = server;
-      server.applyMiddleware({ app });
+      app.use('/graphql', server.getMiddleware());
       return app;
     },
     destroyApp: async function () {

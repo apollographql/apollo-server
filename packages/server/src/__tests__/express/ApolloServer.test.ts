@@ -54,12 +54,13 @@ describe('apollo-server-express', () => {
         await server.start();
         serverToCleanUp = server;
       }
-      server.applyMiddleware({ app, path: options?.graphqlPath });
+      const graphqlPath = options?.graphqlPath ?? '/graphql';
+      app.use(graphqlPath, server.getMiddleware());
       await new Promise((resolve) => {
         httpServer.once('listening', resolve);
         httpServer.listen({ port: 0 });
       });
-      return createServerInfo(server, httpServer);
+      return createServerInfo(server, httpServer, graphqlPath);
     },
     async () => {
       await serverToCleanUp?.stop();
@@ -83,13 +84,13 @@ describe('apollo-server-express', () => {
     });
     await server.start();
     app = express();
-    server.applyMiddleware({ ...options, app });
+    app.use('/graphql', server.getMiddleware(options));
 
     httpServer = await new Promise<http.Server>((resolve) => {
       const l: http.Server = app.listen({ port: 0 }, () => resolve(l));
     });
 
-    return createServerInfo(server, httpServer);
+    return createServerInfo(server, httpServer, '/graphql');
   }
 
   afterEach(async () => {
@@ -183,7 +184,7 @@ describe('apollo-server-express', () => {
     });
 
     it('gives helpful error if body is not parsed', async () => {
-      const { server, httpServer } = await createServer(
+      const { httpServer } = await createServer(
         {
           typeDefs,
           resolvers,
@@ -192,7 +193,7 @@ describe('apollo-server-express', () => {
       );
 
       await request(httpServer)
-        .post(server.graphqlPath)
+        .post('/graphql')
         .send({ query: '{hello}' })
         .expect(500, /need to use `body-parser`/);
     });

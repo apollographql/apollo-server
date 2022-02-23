@@ -56,6 +56,7 @@ quietLogger.setLevel(loglevel.levels.WARN);
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
   httpServer: http.Server,
+  graphqlPath: string,
 ): ServerInfo<AS> {
   const serverInfo: any = {
     ...(httpServer.address() as AddressInfo),
@@ -76,7 +77,7 @@ export function createServerInfo<AS extends ApolloServerBase>(
     protocol: 'http',
     hostname: hostForUrl,
     port: serverInfo.port,
-    pathname: server.graphqlPath,
+    pathname: graphqlPath,
   });
 
   return serverInfo;

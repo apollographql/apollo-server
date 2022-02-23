@@ -17,7 +17,7 @@ async function createConnectApp(options: CreateAppOptions = {}) {
   );
   await server.start();
   // See comment on ServerRegistration.app for its typing.
-  server.applyMiddleware({ app: app as any });
+  (app as any).use('/graphql', server.getMiddleware());
   return app;
 }
 

@@ -131,7 +131,6 @@ export class ApolloServerBase<
   ContextFunctionParams = any,
 > {
   private logger: Logger;
-  public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLServerOptions<any>> =
     Object.create(null);
 

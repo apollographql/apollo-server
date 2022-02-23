@@ -12,7 +12,6 @@ import {
 import accepts from 'accepts';
 
 export interface GetMiddlewareOptions {
-  path?: string;
   cors?:
     | corsMiddleware.CorsOptions
     | corsMiddleware.CorsOptionsDelegate
@@ -53,48 +52,37 @@ export class ApolloServerExpress<
     return super.graphQLServerOptions(contextParams);
   }
 
-  public applyMiddleware({ app, ...rest }: ServerRegistration) {
-    // getMiddleware calls this too, but we want the right method name in the error
-    this.assertStarted('applyMiddleware');
-
-    app.use(this.getMiddleware(rest));
-  }
-
   // TODO: While `express` is not Promise-aware, this should become `async` in
   // a major release in order to align the API with other integrations (e.g.
   // Hapi) which must be `async`.
   public getMiddleware({
-    path,
     cors,
     bodyParserConfig,
   }: GetMiddlewareOptions = {}): express.Router {
-    if (!path) path = '/graphql';
     this.assertStarted('getMiddleware');
 
     // Note that even though we use Express's router here, we still manage to be
     // Connect-compatible because express.Router just implements the same
     // middleware interface that Connect and Express share!
+    // FIXME no router!
     const router = express.Router();
-
-    // XXX multiple paths?
-    this.graphqlPath = path;
 
     // Note that we don't just pass all of these handlers to a single app.use call
     // for 'connect' compatibility.
     if (cors === true) {
-      router.use(path, corsMiddleware<corsMiddleware.CorsRequest>());
+      router.use(corsMiddleware<corsMiddleware.CorsRequest>());
     } else if (cors !== false) {
-      router.use(path, corsMiddleware(cors));
+      router.use(corsMiddleware(cors));
     }
 
     if (bodyParserConfig === true) {
-      router.use(path, json());
+      router.use(json());
     } else if (bodyParserConfig !== false) {
-      router.use(path, json(bodyParserConfig));
+      router.use(json(bodyParserConfig));
     }
 
     const landingPage = this.getLandingPage();
-    router.use(path, (req, res, next) => {
+    router.use((req, res, next) => {
       if (landingPage && prefersHtml(req)) {
         res.setHeader('Content-Type', 'text/html');
         res.write(landingPage.html);
