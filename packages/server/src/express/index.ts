@@ -58,31 +58,27 @@ export class ApolloServerExpress<
   public getMiddleware({
     cors,
     bodyParserConfig,
-  }: GetMiddlewareOptions = {}): express.Router {
+  }: GetMiddlewareOptions = {}): express.RequestHandler {
     this.assertStarted('getMiddleware');
 
-    // Note that even though we use Express's router here, we still manage to be
-    // Connect-compatible because express.Router just implements the same
-    // middleware interface that Connect and Express share!
-    // FIXME no router!
-    const router = express.Router();
+    const app = express();
 
     // Note that we don't just pass all of these handlers to a single app.use call
     // for 'connect' compatibility.
     if (cors === true) {
-      router.use(corsMiddleware<corsMiddleware.CorsRequest>());
+      app.use(corsMiddleware<corsMiddleware.CorsRequest>());
     } else if (cors !== false) {
-      router.use(corsMiddleware(cors));
+      app.use(corsMiddleware(cors));
     }
 
     if (bodyParserConfig === true) {
-      router.use(json());
+      app.use(json());
     } else if (bodyParserConfig !== false) {
-      router.use(json(bodyParserConfig));
+      app.use(json(bodyParserConfig));
     }
 
     const landingPage = this.getLandingPage();
-    router.use((req, res, next) => {
+    app.use((req, res, next) => {
       if (landingPage && prefersHtml(req)) {
         res.setHeader('Content-Type', 'text/html');
         res.write(landingPage.html);
@@ -154,7 +150,7 @@ export class ApolloServerExpress<
       );
     });
 
-    return router;
+    return app;
   }
 }
 
