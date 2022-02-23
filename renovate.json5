@@ -50,10 +50,16 @@
       allowedVersions: "15.x"
     },
     // We need to support Node v12, so we don't allow ourselves to use type definitions
-    // that would let us write v14-specific code.
+    // that would let us write v14-specific code. (In AS4, we stay on v14 instead.)
     {
-      "matchPackageNames": ["@types/node"],
-      "allowedVersions": "12.x"
+      matchPackageNames: ["@types/node"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "12.x"
+    },
+    {
+      matchPackageNames: ["@types/node"],
+      matchBaseBranches: ["version-4"],
+      allowedVersions: "14.x"
     },
     // make-fetch-happen is used by the op reg plugin, which uses a cache API
     // that is removed in v9.
