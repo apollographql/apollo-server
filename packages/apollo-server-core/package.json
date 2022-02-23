@@ -42,7 +42,7 @@
     "graphql-tag": "^2.11.0",
     "lodash.sortby": "^4.7.0",
     "loglevel": "^1.6.8",
-    "lru-cache": "^6.0.0",
+    "lru-cache": "^7.0.0",
     "sha.js": "^2.4.11",
     "uuid": "^8.0.0"
   },
