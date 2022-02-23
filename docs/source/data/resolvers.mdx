@@ -463,7 +463,7 @@ If the resolver for the `books` field returns an array of objects that each cont
 
 ## Resolving unions and interfaces
 
-There are GraphQL types that enable you to define a field that returns one of multiple possible object types (i.e. [unions and interfaces](../schema/unions-interfaces/#resolving-a-union)). To resolve a field that can return different object types, you must define a `__resolveType` function to inform Apollo Server _which_ object type to return.
+There are GraphQL types that enable you to define a field that returns one of multiple possible object types (i.e., [unions and interfaces](../schema/unions-interfaces/#resolving-a-union)). To resolve a field that can return different object types, you must define a `__resolveType` function to inform Apollo Server _which_ type of object is being returned.
 
 > [See examples of the `__resolveType` function](../schema/unions-interfaces/#resolving-a-union).
 
