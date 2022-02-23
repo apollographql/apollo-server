@@ -197,53 +197,6 @@ describe('apollo-server-express', () => {
         .expect(500, /need to use `body-parser`/);
     });
 
-    describe('health checks', () => {
-      it('creates a health check endpoint', async () => {
-        const { httpServer } = await createServer({
-          typeDefs,
-          resolvers,
-        });
-
-        await request(httpServer)
-          .get('/.well-known/apollo/server-health')
-          .expect(200, { status: 'pass' });
-      });
-
-      it('provides a callback for the health check', async () => {
-        const { httpServer } = await createServer(
-          {
-            typeDefs,
-            resolvers,
-          },
-          {
-            onHealthCheck: async () => {
-              throw Error("can't connect to DB");
-            },
-          },
-        );
-
-        await request(httpServer)
-          .get('/.well-known/apollo/server-health')
-          .expect(503, { status: 'fail' });
-      });
-
-      it('can disable the healthCheck', async () => {
-        const { httpServer } = await createServer(
-          {
-            typeDefs,
-            resolvers,
-          },
-          {
-            disableHealthCheck: true,
-          },
-        );
-
-        await request(httpServer)
-          .get('/.well-known/apollo/server-health')
-          .expect(404);
-      });
-    });
-
     describe('errors', () => {
       it('returns thrown context error as a valid graphql result', async () => {
         const typeDefs = gql`
