@@ -5,6 +5,7 @@
     "group:graphql-toolsMonorepo",
   ],
   "schedule": null,
+  baseBranches: ["main", "version-4"],
   // Disable circleci manager; see apollographql/federation's renovate file for details.
   "enabledManagers": ["npm"],
   "dependencyDashboard": true,
