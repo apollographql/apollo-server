@@ -8,6 +8,7 @@
     "compile": "tsc --build tsconfig.build.json",
     "compile:clean": "tsc --build tsconfig.build.json --clean",
     "watch": "tsc --build tsconfig.build.json --watch",
+    "install-with-npm-8.5": "npm i -g npm@^8.5.0 && npm i",
     "postinstall": "npm run compile",
     "pretest": "tsc --build tsconfig.json",
     "test": "jest --verbose",
