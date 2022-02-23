@@ -461,6 +461,16 @@ type Author {
 
 If the resolver for the `books` field returns an array of objects that each contain a `title` field, then you can use a default resolver for the `title` field. The default resolver will correctly return `parent.title`.
 
+## Resolving unions and interfaces
+
+There are GraphQL types that enable you to define a field that returns one of multiple possible object types (i.e., [unions and interfaces](../schema/unions-interfaces/#resolving-a-union)). To resolve a field that can return different object types, you must define a `__resolveType` function to inform Apollo Server _which_ type of object is being returned.
+
+> [See examples of the `__resolveType` function](../schema/unions-interfaces/#resolving-a-union).
+
+## Resolving federated entities
+
+See [Resolving Entities](https://www.apollographql.com/docs/federation/entities/#resolving-entities).
+
 ## Monitoring resolver performance
 
 As with all code, a resolver's performance depends on its logic. It's important to understand which of your schema's fields are computationally expensive or otherwise slow to resolve, so that you can either improve their performance or make sure you only query them when necessary.
