@@ -1,6 +1,12 @@
 {
   "extends": "../../../../tsconfig.test.base",
   "include": ["**/*"],
+  "compilerOptions": {
+    // @apollo/client doesn't work without dom types, and we use it in our tests
+    // to test that the real persisted query link works. Perhaps we can make this
+    // more tightly scoped later.
+    "lib": ["dom"],
+  },
   "references": [
     { "path": "../../" },
     { "path": "../../../server-types" },
