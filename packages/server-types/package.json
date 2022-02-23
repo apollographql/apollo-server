@@ -13,7 +13,7 @@
     "directory": "packages/server-types"
   },
   "engines": {
-    "node": ">=12.0"
+    "node": ">=14.0"
   },
   "dependencies": {
     "@apollo/usage-reporting-protobuf": "^3.3.0",

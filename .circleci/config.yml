@@ -84,7 +84,6 @@ workflows:
           matrix:
             parameters:
               node-version:
-                - "12"
                 - "14"
                 - "16"
                 - "17"
