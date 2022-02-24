@@ -1,6 +1,4 @@
-import express from 'express';
-import corsMiddleware from 'cors';
-import { json, OptionsJson } from 'body-parser';
+import type express from 'express';
 import {
   GraphQLOptions,
   ApolloServerBase,
@@ -10,24 +8,6 @@ import {
   isHttpQueryError,
 } from '..';
 import accepts from 'accepts';
-
-export interface GetMiddlewareOptions {
-  cors?:
-    | corsMiddleware.CorsOptions
-    | corsMiddleware.CorsOptionsDelegate
-    | boolean;
-  bodyParserConfig?: OptionsJson | boolean;
-}
-
-export interface ServerRegistration extends GetMiddlewareOptions {
-  // Note: You can also pass a connect.Server here. If we changed this field to
-  // `express.Application | connect.Server`, it would be very hard to get the
-  // app.use calls to typecheck even though they do work properly. Our
-  // assumption is that very few people use connect with TypeScript (and in fact
-  // we suspect the only connect users left writing GraphQL apps are Meteor
-  // users).
-  app: express.Application;
-}
 
 export interface ExpressContext {
   req: express.Request;
@@ -55,30 +35,12 @@ export class ApolloServerExpress<
   // TODO: While `express` is not Promise-aware, this should become `async` in
   // a major release in order to align the API with other integrations (e.g.
   // Hapi) which must be `async`.
-  public getMiddleware({
-    cors,
-    bodyParserConfig,
-  }: GetMiddlewareOptions = {}): express.RequestHandler {
+  public getMiddleware(): express.RequestHandler {
     this.assertStarted('getMiddleware');
 
-    const app = express();
-
-    // Note that we don't just pass all of these handlers to a single app.use call
-    // for 'connect' compatibility.
-    if (cors === true) {
-      app.use(corsMiddleware<corsMiddleware.CorsRequest>());
-    } else if (cors !== false) {
-      app.use(corsMiddleware(cors));
-    }
-
-    if (bodyParserConfig === true) {
-      app.use(json());
-    } else if (bodyParserConfig !== false) {
-      app.use(json(bodyParserConfig));
-    }
-
     const landingPage = this.getLandingPage();
-    app.use((req, res, next) => {
+
+    return (req, res, next) => {
       if (landingPage && prefersHtml(req)) {
         res.setHeader('Content-Type', 'text/html');
         res.write(landingPage.html);
@@ -89,19 +51,13 @@ export class ApolloServerExpress<
       if (!req.body) {
         // The json body-parser *always* sets req.body to {} if it's unset (even
         // if the Content-Type doesn't match), so if it isn't set, you probably
-        // forgot to set up body-parser.
+        // forgot to set up body-parser. (Note that this may change in the future
+        // body-parser@2.)
         res.status(500);
-        if (bodyParserConfig === false) {
-          res.send(
-            '`res.body` is not set; you passed `bodyParserConfig: false`, ' +
-              'but you still need to use `body-parser` middleware yourself.',
-          );
-        } else {
-          res.send(
-            '`res.body` is not set even though Apollo Server installed ' +
-              "`body-parser` middleware; this shouldn't happen!",
-          );
-        }
+        res.send(
+          '`res.body` is not set; this probably means you forgot to set up the ' +
+            '`body-parser` middleware before the Apollo Server middleware.',
+        );
         return;
       }
 
@@ -119,13 +75,7 @@ export class ApolloServerExpress<
           }
           res.statusCode = responseInit.status || 200;
 
-          // Using `.send` is a best practice for Express, but we also just use
-          // `.end` for compatibility with `connect`.
-          if (typeof res.send === 'function') {
-            res.send(graphqlResponse);
-          } else {
-            res.end(graphqlResponse);
-          }
+          res.send(graphqlResponse);
         },
         (error: Error) => {
           if (!isHttpQueryError(error)) {
@@ -139,18 +89,10 @@ export class ApolloServerExpress<
           }
 
           res.statusCode = error.statusCode;
-          if (typeof res.send === 'function') {
-            // Using `.send` is a best practice for Express, but we also just use
-            // `.end` for compatibility with `connect`.
-            res.send(error.message);
-          } else {
-            res.end(error.message);
-          }
+          res.send(error.message);
         },
       );
-    });
-
-    return app;
+    };
   }
 }
 

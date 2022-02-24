@@ -1,3 +1,5 @@
+import { json } from 'body-parser';
+import cors from 'cors';
 import express from 'express';
 import { ApolloServerExpress, ApolloServerExpressConfig } from '../../express';
 import testSuite, { schema as Schema, CreateAppOptions } from '../integration';
@@ -23,7 +25,7 @@ describe('integration:Express', () => {
       );
       await server.start();
       serverToCleanUp = server;
-      app.use('/graphql', server.getMiddleware());
+      app.use('/graphql', cors(), json(), server.getMiddleware());
       return app;
     },
     destroyApp: async function () {

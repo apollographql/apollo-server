@@ -1,3 +1,5 @@
+import { OptionsJson, json } from 'body-parser';
+import cors from 'cors';
 import express from 'express';
 
 import http from 'http';
@@ -10,11 +12,7 @@ import {
   ApolloServerPluginCacheControlDisabled,
   ApolloServerPluginDrainHttpServer,
 } from '../..';
-import {
-  ApolloServerExpress,
-  ApolloServerExpressConfig,
-  ServerRegistration,
-} from '../../express';
+import { ApolloServerExpress, ApolloServerExpressConfig } from '../../express';
 
 import {
   testApolloServer,
@@ -55,7 +53,7 @@ describe('apollo-server-express', () => {
         serverToCleanUp = server;
       }
       const graphqlPath = options?.graphqlPath ?? '/graphql';
-      app.use(graphqlPath, server.getMiddleware());
+      app.use(graphqlPath, cors(), json(), server.getMiddleware());
       await new Promise((resolve) => {
         httpServer.once('listening', resolve);
         httpServer.listen({ port: 0 });
@@ -76,7 +74,7 @@ describe('apollo-server-express', () => {
 
   async function createServer(
     serverOptions: ApolloServerExpressConfig,
-    options: Partial<ServerRegistration> = {},
+    options?: { skipBodyParser?: true; bodyParserConfig?: OptionsJson },
   ) {
     server = new ApolloServerExpress({
       stopOnTerminationSignals: false,
@@ -84,7 +82,18 @@ describe('apollo-server-express', () => {
     });
     await server.start();
     app = express();
-    app.use('/graphql', server.getMiddleware(options));
+    app.use(
+      '/graphql',
+      ...[
+        cors(),
+        ...(options?.skipBodyParser
+          ? []
+          : options?.bodyParserConfig
+          ? [json(options.bodyParserConfig)]
+          : [json()]),
+        server.getMiddleware(),
+      ],
+    );
 
     httpServer = await new Promise<http.Server>((resolve) => {
       const l: http.Server = app.listen({ port: 0 }, () => resolve(l));
@@ -136,28 +145,6 @@ describe('apollo-server-express', () => {
         );
     });
 
-    it('accepts cors configuration', async () => {
-      const { url: uri } = await createServer(
-        {
-          typeDefs,
-          resolvers,
-        },
-        {
-          cors: { origin: 'apollographql.com' },
-        },
-      );
-
-      const apolloFetch = createApolloFetch({ uri }).useAfter(
-        (response, next) => {
-          expect(
-            response.response.headers.get('access-control-allow-origin'),
-          ).toEqual('apollographql.com');
-          next();
-        },
-      );
-      await apolloFetch({ query: '{hello}' });
-    });
-
     it('accepts body parser configuration', async () => {
       const { url: uri } = await createServer(
         {
@@ -189,13 +176,13 @@ describe('apollo-server-express', () => {
           typeDefs,
           resolvers,
         },
-        { bodyParserConfig: false },
+        { skipBodyParser: true },
       );
 
       await request(httpServer)
         .post('/graphql')
         .send({ query: '{hello}' })
-        .expect(500, /need to use `body-parser`/);
+        .expect(500, /forgot to set up the `body-parser`/);
     });
 
     describe('errors', () => {
