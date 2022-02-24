@@ -3,11 +3,6 @@ import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
-  InMemoryLRUCache,
-  KeyValueCache,
-  PrefixingKeyValueCache,
-} from 'apollo-server-caching';
-import {
   assertValidSchema,
   DocumentNode,
   FieldDefinitionNode,
@@ -19,6 +14,7 @@ import {
   print,
   ValidationContext,
 } from 'graphql';
+import Keyv from 'keyv';
 import loglevel from 'loglevel';
 import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
@@ -68,6 +64,7 @@ import type {
   WithRequired,
 } from './types';
 import isNodeLike from './utils/isNodeLike';
+import { LRUStore, PrefixingKeyv } from './utils/KeyvLRU';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
 
 const NoIntrospection = (context: ValidationContext) => ({
@@ -156,7 +153,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   ) => GraphQLResponse | null;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   includeStackTracesInErrorResponses: boolean;
-  cache: KeyValueCache;
+  cache: Keyv<string>;
   persistedQueries?: WithRequired<PersistedQueryOptions, 'cache'>;
   nodeEnv: string;
   allowBatchedHttpRequests: boolean;
@@ -267,7 +264,15 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         };
 
     const introspectionEnabled = config.introspection ?? isDev;
-    const cache = config.cache ?? new InMemoryLRUCache();
+
+    // The default internal cache is a vanilla `Keyv` which uses a `Map` by
+    // default for its underlying store. For production, we recommend using a
+    // more appropriate Keyv implementation (see
+    // https://github.com/jaredwray/keyv/tree/main/packages for 1st party
+    // maintained Keyv packages or our own Keyv store `LRUStore`).
+    // TODO(AS4): warn users and provide better documentation around providing
+    // an appropriate Keyv.
+    const cache = config.cache ?? new Keyv();
 
     // Note that we avoid calling methods on `this` before `this.internals` is assigned
     // (thus a bunch of things being static methods above).
@@ -289,7 +294,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           ? undefined
           : {
               ...config.persistedQueries,
-              cache: new PrefixingKeyValueCache(
+              cache: new PrefixingKeyv(
                 config.persistedQueries?.cache ?? cache,
                 APQ_CACHE_PREFIX,
               ),
@@ -707,13 +712,16 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       // random prefix each time we get a new schema.
       documentStore:
         providedUnprefixedDocumentStore === undefined
-          ? ApolloServer.initializeDocumentStore()
+          ? new Keyv<DocumentNode>({
+              store: new LRUStore({
+                // Create ~about~ a 30MiB cache by default. Configurable by providing
+                // your own `documentStore`.
+                maxSize: Math.pow(2, 20) * 30,
+              }),
+            })
           : providedUnprefixedDocumentStore === null
           ? null
-          : new PrefixingKeyValueCache(
-              providedUnprefixedDocumentStore,
-              `${uuid.v4()}:`,
-            ),
+          : new PrefixingKeyv(providedUnprefixedDocumentStore, `${uuid.v4()}:`),
     };
   }
 
@@ -943,20 +951,6 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     });
 
     return plugins;
-  }
-
-  private static initializeDocumentStore(): InMemoryLRUCache<DocumentNode> {
-    return new InMemoryLRUCache<DocumentNode>({
-      // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
-      // since the technique to calculate the size of a DocumentNode is
-      // only using JSON.stringify on the DocumentNode (and thus doesn't account
-      // for unicode characters, etc.), but it should do a reasonable job at
-      // providing a caching document store for most operations.
-      //
-      // If you want to tweak the max size, pass in your own documentStore.
-      maxSize: Math.pow(2, 20) * 30,
-      sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
-    });
   }
 
   // TODO(AS4): Make sure we like the name of this function.

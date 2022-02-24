@@ -21,7 +21,7 @@ export function defaultSendOperationsAsTrace() {
     // more configuration surface area. Hopefully the warning message will allow
     // us to evaluate the need with more validated input from those that receive
     // it.
-    max: Math.pow(2, 20),
+    maxSize: Math.pow(2, 20),
     length: (_val, key) => {
       return (key && Buffer.byteLength(key)) || 0;
     },

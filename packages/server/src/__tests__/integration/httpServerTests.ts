@@ -4,48 +4,44 @@
 // function. Newer tests have generally been added to the apolloServerTests.ts
 // file.
 
-import { sha256 } from 'js-sha256';
-
+import resolvable from '@josephg/resolvable';
 import {
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLString,
-  GraphQLInt,
-  GraphQLError,
-  GraphQLNonNull,
-  GraphQLScalarType,
-  getIntrospectionQuery,
   BREAK,
   DocumentNode,
+  getIntrospectionQuery,
   getOperationAST,
+  GraphQLError,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLSchema,
+  GraphQLString,
   ValidationContext,
 } from 'graphql';
-
-import type http from 'http';
-
-import request from 'supertest';
-import type { HTTPError } from 'superagent';
-import resolvable from '@josephg/resolvable';
-
-import {
-  ApolloServerOptions,
-  KeyValueCache,
-  ApolloServerPluginCacheControl,
-  PersistedQueryOptions,
-  ApolloServerPluginCacheControlDisabled,
-  ApolloServer,
-} from '../..';
-import { PersistedQueryNotFoundError } from '../../errors';
 import gql from 'graphql-tag';
-import type {
-  GraphQLResponse,
-  GraphQLRequestListener,
-  BaseContext,
-} from '../../externalTypes';
+import type http from 'http';
+import { sha256 } from 'js-sha256';
+import Keyv from 'keyv';
+import type { HTTPError } from 'superagent';
+import request from 'supertest';
 import type {
   CreateServerForIntegrationTests,
   CreateServerForIntegrationTestsOptions,
 } from '.';
+import {
+  ApolloServer,
+  ApolloServerOptions,
+  ApolloServerPluginCacheControl,
+  ApolloServerPluginCacheControlDisabled,
+  PersistedQueryOptions,
+} from '../..';
+import { PersistedQueryNotFoundError } from '../../errors';
+import type {
+  BaseContext,
+  GraphQLRequestListener,
+  GraphQLResponse,
+} from '../../externalTypes';
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
@@ -1423,17 +1419,6 @@ export function defineIntegrationTestSuiteHttpServerTests(
         },
       };
 
-      function createMockCache(): KeyValueCache {
-        const map = new Map<string, string>();
-        return {
-          set: jest.fn(async (key, val) => {
-            await map.set(key, val);
-          }),
-          get: jest.fn(async (key) => map.get(key)),
-          delete: jest.fn(async (key) => map.delete(key)),
-        };
-      }
-
       let didEncounterErrors: jest.MockedFunction<
         NonNullable<GraphQLRequestListener<BaseContext>['didEncounterErrors']>
       >;
@@ -1466,10 +1451,11 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       }
 
-      let cache: KeyValueCache;
-
+      let cache: Keyv<string>;
+      let setSpy: jest.SpyInstance;
       beforeEach(async () => {
-        cache = createMockCache();
+        cache = new Keyv();
+        setSpy = jest.spyOn(cache, 'set');
         didResolveSource = jest.fn();
         didEncounterErrors = jest.fn();
       });
@@ -1482,13 +1468,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           query,
         });
 
-        expect(cache.set).toHaveBeenCalledWith(
-          expect.stringMatching(/^apq:/),
-          query,
-          expect.objectContaining({
-            ttl: 900,
-          }),
-        );
+        expect(setSpy).toHaveBeenCalledWith(`apq:${hash}`, query, 900);
         expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
           'source',
           query,
@@ -1503,12 +1483,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
           query,
         });
 
-        expect(cache.set).toHaveBeenCalledWith(
-          expect.stringMatching(/^apq:/),
+        expect(setSpy).toHaveBeenCalledWith(
+          `apq:${hash}`,
           '{testString}',
-          expect.not.objectContaining({
-            ttl: 900,
-          }),
+          undefined,
         );
         expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
           'source',

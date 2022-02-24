@@ -1,5 +1,4 @@
 import type { Logger } from '@apollo/utils.logger';
-import { InMemoryLRUCache } from 'apollo-server-caching';
 import {
   getOperationAST,
   GraphQLObjectType,
@@ -8,6 +7,7 @@ import {
   parse,
   validate as graphqlValidate,
 } from 'graphql';
+import Keyv from 'keyv';
 import { newCachePolicy } from '../cachePolicy';
 import type {
   ApolloServerPlugin,
@@ -130,7 +130,7 @@ export default async function pluginTestHarness<TContext>({
     request: graphqlRequest,
     metrics: Object.create(null),
     source: graphqlRequest.query,
-    cache: new InMemoryLRUCache(),
+    cache: new Keyv<string>(),
     contextValue,
     overallCachePolicy: newCachePolicy(),
   };

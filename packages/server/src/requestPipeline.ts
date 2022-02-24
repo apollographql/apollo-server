@@ -266,11 +266,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       internals.persistedQueries.cache.set(
         queryHash,
         query,
-        typeof internals.persistedQueries.ttl !== 'undefined'
-          ? {
-              ttl: internals.persistedQueries.ttl,
-            }
-          : Object.create(null),
+        internals.persistedQueries?.ttl ?? undefined,
       ),
     ).catch(internals.logger.warn);
   }

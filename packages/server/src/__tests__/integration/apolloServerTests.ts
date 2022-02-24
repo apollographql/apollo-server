@@ -50,12 +50,13 @@ import type {
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import type { AddressInfo } from 'net';
 import request from 'supertest';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import Keyv from 'keyv';
 import type {
   CreateServerForIntegrationTests,
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,
 } from '.';
+import { LRUStore } from '../../utils/KeyvLRU';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -2279,7 +2280,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
           const uri = await createServerAndGetUrl({
             gateway,
             documentStore: withDocumentStore
-              ? new InMemoryLRUCache<DocumentNode>()
+              ? new Keyv<DocumentNode>({
+                  store: new LRUStore({ maxSize: 2000 }),
+                })
               : undefined,
           });
 

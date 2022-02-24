@@ -1,4 +1,3 @@
-import type { BaseContext } from '../../externalTypes';
 import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';
@@ -9,6 +8,7 @@ import {
   ApolloServerPluginDrainHttpServer,
 } from '../..';
 import { expressMiddleware } from '../../express';
+import type { BaseContext } from '../../externalTypes';
 import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,

@@ -1,14 +1,14 @@
 // TODO(AS4): This seems like it could live in this package too.
 import type { Trace } from '@apollo/usage-reporting-protobuf';
 import type { Logger } from '@apollo/utils.logger';
-import type { KeyValueCache } from 'apollo-server-caching';
 import type {
   DocumentNode,
   GraphQLError,
   GraphQLFormattedError,
   GraphQLSchema,
-  OperationDefinitionNode,
+  OperationDefinitionNode
 } from 'graphql';
+import type Keyv from 'keyv';
 import type { CachePolicy } from './cacheControl';
 import type { HTTPGraphQLRequest, HTTPGraphQLResponse } from './http';
 
@@ -59,7 +59,7 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly schema: GraphQLSchema;
 
   readonly contextValue: TContext;
-  readonly cache: KeyValueCache;
+  readonly cache: Keyv<string>;
 
   readonly queryHash?: string;
 
