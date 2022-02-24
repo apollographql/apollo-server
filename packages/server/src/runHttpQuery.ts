@@ -117,7 +117,6 @@ export function throwHttpGraphQLError<E extends Error>(
 const NODE_ENV = process.env.NODE_ENV ?? '';
 
 export async function runHttpQuery(
-  handlerArguments: Array<any>,
   request: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
   function debugFromNodeEnv(nodeEnv: string = NODE_ENV) {
@@ -126,7 +125,7 @@ export async function runHttpQuery(
 
   let options: GraphQLOptions;
   try {
-    options = await resolveGraphqlOptions(request.options, ...handlerArguments);
+    options = await resolveGraphqlOptions(request.options);
   } catch (e) {
     // The options can be generated asynchronously, so we don't have access to
     // the normal options provided by the user, such as: formatError,

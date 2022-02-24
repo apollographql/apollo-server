@@ -61,7 +61,7 @@ export class ApolloServerExpress<
         return;
       }
 
-      runHttpQuery([], {
+      runHttpQuery({
         method: req.method,
         options: () => this.createGraphQLServerOptions(req, res),
         query: req.method === 'POST' ? req.body : req.query,

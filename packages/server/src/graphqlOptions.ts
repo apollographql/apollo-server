@@ -83,10 +83,9 @@ export async function resolveGraphqlOptions(
   options:
     | GraphQLServerOptions
     | ((...args: Array<any>) => ValueOrPromise<GraphQLServerOptions>),
-  ...args: Array<any>
 ): Promise<GraphQLServerOptions> {
   if (typeof options === 'function') {
-    return await options(...args);
+    return await options();
   } else {
     return options;
   }

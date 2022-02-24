@@ -42,7 +42,7 @@ describe('runHttpQuery', () => {
       });
 
       expect.assertions(2);
-      return runHttpQuery([], noQueryRequest).catch((err: HttpQueryError) => {
+      return runHttpQuery(noQueryRequest).catch((err: HttpQueryError) => {
         expect(err.statusCode).toEqual(400);
         expect(err.message).toEqual(
           JSON.stringify({
@@ -76,7 +76,7 @@ describe('runHttpQuery', () => {
 
     it('succeeds when there are no batched queries in the request', async () => {
       await expect(
-        runHttpQuery([], mockDisabledBatchQueryRequest),
+        runHttpQuery(mockDisabledBatchQueryRequest),
       ).resolves.not.toThrow();
     });
 
@@ -95,21 +95,19 @@ describe('runHttpQuery', () => {
           ],
         },
       );
-      return runHttpQuery([], batchedQueryRequest).catch(
-        (err: HttpQueryError) => {
-          expect(err.statusCode).toEqual(400);
-          expect(err.message).toEqual(
-            JSON.stringify({
-              errors: [
-                {
-                  message: 'Operation batching disabled.',
-                  extensions: { code: 'INTERNAL_SERVER_ERROR' },
-                },
-              ],
-            }) + '\n',
-          );
-        },
-      );
+      return runHttpQuery(batchedQueryRequest).catch((err: HttpQueryError) => {
+        expect(err.statusCode).toEqual(400);
+        expect(err.message).toEqual(
+          JSON.stringify({
+            errors: [
+              {
+                message: 'Operation batching disabled.',
+                extensions: { code: 'INTERNAL_SERVER_ERROR' },
+              },
+            ],
+          }) + '\n',
+        );
+      });
     });
   });
 
@@ -144,9 +142,7 @@ describe('runHttpQuery', () => {
         },
       );
 
-      await expect(
-        runHttpQuery([], multipleQueryRequest),
-      ).resolves.not.toThrow();
+      await expect(runHttpQuery(multipleQueryRequest)).resolves.not.toThrow();
     });
   });
 });
