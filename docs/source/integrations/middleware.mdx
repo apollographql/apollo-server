@@ -383,10 +383,10 @@ async function startApolloServer(typeDefs, resolvers) {
   await server.applyMiddleware({
     app,
     route: {            // shared route options for GET & POST requests
-      cors: true
+      cors: true,
     },
     routeGet: {         // route options for GET requests
-      description: 'Get Route Description'
+      description: 'Get Route Description',
     },
     routePost: {        // route options for POST requests
       description: 'Post Route Description',
