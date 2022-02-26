@@ -48,7 +48,7 @@
     "@types/express-serve-static-core": "4.17.28",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/jest": "27.4.1",
-    "@types/lodash": "4.14.178",
+    "@types/lodash": "4.14.179",
     "@types/lodash.sortby": "4.7.6",
     "@types/lodash.sumby": "4.6.6",
     "@types/lodash.xorby": "4.7.6",
