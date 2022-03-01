@@ -92,7 +92,7 @@
     "supertest": "6.2.2",
     "test-listen": "1.1.0",
     "ts-jest": "27.1.3",
-    "typescript": "4.5.5",
+    "typescript": "4.6.2",
     "winston": "3.6.0",
     "winston-transport": "4.5.0"
   },
