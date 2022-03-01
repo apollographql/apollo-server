@@ -48,8 +48,9 @@
 /features/unions-interfaces/ /docs/apollo-server/schema/unions-interfaces/
 
 # Move federation docs into their own docset
-/api/apollo-federation/ /docs/federation/api/apollo-federation/ 302!
+/api/apollo-federation/ /docs/federation/api/apollo-subgraph/ 302!
 /api/apollo-gateway/ /docs/federation/api/apollo-gateway/ 302!
+/api/apollo-subgraph/ /docs/federation/api/apollo-subgraph/ 302!
 /federation/managed-federation /docs/studio/managed-federation/overview/
 /federation/introduction /docs/federation/ 302!
 /federation/* /docs/federation/:splat 302!
