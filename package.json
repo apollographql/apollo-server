@@ -80,7 +80,7 @@
     "jest-mock-random": "1.1.1",
     "js-sha256": "0.9.0",
     "lodash.sumby": "4.6.0",
-    "log4js": "6.4.1",
+    "log4js": "6.4.2",
     "mock-req": "0.2.0",
     "nock": "13.2.4",
     "node-fetch": "2.6.7",
