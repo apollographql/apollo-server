@@ -21,7 +21,6 @@
     "packages/apollo-server-lambda",
     "packages/apollo-server-micro",
     "packages/apollo-server-plugin-base",
-    "packages/apollo-server-plugin-operation-registry",
     "packages/apollo-server-plugin-response-cache",
     "packages/apollo-server-types"
   ],

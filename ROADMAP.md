@@ -135,7 +135,7 @@ Because it is semantically pretty independent from Apollo Server, we will move i
 
 ### Move plugins which have their own package to their own repositories
 
-Some plugins, like the usage reporting plugin, are built in to Apollo Server; they currently live in `apollo-server-core` and will live in `@apollo/server` in AS4. Other plugins live in their own packages.  These plugins will move to their own repositories. Specifically, this includes `apollo-server-plugin-operation-registry` and `apollo-server-plugin-response-cache`.
+Some plugins, like the usage reporting plugin, are built in to Apollo Server; they currently live in `apollo-server-core` and will live in `@apollo/server` in AS4. Other plugins live in their own packages.  These plugins will move to their own repositories. Specifically, this includes ~`apollo-server-plugin-operation-registry`~ (migrated to `@apollo/server-plugin-operation-registry`) and `apollo-server-plugin-response-cache`.
 
 (Because `apollo-server-plugin-response-cache` will have no dependencies other than `@apollo/server` and `graphql`, it might be reasonable to merge it into `@apollo/server` as well. That said, keeping it as a separate package means we can make interface improvements to it on a versioning lifecycle that doesn't have to be strictly synchronized with the main Apollo Server API, so a separate package and repository is probably best.)
 
