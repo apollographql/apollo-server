@@ -49,7 +49,7 @@ Additionally, Apollo Server 3 [no longer re-exports all of the exports from the 
 
 We hope to add more fully-integrated subscription support to Apollo Server in a future version.
 
-> Note that the `subscriptions-transport-ws` library is not actively maintained. An alternative, actively-maintained `graphql-ws` package exists, which we intend to support in a future release. These libraries implement different protocols for GraphQL subscriptions over WebSocket, so you need to adjust your client to support `graphql-ws`. At the time of release of Apollo Server 3, the `graphql-ws` protocol is not yet supported by GraphQL Playground or the Apollo Studio Explorer.
+> Note that the `subscriptions-transport-ws` library is no longer maintained. A newer, actively-maintained `graphql-ws` package exists. These libraries implement different protocols for GraphQL subscriptions over WebSocket, so you need to adjust your client to support `graphql-ws`. This migration guide shows how to reenable `subscriptions-transport-ws` to make your transition from Apollo Server 2 to Apollo Server 3 as easy as possible, but we recommend that you then migrate from `subscriptions-transport-ws` to `graphql-ws` once you've finished the upgrade. The [subscriptions documentation](./data/subscriptions/) shows how to use the newer `graphql-ws` rather than the unmaintained `subscriptions-transport-ws`.
 
 #### Reenabling subscriptions
 
