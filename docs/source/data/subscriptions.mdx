@@ -575,9 +575,8 @@ If you intend to switch from `subscriptions-transport-ws` to `graphql-ws` you wi
   <thead>
     <tr>
       <th>Client Name</th>
-      <th>Minimum version required for graphql-ws</th>
-      <th>To use graphql-ws</th>
-      <th>To use subscriptions-transport-ws (OLDER)</th>
+      <th>To use graphql-ws (RECOMMENDED)</th>
+      <th>To use subscriptions-transport-ws</th>
     </tr>
   </thead>
 
@@ -587,11 +586,6 @@ If you intend to switch from `subscriptions-transport-ws` to `graphql-ws` you wi
 
 [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/)
 
-</td>
-
-<td>
-
-N/A
 </td>
 
 <td>
@@ -614,14 +608,11 @@ N/A
 
 </td>
 
-<td>
-
-3.5.10
-</td>
 
 <td>
 
 Use [`GraphQLWsLink`](https://www.apollographql.com/docs/react/api/link/apollo-link-subscriptions/)
+<br>(Requires v3.5.10 or later)
 
 </td>
 
@@ -636,18 +627,15 @@ Use [`WebSocketLink`](https://www.apollographql.com/docs/react/api/link/apollo-l
 <tr>
 <td>
 
-[Apollo iOS](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support)
+[Apollo iOS](https://www.apollographql.com/docs/ios/)
 
 </td>
 
-<td>
-
-0.51.0
-</td>
 
 <td>
 
-[`graphql_transport_ws`](https://www.apollographql.com/docs/ios/api/ApolloWebSocket/enums/WebSocket.WSProtocol/#graphql_transport_ws) (Really, we promise!)
+[`graphql_transport_ws`](https://www.apollographql.com/docs/ios/api/ApolloWebSocket/enums/WebSocket.WSProtocol/#graphql_transport_ws)
+<br>(Requires v0.51.0 or later)
 
 </td>
 
@@ -662,18 +650,14 @@ Use [`WebSocketLink`](https://www.apollographql.com/docs/react/api/link/apollo-l
 <tr>
 <td>
 
-[Apollo Kotlin](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support)
+[Apollo Kotlin](https://www.apollographql.com/docs/kotlin/)
 
 </td>
 
 <td>
 
-3.0.0
-</td>
-
-<td>
-
-[`GraphQLWsProtocol`](https://www.apollographql.com/docs/kotlin/essentials/subscriptions/#customizing-your-websocket-protocol)
+[`GraphQLWsProtocol`](https://www.apollographql.com/docs/kotlin/essentials/subscriptions/#customizing-your-websocket-protocol)<br>
+(Requires v3.0.0 or later)
 
 </td>
 
@@ -686,13 +670,6 @@ Use [`WebSocketLink`](https://www.apollographql.com/docs/react/api/link/apollo-l
 
 </tbody>
 </table>
-
-<!-- Just going to comment these out for now -->
-<!-- * [Adjust Apollo Studio Explorer settings](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support)
-* Update to [Apollo Client 3.5.10 or later](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol)
-  * Replace usage of [`WebSocketLink` with `GraphQLWsLink` ](https://www.apollographql.com/docs/react/api/link/apollo-link-subscriptions/)
-* [Customize your WebSocket protocol](https://www.apollographql.com/docs/kotlin/essentials/subscriptions/#customizing-your-websocket-protocol) if using Apollo Kotlin
-* Update to [Apollo iOS 0.51.0 or later](https://github.com/apollographql/apollo-ios) and [customize your WebSocket protocol](https://www.apollographql.com/docs/ios/subscriptions/#graphql-over-websocket-protocols) -->
 
 For more information on using Apollo Server with `subscriptions-transport-ws`, you can view the [previous version of this article here](https://github.com/apollographql/apollo-server/blob/4b82967c10a69aa104848a8c9d15c591b528918c/docs/source/data/subscriptions.mdx).
 
