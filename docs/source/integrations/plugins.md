@@ -198,7 +198,7 @@ Add your plugins to Apollo Server by providing a `plugins` configuration option 
 ```js
 const { ApolloServer } = require('apollo-server');
 const ApolloServerOperationRegistry =
-  require('apollo-server-plugin-operation-registry');
+  require('@apollo/server-plugin-operation-registry');
 
 /* This example doesn't provide `typeDefs` or `resolvers`,
    both of which are required to start the server. */

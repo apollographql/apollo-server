@@ -74,12 +74,6 @@
       matchBaseBranches: ["main"],
       allowedVersions: "5.x"
     },
-    // make-fetch-happen is used by the op reg plugin, which uses a cache API
-    // that is removed in v9.
-    {
-      "matchPackageNames": ["make-fetch-happen"],
-      "allowedVersions": "8.x"
-    },
     // node-fetch v3 only ships as ESM. We currently build to CommonJS and even
     // if we start publishing as ESM (#5627) we're not going to go ESM-only
     // for a while. (Plus it requires Node v12.20 and we technically support

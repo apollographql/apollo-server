@@ -23,7 +23,6 @@
     { "path": "./packages/apollo-server-lambda" },
     { "path": "./packages/apollo-server-micro" },
     { "path": "./packages/apollo-server-plugin-base" },
-    { "path": "./packages/apollo-server-plugin-operation-registry" },
     { "path": "./packages/apollo-server-plugin-response-cache" },
   ]
 }
