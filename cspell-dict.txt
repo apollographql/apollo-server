@@ -28,6 +28,7 @@ codecov
 codegen
 codepaths
 codesandbox
+contravariantly
 dataloaders
 datasource
 datasources

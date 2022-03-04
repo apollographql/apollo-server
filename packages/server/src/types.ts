@@ -7,6 +7,7 @@ import type {
   GraphQLExecutor,
   ApolloConfigInput,
   ApolloServerPlugin,
+  BaseContext,
 } from '@apollo/server-types';
 
 import type {
@@ -28,7 +29,9 @@ export type ContextFunction<FunctionParams = any, ProducedContext = object> = (
 
 // A plugin can return an interface that matches `ApolloServerPlugin`, or a
 // factory function that returns `ApolloServerPlugin`.
-export type PluginDefinition = ApolloServerPlugin | (() => ApolloServerPlugin);
+export type PluginDefinition<TContext extends BaseContext> =
+  | ApolloServerPlugin<TContext>
+  | (() => ApolloServerPlugin<TContext>);
 
 type BaseConfig = Pick<
   GraphQLOptions<Context>,
@@ -86,22 +89,21 @@ export type DocumentStore = KeyValueCache<DocumentNode>;
 
 // This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
-export interface Config<ContextFunctionParams = any> extends BaseConfig {
+export interface Config<TContext extends BaseContext> extends BaseConfig {
   modules?: GraphQLSchemaModule[];
 
   // These three options are always only passed directly through to
   // makeExecutableSchema. (If you don't want to use makeExecutableSchema, pass
   // `schema` instead.)
-  typeDefs?: IExecutableSchemaDefinition['typeDefs'];
-  resolvers?: IExecutableSchemaDefinition['resolvers'];
-  parseOptions?: IExecutableSchemaDefinition['parseOptions'];
+  typeDefs?: IExecutableSchemaDefinition<TContext>['typeDefs'];
+  resolvers?: IExecutableSchemaDefinition<TContext>['resolvers'];
+  parseOptions?: IExecutableSchemaDefinition<TContext>['parseOptions'];
 
   schema?: GraphQLSchema;
-  context?: Context | ContextFunction<ContextFunctionParams>;
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
-  plugins?: PluginDefinition[];
+  plugins?: PluginDefinition<TContext>[];
   persistedQueries?: PersistedQueryOptions | false;
   gateway?: GatewayInterface;
   stopOnTerminationSignals?: boolean;

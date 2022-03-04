@@ -24,6 +24,7 @@ import type {
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
   GraphQLRequestContext,
+  BaseContext,
 } from '@apollo/server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { newCachePolicy } from '../cachePolicy';
@@ -62,8 +63,7 @@ function runQuery(
 
 interface QueryOptions
   extends Pick<
-    GraphQLOptions<GraphQLContext<any>>,
-    | 'context'
+    GraphQLOptions<GraphQLContext<BaseContext>>,
     | 'debug'
     | 'documentStore'
     | 'fieldResolver'
@@ -78,6 +78,7 @@ interface QueryOptions
   variables?: { [key: string]: any };
   operationName?: string;
   request: Pick<Request, 'url' | 'method' | 'headers'>;
+  context?: BaseContext;
 }
 
 const queryType = new GraphQLObjectType({
@@ -513,7 +514,9 @@ describe('runQuery', () => {
         it('works as a listener on an object returned from "executionDidStart"', async () => {
           const executionDidEnd = jest.fn();
           const executionDidStart = jest.fn(
-            async (): Promise<GraphQLRequestExecutionListener> => ({
+            async (): Promise<
+              GraphQLRequestExecutionListener<BaseContext>
+            > => ({
               executionDidEnd,
             }),
           );
@@ -543,7 +546,9 @@ describe('runQuery', () => {
           const willResolveField = jest.fn();
           const executionDidEnd = jest.fn();
           const executionDidStart = jest.fn(
-            async (): Promise<GraphQLRequestExecutionListener> => ({
+            async (): Promise<
+              GraphQLRequestExecutionListener<BaseContext>
+            > => ({
               willResolveField,
               executionDidEnd,
             }),
@@ -573,7 +578,9 @@ describe('runQuery', () => {
           const willResolveField = jest.fn();
           const executionDidEnd = jest.fn();
           const executionDidStart = jest.fn(
-            async (): Promise<GraphQLRequestExecutionListener> => ({
+            async (): Promise<
+              GraphQLRequestExecutionListener<BaseContext>
+            > => ({
               willResolveField,
               executionDidEnd,
             }),
@@ -728,7 +735,9 @@ describe('runQuery', () => {
           const willResolveField = jest.fn(() => didResolveField);
           const executionDidEnd = jest.fn();
           const executionDidStart = jest.fn(
-            async (): Promise<GraphQLRequestExecutionListener> => ({
+            async (): Promise<
+              GraphQLRequestExecutionListener<BaseContext>
+            > => ({
               willResolveField,
               executionDidEnd,
             }),
@@ -761,7 +770,9 @@ describe('runQuery', () => {
           const willResolveField = jest.fn(() => didResolveField);
           const executionDidEnd = jest.fn();
           const executionDidStart = jest.fn(
-            async (): Promise<GraphQLRequestExecutionListener> => ({
+            async (): Promise<
+              GraphQLRequestExecutionListener<BaseContext>
+            > => ({
               willResolveField,
               executionDidEnd,
             }),
@@ -823,7 +834,7 @@ describe('runQuery', () => {
             jest.fn();
           const willResolveField = jest.fn(() => didResolveField);
 
-          const plugins: ApolloServerPlugin[] = [
+          const plugins: ApolloServerPlugin<BaseContext>[] = [
             {
               requestDidStart: async () => ({
                 executionDidStart: async () => ({
@@ -868,7 +879,7 @@ describe('runQuery', () => {
 
     describe('didEncounterErrors', () => {
       const didEncounterErrors = jest.fn();
-      const plugins: ApolloServerPlugin[] = [
+      const plugins: ApolloServerPlugin<BaseContext>[] = [
         {
           async requestDidStart() {
             return { didEncounterErrors };
@@ -939,7 +950,7 @@ describe('runQuery', () => {
             callOrder.push('parsingDidEnd');
           },
         );
-        const parsingDidStart: GraphQLRequestListener['parsingDidStart'] =
+        const parsingDidStart: GraphQLRequestListener<BaseContext>['parsingDidStart'] =
           jest.fn(async () => {
             callOrder.push('parsingDidStart');
             return parsingDidEnd;
@@ -949,13 +960,13 @@ describe('runQuery', () => {
           jest.fn(async () => {
             callOrder.push('validationDidEnd');
           });
-        const validationDidStart: GraphQLRequestListener['validationDidStart'] =
+        const validationDidStart: GraphQLRequestListener<BaseContext>['validationDidStart'] =
           jest.fn(async () => {
             callOrder.push('validationDidStart');
             return validationDidEnd;
           });
 
-        const didResolveSource: GraphQLRequestListener['didResolveSource'] =
+        const didResolveSource: GraphQLRequestListener<BaseContext>['didResolveSource'] =
           jest.fn(async () => {
             callOrder.push('didResolveSource');
           });
@@ -976,7 +987,7 @@ describe('runQuery', () => {
         );
 
         const executionDidStart = jest.fn(
-          async (): Promise<GraphQLRequestExecutionListener> => {
+          async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => {
             callOrder.push('executionDidStart');
             return { willResolveField, executionDidEnd };
           },
@@ -1048,13 +1059,13 @@ describe('runQuery', () => {
       const validationDidStart = jest.fn();
       const parsingDidStart = jest.fn();
 
-      const plugins: ApolloServerPlugin[] = [
+      const plugins: ApolloServerPlugin<BaseContext>[] = [
         {
           async requestDidStart() {
             return {
               validationDidStart,
               parsingDidStart,
-            } as GraphQLRequestListener;
+            } as GraphQLRequestListener<BaseContext>;
           },
         },
       ];
@@ -1071,7 +1082,7 @@ describe('runQuery', () => {
       documentStore,
     }: {
       queryString?: string;
-      plugins?: ApolloServerPlugin[];
+      plugins?: ApolloServerPlugin<BaseContext>[];
       documentStore?: QueryOptions['documentStore'];
     }) {
       return runQuery({

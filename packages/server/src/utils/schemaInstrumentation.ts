@@ -8,7 +8,10 @@ import {
 } from 'graphql/type';
 import { defaultFieldResolver } from 'graphql/execution';
 import type { FieldNode } from 'graphql/language';
-import type { GraphQLRequestExecutionListener } from '@apollo/server-types';
+import type {
+  BaseContext,
+  GraphQLRequestExecutionListener,
+} from '@apollo/server-types';
 import type { GraphQLObjectResolver } from '@apollographql/apollo-tools';
 
 export const symbolExecutionDispatcherWillResolveField = Symbol(
@@ -17,7 +20,7 @@ export const symbolExecutionDispatcherWillResolveField = Symbol(
 export const symbolUserFieldResolver = Symbol('apolloServerUserFieldResolver');
 const symbolPluginsEnabled = Symbol('apolloServerPluginsEnabled');
 
-export function enablePluginsForSchemaResolvers(
+export function enablePluginsForSchemaResolvers<TContext extends BaseContext>(
   schema: GraphQLSchema & { [symbolPluginsEnabled]?: boolean },
 ) {
   if (pluginsEnabledForSchemaResolvers(schema)) {
@@ -27,7 +30,18 @@ export function enablePluginsForSchemaResolvers(
     value: true,
   });
 
-  forEachField(schema, wrapField);
+  const typeMap = schema.getTypeMap();
+  Object.values(typeMap).forEach((type) => {
+    if (
+      !getNamedType(type).name.startsWith('__') &&
+      type instanceof GraphQLObjectType
+    ) {
+      const fields = type.getFields();
+      Object.values(fields).forEach((field) => {
+        wrapField<TContext>(field);
+      });
+    }
+  });
 
   return schema;
 }
@@ -38,7 +52,9 @@ export function pluginsEnabledForSchemaResolvers(
   return !!schema[symbolPluginsEnabled];
 }
 
-function wrapField(field: GraphQLField<any, any>): void {
+function wrapField<TContext extends BaseContext>(
+  field: GraphQLField<any, any>,
+): void {
   const originalFieldResolve = field.resolve;
 
   field.resolve = (source, args, context, info) => {
@@ -53,7 +69,9 @@ function wrapField(field: GraphQLField<any, any>): void {
 
     const willResolveField = context?.[
       symbolExecutionDispatcherWillResolveField
-    ] as GraphQLRequestExecutionListener['willResolveField'] | undefined;
+    ] as
+      | GraphQLRequestExecutionListener<TContext>['willResolveField']
+      | undefined;
 
     const userFieldResolver = context?.[symbolUserFieldResolver] as
       | GraphQLFieldResolver<any, any>
@@ -154,24 +172,3 @@ export function whenResultIsFinished(
     callback(null, result);
   }
 }
-
-function forEachField(schema: GraphQLSchema, fn: FieldIteratorFn): void {
-  const typeMap = schema.getTypeMap();
-  Object.entries(typeMap).forEach(([typeName, type]) => {
-    if (
-      !getNamedType(type).name.startsWith('__') &&
-      type instanceof GraphQLObjectType
-    ) {
-      const fields = type.getFields();
-      Object.entries(fields).forEach(([fieldName, field]) => {
-        fn(field, typeName, fieldName);
-      });
-    }
-  });
-}
-
-type FieldIteratorFn = (
-  fieldDef: GraphQLField<any, any>,
-  typeName: string,
-  fieldName: string,
-) => void;

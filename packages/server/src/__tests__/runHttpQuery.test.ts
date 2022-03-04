@@ -34,6 +34,7 @@ describe('runHttpQuery', () => {
         schemaHash: 'deprecated' as SchemaHash,
       },
       request: new MockReq(),
+      context: {},
     };
 
     it('raises a 400 error if the query is missing', () => {
@@ -72,6 +73,7 @@ describe('runHttpQuery', () => {
         allowBatchedHttpRequests: false,
       },
       request: new MockReq(),
+      context: {},
     };
 
     it('succeeds when there are no batched queries in the request', async () => {
@@ -124,6 +126,7 @@ describe('runHttpQuery', () => {
         allowBatchedHttpRequests: true,
       },
       request: new MockReq(),
+      context: {},
     };
 
     it('succeeds when there are multiple queries in the request', async () => {

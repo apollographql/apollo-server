@@ -1,3 +1,4 @@
+import type { BaseContext } from '@apollo/server-types';
 import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
 
 export interface ApolloServerPluginLandingPageDefaultBaseOptions {
@@ -66,7 +67,7 @@ interface LandingPageConfig {
 
 export function ApolloServerPluginLandingPageLocalDefault(
   options: ApolloServerPluginLandingPageLocalDefaultOptions = {},
-): ImplicitlyInstallablePlugin {
+): ImplicitlyInstallablePlugin<BaseContext> {
   // We list known keys explicitly to get better typechecking, but we pass
   // through extras in case we've added new keys to the splash page and haven't
   // quite updated the plugin yet.
@@ -97,7 +98,7 @@ export function ApolloServerPluginLandingPageLocalDefault(
 
 export function ApolloServerPluginLandingPageProductionDefault(
   options: ApolloServerPluginLandingPageProductionDefaultOptions = {},
-): ImplicitlyInstallablePlugin {
+): ImplicitlyInstallablePlugin<BaseContext> {
   // We list known keys explicitly to get better typechecking, but we pass
   // through extras in case we've added new keys to the splash page and haven't
   // quite updated the plugin yet.
@@ -144,7 +145,7 @@ function encodeConfig(config: LandingPageConfig): string {
 function ApolloServerPluginLandingPageDefault(
   maybeVersion: string | undefined,
   encodedConfig: string,
-): ImplicitlyInstallablePlugin {
+): ImplicitlyInstallablePlugin<BaseContext> {
   const version = maybeVersion ?? '_latest';
   return {
     __internal_installed_implicitly__: false,

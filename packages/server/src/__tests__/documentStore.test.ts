@@ -3,6 +3,7 @@ import type { DocumentNode } from 'graphql';
 
 import { ApolloServerBase } from '../ApolloServer';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import type { BaseContext } from '@apollo/server-types';
 
 const typeDefs = gql`
   type Query {
@@ -17,13 +18,6 @@ const resolvers = {
     },
   },
 };
-
-// allow us to access internals of the class
-class ApolloServerObservable extends ApolloServerBase {
-  override graphQLServerOptions() {
-    return super.graphQLServerOptions();
-  }
-}
 
 const documentNodeMatcher = {
   kind: 'Document',
@@ -43,14 +37,14 @@ const operations = {
 
 describe('ApolloServerBase documentStore', () => {
   it('documentStore - undefined', async () => {
-    const server = new ApolloServerObservable({
+    const server = new ApolloServerBase<BaseContext>({
       typeDefs,
       resolvers,
     });
 
     await server.start();
 
-    const options = await server.graphQLServerOptions();
+    const options = await server['graphQLServerOptions']();
     const embeddedStore = options.documentStore as any;
     expect(embeddedStore).toBeInstanceOf(InMemoryLRUCache);
 
@@ -98,7 +92,7 @@ describe('ApolloServerBase documentStore', () => {
   });
 
   it('documentStore - null', async () => {
-    const server = new ApolloServerObservable({
+    const server = new ApolloServerBase<BaseContext>({
       typeDefs,
       resolvers,
       documentStore: null,
@@ -106,7 +100,7 @@ describe('ApolloServerBase documentStore', () => {
 
     await server.start();
 
-    const options = await server.graphQLServerOptions();
+    const options = await server['graphQLServerOptions']();
     expect(options.documentStore).toBe(null);
 
     const result = await server.executeOperation(operations.simple.op);

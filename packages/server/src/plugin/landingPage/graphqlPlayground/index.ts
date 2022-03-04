@@ -7,6 +7,7 @@
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import type {
   ApolloServerPlugin,
+  BaseContext,
   GraphQLServerListener,
 } from '@apollo/server-types';
 
@@ -30,7 +31,7 @@ export function ApolloServerPluginLandingPageGraphQLPlayground(
   options: ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Object.create(
     null,
   ),
-): ApolloServerPlugin {
+): ApolloServerPlugin<BaseContext> {
   return {
     async serverWillStart(): Promise<GraphQLServerListener> {
       return {

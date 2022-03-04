@@ -4,13 +4,16 @@ import type {
   Logger,
   GraphQLRequestContext,
   GraphQLRequestContextWillSendResponse,
+  BaseContext,
 } from '@apollo/server-types';
 import type fetch from 'node-fetch';
 import type { Agent as HttpAgent } from 'http';
 import type { Agent as HttpsAgent } from 'https';
 import type { Trace } from '@apollo/usage-reporting-protobuf';
 
-export interface ApolloServerPluginUsageReportingOptions<TContext> {
+export interface ApolloServerPluginUsageReportingOptions<
+  TContext extends BaseContext,
+> {
   //#region Configure exactly which data should be sent to Apollo.
   /**
    * By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable

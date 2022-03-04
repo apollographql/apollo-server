@@ -53,11 +53,11 @@ import request from 'supertest';
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
 
-export function createServerInfo<AS extends ApolloServerBase>(
-  server: AS,
+export function createServerInfo(
+  server: ApolloServerBase<BaseContext>,
   httpServer: http.Server,
   graphqlPath: string,
-): ServerInfo<AS> {
+): ServerInfo {
   const serverInfo: any = {
     ...(httpServer.address() as AddressInfo),
     server,
@@ -157,34 +157,37 @@ const makeGatewayMock = ({
   return { gateway: mockedGateway, triggers: eventuallyAssigned };
 };
 
-export interface ServerInfo<AS extends ApolloServerBase> {
+export interface ServerInfo {
   address: string;
   family: string;
   url: string;
   port: number | string;
-  server: AS;
+  server: ApolloServerBase<BaseContext>;
   httpServer: http.Server;
 }
 
-export interface CreateServerFunc<AS extends ApolloServerBase> {
+export interface CreateServerFunc {
   (
-    config: Config,
+    config: Config<BaseContext>,
     options?: {
       suppressStartCall?: boolean;
       graphqlPath?: string;
       noRequestsMade?: boolean;
+      context?: (arg: any) => Promise<BaseContext>;
     },
-  ): Promise<ServerInfo<AS>>;
+  ): Promise<ServerInfo>;
 }
 
 export interface StopServerFunc {
   (): Promise<void>;
 }
 
-export function testApolloServer<AS extends ApolloServerBase>(
-  createApolloServer: CreateServerFunc<AS>,
+export function testApolloServer(
+  createApolloServer: CreateServerFunc,
   stopServer: StopServerFunc,
-  options: { serverlessFramework?: boolean } = {},
+  options: {
+    serverlessFramework?: boolean;
+  } = {},
 ) {
   describe('ApolloServer', () => {
     afterEach(stopServer);
@@ -624,20 +627,22 @@ export function testApolloServer<AS extends ApolloServerBase>(
     describe('Plugins', () => {
       let apolloFetch: ApolloFetch;
       let apolloFetchResponse: ParsedResponse;
-      let serverInstance: ApolloServerBase;
+      let serverInstance: ApolloServerBase<BaseContext>;
 
       const setupApolloServerAndFetchPairForPlugins = async (
-        plugins: PluginDefinition[] = [],
+        plugins: PluginDefinition<BaseContext>[] = [],
       ) => {
-        const { url: uri, server } = await createApolloServer({
-          context: { customContext: true },
-          typeDefs: gql`
-            type Query {
-              justAField: String
-            }
-          `,
-          plugins,
-        });
+        const { url: uri, server } = await createApolloServer(
+          {
+            typeDefs: gql`
+              type Query {
+                justAField: String
+              }
+            `,
+            plugins,
+          },
+          { context: async () => ({ customContext: true }) },
+        );
 
         serverInstance = server;
 
@@ -649,6 +654,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
       };
 
+      // TODO(AS4): Is this test still relevant now that we pass
+      // the context explicitly to executeOperation?
       // Test for https://github.com/apollographql/apollo-server/issues/4170
       it('works when using executeOperation', async () => {
         const encounteredFields: ResponsePath[] = [];
@@ -677,12 +684,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
         // before assigning to it, that is not the contract we have with the
         // context, which should have been copied on `executeOperation` (which
         // is meant to be used by testing, currently).
-        await serverInstance.executeOperation({
-          query: '{ justAField }',
-        });
-        await serverInstance.executeOperation({
-          query: '{ justAField }',
-        });
+        await serverInstance.executeOperation(
+          {
+            query: '{ justAField }',
+          },
+          { customContext: true },
+        );
+        await serverInstance.executeOperation(
+          {
+            query: '{ justAField }',
+          },
+          { customContext: true },
+        );
 
         expect(encounteredFields).toStrictEqual([
           { key: 'justAField', prev: undefined, typename: 'Query' },
@@ -1000,8 +1013,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
             usageReportingOptions: Partial<
               ApolloServerPluginUsageReportingOptions<any>
             > = {},
-            constructorOptions: Partial<CreateServerFunc<AS>> = {},
-            plugins: PluginDefinition[] = [],
+            constructorOptions: Partial<CreateServerFunc> = {},
+            plugins: PluginDefinition<BaseContext>[] = [],
           ) => {
             const { url: uri } = await createApolloServer({
               typeDefs: gql`
@@ -1508,12 +1521,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
               },
             },
           };
-          const spy = jest.fn(() => ({}));
-          const { url: uri } = await createApolloServer({
-            typeDefs,
-            resolvers,
-            context: spy,
-          });
+          const spy = jest.fn(async () => ({}));
+          const { url: uri } = await createApolloServer(
+            {
+              typeDefs,
+              resolvers,
+            },
+            {
+              context: spy,
+            },
+          );
 
           const apolloFetch = createApolloFetch({ uri });
 
@@ -1543,11 +1560,15 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 },
               },
             };
-            const { url: uri } = await createApolloServer({
-              typeDefs,
-              resolvers,
-              context: uniqueContext,
-            });
+            const { url: uri } = await createApolloServer(
+              {
+                typeDefs,
+                resolvers,
+              },
+              {
+                context: async () => uniqueContext,
+              },
+            );
 
             const apolloFetch = createApolloFetch({ uri });
 
@@ -1580,14 +1601,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
             const { server } = await createApolloServer({
               typeDefs,
               resolvers,
-              context: uniqueContext,
             });
 
             expect(spy).not.toBeCalled();
 
-            await server.executeOperation({ query: '{hello}' });
+            await server.executeOperation({ query: '{hello}' }, uniqueContext);
             expect(spy).toHaveBeenCalledTimes(1);
-            await server.executeOperation({ query: '{hello}' });
+            await server.executeOperation({ query: '{hello}' }, uniqueContext);
             expect(spy).toHaveBeenCalledTimes(2);
           });
         });
@@ -1595,21 +1615,29 @@ export function testApolloServer<AS extends ApolloServerBase>(
         describe('as a function', () => {
           it('can accept and return `req`', async () => {
             expect(
-              await createApolloServer({
-                typeDefs,
-                resolvers,
-                context: ({ req }) => ({ req }),
-              }),
+              await createApolloServer(
+                {
+                  typeDefs,
+                  resolvers,
+                },
+                {
+                  context: async ({ req }) => ({ req }),
+                },
+              ),
             ).not.toThrow;
           });
 
           it('can accept nothing and return an empty object', async () => {
             expect(
-              await createApolloServer({
-                typeDefs,
-                resolvers,
-                context: () => ({}),
-              }),
+              await createApolloServer(
+                {
+                  typeDefs,
+                  resolvers,
+                },
+                {
+                  context: async () => ({}),
+                },
+              ),
             ).not.toThrow;
           });
 
@@ -1629,11 +1657,15 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 },
               },
             };
-            const { url: uri } = await createApolloServer({
-              typeDefs,
-              resolvers,
-              context: async () => uniqueContext,
-            });
+            const { url: uri } = await createApolloServer(
+              {
+                typeDefs,
+                resolvers,
+              },
+              {
+                context: async () => uniqueContext,
+              },
+            );
 
             const apolloFetch = createApolloFetch({ uri });
 
@@ -1655,15 +1687,19 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 },
               },
             };
-            const { url: uri } = await createApolloServer({
-              typeDefs,
-              resolvers,
-              stopOnTerminationSignals: false,
-              nodeEnv: '',
-              context: () => {
-                throw new AuthenticationError('valid result');
+            const { url: uri } = await createApolloServer(
+              {
+                typeDefs,
+                resolvers,
+                stopOnTerminationSignals: false,
+                nodeEnv: '',
               },
-            });
+              {
+                context: async () => {
+                  throw new AuthenticationError('valid result');
+                },
+              },
+            );
 
             const apolloFetch = createApolloFetch({ uri });
 
@@ -1682,21 +1718,29 @@ export function testApolloServer<AS extends ApolloServerBase>(
         describe('as an object', () => {
           it('can be an empty object', async () => {
             expect(
-              await createApolloServer({
-                typeDefs,
-                resolvers,
-                context: {},
-              }),
+              await createApolloServer(
+                {
+                  typeDefs,
+                  resolvers,
+                },
+                {
+                  context: async () => ({}),
+                },
+              ),
             ).not.toThrow;
           });
 
           it('can contain arbitrary values', async () => {
             expect(
-              await createApolloServer({
-                typeDefs,
-                resolvers,
-                context: { value: 'arbitrary' },
-              }),
+              await createApolloServer(
+                {
+                  typeDefs,
+                  resolvers,
+                },
+                {
+                  context: async () => ({ value: 'arbitrary' }),
+                },
+              ),
             ).not.toThrow;
           });
         });
@@ -2457,7 +2501,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         return getWithoutAcceptHeader(url).set('accept', 'text/html');
       }
 
-      function makeServerConfig(htmls: string[]): Config {
+      function makeServerConfig(htmls: string[]): Config<BaseContext> {
         return {
           typeDefs: 'type Query {x: ID}',
           plugins: [

@@ -72,6 +72,7 @@
     "cors": "2.8.5",
     "cspell": "5.18.5",
     "express": "4.17.3",
+    "express-async-handler": "1.2.0",
     "graphql": "16.3.0",
     "graphql-tag": "2.12.6",
     "jest": "27.5.1",

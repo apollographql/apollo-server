@@ -1,4 +1,8 @@
-import type { CacheAnnotation, CacheHint } from '@apollo/server-types';
+import type {
+  BaseContext,
+  CacheAnnotation,
+  CacheHint,
+} from '@apollo/server-types';
 import type { CacheScope } from '@apollo/server-types';
 import {
   DirectiveNode,
@@ -35,7 +39,7 @@ export interface ApolloServerPluginCacheControlOptions {
 
 export function ApolloServerPluginCacheControl(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
-): InternalApolloServerPlugin {
+): InternalApolloServerPlugin<BaseContext> {
   const typeAnnotationCache = new LRUCache<
     GraphQLCompositeType,
     CacheAnnotation
@@ -343,7 +347,7 @@ function isRestricted(hint: CacheHint) {
 
 // This plugin does nothing, but it ensures that ApolloServer won't try
 // to add a default ApolloServerPluginCacheControl.
-export function ApolloServerPluginCacheControlDisabled(): InternalApolloServerPlugin {
+export function ApolloServerPluginCacheControlDisabled(): InternalApolloServerPlugin<BaseContext> {
   return {
     __internal_plugin_id__() {
       return 'CacheControl';

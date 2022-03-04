@@ -23,17 +23,13 @@ import type {
   Logger,
   SchemaHash,
   ApolloConfig,
+  BaseContext,
+  GraphQLResponse,
 } from '@apollo/server-types';
 
 import type { GraphQLServerOptions } from './graphqlOptions';
 
-import type {
-  Config,
-  Context,
-  ContextFunction,
-  DocumentStore,
-  PluginDefinition,
-} from './types';
+import type { Config, DocumentStore, PluginDefinition } from './types';
 
 import { generateSchemaHash } from './utils/schemaHash';
 import {
@@ -45,7 +41,6 @@ import {
 
 import { Headers } from 'node-fetch';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { cloneObject } from './runHttpQuery';
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';
 import {
@@ -60,6 +55,7 @@ import {
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import { newCachePolicy } from './cachePolicy';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
+import { cloneObject } from './runHttpQuery';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -126,20 +122,16 @@ class UnreachableCaseError extends Error {
   }
 }
 
-export class ApolloServerBase<
-  // The type of the argument to the `context` function for this integration.
-  ContextFunctionParams = any,
-> {
+export class ApolloServerBase<TContext extends BaseContext> {
   private logger: Logger;
   public requestOptions: Partial<GraphQLServerOptions<any>> =
     Object.create(null);
 
-  private context?: Context | ContextFunction<ContextFunctionParams>;
   private apolloConfig: ApolloConfig;
-  protected plugins: ApolloServerPlugin[] = [];
+  protected plugins: ApolloServerPlugin<TContext>[] = [];
 
   private parseOptions: ParseOptions;
-  private config: Config<ContextFunctionParams>;
+  private config: Config<TContext>;
   private state: ServerState;
   private toDispose = new Set<() => Promise<void>>();
   private toDisposeLast = new Set<() => Promise<void>>();
@@ -148,14 +140,13 @@ export class ApolloServerBase<
   private landingPage: LandingPage | null = null;
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
-  constructor(config: Config<ContextFunctionParams>) {
+  constructor(config: Config<TContext>) {
     if (!config) throw new Error('ApolloServer requires options.');
     this.config = {
       ...config,
       nodeEnv: config.nodeEnv ?? process.env.NODE_ENV,
     };
     const {
-      context,
       resolvers,
       schema,
       modules,
@@ -204,7 +195,6 @@ export class ApolloServerBase<
     }
 
     this.parseOptions = parseOptions;
-    this.context = context;
 
     const isDev = this.config.nodeEnv !== 'production';
 
@@ -249,7 +239,7 @@ export class ApolloServerBase<
       delete requestOptions.persistedQueries;
     }
 
-    this.requestOptions = requestOptions as GraphQLServerOptions;
+    this.requestOptions = requestOptions as GraphQLServerOptions<TContext>;
 
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
@@ -760,7 +750,7 @@ export class ApolloServerBase<
   }
 
   private ensurePluginInstantiation(
-    userPlugins: PluginDefinition[] = [],
+    userPlugins: PluginDefinition<TContext>[] = [],
     isDev: boolean,
   ): void {
     this.plugins = userPlugins.map((plugin) => {
@@ -884,33 +874,10 @@ export class ApolloServerBase<
     });
   }
 
-  // This function is used by the integrations to generate the graphQLOptions
-  // from an object containing the request and other integration specific
-  // options
-  protected async graphQLServerOptions(
-    // We ought to be able to declare this as taking ContextFunctionParams, but
-    // that gets us into weird business around inheritance, since a subclass (eg
-    // Lambda subclassing Express) may have a different ContextFunctionParams.
-    // So it's the job of the subclass's function that calls this function to
-    // make sure that its argument properly matches the particular subclass's
-    // context params type.
-    integrationContextArgument?: any,
-  ): Promise<GraphQLServerOptions> {
+  protected async graphQLServerOptions(): Promise<
+    GraphQLServerOptions<TContext>
+  > {
     const { schema, schemaHash, documentStore } = await this._ensureStarted();
-
-    let context: Context = this.context ? this.context : {};
-
-    try {
-      context =
-        typeof this.context === 'function'
-          ? await this.context(integrationContextArgument || {})
-          : context;
-    } catch (error) {
-      // Defer context error resolution to inside of runQuery
-      context = () => {
-        throw error;
-      };
-    }
 
     return {
       schema,
@@ -918,7 +885,6 @@ export class ApolloServerBase<
       logger: this.logger,
       plugins: this.plugins,
       documentStore,
-      context,
       parseOptions: this.parseOptions,
       ...this.requestOptions,
     };
@@ -935,20 +901,28 @@ export class ApolloServerBase<
    * just a convenience, not an optimization (we convert provided ASTs back into
    * string).
    *
-   * If you pass a second argument to this method and your ApolloServer's
-   * `context` is a function, that argument will be passed directly to your
-   * `context` function. It is your responsibility to make it as close as needed
-   * by your `context` function to the integration-specific argument that your
-   * integration passes to `context` (eg, for `apollo-server-express`, the
-   * `{req: express.Request, res: express.Response }` object) and to keep it
-   * updated as you upgrade Apollo Server.
+   * The second object will be the `context` object available in resolvers.
    */
+  // TODO(AS4): document this
+  public async executeOperation(
+    this: ApolloServerBase<BaseContext>,
+    request: Omit<GraphQLRequest, 'query'> & {
+      query?: string | DocumentNode;
+    },
+  ): Promise<GraphQLResponse>;
   public async executeOperation(
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
     },
-    integrationContextArgument?: ContextFunctionParams,
-  ) {
+    context: TContext,
+  ): Promise<GraphQLResponse>;
+
+  async executeOperation(
+    request: Omit<GraphQLRequest, 'query'> & {
+      query?: string | DocumentNode;
+    },
+    context?: TContext,
+  ): Promise<GraphQLResponse> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
     // `apollo-server` which doesn't support `start()`.)
@@ -956,21 +930,29 @@ export class ApolloServerBase<
       await this._start();
     }
 
-    const options = await this.graphQLServerOptions(integrationContextArgument);
+    // The typecast here is safe, because the only way `context` can be null-ish
+    // is if we used the `context?: BaseContext` override, in which case
+    // TContext is BaseContext and {} is ok.
+    //
+    // TODO(AS4): This actually only works because of the fact that ApolloServerBase
+    // has a field (config) that (nested) eventually contains a function taking TContext
+    // as a parameter. That makes `const x: ApolloServerBase<BaseContext> = new
+    // ApolloServerBase<{foo: number}>` into (appropriately) an error. Let's make
+    // sure that's still the case before we release. If not, we can achieve a similar
+    // goal by making `executeOperation` a top-level function because top-level functions
+    // in TS treat function arguments contravariantly and methods do not.
+    //
+    // We clone the context because there are some assumptions that every operation
+    // execution has a brand new context object; specifically, in order to implement
+    // willResolveField we put a Symbol on the context that is specific to a particular
+    // request pipeline execution. We could avoid this if we had a better way of
+    // instrumenting execution.
+    // NOTE: THIS IS DUPLICATED IN runHttpQuery.ts' buildRequestContext.
+    const actualContext: TContext = cloneObject(context ?? ({} as TContext));
 
-    if (typeof options.context === 'function') {
-      options.context = (options.context as () => never)();
-    } else if (typeof options.context === 'object') {
-      // TODO: We currently shallow clone the context for every request,
-      // but that's unlikely to be what people want.
-      // We allow passing in a function for `context` to ApolloServer,
-      // but this only runs once for a batched request (because this is resolved
-      // in ApolloServer#graphQLServerOptions, before runHttpQuery is invoked).
-      // NOTE: THIS IS DUPLICATED IN runHttpQuery.ts' buildRequestContext.
-      options.context = cloneObject(options.context);
-    }
+    const options = await this.graphQLServerOptions();
 
-    const requestCtx: GraphQLRequestContext = {
+    const requestCtx: GraphQLRequestContext<TContext> = {
       logger: this.logger,
       schema: options.schema,
       schemaHash: options.schemaHash,
@@ -981,7 +963,7 @@ export class ApolloServerBase<
             ? print(request.query)
             : request.query,
       },
-      context: options.context || Object.create(null),
+      context: actualContext,
       cache: options.cache!,
       metrics: {},
       response: {
@@ -1012,12 +994,13 @@ export class ApolloServerBase<
   }
 }
 
-export type ImplicitlyInstallablePlugin = ApolloServerPlugin & {
-  __internal_installed_implicitly__: boolean;
-};
+export type ImplicitlyInstallablePlugin<TContext extends BaseContext> =
+  ApolloServerPlugin<TContext> & {
+    __internal_installed_implicitly__: boolean;
+  };
 
-export function isImplicitlyInstallablePlugin(
-  p: ApolloServerPlugin,
-): p is ImplicitlyInstallablePlugin {
+export function isImplicitlyInstallablePlugin<TContext>(
+  p: ApolloServerPlugin<TContext>,
+): p is ImplicitlyInstallablePlugin<TContext> {
   return '__internal_installed_implicitly__' in p;
 }

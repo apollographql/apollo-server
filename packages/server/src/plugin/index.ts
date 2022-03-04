@@ -15,7 +15,7 @@
 //
 // The goal is that the generated `dist/plugin/index.js` file has no top-level
 // require calls.
-import type { ApolloServerPlugin } from '@apollo/server-types';
+import type { ApolloServerPlugin, BaseContext } from '@apollo/server-types';
 
 //#region Usage reporting
 import type { ApolloServerPluginUsageReportingOptions } from './usageReporting';
@@ -27,14 +27,14 @@ export type {
   GenerateClientInfo,
 } from './usageReporting';
 
-export function ApolloServerPluginUsageReporting<TContext>(
+export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
   options: ApolloServerPluginUsageReportingOptions<TContext> = Object.create(
     null,
   ),
-): ApolloServerPlugin {
+): ApolloServerPlugin<TContext> {
   return require('./usageReporting').ApolloServerPluginUsageReporting(options);
 }
-export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin {
+export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin<BaseContext> {
   return require('./usageReporting').ApolloServerPluginUsageReportingDisabled();
 }
 //#endregion
@@ -45,7 +45,7 @@ export type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting
 
 export function ApolloServerPluginSchemaReporting(
   options: ApolloServerPluginSchemaReportingOptions = Object.create(null),
-): ApolloServerPlugin {
+): ApolloServerPlugin<BaseContext> {
   return require('./schemaReporting').ApolloServerPluginSchemaReporting(
     options,
   );
@@ -58,10 +58,10 @@ export type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
 
 export function ApolloServerPluginInlineTrace(
   options: ApolloServerPluginInlineTraceOptions = Object.create(null),
-): ApolloServerPlugin {
+): ApolloServerPlugin<BaseContext> {
   return require('./inlineTrace').ApolloServerPluginInlineTrace(options);
 }
-export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin {
+export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin<BaseContext> {
   return require('./inlineTrace').ApolloServerPluginInlineTraceDisabled();
 }
 //#endregion
@@ -72,10 +72,10 @@ export type { ApolloServerPluginCacheControlOptions } from './cacheControl';
 
 export function ApolloServerPluginCacheControl(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
-): ApolloServerPlugin {
+): ApolloServerPlugin<BaseContext> {
   return require('./cacheControl').ApolloServerPluginCacheControl(options);
 }
-export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin {
+export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin<BaseContext> {
   return require('./cacheControl').ApolloServerPluginCacheControlDisabled();
 }
 //#endregion
@@ -85,7 +85,7 @@ import type { ApolloServerPluginDrainHttpServerOptions } from './drainHttpServer
 export type { ApolloServerPluginDrainHttpServerOptions } from './drainHttpServer';
 export function ApolloServerPluginDrainHttpServer(
   options: ApolloServerPluginDrainHttpServerOptions,
-): ApolloServerPlugin {
+): ApolloServerPlugin<BaseContext> {
   return require('./drainHttpServer').ApolloServerPluginDrainHttpServer(
     options,
   );
@@ -94,8 +94,8 @@ export function ApolloServerPluginDrainHttpServer(
 
 //#region LandingPage
 import type { InternalApolloServerPlugin } from '../internalPlugin';
-export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin {
-  const plugin: InternalApolloServerPlugin = {
+export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin<BaseContext> {
+  const plugin: InternalApolloServerPlugin<BaseContext> = {
     __internal_plugin_id__() {
       return 'LandingPageDisabled';
     },
@@ -114,14 +114,14 @@ export type {
 } from './landingPage/default';
 export function ApolloServerPluginLandingPageLocalDefault(
   options?: ApolloServerPluginLandingPageLocalDefaultOptions,
-): ApolloServerPlugin {
+): ApolloServerPlugin<BaseContext> {
   return require('./landingPage/default').ApolloServerPluginLandingPageLocalDefault(
     options,
   );
 }
 export function ApolloServerPluginLandingPageProductionDefault(
   options?: ApolloServerPluginLandingPageProductionDefaultOptions,
-): ApolloServerPlugin {
+): ApolloServerPlugin<BaseContext> {
   return require('./landingPage/default').ApolloServerPluginLandingPageProductionDefault(
     options,
   );
@@ -133,7 +133,7 @@ export function ApolloServerPluginLandingPageGraphQLPlayground(
   options: ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Object.create(
     null,
   ),
-): ApolloServerPlugin {
+): ApolloServerPlugin<BaseContext> {
   return require('./landingPage/graphqlPlayground').ApolloServerPluginLandingPageGraphQLPlayground(
     options,
   );

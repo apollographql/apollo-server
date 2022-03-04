@@ -10,12 +10,12 @@ import type {
 import type { KeyValueCache } from 'apollo-server-caching';
 import type {
   GraphQLExecutor,
-  ValueOrPromise,
   GraphQLResponse,
   GraphQLRequestContext,
   Logger,
   SchemaHash,
   ApolloServerPlugin,
+  BaseContext,
 } from '@apollo/server-types';
 import type { DocumentStore } from './types';
 
@@ -36,7 +36,7 @@ import type { DocumentStore } from './types';
  *
  */
 export interface GraphQLServerOptions<
-  TContext = Record<string, any>,
+  TContext extends BaseContext,
   TRootValue = any,
 > {
   schema: GraphQLSchema;
@@ -47,7 +47,6 @@ export interface GraphQLServerOptions<
   logger?: Logger;
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
-  context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
   executor?: GraphQLExecutor;
   formatResponse?: (
@@ -58,7 +57,7 @@ export interface GraphQLServerOptions<
   debug?: boolean;
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
-  plugins?: ApolloServerPlugin[];
+  plugins?: ApolloServerPlugin<TContext>[];
   documentStore?: DocumentStore | null;
   parseOptions?: ParseOptions;
   nodeEnv?: string;
@@ -78,15 +77,3 @@ export interface PersistedQueryOptions {
 }
 
 export default GraphQLServerOptions;
-
-export async function resolveGraphqlOptions(
-  options:
-    | GraphQLServerOptions
-    | ((...args: Array<any>) => ValueOrPromise<GraphQLServerOptions>),
-): Promise<GraphQLServerOptions> {
-  if (typeof options === 'function') {
-    return await options();
-  } else {
-    return options;
-  }
-}

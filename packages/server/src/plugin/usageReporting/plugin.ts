@@ -10,6 +10,7 @@ import type {
   GraphQLServiceContext,
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextWillSendResponse,
+  BaseContext,
 } from '@apollo/server-types';
 import {
   createOperationDerivedDataCache,
@@ -58,11 +59,11 @@ class ReportData {
   }
 }
 
-export function ApolloServerPluginUsageReporting<TContext>(
+export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
   options: ApolloServerPluginUsageReportingOptions<TContext> = Object.create(
     null,
   ),
-): InternalApolloServerPlugin {
+): InternalApolloServerPlugin<TContext> {
   // Note: We'd like to change the default to false in Apollo Server 4, so that
   // the default usage reporting experience doesn't include *anything* that
   // could potentially be PII (like error messages) --- just operations and
@@ -841,7 +842,9 @@ function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
 
 // This plugin does nothing, but it ensures that ApolloServer won't try
 // to add a default ApolloServerPluginUsageReporting.
-export function ApolloServerPluginUsageReportingDisabled(): InternalApolloServerPlugin {
+export function ApolloServerPluginUsageReportingDisabled<
+  TContext extends BaseContext,
+>(): InternalApolloServerPlugin<TContext> {
   return {
     __internal_plugin_id__() {
       return 'UsageReporting';

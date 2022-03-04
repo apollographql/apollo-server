@@ -1,3 +1,4 @@
+import type { BaseContext } from '@apollo/server-types';
 import { OptionsJson, json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';
@@ -12,7 +13,8 @@ import {
   ApolloServerPluginCacheControlDisabled,
   ApolloServerPluginDrainHttpServer,
 } from '../..';
-import { ApolloServerExpress, ApolloServerExpressConfig } from '../../express';
+import { ApolloServerExpress, ExpressContext } from '../../express';
+import type { Config } from '../../types';
 
 import {
   testApolloServer,
@@ -35,7 +37,7 @@ const resolvers = {
 describe('apollo-server-express', () => {
   let serverToCleanUp: ApolloServerExpress | null = null;
   testApolloServer(
-    async (config: ApolloServerExpressConfig, options) => {
+    async (config: Config<BaseContext>, options) => {
       serverToCleanUp = null;
       const app = express();
       const httpServer = http.createServer(app);
@@ -53,7 +55,12 @@ describe('apollo-server-express', () => {
         serverToCleanUp = server;
       }
       const graphqlPath = options?.graphqlPath ?? '/graphql';
-      app.use(graphqlPath, cors(), json(), server.getMiddleware());
+      app.use(
+        graphqlPath,
+        cors(),
+        json(),
+        server.getMiddleware(options?.context ?? (async () => ({}))),
+      );
       await new Promise((resolve) => {
         httpServer.once('listening', resolve);
         httpServer.listen({ port: 0 });
@@ -73,8 +80,12 @@ describe('apollo-server-express', () => {
   let httpServer: http.Server;
 
   async function createServer(
-    serverOptions: ApolloServerExpressConfig,
-    options?: { skipBodyParser?: true; bodyParserConfig?: OptionsJson },
+    serverOptions: Config<BaseContext>,
+    options?: {
+      context?: (expressContext: ExpressContext) => Promise<BaseContext>;
+      skipBodyParser?: true;
+      bodyParserConfig?: OptionsJson;
+    },
   ) {
     server = new ApolloServerExpress({
       stopOnTerminationSignals: false,
@@ -91,7 +102,7 @@ describe('apollo-server-express', () => {
           : options?.bodyParserConfig
           ? [json(options.bodyParserConfig)]
           : [json()]),
-        server.getMiddleware(),
+        server.getMiddleware(options?.context ?? (async () => ({}))),
       ],
     );
 
@@ -186,42 +197,6 @@ describe('apollo-server-express', () => {
     });
 
     describe('errors', () => {
-      it('returns thrown context error as a valid graphql result', async () => {
-        const typeDefs = gql`
-          type Query {
-            hello: String
-          }
-        `;
-        const resolvers = {
-          Query: {
-            hello: () => {
-              throw Error('never get here');
-            },
-          },
-        };
-        const { url: uri } = await createServer({
-          typeDefs,
-          resolvers,
-          context: () => {
-            throw new AuthenticationError('valid result');
-          },
-          // Stack trace not included for NODE_ENV=test
-          nodeEnv: '',
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-
-        const result = await apolloFetch({ query: '{hello}' });
-        expect(result.errors.length).toEqual(1);
-        expect(result.data).toBeUndefined();
-
-        const e = result.errors[0];
-        expect(e.message).toMatch('valid result');
-        expect(e.extensions).toBeDefined();
-        expect(e.extensions.code).toEqual('UNAUTHENTICATED');
-        expect(e.extensions.exception.stacktrace).toBeDefined();
-      });
-
       it('propagates error codes in dev mode', async () => {
         const { url: uri } = await createServer({
           typeDefs: gql`

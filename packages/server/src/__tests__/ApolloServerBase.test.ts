@@ -2,7 +2,15 @@ import { ApolloServerBase } from '../ApolloServer';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { gql } from '../';
 import type { GraphQLSchema } from 'graphql';
-import type { ApolloServerPlugin, Logger } from '@apollo/server-types';
+import type {
+  ApolloServerPlugin,
+  BaseContext,
+  Logger,
+} from '@apollo/server-types';
+import {
+  ApolloServerPluginCacheControlDisabled,
+  ApolloServerPluginUsageReporting,
+} from '../plugin';
 
 const typeDefs = gql`
   type Query {
@@ -86,7 +94,7 @@ describe('ApolloServerBase construction', () => {
 });
 
 describe('ApolloServerBase start', () => {
-  const failToStartPlugin: ApolloServerPlugin = {
+  const failToStartPlugin: ApolloServerPlugin<BaseContext> = {
     async serverWillStart() {
       throw Error('nope');
     },
@@ -141,7 +149,7 @@ describe('ApolloServerBase start', () => {
       error,
     };
 
-    class ServerlessApolloServer extends ApolloServerBase {
+    class ServerlessApolloServer extends ApolloServerBase<BaseContext> {
       override serverlessFramework() {
         return true;
       }
@@ -248,19 +256,89 @@ describe('ApolloServerBase executeOperation', () => {
     expect(result.errors?.[0].extensions?.code).toBe('GRAPHQL_PARSE_FAILED');
   });
 
-  it('passes its second argument to context function', async () => {
+  it('passes its second argument as context object', async () => {
     const server = new ApolloServerBase({
       typeDefs,
       resolvers,
-      context: ({ fooIn }) => ({ foo: fooIn }),
     });
     await server.start();
 
     const result = await server.executeOperation(
       { query: '{ contextFoo }' },
-      { fooIn: 'bla' },
+      { foo: 'bla' },
     );
     expect(result.errors).toBeUndefined();
     expect(result.data?.contextFoo).toBe('bla');
+  });
+
+  it('typing for context objects works', async () => {
+    const server = new ApolloServerBase<{ foo: number }>({
+      typeDefs: 'type Query { n: Int!, n2: String! }',
+      resolvers: {
+        Query: {
+          n(_parent: any, _args: any, context): number {
+            return context.foo;
+          },
+          n2(_parent: any, _args: any, context): string {
+            // It knows that context.foo is a number so it doesn't work as a string.
+            // @ts-expect-error
+            return context.foo;
+          },
+        },
+      },
+      plugins: [
+        {
+          // Works with plugins too!
+          async requestDidStart({ context }) {
+            let n: number = context.foo;
+            // @ts-expect-error
+            let s: string = context.foo;
+            // Make sure both variables are used (so the only expected error
+            // is the type error).
+            JSON.stringify({ n, s });
+          },
+        },
+        // Plugins declared to be <BaseContext> still work.
+        ApolloServerPluginCacheControlDisabled(),
+      ],
+    });
+    await server.start();
+    const result = await server.executeOperation(
+      { query: '{ n }' },
+      { foo: 123 },
+    );
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.n).toBe(123);
+
+    const result2 = await server.executeOperation(
+      { query: '{ n }' },
+      // It knows that context.foo is a number so it doesn't work as a string.
+      // @ts-expect-error
+      { foo: 'asdf' },
+    );
+    // GraphQL will be sad that a string was returned from an Int! field.
+    expect(result2.errors).toBeDefined();
+  });
+
+  it('typing for context objects works with argument to usage reporting', async () => {
+    new ApolloServerBase<{ foo: number }>({
+      typeDefs: 'type Query { n: Int! }',
+      plugins: [
+        ApolloServerPluginUsageReporting({
+          generateClientInfo({ context }) {
+            let n: number = context.foo;
+            // @ts-expect-error
+            let s: string = context.foo;
+            // Make sure both variables are used (so the only expected error
+            // is the type error).
+            return {
+              clientName: `client ${n} ${s}`,
+            };
+          },
+        }),
+      ],
+    });
+
+    // Don't start the server because we don't actually want any usage reporting.
   });
 });

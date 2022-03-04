@@ -7,6 +7,7 @@ import { SchemaReporter } from './schemaReporter';
 import createSHA from '../../utils/createSHA';
 import { schemaIsFederated } from '../schemaIsFederated';
 import type { SchemaReport } from './generated/operations';
+import type { BaseContext } from '@apollo/server-types';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**
@@ -63,7 +64,7 @@ export function ApolloServerPluginSchemaReporting(
     endpointUrl,
     fetcher,
   }: ApolloServerPluginSchemaReportingOptions = Object.create(null),
-): InternalApolloServerPlugin {
+): InternalApolloServerPlugin<BaseContext> {
   const bootId = uuidv4();
 
   return {

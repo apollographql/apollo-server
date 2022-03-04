@@ -3,6 +3,7 @@ import { TraceTreeBuilder } from '../traceTreeBuilder';
 import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { schemaIsFederated } from '../schemaIsFederated';
+import type { BaseContext } from '@apollo/server-types';
 
 export interface ApolloServerPluginInlineTraceOptions {
   /**
@@ -32,7 +33,7 @@ export interface ApolloServerPluginInlineTraceOptions {
 // usage reporting ingress.
 export function ApolloServerPluginInlineTrace(
   options: ApolloServerPluginInlineTraceOptions = Object.create(null),
-): InternalApolloServerPlugin {
+): InternalApolloServerPlugin<BaseContext> {
   let enabled: boolean | null = options.__onlyIfSchemaIsFederated ? null : true;
   return {
     __internal_plugin_id__() {
@@ -131,7 +132,7 @@ export function ApolloServerPluginInlineTrace(
 
 // This plugin does nothing, but it ensures that ApolloServer won't try
 // to add a default ApolloServerPluginInlineTrace.
-export function ApolloServerPluginInlineTraceDisabled(): InternalApolloServerPlugin {
+export function ApolloServerPluginInlineTraceDisabled(): InternalApolloServerPlugin<BaseContext> {
   return {
     __internal_plugin_id__() {
       return 'InlineTrace';

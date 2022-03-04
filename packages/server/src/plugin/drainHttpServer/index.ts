@@ -1,5 +1,5 @@
 import type http from 'http';
-import type { ApolloServerPlugin } from '@apollo/server-types';
+import type { ApolloServerPlugin, BaseContext } from '@apollo/server-types';
 import { Stopper } from './stoppable';
 
 /**
@@ -25,7 +25,7 @@ export interface ApolloServerPluginDrainHttpServerOptions {
  */
 export function ApolloServerPluginDrainHttpServer(
   options: ApolloServerPluginDrainHttpServerOptions,
-): ApolloServerPlugin {
+): ApolloServerPlugin<BaseContext> {
   const stopper = new Stopper(options.httpServer);
   return {
     async serverWillStart() {

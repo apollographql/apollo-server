@@ -7,9 +7,8 @@ import type { BaseContext, ApolloServerPlugin } from '@apollo/server-types';
 // ApolloServer.ensurePluginInstantiation uses to figure out if the plugins have
 // already been installed (or explicitly disabled via the matching Disable
 // plugins).
-export interface InternalApolloServerPlugin<
-  TContext extends BaseContext = BaseContext,
-> extends ApolloServerPlugin<TContext> {
+export interface InternalApolloServerPlugin<TContext extends BaseContext>
+  extends ApolloServerPlugin<TContext> {
   // Used to identify a few specific plugins that are instantiated
   // by default if not explicitly used or disabled.
   __internal_plugin_id__(): InternalPluginId;
@@ -22,9 +21,9 @@ export type InternalPluginId =
   | 'InlineTrace'
   | 'UsageReporting';
 
-export function pluginIsInternal(
-  plugin: ApolloServerPlugin,
-): plugin is InternalApolloServerPlugin {
+export function pluginIsInternal<TContext extends BaseContext>(
+  plugin: ApolloServerPlugin<TContext>,
+): plugin is InternalApolloServerPlugin<TContext> {
   // We could call the function and compare it to the list above, but this seems
   // good enough.
   return '__internal_plugin_id__' in plugin;

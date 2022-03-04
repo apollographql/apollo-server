@@ -21,7 +21,6 @@ import type { HTTPError } from 'superagent';
 import resolvable from '@josephg/resolvable';
 
 import {
-  GraphQLOptions,
   Config,
   PersistedQueryOptions,
   KeyValueCache,
@@ -33,6 +32,7 @@ import type {
   GraphQLResponse,
   ValueOrPromise,
   GraphQLRequestListener,
+  BaseContext,
 } from '@apollo/server-types';
 
 export * from './ApolloServer';
@@ -201,17 +201,11 @@ export const schema = new GraphQLSchema({
   query: queryType,
   mutation: mutationType,
 });
-
-export interface CreateAppOptions {
-  excludeParser?: boolean;
-  graphqlOptions?:
-    | GraphQLOptions
-    | { (): ValueOrPromise<GraphQLOptions> }
-    | Config;
-}
-
 export interface CreateAppFunc {
-  (options?: CreateAppOptions): Promise<any>;
+  (
+    config?: Config<BaseContext>,
+    context?: () => Promise<BaseContext>,
+  ): Promise<any>;
 }
 
 export interface DestroyAppFunc {
@@ -232,7 +226,7 @@ export default ({
   describe('apolloServer', () => {
     let app: any;
     let didEncounterErrors: jest.MockedFunction<
-      NonNullable<GraphQLRequestListener['didEncounterErrors']>
+      NonNullable<GraphQLRequestListener<BaseContext>['didEncounterErrors']>
     >;
 
     afterEach(async () => {
@@ -381,16 +375,14 @@ export default ({
       it('throws error if trying to use mutation using GET request', async () => {
         didEncounterErrors = jest.fn();
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            plugins: [
-              {
-                async requestDidStart() {
-                  return { didEncounterErrors };
-                },
+          schema,
+          plugins: [
+            {
+              async requestDidStart() {
+                return { didEncounterErrors };
               },
-            ],
-          },
+            },
+          ],
         });
         const query = {
           query: 'mutation test{ testMutation(echo: "ping") }',
@@ -419,16 +411,14 @@ export default ({
       it('throws error if trying to use mutation with fragment using GET request', async () => {
         didEncounterErrors = jest.fn();
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            plugins: [
-              {
-                async requestDidStart() {
-                  return { didEncounterErrors };
-                },
+          schema,
+          plugins: [
+            {
+              async requestDidStart() {
+                return { didEncounterErrors };
               },
-            ],
-          },
+            },
+          ],
         });
         const query = {
           query: `fragment PersonDetails on PersonType {
@@ -493,7 +483,7 @@ export default ({
 
       it('cache-control not set without any hints', async () => {
         app = await createApp({
-          graphqlOptions: { schema },
+          schema,
         });
         const expected = {
           testPerson: { firstName: 'Jane' },
@@ -513,7 +503,7 @@ export default ({
 
       it('cache-control set with dynamic hint', async () => {
         app = await createApp({
-          graphqlOptions: { schema },
+          schema,
         });
         const expected = {
           testPersonWithCacheControl: { firstName: 'Jane' },
@@ -530,10 +520,8 @@ export default ({
 
       it('cache-control set with defaultMaxAge', async () => {
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
-          },
+          schema,
+          plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
         });
         const expected = {
           testPerson: { firstName: 'Jane' },
@@ -550,7 +538,8 @@ export default ({
 
       it('returns PersistedQueryNotSupported to a GET request if PQs disabled', async () => {
         app = await createApp({
-          graphqlOptions: { schema, persistedQueries: false },
+          schema,
+          persistedQueries: false,
         });
         const req = request(app)
           .get('/graphql')
@@ -577,7 +566,8 @@ export default ({
 
       it('returns PersistedQueryNotSupported to a POST request if PQs disabled', async () => {
         app = await createApp({
-          graphqlOptions: { schema, persistedQueries: false },
+          schema,
+          persistedQueries: false,
         });
         const req = request(app)
           .post('/graphql')
@@ -835,10 +825,8 @@ export default ({
 
       it('disables batch requests when allowBatchedHttpRequests is false', async () => {
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            allowBatchedHttpRequests: false,
-          },
+          schema,
+          allowBatchedHttpRequests: false,
         });
 
         const res = await request(app)
@@ -871,12 +859,12 @@ export default ({
       });
 
       it('clones batch context', async () => {
-        app = await createApp({
-          graphqlOptions: {
+        app = await createApp(
+          {
             schema,
-            context: { testField: 'expected' },
           },
-        });
+          async () => ({ testField: 'expected' }),
+        );
         const expected = [
           {
             data: {
@@ -907,15 +895,15 @@ export default ({
 
       it('executes batch context if it is a function', async () => {
         let callCount = 0;
-        app = await createApp({
-          graphqlOptions: {
+        app = await createApp(
+          {
             schema,
-            context: () => {
-              callCount++;
-              return { testField: 'expected' };
-            },
           },
-        });
+          async () => {
+            callCount++;
+            return { testField: 'expected' };
+          },
+        );
         const expected = [
           {
             data: {
@@ -971,12 +959,10 @@ export default ({
 
       it('applies the formatResponse function', async () => {
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            formatResponse(response: GraphQLResponse) {
-              response['extensions'] = { it: 'works' };
-              return response;
-            },
+          schema,
+          formatResponse(response: GraphQLResponse) {
+            response['extensions'] = { it: 'works' };
+            return response;
           },
         });
         const expected = { it: 'works' };
@@ -994,12 +980,12 @@ export default ({
 
       it('passes the context to the resolver', async () => {
         const expected = 'context works';
-        app = await createApp({
-          graphqlOptions: {
+        app = await createApp(
+          {
             schema,
-            context: { testField: expected },
           },
-        });
+          async () => ({ testField: expected }),
+        );
         const req = request(app).post('/graphql').send({
           query: 'query test{ testContext }',
         });
@@ -1012,10 +998,8 @@ export default ({
       it('passes the rootValue to the resolver', async () => {
         const expected = 'it passes rootValue';
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            rootValue: expected,
-          },
+          schema,
+          rootValue: expected,
         });
         const req = request(app).post('/graphql').send({
           query: 'query test{ testRootValue }',
@@ -1030,14 +1014,10 @@ export default ({
         const expectedQuery = 'query: it passes rootValue';
         const expectedMutation = 'mutation: it passes rootValue';
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            rootValue: (documentNode: DocumentNode) => {
-              const op = getOperationAST(documentNode, undefined);
-              return op!.operation === 'query'
-                ? expectedQuery
-                : expectedMutation;
-            },
+          schema,
+          rootValue: (documentNode: DocumentNode) => {
+            const op = getOperationAST(documentNode, undefined);
+            return op!.operation === 'query' ? expectedQuery : expectedMutation;
           },
         });
         const queryReq = request(app).post('/graphql').send({
@@ -1059,9 +1039,7 @@ export default ({
       it('returns errors', async () => {
         const expected = 'Secret error message';
         app = await createApp({
-          graphqlOptions: {
-            schema,
-          },
+          schema,
         });
         const req = request(app).post('/graphql').send({
           query: 'query test{ testError }',
@@ -1075,12 +1053,10 @@ export default ({
       it('applies formatError if provided', async () => {
         const expected = '--blank--';
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            formatError: (error) => {
-              expect(error instanceof Error).toBe(true);
-              return { message: expected };
-            },
+          schema,
+          formatError: (error) => {
+            expect(error instanceof Error).toBe(true);
+            return { message: expected };
           },
         });
         const req = request(app).post('/graphql').send({
@@ -1095,13 +1071,11 @@ export default ({
       it('formatError receives error that passes instanceof checks', async () => {
         const expected = '--blank--';
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            formatError: (error) => {
-              expect(error instanceof Error).toBe(true);
-              expect(error instanceof GraphQLError).toBe(true);
-              return { message: expected };
-            },
+          schema,
+          formatError: (error) => {
+            expect(error instanceof Error).toBe(true);
+            expect(error instanceof GraphQLError).toBe(true);
+            return { message: expected };
           },
         });
         const req = request(app).post('/graphql').send({
@@ -1115,11 +1089,9 @@ export default ({
 
       it('allows for custom error formatting to sanitize', async () => {
         app = await createApp({
-          graphqlOptions: {
-            schema: TestSchema,
-            formatError(error) {
-              return { message: 'Custom error format: ' + error.message };
-            },
+          schema: TestSchema,
+          formatError(error) {
+            return { message: 'Custom error format: ' + error.message };
           },
         });
 
@@ -1140,15 +1112,13 @@ export default ({
 
       it('allows for custom error formatting to elaborate', async () => {
         app = await createApp({
-          graphqlOptions: {
-            schema: TestSchema,
-            formatError(error) {
-              return {
-                message: error.message,
-                locations: error.locations,
-                stack: 'Stack trace',
-              };
-            },
+          schema: TestSchema,
+          formatError(error) {
+            return {
+              message: error.message,
+              locations: error.locations,
+              stack: 'Stack trace',
+            };
           },
         });
 
@@ -1171,11 +1141,9 @@ export default ({
 
       it('sends internal server error when formatError fails', async () => {
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            formatError: () => {
-              throw new Error('I should be caught');
-            },
+          schema,
+          formatError: () => {
+            throw new Error('I should be caught');
           },
         });
         const req = request(app).post('/graphql').send({
@@ -1197,10 +1165,8 @@ export default ({
           };
         };
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            validationRules: [alwaysInvalidRule],
-          },
+          schema,
+          validationRules: [alwaysInvalidRule],
         });
         const req = request(app).post('/graphql').send({
           query: 'query test{ testString }',
@@ -1248,19 +1214,17 @@ export default ({
         // Promise we want them to resolve at whatever eventual pace they
         // will so we can make sure that things are happening in order.
         const unawaitedApp = createApp({
-          graphqlOptions: {
-            schema,
-            plugins: [
-              {
-                async serverWillStart() {
-                  calls.push('zero');
-                  pluginStartedBarrier.resolve();
-                  await letPluginFinishBarrier;
-                  calls.push('one');
-                },
+          schema,
+          plugins: [
+            {
+              async serverWillStart() {
+                calls.push('zero');
+                pluginStartedBarrier.resolve();
+                await letPluginFinishBarrier;
+                calls.push('one');
               },
-            ],
-          },
+            },
+          ],
         });
 
         // Account for the fact that `createApp` might return a Promise,
@@ -1303,20 +1267,18 @@ export default ({
     describe('status code', () => {
       it('allows setting a custom status code', async () => {
         app = await createApp({
-          graphqlOptions: {
-            schema,
-            plugins: [
-              {
-                async requestDidStart() {
-                  return {
-                    async willSendResponse({ response: { http } }) {
-                      http!.status = 403;
-                    },
-                  };
-                },
+          schema,
+          plugins: [
+            {
+              async requestDidStart() {
+                return {
+                  async willSendResponse({ response: { http } }) {
+                    http!.status = 403;
+                  },
+                };
               },
-            ],
-          },
+            },
+          ],
         });
 
         const req = request(app).post('/graphql').send({
@@ -1362,31 +1324,29 @@ export default ({
       }
 
       let didEncounterErrors: jest.MockedFunction<
-        NonNullable<GraphQLRequestListener['didEncounterErrors']>
+        NonNullable<GraphQLRequestListener<BaseContext>['didEncounterErrors']>
       >;
 
       let didResolveSource: jest.MockedFunction<
-        NonNullable<GraphQLRequestListener['didResolveSource']>
+        NonNullable<GraphQLRequestListener<BaseContext>['didResolveSource']>
       >;
 
       function createApqApp(apqOptions: PersistedQueryOptions = {}) {
         return createApp({
-          graphqlOptions: {
-            schema,
-            plugins: [
-              {
-                async requestDidStart() {
-                  return {
-                    didResolveSource,
-                    didEncounterErrors,
-                  };
-                },
+          schema,
+          plugins: [
+            {
+              async requestDidStart() {
+                return {
+                  didResolveSource,
+                  didEncounterErrors,
+                };
               },
-            ],
-            persistedQueries: {
-              cache,
-              ...apqOptions,
             },
+          ],
+          persistedQueries: {
+            cache,
+            ...apqOptions,
           },
         });
       }

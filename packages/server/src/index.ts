@@ -7,7 +7,6 @@ export {
 
 export {
   default as GraphQLOptions,
-  resolveGraphqlOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
 

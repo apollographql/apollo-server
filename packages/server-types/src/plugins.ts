@@ -16,9 +16,7 @@ import type {
   GraphQLSchemaContext,
 } from './types';
 
-export interface ApolloServerPlugin<
-  TContext extends BaseContext = BaseContext,
-> {
+export interface ApolloServerPlugin<TContext extends BaseContext> {
   serverWillStart?(
     service: GraphQLServiceContext,
   ): Promise<GraphQLServerListener | void>;
@@ -74,9 +72,8 @@ export type GraphQLRequestListenerDidResolveField = (
   result?: any,
 ) => void;
 
-export interface GraphQLRequestListener<
-  TContext extends BaseContext = BaseContext,
-> extends AnyFunctionMap {
+export interface GraphQLRequestListener<TContext extends BaseContext>
+  extends AnyFunctionMap {
   didResolveSource?(
     requestContext: GraphQLRequestContextDidResolveSource<TContext>,
   ): Promise<void>;
@@ -108,16 +105,15 @@ export interface GraphQLRequestListener<
 
   executionDidStart?(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ): Promise<GraphQLRequestExecutionListener | void>;
+  ): Promise<GraphQLRequestExecutionListener<TContext> | void>;
 
   willSendResponse?(
     requestContext: GraphQLRequestContextWillSendResponse<TContext>,
   ): Promise<void>;
 }
 
-export interface GraphQLRequestExecutionListener<
-  TContext extends BaseContext = BaseContext,
-> extends AnyFunctionMap {
+export interface GraphQLRequestExecutionListener<TContext extends BaseContext>
+  extends AnyFunctionMap {
   executionDidEnd?: GraphQLRequestListenerExecutionDidEnd;
   // willResolveField is not async because we've observed that it already has
   // quite a performance impact on execution even without involving the Promise
