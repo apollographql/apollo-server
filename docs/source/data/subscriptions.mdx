@@ -384,7 +384,6 @@ An example server is available on [GitHub](https://github.com/apollographql/docs
   <img alt="Edit server-subscriptions-as3" src="https://codesandbox.io/static/img/play-codesandbox.svg" />
 </a>
 
-
 The server exposes one subscription (`numberIncremented`) that returns an integer that's incremented on the server every second. Here's an example subscription that you can run against your server:
 
 ```graphql
@@ -393,9 +392,9 @@ subscription IncrementingNumber {
 }
 ```
 
-After you start up the server in CodeSandbox, follow the instructions in the browser to test running the `numberIncremented` subscription in Apollo Sandbox. You should see the subscription's value update every second.
-
 > If you don't see the result of your subscription operation you might need to [adjust your Sandbox settings to use the `graphql-ws` protocol](https://www.apollographql.com/docs/studio/explorer/additional-features/#subscription-support).
+
+After you start up the server in CodeSandbox, follow the instructions in the browser to test running the `numberIncremented` subscription in Apollo Sandbox. You should see the subscription's value update every second.
 
 ## Operation context
 
