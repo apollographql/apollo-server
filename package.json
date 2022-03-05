@@ -65,7 +65,7 @@
     "@josephg/resolvable": "1.0.1",
     "@rollup/plugin-commonjs": "21.0.2",
     "@rollup/plugin-json": "4.1.0",
-    "@sinonjs/fake-timers": "9.1.0",
+    "@sinonjs/fake-timers": "9.1.1",
     "@types/async-retry": "1.4.3",
     "@types/aws-lambda": "8.10.93",
     "@types/body-parser": "1.19.2",
