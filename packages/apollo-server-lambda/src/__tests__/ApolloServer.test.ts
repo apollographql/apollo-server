@@ -1,7 +1,10 @@
 import http from 'http';
 import request from 'supertest';
 import express from 'express';
-import { createAPIGatewayV2MockServer } from './mockAPIGatewayServer';
+import {
+  createAPIGatewayV1MockServer,
+  createAPIGatewayV2MockServer,
+} from './mockAPIGatewayServer';
 import {
   ApolloServerPluginDrainHttpServer,
   Config,
@@ -77,7 +80,15 @@ describe('apollo-server-lambda', () => {
     { serverlessFramework: true },
   );
 
-  const createLambda = (
+  const createLambdaAPIGatewayV1 = (
+    createHandlerOptions: CreateHandlerOptions = {},
+    config: Config<LambdaContextFunctionParams> = { typeDefs, resolvers },
+  ) => {
+    const server = new ApolloServer(config);
+    const handler = server.createHandler(createHandlerOptions);
+    return createAPIGatewayV1MockServer(handler);
+  };
+  const createLambdaAPIGatewayV2 = (
     createHandlerOptions: CreateHandlerOptions = {},
     config: Config<LambdaContextFunctionParams> = { typeDefs, resolvers },
   ) => {
@@ -102,8 +113,45 @@ describe('apollo-server-lambda', () => {
       });
     });
 
-    it('receives both Express and Lambda context', async () => {
-      const app = createLambda(
+    it('receives both Express and Lambda context with API Gateway V1', async () => {
+      const app = createLambdaAPIGatewayV1(
+        {},
+        {
+          typeDefs: 'type Query { context: String }',
+          resolvers: {
+            Query: {
+              context: (_parent, _args, context) => JSON.stringify(context),
+            },
+          },
+          // Add something interesting from each context argument part to the
+          // context.
+          context({ event, context, express }) {
+            const { req, res } = express;
+            return {
+              reqHttpVersion: req.httpVersion,
+              resHasApp: !!res.app,
+              eventVersion: event.version,
+              contextFunctionName: context.functionName,
+            };
+          },
+        },
+      );
+      await request(app)
+        .post('/graphql')
+        .send({ query: '{context}' })
+        .expect(200)
+        .expect((res) => {
+          expect(typeof res.body.data.context).toBe('string');
+          const context = JSON.parse(res.body.data.context);
+          expect(context).toEqual({
+            reqHttpVersion: '1.1',
+            resHasApp: true,
+            contextFunctionName: 'someFunc',
+          });
+        });
+    });
+    it('receives both Express and Lambda context with API Gateway V2', async () => {
+      const app = createLambdaAPIGatewayV2(
         {},
         {
           typeDefs: 'type Query { context: String }',
@@ -142,8 +190,22 @@ describe('apollo-server-lambda', () => {
     });
   });
 
-  it('expressAppFromMiddleware', async () => {
-    const app = createLambda({
+  it('expressAppFromMiddleware with API Gateway V1', async () => {
+    const app = createLambdaAPIGatewayV1({
+      expressAppFromMiddleware(middleware) {
+        const app = express();
+        app.get('/lambda-test', (_req, res) => {
+          res.send('some body');
+        });
+        app.use(middleware);
+        return app;
+      },
+    });
+    await request(app).get('/lambda-test').expect(200, 'some body');
+  });
+
+  it('expressAppFromMiddleware with API Gateway V2', async () => {
+    const app = createLambdaAPIGatewayV2({
       expressAppFromMiddleware(middleware) {
         const app = express();
         app.get('/lambda-test', (_req, res) => {
@@ -157,8 +219,21 @@ describe('apollo-server-lambda', () => {
   });
 
   describe('healthchecks', () => {
-    it('creates a healthcheck endpoint', async () => {
-      const app = createLambda();
+    it('creates a healthcheck endpoint with API Gateway V1', async () => {
+      const app = createLambdaAPIGatewayV1();
+
+      const req = request(app).get('/.well-known/apollo/server-health');
+
+      return req.then((res: any) => {
+        expect(res.status).toEqual(200);
+        expect(res.body).toEqual({ status: 'pass' });
+        expect(res.headers['content-type']).toEqual(
+          'application/health+json; charset=utf-8',
+        );
+      });
+    });
+    it('creates a healthcheck endpoint with API Gateway V2', async () => {
+      const app = createLambdaAPIGatewayV2();
 
       const req = request(app).get('/.well-known/apollo/server-health');
 
@@ -171,8 +246,8 @@ describe('apollo-server-lambda', () => {
       });
     });
 
-    it('provides a callback for the healthcheck', async () => {
-      const app = createLambda({
+    it('provides a callback for the healthcheck with API Gateway V1', async () => {
+      const app = createLambdaAPIGatewayV1({
         expressGetMiddlewareOptions: {
           onHealthCheck: async () => {
             return new Promise((resolve) => {
@@ -193,8 +268,51 @@ describe('apollo-server-lambda', () => {
       });
     });
 
-    it('returns a 503 if healthcheck fails', async () => {
-      const app = createLambda({
+    it('provides a callback for the healthcheck with API Gateway V2', async () => {
+      const app = createLambdaAPIGatewayV2({
+        expressGetMiddlewareOptions: {
+          onHealthCheck: async () => {
+            return new Promise((resolve) => {
+              return resolve('Success!');
+            });
+          },
+        },
+      });
+
+      const req = request(app).get('/.well-known/apollo/server-health');
+
+      return req.then((res: any) => {
+        expect(res.status).toEqual(200);
+        expect(res.body).toEqual({ status: 'pass' });
+        expect(res.headers['content-type']).toEqual(
+          'application/health+json; charset=utf-8',
+        );
+      });
+    });
+
+    it('returns a 503 if healthcheck fails with API Gateway V1', async () => {
+      const app = createLambdaAPIGatewayV1({
+        expressGetMiddlewareOptions: {
+          onHealthCheck: async () => {
+            return new Promise(() => {
+              throw new Error('Failed to connect!');
+            });
+          },
+        },
+      });
+
+      const req = request(app).get('/.well-known/apollo/server-health');
+
+      return req.then((res: any) => {
+        expect(res.status).toEqual(503);
+        expect(res.body).toEqual({ status: 'fail' });
+        expect(res.headers['content-type']).toEqual(
+          'application/health+json; charset=utf-8',
+        );
+      });
+    });
+    it('returns a 503 if healthcheck fails with API Gateway V2', async () => {
+      const app = createLambdaAPIGatewayV2({
         expressGetMiddlewareOptions: {
           onHealthCheck: async () => {
             return new Promise(() => {
