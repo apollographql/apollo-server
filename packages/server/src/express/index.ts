@@ -1,14 +1,11 @@
 import type express from 'express';
-import {
-  ApolloServerBase,
-  runHttpQuery,
-  convertNodeHttpToRequest,
-  isHttpQueryError,
-} from '..';
+import { ApolloServerBase } from '..';
 import accepts from 'accepts';
 import asyncHandler from 'express-async-handler';
-import type { BaseContext } from '@apollo/server-types';
-import { debugFromNodeEnv, throwHttpGraphQLError } from '../runHttpQuery';
+import type { BaseContext, HTTPGraphQLResponse } from '@apollo/server-types';
+import { debugFromNodeEnv, executeContextFunction } from '../runHttpQuery';
+import type { HTTPGraphQLRequest } from '@apollo/server-types';
+import { runPotentiallyBatchedHttpQuery } from '../httpBatching';
 
 export interface ExpressContext {
   req: express.Request;
@@ -31,6 +28,15 @@ export class ApolloServerExpress<
     const landingPage = this.getLandingPage();
 
     return asyncHandler(async (req, res) => {
+      function sendResponse(httpGraphQLResponse: HTTPGraphQLResponse) {
+        for (const [key, value] of httpGraphQLResponse.headers) {
+          res.setHeader(key, value);
+        }
+        res.statusCode = httpGraphQLResponse.statusCode || 200;
+        res.send(httpGraphQLResponse.completeBody);
+      }
+
+      // TODO(AS4): move landing page logic into core
       if (landingPage && prefersHtml(req)) {
         res.setHeader('Content-Type', 'text/html');
         res.write(landingPage.html);
@@ -45,85 +51,62 @@ export class ApolloServerExpress<
         // body-parser@2.)
         res.status(500);
         res.send(
-          '`res.body` is not set; this probably means you forgot to set up the ' +
+          '`req.body` is not set; this probably means you forgot to set up the ' +
             '`body-parser` middleware before the Apollo Server middleware.',
         );
         return;
       }
 
-      function handleError(error: any) {
-        if (!isHttpQueryError(error)) {
-          throw error;
-        }
-
-        if (error.headers) {
-          for (const [name, value] of Object.entries(error.headers)) {
-            res.setHeader(name, value);
-          }
-        }
-
-        res.statusCode = error.statusCode;
-        res.send(error.message);
+      const contextFunctionExecutionResult = await executeContextFunction(
+        () => contextFunction({ req, res }),
+        {
+          debug:
+            this.requestOptions.debug ??
+            debugFromNodeEnv(this.requestOptions.nodeEnv),
+          formatter: this.requestOptions.formatError,
+        },
+      );
+      if (contextFunctionExecutionResult.errorHTTPGraphQLResponse) {
+        sendResponse(contextFunctionExecutionResult.errorHTTPGraphQLResponse);
         return;
       }
+      const { context } = contextFunctionExecutionResult;
 
-      // TODO(AS4): Invoke the context function via some ApolloServer method
-      // that does error handling in a consistent and plugin-visible way. For
-      // now we will fall back to some old code that throws an HTTP-GraphQL
-      // error and we will catch and handle it, blah.
-      let context;
-      try {
-        context = await contextFunction({ req, res });
-      } catch (e: any) {
-        try {
-          // XXX `any` isn't ideal, but this is the easiest thing for now, without
-          // introducing a strong `instanceof GraphQLError` requirement.
-          e.message = `Context creation failed: ${e.message}`;
-          // For errors that are not internal, such as authentication, we
-          // should provide a 400 response
-          const statusCode =
-            e.extensions &&
-            e.extensions.code &&
-            e.extensions.code !== 'INTERNAL_SERVER_ERROR'
-              ? 400
-              : 500;
-          throwHttpGraphQLError(statusCode, [e], {
-            debug:
-              this.requestOptions.debug ??
-              debugFromNodeEnv(this.requestOptions.nodeEnv),
-            formatError: this.requestOptions.formatError,
-          });
-        } catch (error: any) {
-          handleError(error);
-          return;
+      const headers = new Map<string, string>();
+      for (const [key, value] of Object.entries(req.headers)) {
+        if (value !== undefined) {
+          // Node/Express headers can be an array or a single value. We join
+          // multi-valued headers with `, ` just like the Fetch API's `Headers`
+          // does. We assume that keys are already lower-cased (as per the Node
+          // docs on IncomingMessage.headers) and so we don't bother to lower-case
+          // them or combine across multiple keys that would lower-case to the
+          // same value.
+          headers.set(key, Array.isArray(value) ? value.join(', ') : value);
         }
       }
 
-      let r;
-      try {
-        r = await runHttpQuery({
-          method: req.method,
-          // TODO(AS4): error handling
-          options: await this.graphQLServerOptions(),
-          context,
-          query: req.method === 'POST' ? req.body : req.query,
-          request: convertNodeHttpToRequest(req),
-        });
-      } catch (error: any) {
-        handleError(error);
-        return;
+      // TODO(AS4): error handling but also just eliminating this class
+      const serverOptions = await this.graphQLServerOptions();
+
+      const httpGraphQLRequest: HTTPGraphQLRequest = {
+        method: req.method.toUpperCase(),
+        headers,
+        searchParams: req.query,
+        body: req.body,
+      };
+
+      // TODO(AS4): Make batching optional and off by default; perhaps move it
+      // to a separate middleware.
+      const httpGraphQLResponse = await runPotentiallyBatchedHttpQuery(
+        httpGraphQLRequest,
+        context,
+        serverOptions,
+      );
+      if (httpGraphQLResponse.completeBody === null) {
+        // TODO(AS4): Implement incremental delivery or improve error handling.
+        throw Error('Incremental delivery not implemented');
       }
-
-      const { graphqlResponse, responseInit } = r;
-
-      if (responseInit.headers) {
-        for (const [name, value] of Object.entries(responseInit.headers)) {
-          res.setHeader(name, value);
-        }
-      }
-      res.statusCode = responseInit.status || 200;
-
-      res.send(graphqlResponse);
+      sendResponse(httpGraphQLResponse);
     });
   }
 }

@@ -38,7 +38,6 @@ import {
   APQ_CACHE_PREFIX,
 } from './requestPipeline';
 
-import { Headers } from 'node-fetch';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';
@@ -54,7 +53,7 @@ import {
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import { newCachePolicy } from './cachePolicy';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
-import { cloneObject } from './runHttpQuery';
+import { cloneObject, HeaderMap } from './runHttpQuery';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -951,6 +950,8 @@ export class ApolloServerBase<TContext extends BaseContext> {
 
     const options = await this.graphQLServerOptions();
 
+    // TODO(AS4): Once runHttpQuery becomes a method, this setup can be shared
+    // with it.
     const requestCtx: GraphQLRequestContext<TContext> = {
       logger: this.logger,
       schema: options.schema,
@@ -966,7 +967,8 @@ export class ApolloServerBase<TContext extends BaseContext> {
       metrics: {},
       response: {
         http: {
-          headers: new Headers(),
+          headers: new HeaderMap(),
+          statusCode: undefined,
         },
       },
       debug: options.debug,

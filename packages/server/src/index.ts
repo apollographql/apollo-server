@@ -1,9 +1,4 @@
-export {
-  runHttpQuery,
-  HttpQueryRequest,
-  HttpQueryError,
-  isHttpQueryError,
-} from './runHttpQuery';
+export { runHttpQuery, HttpQueryError, isHttpQueryError } from './runHttpQuery';
 
 export {
   default as GraphQLOptions,
