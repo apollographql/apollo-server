@@ -22,5 +22,5 @@ We recommend performing GraphQL-level health checks to ensure your server succes
 <!-- Update later one way or the other -->
 > Note that the [`ApolloServerStandalone` package](../api/apollo-server.mdx) doesn't provide direct access to your HTTP server, so we recommend running a GraphQL-level health check to ensure your server is healthy.
 
-If you are using an [integration with Apollo Server](../integrations/middleware/) and want to check if your HTTP server is serving traffic, you can add a simple HTTP-level health check directly to your web framework by returning a status of 200 to the URL path of your choice.
+If you are using an [integration with Apollo Server](../integrations/middleware/) and want to check if your HTTP server is serving traffic, you can add a simple HTTP-level health check handler directly to your web framework by returning a status of 200 to the URL path of your choice.
 
