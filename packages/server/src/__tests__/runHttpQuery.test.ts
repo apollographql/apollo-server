@@ -1,8 +1,7 @@
-import MockReq = require('mock-req');
-
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 
-import { runHttpQuery, HttpQueryError } from '../runHttpQuery';
+import { HeaderMap } from '../runHttpQuery';
+import { runPotentiallyBatchedHttpQuery } from '../httpBatching';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
@@ -20,128 +19,165 @@ const schema = new GraphQLSchema({
   query: queryType,
 });
 
+const serverOptions = {
+  debug: false,
+  schema,
+};
+
 describe('runHttpQuery', () => {
   describe('handling a GET query', () => {
-    const mockQueryRequest = {
-      method: 'GET',
-      query: {
-        query: '{ testString }',
-      },
-      options: {
-        debug: false,
-        schema,
-      },
-      request: new MockReq(),
-      context: {},
-    };
-
-    it('raises a 400 error if the query is missing', () => {
-      const noQueryRequest = Object.assign({}, mockQueryRequest, {
-        query: 'foo',
-      });
-
-      expect.assertions(2);
-      return runHttpQuery(noQueryRequest).catch((err: HttpQueryError) => {
-        expect(err.statusCode).toEqual(400);
-        expect(err.message).toEqual(
-          JSON.stringify({
-            errors: [
-              {
-                message:
-                  'GraphQL operations must contain a non-empty `query` or a `persistedQuery` extension.',
-                extensions: { code: 'INTERNAL_SERVER_ERROR' },
-              },
-            ],
-          }) + '\n',
-        );
-      });
+    it('raises a 400 error if the query is missing', async () => {
+      expect(
+        await runPotentiallyBatchedHttpQuery(
+          {
+            method: 'GET',
+            headers: new HeaderMap(),
+            searchParams: {},
+            body: {},
+          },
+          {},
+          { ...serverOptions, allowBatchedHttpRequests: false },
+        ),
+      ).toMatchInlineSnapshot(`
+        Object {
+          "bodyChunks": null,
+          "completeBody": "{\\"errors\\":[{\\"message\\":\\"GraphQL operations must contain a non-empty \`query\` or a \`persistedQuery\` extension.\\",\\"extensions\\":{\\"code\\":\\"BAD_REQUEST\\"}}]}
+        ",
+          "headers": Map {
+            "content-type" => "application/json",
+          },
+          "statusCode": 400,
+        }
+      `);
     });
   });
 
   describe('when allowBatchedHttpRequests is false', () => {
-    const mockDisabledBatchQueryRequest = {
-      method: 'GET',
-      query: {
-        query: '{ testString }',
-      },
-      options: {
-        debug: false,
-        schema,
-        allowBatchedHttpRequests: false,
-      },
-      request: new MockReq(),
-      context: {},
-    };
-
     it('succeeds when there are no batched queries in the request', async () => {
-      await expect(
-        runHttpQuery(mockDisabledBatchQueryRequest),
-      ).resolves.not.toThrow();
+      expect(
+        await runPotentiallyBatchedHttpQuery(
+          {
+            method: 'POST',
+            headers: new HeaderMap([['content-type', 'application/json']]),
+            searchParams: {},
+            body: {
+              query: '{ testString }',
+            },
+          },
+          {},
+          { ...serverOptions, allowBatchedHttpRequests: false },
+        ),
+      ).toMatchInlineSnapshot(`
+        Object {
+          "bodyChunks": null,
+          "completeBody": "{\\"data\\":{\\"testString\\":\\"it works\\"}}
+        ",
+          "headers": Map {
+            "content-type" => "application/json",
+            "content-length" => "35",
+          },
+          "statusCode": undefined,
+        }
+      `);
     });
 
-    it('throws when there are batched queries in the request', () => {
-      const batchedQueryRequest = Object.assign(
-        {},
-        mockDisabledBatchQueryRequest,
-        {
-          query: [
-            {
-              query: '{ testString }',
-            },
-            {
-              query: '{ testString }',
-            },
-          ],
-        },
-      );
-      return runHttpQuery(batchedQueryRequest).catch((err: HttpQueryError) => {
-        expect(err.statusCode).toEqual(400);
-        expect(err.message).toEqual(
-          JSON.stringify({
-            errors: [
+    it('error when there are batched queries in the request', async () => {
+      expect(
+        await runPotentiallyBatchedHttpQuery(
+          {
+            method: 'POST',
+            headers: new HeaderMap([['content-type', 'application/json']]),
+            searchParams: {},
+            body: [
               {
-                message: 'Operation batching disabled.',
-                extensions: { code: 'INTERNAL_SERVER_ERROR' },
+                query: '{ testString }',
+              },
+
+              {
+                query: '{ testString }',
               },
             ],
-          }) + '\n',
-        );
-      });
+          },
+
+          {},
+          { ...serverOptions, allowBatchedHttpRequests: false },
+        ),
+      ).toMatchInlineSnapshot(`
+        Object {
+          "bodyChunks": null,
+          "completeBody": "Operation batching disabled.",
+          "headers": Map {
+            "content-type" => "text/plain",
+          },
+          "statusCode": 400,
+        }
+      `);
     });
   });
 
   describe('when allowBatchedHttpRequests is true', () => {
-    const mockEnabledBatchQueryRequest = {
-      method: 'GET',
-      query: {
-        query: '{ testString }',
-      },
-      options: {
-        debug: false,
-        schema,
-        allowBatchedHttpRequests: true,
-      },
-      request: new MockReq(),
-      context: {},
-    };
+    it('succeeds when there are no batched queries in the request', async () => {
+      expect(
+        await runPotentiallyBatchedHttpQuery(
+          {
+            method: 'POST',
+            headers: new HeaderMap([['content-type', 'application/json']]),
+            searchParams: {},
+            body: {
+              query: '{ testString }',
+            },
+          },
 
+          {},
+          { ...serverOptions, allowBatchedHttpRequests: true },
+        ),
+      ).toMatchInlineSnapshot(`
+        Object {
+          "bodyChunks": null,
+          "completeBody": "{\\"data\\":{\\"testString\\":\\"it works\\"}}
+        ",
+          "headers": Map {
+            "content-type" => "application/json",
+            "content-length" => "35",
+          },
+          "statusCode": undefined,
+        }
+      `);
+    });
     it('succeeds when there are multiple queries in the request', async () => {
-      const multipleQueryRequest = Object.assign(
-        {},
-        mockEnabledBatchQueryRequest,
-        {
-          query: [
-            {
-              query: '{ testString }',
-            },
-            {
-              query: '{ testString }',
-            },
-          ],
-        },
-      );
+      expect(
+        await runPotentiallyBatchedHttpQuery(
+          {
+            method: 'POST',
+            headers: new HeaderMap([['content-type', 'application/json']]),
+            searchParams: {},
+            body: [
+              {
+                query: '{ testString }',
+              },
 
-      await expect(runHttpQuery(multipleQueryRequest)).resolves.not.toThrow();
+              {
+                query: '{ testString }',
+              },
+            ],
+          },
+
+          {},
+          { ...serverOptions, allowBatchedHttpRequests: true },
+        ),
+      ).toMatchInlineSnapshot(`
+        Object {
+          "bodyChunks": null,
+          "completeBody": "[{\\"data\\":{\\"testString\\":\\"it works\\"}}
+        ,{\\"data\\":{\\"testString\\":\\"it works\\"}}
+        ]",
+          "headers": Map {
+            "content-type" => "application/json",
+            "content-length" => "35",
+          },
+        }
+      `);
+      // TODO(AS4): decide if we want to strip the newline in batching
     });
   });
 });

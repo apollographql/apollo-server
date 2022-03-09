@@ -255,6 +255,18 @@ export class UserInputError extends ApolloError {
   }
 }
 
+// TODO(AS4): We added this in AS4. Is that a good idea? We should at least
+// document it, and maybe consider using it for more of the errors in
+// runHttpQuery instead of just returning text/plain errors.
+export class BadRequestError extends ApolloError {
+  constructor(message: string, extensions?: Record<string, any>) {
+    super(message, 'BAD_REQUEST', extensions);
+
+    Object.defineProperty(this, 'name', { value: 'BadRequestError' });
+  }
+}
+
+// This function should not throw.
 export function formatApolloErrors(
   errors: ReadonlyArray<Error>,
   options?: {

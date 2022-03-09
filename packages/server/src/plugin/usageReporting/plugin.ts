@@ -2,7 +2,7 @@ import os from 'os';
 import { gzip } from 'zlib';
 import retry from 'async-retry';
 import { Report, ReportHeader, Trace } from '@apollo/usage-reporting-protobuf';
-import fetch, { Response, Headers } from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
 import type {
   GraphQLRequestListener,
   GraphQLServerListener,
@@ -34,6 +34,7 @@ import {
   ReferencedFieldsByType,
 } from './referencedFields';
 import type LRUCache from 'lru-cache';
+import type { HeaderMap } from '../../runHttpQuery';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -778,7 +779,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
 
 export function makeHTTPRequestHeaders(
   http: Trace.IHTTP,
-  headers: Headers,
+  headers: HeaderMap,
   sendHeaders?: SendValuesBaseOptions,
 ): void {
   if (
@@ -789,7 +790,7 @@ export function makeHTTPRequestHeaders(
     return;
   }
   for (const [key, value] of headers) {
-    const lowerCaseKey = key.toLowerCase();
+    // Note that HeaderMap keys are already lower-case.
     if (
       ('exceptNames' in sendHeaders &&
         // We assume that most users only have a few headers to hide, or will
@@ -797,11 +798,11 @@ export function makeHTTPRequestHeaders(
         // operation if it causes real performance issues.
         sendHeaders.exceptNames.some((exceptHeader) => {
           // Headers are case-insensitive, and should be compared as such.
-          return exceptHeader.toLowerCase() === lowerCaseKey;
+          return exceptHeader.toLowerCase() === key;
         })) ||
       ('onlyNames' in sendHeaders &&
         !sendHeaders.onlyNames.some((header) => {
-          return header.toLowerCase() === lowerCaseKey;
+          return header.toLowerCase() === key;
         }))
     ) {
       continue;

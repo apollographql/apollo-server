@@ -335,11 +335,21 @@ export default ({
 
       it('throws an error if GET query is missing', async () => {
         app = await createApp();
-        const req = request(app).get(`/graphql`);
-        return req.then((res) => {
-          expect(res.status).toEqual(400);
-          expect((res.error as HTTPError).text).toMatch('GET query missing.');
-        });
+        const res = await request(app).get(`/graphql`);
+        expect(res.status).toEqual(400);
+        expect(JSON.parse((res.error as HTTPError).text))
+          .toMatchInlineSnapshot(`
+          Object {
+            "errors": Array [
+              Object {
+                "extensions": Object {
+                  "code": "BAD_REQUEST",
+                },
+                "message": "GraphQL operations must contain a non-empty \`query\` or a \`persistedQuery\` extension.",
+              },
+            ],
+          }
+        `);
       });
 
       it('can handle a basic GET request', async () => {
@@ -658,33 +668,28 @@ export default ({
         });
       });
 
-      it('can handle a request with variables as string', async () => {
+      it('POST does not handle a request with variables as string', async () => {
         app = await createApp();
-        const expected = {
-          testArgument: 'hello world',
-        };
-        const req = request(app).post('/graphql').send({
+        const res = await request(app).post('/graphql').send({
           query: 'query test($echo: String!){ testArgument(echo: $echo) }',
           variables: '{ "echo": "world" }',
         });
-        return req.then((res) => {
-          expect(res.status).toEqual(200);
-          expect(res.body.data).toEqual(expected);
-        });
+        expect(res.status).toEqual(400);
+        expect((res.error as HTTPError).text).toMatchInlineSnapshot(
+          `"\`variables\` in a POST body should be provided as an object, not a recursively JSON-encoded string."`,
+        );
       });
 
-      it('can handle a request with variables as an invalid string', async () => {
+      it('POST does not handle a request with extensions as string', async () => {
         app = await createApp();
-        const req = request(app).post('/graphql').send({
+        const res = await request(app).post('/graphql').send({
           query: 'query test($echo: String!){ testArgument(echo: $echo) }',
-          variables: '{ echo: "world" }',
+          extensions: '{ "echo": "world" }',
         });
-        return req.then((res) => {
-          expect(res.status).toEqual(400);
-          expect((res.error as HTTPError).text).toMatch(
-            'Variables are invalid JSON.',
-          );
-        });
+        expect(res.status).toEqual(400);
+        expect((res.error as HTTPError).text).toMatchInlineSnapshot(
+          `"\`extensions\` in a POST body should be provided as an object, not a recursively JSON-encoded string."`,
+        );
       });
 
       it('can handle a request with operationName', async () => {
@@ -738,7 +743,7 @@ export default ({
       });
 
       it('can handle batch requests', async () => {
-        app = await createApp();
+        app = await createApp({ schema, allowBatchedHttpRequests: true });
         const expected = [
           {
             data: {
@@ -774,8 +779,8 @@ export default ({
         });
       });
 
-      it('can handle batch requests', async () => {
-        app = await createApp();
+      it('can handle batch requests with one element', async () => {
+        app = await createApp({ schema, allowBatchedHttpRequests: true });
         const expected = [
           {
             data: {
@@ -804,7 +809,7 @@ export default ({
         const parallels = 100;
         const delayPerReq = 40;
 
-        app = await createApp();
+        app = await createApp({ schema, allowBatchedHttpRequests: true });
         const expected = Array(parallels).fill({
           data: { testStringWithDelay: 'it works' },
         });
@@ -823,11 +828,8 @@ export default ({
         });
       }, 3000); // this test will fail due to timeout if running serially.
 
-      it('disables batch requests when allowBatchedHttpRequests is false', async () => {
-        app = await createApp({
-          schema,
-          allowBatchedHttpRequests: false,
-        });
+      it('disables batch requests by default', async () => {
+        app = await createApp();
 
         const res = await request(app)
           .post('/graphql')
@@ -848,20 +850,16 @@ export default ({
           ]);
 
         expect(res.status).toEqual(400);
-        expect(res.body).toEqual({
-          errors: [
-            {
-              message: 'Operation batching disabled.',
-              extensions: { code: 'INTERNAL_SERVER_ERROR' },
-            },
-          ],
-        });
+        expect((res.error as HTTPError).text).toMatchInlineSnapshot(
+          `"Operation batching disabled."`,
+        );
       });
 
       it('clones batch context', async () => {
         app = await createApp(
           {
             schema,
+            allowBatchedHttpRequests: true,
           },
           async () => ({ testField: 'expected' }),
         );
@@ -898,6 +896,7 @@ export default ({
         app = await createApp(
           {
             schema,
+            allowBatchedHttpRequests: true,
           },
           async () => {
             callCount++;
@@ -1273,7 +1272,7 @@ export default ({
               async requestDidStart() {
                 return {
                   async willSendResponse({ response: { http } }) {
-                    http!.status = 403;
+                    http!.statusCode = 403;
                   },
                 };
               },
@@ -1331,7 +1330,10 @@ export default ({
         NonNullable<GraphQLRequestListener<BaseContext>['didResolveSource']>
       >;
 
-      function createApqApp(apqOptions: PersistedQueryOptions = {}) {
+      function createApqApp(
+        apqOptions: PersistedQueryOptions = {},
+        allowBatchedHttpRequests = false,
+      ) {
         return createApp({
           schema,
           plugins: [
@@ -1348,6 +1350,7 @@ export default ({
             cache,
             ...apqOptions,
           },
+          allowBatchedHttpRequests,
         });
       }
 
@@ -1573,7 +1576,7 @@ export default ({
       });
 
       it('returns with batched persisted queries', async () => {
-        app = await createApqApp();
+        app = await createApqApp({}, true); // allow batching
 
         const errors = await request(app)
           .post('/graphql')

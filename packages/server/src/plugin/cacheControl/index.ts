@@ -250,7 +250,7 @@ export function ApolloServerPluginCacheControl(
             response.http
           ) {
             response.http.headers.set(
-              'Cache-Control',
+              'cache-control',
               `max-age=${
                 policyIfCacheable.maxAge
               }, ${policyIfCacheable.scope.toLowerCase()}`,

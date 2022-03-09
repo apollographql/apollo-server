@@ -1,13 +1,11 @@
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { graphql } from 'graphql';
-import { Request } from 'node-fetch';
 import loglevel from 'loglevel';
 import {
   makeHTTPRequestHeaders,
   ApolloServerPluginUsageReporting,
 } from '../../../plugin/usageReporting/plugin';
-import { Headers } from 'node-fetch';
 import {
   Trace,
   Report,
@@ -23,6 +21,7 @@ import { mockRandom, resetMockRandom } from 'jest-mock-random';
 import { gunzipSync } from 'zlib';
 import type { ApolloServerPluginUsageReportingOptions } from '../../../plugin/usageReporting/options';
 import type { GraphQLRequestContextDidResolveOperation } from '@apollo/server-types';
+import { HeaderMap } from '../../../runHttpQuery';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -112,7 +111,12 @@ describe('end-to-end', () => {
         extensions: {
           clientName: 'testing suite',
         },
-        http: new Request('http://localhost:123/foo'),
+        http: {
+          method: 'GET',
+          headers: new HeaderMap(),
+          searchParams: {},
+          body: {},
+        },
       },
       executor: async ({ request: { query: source }, context }) => {
         return await graphql({
@@ -387,9 +391,10 @@ describe('end-to-end', () => {
 });
 
 describe('sendHeaders makeHTTPRequestHeaders helper', () => {
-  const headers = new Headers();
-  headers.append('name', 'value');
-  headers.append('authorization', 'blahblah'); // THIS SHOULD NEVER BE SENT
+  const headers = new HeaderMap([
+    ['name', 'value'],
+    ['authorization', 'blahblah'], // THIS SHOULD NEVER BE SENT
+  ]);
 
   const headersOutput = { name: new Trace.HTTP.Values({ value: ['value'] }) };
 
@@ -462,10 +467,16 @@ describe('sendHeaders makeHTTPRequestHeaders helper', () => {
   });
 
   it('authorization, cookie, and set-cookie headers should never be sent', () => {
-    headers.append('cookie', 'blahblah');
-    headers.append('set-cookie', 'blahblah');
     const http = makeTestHTTP();
-    makeHTTPRequestHeaders(http, headers, { all: true });
+    const headersWithCookies = new HeaderMap([
+      ...headers,
+      ['cookie', 'blahblah'],
+      ['set-cookie', 'blahblah'],
+    ]);
+    // double check we didn't mess up the HeaderMap constructor :)
+    expect(headersWithCookies.get('cookie')).toBe('blahblah');
+
+    makeHTTPRequestHeaders(http, headersWithCookies, { all: true });
     expect(http.requestHeaders['authorization']).toBe(undefined);
     expect(http.requestHeaders['cookie']).toBe(undefined);
     expect(http.requestHeaders['set-cookie']).toBe(undefined);

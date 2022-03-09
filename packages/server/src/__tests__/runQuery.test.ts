@@ -1,5 +1,3 @@
-import MockReq = require('mock-req');
-
 import {
   GraphQLSchema,
   GraphQLObjectType,
@@ -11,7 +9,6 @@ import {
 } from 'graphql';
 
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
-import type { Request } from 'node-fetch';
 import type { GraphQLOptions, Context as GraphQLContext } from '..';
 import type {
   GraphQLResponse,
@@ -27,6 +24,7 @@ import type {
 } from '@apollo/server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { newCachePolicy } from '../cachePolicy';
+import { HeaderMap } from '../runHttpQuery';
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
 // GraphQLRequestProcessor refactoring.
@@ -41,7 +39,12 @@ function runQuery(
     query: options.queryString,
     operationName: options.operationName,
     variables: options.variables,
-    http: options.request,
+    http: {
+      method: 'GET',
+      headers: new HeaderMap(),
+      searchParams: {},
+      body: {},
+    },
   };
 
   return processGraphQLRequest(options, {
@@ -73,7 +76,6 @@ interface QueryOptions
   queryString?: string;
   variables?: { [key: string]: any };
   operationName?: string;
-  request: Pick<Request, 'url' | 'method' | 'headers'>;
   context?: BaseContext;
 }
 
@@ -148,7 +150,6 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: query,
-      request: new MockReq(),
     }).then((res) => {
       expect(res.data).toEqual(expected);
     });
@@ -161,7 +162,6 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       variables: { base: 1 },
-      request: new MockReq(),
     }).then((res) => {
       expect(res.data).toBeUndefined();
       expect(res.errors!.length).toEqual(1);
@@ -176,7 +176,6 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       debug: true,
-      request: new MockReq(),
     }).then(() => {
       logStub.mockRestore();
       expect(logStub.mock.calls.length).toEqual(0);
@@ -190,7 +189,6 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       debug: false,
-      request: new MockReq(),
     }).then(() => {
       logStub.mockRestore();
       expect(logStub.mock.calls.length).toEqual(0);
@@ -205,7 +203,6 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       variables: { base: 1 },
-      request: new MockReq(),
     }).then((res) => {
       expect(res.data).toBeUndefined();
       expect(res.errors!.length).toEqual(1);
@@ -220,7 +217,6 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       rootValue: 'it also',
-      request: new MockReq(),
     }).then((res) => {
       expect(res.data).toEqual(expected);
     });
@@ -236,7 +232,6 @@ describe('runQuery', () => {
         expect(doc.kind).toEqual('Document');
         return 'it also';
       },
-      request: new MockReq(),
     }).then((res) => {
       expect(res.data).toEqual(expected);
     });
@@ -249,7 +244,6 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       context: { s: 'it still' },
-      request: new MockReq(),
     }).then((res) => {
       expect(res.data).toEqual(expected);
     });
@@ -266,7 +260,6 @@ describe('runQuery', () => {
         response['extensions'] = context.s;
         return response;
       },
-      request: new MockReq(),
     }).then((res) => {
       expect(res.data).toEqual(expected);
       expect(res['extensions']).toEqual('it still');
@@ -280,7 +273,6 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       variables: { base: 1 },
-      request: new MockReq(),
     }).then((res) => {
       expect(res.data).toEqual(expected);
     });
@@ -293,7 +285,6 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: query,
-      request: new MockReq(),
     }).then((res) => {
       expect(res.errors![0].message).toEqual(expected);
     });
@@ -303,7 +294,6 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: `{ testAwaitedValue }`,
-      request: new MockReq(),
     }).then((res) => {
       expect(res.data).toEqual({
         testAwaitedValue: 'it works',
@@ -326,7 +316,6 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       operationName: 'Q1',
-      request: new MockReq(),
     }).then((res) => {
       expect(res.data).toEqual(expected);
     });
@@ -345,7 +334,6 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       operationName: 'Q1',
-      request: new MockReq(),
     });
 
     expect(result1.data).toEqual({
@@ -359,7 +347,6 @@ describe('runQuery', () => {
       queryString: query,
       operationName: 'Q1',
       fieldResolver: () => 'a very testful field resolver string',
-      request: new MockReq(),
     });
 
     expect(result2.data).toEqual({
@@ -382,7 +369,6 @@ describe('runQuery', () => {
                 requestDidStart,
               },
             ],
-            request: new MockReq(),
           });
 
         await runOnce();
@@ -400,7 +386,6 @@ describe('runQuery', () => {
               requestDidStart,
             },
           ],
-          request: new MockReq(),
         });
 
         const invocation = requestDidStart.mock.calls[0][0];
@@ -432,7 +417,6 @@ describe('runQuery', () => {
               },
             },
           ],
-          request: new MockReq(),
         });
 
         expect(didResolveSource).toHaveBeenCalled();
@@ -458,7 +442,6 @@ describe('runQuery', () => {
               },
             },
           ],
-          request: new MockReq(),
         });
 
         expect(parsingDidStart).toBeCalled();
@@ -477,7 +460,6 @@ describe('runQuery', () => {
               },
             },
           ],
-          request: new MockReq(),
         });
 
         expect(parsingDidStart).toBeCalled();
@@ -499,7 +481,6 @@ describe('runQuery', () => {
               },
             },
           ],
-          request: new MockReq(),
         });
 
         expect(executionDidStart).toHaveBeenCalledTimes(1);
@@ -528,7 +509,6 @@ describe('runQuery', () => {
                 },
               },
             ],
-            request: new MockReq(),
           });
 
           expect(executionDidStart).toHaveBeenCalledTimes(1);
@@ -561,7 +541,6 @@ describe('runQuery', () => {
                 },
               },
             ],
-            request: new MockReq(),
           });
 
           expect(executionDidStart).toHaveBeenCalledTimes(1);
@@ -593,7 +572,6 @@ describe('runQuery', () => {
                 },
               },
             ],
-            request: new MockReq(),
           });
 
           expect(executionDidStart).toHaveBeenCalledTimes(1);
@@ -619,7 +597,6 @@ describe('runQuery', () => {
                   },
                 },
               ],
-              request: new MockReq(),
             });
 
             // It is called only once.
@@ -647,7 +624,6 @@ describe('runQuery', () => {
                   },
                 },
               ],
-              request: new MockReq(),
             });
 
             // It is called 1st for `testObject` and then 2nd for `testString`.
@@ -686,7 +662,6 @@ describe('runQuery', () => {
                   },
                 },
               ],
-              request: new MockReq(),
             });
 
             expect(willResolveField).toHaveBeenCalledTimes(1);
@@ -713,7 +688,6 @@ describe('runQuery', () => {
                   },
                 },
               ],
-              request: new MockReq(),
             });
 
             expect(willResolveField).toHaveBeenCalledTimes(1);
@@ -750,7 +724,6 @@ describe('runQuery', () => {
                 },
               },
             ],
-            request: new MockReq(),
           });
 
           expect(executionDidStart).toHaveBeenCalledTimes(1);
@@ -785,7 +758,6 @@ describe('runQuery', () => {
                 },
               },
             ],
-            request: new MockReq(),
           });
 
           expect(executionDidStart).toHaveBeenCalledTimes(1);
@@ -843,7 +815,7 @@ describe('runQuery', () => {
             schema: schemaWithResolver,
             queryString,
             plugins,
-            request: new MockReq(),
+
             fieldResolver: differentFieldResolver,
           });
 
@@ -858,7 +830,7 @@ describe('runQuery', () => {
             schema: schemaWithoutResolver,
             queryString,
             plugins,
-            request: new MockReq(),
+
             fieldResolver: differentFieldResolver,
           });
 
@@ -887,7 +859,6 @@ describe('runQuery', () => {
           schema,
           queryString: '{ testStringWithParseError: }',
           plugins,
-          request: new MockReq(),
         });
 
         expect(didEncounterErrors).toBeCalledWith(
@@ -902,7 +873,6 @@ describe('runQuery', () => {
           schema,
           queryString: '{ testError }',
           plugins,
-          request: new MockReq(),
         });
 
         expect(response).toHaveProperty(
@@ -927,7 +897,6 @@ describe('runQuery', () => {
           schema,
           queryString: '{ testString }',
           plugins,
-          request: new MockReq(),
         });
 
         expect(didEncounterErrors).not.toBeCalled();
@@ -1022,7 +991,6 @@ describe('runQuery', () => {
               },
             },
           ],
-          request: new MockReq(),
         });
 
         expect(parsingDidStart).toHaveBeenCalledTimes(1);
@@ -1085,7 +1053,6 @@ describe('runQuery', () => {
         documentStore,
         queryString,
         plugins,
-        request: new MockReq(),
       });
     }
 
@@ -1242,7 +1209,6 @@ describe('runQuery', () => {
         schema,
         queryString: query,
         operationName: 'Q1',
-        request: new MockReq(),
       });
 
       // Expect there to be several async ids provided

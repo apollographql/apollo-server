@@ -1,5 +1,4 @@
 import { GraphQLError } from 'graphql';
-import { Headers } from 'node-fetch';
 import type { CacheHint } from '@apollo/server-types';
 import {
   ApolloServerPluginCacheControl,
@@ -10,6 +9,7 @@ import type {
   GraphQLResponse,
 } from '@apollo/server-types';
 import pluginTestHarness from '../../pluginTestHarness';
+import { HeaderMap } from '../../../runHttpQuery';
 
 describe('plugin', () => {
   describe('willSendResponse', () => {
@@ -36,7 +36,7 @@ describe('plugin', () => {
         executor: async () => {
           const response: GraphQLResponse = {
             http: {
-              headers: new Headers(),
+              headers: new HeaderMap(),
             },
             data: { test: 'test' },
           };
@@ -63,7 +63,7 @@ describe('plugin', () => {
           },
           overallCachePolicy,
         });
-        expect(requestContext.response.http!.headers.get('Cache-Control')).toBe(
+        expect(requestContext.response.http!.headers.get('cache-control')).toBe(
           'max-age=300, public',
         );
       });
@@ -72,8 +72,8 @@ describe('plugin', () => {
         requestContext: GraphQLRequestContextWillSendResponse<any>,
       ) => {
         expect(
-          requestContext.response.http!.headers.get('Cache-Control'),
-        ).toBeNull();
+          requestContext.response.http!.headers.get('cache-control'),
+        ).toBeUndefined();
       };
 
       it('is not set when calculateHttpHeaders is set to false', async () => {

@@ -730,7 +730,7 @@ export function testApolloServer(
                 },
                 async willSendResponse({ response: { http, errors } }) {
                   if (errors![0].message === 'known_error') {
-                    http!.status = 403;
+                    http!.statusCode = 403;
                   }
                 },
               };
