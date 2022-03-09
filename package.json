@@ -57,7 +57,7 @@
   "devDependencies": {
     "@apollo/client": "3.5.10",
     "@graphql-codegen/cli": "2.6.2",
-    "@graphql-codegen/typescript-operations": "2.3.3",
+    "@graphql-codegen/typescript-operations": "2.3.4",
     "@graphql-tools/mock": "8.5.2",
     "@graphql-tools/schema": "8.3.2",
     "@graphql-tools/utils": "8.6.2",
