@@ -16,7 +16,7 @@ The following must be done before following this guide:
 - [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/installing.html)
 - [Configure the AWS CLI with user credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
 - If using SAM for deployment, [Install AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-linux.html)
-- If using the serverless framework for deployment, Install the serverless framework from NPM:
+- If using the Serverless Framework for deployment, install it from NPM:
   - `npm install -g serverless`
 
 ---
@@ -85,17 +85,17 @@ Resources:
       MemorySize: 256
       Runtime: nodejs14.x
       Events:
-        AutomaticPersistedQueries:
+        GraphQLGET:
           Type: Api
           Properties:
             Path: /
             Method: get
-        GraphQL:
+        GraphQLPOST:
           Type: Api
           Properties:
             Path: /
             Method: post
-        ApolloSandbox:
+        GraphQLOPTIONS:
           Type: Api
           Properties:
             Path: /
@@ -104,7 +104,7 @@ Resources:
 
 You will need to ensure `options` are exposed to use Apollo Explorer and Apollo Sandbox.
 
-*Note: The example above is using v1 of AWS API Gateway which is denoted by the `Type: Api`, but v2 (`Type: HttpApi`) is supported as well. The `apollo-server-lambda` [repository currently has tests that cover both v1 and v2 API Gateway events and ALB events](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-lambda/src/__tests__/lambdaApollo.test.ts). More info about API Event Source can be found [here](https://github.com/aws/serverless-application-model/blob/master/versions/2016-10-31.md#api)*
+>The example above is using v1 of AWS API Gateway which is denoted by the `Type: Api`, but v2 (`Type: HttpApi`) is supported as well. The `apollo-server-lambda` [repository currently has tests that cover both v1 and v2 API Gateway events and ALB events](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-lambda/src/__tests__/lambdaApollo.test.ts). More info about API Event Source can be found [here](https://github.com/aws/serverless-application-model/blob/master/versions/2016-10-31.md#api)
 
 ### Invoking SAM locally
 
@@ -147,52 +147,6 @@ Below is an example of the minimum `event.json` needed for a standard GraphQL re
     }
   },
   "body": "{ \"query\": \"{__typename}\" }",
-  "headers": {
-    "Accept": "*",
-    "origin": "",
-    "content-type": "application/json"
-  }
-}
-```
-
-Below is an example of the minimum `event.json` needed to test an Automatic Persisted Queries (APQ) GraphQL request when using v1 API Gateway:
-
-```
-{
-  "requestContext": {
-    "version": "1.0"
-  },
-  "path": "/graphql",
-  "httpMethod": "GET",
-  "body": "",
-  "multiValueHeaders": {
-    "Accept": "*",
-    "origin": "",
-    "content-type": "application/json"
-  },
-  "multiValueQueryStringParameters": {
-    "query": ["{__typename}"],
-    "extensions": [
-      "{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38\"}}"
-    ]
-  }
-}
-```
-
-Below is an example of the minimum `event.json` needed to test an Automatic Persisted Queries (APQ) GraphQL request when using v2 API Gateway:
-
-```
-{
-  "version": "2.0",
-  "rawPath": "/graphql",
-  "rawQueryString":"extensions={\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38\"}}",
-  "requestContext": {
-    "http": {
-      "method: "GET",
-      "path": "/graphql",
-    },
-  },
-  "body": "",
   "headers": {
     "Accept": "*",
     "origin": "",
@@ -308,10 +262,6 @@ functions:
     - http:
         path: /
         method: get
-        cors: true
-    - http:
-        path: /
-        method: options
         cors: true
 ```
 
