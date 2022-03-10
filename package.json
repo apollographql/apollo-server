@@ -46,7 +46,6 @@
     "@types/cors": "2.8.12",
     "@types/express": "4.17.13",
     "@types/express-serve-static-core": "4.17.28",
-    "@types/fast-json-stable-stringify": "2.0.0",
     "@types/jest": "27.4.1",
     "@types/lodash": "4.14.179",
     "@types/lodash.sortby": "4.7.6",

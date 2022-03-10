@@ -15,7 +15,6 @@ import type { Request } from 'node-fetch';
 import type { GraphQLOptions, Context as GraphQLContext } from '..';
 import type {
   GraphQLResponse,
-  SchemaHash,
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
   GraphQLRequestListener,
@@ -48,9 +47,6 @@ function runQuery(
   return processGraphQLRequest(options, {
     request,
     schema: options.schema,
-    // Relying on specific values for this deprecated field isn't great,
-    // but we at least test that it gets passed through.
-    schemaHash: 'deprecated' as SchemaHash,
     metrics: {},
     logger: console,
     context: options.context || {},
@@ -395,7 +391,7 @@ describe('runQuery', () => {
         expect(requestDidStart.mock.calls.length).toBe(2);
       });
 
-      it('is called with the schema and schemaHash', async () => {
+      it('is called with the schema', async () => {
         await runQuery({
           schema,
           queryString: '{ testString }',
@@ -409,7 +405,6 @@ describe('runQuery', () => {
 
         const invocation = requestDidStart.mock.calls[0][0];
         expect(invocation).toHaveProperty('schema', schema);
-        expect(invocation).toHaveProperty('schemaHash', 'deprecated');
       });
     });
 

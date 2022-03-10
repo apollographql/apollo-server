@@ -9,6 +9,7 @@ import {
   DocumentNode,
   ParseOptions,
   print,
+  assertValidSchema,
 } from 'graphql';
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
@@ -21,7 +22,6 @@ import type {
   GraphQLServerListener,
   LandingPage,
   Logger,
-  SchemaHash,
   ApolloConfig,
   BaseContext,
   GraphQLResponse,
@@ -31,7 +31,6 @@ import type { GraphQLServerOptions } from './graphqlOptions';
 
 import type { Config, DocumentStore, PluginDefinition } from './types';
 
-import { generateSchemaHash } from './utils/schemaHash';
 import {
   processGraphQLRequest,
   GraphQLRequestContext,
@@ -72,9 +71,6 @@ const NoIntrospection = (context: ValidationContext) => ({
 
 export type SchemaDerivedData = {
   schema: GraphQLSchema;
-  // Not a very useful schema hash (not the same one schema and usage reporting
-  // use!) but kept around for backwards compatibility.
-  schemaHash: SchemaHash;
   // A store that, when enabled (default), will store the parsed and validated
   // versions of operations in-memory, allowing subsequent parses/validates
   // on the same operation to be executed immediately.
@@ -361,7 +357,6 @@ export class ApolloServerBase<TContext extends BaseContext> {
       const service: GraphQLServiceContext = {
         logger: this.logger,
         schema: schemaDerivedData.schema,
-        schemaHash: schemaDerivedData.schemaHash,
         apollo: this.apolloConfig,
         serverlessFramework: this.serverlessFramework(),
       };
@@ -656,11 +651,16 @@ export class ApolloServerBase<TContext extends BaseContext> {
   }
 
   private generateSchemaDerivedData(schema: GraphQLSchema): SchemaDerivedData {
-    const schemaHash = generateSchemaHash(schema!);
+    // Instead of waiting for the first operation execution against the schema
+    // to find out if it's a valid schema or not, check right now. In the
+    // non-gateway case, if this throws then the `new ApolloServer` call will
+    // throw. In the gateway case if this throws then it will log a message and
+    // just not update the schema (although oddly the message will claim that
+    // the schema is updating).
+    assertValidSchema(schema);
 
     return {
       schema,
-      schemaHash,
       // The DocumentStore is schema-derived because we put documents in it after
       // checking that they pass GraphQL validation against the schema and use
       // this to skip validation as well as parsing. So we can't reuse the same
@@ -877,11 +877,10 @@ export class ApolloServerBase<TContext extends BaseContext> {
   protected async graphQLServerOptions(): Promise<
     GraphQLServerOptions<TContext>
   > {
-    const { schema, schemaHash, documentStore } = await this._ensureStarted();
+    const { schema, documentStore } = await this._ensureStarted();
 
     return {
       schema,
-      schemaHash,
       logger: this.logger,
       plugins: this.plugins,
       documentStore,
@@ -955,7 +954,6 @@ export class ApolloServerBase<TContext extends BaseContext> {
     const requestCtx: GraphQLRequestContext<TContext> = {
       logger: this.logger,
       schema: options.schema,
-      schemaHash: options.schemaHash,
       request: {
         ...request,
         query:

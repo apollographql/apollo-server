@@ -11,7 +11,6 @@ import type {
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
-  SchemaHash,
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
   GraphQLServerListener,
@@ -106,7 +105,6 @@ export default async function pluginTestHarness<TContext>({
     const maybeServerListener = await pluginInstance.serverWillStart({
       logger: logger || console,
       schema,
-      schemaHash: 'deprecated' as SchemaHash,
       serverlessFramework: false,
       apollo: {
         key: 'some-key',
@@ -123,7 +121,6 @@ export default async function pluginTestHarness<TContext>({
   const requestContext: Mutable<GraphQLRequestContext<TContext>> = {
     logger: logger || console,
     schema,
-    schemaHash: 'deprecated' as SchemaHash,
     request: graphqlRequest,
     metrics: Object.create(null),
     source: graphqlRequest.query,

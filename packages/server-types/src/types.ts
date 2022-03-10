@@ -39,19 +39,6 @@ export type AnyFunctionMap = { [key: string]: AnyFunction | undefined };
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
-// By default, TypeScript uses structural typing (as opposed to nominal typing)
-// Put another way, if it looks like the type and walks like that type, then
-// TypeScript lets it be a type.
-//
-// That's often okay, but it leaves a lot to be desired since a `string` of one
-// type can just be passed in as `string` for that type and TypeScript won't
-// complain.  Flow offers opaque types which solve this, but TypeScript doesn't
-// offer this (yet?).  This Faux-paque type can be used to gain nominal-esque
-// typing, which is incredibly beneficial during re-factors!
-type Fauxpaque<K, T> = K & { __fauxpaque: T };
-
-export type SchemaHash = Fauxpaque<string, 'SchemaHash'>;
-
 // Configuration for how Apollo Server talks to the Apollo registry, as passed
 // to the ApolloServer constructor. Each field can also be provided as an
 // environment variable.
@@ -82,10 +69,6 @@ export interface ApolloConfig {
 export interface GraphQLServiceContext {
   logger: Logger;
   schema: GraphQLSchema;
-  /**
-   * @deprecated: a not particularly stable or useful hash of the schema.
-   */
-  schemaHash: SchemaHash;
   apollo: ApolloConfig;
   persistedQueries?: {
     cache: KeyValueCache;
@@ -137,10 +120,6 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   logger: Logger;
 
   readonly schema: GraphQLSchema;
-  /**
-   * @deprecated: a not particularly stable or useful hash of the schema.
-   */
-  readonly schemaHash: SchemaHash;
 
   readonly context: TContext;
   readonly cache: KeyValueCache;
