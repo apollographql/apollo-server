@@ -9,6 +9,12 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+## v3.6.4
+
+- `apollo-server-core`: Fixes a regression in v3.6.0 where usage reporting would never send traces for unexecutable operations (parse errors, validation errors, and unknown operation name errors). While "traces" for these operations won't actually contain an execution tree, they can contain interesting errors. [Issue #6193](https://github.com/apollographql/apollo-server/issues/6193) [PR #6194](https://github.com/apollographql/apollo-server/pull/6194)
+
+## v3.6.3
+
 - `apollo-server-core`: The inline trace plugin will now include the full query plan and subgraph traces if manually installed in an Apollo Gateway. (Previously, you technically could install this plugin in a Gateway but it would not have any real trace data.) This is recommended for development use only and not in production servers. [PR #6017](https://github.com/apollographql/apollo-server/pull/6017)
 - `apollo-server-core`: The default landing page plugins now take an `includeCookies` option which allows you to specify that Explorer should send cookies to your server. [PR #6014](https://github.com/apollographql/apollo-server/pull/6014)
 - `apollo-server-core`: Apollo Server has a heuristic added in v2.23.0 and improved in v3.1.0 which tries to detect execution errors that come from the `graphql-js` variable value validation phase and report them with an `extensions.code` of `BAD_USER_INPUT` rather than `INTERNAL_SERVER_ERROR`. In this release, the heuristic is improved to include some cases including variables that are non-null lists. [PR #6066](https://github.com/apollographql/apollo-server/pull/6066)
