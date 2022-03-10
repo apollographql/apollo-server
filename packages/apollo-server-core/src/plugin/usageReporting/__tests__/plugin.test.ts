@@ -214,7 +214,13 @@ describe('end-to-end', () => {
         (contextualizedStats) =>
           contextualizedStats.queryLatencyStats?.requestCount ?? 0,
       );
-      expect(operationsSentAsTrace + operationsSentAsStats).toBe(1);
+      // Since we only ever run a single operation, the cache in
+      // defaultSendOperationsAsTrace should always be empty and we should
+      // always send this as a trace, not stats. This is even the case if it's a
+      // pre-execution error, because the error itself is an interesting thing
+      // to send in a trace even if the tree part of the trace is trivial.
+      expect(operationsSentAsTrace).toBe(1);
+      expect(operationsSentAsStats).toBe(0);
     }),
   );
 

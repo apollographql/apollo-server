@@ -538,11 +538,6 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
                 metrics.captureTraces =
                   !!treeBuilder.trace.fieldExecutionWeight;
-              } else if (metrics.captureTraces) {
-                // Some other plugin already decided that we are capturing traces.
-                // (For example, you may be running ApolloServerPluginInlineTrace
-                // and this is a request with the header that requests tracing.)
-                treeBuilder.trace.fieldExecutionWeight = 1;
               }
             }
           },
@@ -644,6 +639,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
                 statsReportKey = `## GraphQLUnknownOperationName\n`;
               }
 
+              const isExecutable = statsReportKey === undefined;
+
               if (statsReportKey) {
                 if (options.sendUnexecutableOperationDocuments) {
                   trace.unexecutedOperationBody = requestContext.source;
@@ -675,9 +672,16 @@ export function ApolloServerPluginUsageReporting<TContext>(
                 // organization's plan allows for viewing traces *and* we
                 // actually captured this as a full trace *and*
                 // sendOperationAsTrace says so.
+                //
+                // (As an edge case, if the reason metrics.captureTraces is
+                // falsey is that this is an unexecutable operation and thus we
+                // never ran the code in didResolveOperation that sets
+                // metrics.captureTrace, we allow it to be sent as a trace. This
+                // means we'll still send some parse and validation failures as
+                // traces, for the sake of the Errors page.)
                 asTrace:
                   graphMightSupportTraces &&
-                  !!metrics.captureTraces &&
+                  (!isExecutable || !!metrics.captureTraces) &&
                   sendOperationAsTrace(trace, statsReportKey),
                 includeTracesContributingToStats,
                 referencedFieldsByType,
