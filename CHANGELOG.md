@@ -9,6 +9,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+## v3.6.4
+
 - `apollo-server-core`: Fixes a regression in v3.6.0 where usage reporting would never send traces for unexecutable operations (parse errors, validation errors, and unknown operation name errors). While "traces" for these operations won't actually contain an execution tree, they can contain interesting errors. [Issue #6193](https://github.com/apollographql/apollo-server/issues/6193) [PR #6194](https://github.com/apollographql/apollo-server/pull/6194)
 
 ## v3.6.3
