@@ -11,7 +11,17 @@ function internalError(message: string) {
 export class TraceTreeBuilder {
   private rootNode = new Trace.Node();
   private logger: Logger = console;
-  public trace = new Trace({ root: this.rootNode });
+  public trace = new Trace({
+    root: this.rootNode,
+    // By default, each trace counts as one operation for the sake of field
+    // execution counts. If we end up calling the fieldLevelInstrumentation
+    // callback (once we've successfully resolved the operation) then we
+    // may set this to a higher number; but we'll start it at 1 so that traces
+    // that don't successfully resolve the operation (eg parse failures) or
+    // where we don't call the callback because a plugin set captureTraces to
+    // true have a reasonable default.
+    fieldExecutionWeight: 1,
+  });
   public startHrTime?: [number, number];
   private stopped = false;
   private nodes = new Map<string, Trace.Node>([
