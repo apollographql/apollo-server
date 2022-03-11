@@ -485,8 +485,7 @@ The REDACTED doesn't have sufficient privileges.
 
 GraphQL, by design, does not use the same conventions from REST to communicate via HTTP verbs and status codes. Client information should be contained in the schema or as part of the standard response `errors` field. We recommend using the included [Error Codes](#error-codes) or [Custom Errors](#custom-errors) for error consistency rather than directly modifying the HTTP response.
 
-If you need to have custom behavior, you can set the `http` fields on the response via a [plugin](../integrations/plugins).
-Be aware that GraphQL client libraries may not treat all response status codes the same, and so it will be up to your team to decide what patterns are used.
+You can set custom fields on your HTTP response by using a [plugin](../integrations/plugins). Be aware that GraphQL client libraries may not treat all response status codes the same, and so it will be up to your team to decide what patterns to use.
 
 As an example, here is how you could set a custom response header and status code based on a GraphQL error:
 
