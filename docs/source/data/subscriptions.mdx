@@ -499,7 +499,7 @@ import { createClient } from 'graphql-ws';
 const wsLink = new GraphQLWsLink(createClient({
   url: 'ws://localhost:4000/subscriptions',
   connectionParams: {
-    authorization: user.authToken,
+    authentication: user.authToken,
   },
 }));
 ```
