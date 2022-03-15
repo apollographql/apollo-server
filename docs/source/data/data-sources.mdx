@@ -3,10 +3,6 @@ title: Data sources
 description: Manage connections to databases and REST APIs
 ---
 
-import {
-  ExpansionPanel,
-} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
-
 **Data sources** are classes that Apollo Server can use to encapsulate fetching data from a particular source, such as a database or a REST API. These classes help handle caching, deduplication, and errors while resolving operations.
 
 Your server can use any number of different data sources. You don't _have_ to use data sources to fetch data, but they're strongly recommended.
@@ -54,7 +50,7 @@ If none of these implementations applies to your use case, you can create your o
 
 You provide your `DataSource` subclasses to the `ApolloServer` constructor, like so:
 
-```js{4-9}:title=index.js
+```js {4-9} title="index.js"
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -73,7 +69,7 @@ const server = new ApolloServer({
 
 Your resolvers can now access your data sources from the shared `context` object and use them to fetch data:
 
-```js:title=resolvers.js
+```js title="resolvers.js"
 const resolvers = {
   Query: {
     movie: async (_, { id }, { dataSources }) => {
@@ -123,7 +119,7 @@ For the options you can pass to the underlying Memcached client, [see the docume
 
 #### Redis
 
-```js:title=Redis
+```js title="Redis"
 const { BaseRedisCache } = require('apollo-server-cache-redis');
 const Redis = require('ioredis');
 
@@ -166,7 +162,7 @@ You then extend the `RESTDataSource` class and implement whatever data-fetching 
 
 Here's an example `RESTDataSource` subclass that defines two data-fetching methods, `getMovie` and `getMostViewedMovies`:
 
-```js:title=movies-api.js
+```js title="movies-api.js"
 const { RESTDataSource } = require('apollo-datasource-rest');
 
 class MoviesAPI extends RESTDataSource {

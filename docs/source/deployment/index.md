@@ -1,6 +1,5 @@
 ---
 title: Deployment Basics
-sidebar_title: Basics
 description: Deploying your new Apollo Server to the world
 ---
 

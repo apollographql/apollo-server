@@ -3,13 +3,11 @@ title: Creating schema directives
 description: Apply custom logic to GraphQL types, fields, and arguments
 ---
 
-import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
-
 > Before you create a custom schema directive, [learn the basics about directives](./directives).
 
 Your schema can define custom directives that can then decorate _other_ parts of your schema:
 
-```graphql:title=schema.graphql
+```graphql title="schema.graphql"
 # Definition
 directive @uppercase on FIELD_DEFINITION
 
@@ -25,7 +23,7 @@ When Apollo Server loads your schema on startup, it can execute custom logic whe
 
 A directive definition looks like this:
 
-```graphql:title=schema.graphql
+```graphql title="schema.graphql"
 directive @deprecated(
   reason: String = "No longer supported"
 ) on FIELD_DEFINITION | ENUM_VALUE
@@ -221,7 +219,7 @@ In your subclass, you override the **visitor method** for _each location_ your d
 
 Here's a possible implementation of the default `@deprecated` directive:
 
-```js:title=DeprecatedDirective.js
+```js title="DeprecatedDirective.js"
 const { SchemaDirectiveVisitor } = require("apollo-server");
 
 // Subclass of SchemaDirectiveVisitor
@@ -248,7 +246,7 @@ This subclass adds two fields to the executable schema's representation of a dep
 To add this logic to Apollo Server, you pass the `DeprecatedDirective` class to the `ApolloServer` constructor via the `schemaDirectives` object:
 
 
-```js:title=index.js
+```js title="index.js"
 const { ApolloServer, gql } = require("apollo-server");
 const { DeprecatedDirective } = require("./DeprecatedDirective");
 
@@ -299,7 +297,7 @@ This example defines an `@uppercase` directive for this purpose:
 
 <ExpansionPanel title="Click to expand">
 
-```js:title=index.js
+```js title="index.js"
 const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
 const { defaultFieldResolver } = require("graphql");
 

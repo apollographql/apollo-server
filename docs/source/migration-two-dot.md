@@ -13,7 +13,7 @@ Apollo Server 2.0 ships with the `gql` tag for **editor syntax highlighting** an
 
 The `gql` tag parses the query string into an AST  and is now exported from the new `apollo-server` package.
 
-```js{1,3}
+```js {1,3}
 const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
@@ -283,7 +283,7 @@ new ApolloServer({
 
 ## Replacing `logFunction`
 
-Apollo Server 2 removes the `logFunction` to reduce the exposure of internal implementation details. The experimental, non-public `graphql-extensions` provides a more structured and flexible way of instrumenting Apollo Server. An explanation of to do more granular logging, can be found in the [metrics section](/monitoring/metrics/).
+Apollo Server 2 removes the `logFunction` to reduce the exposure of internal implementation details. The experimental, non-public `graphql-extensions` provides a more structured and flexible way of instrumenting Apollo Server. An explanation of to do more granular logging, can be found in the [metrics section](./monitoring/metrics/).
 
 ## Replacing GraphiQL
 

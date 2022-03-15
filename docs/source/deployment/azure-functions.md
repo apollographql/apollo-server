@@ -1,6 +1,5 @@
 ---
 title: Deploying with Azure Functions
-sidebar_title: Azure Functions
 description: Deploying your GraphQL server to Azure Functions
 ---
 This is the Azure Functions integration for the Apollo community GraphQL Server. [Read Docs](https://www.npmjs.com/package/apollo-server-azure-functions)

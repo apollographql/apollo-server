@@ -3,8 +3,6 @@ title: Subscriptions
 description: Persistent GraphQL read operations
 ---
 
-import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
-
 > **Subscriptions are not currently supported in [Apollo Federation](https://www.apollographql.com/docs/federation/).**
 
 **Subscriptions** are long-lasting GraphQL read operations that can update their result whenever a particular server-side event occurs. Most commonly, updated results are _pushed_ from the server to subscribing clients. For example, a chat application's server might use a subscription to push newly received messages to all clients in a particular chat room.
@@ -59,7 +57,7 @@ const server = new ApolloServer({
 
 Resolvers for `Subscription` fields differ from resolvers for fields of other types. Specifically, `Subscription` field resolvers are _objects_ that define a `subscribe` function:
 
-```js:title=index.js
+```js title="index.js"
 const resolvers = {
   Subscription: {
     postCreated: {
@@ -118,7 +116,7 @@ type Mutation {
 
 A basic resolver for `createPost` might look like this:
 
-```js{3-6}
+```js {3-6}
 const resolvers = {
   Mutation: {
     createPost(parent, args, context) {
@@ -158,7 +156,7 @@ You pass this method an array containing the names of all event labels that the 
 
 Every `Subscription` field resolver's `subscribe` function must return an `AsyncIterator` object. This brings us back to the code sample at the top of [Resolving a subscription](#resolving-a-subscription):
 
-```js:title=index.js
+```js title="index.js"
 const resolvers = {
   Subscription: {
     postCreated: {
@@ -194,7 +192,7 @@ To fix this, we can use the `withFilter` helper function to control updates on a
 
 Here's an example resolver for `commentAdded` that uses the `withFilter` function:
 
-```js{5-12}
+```js {5-12}
 const { withFilter } = require('apollo-server');
 
 const resolvers = {

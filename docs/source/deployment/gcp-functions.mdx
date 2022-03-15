@@ -1,17 +1,12 @@
 ---
 title: Deploying with Google Cloud Functions
-sidebar_title: Google Cloud Functions
 ---
-
-import {
-  ExpansionPanel,
-} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
 This tutorial helps you deploy Apollo Server to Google Cloud Functions. It uses the following example function handler:
 
 <ExpansionPanel title="Click to expand">
 
-```javascript:title=index.js
+```javascript title="index.js"
 const { ApolloServer, gql } = require('apollo-server-cloud-functions');
 
 // Construct a schema, using GraphQL schema language
@@ -30,7 +25,7 @@ const resolvers = {
 
 /*
 Because `NODE_ENV` is a reserved environment variable in Google Cloud Functions
-and it defaults to "production", you need to set both the `playground` and 
+and it defaults to "production", you need to set both the `playground` and
 `introspection` options to `true` for GraphQL Playground to work correctly.
 */
 const server = new ApolloServer({
@@ -66,7 +61,7 @@ Paste the example code at the top of this page into the contents of `index.js` i
 
 Edit `package.json` so that it lists `apollo-server-cloud-functions` and `graphql` in its dependencies:
 
-```json:title=package.json
+```json title="package.json"
 "dependencies": {
   "apollo-server-cloud-functions": "^2.24.0",
   "graphql": "^15.5.0"
@@ -184,7 +179,7 @@ exports.handler = server.createHandler();
 
 To enable CORS, you need to modify your HTTP response headers. To do so, use the `cors` option:
 
-```javascript{23-26}
+```javascript {23-26}
 const { ApolloServer, gql } = require('apollo-server-cloud-functions');
 
 // Construct a schema, using GraphQL schema language

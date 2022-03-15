@@ -1,6 +1,6 @@
 ---
 title: Health checks
-description: Determining the health status of the Apollo Server 
+description: Determining the health status of the Apollo Server
 ---
 
 Health checks are often used by load balancers to determine if a server is available and ready to start serving traffic.  By default, Apollo Server provides a health check endpoint at `/.well-known/apollo/server-health` which returns a 200 status code if the server has started.
@@ -9,7 +9,7 @@ This basic health check may not be comprehensive enough for some applications an
 
 > **Note:** Alternatively, the `onHealthCheck` can be defined as an `async` function which `throw`s if it encounters an error and returns when conditions are considered normal.
 
-```js{10-19}
+```js {10-19}
 const { ApolloServer, gql } = require('apollo-server');
 
 // Undefined for brevity.

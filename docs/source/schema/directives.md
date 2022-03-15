@@ -1,6 +1,5 @@
 ---
 title: Directives
-sidebar_title: Directives
 description: Configure GraphQL types, fields, and arguments
 ---
 
@@ -8,7 +7,7 @@ A **directive** decorates part of a GraphQL schema or operation with additional 
 
 Directives are preceded by the `@` character, like so:
 
-```graphql{2}:title=schema.graphql
+```graphql {2} title="schema.graphql"
 type ExampleType {
   oldField: String @deprecated(reason: "Use `newField`.")
   newField: String
@@ -34,7 +33,7 @@ directive @deprecated(
 
 This indicates that `@deprecated` can decorate either a schema  `FIELD_DEFINITION` (as shown at the top of the article) or a schema `ENUM_VALUE` definition (as shown here):
 
-```graphql:title=schema.graphql
+```graphql title="schema.graphql"
 enum MyEnum {
   OLD_VALUE @deprecated(reason: "Use `NEW_VALUE`.")
   NEW_VALUE
@@ -78,7 +77,7 @@ To use a custom directive:
 
 The following example defines an `UpperCaseDirective` subclass for use with the `@upper` custom directive. Because it's decorated with `@upper`, the `Query.hello` field returns `HELLO WORLD!` instead of `Hello world!`.
 
-```js{20,40-42}
+```js {20,40-42}
 const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
 const { defaultFieldResolver } = require('graphql');
 

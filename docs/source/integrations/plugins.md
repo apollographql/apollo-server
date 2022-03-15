@@ -17,7 +17,7 @@ with each request that's sent to Apollo Server.
 Plugins are JavaScript objects that implement one or more functions that respond to
 events. Here's a basic plugin that responds to the `serverWillStart` event:
 
-```js:title=index.js
+```js title="index.js"
 const myPlugin = {
   serverWillStart() {
     console.log('Server starting up!');
@@ -30,7 +30,7 @@ const myPlugin = {
 You can define a plugin in the same file where you initialize Apollo Server, or
 you can export it as a separate module:
 
-```js:title=myplugin.js
+```js title="myplugin.js"
 module.exports = {
   serverWillStart() {
     console.log('Server starting up!');
@@ -41,7 +41,7 @@ module.exports = {
 To create a plugin that accepts options, create a function that accepts an
 `options` object and returns a properly structured plugin object, like so:
 
-```js:title=myplugin.js
+```js title="myplugin.js"
 module.exports = (options) => {
   return {
     serverWillStart() {
@@ -252,7 +252,7 @@ Request lifecycle events are associated with a specific request. You define resp
 
 ### `serverWillStart`
 
-The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. If you respond to this event with an `async` function (or if the function returns a `Promise`), the server doesn't start until the asynchronous operation completes. If the `Promise` is _rejected_, startup _fails_ (**unless you're using [Express middleware](/integrations/middleware/)**). This helps you make sure all
+The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. If you respond to this event with an `async` function (or if the function returns a `Promise`), the server doesn't start until the asynchronous operation completes. If the `Promise` is _rejected_, startup _fails_ (**unless you're using [Express middleware](./middleware/)**). This helps you make sure all
 of your server's dependencies are available before attempting to begin serving requests.
 
 #### Example

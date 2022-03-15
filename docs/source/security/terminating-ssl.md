@@ -5,7 +5,7 @@ title: Terminating SSL
 Most production environments use a load balancer or HTTP proxy (such as nginx) to perform SSL termination on behalf of web applications in that environment.
 
 If you're using Apollo Server in an application that must perform its _own_ SSL termination, you can use the `https` module with the `apollo-server-express` [middleware
-library](/integrations/middleware/).
+library](../integrations/middleware/).
 
 Here's an example that uses HTTPS in production and HTTP in development:
 

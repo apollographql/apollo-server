@@ -48,7 +48,7 @@ version in the [`ApolloClient` constructor](https://www.apollographql.com/docs/r
 
 For more advanced cases, or to use headers other than the default headers, pass a `generateClientInfo` function into the [usage reporting plugin](../api/plugin/usage-reporting/):
 
-```js{9-24}
+```js {9-24}
 const { ApolloServer } = require("apollo-server");
 const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 

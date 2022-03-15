@@ -77,7 +77,7 @@ The `__resolveType` function uses a returned object's fields to determine its ty
 
 Here's an example `__resolveType` function for the `Result` union defined above:
 
-```js{3-11}
+```js {3-11}
 const resolvers = {
   Result: {
     __resolveType(obj, context, info){
@@ -209,7 +209,7 @@ For more information, see [Using fragments with unions and interfaces](https://w
 
 Here's an example `__resolveType` function for the `Book` interface defined above:
 
-```js{3-11}
+```js {3-11}
 const resolvers = {
   Book: {
     __resolveType(book, context, info){
