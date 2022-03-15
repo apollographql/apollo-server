@@ -1,6 +1,5 @@
 ---
 title: Apollo Server plugin event reference
-sidebar_title: Event reference
 ---
 
 > **New in Apollo Server 3:** All plugin lifecycle methods are `async`, _except for [`willResolveField`](#willresolvefield) and [`schemaDidLoadOrUpdate`](#schemadidloadorupdate)_.
@@ -105,7 +104,7 @@ This event enables you to serve a [custom landing page](../testing/build-run-que
 
 You define your plugin's `renderLandingPage` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, which enables it to read values passed to `serverWillStart`:
 
-```js{5-22}:title=index.js
+```js {5-22} title="index.js"
 const server = new ApolloServer({
   // ... other configuration ...
 

@@ -1,6 +1,5 @@
 ---
 title: Build and run queries against Apollo Server
-sidebar_title: Build and run queries
 ---
 
 In non-production environments, Apollo Server 3 serves the following landing page from its base URL (`http://localhost:4000` by default):
@@ -42,8 +41,8 @@ You can install either of these plugins manually to configure its behavior.
 
 This sample replicates Apollo Server's default behavior, except it removes the footer that each landing page displays:
 
-```js{1-4,10-12}:title=index.js
-const { 
+```js {1-4,10-12} title="index.js"
+const {
   ApolloServerPluginLandingPageProductionDefault
   ApolloServerPluginLandingPageLocalDefault,
 } = require('apollo-server-core');
@@ -71,7 +70,7 @@ For all available configuration options for these plugins, [see the API referenc
 
 You can replicate this behavior in Apollo Server 3 by providing the following plugin to the `ApolloServer` constructor:
 
-```js{1,7-9}:title=index.js
+```js {1,7-9} title="index.js"
 const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
 
 const server = new ApolloServer({
@@ -91,7 +90,7 @@ You can configure GraphQL Playground's behavior by [providing options to this pl
 
 You can serve a custom HTML landing page from Apollo Server's base URL. To do so, define your own [custom plugin](../integrations/plugins/) that calls the [`renderLandingPage` method](../integrations/plugins-event-reference/#renderlandingpage), like so:
 
-```js{5-22}:title=index.js
+```js {5-22} title="index.js"
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -123,7 +122,7 @@ const server = new ApolloServer({
 
 You can disable Apollo Server's landing page by providing the following plugin to the `ApolloServer` constructor:
 
-```js{1,7}:title=index.js
+```js {1,7} title="index.js"
 const { ApolloServerPluginLandingPageDisabled } = require('apollo-server-core');
 
 const server = new ApolloServer({

@@ -2,18 +2,16 @@
 title: Terminating SSL
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Most production environments use a load balancer or HTTP proxy (such as nginx) to perform SSL termination on behalf of web applications in that environment.
 
 If you're using Apollo Server in an application that must perform its _own_ SSL termination, you can use the `https` module with the `apollo-server-express` [middleware
-library](/integrations/middleware/).
+library](../integrations/middleware/).
 
 Here's an example that uses HTTPS in production and HTTP in development:
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import typeDefs from './graphql/schema';

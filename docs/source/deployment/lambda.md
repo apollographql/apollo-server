@@ -1,6 +1,5 @@
 ---
 title: Deploying with AWS Lambda
-sidebar_title: Lambda
 description: How to deploy Apollo Server with AWS Lambda
 ---
 

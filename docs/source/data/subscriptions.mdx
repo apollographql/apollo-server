@@ -1,10 +1,7 @@
 ---
 title: Subscriptions in Apollo Server
-sidebar_title: Subscriptions
 description: Persistent GraphQL read operations
 ---
-
-import {ExpansionPanel, MultiCodeBlock} from 'gatsby-theme-apollo-docs';
 
 > **Apollo Server 3 removes built-in support for subscriptions.** You can reenable support as [described below](#enabling-subscriptions).
 >
@@ -58,7 +55,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
 
 2. Add the following imports to the file where you initialize your `ApolloServer` instance (we'll use these in later steps):
 
-    ```ts:title=index.ts
+    ```ts title="index.ts"
     import { createServer } from 'http';
     import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
     import { makeExecutableSchema } from '@graphql-tools/schema';
@@ -68,7 +65,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
 
 3. Next, in order to set up both the HTTP and subscription servers, we need to first create an `http.Server`. Do this by passing your Express `app` to the `createServer` function, which we imported from the `http` module:
 
-    ```ts:title=index.ts
+    ```ts title="index.ts"
     // This `app` is the returned value from `express()`.
     const httpServer = createServer(app);
     ```
@@ -79,7 +76,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
 
     The subscription server (which we'll instantiate next) doesn't take `typeDefs` and `resolvers` options. Instead, it takes an executable `GraphQLSchema`. We can pass this `schema` object to both the subscription server and `ApolloServer`. This way, we make sure that the same schema is being used in both places.
 
-    ```ts:title=index.ts
+    ```ts title="index.ts"
     const schema = makeExecutableSchema({ typeDefs, resolvers });
     // ...
     const server = new ApolloServer({
@@ -89,7 +86,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
 
 5. Create a `WebSocketServer` to use as your subscription server.
 
-    ```ts:title=index.ts
+    ```ts title="index.ts"
       // Creating the WebSocket server
       const wsServer = new WebSocketServer({
         // This is the `httpServer` we created in a previous step.
@@ -106,7 +103,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
 
 6. Add [plugins](../integrations/plugins) to your `ApolloServer` constructor to shutdown both the HTTP server and the `WebSocketServer`:
 
-    ```ts:title=index.ts
+    ```ts title="index.ts"
       const server = new ApolloServer({
         schema,
         plugins: [
@@ -137,7 +134,7 @@ A completed example of setting up subscriptions is shown below:
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-express';
 import { createServer } from 'http';
 import express from 'express';
@@ -204,7 +201,7 @@ httpServer.listen(PORT, () => {
 
 Resolvers for `Subscription` fields differ from resolvers for fields of other types. Specifically, `Subscription` field resolvers are **objects** that define a `subscribe` function:
 
-```ts:title=index.ts
+```ts title="index.ts"
 const resolvers = {
   Subscription: {
     postCreated: {
@@ -268,7 +265,7 @@ type Mutation {
 
 A basic resolver for `createPost` might look like this:
 
-```js{3-6}
+```js {3-6}
 const resolvers = {
   Mutation: {
     createPost(parent, args, context) {
@@ -310,7 +307,7 @@ Every `Subscription` field resolver's `subscribe` function must return an `Async
 
 This brings us back to the code sample at the top of [Resolving a subscription](#resolving-a-subscription):
 
-```js:title=index.js
+```js title="index.js"
 const resolvers = {
   Subscription: {
     postCreated: {
@@ -346,7 +343,7 @@ To fix this, we can use the `withFilter` helper function to control updates on a
 
 Here's an example resolver for `commentAdded` that uses the `withFilter` function:
 
-```js{5-12}
+```js {5-12}
 import { withFilter } from 'graphql-subscriptions';
 
 const resolvers = {
@@ -463,7 +460,7 @@ Defining an `onConnect` function enables you to reject a particular incoming con
 
 You provide these functions as options to the first argument of `useServer`, like so:
 
-```ts{5,12}
+```ts {5,12}
 useServer(
   {
     schema,

@@ -1,6 +1,5 @@
 ---
 title: "API Reference: Cache control plugin"
-sidebar_title: Cache control
 api_reference: true
 ---
 

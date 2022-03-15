@@ -86,7 +86,7 @@ In [the example above](#example-the-date-scalar), `parseLiteral` converts the AS
 
 After you define your `GraphQLScalarType` instance, you include it in the same [resolver map](../data/resolvers/#defining-a-resolver) that contains resolvers for your schema's other types and fields:
 
-```js{21-24}
+```js {21-24}
 const { ApolloServer, gql } = require('apollo-server');
 const { GraphQLScalarType, Kind } = require('graphql');
 
@@ -122,7 +122,7 @@ const server = new ApolloServer({
 
 In this example, we create a custom scalar called `Odd` that can only contain odd integers:
 
-```js:title=index.js
+```js title="index.js"
 const { ApolloServer, gql, UserInputError } = require('apollo-server');
 const { GraphQLScalarType, Kind } = require('graphql');
 

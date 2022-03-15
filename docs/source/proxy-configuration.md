@@ -25,7 +25,7 @@ npm install global-agent
 
 After the `global-agent` dependency has been installed, invoke its `bootstrap` method **before** Apollo Server is initialized:
 
-```js{2-5})
+```js {2-5}
 const { ApolloServer, gql } = require('apollo-server');
 const { bootstrap: bootstrapGlobalAgent } = require('global-agent');
 

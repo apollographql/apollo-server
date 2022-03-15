@@ -1,6 +1,5 @@
 ---
 title: "API Reference: Landing page plugins"
-sidebar_title: Landing pages
 api_reference: true
 ---
 

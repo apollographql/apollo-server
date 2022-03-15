@@ -1,10 +1,7 @@
 ---
 title: "API Reference: ApolloServer"
-sidebar_title: ApolloServer
 api_reference: true
 ---
-
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 
 This API reference documents the `ApolloServer` class.
 
@@ -588,7 +585,7 @@ The async `start` method instructs Apollo Server to prepare to handle incoming o
 
 Always call `await server.start()` *before* calling `server.applyMiddleware` and starting your HTTP server. This allows you to react to Apollo Server startup failures by crashing your process instead of starting to serve traffic.
 
-If the only thing you are doing with your server is calling [`executeOperation`](../../testing/testing/) on it (ie, you're not actually starting an HTTP server), you don't have to call `start()`; `executeOperation` will do that for you.
+If the only thing you are doing with your server is calling [`executeOperation`](../testing/testing/) on it (ie, you're not actually starting an HTTP server), you don't have to call `start()`; `executeOperation` will do that for you.
 
 This method was optional in Apollo Server 2 but is required in Apollo Server 3.
 
@@ -703,7 +700,7 @@ Here's an example of using `applyMiddleware` with `apollo-server-express`.
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const { ApolloServerPluginDrainHttpServer } = require('apollo-server-core');

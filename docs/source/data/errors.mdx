@@ -5,8 +5,6 @@ description: Making errors actionable on the client and server
 
 <!-- cSpell:ignore typenam -->
 
-import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
-
 Whenever Apollo Server encounters errors while processing a GraphQL operation, its response to the client includes an `errors` array that contains each error that occurred. Each error in the array has an `extensions` field that provides additional useful information, including an error `code` and (while in development mode) an `exception.stacktrace`.
 
 Here's an example error response caused by misspelling the `__typename` field in a query:
@@ -178,7 +176,7 @@ For example, this resolver throws a [`UserInputError`](#bad_user_input) if the i
 
 <ExpansionPanel title="Click to expand">
 
-```js{20-25}
+```js {20-25}
 const {
   ApolloServer,
   gql,
@@ -220,7 +218,7 @@ This example builds on the one above by adding the name of the GraphQL argument 
 
 <ExpansionPanel title="Click to expand">
 
-```js{22-24}
+```js {22-24}
 const {
   ApolloServer,
   gql,
@@ -258,7 +256,7 @@ This results in a response like the following:
 
 <ExpansionPanel title="Click to expand">
 
-```json{15}
+```json {15}
 {
   "errors": [
     {
@@ -340,7 +338,7 @@ The `ApolloServer` constructor accepts a `formatError` function that is run on e
 
 This example returns a more generic error whenever the original error's message begins with `Database Error: `:
 
-```js{4-12}
+```js {4-12}
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -392,7 +390,7 @@ Your `rewriteError` function is called for each error (a `GraphQLError` or an `A
 
 Let's say our server is `throw`ing an `AuthenticationError` whenever an incorrect password is provided. We can avoid reporting these errors to Apollo Studio by defining `rewriteError`, like so:
 
-```js{7-17}
+```js {7-17}
 const { ApolloServer, AuthenticationError } = require("apollo-server");
 const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 const server = new ApolloServer({
@@ -422,7 +420,7 @@ When generating an error (e.g., `new ApolloError("Failure!")`), the error's `mes
 
 We can check these properties when determining whether an error should be reported to Apollo Studio using the `rewriteError` function as follows:
 
-```js{7-17}
+```js {7-17}
 const { ApolloServer } = require("apollo-server");
 const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 const server = new ApolloServer({
@@ -459,7 +457,7 @@ throw new ApolloError("The x-api-key:12345 doesn't have sufficient privileges.")
 
 The `rewriteError` function can ensure that such information is not sent to Apollo Studio and potentially revealed outside its intended scope:
 
-```js{7-13}
+```js {7-13}
 const { ApolloServer } = require("apollo-server");
 const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 const server = new ApolloServer({

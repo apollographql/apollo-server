@@ -1,6 +1,5 @@
 ---
 title: "API Reference: Usage reporting plugin"
-sidebar_title: Usage reporting
 api_reference: true
 ---
 
@@ -8,7 +7,7 @@ Apollo Server's built-in usage reporting plugin gathers data on how your clients
 
 ## Default installation
 
-Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](/monitoring/metrics/#connecting-to-apollo-studio). You usually do this by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables. No other action is required.
+Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](../../monitoring/metrics/#connecting-to-apollo-studio). You usually do this by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables. No other action is required.
 
 If you don't provide an API key and graph ref, this plugin is not installed.
 

@@ -1,11 +1,6 @@
 ---
 title: Get started with Apollo Server
-sidebar_title: Get started
 ---
-
-import {
-  ExpansionPanel,
-} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
 This tutorial helps you:
 
@@ -71,7 +66,7 @@ of books by title and author.
 
 Open `index.js` in your preferred editor and paste the following into it:
 
-```js:title=index.js
+```js title="index.js"
 const { ApolloServer, gql } = require('apollo-server');
 
 // A schema is a collection of type definitions (hence "typeDefs")
@@ -107,7 +102,7 @@ server). For the purposes of this tutorial, we'll just hardcode some example dat
 
 Add the following to the bottom of `index.js`:
 
-```js:title=index.js
+```js title="index.js"
 const books = [
   {
     title: 'The Awakening',
@@ -130,7 +125,7 @@ Resolvers tell Apollo Server _how_ to fetch the data associated with a particula
 
 Add the following to the bottom of `index.js`:
 
-```js:title=index.js
+```js title="index.js"
 // Resolvers define the technique for fetching the types defined in the
 // schema. This resolver retrieves books from the "books" array above.
 const resolvers = {
@@ -147,7 +142,7 @@ this information to Apollo Server when we initialize it.
 
 Add the following to the bottom of `index.js`:
 
-```js:title=index.js
+```js title="index.js"
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 const server = new ApolloServer({ typeDefs, resolvers });
@@ -234,6 +229,6 @@ This example application is a great starting point for working with
 Apollo Server. Check out the following resources to learn more about the basics
 of schemas, resolvers, and deployment:
 
-* [Schema basics](/schema/schema/)
-* [Resolvers](/data/resolvers/)
-* [Deploying with Heroku](/deployment/heroku/)
+* [Schema basics](./schema/schema/)
+* [Resolvers](./data/resolvers/)
+* [Deploying with Heroku](./deployment/heroku/)

@@ -27,7 +27,7 @@ All of a union's included types must be [object types](./schema/#object-types) (
 
 The following schema defines a `SearchResult` union type that can return either a `Book` or an `Author`:
 
-```graphql{1,12}
+```graphql {1,12}
 union SearchResult = Book | Author
 
 type Book {
@@ -108,7 +108,7 @@ The `__resolveType` function is responsible for determining an object's correspo
 
 Here's a basic `__resolveType` function for the `SearchResult` union defined above:
 
-```js{3-13}
+```js {3-13}
 const resolvers = {
   SearchResult: {
     __resolveType(obj, context, info){
@@ -275,7 +275,7 @@ For more information, see [Using fragments with unions and interfaces](https://w
 
 Here's an example `__resolveType` function for the `Book` interface defined above:
 
-```js{3-13}
+```js {3-13}
 const resolvers = {
   Book: {
     __resolveType(book, context, info){

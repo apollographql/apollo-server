@@ -33,7 +33,7 @@ Apollo Server supports APQ without any additional configuration. However, some _
 
 To set up APQ in Apollo Client, first import the `createPersistedQueryLink` function in the same file where you initialize `ApolloClient`:
 
-```js:title=index.js
+```js title="index.js"
 import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
 ```
 
@@ -114,7 +114,7 @@ Apollo Server works well with a Content Distribution Network (CDN) to cache full
 
 ### Step 1: Add cache hints to the GraphQL schema
 
-Add cache hints as [directives](/schema/directives/) to GraphQL schema so that Apollo Server knows which fields and types are cacheable and for how long. For example, this schema indicates that all fields that return an `Author` should be cached for 60 seconds, and that the `posts` field should itself be cached for 180 seconds:
+Add cache hints as [directives](../schema/directives/) to GraphQL schema so that Apollo Server knows which fields and types are cacheable and for how long. For example, this schema indicates that all fields that return an `Author` should be cached for 60 seconds, and that the `posts` field should itself be cached for 180 seconds:
 
 ```graphql
 type Author @cacheControl(maxAge: 60) {

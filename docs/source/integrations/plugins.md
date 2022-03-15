@@ -1,6 +1,5 @@
 ---
 title: Creating Apollo Server plugins
-sidebar_title: Creating plugins
 description: Extend Apollo Server with custom functionality
 ---
 
@@ -12,7 +11,7 @@ You can create your own Apollo Server plugins to perform custom operations in re
 
 Plugins are JavaScript objects that implement one or more functions that respond to events. Here's a basic plugin that responds to the `serverWillStart` event:
 
-```js:title=index.js
+```js title="index.js"
 const myPlugin = {
   async serverWillStart() {
     console.log('Server starting up!');
@@ -25,7 +24,7 @@ const myPlugin = {
 You can define a plugin in the same file where you initialize Apollo Server, or
 you can export it as a separate module:
 
-```js:title=myPlugin.js
+```js title="myPlugin.js"
 module.exports = {
   async serverWillStart() {
     console.log('Server starting up!');
@@ -36,7 +35,7 @@ module.exports = {
 To create a plugin that accepts options, create a function that accepts an
 `options` object and returns a properly structured plugin object, like so:
 
-```js:title=myPlugin.js
+```js title="myPlugin.js"
 module.exports = (options) => {
   return {
     async serverWillStart() {

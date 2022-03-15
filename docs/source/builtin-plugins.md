@@ -1,6 +1,5 @@
 ---
 title: Built-in plugins
-sidebar_title: Overview
 ---
 
 **Plugins** extend Apollo Server's functionality by performing custom operations in response to certain events. These events correspond to individual phases of the GraphQL request lifecycle, and to the lifecycle of Apollo Server itself.
