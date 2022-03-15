@@ -1,6 +1,13 @@
 {
   "title": "Apollo Server",
   "version": "v2",
+  "algoliaFilters": [
+    "docset:server",
+    [
+      "docset:react",
+      "docset:federation"
+    ]
+  ],
   "sidebar": {
     "Introduction": "/",
     "Get started": "/getting-started",
