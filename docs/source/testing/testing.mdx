@@ -57,7 +57,7 @@ it('returns hello with the provided name', async () => {
 
 Note that when testing, any errors in parsing, validating, and executing your GraphQL operation are returned in the `errors` field of the operation result. As with any GraphQL response, these errors are not _thrown_.
 
-Unlike with a normal instance of `ApolloServer`,  you don't need to call [`start`](../../api/apollo-server/#start) before calling `executeOperation`. The server instance calls `start` automatically for you if it hasn't been called already, and any startup errors are thrown.
+Unlike with a normal instance of `ApolloServer`,  you don't need to call [`start`](../api/apollo-server/#start) before calling `executeOperation`. The server instance calls `start` automatically for you if it hasn't been called already, and any startup errors are thrown.
 
 To expand on the example above, here's a full integration test being run against a test instance of `ApolloServer`. This test imports all of the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `ApolloServer`.
 
