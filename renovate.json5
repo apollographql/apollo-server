@@ -6,7 +6,7 @@
   ],
   "schedule": null,
   baseBranches: ["main", "version-4"],
-  // Override this value set in apollo-open-source and apollo-docs back to the default.
+  // Override this value set in apollo-open-source back to the default.
   // It's nice to be able to see PRs for everything in the Dependency Dashboard.
   prCreation: "immediate",
   // Disable circleci manager; see apollographql/federation's renovate file for details.
@@ -21,18 +21,6 @@
   //   old branch point. GH auto-merge doesn't have that property so it's a bit more likely that
   //   a deps update could break the build if there are recent related changes.
   platformAutomerge: false,
-  // We've run into some weird problems where Renovate will notice that a
-  // package has the same version in the root and in docs/ and make sure that a
-  // package is only installed in the root node_modules and not
-  // docs/node_modules. Unfortunately our Netlify doc build system only runs
-  // `npm i` under docs so this breaks. Rather than spend much effort figuring
-  // out how to make Netlify install more things or make Renovate not do this,
-  // let's just stop doing Renovate on the docs subdirectory. The docs team is
-  // currently working on a big overhaul that will remove docs/package.json
-  // entirely anyway. (Note that if you want to revert this change, you'll want
-  // to add back a bunch of docs-specific config that was removed when this line
-  // was added.)
-  ignorePaths: ["**/docs/**"],
   "packageRules": [
     // Bunch up all non-major dependencies into a single PR.  In the common case
     // where the upgrades apply cleanly, this causes less noise and is resolved faster
