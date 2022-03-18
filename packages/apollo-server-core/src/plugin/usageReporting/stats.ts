@@ -38,7 +38,7 @@ export class OurReport implements Required<IReport> {
   readonly tracesPerQuery: Record<string, OurTracesAndStats> =
     Object.create(null);
   endTime: google.protobuf.ITimestamp | null = null;
-
+  operationCount = 0;
   // A rough estimate of the number of bytes currently in the report. We start
   // at zero and don't count `header` and `endTime`, which have the same size
   // for every report. This really is a rough estimate, so we don't stress too

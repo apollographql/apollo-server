@@ -30,13 +30,11 @@ quietLogger.setLevel(loglevel.levels.WARN);
 describe('end-to-end', () => {
   async function runTest({
     pluginOptions = {},
-    expectReport = true,
     query,
     operationName,
     schemaShouldBeInstrumented = true,
   }: {
     pluginOptions?: ApolloServerPluginUsageReportingOptions<any>;
-    expectReport?: boolean;
     query?: string;
     operationName?: string | null;
     schemaShouldBeInstrumented?: boolean;
@@ -82,14 +80,14 @@ describe('end-to-end', () => {
     });
 
     const nockScope = nock('https://usage-reporting.api.apollographql.com');
-    if (expectReport) {
-      nockScope
-        .post('/api/ingress/traces')
-        .reply(200, (_: any, requestBody: string) => {
-          reportResolver(requestBody);
-          return 'ok';
-        });
-    }
+
+    nockScope
+      .post('/api/ingress/traces')
+      .reply(200, (_: any, requestBody: string) => {
+        reportResolver(requestBody);
+        return 'ok';
+      });
+
     const schema = addMocksToSchema({
       schema: makeExecutableSchema({ typeDefs }),
     });
@@ -124,14 +122,13 @@ describe('end-to-end', () => {
       },
     });
 
-    const report = expectReport
-      ? await reportPromise.then((reportBody: string) => {
-          // nock returns binary bodies as hex strings
-          const gzipReportBuffer = Buffer.from(reportBody, 'hex');
-          const reportBuffer = gunzipSync(gzipReportBuffer);
-          return Report.decode(reportBuffer);
-        })
-      : null;
+    const report = await reportPromise.then((reportBody: string) => {
+      // nock returns binary bodies as hex strings
+      const gzipReportBuffer = Buffer.from(reportBody, 'hex');
+      const reportBuffer = gunzipSync(gzipReportBuffer);
+      return Report.decode(reportBuffer);
+    });
+
     nockScope.done();
 
     expect(pluginsEnabledForSchemaResolvers(schema)).toBe(
@@ -144,9 +141,9 @@ describe('end-to-end', () => {
   it('basic tracing', async () => {
     const { report } = await runTest({});
 
-    expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
-    expect(Object.keys(report!.tracesPerQuery)[0]).toMatch(/^# q\n/);
-    const traces = Object.values(report!.tracesPerQuery)[0]!.trace;
+    expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
+    expect(Object.keys(report.tracesPerQuery)[0]).toMatch(/^# q\n/);
+    const traces = Object.values(report.tracesPerQuery)[0]!.trace;
     expect(traces).toHaveLength(1);
     expect(
       (traces![0] as ITrace).root!.child!.some(
@@ -196,7 +193,7 @@ describe('end-to-end', () => {
   ].forEach(({ testName, op, statsReportKey }) =>
     it(testName, async () => {
       const { report } = await runTest(op);
-      const queryEntries = Object.entries(report!.tracesPerQuery);
+      const queryEntries = Object.entries(report.tracesPerQuery);
       expect(queryEntries).toHaveLength(1);
       expect(queryEntries[0][0]).toBe(statsReportKey);
       const tracesAndStats = queryEntries[0][1];
@@ -235,21 +232,22 @@ describe('end-to-end', () => {
         },
         schemaShouldBeInstrumented: true,
       });
-      expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+      expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
       expect(context.metrics.captureTraces).toBe(true);
     });
     it('exclude based on operation name', async () => {
-      const { context } = await runTest({
+      const { context, report } = await runTest({
         pluginOptions: {
           includeRequest: async (request: any) => {
             await new Promise<void>((res) => setTimeout(() => res(), 1));
             return request.request.operationName === 'not_q';
           },
         },
-        expectReport: false,
         schemaShouldBeInstrumented: false,
       });
       expect(context.metrics.captureTraces).toBeFalsy();
+      expect(report.operationCount).toBe(1);
+      expect(Object.keys(report.tracesPerQuery)).toHaveLength(0);
     });
   });
 
@@ -299,9 +297,9 @@ describe('end-to-end', () => {
         },
       });
       expect(context.metrics.captureTraces).toBe(true);
-      expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+      expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
       expect(
-        containsFieldExecutionData(Object.values(report!.tracesPerQuery)[0]!),
+        containsFieldExecutionData(Object.values(report.tracesPerQuery)[0]!),
       ).toBe(true);
     });
 
@@ -320,9 +318,9 @@ describe('end-to-end', () => {
       // We do get a report about this operation; we just don't have field
       // execution data (as trace or as TypeStat).
       expect(context.metrics.captureTraces).toBe(false);
-      expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+      expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
       expect(
-        containsFieldExecutionData(Object.values(report!.tracesPerQuery)[0]!),
+        containsFieldExecutionData(Object.values(report.tracesPerQuery)[0]!),
       ).toBe(false);
     });
 
@@ -341,12 +339,12 @@ describe('end-to-end', () => {
           schemaShouldBeInstrumented: true,
         });
         expect(context.metrics.captureTraces).toBe(true);
-        expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+        expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
         expect(
-          containsFieldExecutionData(Object.values(report!.tracesPerQuery)[0]!),
+          containsFieldExecutionData(Object.values(report.tracesPerQuery)[0]!),
         ).toBe(true);
         const statsWithContext = (
-          Object.values(report!.tracesPerQuery)[0]!
+          Object.values(report.tracesPerQuery)[0]!
             .statsWithContext as ContextualizedStats[]
         )[0];
         expect(
@@ -377,9 +375,9 @@ describe('end-to-end', () => {
           schemaShouldBeInstrumented: false,
         });
         expect(context.metrics.captureTraces).toBe(false);
-        expect(Object.keys(report!.tracesPerQuery)).toHaveLength(1);
+        expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
         expect(
-          containsFieldExecutionData(Object.values(report!.tracesPerQuery)[0]!),
+          containsFieldExecutionData(Object.values(report.tracesPerQuery)[0]!),
         ).toBe(false);
       });
     });

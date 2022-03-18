@@ -2435,6 +2435,9 @@ export interface IReport {
 
     /** Report endTime */
     endTime?: (google.protobuf.ITimestamp|null);
+
+    /** Report operationCount */
+    operationCount?: (number|null);
 }
 
 /** Represents a Report. */
@@ -2454,6 +2457,9 @@ export class Report implements IReport {
 
     /** Report endTime. */
     public endTime?: (google.protobuf.ITimestamp|null);
+
+    /** Report operationCount. */
+    public operationCount: number;
 
     /**
      * Creates a new Report instance using the specified properties.
