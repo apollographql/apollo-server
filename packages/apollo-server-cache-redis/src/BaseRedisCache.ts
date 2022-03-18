@@ -8,8 +8,7 @@ interface BaseRedisClient {
   set: (
     key: string,
     value: string,
-    option?: string,
-    optionValue?: number,
+    ...args: Array<any>
   ) => Promise<any>;
   flushdb: () => Promise<any>;
   del: (key: string) => Promise<number>;
@@ -22,6 +21,10 @@ export interface RedisClient extends BaseRedisClient {
 
 export interface RedisNoMgetClient extends BaseRedisClient {
   get: (key: string) => Promise<string | null>;
+}
+
+export interface RedisKeyValueCacheSetOptions extends KeyValueCacheSetOptions {
+  redisOptions?: Array<string | number>;
 }
 
 /**
@@ -41,7 +44,7 @@ export interface BaseRedisCacheOptions {
 
 export class BaseRedisCache implements KeyValueCache<string> {
   readonly client: BaseRedisClient;
-  readonly defaultSetOptions: KeyValueCacheSetOptions = {
+  readonly defaultSetOptions: RedisKeyValueCacheSetOptions = {
     ttl: 300,
   };
 
@@ -75,11 +78,15 @@ export class BaseRedisCache implements KeyValueCache<string> {
   async set(
     key: string,
     value: string,
-    options?: KeyValueCacheSetOptions,
+    options?: RedisKeyValueCacheSetOptions,
   ): Promise<void> {
-    const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-    if (typeof ttl === 'number') {
-      await this.client.set(key, value, 'EX', ttl);
+    const combinedOptions = { ...this.defaultSetOptions, ...options };
+    const { ttl } = combinedOptions;
+    const redisOptions = combinedOptions.redisOptions ?? [];
+    const args = (typeof ttl === 'number') ? ['EX', ttl, ...redisOptions] : [...redisOptions];
+
+    if (args?.length) {
+      await this.client.set(key, value, ...args);
     } else {
       // We'll leave out the EXpiration when no value is specified.  Of course,
       // it may be purged from the cache for other reasons as deemed necessary.
