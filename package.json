@@ -51,7 +51,7 @@
     "@types/lodash.sortby": "4.7.6",
     "@types/lodash.sumby": "4.6.6",
     "@types/lodash.xorby": "4.7.6",
-    "@types/lru-cache": "5.1.1",
+    "@types/lru-cache": "7.5.0",
     "@types/node": "14.18.12",
     "@types/node-fetch": "2.6.1",
     "@types/qs-middleware": "1.0.1",
