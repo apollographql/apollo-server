@@ -5,7 +5,7 @@
   "main": "generated/index.js",
   "types": "generated/index.d.ts",
   "scripts": {
-    "generate": "rm -rf generated && mkdir generated && npm run pbjs && npm run pbts && cp src/* generated",
+    "generate": "rm -rf generated && mkdir generated && npm run pbjs && npm run pbts && cp src/index.* generated",
     "pbjs": "apollo-pbjs --target static-module --out generated/protobuf.js --wrap commonjs --force-number --no-from-object src/reports.proto",
     "pbts": "apollo-pbts -o generated/protobuf.d.ts generated/protobuf.js",
     "update-proto": "curl -sSfo src/reports.proto https://usage-reporting.api.apollographql.com/proto/reports.proto"

@@ -398,6 +398,9 @@ message Report {
   // If there are no traces and no end_time present the report will not be able to be processed.
   // Note: This will override the end_time from traces.
   google.protobuf.Timestamp end_time = 2; // required if no traces in this message
+
+  // Total number of operations processed during this period.
+  uint64 operation_count = 6;
 }
 
 message ContextualizedStats {
