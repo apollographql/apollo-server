@@ -14,6 +14,6 @@
   cd monodocs
   npm i
   cp -r ../docs local
-  DOCS_LOCAL=true npm run build
+  DOCS_LOCAL=true npm run build \
   """
   publish = "../monodocs/public"
