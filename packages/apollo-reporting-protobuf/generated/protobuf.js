@@ -6243,6 +6243,7 @@ $root.Report = (function() {
      * @property {IReportHeader|null} [header] Report header
      * @property {Object.<string,ITracesAndStats>|null} [tracesPerQuery] Report tracesPerQuery
      * @property {google.protobuf.ITimestamp|null} [endTime] Report endTime
+     * @property {number|null} [operationCount] Report operationCount
      */
 
     /**
@@ -6286,6 +6287,14 @@ $root.Report = (function() {
     Report.prototype.endTime = null;
 
     /**
+     * Report operationCount.
+     * @member {number} operationCount
+     * @memberof Report
+     * @instance
+     */
+    Report.prototype.operationCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+    /**
      * Creates a new Report instance using the specified properties.
      * @function create
      * @memberof Report
@@ -6318,6 +6327,8 @@ $root.Report = (function() {
                 writer.uint32(/* id 5, wireType 2 =*/42).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
                 $root.TracesAndStats.encode(message.tracesPerQuery[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
             }
+        if (message.operationCount != null && Object.hasOwnProperty.call(message, "operationCount"))
+            writer.uint32(/* id 6, wireType 0 =*/48).uint64(message.operationCount);
         return writer;
     };
 
@@ -6365,6 +6376,9 @@ $root.Report = (function() {
                 break;
             case 2:
                 message.endTime = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
+                break;
+            case 6:
+                message.operationCount = reader.uint64();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -6421,6 +6435,9 @@ $root.Report = (function() {
             if (error)
                 return "endTime." + error;
         }
+        if (message.operationCount != null && message.hasOwnProperty("operationCount"))
+            if (!$util.isInteger(message.operationCount) && !(message.operationCount && $util.isInteger(message.operationCount.low) && $util.isInteger(message.operationCount.high)))
+                return "operationCount: integer|Long expected";
         return null;
     };
 
@@ -6442,6 +6459,11 @@ $root.Report = (function() {
         if (options.defaults) {
             object.header = null;
             object.endTime = null;
+            if ($util.Long) {
+                var long = new $util.Long(0, 0, true);
+                object.operationCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+            } else
+                object.operationCount = options.longs === String ? "0" : 0;
         }
         if (message.header != null && message.hasOwnProperty("header"))
             object.header = $root.ReportHeader.toObject(message.header, options);
@@ -6453,6 +6475,11 @@ $root.Report = (function() {
             for (var j = 0; j < keys2.length; ++j)
                 object.tracesPerQuery[keys2[j]] = $root.TracesAndStats.toObject(message.tracesPerQuery[keys2[j]], options);
         }
+        if (message.operationCount != null && message.hasOwnProperty("operationCount"))
+            if (typeof message.operationCount === "number")
+                object.operationCount = options.longs === String ? String(message.operationCount) : message.operationCount;
+            else
+                object.operationCount = options.longs === String ? $util.Long.prototype.toString.call(message.operationCount) : options.longs === Number ? new $util.LongBits(message.operationCount.low >>> 0, message.operationCount.high >>> 0).toNumber(true) : message.operationCount;
         return object;
     };
 

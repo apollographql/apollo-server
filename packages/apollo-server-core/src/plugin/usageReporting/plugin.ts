@@ -232,7 +232,10 @@ export function ApolloServerPluginUsageReporting<TContext>(
         const { report } = reportData;
         reportData.reset();
 
-        if (Object.keys(report.tracesPerQuery).length === 0) {
+        if (
+          Object.keys(report.tracesPerQuery).length === 0 &&
+          report.operationCount === 0
+        ) {
           return;
         }
 
@@ -566,13 +569,22 @@ export function ApolloServerPluginUsageReporting<TContext>(
               treeBuilder.didEncounterErrors(requestContext.errors);
             }
 
+            const resolvedOperation = !!requestContext.operation;
+
             // If we got an error before we called didResolveOperation (eg parse or
             // validation error), check to see if we should include the request.
             await maybeCallIncludeRequestHook(requestContext);
 
             treeBuilder.stopTiming();
+            const executableSchemaId =
+              overriddenExecutableSchemaId ??
+              executableSchemaIdForSchema(schema);
+            const reportData = getReportData(executableSchemaId);
 
-            if (includeOperationInUsageReporting === false) return;
+            if (includeOperationInUsageReporting === false) {
+              if (resolvedOperation) reportData.report.operationCount++;
+              return;
+            }
 
             treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
             treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
@@ -663,6 +675,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
               if (protobufError) {
                 throw new Error(`Error encoding trace: ${protobufError}`);
               }
+
+              if (resolvedOperation) report.operationCount++;
 
               report.addTrace({
                 statsReportKey,
