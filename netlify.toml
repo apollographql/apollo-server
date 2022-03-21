@@ -8,4 +8,4 @@
   base = "docs"
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
   command = "./preview.sh"
-  publish = "monodocs/public"
+  publish = "../monodocs/public"
