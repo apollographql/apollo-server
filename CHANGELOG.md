@@ -9,6 +9,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+## v3.6.5
+
 - `apollo-server-plugin-usage-reporting`: Stop distributing unnecessary `generated/reports.proto` file. Count executable operations. [PR #6239](https://github.com/apollographql/apollo-server/pull/6239)
 
 ## v3.6.4
