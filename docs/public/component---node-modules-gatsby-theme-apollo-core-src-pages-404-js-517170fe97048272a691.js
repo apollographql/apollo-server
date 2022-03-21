@@ -1,2 +1,0 @@
-"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[141],{99433:function(n,u,t){t.r(u),t.d(u,{default:function(){return f}});t(67294);var e=t(23431);function f(){return(0,e.tZ)("div",null,"not found")}}}]);
-//# sourceMappingURL=component---node-modules-gatsby-theme-apollo-core-src-pages-404-js-517170fe97048272a691.js.map
