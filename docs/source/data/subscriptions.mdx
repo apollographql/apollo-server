@@ -209,7 +209,7 @@ const resolvers = {
     hello: {
       // Example using an async generator 
       subscribe: async function* () {
-        for await (const word of ["Hello", "Bonjour", "Hola", "Ciao", "Zdravo"]) {
+        for await (const word of ["Hello", "Bonjour", "Ciao"]) {
           yield { hello: word };
         }
       },
