@@ -1,4 +1,3 @@
-import type { GraphQLServerOptions } from './graphqlOptions';
 import { formatApolloErrors } from './errors';
 import {
   processGraphQLRequest,
@@ -13,6 +12,7 @@ import type {
 } from '@apollo/server-types';
 import { newCachePolicy } from './cachePolicy';
 import type { GraphQLError, GraphQLFormattedError } from 'graphql';
+import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just
 // do want to use (our own? somebody else's?) Headers class.
@@ -67,14 +67,6 @@ export class HttpQueryError extends Error {
 
 export function isHttpQueryError(e: unknown): e is HttpQueryError {
   return (e as any)?.name === 'HttpQueryError';
-}
-
-const NODE_ENV = process.env.NODE_ENV ?? '';
-
-// TODO(AS4): this probably can be un-exported once we clean up context function
-// error handling
-export function debugFromNodeEnv(nodeEnv: string = NODE_ENV) {
-  return nodeEnv !== 'production' && nodeEnv !== 'test';
 }
 
 function fieldIfString(
@@ -154,13 +146,10 @@ function ensureQueryIsStringOrMissing(query: any) {
 export async function runHttpQuery<TContext extends BaseContext>(
   httpRequest: HTTPGraphQLRequest,
   context: TContext,
-  options: GraphQLServerOptions<TContext>,
+  schemaDerivedData: SchemaDerivedData,
+  internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
   try {
-    if (options.debug === undefined) {
-      options.debug = debugFromNodeEnv(options.nodeEnv);
-    }
-
     let graphqlRequest: GraphQLRequest;
 
     switch (httpRequest.method) {
@@ -237,36 +226,6 @@ export async function runHttpQuery<TContext extends BaseContext>(
         ).asHTTPGraphQLResponse();
     }
 
-    const plugins = [...(options.plugins ?? [])];
-
-    // GET operations should only be queries (not mutations). We want to throw
-    // a particular HTTP error in that case.
-    if (httpRequest.method === 'GET') {
-      plugins.unshift({
-        async requestDidStart() {
-          return {
-            async didResolveOperation({ operation }) {
-              if (operation.operation !== 'query') {
-                throw new HttpQueryError(
-                  405,
-                  `GET supports only query operation`,
-                  false,
-                  new HeaderMap([['allow', 'POST']]),
-                );
-              }
-            },
-          };
-        },
-      });
-    }
-
-    // Create a local copy of `options`, based on global options, but maintaining
-    // that appropriate plugins are in place.
-    options = {
-      ...options,
-      plugins,
-    };
-
     const partialResponse: Pick<HTTPGraphQLResponse, 'headers' | 'statusCode'> =
       {
         headers: new HeaderMap([['content-type', 'application/json']]),
@@ -274,14 +233,8 @@ export async function runHttpQuery<TContext extends BaseContext>(
       };
 
     const requestContext: GraphQLRequestContext<TContext> = {
-      // While `logger` is guaranteed by internal Apollo Server usage of
-      // this `processHTTPRequest` method, this method has been publicly
-      // exported since perhaps as far back as Apollo Server 1.x.  Therefore,
-      // for compatibility reasons, we'll default to `console`.
-      // TODO(AS4): Probably when we refactor 'options' this special case will
-      // go away.
-      logger: options.logger || console,
-      schema: options.schema,
+      logger: internals.logger,
+      schema: schemaDerivedData.schema,
       request: graphqlRequest,
       response: { http: partialResponse },
       // We clone the context because there are some assumptions that every operation
@@ -295,13 +248,15 @@ export async function runHttpQuery<TContext extends BaseContext>(
       // single request.
       // NOTE: THIS IS DUPLICATED IN ApolloServerBase.prototype.executeOperation.
       context: cloneObject(context),
-      // TODO(AS4): fix ! as part of fixing GraphQLServerOptions
-      cache: options.cache!,
-      debug: options.debug,
+      cache: internals.cache,
       metrics: {},
       overallCachePolicy: newCachePolicy(),
     };
-    const response = await processGraphQLRequest(options, requestContext);
+    const response = await processGraphQLRequest(
+      schemaDerivedData,
+      internals,
+      requestContext,
+    );
 
     // This code is run on parse/validation errors and any other error that
     // doesn't reach GraphQL execution
@@ -344,8 +299,8 @@ export async function runHttpQuery<TContext extends BaseContext>(
       headers: new HeaderMap([['content-type', 'application/json']]),
       completeBody: prettyJSONStringify({
         errors: formatApolloErrors([error as Error], {
-          debug: options.debug,
-          formatter: options.formatError,
+          debug: internals.includeStackTracesInErrorResponses,
+          formatter: internals.formatError,
         }),
       }),
       bodyChunks: null,

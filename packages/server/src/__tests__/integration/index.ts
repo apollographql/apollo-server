@@ -22,15 +22,14 @@ import resolvable from '@josephg/resolvable';
 
 import {
   Config,
-  PersistedQueryOptions,
   KeyValueCache,
   ApolloServerPluginCacheControl,
+  PersistedQueryOptions,
 } from '../..';
 import { PersistedQueryNotFoundError } from '../../errors';
 import gql from 'graphql-tag';
 import type {
   GraphQLResponse,
-  ValueOrPromise,
   GraphQLRequestListener,
   BaseContext,
 } from '@apollo/server-types';
@@ -209,7 +208,7 @@ export interface CreateAppFunc {
 }
 
 export interface DestroyAppFunc {
-  (app: any): ValueOrPromise<void>;
+  (app: any): Promise<void>;
 }
 
 export default ({
@@ -773,6 +772,28 @@ export default ({
               operationName: 'testX',
             },
           ]);
+        return req.then((res) => {
+          expect(res.status).toEqual(200);
+          expect(res.body).toEqual(expected);
+        });
+      });
+
+      it('can handle non-batch requests when allowBatchedHttpRequests is true', async () => {
+        app = await createApp({ schema, allowBatchedHttpRequests: true });
+        const expected = {
+          data: {
+            testString: 'it works',
+          },
+        };
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: `
+                      query test($echo: String){ testArgument(echo: $echo) }
+                      query test2{ testString }`,
+            variables: { echo: 'world' },
+            operationName: 'test2',
+          });
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);

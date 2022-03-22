@@ -10,10 +10,13 @@ import {
   ParseOptions,
   print,
   assertValidSchema,
+  GraphQLFormattedError,
+  GraphQLFieldResolver,
 } from 'graphql';
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
   InMemoryLRUCache,
+  KeyValueCache,
   PrefixingKeyValueCache,
 } from 'apollo-server-caching';
 import type {
@@ -25,11 +28,19 @@ import type {
   ApolloConfig,
   BaseContext,
   GraphQLResponse,
+  GraphQLExecutor,
+  HTTPGraphQLRequest,
+  HTTPGraphQLResponse,
+  WithRequired,
 } from '@apollo/server-types';
 
-import type { GraphQLServerOptions } from './graphqlOptions';
-
-import type { Config, DocumentStore, PluginDefinition } from './types';
+import type {
+  Config,
+  DocumentStore,
+  PersistedQueryOptions,
+  PluginDefinition,
+  StaticSchemaConfig,
+} from './types';
 
 import {
   processGraphQLRequest,
@@ -53,8 +64,9 @@ import {
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import { newCachePolicy } from './cachePolicy';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
-import { cloneObject, HeaderMap } from './runHttpQuery';
 import * as uuid from 'uuid';
+import { cloneObject, HeaderMap, HttpQueryError } from './runHttpQuery';
+import { runPotentiallyBatchedHttpQuery } from './httpBatching';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -94,11 +106,16 @@ type ServerState =
   | {
       phase: 'started';
       schemaManager: SchemaManager;
+      drainServers: (() => Promise<void>) | null;
+      landingPage: LandingPage | null;
+      toDispose: (() => Promise<void>)[];
+      toDisposeLast: (() => Promise<void>)[];
     }
   | {
       phase: 'draining';
-      schemaManager: SchemaManager;
       barrier: Resolvable<void>;
+      schemaManager: SchemaManager;
+      landingPage: LandingPage | null;
     }
   | {
       phase: 'stopping';
@@ -118,162 +135,147 @@ class UnreachableCaseError extends Error {
   }
 }
 
+// TODO(AS4): Move this to its own file or something. Also organize the fields.
+
+export interface ApolloServerInternals<TContext> {
+  formatError?: (error: GraphQLError) => GraphQLFormattedError;
+  // TODO(AS4): Is there a way (with generics/codegen?) to make
+  // this "any" more specific? In AS3 there was technically a
+  // generic for it but it was used inconsistently.
+  rootValue?: ((parsedQuery: DocumentNode) => any) | any;
+  validationRules: Array<(context: ValidationContext) => any>;
+  formatResponse?: (
+    response: GraphQLResponse,
+    requestContext: GraphQLRequestContext<TContext>,
+  ) => GraphQLResponse | null;
+  fieldResolver?: GraphQLFieldResolver<any, TContext>;
+  includeStackTracesInErrorResponses: boolean;
+  cache: KeyValueCache;
+  persistedQueries?: WithRequired<PersistedQueryOptions, 'cache'>;
+  nodeEnv: string;
+  allowBatchedHttpRequests: boolean;
+  logger: Logger;
+  apolloConfig: ApolloConfig;
+  plugins: ApolloServerPlugin<TContext>[];
+  parseOptions: ParseOptions;
+  state: ServerState;
+  stopOnTerminationSignals: boolean;
+  executor: GraphQLExecutor | null;
+}
+
+function defaultLogger(): Logger {
+  const loglevelLogger = loglevel.getLogger('apollo-server');
+  // TODO(AS4): Ensure that migration guide makes it clear that
+  // debug:true doesn't set the log level any more.
+  loglevelLogger.setLevel(loglevel.levels.INFO);
+  return loglevelLogger;
+}
 export class ApolloServerBase<TContext extends BaseContext> {
-  private logger: Logger;
-  public requestOptions: Partial<GraphQLServerOptions<any>> =
-    Object.create(null);
+  private internals: ApolloServerInternals<TContext>;
 
-  private apolloConfig: ApolloConfig;
-  protected plugins: ApolloServerPlugin<TContext>[] = [];
-
-  private parseOptions: ParseOptions;
-  private config: Config<TContext>;
-  private state: ServerState;
-  private toDispose = new Set<() => Promise<void>>();
-  private toDisposeLast = new Set<() => Promise<void>>();
-  private drainServers: (() => Promise<void>) | null = null;
-  private stopOnTerminationSignals: boolean;
-  private landingPage: LandingPage | null = null;
-
-  // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config<TContext>) {
-    if (!config) throw new Error('ApolloServer requires options.');
-    this.config = {
-      ...config,
-      nodeEnv: config.nodeEnv ?? process.env.NODE_ENV,
-    };
-    const {
-      resolvers,
-      schema,
-      modules,
-      typeDefs,
-      parseOptions = {},
-      introspection,
-      plugins,
-      gateway,
-      apollo,
-      stopOnTerminationSignals,
-      // These next options aren't used in this function but they don't belong in
-      // requestOptions.
-      mocks,
-      mockEntireSchema,
-      documentStore,
-      ...requestOptions
-    } = this.config;
+    const nodeEnv = config.nodeEnv ?? process.env.NODE_ENV ?? '';
 
-    // Setup logging facilities
-    if (config.logger) {
-      this.logger = config.logger;
-    } else {
-      // If the user didn't provide their own logger, we'll initialize one.
-      const loglevelLogger = loglevel.getLogger('apollo-server');
+    const logger = config.logger ?? defaultLogger();
 
-      // We don't do much logging in Apollo Server right now.  There's a notion
-      // of a `debug` flag, which changes stack traces in some error messages,
-      // and adds a bit of debug logging to some plugins. `info` is primarily
-      // used for startup logging in plugins. We'll default to `info` so you
-      // get to see that startup logging.
-      if (this.config.debug === true) {
-        loglevelLogger.setLevel(loglevel.levels.DEBUG);
-      } else {
-        loglevelLogger.setLevel(loglevel.levels.INFO);
-      }
+    const apolloConfig = determineApolloConfig(config.apollo);
 
-      this.logger = loglevelLogger;
-    }
-
-    this.apolloConfig = determineApolloConfig(apollo);
-
-    if (gateway && (modules || schema || typeDefs || resolvers)) {
-      throw new Error(
-        'Cannot define both `gateway` and any of: `modules`, `schema`, `typeDefs`, or `resolvers`',
-      );
-    }
-
-    this.parseOptions = parseOptions;
-
-    const isDev = this.config.nodeEnv !== 'production';
-
-    // We handle signals if it was explicitly requested, or if we're in Node,
-    // not in a test, not in a serverless framework, and it wasn't explicitly
-    // turned off. (We only actually register the signal handlers once we've
-    // successfully started up, because there's nothing to stop otherwise.)
-    this.stopOnTerminationSignals =
-      typeof stopOnTerminationSignals === 'boolean'
-        ? stopOnTerminationSignals
-        : isNodeLike &&
-          this.config.nodeEnv !== 'test' &&
-          !this.serverlessFramework();
-
-    // if this is local dev, introspection should turned on
-    // in production, we can manually turn introspection on by passing {
-    // introspection: true } to the constructor of ApolloServer
-    if (
-      (typeof introspection === 'boolean' && !introspection) ||
-      (introspection === undefined && !isDev)
-    ) {
-      const noIntro = [NoIntrospection];
-      requestOptions.validationRules = requestOptions.validationRules
-        ? requestOptions.validationRules.concat(noIntro)
-        : noIntro;
-    }
-
-    if (!requestOptions.cache) {
-      requestOptions.cache = new InMemoryLRUCache();
-    }
-
-    if (requestOptions.persistedQueries !== false) {
-      const { cache: apqCache = requestOptions.cache!, ...apqOtherOptions } =
-        requestOptions.persistedQueries || Object.create(null);
-
-      requestOptions.persistedQueries = {
-        cache: new PrefixingKeyValueCache(apqCache, APQ_CACHE_PREFIX),
-        ...apqOtherOptions,
-      };
-    } else {
-      // the user does not want to use persisted queries, so we remove the field
-      delete requestOptions.persistedQueries;
-    }
-
-    this.requestOptions = requestOptions as GraphQLServerOptions<TContext>;
+    const isDev = nodeEnv !== 'production';
 
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
-    this.ensurePluginInstantiation(plugins, isDev);
+    const plugins = ApolloServerBase.ensurePluginInstantiation(
+      config.plugins,
+      isDev,
+      apolloConfig,
+      logger,
+    );
 
-    if (gateway) {
-      // ApolloServer has been initialized but we have not yet tried to load the
-      // schema from the gateway. That will wait until the user calls
-      // `server.start()` or `server.listen()`, or (in serverless frameworks)
-      // until the `this._start()` call at the end of this constructor.
-      this.state = {
-        phase: 'initialized',
-        schemaManager: new SchemaManager({
-          gateway,
-          apolloConfig: this.apolloConfig,
-          schemaDerivedDataProvider: (schema) =>
-            this.generateSchemaDerivedData(schema),
-          logger: this.logger,
-        }),
-      };
-    } else {
-      // We construct the schema synchronously so that we can fail fast if the
-      // schema can't be constructed. (This used to be more important because we
-      // used to have a 'schema' field that was publicly accessible immediately
-      // after construction, though that field never actually worked with
-      // gateways.)
-      this.state = {
-        phase: 'initialized',
-        schemaManager: new SchemaManager({
-          apiSchema: this.maybeAddMocksToConstructedSchema(
-            this.constructSchema(),
-          ),
-          schemaDerivedDataProvider: (schema) =>
-            this.generateSchemaDerivedData(schema),
-          logger: this.logger,
-        }),
-      };
-    }
+    const state: ServerState = config.gateway
+      ? // ApolloServer has been initialized but we have not yet tried to load the
+        // schema from the gateway. That will wait until the user calls
+        // `server.start()` or `server.listen()`, or (in serverless frameworks)
+        // until the `this._start()` call at the end of this constructor.
+        {
+          phase: 'initialized',
+          schemaManager: new SchemaManager({
+            gateway: config.gateway,
+            apolloConfig,
+            schemaDerivedDataProvider: (schema) =>
+              ApolloServerBase.generateSchemaDerivedData(
+                schema,
+                config.documentStore,
+              ),
+            logger,
+          }),
+        }
+      : // We construct the schema synchronously so that we can fail fast if the
+        // schema can't be constructed. (This used to be more important because we
+        // used to have a 'schema' field that was publicly accessible immediately
+        // after construction, though that field never actually worked with
+        // gateways.)
+        {
+          phase: 'initialized',
+          schemaManager: new SchemaManager({
+            apiSchema: ApolloServerBase.maybeAddMocksToConstructedSchema(
+              ApolloServerBase.constructSchema(config),
+              config,
+            ),
+            schemaDerivedDataProvider: (schema) =>
+              ApolloServerBase.generateSchemaDerivedData(
+                schema,
+                config.documentStore,
+              ),
+            logger,
+          }),
+        };
+
+    const introspectionEnabled = config.introspection ?? isDev;
+    const cache = config.cache ?? new InMemoryLRUCache();
+
+    // Note that we avoid calling methods on `this` before `this.internals` is assigned
+    // (thus a bunch of things being static methods above).
+    this.internals = {
+      formatError: config.formatError,
+      rootValue: config.rootValue,
+      validationRules: [
+        ...(config.validationRules ?? []),
+        ...(introspectionEnabled ? [] : [NoIntrospection]),
+      ],
+      formatResponse: config.formatResponse,
+      fieldResolver: config.fieldResolver,
+      includeStackTracesInErrorResponses:
+        config.includeStackTracesInErrorResponses ??
+        (nodeEnv !== 'production' && nodeEnv !== 'test'),
+      cache,
+      persistedQueries:
+        config.persistedQueries === false
+          ? undefined
+          : {
+              ...config.persistedQueries,
+              cache: new PrefixingKeyValueCache(
+                config.persistedQueries?.cache ?? cache,
+                APQ_CACHE_PREFIX,
+              ),
+            },
+      nodeEnv,
+      allowBatchedHttpRequests: config.allowBatchedHttpRequests ?? false,
+      logger,
+      apolloConfig,
+      plugins,
+      parseOptions: config.parseOptions ?? {},
+      state,
+      // We handle signals if it was explicitly requested, or if we're in Node,
+      // not in a test, not in a serverless framework, and it wasn't explicitly
+      // turned off. (We only actually register the signal handlers once we've
+      // successfully started up, because there's nothing to stop otherwise.)
+      stopOnTerminationSignals:
+        typeof config.stopOnTerminationSignals === 'boolean'
+          ? config.stopOnTerminationSignals
+          : isNodeLike && nodeEnv !== 'test' && !this.serverlessFramework(),
+
+      executor: config.executor ?? null, // can be set by _start too
+    };
 
     // The main entry point (createHandler) to serverless frameworks generally
     // needs to be called synchronously from the top level of your entry point,
@@ -285,6 +287,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
     // There's no way to make "the whole server fail" separately from making
     // individual requests fail, but that's not entirely unreasonable for a
     // "serverless" model.
+    // TODO(AS4): Make serverless model simpler (less boilerplate in integrations).
     if (this.serverlessFramework()) {
       this._start().catch((e) => this.logStartupError(e));
     }
@@ -330,54 +333,39 @@ export class ApolloServerBase<TContext extends BaseContext> {
   // This is protected so that it can be called from `apollo-server`. It is
   // otherwise an internal implementation detail.
   protected async _start(): Promise<void> {
-    if (this.state.phase !== 'initialized') {
+    if (this.internals.state.phase !== 'initialized') {
       throw new Error(
-        `called start() with surprising state ${this.state.phase}`,
+        `called start() with surprising state ${this.internals.state.phase}`,
       );
     }
-    const schemaManager = this.state.schemaManager;
+    const schemaManager = this.internals.state.schemaManager;
     const barrier = resolvable();
-    this.state = {
+    this.internals.state = {
       phase: 'starting',
       barrier,
       schemaManager,
     };
     try {
+      const toDispose: (() => Promise<void>)[] = [];
       const executor = await schemaManager.start();
-      this.toDispose.add(async () => {
+      if (executor) {
+        this.internals.executor = executor;
+      }
+      toDispose.push(async () => {
         await schemaManager.stop();
       });
-      if (executor) {
-        // If we loaded an executor from a gateway, use it to execute
-        // operations.
-        this.requestOptions.executor = executor;
-      }
 
       const schemaDerivedData = schemaManager.getSchemaDerivedData();
       const service: GraphQLServiceContext = {
-        logger: this.logger,
+        logger: this.internals.logger,
         schema: schemaDerivedData.schema,
-        apollo: this.apolloConfig,
+        apollo: this.internals.apolloConfig,
         serverlessFramework: this.serverlessFramework(),
       };
 
-      // The `persistedQueries` attribute on the GraphQLServiceContext was
-      // originally used by the operation registry, which shared the cache with
-      // it.  This is no longer the case.  However, while we are continuing to
-      // expand the support of the interface for `persistedQueries`, e.g. with
-      // additions like https://github.com/apollographql/apollo-server/pull/3623,
-      // we don't want to continually expand the API surface of what we expose
-      // to the plugin API.   In this particular case, it certainly doesn't need
-      // to get the `ttl` default value which are intended for APQ only.
-      if (this.requestOptions.persistedQueries?.cache) {
-        service.persistedQueries = {
-          cache: this.requestOptions.persistedQueries.cache,
-        };
-      }
-
       const taggedServerListeners = (
         await Promise.all(
-          this.plugins.map(async (plugin) => ({
+          this.internals.plugins.map(async (plugin) => ({
             serverListener:
               plugin.serverWillStart && (await plugin.serverWillStart(service)),
             installedImplicitly:
@@ -421,7 +409,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
           : [],
       );
       if (serverWillStops.length) {
-        this.toDispose.add(async () => {
+        toDispose.push(async () => {
           await Promise.all(
             serverWillStops.map((serverWillStop) => serverWillStop()),
           );
@@ -431,13 +419,13 @@ export class ApolloServerBase<TContext extends BaseContext> {
       const drainServerCallbacks = taggedServerListeners.flatMap((l) =>
         l.serverListener.drainServer ? [l.serverListener.drainServer] : [],
       );
-      if (drainServerCallbacks.length) {
-        this.drainServers = async () => {
-          await Promise.all(
-            drainServerCallbacks.map((drainServer) => drainServer()),
-          );
-        };
-      }
+      const drainServers = drainServerCallbacks.length
+        ? async () => {
+            await Promise.all(
+              drainServerCallbacks.map((drainServer) => drainServer()),
+            );
+          }
+        : null;
 
       // Find the renderLandingPage callback, if one is provided. If the user
       // installed ApolloServerPluginLandingPageDisabled then there may be none
@@ -453,31 +441,44 @@ export class ApolloServerBase<TContext extends BaseContext> {
             (l) => !l.installedImplicitly,
           );
       }
+      let landingPage: LandingPage | null = null;
       if (taggedServerListenersWithRenderLandingPage.length > 1) {
         throw Error('Only one plugin can implement renderLandingPage.');
       } else if (taggedServerListenersWithRenderLandingPage.length) {
-        this.landingPage = await taggedServerListenersWithRenderLandingPage[0]
+        landingPage = await taggedServerListenersWithRenderLandingPage[0]
           .serverListener.renderLandingPage!();
-      } else {
-        this.landingPage = null;
       }
 
-      this.state = {
+      const toDisposeLast = this.maybeRegisterTerminationSignalHandlers([
+        'SIGINT',
+        'SIGTERM',
+      ]);
+
+      this.internals.state = {
         phase: 'started',
         schemaManager,
+        drainServers,
+        landingPage,
+        toDispose,
+        toDisposeLast,
       };
-      this.maybeRegisterTerminationSignalHandlers(['SIGINT', 'SIGTERM']);
     } catch (error) {
-      this.state = { phase: 'failed to start', error: error as Error };
+      this.internals.state = {
+        phase: 'failed to start',
+        error: error as Error,
+      };
       throw error;
     } finally {
       barrier.resolve();
     }
   }
 
-  private maybeRegisterTerminationSignalHandlers(signals: NodeJS.Signals[]) {
-    if (!this.stopOnTerminationSignals) {
-      return;
+  private maybeRegisterTerminationSignalHandlers(
+    signals: NodeJS.Signals[],
+  ): (() => Promise<void>)[] {
+    const toDisposeLast: (() => Promise<void>)[] = [];
+    if (!this.internals.stopOnTerminationSignals) {
+      return toDisposeLast;
     }
 
     let receivedSignal = false;
@@ -491,8 +492,8 @@ export class ApolloServerBase<TContext extends BaseContext> {
       try {
         await this.stop();
       } catch (e) {
-        this.logger.error(`stop() threw during ${signal} shutdown`);
-        this.logger.error(e);
+        this.internals.logger.error(`stop() threw during ${signal} shutdown`);
+        this.internals.logger.error(e);
         // Can't rely on the signal handlers being removed.
         process.exit(1);
       }
@@ -506,10 +507,11 @@ export class ApolloServerBase<TContext extends BaseContext> {
 
     signals.forEach((signal) => {
       process.on(signal, signalHandler);
-      this.toDisposeLast.add(async () => {
+      toDisposeLast.push(async () => {
         process.removeListener(signal, signalHandler);
       });
     });
+    return toDisposeLast;
   }
 
   // This method is called at the beginning of each GraphQL request by
@@ -527,7 +529,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
   // class that expects it to be started).
   private async _ensureStarted(): Promise<SchemaDerivedData> {
     while (true) {
-      switch (this.state.phase) {
+      switch (this.internals.state.phase) {
         case 'initialized':
           // This error probably won't happen: serverless frameworks
           // automatically call `_start` at the end of the constructor, and
@@ -537,13 +539,13 @@ export class ApolloServerBase<TContext extends BaseContext> {
             'You need to call `server.start()` before using your Apollo Server.',
           );
         case 'starting':
-          await this.state.barrier;
+          await this.internals.state.barrier;
           // continue the while loop
           break;
         case 'failed to start':
           // First we log the error that prevented startup (which means it will
           // get logged once for every GraphQL operation).
-          this.logStartupError(this.state.error);
+          this.logStartupError(this.internals.state.error);
           // Now make the operation itself fail.
           // We intentionally do not re-throw actual startup error as it may contain
           // implementation details and this error will propagate to the client.
@@ -552,7 +554,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
           );
         case 'started':
         case 'draining': // We continue to run operations while draining.
-          return this.state.schemaManager.getSchemaDerivedData();
+          return this.internals.state.schemaManager.getSchemaDerivedData();
         case 'stopping':
           throw new Error(
             'Cannot execute GraphQL operations while the server is stopping.',
@@ -562,7 +564,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
             'Cannot execute GraphQL operations after the server has stopped.',
           );
         default:
-          throw new UnreachableCaseError(this.state);
+          throw new UnreachableCaseError(this.internals.state);
       }
     }
   }
@@ -574,7 +576,10 @@ export class ApolloServerBase<TContext extends BaseContext> {
   }
 
   protected assertStarted(methodName: string) {
-    if (this.state.phase !== 'started' && this.state.phase !== 'draining') {
+    if (
+      this.internals.state.phase !== 'started' &&
+      this.internals.state.phase !== 'draining'
+    ) {
       throw new Error(
         'You must `await server.start()` before calling `server.' +
           methodName +
@@ -590,33 +595,29 @@ export class ApolloServerBase<TContext extends BaseContext> {
   // startup error directly instead of logging (or `await server.listen()` for
   // the batteries-included `apollo-server`).
   private logStartupError(err: Error) {
-    this.logger.error(
+    this.internals.logger.error(
       'An error occurred during Apollo Server startup. All GraphQL requests ' +
         'will now fail. The startup error was: ' +
         (err?.message || err),
     );
   }
 
-  private constructSchema(): GraphQLSchema {
-    const { schema, modules, typeDefs, resolvers, parseOptions } = this.config;
-    if (schema) {
-      return schema;
+  private static constructSchema<TContext>(
+    config: StaticSchemaConfig<TContext>,
+  ): GraphQLSchema {
+    if (config.schema) {
+      return config.schema;
     }
 
-    if (modules) {
-      const { schema, errors } = buildServiceDefinition(modules);
+    if (config.modules) {
+      const { schema, errors } = buildServiceDefinition(config.modules);
       if (errors && errors.length > 0) {
         throw new Error(errors.map((error) => error.message).join('\n\n'));
       }
       return schema!;
     }
 
-    if (!typeDefs) {
-      throw Error(
-        'Apollo Server requires either an existing schema, modules or typeDefs',
-      );
-    }
-
+    const { typeDefs, resolvers, parseOptions } = config;
     const augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
 
     // For convenience, we allow you to pass a few options that we pass through
@@ -632,10 +633,11 @@ export class ApolloServerBase<TContext extends BaseContext> {
     });
   }
 
-  private maybeAddMocksToConstructedSchema(
+  private static maybeAddMocksToConstructedSchema<TContext>(
     schema: GraphQLSchema,
+    config: StaticSchemaConfig<TContext>,
   ): GraphQLSchema {
-    const { mocks, mockEntireSchema } = this.config;
+    const { mocks, mockEntireSchema } = config;
     if (mocks === false) {
       return schema;
     }
@@ -650,7 +652,14 @@ export class ApolloServerBase<TContext extends BaseContext> {
     });
   }
 
-  private generateSchemaDerivedData(schema: GraphQLSchema): SchemaDerivedData {
+  private static generateSchemaDerivedData(
+    schema: GraphQLSchema,
+    // null means don't use a documentStore at all.
+    // missing/undefined means use the default (creating a new one each
+    // time).
+    // defined means wrap this one in a random prefix for each new schema.
+    providedUnprefixedDocumentStore: DocumentStore | null | undefined,
+  ): SchemaDerivedData {
     // Instead of waiting for the first operation execution against the schema
     // to find out if it's a valid schema or not, check right now. In the
     // non-gateway case, if this throws then the `new ApolloServer` call will
@@ -670,19 +679,19 @@ export class ApolloServerBase<TContext extends BaseContext> {
       // new schema. If we're using a user-provided DocumentStore, then we use a
       // random prefix each time we get a new schema.
       documentStore:
-        this.config.documentStore === undefined
-          ? this.initializeDocumentStore()
-          : this.config.documentStore === null
+        providedUnprefixedDocumentStore === undefined
+          ? ApolloServerBase.initializeDocumentStore()
+          : providedUnprefixedDocumentStore === null
           ? null
           : new PrefixingKeyValueCache(
-              this.config.documentStore,
+              providedUnprefixedDocumentStore,
               `${uuid.v4()}:`,
             ),
     };
   }
 
   public async stop() {
-    switch (this.state.phase) {
+    switch (this.internals.state.phase) {
       case 'initialized':
       case 'starting':
       case 'failed to start':
@@ -692,8 +701,8 @@ export class ApolloServerBase<TContext extends BaseContext> {
 
       // Calling stop more than once should have the same result as the first time.
       case 'stopped':
-        if (this.state.stopError) {
-          throw this.state.stopError;
+        if (this.internals.state.stopError) {
+          throw this.internals.state.stopError;
         }
         return;
 
@@ -701,11 +710,11 @@ export class ApolloServerBase<TContext extends BaseContext> {
       // do whatever it did.
       case 'stopping':
       case 'draining': {
-        await this.state.barrier;
+        await this.internals.state.barrier;
         // The cast here is because TS doesn't understand that this.state can
         // change during the await
         // (https://github.com/microsoft/TypeScript/issues/9998).
-        const state = this.state as ServerState;
+        const state = this.internals.state as ServerState;
         if (state.phase !== 'stopped') {
           throw Error(`Surprising post-stopping state ${state.phase}`);
         }
@@ -720,48 +729,65 @@ export class ApolloServerBase<TContext extends BaseContext> {
         break;
 
       default:
-        throw new UnreachableCaseError(this.state);
+        throw new UnreachableCaseError(this.internals.state);
     }
 
     const barrier = resolvable();
 
+    const {
+      schemaManager,
+      drainServers,
+      landingPage,
+      toDispose,
+      toDisposeLast,
+    } = this.internals.state;
+
     // Commit to stopping and start draining servers.
-    this.state = {
+    this.internals.state = {
       phase: 'draining',
-      schemaManager: this.state.schemaManager,
       barrier,
+      schemaManager,
+      landingPage,
     };
 
     try {
-      await this.drainServers?.();
+      await drainServers?.();
 
       // Servers are drained. Prevent further operations from starting and call
       // stop handlers.
-      this.state = { phase: 'stopping', barrier };
+      this.internals.state = { phase: 'stopping', barrier };
 
       // We run shutdown handlers in two phases because we don't want to turn
       // off our signal listeners (ie, allow signals to kill the process) until
       // we've done the important parts of shutdown like running serverWillStop
       // handlers. (We can make this more generic later if it's helpful.)
-      await Promise.all([...this.toDispose].map((dispose) => dispose()));
-      await Promise.all([...this.toDisposeLast].map((dispose) => dispose()));
+      await Promise.all([...toDispose].map((dispose) => dispose()));
+      await Promise.all([...toDisposeLast].map((dispose) => dispose()));
     } catch (stopError) {
-      this.state = { phase: 'stopped', stopError: stopError as Error };
+      this.internals.state = {
+        phase: 'stopped',
+        stopError: stopError as Error,
+      };
       barrier.resolve();
       throw stopError;
     }
-    this.state = { phase: 'stopped', stopError: null };
+    this.internals.state = { phase: 'stopped', stopError: null };
   }
 
   protected serverlessFramework(): boolean {
     return false;
   }
 
-  private ensurePluginInstantiation(
+  // This is called in the constructor before this.internals has been
+  // initialized, so we make it static to make it clear it can't assume that
+  // `this` has been fully initialized.
+  private static ensurePluginInstantiation<TContext>(
     userPlugins: PluginDefinition<TContext>[] = [],
     isDev: boolean,
-  ): void {
-    this.plugins = userPlugins.map((plugin) => {
+    apolloConfig: ApolloConfig,
+    logger: Logger,
+  ): ApolloServerPlugin<TContext>[] {
+    const plugins = userPlugins.map((plugin) => {
       if (typeof plugin === 'function') {
         return plugin();
       }
@@ -769,14 +795,14 @@ export class ApolloServerBase<TContext extends BaseContext> {
     });
 
     const alreadyHavePluginWithInternalId = (id: InternalPluginId) =>
-      this.plugins.some(
+      plugins.some(
         (p) => pluginIsInternal(p) && p.__internal_plugin_id__() === id,
       );
 
     // Special case: cache control is on unless you explicitly disable it.
     {
       if (!alreadyHavePluginWithInternalId('CacheControl')) {
-        this.plugins.push(ApolloServerPluginCacheControl());
+        plugins.push(ApolloServerPluginCacheControl());
       }
     }
 
@@ -785,14 +811,14 @@ export class ApolloServerBase<TContext extends BaseContext> {
     {
       const alreadyHavePlugin =
         alreadyHavePluginWithInternalId('UsageReporting');
-      if (!alreadyHavePlugin && this.apolloConfig.key) {
-        if (this.apolloConfig.graphRef) {
+      if (!alreadyHavePlugin && apolloConfig.key) {
+        if (apolloConfig.graphRef) {
           // Keep this plugin first so it wraps everything. (Unfortunately despite
           // the fact that the person who wrote this line also was the original
           // author of the comment above in #1105, they don't quite understand why this was important.)
-          this.plugins.unshift(ApolloServerPluginUsageReporting());
+          plugins.unshift(ApolloServerPluginUsageReporting());
         } else {
-          this.logger.warn(
+          logger.warn(
             'You have specified an Apollo key but have not specified a graph ref; usage ' +
               'reporting is disabled. To enable usage reporting, set the `APOLLO_GRAPH_REF` ' +
               'environment variable to `your-graph-id@your-graph-variant`. To disable this ' +
@@ -808,9 +834,9 @@ export class ApolloServerBase<TContext extends BaseContext> {
         alreadyHavePluginWithInternalId('SchemaReporting');
       const enabledViaEnvVar = process.env.APOLLO_SCHEMA_REPORTING === 'true';
       if (!alreadyHavePlugin && enabledViaEnvVar) {
-        if (this.apolloConfig.key) {
+        if (apolloConfig.key) {
           const options: ApolloServerPluginSchemaReportingOptions = {};
-          this.plugins.push(ApolloServerPluginSchemaReporting(options));
+          plugins.push(ApolloServerPluginSchemaReporting(options));
         } else {
           throw new Error(
             "You've enabled schema reporting by setting the APOLLO_SCHEMA_REPORTING " +
@@ -832,7 +858,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
         // federated" mode.  (This is slightly different than the
         // pre-ApolloServerPluginInlineTrace where we would also avoid doing
         // this if an API key was configured and log a warning.)
-        this.plugins.push(
+        plugins.push(
           ApolloServerPluginInlineTrace({ __onlyIfSchemaIsFederated: true }),
         );
       }
@@ -864,11 +890,35 @@ export class ApolloServerBase<TContext extends BaseContext> {
         );
       }
       plugin.__internal_installed_implicitly__ = true;
-      this.plugins.push(plugin);
+      plugins.push(plugin);
     }
+
+    // Special case: GET operations should only be queries (not mutations). We
+    // want to throw a particular HTTP error in that case.
+    plugins.unshift({
+      async requestDidStart() {
+        return {
+          async didResolveOperation({ operation, request }) {
+            if (
+              request.http?.method === 'GET' &&
+              operation.operation !== 'query'
+            ) {
+              throw new HttpQueryError(
+                405,
+                `GET supports only query operation`,
+                false,
+                new HeaderMap([['allow', 'POST']]),
+              );
+            }
+          },
+        };
+      },
+    });
+
+    return plugins;
   }
 
-  private initializeDocumentStore(): InMemoryLRUCache<DocumentNode> {
+  private static initializeDocumentStore(): InMemoryLRUCache<DocumentNode> {
     return new InMemoryLRUCache<DocumentNode>({
       // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
       // since the technique to calculate the size of a DocumentNode is
@@ -882,26 +932,25 @@ export class ApolloServerBase<TContext extends BaseContext> {
     });
   }
 
-  protected async graphQLServerOptions(): Promise<
-    GraphQLServerOptions<TContext>
-  > {
-    const { schema, documentStore } = await this._ensureStarted();
-
-    return {
-      schema,
-      logger: this.logger,
-      plugins: this.plugins,
-      documentStore,
-      parseOptions: this.parseOptions,
-      ...this.requestOptions,
-    };
+  // TODO(AS4): Make sure we like the name of this function.
+  public async executeHTTPGraphQLRequest(
+    httpGraphQLRequest: HTTPGraphQLRequest,
+    context: TContext,
+  ): Promise<HTTPGraphQLResponse> {
+    const schemaDerivedData = await this._ensureStarted();
+    return await runPotentiallyBatchedHttpQuery(
+      httpGraphQLRequest,
+      context,
+      schemaDerivedData,
+      this.internals,
+    );
   }
 
   /**
    * This method is primarily meant for testing: it allows you to execute a
-   * GraphQL operation via the request pipeline without going through without
-   * going through the HTTP layer. Note that this means that any handling you do
-   * in your server at the HTTP level will not affect this call!
+   * GraphQL operation via the request pipeline without going through the HTTP
+   * layer. Note that this means that any handling you do in your server at the
+   * HTTP level will not affect this call!
    *
    * For convenience, you can provide `request.query` either as a string or a
    * DocumentNode, in case you choose to use the gql tag in your tests. This is
@@ -933,9 +982,11 @@ export class ApolloServerBase<TContext extends BaseContext> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
     // `apollo-server` which doesn't support `start()`.)
-    if (this.state.phase === 'initialized') {
+    if (this.internals.state.phase === 'initialized') {
       await this._start();
     }
+
+    const schemaDerivedData = await this._ensureStarted();
 
     // The typecast here is safe, because the only way `context` can be null-ish
     // is if we used the `context?: BaseContext` override, in which case
@@ -957,13 +1008,11 @@ export class ApolloServerBase<TContext extends BaseContext> {
     // NOTE: THIS IS DUPLICATED IN runHttpQuery.ts' buildRequestContext.
     const actualContext: TContext = cloneObject(context ?? ({} as TContext));
 
-    const options = await this.graphQLServerOptions();
-
     // TODO(AS4): Once runHttpQuery becomes a method, this setup can be shared
     // with it.
     const requestCtx: GraphQLRequestContext<TContext> = {
-      logger: this.logger,
-      schema: options.schema,
+      logger: this.internals.logger,
+      schema: schemaDerivedData.schema,
       request: {
         ...request,
         query:
@@ -972,7 +1021,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
             : request.query,
       },
       context: actualContext,
-      cache: options.cache!,
+      cache: this.internals.cache,
       metrics: {},
       response: {
         http: {
@@ -980,11 +1029,10 @@ export class ApolloServerBase<TContext extends BaseContext> {
           statusCode: undefined,
         },
       },
-      debug: options.debug,
       overallCachePolicy: newCachePolicy(),
     };
 
-    return processGraphQLRequest(options, requestCtx);
+    return processGraphQLRequest(schemaDerivedData, this.internals, requestCtx);
   }
 
   // This method is called by integrations after start() (because we want
@@ -997,9 +1045,16 @@ export class ApolloServerBase<TContext extends BaseContext> {
   // integrations rely on this to tell the difference between "haven't called
   // renderLandingPage yet" and "there is no landing page").
   protected getLandingPage(): LandingPage | null {
-    this.assertStarted('getLandingPage');
+    if (
+      this.internals.state.phase !== 'started' &&
+      this.internals.state.phase !== 'draining'
+    ) {
+      throw new Error(
+        'You must `await server.start()` before calling `server.getLandingPage()`',
+      );
+    }
 
-    return this.landingPage;
+    return this.internals.state.landingPage;
   }
 }
 

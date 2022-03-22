@@ -1,9 +1,6 @@
-export { runHttpQuery, HttpQueryError, isHttpQueryError } from './runHttpQuery';
+// TODO(AS4): Evaluate the full exposed API.
 
-export {
-  default as GraphQLOptions,
-  PersistedQueryOptions,
-} from './graphqlOptions';
+export { HttpQueryError, isHttpQueryError } from './runHttpQuery';
 
 export {
   ApolloError,
@@ -15,8 +12,6 @@ export {
   UserInputError,
   formatApolloErrors,
 } from './errors';
-
-export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 
 // ApolloServer Base class
 export { ApolloServerBase } from './ApolloServer';
@@ -33,5 +28,6 @@ export {
   GraphQLExecutionResult,
 } from '@apollo/server-types';
 
+// TODO(AS4): Why re-export graphql-tag?
 export * from './gql';
 export * from './plugin';

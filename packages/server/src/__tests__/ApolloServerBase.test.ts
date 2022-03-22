@@ -1,6 +1,9 @@
 import { ApolloServerBase } from '../ApolloServer';
-import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { gql } from '../';
+import {
+  buildServiceDefinition,
+  GraphQLSchemaModule,
+} from '@apollographql/apollo-tools';
+import { Config, GatewayInterface, gql } from '../';
 import type { GraphQLSchema } from 'graphql';
 import type {
   ApolloServerPlugin,
@@ -43,7 +46,7 @@ describe('ApolloServerBase construction', () => {
     expect(
       () =>
         new ApolloServerBase({
-          schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema,
+          schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema!,
         }),
     ).not.toThrow();
   });
@@ -84,12 +87,41 @@ describe('ApolloServerBase construction', () => {
     );
   });
 
-  it('throws when the no schema configuration option is provided', () => {
+  it('throws when no schema configuration option is provided', () => {
     expect(() => {
+      // @ts-expect-error
       new ApolloServerBase({});
-    }).toThrowErrorMatchingInlineSnapshot(
-      `"Apollo Server requires either an existing schema, modules or typeDefs"`,
-    );
+    }).toThrow();
+  });
+
+  it('TypeScript enforces schema-related option combinations', async () => {
+    const schema = buildServiceDefinition([{ typeDefs, resolvers }]).schema!;
+    const gateway: GatewayInterface = {
+      async load() {
+        return { schema, executor: null };
+      },
+      async stop() {},
+    };
+    const modules: GraphQLSchemaModule[] = [];
+
+    function takesConfig(_c: Config<BaseContext>) {}
+
+    takesConfig({ gateway });
+    takesConfig({ schema });
+    takesConfig({ modules });
+    takesConfig({ typeDefs });
+    takesConfig({ typeDefs, resolvers });
+
+    // @ts-expect-error
+    takesConfig({ gateway, schema });
+    // @ts-expect-error
+    takesConfig({ gateway, modules });
+    // @ts-expect-error
+    takesConfig({ gateway, typeDefs });
+    // @ts-expect-error
+    takesConfig({ schema, resolvers });
+    // @ts-expect-error
+    takesConfig({ schema, typeDefs });
   });
 });
 
@@ -202,7 +234,7 @@ describe('ApolloServerBase executeOperation', () => {
     const server = new ApolloServerBase({
       typeDefs,
       resolvers,
-      debug: true,
+      includeStackTracesInErrorResponses: true,
     });
     await server.start();
 

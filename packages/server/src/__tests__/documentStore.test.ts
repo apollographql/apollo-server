@@ -44,9 +44,10 @@ describe('ApolloServerBase documentStore', () => {
 
     await server.start();
 
-    const options = await server['graphQLServerOptions']();
-    const embeddedStore = options.documentStore as any;
-    expect(embeddedStore).toBeInstanceOf(InMemoryLRUCache);
+    // Use [] syntax to access a private method.
+    const { documentStore } = await server['_ensureStarted']();
+    expect(documentStore).toBeInstanceOf(InMemoryLRUCache);
+    const embeddedStore = documentStore as InMemoryLRUCache<DocumentNode>;
 
     await server.executeOperation(operations.simple.op);
 
@@ -104,8 +105,9 @@ describe('ApolloServerBase documentStore', () => {
 
     await server.start();
 
-    const options = await server['graphQLServerOptions']();
-    expect(options.documentStore).toBe(null);
+    // Use [] syntax to access a private method.
+    const { documentStore } = await server['_ensureStarted']();
+    expect(documentStore).toBeNull();
 
     const result = await server.executeOperation(operations.simple.op);
 

@@ -8,8 +8,7 @@ import {
   DocumentNode,
 } from 'graphql';
 
-import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
-import type { GraphQLOptions, Context as GraphQLContext } from '..';
+import type { GraphQLRequest } from '../requestPipeline';
 import type {
   GraphQLResponse,
   ApolloServerPlugin,
@@ -19,64 +18,22 @@ import type {
   GraphQLRequestListenerExecutionDidEnd,
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
-  GraphQLRequestContext,
   BaseContext,
 } from '@apollo/server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import { newCachePolicy } from '../cachePolicy';
-import { HeaderMap } from '../runHttpQuery';
+import type { Config } from '../types';
+import { ApolloServerBase } from '../ApolloServer';
 
-// This is a temporary kludge to ensure we preserve runQuery behavior with the
-// GraphQLRequestProcessor refactoring.
-// These tests will be rewritten as GraphQLRequestProcessor tests after the
-// refactoring is complete.
-
-function runQuery(
-  options: QueryOptions,
-  requestContextExtra?: Partial<GraphQLRequestContext>,
+async function runQuery(
+  config: Config<BaseContext>,
+  request: GraphQLRequest,
+  context?: BaseContext,
 ): Promise<GraphQLResponse> {
-  const request: GraphQLRequest = {
-    query: options.queryString,
-    operationName: options.operationName,
-    variables: options.variables,
-    http: {
-      method: 'GET',
-      headers: new HeaderMap(),
-      searchParams: {},
-      body: {},
-    },
-  };
-
-  return processGraphQLRequest(options, {
-    request,
-    schema: options.schema,
-    metrics: {},
-    logger: console,
-    context: options.context || {},
-    debug: options.debug,
-    cache: {} as any,
-    overallCachePolicy: newCachePolicy(),
-    ...requestContextExtra,
-  });
-}
-
-interface QueryOptions
-  extends Pick<
-    GraphQLOptions<GraphQLContext<BaseContext>>,
-    | 'debug'
-    | 'documentStore'
-    | 'fieldResolver'
-    | 'formatError'
-    | 'formatResponse'
-    | 'plugins'
-    | 'rootValue'
-    | 'schema'
-    | 'validationRules'
-  > {
-  queryString?: string;
-  variables?: { [key: string]: any };
-  operationName?: string;
-  context?: BaseContext;
+  const server = new ApolloServerBase<BaseContext>(config);
+  await server.start();
+  const response = await server.executeOperation(request, context ?? {});
+  await server.stop();
+  return response;
 }
 
 const queryType = new GraphQLObjectType({
@@ -127,7 +84,8 @@ const queryType = new GraphQLObjectType({
     testAwaitedValue: {
       type: GraphQLString,
       async resolve() {
-        return 'it ' + (await 'works');
+        await new Promise<void>((resolve) => setTimeout(resolve, 2));
+        return 'it works';
       },
     },
     testError: {
@@ -143,186 +101,163 @@ const schema = new GraphQLSchema({
   query: queryType,
 });
 
-describe('runQuery', () => {
-  it('returns the right result when query is a string', () => {
-    const query = `{ testString }`;
-    const expected = { testString: 'it works' };
-    return runQuery({
-      schema,
-      queryString: query,
-    }).then((res) => {
-      expect(res.data).toEqual(expected);
-    });
-  });
+it('returns the right result when query is a string', async () => {
+  const query = `{ testString }`;
+  const expected = { testString: 'it works' };
+  const res = await runQuery({ schema }, { query });
+  expect(res.data).toEqual(expected);
+});
 
-  it('returns a syntax error if the query string contains one', () => {
-    const query = `query { test `;
-    const expected = /Syntax Error/;
-    return runQuery({
-      schema,
-      queryString: query,
+it('returns a syntax error if the query string contains one', async () => {
+  const query = `query { test `;
+  const expected = /Syntax Error/;
+  const res = await runQuery(
+    { schema },
+    {
+      query,
       variables: { base: 1 },
-    }).then((res) => {
-      expect(res.data).toBeUndefined();
-      expect(res.errors!.length).toEqual(1);
-      expect(res.errors![0].message).toMatch(expected);
-    });
-  });
+    },
+  );
+  expect(res.data).toBeUndefined();
+  expect(res.errors!.length).toEqual(1);
+  expect(res.errors![0].message).toMatch(expected);
+});
 
-  it('does not call console.error if in an error occurs and debug mode is set', () => {
+// Maybe we used to log field errors and we want to make sure we don't do that?
+// Our Jest tests automatically fail if anything is logged to the console.
+it.each([true, false])(
+  'does not call console.error if in an error occurs and includeStackTracesInErrorResponses is %s',
+  async (includeStackTracesInErrorResponses) => {
     const query = `query { testError }`;
-    const logStub = jest.spyOn(console, 'error');
-    return runQuery({
-      schema,
-      queryString: query,
-      debug: true,
-    }).then(() => {
-      logStub.mockRestore();
-      expect(logStub.mock.calls.length).toEqual(0);
-    });
-  });
+    const res = await runQuery(
+      {
+        schema,
+        includeStackTracesInErrorResponses,
+      },
+      { query },
+    );
+    expect(res.data).toEqual({ testError: null });
+    expect(res.errors!.length).toEqual(1);
+    expect(res.errors![0].message).toEqual('Secret error message');
+  },
+);
 
-  it('does not call console.error if in an error occurs and not in debug mode', () => {
-    const query = `query { testError }`;
-    const logStub = jest.spyOn(console, 'error');
-    return runQuery({
-      schema,
-      queryString: query,
-      debug: false,
-    }).then(() => {
-      logStub.mockRestore();
-      expect(logStub.mock.calls.length).toEqual(0);
-    });
-  });
-
-  it('returns a validation error if the query string does not pass validation', () => {
-    const query = `query TestVar($base: String){ testArgumentValue(base: $base) }`;
-    const expected =
-      'Variable "$base" of type "String" used in position expecting type "Int!".';
-    return runQuery({
-      schema,
-      queryString: query,
+it('returns a validation error if the query string does not pass validation', async () => {
+  const query = `query TestVar($base: String){ testArgumentValue(base: $base) }`;
+  const expected =
+    'Variable "$base" of type "String" used in position expecting type "Int!".';
+  const res = await runQuery(
+    { schema },
+    {
+      query,
       variables: { base: 1 },
-    }).then((res) => {
-      expect(res.data).toBeUndefined();
-      expect(res.errors!.length).toEqual(1);
-      expect(res.errors![0].message).toEqual(expected);
-    });
-  });
+    },
+  );
+  expect(res.data).toBeUndefined();
+  expect(res.errors!.length).toEqual(1);
+  expect(res.errors![0].message).toEqual(expected);
+});
 
-  it('correctly passes in the rootValue', () => {
-    const query = `{ testRootValue }`;
-    const expected = { testRootValue: 'it also works' };
-    return runQuery({
+it('correctly passes in the rootValue', async () => {
+  const query = `{ testRootValue }`;
+  const expected = { testRootValue: 'it also works' };
+  const res = await runQuery(
+    {
       schema,
-      queryString: query,
       rootValue: 'it also',
-    }).then((res) => {
-      expect(res.data).toEqual(expected);
-    });
-  });
+    },
+    { query },
+  );
+  expect(res.data).toEqual(expected);
+});
 
-  it('correctly evaluates a rootValue function', () => {
-    const query = `{ testRootValue }`;
-    const expected = { testRootValue: 'it also works' };
-    return runQuery({
+it('correctly evaluates a rootValue function', async () => {
+  const query = `{ testRootValue }`;
+  const expected = { testRootValue: 'it also works' };
+  const res = await runQuery(
+    {
       schema,
-      queryString: query,
-      rootValue: (doc: DocumentNode) => {
-        expect(doc.kind).toEqual('Document');
+      rootValue: (doc_1: DocumentNode) => {
+        expect(doc_1.kind).toEqual('Document');
         return 'it also';
       },
-    }).then((res) => {
-      expect(res.data).toEqual(expected);
-    });
-  });
+    },
+    { query },
+  );
+  expect(res.data).toEqual(expected);
+});
 
-  it('correctly passes in the context', () => {
-    const query = `{ testContextValue }`;
-    const expected = { testContextValue: 'it still works' };
-    return runQuery({
-      schema,
-      queryString: query,
-      context: { s: 'it still' },
-    }).then((res) => {
-      expect(res.data).toEqual(expected);
-    });
-  });
+it('correctly passes in the context', async () => {
+  const query = `{ testContextValue }`;
+  const expected = { testContextValue: 'it still works' };
+  const res = await runQuery({ schema }, { query }, { s: 'it still' });
+  expect(res.data).toEqual(expected);
+});
 
-  it('passes the options to formatResponse', () => {
-    const query = `{ testContextValue }`;
-    const expected = { testContextValue: 'it still works' };
-    return runQuery({
+it('passes the options to formatResponse', async () => {
+  const query = `{ testContextValue }`;
+  const expected = { testContextValue: 'it still works' };
+  const res = await runQuery(
+    {
       schema,
-      queryString: query,
-      context: { s: 'it still' },
-      formatResponse: (response: any, { context }: { context: any }) => {
-        response['extensions'] = context.s;
-        return response;
+      formatResponse: (response_1: any, { context }: { context: any }) => {
+        response_1['extensions'] = context.s;
+        return response_1;
       },
-    }).then((res) => {
-      expect(res.data).toEqual(expected);
-      expect(res['extensions']).toEqual('it still');
-    });
-  });
+    },
+    { query },
+    { s: 'it still' },
+  );
+  expect(res.data).toEqual(expected);
+  expect(res['extensions']).toEqual('it still');
+});
 
-  it('correctly passes in variables (and arguments)', () => {
-    const query = `query TestVar($base: Int!){ testArgumentValue(base: $base) }`;
-    const expected = { testArgumentValue: 6 };
-    return runQuery({
-      schema,
-      queryString: query,
+it('correctly passes in variables (and arguments)', async () => {
+  const query = `query TestVar($base: Int!){ testArgumentValue(base: $base) }`;
+  const expected = { testArgumentValue: 6 };
+  const res = await runQuery(
+    { schema },
+    {
+      query,
       variables: { base: 1 },
-    }).then((res) => {
-      expect(res.data).toEqual(expected);
-    });
-  });
+    },
+  );
+  expect(res.data).toEqual(expected);
+});
 
-  it('throws an error if there are missing variables', () => {
-    const query = `query TestVar($base: Int!){ testArgumentValue(base: $base) }`;
-    const expected =
-      'Variable "$base" of required type "Int!" was not provided.';
-    return runQuery({
-      schema,
-      queryString: query,
-    }).then((res) => {
-      expect(res.errors![0].message).toEqual(expected);
-    });
-  });
+it('throws an error if there are missing variables', async () => {
+  const query = `query TestVar($base: Int!){ testArgumentValue(base: $base) }`;
+  const expected = 'Variable "$base" of required type "Int!" was not provided.';
+  const res = await runQuery({ schema }, { query });
+  expect(res.errors![0].message).toEqual(expected);
+});
 
-  it('supports yielding resolver functions', () => {
-    return runQuery({
-      schema,
-      queryString: `{ testAwaitedValue }`,
-    }).then((res) => {
-      expect(res.data).toEqual({
-        testAwaitedValue: 'it works',
-      });
-    });
-  });
+it('supports yielding resolver functions', async () => {
+  const res = await runQuery({ schema }, { query: `{ testAwaitedValue }` });
+  expect(res.data).toEqual({ testAwaitedValue: 'it works' });
+});
 
-  it('runs the correct operation when operationName is specified', () => {
-    const query = `
+it('runs the correct operation when operationName is specified', async () => {
+  const query = `
         query Q1 {
             testString
         }
         query Q2 {
             testRootValue
         }`;
-    const expected = {
-      testString: 'it works',
-    };
-    return runQuery({
-      schema,
-      queryString: query,
+  const expected = { testString: 'it works' };
+  const res = await runQuery(
+    { schema },
+    {
+      query,
       operationName: 'Q1',
-    }).then((res) => {
-      expect(res.data).toEqual(expected);
-    });
-  });
+    },
+  );
+  expect(res.data).toEqual(expected);
+});
 
-  it('uses custom field resolver', async () => {
-    const query = `
+it('uses custom field resolver', async () => {
+  const query = `
         query Q1 {
           testObject {
             testString
@@ -330,148 +265,128 @@ describe('runQuery', () => {
         }
       `;
 
-    const result1 = await runQuery({
-      schema,
-      queryString: query,
+  const result1 = await runQuery(
+    { schema },
+    {
+      query,
       operationName: 'Q1',
-    });
+    },
+  );
 
-    expect(result1.data).toEqual({
-      testObject: {
-        testString: 'a very test string',
-      },
-    });
+  expect(result1.data).toEqual({
+    testObject: {
+      testString: 'a very test string',
+    },
+  });
 
-    const result2 = await runQuery({
-      schema,
-      queryString: query,
+  const result2 = await runQuery(
+    { schema, fieldResolver: () => 'a very testful field resolver string' },
+    {
+      query,
       operationName: 'Q1',
-      fieldResolver: () => 'a very testful field resolver string',
+    },
+  );
+
+  expect(result2.data).toEqual({
+    testObject: {
+      testString: 'a very testful field resolver string',
+    },
+  });
+});
+
+describe('request pipeline life-cycle hooks', () => {
+  it('requestDidStart called for each request', async () => {
+    const requestDidStart = jest.fn();
+    const runOnce = () =>
+      runQuery(
+        {
+          schema,
+          plugins: [{ requestDidStart }],
+        },
+        { query: '{ testString }' },
+      );
+
+    await runOnce();
+    expect(requestDidStart).toBeCalledTimes(1);
+    expect(requestDidStart.mock.calls[0][0]).toHaveProperty('schema', schema);
+    await runOnce();
+    expect(requestDidStart).toBeCalledTimes(2);
+  });
+
+  /**
+   * This tests the simple invocation of the "didResolveSource" hook, but
+   * doesn't test one of the primary reasons why "source" isn't guaranteed
+   * sooner in the request life-cycle: when "source" is populated via an APQ
+   * cache HIT.
+   *
+   * That functionality is tested in `apollo-server-integration-testsuite`,
+   * within the "Persisted Queries" tests. (Search for "didResolveSource").
+   */
+  it('didResolveSource called with the source', async () => {
+    const didResolveSource = jest.fn();
+    await runQuery(
+      {
+        schema,
+        plugins: [
+          {
+            async requestDidStart() {
+              return {
+                didResolveSource,
+              };
+            },
+          },
+        ],
+      },
+      { query: '{ testString }' },
+    );
+
+    expect(didResolveSource).toHaveBeenCalled();
+    expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
+      'source',
+      '{ testString }',
+    );
+  });
+
+  describe('parsingDidStart', () => {
+    const parsingDidStart = jest.fn();
+    const plugin = {
+      async requestDidStart() {
+        return {
+          parsingDidStart,
+        };
+      },
+    };
+    it('called when parsing will result in an error', async () => {
+      await runQuery(
+        {
+          schema,
+          plugins: [plugin],
+        },
+        { query: '{ testStringWithParseError: }' },
+      );
+
+      expect(parsingDidStart).toBeCalled();
     });
 
-    expect(result2.data).toEqual({
-      testObject: {
-        testString: 'a very testful field resolver string',
-      },
+    it('called when a successful parse happens', async () => {
+      await runQuery(
+        {
+          schema,
+          plugins: [plugin],
+        },
+        { query: '{ testString }' },
+      );
+
+      expect(parsingDidStart).toBeCalled();
     });
   });
 
-  describe('request pipeline life-cycle hooks', () => {
-    describe('requestDidStart', () => {
-      const requestDidStart = jest.fn();
-      it('called for each request', async () => {
-        const runOnce = () =>
-          runQuery({
-            schema,
-            queryString: '{ testString }',
-            plugins: [
-              {
-                requestDidStart,
-              },
-            ],
-          });
-
-        await runOnce();
-        expect(requestDidStart.mock.calls.length).toBe(1);
-        await runOnce();
-        expect(requestDidStart.mock.calls.length).toBe(2);
-      });
-
-      it('is called with the schema', async () => {
-        await runQuery({
+  describe('executionDidStart', () => {
+    it('called when execution starts', async () => {
+      const executionDidStart = jest.fn();
+      await runQuery(
+        {
           schema,
-          queryString: '{ testString }',
-          plugins: [
-            {
-              requestDidStart,
-            },
-          ],
-        });
-
-        const invocation = requestDidStart.mock.calls[0][0];
-        expect(invocation).toHaveProperty('schema', schema);
-      });
-    });
-
-    /**
-     * This tests the simple invocation of the "didResolveSource" hook, but
-     * doesn't test one of the primary reasons why "source" isn't guaranteed
-     * sooner in the request life-cycle: when "source" is populated via an APQ
-     * cache HIT.
-     *
-     * That functionality is tested in `apollo-server-integration-testsuite`,
-     * within the "Persisted Queries" tests. (Search for "didResolveSource").
-     */
-    describe('didResolveSource', () => {
-      const didResolveSource = jest.fn();
-      it('called with the source', async () => {
-        await runQuery({
-          schema,
-          queryString: '{ testString }',
-          plugins: [
-            {
-              async requestDidStart() {
-                return {
-                  didResolveSource,
-                };
-              },
-            },
-          ],
-        });
-
-        expect(didResolveSource).toHaveBeenCalled();
-        expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
-          'source',
-          '{ testString }',
-        );
-      });
-    });
-
-    describe('parsingDidStart', () => {
-      const parsingDidStart = jest.fn();
-      it('called when parsing will result in an error', async () => {
-        await runQuery({
-          schema,
-          queryString: '{ testStringWithParseError: }',
-          plugins: [
-            {
-              async requestDidStart() {
-                return {
-                  parsingDidStart,
-                };
-              },
-            },
-          ],
-        });
-
-        expect(parsingDidStart).toBeCalled();
-      });
-
-      it('called when a successful parse happens', async () => {
-        await runQuery({
-          schema,
-          queryString: '{ testString }',
-          plugins: [
-            {
-              async requestDidStart() {
-                return {
-                  parsingDidStart,
-                };
-              },
-            },
-          ],
-        });
-
-        expect(parsingDidStart).toBeCalled();
-      });
-    });
-
-    describe('executionDidStart', () => {
-      it('called when execution starts', async () => {
-        const executionDidStart = jest.fn();
-        await runQuery({
-          schema,
-          queryString: '{ testString }',
           plugins: [
             {
               async requestDidStart() {
@@ -481,504 +396,525 @@ describe('runQuery', () => {
               },
             },
           ],
-        });
+        },
+        { query: '{ testString }' },
+      );
+
+      expect(executionDidStart).toHaveBeenCalledTimes(1);
+    });
+
+    describe('executionDidEnd', () => {
+      it('works as a listener on an object returned from "executionDidStart"', async () => {
+        const executionDidEnd = jest.fn();
+        const executionDidStart = jest.fn(
+          async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => ({
+            executionDidEnd,
+          }),
+        );
+
+        await runQuery(
+          {
+            schema,
+            plugins: [
+              {
+                async requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+          },
+          { query: '{ testString }' },
+        );
 
         expect(executionDidStart).toHaveBeenCalledTimes(1);
-      });
-
-      describe('executionDidEnd', () => {
-        it('works as a listener on an object returned from "executionDidStart"', async () => {
-          const executionDidEnd = jest.fn();
-          const executionDidStart = jest.fn(
-            async (): Promise<
-              GraphQLRequestExecutionListener<BaseContext>
-            > => ({
-              executionDidEnd,
-            }),
-          );
-
-          await runQuery({
-            schema,
-            queryString: '{ testString }',
-            plugins: [
-              {
-                async requestDidStart() {
-                  return {
-                    executionDidStart,
-                  };
-                },
-              },
-            ],
-          });
-
-          expect(executionDidStart).toHaveBeenCalledTimes(1);
-          expect(executionDidEnd).toHaveBeenCalledTimes(1);
-        });
-      });
-
-      describe('willResolveField', () => {
-        it('called when resolving a field starts', async () => {
-          const willResolveField = jest.fn();
-          const executionDidEnd = jest.fn();
-          const executionDidStart = jest.fn(
-            async (): Promise<
-              GraphQLRequestExecutionListener<BaseContext>
-            > => ({
-              willResolveField,
-              executionDidEnd,
-            }),
-          );
-
-          await runQuery({
-            schema,
-            queryString: '{ testString }',
-            plugins: [
-              {
-                async requestDidStart() {
-                  return {
-                    executionDidStart,
-                  };
-                },
-              },
-            ],
-          });
-
-          expect(executionDidStart).toHaveBeenCalledTimes(1);
-          expect(willResolveField).toHaveBeenCalledTimes(1);
-          expect(executionDidEnd).toHaveBeenCalledTimes(1);
-        });
-
-        it('called once for each field being resolved', async () => {
-          const willResolveField = jest.fn();
-          const executionDidEnd = jest.fn();
-          const executionDidStart = jest.fn(
-            async (): Promise<
-              GraphQLRequestExecutionListener<BaseContext>
-            > => ({
-              willResolveField,
-              executionDidEnd,
-            }),
-          );
-
-          await runQuery({
-            schema,
-            queryString: '{ testString again:testString }',
-            plugins: [
-              {
-                async requestDidStart() {
-                  return {
-                    executionDidStart,
-                  };
-                },
-              },
-            ],
-          });
-
-          expect(executionDidStart).toHaveBeenCalledTimes(1);
-          expect(willResolveField).toHaveBeenCalledTimes(2);
-          expect(executionDidEnd).toHaveBeenCalledTimes(1);
-        });
-
-        describe('receives correct resolver parameter object', () => {
-          it('receives undefined parent when there is no parent', async () => {
-            const willResolveField = jest.fn();
-
-            await runQuery({
-              schema,
-              queryString: '{ testString }',
-              plugins: [
-                {
-                  async requestDidStart() {
-                    return {
-                      executionDidStart: async () => ({
-                        willResolveField,
-                      }),
-                    };
-                  },
-                },
-              ],
-            });
-
-            // It is called only once.
-            expect(willResolveField).toHaveBeenCalledTimes(1);
-            const call = willResolveField.mock.calls[0];
-            expect(call[0]).toHaveProperty('source', undefined);
-            expect(call[0]).toHaveProperty('info.path.key', 'testString');
-            expect(call[0]).toHaveProperty('info.path.prev', undefined);
-          });
-
-          it('receives the parent when there is one', async () => {
-            const willResolveField = jest.fn();
-
-            await runQuery({
-              schema,
-              queryString: '{ testObject { testString } }',
-              plugins: [
-                {
-                  async requestDidStart() {
-                    return {
-                      executionDidStart: async () => ({
-                        willResolveField,
-                      }),
-                    };
-                  },
-                },
-              ],
-            });
-
-            // It is called 1st for `testObject` and then 2nd for `testString`.
-            expect(willResolveField).toHaveBeenCalledTimes(2);
-            const [firstCall, secondCall] = willResolveField.mock.calls;
-            expect(firstCall[0]).toHaveProperty('source', undefined);
-            expect(firstCall[0]).toHaveProperty('info.path.key', 'testObject');
-            expect(firstCall[0]).toHaveProperty('info.path.prev', undefined);
-
-            expect(secondCall[0]).toHaveProperty('source', {
-              testString: 'a very test string',
-            });
-            expect(secondCall[0]).toHaveProperty('info.path.key', 'testString');
-            expect(secondCall[0]).toHaveProperty('info.path.prev', {
-              key: 'testObject',
-              prev: undefined,
-              typename: 'QueryType',
-            });
-          });
-
-          it('receives context', async () => {
-            const willResolveField = jest.fn();
-
-            await runQuery({
-              schema,
-              context: { ourSpecialContext: true },
-              queryString: '{ testString }',
-              plugins: [
-                {
-                  async requestDidStart() {
-                    return {
-                      executionDidStart: async () => ({
-                        willResolveField,
-                      }),
-                    };
-                  },
-                },
-              ],
-            });
-
-            expect(willResolveField).toHaveBeenCalledTimes(1);
-            expect(willResolveField.mock.calls[0][0]).toHaveProperty(
-              'context',
-              expect.objectContaining({ ourSpecialContext: true }),
-            );
-          });
-
-          it('receives arguments', async () => {
-            const willResolveField = jest.fn();
-
-            await runQuery({
-              schema,
-              queryString: '{ testArgumentValue(base: 99) }',
-              plugins: [
-                {
-                  async requestDidStart() {
-                    return {
-                      executionDidStart: async () => ({
-                        willResolveField,
-                      }),
-                    };
-                  },
-                },
-              ],
-            });
-
-            expect(willResolveField).toHaveBeenCalledTimes(1);
-            expect(willResolveField.mock.calls[0][0]).toHaveProperty(
-              'args.base',
-              99,
-            );
-          });
-        });
-
-        it('calls the end handler', async () => {
-          const didResolveField: GraphQLRequestListenerDidResolveField =
-            jest.fn();
-          const willResolveField = jest.fn(() => didResolveField);
-          const executionDidEnd = jest.fn();
-          const executionDidStart = jest.fn(
-            async (): Promise<
-              GraphQLRequestExecutionListener<BaseContext>
-            > => ({
-              willResolveField,
-              executionDidEnd,
-            }),
-          );
-
-          await runQuery({
-            schema,
-            queryString: '{ testString }',
-            plugins: [
-              {
-                async requestDidStart() {
-                  return {
-                    executionDidStart,
-                  };
-                },
-              },
-            ],
-          });
-
-          expect(executionDidStart).toHaveBeenCalledTimes(1);
-          expect(willResolveField).toHaveBeenCalledTimes(1);
-          expect(didResolveField).toHaveBeenCalledTimes(1);
-          expect(executionDidEnd).toHaveBeenCalledTimes(1);
-        });
-
-        it('calls the end handler for each field being resolved', async () => {
-          const didResolveField: GraphQLRequestListenerDidResolveField =
-            jest.fn();
-          const willResolveField = jest.fn(() => didResolveField);
-          const executionDidEnd = jest.fn();
-          const executionDidStart = jest.fn(
-            async (): Promise<
-              GraphQLRequestExecutionListener<BaseContext>
-            > => ({
-              willResolveField,
-              executionDidEnd,
-            }),
-          );
-
-          await runQuery({
-            schema,
-            queryString: '{ testString again: testString }',
-            plugins: [
-              {
-                async requestDidStart() {
-                  return {
-                    executionDidStart,
-                  };
-                },
-              },
-            ],
-          });
-
-          expect(executionDidStart).toHaveBeenCalledTimes(1);
-          expect(willResolveField).toHaveBeenCalledTimes(2);
-          expect(didResolveField).toHaveBeenCalledTimes(2);
-          expect(executionDidEnd).toHaveBeenCalledTimes(1);
-        });
-
-        it('uses the custom "fieldResolver" when defined', async () => {
-          const schemaWithResolver = new GraphQLSchema({
-            query: new GraphQLObjectType({
-              name: 'QueryType',
-              fields: {
-                testString: {
-                  type: GraphQLString,
-                  resolve() {
-                    return 'using schema-defined resolver';
-                  },
-                },
-              },
-            }),
-          });
-
-          const schemaWithoutResolver = new GraphQLSchema({
-            query: new GraphQLObjectType({
-              name: 'QueryType',
-              fields: {
-                testString: {
-                  type: GraphQLString,
-                },
-              },
-            }),
-          });
-
-          const differentFieldResolver = () =>
-            "I'm different, ya, I'm different.";
-
-          const queryString = `{ testString } `;
-
-          const didResolveField: GraphQLRequestListenerDidResolveField =
-            jest.fn();
-          const willResolveField = jest.fn(() => didResolveField);
-
-          const plugins: ApolloServerPlugin<BaseContext>[] = [
-            {
-              requestDidStart: async () => ({
-                executionDidStart: async () => ({
-                  willResolveField,
-                }),
-              }),
-            },
-          ];
-
-          const resultFromSchemaWithResolver = await runQuery({
-            schema: schemaWithResolver,
-            queryString,
-            plugins,
-
-            fieldResolver: differentFieldResolver,
-          });
-
-          expect(willResolveField).toHaveBeenCalledTimes(1);
-          expect(didResolveField).toHaveBeenCalledTimes(1);
-
-          expect(resultFromSchemaWithResolver.data).toEqual({
-            testString: 'using schema-defined resolver',
-          });
-
-          const resultFromSchemaWithoutResolver = await runQuery({
-            schema: schemaWithoutResolver,
-            queryString,
-            plugins,
-
-            fieldResolver: differentFieldResolver,
-          });
-
-          expect(willResolveField).toHaveBeenCalledTimes(2);
-          expect(didResolveField).toHaveBeenCalledTimes(2);
-
-          expect(resultFromSchemaWithoutResolver.data).toEqual({
-            testString: "I'm different, ya, I'm different.",
-          });
-        });
+        expect(executionDidEnd).toHaveBeenCalledTimes(1);
       });
     });
 
-    describe('didEncounterErrors', () => {
-      const didEncounterErrors = jest.fn();
-      const plugins: ApolloServerPlugin<BaseContext>[] = [
-        {
-          async requestDidStart() {
-            return { didEncounterErrors };
-          },
-        },
-      ];
-
-      it('called when an error occurs', async () => {
-        await runQuery({
-          schema,
-          queryString: '{ testStringWithParseError: }',
-          plugins,
-        });
-
-        expect(didEncounterErrors).toBeCalledWith(
-          expect.objectContaining({
-            errors: expect.arrayContaining([expect.any(Error)]),
-          }),
-        );
-      });
-
-      it('called when an error occurs in execution', async () => {
-        const response = await runQuery({
-          schema,
-          queryString: '{ testError }',
-          plugins,
-        });
-
-        expect(response).toHaveProperty(
-          'errors.0.message',
-          'Secret error message',
-        );
-        expect(response).toHaveProperty('data.testError', null);
-
-        expect(didEncounterErrors).toBeCalledWith(
-          expect.objectContaining({
-            errors: expect.arrayContaining([
-              expect.objectContaining({
-                message: 'Secret error message',
-              }),
-            ]),
-          }),
-        );
-      });
-
-      it('not called when an error does not occur', async () => {
-        await runQuery({
-          schema,
-          queryString: '{ testString }',
-          plugins,
-        });
-
-        expect(didEncounterErrors).not.toBeCalled();
-      });
-    });
-
-    describe('ordering', () => {
-      it('calls hooks in the expected order', async () => {
-        const callOrder: string[] = [];
-        let stopAwaiting: Function;
-        const toBeAwaited = new Promise((resolve) => (stopAwaiting = resolve));
-
-        const parsingDidEnd: GraphQLRequestListenerParsingDidEnd = jest.fn(
-          async () => {
-            callOrder.push('parsingDidEnd');
-          },
-        );
-        const parsingDidStart: GraphQLRequestListener<BaseContext>['parsingDidStart'] =
-          jest.fn(async () => {
-            callOrder.push('parsingDidStart');
-            return parsingDidEnd;
-          });
-
-        const validationDidEnd: GraphQLRequestListenerValidationDidEnd =
-          jest.fn(async () => {
-            callOrder.push('validationDidEnd');
-          });
-        const validationDidStart: GraphQLRequestListener<BaseContext>['validationDidStart'] =
-          jest.fn(async () => {
-            callOrder.push('validationDidStart');
-            return validationDidEnd;
-          });
-
-        const didResolveSource: GraphQLRequestListener<BaseContext>['didResolveSource'] =
-          jest.fn(async () => {
-            callOrder.push('didResolveSource');
-          });
-
-        const didResolveField: GraphQLRequestListenerDidResolveField = jest.fn(
-          () => callOrder.push('didResolveField'),
-        );
-
-        const willResolveField = jest.fn(() => {
-          callOrder.push('willResolveField');
-          return didResolveField;
-        });
-
-        const executionDidEnd: GraphQLRequestListenerExecutionDidEnd = jest.fn(
-          async () => {
-            callOrder.push('executionDidEnd');
-          },
-        );
-
+    describe('willResolveField', () => {
+      it('called when resolving a field starts', async () => {
+        const willResolveField = jest.fn();
+        const executionDidEnd = jest.fn();
         const executionDidStart = jest.fn(
-          async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => {
-            callOrder.push('executionDidStart');
-            return { willResolveField, executionDidEnd };
-          },
+          async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => ({
+            willResolveField,
+            executionDidEnd,
+          }),
         );
 
-        const schema = new GraphQLSchema({
+        await runQuery(
+          {
+            schema,
+            plugins: [
+              {
+                async requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+          },
+          { query: '{ testString }' },
+        );
+
+        expect(executionDidStart).toHaveBeenCalledTimes(1);
+        expect(willResolveField).toHaveBeenCalledTimes(1);
+        expect(executionDidEnd).toHaveBeenCalledTimes(1);
+      });
+
+      it('called once for each field being resolved', async () => {
+        const willResolveField = jest.fn();
+        const executionDidEnd = jest.fn();
+        const executionDidStart = jest.fn(
+          async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => ({
+            willResolveField,
+            executionDidEnd,
+          }),
+        );
+
+        await runQuery(
+          {
+            schema,
+            plugins: [
+              {
+                async requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+          },
+          { query: '{ testString again:testString }' },
+        );
+
+        expect(executionDidStart).toHaveBeenCalledTimes(1);
+        expect(willResolveField).toHaveBeenCalledTimes(2);
+        expect(executionDidEnd).toHaveBeenCalledTimes(1);
+      });
+
+      describe('receives correct resolver parameter object', () => {
+        it('receives undefined parent when there is no parent', async () => {
+          const willResolveField = jest.fn();
+
+          await runQuery(
+            {
+              schema,
+              plugins: [
+                {
+                  async requestDidStart() {
+                    return {
+                      executionDidStart: async () => ({
+                        willResolveField,
+                      }),
+                    };
+                  },
+                },
+              ],
+            },
+            { query: '{ testString }' },
+          );
+
+          // It is called only once.
+          expect(willResolveField).toHaveBeenCalledTimes(1);
+          const call = willResolveField.mock.calls[0];
+          expect(call[0]).toHaveProperty('source', undefined);
+          expect(call[0]).toHaveProperty('info.path.key', 'testString');
+          expect(call[0]).toHaveProperty('info.path.prev', undefined);
+        });
+
+        it('receives the parent when there is one', async () => {
+          const willResolveField = jest.fn();
+
+          await runQuery(
+            {
+              schema,
+              plugins: [
+                {
+                  async requestDidStart() {
+                    return {
+                      executionDidStart: async () => ({
+                        willResolveField,
+                      }),
+                    };
+                  },
+                },
+              ],
+            },
+            { query: '{ testObject { testString } }' },
+          );
+
+          // It is called 1st for `testObject` and then 2nd for `testString`.
+          expect(willResolveField).toHaveBeenCalledTimes(2);
+          const [firstCall, secondCall] = willResolveField.mock.calls;
+          expect(firstCall[0]).toHaveProperty('source', undefined);
+          expect(firstCall[0]).toHaveProperty('info.path.key', 'testObject');
+          expect(firstCall[0]).toHaveProperty('info.path.prev', undefined);
+
+          expect(secondCall[0]).toHaveProperty('source', {
+            testString: 'a very test string',
+          });
+          expect(secondCall[0]).toHaveProperty('info.path.key', 'testString');
+          expect(secondCall[0]).toHaveProperty('info.path.prev', {
+            key: 'testObject',
+            prev: undefined,
+            typename: 'QueryType',
+          });
+        });
+
+        it('receives context', async () => {
+          const willResolveField = jest.fn();
+
+          await runQuery(
+            {
+              schema,
+              plugins: [
+                {
+                  async requestDidStart() {
+                    return {
+                      executionDidStart: async () => ({
+                        willResolveField,
+                      }),
+                    };
+                  },
+                },
+              ],
+            },
+            {
+              query: '{ testString }',
+            },
+            { ourSpecialContext: true },
+          );
+
+          expect(willResolveField).toHaveBeenCalledTimes(1);
+          expect(willResolveField.mock.calls[0][0]).toHaveProperty(
+            'context',
+            expect.objectContaining({ ourSpecialContext: true }),
+          );
+        });
+
+        it('receives arguments', async () => {
+          const willResolveField = jest.fn();
+
+          await runQuery(
+            {
+              schema,
+              plugins: [
+                {
+                  async requestDidStart() {
+                    return {
+                      executionDidStart: async () => ({
+                        willResolveField,
+                      }),
+                    };
+                  },
+                },
+              ],
+            },
+            { query: '{ testArgumentValue(base: 99) }' },
+          );
+
+          expect(willResolveField).toHaveBeenCalledTimes(1);
+          expect(willResolveField.mock.calls[0][0]).toHaveProperty(
+            'args.base',
+            99,
+          );
+        });
+      });
+
+      it('calls the end handler', async () => {
+        const didResolveField: GraphQLRequestListenerDidResolveField =
+          jest.fn();
+        const willResolveField = jest.fn(() => didResolveField);
+        const executionDidEnd = jest.fn();
+        const executionDidStart = jest.fn(
+          async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => ({
+            willResolveField,
+            executionDidEnd,
+          }),
+        );
+
+        await runQuery(
+          {
+            schema,
+            plugins: [
+              {
+                async requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+          },
+          { query: '{ testString }' },
+        );
+
+        expect(executionDidStart).toHaveBeenCalledTimes(1);
+        expect(willResolveField).toHaveBeenCalledTimes(1);
+        expect(didResolveField).toHaveBeenCalledTimes(1);
+        expect(executionDidEnd).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls the end handler for each field being resolved', async () => {
+        const didResolveField: GraphQLRequestListenerDidResolveField =
+          jest.fn();
+        const willResolveField = jest.fn(() => didResolveField);
+        const executionDidEnd = jest.fn();
+        const executionDidStart = jest.fn(
+          async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => ({
+            willResolveField,
+            executionDidEnd,
+          }),
+        );
+
+        await runQuery(
+          {
+            schema,
+            plugins: [
+              {
+                async requestDidStart() {
+                  return {
+                    executionDidStart,
+                  };
+                },
+              },
+            ],
+          },
+          { query: '{ testString again: testString }' },
+        );
+
+        expect(executionDidStart).toHaveBeenCalledTimes(1);
+        expect(willResolveField).toHaveBeenCalledTimes(2);
+        expect(didResolveField).toHaveBeenCalledTimes(2);
+        expect(executionDidEnd).toHaveBeenCalledTimes(1);
+      });
+
+      it('uses the custom "fieldResolver" when defined', async () => {
+        const schemaWithResolver = new GraphQLSchema({
           query: new GraphQLObjectType({
             name: 'QueryType',
             fields: {
               testString: {
                 type: GraphQLString,
-                async resolve() {
-                  callOrder.push('beforeAwaiting');
-                  await toBeAwaited;
-                  callOrder.push('afterAwaiting');
-                  return 'it works';
+                resolve() {
+                  return 'using schema-defined resolver';
                 },
               },
             },
           }),
         });
 
-        Promise.resolve().then(() => stopAwaiting());
+        const schemaWithoutResolver = new GraphQLSchema({
+          query: new GraphQLObjectType({
+            name: 'QueryType',
+            fields: {
+              testString: {
+                type: GraphQLString,
+              },
+            },
+          }),
+        });
 
-        await runQuery({
+        const differentFieldResolver = () =>
+          "I'm different, ya, I'm different.";
+
+        const queryString = `{ testString } `;
+
+        const didResolveField: GraphQLRequestListenerDidResolveField =
+          jest.fn();
+        const willResolveField = jest.fn(() => didResolveField);
+
+        const plugins: ApolloServerPlugin<BaseContext>[] = [
+          {
+            requestDidStart: async () => ({
+              executionDidStart: async () => ({
+                willResolveField,
+              }),
+            }),
+          },
+        ];
+
+        const resultFromSchemaWithResolver = await runQuery(
+          {
+            schema: schemaWithResolver,
+            plugins,
+            fieldResolver: differentFieldResolver,
+          },
+          { query: queryString },
+        );
+
+        expect(willResolveField).toHaveBeenCalledTimes(1);
+        expect(didResolveField).toHaveBeenCalledTimes(1);
+
+        expect(resultFromSchemaWithResolver.data).toEqual({
+          testString: 'using schema-defined resolver',
+        });
+
+        const resultFromSchemaWithoutResolver = await runQuery(
+          {
+            schema: schemaWithoutResolver,
+            plugins,
+            fieldResolver: differentFieldResolver,
+          },
+          { query: queryString },
+        );
+
+        expect(willResolveField).toHaveBeenCalledTimes(2);
+        expect(didResolveField).toHaveBeenCalledTimes(2);
+
+        expect(resultFromSchemaWithoutResolver.data).toEqual({
+          testString: "I'm different, ya, I'm different.",
+        });
+      });
+    });
+  });
+
+  describe('didEncounterErrors', () => {
+    const didEncounterErrors = jest.fn();
+    const plugins: ApolloServerPlugin<BaseContext>[] = [
+      {
+        async requestDidStart() {
+          return { didEncounterErrors };
+        },
+      },
+    ];
+
+    it('called when an error occurs', async () => {
+      await runQuery(
+        {
           schema,
-          queryString: '{ testString }',
+          plugins,
+        },
+        { query: '{ testStringWithParseError: }' },
+      );
+
+      expect(didEncounterErrors).toBeCalledWith(
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.any(Error)]),
+        }),
+      );
+    });
+
+    it('called when an error occurs in execution', async () => {
+      const response = await runQuery(
+        {
+          schema,
+          plugins,
+        },
+        { query: '{ testError }' },
+      );
+
+      expect(response).toHaveProperty(
+        'errors.0.message',
+        'Secret error message',
+      );
+      expect(response).toHaveProperty('data.testError', null);
+
+      expect(didEncounterErrors).toBeCalledWith(
+        expect.objectContaining({
+          errors: expect.arrayContaining([
+            expect.objectContaining({
+              message: 'Secret error message',
+            }),
+          ]),
+        }),
+      );
+    });
+
+    it('not called when an error does not occur', async () => {
+      await runQuery(
+        {
+          schema,
+          plugins,
+        },
+        { query: '{ testString }' },
+      );
+
+      expect(didEncounterErrors).not.toBeCalled();
+    });
+  });
+
+  describe('ordering', () => {
+    it('calls hooks in the expected order', async () => {
+      const callOrder: string[] = [];
+      let stopAwaiting: Function;
+      const toBeAwaited = new Promise((resolve) => (stopAwaiting = resolve));
+
+      const parsingDidEnd: GraphQLRequestListenerParsingDidEnd = jest.fn(
+        async () => {
+          callOrder.push('parsingDidEnd');
+        },
+      );
+      const parsingDidStart: GraphQLRequestListener<BaseContext>['parsingDidStart'] =
+        jest.fn(async () => {
+          callOrder.push('parsingDidStart');
+          return parsingDidEnd;
+        });
+
+      const validationDidEnd: GraphQLRequestListenerValidationDidEnd = jest.fn(
+        async () => {
+          callOrder.push('validationDidEnd');
+        },
+      );
+      const validationDidStart: GraphQLRequestListener<BaseContext>['validationDidStart'] =
+        jest.fn(async () => {
+          callOrder.push('validationDidStart');
+          return validationDidEnd;
+        });
+
+      const didResolveSource: GraphQLRequestListener<BaseContext>['didResolveSource'] =
+        jest.fn(async () => {
+          callOrder.push('didResolveSource');
+        });
+
+      const didResolveField: GraphQLRequestListenerDidResolveField = jest.fn(
+        () => callOrder.push('didResolveField'),
+      );
+
+      const willResolveField = jest.fn(() => {
+        callOrder.push('willResolveField');
+        return didResolveField;
+      });
+
+      const executionDidEnd: GraphQLRequestListenerExecutionDidEnd = jest.fn(
+        async () => {
+          callOrder.push('executionDidEnd');
+        },
+      );
+
+      const executionDidStart = jest.fn(
+        async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => {
+          callOrder.push('executionDidStart');
+          return { willResolveField, executionDidEnd };
+        },
+      );
+
+      const schema = new GraphQLSchema({
+        query: new GraphQLObjectType({
+          name: 'QueryType',
+          fields: {
+            testString: {
+              type: GraphQLString,
+              async resolve() {
+                callOrder.push('beforeAwaiting');
+                await toBeAwaited;
+                callOrder.push('afterAwaiting');
+                return 'it works';
+              },
+            },
+          },
+        }),
+      });
+
+      Promise.resolve().then(() => stopAwaiting());
+
+      await runQuery(
+        {
+          schema,
           plugins: [
             {
               async requestDidStart() {
@@ -991,228 +927,193 @@ describe('runQuery', () => {
               },
             },
           ],
-        });
-
-        expect(parsingDidStart).toHaveBeenCalledTimes(1);
-        expect(parsingDidEnd).toHaveBeenCalledTimes(1);
-        expect(validationDidStart).toHaveBeenCalledTimes(1);
-        expect(validationDidEnd).toHaveBeenCalledTimes(1);
-        expect(executionDidStart).toHaveBeenCalledTimes(1);
-        expect(willResolveField).toHaveBeenCalledTimes(1);
-        expect(didResolveField).toHaveBeenCalledTimes(1);
-        expect(callOrder).toStrictEqual([
-          'didResolveSource',
-          'parsingDidStart',
-          'parsingDidEnd',
-          'validationDidStart',
-          'validationDidEnd',
-          'executionDidStart',
-          'willResolveField',
-          'beforeAwaiting',
-          'afterAwaiting',
-          'didResolveField',
-          'executionDidEnd',
-        ]);
-      });
-    });
-  });
-
-  describe('parsing and validation cache', () => {
-    function createLifecyclePluginMocks() {
-      const validationDidStart = jest.fn();
-      const parsingDidStart = jest.fn();
-
-      const plugins: ApolloServerPlugin<BaseContext>[] = [
-        {
-          async requestDidStart() {
-            return {
-              validationDidStart,
-              parsingDidStart,
-            } as GraphQLRequestListener<BaseContext>;
-          },
         },
-      ];
+        { query: '{ testString }' },
+      );
 
-      return {
-        plugins,
-        events: { validationDidStart, parsingDidStart },
-      };
-    }
-
-    function runRequest({
-      queryString = '{ testString }',
-      plugins = [],
-      documentStore,
-    }: {
-      queryString?: string;
-      plugins?: ApolloServerPlugin<BaseContext>[];
-      documentStore?: QueryOptions['documentStore'];
-    }) {
-      return runQuery({
-        schema,
-        documentStore,
-        queryString,
-        plugins,
-      });
-    }
-
-    function forgeLargerTestQuery(
-      count: number,
-      prefix: string = 'prefix',
-    ): string {
-      if (count <= 0) {
-        count = 1;
-      }
-
-      let query: string = '';
-
-      for (let q = 0; q < count; q++) {
-        query += ` ${prefix}_${count}: testString\n`;
-      }
-
-      return '{\n' + query + '}';
-    }
-
-    it('validates each time when the documentStore is not present', async () => {
-      expect.assertions(4);
-
-      const {
-        plugins,
-        events: { parsingDidStart, validationDidStart },
-      } = createLifecyclePluginMocks();
-
-      // The first request will do a parse and validate. (1/1)
-      await runRequest({ plugins });
-      expect(parsingDidStart.mock.calls.length).toBe(1);
-      expect(validationDidStart.mock.calls.length).toBe(1);
-
-      // The second request should ALSO do a parse and validate. (2/2)
-      await runRequest({ plugins });
-      expect(parsingDidStart.mock.calls.length).toBe(2);
-      expect(validationDidStart.mock.calls.length).toBe(2);
-    });
-
-    it('caches the DocumentNode in the documentStore when instrumented', async () => {
-      expect.assertions(4);
-      const documentStore = new InMemoryLRUCache<DocumentNode>();
-
-      const {
-        plugins,
-        events: { parsingDidStart, validationDidStart },
-      } = createLifecyclePluginMocks();
-
-      // An uncached request will have 1 parse and 1 validate call.
-      await runRequest({ plugins, documentStore });
-      expect(parsingDidStart.mock.calls.length).toBe(1);
-      expect(validationDidStart.mock.calls.length).toBe(1);
-
-      // The second request should still only have a 1 validate and 1 parse.
-      await runRequest({ plugins, documentStore });
-      expect(parsingDidStart.mock.calls.length).toBe(1);
-      expect(validationDidStart.mock.calls.length).toBe(1);
-    });
-
-    it("the documentStore calculates the DocumentNode's length by its JSON.stringify'd representation", async () => {
-      expect.assertions(14);
-      const {
-        plugins,
-        events: { parsingDidStart, validationDidStart },
-      } = createLifecyclePluginMocks();
-
-      const queryLarge = forgeLargerTestQuery(3, 'large');
-      const querySmall1 = forgeLargerTestQuery(1, 'small1');
-      const querySmall2 = forgeLargerTestQuery(1, 'small2');
-
-      // We're going to create a smaller-than-default cache which will be the
-      // size of the two smaller queries.  All three of these queries will never
-      // fit into this cache, so we'll roll through them all.
-      const maxSize =
-        InMemoryLRUCache.jsonBytesSizeCalculator(parse(querySmall1)) +
-        InMemoryLRUCache.jsonBytesSizeCalculator(parse(querySmall2));
-
-      const documentStore = new InMemoryLRUCache<DocumentNode>({
-        maxSize,
-        sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
-      });
-
-      await runRequest({ plugins, documentStore, queryString: querySmall1 });
-      expect(parsingDidStart.mock.calls.length).toBe(1);
-      expect(validationDidStart.mock.calls.length).toBe(1);
-
-      await runRequest({ plugins, documentStore, queryString: querySmall2 });
-      expect(parsingDidStart.mock.calls.length).toBe(2);
-      expect(validationDidStart.mock.calls.length).toBe(2);
-
-      // This query should be large enough to evict both of the previous
-      // from the LRU cache since it's larger than the TOTAL limit of the cache
-      // (which is capped at the length of small1 + small2) — though this will
-      // still fit (barely).
-      await runRequest({ plugins, documentStore, queryString: queryLarge });
-      expect(parsingDidStart.mock.calls.length).toBe(3);
-      expect(validationDidStart.mock.calls.length).toBe(3);
-
-      // Make sure the large query is still cached (No incr. to parse/validate.)
-      await runRequest({ plugins, documentStore, queryString: queryLarge });
-      expect(parsingDidStart.mock.calls.length).toBe(3);
-      expect(validationDidStart.mock.calls.length).toBe(3);
-
-      // This small (and the other) should both trigger parse/validate since
-      // the cache had to have evicted them both after accommodating the larger.
-      await runRequest({ plugins, documentStore, queryString: querySmall1 });
-      expect(parsingDidStart.mock.calls.length).toBe(4);
-      expect(validationDidStart.mock.calls.length).toBe(4);
-
-      await runRequest({ plugins, documentStore, queryString: querySmall2 });
-      expect(parsingDidStart.mock.calls.length).toBe(5);
-      expect(validationDidStart.mock.calls.length).toBe(5);
-
-      // Finally, make sure that the large query is gone (it should be, after
-      // the last two have taken its spot again.)
-      await runRequest({ plugins, documentStore, queryString: queryLarge });
-      expect(parsingDidStart.mock.calls.length).toBe(6);
-      expect(validationDidStart.mock.calls.length).toBe(6);
+      expect(parsingDidStart).toHaveBeenCalledTimes(1);
+      expect(parsingDidEnd).toHaveBeenCalledTimes(1);
+      expect(validationDidStart).toHaveBeenCalledTimes(1);
+      expect(validationDidEnd).toHaveBeenCalledTimes(1);
+      expect(executionDidStart).toHaveBeenCalledTimes(1);
+      expect(willResolveField).toHaveBeenCalledTimes(1);
+      expect(didResolveField).toHaveBeenCalledTimes(1);
+      expect(callOrder).toStrictEqual([
+        'didResolveSource',
+        'parsingDidStart',
+        'parsingDidEnd',
+        'validationDidStart',
+        'validationDidEnd',
+        'executionDidStart',
+        'willResolveField',
+        'beforeAwaiting',
+        'afterAwaiting',
+        'didResolveField',
+        'executionDidEnd',
+      ]);
     });
   });
+});
 
-  describe('async_hooks', () => {
-    let asyncHooks: typeof import('async_hooks');
-    let asyncHook: import('async_hooks').AsyncHook;
-    const ids: number[] = [];
+describe('parsing and validation cache', () => {
+  function createLifecyclePluginMocks() {
+    const validationDidStart = jest.fn();
+    const parsingDidStart = jest.fn();
 
-    try {
-      asyncHooks = require('async_hooks');
-    } catch (err) {
-      return; // async_hooks not present, give up
+    const plugins: ApolloServerPlugin<BaseContext>[] = [
+      {
+        async requestDidStart() {
+          return {
+            validationDidStart,
+            parsingDidStart,
+          } as GraphQLRequestListener<BaseContext>;
+        },
+      },
+    ];
+
+    return {
+      plugins,
+      events: { validationDidStart, parsingDidStart },
+    };
+  }
+
+  function forgeLargerTestQuery(
+    count: number,
+    prefix: string = 'prefix',
+  ): string {
+    if (count <= 0) {
+      count = 1;
     }
 
-    beforeAll(() => {
-      asyncHook = asyncHooks.createHook({
-        init: (asyncId: number) => ids.push(asyncId),
-      });
-      asyncHook.enable();
+    let query: string = '';
+
+    for (let q = 0; q < count; q++) {
+      query += ` ${prefix}_${count}: testString\n`;
+    }
+
+    return '{\n' + query + '}';
+  }
+
+  it('validates each time when the documentStore is null', async () => {
+    const {
+      plugins,
+      events: { parsingDidStart, validationDidStart },
+    } = createLifecyclePluginMocks();
+
+    const server = new ApolloServerBase<BaseContext>({
+      schema,
+      plugins,
+      documentStore: null,
+    });
+    await server.start();
+
+    const query = '{ testString }';
+
+    // The first request will do a parse and validate. (1/1)
+    await server.executeOperation({ query });
+    expect(parsingDidStart.mock.calls.length).toBe(1);
+    expect(validationDidStart.mock.calls.length).toBe(1);
+
+    // The second request should ALSO do a parse and validate. (2/2)
+    await server.executeOperation({ query });
+    expect(parsingDidStart.mock.calls.length).toBe(2);
+    expect(validationDidStart.mock.calls.length).toBe(2);
+
+    await server.stop();
+  });
+
+  it('only validates and parses once by default', async () => {
+    const {
+      plugins,
+      events: { parsingDidStart, validationDidStart },
+    } = createLifecyclePluginMocks();
+
+    const server = new ApolloServerBase<BaseContext>({
+      schema,
+      plugins,
+    });
+    await server.start();
+
+    const query = '{ testString }';
+
+    // The first request will do a parse and validate. (1/1)
+    await server.executeOperation({ query });
+    expect(parsingDidStart.mock.calls.length).toBe(1);
+    expect(validationDidStart.mock.calls.length).toBe(1);
+
+    // The second request should still only have a 1 validate and 1 parse.
+    await server.executeOperation({ query });
+    expect(parsingDidStart.mock.calls.length).toBe(1);
+    expect(validationDidStart.mock.calls.length).toBe(1);
+
+    await server.stop();
+  });
+
+  it("the documentStore calculates the DocumentNode's length by its JSON.stringify'd representation", async () => {
+    expect.assertions(14);
+    const {
+      plugins,
+      events: { parsingDidStart, validationDidStart },
+    } = createLifecyclePluginMocks();
+
+    const queryLarge = forgeLargerTestQuery(3, 'large');
+    const querySmall1 = forgeLargerTestQuery(1, 'small1');
+    const querySmall2 = forgeLargerTestQuery(1, 'small2');
+
+    // We're going to create a smaller-than-default cache which will be the
+    // size of the two smaller queries.  All three of these queries will never
+    // fit into this cache, so we'll roll through them all.
+    const maxSize =
+      InMemoryLRUCache.jsonBytesSizeCalculator(parse(querySmall1)) +
+      InMemoryLRUCache.jsonBytesSizeCalculator(parse(querySmall2));
+
+    const documentStore = new InMemoryLRUCache<DocumentNode>({
+      maxSize,
+      sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
     });
 
-    afterAll(() => {
-      asyncHook.disable();
+    const server = new ApolloServerBase<BaseContext>({
+      schema,
+      plugins,
+      documentStore,
     });
+    await server.start();
 
-    it('does not break async_hook call stack', async () => {
-      const query = `
-        query Q1 {
-          testObject {
-            testString
-          }
-        }
-      `;
+    await server.executeOperation({ query: querySmall1 });
+    expect(parsingDidStart.mock.calls.length).toBe(1);
+    expect(validationDidStart.mock.calls.length).toBe(1);
 
-      await runQuery({
-        schema,
-        queryString: query,
-        operationName: 'Q1',
-      });
+    await server.executeOperation({ query: querySmall2 });
+    expect(parsingDidStart.mock.calls.length).toBe(2);
+    expect(validationDidStart.mock.calls.length).toBe(2);
 
-      // Expect there to be several async ids provided
-      expect(ids.length).toBeGreaterThanOrEqual(2);
-    });
+    // This query should be large enough to evict both of the previous
+    // from the LRU cache since it's larger than the TOTAL limit of the cache
+    // (which is capped at the length of small1 + small2) — though this will
+    // still fit (barely).
+    await server.executeOperation({ query: queryLarge });
+    expect(parsingDidStart.mock.calls.length).toBe(3);
+    expect(validationDidStart.mock.calls.length).toBe(3);
+
+    // Make sure the large query is still cached (No incr. to parse/validate.)
+    await server.executeOperation({ query: queryLarge });
+    expect(parsingDidStart.mock.calls.length).toBe(3);
+    expect(validationDidStart.mock.calls.length).toBe(3);
+
+    // This small (and the other) should both trigger parse/validate since
+    // the cache had to have evicted them both after accommodating the larger.
+    await server.executeOperation({ query: querySmall1 });
+    expect(parsingDidStart.mock.calls.length).toBe(4);
+    expect(validationDidStart.mock.calls.length).toBe(4);
+
+    await server.executeOperation({ query: querySmall2 });
+    expect(parsingDidStart.mock.calls.length).toBe(5);
+    expect(validationDidStart.mock.calls.length).toBe(5);
+
+    // Finally, make sure that the large query is gone (it should be, after
+    // the last two have taken its spot again.)
+    await server.executeOperation({ query: queryLarge });
+    expect(parsingDidStart.mock.calls.length).toBe(6);
+    expect(validationDidStart.mock.calls.length).toBe(6);
   });
 });

@@ -2,13 +2,14 @@ import type {
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
 } from '@apollo/server-types';
-import type GraphQLServerOptions from './graphqlOptions';
+import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
 import { HeaderMap, HttpQueryError, runHttpQuery } from './runHttpQuery';
 
 export async function runBatchHttpQuery<TContext>(
   batchRequest: Omit<HTTPGraphQLRequest, 'body'> & { body: any[] },
   context: TContext,
-  serverOptions: GraphQLServerOptions<TContext>,
+  schemaDerivedData: SchemaDerivedData,
+  internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
   // TODO(AS4): Handle empty list as an error
 
@@ -27,7 +28,8 @@ export async function runBatchHttpQuery<TContext>(
       const response = await runHttpQuery(
         singleRequest,
         context,
-        serverOptions,
+        schemaDerivedData,
+        internals,
       );
 
       if (response.completeBody === null) {
@@ -54,13 +56,24 @@ export async function runBatchHttpQuery<TContext>(
 export async function runPotentiallyBatchedHttpQuery<TContext>(
   httpGraphQLRequest: HTTPGraphQLRequest,
   context: TContext,
-  serverOptions: GraphQLServerOptions<TContext>,
+  schemaDerivedData: SchemaDerivedData,
+  internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
   if (!Array.isArray(httpGraphQLRequest.body)) {
-    return await runHttpQuery(httpGraphQLRequest, context, serverOptions);
+    return await runHttpQuery(
+      httpGraphQLRequest,
+      context,
+      schemaDerivedData,
+      internals,
+    );
   }
-  if (serverOptions.allowBatchedHttpRequests) {
-    return await runBatchHttpQuery(httpGraphQLRequest, context, serverOptions);
+  if (internals.allowBatchedHttpRequests) {
+    return await runBatchHttpQuery(
+      httpGraphQLRequest,
+      context,
+      schemaDerivedData,
+      internals,
+    );
   }
   return new HttpQueryError(
     400,

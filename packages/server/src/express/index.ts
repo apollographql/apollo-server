@@ -3,9 +3,8 @@ import { ApolloServerBase } from '..';
 import accepts from 'accepts';
 import asyncHandler from 'express-async-handler';
 import type { BaseContext, HTTPGraphQLResponse } from '@apollo/server-types';
-import { debugFromNodeEnv, executeContextFunction } from '../runHttpQuery';
+import { executeContextFunction } from '../runHttpQuery';
 import type { HTTPGraphQLRequest } from '@apollo/server-types';
-import { runPotentiallyBatchedHttpQuery } from '../httpBatching';
 
 export interface ExpressContext {
   req: express.Request;
@@ -60,10 +59,10 @@ export class ApolloServerExpress<
       const contextFunctionExecutionResult = await executeContextFunction(
         () => contextFunction({ req, res }),
         {
-          debug:
-            this.requestOptions.debug ??
-            debugFromNodeEnv(this.requestOptions.nodeEnv),
-          formatter: this.requestOptions.formatError,
+          // TODO(AS4): Clean this up (probably by moving executeContextFunction
+          // into executeHTTPGraphQLRequest)
+          debug: this['internals'].includeStackTracesInErrorResponses,
+          formatter: this['internals'].formatError,
         },
       );
       if (contextFunctionExecutionResult.errorHTTPGraphQLResponse) {
@@ -85,9 +84,6 @@ export class ApolloServerExpress<
         }
       }
 
-      // TODO(AS4): error handling but also just eliminating this class
-      const serverOptions = await this.graphQLServerOptions();
-
       const httpGraphQLRequest: HTTPGraphQLRequest = {
         method: req.method.toUpperCase(),
         headers,
@@ -97,10 +93,9 @@ export class ApolloServerExpress<
 
       // TODO(AS4): Make batching optional and off by default; perhaps move it
       // to a separate middleware.
-      const httpGraphQLResponse = await runPotentiallyBatchedHttpQuery(
+      const httpGraphQLResponse = await this.executeHTTPGraphQLRequest(
         httpGraphQLRequest,
         context,
-        serverOptions,
       );
       if (httpGraphQLResponse.completeBody === null) {
         // TODO(AS4): Implement incremental delivery or improve error handling.

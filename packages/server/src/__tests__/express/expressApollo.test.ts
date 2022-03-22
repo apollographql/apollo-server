@@ -6,9 +6,8 @@ import testSuite, { schema as Schema } from '../integration';
 
 describe('expressApollo', () => {
   it('throws error if called without schema', function () {
-    expect(() => new ApolloServerExpress(undefined as any)).toThrow(
-      'ApolloServer requires options.',
-    );
+    // @ts-expect-error
+    expect(() => new ApolloServerExpress()).toThrow();
   });
 });
 

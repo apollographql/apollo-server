@@ -288,34 +288,6 @@ export function testApolloServer(
           expect(result.data).toBeDefined();
           expect(result.errors).toBeUndefined();
         });
-
-        it('prohibits providing a gateway in addition to schema/typeDefs/resolvers', async () => {
-          const { gateway } = makeGatewayMock();
-
-          const incompatibleArgsSpy = jest.fn();
-          await createApolloServer({ gateway, schema }).catch((err) =>
-            incompatibleArgsSpy(err.message),
-          );
-          expect(incompatibleArgsSpy.mock.calls[0][0]).toMatch(
-            /Cannot define both/,
-          );
-
-          await createApolloServer({
-            gateway,
-            modules: {} as any,
-          }).catch((err) => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[1][0]).toMatch(
-            /Cannot define both/,
-          );
-
-          await createApolloServer({
-            gateway,
-            typeDefs: {} as any,
-          }).catch((err) => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(
-            /Cannot define both/,
-          );
-        });
       });
 
       describe('appropriate error for bad user input', () => {
@@ -526,30 +498,6 @@ export function testApolloServer(
             ).rejects.toThrow('You must `await server.start()`');
           });
         }
-
-        it('uses schema over resolvers + typeDefs', async () => {
-          const typeDefs = gql`
-            type Query {
-              hello: String
-            }
-          `;
-          const resolvers = { Query: { hello: () => 'hi' } };
-          const { url: uri } = await createApolloServer({
-            typeDefs,
-            resolvers,
-            schema,
-          });
-
-          const apolloFetch = createApolloFetch({ uri });
-          const typeDefResult = await apolloFetch({ query: '{hello}' });
-
-          expect(typeDefResult.data).toBeUndefined();
-          expect(typeDefResult.errors).toBeDefined();
-
-          const result = await apolloFetch({ query: '{testString}' });
-          expect(result.data).toEqual({ testString: 'test string' });
-          expect(result.errors).toBeUndefined();
-        });
 
         it('allows mocks as boolean', async () => {
           const typeDefs = gql`
@@ -900,7 +848,7 @@ export function testApolloServer(
             },
           },
           introspection: true,
-          debug: true,
+          includeStackTracesInErrorResponses: true,
           formatError,
         });
 
@@ -1056,7 +1004,7 @@ export function testApolloServer(
                 }),
                 ...plugins,
               ],
-              debug: true,
+              includeStackTracesInErrorResponses: true,
               stopOnTerminationSignals: false,
               nodeEnv: '',
               ...constructorOptions,
@@ -1483,7 +1431,7 @@ export function testApolloServer(
             },
           ],
           formatError,
-          debug: true,
+          includeStackTracesInErrorResponses: true,
         });
         const apolloFetch = createApolloFetch({ uri });
         const result = await apolloFetch({

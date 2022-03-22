@@ -66,7 +66,6 @@ export type HTTPGraphQLResponse = {
 
 export type BaseContext = Record<string, any>;
 
-export type ValueOrPromise<T> = T | Promise<T>;
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 /**
@@ -97,6 +96,8 @@ export interface ApolloConfigInput {
   // backwards compatibility, may alternatively specify the ref as graphId and
   // graphVariant separately.
   graphRef?: string;
+  // TODO(AS4): Consider dropping support for specifying ID and variant separately.
+  //
   // The graph ID of your graph, eg `my-graph`. Environment variable:
   // APOLLO_GRAPH_ID.
   graphId?: string;
@@ -113,13 +114,12 @@ export interface ApolloConfig {
   graphRef?: string;
 }
 
+// TODO(AS4): Rename this type to Server rather than Service or something.
 export interface GraphQLServiceContext {
   logger: Logger;
   schema: GraphQLSchema;
   apollo: ApolloConfig;
-  persistedQueries?: {
-    cache: KeyValueCache;
-  };
+  // TODO(AS4): Make sure we document that we removed `persistedQueries`.
   serverlessFramework: boolean;
 }
 
@@ -198,8 +198,6 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly errors?: ReadonlyArray<GraphQLError>;
 
   readonly metrics: GraphQLRequestMetrics;
-
-  debug?: boolean;
 
   readonly overallCachePolicy: CachePolicy;
 }
