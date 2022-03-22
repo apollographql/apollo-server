@@ -197,7 +197,7 @@ httpServer.listen(PORT, () => {
 
 </ExpansionPanel>
 
-> ⚠️ **Running into an error?** If you are using the `graphql-ws` library your specified subscription protocol must be consistent across your backend, frontend and **every other tool** you use (including [Apollo Sandbox](./studio/explorer/additional-features/#subscription-support)). For more information see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
+> ⚠️ **Running into an error?** If you are using the `graphql-ws` library your specified subscription protocol must be consistent across your backend, frontend and **every other tool** you use (including [Apollo Sandbox](../studio/explorer/additional-features/#subscription-support)). For more information see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
 
 ## Resolving a subscription
 
@@ -207,7 +207,7 @@ Resolvers for `Subscription` fields differ from resolvers for fields of other ty
 const resolvers = {
   Subscription: {
     hello: {
-      // Example using an async generator 
+      // Example using an async generator
       subscribe: async function* () {
         for await (const word of ["Hello", "Bonjour", "Ciao"]) {
           yield { hello: word };
