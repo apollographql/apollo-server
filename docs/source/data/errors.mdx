@@ -480,3 +480,33 @@ In this case, the error above is reported to Apollo Studio as:
 ```
 The REDACTED doesn't have sufficient privileges.
 ```
+
+## Returning HTTP status codes
+
+GraphQL, by design, does not use the same conventions from REST to communicate via HTTP verbs and status codes. Client information should be contained in the schema or as part of the standard response `errors` field. We recommend using the included [Error Codes](#error-codes) or [Custom Errors](#custom-errors) for error consistency rather than directly modifying the HTTP response.
+
+You can set custom fields on your HTTP response by using a [plugin](../integrations/plugins). Be aware that GraphQL client libraries may not treat all response status codes the same, and so it will be up to your team to decide what patterns to use.
+
+As an example, here is how you could set a custom response header and status code based on a GraphQL error:
+
+
+```js
+const setHttpPlugin = {
+  async requestDidStart() {
+    return {
+      async willSendResponse({ response }) {
+        response.http.headers.set('Custom-Header', 'hello');
+        if (response?.errors?.[0]?.message === 'teapot') {
+          response.http.status = 418;
+        }
+      }
+    };
+  }
+};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [setHttpPlugin]
+});
+```
