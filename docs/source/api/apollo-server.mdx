@@ -220,8 +220,6 @@ new ApolloServer({
 
 </div>
 
-**Do not share a `documentStore` between multiple `ApolloServer` instances**, _unless_ you assign a unique prefix to each instance's entries (for example, using [`PrefixingKeyValueCache`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/PrefixingKeyValueCache.ts)). Apollo Server skips parsing and validating any operation that's present in its `documentStore`, so if servers with _different_ schemas share the _same_ `documentStore`, a server might execute an operation that its schema doesn't support.
-
 Pass `null` to disable this cache entirely.
 
 Available in Apollo Server v3.4.0 and later.

@@ -58,6 +58,7 @@ import {
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import { newCachePolicy } from './cachePolicy';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
+import * as uuid from 'uuid';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -670,15 +671,23 @@ export class ApolloServerBase<
     return {
       schema,
       schemaHash,
-      // The DocumentStore is schema-derived because we put documents in it after
-      // checking that they pass GraphQL validation against the schema and use
-      // this to skip validation as well as parsing. So we can't reuse the same
-      // DocumentStore for different schemas because that might make us treat
-      // invalid operations as valid.
+      // The DocumentStore is schema-derived because we put documents in it
+      // after checking that they pass GraphQL validation against the schema and
+      // use this to skip validation as well as parsing. So we can't reuse the
+      // same DocumentStore for different schemas because that might make us
+      // treat invalid operations as valid. If we're using the default
+      // DocumentStore, then we just create it from scratch each time we get a
+      // new schema. If we're using a user-provided DocumentStore, then we use a
+      // random prefix each time we get a new schema.
       documentStore:
         this.config.documentStore === undefined
           ? this.initializeDocumentStore()
-          : this.config.documentStore,
+          : this.config.documentStore === null
+          ? null
+          : new PrefixingKeyValueCache(
+              this.config.documentStore,
+              `${uuid.v4()}:`,
+            ),
     };
   }
 
