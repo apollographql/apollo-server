@@ -197,7 +197,7 @@ httpServer.listen(PORT, () => {
 
 </ExpansionPanel>
 
-> ⚠️ **Running into an error?** If you are using the `graphql-ws` library your specified subscription protocol must be consistent across your backend, frontend and **every other tool** you use (including [Apollo Sandbox](../studio/explorer/additional-features/#subscription-support)). For more information see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
+> ⚠️ **Running into an error?** If you're using the `graphql-ws` library, your specified subscription protocol must be consistent across your backend, frontend, and **every other tool** you use (including [Apollo Sandbox](../studio/explorer/additional-features/#subscription-support)). For more information, see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
 
 ## Resolving a subscription
 
@@ -492,7 +492,7 @@ For more information and examples of using `onConnect` and `onDisconnect`, see t
 
 ### Example: Authentication with Apollo Client
 
->If you plan to use subscriptions with Apollo Client, ensure **[both your client and server subscription protocols are consistent](#switching-from-subscriptions-transport-ws)** for the subscription library you are using (this example uses the `graphql-ws` library).
+>If you plan to use subscriptions with Apollo Client, ensure **[both your client and server subscription protocols are consistent](#switching-from-subscriptions-transport-ws)** for the subscription library you're using (this example uses the `graphql-ws` library).
 
 In Apollo Client, the `GraphQLWsLink` constructor supports adding information to `connectionParams` ([example](https://www.apollographql.com/docs/react/data/subscriptions/#5-authenticate-over-websocket-optional)). Those `connectionParams` are sent to your server when it connects, allowing you to extract information from the client request by accessing `Context.connectionParams`.
 
@@ -570,7 +570,7 @@ If none of these libraries fits your use case, you can also create your own `Pub
 
 ## Switching from `subscriptions-transport-ws`
 
->If you use subscriptions with Apollo Client you must ensure **[both your client and server subscription protocols are consistent](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol)** for the subscription library you are using.
+>If you use subscriptions with Apollo Client you must ensure **[both your client and server subscription protocols are consistent](https://www.apollographql.com/docs/react/data/subscriptions/#choice-of-subscription-protocol)** for the subscription library your're using.
 
 This article previously demonstrated using the `subscriptions-transport-ws` library to set up subscriptions. However, this library is no longer actively maintained. You can still use it with Apollo Server, but we strongly recommend using [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) instead.
 
