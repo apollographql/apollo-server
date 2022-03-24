@@ -86,12 +86,16 @@ describe('ApolloServerBase documentStore', () => {
 
     await server.executeOperation(operations.simple.op);
 
-    expect(Object.keys(cache)).toEqual([operations.simple.hash]);
-    expect(cache[operations.simple.hash]).toMatchObject(documentNodeMatcher);
+    const keys = Object.keys(cache);
+    expect(keys).toHaveLength(1);
+    const theKey = keys[0];
+    expect(theKey.split(':')).toHaveLength(2);
+    expect(theKey.split(':')[1]).toEqual(operations.simple.hash);
+    expect(cache[theKey]).toMatchObject(documentNodeMatcher);
 
     await server.executeOperation(operations.simple.op);
 
-    expect(Object.keys(cache)).toEqual([operations.simple.hash]);
+    expect(Object.keys(cache)).toEqual([theKey]);
 
     expect(getSpy.mock.calls.length).toBe(2);
     expect(setSpy.mock.calls.length).toBe(1);
@@ -113,4 +117,6 @@ describe('ApolloServerBase documentStore', () => {
 
     expect(result.data).toEqual({ hello: 'world' });
   });
+
+  it('documentStore with changing schema', async () => {});
 });
