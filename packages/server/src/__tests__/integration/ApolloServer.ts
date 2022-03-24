@@ -15,6 +15,7 @@ import {
   ValidationContext,
   FieldDefinitionNode,
   ResponsePath,
+  DocumentNode,
 } from 'graphql';
 
 // Note that by doing deep imports here we don't need to install React.
@@ -49,6 +50,7 @@ import type {
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import type { AddressInfo } from 'net';
 import request from 'supertest';
+import { InMemoryLRUCache } from 'apollo-server-caching';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -2284,47 +2286,63 @@ export function testApolloServer(
     });
 
     describe('Gateway', () => {
-      it('receives schema updates from the gateway', async () => {
-        const makeQueryTypeWithField = (fieldName: string) =>
-          new GraphQLSchema({
-            query: new GraphQLObjectType({
-              name: 'QueryType',
-              fields: {
-                [fieldName]: {
-                  type: GraphQLString,
+      it.each([true, false])(
+        'receives schema updates from the gateway (with document store: %s)',
+        async (withDocumentStore: boolean) => {
+          const makeQueryTypeWithField = (fieldName: string) =>
+            new GraphQLSchema({
+              query: new GraphQLObjectType({
+                name: 'QueryType',
+                fields: {
+                  [fieldName]: {
+                    type: GraphQLString,
+                  },
                 },
-              },
-            }),
+              }),
+            });
+
+          const executor = (req: GraphQLRequestContextExecutionDidStart<any>) =>
+            (req.source as string).match(/1/)
+              ? Promise.resolve({ data: { testString1: 'hello' } })
+              : Promise.resolve({ data: { testString2: 'aloha' } });
+
+          const { gateway, triggers } = makeGatewayMock();
+
+          triggers.resolveLoad({
+            schema: makeQueryTypeWithField('testString1'),
+            executor,
           });
 
-        const executor = (req: GraphQLRequestContextExecutionDidStart<any>) =>
-          (req.source as string).match(/1/)
-            ? Promise.resolve({ data: { testString1: 'hello' } })
-            : Promise.resolve({ data: { testString2: 'aloha' } });
+          const { url: uri } = await createApolloServer({
+            gateway,
+            documentStore: withDocumentStore
+              ? new InMemoryLRUCache<DocumentNode>()
+              : undefined,
+          });
 
-        const { gateway, triggers } = makeGatewayMock();
+          const apolloFetch = createApolloFetch({ uri });
+          const result1 = await apolloFetch({ query: '{testString1}' });
 
-        triggers.resolveLoad({
-          schema: makeQueryTypeWithField('testString1'),
-          executor,
-        });
+          expect(result1.data).toEqual({ testString1: 'hello' });
+          expect(result1.errors).toBeUndefined();
 
-        const { url: uri } = await createApolloServer({
-          gateway,
-        });
+          triggers.triggerSchemaChange!(makeQueryTypeWithField('testString2'));
 
-        const apolloFetch = createApolloFetch({ uri });
-        const result1 = await apolloFetch({ query: '{testString1}' });
+          const result2 = await apolloFetch({ query: '{testString2}' });
+          expect(result2.data).toEqual({ testString2: 'aloha' });
+          expect(result2.errors).toBeUndefined();
 
-        expect(result1.data).toEqual({ testString1: 'hello' });
-        expect(result1.errors).toBeUndefined();
-
-        triggers.triggerSchemaChange!(makeQueryTypeWithField('testString2'));
-
-        const result2 = await apolloFetch({ query: '{testString2}' });
-        expect(result2.data).toEqual({ testString2: 'aloha' });
-        expect(result2.errors).toBeUndefined();
-      });
+          const invalidResult = await apolloFetch({ query: '{testString1}' });
+          expect(invalidResult.data).toBeUndefined();
+          expect(invalidResult.errors).toEqual([
+            {
+              extensions: { code: 'GRAPHQL_VALIDATION_FAILED' },
+              message:
+                'Cannot query field "testString1" on type "QueryType". Did you mean "testString2"?',
+            },
+          ]);
+        },
+      );
 
       it('passes apollo data to the gateway', async () => {
         const optionsSpy = jest.fn();
