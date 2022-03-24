@@ -26,6 +26,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// TODO(AS4): Figure out a way to usefully test the grace period behavior without
+//   leading to flakiness due to speed variation.
+
 import http from 'http';
 import https from 'https';
 const a: any = require('awaiting');
