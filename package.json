@@ -83,7 +83,7 @@
     "log4js": "6.4.4",
     "nock": "13.2.4",
     "node-fetch": "2.6.7",
-    "prettier": "2.6.0",
+    "prettier": "2.6.1",
     "qs-middleware": "1.0.3",
     "request-promise": "4.2.6",
     "requisition": "1.7.0",
