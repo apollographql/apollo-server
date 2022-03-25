@@ -35,11 +35,11 @@ import type {
 } from '@apollo/server-types';
 
 import type {
-  Config,
+  ApolloServerOptions,
   DocumentStore,
   PersistedQueryOptions,
   PluginDefinition,
-  StaticSchemaConfig,
+  ApolloServerOptionsWithStaticSchema,
 } from './types';
 
 import {
@@ -173,7 +173,7 @@ function defaultLogger(): Logger {
 export class ApolloServerBase<TContext extends BaseContext> {
   private internals: ApolloServerInternals<TContext>;
 
-  constructor(config: Config<TContext>) {
+  constructor(config: ApolloServerOptions<TContext>) {
     const nodeEnv = config.nodeEnv ?? process.env.NODE_ENV ?? '';
 
     const logger = config.logger ?? defaultLogger();
@@ -603,7 +603,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
   }
 
   private static constructSchema<TContext>(
-    config: StaticSchemaConfig<TContext>,
+    config: ApolloServerOptionsWithStaticSchema<TContext>,
   ): GraphQLSchema {
     if (config.schema) {
       return config.schema;
@@ -635,7 +635,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
 
   private static maybeAddMocksToConstructedSchema<TContext>(
     schema: GraphQLSchema,
-    config: StaticSchemaConfig<TContext>,
+    config: ApolloServerOptionsWithStaticSchema<TContext>,
   ): GraphQLSchema {
     const { mocks, mockEntireSchema } = config;
     if (mocks === false) {

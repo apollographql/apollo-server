@@ -21,11 +21,11 @@ import type {
   BaseContext,
 } from '@apollo/server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import type { Config } from '../types';
+import type { ApolloServerOptions } from '../types';
 import { ApolloServerBase } from '../ApolloServer';
 
 async function runQuery(
-  config: Config<BaseContext>,
+  config: ApolloServerOptions<BaseContext>,
   request: GraphQLRequest,
   context?: BaseContext,
 ): Promise<GraphQLResponse> {

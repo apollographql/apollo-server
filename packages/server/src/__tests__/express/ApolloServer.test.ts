@@ -14,7 +14,7 @@ import {
   ApolloServerPluginDrainHttpServer,
 } from '../..';
 import { ApolloServerExpress, ExpressContext } from '../../express';
-import type { Config } from '../../types';
+import type { ApolloServerOptions } from '../../types';
 
 import {
   testApolloServer,
@@ -37,7 +37,7 @@ const resolvers = {
 describe('apollo-server-express', () => {
   let serverToCleanUp: ApolloServerExpress | null = null;
   testApolloServer(
-    async (config: Config<BaseContext>, options) => {
+    async (config: ApolloServerOptions<BaseContext>, options) => {
       serverToCleanUp = null;
       const app = express();
       const httpServer = http.createServer(app);
@@ -80,7 +80,7 @@ describe('apollo-server-express', () => {
   let httpServer: http.Server;
 
   async function createServer(
-    serverOptions: Config<BaseContext>,
+    serverOptions: ApolloServerOptions<BaseContext>,
     options?: {
       context?: (expressContext: ExpressContext) => Promise<BaseContext>;
       skipBodyParser?: true;

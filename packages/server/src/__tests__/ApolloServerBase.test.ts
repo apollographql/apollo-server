@@ -3,7 +3,7 @@ import {
   buildServiceDefinition,
   GraphQLSchemaModule,
 } from '@apollographql/apollo-tools';
-import { Config, GatewayInterface, gql } from '../';
+import { ApolloServerOptions, GatewayInterface, gql } from '../';
 import type { GraphQLSchema } from 'graphql';
 import type {
   ApolloServerPlugin,
@@ -104,7 +104,7 @@ describe('ApolloServerBase construction', () => {
     };
     const modules: GraphQLSchemaModule[] = [];
 
-    function takesConfig(_c: Config<BaseContext>) {}
+    function takesConfig(_c: ApolloServerOptions<BaseContext>) {}
 
     takesConfig({ gateway });
     takesConfig({ schema });

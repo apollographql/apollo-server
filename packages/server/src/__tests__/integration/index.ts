@@ -21,7 +21,7 @@ import type { HTTPError } from 'superagent';
 import resolvable from '@josephg/resolvable';
 
 import {
-  Config,
+  ApolloServerOptions,
   KeyValueCache,
   ApolloServerPluginCacheControl,
   PersistedQueryOptions,
@@ -202,7 +202,7 @@ export const schema = new GraphQLSchema({
 });
 export interface CreateAppFunc {
   (
-    config?: Config<BaseContext>,
+    config?: ApolloServerOptions<BaseContext>,
     context?: () => Promise<BaseContext>,
   ): Promise<any>;
 }

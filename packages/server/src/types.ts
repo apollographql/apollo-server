@@ -84,10 +84,8 @@ export interface PersistedQueryOptions {
   ttl?: number | null;
 }
 
-// This configuration is shared between all integrations and should include
-// fields that are not specific to a single integration
 // TODO(AS4): Organize this.
-interface BaseConfig<TContext extends BaseContext> {
+interface ApolloServerOptionsBase<TContext extends BaseContext> {
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => any) | any;
   validationRules?: Array<(context: ValidationContext) => any>;
@@ -117,8 +115,8 @@ interface BaseConfig<TContext extends BaseContext> {
   parseOptions?: IExecutableSchemaDefinition<TContext>['parseOptions'];
 }
 
-export interface GatewaySchemaConfig<TContext extends BaseContext>
-  extends BaseConfig<TContext> {
+export interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
+  extends ApolloServerOptionsBase<TContext> {
   gateway: GatewayInterface;
   schema?: undefined;
   modules?: undefined;
@@ -126,8 +124,8 @@ export interface GatewaySchemaConfig<TContext extends BaseContext>
   resolvers?: undefined;
 }
 
-export interface StaticSchemaProvidedConfig<TContext extends BaseContext>
-  extends BaseConfig<TContext> {
+export interface ApolloServerOptionsWithSchema<TContext extends BaseContext>
+  extends ApolloServerOptionsBase<TContext> {
   schema: GraphQLSchema;
   gateway?: undefined;
   modules?: undefined;
@@ -135,8 +133,8 @@ export interface StaticSchemaProvidedConfig<TContext extends BaseContext>
   resolvers?: undefined;
 }
 
-export interface StaticSchemaFromModulesConfig<TContext extends BaseContext>
-  extends BaseConfig<TContext> {
+export interface ApolloServerOptionsWithModules<TContext extends BaseContext>
+  extends ApolloServerOptionsBase<TContext> {
   modules: GraphQLSchemaModule[];
   gateway?: undefined;
   schema?: undefined;
@@ -144,8 +142,8 @@ export interface StaticSchemaFromModulesConfig<TContext extends BaseContext>
   resolvers?: undefined;
 }
 
-export interface StaticSchemaFromTypeDefsConfig<TContext extends BaseContext>
-  extends BaseConfig<TContext> {
+export interface ApolloServerOptionsWithTypeDefs<TContext extends BaseContext>
+  extends ApolloServerOptionsBase<TContext> {
   // These three options are always only passed directly through to
   // makeExecutableSchema. (If you don't want to use makeExecutableSchema, pass
   // `schema` instead.)
@@ -156,25 +154,16 @@ export interface StaticSchemaFromTypeDefsConfig<TContext extends BaseContext>
   modules?: undefined;
 }
 
-export type StaticSchemaConfig<TContext extends BaseContext> = (
-  | StaticSchemaProvidedConfig<TContext>
-  | StaticSchemaFromModulesConfig<TContext>
-  | StaticSchemaFromTypeDefsConfig<TContext>
-) & {
-  mocks?: boolean | IMocks;
-  mockEntireSchema?: boolean;
-};
+export type ApolloServerOptionsWithStaticSchema<TContext extends BaseContext> =
+  (
+    | ApolloServerOptionsWithSchema<TContext>
+    | ApolloServerOptionsWithModules<TContext>
+    | ApolloServerOptionsWithTypeDefs<TContext>
+  ) & {
+    mocks?: boolean | IMocks;
+    mockEntireSchema?: boolean;
+  };
 
-export type Config<TContext extends BaseContext> =
-  | GatewaySchemaConfig<TContext>
-  | StaticSchemaConfig<TContext>;
-
-// | 'formatError'
-// | 'rootValue'
-// | 'validationRules'
-// | 'executor'
-// | 'formatResponse'
-// | 'fieldResolver'
-// | 'cache'
-// | 'logger'
-// | 'allowBatchedHttpRequests'
+export type ApolloServerOptions<TContext extends BaseContext> =
+  | ApolloServerOptionsWithGateway<TContext>
+  | ApolloServerOptionsWithStaticSchema<TContext>;

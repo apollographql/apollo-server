@@ -28,7 +28,7 @@ import {
   AuthenticationError,
   UserInputError,
   gql,
-  Config,
+  ApolloServerOptions,
   ApolloServerBase,
   PluginDefinition,
   GatewayInterface,
@@ -170,7 +170,7 @@ export interface ServerInfo {
 
 export interface CreateServerFunc {
   (
-    config: Config<BaseContext>,
+    config: ApolloServerOptions<BaseContext>,
     options?: {
       suppressStartCall?: boolean;
       graphqlPath?: string;
@@ -2467,7 +2467,9 @@ export function testApolloServer(
         return getWithoutAcceptHeader(url).set('accept', 'text/html');
       }
 
-      function makeServerConfig(htmls: string[]): Config<BaseContext> {
+      function makeServerConfig(
+        htmls: string[],
+      ): ApolloServerOptions<BaseContext> {
         return {
           typeDefs: 'type Query {x: ID}',
           plugins: [
