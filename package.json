@@ -38,7 +38,7 @@
     "@graphql-tools/schema": "8.3.5",
     "@graphql-tools/utils": "8.6.5",
     "@josephg/resolvable": "1.0.1",
-    "@rollup/plugin-commonjs": "21.0.2",
+    "@rollup/plugin-commonjs": "21.0.3",
     "@rollup/plugin-json": "4.1.0",
     "@types/async-retry": "1.4.3",
     "@types/body-parser": "1.19.2",
