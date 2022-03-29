@@ -30,7 +30,6 @@
     "npm": "^8.5.0"
   },
   "devDependencies": {
-    "@apollographql/apollo-tools": "0.5.2",
     "@apollo/client": "3.5.10",
     "@graphql-codegen/cli": "2.6.2",
     "@graphql-codegen/typescript-operations": "2.3.5",

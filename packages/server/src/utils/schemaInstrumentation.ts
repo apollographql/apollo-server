@@ -1,18 +1,15 @@
 import {
   GraphQLSchema,
   GraphQLField,
-  ResponsePath,
   getNamedType,
   GraphQLObjectType,
   GraphQLFieldResolver,
 } from 'graphql/type';
 import { defaultFieldResolver } from 'graphql/execution';
-import type { FieldNode } from 'graphql/language';
 import type {
   BaseContext,
   GraphQLRequestExecutionListener,
 } from '@apollo/server-types';
-import type { GraphQLObjectResolver } from '@apollographql/apollo-tools';
 
 export const symbolExecutionDispatcherWillResolveField = Symbol(
   'apolloServerExecutionDispatcherWillResolveField',
@@ -58,15 +55,6 @@ function wrapField<TContext extends BaseContext>(
   const originalFieldResolve = field.resolve;
 
   field.resolve = (source, args, context, info) => {
-    // This is a bit of a hack, but since `ResponsePath` is a linked list,
-    // a new object gets created every time a path segment is added.
-    // So we can use that to share our `whenObjectResolved` promise across
-    // all field resolvers for the same object.
-    const parentPath = info.path.prev as ResponsePath & {
-      __fields?: Record<string, ReadonlyArray<FieldNode>>;
-      __whenObjectResolved?: Promise<any>;
-    };
-
     const willResolveField = context?.[
       symbolExecutionDispatcherWillResolveField
     ] as
@@ -87,42 +75,11 @@ function wrapField<TContext extends BaseContext>(
       typeof willResolveField === 'function' &&
       willResolveField({ source, args, context, info });
 
-    const resolveObject: GraphQLObjectResolver<any, any> | undefined = (
-      info.parentType as any
-    ).resolveObject;
-
-    let whenObjectResolved: Promise<any> | undefined;
-
-    if (parentPath && resolveObject) {
-      if (!parentPath.__fields) {
-        parentPath.__fields = {};
-      }
-
-      parentPath.__fields[info.fieldName] = info.fieldNodes;
-
-      whenObjectResolved = parentPath.__whenObjectResolved;
-      if (!whenObjectResolved) {
-        // Use `Promise.resolve().then()` to delay executing
-        // `resolveObject()` so we can collect all the fields first.
-        whenObjectResolved = Promise.resolve().then(() => {
-          return resolveObject(source, parentPath.__fields!, context, info);
-        });
-        parentPath.__whenObjectResolved = whenObjectResolved;
-      }
-    }
-
     const fieldResolver =
       originalFieldResolve || userFieldResolver || defaultFieldResolver;
 
     try {
-      let result: any;
-      if (whenObjectResolved) {
-        result = whenObjectResolved.then((resolvedObject: any) => {
-          return fieldResolver(resolvedObject, args, context, info);
-        });
-      } else {
-        result = fieldResolver(source, args, context, info);
-      }
+      let result = fieldResolver(source, args, context, info);
 
       // Call the stack's handlers either immediately (if result is not a
       // Promise) or once the Promise is done. Then return that same

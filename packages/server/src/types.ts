@@ -19,10 +19,6 @@ import type {
   Logger,
 } from '@apollo/server-types';
 
-import type { GraphQLSchemaModule } from '@apollographql/apollo-tools';
-
-export type { GraphQLSchemaModule };
-
 import type { KeyValueCache } from 'apollo-server-caching';
 export type { KeyValueCache };
 
@@ -119,7 +115,6 @@ export interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
   gateway: GatewayInterface;
   schema?: undefined;
-  modules?: undefined;
   typeDefs?: undefined;
   resolvers?: undefined;
 }
@@ -128,36 +123,24 @@ export interface ApolloServerOptionsWithSchema<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
   schema: GraphQLSchema;
   gateway?: undefined;
-  modules?: undefined;
-  typeDefs?: undefined;
-  resolvers?: undefined;
-}
-
-export interface ApolloServerOptionsWithModules<TContext extends BaseContext>
-  extends ApolloServerOptionsBase<TContext> {
-  modules: GraphQLSchemaModule[];
-  gateway?: undefined;
-  schema?: undefined;
   typeDefs?: undefined;
   resolvers?: undefined;
 }
 
 export interface ApolloServerOptionsWithTypeDefs<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
-  // These three options are always only passed directly through to
+  // These two options are always only passed directly through to
   // makeExecutableSchema. (If you don't want to use makeExecutableSchema, pass
   // `schema` instead.)
   typeDefs: IExecutableSchemaDefinition<TContext>['typeDefs'];
   resolvers?: IExecutableSchemaDefinition<TContext>['resolvers'];
   gateway?: undefined;
   schema?: undefined;
-  modules?: undefined;
 }
 
 export type ApolloServerOptionsWithStaticSchema<TContext extends BaseContext> =
   (
     | ApolloServerOptionsWithSchema<TContext>
-    | ApolloServerOptionsWithModules<TContext>
     | ApolloServerOptionsWithTypeDefs<TContext>
   ) & {
     mocks?: boolean | IMocks;

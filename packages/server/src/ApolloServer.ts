@@ -49,7 +49,6 @@ import {
   APQ_CACHE_PREFIX,
 } from './requestPipeline';
 
-import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';
 import {
@@ -607,14 +606,6 @@ export class ApolloServerBase<TContext extends BaseContext> {
   ): GraphQLSchema {
     if (config.schema) {
       return config.schema;
-    }
-
-    if (config.modules) {
-      const { schema, errors } = buildServiceDefinition(config.modules);
-      if (errors && errors.length > 0) {
-        throw new Error(errors.map((error) => error.message).join('\n\n'));
-      }
-      return schema!;
     }
 
     const { typeDefs, resolvers, parseOptions } = config;
