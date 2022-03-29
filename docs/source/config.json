@@ -44,6 +44,7 @@
     },
     "Security": {
       "Auth": "/security/authentication",
+      "CORS":"/security/cors",
       "Terminating SSL": "/security/terminating-ssl",
       "Proxy configuration": "/proxy-configuration"
     },

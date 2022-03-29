@@ -1,6 +1,86 @@
-# What is CORS?
+---
+title: Configuring CORS with Apollo Server
+description: Control resource access to your server
+---
 
-[Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (better known as CORS) is a mechanism that allows a server to dictate which origin it permits loading resources from.
+## CORS Basics
+[Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header protection mechanism that allows a server to dictate which origins it accepts requests from.
+
+Two URLS have the same origin if they have an identical domain, protocol, and port.
+
+A web application makes a cross-origin HTTP request when it requests a resource that has a different origin (domain, protocol, and port) than its own origin.
+
+The HTTP headers returned by the server are:
+  - "Access-Control-Allow-Origin"
+    1. options * -> allows any domain
+    1. a full domain name
+
+> If you want to pass headers (cookies) cannot use `*` -> must provide a domain! Can pass in [config options](https://github.com/expressjs/cors#configuration-options) to specify domain.
+
+
+## Apollo Server defaults
+By default, the [batteries-included `apollo-server` package the `cors` constructor option](../api/apollo-server/#cors) is set to `*` allowing all origins to send requests to your server. This works great in development, allowing you to delay configuring CORS until your application is ready for production. You can provide the following [config options](https://github.com/expressjs/cors#configuration-options) to the `cors` configuration option passed into Apollo Server
+
+You can set cors in your middleware specific implementation
+
+```js
+server.applyMiddleware({
+  app,
+  path: '/graphql',
+  cors: {
+    origin: "https://localhost:3000"
+  }
+});
+```
+
+
+You can also turn CORS off for your server, allowing all traffic which can lead to security implications.
+
+Setting more granular cors options : use your own middleware
+
+```js
+var corsOptions = {
+  origin: process.env.FRONTEND_URL,
+  credentials: true
+};
+// set up Cors for express middleware NOT in the apollo-server section
+app.use(cors(corsOptions));
+
+server.applyMiddleware({
+  app,
+  path: '/',
+  cors: corsOptions, // disables the apollo-server-express cors to allow the cors middleware use
+})
+
+app.listen({ port: 4000 }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+);
+```
+
+## CORS and authentication
+If you want your API to be cookie authenticated then you’ll need to improve things
+
+
+- What is CORS?
+  - How is it used?
+  - Do I need to cover preflight?
+- How do CORS + GraphQL + Apollo Server work?
+  - Examples of setting up different options?
+  - Defaults of ‘*’
+  - The different `cors` options and what they mean in this context?
+- Best practices around using CORS?
+  - How should I list specific origins I'd like to allow?
+  - How to use credentials with CORS?
+  - Which headers/request methods to allow?
+  - How send cookies?
+  - How restrict access to your API? (authenticated / not)
 
 
 
+
+
+
+## Next
+We need to generally document what’s important to think about with CORS and AS.  Notably, that our default of ‘*’ might be not good enough for two reasons: first, that it doesn’t let anyone send cookies so if you want your API to be cookie authenticated then you’ll need to improve things; and second that maybe you don’t want arbitrary origins able to send requests to your API (even without being able to use the user’s credentials).
+
+We also need to fix the issue from that thread.  That issue is a CSRF issue which is a step past CORS — CSRF kinda lets you do nasty things that you’d think your CORS policy should block. Fixing that issue is going to involve adding a new Apollo Server option (off by default in AS3, on by default in AS4) that basically lets you make requests fail if they don’t contain certain special headers; this mostly will affect GET requests. Happy to work with you on crafting the docs for that.  I think it’s OK if we add the overall CORS advice docs first and then update them with the new anti-CSRF advice second.
