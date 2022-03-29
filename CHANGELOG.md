@@ -9,7 +9,11 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
-- `apollo-server-core`: Update `@apollographql/apollo-tools` dependency to the latest version which now properly lists its peer dependencies. This is problematic for Yarn3 PnP users (as reported in https://github.com/apollographql/apollo-server/issues/6269) [PR #6273](https://github.com/apollographql/apollo-server/pull/6273)
+- _Nothing yet! Stay tuned._
+
+## v3.6.7
+
+- `apollo-server-core`: Update `@apollographql/apollo-tools` dependency to the latest version which now properly lists its peer dependencies. This fixes a problem with using Yarn3 PnP [PR #6273](https://github.com/apollographql/apollo-server/pull/6273)
 
 ## v3.6.6
 
