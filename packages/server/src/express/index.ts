@@ -1,6 +1,6 @@
 import type express from 'express';
 import { ApolloServerBase } from '..';
-import accepts from 'accepts';
+import Negotiator from 'negotiator';
 import asyncHandler from 'express-async-handler';
 import type { BaseContext } from '@apollo/server-types';
 import type { HTTPGraphQLRequest } from '@apollo/server-types';
@@ -91,10 +91,10 @@ function prefersHtml(req: express.Request): boolean {
   if (req.method !== 'GET') {
     return false;
   }
-  const accept = accepts(req);
-  const types = accept.types() as string[];
   return (
-    types.find((x: string) => x === 'text/html' || x === 'application/json') ===
-    'text/html'
+    new Negotiator({ headers: { accept: req.header('accept') } }).mediaType([
+      'application/json',
+      'text/html',
+    ]) === 'text/html'
   );
 }

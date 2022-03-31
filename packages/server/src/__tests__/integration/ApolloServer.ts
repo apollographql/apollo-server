@@ -2463,8 +2463,8 @@ export function testApolloServer(
         return request(httpServer).get(url);
       }
 
-      function get(url: string) {
-        return getWithoutAcceptHeader(url).set('accept', 'text/html');
+      function get(url: string, accept: string = 'text/html') {
+        return getWithoutAcceptHeader(url).set('accept', accept);
       }
 
       function makeServerConfig(
@@ -2580,6 +2580,19 @@ export function testApolloServer(
 
           it('basic GET works', async () => {
             await get('/').expect(200, 'BAZ');
+          });
+          it('basic GET works with more complex header', async () => {
+            // This is what Chrome happens to be sending today.
+            await get(
+              '/',
+              'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            ).expect(200, 'BAZ');
+          });
+          it('no landing page with application/json', async () => {
+            await get('/', 'application/json').expect(serveNoLandingPage);
+          });
+          it('no landing page with */*', async () => {
+            await get('/', '*/*').expect(serveNoLandingPage);
           });
           it('needs the header', async () => {
             await getWithoutAcceptHeader('/').expect(serveNoLandingPage);
