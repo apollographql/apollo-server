@@ -3,31 +3,43 @@ title: Configuring CORS with Apollo Server
 description: Control resource access to your server
 ---
 
-## CORS Basics
-
-[Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header based protocol that allows a server to dictate which origins, besides its self, have access to its resources. In simpler terms, the server can specify if the the code in the browser can read the contents of the server's response.
+[Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header based protocol that allows a server to dictate which origins, besides its self, have access to its resources. In simpler terms, the server can specify if the browser's code can read the contents of a server's response.
 
 ## Background
 
-To better understand what CORS why it is needed, it's necessary to have some background context. Let's start by covering what an _origin_ in this context is: a server's Origin is it's domain, protocol, and por.
+To better understand what CORS is and why it is needed, it's necessary to have some background context. The [_origin_](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy#definition_of_an_origin) of a piece of web content is that content's domain, protocol, and port.
 
-<!-- Cover the same-origin policy -->
-The [same-source origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) (SOP) is a security mechanism that restricts server requests to only those on the same origin. So a server can request and respond with resources for URLS with an identical origin (domain, protocol, and port) to their own.
+The [same origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) (SOP) is a security mechanism that restricts scripts on one origin from accessing data from another origin.
 
-<!-- What CORS does and how it protects server -->
-<!--  How does CORS affect SOP? Can it just skip it over or does it instead ADD to it? -->
-Cross-Origin Resource Sharing, is how a server can safely _share_ resources across different origins.  CORS enables servers to have a layer of protection by letting them define HTTP headers, which specify the external client scripts that can access their resources.
+<!--  CHECK THAT -->
+The SOP policy was put in place to prevent malicious scripts from the client's browser from reading or accessing the contents of a response from another website.
 
-A web application makes a cross-origin HTTP request when it requests a resource that has a different origin (domain, protocol, and port) than its own origin.
+```none
+# Same origin
+http://example.com:8080/ <==> http://example.com:8080/
+
+# Different origin (difference in domain, protocol, and port)
+http://example.com:8080/ =X= https://example1.com:8081/
+```
+
+However as we all know, the Internet is an exciting place full of interesting resources that can make websites better (think images, API call, etc.). So another protocol was needed to share resources _across_ different origins.
+
+Cross-Origin Resource Sharing is the mechanism that allows a web page to  _share_ resources across different origins. CORS provides an extra layer of protection by enabling servers and clients to define HTTP headers, which specify which external clients scripts can access their resources.
+
+<!-- position as extra information for now until CSRF guidance is ready and we can extract  -->
+<ExpansionPanel title="Extra CORS info">
+CORS also relies on a "preflight" mechanism for certain requests to provide an extra layer of security for requests that may cause side-effects for a server. During "preflight" the browser first sends an HTTP request using the [OPTIONS method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS) to the resource on the other origin, in order to determine if the actual request is safe to send. For more information on which requests don't get pre-flighted see [the MDN CORS documentation]((https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests)).
 
 
+<!-- position as extra information for now until CSRF guidance is ready and we can extract  -->
+GraphQL requests are sent via `GET` or `POST` requests so the only requests that will trigger a preflight check are those with
 
+</ExpansionPanel>
 
-
-## Configuring CORS with Apollo Server
+## Configuring CORS options
 
 <!--  Cover `*` -->
-CORS uses [a number of HTTP response headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#the_http_response_headers) in both the request and response as part of it's protocol, but the most  wellknown is the [`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) response header.  `Access-Control-Allow-Origin` is returned by the server and indicates which clients are allowed to access its resources.
+CORS uses [a number of HTTP response headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#the_http_response_headers) in both the request and response as part of it's protocol, the most wellknown header is the [`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) response header.  `Access-Control-Allow-Origin` is returned by the server and indicates which clients are allowed to access its resources.
 
 > If you want to pass headers (cookies) you cannot use the default `*` option. You must provide a specified domain learn more below! Can pass in [config options](https://github.com/expressjs/cors#configuration-options) directly to specify which domains have access.
 
@@ -37,10 +49,11 @@ By default, the [batteries-included `apollo-server` package `cors` constructor o
 
 This works great in development, allowing you to delay configuring CORS until your application is ready for production. To disallow other origins from making request to your server you should set a more restrictive cors policy to only allow server access to the clients who need it. This will keep bad actors from accesssing your sever (this matters with/without credentials).
 
- You can provide the following [config options](https://github.com/expressjs/cors#configuration-options) to the `cors` configuration option passed into Apollo Server.
+You can provide the following [config options](https://github.com/expressjs/cors#configuration-options) to the `cors` configuration option passed into Apollo Server.
 
 The batteries-included Apollo Server uses the [Express `cors` middleware package](https://www.npmjs.com/package/cors) under the hood to enable you to easily configure your server's CORS configuration.
 
+> [Plug preflight scripts](https://www.apollographql.com/blog/announcement/tooling/automatically-authenticate-with-preflight-scripts-in-apollo-studio-explorer/#test-and-publish-your-script)
 
 <!--  Examples of setting custom cors policy for batteries included AS3 -->
 <!--  Do I need to cover Access-Control-Allow-Credentials? -->
@@ -56,6 +69,7 @@ server.applyMiddleware({
 });
 ```
 
+<!-- Add note to add sandbox to restricted CORS  -->
 
 You can also turn CORS off for your server, allowing all traffic which can lead to security implications.
 
@@ -83,6 +97,11 @@ app.listen({ port: 4000 }, () =>
 ## Authentication and CORS
 If you want your API to be cookie authenticated then you’ll need to improve things. HTTP cookies not sent by default over CORS— to enable them you must set your `cors` middleware configuration to allow credentials:
 
+## Using Cookies with Cross Site Requests
+<!--  I need to setup a cookie example -->
+<!-- What is a SameSite=None cookie? How does it work with CORS? -->
+Many applications use cookies to authentication  their users. To use cookies in third party contexts the cookie must have the `Samesite=None; Secure` property upon it. In order for your cookie to be successfully passed from
+
 Allows [`Access-Control-Allow-Credentials`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials):
 
 ```js
@@ -92,14 +111,27 @@ app.use(cors({
 }));
 ```
 
+<!--  Cookies vs. Headers? -->
 
+## Using Headers
+<!--  I need to setup an headers example -->
+
+you are are setting your cookie to
+If your server uses cookies to authenticate, you can configure your endpoint to share those cookies:
+
+```js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  cors: { origin: ["http://localhost:3000", "https://studio.apollographql.com"], credentials: true },
+});
+```
 
 <!-- Cookie example with CORS -->
 [Add in Client Docs](https://www.apollographql.com/docs/react/networking/basic-http-networking) example of cookies
 
 
-- What is CORS?
-  - How is it used?
+
 - How do CORS + GraphQL + Apollo Server work?
   - Examples of setting up different options?
   - Defaults of ‘*’
