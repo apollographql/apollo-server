@@ -1,17 +1,15 @@
 import { formatApolloErrors } from './errors';
-import {
-  processGraphQLRequest,
-  GraphQLRequest,
-  GraphQLRequestContext,
-  GraphQLResponse,
-} from './requestPipeline';
+import type { GraphQLRequest, GraphQLResponse } from './requestPipeline';
 import type {
   BaseContext,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
 } from '@apollo/server-types';
-import { newCachePolicy } from './cachePolicy';
-import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
+import {
+  ApolloServerInternals,
+  internalExecuteOperation,
+  SchemaDerivedData,
+} from './ApolloServer';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just
 // do want to use (our own? somebody else's?) Headers class.
@@ -149,7 +147,7 @@ export async function runHttpQuery<TContext extends BaseContext>(
   internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
   try {
-    let graphqlRequest: GraphQLRequest;
+    let graphQLRequest: GraphQLRequest;
 
     switch (httpRequest.method) {
       case 'POST':
@@ -179,7 +177,7 @@ export async function runHttpQuery<TContext extends BaseContext>(
           ).asHTTPGraphQLResponse();
         }
 
-        graphqlRequest = {
+        graphQLRequest = {
           query: fieldIfString(httpRequest.body, 'query'),
           operationName: fieldIfString(httpRequest.body, 'operationName'),
           variables: fieldIfRecord(httpRequest.body, 'variables'),
@@ -198,7 +196,7 @@ export async function runHttpQuery<TContext extends BaseContext>(
 
         ensureQueryIsStringOrMissing(httpRequest.searchParams.query);
 
-        graphqlRequest = {
+        graphQLRequest = {
           query: fieldIfString(httpRequest.searchParams, 'query'),
           operationName: fieldIfString(
             httpRequest.searchParams,
@@ -225,66 +223,42 @@ export async function runHttpQuery<TContext extends BaseContext>(
         ).asHTTPGraphQLResponse();
     }
 
-    const partialResponse: Pick<HTTPGraphQLResponse, 'headers' | 'statusCode'> =
-      {
-        headers: new HeaderMap([['content-type', 'application/json']]),
-        statusCode: undefined,
-      };
-
-    const requestContext: GraphQLRequestContext<TContext> = {
-      logger: internals.logger,
-      schema: schemaDerivedData.schema,
-      request: graphqlRequest,
-      response: { http: partialResponse },
-      // We clone the context because there are some assumptions that every operation
-      // execution has a brand new context object; specifically, in order to implement
-      // willResolveField we put a Symbol on the context that is specific to a particular
-      // request pipeline execution. We could avoid this if we had a better way of
-      // instrumenting execution.
-      //
-      // We don't want to do a deep clone here, because one of the main advantages of
-      // using batched HTTP requests is to share context across operations for a
-      // single request.
-      // NOTE: THIS IS DUPLICATED IN ApolloServer.prototype.executeOperation.
-      contextValue: cloneObject(contextValue),
-      cache: internals.cache,
-      metrics: {},
-      overallCachePolicy: newCachePolicy(),
-    };
-    const response = await processGraphQLRequest(
-      schemaDerivedData,
-      internals,
-      requestContext,
-    );
+    const { graphQLResponse, responseHeadersAndStatusCode } =
+      await internalExecuteOperation({
+        graphQLRequest,
+        contextValue,
+        internals,
+        schemaDerivedData,
+      });
 
     // This code is run on parse/validation errors and any other error that
     // doesn't reach GraphQL execution
-    if (response.errors && typeof response.data === 'undefined') {
+    if (graphQLResponse.errors && typeof graphQLResponse.data === 'undefined') {
       // don't include options, since the errors have already been formatted
       return {
-        statusCode: response.http?.statusCode || 400,
+        statusCode: graphQLResponse.http?.statusCode || 400,
         headers: new HeaderMap([
           ['content-type', 'application/json'],
-          ...(response.http?.headers ?? new Map()),
+          ...(graphQLResponse.http?.headers ?? new Map()),
         ]),
         completeBody: prettyJSONStringify({
           // TODO(AS4): Understand why we don't call formatApolloErrors here.
-          errors: response.errors,
-          extensions: response.extensions,
+          errors: graphQLResponse.errors,
+          extensions: graphQLResponse.extensions,
         }),
         bodyChunks: null,
       };
     }
 
-    const body = prettyJSONStringify(serializeGraphQLResponse(response));
+    const body = prettyJSONStringify(serializeGraphQLResponse(graphQLResponse));
 
-    partialResponse.headers.set(
+    responseHeadersAndStatusCode.headers.set(
       'content-length',
       Buffer.byteLength(body, 'utf8').toString(),
     );
 
     return {
-      ...partialResponse,
+      ...responseHeadersAndStatusCode,
       completeBody: body,
       bodyChunks: null,
     };

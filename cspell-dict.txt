@@ -28,6 +28,7 @@ codecov
 codegen
 codepaths
 codesandbox
+contravariance
 contravariantly
 dataloaders
 datasource
@@ -66,6 +67,7 @@ goofql
 graphiql
 graphqlcodegenerator
 GraphQLJSON
+hackily
 herokuapp
 hrtime
 htmls

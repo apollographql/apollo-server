@@ -354,6 +354,23 @@ describe('ApolloServer executeOperation', () => {
     expect(result2.errors).toBeDefined();
   });
 
+  // This works due to the __forceTContextToBeContravariant hack.
+  it('context is contravariant', () => {
+    // @ts-expect-error
+    const server1: ApolloServer<{}> = new ApolloServer<{
+      foo: number;
+    }>({ typeDefs: 'type Query{id: ID}' });
+    // avoid the expected error just being an unused variable
+    expect(server1).toBeDefined();
+
+    // The opposite is OK: we can pass a more specific context object to
+    // something expecting less.
+    const server2: ApolloServer<{
+      foo: number;
+    }> = new ApolloServer<{}>({ typeDefs: 'type Query{id: ID}' });
+    expect(server2).toBeDefined();
+  });
+
   it('typing for context objects works with argument to usage reporting', async () => {
     new ApolloServer<{ foo: number }>({
       typeDefs: 'type Query { n: Int! }',

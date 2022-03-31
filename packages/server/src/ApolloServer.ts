@@ -180,6 +180,34 @@ function defaultLogger(): Logger {
 export class ApolloServer<TContext extends BaseContext = BaseContext> {
   private internals: ApolloServerInternals<TContext>;
 
+  // We really want to prevent this from being legal:
+  //
+  //     const s: ApolloServer<{}> =
+  //       new ApolloServer<{importantContextField: boolean}>({ ... });
+  //     s.executeOperation({query}, {});
+  //
+  // ie, if you declare an ApolloServer whose context values must be of a
+  // certain type, you can't assign it to a variable whose context values are
+  // less constrained and then pass in a context value missing important fields.
+  // That is, we want ApolloServer to be "contravariant" in TContext. TypeScript
+  // just added a feature to implement this directly
+  // (https://github.com/microsoft/TypeScript/pull/48240) which we hopefully can
+  // use once it's released (ideally down-leveling our generated .d.ts once
+  // https://github.com/sandersn/downlevel-dts/issues/73 is implemented). But
+  // until then, having a field with a function that takes TContext does the
+  // trick. (Why isn't having a method like executeOperation good enough?
+  // TypeScript doesn't treat method arguments contravariantly, just standalone
+  // functions.)  We have a ts-expect-error test for this behavior (search
+  // "contravariant").
+  //
+  // We only care about the compile-time effects of this field. It is not
+  // private because that wouldn't work due to
+  // https://github.com/microsoft/TypeScript/issues/38953 We will remove this
+  // once `out TContext` is available. Note that when we replace this with `out
+  // TContext`, we may make it so that users of older TypeScript versions no
+  // longer have this protection.
+  protected __forceTContextToBeContravariant?: (contextValue: TContext) => void;
+
   constructor(config: ApolloServerOptions<TContext>) {
     const nodeEnv = config.nodeEnv ?? process.env.NODE_ENV ?? '';
 
@@ -1040,58 +1068,77 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       await this._ensureStarted()
     ).schemaManager.getSchemaDerivedData();
 
-    // The typecast here is safe, because the only way `contextValue` can be
-    // null-ish is if we used the `contextValue?: BaseContext` override, in
-    // which case TContext is BaseContext and {} is ok.
-    //
-    // TODO(AS4): This actually only works because of the fact that
-    // ApolloServerBase has a field (config) that (nested) eventually contains a
-    // function taking TContext as a parameter. That makes `const x:
-    // ApolloServerBase<BaseContext> = new ApolloServerBase<{foo: number}>` into
-    // (appropriately) an error. Let's make sure that's still the case before we
-    // release. If not, we can achieve a similar goal by making
-    // `executeOperation` a top-level function because top-level functions in TS
-    // treat function arguments contravariantly and methods do not. Note that
-    // some of the details above changed during AS4 work but we'll recheck them
-    // :)
-    //
-    // We clone the contextValue because there are some assumptions that every
-    // operation execution has a brand new contextValue object; specifically, in
-    // order to implement willResolveField we put a Symbol on the contextValue that
-    // is specific to a particular request pipeline execution. We could avoid
-    // this if we had a better way of instrumenting execution. NOTE: THIS IS
-    // DUPLICATED IN runHttpQuery.ts' buildRequestContext.
-    // TODO(AS4): can we not do the clone and instead put the symbol somewhere else?
-    const actualContextValue: TContext = cloneObject(
-      contextValue ?? ({} as TContext),
-    );
-
-    // TODO(AS4): Once runHttpQuery becomes a method, this setup can be shared
-    // with it.
-    const requestCtx: GraphQLRequestContext<TContext> = {
-      logger: this.internals.logger,
-      schema: schemaDerivedData.schema,
-      request: {
-        ...request,
-        query:
-          request.query && typeof request.query !== 'string'
-            ? print(request.query)
-            : request.query,
-      },
-      contextValue: actualContextValue,
-      cache: this.internals.cache,
-      metrics: {},
-      response: {
-        http: {
-          headers: new HeaderMap(),
-          statusCode: undefined,
-        },
-      },
-      overallCachePolicy: newCachePolicy(),
+    // For convenience, this function lets you pass either a string or an AST,
+    // but we normalize to string.
+    const graphQLRequest: GraphQLRequest = {
+      ...request,
+      query:
+        request.query && typeof request.query !== 'string'
+          ? print(request.query)
+          : request.query,
     };
 
-    return processGraphQLRequest(schemaDerivedData, this.internals, requestCtx);
+    return (
+      await internalExecuteOperation({
+        graphQLRequest,
+        // The typecast here is safe, because the only way `contextValue` can be
+        // null-ish is if we used the `contextValue?: BaseContext` override, in
+        // which case TContext is BaseContext and {} is ok. (This does depend on
+        // the fact we've hackily forced the class to be contravariant in
+        // TContext.)
+        contextValue: contextValue ?? ({} as TContext),
+        internals: this.internals,
+        schemaDerivedData,
+      })
+    ).graphQLResponse;
   }
+}
+
+// Shared code between runHttpQuery (ie executeHTTPGraphQLRequest) and
+// executeOperation to set up a request context and invoke the request pipeline.
+export async function internalExecuteOperation<TContext extends BaseContext>({
+  graphQLRequest,
+  contextValue,
+  internals,
+  schemaDerivedData,
+}: {
+  graphQLRequest: GraphQLRequest;
+  contextValue: TContext;
+  internals: ApolloServerInternals<TContext>;
+  schemaDerivedData: SchemaDerivedData;
+}): Promise<{
+  graphQLResponse: GraphQLResponse;
+  responseHeadersAndStatusCode: Pick<
+    HTTPGraphQLResponse,
+    'headers' | 'statusCode'
+  >;
+}> {
+  const httpGraphQLResponse = {
+    headers: new HeaderMap([['content-type', 'application/json']]),
+    statusCode: undefined,
+  };
+  return {
+    graphQLResponse: await processGraphQLRequest(schemaDerivedData, internals, {
+      logger: internals.logger,
+      schema: schemaDerivedData.schema,
+      request: graphQLRequest,
+      response: { http: httpGraphQLResponse },
+      // We clone the context because there are some assumptions that every operation
+      // execution has a brand new context object; specifically, in order to implement
+      // willResolveField we put a Symbol on the context that is specific to a particular
+      // request pipeline execution. We could avoid this if we had a better way of
+      // instrumenting execution.
+      //
+      // We don't want to do a deep clone here, because one of the main advantages of
+      // using batched HTTP requests is to share context across operations for a
+      // single request.
+      contextValue: cloneObject(contextValue),
+      cache: internals.cache,
+      metrics: {},
+      overallCachePolicy: newCachePolicy(),
+    }),
+    responseHeadersAndStatusCode: httpGraphQLResponse,
+  };
 }
 
 export type ImplicitlyInstallablePlugin<TContext extends BaseContext> =
