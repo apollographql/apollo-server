@@ -193,6 +193,12 @@ const mutationType = new GraphQLObjectType({
         return args;
       },
     },
+    testRootValue: {
+      type: GraphQLString,
+      resolve(rootValue) {
+        return rootValue;
+      },
+    },
   },
 });
 
@@ -1023,20 +1029,17 @@ export default ({
             return op!.operation === 'query' ? expectedQuery : expectedMutation;
           },
         });
-        const queryReq = request(app).post('/graphql').send({
+        const queryRes = await request(app).post('/graphql').send({
           query: 'query test{ testRootValue }',
         });
-        return queryReq.then((res) => {
-          expect(res.status).toEqual(200);
-          expect(res.body.data.testRootValue).toEqual(expectedQuery);
+        expect(queryRes.status).toEqual(200);
+        expect(queryRes.body.data.testRootValue).toEqual(expectedQuery);
+
+        const mutationRes = await request(app).post('/graphql').send({
+          query: 'mutation test{ testRootValue }',
         });
-        const mutationReq = request(app).post('/graphql').send({
-          query: 'mutation test{ testMutation(echo: "ping") }',
-        });
-        return mutationReq.then((res) => {
-          expect(res.status).toEqual(200);
-          expect(res.body.data.testRootValue).toEqual(expectedMutation);
-        });
+        expect(mutationRes.status).toEqual(200);
+        expect(mutationRes.body.data.testRootValue).toEqual(expectedMutation);
       });
 
       it('returns errors', async () => {
