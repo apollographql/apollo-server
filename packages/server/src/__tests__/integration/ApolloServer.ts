@@ -1755,6 +1755,37 @@ export function testApolloServer(
         expect(result.errors[0].extensions.exception).toBeUndefined();
       });
 
+      it('propagates error codes in dev mode', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: gql`
+            type Query {
+              fieldWhichWillError: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              fieldWhichWillError: () => {
+                throw new AuthenticationError('we the best music');
+              },
+            },
+          },
+          stopOnTerminationSignals: false,
+          nodeEnv: '',
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({ query: `{fieldWhichWillError}` });
+        expect(result.data).toBeDefined();
+        expect(result.data).toEqual({ fieldWhichWillError: null });
+
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.exception).toBeDefined();
+        expect(result.errors[0].extensions.exception.stacktrace).toBeDefined();
+      });
+
       it('shows ApolloError extensions in extensions (only!)', async () => {
         const { url: uri } = await createApolloServer({
           typeDefs: gql`

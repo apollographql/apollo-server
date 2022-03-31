@@ -25,6 +25,7 @@ import {
   KeyValueCache,
   ApolloServerPluginCacheControl,
   PersistedQueryOptions,
+  ApolloServerPluginCacheControlDisabled,
 } from '../..';
 import { PersistedQueryNotFoundError } from '../../errors';
 import gql from 'graphql-tag';
@@ -479,6 +480,104 @@ export default ({
         });
       });
 
+      describe('cache-control', () => {
+        const books = [
+          {
+            title: 'H',
+            author: 'J',
+          },
+        ];
+
+        const typeDefs = gql`
+          type Book {
+            title: String
+            author: String
+          }
+
+          type Cook @cacheControl(maxAge: 200) {
+            title: String
+            author: String
+          }
+
+          type Pook @cacheControl(maxAge: 200) {
+            title: String
+            books: [Book] @cacheControl(maxAge: 20, scope: PRIVATE)
+          }
+
+          type Query {
+            books: [Book]
+            cooks: [Cook]
+            pooks: [Pook]
+          }
+
+          enum CacheControlScope {
+            PUBLIC
+            PRIVATE
+          }
+
+          directive @cacheControl(
+            maxAge: Int
+            scope: CacheControlScope
+          ) on FIELD_DEFINITION | OBJECT | INTERFACE
+        `;
+
+        const resolvers = {
+          Query: {
+            books: () => books,
+            cooks: () => books,
+            pooks: () => [{ title: 'pook', books }],
+          },
+        };
+
+        it('applies cacheControl Headers', async () => {
+          const app = await createApp({ typeDefs, resolvers });
+          const res = await request(app).post('/graphql').send({
+            query: `{ cooks { title author } }`,
+          });
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual({ cooks: books });
+          expect(res.headers['cache-control']).toEqual('max-age=200, public');
+        });
+
+        it('contains no cacheControl Headers when uncacheable', async () => {
+          const app = await createApp({ typeDefs, resolvers });
+          const res = await request(app).post('/graphql').send({
+            query: `{ books { title author } }`,
+          });
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual({ books });
+          expect(res.headers['cache-control']).toBeUndefined;
+        });
+
+        it('contains private cacheControl Headers when scoped', async () => {
+          const app = await createApp({ typeDefs, resolvers });
+          const res = await request(app).post('/graphql').send({
+            query: `{ pooks { title books { title author } } }`,
+          });
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual({
+            pooks: [{ title: 'pook', books }],
+          });
+          expect(res.headers['cache-control']).toEqual('max-age=20, private');
+        });
+
+        it('runs when cache-control is disabled', async () => {
+          const app = await createApp({
+            typeDefs,
+            resolvers,
+            plugins: [ApolloServerPluginCacheControlDisabled()],
+          });
+          const res = await request(app).post('/graphql').send({
+            query: `{ pooks { title books { title author } } }`,
+          });
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual({
+            pooks: [{ title: 'pook', books }],
+          });
+          expect(res.headers['cache-control']).toBeUndefined;
+        });
+      });
+
       it('cache-control not set without any hints', async () => {
         app = await createApp({
           schema,
@@ -492,10 +591,7 @@ export default ({
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
-          // hapi defaults to no-cache, so we have to allow that.
-          expect([undefined, 'no-cache']).toContain(
-            res.headers['cache-control'],
-          );
+          expect(res.headers['cache-control']).toBeUndefined();
         });
       });
 
