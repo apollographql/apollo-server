@@ -12,8 +12,9 @@ import {
   AuthenticationError,
   ApolloServerPluginCacheControlDisabled,
   ApolloServerPluginDrainHttpServer,
+  ApolloServer,
 } from '../..';
-import { ApolloServerExpress, ExpressContext } from '../../express';
+import { ExpressContext, expressMiddleware } from '../../express';
 import type { ApolloServerOptions } from '../../types';
 
 import {
@@ -35,13 +36,13 @@ const resolvers = {
 };
 
 describe('apollo-server-express', () => {
-  let serverToCleanUp: ApolloServerExpress | null = null;
+  let serverToCleanUp: ApolloServer | null = null;
   testApolloServer(
     async (config: ApolloServerOptions<BaseContext>, options) => {
       serverToCleanUp = null;
       const app = express();
       const httpServer = http.createServer(app);
-      const server = new ApolloServerExpress({
+      const server = new ApolloServer({
         ...config,
         plugins: [
           ...(config.plugins ?? []),
@@ -57,9 +58,11 @@ describe('apollo-server-express', () => {
       const graphqlPath = options?.graphqlPath ?? '/graphql';
       app.use(
         graphqlPath,
-        cors(),
+        cors<cors.CorsRequest>(),
         json(),
-        server.getMiddleware(options?.context ?? (async () => ({}))),
+        expressMiddleware(server, {
+          contextFunction: options?.context,
+        }),
       );
       await new Promise((resolve) => {
         httpServer.once('listening', resolve);
@@ -74,7 +77,7 @@ describe('apollo-server-express', () => {
 });
 
 describe('apollo-server-express', () => {
-  let server: ApolloServerExpress;
+  let server: ApolloServer;
 
   let app: express.Application;
   let httpServer: http.Server;
@@ -87,7 +90,7 @@ describe('apollo-server-express', () => {
       bodyParserConfig?: OptionsJson;
     },
   ) {
-    server = new ApolloServerExpress({
+    server = new ApolloServer({
       stopOnTerminationSignals: false,
       ...serverOptions,
     });
@@ -102,7 +105,9 @@ describe('apollo-server-express', () => {
           : options?.bodyParserConfig
           ? [json(options.bodyParserConfig)]
           : [json()]),
-        server.getMiddleware(options?.context ?? (async () => ({}))),
+        expressMiddleware(server, {
+          contextFunction: options?.context ?? (async () => ({})),
+        }),
       ],
     );
 

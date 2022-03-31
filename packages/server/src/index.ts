@@ -14,7 +14,7 @@ export {
 } from './errors';
 
 // ApolloServer Base class
-export { ApolloServerBase } from './ApolloServer';
+export { ApolloServer } from './ApolloServer';
 export * from './types';
 export {
   GraphQLServiceContext,

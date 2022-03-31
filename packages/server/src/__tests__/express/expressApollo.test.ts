@@ -1,23 +1,17 @@
 import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';
-import { ApolloServerExpress } from '../../express';
+import { ApolloServer } from '../..';
+import { expressMiddleware } from '../../express';
 import testSuite, { schema as Schema } from '../integration';
 
-describe('expressApollo', () => {
-  it('throws error if called without schema', function () {
-    // @ts-expect-error
-    expect(() => new ApolloServerExpress()).toThrow();
-  });
-});
-
 describe('integration:Express', () => {
-  let serverToCleanUp: ApolloServerExpress | null = null;
+  let serverToCleanUp: ApolloServer | null = null;
   testSuite({
     createApp: async function createApp(config, context) {
       serverToCleanUp = null;
       const app = express();
-      const server = new ApolloServerExpress(
+      const server = new ApolloServer(
         config ?? {
           schema: Schema,
         },
@@ -26,9 +20,11 @@ describe('integration:Express', () => {
       serverToCleanUp = server;
       app.use(
         '/graphql',
-        cors(),
+        cors<cors.CorsRequest>(),
         json(),
-        server.getMiddleware(context ?? (async () => ({}))),
+        expressMiddleware(server, {
+          contextFunction: context,
+        }),
       );
       return app;
     },

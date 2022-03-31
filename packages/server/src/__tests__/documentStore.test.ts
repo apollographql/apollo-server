@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 import type { DocumentNode } from 'graphql';
 
-import { ApolloServerBase } from '../ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import type { BaseContext } from '@apollo/server-types';
 
@@ -35,9 +35,9 @@ const operations = {
   },
 };
 
-describe('ApolloServerBase documentStore', () => {
+describe('ApolloServer documentStore', () => {
   it('documentStore - undefined', async () => {
-    const server = new ApolloServerBase<BaseContext>({
+    const server = new ApolloServer<BaseContext>({
       typeDefs,
       resolvers,
     });
@@ -74,7 +74,7 @@ describe('ApolloServerBase documentStore', () => {
     const getSpy = jest.spyOn(documentStore, 'get');
     const setSpy = jest.spyOn(documentStore, 'set');
 
-    const server = new ApolloServerBase({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
       documentStore,
@@ -99,7 +99,7 @@ describe('ApolloServerBase documentStore', () => {
   });
 
   it('documentStore - null', async () => {
-    const server = new ApolloServerBase<BaseContext>({
+    const server = new ApolloServer<BaseContext>({
       typeDefs,
       resolvers,
       documentStore: null,

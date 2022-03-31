@@ -177,7 +177,7 @@ function defaultLogger(): Logger {
   loglevelLogger.setLevel(loglevel.levels.INFO);
   return loglevelLogger;
 }
-export class ApolloServerBase<TContext extends BaseContext> {
+export class ApolloServer<TContext extends BaseContext = BaseContext> {
   private internals: ApolloServerInternals<TContext>;
 
   constructor(config: ApolloServerOptions<TContext>) {
@@ -191,7 +191,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
 
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
-    const plugins = ApolloServerBase.ensurePluginInstantiation(
+    const plugins = ApolloServer.ensurePluginInstantiation(
       config.plugins,
       isDev,
       apolloConfig,
@@ -209,7 +209,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
             gateway: config.gateway,
             apolloConfig,
             schemaDerivedDataProvider: (schema) =>
-              ApolloServerBase.generateSchemaDerivedData(
+              ApolloServer.generateSchemaDerivedData(
                 schema,
                 config.documentStore,
               ),
@@ -224,12 +224,12 @@ export class ApolloServerBase<TContext extends BaseContext> {
         {
           phase: 'initialized',
           schemaManager: new SchemaManager({
-            apiSchema: ApolloServerBase.maybeAddMocksToConstructedSchema(
-              ApolloServerBase.constructSchema(config),
+            apiSchema: ApolloServer.maybeAddMocksToConstructedSchema(
+              ApolloServer.constructSchema(config),
               config,
             ),
             schemaDerivedDataProvider: (schema) =>
-              ApolloServerBase.generateSchemaDerivedData(
+              ApolloServer.generateSchemaDerivedData(
                 schema,
                 config.documentStore,
               ),
@@ -582,18 +582,17 @@ export class ApolloServerBase<TContext extends BaseContext> {
     await this._ensureStarted();
   }
 
-  protected assertStarted(methodName: string) {
+  public assertStarted(expressionForError: string) {
     if (
       this.internals.state.phase !== 'started' &&
       this.internals.state.phase !== 'draining'
     ) {
       throw new Error(
-        'You must `await server.start()` before calling `server.' +
-          methodName +
-          '()`',
+        'You must `await server.start()` before calling `' +
+          expressionForError +
+          '`',
       );
     }
-    // XXX do we need to do anything special for stopping/stopped?
   }
 
   // Given an error that occurred during Apollo Server startup, log it with a
@@ -679,7 +678,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
       // random prefix each time we get a new schema.
       documentStore:
         providedUnprefixedDocumentStore === undefined
-          ? ApolloServerBase.initializeDocumentStore()
+          ? ApolloServer.initializeDocumentStore()
           : providedUnprefixedDocumentStore === null
           ? null
           : new PrefixingKeyValueCache(
@@ -932,10 +931,13 @@ export class ApolloServerBase<TContext extends BaseContext> {
   }
 
   // TODO(AS4): Make sure we like the name of this function.
-  public async executeHTTPGraphQLRequest(
-    httpGraphQLRequest: HTTPGraphQLRequest,
-    contextFunction: () => Promise<TContext>,
-  ): Promise<HTTPGraphQLResponse> {
+  public async executeHTTPGraphQLRequest({
+    httpGraphQLRequest,
+    contextFunction,
+  }: {
+    httpGraphQLRequest: HTTPGraphQLRequest;
+    contextFunction: () => Promise<TContext>;
+  }): Promise<HTTPGraphQLResponse> {
     const runningServerState = await this._ensureStarted();
 
     if (
@@ -1009,7 +1011,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
    */
   // TODO(AS4): document this
   public async executeOperation(
-    this: ApolloServerBase<BaseContext>,
+    this: ApolloServer<BaseContext>,
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
     },
@@ -1049,6 +1051,8 @@ export class ApolloServerBase<TContext extends BaseContext> {
     // sure that's still the case before we release. If not, we can achieve a similar
     // goal by making `executeOperation` a top-level function because top-level functions
     // in TS treat function arguments contravariantly and methods do not.
+    // Note that some of the details above changed during AS4 work but we'll recheck
+    // them :)
     //
     // We clone the context because there are some assumptions that every operation
     // execution has a brand new context object; specifically, in order to implement

@@ -169,7 +169,7 @@ export class SchemaManager {
           callback(this.schemaContext);
         } catch (e) {
           // Note that onSchemaLoadOrUpdate() is currently only called from
-          // ApolloServerBase._start(), so we throw here to alert the user early
+          // ApolloServer._start(), so we throw here to alert the user early
           // that their callback is failing.
           throw new Error(
             `An error was thrown from an 'onSchemaLoadOrUpdate' listener: ${

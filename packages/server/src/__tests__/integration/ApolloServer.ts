@@ -29,7 +29,7 @@ import {
   UserInputError,
   gql,
   ApolloServerOptions,
-  ApolloServerBase,
+  ApolloServer,
   PluginDefinition,
   GatewayInterface,
   GraphQLServiceConfig,
@@ -56,7 +56,7 @@ const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
 
 export function createServerInfo(
-  server: ApolloServerBase<BaseContext>,
+  server: ApolloServer<BaseContext>,
   httpServer: http.Server,
   graphqlPath: string,
 ): ServerInfo {
@@ -164,7 +164,7 @@ export interface ServerInfo {
   family: string;
   url: string;
   port: number | string;
-  server: ApolloServerBase<BaseContext>;
+  server: ApolloServer<BaseContext>;
   httpServer: http.Server;
 }
 
@@ -577,7 +577,7 @@ export function testApolloServer(
     describe('Plugins', () => {
       let apolloFetch: ApolloFetch;
       let apolloFetchResponse: ParsedResponse;
-      let serverInstance: ApolloServerBase<BaseContext>;
+      let serverInstance: ApolloServer<BaseContext>;
 
       const setupApolloServerAndFetchPairForPlugins = async (
         plugins: PluginDefinition<BaseContext>[] = [],

@@ -22,14 +22,14 @@ import type {
 } from '@apollo/server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import type { ApolloServerOptions } from '../types';
-import { ApolloServerBase } from '../ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,
   request: GraphQLRequest,
   context?: BaseContext,
 ): Promise<GraphQLResponse> {
-  const server = new ApolloServerBase<BaseContext>(config);
+  const server = new ApolloServer<BaseContext>(config);
   await server.start();
   const response = await server.executeOperation(request, context ?? {});
   await server.stop();
@@ -1000,7 +1000,7 @@ describe('parsing and validation cache', () => {
       events: { parsingDidStart, validationDidStart },
     } = createLifecyclePluginMocks();
 
-    const server = new ApolloServerBase<BaseContext>({
+    const server = new ApolloServer<BaseContext>({
       schema,
       plugins,
       documentStore: null,
@@ -1028,7 +1028,7 @@ describe('parsing and validation cache', () => {
       events: { parsingDidStart, validationDidStart },
     } = createLifecyclePluginMocks();
 
-    const server = new ApolloServerBase<BaseContext>({
+    const server = new ApolloServer<BaseContext>({
       schema,
       plugins,
     });
@@ -1072,7 +1072,7 @@ describe('parsing and validation cache', () => {
       sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
     });
 
-    const server = new ApolloServerBase<BaseContext>({
+    const server = new ApolloServer<BaseContext>({
       schema,
       plugins,
       documentStore,

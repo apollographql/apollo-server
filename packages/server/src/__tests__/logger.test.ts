@@ -1,4 +1,4 @@
-import { ApolloServerBase } from '../..';
+import { ApolloServer } from '../..';
 import type { Logger } from '@apollo/server-types';
 import { PassThrough } from 'stream';
 import gql from 'graphql-tag';
@@ -14,7 +14,7 @@ const LOWEST_LOG_LEVEL = 'debug';
 const KNOWN_DEBUG_MESSAGE = 'The request has started.';
 
 async function triggerLogMessage(loggerToUse: Logger) {
-  const server = new ApolloServerBase({
+  const server = new ApolloServer({
     typeDefs: gql`
       type Query {
         field: String!

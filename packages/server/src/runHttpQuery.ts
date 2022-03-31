@@ -245,7 +245,7 @@ export async function runHttpQuery<TContext extends BaseContext>(
       // We don't want to do a deep clone here, because one of the main advantages of
       // using batched HTTP requests is to share context across operations for a
       // single request.
-      // NOTE: THIS IS DUPLICATED IN ApolloServerBase.prototype.executeOperation.
+      // NOTE: THIS IS DUPLICATED IN ApolloServer.prototype.executeOperation.
       context: cloneObject(context),
       cache: internals.cache,
       metrics: {},

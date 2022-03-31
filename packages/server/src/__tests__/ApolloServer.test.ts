@@ -1,5 +1,5 @@
-import { ApolloServerBase } from '../ApolloServer';
-import { ApolloServerOptions, GatewayInterface, gql } from '../';
+import { ApolloServer } from '../ApolloServer';
+import { ApolloServerOptions, GatewayInterface, gql } from '..';
 import type { GraphQLSchema } from 'graphql';
 import type {
   ApolloServerPlugin,
@@ -34,15 +34,20 @@ const resolvers = {
   },
 };
 
-describe('ApolloServerBase construction', () => {
+describe('ApolloServer construction', () => {
   it('succeeds when a valid configuration options are provided to typeDefs and resolvers', () => {
-    expect(() => new ApolloServerBase({ typeDefs, resolvers })).not.toThrow();
+    expect(() => new ApolloServer({ typeDefs, resolvers })).not.toThrow();
+  });
+
+  it('throws error if called without schema', function () {
+    // @ts-expect-error
+    expect(() => new ApolloServer()).toThrow();
   });
 
   it('succeeds when a valid GraphQLSchema is provided to the schema configuration option', () => {
     expect(
       () =>
-        new ApolloServerBase({
+        new ApolloServer({
           schema: makeExecutableSchema({ typeDefs, resolvers }),
         }),
     ).not.toThrow();
@@ -58,7 +63,7 @@ describe('ApolloServerBase construction', () => {
     };
     expect(
       () =>
-        new ApolloServerBase({
+        new ApolloServer({
           typeDefs,
           resolvers,
           apollo: {
@@ -76,7 +81,7 @@ describe('ApolloServerBase construction', () => {
 
   it('throws when a GraphQLSchema is not provided to the schema configuration option', () => {
     expect(() => {
-      new ApolloServerBase({
+      new ApolloServer({
         schema: {} as GraphQLSchema,
       });
     }).toThrowErrorMatchingInlineSnapshot(
@@ -87,7 +92,7 @@ describe('ApolloServerBase construction', () => {
   it('throws when no schema configuration option is provided', () => {
     expect(() => {
       // @ts-expect-error
-      new ApolloServerBase({});
+      new ApolloServer({});
     }).toThrow();
   });
 
@@ -122,7 +127,7 @@ describe('ApolloServerBase construction', () => {
   });
 });
 
-describe('ApolloServerBase start', () => {
+describe('ApolloServer start', () => {
   const failToStartPlugin: ApolloServerPlugin<BaseContext> = {
     async serverWillStart() {
       throw Error('nope');
@@ -132,7 +137,7 @@ describe('ApolloServerBase start', () => {
     'This data graph is missing a valid configuration. More details may be available in the server logs.';
 
   it('start throws on startup error', async () => {
-    const server = new ApolloServerBase({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
       plugins: [failToStartPlugin],
@@ -142,7 +147,7 @@ describe('ApolloServerBase start', () => {
 
   it('stop throws on stop error', async () => {
     let n = 1;
-    const server = new ApolloServerBase({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
       plugins: [
@@ -178,7 +183,7 @@ describe('ApolloServerBase start', () => {
       error,
     };
 
-    class ServerlessApolloServer extends ApolloServerBase<BaseContext> {
+    class ServerlessApolloServer extends ApolloServer<BaseContext> {
       override serverlessFramework() {
         return true;
       }
@@ -211,9 +216,9 @@ describe('ApolloServerBase start', () => {
   });
 });
 
-describe('ApolloServerBase executeOperation', () => {
+describe('ApolloServer executeOperation', () => {
   it('returns error information without details by default', async () => {
-    const server = new ApolloServerBase({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
     });
@@ -228,7 +233,7 @@ describe('ApolloServerBase executeOperation', () => {
   });
 
   it('returns error information with details when debug is enabled', async () => {
-    const server = new ApolloServerBase({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
       includeStackTracesInErrorResponses: true,
@@ -244,7 +249,7 @@ describe('ApolloServerBase executeOperation', () => {
   });
 
   it('works with string', async () => {
-    const server = new ApolloServerBase({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
     });
@@ -256,7 +261,7 @@ describe('ApolloServerBase executeOperation', () => {
   });
 
   it('works with AST', async () => {
-    const server = new ApolloServerBase({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
     });
@@ -274,7 +279,7 @@ describe('ApolloServerBase executeOperation', () => {
   });
 
   it('parse errors', async () => {
-    const server = new ApolloServerBase({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
     });
@@ -286,7 +291,7 @@ describe('ApolloServerBase executeOperation', () => {
   });
 
   it('passes its second argument as context object', async () => {
-    const server = new ApolloServerBase({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
     });
@@ -301,7 +306,7 @@ describe('ApolloServerBase executeOperation', () => {
   });
 
   it('typing for context objects works', async () => {
-    const server = new ApolloServerBase<{ foo: number }>({
+    const server = new ApolloServer<{ foo: number }>({
       typeDefs: 'type Query { n: Int!, n2: String! }',
       resolvers: {
         Query: {
@@ -350,7 +355,7 @@ describe('ApolloServerBase executeOperation', () => {
   });
 
   it('typing for context objects works with argument to usage reporting', async () => {
-    new ApolloServerBase<{ foo: number }>({
+    new ApolloServer<{ foo: number }>({
       typeDefs: 'type Query { n: Int! }',
       plugins: [
         ApolloServerPluginUsageReporting({
