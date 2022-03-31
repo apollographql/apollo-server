@@ -614,9 +614,9 @@ export function testApolloServer(
           {
             requestDidStart: async () => ({
               executionDidStart: async () => ({
-                willResolveField({ info, context }) {
+                willResolveField({ info, contextValue }) {
                   encounteredFields.push(info.path);
-                  encounteredContext.push(context);
+                  encounteredContext.push(contextValue);
                 },
               }),
             }),
@@ -2585,6 +2585,7 @@ export function testApolloServer(
             // This is what Chrome happens to be sending today.
             await get(
               '/',
+              // cspell:disable-next-line
               'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             ).expect(200, 'BAZ');
           });

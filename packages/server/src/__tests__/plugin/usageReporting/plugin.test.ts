@@ -116,12 +116,12 @@ describe('end-to-end', () => {
           body: {},
         },
       },
-      executor: async ({ request: { query: source }, context }) => {
+      executor: async ({ request: { query: source }, contextValue }) => {
         return await graphql({
           schema,
           source,
           // context is needed for schema instrumentation to find plugins.
-          contextValue: context,
+          contextValue,
         });
       },
     });

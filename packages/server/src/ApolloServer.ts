@@ -933,10 +933,10 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
   // TODO(AS4): Make sure we like the name of this function.
   public async executeHTTPGraphQLRequest({
     httpGraphQLRequest,
-    contextFunction,
+    context,
   }: {
     httpGraphQLRequest: HTTPGraphQLRequest;
-    contextFunction: () => Promise<TContext>;
+    context: () => Promise<TContext>;
   }): Promise<HTTPGraphQLResponse> {
     const runningServerState = await this._ensureStarted();
 
@@ -951,9 +951,9 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       };
     }
 
-    let context: TContext;
+    let contextValue: TContext;
     try {
-      context = await contextFunction();
+      contextValue = await context();
     } catch (e: any) {
       // XXX `any` isn't ideal, but this is the easiest thing for now, without
       // introducing a strong `instanceof GraphQLError` requirement.
@@ -981,7 +981,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
 
     return await runPotentiallyBatchedHttpQuery(
       httpGraphQLRequest,
-      context,
+      contextValue,
       runningServerState.schemaManager.getSchemaDerivedData(),
       this.internals,
     );
@@ -1007,7 +1007,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
    * just a convenience, not an optimization (we convert provided ASTs back into
    * string).
    *
-   * The second object will be the `context` object available in resolvers.
+   * The second object will be the `contextValue` object available in resolvers.
    */
   // TODO(AS4): document this
   public async executeOperation(
@@ -1020,14 +1020,14 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
     },
-    context: TContext,
+    contextValue: TContext,
   ): Promise<GraphQLResponse>;
 
   async executeOperation(
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
     },
-    context?: TContext,
+    contextValue?: TContext,
   ): Promise<GraphQLResponse> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
@@ -1040,27 +1040,31 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       await this._ensureStarted()
     ).schemaManager.getSchemaDerivedData();
 
-    // The typecast here is safe, because the only way `context` can be null-ish
-    // is if we used the `context?: BaseContext` override, in which case
-    // TContext is BaseContext and {} is ok.
+    // The typecast here is safe, because the only way `contextValue` can be
+    // null-ish is if we used the `contextValue?: BaseContext` override, in
+    // which case TContext is BaseContext and {} is ok.
     //
-    // TODO(AS4): This actually only works because of the fact that ApolloServerBase
-    // has a field (config) that (nested) eventually contains a function taking TContext
-    // as a parameter. That makes `const x: ApolloServerBase<BaseContext> = new
-    // ApolloServerBase<{foo: number}>` into (appropriately) an error. Let's make
-    // sure that's still the case before we release. If not, we can achieve a similar
-    // goal by making `executeOperation` a top-level function because top-level functions
-    // in TS treat function arguments contravariantly and methods do not.
-    // Note that some of the details above changed during AS4 work but we'll recheck
-    // them :)
+    // TODO(AS4): This actually only works because of the fact that
+    // ApolloServerBase has a field (config) that (nested) eventually contains a
+    // function taking TContext as a parameter. That makes `const x:
+    // ApolloServerBase<BaseContext> = new ApolloServerBase<{foo: number}>` into
+    // (appropriately) an error. Let's make sure that's still the case before we
+    // release. If not, we can achieve a similar goal by making
+    // `executeOperation` a top-level function because top-level functions in TS
+    // treat function arguments contravariantly and methods do not. Note that
+    // some of the details above changed during AS4 work but we'll recheck them
+    // :)
     //
-    // We clone the context because there are some assumptions that every operation
-    // execution has a brand new context object; specifically, in order to implement
-    // willResolveField we put a Symbol on the context that is specific to a particular
-    // request pipeline execution. We could avoid this if we had a better way of
-    // instrumenting execution.
-    // NOTE: THIS IS DUPLICATED IN runHttpQuery.ts' buildRequestContext.
-    const actualContext: TContext = cloneObject(context ?? ({} as TContext));
+    // We clone the contextValue because there are some assumptions that every
+    // operation execution has a brand new contextValue object; specifically, in
+    // order to implement willResolveField we put a Symbol on the contextValue that
+    // is specific to a particular request pipeline execution. We could avoid
+    // this if we had a better way of instrumenting execution. NOTE: THIS IS
+    // DUPLICATED IN runHttpQuery.ts' buildRequestContext.
+    // TODO(AS4): can we not do the clone and instead put the symbol somewhere else?
+    const actualContextValue: TContext = cloneObject(
+      contextValue ?? ({} as TContext),
+    );
 
     // TODO(AS4): Once runHttpQuery becomes a method, this setup can be shared
     // with it.
@@ -1074,7 +1078,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
             ? print(request.query)
             : request.query,
       },
-      context: actualContext,
+      contextValue: actualContextValue,
       cache: this.internals.cache,
       metrics: {},
       response: {

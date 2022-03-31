@@ -22,9 +22,7 @@ describe('integration:Express', () => {
         '/graphql',
         cors<cors.CorsRequest>(),
         json(),
-        expressMiddleware(server, {
-          contextFunction: context,
-        }),
+        expressMiddleware(server, { context }),
       );
       return app;
     },

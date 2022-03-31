@@ -200,8 +200,11 @@ it('passes the options to formatResponse', async () => {
   const res = await runQuery(
     {
       schema,
-      formatResponse: (response_1: any, { context }: { context: any }) => {
-        response_1['extensions'] = context.s;
+      formatResponse: (
+        response_1: any,
+        { contextValue }: { contextValue: any },
+      ) => {
+        response_1['extensions'] = contextValue.s;
         return response_1;
       },
     },
@@ -591,7 +594,7 @@ describe('request pipeline life-cycle hooks', () => {
 
           expect(willResolveField).toHaveBeenCalledTimes(1);
           expect(willResolveField.mock.calls[0][0]).toHaveProperty(
-            'context',
+            'contextValue',
             expect.objectContaining({ ourSpecialContext: true }),
           );
         });

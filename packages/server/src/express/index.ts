@@ -10,18 +10,19 @@ export interface ExpressContext {
 }
 
 export interface ExpressMiddlewareOptions<TContext> {
-  contextFunction?: (expressContext: ExpressContext) => Promise<TContext>;
+  context?: (expressContext: ExpressContext) => Promise<TContext>;
 }
 
 // TODO(AS4): Figure out exact naming (eg is this Express-specific or just Node
 // HTTP?)
+// TODO(AS4): Write compilation tests about the context optionality stuff.
 export function expressMiddleware(
   server: ApolloServer<BaseContext>,
   options?: ExpressMiddlewareOptions<BaseContext>,
 ): express.RequestHandler;
 export function expressMiddleware<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
-  options: WithRequired<ExpressMiddlewareOptions<TContext>, 'contextFunction'>,
+  options: WithRequired<ExpressMiddlewareOptions<TContext>, 'context'>,
 ): express.RequestHandler;
 export function expressMiddleware<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
@@ -29,12 +30,13 @@ export function expressMiddleware<TContext extends BaseContext>(
 ): express.RequestHandler {
   server.assertStarted('expressMiddleware()');
 
-  // This `as` is safe because the overload above shows that contextFunction can
+  // This `as` is safe because the overload above shows that context can
   // only be left out if you're using BaseContext as your context, and {} is a
   // valid BaseContext.
-  const contextFunction: (expressContext: ExpressContext) => Promise<TContext> =
-    options?.contextFunction ?? (async () => ({} as TContext));
+  const context: (expressContext: ExpressContext) => Promise<TContext> =
+    options?.context ?? (async () => ({} as TContext));
 
+  // TODO(AS4): get rid of asyncHandler
   return asyncHandler(async (req, res) => {
     if (!req.body) {
       // The json body-parser *always* sets req.body to {} if it's unset (even
@@ -73,7 +75,7 @@ export function expressMiddleware<TContext extends BaseContext>(
     // to a separate middleware.
     const httpGraphQLResponse = await server.executeHTTPGraphQLRequest({
       httpGraphQLRequest,
-      contextFunction: () => contextFunction({ req, res }),
+      context: () => context({ req, res }),
     });
     if (httpGraphQLResponse.completeBody === null) {
       // TODO(AS4): Implement incremental delivery or improve error handling.

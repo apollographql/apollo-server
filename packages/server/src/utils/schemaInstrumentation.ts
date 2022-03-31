@@ -54,14 +54,14 @@ function wrapField<TContext extends BaseContext>(
 ): void {
   const originalFieldResolve = field.resolve;
 
-  field.resolve = (source, args, context, info) => {
-    const willResolveField = context?.[
+  field.resolve = (source, args, contextValue, info) => {
+    const willResolveField = contextValue?.[
       symbolExecutionDispatcherWillResolveField
     ] as
       | GraphQLRequestExecutionListener<TContext>['willResolveField']
       | undefined;
 
-    const userFieldResolver = context?.[symbolUserFieldResolver] as
+    const userFieldResolver = contextValue?.[symbolUserFieldResolver] as
       | GraphQLFieldResolver<any, any>
       | undefined;
 
@@ -73,13 +73,13 @@ function wrapField<TContext extends BaseContext>(
     // resolution is complete.
     const didResolveField =
       typeof willResolveField === 'function' &&
-      willResolveField({ source, args, context, info });
+      willResolveField({ source, args, contextValue, info });
 
     const fieldResolver =
       originalFieldResolve || userFieldResolver || defaultFieldResolver;
 
     try {
-      let result = fieldResolver(source, args, context, info);
+      let result = fieldResolver(source, args, contextValue, info);
 
       // Call the stack's handlers either immediately (if result is not a
       // Promise) or once the Promise is done. Then return that same

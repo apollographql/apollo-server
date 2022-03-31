@@ -323,10 +323,10 @@ describe('ApolloServer executeOperation', () => {
       plugins: [
         {
           // Works with plugins too!
-          async requestDidStart({ context }) {
-            let n: number = context.foo;
+          async requestDidStart({ contextValue }) {
+            let n: number = contextValue.foo;
             // @ts-expect-error
-            let s: string = context.foo;
+            let s: string = contextValue.foo;
             // Make sure both variables are used (so the only expected error
             // is the type error).
             JSON.stringify({ n, s });
@@ -359,10 +359,10 @@ describe('ApolloServer executeOperation', () => {
       typeDefs: 'type Query { n: Int! }',
       plugins: [
         ApolloServerPluginUsageReporting({
-          generateClientInfo({ context }) {
-            let n: number = context.foo;
+          generateClientInfo({ contextValue }) {
+            let n: number = contextValue.foo;
             // @ts-expect-error
-            let s: string = context.foo;
+            let s: string = contextValue.foo;
             // Make sure both variables are used (so the only expected error
             // is the type error).
             return {

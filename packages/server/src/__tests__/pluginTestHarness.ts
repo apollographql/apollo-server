@@ -39,7 +39,7 @@ export default async function pluginTestHarness<TContext>({
   graphqlRequest,
   overallCachePolicy,
   executor,
-  context = Object.create(null),
+  contextValue = Object.create(null),
 }: {
   /**
    * An instance of the plugin to test.
@@ -82,7 +82,7 @@ export default async function pluginTestHarness<TContext>({
   /**
    * (optional) To provide a user context, if necessary.
    */
-  context?: TContext;
+  contextValue?: TContext;
 }): Promise<GraphQLRequestContextWillSendResponse<TContext>> {
   if (!schema) {
     schema = new GraphQLSchema({
@@ -125,7 +125,7 @@ export default async function pluginTestHarness<TContext>({
     metrics: Object.create(null),
     source: graphqlRequest.query,
     cache: new InMemoryLRUCache(),
-    context,
+    contextValue,
     overallCachePolicy: newCachePolicy(),
   };
 
@@ -254,7 +254,7 @@ export default async function pluginTestHarness<TContext>({
         executionDispatcher.invokeSyncDidStartHook('willResolveField', ...args);
 
     Object.defineProperty(
-      requestContext.context,
+      requestContext.contextValue,
       symbolExecutionDispatcherWillResolveField,
       { value: invokeWillResolveField },
     );

@@ -61,7 +61,7 @@ describe('apollo-server-express', () => {
         cors<cors.CorsRequest>(),
         json(),
         expressMiddleware(server, {
-          contextFunction: options?.context,
+          context: options?.context,
         }),
       );
       await new Promise((resolve) => {
@@ -106,7 +106,7 @@ describe('apollo-server-express', () => {
           ? [json(options.bodyParserConfig)]
           : [json()]),
         expressMiddleware(server, {
-          contextFunction: options?.context ?? (async () => ({})),
+          context: options?.context,
         }),
       ],
     );

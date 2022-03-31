@@ -310,7 +310,7 @@ export async function processGraphQLRequest<TContext>(
           );
 
       Object.defineProperty(
-        requestContext.context,
+        requestContext.contextValue,
         symbolExecutionDispatcherWillResolveField,
         { value: invokeWillResolveField },
       );
@@ -320,9 +320,13 @@ export async function processGraphQLRequest<TContext>(
       // fields with `wrapField` within `enablePluginsForSchemaResolvers` of
       // the `schemaInstrumentation` module.
       if (internals.fieldResolver) {
-        Object.defineProperty(requestContext.context, symbolUserFieldResolver, {
-          value: internals.fieldResolver,
-        });
+        Object.defineProperty(
+          requestContext.contextValue,
+          symbolUserFieldResolver,
+          {
+            value: internals.fieldResolver,
+          },
+        );
       }
 
       // If the schema is already enabled, this is a no-op.  Otherwise, the
@@ -418,7 +422,7 @@ export async function processGraphQLRequest<TContext>(
         typeof internals.rootValue === 'function'
           ? internals.rootValue(document)
           : internals.rootValue,
-      contextValue: requestContext.context,
+      contextValue: requestContext.contextValue,
       variableValues: request.variables,
       operationName: request.operationName,
       fieldResolver: internals.fieldResolver,

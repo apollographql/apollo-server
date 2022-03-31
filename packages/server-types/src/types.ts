@@ -174,7 +174,7 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
 
   readonly schema: GraphQLSchema;
 
-  readonly context: TContext;
+  readonly contextValue: TContext;
   readonly cache: KeyValueCache;
 
   readonly queryHash?: string;
@@ -242,7 +242,7 @@ export type GraphQLFieldResolverParams<
 > = {
   source: TSource;
   args: TArgs;
-  context: TContext;
+  contextValue: TContext;
   info: GraphQLResolveInfo;
 };
 

@@ -30,7 +30,7 @@ export async function collectCacheControlHintsAndPolicyIfCacheable(
       return await graphql({
         schema,
         source: requestContext.request.query,
-        contextValue: requestContext.context,
+        contextValue: requestContext.contextValue,
       });
     },
   });

@@ -7,7 +7,7 @@ import { HeaderMap, HttpQueryError, runHttpQuery } from './runHttpQuery';
 
 export async function runBatchHttpQuery<TContext>(
   batchRequest: Omit<HTTPGraphQLRequest, 'body'> & { body: any[] },
-  context: TContext,
+  contextValue: TContext,
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
@@ -27,7 +27,7 @@ export async function runBatchHttpQuery<TContext>(
 
       const response = await runHttpQuery(
         singleRequest,
-        context,
+        contextValue,
         schemaDerivedData,
         internals,
       );
@@ -55,14 +55,14 @@ export async function runBatchHttpQuery<TContext>(
 
 export async function runPotentiallyBatchedHttpQuery<TContext>(
   httpGraphQLRequest: HTTPGraphQLRequest,
-  context: TContext,
+  contextValue: TContext,
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
   if (!Array.isArray(httpGraphQLRequest.body)) {
     return await runHttpQuery(
       httpGraphQLRequest,
-      context,
+      contextValue,
       schemaDerivedData,
       internals,
     );
@@ -70,7 +70,7 @@ export async function runPotentiallyBatchedHttpQuery<TContext>(
   if (internals.allowBatchedHttpRequests) {
     return await runBatchHttpQuery(
       httpGraphQLRequest,
-      context,
+      contextValue,
       schemaDerivedData,
       internals,
     );

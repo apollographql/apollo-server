@@ -144,7 +144,7 @@ function ensureQueryIsStringOrMissing(query: any) {
 // This function should not throw.
 export async function runHttpQuery<TContext extends BaseContext>(
   httpRequest: HTTPGraphQLRequest,
-  context: TContext,
+  contextValue: TContext,
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
@@ -246,7 +246,7 @@ export async function runHttpQuery<TContext extends BaseContext>(
       // using batched HTTP requests is to share context across operations for a
       // single request.
       // NOTE: THIS IS DUPLICATED IN ApolloServer.prototype.executeOperation.
-      context: cloneObject(context),
+      contextValue: cloneObject(contextValue),
       cache: internals.cache,
       metrics: {},
       overallCachePolicy: newCachePolicy(),
