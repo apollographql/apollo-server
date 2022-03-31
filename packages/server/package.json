@@ -36,7 +36,6 @@
     "apollo-server-caching": "^3.3.0",
     "async-retry": "^1.2.1",
     "express": "^4.17.1",
-    "express-async-handler": "^1.2.0",
     "graphql-tag": "^2.11.0",
     "lodash.sortby": "^4.7.0",
     "loglevel": "^1.6.8",

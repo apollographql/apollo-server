@@ -1,6 +1,5 @@
 import type express from 'express';
 import type { ApolloServer } from '..';
-import asyncHandler from 'express-async-handler';
 import type { BaseContext, WithRequired } from '@apollo/server-types';
 import type { HTTPGraphQLRequest } from '@apollo/server-types';
 
@@ -36,8 +35,7 @@ export function expressMiddleware<TContext extends BaseContext>(
   const context: (expressContext: ExpressContext) => Promise<TContext> =
     options?.context ?? (async () => ({} as TContext));
 
-  // TODO(AS4): get rid of asyncHandler
-  return asyncHandler(async (req, res) => {
+  return (req, res, next) => {
     if (!req.body) {
       // The json body-parser *always* sets req.body to {} if it's unset (even
       // if the Content-Type doesn't match), so if it isn't set, you probably
@@ -73,19 +71,23 @@ export function expressMiddleware<TContext extends BaseContext>(
 
     // TODO(AS4): Make batching optional and off by default; perhaps move it
     // to a separate middleware.
-    const httpGraphQLResponse = await server.executeHTTPGraphQLRequest({
-      httpGraphQLRequest,
-      context: () => context({ req, res }),
-    });
-    if (httpGraphQLResponse.completeBody === null) {
-      // TODO(AS4): Implement incremental delivery or improve error handling.
-      throw Error('Incremental delivery not implemented');
-    }
+    server
+      .executeHTTPGraphQLRequest({
+        httpGraphQLRequest,
+        context: () => context({ req, res }),
+      })
+      .then((httpGraphQLResponse) => {
+        if (httpGraphQLResponse.completeBody === null) {
+          // TODO(AS4): Implement incremental delivery or improve error handling.
+          throw Error('Incremental delivery not implemented');
+        }
 
-    for (const [key, value] of httpGraphQLResponse.headers) {
-      res.setHeader(key, value);
-    }
-    res.statusCode = httpGraphQLResponse.statusCode || 200;
-    res.send(httpGraphQLResponse.completeBody);
-  });
+        for (const [key, value] of httpGraphQLResponse.headers) {
+          res.setHeader(key, value);
+        }
+        res.statusCode = httpGraphQLResponse.statusCode || 200;
+        res.send(httpGraphQLResponse.completeBody);
+      })
+      .catch(next);
+  };
 }
