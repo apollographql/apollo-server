@@ -215,12 +215,10 @@ export default ({
   createApp,
   destroyApp,
   serverlessFramework,
-  integrationName,
 }: {
   createApp: CreateAppFunc;
   destroyApp?: DestroyAppFunc;
   serverlessFramework?: boolean;
-  integrationName?: string;
 }) => {
   describe('apolloServer', () => {
     let app: any;
@@ -267,11 +265,7 @@ export default ({
           .send();
         return req.then((res) => {
           expect(res.status).toEqual(400);
-          expect((res.error as HTTPError).text).toMatch(
-            integrationName === 'fastify'
-              ? "Body cannot be empty when content-type is set to 'application/json'"
-              : 'POST body missing',
-          );
+          expect((res.error as HTTPError).text).toMatch('POST body missing');
         });
       });
 
@@ -317,18 +311,7 @@ export default ({
           .send('{foo');
         return req.then((res) => {
           expect(res.status).toEqual(400);
-          expect((res.error as HTTPError).text).toMatch(
-            integrationName === 'hapi'
-              ? 'Invalid request payload JSON format'
-              : integrationName === 'micro'
-              ? 'Invalid JSON'
-              : integrationName === 'azure-functions'
-              ? // This is not really the right message but AF does its parsing
-                // outside of our handlers and getting it actually right was too
-                // much of a pain.
-                'POST body missing, invalid Content-Type, or JSON object has no keys.'
-              : 'Unexpected token f',
-          );
+          expect((res.error as HTTPError).text).toMatch('Unexpected token f');
         });
       });
 
