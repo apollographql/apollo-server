@@ -64,8 +64,14 @@ import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import { newCachePolicy } from './cachePolicy';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
 import * as uuid from 'uuid';
-import { cloneObject, HeaderMap, HttpQueryError } from './runHttpQuery';
+import {
+  cloneObject,
+  HeaderMap,
+  HttpQueryError,
+  prettyJSONStringify,
+} from './runHttpQuery';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching';
+import { formatApolloErrors } from './errors';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -926,9 +932,38 @@ export class ApolloServerBase<TContext extends BaseContext> {
   // TODO(AS4): Make sure we like the name of this function.
   public async executeHTTPGraphQLRequest(
     httpGraphQLRequest: HTTPGraphQLRequest,
-    context: TContext,
+    contextFunction: () => Promise<TContext>,
   ): Promise<HTTPGraphQLResponse> {
     const schemaDerivedData = await this._ensureStarted();
+
+    let context: TContext;
+    try {
+      context = await contextFunction();
+    } catch (e: any) {
+      // XXX `any` isn't ideal, but this is the easiest thing for now, without
+      // introducing a strong `instanceof GraphQLError` requirement.
+      e.message = `Context creation failed: ${e.message}`;
+      // For errors that are not internal, such as authentication, we
+      // should provide a 400 response
+      const statusCode =
+        e.extensions &&
+        e.extensions.code &&
+        e.extensions.code !== 'INTERNAL_SERVER_ERROR'
+          ? 400
+          : 500;
+      return {
+        statusCode,
+        headers: new HeaderMap([['content-type', 'application/json']]),
+        completeBody: prettyJSONStringify({
+          errors: formatApolloErrors([e as Error], {
+            debug: this.internals.includeStackTracesInErrorResponses,
+            formatter: this.internals.formatError,
+          }),
+        }),
+        bodyChunks: null,
+      };
+    }
+
     return await runPotentiallyBatchedHttpQuery(
       httpGraphQLRequest,
       context,

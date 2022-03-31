@@ -11,7 +11,6 @@ import type {
   HTTPGraphQLResponse,
 } from '@apollo/server-types';
 import { newCachePolicy } from './cachePolicy';
-import type { GraphQLError, GraphQLFormattedError } from 'graphql';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just
@@ -321,50 +320,10 @@ function serializeGraphQLResponse(
 }
 
 // The result of a curl does not appear well in the terminal, so we add an extra new line
-function prettyJSONStringify(value: any) {
+export function prettyJSONStringify(value: any) {
   return JSON.stringify(value) + '\n';
 }
 
 export function cloneObject<T extends Object>(object: T): T {
   return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
-}
-
-type ContextFunctionExecutionResult<TContext extends BaseContext> =
-  | { errorHTTPGraphQLResponse: HTTPGraphQLResponse }
-  | { errorHTTPGraphQLResponse: null; context: TContext };
-// TODO(AS4): Move this into ApolloServer.
-// TODO(AS4): Errors here should get into plugins somehow.
-export async function executeContextFunction<TContext extends BaseContext>(
-  contextFunction: () => Promise<TContext>,
-  // TODO(AS4): These won't be necessary once it's on ApolloServer.
-  options: {
-    formatter?: (error: GraphQLError) => GraphQLFormattedError;
-    debug?: boolean;
-  },
-): Promise<ContextFunctionExecutionResult<TContext>> {
-  try {
-    return { context: await contextFunction(), errorHTTPGraphQLResponse: null };
-  } catch (e: any) {
-    // XXX `any` isn't ideal, but this is the easiest thing for now, without
-    // introducing a strong `instanceof GraphQLError` requirement.
-    e.message = `Context creation failed: ${e.message}`;
-    // For errors that are not internal, such as authentication, we
-    // should provide a 400 response
-    const statusCode =
-      e.extensions &&
-      e.extensions.code &&
-      e.extensions.code !== 'INTERNAL_SERVER_ERROR'
-        ? 400
-        : 500;
-    return {
-      errorHTTPGraphQLResponse: {
-        statusCode,
-        headers: new HeaderMap([['content-type', 'application/json']]),
-        completeBody: prettyJSONStringify({
-          errors: formatApolloErrors([e as Error], options),
-        }),
-        bodyChunks: null,
-      },
-    };
-  }
 }

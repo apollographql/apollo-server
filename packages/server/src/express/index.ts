@@ -2,8 +2,7 @@ import type express from 'express';
 import { ApolloServerBase } from '..';
 import accepts from 'accepts';
 import asyncHandler from 'express-async-handler';
-import type { BaseContext, HTTPGraphQLResponse } from '@apollo/server-types';
-import { executeContextFunction } from '../runHttpQuery';
+import type { BaseContext } from '@apollo/server-types';
 import type { HTTPGraphQLRequest } from '@apollo/server-types';
 
 export interface ExpressContext {
@@ -27,14 +26,6 @@ export class ApolloServerExpress<
     const landingPage = this.getLandingPage();
 
     return asyncHandler(async (req, res) => {
-      function sendResponse(httpGraphQLResponse: HTTPGraphQLResponse) {
-        for (const [key, value] of httpGraphQLResponse.headers) {
-          res.setHeader(key, value);
-        }
-        res.statusCode = httpGraphQLResponse.statusCode || 200;
-        res.send(httpGraphQLResponse.completeBody);
-      }
-
       // TODO(AS4): move landing page logic into core
       if (landingPage && prefersHtml(req)) {
         res.setHeader('Content-Type', 'text/html');
@@ -55,21 +46,6 @@ export class ApolloServerExpress<
         );
         return;
       }
-
-      const contextFunctionExecutionResult = await executeContextFunction(
-        () => contextFunction({ req, res }),
-        {
-          // TODO(AS4): Clean this up (probably by moving executeContextFunction
-          // into executeHTTPGraphQLRequest)
-          debug: this['internals'].includeStackTracesInErrorResponses,
-          formatter: this['internals'].formatError,
-        },
-      );
-      if (contextFunctionExecutionResult.errorHTTPGraphQLResponse) {
-        sendResponse(contextFunctionExecutionResult.errorHTTPGraphQLResponse);
-        return;
-      }
-      const { context } = contextFunctionExecutionResult;
 
       const headers = new Map<string, string>();
       for (const [key, value] of Object.entries(req.headers)) {
@@ -95,13 +71,18 @@ export class ApolloServerExpress<
       // to a separate middleware.
       const httpGraphQLResponse = await this.executeHTTPGraphQLRequest(
         httpGraphQLRequest,
-        context,
+        () => contextFunction({ req, res }),
       );
       if (httpGraphQLResponse.completeBody === null) {
         // TODO(AS4): Implement incremental delivery or improve error handling.
         throw Error('Incremental delivery not implemented');
       }
-      sendResponse(httpGraphQLResponse);
+
+      for (const [key, value] of httpGraphQLResponse.headers) {
+        res.setHeader(key, value);
+      }
+      res.statusCode = httpGraphQLResponse.statusCode || 200;
+      res.send(httpGraphQLResponse.completeBody);
     });
   }
 }
