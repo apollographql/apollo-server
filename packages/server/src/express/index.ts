@@ -1,6 +1,5 @@
 import type express from 'express';
 import { ApolloServerBase } from '..';
-import Negotiator from 'negotiator';
 import asyncHandler from 'express-async-handler';
 import type { BaseContext } from '@apollo/server-types';
 import type { HTTPGraphQLRequest } from '@apollo/server-types';
@@ -23,17 +22,7 @@ export class ApolloServerExpress<
   ): express.RequestHandler {
     this.assertStarted('getMiddleware');
 
-    const landingPage = this.getLandingPage();
-
     return asyncHandler(async (req, res) => {
-      // TODO(AS4): move landing page logic into core
-      if (landingPage && prefersHtml(req)) {
-        res.setHeader('Content-Type', 'text/html');
-        res.write(landingPage.html);
-        res.end();
-        return;
-      }
-
       if (!req.body) {
         // The json body-parser *always* sets req.body to {} if it's unset (even
         // if the Content-Type doesn't match), so if it isn't set, you probably
@@ -85,16 +74,4 @@ export class ApolloServerExpress<
       res.send(httpGraphQLResponse.completeBody);
     });
   }
-}
-
-function prefersHtml(req: express.Request): boolean {
-  if (req.method !== 'GET') {
-    return false;
-  }
-  return (
-    new Negotiator({ headers: { accept: req.header('accept') } }).mediaType([
-      'application/json',
-      'text/html',
-    ]) === 'text/html'
-  );
 }

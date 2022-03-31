@@ -1,6 +1,7 @@
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import loglevel from 'loglevel';
+import Negotiator from 'negotiator';
 import {
   GraphQLSchema,
   GraphQLError,
@@ -94,6 +95,11 @@ export type SchemaDerivedData = {
   documentStore: DocumentStore | null;
 };
 
+type RunningServerState = {
+  schemaManager: SchemaManager;
+  landingPage: LandingPage | null;
+};
+
 type ServerState =
   | {
       phase: 'initialized';
@@ -108,20 +114,16 @@ type ServerState =
       phase: 'failed to start';
       error: Error;
     }
-  | {
+  | ({
       phase: 'started';
-      schemaManager: SchemaManager;
       drainServers: (() => Promise<void>) | null;
-      landingPage: LandingPage | null;
       toDispose: (() => Promise<void>)[];
       toDisposeLast: (() => Promise<void>)[];
-    }
-  | {
+    } & RunningServerState)
+  | ({
       phase: 'draining';
       barrier: Resolvable<void>;
-      schemaManager: SchemaManager;
-      landingPage: LandingPage | null;
-    }
+    } & RunningServerState)
   | {
       phase: 'stopping';
       barrier: Resolvable<void>;
@@ -532,7 +534,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
   // It's also called via `ensureStarted` by serverless frameworks so that they
   // can call `renderLandingPage` (or do other things like call a method on a base
   // class that expects it to be started).
-  private async _ensureStarted(): Promise<SchemaDerivedData> {
+  private async _ensureStarted(): Promise<RunningServerState> {
     while (true) {
       switch (this.internals.state.phase) {
         case 'initialized':
@@ -559,7 +561,7 @@ export class ApolloServerBase<TContext extends BaseContext> {
           );
         case 'started':
         case 'draining': // We continue to run operations while draining.
-          return this.internals.state.schemaManager.getSchemaDerivedData();
+          return this.internals.state;
         case 'stopping':
           throw new Error(
             'Cannot execute GraphQL operations while the server is stopping.',
@@ -934,7 +936,18 @@ export class ApolloServerBase<TContext extends BaseContext> {
     httpGraphQLRequest: HTTPGraphQLRequest,
     contextFunction: () => Promise<TContext>,
   ): Promise<HTTPGraphQLResponse> {
-    const schemaDerivedData = await this._ensureStarted();
+    const runningServerState = await this._ensureStarted();
+
+    if (
+      runningServerState.landingPage &&
+      this.prefersHTML(httpGraphQLRequest)
+    ) {
+      return {
+        headers: new HeaderMap([['content-type', 'text/html']]),
+        completeBody: runningServerState.landingPage.html,
+        bodyChunks: null,
+      };
+    }
 
     let context: TContext;
     try {
@@ -967,8 +980,17 @@ export class ApolloServerBase<TContext extends BaseContext> {
     return await runPotentiallyBatchedHttpQuery(
       httpGraphQLRequest,
       context,
-      schemaDerivedData,
+      runningServerState.schemaManager.getSchemaDerivedData(),
       this.internals,
+    );
+  }
+
+  private prefersHTML(request: HTTPGraphQLRequest): boolean {
+    return (
+      request.method === 'GET' &&
+      new Negotiator({
+        headers: { accept: request.headers.get('accept') },
+      }).mediaType(['application/json', 'text/html']) === 'text/html'
     );
   }
 
@@ -1012,7 +1034,9 @@ export class ApolloServerBase<TContext extends BaseContext> {
       await this._start();
     }
 
-    const schemaDerivedData = await this._ensureStarted();
+    const schemaDerivedData = (
+      await this._ensureStarted()
+    ).schemaManager.getSchemaDerivedData();
 
     // The typecast here is safe, because the only way `context` can be null-ish
     // is if we used the `context?: BaseContext` override, in which case
@@ -1059,28 +1083,6 @@ export class ApolloServerBase<TContext extends BaseContext> {
     };
 
     return processGraphQLRequest(schemaDerivedData, this.internals, requestCtx);
-  }
-
-  // This method is called by integrations after start() (because we want
-  // renderLandingPage callbacks to be able to take advantage of the context
-  // passed to serverWillStart); it returns the LandingPage from the (single)
-  // plugin `renderLandingPage` callback if it exists and returns what it
-  // returns to the integration. The integration should serve the HTML page when
-  // requested with `accept: text/html`. If no landing page is defined by any
-  // plugin, returns null. (Specifically null and not undefined; some serverless
-  // integrations rely on this to tell the difference between "haven't called
-  // renderLandingPage yet" and "there is no landing page").
-  protected getLandingPage(): LandingPage | null {
-    if (
-      this.internals.state.phase !== 'started' &&
-      this.internals.state.phase !== 'draining'
-    ) {
-      throw new Error(
-        'You must `await server.start()` before calling `server.getLandingPage()`',
-      );
-    }
-
-    return this.internals.state.landingPage;
   }
 }
 

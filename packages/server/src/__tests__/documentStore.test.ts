@@ -45,7 +45,9 @@ describe('ApolloServerBase documentStore', () => {
     await server.start();
 
     // Use [] syntax to access a private method.
-    const { documentStore } = await server['_ensureStarted']();
+    const { documentStore } = (
+      await server['_ensureStarted']()
+    ).schemaManager.getSchemaDerivedData();
     expect(documentStore).toBeInstanceOf(InMemoryLRUCache);
     const embeddedStore = documentStore as InMemoryLRUCache<DocumentNode>;
 
@@ -106,7 +108,9 @@ describe('ApolloServerBase documentStore', () => {
     await server.start();
 
     // Use [] syntax to access a private method.
-    const { documentStore } = await server['_ensureStarted']();
+    const { documentStore } = (
+      await server['_ensureStarted']()
+    ).schemaManager.getSchemaDerivedData();
     expect(documentStore).toBeNull();
 
     const result = await server.executeOperation(operations.simple.op);
