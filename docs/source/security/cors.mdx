@@ -37,12 +37,12 @@ const server = new ApolloServer({
 });
 ```
 
-If you are using another integration of Apollo Server, you can add [CORS configuration options](../api/apollo-server/#cors-1) to your framework-specific middleware function.
+If you're using another integration of Apollo Server, you can add [CORS configuration options](../api/apollo-server/#cors-1) to your framework-specific middleware function.
 
 Below is an example of setting up CORS with the [`apollo-server-express`](../integrations/middleware#swapping-out-apollo-server) package:
 
 ```js
-// ... setup the server
+// ... set up the server
 await server.start();
 
 const corsOptions = {
@@ -56,7 +56,7 @@ server.applyMiddleware({
 });
 ```
 
-### Configuring Origins
+### Configuring origins
 
 CORS uses [specific HTTP request headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#the_http_response_headers) as part of its protocol; the most well-known is [`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin). The `Access-Control-Allow-Origin` header enables a server to dictate which origins can use scripts to access that server's resources. Using [`cors`](https://github.com/expressjs/cors#configuration-options) middleware, you can configure the `Access-Control-Allow-Origin` header using the `origins` option.
 
@@ -90,7 +90,7 @@ Using `cors` middleware, we can do this by setting the [`credentials`](https://g
 ```js
 //  The example below is using the apollo-server-express package.
 
-// ... setup the server
+// ... set up the server
 await server.start();
 
 const corsOptions = { origin: yourOrigin, credentials: true };
