@@ -65,7 +65,7 @@
     "@vendia/serverless-express": "4.5.4",
     "apollo-server-caching": "3.3.0",
     "awaiting": "3.0.0",
-    "body-parser": "1.19.2",
+    "body-parser": "1.20.0",
     "bunyan": "1.8.15",
     "codecov": "3.8.3",
     "cors": "2.8.5",
