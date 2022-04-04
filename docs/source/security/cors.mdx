@@ -3,7 +3,7 @@ title: Configuring CORS
 description: Control access to your server's resources
 ---
 
-[Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header based protocol that enables a server to dictate which origins have access to its resources. Put another way, your server can specify which websites can utilize a users' browser to talk to your server and precisely which kinds of requests are allowed.
+[Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header based protocol that enables a server to dictate which origins have access to its resources. Put another way, your server can specify which websites can use a user's browser to talk to your server and precisely which kinds of HTTP requests are allowed.
 
 ## Why use CORS?
 
@@ -11,12 +11,12 @@ Most developers know about CORS because they run into the all-too-common [CORS e
 
 It's common knowledge that all Internet users need to think carefully before installing any new software on their devices. However, when it comes to websites, we navigate to different sites all the time, letting our browsers load content from those sites along the way.
 
-As web developers, we aim to have users navigate to our website, but we don't want the user's browser to do anything fishy to our server while the user is visiting. Browser security mechanisms (e.g., CORS or SOP) can give developers peace of mind by enabling a website's server to specify which browser's origins can request resources from your server.
+As web developers, we aim to have users navigate to our website, but we don't want the user's browser to do anything fishy to our server while the user is visiting. Browser security mechanisms (e.g., CORS or SOP) can give developers peace of mind by enabling a website's server to specify which browser's origins can request resources from that server.
 
-The [_origin_](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy#definition_of_an_origin) of a piece of web content is that content's domain, protocol, and port. The [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) (SOP) is a security mechanism that restricts scripts on one origin from interacting with resources from another origin.
+The [_origin_](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy#definition_of_an_origin) of a piece of web content consists of that content's domain, protocol, and port. The [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) (SOP) is a security mechanism that restricts scripts on one origin from interacting with resources from another origin.
 
 
-```none
+```bash
 # Same origin
 http://example.com:8080/ <==> http://example.com:8080/
 
@@ -24,9 +24,9 @@ http://example.com:8080/ <==> http://example.com:8080/
 http://example.com:8080/ =X= https://example1.com:8081/
 ```
 
-However, as we all know, the Internet is an exciting place full of resources that can make websites better (e.g., importing images, extra fonts, making API calls, etc.).  Developers needed a new protocol to relax SOP and safely _share_ resources across different origins.
+However, as we all know, the internet is an exciting place full of resources that can make websites better (importing images, extra fonts, making API calls, etc.).  Developers needed a new protocol to relax SOP and safely _share_ resources across different origins.
 
-Cross-Origin Resource Sharing is the mechanism that allows a web page to  _share_ resources across different origins. CORS provides an extra layer of protection by enabling servers and clients to define HTTP headers, which specify which external clients' scripts can access their resources.
+Cross-Origin Resource Sharing is the mechanism that allows a web page to  _share_ resources across different origins. CORS provides an extra layer of protection by enabling servers and clients to define HTTP headers that specify _which_ external clients' scripts can access their resources.
 
 Note that both SOP and CORS are related to [website and browser security](https://developer.mozilla.org/en-US/docs/Web/Security#security-related_glossary_terms); neither prevents other kinds of software from requesting resources from your server.
 
@@ -45,6 +45,8 @@ const server = new ApolloServer({
   },
 });
 ```
+
+The example above enables CORS requests from two origins `http://localhost:3000` and `https://studio.apollographql.com` (the origin for [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/)).
 
 If you're using another integration of Apollo Server, you can add the `cors` configuration option to your framework-specific middleware function to change your server's CORS behavior. To learn more about the CORS defaults and options for your integration of Apollo Server, see [CORS configuration options](../api/apollo-server/#cors-1).
 
@@ -67,7 +69,7 @@ server.applyMiddleware({
 
 ### Configuring origins
 
-CORS uses [specific HTTP request headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#the_http_response_headers) as part of its protocol; the most well-known is [`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin). The `Access-Control-Allow-Origin` header enables a server to dictate which origins can use scripts to access that server's resources. Using [`cors`](https://github.com/expressjs/cors#configuration-options) middleware, you can configure the `Access-Control-Allow-Origin` header using the `origins` option.
+CORS uses [specific HTTP request headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#the_http_response_headers) as part of its protocol, including[`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin). The `Access-Control-Allow-Origin` header enables a server to dictate which origins can use scripts to access that server's resources. Using [`cors`](https://github.com/expressjs/cors#configuration-options) middleware, you can configure the `Access-Control-Allow-Origin` header using the `origins` option.
 
 By default, the batteries-included `apollo-server` package uses the wildcard value (`*`) to allow requests from any origin _without credentials_ to access its served responses. This works great in development, allowing you to delay configuring CORS until your application is ready for production. You can also [remove CORS middleware entirely](../api/apollo-server#cors), disabling cross-origin requests.
 
@@ -86,13 +88,13 @@ const server = new ApolloServer({
 });
 ```
 
-> Note if you plan to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a web IDE you should include https://studio.apollographql.com in your list of valid origins.
+> Note if you plan to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a GraphQL web IDE you should include `https://studio.apollographql.com` in your list of valid origins.
 
 In certain situations, you may want to use the wildcard value (`*`) in production, allowing requests from any origin. For example, if you create a public API or an API to embed in other websites, you might want to allow all origins to access your server's resources. If you do use the wildcard value in production, _any_ website can tell a user's browser to send an arbitrary request (without cookies or other credentials) to your server and read that server's response.
 
 ## Passing credentials with CORS
 
-If your cross-site requests [include](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) a user's credentials (e.g., cookies or HTTP Authentication headers), you might need to modify your CORS configuration.
+If your cross-site requests [include a user's credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) (e.g., cookies or HTTP Authentication headers), you might need to modify your CORS configuration.
 
 You can enable credentials with CORS by setting the [`Access-Control-Allow-Credentials`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials) HTTP header to `true`.
 
