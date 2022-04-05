@@ -15,7 +15,7 @@ As web developers, we aim to have users navigate to our website, but we don't wa
 
 The [_origin_](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy#definition_of_an_origin) of a piece of web content consists of that content's domain, protocol, and port. The [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) (SOP) is a security mechanism that restricts scripts on one origin from interacting with resources from another origin.
 
-
+If two URLs differ in their domain, protocol, or port, then those URLs come from two different origins:
 ```bash
 # Same origin
 http://example.com:8080/ <==> http://example.com:8080/
@@ -23,6 +23,7 @@ http://example.com:8080/ <==> http://example.com:8080/
 # Different origin (difference in domain, protocol, and port)
 http://example.com:8080/ =X= https://example1.com:8081/
 ```
+
 
 However, as we all know, the internet is an exciting place full of resources that can make websites better (importing images, extra fonts, making API calls, etc.).  Developers needed a new protocol to relax SOP and safely _share_ resources across different origins.
 
