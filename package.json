@@ -106,7 +106,7 @@
     "cspell": "5.19.5",
     "deep-freeze": "0.0.1",
     "express": "4.17.3",
-    "fastify": "3.27.4",
+    "fastify": "3.28.0",
     "form-data": "4.0.0",
     "graphql": "15.8.0",
     "graphql-tag": "2.12.6",
