@@ -109,8 +109,15 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     if (bodyParserConfig === true) {
-      middlewares.push(middlewareFromPath(path, bodyParser()));
+      middlewares.push(middlewareFromPath(path, bodyParser({
+        extendTypes: {
+          json: ['application/json', 'application/graphql+json']
+        }
+      })));
     } else if (bodyParserConfig !== false) {
+      if (typeof bodyParserConfig === 'object' && !bodyParserConfig.extendTypes) {
+        bodyParserConfig.extendTypes = { json: ['application/graphql+json', 'application/json'] }
+    }
       middlewares.push(middlewareFromPath(path, bodyParser(bodyParserConfig)));
     }
 

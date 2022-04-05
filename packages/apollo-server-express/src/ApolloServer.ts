@@ -126,10 +126,16 @@ export class ApolloServer<
     }
 
     if (bodyParserConfig === true) {
-      router.use(path, json());
+      router.use(path, json({
+          type: ['application/graphql+json', 'application/json']
+      }));
     } else if (bodyParserConfig !== false) {
-      router.use(path, json(bodyParserConfig));
+        if (typeof bodyParserConfig === 'object' && !bodyParserConfig.type) {
+            bodyParserConfig.type = ['application/graphql+json', 'application/json']
+        }
+        router.use(path, json(bodyParserConfig));
     }
+
 
     const landingPage = this.getLandingPage();
     router.use(path, (req, res, next) => {
