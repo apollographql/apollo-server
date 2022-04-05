@@ -3,13 +3,13 @@ title: Configuring CORS
 description: Control access to your server's resources
 ---
 
-[Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header based protocol that enables a server to dictate which origins have access to its resources. Put another way, your server can specify which websites can use a user's browser to talk to your server and precisely which kinds of HTTP requests are allowed.
+[Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header based protocol that enables a server to dictate which origins have access to its resources. Put another way, your server can specify which websites can use a user's browser to talk to your server, and precisely which types of HTTP requests are allowed.
 
 ## Why use CORS?
 
 Most developers know about CORS because they run into the all-too-common [CORS error](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors). CORS errors usually occur when you set up an API call or try to get your separately hosted server and client to talk to each other. To better understand what CORS is and why we use it, we'll briefly go over some background context.
 
-It's common knowledge that all Internet users need to think carefully before installing any new software on their devices. However, when it comes to websites, we navigate to different sites all the time, letting our browsers load content from those sites along the way.
+It's common knowledge that all internet users need to think carefully before installing any new software on their devices. However, when it comes to websites, we navigate to different sites all the time, letting our browsers load content from those sites along the way.
 
 As web developers, we aim to have users navigate to our website, but we don't want the user's browser to do anything fishy to our server while the user is visiting. Browser security mechanisms (e.g., CORS or SOP) can give developers peace of mind by enabling a website's server to specify which browser's origins can request resources from that server.
 
@@ -32,7 +32,7 @@ Note that both SOP and CORS are related to [website and browser security](https:
 
 ## Configuring CORS options for Apollo Server
 
-By default, the batteries-included `apollo-server` package uses the wildcard value (`*`) to allow requests from any origin _without credentials_ to access its served responses.  We'll go into more details about what this means in a moment.
+By default, the batteries-included `apollo-server` package uses the wildcard value (`*`) to allow requests from any origin _without credentials_ to access its served responses.  We'll go into more detail about what this means below.
 
 The batteries-included `apollo-server` [has a `cors` option](../api/apollo-server/#cors), which you can use to change your server's default CORS behavior:
 
@@ -46,7 +46,7 @@ const server = new ApolloServer({
 });
 ```
 
-The example above enables CORS requests from two origins `http://localhost:3000` and `https://studio.apollographql.com` (the origin for [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/)).
+The example above enables CORS requests from `http://localhost:3000`, along with `https://studio.apollographql.com` (the origin for [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/)).
 
 If you're using another integration of Apollo Server, you can add the `cors` configuration option to your framework-specific middleware function to change your server's CORS behavior. To learn more about the CORS defaults and options for your integration of Apollo Server, see [CORS configuration options](../api/apollo-server/#cors-1).
 
@@ -69,7 +69,7 @@ server.applyMiddleware({
 
 ### Configuring origins
 
-CORS uses [specific HTTP request headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#the_http_response_headers) as part of its protocol, including[`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin). The `Access-Control-Allow-Origin` header enables a server to dictate which origins can use scripts to access that server's resources. Using [`cors`](https://github.com/expressjs/cors#configuration-options) middleware, you can configure the `Access-Control-Allow-Origin` header using the `origins` option.
+CORS uses [specific HTTP request headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#the_http_response_headers) as part of its protocol, including [`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin). The `Access-Control-Allow-Origin` header enables a server to dictate which origins can use scripts to access that server's resources. Using [`cors`](https://github.com/expressjs/cors#configuration-options) middleware, you can configure the `Access-Control-Allow-Origin` header using the `origins` option.
 
 By default, the batteries-included `apollo-server` package uses the wildcard value (`*`) to allow requests from any origin _without credentials_ to access its served responses. This works great in development, allowing you to delay configuring CORS until your application is ready for production. You can also [remove CORS middleware entirely](../api/apollo-server#cors), disabling cross-origin requests.
 
@@ -90,11 +90,11 @@ const server = new ApolloServer({
 
 > Note if you plan to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a GraphQL web IDE you should include `https://studio.apollographql.com` in your list of valid origins.
 
-In certain situations, you may want to use the wildcard value (`*`) in production, allowing requests from any origin. For example, if you create a public API or an API to embed in other websites, you might want to allow all origins to access your server's resources. If you do use the wildcard value in production, _any_ website can tell a user's browser to send an arbitrary request (without cookies or other credentials) to your server and read that server's response.
+In certain situations, you might want to use the wildcard value (`*`) in production, allowing requests from any origin. For example, if you create a public API or an API to embed in other websites, you might want to allow all origins to access your server's resources. If you do use the wildcard value in production, _any_ website can tell a user's browser to send an arbitrary request (without cookies or other credentials) to your server and read that server's response.
 
 ## Passing credentials with CORS
 
-If your cross-site requests [include a user's credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) (e.g., cookies or HTTP Authentication headers), you might need to modify your CORS configuration.
+If your cross-site requests [include a user's credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) (e.g., cookies or HTTP `Authentication` headers), you might need to modify your CORS configuration.
 
 You can enable credentials with CORS by setting the [`Access-Control-Allow-Credentials`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials) HTTP header to `true`.
 
@@ -117,7 +117,7 @@ server.applyMiddleware({
 
 > You *must* specify an origin to enable credentialed requests (i.e., your origin can't use the `*` wildcard value).
 
-The `cors` middleware `origin` option does accept a boolean value; this means you can configure CORS to allow all cross-origin requests _with_ credentials (i.e., `{origin: true, credentials: true}`). In production, we advise against this and strongly recommend [specifying origins in your CORS configuration](#configuring-origins).
+The `cors` middleware `origin` option accepts a boolean value, which means you can configure CORS to allow all cross-origin requests _with_ credentials (i.e., `{origin: true, credentials: true}`). In production, we advise against this and strongly recommend [specifying origins in your CORS configuration](#configuring-origins).
 
 For examples of sending cookies and authorization headers from Apollo Client, see [Authentication](/react/networking/authentication/). For more guidance on adding authentication logic to Apollo Server, see [Authentication and authorization](./authentication).
 
