@@ -111,7 +111,10 @@ export class ApolloServer extends ApolloServerExpress {
     super.applyMiddleware({
       app: app,
       path: '/',
-      bodyParserConfig: { limit: '50mb' },
+      bodyParserConfig: {
+        limit: '50mb',
+        type: ['application/json', 'application/graphql+json'],
+      },
       onHealthCheck: this.onHealthCheck,
       cors:
         typeof this.cors !== 'undefined'
