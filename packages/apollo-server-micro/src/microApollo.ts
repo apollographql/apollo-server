@@ -51,7 +51,7 @@ export function graphqlMicro(
           (contentType &&
             req.headers['content-length'] &&
             req.headers['content-length'] !== '0' &&
-            (typeis.is(contentType, 'application/json') || typeis.is(contentType, 'application/graphql+json')) &&
+            typeis.is(contentType, 'application/json', 'application/graphql+json') &&
             (await json(req)))
         : url.parse(req.url!, true).query;
 
