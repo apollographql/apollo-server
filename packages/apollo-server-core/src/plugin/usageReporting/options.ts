@@ -1,10 +1,10 @@
 import type { GraphQLError, DocumentNode } from 'graphql';
 import type {
   GraphQLRequestContextDidResolveOperation,
-  Logger,
   GraphQLRequestContext,
   GraphQLRequestContextWillSendResponse,
 } from 'apollo-server-types';
+import type { Logger } from '@apollo/utils.logger';
 import type { fetch, RequestAgent } from 'apollo-server-env';
 import type { Trace } from 'apollo-reporting-protobuf';
 
