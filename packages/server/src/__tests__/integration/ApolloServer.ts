@@ -156,30 +156,48 @@ export interface ServerInfo {
   httpServer: http.Server;
 }
 
+export interface CreateServerOptions {
+  suppressStartCall?: boolean;
+  graphqlPath?: string;
+  noRequestsMade?: boolean;
+  context?: (arg: any) => Promise<BaseContext>;
+}
+
 export interface CreateServerFunc {
   (
     config: ApolloServerOptions<BaseContext>,
-    options?: {
-      suppressStartCall?: boolean;
-      graphqlPath?: string;
-      noRequestsMade?: boolean;
-      context?: (arg: any) => Promise<BaseContext>;
-    },
+    options?: CreateServerOptions,
   ): Promise<ServerInfo>;
 }
 
-export interface StopServerFunc {
-  (): Promise<void>;
-}
-
 export function testApolloServer(
-  createApolloServer: CreateServerFunc,
-  stopServer: StopServerFunc,
+  createServer: CreateServerFunc,
   options: {
     serverlessFramework?: boolean;
   } = {},
 ) {
   describe('ApolloServer', () => {
+    let serverToCleanUp: ApolloServer | null = null;
+
+    async function createApolloServer(
+      config: ApolloServerOptions<BaseContext>,
+      options?: CreateServerOptions,
+    ): Promise<ServerInfo> {
+      const serverInfo = await createServer(config, options);
+      serverToCleanUp = serverInfo.server;
+      return serverInfo;
+    }
+
+    // This will get called at the end of each test, and also tests
+    // which want to test stop() behavior can call it themselves (so it's OK to call
+    // it more than once).
+    async function stopServer() {
+      try {
+        await serverToCleanUp?.stop();
+      } finally {
+        serverToCleanUp = null;
+      }
+    }
     afterEach(stopServer);
 
     describe('constructor', () => {

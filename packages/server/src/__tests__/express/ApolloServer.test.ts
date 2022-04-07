@@ -30,10 +30,8 @@ const resolvers = {
 };
 
 describe('apollo-server-express', () => {
-  let serverToCleanUp: ApolloServer | null = null;
   testApolloServer(
     async (config: ApolloServerOptions<BaseContext>, options) => {
-      serverToCleanUp = null;
       const app = express();
       const httpServer = http.createServer(app);
       const server = new ApolloServer({
@@ -47,7 +45,6 @@ describe('apollo-server-express', () => {
       });
       if (!options?.suppressStartCall) {
         await server.start();
-        serverToCleanUp = server;
       }
       const graphqlPath = options?.graphqlPath ?? '/graphql';
       app.use(
@@ -63,9 +60,6 @@ describe('apollo-server-express', () => {
         httpServer.listen({ port: 0 });
       });
       return createServerInfo(server, httpServer, graphqlPath);
-    },
-    async () => {
-      await serverToCleanUp?.stop();
     },
   );
 });
