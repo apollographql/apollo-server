@@ -60,29 +60,20 @@ export function createServerInfo(
   httpServer: http.Server,
   graphqlPath: string,
 ): ServerInfo {
-  const serverInfo: any = {
-    ...(httpServer.address() as AddressInfo),
-    server,
-    httpServer,
-  };
+  const { address, port } = httpServer.address() as AddressInfo;
 
   // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
   // corresponding loopback ip. Note that the url field we're setting is
   // primarily for consumption by our test suite. If this heuristic is wrong for
   // your use case, explicitly specify a frontend host (in the `host` option to
   // ApolloServer.listen).
-  let hostForUrl = serverInfo.address;
-  if (serverInfo.address === '' || serverInfo.address === '::')
-    hostForUrl = 'localhost';
+  const hostname = address === '' || address === '::' ? 'localhost' : address;
 
-  serverInfo.url = require('url').format({
-    protocol: 'http',
-    hostname: hostForUrl,
-    port: serverInfo.port,
-    pathname: graphqlPath,
-  });
-
-  return serverInfo;
+  return {
+    server,
+    httpServer,
+    url: `http://${hostname}:${port}${graphqlPath}`,
+  };
 }
 
 const INTROSPECTION_QUERY = `
@@ -160,10 +151,7 @@ const makeGatewayMock = ({
 };
 
 export interface ServerInfo {
-  address: string;
-  family: string;
   url: string;
-  port: number | string;
   server: ApolloServer<BaseContext>;
   httpServer: http.Server;
 }
