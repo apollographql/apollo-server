@@ -1,8 +1,8 @@
 import http from 'http';
 import { sha256 } from 'js-sha256';
 import { URL } from 'url';
-import express = require('express');
-import bodyParser = require('body-parser');
+import express from 'express';
+import bodyParser from 'body-parser';
 import loglevel from 'loglevel';
 
 import { Report, Trace } from '@apollo/usage-reporting-protobuf';
@@ -51,30 +51,14 @@ import resolvable, { Resolvable } from '@josephg/resolvable';
 import type { AddressInfo } from 'net';
 import request from 'supertest';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import type {
+  CreateServerForIntegrationTests,
+  CreateServerForIntegrationTestsOptions,
+  CreateServerForIntegrationTestsResult,
+} from '.';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
-
-export function createServerInfo(
-  server: ApolloServer<BaseContext>,
-  httpServer: http.Server,
-  graphqlPath: string,
-): ServerInfo {
-  const { address, port } = httpServer.address() as AddressInfo;
-
-  // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
-  // corresponding loopback ip. Note that the url field we're setting is
-  // primarily for consumption by our test suite. If this heuristic is wrong for
-  // your use case, explicitly specify a frontend host (in the `host` option to
-  // ApolloServer.listen).
-  const hostname = address === '' || address === '::' ? 'localhost' : address;
-
-  return {
-    server,
-    httpServer,
-    url: `http://${hostname}:${port}${graphqlPath}`,
-  };
-}
 
 const INTROSPECTION_QUERY = `
   {
@@ -150,42 +134,51 @@ const makeGatewayMock = ({
   return { gateway: mockedGateway, triggers: eventuallyAssigned };
 };
 
-export interface ServerInfo {
-  url: string;
-  server: ApolloServer<BaseContext>;
-  httpServer: http.Server;
+function urlForHttpServer(
+  httpServer: http.Server,
+  graphqlPath?: string,
+): string {
+  const { address, port } = httpServer.address() as AddressInfo;
+
+  // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
+  // corresponding loopback ip. Note that the url field we're setting is
+  // primarily for consumption by our test suite. If this heuristic is wrong for
+  // your use case, explicitly specify a frontend host (in the `host` option to
+  // ApolloServer.listen).
+  const hostname = address === '' || address === '::' ? 'localhost' : address;
+
+  return `http://${hostname}:${port}${graphqlPath ?? '/graphql'}`;
 }
 
-export interface CreateServerOptions {
-  suppressStartCall?: boolean;
-  graphqlPath?: string;
-  noRequestsMade?: boolean;
-  context?: (arg: any) => Promise<BaseContext>;
-}
-
-export interface CreateServerFunc {
-  (
-    config: ApolloServerOptions<BaseContext>,
-    options?: CreateServerOptions,
-  ): Promise<ServerInfo>;
-}
-
-export function testApolloServer(
-  createServer: CreateServerFunc,
+export function defineIntegrationTestSuiteApolloServerTests(
+  createServerWithoutRememberingToCleanItUp: CreateServerForIntegrationTests,
   options: {
     serverlessFramework?: boolean;
   } = {},
 ) {
-  describe('ApolloServer', () => {
+  describe('apolloServerTests.ts', () => {
     let serverToCleanUp: ApolloServer | null = null;
 
-    async function createApolloServer(
+    async function createServer(
       config: ApolloServerOptions<BaseContext>,
-      options?: CreateServerOptions,
-    ): Promise<ServerInfo> {
-      const serverInfo = await createServer(config, options);
+      options?: CreateServerForIntegrationTestsOptions,
+    ): Promise<CreateServerForIntegrationTestsResult> {
+      const serverInfo = await createServerWithoutRememberingToCleanItUp(
+        config,
+        options,
+      );
       serverToCleanUp = serverInfo.server;
       return serverInfo;
+    }
+
+    async function createServerAndGetUrl(
+      config: ApolloServerOptions<BaseContext>,
+      options?: CreateServerForIntegrationTestsOptions,
+    ): Promise<string> {
+      return urlForHttpServer(
+        (await createServer(config, options)).httpServer,
+        options?.graphqlPath,
+      );
     }
 
     // This will get called at the end of each test, and also tests
@@ -218,7 +211,7 @@ export function testApolloServer(
             return error;
           });
 
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             schema,
             validationRules: [NoTestString],
             introspection: false,
@@ -249,7 +242,7 @@ export function testApolloServer(
         });
 
         it('allows introspection by default', async () => {
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             schema,
             stopOnTerminationSignals: false,
             nodeEnv: '',
@@ -263,7 +256,7 @@ export function testApolloServer(
         });
 
         it('prevents introspection by default during production', async () => {
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             schema,
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
@@ -281,7 +274,7 @@ export function testApolloServer(
         });
 
         it('allows introspection to be enabled explicitly', async () => {
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             schema,
             introspection: true,
             stopOnTerminationSignals: false,
@@ -298,7 +291,7 @@ export function testApolloServer(
 
       describe('appropriate error for bad user input', () => {
         it('variable coercion errors', async () => {
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             typeDefs: gql`
               type Query {
                 hello(x: String): String
@@ -321,7 +314,7 @@ export function testApolloServer(
         });
 
         it('catches required type variable error and returns UserInputError', async () => {
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             typeDefs: gql`
               type Query {
                 hello(x: String!): String
@@ -343,7 +336,7 @@ export function testApolloServer(
         });
 
         it('catches required List type variable error and returns UserInputError', async () => {
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             typeDefs: gql`
               type Query {
                 hello(x: [String]!): String
@@ -365,7 +358,7 @@ export function testApolloServer(
         });
 
         it('catches non-null type variable error and returns UserInputError', async () => {
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             typeDefs: gql`
               type Query {
                 hello(x: String!): String
@@ -388,7 +381,7 @@ export function testApolloServer(
         });
 
         it('catches non-null List type variable error and returns UserInputError', async () => {
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             typeDefs: gql`
               type Query {
                 hello(x: [String]!): String
@@ -411,7 +404,7 @@ export function testApolloServer(
         });
 
         it('catches List of non-null type variable error and returns UserInputError', async () => {
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             typeDefs: gql`
               type Query {
                 hello(x: [String!]!): String
@@ -443,7 +436,7 @@ export function testApolloServer(
             }
           `;
           const resolvers = { Query: { hello: () => 'hi' } };
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             typeDefs,
             resolvers,
           });
@@ -465,7 +458,7 @@ export function testApolloServer(
 
           triggers.resolveLoad({ schema, executor });
 
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             gateway,
           });
 
@@ -489,7 +482,7 @@ export function testApolloServer(
             triggers.rejectLoad(loadError);
 
             await expect(
-              createApolloServer({
+              createServerAndGetUrl({
                 gateway,
               }),
             ).rejects.toThrowError(loadError);
@@ -497,7 +490,7 @@ export function testApolloServer(
 
           it('not calling start causes a clear error', async () => {
             await expect(
-              createApolloServer(
+              createServerAndGetUrl(
                 { typeDefs: 'type Query{x: ID}' },
                 { suppressStartCall: true },
               ),
@@ -511,7 +504,7 @@ export function testApolloServer(
               hello: String
             }
           `;
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             typeDefs,
             mocks: true,
           });
@@ -528,7 +521,7 @@ export function testApolloServer(
               hello: String
             }
           `;
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             typeDefs,
             mocks: { String: () => 'mock city' },
           });
@@ -558,7 +551,7 @@ export function testApolloServer(
               }),
             },
           };
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             typeDefs,
             resolvers,
             mocks: {
@@ -588,7 +581,7 @@ export function testApolloServer(
       const setupApolloServerAndFetchPairForPlugins = async (
         plugins: PluginDefinition<BaseContext>[] = [],
       ) => {
-        const { url: uri, server } = await createApolloServer(
+        const { server, httpServer } = await createServer(
           {
             typeDefs: gql`
               type Query {
@@ -602,7 +595,7 @@ export function testApolloServer(
 
         serverInstance = server;
 
-        apolloFetch = createApolloFetch({ uri })
+        apolloFetch = createApolloFetch({ uri: urlForHttpServer(httpServer) })
           // Store the response so we can inspect it.
           .useAfter(({ response }, next) => {
             apolloFetchResponse = response;
@@ -758,7 +751,7 @@ export function testApolloServer(
           return error;
         });
 
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           schema,
           validationRules: [throwError],
           introspection: true,
@@ -840,7 +833,7 @@ export function testApolloServer(
           };
         });
 
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
               fieldWhichWillError: String
@@ -969,10 +962,10 @@ export function testApolloServer(
             usageReportingOptions: Partial<
               ApolloServerPluginUsageReportingOptions<any>
             > = {},
-            constructorOptions: Partial<CreateServerFunc> = {},
+            constructorOptions: Partial<CreateServerForIntegrationTests> = {},
             plugins: PluginDefinition<BaseContext>[] = [],
           ) => {
-            const { url: uri } = await createApolloServer({
+            const uri = await createServerAndGetUrl({
               typeDefs: gql`
                 enum CacheControlScope {
                   PUBLIC
@@ -1412,7 +1405,7 @@ export function testApolloServer(
           error.message = 'masked';
           return error;
         });
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
               fieldWhichWillError: String
@@ -1478,7 +1471,7 @@ export function testApolloServer(
             },
           };
           const spy = jest.fn(async () => ({}));
-          const { url: uri } = await createApolloServer(
+          const uri = await createServerAndGetUrl(
             {
               typeDefs,
               resolvers,
@@ -1516,7 +1509,7 @@ export function testApolloServer(
                 },
               },
             };
-            const { url: uri } = await createApolloServer(
+            const uri = await createServerAndGetUrl(
               {
                 typeDefs,
                 resolvers,
@@ -1554,7 +1547,7 @@ export function testApolloServer(
                 },
               },
             };
-            const { server } = await createApolloServer({
+            const { server } = await createServer({
               typeDefs,
               resolvers,
             });
@@ -1569,23 +1562,9 @@ export function testApolloServer(
         });
 
         describe('as a function', () => {
-          it('can accept and return `req`', async () => {
-            expect(
-              await createApolloServer(
-                {
-                  typeDefs,
-                  resolvers,
-                },
-                {
-                  context: async ({ req }) => ({ req }),
-                },
-              ),
-            ).not.toThrow;
-          });
-
           it('can accept nothing and return an empty object', async () => {
             expect(
-              await createApolloServer(
+              await createServerAndGetUrl(
                 {
                   typeDefs,
                   resolvers,
@@ -1613,7 +1592,7 @@ export function testApolloServer(
                 },
               },
             };
-            const { url: uri } = await createApolloServer(
+            const uri = await createServerAndGetUrl(
               {
                 typeDefs,
                 resolvers,
@@ -1643,7 +1622,7 @@ export function testApolloServer(
                 },
               },
             };
-            const { url: uri } = await createApolloServer(
+            const uri = await createServerAndGetUrl(
               {
                 typeDefs,
                 resolvers,
@@ -1674,7 +1653,7 @@ export function testApolloServer(
         describe('as an object', () => {
           it('can be an empty object', async () => {
             expect(
-              await createApolloServer(
+              await createServerAndGetUrl(
                 {
                   typeDefs,
                   resolvers,
@@ -1688,7 +1667,7 @@ export function testApolloServer(
 
           it('can contain arbitrary values', async () => {
             expect(
-              await createApolloServer(
+              await createServerAndGetUrl(
                 {
                   typeDefs,
                   resolvers,
@@ -1703,7 +1682,7 @@ export function testApolloServer(
       });
 
       it('propagates error codes in production', async () => {
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
               fieldWhichWillError: String
@@ -1733,7 +1712,7 @@ export function testApolloServer(
       });
 
       it('propagates error codes with null response in production', async () => {
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
               fieldWhichWillError: String!
@@ -1762,7 +1741,7 @@ export function testApolloServer(
       });
 
       it('propagates error codes in dev mode', async () => {
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
               fieldWhichWillError: String
@@ -1793,7 +1772,7 @@ export function testApolloServer(
       });
 
       it('shows ApolloError extensions in extensions (only!)', async () => {
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
               fieldWhichWillError: String
@@ -1841,14 +1820,13 @@ export function testApolloServer(
       };
 
       beforeEach(async () => {
-        const serverInfo = await createApolloServer({
+        uri = await createServerAndGetUrl({
           schema,
           introspection: false,
           persistedQueries: {
             cache: new Map<string, string>() as any,
           },
         });
-        uri = serverInfo.url;
       });
 
       it('returns PersistedQueryNotFound on the first try', async () => {
@@ -2028,7 +2006,7 @@ export function testApolloServer(
             const reportErrorPromise = new Promise<Error>(
               (resolve) => (reportErrorPromiseResolve = resolve),
             );
-            const { url: uri } = await createApolloServer({
+            const uri = await createServerAndGetUrl({
               typeDefs: gql`
                 type Query {
                   something: String!
@@ -2153,7 +2131,7 @@ export function testApolloServer(
       }
 
       it("doesn't include federated trace without the special header", async () => {
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           typeDefs: allTypeDefs,
           resolvers,
           logger: quietLogger,
@@ -2169,7 +2147,7 @@ export function testApolloServer(
       });
 
       it("doesn't include federated trace without _Service in the schema", async () => {
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           typeDefs: baseTypeDefs,
           resolvers,
         });
@@ -2184,7 +2162,7 @@ export function testApolloServer(
       });
 
       it('reports a total duration that is longer than the duration of its resolvers', async () => {
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           typeDefs: allTypeDefs,
           resolvers,
           logger: quietLogger,
@@ -2231,7 +2209,7 @@ export function testApolloServer(
       });
 
       it('includes errors in federated trace', async () => {
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           typeDefs: allTypeDefs,
           resolvers,
           formatError(err) {
@@ -2298,7 +2276,7 @@ export function testApolloServer(
             executor,
           });
 
-          const { url: uri } = await createApolloServer({
+          const uri = await createServerAndGetUrl({
             gateway,
             documentStore: withDocumentStore
               ? new InMemoryLRUCache<DocumentNode>()
@@ -2334,7 +2312,7 @@ export function testApolloServer(
 
         const { gateway, triggers } = makeGatewayMock({ optionsSpy });
         triggers.resolveLoad({ schema, executor: async () => ({}) });
-        await createApolloServer(
+        await createServerAndGetUrl(
           {
             gateway,
             apollo: {
@@ -2360,7 +2338,7 @@ export function testApolloServer(
         const unsubscribeSpy = jest.fn();
         const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
         triggers.resolveLoad({ schema, executor: async () => ({}) });
-        const server = (await createApolloServer({ gateway })).server;
+        const server = (await createServer({ gateway })).server;
         if (options.serverlessFramework) {
           // Serverless frameworks execute ApolloServer.start() in a dangling
           // promise in the server constructor. To ensure that the server has
@@ -2395,7 +2373,7 @@ export function testApolloServer(
         const { gateway, triggers } = makeGatewayMock();
 
         triggers.resolveLoad({ schema, executor });
-        const { url: uri } = await createApolloServer({
+        const uri = await createServerAndGetUrl({
           gateway,
         });
         const fetchComplete = jest.fn();
@@ -2461,11 +2439,13 @@ export function testApolloServer(
           executor,
         });
 
-        const { url: uri, server } = await createApolloServer({
+        const { httpServer, server } = await createServer({
           gateway,
         });
 
-        const apolloFetch = createApolloFetch({ uri });
+        const apolloFetch = createApolloFetch({
+          uri: urlForHttpServer(httpServer),
+        });
         const result1 = apolloFetch({ query: '{testString1}' });
         await executorData['{testString1}'].startPromise;
         triggers.triggerSchemaChange!(makeQueryTypeWithField('testString2'));
@@ -2533,8 +2513,7 @@ export function testApolloServer(
       const serveNoLandingPage = 400;
 
       it('defaults to LocalDefault', async () => {
-        httpServer = (await createApolloServer(makeServerConfig([])))
-          .httpServer;
+        httpServer = (await createServer(makeServerConfig([]))).httpServer;
         await get('/graphql').expect(
           200,
           /apollo-server-landing-page.cdn.apollographql.com\/_latest.*isProd[^t]+false/s,
@@ -2543,7 +2522,7 @@ export function testApolloServer(
 
       it('can specify version for LocalDefault', async () => {
         httpServer = (
-          await createApolloServer({
+          await createServer({
             typeDefs: 'type Query {x: ID}',
             plugins: [
               ApolloServerPluginLandingPageLocalDefault({ version: 'abcdef' }),
@@ -2558,7 +2537,7 @@ export function testApolloServer(
 
       it('can install playground with specific version', async () => {
         httpServer = (
-          await createApolloServer({
+          await createServer({
             typeDefs: 'type Query {x: ID}',
             plugins: [
               ApolloServerPluginLandingPageGraphQLPlayground({
@@ -2574,7 +2553,7 @@ export function testApolloServer(
 
       it('can be disabled', async () => {
         httpServer = (
-          await createApolloServer({
+          await createServer({
             typeDefs: 'type Query {x: ID}',
             plugins: [ApolloServerPluginLandingPageDisabled()],
           })
@@ -2586,7 +2565,7 @@ export function testApolloServer(
         describe('with non-root graphqlPath', () => {
           beforeEach(async () => {
             httpServer = (
-              await createApolloServer(makeServerConfig(['BAZ']), {
+              await createServer(makeServerConfig(['BAZ']), {
                 graphqlPath: '/goofql',
               })
             ).httpServer;
@@ -2609,7 +2588,7 @@ export function testApolloServer(
         describe('with root graphqlPath', () => {
           beforeEach(async () => {
             httpServer = (
-              await createApolloServer(makeServerConfig(['BAZ']), {
+              await createServer(makeServerConfig(['BAZ']), {
                 graphqlPath: '/',
               })
             ).httpServer;
@@ -2644,7 +2623,7 @@ export function testApolloServer(
         describe('startup errors', () => {
           it('only one plugin can implement renderLandingPage', async () => {
             await expect(
-              createApolloServer(makeServerConfig(['x', 'y'])),
+              createServerAndGetUrl(makeServerConfig(['x', 'y'])),
             ).rejects.toThrow(
               'Only one plugin can implement renderLandingPage.',
             );
