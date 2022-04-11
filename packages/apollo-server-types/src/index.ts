@@ -14,7 +14,9 @@ import type {
 // This seems like it could live in this package too.
 import type { KeyValueCache } from 'apollo-server-caching';
 import type { Trace } from 'apollo-reporting-protobuf';
+import type { Logger } from '@apollo/utils.logger';
 
+export type { Logger } from '@apollo/utils.logger';
 export type BaseContext = Record<string, any>;
 
 export type ValueOrPromise<T> = T | Promise<T>;
@@ -182,14 +184,6 @@ export type GraphQLExecutionResult = {
   data?: Record<string, any> | null;
   errors?: ReadonlyArray<GraphQLError>;
   extensions?: Record<string, any>;
-};
-
-export type Logger = {
-  // Ordered from least-severe to most-severe.
-  debug(message?: any): void;
-  info(message?: any): void;
-  warn(message?: any): void;
-  error(message?: any): void;
 };
 
 /**

@@ -2,7 +2,7 @@
 // ApolloServerPluginInlineTrace.
 import { GraphQLError, GraphQLResolveInfo, ResponsePath } from 'graphql';
 import { Trace, google } from 'apollo-reporting-protobuf';
-import type { Logger } from 'apollo-server-types';
+import type { Logger } from '@apollo/utils.logger';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);

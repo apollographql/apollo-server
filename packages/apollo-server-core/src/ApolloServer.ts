@@ -42,7 +42,8 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import type { Logger, SchemaHash, ApolloConfig } from 'apollo-server-types';
+import type { SchemaHash, ApolloConfig } from 'apollo-server-types';
+import type { Logger } from '@apollo/utils.logger';
 import { cloneObject } from './runHttpQuery';
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';

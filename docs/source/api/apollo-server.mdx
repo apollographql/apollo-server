@@ -367,11 +367,11 @@ Defaults to `true` unless the `NODE_ENV` environment variable is `production` or
 
 ##### `logger`
 
-[`Logger`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L178-L184)
+[`Logger`](https://www.npmjs.com/package/@apollo/utils.logger)
 </td>
 <td>
 
-An object to use for logging in place of `console`. If provided, this object must implement all methods of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L178-L184).
+An object to use for logging in place of `console`. If provided, this object must implement all methods of [the `Logger` interface](https://www.npmjs.com/package/@apollo/utils.logger).
 
 If you provide this value, Apollo Server automatically logs all messages of _all_ severity levels (`debug` through `error`), regardless of whether the `debug` option is set to `true`. It is the responsibility of the logger to determine how to handle logged messages of each level.
 

@@ -3,7 +3,7 @@ import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { gql } from '../';
 import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type { GraphQLSchema } from 'graphql';
-import type { Logger } from 'apollo-server-types';
+import type { Logger } from '@apollo/utils.logger';
 
 const typeDefs = gql`
   type Query {
