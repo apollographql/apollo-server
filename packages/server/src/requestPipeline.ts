@@ -42,6 +42,7 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
+  BaseContext,
 } from '@apollo/server-types';
 
 import { Dispatcher } from './utils/dispatcher';
@@ -76,7 +77,7 @@ function isBadUserInputGraphQLError(error: GraphQLError): Boolean {
   );
 }
 
-export async function processGraphQLRequest<TContext>(
+export async function processGraphQLRequest<TContext extends BaseContext>(
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,

@@ -16,6 +16,19 @@
 // The goal is that the generated `dist/plugin/index.js` file has no top-level
 // require calls.
 import type { ApolloServerPlugin, BaseContext } from '@apollo/server-types';
+import type {
+  InternalApolloServerPlugin,
+  InternalPluginId,
+} from '../internalPlugin';
+
+function disabledPlugin(id: InternalPluginId): ApolloServerPlugin<BaseContext> {
+  const plugin: InternalApolloServerPlugin<BaseContext> = {
+    __internal_plugin_id__() {
+      return id;
+    },
+  };
+  return plugin;
+}
 
 //#region Usage reporting
 import type { ApolloServerPluginUsageReportingOptions } from './usageReporting';
@@ -35,7 +48,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
   return require('./usageReporting').ApolloServerPluginUsageReporting(options);
 }
 export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin<BaseContext> {
-  return require('./usageReporting').ApolloServerPluginUsageReportingDisabled();
+  return disabledPlugin('UsageReporting');
 }
 //#endregion
 
@@ -62,7 +75,7 @@ export function ApolloServerPluginInlineTrace(
   return require('./inlineTrace').ApolloServerPluginInlineTrace(options);
 }
 export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin<BaseContext> {
-  return require('./inlineTrace').ApolloServerPluginInlineTraceDisabled();
+  return disabledPlugin('InlineTrace');
 }
 //#endregion
 
@@ -76,7 +89,7 @@ export function ApolloServerPluginCacheControl(
   return require('./cacheControl').ApolloServerPluginCacheControl(options);
 }
 export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin<BaseContext> {
-  return require('./cacheControl').ApolloServerPluginCacheControlDisabled();
+  return disabledPlugin('CacheControl');
 }
 //#endregion
 
@@ -93,14 +106,8 @@ export function ApolloServerPluginDrainHttpServer(
 //#endregion
 
 //#region LandingPage
-import type { InternalApolloServerPlugin } from '../internalPlugin';
 export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin<BaseContext> {
-  const plugin: InternalApolloServerPlugin<BaseContext> = {
-    __internal_plugin_id__() {
-      return 'LandingPageDisabled';
-    },
-  };
-  return plugin;
+  return disabledPlugin('LandingPageDisabled');
 }
 
 import type {

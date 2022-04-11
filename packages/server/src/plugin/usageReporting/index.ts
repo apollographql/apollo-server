@@ -1,7 +1,4 @@
-export {
-  ApolloServerPluginUsageReporting,
-  ApolloServerPluginUsageReportingDisabled,
-} from './plugin';
+export { ApolloServerPluginUsageReporting } from './plugin';
 export {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,

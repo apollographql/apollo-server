@@ -858,15 +858,3 @@ function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
     return {};
   }
 }
-
-// This plugin does nothing, but it ensures that ApolloServer won't try
-// to add a default ApolloServerPluginUsageReporting.
-export function ApolloServerPluginUsageReportingDisabled<
-  TContext extends BaseContext,
->(): InternalApolloServerPlugin<TContext> {
-  return {
-    __internal_plugin_id__() {
-      return 'UsageReporting';
-    },
-  };
-}

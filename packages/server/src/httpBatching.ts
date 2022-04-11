@@ -1,11 +1,12 @@
 import type {
+  BaseContext,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
 } from '@apollo/server-types';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
 import { HeaderMap, HttpQueryError, runHttpQuery } from './runHttpQuery';
 
-export async function runBatchHttpQuery<TContext>(
+export async function runBatchHttpQuery<TContext extends BaseContext>(
   batchRequest: Omit<HTTPGraphQLRequest, 'body'> & { body: any[] },
   contextValue: TContext,
   schemaDerivedData: SchemaDerivedData,
@@ -53,7 +54,9 @@ export async function runBatchHttpQuery<TContext>(
   return combinedResponse;
 }
 
-export async function runPotentiallyBatchedHttpQuery<TContext>(
+export async function runPotentiallyBatchedHttpQuery<
+  TContext extends BaseContext,
+>(
   httpGraphQLRequest: HTTPGraphQLRequest,
   contextValue: TContext,
   schemaDerivedData: SchemaDerivedData,

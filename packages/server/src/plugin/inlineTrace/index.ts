@@ -129,13 +129,3 @@ export function ApolloServerPluginInlineTrace(
     },
   };
 }
-
-// This plugin does nothing, but it ensures that ApolloServer won't try
-// to add a default ApolloServerPluginInlineTrace.
-export function ApolloServerPluginInlineTraceDisabled(): InternalApolloServerPlugin<BaseContext> {
-  return {
-    __internal_plugin_id__() {
-      return 'InlineTrace';
-    },
-  };
-}

@@ -24,6 +24,14 @@ export interface ApolloServerPlugin<TContext extends BaseContext> {
   requestDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
   ): Promise<GraphQLRequestListener<TContext> | void>;
+
+  // See the similarly named field on ApolloServer for details. Note that it
+  // appears that this only works if it is a *field*, not a *method*, which is
+  // why `requestDidStart` (which takes a TContext wrapped in something) is not
+  // sufficient.
+  //
+  // TODO(AS4): Upgrade to TS 4.7 and use `in` instead.
+  __forceTContextToBeContravariant?: (contextValue: TContext) => void;
 }
 
 export interface GraphQLServerListener {

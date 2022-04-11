@@ -64,7 +64,7 @@ export type HTTPGraphQLResponse = {
     }
 );
 
-export type BaseContext = Record<string, any>;
+export type BaseContext = {};
 
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 

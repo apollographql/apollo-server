@@ -344,13 +344,3 @@ function cacheAnnotationFromField(
 function isRestricted(hint: CacheHint) {
   return hint.maxAge !== undefined || hint.scope !== undefined;
 }
-
-// This plugin does nothing, but it ensures that ApolloServer won't try
-// to add a default ApolloServerPluginCacheControl.
-export function ApolloServerPluginCacheControlDisabled(): InternalApolloServerPlugin<BaseContext> {
-  return {
-    __internal_plugin_id__() {
-      return 'CacheControl';
-    },
-  };
-}

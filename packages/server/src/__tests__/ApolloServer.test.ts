@@ -305,91 +305,127 @@ describe('ApolloServer executeOperation', () => {
     expect(result.data?.contextFoo).toBe('bla');
   });
 
-  it('typing for context objects works', async () => {
-    const server = new ApolloServer<{ foo: number }>({
-      typeDefs: 'type Query { n: Int!, n2: String! }',
-      resolvers: {
-        Query: {
-          n(_parent: any, _args: any, context): number {
-            return context.foo;
-          },
-          n2(_parent: any, _args: any, context): string {
-            // It knows that context.foo is a number so it doesn't work as a string.
-            // @ts-expect-error
-            return context.foo;
-          },
-        },
-      },
-      plugins: [
-        {
-          // Works with plugins too!
-          async requestDidStart({ contextValue }) {
-            let n: number = contextValue.foo;
-            // @ts-expect-error
-            let s: string = contextValue.foo;
-            // Make sure both variables are used (so the only expected error
-            // is the type error).
-            JSON.stringify({ n, s });
+  describe('context generic typing', () => {
+    it('typing for context objects works', async () => {
+      const server = new ApolloServer<{ foo: number }>({
+        typeDefs: 'type Query { n: Int!, n2: String! }',
+        resolvers: {
+          Query: {
+            n(_parent: any, _args: any, context): number {
+              return context.foo;
+            },
+            n2(_parent: any, _args: any, context): string {
+              // It knows that context.foo is a number so it doesn't work as a string.
+              // @ts-expect-error
+              return context.foo;
+            },
           },
         },
-        // Plugins declared to be <BaseContext> still work.
-        ApolloServerPluginCacheControlDisabled(),
-      ],
-    });
-    await server.start();
-    const result = await server.executeOperation(
-      { query: '{ n }' },
-      { foo: 123 },
-    );
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.n).toBe(123);
+        plugins: [
+          {
+            // Works with plugins too!
+            async requestDidStart({ contextValue }) {
+              let n: number = contextValue.foo;
+              // @ts-expect-error
+              let s: string = contextValue.foo;
+              // Make sure both variables are used (so the only expected error
+              // is the type error).
+              JSON.stringify({ n, s });
+            },
+          },
+          // Plugins declared to be <BaseContext> still work.
+          ApolloServerPluginCacheControlDisabled(),
+        ],
+      });
+      await server.start();
+      const result = await server.executeOperation(
+        { query: '{ n }' },
+        { foo: 123 },
+      );
+      expect(result.errors).toBeUndefined();
+      expect(result.data?.n).toBe(123);
 
-    const result2 = await server.executeOperation(
-      { query: '{ n }' },
-      // It knows that context.foo is a number so it doesn't work as a string.
+      const result2 = await server.executeOperation(
+        { query: '{ n }' },
+        // It knows that context.foo is a number so it doesn't work as a string.
+        // @ts-expect-error
+        { foo: 'asdf' },
+      );
+      // GraphQL will be sad that a string was returned from an Int! field.
+      expect(result2.errors).toBeDefined();
+    });
+
+    // This works due to the __forceTContextToBeContravariant hack.
+    it('context is contravariant', () => {
       // @ts-expect-error
-      { foo: 'asdf' },
-    );
-    // GraphQL will be sad that a string was returned from an Int! field.
-    expect(result2.errors).toBeDefined();
-  });
+      const server1: ApolloServer<{}> = new ApolloServer<{
+        foo: number;
+      }>({ typeDefs: 'type Query{id: ID}' });
+      // avoid the expected error just being an unused variable
+      expect(server1).toBeDefined();
 
-  // This works due to the __forceTContextToBeContravariant hack.
-  it('context is contravariant', () => {
-    // @ts-expect-error
-    const server1: ApolloServer<{}> = new ApolloServer<{
-      foo: number;
-    }>({ typeDefs: 'type Query{id: ID}' });
-    // avoid the expected error just being an unused variable
-    expect(server1).toBeDefined();
-
-    // The opposite is OK: we can pass a more specific context object to
-    // something expecting less.
-    const server2: ApolloServer<{
-      foo: number;
-    }> = new ApolloServer<{}>({ typeDefs: 'type Query{id: ID}' });
-    expect(server2).toBeDefined();
-  });
-
-  it('typing for context objects works with argument to usage reporting', async () => {
-    new ApolloServer<{ foo: number }>({
-      typeDefs: 'type Query { n: Int! }',
-      plugins: [
-        ApolloServerPluginUsageReporting({
-          generateClientInfo({ contextValue }) {
-            let n: number = contextValue.foo;
-            // @ts-expect-error
-            let s: string = contextValue.foo;
-            // Make sure both variables are used (so the only expected error
-            // is the type error).
-            return {
-              clientName: `client ${n} ${s}`,
-            };
-          },
-        }),
-      ],
+      // The opposite is OK: we can pass a more specific context object to
+      // something expecting less.
+      const server2: ApolloServer<{
+        foo: number;
+      }> = new ApolloServer<{}>({ typeDefs: 'type Query{id: ID}' });
+      expect(server2).toBeDefined();
     });
 
-    // Don't start the server because we don't actually want any usage reporting.
+    it('typing for context objects works with argument to usage reporting', () => {
+      new ApolloServer<{ foo: number }>({
+        typeDefs: 'type Query { n: Int! }',
+        plugins: [
+          ApolloServerPluginUsageReporting({
+            generateClientInfo({ contextValue }) {
+              let n: number = contextValue.foo;
+              // @ts-expect-error
+              let s: string = contextValue.foo;
+              // Make sure both variables are used (so the only expected error
+              // is the type error).
+              return {
+                clientName: `client ${n} ${s}`,
+              };
+            },
+          }),
+        ],
+      });
+
+      // Don't start the server because we don't actually want any usage reporting.
+    });
+
+    it('typing for plugins works appropriately', () => {
+      type SpecificContext = { someField: boolean };
+
+      function takesPlugin<TContext extends BaseContext>(
+        _p: ApolloServerPlugin<TContext>,
+      ) {}
+
+      const specificPlugin: ApolloServerPlugin<SpecificContext> = {
+        async requestDidStart({ contextValue }) {
+          console.log(contextValue.someField); // this doesn't actually run
+        },
+      };
+
+      const basePlugin: ApolloServerPlugin<BaseContext> = {
+        async requestDidStart({ contextValue }) {
+          console.log(contextValue); // this doesn't actually run
+        },
+      };
+
+      // @ts-expect-error
+      takesPlugin<BaseContext>(specificPlugin);
+      takesPlugin<SpecificContext>(basePlugin);
+
+      new ApolloServer<BaseContext>({
+        typeDefs: 'type Query { x: ID }',
+        // @ts-expect-error
+        plugins: [specificPlugin],
+      });
+      new ApolloServer<SpecificContext>({
+        typeDefs: 'type Query { x: ID }',
+        plugins: [basePlugin],
+      });
+    });
   });
 });
