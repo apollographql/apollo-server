@@ -342,11 +342,11 @@ The default value is `100`.
 
 ###### `logger`
 
-[`Logger`](https://github.com/apollographql/apollo-utils/tree/main/packages/logger)
+[`Logger`](https://www.npmjs.com/package/@apollo/utils.logger)
 </td>
 <td>
 
-If you provide this object, the plugin sends it all log messages related to Apollo Studio communication, instead of sending them to the default logger. The object must implement all methods of [the `Logger` interface](https://github.com/apollographql/apollo-utils/tree/main/packages/logger).
+If you provide this object, the plugin sends it all log messages related to Apollo Studio communication, instead of sending them to the default logger. The object must implement all methods of [the `Logger` interface](https://www.npmjs.com/package/@apollo/utils.logger).
 
 </td>
 </tr>
