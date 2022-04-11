@@ -16,6 +16,7 @@ import type { KeyValueCache } from 'apollo-server-caching';
 import type { Trace } from 'apollo-reporting-protobuf';
 import type { Logger } from '@apollo/utils.logger';
 
+export type { Logger } from '@apollo/utils.logger';
 export type BaseContext = Record<string, any>;
 
 export type ValueOrPromise<T> = T | Promise<T>;
