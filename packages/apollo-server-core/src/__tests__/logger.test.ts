@@ -26,6 +26,8 @@ describe('logger', () => {
     await server.start();
 
     expect(debugSpy).toHaveBeenCalledWith(KNOWN_DEBUG_MESSAGE);
+    // checking the logger is the one from `loglevel`, we can't instance check
+    // this since loglevel doesn't uses classes.
     expect(defaultLogger.levels).toEqual(loglevel.levels);
   });
 
