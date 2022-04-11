@@ -70,13 +70,13 @@ server.applyMiddleware({
 
 ### Configuring origins
 
-CORS uses [specific HTTP request headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#the_http_response_headers) as part of its protocol, including [`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) (ACAO). The `Access-Control-Allow-Origin` header enables a server to dictate which origins can use scripts to access that server's resources. Using [`cors`](https://github.com/expressjs/cors#configuration-options) middleware, you can configure the `Access-Control-Allow-Origin` header using the `origins` option.
+CORS uses [specific HTTP request headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#the_http_response_headers) as part of its protocol, including [`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin)). The `Access-Control-Allow-Origin` header enables a server to dictate which origins can use scripts to access that server's resources. Using [`cors`](https://github.com/expressjs/cors#configuration-options) middleware, you can configure the `Access-Control-Allow-Origin` header using the `origin` option.
 
 By default, the batteries-included `apollo-server` package uses the wildcard value (`*`) to allow requests from any origin _without credentials_ to access its served responses. This works great in development, allowing you to delay configuring CORS until your application is ready for production. You can also [remove CORS middleware entirely](../api/apollo-server#cors), disabling cross-origin requests.
 
 > If you need to pass credentials to your server (e.g., via cookies or an HTTP header), you can't use the wildcard value (`*`) for your origin. You _must_ provide specific origins; see [Passing credentials with CORS](#passing-credentials-with-cors) for examples.
 
-When your server is in production, we strongly recommend listing the specific origins that should have access to your server:
+Below is an example of configuring the `origin` option with a list of specific origins that can access our server's responses:
 
 ```js
 //  With the batteries-included Apollo Server
@@ -91,7 +91,19 @@ const server = new ApolloServer({
 
 > Note if you plan to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a GraphQL web IDE you should include `https://studio.apollographql.com` in your list of valid origins.
 
-### Passing credentials with CORS
+### Specifying origins in production
+
+Depending on what you are building, you might want to change your CORS middleware's `origin` option when your project is ready for production.
+
+If you create a public API or an API to embed in other websites, you probably want to allow _all_ origins to access your server's resources. You can use the default wildcard value (`*`) in these situations, allowing requests from any origin.
+
+> If you use the wildcard value (`*`) in production, _any_ website can tell a user's browser to send an arbitrary request (without cookies or other credentials) to your server and read that server's response.
+
+If you create an API on the public internet to serve resources to your _own_ website or app, you might want to specify which origins can access your server's resources. If your API needs to [send user credentials](#passing-credentials-with-cors) with requests, we strongly recommend specifying origins in your CORS configuration.
+
+If your browser is running your API on a private network (i.e., not on the public internet), we **strongly recommend** specifying which origins can access your server's resources. This is to avoid enabling attackers to use your browser to send requests to servers on your private network.
+
+## Passing credentials with CORS
 
 If your cross-site requests [include a user's credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) (e.g., cookies or HTTP `Authentication` headers), you might need to modify your CORS configuration.
 
@@ -119,23 +131,3 @@ server.applyMiddleware({
 The `cors` middleware `origin` option accepts a boolean value, which means you can configure CORS to allow all cross-origin requests _with_ credentials (i.e., `{origin: true, credentials: true}`). In production, we advise against this and strongly recommend [specifying origins in your CORS configuration](#configuring-origins).
 
 For examples of sending cookies and authorization headers from Apollo Client, see [Authentication](/react/networking/authentication/). For more guidance on adding authentication logic to Apollo Server, see [Authentication and authorization](./authentication).
-
-## Choosing CORS options for your project
-
-Depending on what you are building, your CORS configuration might need to change.
-
-For example, if you create a public API or an API to embed in other websites, you probably want to allow all origins to access your server's resources. In these situations, you might want to use the wildcard value (`*`) as your `Access-Control-Allow-Origin` header, allowing requests from any origin.
-
-If you are exposing an API on the public internet specifically to serve your _own_ website or app, then it might be a good idea to specify origins in your CORS config.
-<!-- WORK ON THIS! -->
-If you do choose to use the default CORS behavior in this scenario (i.e., using the wildcard value (`*`) as your `Access-Control-Allow-Origin` header) then you know that a request can come in with credentials, so you will probably be fine.
-
-If you are passing credentials to your API, then we strongly recommend specify which origins can access your server's resources.
-
-> If you do use the wildcard value in production, _any_ website can tell a user's browser to send an arbitrary request (without cookies or other credentials) to your server and read that server's response.
-
-<!--  Clean this up: Serve your own sites then might be good idea. If have credentials def good idea  -->
-
-### Building private API
-<!-- Flesh this out -->
-If you have an API that relies on network level controls for security, i.e., your browser is running the API on your private network, we strongly recommend setting specific origins.
