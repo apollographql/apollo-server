@@ -6,7 +6,6 @@ import type {
   GraphQLResponse,
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContext,
-  Logger,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextParsingDidStart,
@@ -15,6 +14,7 @@ import type {
   GraphQLRequestExecutionListener,
   GraphQLServerListener,
 } from '@apollo/server-types';
+import type { Logger } from '@apollo/utils.logger';
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
 import {
   enablePluginsForSchemaResolvers,

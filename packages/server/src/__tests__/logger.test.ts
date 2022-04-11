@@ -1,146 +1,60 @@
 import { ApolloServer } from '../..';
-import type { Logger } from '@apollo/server-types';
-import { PassThrough } from 'stream';
 import gql from 'graphql-tag';
+import loglevel from 'loglevel';
 
-import * as winston from 'winston';
-import WinstonTransport from 'winston-transport';
-import * as bunyan from 'bunyan';
-import * as loglevel from 'loglevel';
-import * as log4js from 'log4js';
-
-const LOWEST_LOG_LEVEL = 'debug';
-
-const KNOWN_DEBUG_MESSAGE = 'The request has started.';
-
-async function triggerLogMessage(loggerToUse: Logger) {
-  const server = new ApolloServer({
-    typeDefs: gql`
-      type Query {
-        field: String!
-      }
-    `,
-    logger: loggerToUse,
-    plugins: [
-      {
-        async requestDidStart({ logger }) {
-          logger.debug(KNOWN_DEBUG_MESSAGE);
-        },
-      },
-    ],
-  });
-  await server.start();
-  await server.executeOperation({
-    query: '{ field }',
-  });
-}
+const KNOWN_DEBUG_MESSAGE = 'The server is starting.';
 
 describe('logger', () => {
-  it("works with 'winston'", async () => {
-    const sink = jest.fn();
-    const transport = new (class extends WinstonTransport {
-      constructor() {
-        super({
-          format: winston.format.json(),
-        });
-      }
-
-      override log(info: any) {
-        sink(info);
-      }
-    })();
-
-    const logger = winston.createLogger({ level: 'debug' }).add(transport);
-
-    await triggerLogMessage(logger);
-
-    expect(sink).toHaveBeenCalledWith(
-      expect.objectContaining({
-        level: LOWEST_LOG_LEVEL,
-        message: KNOWN_DEBUG_MESSAGE,
-      }),
-    );
-  });
-
-  it("works with 'bunyan'", async () => {
-    const sink = jest.fn();
-
-    // Bunyan uses streams for its logging implementations.
-    const writable = new PassThrough();
-    writable.on('data', (data) => sink(JSON.parse(data.toString())));
-
-    const logger = bunyan.createLogger({
-      name: 'test-logger-bunyan',
-      streams: [
+  it('uses internal loglevel logger by default', async () => {
+    const server = new ApolloServer({
+      typeDefs: gql`
+        type Query {
+          field: String!
+        }
+      `,
+      plugins: [
         {
-          level: LOWEST_LOG_LEVEL,
-          stream: writable,
+          async serverWillStart({ logger }) {
+            logger.debug(KNOWN_DEBUG_MESSAGE);
+          },
         },
       ],
     });
 
-    await triggerLogMessage(logger);
+    const defaultLogger = server['internals'].logger as loglevel.Logger;
+    const debugSpy = jest.spyOn(defaultLogger, 'debug');
+    await server.start();
 
-    expect(sink).toHaveBeenCalledWith(
-      expect.objectContaining({
-        level: bunyan.DEBUG,
-        msg: KNOWN_DEBUG_MESSAGE,
-      }),
-    );
+    expect(debugSpy).toHaveBeenCalledWith(KNOWN_DEBUG_MESSAGE);
+    // checking the logger is the one from `loglevel`, we can't instance check
+    // this since loglevel doesn't uses classes.
+    expect(defaultLogger.levels).toEqual(loglevel.levels);
   });
 
-  it("works with 'loglevel'", async () => {
-    const sink = jest.fn();
-
-    const logger = loglevel.getLogger('test-logger-loglevel');
-    logger.methodFactory =
-      (_methodName, level): loglevel.LoggingMethod =>
-      (message) =>
-        sink({ level, message });
-
-    // The `setLevel` method must be called after overwriting `methodFactory`.
-    // This is an intentional API design pattern of the loglevel package:
-    // https://www.npmjs.com/package/loglevel#writing-plugins
-    logger.setLevel(loglevel.levels.DEBUG);
-
-    await triggerLogMessage(logger);
-
-    expect(sink).toHaveBeenCalledWith({
-      level: loglevel.levels.DEBUG,
-      message: KNOWN_DEBUG_MESSAGE,
-    });
-  });
-
-  it("works with 'log4js'", async () => {
-    const sink = jest.fn();
-
-    log4js.configure({
-      appenders: {
-        custom: {
-          type: {
-            configure: () => (loggingEvent: log4js.LoggingEvent) =>
-              sink(loggingEvent),
+  it('uses custom logger when configured', async () => {
+    const debugSpy = jest.fn();
+    const server = new ApolloServer({
+      typeDefs: gql`
+        type Query {
+          field: String!
+        }
+      `,
+      plugins: [
+        {
+          async serverWillStart({ logger }) {
+            logger.debug(KNOWN_DEBUG_MESSAGE);
           },
         },
-      },
-      categories: {
-        default: {
-          appenders: ['custom'],
-          level: LOWEST_LOG_LEVEL,
-        },
+      ],
+      logger: {
+        debug: debugSpy,
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       },
     });
 
-    const logger = log4js.getLogger();
-    logger.level = LOWEST_LOG_LEVEL;
-
-    await triggerLogMessage(logger);
-
-    expect(sink).toHaveBeenCalledWith(
-      expect.objectContaining({
-        level: log4js.levels.DEBUG,
-        data: [KNOWN_DEBUG_MESSAGE],
-      }),
-    );
+    await server.start();
+    expect(debugSpy).toHaveBeenCalledWith(KNOWN_DEBUG_MESSAGE);
   });
 });

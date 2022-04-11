@@ -16,8 +16,8 @@ import type {
   BaseContext,
   GraphQLResponse,
   GraphQLRequestContext,
-  Logger,
 } from '@apollo/server-types';
+import type { Logger } from '@apollo/utils.logger';
 
 import type { KeyValueCache } from 'apollo-server-caching';
 export type { KeyValueCache };

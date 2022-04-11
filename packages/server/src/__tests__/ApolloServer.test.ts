@@ -1,11 +1,7 @@
 import { ApolloServer } from '../ApolloServer';
 import { ApolloServerOptions, GatewayInterface, gql } from '..';
 import type { GraphQLSchema } from 'graphql';
-import type {
-  ApolloServerPlugin,
-  BaseContext,
-  Logger,
-} from '@apollo/server-types';
+import type { ApolloServerPlugin, BaseContext } from '@apollo/server-types';
 import {
   ApolloServerPluginCacheControlDisabled,
   ApolloServerPluginUsageReporting,
@@ -55,7 +51,7 @@ describe('ApolloServer construction', () => {
 
   it('succeeds when passed a graphVariant in construction', () => {
     const warn = jest.fn();
-    const logger: Logger = {
+    const logger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn,
@@ -176,7 +172,7 @@ describe('ApolloServer start', () => {
   // get to executeOperation without server.start().
   it('execute throws redacted message on serverless startup error', async () => {
     const error = jest.fn();
-    const logger: Logger = {
+    const logger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
