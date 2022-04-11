@@ -401,6 +401,19 @@ The plugin uses the same in-memory LRU cache as Apollo Server's other features. 
 
 See [Using Memcached/Redis as a cache storage backend](../data/data-sources/#using-memcachedredis-as-a-cache-storage-backend).
 
+You can pass in a cache implementation to the responseCachePlugin via the `cache` option. For instance, the Memcached implementation:
+```javascript
+import responseCachePlugin from 'apollo-server-plugin-response-cache';
+const { MemcachedCache } = require('apollo-server-cache-memcached');
+const cache = new MemcachedCache(
+    ['memcached-server-1', 'memcached-server-2', 'memcached-server-3'],
+    { retries: 10, retry: 10000 }
+const server = new ApolloServer({
+  gateway,
+  // ...other options...
+  plugins: [responseCachePlugin({cache:cache})],
+});
+
 > You can also [implement your own cache backend](../data/data-sources/#implementing-your-own-cache-backend).
 
 
