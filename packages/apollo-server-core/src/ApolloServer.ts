@@ -37,6 +37,7 @@ import {
   processGraphQLRequest,
   GraphQLRequestContext,
   GraphQLRequest,
+  GraphQLResponse,
   APQ_CACHE_PREFIX,
 } from './requestPipeline';
 
@@ -952,12 +953,13 @@ export class ApolloServerBase<
    * `{req: express.Request, res: express.Response }` object) and to keep it
    * updated as you upgrade Apollo Server.
    */
-  public async executeOperation(
-    request: Omit<GraphQLRequest, 'query'> & {
+  public async executeOperation<TData = any, TVariables = Record<string, any>>(
+    request: Omit<GraphQLRequest, 'query' | 'variables'> & {
       query?: string | DocumentNode;
+      variables?: TVariables;
     },
     integrationContextArgument?: ContextFunctionParams,
-  ) {
+  ): Promise<Omit<GraphQLResponse, 'data'> & { data?: TData }> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
     // `apollo-server` which doesn't support `start()`.)
