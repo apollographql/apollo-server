@@ -5,6 +5,12 @@ description: Control access to your server's resources
 
 [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header based protocol that enables a server to dictate which origins have access to its resources. Put another way, your server can specify which websites can use a user's browser to talk to your server, and precisely which types of HTTP requests are allowed.
 
+Apollo Server's default CORS behavior enables anyone on the Internet to connect to the applications a server is serving up.
+
+> ⚠️ If your app is only visible on a private network and uses network separation for security, the default CORS behavior is **not secure**. See [Specifying origins in production](#specifying-origins-in-production) for more information.
+
+By default, Apollo Server doesn't allow you to pass cookies with requests.  If you want to use cookies for authentication, see [Passing Credentials with CORS](#passing-credentials-with-cors).
+
 ## Why use CORS?
 
 Most developers know about CORS because they run into the all-too-common [CORS error](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors). CORS errors usually occur when you set up an API call or try to get your separately hosted server and client to talk to each other. To better understand what CORS is and why we use it, we'll briefly go over some background context.
@@ -101,7 +107,7 @@ If you create a public API or an API to embed in other websites, you probably wa
 
 If you create an API on the public internet to serve resources to your _own_ website or app, you might want to specify which origins can access your server's resources. If your API needs to [send user credentials](#passing-credentials-with-cors) with requests, we strongly recommend specifying origins in your CORS configuration.
 
-If your browser is running your API on a private network (i.e., not on the public internet), we **strongly recommend** specifying which origins can access your server's resources. This is to avoid enabling attackers to use your browser to send requests to servers on your private network.
+If your browser is running your API on a private network (i.e., not on the public internet), we **strongly recommend specifying which origins can access your server's resources**. This is to avoid enabling attackers to use your browser to send requests to servers on your private network.
 
 ## Passing credentials with CORS
 
