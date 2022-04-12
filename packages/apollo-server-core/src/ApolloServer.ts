@@ -959,7 +959,7 @@ export class ApolloServerBase<
       variables?: TVariables;
     },
     integrationContextArgument?: ContextFunctionParams,
-  ): Promise<Omit<GraphQLResponse, 'data'> & { data?: TData }> {
+  ): Promise<Omit<GraphQLResponse, 'data'> & { data?: TData | null }> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
     // `apollo-server` which doesn't support `start()`.)
