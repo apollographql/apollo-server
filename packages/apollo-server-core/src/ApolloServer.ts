@@ -953,7 +953,7 @@ export class ApolloServerBase<
    * `{req: express.Request, res: express.Response }` object) and to keep it
    * updated as you upgrade Apollo Server.
    */
-  public async executeOperation<TData = any, TVariables = Record<string, any>>(
+  public async executeOperation<TData = Record<string, any>, TVariables = Record<string, any>>(
     request: Omit<GraphQLRequest, 'query' | 'variables'> & {
       query?: string | DocumentNode;
       variables?: TVariables;
