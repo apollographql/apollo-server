@@ -38,7 +38,7 @@ Note that both SOP and CORS are related to [browser security](https://developer.
 
 ## Choosing CORS options for your project
 
-When configuring CORS for your application, there are two main options you might want to change: the origins that can access your server's resources and whether your server accepts user credentials sent with requests.
+When thinking about configuring CORS for your application, there are two main options you might want to change: the origins that can access your server's resources and whether your server accepts user credentials (i.e., cookies) with requests.
 
 ### Specifying origins
 
@@ -56,7 +56,7 @@ If your API needs to accept [cross-origin cookies](https://developer.mozilla.org
 
 #### APIs with known consumers
 
-If you create an API on the public internet to serve resources to your _own_ websites or apps, you might want to [specify which origins](#configuring-cors-options-for-apollo-server) can access your server's resources. If your API [includes user credentials](#passing-credentials-with-cors) with requests, we strongly recommend specifying origins in your CORS configuration.
+If you create an API on the public internet to serve resources to your _own_ websites or apps, you might want to [specify which origins](#configuring-cors-options-for-apollo-server) can access your server's resources. Explicitly specifying origins can provide an extra level of security.
 
 #### Public or embedded APIs
 
@@ -70,7 +70,7 @@ If your application doesn't fit into any of the above categories, the default Ap
 
 ##  Configuring CORS options for Apollo Server
 
-By default, the batteries-included `apollo-server` package serves the `Access-Control-Allow-Origin` HTTP header with the wildcard value (`*`). This allows scripts on any origin to make requests to the server and read its responses.
+By default, the batteries-included `apollo-server` package serves the `Access-Control-Allow-Origin` HTTP header with the wildcard value (`*`). This allows scripts on any origin to make requests, _without cookies_, to the server and read its responses.
 
 > If you need to pass credentials to your server (e.g., via cookies), you can't use the wildcard value (`*`) for your origin. You _must_ provide specific origins; see [Passing credentials with CORS](#passing-credentials-with-cors) for examples.
 
@@ -117,9 +117,9 @@ If your server requires requests to [include a user's credentials](https://devel
 
 You can enable credentials with CORS by setting the [`Access-Control-Allow-Credentials`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials) HTTP header to `true`.
 
-> You *must* specify an origin to enable credentialed requests (i.e., if your server sends the `*` wildcard value for the `Access-Control-Allow-Origin` HTTP header then your browser will refuse to send credentials).
+> You *must* [specify an origin](#configuring-cors-options-for-apollo-server) to enable credentialed requests (i.e., if your server sends the `*` wildcard value for the `Access-Control-Allow-Origin` HTTP header, your browser will refuse to send credentials).
 
-To enable credentials for the batteries-included `apollo-server` you can use the [`cors` option](../api/apollo-server/#cors) to specify `origins` and set `credentials` to be `true`:
+To  enable your browser to pass credentials with the batteries-included `apollo-server` you can use the [`cors` option](../api/apollo-server/#cors) to specify `origins` and set `credentials` to `true`:
 
 ```js
 const server = new ApolloServer({
@@ -132,7 +132,7 @@ const server = new ApolloServer({
 });
 ```
 
-Using `cors` middleware with an integration of Apollo Server, you can set the [`credentials`](https://github.com/expressjs/cors#configuration-options) option to `true` to enable your browser to pass credentials:
+Using `cors` middleware with an integration of Apollo Server, you can set the [`credentials`](https://github.com/expressjs/cors#configuration-options) option to `true` before passing it to your [framework-specific middleware function](https://www.apollographql.com/docs/apollo-server/api/apollo-server#framework-specific-middleware-function):
 
 ```js
 //  The example below is using the apollo-server-express package.
@@ -149,7 +149,7 @@ server.applyMiddleware({
 });
 ```
 
->The `cors` middleware `origin` option accepts a boolean value, which means you can technically configure CORS to allow all cross-origin requests _with_ credentials (i.e., `{origin: true, credentials: true}`). In production, this is almost certainly insecure, since it means that any website can read information from your server that is protected by the user's cookies. Instead, if you enable credentials you should [specify specific origins in your CORS configuration](#configuring-origins).
+>The `cors` middleware `origin` option also accepts a boolean value, which means you can technically configure CORS to allow all cross-origin requests _with_ credentials (i.e., `{origin: true, credentials: true}`). This is almost certainly insecure because any website could read information previously protected by a user's cookies. Instead, you should [specify origins in your CORS configuration](#configuring-cors-options-for-apollo-server) whenever you enable credentials.
 
 For examples of sending cookies and authorization headers from Apollo Client, see [Authentication](/react/networking/authentication/). For more guidance on adding authentication logic to Apollo Server, see [Authentication and authorization](./authentication).
 
