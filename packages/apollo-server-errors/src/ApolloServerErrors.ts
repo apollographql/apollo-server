@@ -7,6 +7,7 @@ import {
   printError,
   formatError,
 } from 'graphql';
+import { ErrorCode, ErrorName } from './types';
 
 declare module 'graphql' {
   export interface GraphQLErrorExtensions {
@@ -40,7 +41,7 @@ export class ApolloError extends Error implements GraphQLError {
 
     // if no name provided, use the default. defineProperty ensures that it stays non-enumerable
     if (!this.name) {
-      Object.defineProperty(this, 'name', { value: 'ApolloError' });
+      Object.defineProperty(this, 'name', { value: ErrorName.APOLLO_ERROR });
     }
 
     if (extensions?.extensions) {
@@ -115,7 +116,7 @@ function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
 
   expanded.extensions = {
     ...error.extensions,
-    code: error.extensions?.code || 'INTERNAL_SERVER_ERROR',
+    code: error.extensions?.code || ErrorCode.INTERNAL_SERVER_ERROR,
     exception: {
       ...error.extensions?.exception,
       ...(error.originalError as any),
@@ -141,7 +142,7 @@ function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
 
 export function toApolloError(
   error: Error & { extensions?: Record<string, any> },
-  code: string = 'INTERNAL_SERVER_ERROR',
+  code: string = ErrorCode.INTERNAL_SERVER_ERROR,
 ): Error & { extensions: Record<string, any> } {
   let err = error;
   if (err.extensions) {
@@ -180,7 +181,7 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
 
   // Fallback on default for code
   if (!copy.extensions.code) {
-    copy.extensions.code = options?.code || 'INTERNAL_SERVER_ERROR';
+    copy.extensions.code = options?.code || ErrorCode.INTERNAL_SERVER_ERROR;
   }
 
   // copy the original error, while keeping all values non-enumerable, so they
@@ -197,61 +198,66 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
 
 export class SyntaxError extends ApolloError {
   constructor(message: string) {
-    super(message, 'GRAPHQL_PARSE_FAILED');
+    super(message, ErrorCode.GRAPHQL_PARSE_FAILED);
 
-    Object.defineProperty(this, 'name', { value: 'SyntaxError' });
+    Object.defineProperty(this, 'name', { value: ErrorName.SYNTAX_ERROR });
   }
 }
 
 export class ValidationError extends ApolloError {
   constructor(message: string) {
-    super(message, 'GRAPHQL_VALIDATION_FAILED');
+    super(message, ErrorCode.GRAPHQL_VALIDATION_FAILED);
 
-    Object.defineProperty(this, 'name', { value: 'ValidationError' });
+    Object.defineProperty(this, 'name', { value: ErrorName.VALIDATION_ERROR });
   }
 }
 
 export class AuthenticationError extends ApolloError {
   constructor(message: string, extensions?: Record<string, any>) {
-    super(message, 'UNAUTHENTICATED', extensions);
+    super(message, ErrorCode.UNAUTHENTICATED, extensions);
 
-    Object.defineProperty(this, 'name', { value: 'AuthenticationError' });
+    Object.defineProperty(this, 'name', {
+      value: ErrorName.AUTHENTICATION_ERROR,
+    });
   }
 }
 
 export class ForbiddenError extends ApolloError {
   constructor(message: string, extensions?: Record<string, any>) {
-    super(message, 'FORBIDDEN', extensions);
+    super(message, ErrorCode.FORBIDDEN, extensions);
 
-    Object.defineProperty(this, 'name', { value: 'ForbiddenError' });
+    Object.defineProperty(this, 'name', { value: ErrorName.FORBIDDEN_ERROR });
   }
 }
 
 export class PersistedQueryNotFoundError extends ApolloError {
   constructor() {
-    super('PersistedQueryNotFound', 'PERSISTED_QUERY_NOT_FOUND');
+    super('PersistedQueryNotFound', ErrorCode.PERSISTED_QUERY_NOT_FOUND);
 
     Object.defineProperty(this, 'name', {
-      value: 'PersistedQueryNotFoundError',
+      value: ErrorName.PERSISTED_QUERY_NOT_FOUND_ERROR,
     });
   }
 }
 
 export class PersistedQueryNotSupportedError extends ApolloError {
   constructor() {
-    super('PersistedQueryNotSupported', 'PERSISTED_QUERY_NOT_SUPPORTED');
+    super(
+      'PersistedQueryNotSupported',
+      ErrorCode.PERSISTED_QUERY_NOT_SUPPORTED,
+    );
 
     Object.defineProperty(this, 'name', {
-      value: 'PersistedQueryNotSupportedError',
+      value: ErrorName.PERSISTED_QUERY_NOT_SUPPORTED_ERROR,
     });
   }
 }
 
 export class UserInputError extends ApolloError {
   constructor(message: string, extensions?: Record<string, any>) {
-    super(message, 'BAD_USER_INPUT', extensions);
+    super(message, ErrorCode.BAD_USER_INPUT, extensions);
 
-    Object.defineProperty(this, 'name', { value: 'UserInputError' });
+    Object.defineProperty(this, 'name', { value: ErrorName.USER_INPUT_ERROR });
   }
 }
 
