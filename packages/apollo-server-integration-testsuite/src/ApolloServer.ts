@@ -45,6 +45,7 @@ import {
   ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloError,
   ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageEmbeddedExplorer,
 } from 'apollo-server-core';
 import { Headers, fetch } from 'apollo-server-env';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
@@ -3058,6 +3059,38 @@ export function testApolloServer<AS extends ApolloServerBase>(
         await get('/graphql')
           .expect(/Playground/)
           .expect(/react@9\.8\.7/);
+      });
+
+      it('can install embedded Explorer plugin', async () => {
+        httpServer = (
+          await createApolloServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [ApolloServerPluginLandingPageEmbeddedExplorer({})],
+          })
+        ).httpServer;
+
+        await get('/graphql').expect(
+          200,
+          /apollo-server-landing-page.cdn.apollographql.com\/_latest/s,
+        );
+      });
+
+      it('can specify a specific version for embedded Explorer plugin', async () => {
+        httpServer = (
+          await createApolloServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [
+              ApolloServerPluginLandingPageEmbeddedExplorer({
+                version: 'abcdef',
+              }),
+            ],
+          })
+        ).httpServer;
+
+        await get('/graphql').expect(
+          200,
+          /apollo-server-landing-page.cdn.apollographql.com\/abcdef/s,
+        );
       });
 
       it('can be disabled', async () => {

@@ -138,4 +138,17 @@ export function ApolloServerPluginLandingPageGraphQLPlayground(
     options,
   );
 }
+
+import type { ApolloServerPluginLandingPageEmbeddedExplorerOptions } from './landingPage/embeddedExplorer';
+export type { ApolloServerPluginLandingPageEmbeddedExplorerOptions } from './landingPage/embeddedExplorer';
+export function ApolloServerPluginLandingPageEmbeddedExplorer(
+  options: ApolloServerPluginLandingPageEmbeddedExplorerOptions = Object.create(
+    null,
+  ),
+): ApolloServerPlugin {
+  return require('./landingPage/embeddedExplorer').ApolloServerPluginLandingPageEmbeddedExplorer(
+    options,
+  );
+}
+
 //#endregion
