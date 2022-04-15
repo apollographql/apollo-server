@@ -45,7 +45,7 @@ import fetch from 'node-fetch';
 import type {
   BaseContext,
   GraphQLRequestContextExecutionDidStart,
-} from '@apollo/server-types';
+} from '../../types/index';
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import type { AddressInfo } from 'net';

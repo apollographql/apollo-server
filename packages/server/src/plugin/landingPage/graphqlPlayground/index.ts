@@ -9,7 +9,7 @@ import type {
   ApolloServerPlugin,
   BaseContext,
   GraphQLServerListener,
-} from '@apollo/server-types';
+} from '../../../types/index';
 
 // This specifies the React version of our fork of GraphQL Playground,
 // `@apollographql/graphql-playground-react`.  It is related to, but not to

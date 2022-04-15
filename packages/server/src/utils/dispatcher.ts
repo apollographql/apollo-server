@@ -1,4 +1,4 @@
-import type { AnyFunction, AnyFunctionMap } from '@apollo/server-types';
+import type { AnyFunction, AnyFunctionMap } from '../types/index';
 
 type Args<F> = F extends (...args: infer A) => any ? A : never;
 type AsFunction<F> = F extends AnyFunction ? F : never;

@@ -3,7 +3,7 @@ import type {
   ApolloConfig,
   GraphQLExecutor,
   GraphQLSchemaContext,
-} from '@apollo/server-types';
+} from '../types/index';
 import type { Logger } from '@apollo/utils.logger';
 import type { GatewayInterface, Unsubscriber } from '../types';
 import type { SchemaDerivedData } from '../ApolloServer';

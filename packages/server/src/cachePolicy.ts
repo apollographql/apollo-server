@@ -1,4 +1,4 @@
-import type { CacheHint, CachePolicy } from '@apollo/server-types';
+import type { CacheHint, CachePolicy } from './types/index';
 
 export function newCachePolicy(): CachePolicy {
   return {

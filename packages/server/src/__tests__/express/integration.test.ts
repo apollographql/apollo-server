@@ -1,4 +1,4 @@
-import type { BaseContext } from '@apollo/server-types';
+import type { BaseContext } from '../../types/index';
 import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';

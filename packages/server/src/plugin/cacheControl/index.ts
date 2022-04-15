@@ -2,8 +2,8 @@ import type {
   BaseContext,
   CacheAnnotation,
   CacheHint,
-} from '@apollo/server-types';
-import type { CacheScope } from '@apollo/server-types';
+  CacheScope,
+} from '../../types/index';
 import {
   DirectiveNode,
   getNamedType,

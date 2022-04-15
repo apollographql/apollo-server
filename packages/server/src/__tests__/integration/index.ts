@@ -1,5 +1,5 @@
 import type http from 'http';
-import type { BaseContext } from '@apollo/server-types';
+import type { BaseContext } from '../../types/index';
 import type { ApolloServer, ApolloServerOptions } from '../..';
 import { defineIntegrationTestSuiteApolloServerTests } from './apolloServerTests';
 import { defineIntegrationTestSuiteHttpServerTests } from './httpServerTests';

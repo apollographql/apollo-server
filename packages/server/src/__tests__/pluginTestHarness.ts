@@ -13,7 +13,7 @@ import type {
   ApolloServerPlugin,
   GraphQLRequestExecutionListener,
   GraphQLServerListener,
-} from '@apollo/server-types';
+} from '../types/index';
 import type { Logger } from '@apollo/utils.logger';
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
 import {

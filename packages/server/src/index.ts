@@ -26,7 +26,7 @@ export {
   ValidationRule,
   GraphQLExecutor,
   GraphQLExecutionResult,
-} from '@apollo/server-types';
+} from './types/index';
 
 // TODO(AS4): Why re-export graphql-tag?
 export * from './gql';
