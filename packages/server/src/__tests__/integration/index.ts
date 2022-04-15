@@ -1,5 +1,5 @@
 import type http from 'http';
-import type { BaseContext } from '../../externalTypes';
+import type { BaseContext, ContextFunction } from '../../externalTypes';
 import type { ApolloServer, ApolloServerOptions } from '../..';
 import { defineIntegrationTestSuiteApolloServerTests } from './apolloServerTests';
 import { defineIntegrationTestSuiteHttpServerTests } from './httpServerTests';
@@ -13,7 +13,7 @@ export interface CreateServerForIntegrationTestsOptions {
   suppressStartCall?: boolean;
   graphqlPath?: string;
   noRequestsMade?: boolean;
-  context?: () => Promise<BaseContext>;
+  context?: ContextFunction;
 }
 
 export type CreateServerForIntegrationTests = (
