@@ -6,3 +6,4 @@ export * from './plugins';
 export * from './types';
 
 export { BaseContext, ContextFunction } from './context';
+export { HTTPGraphQLRequest, HTTPGraphQLResponse } from './http';
