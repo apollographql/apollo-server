@@ -25,7 +25,6 @@ import type {
   GraphQLServiceContext,
   GraphQLServerListener,
   LandingPage,
-  ApolloConfig,
   BaseContext,
   GraphQLResponse,
   GraphQLExecutor,
@@ -52,7 +51,7 @@ import {
 } from './requestPipeline';
 
 import isNodeLike from './utils/isNodeLike';
-import { determineApolloConfig } from './determineApolloConfig';
+import { ApolloConfig, determineApolloConfig } from './config';
 import {
   ApolloServerPluginSchemaReporting,
   ApolloServerPluginSchemaReportingOptions,

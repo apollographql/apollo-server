@@ -16,16 +16,11 @@ export {
 // ApolloServer Base class
 export { ApolloServer } from './ApolloServer';
 export * from './types';
+
+export { ApolloConfig, ApolloConfigInput } from './config';
+// FIXME: selective export of types
 export {
-  GraphQLServiceContext,
-  GraphQLRequest,
-  VariableValues,
-  GraphQLResponse,
-  GraphQLRequestMetrics,
-  GraphQLRequestContext,
-  ValidationRule,
-  GraphQLExecutor,
-  GraphQLExecutionResult,
+
 } from './externalTypes';
 
 // TODO(AS4): Why re-export graphql-tag?

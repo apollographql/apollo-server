@@ -1,6 +1,5 @@
 import type {
   AnyFunctionMap,
-  GraphQLServiceContext,
   GraphQLRequestContext,
   GraphQLResponse,
   GraphQLFieldResolverParams,
@@ -15,6 +14,18 @@ import type {
   GraphQLSchemaContext,
 } from './types';
 import type { BaseContext } from './context';
+import type { Logger } from '@apollo/utils.logger';
+import type { GraphQLSchema } from 'graphql';
+import type { ApolloConfig } from '../config';
+
+// TODO(AS4): Rename this type to Server rather than Service or something.
+export interface GraphQLServiceContext {
+  logger: Logger;
+  schema: GraphQLSchema;
+  apollo: ApolloConfig;
+  // TODO(AS4): Make sure we document that we removed `persistedQueries`.
+  serverlessFramework: boolean;
+}
 
 export interface ApolloServerPlugin<TContext extends BaseContext> {
   serverWillStart?(
