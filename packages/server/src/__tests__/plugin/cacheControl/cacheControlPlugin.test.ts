@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import type { CacheHint } from '../../../types/index';
+import type { CacheHint } from '../../../externalTypes';
 import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
@@ -7,7 +7,7 @@ import {
 import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLResponse,
-} from '../../../types/index';
+} from '../../../externalTypes';
 import pluginTestHarness from '../../pluginTestHarness';
 import { HeaderMap } from '../../../runHttpQuery';
 

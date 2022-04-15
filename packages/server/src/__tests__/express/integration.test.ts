@@ -1,4 +1,4 @@
-import type { BaseContext } from '../../types/index';
+import type { BaseContext } from '../../externalTypes';
 import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';

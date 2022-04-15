@@ -4,7 +4,7 @@ import type {
   BaseContext,
   WithRequired,
   HTTPGraphQLRequest,
-} from '../types/index';
+} from '../externalTypes';
 
 export interface ExpressContext {
   req: express.Request;

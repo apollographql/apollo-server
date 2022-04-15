@@ -26,7 +26,7 @@ export {
   ValidationRule,
   GraphQLExecutor,
   GraphQLExecutionResult,
-} from './types/index';
+} from './externalTypes';
 
 // TODO(AS4): Why re-export graphql-tag?
 export * from './gql';

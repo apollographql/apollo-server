@@ -1,4 +1,4 @@
-import type { BaseContext } from '../../../types/index';
+import type { BaseContext } from '../../../externalTypes';
 import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
 
 export interface ApolloServerPluginLandingPageDefaultBaseOptions {

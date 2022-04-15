@@ -43,7 +43,7 @@ import type {
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
   BaseContext,
-} from './types/index';
+} from './externalTypes';
 
 import { Dispatcher } from './utils/dispatcher';
 

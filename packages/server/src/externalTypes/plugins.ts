@@ -1,6 +1,5 @@
 import type {
   AnyFunctionMap,
-  BaseContext,
   GraphQLServiceContext,
   GraphQLRequestContext,
   GraphQLResponse,
@@ -15,6 +14,7 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLSchemaContext,
 } from './types';
+import type { BaseContext } from './context';
 
 export interface ApolloServerPlugin<TContext extends BaseContext> {
   serverWillStart?(

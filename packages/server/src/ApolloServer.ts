@@ -32,7 +32,8 @@ import type {
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
   WithRequired,
-} from './types/index';
+  ContextFunction,
+} from './externalTypes';
 import type { Logger } from '@apollo/utils.logger';
 
 import type {
@@ -966,7 +967,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     context,
   }: {
     httpGraphQLRequest: HTTPGraphQLRequest;
-    context: () => Promise<TContext>;
+    context: ContextFunction<TContext>;
   }): Promise<HTTPGraphQLResponse> {
     const runningServerState = await this._ensureStarted();
 

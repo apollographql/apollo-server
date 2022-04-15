@@ -1,4 +1,4 @@
-import type { CachePolicy } from '../types/index';
+import type { CachePolicy } from '../externalTypes';
 import { newCachePolicy } from '../cachePolicy';
 
 describe('newCachePolicy', () => {

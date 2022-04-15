@@ -45,7 +45,7 @@ import fetch from 'node-fetch';
 import type {
   BaseContext,
   GraphQLRequestContextExecutionDidStart,
-} from '../../types/index';
+} from '../../externalTypes';
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import type { AddressInfo } from 'net';

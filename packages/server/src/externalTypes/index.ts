@@ -4,3 +4,5 @@ export * from './plugins';
 
 // These are the types that used to live in `@apollo/server-types`.
 export * from './types';
+
+export { BaseContext, ContextFunction } from './context';

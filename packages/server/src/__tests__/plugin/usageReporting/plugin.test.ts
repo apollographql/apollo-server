@@ -20,7 +20,7 @@ import sumBy from 'lodash.sumby';
 import { mockRandom, resetMockRandom } from 'jest-mock-random';
 import { gunzipSync } from 'zlib';
 import type { ApolloServerPluginUsageReportingOptions } from '../../../plugin/usageReporting/options';
-import type { GraphQLRequestContextDidResolveOperation } from '../../../types/index';
+import type { GraphQLRequestContextDidResolveOperation } from '../../../externalTypes';
 import { HeaderMap } from '../../../runHttpQuery';
 
 const quietLogger = loglevel.getLogger('quiet');

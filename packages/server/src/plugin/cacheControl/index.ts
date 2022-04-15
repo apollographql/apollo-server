@@ -3,7 +3,7 @@ import type {
   CacheAnnotation,
   CacheHint,
   CacheScope,
-} from '../../types/index';
+} from '../../externalTypes';
 import {
   DirectiveNode,
   getNamedType,

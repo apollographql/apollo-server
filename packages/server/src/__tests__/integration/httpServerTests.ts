@@ -41,7 +41,7 @@ import type {
   GraphQLResponse,
   GraphQLRequestListener,
   BaseContext,
-} from '../../types/index';
+} from '../../externalTypes';
 import type {
   CreateServerForIntegrationTests,
   CreateServerForIntegrationTestsOptions,

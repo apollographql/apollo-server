@@ -1,7 +1,7 @@
 import { ApolloServer } from '../ApolloServer';
 import { ApolloServerOptions, GatewayInterface, gql } from '..';
 import type { GraphQLSchema } from 'graphql';
-import type { ApolloServerPlugin, BaseContext } from '../types/index';
+import type { ApolloServerPlugin, BaseContext } from '../externalTypes';
 import {
   ApolloServerPluginCacheControlDisabled,
   ApolloServerPluginUsageReporting,

@@ -11,7 +11,7 @@ import type {
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextWillSendResponse,
   BaseContext,
-} from '../../types/index';
+} from '../../externalTypes';
 import {
   createOperationDerivedDataCache,
   OperationDerivedData,

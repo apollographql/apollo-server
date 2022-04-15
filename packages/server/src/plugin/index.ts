@@ -15,7 +15,7 @@
 //
 // The goal is that the generated `dist/plugin/index.js` file has no top-level
 // require calls.
-import type { BaseContext, ApolloServerPlugin } from '../types/index';
+import type { BaseContext, ApolloServerPlugin } from '../externalTypes';
 import type {
   InternalApolloServerPlugin,
   InternalPluginId,

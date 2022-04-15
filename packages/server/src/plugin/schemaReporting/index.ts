@@ -7,7 +7,7 @@ import { SchemaReporter } from './schemaReporter';
 import createSHA from '../../utils/createSHA';
 import { schemaIsFederated } from '../schemaIsFederated';
 import type { SchemaReport } from './generated/operations';
-import type { BaseContext } from '../../types/index';
+import type { BaseContext } from '../../externalTypes';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**

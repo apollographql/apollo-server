@@ -3,7 +3,7 @@ import { TraceTreeBuilder } from '../traceTreeBuilder';
 import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { schemaIsFederated } from '../schemaIsFederated';
-import type { BaseContext } from '../../types/index';
+import type { BaseContext } from '../../externalTypes';
 
 export interface ApolloServerPluginInlineTraceOptions {
   /**
