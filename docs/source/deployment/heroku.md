@@ -56,7 +56,7 @@ web: node index.js
 
 Replace `node index.js` with whichever command you use to start your Apollo Server instance.
 
-> A Procfile is not _required_ to run Apollo Server on Heroku. If you don't provide a Procfile, attempts to run the `start script` that's defined in your `package.json` file.
+> A Procfile is not _required_ to run Apollo Server on Heroku. If you don't provide a Procfile, Heroku attempts to run the `start script` that's defined in your `package.json` file.
 
 ## Deploying the project
 
