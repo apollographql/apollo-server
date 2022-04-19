@@ -1,10 +1,10 @@
-import type { GraphQLCompositeType } from "graphql";
+import type { GraphQLCompositeType } from 'graphql';
 
 /**
  * CacheHint represents a contribution to an overall cache policy. It can
  * specify a maxAge and/or a scope.
  */
- export interface CacheHint {
+export interface CacheHint {
   maxAge?: number;
   scope?: CacheScope;
 }

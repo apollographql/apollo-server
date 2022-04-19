@@ -1,10 +1,7 @@
 import type { GraphQLSchema } from 'graphql';
 import type { Logger } from '@apollo/utils.logger';
 import type { ApolloConfig } from '../config';
-import type {
-  GraphQLExecutor,
-  GraphQLSchemaContext,
-} from '../externalTypes';
+import type { GraphQLExecutor, GraphQLSchemaContext } from '../externalTypes';
 import type { GatewayInterface, Unsubscriber } from '../types';
 import type { SchemaDerivedData } from '../ApolloServer';
 

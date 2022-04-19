@@ -1,6 +1,6 @@
-import type { GraphQLError } from "graphql";
-import type { WithRequired } from "../types";
-import type { GraphQLRequestContext } from "./graphql";
+import type { GraphQLError } from 'graphql';
+import type { WithRequired } from '../types';
+import type { GraphQLRequestContext } from './graphql';
 
 export type GraphQLExecutor<TContext = Record<string, any>> = (
   requestContext: GraphQLRequestContextExecutionDidStart<TContext>,

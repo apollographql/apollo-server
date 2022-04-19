@@ -35,12 +35,12 @@ export type StripPromise<T> = T extends Promise<infer U> ? U : never;
  * and in particular doesn't consider `this`.  For now, it has been brought
  * here from the Apollo Server `Dispatcher`, where it was first utilized.
  */
- export type AnyFunction = (...args: any[]) => any;
+export type AnyFunction = (...args: any[]) => any;
 
- /**
-  * A map of `AnyFunction`s which are the interface for our plugin API's
-  * request listeners. (e.g. `GraphQLRequestListener`s).
-  */
+/**
+ * A map of `AnyFunction`s which are the interface for our plugin API's
+ * request listeners. (e.g. `GraphQLRequestListener`s).
+ */
 export type AnyFunctionMap = {
   [key: string]: AnyFunction | undefined;
 };

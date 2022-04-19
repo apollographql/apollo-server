@@ -12,7 +12,7 @@ import type {
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextResponseForOperation,
   GraphQLRequestContextValidationDidStart,
-  GraphQLRequestContextWillSendResponse
+  GraphQLRequestContextWillSendResponse,
 } from './requestPipeline';
 
 // TODO(AS4): Rename this type to Server rather than Service or something.
@@ -149,15 +149,15 @@ export interface GraphQLRequestListener<TContext extends BaseContext>
  * include not needing to have three unused variables in scope just because
  * there was a need to access the `info` property in a wrapped plugin.
  */
- export type GraphQLFieldResolverParams<
- TSource,
- TContext,
- TArgs = { [argName: string]: any },
+export type GraphQLFieldResolverParams<
+  TSource,
+  TContext,
+  TArgs = { [argName: string]: any },
 > = {
- source: TSource;
- args: TArgs;
- contextValue: TContext;
- info: GraphQLResolveInfo;
+  source: TSource;
+  args: TArgs;
+  contextValue: TContext;
+  info: GraphQLResolveInfo;
 };
 
 export interface GraphQLRequestExecutionListener<TContext extends BaseContext>

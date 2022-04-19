@@ -22,13 +22,13 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestExecutionListener,
   GraphQLResponse,
-  GraphQLServerListener
+  GraphQLServerListener,
 } from '../externalTypes';
 import type { WithRequired } from '../types';
 import { Dispatcher } from '../utils/dispatcher';
 import {
   enablePluginsForSchemaResolvers,
-  symbolExecutionDispatcherWillResolveField
+  symbolExecutionDispatcherWillResolveField,
 } from '../utils/schemaInstrumentation';
 
 // This test harness guarantees the presence of `query`.

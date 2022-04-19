@@ -7,7 +7,7 @@ import type {
   GraphQLError,
   GraphQLFormattedError,
   GraphQLSchema,
-  OperationDefinitionNode
+  OperationDefinitionNode,
 } from 'graphql';
 import type { CachePolicy } from './cacheControl';
 import type { HTTPGraphQLRequest, HTTPGraphQLResponse } from './http';

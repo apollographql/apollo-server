@@ -19,9 +19,7 @@ export * from './types';
 
 export { ApolloConfig, ApolloConfigInput } from './config';
 // FIXME: selective export of types
-export {
-
-} from './externalTypes';
+export {} from './externalTypes';
 
 // TODO(AS4): Why re-export graphql-tag?
 export * from './gql';

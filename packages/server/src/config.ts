@@ -1,4 +1,4 @@
-import createSHA from "./utils/createSHA";
+import createSHA from './utils/createSHA';
 
 // Configuration for how Apollo Server talks to the Apollo registry, as passed
 // to the ApolloServer constructor. Each field can also be provided as an
