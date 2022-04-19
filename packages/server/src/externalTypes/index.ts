@@ -1,3 +1,9 @@
+/**
+ * This file represents the external type definitions needed by end users,
+ * integration implementors, and plugin implementors. Everything from this file
+ * is re-exported by the root (via * export), so add exports to this file with
+ * intention (it's public API).
+ */
 export {
   CacheAnnotation,
   CacheHint,
