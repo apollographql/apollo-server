@@ -1,4 +1,5 @@
 import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
+import { printSchema } from 'graphql';
 
 export interface ApolloServerPluginLandingPageEmbeddedExplorerOptions {
   /**
@@ -38,10 +39,10 @@ export interface ApolloServerPluginLandingPageEmbeddedExplorerOptions {
    * dynamically added to the server.
    *
    * If you are running a subgraph or non-federated server, we will not poll
-   * for your schema regardless of what you pass here since it will never change.
+   * for your schema unless you pass a specific ms here.
    *
-   * If you are running a gateway, we can poll for your changing schema every
-   * schemaPollIntervalMs ms and show changes in the embedded Explorer.
+   * If you are running a gateway, we will be default poll for your changing
+   * schema every 5 seconds and show changes in the embedded Explorer.
    *
    * If you specify a graphRef, we ignore schemaPollIntervalMs & just
    * populate the schema with the registered graph's schema.
@@ -74,6 +75,10 @@ interface EmbeddedLandingPageConfig {
   headers?: Record<string, string>;
   includeCookies?: boolean;
   schemaPollIntervalMs?: number;
+  // schema from Apollo Server
+  // If your server is running a gateway, we will continue to poll your endpoint.
+  // If not, we just use this schema to populate the embedded Explorer.
+  schema?: string;
   embedDisplayOptions?: {
     showHeadersAndEnvVars?: boolean;
     docsPanelState?: 'open' | 'closed';
@@ -122,6 +127,7 @@ export function ApolloServerPluginLandingPageEmbeddedExplorer(
         includeCookies: false,
         persistExplorerState: false,
         schemaPollIntervalMs: isGateway ? 5000 : 0,
+        schema: printSchema(schema),
         ...rest,
       });
       return {
