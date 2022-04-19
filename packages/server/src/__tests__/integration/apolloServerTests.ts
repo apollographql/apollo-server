@@ -30,7 +30,6 @@ import {
   gql,
   ApolloServerOptions,
   ApolloServer,
-  PluginDefinition,
   GatewayInterface,
   GraphQLServiceConfig,
   ApolloServerPluginInlineTrace,
@@ -45,6 +44,7 @@ import fetch from 'node-fetch';
 import type {
   BaseContext,
   GraphQLRequestContextExecutionDidStart,
+  PluginDefinition,
 } from '../../externalTypes';
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
