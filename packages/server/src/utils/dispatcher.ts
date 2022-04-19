@@ -1,8 +1,4 @@
-import type { AnyFunction, AnyFunctionMap } from '../externalTypes';
-
-type Args<F> = F extends (...args: infer A) => any ? A : never;
-type AsFunction<F> = F extends AnyFunction ? F : never;
-type StripPromise<T> = T extends Promise<infer U> ? U : never;
+import type { AnyFunctionMap, Args, AsFunction, StripPromise } from '../types';
 
 type DidEndHook<TArgs extends any[]> = (...args: TArgs) => void;
 type AsyncDidEndHook<TArgs extends any[]> = (...args: TArgs) => Promise<void>;

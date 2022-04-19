@@ -1,29 +1,35 @@
+import type { Logger } from '@apollo/utils.logger';
+import { InMemoryLRUCache } from 'apollo-server-caching';
+import {
+  getOperationAST,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
+  parse,
+  validate as graphqlValidate,
+} from 'graphql';
+import { newCachePolicy } from '../cachePolicy';
 import type {
+  ApolloServerPlugin,
   CacheHint,
-  WithRequired,
   GraphQLRequest,
-  GraphQLRequestContextExecutionDidStart,
-  GraphQLResponse,
-  GraphQLRequestContextWillSendResponse,
   GraphQLRequestContext,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextDidResolveSource,
+  GraphQLRequestContextExecutionDidStart,
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
-  ApolloServerPlugin,
+  GraphQLRequestContextWillSendResponse,
   GraphQLRequestExecutionListener,
-  GraphQLServerListener,
+  GraphQLResponse,
+  GraphQLServerListener
 } from '../externalTypes';
-import type { Logger } from '@apollo/utils.logger';
-import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
+import type { WithRequired } from '../types';
+import { Dispatcher } from '../utils/dispatcher';
 import {
   enablePluginsForSchemaResolvers,
-  symbolExecutionDispatcherWillResolveField,
+  symbolExecutionDispatcherWillResolveField
 } from '../utils/schemaInstrumentation';
-import { InMemoryLRUCache } from 'apollo-server-caching';
-import { Dispatcher } from '../utils/dispatcher';
-import { getOperationAST, parse, validate as graphqlValidate } from 'graphql';
-import { newCachePolicy } from '../cachePolicy';
 
 // This test harness guarantees the presence of `query`.
 type IPluginTestHarnessGraphqlRequest = WithRequired<GraphQLRequest, 'query'>;

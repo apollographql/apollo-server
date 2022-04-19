@@ -9,23 +9,41 @@ import type {
 import type { IMocks } from '@graphql-tools/mock';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type {
-  GraphQLExecutor,
-  ApolloServerPlugin,
   BaseContext,
   GraphQLResponse,
   GraphQLRequestContext,
+  GraphQLExecutor,
 } from './externalTypes';
 import type { ApolloConfig, ApolloConfigInput } from './config';
 import type { Logger } from '@apollo/utils.logger';
 
 import type { KeyValueCache } from 'apollo-server-caching';
+import type { PluginDefinition } from './externalTypes/plugins';
 export type { KeyValueCache };
 
-// A plugin can return an interface that matches `ApolloServerPlugin`, or a
-// factory function that returns `ApolloServerPlugin`.
-export type PluginDefinition<TContext extends BaseContext> =
-  | ApolloServerPlugin<TContext>
-  | (() => ApolloServerPlugin<TContext>);
+export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
+export type Args<F> = F extends (...args: infer A) => any ? A : never;
+export type AsFunction<F> = F extends Function ? F : never;
+export type StripPromise<T> = T extends Promise<infer U> ? U : never;
+
+/**
+ * It is not recommended to use this `AnyFunction` type further.
+ *
+ * This is a legacy type which aims to do what its name suggests (be the type
+ * for _any_ function) but it should be replaced with something from the
+ * TypeScript standard lib.  It doesn't truly cover "any" function right now,
+ * and in particular doesn't consider `this`.  For now, it has been brought
+ * here from the Apollo Server `Dispatcher`, where it was first utilized.
+ */
+ export type AnyFunction = (...args: any[]) => any;
+
+ /**
+  * A map of `AnyFunction`s which are the interface for our plugin API's
+  * request listeners. (e.g. `GraphQLRequestListener`s).
+  */
+export type AnyFunctionMap = {
+  [key: string]: AnyFunction | undefined;
+};
 
 export type Unsubscriber = () => void;
 export type SchemaChangeCallback = (apiSchema: GraphQLSchema) => void;

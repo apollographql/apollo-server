@@ -2,9 +2,9 @@ import type express from 'express';
 import type { ApolloServer } from '..';
 import type {
   BaseContext,
-  WithRequired,
   HTTPGraphQLRequest,
 } from '../externalTypes';
+import type { WithRequired } from '../types';
 
 export interface ExpressContext {
   req: express.Request;
