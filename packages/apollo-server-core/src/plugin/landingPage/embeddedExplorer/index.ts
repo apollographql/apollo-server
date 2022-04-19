@@ -30,11 +30,21 @@ export interface ApolloServerPluginLandingPageEmbeddedExplorerOptions {
    * If you have a Studio graph that is public, you can specify that graphRef
    * and we will render the Explorer of your private graph using that registered schema.
    *
-   * You also have the option to specify a schemaPollIntervalMs instead of a graphRef,
-   * and we will introspect your endpoint for your schema every
-   * schemaPollIntervalMs milliseconds.
+   * You also have the option to just use the schema running on this Apollo Server
+   * instance.
    *
-   * If you specify a graphRef, we ignore schemaPollIntervalMs & just the registered graph's schema.
+   * For subgraphs & non-federated Apollo Server schemas, your server needs
+   * to be restarted for changes to propagate. For gateways, changes are
+   * dynamically added to the server.
+   *
+   * If you are running a subgraph or non-federated server, we will not poll
+   * for your schema regardless of what you pass here since it will never change.
+   *
+   * If you are running a gateway, we can poll for your changing schema every
+   * schemaPollIntervalMs ms and show changes in the embedded Explorer.
+   *
+   * If you specify a graphRef, we ignore schemaPollIntervalMs & just
+   * populate the schema with the registered graph's schema.
    */
   schemaPollIntervalMs?: number;
   /**
@@ -57,7 +67,7 @@ export interface ApolloServerPluginLandingPageEmbeddedExplorerOptions {
 }
 
 // The actual config object read by the embed web app wrapper's React component.
-export interface EmbeddedLandingPageConfig {
+interface EmbeddedLandingPageConfig {
   graphRef?: string | undefined;
   document?: string;
   variables?: Record<string, string>;
@@ -70,24 +80,6 @@ export interface EmbeddedLandingPageConfig {
     theme?: 'dark' | 'light';
   };
   persistExplorerState?: boolean;
-}
-
-export function ApolloServerPluginLandingPageEmbeddedExplorer(
-  options: ApolloServerPluginLandingPageEmbeddedExplorerOptions = {},
-): ImplicitlyInstallablePlugin {
-  // We list known keys explicitly to get better typechecking, but we pass
-  // through extras in case we've added new keys to the splash page and haven't
-  // quite updated the plugin yet.
-  const { version, ...rest } = options;
-  return getApolloServerPluginLandingPageEmbeddedExplorerPlugin(
-    version,
-    encodeConfig({
-      includeCookies: false,
-      schemaPollIntervalMs: 5000,
-      persistExplorerState: false,
-      ...rest,
-    }),
-  );
 }
 
 // A triple encoding! Wow! First we use JSON.stringify to turn our object into a
@@ -106,14 +98,32 @@ function encodeConfig(config: EmbeddedLandingPageConfig): string {
   );
 }
 
-function getApolloServerPluginLandingPageEmbeddedExplorerPlugin(
-  maybeVersion: string | undefined,
-  encodedConfig: string,
+export function ApolloServerPluginLandingPageEmbeddedExplorer(
+  options: ApolloServerPluginLandingPageEmbeddedExplorerOptions = {},
 ): ImplicitlyInstallablePlugin {
+  const { version: maybeVersion, ...rest } = options;
+
   const version = maybeVersion ?? '_latest';
+
   return {
     __internal_installed_implicitly__: false,
-    async serverWillStart() {
+    async serverWillStart({ schema }) {
+      // This indicates if this schema is a gateway (only in fed 1).
+      // We are blocked for fed 2 on adding the `extensions` fields.
+      // https://github.com/apollographql/federation/issues/1749
+      // If you are running a gateway, and we know, your server is dynamically
+      // updated, so we default to polling every 5 seconds.
+      // If we don't know if you are running a gateway, we default
+      // to not polling unless you tell us by setting schemaPollIntervalMs.
+      const isGateway =
+        schema.extensions?.federation || // newer gateway versions in fed1
+        schema.getType('Query')?.extensions?.federation; // older gateway versions in fed1
+      const encodedConfig = encodeConfig({
+        includeCookies: false,
+        persistExplorerState: false,
+        schemaPollIntervalMs: isGateway ? 5000 : 0,
+        ...rest,
+      });
       return {
         async renderLandingPage() {
           const html = `
