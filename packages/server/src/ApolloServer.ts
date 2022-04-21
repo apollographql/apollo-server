@@ -28,7 +28,6 @@ import { formatApolloErrors } from './errors';
 import type {
   ApolloServerPlugin,
   BaseContext,
-  ContextFunction,
   GraphQLExecutor,
   GraphQLResponse,
   GraphQLServerListener,
@@ -138,6 +137,9 @@ class UnreachableCaseError extends Error {
     super(`Unreachable case: ${val}`);
   }
 }
+
+export type ContextThunk<TContext extends BaseContext = BaseContext> =
+  () => Promise<TContext>;
 
 // TODO(AS4): Move this to its own file or something. Also organize the fields.
 
@@ -963,7 +965,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     context,
   }: {
     httpGraphQLRequest: HTTPGraphQLRequest;
-    context: ContextFunction<TContext>;
+    context: ContextThunk<TContext>;
   }): Promise<HTTPGraphQLResponse> {
     const runningServerState = await this._ensureStarted();
 

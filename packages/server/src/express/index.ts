@@ -1,15 +1,16 @@
 import type express from 'express';
 import type { ApolloServer } from '..';
-import type { BaseContext, HTTPGraphQLRequest } from '../externalTypes';
+import type { BaseContext, ContextFunction, HTTPGraphQLRequest } from '../externalTypes';
 import type { WithRequired } from '../types';
 
+// TODO(AS4): Better name for ExpressContext?
 export interface ExpressContext {
   req: express.Request;
   res: express.Response;
 }
 
 export interface ExpressMiddlewareOptions<TContext> {
-  context?: (expressContext: ExpressContext) => Promise<TContext>;
+  context?: ContextFunction<[ExpressContext], TContext>;
 }
 
 // TODO(AS4): Figure out exact naming (eg is this Express-specific or just Node
@@ -29,11 +30,16 @@ export function expressMiddleware<TContext extends BaseContext>(
 ): express.RequestHandler {
   server.assertStarted('expressMiddleware()');
 
-  // This `as` is safe because the overload above shows that context can
+  // This `any` is safe because the overload above shows that context can
   // only be left out if you're using BaseContext as your context, and {} is a
   // valid BaseContext.
-  const context: (expressContext: ExpressContext) => Promise<TContext> =
-    options?.context ?? (async () => ({} as TContext));
+  const defaultContext: ContextFunction<
+    [ExpressContext],
+    any
+  > = async () => ({});
+
+  const context: ContextFunction<[ExpressContext], TContext> =
+    options?.context ?? defaultContext;
 
   return (req, res, next) => {
     if (!req.body) {
