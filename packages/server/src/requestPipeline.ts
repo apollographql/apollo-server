@@ -43,7 +43,7 @@ import type {
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
   BaseContext,
-} from '@apollo/server-types';
+} from './externalTypes';
 
 import { Dispatcher } from './utils/dispatcher';
 

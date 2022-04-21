@@ -41,7 +41,7 @@ import type {
   GraphQLResponse,
   GraphQLRequestListener,
   BaseContext,
-} from '@apollo/server-types';
+} from '../../externalTypes';
 import type {
   CreateServerForIntegrationTests,
   CreateServerForIntegrationTestsOptions,

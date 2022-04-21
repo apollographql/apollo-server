@@ -19,7 +19,7 @@ import type {
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
   BaseContext,
-} from '@apollo/server-types';
+} from '../externalTypes';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import type { ApolloServerOptions } from '../types';
 import { ApolloServer } from '../ApolloServer';

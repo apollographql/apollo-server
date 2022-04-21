@@ -4,7 +4,7 @@ import type {
   BaseContext,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
-} from '@apollo/server-types';
+} from './externalTypes';
 import {
   ApolloServerInternals,
   internalExecuteOperation,

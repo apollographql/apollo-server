@@ -16,17 +16,10 @@ export {
 // ApolloServer Base class
 export { ApolloServer } from './ApolloServer';
 export * from './types';
-export {
-  GraphQLServiceContext,
-  GraphQLRequest,
-  VariableValues,
-  GraphQLResponse,
-  GraphQLRequestMetrics,
-  GraphQLRequestContext,
-  ValidationRule,
-  GraphQLExecutor,
-  GraphQLExecutionResult,
-} from '@apollo/server-types';
+
+export { ApolloConfig, ApolloConfigInput } from './config';
+
+export * from './externalTypes';
 
 // TODO(AS4): Why re-export graphql-tag?
 export * from './gql';

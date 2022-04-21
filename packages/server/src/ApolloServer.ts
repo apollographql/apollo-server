@@ -1,78 +1,74 @@
+import type { Logger } from '@apollo/utils.logger';
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import loglevel from 'loglevel';
-import Negotiator from 'negotiator';
-import {
-  GraphQLSchema,
-  GraphQLError,
-  ValidationContext,
-  FieldDefinitionNode,
-  DocumentNode,
-  ParseOptions,
-  print,
-  assertValidSchema,
-  GraphQLFormattedError,
-  GraphQLFieldResolver,
-} from 'graphql';
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
   InMemoryLRUCache,
   KeyValueCache,
   PrefixingKeyValueCache,
 } from 'apollo-server-caching';
+import {
+  assertValidSchema,
+  DocumentNode,
+  FieldDefinitionNode,
+  GraphQLError,
+  GraphQLFieldResolver,
+  GraphQLFormattedError,
+  GraphQLSchema,
+  ParseOptions,
+  print,
+  ValidationContext,
+} from 'graphql';
+import loglevel from 'loglevel';
+import Negotiator from 'negotiator';
+import * as uuid from 'uuid';
+import { newCachePolicy } from './cachePolicy';
+import { ApolloConfig, determineApolloConfig } from './config';
+import { formatApolloErrors } from './errors';
 import type {
   ApolloServerPlugin,
-  GraphQLServiceContext,
-  GraphQLServerListener,
-  LandingPage,
-  ApolloConfig,
   BaseContext,
-  GraphQLResponse,
   GraphQLExecutor,
+  GraphQLResponse,
+  GraphQLServerListener,
+  GraphQLServiceContext,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
-  WithRequired,
-} from '@apollo/server-types';
-import type { Logger } from '@apollo/utils.logger';
-
-import type {
-  ApolloServerOptions,
-  DocumentStore,
-  PersistedQueryOptions,
+  LandingPage,
   PluginDefinition,
-  ApolloServerOptionsWithStaticSchema,
-} from './types';
-
+} from './externalTypes';
+import { runPotentiallyBatchedHttpQuery } from './httpBatching';
+import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import {
-  processGraphQLRequest,
-  GraphQLRequestContext,
-  GraphQLRequest,
-  APQ_CACHE_PREFIX,
-} from './requestPipeline';
-
-import isNodeLike from './utils/isNodeLike';
-import { determineApolloConfig } from './determineApolloConfig';
-import {
-  ApolloServerPluginSchemaReporting,
-  ApolloServerPluginSchemaReportingOptions,
-  ApolloServerPluginInlineTrace,
-  ApolloServerPluginUsageReporting,
   ApolloServerPluginCacheControl,
+  ApolloServerPluginInlineTrace,
   ApolloServerPluginLandingPageLocalDefault,
   ApolloServerPluginLandingPageProductionDefault,
+  ApolloServerPluginSchemaReporting,
+  ApolloServerPluginSchemaReportingOptions,
+  ApolloServerPluginUsageReporting,
 } from './plugin';
-import { InternalPluginId, pluginIsInternal } from './internalPlugin';
-import { newCachePolicy } from './cachePolicy';
-import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
-import * as uuid from 'uuid';
+import {
+  APQ_CACHE_PREFIX,
+  GraphQLRequest,
+  GraphQLRequestContext,
+  processGraphQLRequest,
+} from './requestPipeline';
 import {
   cloneObject,
   HeaderMap,
   HttpQueryError,
   prettyJSONStringify,
 } from './runHttpQuery';
-import { runPotentiallyBatchedHttpQuery } from './httpBatching';
-import { formatApolloErrors } from './errors';
+import type {
+  ApolloServerOptions,
+  ApolloServerOptionsWithStaticSchema,
+  DocumentStore,
+  PersistedQueryOptions,
+  WithRequired,
+} from './types';
+import isNodeLike from './utils/isNodeLike';
+import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -141,6 +137,9 @@ class UnreachableCaseError extends Error {
     super(`Unreachable case: ${val}`);
   }
 }
+
+export type ContextThunk<TContext extends BaseContext = BaseContext> =
+  () => Promise<TContext>;
 
 // TODO(AS4): Move this to its own file or something. Also organize the fields.
 
@@ -966,7 +965,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     context,
   }: {
     httpGraphQLRequest: HTTPGraphQLRequest;
-    context: () => Promise<TContext>;
+    context: ContextThunk<TContext>;
   }): Promise<HTTPGraphQLResponse> {
     const runningServerState = await this._ensureStarted();
 

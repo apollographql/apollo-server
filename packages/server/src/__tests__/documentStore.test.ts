@@ -3,7 +3,7 @@ import type { DocumentNode } from 'graphql';
 
 import { ApolloServer } from '../ApolloServer';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import type { BaseContext } from '@apollo/server-types';
+import type { BaseContext } from '../externalTypes';
 
 const typeDefs = gql`
   type Query {

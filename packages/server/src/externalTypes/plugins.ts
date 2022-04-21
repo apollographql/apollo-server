@@ -1,20 +1,39 @@
+import type { Logger } from '@apollo/utils.logger';
+import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql';
+import type { ApolloConfig } from '../config';
+import type { AnyFunctionMap } from '../types';
+import type { BaseContext } from './context';
+import type { GraphQLRequestContext, GraphQLResponse } from './graphql';
 import type {
-  AnyFunctionMap,
-  BaseContext,
-  GraphQLServiceContext,
-  GraphQLRequestContext,
-  GraphQLResponse,
-  GraphQLFieldResolverParams,
-  GraphQLRequestContextDidResolveSource,
-  GraphQLRequestContextParsingDidStart,
-  GraphQLRequestContextValidationDidStart,
-  GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextDidEncounterErrors,
-  GraphQLRequestContextResponseForOperation,
+  GraphQLRequestContextDidResolveOperation,
+  GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextExecutionDidStart,
+  GraphQLRequestContextParsingDidStart,
+  GraphQLRequestContextResponseForOperation,
+  GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextWillSendResponse,
-  GraphQLSchemaContext,
-} from './types';
+} from './requestPipeline';
+
+// TODO(AS4): Rename this type to Server rather than Service or something.
+export interface GraphQLServiceContext {
+  logger: Logger;
+  schema: GraphQLSchema;
+  apollo: ApolloConfig;
+  // TODO(AS4): Make sure we document that we removed `persistedQueries`.
+  serverlessFramework: boolean;
+}
+
+export interface GraphQLSchemaContext {
+  apiSchema: GraphQLSchema;
+  coreSupergraphSdl?: string;
+}
+
+// A plugin can return an interface that matches `ApolloServerPlugin`, or a
+// factory function that returns `ApolloServerPlugin`.
+export type PluginDefinition<TContext extends BaseContext> =
+  | ApolloServerPlugin<TContext>
+  | (() => ApolloServerPlugin<TContext>);
 
 export interface ApolloServerPlugin<TContext extends BaseContext> {
   serverWillStart?(
@@ -119,6 +138,27 @@ export interface GraphQLRequestListener<TContext extends BaseContext>
     requestContext: GraphQLRequestContextWillSendResponse<TContext>,
   ): Promise<void>;
 }
+
+/**
+ * This is an object form of the parameters received by typical
+ * `graphql-js` resolvers.  The function type is `GraphQLFieldResolver`
+ * and normally uses positional parameters.  In order to facilitate better
+ * ergonomics in the Apollo Server plugin API, these have been converted to
+ * named properties on the object using their names from the upstream
+ * `GraphQLFieldResolver` type signature.  Ergonomic wins, in this case,
+ * include not needing to have three unused variables in scope just because
+ * there was a need to access the `info` property in a wrapped plugin.
+ */
+export type GraphQLFieldResolverParams<
+  TSource,
+  TContext,
+  TArgs = { [argName: string]: any },
+> = {
+  source: TSource;
+  args: TArgs;
+  contextValue: TContext;
+  info: GraphQLResolveInfo;
+};
 
 export interface GraphQLRequestExecutionListener<TContext extends BaseContext>
   extends AnyFunctionMap {

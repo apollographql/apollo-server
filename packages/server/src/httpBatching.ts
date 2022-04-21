@@ -2,7 +2,7 @@ import type {
   BaseContext,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
-} from '@apollo/server-types';
+} from './externalTypes';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
 import { HeaderMap, HttpQueryError, runHttpQuery } from './runHttpQuery';
 

@@ -11,7 +11,7 @@ import type {
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextWillSendResponse,
   BaseContext,
-} from '@apollo/server-types';
+} from '../../externalTypes';
 import {
   createOperationDerivedDataCache,
   OperationDerivedData,
