@@ -1,25 +1,23 @@
-import type {
-  GraphQLSchema,
-  DocumentNode,
-  GraphQLError,
-  GraphQLFormattedError,
-  ValidationContext,
-  GraphQLFieldResolver,
-} from 'graphql';
+import type { Logger } from '@apollo/utils.logger';
 import type { IMocks } from '@graphql-tools/mock';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type {
-  BaseContext,
-  GraphQLResponse,
-  GraphQLRequestContext,
-  GraphQLExecutor,
-} from './externalTypes';
+  DocumentNode,
+  GraphQLError,
+  GraphQLFieldResolver,
+  GraphQLFormattedError,
+  GraphQLSchema,
+  ValidationContext,
+} from 'graphql';
+import type Keyv from 'keyv';
 import type { ApolloConfig, ApolloConfigInput } from './config';
-import type { Logger } from '@apollo/utils.logger';
-
-import type { KeyValueCache } from 'apollo-server-caching';
+import type {
+  BaseContext,
+  GraphQLExecutor,
+  GraphQLRequestContext,
+  GraphQLResponse,
+} from './externalTypes';
 import type { PluginDefinition } from './externalTypes/plugins';
-export type { KeyValueCache };
 
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export type Args<F> = F extends (...args: infer A) => any ? A : never;
@@ -83,10 +81,10 @@ export interface GatewayInterface {
 // that older versions of `@apollo/gateway` build against AS3.
 export interface GraphQLService extends GatewayInterface {}
 
-export type DocumentStore = KeyValueCache<DocumentNode>;
+export type DocumentStore = Keyv<DocumentNode>;
 
 export interface PersistedQueryOptions {
-  cache?: KeyValueCache;
+  cache?: Keyv<string>;
   /**
    * Specified in **seconds**, this time-to-live (TTL) value limits the lifespan
    * of how long the persisted query should be cached.  To specify a desired
@@ -108,7 +106,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
     requestContext: GraphQLRequestContext<TContext>,
   ) => GraphQLResponse | null;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
-  cache?: KeyValueCache;
+  cache?: Keyv<string>;
   includeStackTracesInErrorResponses?: boolean;
   logger?: Logger;
   allowBatchedHttpRequests?: boolean;

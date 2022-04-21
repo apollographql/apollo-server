@@ -50,7 +50,7 @@ import type {
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import type { AddressInfo } from 'net';
 import request from 'supertest';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import Keyv from 'keyv';
 import type {
   CreateServerForIntegrationTests,
   CreateServerForIntegrationTestsOptions,
@@ -2279,7 +2279,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           const uri = await createServerAndGetUrl({
             gateway,
             documentStore: withDocumentStore
-              ? new InMemoryLRUCache<DocumentNode>()
+              ? new Keyv<DocumentNode>()
               : undefined,
           });
 

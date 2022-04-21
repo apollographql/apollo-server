@@ -1,35 +1,35 @@
 import {
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLString,
+  DocumentNode,
   GraphQLInt,
   GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
   parse,
-  DocumentNode,
 } from 'graphql';
-
-import type { GraphQLRequest } from '../requestPipeline';
+import Keyv from 'keyv';
+import { ApolloServer } from '../ApolloServer';
 import type {
-  GraphQLResponse,
   ApolloServerPlugin,
+  BaseContext,
   GraphQLRequestExecutionListener,
   GraphQLRequestListener,
   GraphQLRequestListenerDidResolveField,
   GraphQLRequestListenerExecutionDidEnd,
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
-  BaseContext,
+  GraphQLResponse,
 } from '../externalTypes';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import type { GraphQLRequest } from '../requestPipeline';
 import type { ApolloServerOptions } from '../types';
-import { ApolloServer } from '../ApolloServer';
+import { LRUCacheStore, sizeCalculation } from '../utils/LRUCacheStore';
 
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,
   request: GraphQLRequest,
   context?: BaseContext,
 ): Promise<GraphQLResponse> {
-  const server = new ApolloServer<BaseContext>(config);
+  const server = new ApolloServer(config);
   await server.start();
   const response = await server.executeOperation(request, context ?? {});
   await server.stop();
@@ -1003,7 +1003,7 @@ describe('parsing and validation cache', () => {
       events: { parsingDidStart, validationDidStart },
     } = createLifecyclePluginMocks();
 
-    const server = new ApolloServer<BaseContext>({
+    const server = new ApolloServer({
       schema,
       plugins,
       documentStore: null,
@@ -1031,7 +1031,7 @@ describe('parsing and validation cache', () => {
       events: { parsingDidStart, validationDidStart },
     } = createLifecyclePluginMocks();
 
-    const server = new ApolloServer<BaseContext>({
+    const server = new ApolloServer({
       schema,
       plugins,
     });
@@ -1063,19 +1063,28 @@ describe('parsing and validation cache', () => {
     const querySmall1 = forgeLargerTestQuery(1, 'small1');
     const querySmall2 = forgeLargerTestQuery(1, 'small2');
 
-    // We're going to create a smaller-than-default cache which will be the
-    // size of the two smaller queries.  All three of these queries will never
-    // fit into this cache, so we'll roll through them all.
-    const maxSize =
-      InMemoryLRUCache.jsonBytesSizeCalculator(parse(querySmall1)) +
-      InMemoryLRUCache.jsonBytesSizeCalculator(parse(querySmall2));
+    // The (stringified) objects returned by this function represent how they're
+    // stored in the cache and the form they're in when having size calculations
+    // performed on them.
+    function cacheRepresentationOfQuery(query: string): string {
+      return JSON.stringify({ value: parse(query), expires: null });
+    }
 
-    const documentStore = new InMemoryLRUCache<DocumentNode>({
-      maxSize,
-      sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
+    // We're going to create a smaller-than-default cache which will be the size
+    // of the two smaller queries. All three of these queries will never fit
+    // into this cache, so we'll roll through them all.
+    const maxSize =
+      // sizeCalculation is the same calculator that `LRUCacheStore` uses by default.
+      sizeCalculation(cacheRepresentationOfQuery(querySmall1)) +
+      sizeCalculation(cacheRepresentationOfQuery(querySmall2));
+
+    const documentStore = new Keyv<DocumentNode>({
+      store: new LRUCacheStore<DocumentNode>({
+        maxSize,
+      }),
     });
 
-    const server = new ApolloServer<BaseContext>({
+    const server = new ApolloServer({
       schema,
       plugins,
       documentStore,

@@ -9,3 +9,5 @@ dist/
 
 # Don't format generated files!
 **/generated/**
+
+.volta

@@ -40,38 +40,12 @@ export interface ApolloServerPluginCacheControlOptions {
 export function ApolloServerPluginCacheControl(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
 ): InternalApolloServerPlugin<BaseContext> {
-  const typeAnnotationCache = new LRUCache<
-    GraphQLCompositeType,
-    CacheAnnotation
-  >();
-  const fieldAnnotationCache = new LRUCache<
+  let typeAnnotationCache: LRUCache<GraphQLCompositeType, CacheAnnotation>;
+
+  let fieldAnnotationCache: LRUCache<
     GraphQLField<unknown, unknown>,
     CacheAnnotation
-  >();
-
-  function memoizedCacheAnnotationFromType(
-    t: GraphQLCompositeType,
-  ): CacheAnnotation {
-    const existing = typeAnnotationCache.get(t);
-    if (existing) {
-      return existing;
-    }
-    const annotation = cacheAnnotationFromType(t);
-    typeAnnotationCache.set(t, annotation);
-    return annotation;
-  }
-
-  function memoizedCacheAnnotationFromField(
-    field: GraphQLField<unknown, unknown>,
-  ): CacheAnnotation {
-    const existing = fieldAnnotationCache.get(field);
-    if (existing) {
-      return existing;
-    }
-    const annotation = cacheAnnotationFromField(field);
-    fieldAnnotationCache.set(field, annotation);
-    return annotation;
-  }
+  >;
 
   return {
     __internal_plugin_id__() {
@@ -87,20 +61,54 @@ export function ApolloServerPluginCacheControl(
       // versions of Gateway older than 0.35.0, we should also run this code
       // from a schemaDidLoadOrUpdate instead of serverWillStart. Using
       // schemaDidLoadOrUpdate throws when combined with old gateways.)
-      typeAnnotationCache.max = Object.values(schema.getTypeMap()).filter(
-        isCompositeType,
-      ).length;
-      fieldAnnotationCache.max =
-        Object.values(schema.getTypeMap())
-          .filter(isObjectType)
-          .flatMap((t) => Object.values(t.getFields())).length +
-        Object.values(schema.getTypeMap())
-          .filter(isInterfaceType)
-          .flatMap((t) => Object.values(t.getFields())).length;
+      typeAnnotationCache = new LRUCache<GraphQLCompositeType, CacheAnnotation>(
+        {
+          max: Object.values(schema.getTypeMap()).filter(isCompositeType)
+            .length,
+        },
+      );
+
+      fieldAnnotationCache = new LRUCache<
+        GraphQLField<unknown, unknown>,
+        CacheAnnotation
+      >({
+        max:
+          Object.values(schema.getTypeMap())
+            .filter(isObjectType)
+            .flatMap((t) => Object.values(t.getFields())).length +
+          Object.values(schema.getTypeMap())
+            .filter(isInterfaceType)
+            .flatMap((t) => Object.values(t.getFields())).length,
+      });
+
       return undefined;
     },
 
     async requestDidStart(requestContext) {
+      function memoizedCacheAnnotationFromType(
+        t: GraphQLCompositeType,
+      ): CacheAnnotation {
+        const existing = typeAnnotationCache.get(t);
+        if (existing) {
+          return existing;
+        }
+        const annotation = cacheAnnotationFromType(t);
+        typeAnnotationCache.set(t, annotation);
+        return annotation;
+      }
+
+      function memoizedCacheAnnotationFromField(
+        field: GraphQLField<unknown, unknown>,
+      ): CacheAnnotation {
+        const existing = fieldAnnotationCache.get(field);
+        if (existing) {
+          return existing;
+        }
+        const annotation = cacheAnnotationFromField(field);
+        fieldAnnotationCache.set(field, annotation);
+        return annotation;
+      }
+
       const defaultMaxAge: number = options.defaultMaxAge ?? 0;
       const calculateHttpHeaders = options.calculateHttpHeaders ?? true;
       const { __testing__cacheHints } = options;
