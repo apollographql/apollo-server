@@ -1,6 +1,10 @@
 import type express from 'express';
 import type { ApolloServer } from '..';
-import type { BaseContext, ContextFunction, HTTPGraphQLRequest } from '../externalTypes';
+import type {
+  BaseContext,
+  ContextFunction,
+  HTTPGraphQLRequest,
+} from '../externalTypes';
 import type { WithRequired } from '../types';
 
 // TODO(AS4): Better name for ExpressContext?
