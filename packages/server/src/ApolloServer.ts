@@ -64,7 +64,7 @@ import type {
   WithRequired,
 } from './types';
 import isNodeLike from './utils/isNodeLike';
-import { LRUStore, PrefixingKeyv } from './utils/KeyvLRU';
+import { LRUCacheStore, PrefixingKeyv } from './utils/LRUCacheStore';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
 
 const NoIntrospection = (context: ValidationContext) => ({
@@ -269,7 +269,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     // default for its underlying store. For production, we recommend using a
     // more appropriate Keyv implementation (see
     // https://github.com/jaredwray/keyv/tree/main/packages for 1st party
-    // maintained Keyv packages or our own Keyv store `LRUStore`).
+    // maintained Keyv packages or our own Keyv store `LRUCacheStore`).
     // TODO(AS4): warn users and provide better documentation around providing
     // an appropriate Keyv.
     const cache = config.cache ?? new Keyv();
@@ -713,7 +713,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       documentStore:
         providedUnprefixedDocumentStore === undefined
           ? new Keyv<DocumentNode>({
-              store: new LRUStore({
+              store: new LRUCacheStore({
                 // Create ~about~ a 30MiB cache by default. Configurable by providing
                 // your own `documentStore`.
                 maxSize: Math.pow(2, 20) * 30,

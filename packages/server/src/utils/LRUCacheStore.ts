@@ -2,7 +2,7 @@ import LRUCache from 'lru-cache';
 import Keyv, { Store } from 'keyv';
 
 // LRUCache wrapper to implement the Keyv `Store` interface.
-export class LRUStore<T> implements Store<T> {
+export class LRUCacheStore<T> implements Store<T> {
   private cache: LRUCache<string, T>;
 
   constructor(lruCacheOpts: LRUCache.Options<string, T>) {

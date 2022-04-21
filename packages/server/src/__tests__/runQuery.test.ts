@@ -22,7 +22,7 @@ import type {
 } from '../externalTypes';
 import type { GraphQLRequest } from '../requestPipeline';
 import type { ApolloServerOptions } from '../types';
-import { LRUStore, sizeCalculation } from '../utils/KeyvLRU';
+import { LRUCacheStore, sizeCalculation } from '../utils/LRUCacheStore';
 
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,
@@ -1074,12 +1074,12 @@ describe('parsing and validation cache', () => {
     // of the two smaller queries. All three of these queries will never fit
     // into this cache, so we'll roll through them all.
     const maxSize =
-      // sizeCalculation is the same calculator that `LRUStore` uses by default.
+      // sizeCalculation is the same calculator that `LRUCacheStore` uses by default.
       sizeCalculation(cacheRepresentationOfQuery(querySmall1)) +
       sizeCalculation(cacheRepresentationOfQuery(querySmall2));
 
     const documentStore = new Keyv<DocumentNode>({
-      store: new LRUStore<DocumentNode>({
+      store: new LRUCacheStore<DocumentNode>({
         maxSize,
       }),
     });

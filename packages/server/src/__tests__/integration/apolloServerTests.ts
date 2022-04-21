@@ -56,7 +56,6 @@ import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,
 } from '.';
-import { LRUStore } from '../../utils/KeyvLRU';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -2280,9 +2279,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           const uri = await createServerAndGetUrl({
             gateway,
             documentStore: withDocumentStore
-              ? new Keyv<DocumentNode>({
-                  store: new LRUStore({ maxSize: 2000 }),
-                })
+              ? new Keyv<DocumentNode>()
               : undefined,
           });
 

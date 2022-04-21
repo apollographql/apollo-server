@@ -3,7 +3,7 @@ import type { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import Keyv from 'keyv';
 import { ApolloServer } from '../ApolloServer';
-import { LRUStore } from '../utils/KeyvLRU';
+import { LRUCacheStore } from '../utils/LRUCacheStore';
 
 const typeDefs = gql`
   type Query {
@@ -54,7 +54,7 @@ describe('ApolloServer documentStore', () => {
     await server.executeOperation(operations.simple.op);
 
     expect(
-      (documentStore.opts.store as LRUStore<DocumentNode>)['cache']
+      (documentStore.opts.store as LRUCacheStore<DocumentNode>)['cache']
         .calculatedSize,
     ).toBe(428);
 
@@ -66,10 +66,10 @@ describe('ApolloServer documentStore', () => {
   it('documentStore - custom', async () => {
     const documentStore = new Keyv<
       DocumentNode,
-      { store: LRUStore<DocumentNode> }
+      { store: LRUCacheStore<DocumentNode> }
     >({
       namespace: 'custom',
-      store: new LRUStore<DocumentNode>({ maxSize: 2000 }),
+      store: new LRUCacheStore<DocumentNode>({ maxSize: 2000 }),
     });
 
     const getSpy = jest.spyOn(documentStore, 'get');
