@@ -12,8 +12,8 @@ This guide explains how to setup Apollo Server 2 to run on AWS Lambda using Serv
 The following must be done before following this guide:
 
 - Setup an AWS account
-- [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/installing.html)
-- [Configure the AWS CLI with user credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+- [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [Configure the AWS CLI with user credentials](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html)
 - Install the serverless framework from NPM
   - `npm install -g serverless`
 
