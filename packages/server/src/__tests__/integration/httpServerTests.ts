@@ -3,7 +3,7 @@
 // individual tests just talk to the http.Server returned from their createApp
 // function. Newer tests have generally been added to the apolloServerTests.ts
 // file.
-
+import { createHash } from '@apollo/utils.createhash';
 import resolvable from '@josephg/resolvable';
 import {
   BREAK,
@@ -21,7 +21,6 @@ import {
 } from 'graphql';
 import gql from 'graphql-tag';
 import type http from 'http';
-import { sha256 } from 'js-sha256';
 import Keyv from 'keyv';
 import type { HTTPError } from 'superagent';
 import request from 'supertest';
@@ -1404,7 +1403,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       const query = '{testString}';
       const query2 = '{ testString }';
 
-      const hash = sha256.create().update(query).hex();
+      const hash = createHash('sha256').update(query).digest('hex');
       const extensions = {
         persistedQuery: {
           version: 1,
@@ -1415,7 +1414,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       const extensions2 = {
         persistedQuery: {
           version: 1,
-          sha256Hash: sha256.create().update(query2).hex(),
+          sha256Hash: createHash('sha256').update(query2).digest('hex'),
         },
       };
 

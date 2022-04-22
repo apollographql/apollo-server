@@ -1,4 +1,4 @@
-import createSHA from './utils/createSHA';
+import { createHash } from '@apollo/utils.createhash';
 
 // Configuration for how Apollo Server talks to the Apollo registry, as passed
 // to the ApolloServer constructor. Each field can also be provided as an
@@ -51,7 +51,7 @@ export function determineApolloConfig(
 
   // Determine key hash.
   if (apolloConfig.key) {
-    apolloConfig.keyHash = createSHA('sha512')
+    apolloConfig.keyHash = createHash('sha512')
       .update(apolloConfig.key)
       .digest('hex');
   }

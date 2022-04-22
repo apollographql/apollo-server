@@ -26,6 +26,8 @@
   },
   "dependencies": {
     "@apollo/usage-reporting-protobuf": "^3.3.0",
+    "@apollo/utils.createhash": "^1.0.0",
+    "@apollo/utils.isnodelike": "^1.0.0",
     "@apollo/utils.logger": "^1.0.0",
     "@apollographql/graphql-playground-html": "1.6.29",
     "@graphql-tools/mock": "^8.1.2",
@@ -42,7 +44,6 @@
     "lru-cache": "^7.5.1",
     "negotiator": "^0.6.3",
     "node-fetch": "^2.6.7",
-    "sha.js": "^2.4.11",
     "uuid": "^8.0.0"
   },
   "peerDependencies": {
