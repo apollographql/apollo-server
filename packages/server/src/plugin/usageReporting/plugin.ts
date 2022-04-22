@@ -308,15 +308,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                   accept: 'application/json',
                 },
                 body: compressed,
-                // The node-fetch types (which have been deleted from DefinitelyTyped
-                // because v3 has it built in) don't allow `boolean` but it passes
-                // it to http.request which does, so for the sake of type-checking
-                // we remove `boolean`. We should instead figure out a better story
-                // around these types in general.
-                agent: options.requestAgent as Exclude<
-                  ApolloServerPluginUsageReportingOptions<TContext>['requestAgent'],
-                  boolean
-                >,
+                agent: options.requestAgent,
               },
             );
 
