@@ -17,7 +17,7 @@ Most developers know about CORS because they run into the all-too-common [CORS e
 
 Internet users should always exercise caution when installing any new software on their devices. But when it comes to browsing the web, we navigate to different sites all the time, letting our browsers load content from those sites along the way. This comes with inherent risks.
 
-As web developers, we don't want a user's browser to do anything fishy to our server while the user is visiting. Browser security mechanisms (e.g., CORS or SOP) can give developers peace of mind by enabling a website's server to specify which browser origins can request resources from that server.
+As web developers, we don't want a user's browser to do anything fishy to our server while the user is visiting another website. Browser security mechanisms (e.g., CORS or SOP) can give developers peace of mind by enabling a website's server to specify which browser origins can request resources from that server.
 
 The [_origin_](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy#definition_of_an_origin) of a piece of web content consists of that content's domain, protocol, and port. The [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) (SOP) is a security mechanism that restricts scripts on one origin from interacting with resources from another origin. This means that scripts on websites can interact with resources from the same origin without jumping through any extra hoops.
 
@@ -54,11 +54,11 @@ Depending on what you're building, the origins you specify in your CORS configur
 
 If your browser is running your API on a private network (i.e., not on the public internet) and it relies on the privacy of that network for security, **the default CORS behavior of Apollo Server is insecure**. We strongly recommend [specifying which origins](#configuring-cors-options-for-apollo-server) can access your server's resources.
 
-If you don't, while your computer is on your private network, a script on any website could potentially make your browser talk to your private API. [Some browsers, such as Chrome, have features under development](https://wicg.github.io/private-network-access/) to solve this problem. But in the meantime, all servers on private networks should *always* specify origins in their CORS configuration.
+If you don't, while your personal computer is on your private network, a script on any website could potentially make your browser talk to your private API. [Some browsers, such as Chrome, have features under development](https://wicg.github.io/private-network-access/) to solve this problem. But in the meantime, all servers on private networks should *always* specify origins in their CORS configuration.
 
 #### Federated subgraphs
 
-If you're building a [federated graph](/federation/), we strongly recommend that _all_ of your subgraph servers specify origins in their CORS configuration. Specifically, subgraphs should allow communication _only_ from your gateways (and possibly private admin applications you create to monitor your subgraphs).
+If you're building a [federated graph](/federation/), we strongly recommend that _all_ of your production subgraph servers [_disable_ CORS](../api/apollo-server#cors) (or at least specify origins and limit them to tools like the Apollo Explorer). Most subgraphs should allow communication _only_ from your gateways, and that communication doesn't involve a browser at all.
 
 For more information, see [Securing your subgraphs](/federation/subgraphs/#securing-your-subgraphs).
 
