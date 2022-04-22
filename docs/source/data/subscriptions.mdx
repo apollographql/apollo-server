@@ -678,3 +678,63 @@ Use [`WebSocketLink`](/react/api/link/apollo-link-ws/)
 
 For more information on using Apollo Server with `subscriptions-transport-ws`, you can view the [previous version of this article here](https://github.com/apollographql/apollo-server/blob/4b82967c10a69aa104848a8c9d15c591b528918c/docs/source/data/subscriptions.mdx).
 
+<!-- How to change from using subscriptions-transport-ws to using graphql-ws -->
+<!-- 1. install  -->
+
+
+1. Install `graphql-ws` and `ws`:
+    ```bash
+    npm install graphql-ws ws
+    ```
+
+2. Add the following imports to the file where you initialize your `ApolloServer` instance (we'll use these in later steps):
+
+    ```ts title="index.ts"
+    import { WebSocketServer } from 'ws';
+    import { useServer } from 'graphql-ws/lib/use/ws';
+    ```
+
+3. Create a `WebSocketServer` to use as your subscription server. This will replace the `SubscriptionServer` created by `subscriptions-transport-ws`.
+
+    ```ts title="index.ts"
+      // Creating the WebSocket server
+      const wsServer = new WebSocketServer({
+        // This is the `httpServer` returned by createServer(app);
+        server: httpServer,
+        // Pass a different path here if your ApolloServer serves at
+        // a different path.
+        path: '/graphql',
+      });
+
+      // Hand in the schema we just created and have the
+      // WebSocketServer start listening.
+      const serverCleanup = useServer({ schema }, wsServer);
+    ```
+
+4. Add [plugins](../integrations/plugins) to your `ApolloServer` constructor to shutdown the `WebSocketServer`:
+
+    ```ts title="index.ts"
+      const server = new ApolloServer({
+        schema,
+        plugins: [
+          // ...Other plugins
+          // Proper shutdown for the WebSocket server.
+          {
+            async serverWillStart() {
+              return {
+                async drainServer() {
+                  await serverCleanup.dispose();
+                },
+              };
+            },
+          },
+        ],
+      });
+    ```
+
+5. Finally, ensure you are `listen`ing to your `httpServer`.
+
+  Last step, make sure everything works before you uninstall `subscriptions-transport-ws`
+
+
+
