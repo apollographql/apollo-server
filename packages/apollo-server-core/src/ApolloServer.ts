@@ -375,6 +375,7 @@ export class ApolloServerBase<
         schemaHash: schemaDerivedData.schemaHash,
         apollo: this.apolloConfig,
         serverlessFramework: this.serverlessFramework(),
+        isGateway: schemaManager.isGateway(),
       };
 
       // The `persistedQueries` attribute on the GraphQLServiceContext was

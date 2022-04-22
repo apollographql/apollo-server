@@ -114,6 +114,7 @@ export default async function pluginTestHarness<TContext>({
         key: 'some-key',
         graphRef: 'graph@current',
       },
+      isGateway: false,
     });
     if (maybeServerListener?.serverWillStop) {
       serverListener = maybeServerListener;

@@ -112,17 +112,7 @@ export function ApolloServerPluginLandingPageEmbeddedExplorer(
 
   return {
     __internal_installed_implicitly__: false,
-    async serverWillStart({ schema }) {
-      // This indicates if this schema is a gateway (only in fed 1).
-      // We are blocked for fed 2 on adding the `extensions` fields.
-      // https://github.com/apollographql/federation/issues/1749
-      // If you are running a gateway, and we know, your server is dynamically
-      // updated, so we default to polling every 5 seconds.
-      // If we don't know if you are running a gateway, we default
-      // to not polling unless you tell us by setting schemaPollIntervalMs.
-      const isGateway =
-        schema.extensions?.federation || // newer gateway versions in fed1
-        schema.getType('Query')?.extensions?.federation; // older gateway versions in fed1
+    async serverWillStart({ schema, isGateway }) {
       const encodedConfig = encodeConfig({
         includeCookies: false,
         persistExplorerState: false,

@@ -233,6 +233,10 @@ export class SchemaManager {
       });
     }
   }
+
+  public isGateway(): boolean {
+    return this.modeSpecificState.mode === 'gateway';
+  }
 }
 
 export class GatewayIsTooOldError extends Error {
