@@ -30,6 +30,7 @@ codepaths
 codesandbox
 contravariance
 contravariantly
+createhash
 dataloaders
 datasource
 datasources
@@ -74,6 +75,7 @@ htmls
 httpcache
 IHTTP
 instanceof
+isnodelike
 iteratees
 josephg
 jsdelivr
