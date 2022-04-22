@@ -191,109 +191,109 @@ describe('calculateReferencedFieldsByType', () => {
       }
     `);
   });
-});
 
-it('interface with fragment that uses interface field', () => {
-  expect(
-    validateAndCalculate({
-      document: gql`
-        query {
-          myInterface {
-            ... on A {
-              # Even though x exists on the interface, we only want this to
-              # count towards A.x below, because this operation would work just
-              # as well if x were removed from the interface as long as it was
-              # left on A.
-              x
+  it('interface with fragment that uses interface field', () => {
+    expect(
+      validateAndCalculate({
+        document: gql`
+          query {
+            myInterface {
+              ... on A {
+                # Even though x exists on the interface, we only want this to
+                # count towards A.x below, because this operation would work just
+                # as well if x were removed from the interface as long as it was
+                # left on A.
+                x
+              }
             }
           }
-        }
-      `,
-    }),
-  ).toMatchInlineSnapshot(`
-    Object {
-      "A": Object {
-        "fieldNames": Array [
-          "x",
-        ],
-        "isInterface": false,
-      },
-      "Query": Object {
-        "fieldNames": Array [
-          "myInterface",
-        ],
-        "isInterface": false,
-      },
-    }
-  `);
-});
+        `,
+      }),
+    ).toMatchInlineSnapshot(`
+          Object {
+            "A": Object {
+              "fieldNames": Array [
+                "x",
+              ],
+              "isInterface": false,
+            },
+            "Query": Object {
+              "fieldNames": Array [
+                "myInterface",
+              ],
+              "isInterface": false,
+            },
+          }
+      `);
+  });
 
-it('using field both with interface and object should work', () => {
-  expect(
-    validateAndCalculate({
-      document: gql`
-        query {
-          myInterface {
-            x
-            ... on A {
+  it('using field both with interface and object should work', () => {
+    expect(
+      validateAndCalculate({
+        document: gql`
+          query {
+            myInterface {
               x
+              ... on A {
+                x
+              }
             }
           }
-        }
-      `,
-    }),
-  ).toMatchInlineSnapshot(`
-    Object {
-      "A": Object {
-        "fieldNames": Array [
-          "x",
-        ],
-        "isInterface": false,
-      },
-      "MyInterface": Object {
-        "fieldNames": Array [
-          "x",
-        ],
-        "isInterface": true,
-      },
-      "Query": Object {
-        "fieldNames": Array [
-          "myInterface",
-        ],
-        "isInterface": false,
-      },
-    }
-  `);
-});
+        `,
+      }),
+    ).toMatchInlineSnapshot(`
+          Object {
+            "A": Object {
+              "fieldNames": Array [
+                "x",
+              ],
+              "isInterface": false,
+            },
+            "MyInterface": Object {
+              "fieldNames": Array [
+                "x",
+              ],
+              "isInterface": true,
+            },
+            "Query": Object {
+              "fieldNames": Array [
+                "myInterface",
+              ],
+              "isInterface": false,
+            },
+          }
+      `);
+  });
 
-it('using field multiple times (same level or otherwise) de-dupes', () => {
-  expect(
-    validateAndCalculate({
-      document: gql`
-        query {
-          a1: a {
-            y
+  it('using field multiple times (same level or otherwise) de-dupes', () => {
+    expect(
+      validateAndCalculate({
+        document: gql`
+          query {
+            a1: a {
+              y
+            }
+            a2: a {
+              y
+            }
           }
-          a2: a {
-            y
+        `,
+      }),
+    ).toMatchInlineSnapshot(`
+          Object {
+            "A": Object {
+              "fieldNames": Array [
+                "y",
+              ],
+              "isInterface": false,
+            },
+            "Query": Object {
+              "fieldNames": Array [
+                "a",
+              ],
+              "isInterface": false,
+            },
           }
-        }
-      `,
-    }),
-  ).toMatchInlineSnapshot(`
-    Object {
-      "A": Object {
-        "fieldNames": Array [
-          "y",
-        ],
-        "isInterface": false,
-      },
-      "Query": Object {
-        "fieldNames": Array [
-          "a",
-        ],
-        "isInterface": false,
-      },
-    }
-  `);
+      `);
+  });
 });
