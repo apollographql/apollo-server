@@ -64,7 +64,9 @@ For more information, see [Securing your subgraphs](/federation/subgraphs/#secur
 
 #### APIs that require cookies
 
-If your API needs to accept [cross-origin cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies) with requests, you _must_ specify origins in your CORS configuration. Otherwise, cross-origin cookies are automatically disabled. For examples, see [Passing credentials with CORS](#passing-credentials-with-cors).
+If your API needs to accept [cross-origin cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies) with requests, you _must_ specify origins in your CORS configuration. Otherwise, cross-origin cookies are automatically disabled. This is _not_ a security vulnerability, but it does prevent your API from successfully providing cookies.
+
+For examples, see [Passing credentials with CORS](#passing-credentials-with-cors).
 
 #### APIs with known consumers
 
