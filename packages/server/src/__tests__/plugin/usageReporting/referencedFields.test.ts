@@ -296,4 +296,44 @@ describe('calculateReferencedFieldsByType', () => {
           }
       `);
   });
+
+  // The current Fields L1 UI won't show these, but it's still correct to
+  // include them. (They don't show up in field executions because the way
+  // we instrument for willResolveField doesn't catch them.)
+  it('introspection fields are included', () => {
+    expect(
+      validateAndCalculate({
+        document: gql`
+          query {
+            __schema {
+              types {
+                name
+              }
+            }
+          }
+        `,
+      }),
+    ).toMatchInlineSnapshot(`
+      Object {
+        "Query": Object {
+          "fieldNames": Array [
+            "__schema",
+          ],
+          "isInterface": false,
+        },
+        "__Schema": Object {
+          "fieldNames": Array [
+            "types",
+          ],
+          "isInterface": false,
+        },
+        "__Type": Object {
+          "fieldNames": Array [
+            "name",
+          ],
+          "isInterface": false,
+        },
+      }
+    `);
+  });
 });
