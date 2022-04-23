@@ -1,3 +1,4 @@
+import { isNodeLike } from '@apollo/utils.isnodelike';
 import type { Logger } from '@apollo/utils.logger';
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
@@ -63,7 +64,6 @@ import type {
   PersistedQueryOptions,
   WithRequired,
 } from './types';
-import isNodeLike from './utils/isNodeLike';
 import { LRUCacheStore, PrefixingKeyv } from './utils/LRUCacheStore';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
 

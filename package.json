@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@apollo/client": "3.5.10",
+    "@apollo/utils.createhash": "1.0.0",
     "@graphql-codegen/cli": "2.6.2",
     "@graphql-codegen/typescript-operations": "2.3.5",
     "@graphql-tools/mock": "8.6.8",
@@ -75,7 +76,6 @@
     "jest-config": "27.5.1",
     "jest-junit": "13.2.0",
     "jest-mock-random": "1.1.1",
-    "js-sha256": "0.9.0",
     "keyv": "4.2.2",
     "lodash.sumby": "4.6.0",
     "nock": "13.2.4",

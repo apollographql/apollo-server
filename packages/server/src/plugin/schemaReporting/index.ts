@@ -1,10 +1,10 @@
+import { createHash } from '@apollo/utils.createhash';
 import os from 'os';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { v4 as uuidv4 } from 'uuid';
 import { printSchema, validateSchema, buildSchema } from 'graphql';
 import type fetch from 'node-fetch';
 import { SchemaReporter } from './schemaReporter';
-import createSHA from '../../utils/createSHA';
 import { schemaIsFederated } from '../schemaIsFederated';
 import type { SchemaReport } from './generated/operations';
 import type { BaseContext } from '../../externalTypes';
@@ -200,5 +200,5 @@ export function ApolloServerPluginSchemaReporting(
 }
 
 export function computeCoreSchemaHash(schema: string): string {
-  return createSHA('sha256').update(schema).digest('hex');
+  return createHash('sha256').update(schema).digest('hex');
 }

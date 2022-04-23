@@ -1,5 +1,5 @@
 import http from 'http';
-import { sha256 } from 'js-sha256';
+import { createHash } from '@apollo/utils.createhash';
 import { URL } from 'url';
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -1191,7 +1191,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 Math.random().toString().split('.')[1]
               }: justAField }
             `;
-            const hash = sha256.create().update(TEST_STRING_QUERY).hex();
+            const hash = createHash('sha256')
+              .update(TEST_STRING_QUERY)
+              .digest('hex');
 
             const result = await apolloFetch({
               extensions: {
@@ -1811,7 +1813,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
       const query = gql`
         ${TEST_STRING_QUERY}
       `;
-      const hash = sha256.create().update(TEST_STRING_QUERY).hex();
+      const hash = createHash('sha256').update(TEST_STRING_QUERY).digest('hex');
       const extensions = {
         persistedQuery: {
           version: 1,
@@ -1905,9 +1907,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
       it('returns correct result for persisted query link', (done) => {
         const variables = { id: 1 };
-        const link = createPersistedQueryLink({ sha256 }).concat(
-          createHttpLink({ uri, fetch } as any),
-        );
+        const link = createPersistedQueryLink({
+          sha256: (query) => createHash('sha256').update(query).digest('hex'),
+        }).concat(createHttpLink({ uri, fetch } as any));
 
         execute(link, { query, variables } as any).subscribe((result) => {
           expect(result.data).toEqual({ testString: 'test string' });
@@ -1918,7 +1920,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
       it('returns correct result for persisted query link using get request', (done) => {
         const variables = { id: 1 };
         const link = createPersistedQueryLink({
-          sha256,
+          sha256: (query) => createHash('sha256').update(query).digest('hex'),
           useGETForHashedQueries: true,
         }).concat(createHttpLink({ uri, fetch } as any));
 

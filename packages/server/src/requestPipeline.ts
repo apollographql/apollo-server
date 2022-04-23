@@ -1,3 +1,4 @@
+import { createHash } from '@apollo/utils.createhash';
 import {
   specifiedRules,
   DocumentNode,
@@ -49,14 +50,13 @@ import { Dispatcher } from './utils/dispatcher';
 
 export { GraphQLRequest, GraphQLResponse, GraphQLRequestContext };
 
-import createSHA from './utils/createSHA';
 import { HeaderMap, HttpQueryError } from './runHttpQuery';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 
 function computeQueryHash(query: string) {
-  return createSHA('sha256').update(query).digest('hex');
+  return createHash('sha256').update(query).digest('hex');
 }
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
