@@ -93,6 +93,7 @@ export interface GraphQLServiceContext {
     cache: KeyValueCache;
   };
   serverlessFramework: boolean;
+  isGateway: boolean;
 }
 
 export interface GraphQLSchemaContext {
