@@ -87,6 +87,7 @@ workflows:
                 - "14"
                 - "16"
                 - "17"
+                - "18"
       - "Check for FIXM\x45"
       - Prettier
       - Spell check

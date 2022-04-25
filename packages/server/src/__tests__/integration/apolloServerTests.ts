@@ -934,7 +934,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
             const { family, address, port } =
               this.server.address() as AddressInfo;
 
-            if (family !== 'IPv4') {
+            // @ts-expect-error until https://github.com/DefinitelyTyped/DefinitelyTyped/pull/60042
+            if (family !== 'IPv4' && family !== 4) {
               throw new Error(`The family was unexpectedly ${family}.`);
             }
             return new URL(`http://${address}:${port}`).toString();
@@ -1959,7 +1960,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         const { family, address, port } =
           fakeUsageReportingServer.address() as AddressInfo;
-        if (family !== 'IPv4') {
+        // @ts-expect-error until https://github.com/DefinitelyTyped/DefinitelyTyped/pull/60042
+        if (family !== 'IPv4' && family !== 4) {
           throw new Error(`The family was unexpectedly ${family}.`);
         }
 
