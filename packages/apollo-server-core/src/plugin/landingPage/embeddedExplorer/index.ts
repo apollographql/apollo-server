@@ -33,12 +33,11 @@ export interface ApolloServerPluginLandingPageEmbeddedExplorerOptions {
    * You also have the option to just use the schema running on this Apollo Server
    * instance.
    *
-   * For subgraphs & non-federated Apollo Server schemas, your server needs
-   * to be restarted for changes to propagate. For gateways, changes are
-   * dynamically added to the server.
-   *
-   * If you are running a subgraph or non-federated server, we will not poll
-   * for your schema unless you pass a specific ms here.
+   * If this server is a gateway, the web app will poll your server with an
+   * introspection query every 5 seconds to see if the schema has changed.
+   * You can adjust this polling interval by setting this value,
+   * or disable the polling by setting it to 0.
+   * This param defaults to 0 for non-gateway servers because they have static schemas.
    *
    * If you are running a gateway, we will be default poll for your changing
    * schema every 5 seconds and show changes in the embedded Explorer.
