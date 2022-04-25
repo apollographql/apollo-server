@@ -9,6 +9,14 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+- _Nothing yet! Stay tuned._
+
+## v3.6.7
+
+- `apollo-server-core`: Update `@apollographql/apollo-tools` dependency to the latest version which now properly lists its peer dependencies. This fixes a problem with using Yarn3 PnP [PR #6273](https://github.com/apollographql/apollo-server/pull/6273)
+
+## v3.6.6
+
 - ⚠️ **SECURITY** `apollo-server-core`: Apollo Server 3.4.0 introduced a new `documentStore` constructor option (replacing the `experimental_approximateDocumentStoreMiB` option) which allows you to customize an internal cache used by ApolloServer to memoize the results of parsing and validating GraphQL operations. When this option was combined with the `gateway` option, it was possible for Apollo Server to attempt to execute invalid GraphQL operations. Specifically, if a server processed an operation and then its schema was updated with a change that made that operation no longer valid, the server could still attempt to execute the operation again without re-validating it against the new schema. The problem only lasts until the server is restarted. This release changes the semantics of the `documentStore` option so that a different key prefix is used each time the schema is updated. (As a side effect, you no longer have to be careful to avoid sharing a `documentStore` between multiple `ApolloServer` objects.)  **This update is highly recommended for any users that specify both `documentStore` and `gateway` in `new ApolloServer()`.**
 
 ## v3.6.5
