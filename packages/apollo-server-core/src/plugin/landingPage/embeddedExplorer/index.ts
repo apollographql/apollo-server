@@ -77,7 +77,7 @@ interface EmbeddedLandingPageConfig {
   // schema from Apollo Server
   // If your server is running a gateway, we will continue to poll your endpoint.
   // If not, we just use this schema to populate the embedded Explorer.
-  schema?: string;
+  initialSchema?: string;
   displayOptions?: {
     showHeadersAndEnvVars?: boolean;
     docsPanelState?: 'open' | 'closed';
@@ -126,7 +126,7 @@ export function ApolloServerPluginLandingPageEmbeddedExplorer(
         includeCookies: false,
         persistExplorerState: false,
         schemaPollIntervalMs: isGateway ? 5000 : 0,
-        schema: printSchema(schema),
+        ...(options.graphRef ? {} : { initialSchema: printSchema(schema) }),
         ...rest,
       });
       return {
