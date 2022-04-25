@@ -53,7 +53,7 @@
     "@types/lodash.xorby": "4.7.7",
     "@types/lru-cache": "7.6.1",
     "@types/negotiator": "0.6.1",
-    "@types/node": "14.18.13",
+    "@types/node": "14.18.14",
     "@types/node-fetch": "2.6.1",
     "@types/qs-middleware": "1.0.1",
     "@types/request": "2.48.8",
