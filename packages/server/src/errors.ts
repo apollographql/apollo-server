@@ -1,12 +1,4 @@
-import {
-  ASTNode,
-  GraphQLError,
-  GraphQLFormattedError,
-  Source,
-  SourceLocation,
-  printError,
-  formatError,
-} from 'graphql';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 declare module 'graphql' {
   export interface GraphQLErrorExtensions {
@@ -17,17 +9,8 @@ declare module 'graphql' {
   }
 }
 
-// Note: We'd like to switch to `extends GraphQLError` and look forward to doing so
-// as soon as we drop support for `graphql` bellow `v15.7.0`.
-export class ApolloError extends Error implements GraphQLError {
-  public extensions: Record<string, any>;
-  override readonly name!: string;
-  readonly locations: ReadonlyArray<SourceLocation> | undefined;
-  readonly path: ReadonlyArray<string | number> | undefined;
-  readonly source: Source | undefined;
-  readonly positions: ReadonlyArray<number> | undefined;
-  readonly nodes: ReadonlyArray<ASTNode> | undefined;
-  public originalError: Error | undefined;
+export class ApolloError extends GraphQLError {
+  override name: string;
 
   [key: string]: any;
 
@@ -36,13 +19,6 @@ export class ApolloError extends Error implements GraphQLError {
     code?: string,
     extensions?: Record<string, any>,
   ) {
-    super(message);
-
-    // if no name provided, use the default. defineProperty ensures that it stays non-enumerable
-    if (!this.name) {
-      Object.defineProperty(this, 'name', { value: 'ApolloError' });
-    }
-
     if (extensions?.extensions) {
       throw Error(
         'Pass extensions directly as the third argument of the ApolloError constructor: `new ' +
@@ -51,32 +27,18 @@ export class ApolloError extends Error implements GraphQLError {
       );
     }
 
-    this.extensions = { ...extensions, code };
-  }
+    super(
+      message,
+      undefined /* nodes */,
+      undefined /* source */,
+      undefined /* positions */,
+      undefined /* path */,
+      undefined /* originalError */,
+      { ...extensions, code } /* extensions */,
+    );
 
-  toJSON(): GraphQLFormattedError {
-    return formatError(toGraphQLError(this));
+    this.name = 'ApolloError';
   }
-
-  override toString(): string {
-    return printError(toGraphQLError(this));
-  }
-
-  get [Symbol.toStringTag](): string {
-    return this.name;
-  }
-}
-
-function toGraphQLError(error: ApolloError): GraphQLError {
-  return new GraphQLError(
-    error.message,
-    error.nodes,
-    error.source,
-    error.positions,
-    error.path,
-    error.originalError,
-    error.extensions,
-  );
 }
 
 function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
@@ -113,12 +75,14 @@ function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
     },
   });
 
+  const originalErrorExtensions =
+    error.originalError instanceof GraphQLError ? {} : error.originalError;
   expanded.extensions = {
     ...error.extensions,
     code: error.extensions?.code || 'INTERNAL_SERVER_ERROR',
     exception: {
       ...error.extensions?.exception,
-      ...(error.originalError as any),
+      ...originalErrorExtensions,
     },
   };
 
@@ -165,15 +129,14 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
     : new ApolloError(error.message);
 
   // copy enumerable keys
-  Object.entries(error).forEach(([key, value]) => {
-    if (key === 'extensions') {
-      return; // extensions are handled bellow
+  for (const [key, value] of Object.entries(error)) {
+    if (key !== 'extensions') { // extensions are handled bellow
+      copy[key] = value;
     }
-    copy[key] = value;
-  });
+  }
 
   // merge extensions instead of just copying them
-  copy.extensions = {
+  (copy as any).extensions = {
     ...copy.extensions,
     ...error.extensions,
   };
@@ -199,7 +162,7 @@ export class SyntaxError extends ApolloError {
   constructor(message: string) {
     super(message, 'GRAPHQL_PARSE_FAILED');
 
-    Object.defineProperty(this, 'name', { value: 'SyntaxError' });
+    this.name = 'SyntaxError';
   }
 }
 
@@ -207,7 +170,7 @@ export class ValidationError extends ApolloError {
   constructor(message: string) {
     super(message, 'GRAPHQL_VALIDATION_FAILED');
 
-    Object.defineProperty(this, 'name', { value: 'ValidationError' });
+    this.name = 'ValidationError';
   }
 }
 
@@ -215,7 +178,7 @@ export class AuthenticationError extends ApolloError {
   constructor(message: string, extensions?: Record<string, any>) {
     super(message, 'UNAUTHENTICATED', extensions);
 
-    Object.defineProperty(this, 'name', { value: 'AuthenticationError' });
+    this.name = 'AuthenticationError';
   }
 }
 
@@ -223,7 +186,7 @@ export class ForbiddenError extends ApolloError {
   constructor(message: string, extensions?: Record<string, any>) {
     super(message, 'FORBIDDEN', extensions);
 
-    Object.defineProperty(this, 'name', { value: 'ForbiddenError' });
+    this.name = 'ForbiddenError';
   }
 }
 
@@ -231,9 +194,7 @@ export class PersistedQueryNotFoundError extends ApolloError {
   constructor() {
     super('PersistedQueryNotFound', 'PERSISTED_QUERY_NOT_FOUND');
 
-    Object.defineProperty(this, 'name', {
-      value: 'PersistedQueryNotFoundError',
-    });
+    this.name = 'PersistedQueryNotFoundError';
   }
 }
 
@@ -241,9 +202,7 @@ export class PersistedQueryNotSupportedError extends ApolloError {
   constructor() {
     super('PersistedQueryNotSupported', 'PERSISTED_QUERY_NOT_SUPPORTED');
 
-    Object.defineProperty(this, 'name', {
-      value: 'PersistedQueryNotSupportedError',
-    });
+    this.name = 'PersistedQueryNotSupportedError';
   }
 }
 
@@ -251,7 +210,7 @@ export class UserInputError extends ApolloError {
   constructor(message: string, extensions?: Record<string, any>) {
     super(message, 'BAD_USER_INPUT', extensions);
 
-    Object.defineProperty(this, 'name', { value: 'UserInputError' });
+    this.name = 'UserInputError';
   }
 }
 
@@ -262,7 +221,7 @@ export class BadRequestError extends ApolloError {
   constructor(message: string, extensions?: Record<string, any>) {
     super(message, 'BAD_REQUEST', extensions);
 
-    Object.defineProperty(this, 'name', { value: 'BadRequestError' });
+    this.name = 'BadRequestError';
   }
 }
 

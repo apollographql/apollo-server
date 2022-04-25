@@ -2297,6 +2297,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               extensions: { code: 'GRAPHQL_VALIDATION_FAILED' },
               message:
                 'Cannot query field "testString1" on type "QueryType". Did you mean "testString2"?',
+              locations: [{ line: 1, column: 2 }],
             },
           ]);
         },
