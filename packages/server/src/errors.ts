@@ -286,10 +286,7 @@ export function formatApolloErrors(
         return enrichError(err as Partial<GraphQLError>, debug);
       } else {
         // obscure error
-        const newError = fromGraphQLError(
-          new GraphQLError('Internal server error'),
-        );
-        return enrichError(newError, debug);
+        return new ApolloError('Internal server error');
       }
     }
   }) as Array<ApolloError>;
