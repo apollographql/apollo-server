@@ -1,7 +1,6 @@
 import { GraphQLError } from 'graphql';
 
 import {
-  ApolloError,
   formatApolloErrors,
   AuthenticationError,
   ForbiddenError,
@@ -11,24 +10,6 @@ import {
 } from '../errors';
 
 describe('Errors', () => {
-  describe('ApolloError', () => {
-    const message = 'message';
-    it('defaults code to INTERNAL_SERVER_ERROR', () => {
-      const error = new ApolloError(message);
-      expect(error.message).toEqual(message);
-      expect(error.extensions.code).toBeUndefined();
-    });
-    it('allows code setting and additional properties', () => {
-      const code = 'CODE';
-      const key = 'value';
-      const error = new ApolloError(message, code, { key });
-      expect(error.message).toEqual(message);
-      expect(error.key).toBeUndefined();
-      expect(error.extensions.code).toEqual(code);
-      expect(error.extensions.key).toEqual(key);
-    });
-  });
-
   describe('formatApolloErrors', () => {
     type CreateFormatError =
       | ((
@@ -45,7 +26,9 @@ describe('Errors', () => {
       errors?: Error[],
     ) => {
       if (errors === undefined) {
-        const error = new ApolloError(message, code, { key });
+        const error = new GraphQLError(message, {
+          extensions: { code, key },
+        });
         return formatApolloErrors(
           [
             new GraphQLError(
@@ -100,7 +83,9 @@ describe('Errors', () => {
       expect(error.extensions.code).toEqual(code);
     });
     it('calls formatter after exposing the code and stacktrace', () => {
-      const error = new ApolloError(message, code, { key });
+      const error = new GraphQLError(message, {
+        extensions: { code, key },
+      });
       const formatter = jest.fn();
       formatApolloErrors([error], {
         formatter,
@@ -108,9 +93,8 @@ describe('Errors', () => {
       });
       expect(error.message).toEqual(message);
       expect(error.extensions.key).toEqual(key);
-      expect(error.key).toBeUndefined();
       expect(error.extensions.code).toEqual(code);
-      expect(error instanceof ApolloError).toBe(true);
+      expect(error instanceof GraphQLError).toBe(true);
       expect(formatter).toHaveBeenCalledTimes(1);
     });
     it('Formats native Errors in a JSON-compatible way', () => {
@@ -122,7 +106,7 @@ describe('Errors', () => {
   describe('Named Errors', () => {
     const message = 'message';
     function verifyError(
-      error: ApolloError,
+      error: GraphQLError,
       {
         code,
         errorClass,
@@ -132,7 +116,7 @@ describe('Errors', () => {
       expect(error.message).toEqual(message);
       expect(error.extensions.code).toEqual(code);
       expect(error.name).toEqual(name);
-      expect(error instanceof ApolloError).toBe(true);
+      expect(error instanceof GraphQLError).toBe(true);
       expect(error instanceof errorClass).toBe(true);
     }
 

@@ -9,38 +9,6 @@ declare module 'graphql' {
   }
 }
 
-export class ApolloError extends GraphQLError {
-  override name: string;
-
-  [key: string]: any;
-
-  constructor(
-    message: string,
-    code?: string,
-    extensions?: Record<string, any>,
-  ) {
-    if (extensions?.extensions) {
-      throw Error(
-        'Pass extensions directly as the third argument of the ApolloError constructor: `new ' +
-          'ApolloError(message, code, {myExt: value})`, not `new ApolloError(message, code, ' +
-          '{extensions: {myExt: value}})`',
-      );
-    }
-
-    super(
-      message,
-      undefined /* nodes */,
-      undefined /* source */,
-      undefined /* positions */,
-      undefined /* path */,
-      undefined /* originalError */,
-      { ...extensions, code } /* extensions */,
-    );
-
-    this.name = 'ApolloError';
-  }
-}
-
 function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
   // follows similar structure to https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts#L127-L176
   // with the addition of name
@@ -100,7 +68,7 @@ function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
     delete expanded.extensions.exception;
   }
 
-  return expanded as ApolloError;
+  return expanded as GraphQLError;
 }
 
 export function toApolloError(
@@ -120,18 +88,19 @@ export interface ErrorOptions {
   code?: string;
   // This declaration means it takes any "class" that has a constructor that
   // takes a single string, and should be invoked via the `new` operator.
-  errorClass?: new (message: string) => ApolloError;
+  errorClass?: new (message: string) => GraphQLError;
 }
 
 export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
-  const copy: ApolloError = options?.errorClass
+  const copy: GraphQLError = options?.errorClass
     ? new options.errorClass(error.message)
-    : new ApolloError(error.message);
+    : new GraphQLError(error.message);
 
   // copy enumerable keys
   for (const [key, value] of Object.entries(error)) {
-    if (key !== 'extensions') { // extensions are handled bellow
-      copy[key] = value;
+    // extensions are handled bellow
+    if (key !== 'extensions') {
+      (copy as any)[key] = value;
     }
   }
 
@@ -158,57 +127,61 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
   return copy;
 }
 
-export class SyntaxError extends ApolloError {
+export class SyntaxError extends GraphQLError {
   constructor(message: string) {
-    super(message, 'GRAPHQL_PARSE_FAILED');
+    super(message, { extensions: { code: 'GRAPHQL_PARSE_FAILED' } });
 
     this.name = 'SyntaxError';
   }
 }
 
-export class ValidationError extends ApolloError {
+export class ValidationError extends GraphQLError {
   constructor(message: string) {
-    super(message, 'GRAPHQL_VALIDATION_FAILED');
+    super(message, { extensions: { code: 'GRAPHQL_VALIDATION_FAILED' } });
 
     this.name = 'ValidationError';
   }
 }
 
-export class AuthenticationError extends ApolloError {
+export class AuthenticationError extends GraphQLError {
   constructor(message: string, extensions?: Record<string, any>) {
-    super(message, 'UNAUTHENTICATED', extensions);
+    super(message, { extensions: { ...extensions, code: 'UNAUTHENTICATED' } });
 
     this.name = 'AuthenticationError';
   }
 }
 
-export class ForbiddenError extends ApolloError {
+export class ForbiddenError extends GraphQLError {
   constructor(message: string, extensions?: Record<string, any>) {
-    super(message, 'FORBIDDEN', extensions);
+    super(message, { extensions: { ...extensions, code: 'FORBIDDEN' } });
 
     this.name = 'ForbiddenError';
   }
 }
 
-export class PersistedQueryNotFoundError extends ApolloError {
+export class PersistedQueryNotFoundError extends GraphQLError {
   constructor() {
-    super('PersistedQueryNotFound', 'PERSISTED_QUERY_NOT_FOUND');
+    super('PersistedQueryNotFound', {
+      extensions: { code: 'PERSISTED_QUERY_NOT_FOUND' },
+    });
 
     this.name = 'PersistedQueryNotFoundError';
   }
 }
 
-export class PersistedQueryNotSupportedError extends ApolloError {
+export class PersistedQueryNotSupportedError extends GraphQLError {
   constructor() {
-    super('PersistedQueryNotSupported', 'PERSISTED_QUERY_NOT_SUPPORTED');
+    super('PersistedQueryNotSupported', {
+      extensions: { code: 'PERSISTED_QUERY_NOT_SUPPORTED' },
+    });
 
     this.name = 'PersistedQueryNotSupportedError';
   }
 }
 
-export class UserInputError extends ApolloError {
+export class UserInputError extends GraphQLError {
   constructor(message: string, extensions?: Record<string, any>) {
-    super(message, 'BAD_USER_INPUT', extensions);
+    super(message, { extensions: { ...extensions, code: 'BAD_USER_INPUT' } });
 
     this.name = 'UserInputError';
   }
@@ -217,9 +190,9 @@ export class UserInputError extends ApolloError {
 // TODO(AS4): We added this in AS4. Is that a good idea? We should at least
 // document it, and maybe consider using it for more of the errors in
 // runHttpQuery instead of just returning text/plain errors.
-export class BadRequestError extends ApolloError {
+export class BadRequestError extends GraphQLError {
   constructor(message: string, extensions?: Record<string, any>) {
-    super(message, 'BAD_REQUEST', extensions);
+    super(message, { extensions: { ...extensions, code: 'BAD_REQUEST' } });
 
     this.name = 'BadRequestError';
   }
@@ -232,7 +205,7 @@ export function formatApolloErrors(
     formatter?: (error: GraphQLError) => GraphQLFormattedError;
     debug?: boolean;
   },
-): Array<ApolloError> {
+): Array<GraphQLError> {
   if (!options) {
     return errors.map((error) => enrichError(error));
   }
@@ -286,8 +259,8 @@ export function formatApolloErrors(
         return enrichError(err as Partial<GraphQLError>, debug);
       } else {
         // obscure error
-        return new ApolloError('Internal server error');
+        return new GraphQLError('Internal server error');
       }
     }
-  }) as Array<ApolloError>;
+  }) as Array<GraphQLError>;
 }

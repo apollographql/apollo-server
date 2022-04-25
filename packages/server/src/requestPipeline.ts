@@ -17,7 +17,6 @@ import {
   symbolUserFieldResolver,
 } from './utils/schemaInstrumentation';
 import {
-  ApolloError,
   fromGraphQLError,
   SyntaxError,
   ValidationError,
@@ -498,7 +497,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // Then, if the HTTP status code is not yet set, it sets it to 400.
   async function sendErrorResponse(
     errorOrErrors: ReadonlyArray<GraphQLError> | GraphQLError,
-    errorClass?: typeof ApolloError,
+    errorClass?: typeof GraphQLError,
     http: HTTPGraphQLHead = newHTTPGraphQLHead(),
   ) {
     // If a single error is passed, it should still be encapsulated in an array.
@@ -511,7 +510,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     requestContext.response.result = {
       errors: formatErrors(
         errors.map((err) =>
-          err instanceof ApolloError && !errorClass
+          err instanceof GraphQLError && !errorClass
             ? err
             : fromGraphQLError(
                 err,
