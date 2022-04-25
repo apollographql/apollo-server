@@ -51,7 +51,7 @@ export interface ApolloServerPluginLandingPageEmbeddedExplorerOptions {
   /**
    * Display options can be configured for the embedded Explorer.
    */
-  embedDisplayOptions?: {
+  displayOptions?: {
     // If showHeadersAndEnvVars is false, we don't show the tab where users can input headers & env vars.
     showHeadersAndEnvVars: boolean;
     // The initial state for the left documentation panel in Explorer. Users can expand this when using the Explorer.
@@ -79,7 +79,7 @@ interface EmbeddedLandingPageConfig {
   // If your server is running a gateway, we will continue to poll your endpoint.
   // If not, we just use this schema to populate the embedded Explorer.
   schema?: string;
-  embedDisplayOptions?: {
+  displayOptions?: {
     showHeadersAndEnvVars?: boolean;
     docsPanelState?: 'open' | 'closed';
     theme?: 'dark' | 'light';
