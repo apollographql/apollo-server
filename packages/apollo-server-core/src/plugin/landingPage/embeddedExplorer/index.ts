@@ -27,8 +27,7 @@ export interface ApolloServerPluginLandingPageEmbeddedExplorerOptions {
   headers?: Record<string, string>;
   /**
    * We have two options for grabbing your schema for the embedded Explorer.
-   * // TODO (maya): update this comment when private graphs can be embedded
-   * If you have a Studio graph that is public, you can specify that graphRef
+   * If you have a registered Studio graph, you can specify that graphRef,
    * and we will render the Explorer of your private graph using that registered schema.
    *
    * You also have the option to just use the schema running on this Apollo Server
