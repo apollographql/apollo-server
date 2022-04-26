@@ -86,7 +86,6 @@ workflows:
               node-version:
                 - "14"
                 - "16"
-                - "17"
                 - "18"
       - "Check for FIXM\x45"
       - Prettier
