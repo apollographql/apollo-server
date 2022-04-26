@@ -572,9 +572,13 @@ If none of these libraries fits your use case, you can also create your own `Pub
 
 >If you use subscriptions with Apollo Client you must ensure **[both your client and server subscription protocols are consistent](/react/data/subscriptions/#choosing-a-subscription-library)** for the subscription library you're using.
 
-This article previously demonstrated using the `subscriptions-transport-ws` library to set up subscriptions. However, this library is no longer actively maintained. You can still use it with Apollo Server, but we strongly recommend using [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) instead. A migration path from `subscriptions-transport-ws` to `graphql-ws` is outlined in the [Apollo Server v3 migration guide](/migration/#subscriptions).
+This article previously demonstrated using the `subscriptions-transport-ws` library to set up subscriptions. However, this library is no longer actively maintained. You can still use it with Apollo Server, but we strongly recommend using [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) instead.
 
-If you intend to switch from `subscriptions-transport-ws` to `graphql-ws` you will need to update the following clients:
+For more information on using Apollo Server with `subscriptions-transport-ws`, you can view the [previous version of this article](https://github.com/apollographql/apollo-server/blob/4b82967c10a69aa104848a8c9d15c591b528918c/docs/source/data/subscriptions.mdx).
+
+### Updating subscription clients
+
+If you intend to [switch from `subscriptions-transport-ws` to `graphql-ws`](#switching-to-graphql-ws) you will need to update the following clients:
 
 <table>
   <thead>
@@ -676,28 +680,28 @@ Use [`WebSocketLink`](/react/api/link/apollo-link-ws/)
 </tbody>
 </table>
 
-For more information on using Apollo Server with `subscriptions-transport-ws`, you can view the [previous version of this article here](https://github.com/apollographql/apollo-server/blob/4b82967c10a69aa104848a8c9d15c591b528918c/docs/source/data/subscriptions.mdx).
+### Switching to `graphql-ws`
 
-<!-- How to change from using subscriptions-transport-ws to using graphql-ws -->
-<!-- 1. install  -->
+> The following steps assume you've already [swapped to the `apollo-server-express` package](integrations/middleware/#swapping-out-apollo-server).
 
+To switch from `subscriptions-transport-ws` to `graphql-ws`, you can follow the steps below.
 
-1. Install `graphql-ws` and `ws`:
+1. Install `graphql-ws` and `ws` into your app:
     ```bash
     npm install graphql-ws ws
     ```
 
-2. Add the following imports to the file where you initialize your `ApolloServer` instance (we'll use these in later steps):
+2. Add the following imports to the file where you initialize your HTTP and subscription servers:
 
     ```ts title="index.ts"
     import { WebSocketServer } from 'ws';
     import { useServer } from 'graphql-ws/lib/use/ws';
     ```
 
-3. Create a `WebSocketServer` to use as your subscription server. This will replace the `SubscriptionServer` created by `subscriptions-transport-ws`.
+3. Instantiate a `WebSocketServer` to use as your new subscription server. This server will replace the `SubscriptionServer` from `subscriptions-transport-ws`.
 
     ```ts title="index.ts"
-      // Creating the WebSocket server
+      // Creating the WebSocket subscription server
       const wsServer = new WebSocketServer({
         // This is the `httpServer` returned by createServer(app);
         server: httpServer,
@@ -706,12 +710,12 @@ For more information on using Apollo Server with `subscriptions-transport-ws`, y
         path: '/graphql',
       });
 
-      // Hand in the schema we just created and have the
+      // Pass in an instance of a GraphQLSchema and have the
       // WebSocketServer start listening.
       const serverCleanup = useServer({ schema }, wsServer);
     ```
 
-4. Add [plugins](../integrations/plugins) to your `ApolloServer` constructor to shutdown the `WebSocketServer`:
+4. Add a [plugin](../integrations/plugins) to your `ApolloServer` constructor to properly shutdown your new `WebSocketServer`:
 
     ```ts title="index.ts"
       const server = new ApolloServer({
@@ -732,9 +736,9 @@ For more information on using Apollo Server with `subscriptions-transport-ws`, y
       });
     ```
 
-5. Finally, ensure you are `listen`ing to your `httpServer`.
+5. Ensure you are `listen`ing to your `httpServer` call. You can now remove the code related to your `SubscriptionServer`, start your HTTP server, and test that everything works.
 
-  Last step, make sure everything works before you uninstall `subscriptions-transport-ws`
+If everything is running smoothly, you can (and should) uninstall `subscriptions-transport-ws`. The final step is to [update all your subscription clients](#updating-subscription-clients) to ensure they use the same subscription protocol.
 
 
 
