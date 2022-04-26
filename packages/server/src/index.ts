@@ -24,3 +24,5 @@ export * from './externalTypes';
 // TODO(AS4): Why re-export graphql-tag?
 export * from './gql';
 export * from './plugin';
+
+export { LRUCacheStore } from './utils/LRUCacheStore';
