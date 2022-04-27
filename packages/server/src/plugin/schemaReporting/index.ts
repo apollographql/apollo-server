@@ -3,11 +3,11 @@ import os from 'os';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { v4 as uuidv4 } from 'uuid';
 import { printSchema, validateSchema, buildSchema } from 'graphql';
-import type fetch from 'node-fetch';
 import { SchemaReporter } from './schemaReporter';
 import { schemaIsFederated } from '../schemaIsFederated';
 import type { SchemaReport } from './generated/operations';
 import type { BaseContext } from '../../externalTypes';
+import type { Fetcher } from '@apollo/utils.fetcher';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**
@@ -54,7 +54,7 @@ export interface ApolloServerPluginSchemaReportingOptions {
   /**
    * Specifies which Fetch API implementation to use when reporting schemas.
    */
-  fetcher?: typeof fetch;
+  fetcher?: Fetcher;
 }
 
 export function ApolloServerPluginSchemaReporting(

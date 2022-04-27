@@ -6,10 +6,8 @@ import type {
   BaseContext,
 } from '../../externalTypes';
 import type { Logger } from '@apollo/utils.logger';
-import type fetch from 'node-fetch';
-import type { Agent as HttpAgent } from 'http';
-import type { Agent as HttpsAgent } from 'https';
 import type { Trace } from '@apollo/usage-reporting-protobuf';
+import type { Fetcher } from '@apollo/utils.fetcher';
 
 export interface ApolloServerPluginUsageReportingOptions<
   TContext extends BaseContext,
@@ -234,14 +232,9 @@ export interface ApolloServerPluginUsageReportingOptions<
    */
   sendReportsImmediately?: boolean;
   /**
-   * HTTP(s) agent to be used on the `fetch` call when sending reports to
-   * Apollo.
-   */
-  requestAgent?: HttpAgent | HttpsAgent | false;
-  /**
    * Specifies which Fetch API implementation to use when sending usage reports.
    */
-  fetcher?: typeof fetch;
+  fetcher?: Fetcher;
   /**
    * How often to send reports to Apollo. We'll also send reports when the
    * report gets big; see maxUncompressedReportSize.
