@@ -65,6 +65,15 @@
       matchBaseBranches: ["main"],
       allowedVersions: "5.x"
     },
+    // On version-4 we no longer are maintaining specific Redis cache bindings
+    // (instead we use the Keyv project). So we're not going to make the
+    // backwards-incompatible v4->v5 upgrade to this Redis library on
+    // apollo-server-cache-redis in AS3.
+    {
+      matchPackageNames: ["ioredis", "@types/ioredis"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "4.x"
+    },
     // node-fetch v3 only ships as ESM. We currently build to CommonJS and even
     // if we start publishing as ESM (#5627) we're not going to go ESM-only
     // for a while. (Plus it requires Node v12.20 and we technically support
