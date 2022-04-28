@@ -1,5 +1,5 @@
 import { gql } from '../../gql';
-import fetch, { Headers, Request } from 'node-fetch';
+import fetch from 'node-fetch';
 import type { GraphQLRequest } from '../../externalTypes';
 import type { Logger } from '@apollo/utils.logger';
 import { print } from 'graphql';
@@ -9,6 +9,7 @@ import type {
   SchemaReportMutation,
   ReportSchemaResponse,
 } from './generated/operations';
+import type { Fetcher } from '@apollo/utils.fetcher';
 
 export const schemaReportGql = print(gql`
   mutation SchemaReport($report: SchemaReport!, $coreSchema: String) {
@@ -35,11 +36,11 @@ export class SchemaReporter {
   private readonly logger: Logger;
   private readonly initialReportingDelayInMs: number;
   private readonly fallbackReportingDelayInMs: number;
-  private readonly fetcher: typeof fetch;
+  private readonly fetcher: Fetcher;
 
   private isStopped: boolean;
   private pollTimer?: NodeJS.Timer;
-  private readonly headers: Headers;
+  private readonly headers: Record<string, string>;
 
   constructor(options: {
     schemaReport: SchemaReport;
@@ -49,19 +50,14 @@ export class SchemaReporter {
     logger: Logger;
     initialReportingDelayInMs: number;
     fallbackReportingDelayInMs: number;
-    fetcher?: typeof fetch;
+    fetcher?: Fetcher;
   }) {
-    this.headers = new Headers();
-    this.headers.set('Content-Type', 'application/json');
-    this.headers.set('x-api-key', options.apiKey);
-    this.headers.set(
-      'apollographql-client-name',
-      'ApolloServerPluginSchemaReporting',
-    );
-    this.headers.set(
-      'apollographql-client-version',
-      require('../../../package.json').version,
-    );
+    this.headers = {
+      'Content-Type': 'application/json',
+      'x-api-key': options.apiKey,
+      'apollographql-client-name': 'ApolloServerPluginSchemaReporting',
+      'apollographql-client-version': require('../../../package.json').version,
+    };
 
     this.endpointUrl =
       options.endpointUrl ||
@@ -177,13 +173,12 @@ export class SchemaReporter {
       query: schemaReportGql,
       variables,
     };
-    const httpRequest = new Request(this.endpointUrl, {
+
+    const httpResponse = await this.fetcher(this.endpointUrl, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify(request),
     });
-
-    const httpResponse = await this.fetcher(httpRequest);
 
     if (!httpResponse.ok) {
       throw new Error(

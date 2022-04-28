@@ -2,7 +2,7 @@ import os from 'os';
 import { gzip } from 'zlib';
 import retry from 'async-retry';
 import { Report, ReportHeader, Trace } from '@apollo/usage-reporting-protobuf';
-import fetch, { Response } from 'node-fetch';
+import fetch from 'node-fetch';
 import type {
   GraphQLRequestListener,
   GraphQLServerListener,
@@ -35,6 +35,7 @@ import {
 } from './referencedFields';
 import type LRUCache from 'lru-cache';
 import type { HeaderMap } from '../../runHttpQuery';
+import type { Fetcher, FetcherResponse } from '@apollo/utils.fetcher';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -290,8 +291,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         });
 
         // Wrap fetcher with async-retry for automatic retrying
-        const fetcher = options.fetcher ?? fetch;
-        const response: Response = await retry(
+        const fetcher: Fetcher = options.fetcher ?? fetch;
+        const response: FetcherResponse = await retry(
           // Retry on network errors and 5xx HTTP
           // responses.
           async () => {
@@ -308,7 +309,6 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                   accept: 'application/json',
                 },
                 body: compressed,
-                agent: options.requestAgent,
               },
             );
 

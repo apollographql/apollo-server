@@ -2024,7 +2024,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   endpointUrl: fakeUsageReportingUrl,
                   reportIntervalMs: 1,
                   maxAttempts: 3,
-                  requestAgent,
+                  fetcher: (url, options) =>
+                    fetch(url, { ...options, agent: requestAgent }),
                   logger: quietLogger,
                   reportErrorFunction(error: Error) {
                     reportErrorPromiseResolve(error);
