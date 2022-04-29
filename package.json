@@ -31,7 +31,7 @@
     "npm": "^8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.6.0",
+    "@apollo/client": "3.6.1",
     "@apollo/utils.createhash": "1.1.0",
     "@graphql-codegen/cli": "2.6.2",
     "@graphql-codegen/typescript-operations": "2.3.5",
@@ -88,7 +88,7 @@
     "supertest": "6.2.3",
     "test-listen": "1.1.0",
     "ts-jest": "27.1.4",
-    "typescript": "4.6.3"
+    "typescript": "4.6.4"
   },
   "jest": {
     "projects": [
@@ -97,6 +97,6 @@
   },
   "volta": {
     "node": "16.15.0",
-    "npm": "8.7.0"
+    "npm": "8.8.0"
   }
 }
