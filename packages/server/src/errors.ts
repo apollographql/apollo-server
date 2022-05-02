@@ -232,27 +232,13 @@ export function formatApolloErrors(
   // }
 
   const enrichedErrors = errors.map((error) => enrichError(error, debug));
-  const makePrintable = (error: GraphQLFormattedError) => {
-    if (error instanceof Error) {
-      // Error defines its `message` and other fields as non-enumerable, meaning JSON.stringify does not print them.
-      const graphQLError = error as GraphQLFormattedError;
-      return {
-        message: graphQLError.message,
-        ...(graphQLError.locations && { locations: graphQLError.locations }),
-        ...(graphQLError.path && { path: graphQLError.path }),
-        ...(graphQLError.extensions && { extensions: graphQLError.extensions }),
-      };
-    }
-    return error;
-  };
-
   if (!formatter) {
     return enrichedErrors;
   }
 
   return enrichedErrors.map((error) => {
     try {
-      return makePrintable(formatter(error));
+      return formatter(error);
     } catch (err) {
       if (debug) {
         // XXX: This cast is pretty sketchy, as other error types can be thrown!
