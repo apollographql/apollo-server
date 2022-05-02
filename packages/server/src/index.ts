@@ -3,7 +3,6 @@
 export { HttpQueryError } from './runHttpQuery';
 
 export {
-  toApolloError,
   SyntaxError,
   ValidationError,
   AuthenticationError,
