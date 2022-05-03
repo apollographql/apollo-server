@@ -27,9 +27,9 @@
   "dependencies": {
     "@apollo/usage-reporting-protobuf": "^3.3.0",
     "@apollo/utils.createhash": "^1.1.0",
+    "@apollo/utils.fetcher": "^1.0.0",
     "@apollo/utils.isnodelike": "^1.1.0",
     "@apollo/utils.logger": "^1.0.0",
-    "@apollo/utils.fetcher": "^1.0.0",
     "@apollographql/graphql-playground-html": "1.6.29",
     "@graphql-tools/mock": "^8.1.2",
     "@graphql-tools/schema": "^8.0.0",
