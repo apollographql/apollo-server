@@ -70,7 +70,7 @@
     "cors": "2.8.5",
     "cspell": "5.20.0",
     "express": "4.18.1",
-    "graphql": "16.3.0",
+    "graphql": "16.4.0-canary.pr.2839.e3a8069cfaa6406186314b62aced6487f417a2e6",
     "graphql-tag": "2.12.6",
     "jest": "27.5.1",
     "jest-config": "27.5.1",

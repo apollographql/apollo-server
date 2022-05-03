@@ -18,12 +18,14 @@ describe('end-to-end', () => {
         query: 'query { __typename }',
       },
       executor: async ({ request: { query }, contextValue }) => {
-        return await graphql({
+        return await (graphql({
           schema: makeExecutableSchema({ typeDefs: 'type Query { foo: Int }' }),
           source: query,
           // context is needed for schema instrumentation to find plugins.
           contextValue,
-        });
+          // TODO(brian): I promise not to leave this here I’m just
+          // experimenting
+        }) as any);
       },
     });
   }

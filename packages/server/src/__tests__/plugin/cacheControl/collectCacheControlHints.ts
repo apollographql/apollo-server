@@ -27,11 +27,12 @@ export async function collectCacheControlHintsAndPolicyIfCacheable(
       query: source,
     },
     executor: async (requestContext) => {
-      return await graphql({
+      return await (graphql({
         schema,
         source: requestContext.request.query,
         contextValue: requestContext.contextValue,
-      });
+        // TODO(brian): why
+      }) as any);
     },
   });
 

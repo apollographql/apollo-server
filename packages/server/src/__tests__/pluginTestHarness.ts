@@ -83,7 +83,8 @@ export default async function pluginTestHarness<TContext>({
    */
   executor: (
     requestContext: IPluginTestHarnessExecutionDidStart<TContext>,
-  ) => Promise<GraphQLResponse>;
+    // TODO(brian): I will get to the bottom of this.
+  ) => Promise<GraphQLResponse | any>;
 
   /**
    * (optional) To provide a user context, if necessary.

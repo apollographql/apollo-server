@@ -50,7 +50,7 @@
     "uuid": "^8.0.0"
   },
   "peerDependencies": {
-    "graphql": "^16.3.0"
+    "graphql": "^16.4.0-canary.pr.2839.e3a8069cfaa6406186314b62aced6487f417a2e6"
   },
   "volta": {
     "extends": "../../package.json"
