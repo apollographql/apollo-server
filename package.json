@@ -55,7 +55,7 @@
     "apollo-server-types": "file:packages/apollo-server-types"
   },
   "devDependencies": {
-    "@apollo/client": "3.6.0",
+    "@apollo/client": "3.6.2",
     "@graphql-codegen/cli": "2.6.2",
     "@graphql-codegen/typescript-operations": "2.3.5",
     "@graphql-tools/mock": "8.6.8",
@@ -76,7 +76,7 @@
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/hapi__hapi": "20.0.10",
     "@types/ioredis": "4.28.10",
-    "@types/jest": "27.4.1",
+    "@types/jest": "27.5.0",
     "@types/koa-router": "7.4.4",
     "@types/lodash": "4.14.182",
     "@types/lodash.sortby": "4.7.7",
@@ -102,10 +102,10 @@
     "body-parser": "1.20.0",
     "codecov": "3.8.3",
     "connect": "3.7.0",
-    "cspell": "5.19.7",
+    "cspell": "5.20.0",
     "deep-freeze": "0.0.1",
-    "express": "4.18.0",
-    "fastify": "3.28.0",
+    "express": "4.18.1",
+    "fastify": "3.29.0",
     "form-data": "4.0.0",
     "graphql": "15.8.0",
     "graphql-tag": "2.12.6",
@@ -127,11 +127,11 @@
     "qs-middleware": "1.0.3",
     "request-promise": "4.2.6",
     "requisition": "1.7.0",
-    "rollup": "2.70.2",
+    "rollup": "2.71.1",
     "supertest": "6.2.3",
     "test-listen": "1.1.0",
     "ts-jest": "28.0.1",
-    "typescript": "4.6.3"
+    "typescript": "4.6.4"
   },
   "jest": {
     "projects": [
