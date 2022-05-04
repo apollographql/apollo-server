@@ -70,6 +70,7 @@ htmls
 httpcache
 IHTTP
 instanceof
+ioredis
 iteratees
 josephg
 jsdelivr
