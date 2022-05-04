@@ -1,5 +1,6 @@
 import { isNodeLike } from '@apollo/utils.isnodelike';
 import type { Logger } from '@apollo/utils.logger';
+// TODO(brian): Does this utility have to be updated for AS4?
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import resolvable, { Resolvable } from '@josephg/resolvable';

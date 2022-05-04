@@ -431,7 +431,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // (eg usage reporting) assumes that.
       return await internals.executor(requestContext);
     } else {
-      return await graphqlExecute(executionArgs);
+      return await (graphqlExecute(executionArgs) as any);
     }
   }
 
