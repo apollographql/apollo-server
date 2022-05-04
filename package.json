@@ -29,7 +29,7 @@
     "npm": "8.x"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "0.5.3",
+    "@apollographql/apollo-tools": "0.5.4",
     "apollo-datasource": "file:packages/apollo-datasource",
     "apollo-datasource-rest": "file:packages/apollo-datasource-rest",
     "apollo-reporting-protobuf": "file:packages/apollo-reporting-protobuf",
