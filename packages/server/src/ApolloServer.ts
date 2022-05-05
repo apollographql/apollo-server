@@ -46,6 +46,10 @@ import {
   ApolloServerPluginUsageReporting,
 } from './plugin';
 import {
+  preventCsrf,
+  recommendedCsrfPreventionRequestHeaders,
+} from './preventCsrf';
+import {
   APQ_CACHE_PREFIX,
   GraphQLRequest,
   GraphQLRequestContext,
@@ -164,6 +168,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   state: ServerState;
   stopOnTerminationSignals: boolean;
   executor: GraphQLExecutor | null;
+  csrfPreventionRequestHeaders: string[] | null;
 }
 
 function defaultLogger(): Logger {
@@ -173,6 +178,7 @@ function defaultLogger(): Logger {
   loglevelLogger.setLevel(loglevel.levels.INFO);
   return loglevelLogger;
 }
+
 export class ApolloServer<TContext extends BaseContext = BaseContext> {
   private internals: ApolloServerInternals<TContext>;
 
@@ -316,6 +322,14 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           : isNodeLike && nodeEnv !== 'test' && !this.serverlessFramework(),
 
       executor: config.executor ?? null, // can be set by _start too
+
+      csrfPreventionRequestHeaders:
+        config.csrfPrevention === true || config.csrfPrevention === undefined
+          ? recommendedCsrfPreventionRequestHeaders
+          : config.csrfPrevention === false
+          ? null
+          : config.csrfPrevention.requestHeaders ??
+            recommendedCsrfPreventionRequestHeaders,
     };
 
     // The main entry point (createHandler) to serverless frameworks generally
@@ -959,6 +973,15 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         completeBody: runningServerState.landingPage.html,
         bodyChunks: null,
       };
+    }
+
+    // If enabled, check to ensure that this request was preflighted before doing
+    // anything real (such as running the context function).
+    if (this.internals.csrfPreventionRequestHeaders) {
+      preventCsrf(
+        httpGraphQLRequest.headers,
+        this.internals.csrfPreventionRequestHeaders,
+      );
     }
 
     let contextValue: TContext;
