@@ -1040,25 +1040,38 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
    * The second object will be the `contextValue` object available in resolvers.
    */
   // TODO(AS4): document this
-  public async executeOperation(
+  public async executeOperation<
+    TData = Record<string, any>,
+    TVariables = Record<string, any>,
+  >(
     this: ApolloServer<BaseContext>,
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
+      variables?: TVariables;
     },
-  ): Promise<GraphQLResponse>;
-  public async executeOperation(
+  ): Promise<GraphQLResponse<TData>>;
+
+  public async executeOperation<
+    TData = Record<string, any>,
+    TVariables = Record<string, any>,
+  >(
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
+      variables?: TVariables;
     },
     contextValue: TContext,
-  ): Promise<GraphQLResponse>;
+  ): Promise<GraphQLResponse<TData>>;
 
-  async executeOperation(
+  async executeOperation<
+    TData = Record<string, any>,
+    TVariables = Record<string, any>,
+  >(
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
+      variables?: TVariables;
     },
     contextValue?: TContext,
-  ): Promise<GraphQLResponse> {
+  ): Promise<GraphQLResponse<TData>> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
     // `apollo-server` which doesn't support `start()`.)

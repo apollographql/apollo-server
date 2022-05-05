@@ -139,12 +139,19 @@ export interface GraphQLRequest {
 
 export type VariableValues = { [name: string]: any };
 
+// Its not possible for this to be Record<string, any> without casting either the
+// result of executeOperation in ApolloServer.ts or the result of sendResponse and
+// sendErrorResponse in requestPipeline.ts.
+// By leaving this open as the wider object type it fulfills what a user can pass
+// in which is an extension of Record<string, any>.
+type GraphQLResponseData = Record<string | number | symbol, any>;
+
 // TODO(AS4): does this differ in an interesting way from GraphQLExecutionResult
 // and graphql-js ExecutionResult? It does have `http` but perhaps this can be an
 // "extends". Ah, the difference is about formatted vs throwable errors? Let's
 // make sure we at least understand it.
-export interface GraphQLResponse {
-  data?: Record<string, any> | null;
+export interface GraphQLResponse<TData = GraphQLResponseData> {
+  data?: TData | null;
   errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: Record<string, any>;
   // TODO(AS4): Seriously consider whether this type makes sense at all or whether
