@@ -24,7 +24,7 @@
     "apollo-server-errors": "file:../apollo-server-errors",
     "http-cache-semantics": "^4.1.0"
   },
-  "devDependencies": {
-    "apollo-server-types": "file:../apollo-server-types"
+  "peerDependencies": {
+    "graphql": "^15.3.0 || ^16.0.0"
   }
 }

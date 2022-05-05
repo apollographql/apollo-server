@@ -10,8 +10,6 @@ import {
   fetch,
 } from 'apollo-server-env';
 
-import type { ValueOrPromise } from 'apollo-server-types';
-
 import { DataSource, DataSourceConfig } from 'apollo-datasource';
 
 import { HTTPCache } from './HTTPCache';
@@ -22,6 +20,7 @@ import {
   ForbiddenError,
 } from 'apollo-server-errors';
 
+type ValueOrPromise<T> = T | Promise<T>;
 declare module 'apollo-server-env/dist/fetch' {
   interface RequestInit {
     cacheOptions?:
