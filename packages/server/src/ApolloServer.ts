@@ -65,7 +65,7 @@ import type {
   WithRequired,
 } from './types';
 import { LRUCacheStore, PrefixingKeyv } from './utils/LRUCacheStore';
-import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
+import { SchemaManager } from './utils/schemaManager';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -426,20 +426,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       taggedServerListeners.forEach(
         ({ serverListener: { schemaDidLoadOrUpdate } }) => {
           if (schemaDidLoadOrUpdate) {
-            try {
-              schemaManager.onSchemaLoadOrUpdate(schemaDidLoadOrUpdate);
-            } catch (e) {
-              if (e instanceof GatewayIsTooOldError) {
-                throw new Error(
-                  [
-                    `One of your plugins uses the 'schemaDidLoadOrUpdate' hook,`,
-                    `but your gateway version is too old to support this hook.`,
-                    `Please update your version of @apollo/gateway to at least 0.35.0.`,
-                  ].join(' '),
-                );
-              }
-              throw e;
-            }
+            schemaManager.onSchemaLoadOrUpdate(schemaDidLoadOrUpdate);
           }
         },
       );

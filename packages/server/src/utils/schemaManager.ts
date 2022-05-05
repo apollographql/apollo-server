@@ -87,21 +87,15 @@ export class SchemaManager {
     if (this.modeSpecificState.mode === 'gateway') {
       const gateway = this.modeSpecificState.gateway;
       if (gateway.onSchemaLoadOrUpdate) {
-        // Use onSchemaLoadOrUpdate if available, as it reports the core
-        // supergraph SDL and always reports the initial schema load.
+        // Use onSchemaLoadOrUpdate, as it reports the core supergraph SDL and
+        // always reports the initial schema load.
         this.modeSpecificState.unsubscribeFromGateway =
           gateway.onSchemaLoadOrUpdate((schemaContext) => {
             this.processSchemaLoadOrUpdateEvent(schemaContext);
           });
-      } else if (gateway.onSchemaChange) {
-        this.modeSpecificState.unsubscribeFromGateway = gateway.onSchemaChange(
-          (apiSchema) => {
-            this.processSchemaLoadOrUpdateEvent({ apiSchema });
-          },
-        );
       } else {
         throw new Error(
-          "Unexpectedly couldn't find onSchemaChange or onSchemaLoadOrUpdate on gateway",
+          "Unexpectedly couldn't find onSchemaLoadOrUpdate on gateway",
         );
       }
 
@@ -109,13 +103,6 @@ export class SchemaManager {
         apollo: this.modeSpecificState.apolloConfig,
       });
 
-      // Note that for old gateways that have onSchemaChange() and no
-      // onSchemaLoadOrUpdate(), this.schemaDerivedData may not be initialized
-      // during gateway.load() (because old gateways don't notify listeners on
-      // schema load in some cases), so we must initialize it here if needed.
-      if (!this.schemaDerivedData) {
-        this.processSchemaLoadOrUpdateEvent({ apiSchema: config.schema });
-      }
       return config.executor;
     } else {
       this.processSchemaLoadOrUpdateEvent(
@@ -138,45 +125,31 @@ export class SchemaManager {
    *   later for updates.
    * - If registered after stop(), the callback will never be called.
    *
-   * For gateways, a core supergraph SDL will be provided to the callback. If
-   * your gateway is too old to provide a core supergraph SDL, this method will
-   * throw.
+   * For gateways, a core supergraph SDL will be provided to the callback.
    *
    * @param callback The listener to execute on schema load/updates.
    */
   public onSchemaLoadOrUpdate(
     callback: (schemaContext: GraphQLSchemaContext) => void,
   ): Unsubscriber {
-    if (
-      this.modeSpecificState.mode === 'gateway' &&
-      !this.modeSpecificState.gateway.onSchemaLoadOrUpdate
-    ) {
-      throw new GatewayIsTooOldError(
-        [
-          `Your gateway is too old to register a 'onSchemaLoadOrUpdate' listener.`,
-          `Please update your version of @apollo/gateway to at least 0.35.0.`,
-        ].join(' '),
-      );
-    } else {
-      if (!this.schemaContext) {
-        throw new Error('You must call start() before onSchemaLoadOrUpdate()');
-      }
-      if (!this.isStopped) {
-        try {
-          callback(this.schemaContext);
-        } catch (e) {
-          // Note that onSchemaLoadOrUpdate() is currently only called from
-          // ApolloServer._start(), so we throw here to alert the user early
-          // that their callback is failing.
-          throw new Error(
-            `An error was thrown from an 'onSchemaLoadOrUpdate' listener: ${
-              (e as Error).message
-            }`,
-          );
-        }
-      }
-      this.onSchemaLoadOrUpdateListeners.add(callback);
+    if (!this.schemaContext) {
+      throw new Error('You must call start() before onSchemaLoadOrUpdate()');
     }
+    if (!this.isStopped) {
+      try {
+        callback(this.schemaContext);
+      } catch (e) {
+        // Note that onSchemaLoadOrUpdate() is currently only called from
+        // ApolloServer._start(), so we throw here to alert the user early
+        // that their callback is failing.
+        throw new Error(
+          `An error was thrown from an 'onSchemaLoadOrUpdate' listener: ${
+            (e as Error).message
+          }`,
+        );
+      }
+    }
+    this.onSchemaLoadOrUpdateListeners.add(callback);
 
     return () => {
       this.onSchemaLoadOrUpdateListeners.delete(callback);
@@ -229,11 +202,5 @@ export class SchemaManager {
         }
       });
     }
-  }
-}
-
-export class GatewayIsTooOldError extends Error {
-  public constructor(message: string) {
-    super(message);
   }
 }

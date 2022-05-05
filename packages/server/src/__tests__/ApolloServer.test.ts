@@ -99,6 +99,9 @@ describe('ApolloServer construction', () => {
         return { schema, executor: null };
       },
       async stop() {},
+      onSchemaLoadOrUpdate() {
+        return () => {};
+      },
     };
 
     function takesConfig(_c: ApolloServerOptions<BaseContext>) {}
