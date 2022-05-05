@@ -81,6 +81,7 @@ describe('apollo-server-fastify', () => {
     async () => {
       await serverToCleanUp?.stop();
     },
+    { integrationName: 'fastify' },
   );
 });
 

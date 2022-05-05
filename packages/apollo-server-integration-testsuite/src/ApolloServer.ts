@@ -193,7 +193,7 @@ export interface StopServerFunc {
 export function testApolloServer<AS extends ApolloServerBase>(
   createApolloServer: CreateServerFunc<AS>,
   stopServer: StopServerFunc,
-  options: { serverlessFramework?: boolean } = {},
+  options: { serverlessFramework?: boolean; integrationName?: string } = {},
 ) {
   describe('ApolloServer', () => {
     afterEach(stopServer);
@@ -3146,9 +3146,17 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(res.body).toEqual(response);
       }
 
-      function blocked(res: Response) {
-        expect(res.status).toBe(400);
-        expect(res.text).toMatch(/This operation has been blocked/);
+      function blocked(res: Response, noContentType?: boolean) {
+        if (noContentType && options.integrationName === 'fastify') {
+          // fastify blocks POSTs that don't specify text/plain or
+          // application/json content-types by default
+          // (https://www.fastify.io/docs/latest/Reference/ContentTypeParser/)
+          // so this request doesn't even get to our checks.
+          expect(res.status).toBe(415);
+        } else {
+          expect(res.status).toBe(400);
+          expect(res.text).toMatch(/This operation has been blocked/);
+        }
       }
 
       it('csrfPrevention: true', async () => {
@@ -3167,6 +3175,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           await request(httpServer)
             .post('/graphql')
             .send(JSON.stringify(operation)),
+          true,
         );
 
         // POST with text/plain is blocked.
