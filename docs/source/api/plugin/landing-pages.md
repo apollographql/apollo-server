@@ -36,6 +36,7 @@ import { ApolloServerPluginLandingPageLocalDefault,
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     // Install a landing page plugin based on NODE_ENV
     process.env.NODE_ENV === 'production'
@@ -251,6 +252,7 @@ import {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     ApolloServerPluginLandingPageGraphQLPlayground(),
   ],
@@ -334,6 +336,7 @@ import {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     ApolloServerPluginLandingPageDisabled(),
   ],

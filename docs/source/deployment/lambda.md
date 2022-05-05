@@ -50,7 +50,7 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
 
 exports.graphqlHandler = server.createHandler();
 ```
@@ -191,6 +191,7 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   context: ({ event, context, express }) => ({
     headers: event.headers,
     functionName: context.functionName,

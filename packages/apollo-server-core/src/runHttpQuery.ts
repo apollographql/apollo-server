@@ -1,22 +1,23 @@
-import { Request, Headers } from 'apollo-server-env';
+import { Headers, Request } from 'apollo-server-env';
+import { ApolloError, formatApolloErrors } from 'apollo-server-errors';
+import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import type {
+  GraphQLExecutionResult,
+  ValueOrPromise,
+  WithRequired,
+} from 'apollo-server-types';
+import MIMEType from 'whatwg-mimetype';
+import { newCachePolicy } from './cachePolicy';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
-import { ApolloError, formatApolloErrors } from 'apollo-server-errors';
 import {
-  processGraphQLRequest,
   GraphQLRequest,
   GraphQLRequestContext,
   GraphQLResponse,
+  processGraphQLRequest,
 } from './requestPipeline';
-import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import type {
-  WithRequired,
-  GraphQLExecutionResult,
-  ValueOrPromise,
-} from 'apollo-server-types';
-import { newCachePolicy } from './cachePolicy';
 
 export interface HttpQueryRequest {
   method: string;
@@ -116,12 +117,98 @@ export function throwHttpGraphQLError<E extends Error>(
 
 const NODE_ENV = process.env.NODE_ENV ?? '';
 
+// See https://fetch.spec.whatwg.org/#cors-safelisted-request-header
+const NON_PREFLIGHTED_CONTENT_TYPES = [
+  'application/x-www-form-urlencoded',
+  'multipart/form-data',
+  'text/plain',
+];
+
+// We don't want random websites to be able to execute actual GraphQL operations
+// from a user's browser unless our CORS policy supports it. It's not good
+// enough just to ensure that the browser can't read the response from the
+// operation; we also want to prevent CSRF, where the attacker can cause side
+// effects with an operation or can measure the timing of a read operation. Our
+// goal is to ensure that we don't run the context function or execute the
+// GraphQL operation until the browser has evaluated the CORS policy, which
+// means we want all operations to be pre-flighted. We can do that by only
+// processing operations that have at least one header set that appears to be
+// manually set by the JS code rather than by the browser automatically.
+//
+// POST requests generally have a content-type `application/json`, which is
+// sufficient to trigger preflighting. So we take extra care with requests that
+// specify no content-type or that specify one of the three non-preflighted
+// content types. For those operations, we require (if this feature is enabled)
+// one of a set of specific headers to be set. By ensuring that every operation
+// either has a custom content-type or sets one of these headers, we know we
+// won't execute operations at the request of origins who our CORS policy will
+// block.
+function preventCsrf(headers: Headers, csrfPreventionRequestHeaders: string[]) {
+  const contentType = headers.get('content-type');
+
+  // We have to worry about CSRF if it looks like this may have been a
+  // non-preflighted request. If we see a content-type header that is not one of
+  // the three CORS-safelisted MIME types (see
+  // https://fetch.spec.whatwg.org/#cors-safelisted-request-header) then we know
+  // it was preflighted and we don't have to worry.
+  if (contentType !== null) {
+    const contentTypeParsed = MIMEType.parse(contentType);
+    if (contentTypeParsed === null) {
+      // If we got null, then parsing the content-type failed... which is
+      // actually *ok* because that would lead to a preflight. (For example, the
+      // header is empty, or doesn't have a slash, or has bad characters.) The
+      // scary CSRF case is only if there's *not* an error. So it is actually
+      // fine for us to just `return` here. (That said, it would also be
+      // reasonable to reject such requests with provided yet unparsable
+      // Content-Type here.)
+      return;
+    }
+    if (!NON_PREFLIGHTED_CONTENT_TYPES.includes(contentTypeParsed.essence)) {
+      // We managed to parse a MIME type that was not one of the
+      // CORS-safelisted ones. (Probably application/json!) That means that if
+      // the client is a browser, the browser must have applied CORS
+      // preflighting and we don't have to worry about CSRF.
+      return;
+    }
+  }
+
+  // Either there was no content-type, or the content-type parsed properly as
+  // one of the three CORS-safelisted values. Let's look for another header that
+  // (if this was a browser) must have been set by the user's code and would
+  // have caused a preflight.
+  if (
+    csrfPreventionRequestHeaders.some((header) => {
+      const value = headers.get(header);
+      return value !== null && value.length > 0;
+    })
+  ) {
+    return;
+  }
+
+  throw new HttpQueryError(
+    400,
+    `This operation has been blocked as a potential Cross-Site Request Forgery ` +
+      `(CSRF). Please either specify a 'content-type' header (with a type that ` +
+      `is not one of ${NON_PREFLIGHTED_CONTENT_TYPES.join(', ')}) or provide ` +
+      `a non-empty value for one of the following headers: ${csrfPreventionRequestHeaders.join(
+        ', ',
+      )}\n`,
+  );
+}
+
 export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
+  csrfPreventionRequestHeaders?: string[] | null,
 ): Promise<HttpQueryResponse> {
   function debugFromNodeEnv(nodeEnv: string = NODE_ENV) {
     return nodeEnv !== 'production' && nodeEnv !== 'test';
+  }
+
+  // If enabled, check to ensure that this request was preflighted before doing
+  // anything real (such as running the context function).
+  if (csrfPreventionRequestHeaders) {
+    preventCsrf(request.request.headers, csrfPreventionRequestHeaders);
   }
 
   let options: GraphQLOptions;

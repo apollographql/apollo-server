@@ -206,6 +206,7 @@ const { typeDefs, resolvers } = require('./separatelyDefined');
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
 
   // You can import plugins or define them in-line, as shown:
   plugins: [

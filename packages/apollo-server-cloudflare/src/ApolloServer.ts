@@ -22,7 +22,7 @@ export class ApolloServer extends ApolloServerBase {
       event.respondWith(
         graphqlCloudflare(() => {
           return this.createGraphQLServerOptions(event.request);
-        })(event.request),
+        }, this.csrfPreventionRequestHeaders)(event.request),
       );
     });
     return await { url: '', port: null };

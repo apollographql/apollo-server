@@ -24,6 +24,7 @@ import { ApolloServerPluginUsageReporting } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     ApolloServerPluginUsageReporting({
       sendVariableValues: { all: true },
@@ -452,6 +453,7 @@ import { ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [ApolloServerPluginUsageReportingDisabled()],
 });
 ```

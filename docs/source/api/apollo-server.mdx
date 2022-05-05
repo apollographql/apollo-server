@@ -18,7 +18,8 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 ```js
 const server = new ApolloServer({
 	typeDefs,
-	resolvers
+	resolvers,
+  csrfPrevention: true,  // highly recommended
 });
 ```
 
@@ -215,6 +216,7 @@ new ApolloServer({
     maxSize: Math.pow(2, 20) * approximateDocumentStoreMiB,
     sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
   }),
+  // ...
 })
 ```
 
@@ -231,6 +233,19 @@ Available in Apollo Server v3.4.0 and later.
 <td colspan="2">
 
 **Networking options**
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `csrfPrevention`
+
+`Boolean` or `Object`
+</td>
+<td>
+
+Passing `true` enables Apollo Server's [CSRF and XS-Search prevention](../security/cors#preventing-cross-site-request-forgery-csrf) features. This flag is **highly recommended** for all users and will be enabled by default in Apollo Server 4. Enabling this feature prevents certain `GET` requests from executing GraphQL operations. If your server has clients that send `GET` requests and those clients are _not_ one of Apollo Client Web, Apollo iOS, or Apollo Kotlin, you might need to modify the configuration of those clients before enabling this feature. For more details, see [the full CSRF prevention documentation](../security/cors#preventing-cross-site-request-forgery-csrf).
 </td>
 </tr>
 
@@ -710,6 +725,7 @@ async function startApolloServer() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 

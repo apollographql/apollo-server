@@ -138,14 +138,21 @@ const resolvers = {
 ## Step 6: Create an instance of `ApolloServer`
 
 We've defined our schema, data set, and resolver. Now we just need to provide
-this information to Apollo Server when we initialize it.
+this information to Apollo Server when we initialize it. (We also want to enable
+[CSRF prevention](./security/cors#preventing-cross-site-request-forgery-csrf),
+an important security feature that is only disabled by default for reasons of
+backward compatibility.)
 
 Add the following to the bottom of `index.js`:
 
 ```js title="index.js"
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+});
 
 // The `listen` method launches a web server.
 server.listen().then(({ url }) => {

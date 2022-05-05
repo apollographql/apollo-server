@@ -342,6 +342,7 @@ This example returns a more generic error whenever the original error's message 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   formatError: (err) => {
     // Don't give the specific errors to the client.
     if (err.message.startsWith('Database Error: ')) {
@@ -396,6 +397,7 @@ const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     ApolloServerPluginUsageReporting({
       rewriteError(err) {
@@ -426,6 +428,7 @@ const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     ApolloServerPluginUsageReporting({
       rewriteError(err) {
@@ -463,6 +466,7 @@ const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     ApolloServerPluginUsageReporting({
       rewriteError(err) {
@@ -507,6 +511,7 @@ const setHttpPlugin = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  plugins: [setHttpPlugin]
+  csrfPrevention: true,
+  plugins: [setHttpPlugin],
 });
 ```

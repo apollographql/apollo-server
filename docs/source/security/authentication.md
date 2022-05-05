@@ -20,6 +20,7 @@ const { ApolloServer } = require('apollo-server');
 const server = new ApolloServer({
  typeDefs,
  resolvers,
+ csrfPrevention: true,
  context: ({ req }) => {
    // Note: This example uses the `req` argument to access headers,
    // but the arguments received by `context` vary by integration.
@@ -225,7 +226,10 @@ The `@auth` directive can be called directly on the type, or on the fields if yo
 
 One way of implementing the `@auth` directive is by constructing your schema using the [`schemaTransforms` option of the `makeExecutableSchema`](https://www.graphql-tools.com/docs/schema-directives/) function from the [graphql-tools](https://www.graphql-tools.com/) project. You can read the `graphql-tools` docs for details on how to write `schemaTransforms`; then just create your server with
 ```js
-new ApolloServer({ schema: makeExecutableSchema({ typeDefs, resolvers, schemaTransforms }) })
+new ApolloServer({
+  schema: makeExecutableSchema({ typeDefs, resolvers, schemaTransforms }),
+  csrfPrevention: true,
+})
 ```
 
 ### Outside of GraphQL

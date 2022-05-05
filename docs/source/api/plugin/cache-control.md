@@ -20,6 +20,7 @@ import { ApolloServerPluginCacheControl } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     ApolloServerPluginCacheControl({
       // Cache everything for 1 second by default.
@@ -40,6 +41,7 @@ import { ApolloServerPluginCacheControlDisabled } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [ApolloServerPluginCacheControlDisabled()],
 });
 ```

@@ -159,12 +159,16 @@ export class ApolloServer<
         return;
       }
 
-      runHttpQuery([], {
-        method: req.method,
-        options: () => this.createGraphQLServerOptions(req, res),
-        query: req.method === 'POST' ? req.body : req.query,
-        request: convertNodeHttpToRequest(req),
-      }).then(
+      runHttpQuery(
+        [],
+        {
+          method: req.method,
+          options: () => this.createGraphQLServerOptions(req, res),
+          query: req.method === 'POST' ? req.body : req.query,
+          request: convertNodeHttpToRequest(req),
+        },
+        this.csrfPreventionRequestHeaders,
+      ).then(
         ({ graphqlResponse, responseInit }) => {
           if (responseInit.headers) {
             for (const [name, value] of Object.entries(responseInit.headers)) {

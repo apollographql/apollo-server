@@ -133,6 +133,7 @@ import { ApolloServerPluginCacheControl } from 'apollo-server-core';
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   // The max age is calculated in seconds
   plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
 });
@@ -204,6 +205,7 @@ const { ApolloServer } = require('apollo-server');
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   // highlight-start
   persistedQueries: {
     cache: new MemcachedCache(
@@ -228,6 +230,7 @@ const Redis = require('ioredis');
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   // highlight-start
   persistedQueries: {
     cache: new BaseRedisCache({
@@ -253,6 +256,7 @@ const Redis = require('ioredis');
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   // highlight-start
   persistedQueries: {
     cache: new BaseRedisCache({
@@ -283,6 +287,7 @@ const Redis = require('ioredis');
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   // highlight-start
   persistedQueries: {
     cache: new BaseRedisCache({
@@ -312,6 +317,7 @@ Apollo Server's default in-memory store does not specify a TTL for APQ (an APQ r
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   persistedQueries: {
     // highlight-start
     ttl: 900, // 15 minutes
@@ -326,6 +332,7 @@ To disable TTL entirely, specify `null` for the value of `ttl`:
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   persistedQueries: {
     ttl: null, // highlight-line
   },
@@ -342,6 +349,7 @@ You can disable APQ entirely by setting the `persistedQueries` attribute to `fal
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   persistedQueries: false, // highlight-line
 });
 ```

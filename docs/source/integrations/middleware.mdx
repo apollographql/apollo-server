@@ -130,7 +130,7 @@ Let's say our `apollo-server` implementation uses the following code:
 import { ApolloServer } from "apollo-server";
 
 async function startApolloServer(typeDefs, resolvers) {
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
   const { url } = await server.listen();
   console.log(`🚀 Server ready at ${url}`);
 }
@@ -165,6 +165,7 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
@@ -227,7 +228,7 @@ npm install apollo-server graphql
 import { ApolloServer } from 'apollo-server';
 
 async function startApolloServer(typeDefs, resolvers) {
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
   const { url } = await server.listen();
   console.log(`🚀 Server ready at ${url}`);
 }
@@ -265,6 +266,7 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
   await server.start();
@@ -323,6 +325,7 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
     plugins: [
       fastifyAppClosePlugin(app),
       ApolloServerPluginDrainHttpServer({ httpServer: app.server }),
@@ -373,6 +376,7 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
     plugins: [ApolloServerPluginStopHapiServer({ hapiServer: app })],
   });
 
@@ -418,6 +422,7 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
@@ -461,7 +466,7 @@ npm install apollo-server-micro micro graphql
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-micro';
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
 
 module.exports = server.start().then(() => server.createHandler());
 ```
@@ -498,7 +503,7 @@ npm install apollo-server-lambda graphql
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-lambda';
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
 
 exports.handler = server.createHandler();
 ```
@@ -524,7 +529,7 @@ npm install apollo-server-cloud-functions graphql
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-cloud-functions';
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
 
 exports.handler = server.createHandler();
 ```
@@ -549,7 +554,7 @@ npm install apollo-server-azure-functions graphql
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-azure-functions';
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
 
 exports.handler = server.createHandler();
 ```

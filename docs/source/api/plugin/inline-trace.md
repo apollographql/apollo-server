@@ -20,6 +20,7 @@ import { ApolloServerPluginInlineTrace } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     ApolloServerPluginInlineTrace({
       rewriteError: (err) => err.message.match(SENSITIVE_REGEX) ? null : err,
@@ -37,6 +38,7 @@ import { ApolloServerPluginInlineTraceDisabled } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [ApolloServerPluginInlineTraceDisabled()],
 });
 ```

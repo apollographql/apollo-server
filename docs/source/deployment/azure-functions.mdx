@@ -95,7 +95,7 @@ const resolvers = {
 };
 
 // Create our server.
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
 exports.graphqlHandler = server.createHandler();
 ```
 

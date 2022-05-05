@@ -126,6 +126,21 @@ class UnreachableCaseError extends Error {
   }
 }
 
+// Our recommended set of CSRF prevention headers. Operations that do not
+// provide a content-type such as `application/json` (in practice, this
+// means GET operations) must include at least one of these headers.
+// Apollo Client Web's default behavior is to always sends a
+// `content-type` even for `GET`, and Apollo iOS and Apollo Kotlin always
+// send `x-apollo-operation-name`. So if you set
+// `csrfPreventionRequestHeaders: true` then any `GET` operation from these
+// three client projects and any `POST` operation at all should work
+// successfully; if you need `GET`s from another kind of client to work,
+// just add `apollo-require-preflight: true` to their requests.
+const recommendedCsrfPreventionRequestHeaders = [
+  'x-apollo-operation-name',
+  'apollo-require-preflight',
+];
+
 export class ApolloServerBase<
   // The type of the argument to the `context` function for this integration.
   ContextFunctionParams = any,
@@ -138,6 +153,7 @@ export class ApolloServerBase<
   private context?: Context | ContextFunction<ContextFunctionParams>;
   private apolloConfig: ApolloConfig;
   protected plugins: ApolloServerPlugin[] = [];
+  protected csrfPreventionRequestHeaders: string[] | null;
 
   private parseOptions: ParseOptions;
   private config: Config<ContextFunctionParams>;
@@ -172,6 +188,7 @@ export class ApolloServerBase<
       mocks,
       mockEntireSchema,
       documentStore,
+      csrfPrevention,
       ...requestOptions
     } = this.config;
 
@@ -206,6 +223,16 @@ export class ApolloServerBase<
 
     this.parseOptions = parseOptions;
     this.context = context;
+
+    this.csrfPreventionRequestHeaders =
+      csrfPrevention === true
+        ? recommendedCsrfPreventionRequestHeaders
+        : csrfPrevention === false
+        ? null
+        : csrfPrevention === undefined
+        ? null // In AS4, change this to be equivalent to 'true'.
+        : csrfPrevention.requestHeaders ??
+          recommendedCsrfPreventionRequestHeaders;
 
     const isDev = this.config.nodeEnv !== 'production';
 

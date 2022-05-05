@@ -30,7 +30,7 @@ async function startApolloServer() {
   const environment = process.env.NODE_ENV || 'production';
   const config = configurations[environment];
 
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
   await server.start();
 
   const app = express();

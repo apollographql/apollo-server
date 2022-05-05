@@ -30,6 +30,7 @@ import { ApolloServerPluginUsageReporting } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     // Sets a non-default option on the usage reporting plugin
     ApolloServerPluginUsageReporting({

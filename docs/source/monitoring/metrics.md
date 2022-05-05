@@ -62,6 +62,7 @@ const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     ApolloServerPluginUsageReporting({
       generateClientInfo: ({
@@ -124,6 +125,7 @@ const myPlugin = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     myPlugin
   ]

@@ -11,6 +11,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet! Stay tuned._
 
+## v3.7.0
+
+- ⚠️ **SECURITY** `apollo-server-core`: Apollo Server now includes protection against [CSRF](https://owasp.org/www-community/attacks/csrf) and XS-Search attacks. We **highly recommend** enabling this feature by passing `csrfPrevention: true` to `new ApolloServer()`. If you rely on the ability to execute GraphQL operations via HTTP `GET` requests using a client other than Apollo Client Web, Apollo iOS, or Apollo Kotlin (formerly Apollo Android), you may need to first change the configuration of that client. See [the CSRF prevention docs](https://www.apollographql.com/docs/apollo-server/security/cors#preventing-cross-site-request-forgery-csrf) for more details. This vulnerability was reported by Jeffrey Hofmann; the feature was designed with advice from Luca Carettoni of Doyensec.
+
 ## v3.6.8
 
 - `apollo-server-fastify`: This package now depends on the `@fastify/accepts` and `@fastify/cors` packages rather than their older deprecated names `fastify-accepts` and `fastify-cors`. There is no behavior change (except that you will no longer see deprecation messages). [PR #6366](https://github.com/apollographql/apollo-server/pull/6366)

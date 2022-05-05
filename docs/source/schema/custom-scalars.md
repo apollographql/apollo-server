@@ -114,7 +114,8 @@ const resolvers = {
 
 const server = new ApolloServer({
   typeDefs,
-  resolvers
+  resolvers,
+  csrfPrevention: true,
 });
 ```
 
@@ -164,7 +165,7 @@ const resolvers = {
   }
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
@@ -206,7 +207,7 @@ const resolvers = {
   // ...other resolvers...
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)

@@ -57,7 +57,7 @@ import type {
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
 import type { AddressInfo } from 'net';
-import request from 'supertest';
+import request, { Response } from 'supertest';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 
 const quietLogger = loglevel.getLogger('quiet');
@@ -3124,6 +3124,169 @@ export function testApolloServer<AS extends ApolloServerBase>(
             );
           });
         });
+    });
+
+    describe('CSRF prevention', () => {
+      async function makeServer(
+        csrfPrevention: Config['csrfPrevention'],
+      ): Promise<http.Server> {
+        return (
+          await createApolloServer({
+            typeDefs: 'type Query { x: ID }',
+            resolvers: { Query: { x: () => 'foo' } },
+            csrfPrevention,
+          })
+        ).httpServer;
+      }
+      const operation = { query: '{x}' };
+      const response = { data: { x: 'foo' } };
+
+      function succeeds(res: Response) {
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual(response);
+      }
+
+      function blocked(res: Response) {
+        expect(res.status).toBe(400);
+        expect(res.text).toMatch(/This operation has been blocked/);
+      }
+
+      it('csrfPrevention: true', async () => {
+        const httpServer = makeServer(true);
+
+        // Normal POSTs work.
+        succeeds(
+          await request(httpServer)
+            .post('/graphql')
+            .set('content-type', 'application/json')
+            .send(JSON.stringify(operation)),
+        );
+
+        // POST without content-type is blocked.
+        blocked(
+          await request(httpServer)
+            .post('/graphql')
+            .send(JSON.stringify(operation)),
+        );
+
+        // POST with text/plain is blocked.
+        blocked(
+          await request(httpServer)
+            .post('/graphql')
+            .set('content-type', 'text/plain')
+            .send(JSON.stringify(operation)),
+        );
+
+        // GET without content-type is blocked.
+        blocked(await request(httpServer).get('/graphql').query(operation));
+
+        // GET with json content-type succeeds (this is what Apollo Client Web
+        // does).
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('content-type', 'application/json')
+            .query(operation),
+        );
+
+        // GET with text/plain content-type is blocked (because this is not
+        // preflighted).
+        blocked(
+          await request(httpServer)
+            .get('/graphql')
+            .set('content-type', 'text/plain')
+            .query(operation),
+        );
+
+        // GET with an invalid content-type (no slash) actually succeeds, since
+        // this will be preflighted, although it would be reasonable if it
+        // didn't.
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('content-type', 'invalid')
+            .query(operation),
+        );
+
+        // Adding parameters to the content-type and spaces doesn't stop it from
+        // being blocked.
+        blocked(
+          await request(httpServer)
+            .get('/graphql')
+            .set('content-type', '    text/plain   ; charset=utf-8')
+            .query(operation),
+        );
+
+        // But we can do the space and charset around json and have that be fine.
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('content-type', '    application/json   ; charset=utf-8')
+            .query(operation),
+        );
+
+        // This header set by iOS and Kotlin lets us bypass the check (and would
+        // cause a preflight in the browser).
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('x-apollo-operation-name', 'foo')
+            .query(operation),
+        );
+
+        // This header that you can set manually lets us bypass the check (and
+        // would cause a preflight in the browser).
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('apollo-require-preflight', 'bar')
+            .query(operation),
+        );
+
+        // But this random header is not good enough.
+        blocked(
+          await request(httpServer)
+            .get('/graphql')
+            .set('please-preflight-me', 'bar')
+            .query(operation),
+        );
+      });
+
+      it('csrfPrevention: {requestHeaders}', async () => {
+        const httpServer = makeServer({ requestHeaders: ['xxx', 'yyy'] });
+
+        // GET without content-type is blocked.
+        blocked(await request(httpServer).get('/graphql').query(operation));
+
+        // The headers we configured work, separately and together.
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('xxx', 'foo')
+            .query(operation),
+        );
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('yyy', 'bar')
+            .query(operation),
+        );
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('xxx', 'foo')
+            .set('yyy', 'bar')
+            .query(operation),
+        );
+
+        // But this default header doesn't work.
+        blocked(
+          await request(httpServer)
+            .get('/graphql')
+            .set('apollo-require-preflight', 'bar')
+            .query(operation),
+        );
+      });
     });
   });
 }

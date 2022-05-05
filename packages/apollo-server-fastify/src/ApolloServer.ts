@@ -117,6 +117,7 @@ export class ApolloServer<
                       : request.query) as any,
                     request: convertNodeHttpToRequest(request.raw),
                   },
+                  this.csrfPreventionRequestHeaders,
                 );
 
                 if (responseInit.headers) {

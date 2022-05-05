@@ -141,16 +141,20 @@ export class ApolloServer extends ApolloServerBase {
         }
 
         try {
-          const { graphqlResponse, responseInit } = await runHttpQuery([ctx], {
-            method: ctx.request.method,
-            options: () => this.createGraphQLServerOptions(ctx),
-            query:
-              ctx.request.method === 'POST'
-                ? // fallback to ctx.req.body for koa-multer support
-                  (ctx.request as any).body || (ctx.req as any).body
-                : ctx.request.query,
-            request: convertNodeHttpToRequest(ctx.req),
-          });
+          const { graphqlResponse, responseInit } = await runHttpQuery(
+            [ctx],
+            {
+              method: ctx.request.method,
+              options: () => this.createGraphQLServerOptions(ctx),
+              query:
+                ctx.request.method === 'POST'
+                  ? // fallback to ctx.req.body for koa-multer support
+                    (ctx.request as any).body || (ctx.req as any).body
+                  : ctx.request.query,
+              request: convertNodeHttpToRequest(ctx.req),
+            },
+            this.csrfPreventionRequestHeaders,
+          );
           if (responseInit.headers) {
             Object.entries(responseInit.headers).forEach(
               ([headerName, value]) => ctx.set(headerName, value),

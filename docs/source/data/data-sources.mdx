@@ -54,6 +54,7 @@ You provide your `DataSource` subclasses to the `ApolloServer` constructor, like
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   dataSources: () => {
     return {
       moviesAPI: new MoviesAPI(),
@@ -105,6 +106,7 @@ const { MemcachedCache } = require('apollo-server-cache-memcached');
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   cache: new MemcachedCache(
     ['memcached-server-1', 'memcached-server-2', 'memcached-server-3'],
     { retries: 10, retry: 10000 }, // Options
@@ -126,6 +128,7 @@ const Redis = require('ioredis');
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   cache: new BaseRedisCache({
     client: new Redis({
       host: 'redis-server',

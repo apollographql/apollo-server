@@ -338,7 +338,7 @@ let schema = makeExecutableSchema({
 schema = upperDirectiveTransformer(schema, 'upper');
 
 // Provide the schema to the ApolloServer constructor
-const server = new ApolloServer({schema});
+const server = new ApolloServer({schema, csrfPrevention: true});
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);

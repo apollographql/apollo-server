@@ -39,6 +39,7 @@ const resolvers = {};
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   async onHealthCheck() {
     if (everythingLooksHealthy()) {
       return;

@@ -37,6 +37,7 @@ bootstrapGlobalAgent();
 const server = new ApolloServer({
   typesDefs,
   resolvers,
+  csrfPrevention: true,
 });
 ```
 

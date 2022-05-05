@@ -22,6 +22,7 @@ import { ApolloServerPluginSchemaReporting } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [
     ApolloServerPluginSchemaReporting(),
   ],
@@ -81,6 +82,7 @@ new ApolloServer({
       overrideReportedSchema: schema
     }),
   ],
+  // ...
 })
 ```
 </td>

@@ -18,15 +18,10 @@ export interface CloudflareOptionsFunction {
 
 export function graphqlCloudflare(
   options: GraphQLOptions | CloudflareOptionsFunction,
+  csrfPreventionRequestHeaders?: string[] | null,
 ) {
   if (!options) {
     throw new Error('Apollo Server requires options.');
-  }
-
-  if (arguments.length > 1) {
-    throw new Error(
-      `Apollo Server expects exactly one argument, got ${arguments.length}`,
-    );
   }
 
   const graphqlHandler = async (req: Request): Promise<Response> => {
@@ -41,12 +36,16 @@ export function graphqlCloudflare(
             extensions: url.searchParams.get('extensions'),
           };
 
-    return runHttpQuery([req], {
-      method: req.method,
-      options: options,
-      query,
-      request: req as Request,
-    }).then(
+    return runHttpQuery(
+      [req],
+      {
+        method: req.method,
+        options: options,
+        query,
+        request: req as Request,
+      },
+      csrfPreventionRequestHeaders,
+    ).then(
       ({ graphqlResponse, responseInit }) =>
         new Response(graphqlResponse, responseInit),
       (error: HttpQueryError) => {

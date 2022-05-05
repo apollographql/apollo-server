@@ -145,7 +145,7 @@ const resolvers = {
 
 // Pass schema definition and resolvers to the
 // ApolloServer constructor
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
 
 // Launch the server
 server.listen().then(({ url }) => {
@@ -323,7 +323,7 @@ const resolvers = {
 
 // Pass schema definition and resolvers to the
 // ApolloServer constructor
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
 
 // Launch the server
 server.listen().then(({ url }) => {
@@ -387,6 +387,7 @@ To provide an initial `context` to your resolvers, add a `context` initializatio
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   context: ({ req }) => ({
     authScope: getScope(req.headers.authorization)
   })
