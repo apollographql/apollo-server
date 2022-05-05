@@ -10,6 +10,5 @@
     { "path": "../apollo-datasource" },
     { "path": "../apollo-server-caching" },
     { "path": "../apollo-server-errors" },
-    { "path": "../apollo-server-types" },
   ]
 }

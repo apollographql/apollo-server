@@ -9,7 +9,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
-- _Nothing yet! Stay tuned._
+- Add a few missing dependencies to packages. [PR #6393](https://github.com/apollographql/apollo-server/pull/6393)
 
 ## v3.7.0
 
