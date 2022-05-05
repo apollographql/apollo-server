@@ -51,35 +51,17 @@ export type GraphQLServiceConfig = {
   executor: GraphQLExecutor | null;
 };
 
+export type SchemaLoadOrUpdateCallback = (schemaContext: {
+  apiSchema: GraphQLSchema;
+  coreSupergraphSdl: string;
+}) => void;
 export interface GatewayInterface {
   load(options: { apollo: ApolloConfig }): Promise<GraphQLServiceConfig>;
 
-  /**
-   * @deprecated Use `onSchemaLoadOrUpdate` instead
-   */
-  onSchemaChange?(callback: SchemaChangeCallback): Unsubscriber;
-
-  // TODO: This is optional because older gateways may not have this method,
-  //       and we only need it in certain circumstances, so we just error in
-  //       those circumstances if we don't have it.
-  onSchemaLoadOrUpdate?(
-    callback: (schemaContext: {
-      apiSchema: GraphQLSchema;
-      coreSupergraphSdl: string;
-    }) => void,
-  ): Unsubscriber;
+  onSchemaLoadOrUpdate(callback: SchemaLoadOrUpdateCallback): Unsubscriber;
 
   stop(): Promise<void>;
-
-  // Note: this interface used to have an `executor` method, and also return the
-  // executor from `load()`. ApolloServer would only use the former. We dropped
-  // this method and now use the latter, which allows you to make a "mock
-  // gateway" that updates the schema over time but uses normal execution.
 }
-
-// This was the name used for GatewayInterface in AS2; continue to export it so
-// that older versions of `@apollo/gateway` build against AS3.
-export interface GraphQLService extends GatewayInterface {}
 
 export type DocumentStore = Keyv<DocumentNode>;
 

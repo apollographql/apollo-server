@@ -16,6 +16,7 @@ import {
   FieldDefinitionNode,
   ResponsePath,
   DocumentNode,
+  printSchema,
 } from 'graphql';
 
 // Note that by doing deep imports here we don't need to install React.
@@ -56,6 +57,7 @@ import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,
 } from '.';
+import type { SchemaLoadOrUpdateCallback } from '../../types';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -108,9 +110,12 @@ const makeGatewayMock = ({
     rejectLoad: (err: Error) => {
       rejection = err;
     },
-    triggerSchemaChange: null as ((newSchema: GraphQLSchema) => void) | null,
+    triggerSchemaChange: null as
+      | SchemaLoadOrUpdateCallback
+      | null,
   };
 
+  const listeners: SchemaLoadOrUpdateCallback[] = [];
   const mockedGateway: GatewayInterface = {
     load: async (options) => {
       optionsSpy(options);
@@ -120,11 +125,18 @@ const makeGatewayMock = ({
         throw rejection;
       }
       if (resolution) {
+        listeners.forEach((cb) =>
+          cb({
+            apiSchema: resolution!.schema,
+            coreSupergraphSdl: printSchema(resolution!.schema),
+          }),
+        );
         return resolution;
       }
       throw Error('Neither resolving nor rejecting?');
     },
-    onSchemaChange: (callback) => {
+    onSchemaLoadOrUpdate: (callback) => {
+      listeners.push(callback);
       eventuallyAssigned.triggerSchemaChange = callback;
       return unsubscribeSpy;
     },
@@ -2294,7 +2306,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
           expect(result1.data).toEqual({ testString1: 'hello' });
           expect(result1.errors).toBeUndefined();
 
-          triggers.triggerSchemaChange!(makeQueryTypeWithField('testString2'));
+          triggers.triggerSchemaChange!({
+            apiSchema: makeQueryTypeWithField('testString2'),
+            coreSupergraphSdl: 'type Query { testString2: String }',
+          });
 
           const result2 = await apolloFetch({ query: '{testString2}' });
           expect(result2.data).toEqual({ testString2: 'aloha' });
@@ -2398,17 +2413,21 @@ export function defineIntegrationTestSuiteApolloServerTests(
       });
 
       it('can serve multiple active schemas simultaneously during a schema rollover', async () => {
-        const makeQueryTypeWithField = (fieldName: string) =>
-          new GraphQLSchema({
-            query: new GraphQLObjectType({
-              name: 'QueryType',
-              fields: {
-                [fieldName]: {
-                  type: GraphQLString,
+        function getSchemaUpdateWithField(fieldName: string) {
+          return {
+            apiSchema: new GraphQLSchema({
+              query: new GraphQLObjectType({
+                name: 'QueryType',
+                fields: {
+                  [fieldName]: {
+                    type: GraphQLString,
+                  },
                 },
-              },
+              }),
             }),
-          });
+            coreSupergraphSdl: `type Query { ${fieldName}: String }`,
+          };
+        }
 
         const executorData: Record<
           string,
@@ -2440,26 +2459,29 @@ export function defineIntegrationTestSuiteApolloServerTests(
         const { gateway, triggers } = makeGatewayMock();
 
         triggers.resolveLoad({
-          schema: makeQueryTypeWithField('testString1'),
+          schema: getSchemaUpdateWithField('testString1').apiSchema,
           executor,
         });
 
-        const { httpServer, server } = await createServer({
-          gateway,
-        });
+        const { httpServer, server } = await createServer(
+          {
+            gateway,
+          },
+          { suppressStartCall: false },
+        );
 
         const apolloFetch = createApolloFetch({
           uri: urlForHttpServer(httpServer),
         });
         const result1 = apolloFetch({ query: '{testString1}' });
         await executorData['{testString1}'].startPromise;
-        triggers.triggerSchemaChange!(makeQueryTypeWithField('testString2'));
+        triggers.triggerSchemaChange!(getSchemaUpdateWithField('testString2'));
         // Hacky, but: executeOperation awaits schemaDerivedData, so when it
         // finishes we know the new schema is loaded.
         await server.executeOperation({ query: '{__typename}' });
         const result2 = apolloFetch({ query: '{testString2}' });
         await executorData['{testString2}'].startPromise;
-        triggers.triggerSchemaChange!(makeQueryTypeWithField('testString3'));
+        triggers.triggerSchemaChange!(getSchemaUpdateWithField('testString3'));
         await server.executeOperation({ query: '{__typename}' });
         const result3 = apolloFetch({ query: '{testString3}' });
         await executorData['{testString3}'].startPromise;
