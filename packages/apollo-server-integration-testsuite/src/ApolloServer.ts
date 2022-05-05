@@ -3152,7 +3152,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       }
 
       it('csrfPrevention: true', async () => {
-        const httpServer = makeServer(true);
+        const httpServer = await makeServer(true);
 
         // Normal POSTs work.
         succeeds(
@@ -3253,7 +3253,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('csrfPrevention: {requestHeaders}', async () => {
-        const httpServer = makeServer({ requestHeaders: ['xxx', 'yyy'] });
+        const httpServer = await makeServer({ requestHeaders: ['xxx', 'yyy'] });
 
         // GET without content-type is blocked.
         blocked(await request(httpServer).get('/graphql').query(operation));
