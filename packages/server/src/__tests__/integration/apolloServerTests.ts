@@ -2461,12 +2461,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           executor,
         });
 
-        const { httpServer, server } = await createServer(
-          {
-            gateway,
-          },
-          { suppressStartCall: false },
-        );
+        const { httpServer, server } = await createServer({ gateway });
 
         const apolloFetch = createApolloFetch({
           uri: urlForHttpServer(httpServer),

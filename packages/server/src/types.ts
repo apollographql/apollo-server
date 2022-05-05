@@ -44,7 +44,6 @@ export type AnyFunctionMap = {
 };
 
 export type Unsubscriber = () => void;
-export type SchemaChangeCallback = (apiSchema: GraphQLSchema) => void;
 
 export type GraphQLServiceConfig = {
   schema: GraphQLSchema;
@@ -55,6 +54,7 @@ export type SchemaLoadOrUpdateCallback = (schemaContext: {
   apiSchema: GraphQLSchema;
   coreSupergraphSdl: string;
 }) => void;
+
 export interface GatewayInterface {
   load(options: { apollo: ApolloConfig }): Promise<GraphQLServiceConfig>;
 
