@@ -98,7 +98,7 @@ export class ApolloServer extends ApolloServerBase {
     this.graphqlPath = path;
 
     if (cors === true || cors === undefined) {
-      // Unlike the express `cors` package, `fastify-cors`, or Hapi, Koa's cors
+      // Unlike the express `cors` package, `@fastify/cors`, or Hapi, Koa's cors
       // handling defaults to reflecting the incoming origin instead of '*'.
       // Let's make it match.
       middlewares.push(

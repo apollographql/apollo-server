@@ -7,8 +7,8 @@ import {
   runHttpQuery,
 } from 'apollo-server-core';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import accepts from 'fastify-accepts';
-import fastifyCors from 'fastify-cors';
+import accepts from '@fastify/accepts';
+import fastifyCors from '@fastify/cors';
 
 export interface ServerRegistration {
   path?: string;
