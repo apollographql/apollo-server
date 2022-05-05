@@ -93,8 +93,7 @@ export class SchemaManager {
           gateway.onSchemaLoadOrUpdate((schemaContext) => {
             this.processSchemaLoadOrUpdateEvent(schemaContext);
           });
-      }
-      else {
+      } else {
         throw new Error(
           "Unexpectedly couldn't find onSchemaLoadOrUpdate on gateway",
         );

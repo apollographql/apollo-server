@@ -101,7 +101,7 @@ describe('ApolloServer construction', () => {
       async stop() {},
       onSchemaLoadOrUpdate() {
         return () => {};
-      }
+      },
     };
 
     function takesConfig(_c: ApolloServerOptions<BaseContext>) {}

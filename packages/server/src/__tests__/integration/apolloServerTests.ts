@@ -110,9 +110,7 @@ const makeGatewayMock = ({
     rejectLoad: (err: Error) => {
       rejection = err;
     },
-    triggerSchemaChange: null as
-      | SchemaLoadOrUpdateCallback
-      | null,
+    triggerSchemaChange: null as SchemaLoadOrUpdateCallback | null,
   };
 
   const listeners: SchemaLoadOrUpdateCallback[] = [];
