@@ -16,7 +16,7 @@ Apollo Server accepts `POST` requests with a JSON body. A valid request contains
 Let's say we want to execute the following query:
 
 ```graphql
-query GetBestSellers($category:ProductCategory) {
+query GetBestSellers($category: ProductCategory) {
   bestSellers(category: $category) {
     title
   }
@@ -27,7 +27,7 @@ query GetBestSellers($category:ProductCategory) {
 
 ```json
 {
-  "query":"query GetBestSellers($category:ProductCategory){bestSellers(category: $category){title}}",
+  "query":"query GetBestSellers($category: ProductCategory){bestSellers(category: $category){title}}",
   "operationName": "GetBestSellers",
   "variables": { "category": "BOOKS" }
 }
@@ -40,7 +40,7 @@ You can execute this query against an Apollo-hosted example server right now wit
 ```sh
 curl --request POST \
   -H 'Content-Type: application/json' \
-  --data '{"query":"query GetBestSellers($category:ProductCategory){bestSellers(category: $category){title}}", "operationName":"GetBestSellers", "variables":{"category":"BOOKS"}}' \
+  --data '{"query":"query GetBestSellers($category: ProductCategory){bestSellers(category: $category){title}}", "operationName":"GetBestSellers", "variables":{"category":"BOOKS"}}' \
   https://rover.apollo.dev/quickstart/products/graphql
 ```
 
@@ -77,7 +77,7 @@ Here's the same query from [POST requests](#post-requests) formatted for a `curl
 
 ```sh
 curl --request GET \
-  https://rover.apollo.dev/quickstart/products/graphql?query=query%20GetBestSellers%28%24category%3AProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D
+  https://rover.apollo.dev/quickstart/products/graphql?query=query%20GetBestSellers%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D
 ```
 
 Unlike with `POST` requests, `GET` requests do not require a `Content-Type` header. If you have Apollo Server's [CSRF prevention security feature](./security/cors#preventing-cross-site-request-forgery-csrf) enabled with its default configuration (**highly recommended**), `GET` requests that don't contain a `Content-Type` header must contain one of the following:
