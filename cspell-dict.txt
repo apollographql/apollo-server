@@ -22,6 +22,7 @@ bwvllq
 cacheability
 cacheable
 Cacheable
+Carettoni
 Changesets
 cimg
 circleci
@@ -44,6 +45,7 @@ direnv
 Direnv
 docset
 docstrings
+Doyensec
 DRYRUN
 eastus
 endregion
@@ -71,6 +73,7 @@ graphqlcodegenerator
 GraphQLJSON
 hackily
 herokuapp
+Hofmann
 hrtime
 htmls
 httpcache
@@ -87,6 +90,7 @@ linearizability
 linearizable
 Loftis
 loglevel
+Luca
 MAXAGE
 mget
 Mget
@@ -94,6 +98,7 @@ microrouter
 middlewares
 Middlewares
 millis
+monodocs
 mygraph
 myvariant
 namespacing
@@ -110,6 +115,8 @@ pbts
 pook
 Pook
 pooks
+preflighted
+preflighting
 prepended
 prestart
 Procfile
@@ -126,6 +133,7 @@ roadmap
 ROADMAP
 runtimes
 safelist
+safelisted
 safelisting
 Safelisting
 Scheer
@@ -157,7 +165,6 @@ unawaited
 uncacheable
 undersupported
 undici
-urlencode
 unexecutable
 uninstrumented
 unparsable
@@ -167,6 +174,7 @@ unsubscriber
 Unsubscriber
 Unversioned
 Uppercasing
+urlencode
 USERCONFIG
 uuidv
 vendia
@@ -175,4 +183,3 @@ websockets
 Wheelock's
 xorby
 YOURNAME
-monodocs

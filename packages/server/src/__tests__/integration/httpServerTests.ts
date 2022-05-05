@@ -250,7 +250,12 @@ export function defineIntegrationTestSuiteHttpServerTests(
     describe('graphqlHTTP', () => {
       it('rejects the request if the method is not POST or GET', async () => {
         app = await createApp();
-        const req = request(app).head('/graphql').send();
+        const req = request(app)
+          .head('/graphql')
+          // Make sure we get the error we're looking for, not the CSRF
+          // prevention error :)
+          .set('apollo-require-preflight', 't')
+          .send();
         return req.then((res) => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('GET, POST');
@@ -259,7 +264,11 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('throws an error if POST body is empty', async () => {
         app = await createApp();
-        const req = request(app).post('/graphql').type('text/plain').send('  ');
+        const req = request(app)
+          .post('/graphql')
+          .type('text/plain')
+          .set('apollo-require-preflight', 't')
+          .send('  ');
         return req.then((res) => {
           expect(res.status).toEqual(400);
           expect((res.error as HTTPError).text).toMatch('POST body missing');
@@ -283,6 +292,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const req = request(app)
           .post('/graphql')
           .type('text/plain')
+          .set('apollo-require-preflight', 't')
           .send(
             JSON.stringify({
               query: 'query test{ testString }',
@@ -326,7 +336,9 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('throws an error if GET query is missing', async () => {
         app = await createApp();
-        const res = await request(app).get(`/graphql`);
+        const res = await request(app)
+          .get(`/graphql`)
+          .set('apollo-require-preflight', 't');
         expect(res.status).toEqual(400);
         expect(JSON.parse((res.error as HTTPError).text))
           .toMatchInlineSnapshot(`
@@ -351,7 +363,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const query = {
           query: 'query test{ testString }',
         };
-        const req = request(app).get('/graphql').query(query);
+        const req = request(app)
+          .get('/graphql')
+          .set('apollo-require-preflight', 't')
+          .query(query);
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
@@ -366,7 +381,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const query = {
           query: '{ testString }',
         };
-        const req = request(app).get('/graphql').query(query);
+        const req = request(app)
+          .get('/graphql')
+          .set('apollo-require-preflight', 't')
+          .query(query);
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
@@ -388,7 +406,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const query = {
           query: 'mutation test{ testMutation(echo: "ping") }',
         };
-        const req = request(app).get('/graphql').query(query);
+        const req = request(app)
+          .get('/graphql')
+          .set('apollo-require-preflight', 't')
+          .query(query);
 
         await req.then((res) => {
           expect(res.status).toEqual(405);
@@ -432,7 +453,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
               }
             }`,
         };
-        const req = request(app).get('/graphql').query(query);
+        const req = request(app)
+          .get('/graphql')
+          .set('apollo-require-preflight', 't')
+          .query(query);
         await req.then((res) => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
@@ -461,7 +485,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const expected = {
           testArgument: 'hello world',
         };
-        const req = request(app).get('/graphql').query(query);
+        const req = request(app)
+          .get('/graphql')
+          .set('apollo-require-preflight', 't')
+          .query(query);
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
@@ -639,6 +666,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
         const req = request(app)
           .get('/graphql')
+          .set('apollo-require-preflight', 't')
           .query({
             extensions: JSON.stringify({
               persistedQuery: {
@@ -693,6 +721,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         app = await createApp();
         const req = request(app)
           .get('/graphql')
+          .set('apollo-require-preflight', 't')
           .query({
             extensions: JSON.stringify({
               persistedQuery: {
@@ -1347,6 +1376,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         // Intentionally fire off the request asynchronously, without await.
         const res = request(app)
           .get('/graphql')
+          .set('apollo-require-preflight', 't')
           .query({
             query: 'query test{ testString }',
           })
@@ -1498,6 +1528,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         const result = await request(app)
           .get('/graphql')
+          .set('apollo-require-preflight', 't')
           .query({
             query,
             extensions: JSON.stringify({
@@ -1533,6 +1564,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         const result = await request(app)
           .get('/graphql')
+          .set('apollo-require-preflight', 't')
           .query({
             query,
             extensions: JSON.stringify({
@@ -1569,6 +1601,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         const result = await request(app)
           .get('/graphql')
+          .set('apollo-require-preflight', 't')
           .query({
             query,
             extensions: JSON.stringify({
@@ -1767,6 +1800,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
         const result = await request(app)
           .get('/graphql')
+          .set('apollo-require-preflight', 't')
           .query({
             extensions: JSON.stringify(extensions),
           });

@@ -77,6 +77,22 @@ export interface PersistedQueryOptions {
   ttl?: number | null;
 }
 
+export interface CSRFPreventionOptions {
+  // CSRF prevention works by only processing operations from requests whose
+  // structure indicates that if they were sent by a web browser, then the
+  // browser would have had to send a preflight OPTIONS request already. We do
+  // this by specifying some headers that a browser will never automatically set
+  // and which will trigger the browser to preflight. Apollo Server will reject
+  // any operation that does not set at least one of these headers *and* does
+  // not set a content-type (to a header whose parsed type is not
+  // application/x-www-form-urlencoded, multipart/form-data, or text/plain). If
+  // CSRF prevention is enabled (eg, with `csrfPrevention: true`) this list
+  // defaults to ['x-apollo-operation-name', 'apollo-require-preflight']. This
+  // will allow POST operations from any client and GET operations from Apollo
+  // Client Web, Apollo iOS, and Apollo Kotlin.
+  requestHeaders?: string[];
+}
+
 // TODO(AS4): Organize this.
 interface ApolloServerOptionsBase<TContext extends BaseContext> {
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
@@ -100,6 +116,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   apollo?: ApolloConfigInput;
   nodeEnv?: string;
   documentStore?: DocumentStore | null;
+  csrfPrevention?: CSRFPreventionOptions | boolean;
 
   // This is used for two different things: parsing the schema if you're a
   // SchemaFromTypeDefsConfig, *and* parsing operations. Arguably this is a bit
