@@ -14,10 +14,17 @@ describe('FIXME', () => {
     }
     const server = new ApolloServerStandalone({
       typeDefs: `type Query { foo: String}`,
-      async context() {
+      resolvers: {
+        Query: {
+          foo: (_, __, context) => {
+            return context;
+          },
+        }
+      }
+      async context(): Promise<MyContext> {
         return {
           foo: 'bar',
-        } as MyContext;
+        };
       },
     });
   });
