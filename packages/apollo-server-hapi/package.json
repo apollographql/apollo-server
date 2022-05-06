@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@hapi/accept": "^5.0.2",
-    "@hapi/boom": "^9.1.2",
+    "@hapi/boom": "^10.0.0",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-types": "file:../apollo-server-types"
   },
