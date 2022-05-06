@@ -12,29 +12,12 @@ export function ApolloServerPluginLandingPageLocalDefault(
   // We list known keys explicitly to get better typechecking, but we pass
   // through extras in case we've added new keys to the splash page and haven't
   // quite updated the plugin yet.
-  const {
-    version,
-    __internal_apolloStudioEnv__,
-    footer,
-    document,
-    variables,
-    headers,
-    includeCookies,
-    ...rest
-  } = options;
-  return ApolloServerPluginLandingPageDefault(
-    version,
-    encodeConfig({
-      isProd: false,
-      apolloStudioEnv: __internal_apolloStudioEnv__,
-      footer,
-      document,
-      variables,
-      headers,
-      includeCookies,
-      ...rest,
-    }),
-  );
+  const { version, __internal_apolloStudioEnv__, ...rest } = options;
+  return ApolloServerPluginLandingPageDefault(version, {
+    isProd: false,
+    apolloStudioEnv: __internal_apolloStudioEnv__,
+    ...rest,
+  });
 }
 
 export function ApolloServerPluginLandingPageProductionDefault(
@@ -43,31 +26,12 @@ export function ApolloServerPluginLandingPageProductionDefault(
   // We list known keys explicitly to get better typechecking, but we pass
   // through extras in case we've added new keys to the splash page and haven't
   // quite updated the plugin yet.
-  const {
-    version,
-    __internal_apolloStudioEnv__,
-    footer,
-    document,
-    variables,
-    headers,
-    includeCookies,
-    graphRef,
-    ...rest
-  } = options;
-  return ApolloServerPluginLandingPageDefault(
-    version,
-    encodeConfig({
-      isProd: true,
-      apolloStudioEnv: __internal_apolloStudioEnv__,
-      footer,
-      document,
-      variables,
-      headers,
-      includeCookies,
-      graphRef,
-      ...rest,
-    }),
-  );
+  const { version, __internal_apolloStudioEnv__, ...rest } = options;
+  return ApolloServerPluginLandingPageDefault(version, {
+    isProd: true,
+    apolloStudioEnv: __internal_apolloStudioEnv__,
+    ...rest,
+  });
 }
 
 // A triple encoding! Wow! First we use JSON.stringify to turn our object into a
@@ -82,12 +46,78 @@ function encodeConfig(config: LandingPageConfig): string {
   return JSON.stringify(encodeURIComponent(JSON.stringify(config)));
 }
 
+const getEmbeddedExplorerHTML = (
+  version: string,
+  config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
+) => {
+  interface EmbeddableExplorerOptions {
+    graphRef: string;
+    target: string;
+
+    initialState?: {
+      document?: string;
+      variables?: Record<string, any>;
+      headers?: Record<string, string>;
+      displayOptions: {
+        docsPanelState?: 'open' | 'closed'; // default to 'open',
+        showHeadersAndEnvVars?: boolean; // default to `false`
+        theme?: 'dark' | 'light';
+      };
+    };
+    persistExplorerState?: boolean; // defaults to 'false'
+
+    endpointUrl: string;
+  }
+  const embeddedExplorerParams: Omit<EmbeddableExplorerOptions, 'endpointUrl'> =
+    {
+      ...config,
+      target: '#embeddableExplorer',
+      initialState: {
+        ...config,
+        displayOptions: {
+          ...config.displayOptions,
+        },
+      },
+    };
+
+  return `
+<div
+style="width: 100vw; height: 100vh;"
+id="embeddableExplorer"
+></div>
+<script src="https://embeddable-explorer.cdn.apollographql.com/${version}/embeddable-explorer.umd.production.min.js"></script>
+<script>
+  var endpointUrl = window.location.href;
+  var embeddedExplorerConfig = ${JSON.stringify(embeddedExplorerParams)};
+  new window.EmbeddedExplorer({
+    ...embeddedExplorerConfig,
+    endpointUrl,
+  });
+</script>
+`;
+};
+
+const getNonEmbeddedLandingPageHTML = (
+  version: string,
+  config: LandingPageConfig,
+) => {
+  const encodedConfig = encodeConfig(config);
+
+  return `
+<script>window.landingPage = ${encodedConfig};</script>
+<script src="https://apollo-server-landing-page.cdn.apollographql.com/${version}/static/js/main.js"></script>`;
+};
+
 // Helper for the two actual plugin functions.
 function ApolloServerPluginLandingPageDefault(
   maybeVersion: string | undefined,
-  encodedConfig: string,
+  config: LandingPageConfig & {
+    isProd: boolean;
+    apolloStudioEnv: 'staging' | 'prod' | undefined;
+  },
 ): ImplicitlyInstallablePlugin {
   const version = maybeVersion ?? '_latest';
+
   return {
     __internal_installed_implicitly__: false,
     async serverWillStart() {
@@ -145,9 +175,16 @@ curl --request POST \\
   --url '<script>document.write(window.location.href)</script>' \\
   --data '{"query":"query { __typename }"}'</code>
       </div>
+    ${
+      config.shouldEmbed === true && 'graphRef' in config && !!config.graphRef
+        ? getEmbeddedExplorerHTML(version, config)
+        : config.shouldEmbed === true
+        ? // TODO maya implement Sandbox html
+          // getEmbeddedSandboxHTML(version, config)
+          `<div />`
+        : getNonEmbeddedLandingPageHTML(version, config)
+    }
     </div>
-    <script>window.landingPage = ${encodedConfig};</script>
-    <script src="https://apollo-server-landing-page.cdn.apollographql.com/${version}/static/js/main.js"></script>
   </body>
 </html>
           `;
