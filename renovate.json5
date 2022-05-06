@@ -74,6 +74,14 @@
       matchBaseBranches: ["main"],
       allowedVersions: "4.x"
     },
+    // @hapi/boom 9.x drops Node 12 support, so we can't take it. (AS4 drops
+    // Node 12 support too, but we will also no longer maintain a Hapi integration
+    // as part of core in AS4.)
+    {
+      matchPackageNames: ["@hapi/boom"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "9.x"
+    },
     // node-fetch v3 only ships as ESM. We currently build to CommonJS and even
     // if we start publishing as ESM (#5627) we're not going to go ESM-only
     // for a while. (Plus it requires Node v12.20 and we technically support
