@@ -1,68 +1,10 @@
 import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
-
-export interface ApolloServerPluginLandingPageDefaultBaseOptions {
-  /**
-   * By default, the landing page plugin uses the latest version of the landing
-   * page published to Apollo's CDN. If you'd like to pin the current version,
-   * pass the SHA served at
-   * https://apollo-server-landing-page.cdn.apollographql.com/_latest/version.txt
-   * here.
-   */
-  version?: string;
-  /**
-   * Set to false to suppress the footer which explains how to configure the
-   * landing page.
-   */
-  footer?: boolean;
-  /**
-   * Users can configure their landing page to link to Studio Explorer with a
-   * document loaded in the UI.
-   */
-  document?: string;
-  /**
-   * Users can configure their landing page to link to Studio Explorer with
-   * variables loaded in the UI.
-   */
-  variables?: Record<string, string>;
-  /**
-   * Users can configure their landing page to link to Studio Explorer with
-   * headers loaded in the UI.
-   */
-  headers?: Record<string, string>;
-  /**
-   * Users can configure their landing page to link to Studio Explorer with the
-   * setting to include/exclude cookies loaded in the UI.
-   */
-  includeCookies?: boolean;
-  // For Apollo use only.
-  __internal_apolloStudioEnv__?: 'staging' | 'prod';
-}
-
-export interface ApolloServerPluginLandingPageLocalDefaultOptions
-  extends ApolloServerPluginLandingPageDefaultBaseOptions {}
-
-export interface ApolloServerPluginLandingPageProductionDefaultOptions
-  extends ApolloServerPluginLandingPageDefaultBaseOptions {
-  /**
-   * If specified, provide a link (with opt-in auto-redirect) to the Studio page
-   * for the given graphRef. (You need to explicitly pass this here rather than
-   * relying on the server's ApolloConfig, because if your server is publicly
-   * accessible you may not want to display the graph ref publicly.)
-   */
-  graphRef?: string;
-}
-
-// The actual config object read by the landing page's React component.
-interface LandingPageConfig {
-  graphRef?: string | undefined;
-  isProd?: boolean;
-  apolloStudioEnv?: 'staging' | 'prod';
-  document?: string;
-  variables?: Record<string, string>;
-  headers?: Record<string, string>;
-  includeCookies?: boolean;
-  footer?: boolean;
-}
+import type {
+  ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
+  ApolloServerPluginLandingPageLocalDefaultOptions,
+  ApolloServerPluginLandingPageProductionDefaultOptions,
+  LandingPageConfig,
+} from './types';
 
 export function ApolloServerPluginLandingPageLocalDefault(
   options: ApolloServerPluginLandingPageLocalDefaultOptions = {},
