@@ -89,7 +89,26 @@ functions:
         cors: true
 ```
 
-### Running the Serverless Framework
+### Running Locally
+Using the `serverless` CLI, we can invoke our function locally to make sure it is running properly. As with any GraphQL "server", we need to send an operation for the schema to run as an HTTP request. You can store a mock HTTP request locally in a `query.json` file:
+
+```json
+{
+  "httpMethod": "POST",
+  "path": "/",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {},
+  "body": "{\"operationName\": null, \"variables\": null, \"query\": \"{ hello }\"}"
+}
+```
+
+```sh
+serverless invoke local -f graphql -p query.json
+```
+
+### Deploying the Code
 
 After configuring the Serverless Framework, all you have to do to deploy is run `serverless deploy`
 
