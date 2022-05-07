@@ -351,6 +351,7 @@ You provide your `willResolveField` handler in the object returned by your [`exe
 Your `willResolveField` handler can optionally return an ["end hook"](./plugins/#end-hooks) function that's invoked with the resolver's result (or the error that it throws). The end hook is called when your resolver has _fully_ resolved (e.g., if the resolver returns a Promise, the hook is called with the Promise's eventual resolved result).
 
 `willResolveField` and its end hook are synchronous plugin APIs (i.e., they do not return `Promise`s).
+`willResolveField` does not fire if apollo-server is running as a gateway.
 
 #### Example
 
