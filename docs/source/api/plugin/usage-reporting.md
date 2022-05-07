@@ -27,7 +27,7 @@ const server = new ApolloServer({
   csrfPrevention: true,
   plugins: [
     ApolloServerPluginUsageReporting({
-      fieldLevelInstrumentation: 0.5
+      fieldLevelInstrumentation: 0.5,
     }),
   ],
 });
