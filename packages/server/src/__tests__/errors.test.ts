@@ -70,10 +70,10 @@ describe('Errors', () => {
         ),
       ])[0];
       expect(error.message).toEqual(message);
-      expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
-      expect(error.extensions.exception).toHaveProperty('key', key);
+      expect(error.extensions?.code).toEqual('INTERNAL_SERVER_ERROR');
+      expect(error.extensions?.exception).toHaveProperty('key', key);
       // stacktrace should exist under exception
-      expect(error.extensions.exception).not.toHaveProperty('stacktrace');
+      expect(error.extensions?.exception).not.toHaveProperty('stacktrace');
     });
     it('exposes fields on error under exception field and provides code', () => {
       const error = createFormattedError();
@@ -170,9 +170,9 @@ describe('Errors', () => {
         ),
       ])[0];
 
-      expect(formattedError.extensions.field1).toEqual('property1');
-      expect(formattedError.extensions.field2).toEqual('property2');
-      expect(formattedError.extensions.exception).toBeUndefined();
+      expect(formattedError.extensions?.field1).toEqual('property1');
+      expect(formattedError.extensions?.field2).toEqual('property2');
+      expect(formattedError.extensions?.exception).toBeUndefined();
     });
   });
 });

@@ -192,7 +192,7 @@ export function formatApolloErrors(
     formatter?: (error: GraphQLError) => GraphQLFormattedError;
     debug?: boolean;
   },
-): Array<GraphQLError> {
+): Array<GraphQLFormattedError> {
   if (!options) {
     return errors.map((error) => enrichError(error));
   }
@@ -235,5 +235,5 @@ export function formatApolloErrors(
         return new GraphQLError('Internal server error');
       }
     }
-  }) as Array<GraphQLError>;
+  });
 }
