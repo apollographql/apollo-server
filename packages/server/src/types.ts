@@ -1,6 +1,7 @@
 import type { Logger } from '@apollo/utils.logger';
 import type { IMocks } from '@graphql-tools/mock';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
+import type { IResolvers } from '@graphql-tools/utils';
 import type {
   DocumentNode,
   GraphQLError,
@@ -147,7 +148,7 @@ export interface ApolloServerOptionsWithTypeDefs<TContext extends BaseContext>
   // makeExecutableSchema. (If you don't want to use makeExecutableSchema, pass
   // `schema` instead.)
   typeDefs: IExecutableSchemaDefinition<TContext>['typeDefs'];
-  resolvers?: IExecutableSchemaDefinition<TContext>['resolvers'];
+  resolvers?: IResolvers<any, TContext>;
   gateway?: undefined;
   schema?: undefined;
 }

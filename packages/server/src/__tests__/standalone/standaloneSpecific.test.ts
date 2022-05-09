@@ -1,3 +1,4 @@
+import type { IResolvers } from '@graphql-tools/utils';
 import { ApolloServerStandalone } from '../../standalone';
 
 // one with and without context function
@@ -20,7 +21,7 @@ describe('FIXME', () => {
             return context;
           },
         }
-      }
+      },
       async context(): Promise<MyContext> {
         return {
           foo: 'bar',

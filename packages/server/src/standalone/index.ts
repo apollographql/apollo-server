@@ -25,10 +25,10 @@ export class ApolloServerStandalone<
   private httpServer: http.Server;
   private context: ContextFunction<[ExpressContext], TContext>;
 
-  constructor(options: ApolloServerOptions<BaseContext>);
   constructor(
     options: WithRequired<ApolloServerStandaloneOptions<TContext>, 'context'>,
   );
+  constructor(options: ApolloServerOptions<BaseContext>);
   constructor(options: ApolloServerStandaloneOptions<TContext>) {
     const app = express();
     const httpServer = http.createServer(app);
