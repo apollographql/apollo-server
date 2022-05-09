@@ -51,7 +51,7 @@
     "whatwg-mimetype": "^3.0.0"
   },
   "peerDependencies": {
-    "graphql": "^16.3.0"
+    "graphql": "^16.5.0"
   },
   "volta": {
     "extends": "../../package.json"
