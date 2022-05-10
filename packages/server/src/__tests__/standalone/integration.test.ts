@@ -10,7 +10,8 @@ import { ApolloServer } from '../../ApolloServer';
 
 defineIntegrationTestSuite(async function (
   serverOptions: ApolloServerOptions<BaseContext>,
-  testOptions?: CreateServerForIntegrationTestsOptions,
+  // FIXME
+  _testOptions?: CreateServerForIntegrationTestsOptions,
 ): Promise<CreateServerForIntegrationTestsResult> {
   // const server = new ApolloServerStandalone(serverOptions);
   // if (!testOptions?.suppressStartCall) {
