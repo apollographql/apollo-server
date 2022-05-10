@@ -343,7 +343,7 @@ Cache-Control: max-age=60, private
 
 If you run Apollo Server behind a CDN or another caching proxy, you can configure it to use this header's value to cache responses appropriately. See your CDN's documentation for details (for example, here's the [documentation for Amazon CloudFront](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html#expiration-individual-objects)).
 
-Some CDNs require custom headers for caching or custom values in the `cache-control` header like `s-maxage`. You can configure your `ApolloServer` instance accordingly by building your own [plugin](https://www.apollographql.com/docs/apollo-server/integrations/plugins):
+Some CDNs require custom headers for caching or custom values in the `cache-control` header like `s-maxage`. You can configure your `ApolloServer` instance accordingly by telling the built-in cache control plugin to just calculate a policy without setting HTTP headers, and specifying your own [plugin](https://www.apollographql.com/docs/apollo-server/integrations/plugins):
 
 ```javascript
 new ApolloServer({
@@ -354,10 +354,12 @@ new ApolloServer({
         return {
           async willSendResponse(requestContext) {
             const { response, overallCachePolicy } = requestContext;
-            if (overallCachePolicy && response?.http && overallCachePolicy.maxAge) {
+            const policyIfCacheable = overallCachePolicy.policyIfCacheable();
+            if (policyIfCacheable && !response.headers && response.http) {
               response.http.headers.set(
                 "cache-control",
-                `max-age=0, s-maxage=${overallCachePolicy.maxAge}, public` // or the values your CDN recommends
+                // ... or the values your CDN recommends
+                `max-age=0, s-maxage=${overallCachePolicy.maxAge}, ${policyIfCacheable.scope.toLowerCase()}`
               );
             }
           },
