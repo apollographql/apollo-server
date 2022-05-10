@@ -48,7 +48,7 @@ subscription PostFeed {
 
 To run both an Express app _and_ a separate WebSocket server for subscriptions, we'll create an `http.Server` instance that effectively wraps the two and becomes our new `listen`er.
 
-1. Install `graphql-ws`, `ws`, `@graphql-tools/schema`, and 'apollo-server-core':
+1. Install `graphql-ws`, `ws`, `@graphql-tools/schema`, and `apollo-server-core`:
     ```bash
     npm install graphql-ws ws @graphql-tools/schema apollo-server-core
     ```
