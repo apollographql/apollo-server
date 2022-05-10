@@ -97,6 +97,7 @@ class ApolloServerStandalone<
   }
 }
 
+// FIXME delete examples
 // BaseContext
 const serverBaseContextInferred = new ApolloServerStandalone({
   typeDefs: `type Query { id: ID }`,
