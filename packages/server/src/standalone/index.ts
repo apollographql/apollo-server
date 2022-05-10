@@ -11,6 +11,7 @@ import type { WithRequired } from '../types';
 
 interface HTTPServerOptions<TContext extends BaseContext> {
   context?: ContextFunction<[ExpressContext], TContext>;
+  graphqlPath?: string;
 }
 
 export function httpServer(
@@ -43,7 +44,8 @@ class HTTPApolloServer<TContext extends BaseContext> {
   ): Promise<{ url: string }> {
     await this.apolloServer.start();
     this.app.use(
-      cors(),
+      this.options?.graphqlPath ?? '/',
+      cors<cors.CorsRequest>(),
       json(),
       expressMiddleware(this.apolloServer, {
         context: this.options.context,
