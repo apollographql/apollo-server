@@ -1,29 +1,25 @@
-import {
-  ApolloServerStandaloneOptions,
-  ApolloServerStandalone,
-} from '../../standalone';
-import { expressMiddleware } from '../../express';
+import { httpServer as getHttpServer } from '../../standalone';
 import type { BaseContext } from '../../externalTypes';
 import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,
 } from '../integration';
 import { defineIntegrationTestSuite } from '../integration';
+import type { ApolloServerOptions } from '../../types';
+import { ApolloServer } from '../../ApolloServer';
 
 defineIntegrationTestSuite(async function (
-  serverOptions: ApolloServerStandaloneOptions<BaseContext>,
+  serverOptions: ApolloServerOptions<BaseContext>,
   testOptions?: CreateServerForIntegrationTestsOptions,
 ): Promise<CreateServerForIntegrationTestsResult> {
-  const server = new ApolloServerStandalone(serverOptions);
-  if (!testOptions?.suppressStartCall) {
-    await server.start();
-  }
+  // const server = new ApolloServerStandalone(serverOptions);
+  // if (!testOptions?.suppressStartCall) {
+  //   await server.start();
+  // }
+  const server = new ApolloServer(serverOptions);
+  const httpServer = getHttpServer(server);
 
-  await server.listen({ port: 0 });
+  await httpServer.listen({ port: 0 });
 
-  await new Promise((resolve) => {
-    httpServer.once('listening', resolve);
-    httpServer.listen({ port: 0 });
-  });
-  return { server, httpServer };
+  return { server, httpServer: httpServer['httpServer'] };
 });

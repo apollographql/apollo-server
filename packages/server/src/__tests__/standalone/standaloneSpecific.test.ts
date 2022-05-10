@@ -1,32 +1,78 @@
-import type { IResolvers } from '@graphql-tools/utils';
-import { ApolloServerStandalone } from '../../standalone';
+import { httpServer as getHttpServer } from '../../standalone';
+import { ApolloServer } from '../../ApolloServer';
 
-// one with and without context function
-describe('FIXME', () => {
-  it('', () => {
-    const server = new ApolloServerStandalone({
+describe('TContext inference', () => {
+  it('correctly infers BaseContext when no `context` function is provided', async () => {
+    const server = new ApolloServer({
       typeDefs: `type Query { foo: String}`,
     });
+    await getHttpServer(server).listen();
   });
 
-  it('', () => {
+  it('correctly infers `MyContext` when `context` function is provided', async () => {
     interface MyContext {
       foo: string;
     }
-    const server = new ApolloServerStandalone({
+
+    const server = new ApolloServer<MyContext>({
       typeDefs: `type Query { foo: String}`,
       resolvers: {
         Query: {
           foo: (_, __, context) => {
             return context;
           },
-        }
-      },
-      async context(): Promise<MyContext> {
-        return {
-          foo: 'bar',
-        };
+        },
       },
     });
+
+    await getHttpServer(server, {
+      async context() {
+        return { foo: 'bar' };
+      },
+    }).listen();
+  });
+
+  it('errors when `TContext` is provided without a `context` function', async () => {
+    interface MyContext {
+      foo: string;
+    }
+
+    const server = new ApolloServer<MyContext>({
+      typeDefs: `type Query { foo: String}`,
+      resolvers: {
+        Query: {
+          foo: (_, __, context) => {
+            return context;
+          },
+        },
+      },
+    });
+
+    // @ts-expect-error
+    await getHttpServer(server).listen();
+  });
+
+  it('errors when `TContext` is provided without a compatible `context` function', async () => {
+    interface MyContext {
+      foo: string;
+    }
+
+    const server = new ApolloServer<MyContext>({
+      typeDefs: `type Query { foo: String}`,
+      resolvers: {
+        Query: {
+          foo: (_, __, context) => {
+            return context;
+          },
+        },
+      },
+    });
+
+    // @ts-expect-error
+    await getHttpServer(server, {
+      async context() {
+        return { notFoo: 'oops' };
+      },
+    }).listen();
   });
 });
