@@ -497,15 +497,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
               }),
             ).rejects.toThrowError(loadError);
           });
-
-          it('not calling start causes a clear error', async () => {
-            await expect(
-              createServerAndGetUrl(
-                { typeDefs: 'type Query{x: ID}' },
-                { suppressStartCall: true },
-              ),
-            ).rejects.toThrow('You must `await server.start()`');
-          });
         }
 
         it('allows mocks as boolean', async () => {

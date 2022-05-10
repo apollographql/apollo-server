@@ -30,9 +30,9 @@ defineIntegrationTestSuite(async function (
       }),
     ],
   });
-  if (!testOptions?.suppressStartCall) {
-    await server.start();
-  }
+
+  await server.start();
+
   const graphqlPath = testOptions?.graphqlPath ?? '/graphql';
   app.use(
     graphqlPath,

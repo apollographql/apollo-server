@@ -11,7 +11,6 @@ export interface CreateServerForIntegrationTestsResult {
 }
 
 export interface CreateServerForIntegrationTestsOptions {
-  suppressStartCall?: boolean;
   graphqlPath?: string;
   noRequestsMade?: boolean;
   context?: ContextThunk;

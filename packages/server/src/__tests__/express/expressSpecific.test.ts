@@ -16,3 +16,10 @@ it('gives helpful error if body-parser middleware is not installed', async () =>
     .expect(500, /forgot to set up the `body-parser`/);
   await server.stop();
 });
+
+it('not calling start causes a clear error', async () => {
+  const server = new ApolloServer({ typeDefs: 'type Query {f: ID}' });
+  expect(() => expressMiddleware(server)).toThrow(
+    'You must `await server.start()`',
+  );
+});

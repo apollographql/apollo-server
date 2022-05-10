@@ -1,41 +1,32 @@
 import { httpServer as getHttpServer } from '../../standalone';
 import { ApolloServer } from '../../ApolloServer';
 
-describe('TContext inference', () => {
+describe('Typings: TContext inference', () => {
   it('correctly infers BaseContext when no `context` function is provided', async () => {
     const server = new ApolloServer({
       typeDefs: `type Query { foo: String}`,
     });
-    const httpServer = getHttpServer(server);
-    await httpServer.listen({ port: 0 });
-    await server.stop();
+
+    // HTTPApolloServer<BaseContext>
+    getHttpServer(server);
   });
 
-  it('correctly infers `MyContext` when `context` function is provided', async () => {
-    interface MyContext {
-      foo: string;
-    }
-
-    const server = new ApolloServer<MyContext>({
+  // `context` function can provide a superset of the `TContext` inferred by or
+  // provided to the ApolloServer instance
+  it('infers BaseContext when no TContext is provided to ApolloServer, even if a `context` function is provided', async () => {
+    const server = new ApolloServer({
       typeDefs: `type Query { foo: String}`,
-      resolvers: {
-        Query: {
-          foo: (_, __, context) => {
-            return context;
-          },
-        },
-      },
     });
 
-    const httpServer = getHttpServer(server, {
+    // HTTPApolloServer<BaseContext>
+    getHttpServer(server, {
       async context() {
         return { foo: 'bar' };
       },
     });
-    await httpServer.listen({ port: 0 });
   });
 
-  it('errors when `TContext` is provided without a `context` function', async () => {
+  it('correctly infers `MyContext` when generic and `context` function are both provided', async () => {
     interface MyContext {
       foo: string;
     }
@@ -45,19 +36,21 @@ describe('TContext inference', () => {
       resolvers: {
         Query: {
           foo: (_, __, context) => {
-            return context;
+            return context.foo;
           },
         },
       },
     });
 
-    // @ts-expect-error
-    const httpServer = getHttpServer(server);
-    await httpServer.listen({ port: 0 });
-    await server.stop();
+    // HTTPApolloServer<MyContext>
+    getHttpServer(server, {
+      async context() {
+        return { foo: 'bar' };
+      },
+    });
   });
 
-  it('errors when `TContext` is provided without a compatible `context` function', async () => {
+  it('errors when `MyContext` is provided without a `context` function', async () => {
     interface MyContext {
       foo: string;
     }
@@ -67,20 +60,37 @@ describe('TContext inference', () => {
       resolvers: {
         Query: {
           foo: (_, __, context) => {
-            return context;
+            return context.foo;
           },
         },
       },
     });
 
     // @ts-expect-error
-    const httpServer = getHttpServer(server, {
+    getHttpServer(server);
+  });
+
+  it('errors when `MyContext` is provided without a compatible `context` function', async () => {
+    interface MyContext {
+      foo: string;
+    }
+
+    const server = new ApolloServer<MyContext>({
+      typeDefs: `type Query { foo: String}`,
+      resolvers: {
+        Query: {
+          foo: (_, __, context) => {
+            return context.foo;
+          },
+        },
+      },
+    });
+
+    // @ts-expect-error
+    getHttpServer(server, {
       async context() {
         return { notFoo: 'oops' };
       },
     });
-
-    await httpServer.listen({ port: 0 });
-    await server.stop();
   });
 });
