@@ -27,7 +27,7 @@ type ApolloServerStandaloneOptions<
 
 class ApolloServerStandalone<
   TContext extends BaseContext,
-  SContext extends BaseContext = TContext,
+  SContext extends TContext = TContext,
 >{
   private app: express.Express;
   private httpServer: http.Server;
@@ -101,6 +101,9 @@ const serverBaseContextInferred = new ApolloServerStandalone({
   typeDefs: `type Query { id: ID }`,
 });
 
+interface MyContext {
+  id: string;
+}
 // TContext inferred
 const serverTContextInferred = new ApolloServerStandalone({
   typeDefs: `type Query { id: ID }`,
@@ -112,7 +115,10 @@ const serverTContextInferred = new ApolloServerStandalone({
       }
     }
   },
-  contextFunction: async () => ({ id: '1' }),
+  contextFunction: async () => {
+    const ctx: MyContext = { id: '1' };
+    return ctx;
+  }
 });
 
 (async () => {
