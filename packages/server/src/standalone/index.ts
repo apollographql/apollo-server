@@ -8,16 +8,21 @@ import { ExpressContext, expressMiddleware } from "../express";
 import type { BaseContext, ContextFunction } from "../externalTypes";
 import type { ApolloServerOptions } from "../types";
 
-type ApolloServerBaseContext = {
+type NoContextOptions = {
   contextFunction?: never;
 } & ApolloServerOptions<BaseContext>;
 
-type ApolloServerTContext<
+type WithContextOptions<
   TContext extends BaseContext,
   SContext extends BaseContext = TContext,
 > = {
   contextFunction: ContextFunction<[ExpressContext], TContext>;
 } & ApolloServerOptions<SContext>;
+
+type ApolloServerStandaloneOptions<
+  TContext extends BaseContext,
+  SContext extends BaseContext = TContext,
+> = NoContextOptions | WithContextOptions<TContext, SContext>;
 
 
 class ApolloServerStandalone<
@@ -29,14 +34,12 @@ class ApolloServerStandalone<
   private contextFunction: ContextFunction<[ExpressContext], TContext>;
   private apolloServer: ApolloServer<SContext>;
 
-  constructor(opts: ApolloServerBaseContext);
-  constructor(opts: ApolloServerTContext<TContext>);
-  constructor(opts: ApolloServerBaseContext | ApolloServerTContext<TContext>) {
+  constructor(opts: NoContextOptions);
+  constructor(opts: WithContextOptions<TContext>);
+  constructor(opts: ApolloServerStandaloneOptions<TContext, SContext>) {
     const { contextFunction, ...apolloServerOptions } = opts;
 
-    this.apolloServer = new ApolloServer<SContext>(
-      apolloServerOptions as unknown as ApolloServerOptions<SContext>,
-    );
+    this.apolloServer = new ApolloServer<SContext>(apolloServerOptions);
 
     this.contextFunction =
       opts.contextFunction ?? (async () => ({} as TContext));
