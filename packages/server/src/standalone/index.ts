@@ -21,7 +21,6 @@ export function httpServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
   options: WithRequired<HTTPServerOptions<TContext>, 'context'>,
 ): HTTPApolloServer<TContext>;
-
 export function httpServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
   options?: HTTPServerOptions<TContext>,
