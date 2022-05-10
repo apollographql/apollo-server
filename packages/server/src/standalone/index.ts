@@ -8,11 +8,6 @@ import { ExpressContext, expressMiddleware } from "../express";
 import type { BaseContext, ContextFunction } from "../externalTypes";
 import type { ApolloServerOptions } from "../types";
 
-export type ApolloServerStandaloneOptions<TContext extends BaseContext> =
-  ApolloServerOptions<TContext> & {
-    context: ContextFunction<[ExpressContext], TContext>;
-  };
-
 type ApolloServerBaseContext = {
   contextFunction?: never;
 } & ApolloServerOptions<BaseContext>;
