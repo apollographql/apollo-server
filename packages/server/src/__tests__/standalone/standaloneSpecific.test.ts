@@ -7,6 +7,7 @@ describe('TContext inference', () => {
       typeDefs: `type Query { foo: String}`,
     });
     await getHttpServer(server).listen();
+    await server.stop();
   });
 
   it('correctly infers `MyContext` when `context` function is provided', async () => {
@@ -50,6 +51,7 @@ describe('TContext inference', () => {
 
     // @ts-expect-error
     await getHttpServer(server).listen();
+    await server.stop();
   });
 
   it('errors when `TContext` is provided without a compatible `context` function', async () => {
@@ -74,5 +76,6 @@ describe('TContext inference', () => {
         return { notFoo: 'oops' };
       },
     }).listen();
+    await server.stop();
   });
 });
