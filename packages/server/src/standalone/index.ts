@@ -84,7 +84,7 @@ class HTTPApolloServer<TContext extends BaseContext> {
   });
   const http = httpServer(serverNoContext);
   const { url: _url } = await http.listen();
-})();
+});
 
 // happy path with no TContext provided, but yes context function provided - more details
 (async () => {
@@ -104,7 +104,7 @@ class HTTPApolloServer<TContext extends BaseContext> {
     context: async () => ({ id: '1' }),
   });
   const { url: _url } = await http.listen();
-})();
+});
 
 interface MyContext {
   id: string;
@@ -121,7 +121,7 @@ interface MyContext {
     },
   });
   const { url: _url } = await http.listen();
-})();
+});
 
 // `MyContext` provided, context function returns a superset of `MyContext`
 (async () => {
@@ -134,7 +134,7 @@ interface MyContext {
     },
   });
   const { url: _url } = await http.listen();
-})();
+});
 
 // error path: `MyContext` provided but no context function provided
 (async () => {
@@ -146,4 +146,4 @@ interface MyContext {
   // provided `ApolloServer` is not of `BaseContext` type.
   const http = httpServer(serverWithContext);
   const { url: _url } = await http.listen();
-})();
+});

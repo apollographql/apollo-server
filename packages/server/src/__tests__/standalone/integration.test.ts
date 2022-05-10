@@ -10,13 +10,15 @@ import { ApolloServer } from '../../ApolloServer';
 
 defineIntegrationTestSuite(async function (
   serverOptions: ApolloServerOptions<BaseContext>,
-  // FIXME
-  _testOptions?: CreateServerForIntegrationTestsOptions,
+  testOptions?: CreateServerForIntegrationTestsOptions,
 ): Promise<CreateServerForIntegrationTestsResult> {
-  // const server = new ApolloServerStandalone(serverOptions);
-  // if (!testOptions?.suppressStartCall) {
-  //   await server.start();
-  // }
+
+  // This test option doesn't apply to the standalone version, this replicates
+  // the behavior expected by the integration test suite.
+  if (testOptions?.suppressStartCall) {
+    throw Error('You must `await server.start()`');
+  }
+
   const server = new ApolloServer(serverOptions);
   const httpServer = getHttpServer(server);
 
