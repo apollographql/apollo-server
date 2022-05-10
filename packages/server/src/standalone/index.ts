@@ -2,126 +2,149 @@ import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
-import type { ListenOptions } from "net";
-import { ApolloServer } from "../ApolloServer";
-import { ExpressContext, expressMiddleware } from "../express";
-import type { BaseContext, ContextFunction } from "../externalTypes";
-import type { ApolloServerOptions } from "../types";
+import type { AddressInfo, ListenOptions } from 'net';
+import { format as urlFormat } from 'url';
+import { ApolloServer } from '../ApolloServer';
+import { ExpressContext, expressMiddleware } from '../express';
+import type { BaseContext, ContextFunction } from '../externalTypes';
+import type { WithRequired } from '../types';
 
-type NoContextOptions = {
-  contextFunction?: never;
-} & ApolloServerOptions<BaseContext>;
+interface HTTPServerOptions<TContext extends BaseContext> {
+  context?: ContextFunction<[ExpressContext], TContext>;
+}
 
-type WithContextOptions<
-  TContext extends BaseContext,
-  SContext extends BaseContext = TContext,
-> = {
-  contextFunction: ContextFunction<[ExpressContext], TContext>;
-} & ApolloServerOptions<SContext>;
+export function httpServer(
+  server: ApolloServer<BaseContext>,
+  options?: {},
+): HTTPApolloServer<BaseContext>;
+export function httpServer<TContext extends BaseContext>(
+  server: ApolloServer<TContext>,
+  options: WithRequired<HTTPServerOptions<TContext>, 'context'>,
+): HTTPApolloServer<TContext>;
 
-type ApolloServerStandaloneOptions<
-  TContext extends BaseContext,
-  SContext extends BaseContext = TContext,
-> = NoContextOptions | WithContextOptions<TContext, SContext>;
+export function httpServer<TContext extends BaseContext>(
+  server: ApolloServer<TContext>,
+  options?: HTTPServerOptions<TContext>,
+): HTTPApolloServer<TContext> {
+  const context = options?.context ?? (async () => ({} as TContext));
+  return new HTTPApolloServer<TContext>(server, { context });
+}
 
+class HTTPApolloServer<TContext extends BaseContext> {
+  private app: express.Express = express();
+  private httpServer: http.Server = http.createServer(this.app);
 
-class ApolloServerStandalone<
-  TContext extends BaseContext,
-  SContext extends TContext = TContext,
->{
-  private app: express.Express;
-  private httpServer: http.Server;
-  private contextFunction: ContextFunction<[ExpressContext], TContext>;
-  private apolloServer: ApolloServer<SContext>;
-
-  constructor(opts: NoContextOptions);
-  constructor(opts: WithContextOptions<TContext>);
-  constructor(opts: ApolloServerStandaloneOptions<TContext, SContext>) {
-    const { contextFunction, ...apolloServerOptions } = opts;
-
-    this.apolloServer = new ApolloServer<SContext>(apolloServerOptions);
-
-    this.contextFunction =
-      opts.contextFunction ?? (async () => ({} as TContext));
-
-    this.app = express();
-    this.httpServer = http.createServer(this.app);
-  }
+  constructor(
+    private apolloServer: ApolloServer<TContext>,
+    private options: WithRequired<HTTPServerOptions<TContext>, 'context'>,
+  ) {}
 
   async listen(
     listenOptions: ListenOptions = { port: 4000 },
-    listeningListener?: () => void,
-  ): Promise<http.Server> {
+  ): Promise<{ url: string }> {
     await this.apolloServer.start();
-
     this.app.use(
       cors<cors.CorsRequest>(),
       json(),
-      expressMiddleware(
-        this.apolloServer as unknown as ApolloServer<TContext>,
-        {
-          context: this.contextFunction,
-        },
-      ),
+      expressMiddleware(this.apolloServer, {
+        context: this.options.context,
+      }),
     );
 
     // Wait for server to start listening
     await new Promise<void>((resolve) => {
-      this.httpServer.listen(listenOptions, () => {
-        resolve();
-        listeningListener?.();
-      });
+      this.httpServer.listen(listenOptions, resolve);
     });
 
-    // const addressInfo = this.httpServer.address() as AddressInfo;
+    const addressInfo = this.httpServer.address() as AddressInfo;
 
     // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
     // corresponding loopback ip. If this heuristic is wrong for your use case,
     // explicitly specify a frontend host (in the `host` option to
     // ApolloServerStandalone.listen).
-    // let hostForUrl = addressInfo.address;
-    // if (hostForUrl === '' || hostForUrl === '::') {
-    //   hostForUrl = 'localhost';
-    // }
+    let hostForUrl = addressInfo.address;
+    if (hostForUrl === '' || hostForUrl === '::') {
+      hostForUrl = 'localhost';
+    }
 
-    // const url = urlFormat({
-    //   protocol: 'http',
-    //   hostname: hostForUrl,
-    //   port: addressInfo.port,
-    //   pathname: '/',
-    // });
+    const url = urlFormat({
+      protocol: 'http',
+      hostname: hostForUrl,
+      port: addressInfo.port,
+      pathname: '/',
+    });
 
-    return this.httpServer;
+    return { url };
   }
 }
 
-// FIXME delete examples
-// BaseContext
-const serverBaseContextInferred = new ApolloServerStandalone({
-  typeDefs: `type Query { id: ID }`,
-});
+// happy path with no TContext provided, no context function provided
+(async () => {
+  const serverNoContext = new ApolloServer({
+    typeDefs: `type Query { hello: String }`,
+  });
+  const http = httpServer(serverNoContext);
+  const { url } = await http.listen();
+})();
+
+// happy path with no TContext provided, but yes context function provided - more details
+(async () => {
+  const serverNoContext = new ApolloServer({
+    typeDefs: `type Query { hello: String }`,
+  });
+  // This is actually allowed because the `ApolloServer` instance is defined
+  // with `BaseContext` and the provided `context` function satisfies that.
+  // Though I think ideally we would want to _enforce_ that the incoming
+  // `ApolloServer` argument gets an error here since it's not a `TContext`.
+  // Fundamentally this is ok though, and maybe what I really want here is a
+  // warning (Did you forget to pass `TContext` to your server instance? Or more
+  // generally, your context function returns a superset of `TContext` so your
+  // server may not be type aware of the additional fields you've provided on
+  // your context object).
+  const http = httpServer(serverNoContext, {
+    context: async () => ({ id: '1' }),
+  });
+  const { url } = await http.listen();
+})();
 
 interface MyContext {
   id: string;
 }
-// TContext inferred
-const serverTContextInferred = new ApolloServerStandalone({
-  typeDefs: `type Query { id: ID }`,
-   resolvers: {
-    Query: {
-      id: (_, __, context) => {
-        context.id;
-        return '1';
-      }
-    }
-  },
-  contextFunction: async () => {
-    const ctx: MyContext = { id: '1' };
-    return ctx;
-  }
-});
 
+// happy path with `MyContext` provided
 (async () => {
-  // result == http.Server, listen accepts `ListenOptions`
-  const result = await serverTContextInferred.listen();
+  const serverWithContext = new ApolloServer<MyContext>({
+    typeDefs: `type Query { hello: String }`,
+  });
+  const http = httpServer(serverWithContext, {
+    async context() {
+      return { id: '1' };
+    },
+  });
+  const { url } = await http.listen();
+})();
+
+// `MyContext` provided, context function returns a superset of `MyContext`
+(async () => {
+  const serverWithContext = new ApolloServer<MyContext>({
+    typeDefs: `type Query { hello: String }`,
+  });
+  const http = httpServer(serverWithContext, {
+    async context() {
+      return { id: '1', extraneous: 'blah' };
+    },
+  });
+  const { url } = await http.listen();
+})();
+
+// error path: `MyContext` provided but no context function provided
+(async () => {
+  const serverWithContext = new ApolloServer<MyContext>({
+    typeDefs: `type Query { hello: String }`,
+  });
+
+  // @ts-expect-error this is expected, a context function is required when the
+  // provided `ApolloServer` is not of `BaseContext` type.
+  const http = httpServer(serverWithContext);
+  const { url } = await http.listen();
 })();
