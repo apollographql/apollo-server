@@ -225,7 +225,6 @@ export function defineIntegrationTestSuiteHttpServerTests(
     >;
 
     let serverToCleanUp: ApolloServer | null = null;
-    let stopHttpServer: (() => Promise<void>) | null = null;
 
     async function createApp(
       config?: ApolloServerOptions<BaseContext>,
@@ -233,7 +232,6 @@ export function defineIntegrationTestSuiteHttpServerTests(
     ): Promise<http.Server> {
       const serverInfo = await createServer(config ?? { schema }, options);
       serverToCleanUp = serverInfo.server;
-      stopHttpServer = serverInfo.stopHttpServer ?? null;
       return serverInfo.httpServer;
     }
 
@@ -243,10 +241,8 @@ export function defineIntegrationTestSuiteHttpServerTests(
     async function stopServer() {
       try {
         await serverToCleanUp?.stop();
-        await stopHttpServer?.();
       } finally {
         serverToCleanUp = null;
-        stopHttpServer = null;
       }
     }
     afterEach(stopServer);
@@ -1315,6 +1311,23 @@ export function defineIntegrationTestSuiteHttpServerTests(
           expect(res.body.errors[0].message).toEqual(expected);
         });
       });
+    });
+
+    describe('server setup', () => {
+      // Serverless frameworks default listening on all paths so there's no 404.
+      if (!options.serverlessFramework) {
+        it('throws error on 404 routes', async () => {
+          app = await createApp();
+
+          const query = {
+            query: '{ testString }',
+          };
+          const req = request(app).get('/bogus-route').query(query);
+          return req.then((res) => {
+            expect(res.status).toEqual(404);
+          });
+        });
+      }
     });
 
     if (options.serverlessFramework) {

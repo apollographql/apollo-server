@@ -7,7 +7,6 @@ import type {
 import { defineIntegrationTestSuite } from '../integration';
 import type { ApolloServerOptions } from '../../types';
 import { ApolloServer } from '../../ApolloServer';
-import { Stopper } from '../../plugin/drainHttpServer/stoppable';
 
 defineIntegrationTestSuite(async function (
   serverOptions: ApolloServerOptions<BaseContext>,
@@ -19,9 +18,6 @@ defineIntegrationTestSuite(async function (
 
   const httpServer = getHttpServer(server, opts);
   await httpServer.listen({ port: 0 });
-  async function stopHttpServer() {
-    await new Stopper(httpServer['httpServer']).stop(0);
-  }
 
-  return { server, httpServer: httpServer['httpServer'], stopHttpServer };
+  return { server, httpServer: httpServer['httpServer'] };
 });

@@ -41,6 +41,7 @@ class HTTPApolloServer<TContext extends BaseContext> {
   async listen(
     listenOptions: ListenOptions = { port: 4000 },
   ): Promise<{ url: string }> {
+
     await this.apolloServer.start();
     this.app.use(
       cors(),
