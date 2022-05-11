@@ -7,6 +7,7 @@ import { format as urlFormat } from 'url';
 import type { ApolloServer } from '../ApolloServer';
 import { ExpressContext, expressMiddleware } from '../express';
 import type { BaseContext, ContextFunction } from '../externalTypes';
+import { ApolloServerPluginDrainHttpServer } from '../plugin';
 import type { WithRequired } from '../types';
 
 interface HTTPServerOptions<TContext extends BaseContext> {
@@ -41,6 +42,10 @@ class HTTPApolloServer<TContext extends BaseContext> {
   async listen(
     listenOptions: ListenOptions = { port: 4000 },
   ): Promise<{ url: string }> {
+
+    this.apolloServer.addPlugin(
+      ApolloServerPluginDrainHttpServer({ httpServer: this.httpServer }),
+    );
 
     await this.apolloServer.start();
     this.app.use(
