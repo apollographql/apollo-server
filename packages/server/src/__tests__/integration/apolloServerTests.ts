@@ -154,7 +154,7 @@ function urlForHttpServer(httpServer: http.Server): string {
   // ApolloServer.listen).
   const hostname = address === '' || address === '::' ? 'localhost' : address;
 
-  return `http://${hostname}:${port}`;
+  return `http://${hostname}:${port}/graphql`;
 }
 
 export function defineIntegrationTestSuiteApolloServerTests(
@@ -165,6 +165,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 ) {
   describe('apolloServerTests.ts', () => {
     let serverToCleanUp: ApolloServer | null = null;
+    let stopHttpServer: (() => Promise<void>) | null = null;
 
     async function createServer(
       config: ApolloServerOptions<BaseContext>,
@@ -174,6 +175,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         config,
         options,
       );
+      stopHttpServer = serverInfo.stopHttpServer ?? null;
       serverToCleanUp = serverInfo.server;
       return serverInfo;
     }
@@ -191,8 +193,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
     async function stopServer() {
       try {
         await serverToCleanUp?.stop();
+        await stopHttpServer?.();
       } finally {
         serverToCleanUp = null;
+        stopHttpServer = null;
       }
     }
     afterEach(stopServer);

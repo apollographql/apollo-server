@@ -8,6 +8,7 @@ import { defineIntegrationTestSuiteHttpServerTests } from './httpServerTests';
 export interface CreateServerForIntegrationTestsResult {
   server: ApolloServer<BaseContext>;
   httpServer: http.Server;
+  stopHttpServer?: () => Promise<void>;
 }
 
 export interface CreateServerForIntegrationTestsOptions {
