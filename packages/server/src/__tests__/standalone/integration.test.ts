@@ -21,7 +21,7 @@ defineIntegrationTestSuite(async function (
   await httpServer.listen({ port: 0 });
   async function stopHttpServer() {
     await new Stopper(httpServer['httpServer']).stop(0);
-  };
+  }
 
   return { server, httpServer: httpServer['httpServer'], stopHttpServer };
 });
