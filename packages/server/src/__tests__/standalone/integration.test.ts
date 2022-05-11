@@ -1,6 +1,9 @@
 import { httpServer as getHttpServer } from '../../standalone';
 import type { BaseContext } from '../../externalTypes';
-import type { CreateServerForIntegrationTestsOptions, CreateServerForIntegrationTestsResult } from '../integration';
+import type {
+  CreateServerForIntegrationTestsOptions,
+  CreateServerForIntegrationTestsResult,
+} from '../integration';
 import { defineIntegrationTestSuite } from '../integration';
 import type { ApolloServerOptions } from '../../types';
 import { ApolloServer } from '../../ApolloServer';
