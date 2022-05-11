@@ -1313,23 +1313,6 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
     });
 
-    describe('server setup', () => {
-      // Serverless frameworks default listening on all paths so there's no 404.
-      if (!options.serverlessFramework) {
-        it('throws error on 404 routes', async () => {
-          app = await createApp();
-
-          const query = {
-            query: '{ testString }',
-          };
-          const req = request(app).get('/bogus-route').query(query);
-          return req.then((res) => {
-            expect(res.status).toEqual(404);
-          });
-        });
-      }
-    });
-
     if (options.serverlessFramework) {
       // This tests the serverless-specific behavior that ensures that startup
       // finishes before serving a request. Non-serverless frameworks don't have
