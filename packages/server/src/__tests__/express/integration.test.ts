@@ -34,7 +34,7 @@ defineIntegrationTestSuite(async function (
   await server.start();
 
   app.use(
-    cors<cors.CorsRequest>(),
+    cors(),
     json(),
     expressMiddleware(server, {
       context: testOptions?.context,
