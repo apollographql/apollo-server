@@ -11,9 +11,7 @@ defineIntegrationTestSuite(async function (
 ): Promise<CreateServerForIntegrationTestsResult> {
   const server = new ApolloServer(serverOptions);
 
-  const opts = testOptions
-    ? { graphqlPath: testOptions.graphqlPath, context: testOptions.context }
-    : undefined;
+  const opts = testOptions ? { context: testOptions.context } : undefined;
 
   const httpServer = getHttpServer(server, opts);
   await httpServer.listen({ port: 0 });

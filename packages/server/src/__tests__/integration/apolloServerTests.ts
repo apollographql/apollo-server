@@ -144,10 +144,7 @@ const makeGatewayMock = ({
   return { gateway: mockedGateway, triggers: eventuallyAssigned };
 };
 
-function urlForHttpServer(
-  httpServer: http.Server,
-  graphqlPath?: string,
-): string {
+function urlForHttpServer(httpServer: http.Server): string {
   const { address, port } = httpServer.address() as AddressInfo;
 
   // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
@@ -157,7 +154,7 @@ function urlForHttpServer(
   // ApolloServer.listen).
   const hostname = address === '' || address === '::' ? 'localhost' : address;
 
-  return `http://${hostname}:${port}${graphqlPath ?? '/graphql'}`;
+  return `http://${hostname}:${port}`;
 }
 
 export function defineIntegrationTestSuiteApolloServerTests(
@@ -185,10 +182,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
       config: ApolloServerOptions<BaseContext>,
       options?: CreateServerForIntegrationTestsOptions,
     ): Promise<string> {
-      return urlForHttpServer(
-        (await createServer(config, options)).httpServer,
-        options?.graphqlPath,
-      );
+      return urlForHttpServer((await createServer(config, options)).httpServer);
     }
 
     // This will get called at the end of each test, and also tests
@@ -2573,58 +2567,30 @@ export function defineIntegrationTestSuiteApolloServerTests(
       });
 
       describe('basic functionality', () => {
-        describe('with non-root graphqlPath', () => {
-          beforeEach(async () => {
-            httpServer = (
-              await createServer(makeServerConfig(['BAZ']), {
-                graphqlPath: '/goofql',
-              })
-            ).httpServer;
-          });
-
-          it('basic GET works', async () => {
-            await get('/goofql').expect(200, 'BAZ');
-          });
-          it('only mounts under graphqlPath', async () => {
-            await get('/foo').expect(404);
-          });
-          it('needs the header', async () => {
-            await getWithoutAcceptHeader('/goofql').expect(serveNoLandingPage);
-          });
-          it('trailing slash works', async () => {
-            await get('/goofql/').expect(200, 'BAZ');
-          });
+        beforeEach(async () => {
+          httpServer = (await createServer(makeServerConfig(['BAZ'])))
+            .httpServer;
         });
 
-        describe('with root graphqlPath', () => {
-          beforeEach(async () => {
-            httpServer = (
-              await createServer(makeServerConfig(['BAZ']), {
-                graphqlPath: '/',
-              })
-            ).httpServer;
-          });
-
-          it('basic GET works', async () => {
-            await get('/').expect(200, 'BAZ');
-          });
-          it('basic GET works with more complex header', async () => {
-            // This is what Chrome happens to be sending today.
-            await get(
-              '/',
-              // cspell:disable-next-line
-              'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-            ).expect(200, 'BAZ');
-          });
-          it('no landing page with application/json', async () => {
-            await get('/', 'application/json').expect(serveNoLandingPage);
-          });
-          it('no landing page with */*', async () => {
-            await get('/', '*/*').expect(serveNoLandingPage);
-          });
-          it('needs the header', async () => {
-            await getWithoutAcceptHeader('/').expect(serveNoLandingPage);
-          });
+        it('basic GET works', async () => {
+          await get('/').expect(200, 'BAZ');
+        });
+        it('basic GET works with more complex header', async () => {
+          // This is what Chrome happens to be sending today.
+          await get(
+            '/',
+            // cspell:disable-next-line
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+          ).expect(200, 'BAZ');
+        });
+        it('no landing page with application/json', async () => {
+          await get('/', 'application/json').expect(serveNoLandingPage);
+        });
+        it('no landing page with */*', async () => {
+          await get('/', '*/*').expect(serveNoLandingPage);
+        });
+        it('needs the header', async () => {
+          await getWithoutAcceptHeader('/').expect(serveNoLandingPage);
         });
       });
 
