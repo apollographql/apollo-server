@@ -1,4 +1,4 @@
-import { httpServer as getHttpServer } from '../../standalone';
+import { standaloneServer } from '../../standalone';
 import { ApolloServer } from '../../ApolloServer';
 
 describe('Typings: TContext inference', () => {
@@ -8,7 +8,7 @@ describe('Typings: TContext inference', () => {
     });
 
     // HTTPApolloServer<BaseContext>
-    getHttpServer(server);
+    standaloneServer(server);
   });
 
   // `context` function can provide a superset of the `TContext` inferred by or
@@ -19,7 +19,7 @@ describe('Typings: TContext inference', () => {
     });
 
     // HTTPApolloServer<BaseContext>
-    getHttpServer(server, {
+    standaloneServer(server, {
       async context() {
         return { foo: 'bar' };
       },
@@ -43,7 +43,7 @@ describe('Typings: TContext inference', () => {
     });
 
     // HTTPApolloServer<MyContext>
-    getHttpServer(server, {
+    standaloneServer(server, {
       async context() {
         return { foo: 'bar' };
       },
@@ -67,7 +67,7 @@ describe('Typings: TContext inference', () => {
     });
 
     // @ts-expect-error
-    getHttpServer(server);
+    standaloneServer(server);
   });
 
   it('errors when `MyContext` is provided without a compatible `context` function', async () => {
@@ -87,7 +87,7 @@ describe('Typings: TContext inference', () => {
     });
 
     // @ts-expect-error
-    getHttpServer(server, {
+    standaloneServer(server, {
       async context() {
         return { notFoo: 'oops' };
       },

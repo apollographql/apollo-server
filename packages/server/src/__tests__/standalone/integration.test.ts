@@ -1,4 +1,4 @@
-import { httpServer as getHttpServer } from '../../standalone';
+import { standaloneServer } from '../../standalone';
 import type { BaseContext } from '../../externalTypes';
 import type {
   CreateServerForIntegrationTestsOptions,
@@ -14,8 +14,8 @@ defineIntegrationTestSuite(async function (
 ): Promise<CreateServerForIntegrationTestsResult> {
   const opts = testOptions ? { context: testOptions.context } : undefined;
   const server = new ApolloServer(serverOptions);
-  const httpServer = getHttpServer(server, opts);
-  await httpServer.listen({ port: 0 });
+  const standaloneServerInstance = standaloneServer(server, opts);
+  await standaloneServerInstance.listen({ port: 0 });
 
-  return { server, httpServer: httpServer['httpServer'] };
+  return { server, httpServer: standaloneServerInstance['httpServer'] };
 });

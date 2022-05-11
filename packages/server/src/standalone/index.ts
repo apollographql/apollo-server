@@ -14,23 +14,23 @@ interface HTTPServerOptions<TContext extends BaseContext> {
   context?: ContextFunction<[ExpressContext], TContext>;
 }
 
-export function httpServer(
+export function standaloneServer(
   server: ApolloServer<BaseContext>,
   options?: HTTPServerOptions<BaseContext>,
-): HTTPApolloServer<BaseContext>;
-export function httpServer<TContext extends BaseContext>(
+): ApolloServerStandalone<BaseContext>;
+export function standaloneServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
   options: WithRequired<HTTPServerOptions<TContext>, 'context'>,
-): HTTPApolloServer<TContext>;
-export function httpServer<TContext extends BaseContext>(
+): ApolloServerStandalone<TContext>;
+export function standaloneServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
   options?: HTTPServerOptions<TContext>,
-): HTTPApolloServer<TContext> {
+): ApolloServerStandalone<TContext> {
   const context = options?.context ?? (async () => ({} as TContext));
-  return new HTTPApolloServer<TContext>(server, { context });
+  return new ApolloServerStandalone<TContext>(server, { context });
 }
 
-class HTTPApolloServer<TContext extends BaseContext> {
+class ApolloServerStandalone<TContext extends BaseContext> {
   private app: express.Express = express();
   private httpServer: http.Server = http.createServer(this.app);
 
