@@ -154,7 +154,7 @@ function urlForHttpServer(httpServer: http.Server): string {
   // ApolloServer.listen).
   const hostname = address === '' || address === '::' ? 'localhost' : address;
 
-  return `http://${hostname}:${port}/graphql`;
+  return `http://${hostname}:${port}`;
 }
 
 export function defineIntegrationTestSuiteApolloServerTests(
