@@ -955,7 +955,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
   }
 
   public addPlugin(plugin: ApolloServerPlugin<TContext>) {
-    if (this.internals.state.phase !== "initialized") {
+    if (this.internals.state.phase !== 'initialized') {
       throw new Error("Can't add plugins after the server has started");
     }
     this.internals.plugins.push(plugin);

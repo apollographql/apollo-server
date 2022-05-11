@@ -42,7 +42,6 @@ class HTTPApolloServer<TContext extends BaseContext> {
   async listen(
     listenOptions: ListenOptions = { port: 4000 },
   ): Promise<{ url: string }> {
-
     this.apolloServer.addPlugin(
       ApolloServerPluginDrainHttpServer({ httpServer: this.httpServer }),
     );
