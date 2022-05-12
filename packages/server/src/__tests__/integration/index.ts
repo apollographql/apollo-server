@@ -1,4 +1,3 @@
-import type http from 'http';
 import type { ApolloServer, ApolloServerOptions } from '../..';
 import type { ContextThunk } from '../../ApolloServer';
 import type { BaseContext } from '../../externalTypes';
@@ -7,7 +6,7 @@ import { defineIntegrationTestSuiteHttpServerTests } from './httpServerTests';
 
 export interface CreateServerForIntegrationTestsResult {
   server: ApolloServer<BaseContext>;
-  httpServer: http.Server;
+  url: string;
 }
 
 export interface CreateServerForIntegrationTestsOptions {
