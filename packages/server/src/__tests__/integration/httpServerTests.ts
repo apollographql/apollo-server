@@ -20,7 +20,6 @@ import {
   ValidationContext,
 } from 'graphql';
 import gql from 'graphql-tag';
-import type http from 'http';
 import Keyv from 'keyv';
 import type { HTTPError } from 'superagent';
 import request from 'supertest';
@@ -229,10 +228,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
     async function createApp(
       config?: ApolloServerOptions<BaseContext>,
       options?: CreateServerForIntegrationTestsOptions,
-    ): Promise<http.Server> {
+    ): Promise<string> {
       const serverInfo = await createServer(config ?? { schema }, options);
       serverToCleanUp = serverInfo.server;
-      return serverInfo.httpServer;
+      return serverInfo.url;
     }
 
     // This will get called at the end of each test, and also tests

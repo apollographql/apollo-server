@@ -144,19 +144,6 @@ const makeGatewayMock = ({
   return { gateway: mockedGateway, triggers: eventuallyAssigned };
 };
 
-function urlForHttpServer(httpServer: http.Server): string {
-  const { address, port } = httpServer.address() as AddressInfo;
-
-  // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
-  // corresponding loopback ip. Note that the url field we're setting is
-  // primarily for consumption by our test suite. If this heuristic is wrong for
-  // your use case, explicitly specify a frontend host (in the `host` option to
-  // ApolloServer.listen).
-  const hostname = address === '' || address === '::' ? 'localhost' : address;
-
-  return `http://${hostname}:${port}`;
-}
-
 export function defineIntegrationTestSuiteApolloServerTests(
   createServerWithoutRememberingToCleanItUp: CreateServerForIntegrationTests,
   options: {
@@ -182,7 +169,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
       config: ApolloServerOptions<BaseContext>,
       options?: CreateServerForIntegrationTestsOptions,
     ): Promise<string> {
-      return urlForHttpServer((await createServer(config, options)).httpServer);
+      return (await createServer(config, options)).url;
     }
 
     // This will get called at the end of each test, and also tests
@@ -576,7 +563,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
       const setupApolloServerAndFetchPairForPlugins = async (
         plugins: PluginDefinition<BaseContext>[] = [],
       ) => {
-        const { server, httpServer } = await createServer(
+        const { server, url } = await createServer(
           {
             typeDefs: gql`
               type Query {
@@ -590,7 +577,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         serverInstance = server;
 
-        apolloFetch = createApolloFetch({ uri: urlForHttpServer(httpServer) })
+        apolloFetch = createApolloFetch({ uri: url })
           // Store the response so we can inspect it.
           .useAfter(({ response }, next) => {
             apolloFetchResponse = response;
@@ -2446,11 +2433,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
           executor,
         });
 
-        const { httpServer, server } = await createServer({ gateway });
+        const { url, server } = await createServer({ gateway });
 
-        const apolloFetch = createApolloFetch({
-          uri: urlForHttpServer(httpServer),
-        });
+        const apolloFetch = createApolloFetch({ uri: url });
         const result1 = apolloFetch({ query: '{testString1}' });
         await executorData['{testString1}'].startPromise;
         triggers.triggerSchemaChange!(getSchemaUpdateWithField('testString2'));
@@ -2479,14 +2464,14 @@ export function defineIntegrationTestSuiteApolloServerTests(
     });
 
     describe('renderLandingPage', () => {
-      let httpServer: http.Server;
+      let url: string;
 
-      function getWithoutAcceptHeader(url: string) {
-        return request(httpServer).get(url);
+      function getWithoutAcceptHeader() {
+        return request(url).get('/');
       }
 
-      function get(url: string, accept: string = 'text/html') {
-        return getWithoutAcceptHeader(url).set('accept', accept);
+      function get(accept: string = 'text/html') {
+        return getWithoutAcceptHeader().set('accept', accept);
       }
 
       function makeServerConfig(
@@ -2518,30 +2503,30 @@ export function defineIntegrationTestSuiteApolloServerTests(
       const serveNoLandingPage = 400;
 
       it('defaults to LocalDefault', async () => {
-        httpServer = (await createServer(makeServerConfig([]))).httpServer;
-        await get('/').expect(
+        url = (await createServer(makeServerConfig([]))).url;
+        await get().expect(
           200,
           /apollo-server-landing-page.cdn.apollographql.com\/_latest.*isProd[^t]+false/s,
         );
       });
 
       it('can specify version for LocalDefault', async () => {
-        httpServer = (
+        url = (
           await createServer({
             typeDefs: 'type Query {x: ID}',
             plugins: [
               ApolloServerPluginLandingPageLocalDefault({ version: 'abcdef' }),
             ],
           })
-        ).httpServer;
-        await get('/').expect(
+        ).url;
+        await get().expect(
           200,
           /apollo-server-landing-page.cdn.apollographql.com\/abcdef.*isProd[^t]+false/s,
         );
       });
 
       it('can install playground with specific version', async () => {
-        httpServer = (
+        url = (
           await createServer({
             typeDefs: 'type Query {x: ID}',
             plugins: [
@@ -2550,47 +2535,45 @@ export function defineIntegrationTestSuiteApolloServerTests(
               }),
             ],
           })
-        ).httpServer;
-        await get('/')
+        ).url;
+        await get()
           .expect(/Playground/)
           .expect(/react@9\.8\.7/);
       });
 
       it('can be disabled', async () => {
-        httpServer = (
+        url = (
           await createServer({
             typeDefs: 'type Query {x: ID}',
             plugins: [ApolloServerPluginLandingPageDisabled()],
           })
-        ).httpServer;
-        await get('/').expect(serveNoLandingPage);
+        ).url;
+        await get().expect(serveNoLandingPage);
       });
 
       describe('basic functionality', () => {
         beforeEach(async () => {
-          httpServer = (await createServer(makeServerConfig(['BAZ'])))
-            .httpServer;
+          url = (await createServer(makeServerConfig(['BAZ']))).url;
         });
 
         it('basic GET works', async () => {
-          await get('/').expect(200, 'BAZ');
+          await get().expect(200, 'BAZ');
         });
         it('basic GET works with more complex header', async () => {
           // This is what Chrome happens to be sending today.
           await get(
-            '/',
             // cspell:disable-next-line
             'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
           ).expect(200, 'BAZ');
         });
         it('no landing page with application/json', async () => {
-          await get('/', 'application/json').expect(serveNoLandingPage);
+          await get('application/json').expect(serveNoLandingPage);
         });
         it('no landing page with */*', async () => {
-          await get('/', '*/*').expect(serveNoLandingPage);
+          await get('*/*').expect(serveNoLandingPage);
         });
         it('needs the header', async () => {
-          await getWithoutAcceptHeader('/').expect(serveNoLandingPage);
+          await getWithoutAcceptHeader().expect(serveNoLandingPage);
         });
       });
 
@@ -2611,14 +2594,14 @@ export function defineIntegrationTestSuiteApolloServerTests(
     describe('CSRF prevention', () => {
       async function makeServer(
         csrfPrevention?: ApolloServerOptions<BaseContext>['csrfPrevention'],
-      ): Promise<http.Server> {
+      ): Promise<string> {
         return (
           await createServer({
             typeDefs: 'type Query { x: ID }',
             resolvers: { Query: { x: () => 'foo' } },
             csrfPrevention,
           })
-        ).httpServer;
+        ).url;
       }
       const operation = { query: '{x}' };
       const response = { data: { x: 'foo' } };
@@ -2634,36 +2617,34 @@ export function defineIntegrationTestSuiteApolloServerTests(
       }
 
       it('default', async () => {
-        const httpServer = await makeServer();
+        const url = await makeServer();
 
         // Normal POSTs work.
         succeeds(
-          await request(httpServer)
+          await request(url)
             .post('/')
             .set('content-type', 'application/json')
             .send(JSON.stringify(operation)),
         );
 
         // POST without content-type is blocked.
-        blocked(
-          await request(httpServer).post('/').send(JSON.stringify(operation)),
-        );
+        blocked(await request(url).post('/').send(JSON.stringify(operation)));
 
         // POST with text/plain is blocked.
         blocked(
-          await request(httpServer)
+          await request(url)
             .post('/')
             .set('content-type', 'text/plain')
             .send(JSON.stringify(operation)),
         );
 
         // GET without content-type is blocked.
-        blocked(await request(httpServer).get('/').query(operation));
+        blocked(await request(url).get('/').query(operation));
 
         // GET with json content-type succeeds (this is what Apollo Client Web
         // does).
         succeeds(
-          await request(httpServer)
+          await request(url)
             .get('/')
             .set('content-type', 'application/json')
             .query(operation),
@@ -2672,7 +2653,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // GET with text/plain content-type is blocked (because this is not
         // preflighted).
         blocked(
-          await request(httpServer)
+          await request(url)
             .get('/')
             .set('content-type', 'text/plain')
             .query(operation),
@@ -2682,7 +2663,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // this will be preflighted, although it would be reasonable if it
         // didn't.
         succeeds(
-          await request(httpServer)
+          await request(url)
             .get('/')
             .set('content-type', 'invalid')
             .query(operation),
@@ -2691,7 +2672,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // Adding parameters to the content-type and spaces doesn't stop it from
         // being blocked.
         blocked(
-          await request(httpServer)
+          await request(url)
             .get('/')
             .set('content-type', '    text/plain   ; charset=utf-8')
             .query(operation),
@@ -2699,7 +2680,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         // But we can do the space and charset around json and have that be fine.
         succeeds(
-          await request(httpServer)
+          await request(url)
             .get('/')
             .set('content-type', '    application/json   ; charset=utf-8')
             .query(operation),
@@ -2708,7 +2689,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // This header set by iOS and Kotlin lets us bypass the check (and would
         // cause a preflight in the browser).
         succeeds(
-          await request(httpServer)
+          await request(url)
             .get('/')
             .set('x-apollo-operation-name', 'foo')
             .query(operation),
@@ -2717,7 +2698,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // This header that you can set manually lets us bypass the check (and
         // would cause a preflight in the browser).
         succeeds(
-          await request(httpServer)
+          await request(url)
             .get('/')
             .set('apollo-require-preflight', 'bar')
             .query(operation),
@@ -2725,7 +2706,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         // But this random header is not good enough.
         blocked(
-          await request(httpServer)
+          await request(url)
             .get('/')
             .set('please-preflight-me', 'bar')
             .query(operation),
@@ -2733,20 +2714,20 @@ export function defineIntegrationTestSuiteApolloServerTests(
       });
 
       it('csrfPrevention: {requestHeaders}', async () => {
-        const httpServer = await makeServer({ requestHeaders: ['xxx', 'yyy'] });
+        const url = await makeServer({ requestHeaders: ['xxx', 'yyy'] });
 
         // GET without content-type is blocked.
-        blocked(await request(httpServer).get('/').query(operation));
+        blocked(await request(url).get('/').query(operation));
 
         // The headers we configured work, separately and together.
         succeeds(
-          await request(httpServer).get('/').set('xxx', 'foo').query(operation),
+          await request(url).get('/').set('xxx', 'foo').query(operation),
         );
         succeeds(
-          await request(httpServer).get('/').set('yyy', 'bar').query(operation),
+          await request(url).get('/').set('yyy', 'bar').query(operation),
         );
         succeeds(
-          await request(httpServer)
+          await request(url)
             .get('/')
             .set('xxx', 'foo')
             .set('yyy', 'bar')
@@ -2755,7 +2736,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         // But this default header doesn't work.
         blocked(
-          await request(httpServer)
+          await request(url)
             .get('/')
             .set('apollo-require-preflight', 'bar')
             .query(operation),
@@ -2763,10 +2744,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
       });
 
       it('csrfPrevention: false', async () => {
-        const httpServer = await makeServer(false);
+        const url = await makeServer(false);
 
         // GET without content-type succeeds when CSRF prevention is disabled.
-        succeeds(await request(httpServer).get('/').query(operation));
+        succeeds(await request(url).get('/').query(operation));
       });
     });
   });
