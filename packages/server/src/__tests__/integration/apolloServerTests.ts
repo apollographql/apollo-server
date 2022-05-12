@@ -2646,9 +2646,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         // POST without content-type is blocked.
         blocked(
-          await request(httpServer)
-            .post('/')
-            .send(JSON.stringify(operation)),
+          await request(httpServer).post('/').send(JSON.stringify(operation)),
         );
 
         // POST with text/plain is blocked.
@@ -2742,16 +2740,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         // The headers we configured work, separately and together.
         succeeds(
-          await request(httpServer)
-            .get('/')
-            .set('xxx', 'foo')
-            .query(operation),
+          await request(httpServer).get('/').set('xxx', 'foo').query(operation),
         );
         succeeds(
-          await request(httpServer)
-            .get('/')
-            .set('yyy', 'bar')
-            .query(operation),
+          await request(httpServer).get('/').set('yyy', 'bar').query(operation),
         );
         succeeds(
           await request(httpServer)

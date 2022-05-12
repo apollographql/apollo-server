@@ -277,10 +277,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('throws an error if POST body is missing even with content-type', async () => {
         app = await createApp();
-        const req = request(app)
-          .post('/')
-          .type('application/json')
-          .send();
+        const req = request(app).post('/').type('application/json').send();
         return req.then((res) => {
           expect(res.status).toEqual(400);
           expect((res.error as HTTPError).text).toMatch('POST body missing');
