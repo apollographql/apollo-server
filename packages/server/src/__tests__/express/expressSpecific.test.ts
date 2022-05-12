@@ -8,10 +8,10 @@ it('gives helpful error if body-parser middleware is not installed', async () =>
   await server.start();
   const app = express();
   // Note lack of `json` here.
-  app.use('/graphql', expressMiddleware(server));
+  app.use(expressMiddleware(server));
 
   await request(app)
-    .post('/graphql')
+    .post('/')
     .send({ query: '{hello}' })
     .expect(500, /forgot to set up the `body-parser`/);
   await server.stop();

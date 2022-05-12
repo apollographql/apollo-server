@@ -2519,7 +2519,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
       it('defaults to LocalDefault', async () => {
         httpServer = (await createServer(makeServerConfig([]))).httpServer;
-        await get('/graphql').expect(
+        await get('/').expect(
           200,
           /apollo-server-landing-page.cdn.apollographql.com\/_latest.*isProd[^t]+false/s,
         );
@@ -2534,7 +2534,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             ],
           })
         ).httpServer;
-        await get('/graphql').expect(
+        await get('/').expect(
           200,
           /apollo-server-landing-page.cdn.apollographql.com\/abcdef.*isProd[^t]+false/s,
         );
@@ -2551,7 +2551,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             ],
           })
         ).httpServer;
-        await get('/graphql')
+        await get('/')
           .expect(/Playground/)
           .expect(/react@9\.8\.7/);
       });
@@ -2563,7 +2563,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             plugins: [ApolloServerPluginLandingPageDisabled()],
           })
         ).httpServer;
-        await get('/graphql').expect(serveNoLandingPage);
+        await get('/').expect(serveNoLandingPage);
       });
 
       describe('basic functionality', () => {
@@ -2639,34 +2639,32 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // Normal POSTs work.
         succeeds(
           await request(httpServer)
-            .post('/graphql')
+            .post('/')
             .set('content-type', 'application/json')
             .send(JSON.stringify(operation)),
         );
 
         // POST without content-type is blocked.
         blocked(
-          await request(httpServer)
-            .post('/graphql')
-            .send(JSON.stringify(operation)),
+          await request(httpServer).post('/').send(JSON.stringify(operation)),
         );
 
         // POST with text/plain is blocked.
         blocked(
           await request(httpServer)
-            .post('/graphql')
+            .post('/')
             .set('content-type', 'text/plain')
             .send(JSON.stringify(operation)),
         );
 
         // GET without content-type is blocked.
-        blocked(await request(httpServer).get('/graphql').query(operation));
+        blocked(await request(httpServer).get('/').query(operation));
 
         // GET with json content-type succeeds (this is what Apollo Client Web
         // does).
         succeeds(
           await request(httpServer)
-            .get('/graphql')
+            .get('/')
             .set('content-type', 'application/json')
             .query(operation),
         );
@@ -2675,7 +2673,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // preflighted).
         blocked(
           await request(httpServer)
-            .get('/graphql')
+            .get('/')
             .set('content-type', 'text/plain')
             .query(operation),
         );
@@ -2685,7 +2683,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // didn't.
         succeeds(
           await request(httpServer)
-            .get('/graphql')
+            .get('/')
             .set('content-type', 'invalid')
             .query(operation),
         );
@@ -2694,7 +2692,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // being blocked.
         blocked(
           await request(httpServer)
-            .get('/graphql')
+            .get('/')
             .set('content-type', '    text/plain   ; charset=utf-8')
             .query(operation),
         );
@@ -2702,7 +2700,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // But we can do the space and charset around json and have that be fine.
         succeeds(
           await request(httpServer)
-            .get('/graphql')
+            .get('/')
             .set('content-type', '    application/json   ; charset=utf-8')
             .query(operation),
         );
@@ -2711,7 +2709,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // cause a preflight in the browser).
         succeeds(
           await request(httpServer)
-            .get('/graphql')
+            .get('/')
             .set('x-apollo-operation-name', 'foo')
             .query(operation),
         );
@@ -2720,7 +2718,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // would cause a preflight in the browser).
         succeeds(
           await request(httpServer)
-            .get('/graphql')
+            .get('/')
             .set('apollo-require-preflight', 'bar')
             .query(operation),
         );
@@ -2728,7 +2726,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // But this random header is not good enough.
         blocked(
           await request(httpServer)
-            .get('/graphql')
+            .get('/')
             .set('please-preflight-me', 'bar')
             .query(operation),
         );
@@ -2738,24 +2736,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
         const httpServer = await makeServer({ requestHeaders: ['xxx', 'yyy'] });
 
         // GET without content-type is blocked.
-        blocked(await request(httpServer).get('/graphql').query(operation));
+        blocked(await request(httpServer).get('/').query(operation));
 
         // The headers we configured work, separately and together.
         succeeds(
-          await request(httpServer)
-            .get('/graphql')
-            .set('xxx', 'foo')
-            .query(operation),
+          await request(httpServer).get('/').set('xxx', 'foo').query(operation),
+        );
+        succeeds(
+          await request(httpServer).get('/').set('yyy', 'bar').query(operation),
         );
         succeeds(
           await request(httpServer)
-            .get('/graphql')
-            .set('yyy', 'bar')
-            .query(operation),
-        );
-        succeeds(
-          await request(httpServer)
-            .get('/graphql')
+            .get('/')
             .set('xxx', 'foo')
             .set('yyy', 'bar')
             .query(operation),
@@ -2764,7 +2756,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // But this default header doesn't work.
         blocked(
           await request(httpServer)
-            .get('/graphql')
+            .get('/')
             .set('apollo-require-preflight', 'bar')
             .query(operation),
         );
@@ -2774,7 +2766,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         const httpServer = await makeServer(false);
 
         // GET without content-type succeeds when CSRF prevention is disabled.
-        succeeds(await request(httpServer).get('/graphql').query(operation));
+        succeeds(await request(httpServer).get('/').query(operation));
       });
     });
   });

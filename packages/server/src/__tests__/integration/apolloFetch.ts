@@ -108,7 +108,7 @@ function throwHttpError(response: ParsedResponse, error: Error) {
 }
 
 export function createApolloFetch(params: FetchOptions = {}): ApolloFetch {
-  const _uri = params.uri || '/graphql';
+  const _uri = params.uri || '/';
   const middlewares: MiddlewareInterface[] = [];
   const afterwares: AfterwareInterface[] = [];
 

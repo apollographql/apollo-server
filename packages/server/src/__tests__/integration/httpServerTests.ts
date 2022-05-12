@@ -251,7 +251,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('rejects the request if the method is not POST or GET', async () => {
         app = await createApp();
         const req = request(app)
-          .head('/graphql')
+          .head('/')
           // Make sure we get the error we're looking for, not the CSRF
           // prevention error :)
           .set('apollo-require-preflight', 't')
@@ -265,7 +265,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('throws an error if POST body is empty', async () => {
         app = await createApp();
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .type('text/plain')
           .set('apollo-require-preflight', 't')
           .send('  ');
@@ -277,10 +277,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('throws an error if POST body is missing even with content-type', async () => {
         app = await createApp();
-        const req = request(app)
-          .post('/graphql')
-          .type('application/json')
-          .send();
+        const req = request(app).post('/').type('application/json').send();
         return req.then((res) => {
           expect(res.status).toEqual(400);
           expect((res.error as HTTPError).text).toMatch('POST body missing');
@@ -290,7 +287,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('throws an error if invalid content-type', async () => {
         app = await createApp();
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .type('text/plain')
           .set('apollo-require-preflight', 't')
           .send(
@@ -306,7 +303,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('throws an error if POST operation is missing', async () => {
         app = await createApp();
-        const req = request(app).post('/graphql').send({});
+        const req = request(app).post('/').send({});
         return req.then((res) => {
           expect(res.status).toEqual(400);
           expect((res.error as HTTPError).text).toMatch('has no keys');
@@ -315,7 +312,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('throws an error if POST operation is empty', async () => {
         app = await createApp();
-        const req = request(app).post('/graphql').send({ query: '' });
+        const req = request(app).post('/').send({ query: '' });
         return req.then((res) => {
           expect(res.status).toEqual(400);
           expect((res.error as HTTPError).text).toMatch('non-empty `query`');
@@ -325,7 +322,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('throws an error if POST JSON is malformed', async () => {
         app = await createApp();
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .type('application/json')
           .send('{foo');
         return req.then((res) => {
@@ -337,7 +334,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('throws an error if GET query is missing', async () => {
         app = await createApp();
         const res = await request(app)
-          .get(`/graphql`)
+          .get(`/`)
           .set('apollo-require-preflight', 't');
         expect(res.status).toEqual(400);
         expect(JSON.parse((res.error as HTTPError).text))
@@ -364,7 +361,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           query: 'query test{ testString }',
         };
         const req = request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query(query);
         return req.then((res) => {
@@ -382,7 +379,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           query: '{ testString }',
         };
         const req = request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query(query);
         return req.then((res) => {
@@ -407,7 +404,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           query: 'mutation test{ testMutation(echo: "ping") }',
         };
         const req = request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query(query);
 
@@ -454,7 +451,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             }`,
         };
         const req = request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query(query);
         await req.then((res) => {
@@ -486,7 +483,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           testArgument: 'hello world',
         };
         const req = request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query(query);
         return req.then((res) => {
@@ -500,7 +497,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const expected = {
           testString: 'it works',
         };
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testString }',
         });
         return req.then((res) => {
@@ -560,7 +557,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         it('applies cacheControl Headers', async () => {
           const app = await createApp({ typeDefs, resolvers });
-          const res = await request(app).post('/graphql').send({
+          const res = await request(app).post('/').send({
             query: `{ cooks { title author } }`,
           });
           expect(res.status).toEqual(200);
@@ -570,7 +567,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         it('contains no cacheControl Headers when uncacheable', async () => {
           const app = await createApp({ typeDefs, resolvers });
-          const res = await request(app).post('/graphql').send({
+          const res = await request(app).post('/').send({
             query: `{ books { title author } }`,
           });
           expect(res.status).toEqual(200);
@@ -580,7 +577,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         it('contains private cacheControl Headers when scoped', async () => {
           const app = await createApp({ typeDefs, resolvers });
-          const res = await request(app).post('/graphql').send({
+          const res = await request(app).post('/').send({
             query: `{ pooks { title books { title author } } }`,
           });
           expect(res.status).toEqual(200);
@@ -596,7 +593,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             resolvers,
             plugins: [ApolloServerPluginCacheControlDisabled()],
           });
-          const res = await request(app).post('/graphql').send({
+          const res = await request(app).post('/').send({
             query: `{ pooks { title books { title author } } }`,
           });
           expect(res.status).toEqual(200);
@@ -614,7 +611,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const expected = {
           testPerson: { firstName: 'Jane' },
         };
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testPerson { firstName } }',
         });
         return req.then((res) => {
@@ -631,7 +628,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const expected = {
           testPersonWithCacheControl: { firstName: 'Jane' },
         };
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testPersonWithCacheControl { firstName } }',
         });
         return req.then((res) => {
@@ -649,7 +646,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const expected = {
           testPerson: { firstName: 'Jane' },
         };
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testPerson { firstName } }',
         });
         return req.then((res) => {
@@ -665,7 +662,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           persistedQueries: false,
         });
         const req = request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query({
             extensions: JSON.stringify({
@@ -694,7 +691,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           persistedQueries: false,
         });
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send({
             extensions: {
               persistedQuery: {
@@ -720,7 +717,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('returns PersistedQueryNotFound to a GET request', async () => {
         app = await createApp();
         const req = request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query({
             extensions: JSON.stringify({
@@ -745,7 +742,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('returns PersistedQueryNotFound to a POST request', async () => {
         app = await createApp();
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send({
             extensions: {
               persistedQuery: {
@@ -772,7 +769,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           testArgument: 'hello world',
         };
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send({
             query: 'query test($echo: String){ testArgument(echo: $echo) }',
             variables: { echo: 'world' },
@@ -785,7 +782,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('POST does not handle a request with variables as string', async () => {
         app = await createApp();
-        const res = await request(app).post('/graphql').send({
+        const res = await request(app).post('/').send({
           query: 'query test($echo: String!){ testArgument(echo: $echo) }',
           variables: '{ "echo": "world" }',
         });
@@ -797,7 +794,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('POST does not handle a request with extensions as string', async () => {
         app = await createApp();
-        const res = await request(app).post('/graphql').send({
+        const res = await request(app).post('/').send({
           query: 'query test($echo: String!){ testArgument(echo: $echo) }',
           extensions: '{ "echo": "world" }',
         });
@@ -813,7 +810,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           testString: 'it works',
         };
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send({
             query: `
                       query test($echo: String){ testArgument(echo: $echo) }
@@ -830,7 +827,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('can handle introspection request', async () => {
         app = await createApp();
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send({ query: getIntrospectionQuery() });
         return req.then((res) => {
           expect(res.status).toEqual(200);
@@ -843,7 +840,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('does not accept a query AST', async () => {
         app = await createApp();
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send({
             query: gql`
               query test {
@@ -872,7 +869,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           },
         ];
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send([
             {
               query: `
@@ -902,7 +899,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           },
         };
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send({
             query: `
                       query test($echo: String){ testArgument(echo: $echo) }
@@ -926,7 +923,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           },
         ];
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send([
             {
               query: `
@@ -951,7 +948,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           data: { testStringWithDelay: 'it works' },
         });
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send(
             Array(parallels).fill({
               query: `query test($delay: Int!) { testStringWithDelay(delay: $delay) }`,
@@ -969,7 +966,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         app = await createApp();
 
         const res = await request(app)
-          .post('/graphql')
+          .post('/')
           .send([
             {
               query: `
@@ -1013,7 +1010,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           },
         ];
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send([
             {
               query: 'query test{ testContext }',
@@ -1055,7 +1052,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           },
         ];
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send([
             {
               query: 'query test{ testContext }',
@@ -1084,7 +1081,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           testMutation: 'not really a mutation, but who cares: world',
         };
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send({
             query: 'mutation test($echo: String){ testMutation(echo: $echo) }',
             variables: { echo: 'world' },
@@ -1105,7 +1102,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
         const expected = { it: 'works' };
         const req = request(app)
-          .post('/graphql')
+          .post('/')
           .send({
             query: 'mutation test($echo: String){ testMutation(echo: $echo) }',
             variables: { echo: 'world' },
@@ -1124,7 +1121,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           },
           { context: async () => ({ testField: expected }) },
         );
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testContext }',
         });
         return req.then((res) => {
@@ -1139,7 +1136,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           schema,
           rootValue: expected,
         });
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testRootValue }',
         });
         return req.then((res) => {
@@ -1158,13 +1155,13 @@ export function defineIntegrationTestSuiteHttpServerTests(
             return op!.operation === 'query' ? expectedQuery : expectedMutation;
           },
         });
-        const queryRes = await request(app).post('/graphql').send({
+        const queryRes = await request(app).post('/').send({
           query: 'query test{ testRootValue }',
         });
         expect(queryRes.status).toEqual(200);
         expect(queryRes.body.data.testRootValue).toEqual(expectedQuery);
 
-        const mutationRes = await request(app).post('/graphql').send({
+        const mutationRes = await request(app).post('/').send({
           query: 'mutation test{ testRootValue }',
         });
         expect(mutationRes.status).toEqual(200);
@@ -1176,7 +1173,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         app = await createApp({
           schema,
         });
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testError }',
         });
         return req.then((res) => {
@@ -1194,7 +1191,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             return { message: expected };
           },
         });
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testError }',
         });
         return req.then((res) => {
@@ -1213,7 +1210,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             return { message: expected };
           },
         });
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testError }',
         });
         return req.then((res) => {
@@ -1230,7 +1227,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           },
         });
 
-        const response = await request(app).post('/graphql').send({
+        const response = await request(app).post('/').send({
           query: '{thrower}',
         });
 
@@ -1257,7 +1254,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           },
         });
 
-        const response = await request(app).post('/graphql').send({
+        const response = await request(app).post('/').send({
           query: '{thrower}',
         });
 
@@ -1281,7 +1278,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             throw new Error('I should be caught');
           },
         });
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testError }',
         });
         return req.then((res) => {
@@ -1303,7 +1300,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           schema,
           validationRules: [alwaysInvalidRule],
         });
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testString }',
         });
         return req.then((res) => {
@@ -1358,7 +1355,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         // Intentionally fire off the request asynchronously, without await.
         const res = request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query({
             query: 'query test{ testString }',
@@ -1400,7 +1397,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           ],
         });
 
-        const req = request(app).post('/graphql').send({
+        const req = request(app).post('/').send({
           query: 'query test{ testString }',
         });
         return req.then((res) => {
@@ -1475,7 +1472,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('when ttlSeconds is set, passes ttl to the apq cache set call', async () => {
         app = await createApqApp({ ttl: 900 });
 
-        await request(app).post('/graphql').send({
+        await request(app).post('/').send({
           extensions,
           query,
         });
@@ -1490,7 +1487,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('when ttlSeconds is unset, ttl is not passed to apq cache', async () => {
         app = await createApqApp();
 
-        await request(app).post('/graphql').send({
+        await request(app).post('/').send({
           extensions,
           query,
         });
@@ -1510,7 +1507,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         app = await createApqApp();
 
         const result = await request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query({
             query,
@@ -1546,7 +1543,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         app = await createApqApp();
 
         const result = await request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query({
             query,
@@ -1583,7 +1580,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         app = await createApqApp();
 
         const result = await request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query({
             query,
@@ -1621,7 +1618,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('returns PersistedQueryNotFound on the first try', async () => {
         app = await createApqApp();
 
-        const result = await request(app).post('/graphql').send({
+        const result = await request(app).post('/').send({
           extensions,
         });
 
@@ -1645,7 +1642,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('returns result on the second try', async () => {
         app = await createApqApp();
 
-        await request(app).post('/graphql').send({
+        await request(app).post('/').send({
           extensions,
         });
 
@@ -1661,7 +1658,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         expect(didResolveSource).not.toHaveBeenCalled();
 
-        const result = await request(app).post('/graphql').send({
+        const result = await request(app).post('/').send({
           extensions,
           query,
         });
@@ -1684,7 +1681,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         app = await createApqApp({}, true); // allow batching
 
         const errors = await request(app)
-          .post('/graphql')
+          .post('/')
           .send([
             {
               extensions,
@@ -1710,7 +1707,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         );
 
         const result = await request(app)
-          .post('/graphql')
+          .post('/')
           .send([
             {
               extensions,
@@ -1730,17 +1727,17 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('returns result on the persisted query', async () => {
         app = await createApqApp();
 
-        await request(app).post('/graphql').send({
+        await request(app).post('/').send({
           extensions,
         });
 
         expect(didResolveSource).not.toHaveBeenCalled();
 
-        await request(app).post('/graphql').send({
+        await request(app).post('/').send({
           extensions,
           query,
         });
-        const result = await request(app).post('/graphql').send({
+        const result = await request(app).post('/').send({
           extensions,
         });
 
@@ -1757,7 +1754,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         app = await createApqApp();
 
         const response = await request(app)
-          .post('/graphql')
+          .post('/')
           .send({
             extensions: {
               persistedQuery: {
@@ -1777,12 +1774,12 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('returns correct result using get request', async () => {
         app = await createApqApp();
 
-        await request(app).post('/graphql').send({
+        await request(app).post('/').send({
           extensions,
           query,
         });
         const result = await request(app)
-          .get('/graphql')
+          .get('/')
           .set('apollo-require-preflight', 't')
           .query({
             extensions: JSON.stringify(extensions),
