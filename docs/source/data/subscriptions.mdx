@@ -700,41 +700,115 @@ To switch from `subscriptions-transport-ws` to `graphql-ws`, you can follow the 
 
 3. Instantiate a `WebSocketServer` to use as your new subscription server. This server will replace the `SubscriptionServer` from `subscriptions-transport-ws`.
 
-    ```ts title="index.ts"
-      // Creating the WebSocket subscription server
-      const wsServer = new WebSocketServer({
-        // This is the `httpServer` returned by createServer(app);
-        server: httpServer,
-        // Pass a different path here if your ApolloServer serves at
-        // a different path.
-        path: '/graphql',
-      });
+<CodeColumns>
 
-      // Pass in an instance of a GraphQLSchema and have the
-      // WebSocketServer start listening.
-      const serverCleanup = useServer({ schema }, wsServer);
-    ```
+```ts {2} title="index.ts"
+  // Creating the WebSocket subscription server
+  const wsServer = new WebSocketServer({
+    // This is the `httpServer` returned by createServer(app);
+    server: httpServer,
+    // Pass a different path here if your ApolloServer serves at
+    // a different path.
+    path: "/graphql",
+  });
+
+  // Passing in an instance of a GraphQLSchema and
+  // telling the WebSocketServer to start listening
+  const serverCleanup = useServer({ schema }, wsServer);
+```
+
+```ts title="Old Subscription Server"
+  const subscriptionServer = SubscriptionServer.create(
+    {
+      schema,
+      // These are imported from `graphql`.
+      execute,
+      subscribe,
+    },
+    {
+      server: httpServer,
+      path: "/graphql",
+    },
+  );
+```
+
+</CodeColumns>
+
+If your `SubscriptionServer` currently extracts information from a subscription operation for use in your GraphQL operation [`context`](./resolvers/#the-context-argument), you can configure your new WebSocket server to do the same.
+
+For example, if your `SubscriptionServer` checks a client's authentication token and adds the current user to the GraphQL operational context, like so:
+
+```ts title="Old Subscription Server"
+  const subscriptionServer = SubscriptionServer.create(
+    {
+      schema,
+      execute,
+      subscribe,
+      // This will check authentication every time a
+      // client first connects to the subscription server.
+      async onConnect(connectionParams) {
+        if (connectionParams.authentication) {
+          const currentUser = await findUser(connectionParams.authentication);
+          return { currentUser };
+        }
+        throw new Error("Missing auth token!");
+      },
+    },
+    {
+      server: httpServer,
+      path: "/graphql",
+    },
+  );
+```
+
+You could replicate that behavior, by providing a `context` option to the `useServer` options, like so:
+
+```ts title="New Subscription Server"
+const getDynamicContext = async (ctx, msg, args) => {
+  // ctx is the `graphql-ws` Context where connectionParams live
+ if (ctx.connectionParams.authentication) {
+    const currentUser = await findUser(connectionParams.authentication);
+    return { currentUser };
+  }
+  // Otherwise let our resolvers know we don't have a current user
+  return { currentUser: null };
+};
+
+useServer(
+  {
+    schema,
+    // Adding a context property lets you add data to your GraphQL operation context
+     context: (ctx, msg, args) => {
+       // Returning an object here will add that information to our
+       // GraphQL context, which all of our resolvers have access to.
+      return getDynamicContext(ctx, msg, args);
+    },
+  },
+  wsServer,
+);
+```
+
+See [Operation Context](#operation-context) for more examples of setting GraphQL operation `context` for your new Websocket server.
 
 4. Add a [plugin](../integrations/plugins) to your `ApolloServer` constructor to properly shutdown your new `WebSocketServer`:
 
-    ```ts title="index.ts"
-      const server = new ApolloServer({
-        schema,
-        plugins: [
-          // ...Other plugins
-          // Proper shutdown for the WebSocket server.
-          {
-            async serverWillStart() {
-              return {
-                async drainServer() {
-                  await serverCleanup.dispose();
-                },
-              };
+```ts title="index.ts"
+  const server = new ApolloServer({
+    schema,
+    plugins: [
+      // Proper shutdown for the WebSocket server.
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose();
             },
-          },
-        ],
-      });
-    ```
+          };
+        },
+      },
+    ],
+  });
+```
 
 5. Ensure you are `listen`ing to your `httpServer` call. You can now remove the code related to your `SubscriptionServer`, start your HTTP server, and test that everything works.
 
