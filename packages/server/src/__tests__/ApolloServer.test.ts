@@ -126,12 +126,13 @@ describe('ApolloServer construction', () => {
   });
 });
 
+const failToStartPlugin: ApolloServerPlugin<BaseContext> = {
+  async serverWillStart() {
+    throw Error('nope');
+  },
+};
+
 describe('ApolloServer start', () => {
-  const failToStartPlugin: ApolloServerPlugin<BaseContext> = {
-    async serverWillStart() {
-      throw Error('nope');
-    },
-  };
   const redactedMessage =
     'This data graph is missing a valid configuration. More details may be available in the server logs.';
 
@@ -426,5 +427,33 @@ describe('ApolloServer executeOperation', () => {
         plugins: [basePlugin],
       });
     });
+  });
+});
+
+describe('ApolloServer addPlugin', () => {
+  it('can add a plugin before calling `start()`', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+    });
+    expect(server['internals'].state.phase).toMatchInlineSnapshot(
+      `"initialized"`,
+    );
+    server.addPlugin(failToStartPlugin);
+    await expect(server.start()).rejects.toThrow('nope');
+  });
+
+  it('throws an error if you try to add a plugin after calling `start()`', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+    });
+    await server.start();
+
+    expect(() =>
+      server.addPlugin(failToStartPlugin),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `"Can't add plugins after the server has started"`,
+    );
   });
 });

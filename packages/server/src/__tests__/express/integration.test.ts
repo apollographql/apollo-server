@@ -30,13 +30,11 @@ defineIntegrationTestSuite(async function (
       }),
     ],
   });
-  if (!testOptions?.suppressStartCall) {
-    await server.start();
-  }
-  const graphqlPath = testOptions?.graphqlPath ?? '/graphql';
+
+  await server.start();
+
   app.use(
-    graphqlPath,
-    cors<cors.CorsRequest>(),
+    cors(),
     json(),
     expressMiddleware(server, {
       context: testOptions?.context,

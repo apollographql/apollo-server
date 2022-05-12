@@ -954,6 +954,13 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     return plugins;
   }
 
+  public addPlugin(plugin: ApolloServerPlugin<TContext>) {
+    if (this.internals.state.phase !== 'initialized') {
+      throw new Error("Can't add plugins after the server has started");
+    }
+    this.internals.plugins.push(plugin);
+  }
+
   // TODO(AS4): Make sure we like the name of this function.
   public async executeHTTPGraphQLRequest({
     httpGraphQLRequest,
