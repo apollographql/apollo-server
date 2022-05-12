@@ -6,7 +6,7 @@ import { standaloneServer } from '../../standalone';
 import type { ApolloServerOptions } from '../../types';
 import type {
   CreateServerForIntegrationTestsOptions,
-  CreateServerForIntegrationTestsResult
+  CreateServerForIntegrationTestsResult,
 } from '../integration';
 import { defineIntegrationTestSuite } from '../integration';
 
@@ -19,7 +19,10 @@ defineIntegrationTestSuite(async function (
   const standaloneServerInstance = standaloneServer(server, opts);
   await standaloneServerInstance.listen({ port: 0 });
 
-  return { server, url: urlForHttpServer(standaloneServerInstance['httpServer']) };
+  return {
+    server,
+    url: urlForHttpServer(standaloneServerInstance['httpServer']),
+  };
 });
 
 function urlForHttpServer(httpServer: http.Server): string {

@@ -2628,11 +2628,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         );
 
         // POST without content-type is blocked.
-        blocked(
-          await request(url)
-            .post('/')
-            .send(JSON.stringify(operation)),
-        );
+        blocked(await request(url).post('/').send(JSON.stringify(operation)));
 
         // POST with text/plain is blocked.
         blocked(
