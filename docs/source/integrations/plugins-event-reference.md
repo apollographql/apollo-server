@@ -352,6 +352,8 @@ Your `willResolveField` handler can optionally return an ["end hook"](./plugins/
 
 `willResolveField` and its end hook are synchronous plugin APIs (i.e., they do not return `Promise`s).
 
+`willResolveField` only fires when a field is resolved inside the Apollo Server itself; it does not fire at all if the server is a Gateway.
+
 #### Example
 
 ```js
