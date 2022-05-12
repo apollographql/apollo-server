@@ -734,7 +734,7 @@ To switch from `subscriptions-transport-ws` to `graphql-ws`, you can follow the 
 
 </CodeColumns>
 
-If your `SubscriptionServer` currently extracts information from a subscription operation for use in your GraphQL operation [`context`](./resolvers/#the-context-argument), you can configure your new WebSocket server to do the same.
+If your `SubscriptionServer` extracts information from a subscription to use in your GraphQL operation [`context`](./resolvers/#the-context-argument), you can configure your new WebSocket server to do the same.
 
 For example, if your `SubscriptionServer` checks a client's authentication token and adds the current user to the GraphQL operational context, like so:
 
@@ -761,7 +761,9 @@ For example, if your `SubscriptionServer` checks a client's authentication token
   );
 ```
 
-You could replicate that behavior, by providing a `context` option to the `useServer` options, like so:
+You could replicate this behavior by providing a `context` option to the first argument passed to the `useServer` function.
+
+In the example below, we check a client's authentication every time they send a `subscription` operation. Then if that user exists, we add the current user to our GraphQL operation context:
 
 ```ts title="New Subscription Server"
 const getDynamicContext = async (ctx, msg, args) => {
@@ -770,14 +772,13 @@ const getDynamicContext = async (ctx, msg, args) => {
     const currentUser = await findUser(connectionParams.authentication);
     return { currentUser };
   }
-  // Otherwise let our resolvers know we don't have a current user
   return { currentUser: null };
 };
 
 useServer(
   {
     schema,
-    // Adding a context property lets you add data to your GraphQL operation context
+    // Adding a context property lets you add data to your GraphQL operation context.
      context: (ctx, msg, args) => {
        // Returning an object here will add that information to our
        // GraphQL context, which all of our resolvers have access to.
