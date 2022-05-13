@@ -13,7 +13,7 @@ export interface ExpressContext {
   res: express.Response;
 }
 
-export interface ExpressMiddlewareOptions<TContext> {
+export interface ExpressMiddlewareOptions<TContext extends BaseContext> {
   context?: ContextFunction<[ExpressContext], TContext>;
 }
 

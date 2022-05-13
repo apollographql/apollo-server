@@ -57,14 +57,14 @@ export interface ApolloServerPluginSchemaReportingOptions {
   fetcher?: Fetcher;
 }
 
-export function ApolloServerPluginSchemaReporting(
+export function ApolloServerPluginSchemaReporting<TContext extends BaseContext>(
   {
     initialDelayMaxMs,
     overrideReportedSchema,
     endpointUrl,
     fetcher,
   }: ApolloServerPluginSchemaReportingOptions = Object.create(null),
-): InternalApolloServerPlugin<BaseContext> {
+): InternalApolloServerPlugin<TContext> {
   const bootId = uuidv4();
 
   return {

@@ -11,6 +11,7 @@ import Keyv from 'keyv';
 import { newCachePolicy } from '../cachePolicy';
 import type {
   ApolloServerPlugin,
+  BaseContext,
   CacheHint,
   GraphQLRequest,
   GraphQLRequestContext,
@@ -33,12 +34,12 @@ import {
 
 // This test harness guarantees the presence of `query`.
 type IPluginTestHarnessGraphqlRequest = WithRequired<GraphQLRequest, 'query'>;
-type IPluginTestHarnessExecutionDidStart<TContext> =
+type IPluginTestHarnessExecutionDidStart<TContext extends BaseContext> =
   GraphQLRequestContextExecutionDidStart<TContext> & {
     request: IPluginTestHarnessGraphqlRequest;
   };
 
-export default async function pluginTestHarness<TContext>({
+export default async function pluginTestHarness<TContext extends BaseContext>({
   pluginInstance,
   schema,
   logger,

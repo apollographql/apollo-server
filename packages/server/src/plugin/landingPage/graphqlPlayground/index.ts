@@ -27,11 +27,13 @@ export type ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Parameters<
   typeof renderPlaygroundPage
 >[0];
 
-export function ApolloServerPluginLandingPageGraphQLPlayground(
+export function ApolloServerPluginLandingPageGraphQLPlayground<
+  TContext extends BaseContext,
+>(
   options: ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Object.create(
     null,
   ),
-): ApolloServerPlugin<BaseContext> {
+): ApolloServerPlugin<TContext> {
   return {
     async serverWillStart(): Promise<GraphQLServerListener> {
       return {

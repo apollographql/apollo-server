@@ -827,7 +827,9 @@ export function makeHTTPRequestHeaders(
   }
 }
 
-function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
+function defaultGenerateClientInfo<TContext extends BaseContext>({
+  request,
+}: GraphQLRequestContext<TContext>) {
   const clientNameHeaderKey = 'apollographql-client-name';
   const clientVersionHeaderKey = 'apollographql-client-version';
 

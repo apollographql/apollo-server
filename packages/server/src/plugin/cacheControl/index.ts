@@ -37,9 +37,9 @@ export interface ApolloServerPluginCacheControlOptions {
   __testing__cacheHints?: Map<string, CacheHint>;
 }
 
-export function ApolloServerPluginCacheControl(
+export function ApolloServerPluginCacheControl<TContext extends BaseContext>(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
-): InternalApolloServerPlugin<BaseContext> {
+): InternalApolloServerPlugin<TContext> {
   let typeAnnotationCache: LRUCache<GraphQLCompositeType, CacheAnnotation>;
 
   let fieldAnnotationCache: LRUCache<

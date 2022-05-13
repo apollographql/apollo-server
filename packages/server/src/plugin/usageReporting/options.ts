@@ -324,6 +324,6 @@ export interface ClientInfo {
   clientName?: string;
   clientVersion?: string;
 }
-export type GenerateClientInfo<TContext> = (
+export type GenerateClientInfo<TContext extends BaseContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
