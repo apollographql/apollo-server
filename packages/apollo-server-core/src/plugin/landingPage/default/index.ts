@@ -82,7 +82,7 @@ const getEmbeddedExplorerHTML = (
 
   return `
 <div
-style="width: 100vw; height: 100vh;"
+style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableExplorer"
 ></div>
 <script src="https://embeddable-explorer.cdn.apollographql.com/${version}/embeddable-explorer.umd.production.min.js"></script>
@@ -102,7 +102,7 @@ const getEmbeddedSandboxHTML = () => {
   // TODO (Maya) update this to fetch from the `embeddable-sandbox` repo when the GCS service key is set up correctly
   return `
 <div
-style="width: 100vw; height: 100vh;"
+style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableSandbox"
 ></div>
 <script src="https://embeddable-explorer.cdn.apollographql.com/mayaTest_sandbox/embeddable-sandbox.umd.production.min.js"></script>
