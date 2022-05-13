@@ -68,6 +68,11 @@ const getEmbeddedExplorerHTML = (
 
     endpointUrl: string;
   }
+  const productionLandingPageConfigOrDefault = {
+    displayOptions: {},
+    persistExplorerState: false,
+    ...(typeof config.embed === 'boolean' ? {} : config.embed),
+  };
   const embeddedExplorerParams: Omit<EmbeddableExplorerOptions, 'endpointUrl'> =
     {
       ...config,
@@ -75,9 +80,11 @@ const getEmbeddedExplorerHTML = (
       initialState: {
         ...config,
         displayOptions: {
-          ...config.displayOptions,
+          ...productionLandingPageConfigOrDefault.displayOptions,
         },
       },
+      persistExplorerState:
+        productionLandingPageConfigOrDefault.persistExplorerState,
     };
 
   return `
@@ -195,7 +202,7 @@ curl --request POST \\
   --data '{"query":"query { __typename }"}'</code>
       </div>
     ${
-      config.shouldEmbed === true
+      !!config.embed
         ? 'graphRef' in config && !!config.graphRef
           ? getEmbeddedExplorerHTML(version, config)
           : getEmbeddedSandboxHTML()

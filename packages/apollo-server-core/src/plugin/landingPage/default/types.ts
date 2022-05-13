@@ -27,16 +27,8 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
    * headers loaded in the UI.
    */
   headers?: Record<string, string>;
-  /**
-   * Users can configure their landing page to link to Studio Explorer with the
-   * setting to include/exclude cookies loaded in the UI.
-   */
+
   includeCookies?: boolean;
-  /**
-   * Users can configure their landing page to render an embedded Explorer if
-   * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
-   */
-  shouldEmbed?: boolean;
   // For Apollo use only.
   __internal_apolloStudioEnv__?: 'staging' | 'prod';
 }
@@ -47,7 +39,7 @@ export interface ApolloServerPluginNonEmbeddedLandingPageLocalDefaultOptions
    * Users can configure their landing page to render an embedded Explorer if
    * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
    */
-  shouldEmbed?: false;
+  embed?: false;
 }
 
 export interface ApolloServerPluginNonEmbeddedLandingPageProductionDefaultOptions
@@ -63,7 +55,7 @@ export interface ApolloServerPluginNonEmbeddedLandingPageProductionDefaultOption
    * Users can configure their landing page to render an embedded Explorer if
    * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
    */
-  shouldEmbed?: false;
+  embed?: false;
 }
 
 export interface ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions
@@ -72,7 +64,7 @@ export interface ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions
    * Users can configure their landing page to render an embedded Explorer if
    * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
    */
-  shouldEmbed: true;
+  embed: true;
 }
 
 export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
@@ -88,20 +80,48 @@ export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
    * Users can configure their landing page to render an embedded Explorer if
    * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
    */
-  shouldEmbed: true;
+  embed: true | ApolloServerPluginEmbeddedLandingPageProductionConfigOptions;
+}
+
+type ApolloServerPluginEmbeddedLandingPageProductionConfigOptions = {
   /**
    * Display options can be configured for the embedded Explorer.
    */
   displayOptions?: {
-    // If showHeadersAndEnvVars is false, we don't show the tab where users can input headers & env vars.
+    /**
+     * If true, the embedded Explorer includes the panels for setting
+     * request headers and environment variables.
+     * If false, those panels are not present.
+     *
+     * The default value is true.
+     */
     showHeadersAndEnvVars: boolean;
-    // The initial state for the left documentation panel in Explorer. Users can expand this when using the Explorer.
+    /**
+     * If open, the Explorer's Documentation panel (the left column) is
+     * initially expanded. If closed, the panel is initially collapsed.
+     *
+     * The default value is open.
+     */
     docsPanelState: 'open' | 'closed';
-    // The theme for the embedded Explorer.  Users can configure this via settings using the Explorer.
+    /**
+     * If dark, the Explorer's dark theme is used. If light, the light theme is used.
+     *
+     * The default value is dark.
+     */
     theme: 'light' | 'dark';
   };
+  /**
+   * If true, the embedded Explorer uses localStorage to persist its state
+   * (including operations, tabs, variables, and headers) between user sessions.
+   * This state is automatically populated in the Explorer on page load.
+   *
+   * If false, the embedded Explorer loads with an example query
+   * based on your schema (unless you provide document).
+   *
+   * The default value is false.
+   */
   persistExplorerState: boolean;
-}
+};
 
 export type ApolloServerPluginLandingPageLocalDefaultOptions =
   | ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions
