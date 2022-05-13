@@ -277,9 +277,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       requestContext as GraphQLRequestContextResponseForOperation<TContext>,
     );
   if (response == null) {
-    // This execution dispatcher code is duplicated in `pluginTestHarness`
-    // right now.
-
     const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
     (
       await dispatcher.invokeHook(

@@ -1,19 +1,14 @@
 import { GraphQLError } from 'graphql';
-import type { CacheHint } from '../../../externalTypes';
+import type { CacheHint, HTTPGraphQLResponse } from '../../../externalTypes';
 import {
+  ApolloServer,
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
 } from '../../..';
-import type {
-  GraphQLRequestContextWillSendResponse,
-  GraphQLResponse,
-} from '../../../externalTypes';
-import pluginTestHarness from '../../pluginTestHarness';
-import { HeaderMap } from '../../../runHttpQuery';
 
 describe('plugin', () => {
   describe('willSendResponse', () => {
-    function makePluginWithOptions(
+    async function makePluginWithOptions(
       {
         pluginInitializationOptions,
         overallCachePolicy,
@@ -24,30 +19,46 @@ describe('plugin', () => {
         errors?: boolean;
       } = Object.create(null),
     ) {
-      const pluginInstance = ApolloServerPluginCacheControl(
-        pluginInitializationOptions,
-      );
-
-      return pluginTestHarness({
-        pluginInstance,
-        overallCachePolicy,
-        // This query needs to pass graphql validation
-        graphqlRequest: { query: 'query { hello }' },
-        executor: async () => {
-          const response: GraphQLResponse = {
-            http: {
-              headers: new HeaderMap(),
+      const server = new ApolloServer({
+        typeDefs: 'type Query {hello: String}',
+        resolvers: {
+          Query: {
+            hello() {
+              if (errors) {
+                throw new GraphQLError('test error');
+              }
+              return 'asdf';
             },
-            data: { test: 'test' },
-          };
-
-          if (errors) {
-            response.errors = [new GraphQLError('Test Error')];
-          }
-
-          return response;
+          },
         },
+        plugins: [ApolloServerPluginCacheControl(pluginInitializationOptions)],
       });
+
+      if (overallCachePolicy) {
+        server.addPlugin({
+          async requestDidStart({
+            overallCachePolicy: contextOverallCachePolicy,
+          }) {
+            contextOverallCachePolicy.replace(overallCachePolicy);
+          },
+        });
+      }
+
+      await server.start();
+
+      try {
+        return await server.executeHTTPGraphQLRequest({
+          httpGraphQLRequest: {
+            method: 'GET',
+            headers: new Map([['apollo-require-preflight', 't']]),
+            searchParams: { query: '{hello}' },
+            body: {},
+          },
+          context: async () => ({}),
+        });
+      } finally {
+        await server.stop();
+      }
     }
 
     describe('HTTP cache-control header', () => {
@@ -57,55 +68,53 @@ describe('plugin', () => {
       };
 
       it('is set when calculateHttpHeaders is set to true', async () => {
-        const requestContext = await makePluginWithOptions({
+        const response = await makePluginWithOptions({
           pluginInitializationOptions: {
             calculateHttpHeaders: true,
           },
           overallCachePolicy,
         });
-        expect(requestContext.response.http!.headers.get('cache-control')).toBe(
+        expect(response.headers.get('cache-control')).toBe(
           'max-age=300, public',
         );
       });
 
       const shouldNotSetCacheControlHeader = (
-        requestContext: GraphQLRequestContextWillSendResponse<any>,
+        response: HTTPGraphQLResponse,
       ) => {
-        expect(
-          requestContext.response.http!.headers.get('cache-control'),
-        ).toBeUndefined();
+        expect(response.headers.get('cache-control')).toBeUndefined();
       };
 
       it('is not set when calculateHttpHeaders is set to false', async () => {
-        const requestContext = await makePluginWithOptions({
+        const response = await makePluginWithOptions({
           pluginInitializationOptions: {
             calculateHttpHeaders: false,
           },
           overallCachePolicy,
         });
-        shouldNotSetCacheControlHeader(requestContext);
+        shouldNotSetCacheControlHeader(response);
       });
 
       it('is not set if response has errors', async () => {
-        const requestContext = await makePluginWithOptions({
+        const response = await makePluginWithOptions({
           pluginInitializationOptions: {
             calculateHttpHeaders: false,
           },
           overallCachePolicy,
           errors: true,
         });
-        shouldNotSetCacheControlHeader(requestContext);
+        shouldNotSetCacheControlHeader(response);
       });
 
       it('does not set cache-control header if there is no overall cache policy', async () => {
-        const requestContext = await makePluginWithOptions({
+        const response = await makePluginWithOptions({
           pluginInitializationOptions: {
             calculateHttpHeaders: false,
           },
           overallCachePolicy: undefined,
           errors: true,
         });
-        shouldNotSetCacheControlHeader(requestContext);
+        shouldNotSetCacheControlHeader(response);
       });
     });
   });
