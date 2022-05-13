@@ -88,6 +88,11 @@ const getEmbeddedExplorerHTML = (
     };
 
   return `
+<style>
+  iframe {
+    background-color: white;
+  }
+</style>
 <div
 style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableExplorer"
@@ -108,6 +113,11 @@ const getEmbeddedSandboxHTML = () => {
   // (version: string) => {
   // TODO (Maya) update this to fetch from the `embeddable-sandbox` repo when the GCS service key is set up correctly
   return `
+<style>
+  iframe {
+    background-color: white;
+  }
+</style>
 <div
 style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableSandbox"
