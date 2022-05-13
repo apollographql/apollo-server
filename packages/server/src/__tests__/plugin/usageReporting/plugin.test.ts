@@ -1,6 +1,5 @@
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { graphql } from 'graphql';
 import loglevel from 'loglevel';
 import {
   makeHTTPRequestHeaders,
@@ -13,7 +12,6 @@ import {
   ITracesAndStats,
   ContextualizedStats,
 } from '@apollo/usage-reporting-protobuf';
-import pluginTestHarness from '../../pluginTestHarness';
 import { pluginsEnabledForSchemaResolvers } from '../../../utils/schemaInstrumentation';
 import nock from 'nock';
 import sumBy from 'lodash.sumby';
@@ -22,6 +20,9 @@ import { gunzipSync } from 'zlib';
 import type { ApolloServerPluginUsageReportingOptions } from '../../../plugin/usageReporting/options';
 import type { GraphQLRequestContextDidResolveOperation } from '../../../externalTypes';
 import { HeaderMap } from '../../../runHttpQuery';
+import { ApolloServer } from '../../../ApolloServer';
+import type { GraphQLRequestMetrics } from '../../../externalTypes/graphql';
+import { ApolloServerPluginCacheControlDisabled } from '../../../plugin';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -91,40 +92,52 @@ describe('end-to-end', () => {
       schema: makeExecutableSchema({ typeDefs }),
     });
 
-    const pluginInstance = ApolloServerPluginUsageReporting({
-      ...pluginOptions,
-      sendReportsImmediately: true,
-      logger: quietLogger,
+    const server = new ApolloServer({
+      schema,
+      apollo: {
+        key: 'some-key',
+        graphRef: 'graph@current',
+      },
+      plugins: [
+        ApolloServerPluginCacheControlDisabled(),
+        ApolloServerPluginUsageReporting({
+          ...pluginOptions,
+          sendReportsImmediately: true,
+          logger: quietLogger,
+        }),
+        {
+          async requestDidStart() {
+            return {
+              async willSendResponse({ response, metrics }) {
+                if (!response.extensions) {
+                  response.extensions = {};
+                }
+                response.extensions.__metrics__ = metrics;
+              },
+            };
+          },
+        },
+      ],
     });
 
-    const context = await pluginTestHarness({
-      pluginInstance,
-      schema,
-      graphqlRequest: {
-        query: query ?? defaultQuery,
-        // If operation name is specified use it. If it is specified as null convert it to
-        // undefined because graphqlRequest expects string | undefined
-        operationName:
-          operationName === undefined ? 'q' : operationName || undefined,
-        extensions: {
-          clientName: 'testing suite',
-        },
-        http: {
-          method: 'GET',
-          headers: new HeaderMap(),
-          searchParams: {},
-          body: {},
-        },
-      },
-      executor: async ({ request: { query: source }, contextValue }) => {
-        return await graphql({
-          schema,
-          source,
-          // context is needed for schema instrumentation to find plugins.
-          contextValue,
-        });
+    await server.start();
+
+    const response = await server.executeOperation({
+      query: query ?? defaultQuery,
+      // If operation name is specified use it. If it is specified as null convert it to
+      // undefined because graphqlRequest expects string | undefined
+      operationName:
+        operationName === undefined ? 'q' : operationName || undefined,
+      extensions: {
+        clientName: 'testing suite',
       },
     });
+
+    // In addition to the fact that we generally want to stop things that we
+    // start, this will flush the report. You might think sendReportsImmediately
+    // would mean you wouldn't need to do that, but if the report only contains
+    // operationCount it's helpful.
+    await server.stop();
 
     const report = await reportPromise.then((reportBody: string) => {
       // nock returns binary bodies as hex strings
@@ -139,7 +152,10 @@ describe('end-to-end', () => {
       schemaShouldBeInstrumented,
     );
 
-    return { report, context };
+    return {
+      report,
+      metrics: response.extensions!.__metrics__ as GraphQLRequestMetrics,
+    };
   }
 
   it('basic tracing', async () => {
@@ -227,7 +243,7 @@ describe('end-to-end', () => {
 
   describe('includeRequest', () => {
     it('include based on operation name', async () => {
-      const { report, context } = await runTest({
+      const { report, metrics } = await runTest({
         pluginOptions: {
           includeRequest: async (request: any) => {
             await new Promise<void>((res) => setTimeout(() => res(), 1));
@@ -237,10 +253,10 @@ describe('end-to-end', () => {
         schemaShouldBeInstrumented: true,
       });
       expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
-      expect(context.metrics.captureTraces).toBe(true);
+      expect(metrics.captureTraces).toBe(true);
     });
     it('exclude based on operation name', async () => {
-      const { context, report } = await runTest({
+      const { metrics, report } = await runTest({
         pluginOptions: {
           includeRequest: async (request: any) => {
             await new Promise<void>((res) => setTimeout(() => res(), 1));
@@ -249,7 +265,7 @@ describe('end-to-end', () => {
         },
         schemaShouldBeInstrumented: false,
       });
-      expect(context.metrics.captureTraces).toBeFalsy();
+      expect(metrics.captureTraces).toBeFalsy();
       expect(report.operationCount).toBe(1);
       expect(Object.keys(report.tracesPerQuery)).toHaveLength(0);
     });
@@ -290,7 +306,7 @@ describe('end-to-end', () => {
     }
 
     it('include based on operation name', async () => {
-      const { report, context } = await runTest({
+      const { report, metrics } = await runTest({
         pluginOptions: {
           fieldLevelInstrumentation: async (
             requestContext: GraphQLRequestContextDidResolveOperation<any>,
@@ -300,7 +316,7 @@ describe('end-to-end', () => {
           },
         },
       });
-      expect(context.metrics.captureTraces).toBe(true);
+      expect(metrics.captureTraces).toBe(true);
       expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
       expect(
         containsFieldExecutionData(Object.values(report.tracesPerQuery)[0]!),
@@ -308,7 +324,7 @@ describe('end-to-end', () => {
     });
 
     it('exclude based on operation name', async () => {
-      const { report, context } = await runTest({
+      const { report, metrics } = await runTest({
         pluginOptions: {
           fieldLevelInstrumentation: async (
             requestContext: GraphQLRequestContextDidResolveOperation<any>,
@@ -321,7 +337,7 @@ describe('end-to-end', () => {
       });
       // We do get a report about this operation; we just don't have field
       // execution data (as trace or as TypeStat).
-      expect(context.metrics.captureTraces).toBe(false);
+      expect(metrics.captureTraces).toBe(false);
       expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
       expect(
         containsFieldExecutionData(Object.values(report.tracesPerQuery)[0]!),
@@ -334,7 +350,7 @@ describe('end-to-end', () => {
       const fieldLevelInstrumentation = 0.015;
       it('RNG returns a small number', async () => {
         mockRandom(fieldLevelInstrumentation * 0.99);
-        const { report, context } = await runTest({
+        const { report, metrics } = await runTest({
           pluginOptions: {
             fieldLevelInstrumentation,
             // Want to see this in stats so we can see the scaling.
@@ -342,7 +358,7 @@ describe('end-to-end', () => {
           },
           schemaShouldBeInstrumented: true,
         });
-        expect(context.metrics.captureTraces).toBe(true);
+        expect(metrics.captureTraces).toBe(true);
         expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
         expect(
           containsFieldExecutionData(Object.values(report.tracesPerQuery)[0]!),
@@ -372,13 +388,13 @@ describe('end-to-end', () => {
       });
       it('RNG returns a large number', async () => {
         mockRandom(fieldLevelInstrumentation * 1.01);
-        const { report, context } = await runTest({
+        const { report, metrics } = await runTest({
           pluginOptions: {
             fieldLevelInstrumentation,
           },
           schemaShouldBeInstrumented: false,
         });
-        expect(context.metrics.captureTraces).toBe(false);
+        expect(metrics.captureTraces).toBe(false);
         expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
         expect(
           containsFieldExecutionData(Object.values(report.tracesPerQuery)[0]!),

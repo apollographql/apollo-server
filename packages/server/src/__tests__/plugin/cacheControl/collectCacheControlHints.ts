@@ -1,10 +1,10 @@
-import { GraphQLSchema, graphql } from 'graphql';
+import type { GraphQLSchema } from 'graphql';
 import type { CacheHint } from '../../../externalTypes';
 import {
+  ApolloServer,
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
 } from '../../..';
-import pluginTestHarness from '../../pluginTestHarness';
 
 export async function collectCacheControlHintsAndPolicyIfCacheable(
   schema: GraphQLSchema,
@@ -15,31 +15,37 @@ export async function collectCacheControlHintsAndPolicyIfCacheable(
   policyIfCacheable: Required<CacheHint> | null;
 }> {
   const cacheHints = new Map<string, CacheHint>();
-  const pluginInstance = ApolloServerPluginCacheControl({
-    ...options,
-    __testing__cacheHints: cacheHints,
-  });
-
-  const requestContext = await pluginTestHarness({
-    pluginInstance,
+  const server = new ApolloServer({
     schema,
-    graphqlRequest: {
-      query: source,
-    },
-    executor: async (requestContext) => {
-      return await graphql({
-        schema,
-        source: requestContext.request.query,
-        contextValue: requestContext.contextValue,
-      });
-    },
+    plugins: [
+      ApolloServerPluginCacheControl({
+        ...options,
+        __testing__cacheHints: cacheHints,
+      }),
+      {
+        async requestDidStart() {
+          return {
+            async willSendResponse({ response, overallCachePolicy }) {
+              if (!response.extensions) {
+                response.extensions = {};
+              }
+              response.extensions.__policyIfCacheable__ =
+                overallCachePolicy.policyIfCacheable();
+            },
+          };
+        },
+      },
+    ],
   });
+  await server.start();
+  const response = await server.executeOperation({ query: source });
+  await server.stop();
 
-  expect(requestContext.response.errors).toBeUndefined();
+  expect(response.errors).toBeUndefined();
 
   return {
     hints: cacheHints,
-    policyIfCacheable: requestContext.overallCachePolicy.policyIfCacheable(),
+    policyIfCacheable: response.extensions!.__policyIfCacheable__,
   };
 }
 
