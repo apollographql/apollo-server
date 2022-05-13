@@ -65,9 +65,11 @@ interface LandingPageConfig {
   footer?: boolean;
 }
 
-export function ApolloServerPluginLandingPageLocalDefault(
+export function ApolloServerPluginLandingPageLocalDefault<
+  TContext extends BaseContext,
+>(
   options: ApolloServerPluginLandingPageLocalDefaultOptions = {},
-): ImplicitlyInstallablePlugin<BaseContext> {
+): ImplicitlyInstallablePlugin<TContext> {
   // We list known keys explicitly to get better typechecking, but we pass
   // through extras in case we've added new keys to the splash page and haven't
   // quite updated the plugin yet.
@@ -96,9 +98,11 @@ export function ApolloServerPluginLandingPageLocalDefault(
   );
 }
 
-export function ApolloServerPluginLandingPageProductionDefault(
+export function ApolloServerPluginLandingPageProductionDefault<
+  TContext extends BaseContext,
+>(
   options: ApolloServerPluginLandingPageProductionDefaultOptions = {},
-): ImplicitlyInstallablePlugin<BaseContext> {
+): ImplicitlyInstallablePlugin<TContext> {
   // We list known keys explicitly to get better typechecking, but we pass
   // through extras in case we've added new keys to the splash page and haven't
   // quite updated the plugin yet.
@@ -142,10 +146,10 @@ function encodeConfig(config: LandingPageConfig): string {
 }
 
 // Helper for the two actual plugin functions.
-function ApolloServerPluginLandingPageDefault(
+function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
   maybeVersion: string | undefined,
   encodedConfig: string,
-): ImplicitlyInstallablePlugin<BaseContext> {
+): ImplicitlyInstallablePlugin<TContext> {
   const version = maybeVersion ?? '_latest';
   return {
     __internal_installed_implicitly__: false,

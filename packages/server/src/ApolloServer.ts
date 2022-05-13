@@ -92,20 +92,20 @@ export type SchemaDerivedData = {
   documentStore: DocumentStore | null;
 };
 
-type RunningServerState = {
-  schemaManager: SchemaManager;
+type RunningServerState<TContext extends BaseContext> = {
+  schemaManager: SchemaManager<TContext>;
   landingPage: LandingPage | null;
 };
 
-type ServerState =
+type ServerState<TContext extends BaseContext> =
   | {
       phase: 'initialized';
-      schemaManager: SchemaManager;
+      schemaManager: SchemaManager<TContext>;
     }
   | {
       phase: 'starting';
       barrier: Resolvable<void>;
-      schemaManager: SchemaManager;
+      schemaManager: SchemaManager<TContext>;
     }
   | {
       phase: 'failed to start';
@@ -116,11 +116,11 @@ type ServerState =
       drainServers: (() => Promise<void>) | null;
       toDispose: (() => Promise<void>)[];
       toDisposeLast: (() => Promise<void>)[];
-    } & RunningServerState)
+    } & RunningServerState<TContext>)
   | ({
       phase: 'draining';
       barrier: Resolvable<void>;
-    } & RunningServerState)
+    } & RunningServerState<TContext>)
   | {
       phase: 'stopping';
       barrier: Resolvable<void>;
@@ -165,9 +165,9 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   apolloConfig: ApolloConfig;
   plugins: ApolloServerPlugin<TContext>[];
   parseOptions: ParseOptions;
-  state: ServerState;
+  state: ServerState<TContext>;
   stopOnTerminationSignals: boolean;
-  executor: GraphQLExecutor | null;
+  executor: GraphQLExecutor<TContext> | null;
   csrfPreventionRequestHeaders: string[] | null;
 }
 
@@ -230,7 +230,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       logger,
     );
 
-    const state: ServerState = config.gateway
+    const state: ServerState<TContext> = config.gateway
       ? // ApolloServer has been initialized but we have not yet tried to load the
         // schema from the gateway. That will wait until the user calls
         // `server.start()` or `server.listen()`, or (in serverless frameworks)
@@ -569,7 +569,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
   // It's also called via `ensureStarted` by serverless frameworks so that they
   // can call `renderLandingPage` (or do other things like call a method on a base
   // class that expects it to be started).
-  private async _ensureStarted(): Promise<RunningServerState> {
+  private async _ensureStarted(): Promise<RunningServerState<TContext>> {
     while (true) {
       switch (this.internals.state.phase) {
         case 'initialized':
@@ -750,7 +750,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         // The cast here is because TS doesn't understand that this.state can
         // change during the await
         // (https://github.com/microsoft/TypeScript/issues/9998).
-        const state = this.internals.state as ServerState;
+        const state = this.internals.state as ServerState<TContext>;
         if (state.phase !== 'stopped') {
           throw Error(`Surprising post-stopping state ${state.phase}`);
         }
@@ -917,7 +917,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       'LandingPageDisabled',
     );
     if (!alreadyHavePlugin) {
-      const plugin = isDev
+      const plugin: ApolloServerPlugin<TContext> = isDev
         ? ApolloServerPluginLandingPageLocalDefault()
         : ApolloServerPluginLandingPageProductionDefault();
       if (!isImplicitlyInstallablePlugin(plugin)) {

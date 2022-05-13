@@ -101,10 +101,10 @@ const makeGatewayMock = ({
   optionsSpy?: (_options: any) => void;
   unsubscribeSpy?: () => void;
 } = {}) => {
-  let resolution: GraphQLServiceConfig | null = null;
+  let resolution: GraphQLServiceConfig<BaseContext> | null = null;
   let rejection: Error | null = null;
   const eventuallyAssigned = {
-    resolveLoad: (config: GraphQLServiceConfig) => {
+    resolveLoad: (config: GraphQLServiceConfig<BaseContext>) => {
       resolution = config;
     },
     rejectLoad: (err: Error) => {
@@ -114,7 +114,7 @@ const makeGatewayMock = ({
   };
 
   const listeners: SchemaLoadOrUpdateCallback[] = [];
-  const mockedGateway: GatewayInterface = {
+  const mockedGateway: GatewayInterface<BaseContext> = {
     load: async (options) => {
       optionsSpy(options);
       // Make sure it's async

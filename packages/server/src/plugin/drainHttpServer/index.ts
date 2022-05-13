@@ -23,9 +23,9 @@ export interface ApolloServerPluginDrainHttpServerOptions {
  * See https://www.apollographql.com/docs/apollo-server/api/plugin/drain-http-server/
  * for details.
  */
-export function ApolloServerPluginDrainHttpServer(
+export function ApolloServerPluginDrainHttpServer<TContext extends BaseContext>(
   options: ApolloServerPluginDrainHttpServerOptions,
-): ApolloServerPlugin<BaseContext> {
+): ApolloServerPlugin<TContext> {
   const stopper = new Stopper(options.httpServer);
   return {
     async serverWillStart() {

@@ -31,9 +31,9 @@ export interface ApolloServerPluginInlineTraceOptions {
 // on the `extensions`.`ftv1` property of the response.  The Apollo Gateway
 // utilizes this data to construct the full trace and submit it to Apollo's
 // usage reporting ingress.
-export function ApolloServerPluginInlineTrace(
+export function ApolloServerPluginInlineTrace<TContext extends BaseContext>(
   options: ApolloServerPluginInlineTraceOptions = Object.create(null),
-): InternalApolloServerPlugin<BaseContext> {
+): InternalApolloServerPlugin<TContext> {
   let enabled: boolean | null = options.__onlyIfSchemaIsFederated ? null : true;
   return {
     __internal_plugin_id__() {

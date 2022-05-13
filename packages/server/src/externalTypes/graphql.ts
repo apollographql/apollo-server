@@ -10,6 +10,7 @@ import type {
 } from 'graphql';
 import type Keyv from 'keyv';
 import type { CachePolicy } from './cacheControl';
+import type { BaseContext } from './context';
 import type { HTTPGraphQLRequest, HTTPGraphQLResponse } from './http';
 
 export interface GraphQLRequest {
@@ -50,7 +51,7 @@ export interface GraphQLRequestMetrics {
   queryPlanTrace?: Trace.QueryPlanNode;
 }
 
-export interface GraphQLRequestContext<TContext = Record<string, any>> {
+export interface GraphQLRequestContext<TContext extends BaseContext> {
   readonly request: GraphQLRequest;
   readonly response?: GraphQLResponse;
 

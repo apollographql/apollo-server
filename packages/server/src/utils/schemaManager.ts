@@ -2,7 +2,11 @@ import type { Logger } from '@apollo/utils.logger';
 import type { GraphQLSchema } from 'graphql';
 import type { SchemaDerivedData } from '../ApolloServer';
 import type { ApolloConfig } from '../config';
-import type { GraphQLExecutor, GraphQLSchemaContext } from '../externalTypes';
+import type {
+  BaseContext,
+  GraphQLExecutor,
+  GraphQLSchemaContext,
+} from '../externalTypes';
 import type { GatewayInterface, Unsubscriber } from '../types';
 
 type SchemaDerivedDataProvider = (
@@ -22,7 +26,7 @@ type SchemaDerivedDataProvider = (
  * a callback was async, consider instead resolving a Promise in a non-async
  * callback and having your async code wait on the Promise in setTimeout().)
  */
-export class SchemaManager {
+export class SchemaManager<TContext extends BaseContext> {
   private readonly logger: Logger;
   private readonly schemaDerivedDataProvider: SchemaDerivedDataProvider;
   private readonly onSchemaLoadOrUpdateListeners = new Set<
@@ -36,7 +40,7 @@ export class SchemaManager {
   private readonly modeSpecificState:
     | {
         readonly mode: 'gateway';
-        readonly gateway: GatewayInterface;
+        readonly gateway: GatewayInterface<TContext>;
         readonly apolloConfig: ApolloConfig;
         unsubscribeFromGateway?: Unsubscriber;
       }
@@ -48,7 +52,7 @@ export class SchemaManager {
 
   constructor(
     options: (
-      | { gateway: GatewayInterface; apolloConfig: ApolloConfig }
+      | { gateway: GatewayInterface<TContext>; apolloConfig: ApolloConfig }
       | { apiSchema: GraphQLSchema }
     ) & {
       logger: Logger;
@@ -83,7 +87,7 @@ export class SchemaManager {
    *   asynchronously notify them of schema updates.
    * - If we started a gateway, returns the gateway's executor; otherwise null.
    */
-  public async start(): Promise<GraphQLExecutor | null> {
+  public async start(): Promise<GraphQLExecutor<TContext> | null> {
     if (this.modeSpecificState.mode === 'gateway') {
       const gateway = this.modeSpecificState.gateway;
       if (gateway.onSchemaLoadOrUpdate) {

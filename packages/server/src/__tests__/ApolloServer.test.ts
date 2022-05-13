@@ -94,7 +94,7 @@ describe('ApolloServer construction', () => {
 
   it('TypeScript enforces schema-related option combinations', async () => {
     const schema = makeExecutableSchema({ typeDefs, resolvers });
-    const gateway: GatewayInterface = {
+    const gateway: GatewayInterface<BaseContext> = {
       async load() {
         return { schema, executor: null };
       },

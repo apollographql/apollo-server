@@ -45,9 +45,10 @@ export type AnyFunctionMap = {
 
 export type Unsubscriber = () => void;
 
-export type GraphQLServiceConfig = {
+// TODO(AS4): rename
+export type GraphQLServiceConfig<TContext extends BaseContext> = {
   schema: GraphQLSchema;
-  executor: GraphQLExecutor | null;
+  executor: GraphQLExecutor<TContext> | null;
 };
 
 export type SchemaLoadOrUpdateCallback = (schemaContext: {
@@ -55,8 +56,10 @@ export type SchemaLoadOrUpdateCallback = (schemaContext: {
   coreSupergraphSdl: string;
 }) => void;
 
-export interface GatewayInterface {
-  load(options: { apollo: ApolloConfig }): Promise<GraphQLServiceConfig>;
+export interface GatewayInterface<TContext extends BaseContext> {
+  load(options: {
+    apollo: ApolloConfig;
+  }): Promise<GraphQLServiceConfig<TContext>>;
 
   onSchemaLoadOrUpdate(callback: SchemaLoadOrUpdateCallback): Unsubscriber;
 
@@ -98,7 +101,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => any) | any;
   validationRules?: Array<(context: ValidationContext) => any>;
-  executor?: GraphQLExecutor;
+  executor?: GraphQLExecutor<TContext>;
   formatResponse?: (
     response: GraphQLResponse,
     requestContext: GraphQLRequestContext<TContext>,
@@ -127,7 +130,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
 
 export interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
-  gateway: GatewayInterface;
+  gateway: GatewayInterface<TContext>;
   schema?: undefined;
   typeDefs?: undefined;
   resolvers?: undefined;

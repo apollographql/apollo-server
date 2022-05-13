@@ -21,8 +21,10 @@ import type {
   InternalPluginId,
 } from '../internalPlugin';
 
-function disabledPlugin(id: InternalPluginId): ApolloServerPlugin<BaseContext> {
-  const plugin: InternalApolloServerPlugin<BaseContext> = {
+function disabledPlugin<TContext extends BaseContext>(
+  id: InternalPluginId,
+): ApolloServerPlugin<TContext> {
+  const plugin: InternalApolloServerPlugin<TContext> = {
     __internal_plugin_id__() {
       return id;
     },
@@ -47,7 +49,9 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
 ): ApolloServerPlugin<TContext> {
   return require('./usageReporting').ApolloServerPluginUsageReporting(options);
 }
-export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin<BaseContext> {
+export function ApolloServerPluginUsageReportingDisabled<
+  TContext extends BaseContext,
+>(): ApolloServerPlugin<TContext> {
   return disabledPlugin('UsageReporting');
 }
 //#endregion
@@ -56,9 +60,9 @@ export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin<B
 import type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting';
 export type { ApolloServerPluginSchemaReportingOptions } from './schemaReporting';
 
-export function ApolloServerPluginSchemaReporting(
+export function ApolloServerPluginSchemaReporting<TContext extends BaseContext>(
   options: ApolloServerPluginSchemaReportingOptions = Object.create(null),
-): ApolloServerPlugin<BaseContext> {
+): ApolloServerPlugin<TContext> {
   return require('./schemaReporting').ApolloServerPluginSchemaReporting(
     options,
   );
@@ -69,12 +73,14 @@ export function ApolloServerPluginSchemaReporting(
 import type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
 export type { ApolloServerPluginInlineTraceOptions } from './inlineTrace';
 
-export function ApolloServerPluginInlineTrace(
+export function ApolloServerPluginInlineTrace<TContext extends BaseContext>(
   options: ApolloServerPluginInlineTraceOptions = Object.create(null),
-): ApolloServerPlugin<BaseContext> {
+): ApolloServerPlugin<TContext> {
   return require('./inlineTrace').ApolloServerPluginInlineTrace(options);
 }
-export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin<BaseContext> {
+export function ApolloServerPluginInlineTraceDisabled<
+  TContext extends BaseContext,
+>(): ApolloServerPlugin<TContext> {
   return disabledPlugin('InlineTrace');
 }
 //#endregion
@@ -83,12 +89,14 @@ export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin<Base
 import type { ApolloServerPluginCacheControlOptions } from './cacheControl';
 export type { ApolloServerPluginCacheControlOptions } from './cacheControl';
 
-export function ApolloServerPluginCacheControl(
+export function ApolloServerPluginCacheControl<TContext extends BaseContext>(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
-): ApolloServerPlugin<BaseContext> {
+): ApolloServerPlugin<TContext> {
   return require('./cacheControl').ApolloServerPluginCacheControl(options);
 }
-export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin<BaseContext> {
+export function ApolloServerPluginCacheControlDisabled<
+  TContext extends BaseContext,
+>(): ApolloServerPlugin<TContext> {
   return disabledPlugin('CacheControl');
 }
 //#endregion
@@ -96,9 +104,9 @@ export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin<Bas
 //#region Drain HTTP server
 import type { ApolloServerPluginDrainHttpServerOptions } from './drainHttpServer';
 export type { ApolloServerPluginDrainHttpServerOptions } from './drainHttpServer';
-export function ApolloServerPluginDrainHttpServer(
+export function ApolloServerPluginDrainHttpServer<TContext extends BaseContext>(
   options: ApolloServerPluginDrainHttpServerOptions,
-): ApolloServerPlugin<BaseContext> {
+): ApolloServerPlugin<TContext> {
   return require('./drainHttpServer').ApolloServerPluginDrainHttpServer(
     options,
   );
@@ -106,7 +114,9 @@ export function ApolloServerPluginDrainHttpServer(
 //#endregion
 
 //#region LandingPage
-export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin<BaseContext> {
+export function ApolloServerPluginLandingPageDisabled<
+  TContext extends BaseContext,
+>(): ApolloServerPlugin<TContext> {
   return disabledPlugin('LandingPageDisabled');
 }
 
@@ -119,16 +129,20 @@ export type {
   ApolloServerPluginLandingPageLocalDefaultOptions,
   ApolloServerPluginLandingPageProductionDefaultOptions,
 } from './landingPage/default';
-export function ApolloServerPluginLandingPageLocalDefault(
+export function ApolloServerPluginLandingPageLocalDefault<
+  TContext extends BaseContext,
+>(
   options?: ApolloServerPluginLandingPageLocalDefaultOptions,
-): ApolloServerPlugin<BaseContext> {
+): ApolloServerPlugin<TContext> {
   return require('./landingPage/default').ApolloServerPluginLandingPageLocalDefault(
     options,
   );
 }
-export function ApolloServerPluginLandingPageProductionDefault(
+export function ApolloServerPluginLandingPageProductionDefault<
+  TContext extends BaseContext,
+>(
   options?: ApolloServerPluginLandingPageProductionDefaultOptions,
-): ApolloServerPlugin<BaseContext> {
+): ApolloServerPlugin<TContext> {
   return require('./landingPage/default').ApolloServerPluginLandingPageProductionDefault(
     options,
   );
@@ -136,11 +150,13 @@ export function ApolloServerPluginLandingPageProductionDefault(
 
 import type { ApolloServerPluginLandingPageGraphQLPlaygroundOptions } from './landingPage/graphqlPlayground';
 export type { ApolloServerPluginLandingPageGraphQLPlaygroundOptions } from './landingPage/graphqlPlayground';
-export function ApolloServerPluginLandingPageGraphQLPlayground(
+export function ApolloServerPluginLandingPageGraphQLPlayground<
+  TContext extends BaseContext,
+>(
   options: ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Object.create(
     null,
   ),
-): ApolloServerPlugin<BaseContext> {
+): ApolloServerPlugin<TContext> {
   return require('./landingPage/graphqlPlayground').ApolloServerPluginLandingPageGraphQLPlayground(
     options,
   );
