@@ -3,14 +3,15 @@ title: Introduction to Apollo Server
 ---
 
 **Apollo Server is an [open-source](https://github.com/apollographql/apollo-server), spec-compliant GraphQL server** that's compatible with any GraphQL client, including [Apollo Client](https://www.apollographql.com/docs/react). It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
-
-![diagram](./images/index-diagram.svg)
+<!-- TODO replace diagram -->
+<!-- ![diagram](./images/index-diagram.svg) -->
 
 #### You can use Apollo Server as:
 
+* A gateway for a [federated supergraph](/federation/)
+  * The GraphQL server for a [subgraph](/federation/subgraphs) within a federated supergraph
 * A stand-alone GraphQL server, including in a serverless environment
 * An add-on to your application's existing [Node.js middleware](./integrations/middleware/) (such as Express or Fastify)
-* A gateway for a [federated graph](https://www.apollographql.com/docs/federation/)
 
 #### Apollo Server provides:
 
