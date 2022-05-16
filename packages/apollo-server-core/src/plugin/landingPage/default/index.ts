@@ -109,9 +109,7 @@ id="embeddableExplorer"
 `;
 };
 
-const getEmbeddedSandboxHTML = () => {
-  // (version: string) => {
-  // TODO (Maya) update this to fetch from the `embeddable-sandbox` repo when the GCS service key is set up correctly
+const getEmbeddedSandboxHTML = (version: string) => {
   return `
 <style>
   iframe {
@@ -122,7 +120,7 @@ const getEmbeddedSandboxHTML = () => {
 style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableSandbox"
 ></div>
-<script src="https://embeddable-explorer.cdn.apollographql.com/mayaTest_sandbox/embeddable-sandbox.umd.production.min.js"></script>
+<script src="https://embeddable-sandbox.cdn.apollographql.com/${version}/embeddable-sandbox.umd.production.min.js"></script>
 <script>
   var initialEndpoint = window.location.href;
   new window.EmbeddedSandbox({
@@ -215,7 +213,7 @@ curl --request POST \\
       !!config.embed
         ? 'graphRef' in config && !!config.graphRef
           ? getEmbeddedExplorerHTML(version, config)
-          : getEmbeddedSandboxHTML()
+          : getEmbeddedSandboxHTML(version)
         : getNonEmbeddedLandingPageHTML(version, config)
     }
     </div>
