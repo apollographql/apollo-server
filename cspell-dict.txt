@@ -176,3 +176,5 @@ websockets
 Wheelock's
 xorby
 YOURNAME
+Embeddable
+embeddable

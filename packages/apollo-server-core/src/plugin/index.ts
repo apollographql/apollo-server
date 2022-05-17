@@ -106,12 +106,12 @@ export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin {
 import type {
   ApolloServerPluginLandingPageLocalDefaultOptions,
   ApolloServerPluginLandingPageProductionDefaultOptions,
-} from './landingPage/default';
+} from './landingPage/default/types';
 export type {
   ApolloServerPluginLandingPageDefaultBaseOptions,
   ApolloServerPluginLandingPageLocalDefaultOptions,
   ApolloServerPluginLandingPageProductionDefaultOptions,
-} from './landingPage/default';
+} from './landingPage/default/types';
 export function ApolloServerPluginLandingPageLocalDefault(
   options?: ApolloServerPluginLandingPageLocalDefaultOptions,
 ): ApolloServerPlugin {
