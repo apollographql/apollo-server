@@ -101,6 +101,20 @@ By default, the landing page displays a footer that links to the documentation t
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `embed`
+
+`boolean`
+</td>
+<td>
+
+By default, the local landing page displays a page with a link to Apollo Sandbox to query your endpoint. If `embed: true` is passed, the landing page will instead render an embedded version of Apollo Sandbox hosted on your endpoint url. From this embedded Sandbox, you can change the endpoint to query against, and use all the features of the Apollo Sandbox on your Apollo Server endpoint. You can also sign in to your Apollo Studio account to access your Operation Collections, Diffs, Checks and more. The default value for `embed` is `false`.
+
+</td>
+</tr>
+
 </tbody>
 </table>
 
@@ -219,6 +233,22 @@ An object containing initial HTTP header values to populate in the Explorer on l
 <tr>
 <td>
 
+###### `embed`
+
+`boolean | ApolloServerPluginEmbeddedLandingPageProductionConfigOptions`
+</td>
+<td>
+
+By default, a simple curl command will be displayed on your production Apollo Server landing page. If `embed: true` is passed, *and* a `graphRef` is passed, the production landing page will instead render an embedded version of Apollo Studio Explorer hosted on your endpoint url. From this embedded Explorer, you can query the endpoint, and use all the features of the Apollo Studio Explorer on your Apollo Server endpoint. You can also sign in to your Apollo Studio account to access your Operation Collections. The default value for `embed` is `false`.
+
+You can configure the Explorer embedded on your Apollo Server endpoint with display and functional options. For supported options, see [`embed` options](#embed-options).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `includeCookies`
 
 `boolean`
@@ -232,6 +262,126 @@ If you omit this, the Explorer defaults `includeCookies` to `false` or the curre
 </td>
 </tr>
 
+</tbody>
+</table>
+
+### `embed` options
+
+These are the fields you can include in the `embed` option you pass to the ApolloServerPluginLandingPageProductionDefault:
+
+<table class="field-table api-ref">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+##### `displayOptions`
+
+`Object`
+
+</td>
+<td>
+
+An object containing additional display options related to the visual state of the embedded Explorer on page load.
+
+For supported subfields, see [`displayOptions` options](#displayoptions-options).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `persistExplorerState`
+
+`boolean`
+</td>
+<td>
+
+If `true`, the embedded Explorer uses `localStorage` to persist its state (including operations, tabs, variables, and headers) between user sessions. This state is automatically populated in the Explorer on page load.
+
+If `false`, the embedded Explorer loads with an example query based on your schema (unless you provide [`document`](#document)).
+
+The default value is `false`.
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+
+
+### `displayOptions` options
+
+These are the fields you can include in the `displayOptions` option you pass to the embedded Explorer plugin:
+
+<table class="field-table api-ref">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+##### `docsPanelState`
+
+`"open" | "closed"`
+
+</td>
+<td>
+
+If `open`, the Explorer's Documentation panel (the left column) is initially expanded. If `closed`, the panel is initially collapsed.
+
+The default value is `open`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `showHeadersAndEnvVars`
+
+`true | false`
+
+</td>
+<td>
+
+If `true`, the embedded Explorer includes the panels for setting request headers and environment variables. If `false`, those panels are not present.
+
+The default value is `true`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `theme`
+
+`"dark" | "light"`
+
+</td>
+<td>
+
+If `dark`, the Explorer's dark theme is used. If `light`, the light theme is used.
+
+The default value is `dark`.
+
+</td>
+</tr>
 </tbody>
 </table>
 
