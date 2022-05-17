@@ -210,8 +210,8 @@ curl --request POST \\
   --data '{"query":"query { __typename }"}'</code>
       </div>
     ${
-      !!config.embed
-        ? 'graphRef' in config && !!config.graphRef
+      config.embed
+        ? 'graphRef' in config && config.graphRef
           ? getEmbeddedExplorerHTML(version, config)
           : getEmbeddedSandboxHTML(version)
         : getNonEmbeddedLandingPageHTML(version, config)
