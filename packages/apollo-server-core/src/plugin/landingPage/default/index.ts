@@ -40,6 +40,17 @@ function encodeConfig(config: LandingPageConfig): string {
   return JSON.stringify(encodeURIComponent(JSON.stringify(config)));
 }
 
+// This function turns an object into a string and replaces
+// <, >, &, ' with their unicode chars to avoid adding html tags to
+// the landing page html that might be passed from the config
+function getConfigStringForHtml(config: LandingPageConfig) {
+  return JSON.stringify(config)
+    .replace('<', '\\u003c')
+    .replace('>', '\\u003e')
+    .replace('&', '\\u0026')
+    .replace("'", '\\u0027');
+}
+
 const getEmbeddedExplorerHTML = (
   version: string,
   config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
@@ -94,7 +105,9 @@ id="embeddableExplorer"
 <script src="https://embeddable-explorer.cdn.apollographql.com/${version}/embeddable-explorer.umd.production.min.js"></script>
 <script>
   var endpointUrl = window.location.href;
-  var embeddedExplorerConfig = ${JSON.stringify(embeddedExplorerParams)};
+  var embeddedExplorerConfig = ${getConfigStringForHtml(
+    embeddedExplorerParams,
+  )};
   new window.EmbeddedExplorer({
     ...embeddedExplorerConfig,
     endpointUrl,
