@@ -42,7 +42,13 @@ function encodeConfig(config: LandingPageConfig): string {
 
 // This function turns an object into a string and replaces
 // <, >, &, ' with their unicode chars to avoid adding html tags to
-// the landing page html that might be passed from the config
+// the landing page html that might be passed from the config.
+// The only place these characters can appear in the output of
+// JSON.stringify is within string literals, where they can equally
+// well appear \u-escaped. This specifically means that
+// `</script>` won't terminate the script block early.
+// (Perhaps we should have done this instead of the triple-encoding
+// of encodeConfig for the main landing page.)
 function getConfigStringForHtml(config: LandingPageConfig) {
   return JSON.stringify(config)
     .replace('<', '\\u003c')
