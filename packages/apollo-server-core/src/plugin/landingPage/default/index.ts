@@ -9,9 +9,6 @@ import type {
 export function ApolloServerPluginLandingPageLocalDefault(
   options: ApolloServerPluginLandingPageLocalDefaultOptions = {},
 ): ImplicitlyInstallablePlugin {
-  // We list known keys explicitly to get better typechecking, but we pass
-  // through extras in case we've added new keys to the splash page and haven't
-  // quite updated the plugin yet.
   const { version, __internal_apolloStudioEnv__, ...rest } = options;
   return ApolloServerPluginLandingPageDefault(version, {
     isProd: false,
@@ -23,9 +20,6 @@ export function ApolloServerPluginLandingPageLocalDefault(
 export function ApolloServerPluginLandingPageProductionDefault(
   options: ApolloServerPluginLandingPageProductionDefaultOptions = {},
 ): ImplicitlyInstallablePlugin {
-  // We list known keys explicitly to get better typechecking, but we pass
-  // through extras in case we've added new keys to the splash page and haven't
-  // quite updated the plugin yet.
   const { version, __internal_apolloStudioEnv__, ...rest } = options;
   return ApolloServerPluginLandingPageDefault(version, {
     isProd: true,
