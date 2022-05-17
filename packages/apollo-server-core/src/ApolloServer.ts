@@ -20,6 +20,9 @@ import {
   FieldDefinitionNode,
   DocumentNode,
   print,
+  printSchema,
+  parse,
+  visit,
 } from 'graphql';
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import { GraphQLExtension } from 'graphql-extensions';
@@ -119,6 +122,7 @@ type SchemaDerivedData = {
   // versions of operations in-memory, allowing subsequent parses/validates
   // on the same operation to be executed immediately.
   documentStore?: InMemoryLRUCache<DocumentNode>;
+  disableUploads: boolean;
 };
 
 type ServerState =
@@ -160,6 +164,7 @@ export class ApolloServerBase {
 
   protected subscriptionServerOptions?: SubscriptionServerOptions;
   protected uploadsConfig?: FileUploadOptions;
+  private disableUploadsIfSchemaDoesNotUseUploadScalar: boolean;
 
   // set by installSubscriptionHandlers.
   private subscriptionServer?: SubscriptionServer;
@@ -284,6 +289,7 @@ export class ApolloServerBase {
 
     this.requestOptions = requestOptions as GraphQLServerOptions;
 
+    this.disableUploadsIfSchemaDoesNotUseUploadScalar = false;
     if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
         if (!runtimeSupportsUploads) {
@@ -294,10 +300,15 @@ export class ApolloServerBase {
           );
         }
 
-        if (uploads === true || typeof uploads === 'undefined') {
+        if (uploads === true) {
           this.uploadsConfig = {};
+          warnAboutUploads(this.logger, false);
+        } else if (typeof uploads === 'undefined') {
+          this.uploadsConfig = {};
+          this.disableUploadsIfSchemaDoesNotUseUploadScalar = true;
         } else {
           this.uploadsConfig = uploads;
+          warnAboutUploads(this.logger, false);
         }
         //This is here to check if uploads is requested without support. By
         //default we enable them if supported by the integration
@@ -845,12 +856,53 @@ export class ApolloServerBase {
     // Initialize the document store.  This cannot currently be disabled.
     const documentStore = this.initializeDocumentStore();
 
+    // If `uploads` wasn't explicitly specified, we look to see if the schema
+    // uses the Upload scalar and if it doesn't, we disable the upload
+    // middleware.
+    let disableUploads = false;
+    if (this.disableUploadsIfSchemaDoesNotUseUploadScalar) {
+      // We're not going to stress too much about error handling
+      // in this patch to an old version of Apollo Server. If
+      // this crashes for anyone they can file a bug and in the
+      // meantime pass `uploads: true` or `uploads: false` explicitly
+      // to work around.
+      const ast = parse(printSchema(schema));
+
+      // Assume that we are going to disable it unless we find a use of Upload.
+      disableUploads = true;
+
+      visit(ast, {
+        // This will find things like field arguments and input object fields
+        // (including if it's nested in list or non-null). Notably, it will
+        // *not* find the `scalar Upload` definition that we may have auto-added
+        // to the schema because ScalarTypeDefinitionNode has a "NameNode", not
+        // a "NamedTypeNode".
+        NamedType(node) {
+          if (node.name.value === 'Upload') {
+            disableUploads = false;
+          }
+        }
+      })
+
+      if (!disableUploads) {
+        warnAboutUploads(this.logger, true);
+      }
+    }
+
     return {
       schema,
       schemaHash,
       extensions,
       documentStore,
+      disableUploads,
     };
+  }
+
+  // Let the middleware know dynamically whether we are disabling uploads.
+  // (this.uploadsConfig also needs to be true in order to enable uploads.)
+  public disableUploads(): boolean {
+    // If the server isn't started, we shouldn't be processing operations anyway.
+    return this.state.phase !== 'started' || this.state.schemaDerivedData.disableUploads;
   }
 
   public async stop() {
@@ -1352,4 +1404,17 @@ function printNodeFileUploadsMessage(logger: Logger) {
       '',
     ].join('\n'),
   );
+}
+
+function warnAboutUploads(logger: Logger, implicit: boolean) {
+  logger.error([
+    'The third-party `graphql-upload` package is enabled in your server',
+    (implicit
+      ? 'because you use the `Upload` scalar in your schema.'
+      : 'because you explicitly enabled it with the `uploads` option.'),
+    'This package is vulnerable to Cross-Site Request Forgery (CSRF) attacks.',
+    'We recommend you either disable uploads if it is not a necessary part of',
+    'your server, or upgrade to Apollo Server 3.7 and enable CSRF prevention.',
+    'See https://go.apollo.dev/s/graphql-upload-csrf for more details.',
+  ].join('\n'))
 }

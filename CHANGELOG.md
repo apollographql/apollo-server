@@ -11,6 +11,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+## v2.25.4
+
+- ⚠️ **SECURITY**: If your server does not explicitly enable `graphql-upload` support via the `uploads` option to `new ApolloServer` and your schema does not use the `Upload` scalar (other than in its own definition), Apollo Server will not process the `multipart/form-data` requests sent by `graphql-upload` clients. This fixes a Cross-Site Request Forgery (CSRF) vulnerability where origins could cause browsers to execute mutations using a user's cookies even when those origins are not allowed by your CORS policy. If you *do* use uploads in your server, the vulnerability still exists with this version; you should instead upgrade to Apollo Server v3.7 and enable the CSRF prevention feature. (The AS3.7 CSRF prevention feature also protects against other forms of CSRF such as timing attacks against read-only query operations.) See [advisory GHSA-2p3c-p3qw-69r4](https://github.com/apollographql/apollo-server/security/advisories/GHSA-2p3c-p3qw-69r4) for more details.
 
 ## v2.25.3
 

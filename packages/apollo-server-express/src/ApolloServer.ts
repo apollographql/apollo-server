@@ -50,6 +50,7 @@ const fileUploadMiddleware = (
 ) => {
   // Note: we use typeis directly instead of via req.is for connect support.
   if (
+    !server.disableUploads() &&
     typeof processFileUploads === 'function' &&
     typeis(req, ['multipart/form-data'])
   ) {

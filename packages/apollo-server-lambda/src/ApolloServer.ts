@@ -296,7 +296,7 @@ export class ApolloServer<EventT extends APIGatewayProxyEventV1OrV2 = APIGateway
               ReturnType<Exclude<typeof processFileUploads, undefined>>
             >
           | undefined;
-        if (isMultipart && typeof processFileUploads === 'function') {
+        if (isMultipart && !this.disableUploads() && typeof processFileUploads === 'function') {
           const request = new FileUploadRequest() as IncomingMessage;
           request.push(
             Buffer.from(
