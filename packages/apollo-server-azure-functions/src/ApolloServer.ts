@@ -82,7 +82,7 @@ export class ApolloServer extends ApolloServerBase {
     let landingPage: LandingPage | null | undefined;
 
     return (context: Context, req: HttpRequest) => {
-      this.ensureStarted()
+      return this.ensureStarted()
         .then(() => {
           if (landingPage === undefined) {
             landingPage = this.getLandingPage();
