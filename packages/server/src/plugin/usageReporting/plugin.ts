@@ -12,9 +12,13 @@ import fetch from 'node-fetch';
 import os from 'os';
 import { gzip } from 'zlib';
 import type {
-  BaseContext, GraphQLRequestContext, GraphQLRequestContextDidResolveOperation,
-  GraphQLRequestContextWillSendResponse, GraphQLRequestListener,
-  GraphQLServerListener, GraphQLServiceContext
+  BaseContext,
+  GraphQLRequestContext,
+  GraphQLRequestContextDidResolveOperation,
+  GraphQLRequestContextWillSendResponse,
+  GraphQLRequestListener,
+  GraphQLServerListener,
+  GraphQLServiceContext,
 } from '../../externalTypes';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import type { HeaderMap } from '../../runHttpQuery';
@@ -24,11 +28,11 @@ import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
 import {
   createOperationDerivedDataCache,
   OperationDerivedData,
-  operationDerivedDataCacheKey
+  operationDerivedDataCacheKey,
 } from './operationDerivedDataCache';
 import type {
   ApolloServerPluginUsageReportingOptions,
-  SendValuesBaseOptions
+  SendValuesBaseOptions,
 } from './options';
 import { OurReport } from './stats';
 import { makeTraceDetails } from './traceDetails';
