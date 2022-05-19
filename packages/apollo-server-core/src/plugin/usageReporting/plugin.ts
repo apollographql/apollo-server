@@ -34,7 +34,7 @@ import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
 import {
   calculateReferencedFieldsByType,
   ReferencedFieldsByType,
-} from './referencedFields';
+} from '@apollo/utils.usagereporting';
 import type LRUCache from 'lru-cache';
 
 const reportHeaderDefaults = {
