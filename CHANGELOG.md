@@ -18,7 +18,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## v3.6.8
 
 - `apollo-server-fastify`: This package now depends on the `@fastify/accepts` and `@fastify/cors` packages rather than their older deprecated names `fastify-accepts` and `fastify-cors`. There is no behavior change (except that you will no longer see deprecation messages). [PR #6366](https://github.com/apollographql/apollo-server/pull/6366)
-- `apollo-server-types`: The `Logger` TypeScript interface is now re-exported from the new `@apollo/utils.logger` package instead of defined directly in this package; other packages import it from the new package. There should be no observable change. [PR #6229](https://github.com/apollographql/apollo-serverpull/6229)
+- `apollo-server-types`: The `Logger` TypeScript interface is now re-exported from the new `@apollo/utils.logger` package instead of defined directly in this package; other packages import it from the new package. There should be no observable change. [PR #6229](https://github.com/apollographql/apollo-server/pull/6229)
 
 ## v3.6.7
 
