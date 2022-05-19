@@ -1,41 +1,37 @@
+import { Report, ReportHeader, Trace } from '@apollo/usage-reporting-protobuf';
+import type { Fetcher, FetcherResponse } from '@apollo/utils.fetcher';
+import {
+  usageReportingSignature,
+  calculateReferencedFieldsByType,
+  ReferencedFieldsByType,
+} from '@apollo/utils.usagereporting';
+import retry from 'async-retry';
+import { GraphQLSchema, printSchema } from 'graphql';
+import type LRUCache from 'lru-cache';
+import fetch from 'node-fetch';
 import os from 'os';
 import { gzip } from 'zlib';
-import retry from 'async-retry';
-import { Report, ReportHeader, Trace } from '@apollo/usage-reporting-protobuf';
-import fetch from 'node-fetch';
 import type {
-  GraphQLRequestListener,
-  GraphQLServerListener,
-  GraphQLRequestContext,
-  GraphQLServiceContext,
-  GraphQLRequestContextDidResolveOperation,
-  GraphQLRequestContextWillSendResponse,
-  BaseContext,
+  BaseContext, GraphQLRequestContext, GraphQLRequestContextDidResolveOperation,
+  GraphQLRequestContextWillSendResponse, GraphQLRequestListener,
+  GraphQLServerListener, GraphQLServiceContext
 } from '../../externalTypes';
+import type { InternalApolloServerPlugin } from '../../internalPlugin';
+import type { HeaderMap } from '../../runHttpQuery';
+import { computeCoreSchemaHash } from '../schemaReporting';
+import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder';
+import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
 import {
   createOperationDerivedDataCache,
   OperationDerivedData,
-  operationDerivedDataCacheKey,
+  operationDerivedDataCacheKey
 } from './operationDerivedDataCache';
-import { defaultUsageReportingSignature } from './defaultUsageReportingSignature';
 import type {
   ApolloServerPluginUsageReportingOptions,
-  SendValuesBaseOptions,
+  SendValuesBaseOptions
 } from './options';
-import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder';
-import { makeTraceDetails } from './traceDetails';
-import { GraphQLSchema, printSchema } from 'graphql';
-import { computeCoreSchemaHash } from '../schemaReporting';
-import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { OurReport } from './stats';
-import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
-import {
-  calculateReferencedFieldsByType,
-  ReferencedFieldsByType,
-} from './referencedFields';
-import type LRUCache from 'lru-cache';
-import type { HeaderMap } from '../../runHttpQuery';
-import type { Fetcher, FetcherResponse } from '@apollo/utils.fetcher';
+import { makeTraceDetails } from './traceDetails';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -743,7 +739,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
               }
 
               const generatedSignature = (
-                options.calculateSignature || defaultUsageReportingSignature
+                options.calculateSignature || usageReportingSignature
               )(requestContext.document, requestContext.operationName || '');
 
               const generatedOperationDerivedData: OperationDerivedData = {
