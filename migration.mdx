@@ -18,7 +18,7 @@ Apollo Server 4 supports Node.js 14 and later. This includes all LTS and Current
 
 If you're using an older version of Node.js, upgrade your runtime before upgrading to Apollo Server 4.
 
-## `graphql`
+### `graphql`
 
 Apollo Server has a peer dependency on `graphql` (the core JS GraphQL implementation), which means you are responsible for choosing the version installed in your app.
 
@@ -26,7 +26,7 @@ Apollo Server 4 supports graphql v16.3.0 and later. (Apollo Server 3 supported `
 
 If you're using an older version of `graphql`, upgrade it to a supported version before upgrading to Apollo Server 4.
 
-## Removed constructor options
+### Removed constructor options
 
 ## Remove modules constructor option
 
@@ -71,15 +71,15 @@ Removed:
 
 ## Drop support for old versions of gateway in AS4
 
-## We now use Fetcher from `@apollo/utils.fetcher` instead of `apollo-server-env` for Fetch API  TypeScript typing
+## We now use Fetcher from `@apollo/utils.fetcher` instead of `apollo-server-env` for Fetch API TypeScript typing
 
 Semi-relatedly: removed `requestAgent` option from ApolloServerPluginUsageReporting
 
-Instead of
+Instead of:
 
     ApolloServerPluginUsageReporting({ requestAgent })
 
-you can write
+you can write:
 
     import fetch from 'node-fetch';
     ApolloServerPluginUsageReporting({
@@ -105,7 +105,7 @@ We found that in practice, that’s what people actually wanted in tests. If you
 ## Remove body-parser & CORS wrapping (except from standaloneServer, but even that one you can’t configure)
 
 ## Remove health checks and path parsing
-No health checks, run a trivial GraphQL operation or do your own healthcheck.
+No health checks, run a trivial GraphQL operation or do your own health check.
 Middlewares work on any path they get to see. If you want to run GraphQL on a non-root path, use your web framework’s functionality for mounting the middleware at the path. (Previously, the middlewares defaulted to only processing `/graphql`, and the standalone server processed all requests.)
 
 ## Change CacheScope enum to a pure type
@@ -150,7 +150,7 @@ No more dataSources constructor option. The type returned from your context func
 (also maintained by Mercury rather than AS but that’s an internal fact)
 
 ## HTTP handling changes
-In JSON-encoded POST bodies, we expect variables and extensions (if provided) to be objects, not strings containing JSON stringifications of objects
+In JSON-encoded POST bodies, we expect variables and extensions (if provided) to be objects, not strings containing JSON string-ifications of objects
 
 Ie this works:
 {“query”: “{ __typename }”, extensions: {“foo”: 1}}
@@ -181,9 +181,9 @@ context field on GraphQLRequestContext is now contextValue (and in argument to w
 
 # Upcoming Stuff to Cover:
 - Replace implementations of the cache interface with `keyv`
-We no longer maintain `apollo-server-cache-memcached` or `apollo-server-cache-redis`. The interfaces and classes in `apollo-server-caching` are now in (`@apollo/utils.keyvaluecache`)
+We no longer maintain `apollo-server-cache-memcached` or `apollo-server-cache-redis`. The interfaces and classes for `apollo-server-caching` are now in `@apollo/utils.keyvaluecache`
 We now maintain (`@apollo/utils.keyv`) which wraps Keyv and lets you use their implementation of memcached and redis bindings (among others).
-Existing implementations of KeyValueCache should continue to work.
+Existing implementations of `KeyValueCache` should continue to work.
 
 - New HTTP request execution API
 There’s a lot here :)
