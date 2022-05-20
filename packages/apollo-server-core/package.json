@@ -42,7 +42,6 @@
     "async-retry": "^1.2.1",
     "fast-json-stable-stringify": "^2.1.0",
     "graphql-tag": "^2.11.0",
-    "lodash.sortby": "^4.7.0",
     "loglevel": "^1.6.8",
     "lru-cache": "^6.0.0",
     "sha.js": "^2.4.11",
