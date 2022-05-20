@@ -13,7 +13,7 @@ import {
   IReport,
 } from 'apollo-reporting-protobuf';
 import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace';
-import type { ReferencedFieldsByType } from './referencedFields';
+import type { ReferencedFieldsByType } from '@apollo/utils.usagereporting';
 
 // protobuf.js exports both a class and an interface (starting with I) for each
 // message type. The class is what it produces when it decodes the message; the

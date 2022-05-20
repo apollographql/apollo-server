@@ -19,7 +19,7 @@ import {
   OperationDerivedData,
   operationDerivedDataCacheKey,
 } from './operationDerivedDataCache';
-import { defaultUsageReportingSignature } from './defaultUsageReportingSignature';
+import { usageReportingSignature } from '@apollo/utils.usagereporting';
 import type {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
@@ -34,7 +34,7 @@ import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
 import {
   calculateReferencedFieldsByType,
   ReferencedFieldsByType,
-} from './referencedFields';
+} from '@apollo/utils.usagereporting';
 import type LRUCache from 'lru-cache';
 
 const reportHeaderDefaults = {
@@ -746,7 +746,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
               }
 
               const generatedSignature = (
-                options.calculateSignature || defaultUsageReportingSignature
+                options.calculateSignature || usageReportingSignature
               )(requestContext.document, requestContext.operationName || '');
 
               const generatedOperationDerivedData: OperationDerivedData = {
