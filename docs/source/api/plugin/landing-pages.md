@@ -259,8 +259,6 @@ A boolean used to set whether Studio Explorer should include cookies in its Grap
 
 If you omit this, the Explorer defaults `includeCookies` to `false` or the current user setting.
 
-If you have `embed: true`, cookies will never be sent from your embedded Explorer.
-
 </td>
 </tr>
 
