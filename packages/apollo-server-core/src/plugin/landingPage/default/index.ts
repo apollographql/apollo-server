@@ -78,6 +78,8 @@ const getEmbeddedExplorerHTML = (
     persistExplorerState?: boolean; // defaults to 'false'
 
     endpointUrl: string;
+
+    includeCookies?: boolean; // defaults to 'false'
   }
   const productionLandingPageConfigOrDefault = {
     displayOptions: {},
@@ -122,7 +124,7 @@ id="embeddableExplorer"
 `;
 };
 
-const getEmbeddedSandboxHTML = (version: string) => {
+const getEmbeddedSandboxHTML = (version: string, config: LandingPageConfig) => {
   return `
 <style>
   iframe {
@@ -139,6 +141,7 @@ id="embeddableSandbox"
   new window.EmbeddedSandbox({
     target: '#embeddableSandbox',
     initialEndpoint,
+    includeCookies: ${config.includeCookies ?? 'false'},
   });
 </script>
 `;
@@ -226,7 +229,7 @@ curl --request POST \\
       config.embed
         ? 'graphRef' in config && config.graphRef
           ? getEmbeddedExplorerHTML(version, config)
-          : getEmbeddedSandboxHTML(version)
+          : getEmbeddedSandboxHTML(version, config)
         : getNonEmbeddedLandingPageHTML(version, config)
     }
     </div>
