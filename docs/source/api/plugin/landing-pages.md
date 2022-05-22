@@ -307,7 +307,7 @@ These are the fields you can include in the `embed` option you pass to the Apoll
 
 An object containing additional display options related to the visual state of the embedded Explorer on page load.
 
-For supported subfields, see [`displayOptions` options](#displayoptions-options).
+For supported subfields, see [`displayOptions` options](#embed.displayoptions-options).
 
 </td>
 </tr>
@@ -335,7 +335,7 @@ The default value is `false`.
 
 
 
-### `displayOptions` options
+### `embed.displayOptions` options
 
 These are the fields you can include in the `displayOptions` option you pass to the embedded Explorer plugin:
 
