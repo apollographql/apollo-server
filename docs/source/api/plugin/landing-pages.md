@@ -57,7 +57,7 @@ The `ApolloServerPluginLandingPageLocalDefault` plugin shows a landing page welc
 
 <img class="screenshot" src="../../images/as-landing-page.jpg" alt="Apollo Server default landing page" width="350"/>
 
-This landing page is designed for use in local development, where `NODE_ENV` is not set to `production`. It provides a copyable command-line snippet showing how to run operations via `curl`, and it also links to Apollo Sandbox (a hosted GraphQL IDE that runs entirely inside your browser and doesn't require an account). You can choose to embed the Apollo Sandbox on your endpoint if you pass `embed: true`.
+This landing page is designed for use in local development, where `NODE_ENV` is not set to `production`. It provides a copyable command-line snippet showing how to run operations via `curl`, and it also links to (such as [Apollo Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox) (a hosted GraphQL IDE that runs entirely inside your browser and doesn't require an account). You can choose to embed the Apollo Sandbox on your endpoint if you pass `embed: true`.
 
 ### Options
 
@@ -141,7 +141,7 @@ The `ApolloServerPluginLandingPageProductionDefault` shows a minimalist landing 
 
 <img class="screenshot" src="../../images/as-landing-page-production.jpg" alt="Apollo Server default landing page" width="350"/>
 
-This landing page is designed for use in production. It provides a copyable command-line snippet showing how to run operations with your server. By default, the only visible reference to Apollo is a footer explaining how to customize the page. You can also configure it to add a link to query your graph with the Apollo Studio Explorer. You can choose to embed the Apollo Sandbox on your endpoint if you pass `embed: true`, or an [options object to `embed`](#embed-options)).
+This landing page is designed for use in production. It provides a copyable command-line snippet showing how to run operations with your server. By default, the only visible reference to Apollo is a footer explaining how to customize the page. You can also configure it to add a link to query your graph with the ([Apollo Explorer](https://www.apollographql.com/docs/studio/explorer). You can choose to embed the Apollo Explorer on your endpoint if you pass `embed: true`, or an [options object to `embed`](#embed-options)).
 
 ### Options
 
