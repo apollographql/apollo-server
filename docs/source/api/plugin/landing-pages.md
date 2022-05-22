@@ -104,6 +104,22 @@ By default, the landing page displays a footer that links to the documentation t
 <tr>
 <td>
 
+###### `includeCookies`
+
+`boolean`
+</td>
+<td>
+
+A boolean used to set whether Studio Explorer should include cookies in its GraphQL requests to your server.
+
+If you omit this, the Explorer defaults `includeCookies` to `false` or the current user setting.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `embed`
 
 `boolean`
