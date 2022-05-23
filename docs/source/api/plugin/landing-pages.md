@@ -57,7 +57,7 @@ The `ApolloServerPluginLandingPageLocalDefault` plugin shows a landing page welc
 
 <img class="screenshot" src="../../images/as-landing-page.jpg" alt="Apollo Server default landing page" width="350"/>
 
-This landing page is designed for use in local development, where `NODE_ENV` is not set to `production`. It provides a copyable command-line snippet showing how to run operations via `curl`, and it also links to (such as [Apollo Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox) (a hosted GraphQL IDE that runs entirely inside your browser and doesn't require an account). You can choose to embed the Apollo Sandbox on your endpoint if you pass `embed: true`.
+This landing page is designed for use in local development, where `NODE_ENV` is not set to `production`. It provides a copyable command-line snippet showing how to run operations via `curl`, and it also links to (such as [Apollo Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox) a hosted GraphQL IDE that runs entirely inside your browser and doesn't require an account). You can choose to embed the Apollo Sandbox on your endpoint if you pass `embed: true`.
 
 ### Options
 
