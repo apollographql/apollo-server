@@ -251,7 +251,8 @@ An object containing initial HTTP header values to populate in the Explorer on l
 
 ###### `embed`
 
-`boolean | ApolloServerPluginEmbeddedLandingPageProductionConfigOptions`
+`boolean | ApolloServerPluginEmbedded`
+`LandingPageProductionConfigOptions`
 </td>
 <td>
 
