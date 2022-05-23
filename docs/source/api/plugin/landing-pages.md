@@ -141,7 +141,7 @@ The `ApolloServerPluginLandingPageProductionDefault` shows a minimalist landing 
 
 <img class="screenshot" src="../../images/as-landing-page-production.jpg" alt="Apollo Server default landing page" width="350"/>
 
-This landing page is designed for use in production. It provides a copyable command-line snippet showing how to run operations with your server. By default, the only visible reference to Apollo is a footer explaining how to customize the page. You can also configure it to add a link to query your graph with the ([Apollo Explorer](https://www.apollographql.com/docs/studio/explorer). You can choose to embed the Apollo Explorer on your endpoint if you pass the `embed` [option](#embed-options)).
+This landing page is designed for use in production. It provides a copyable command-line snippet showing how to run operations with your server. By default, the only visible reference to Apollo is a footer explaining how to customize the page. You can also configure it to add a link to query your graph with the [Apollo Explorer](https://www.apollographql.com/docs/studio/explorer). You can choose to embed the Apollo Explorer on your endpoint if you pass the `embed` [option](#embed-options)).
 
 ### Options
 
