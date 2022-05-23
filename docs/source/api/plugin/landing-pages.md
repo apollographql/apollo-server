@@ -308,7 +308,7 @@ These are the fields you can include in the `embed` option you pass to the Apoll
 
 An object containing additional display options related to the visual state of the embedded Explorer on page load.
 
-For supported subfields, see [`displayOptions` options](#embed.displayoptions-options).
+For supported subfields, see [`displayOptions` options](#embeddisplayoptions-options).
 
 </td>
 </tr>
