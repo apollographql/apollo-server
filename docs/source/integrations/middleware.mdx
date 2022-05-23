@@ -134,6 +134,9 @@ async function startApolloServer(typeDefs, resolvers) {
   const { url } = await server.listen();
   console.log(`🚀 Server ready at ${url}`);
 }
+
+// you must provide your own `typeDefs` and `resolvers` here
+startApolloServer(typeDefs, resolvers);
 ```
 
 </MultiCodeBlock>
@@ -184,6 +187,9 @@ async function startApolloServer(typeDefs, resolvers) {
   await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 }
+
+// you must provide your own `typeDefs` and `resolvers` here
+startApolloServer(typeDefs, resolvers);
 ```
 
 </MultiCodeBlock>
@@ -232,6 +238,9 @@ async function startApolloServer(typeDefs, resolvers) {
   const { url } = await server.listen();
   console.log(`🚀 Server ready at ${url}`);
 }
+
+// you must provide your own `typeDefs` and `resolvers` here
+startApolloServer(typeDefs, resolvers);
 ```
 
 </MultiCodeBlock>
@@ -274,6 +283,9 @@ async function startApolloServer(typeDefs, resolvers) {
   await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 }
+
+// you must provide your own `typeDefs` and `resolvers` here
+startApolloServer(typeDefs, resolvers);
 ```
 
 </MultiCodeBlock>
@@ -337,6 +349,9 @@ async function startApolloServer(typeDefs, resolvers) {
   await app.listen(4000);
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 }
+
+// you must provide your own `typeDefs` and `resolvers` here
+startApolloServer(typeDefs, resolvers);
 ```
 
 </MultiCodeBlock>
@@ -384,6 +399,9 @@ async function startApolloServer(typeDefs, resolvers) {
   await server.applyMiddleware({ app });
   await app.start();
 }
+
+// you must provide your own `typeDefs` and `resolvers` here
+startApolloServer(typeDefs, resolvers);
 ```
 
 </MultiCodeBlock>
@@ -434,6 +452,9 @@ async function startApolloServer(typeDefs, resolvers) {
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
   return { server, app };
 }
+
+// you must provide your own `typeDefs` and `resolvers` here
+startApolloServer(typeDefs, resolvers);
 ```
 
 </MultiCodeBlock>
