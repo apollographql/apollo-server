@@ -48,7 +48,9 @@ describe('Errors', () => {
     };
 
     it('exposes a stacktrace in debug mode', () => {
-      const error = createFormattedError({ debug: true });
+      const error = createFormattedError({
+        includeStackTracesInErrorResponses: true,
+      });
       expect(error.message).toEqual(message);
       expect(error.extensions.key).toEqual(key);
       expect(error.extensions.exception.key).toBeUndefined();
@@ -82,20 +84,20 @@ describe('Errors', () => {
       expect(error.extensions.exception).toBeUndefined();
       expect(error.extensions.code).toEqual(code);
     });
-    it('calls formatter after exposing the code and stacktrace', () => {
+    it('calls formatError after exposing the code and stacktrace', () => {
       const error = new GraphQLError(message, {
         extensions: { code, key },
       });
-      const formatter = jest.fn();
+      const formatError = jest.fn();
       formatApolloErrors([error], {
-        formatter,
-        debug: true,
+        formatError,
+        includeStackTracesInErrorResponses: true,
       });
       expect(error.message).toEqual(message);
       expect(error.extensions.key).toEqual(key);
       expect(error.extensions.code).toEqual(code);
       expect(error instanceof GraphQLError).toBe(true);
-      expect(formatter).toHaveBeenCalledTimes(1);
+      expect(formatError).toHaveBeenCalledTimes(1);
     });
     it('Formats native Errors in a JSON-compatible way', () => {
       const error = new Error('Hello');

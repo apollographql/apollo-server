@@ -9,7 +9,10 @@ declare module 'graphql' {
   }
 }
 
-function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
+function enrichError(
+  error: Partial<GraphQLError>,
+  includeStackTracesInErrorResponses: boolean = false,
+) {
   // follows similar structure to https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts#L127-L176
   // with the addition of name
   const expanded = Object.create(Object.getPrototypeOf(error), {
@@ -58,7 +61,10 @@ function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
   // graphql-js ensures that the originalError's extensions are hoisted
   // https://github.com/graphql/graphql-js/blob/0bb47b2/src/error/GraphQLError.js#L138
   delete expanded.extensions.exception.extensions;
-  if (debug && !expanded.extensions.exception.stacktrace) {
+  if (
+    includeStackTracesInErrorResponses &&
+    !expanded.extensions.exception.stacktrace
+  ) {
     const stack = error.originalError?.stack || error.stack;
     expanded.extensions.exception.stacktrace = stack?.split('\n');
   }
@@ -189,14 +195,14 @@ export class BadRequestError extends GraphQLError {
 export function formatApolloErrors(
   errors: ReadonlyArray<Error>,
   options?: {
-    formatter?: (error: GraphQLError) => GraphQLFormattedError;
-    debug?: boolean;
+    formatError?: (error: GraphQLError) => GraphQLFormattedError;
+    includeStackTracesInErrorResponses?: boolean;
   },
 ): Array<GraphQLFormattedError> {
   if (!options) {
     return errors.map((error) => enrichError(error));
   }
-  const { formatter, debug } = options;
+  const { formatError, includeStackTracesInErrorResponses } = options;
 
   // Errors that occur in graphql-tools can contain an errors array that contains the errors thrown in a merged schema
   // https://github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L104-L107
@@ -218,18 +224,23 @@ export function formatApolloErrors(
   //   flattenedErrors.push(error);
   // }
 
-  const enrichedErrors = errors.map((error) => enrichError(error, debug));
-  if (!formatter) {
+  const enrichedErrors = errors.map((error) =>
+    enrichError(error, includeStackTracesInErrorResponses),
+  );
+  if (!formatError) {
     return enrichedErrors;
   }
 
   return enrichedErrors.map((error) => {
     try {
-      return formatter(error);
+      return formatError(error);
     } catch (err) {
-      if (debug) {
+      if (includeStackTracesInErrorResponses) {
         // XXX: This cast is pretty sketchy, as other error types can be thrown!
-        return enrichError(err as Partial<GraphQLError>, debug);
+        return enrichError(
+          err as Partial<GraphQLError>,
+          includeStackTracesInErrorResponses,
+        );
       } else {
         // obscure error
         return new GraphQLError('Internal server error');

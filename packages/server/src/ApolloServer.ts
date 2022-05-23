@@ -980,8 +980,8 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         headers: new HeaderMap([['content-type', 'application/json']]),
         completeBody: prettyJSONStringify({
           errors: formatApolloErrors([e as Error], {
-            debug: this.internals.includeStackTracesInErrorResponses,
-            formatter: this.internals.formatError,
+            includeStackTracesInErrorResponses: this.internals.includeStackTracesInErrorResponses,
+            formatError: this.internals.formatError,
           }),
         }),
         bodyChunks: null,

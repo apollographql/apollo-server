@@ -535,8 +535,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     errors: ReadonlyArray<GraphQLError>,
   ): ReadonlyArray<GraphQLFormattedError> {
     return formatApolloErrors(errors, {
-      formatter: internals.formatError,
-      debug: internals.includeStackTracesInErrorResponses,
+      formatError: internals.formatError,
+      includeStackTracesInErrorResponses: internals.includeStackTracesInErrorResponses,
     });
   }
 
