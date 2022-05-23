@@ -9,8 +9,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+- Add `embed` as an option in the `ApolloServerPluginLandingPageLocalDefault` and `ApolloServerPluginLandingPageProductionDefault` plugins. If you pass the `embed` option to `ApolloServerPluginLandingPageLocalDefault`, the Apollo Studio Sandbox will be embedded on your Apollo Server endpoint. If you pass the `embed` option to `ApolloServerPluginLandingPageProductionDefault`, the Apollo Studio embedded Explorer will be embedded on your Apollo Server endpoint. In both cases, users can use the embedded app to run GraphQL operations without any special CORS setup.
 - Add a few missing dependencies to packages. [PR #6393](https://github.com/apollographql/apollo-server/pull/6393)
-- Add `embed` as an option in the `ApolloServerPluginLandingPageLocalDefault` and `ApolloServerPluginLandingPageProductionDefault` plugins. In `ApolloServerPluginLandingPageLocalDefault`, when `embed: true` is passed, the Apollo Studio Sandbox will be embedded on your Apollo Server endpoint. In `ApolloServerPluginLandingPageProductionDefault`, when `embed` is `true`, or is a config object, the Apollo Studio embedded Explorer will be embedded on your Apollo Server endpoint. In both cases, users can use the embedded app to run GraphQL operations without any special CORS setup.
 
 ## v3.7.0
 
