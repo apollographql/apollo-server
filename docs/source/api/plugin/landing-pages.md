@@ -110,7 +110,9 @@ By default, the landing page displays a footer that links to the documentation t
 </td>
 <td>
 
-A boolean used to set whether Studio Explorer should include cookies in its GraphQL requests to your server.
+If `true`, the embedded Apollo Studio Explorer includes cookies in its GraphQL requests to your server.
+
+The default value is `false`, unless the user changes the setting in the Explorer UI.
 
 If you omit this, the Explorer defaults `includeCookies` to `false` or the current user setting.
 
@@ -126,7 +128,9 @@ If you omit this, the Explorer defaults `includeCookies` to `false` or the curre
 </td>
 <td>
 
-By default, the local landing page displays a page with a link to Apollo Sandbox to query your endpoint. If `embed: true` is passed, the landing page will instead render an embedded version of Apollo Sandbox hosted on your endpoint url. From this embedded Sandbox, you can change the endpoint to query against, and use all the features of the Apollo Sandbox on your Apollo Server endpoint. You can also sign in to your Apollo Studio account to access your Operation Collections, Diffs, Checks and more. The default value for `embed` is `false`.
+If `true`, the Apollo Server landing page renders an embedded version of Apollo Sandbox at its GraphQL endpoint URL. This enables visitors to query the endpoint directly and use additional Sandbox features if signed in with their Apollo account.
+
+The default value is `false`, in which case the landing page instead displays a link to open the non-embedded version of Sandbox.
 
 </td>
 </tr>
@@ -256,7 +260,11 @@ An object containing initial HTTP header values to populate in the Explorer on l
 </td>
 <td>
 
-By default, a simple curl command will be displayed on your production Apollo Server landing page. If `embed: true` is passed, *and* a `graphRef` is passed, the production landing page will instead render an embedded version of Apollo Studio Explorer hosted on your endpoint url. From this embedded Explorer, you can query the endpoint, and use all the features of the Apollo Studio Explorer on your Apollo Server endpoint. You can also sign in to your Apollo Studio account to access your Operation Collections. The default value for `embed` is `false`.
+If `true` or you provide an options object, the Apollo Server landing page renders an embedded version of the Apollo Studio Explorer at its GraphQL endpoint URL. This enables visitors to query the endpoint directly and use additional Explorer features if signed in with their Apollo account.
+
+To embed the Explorer, you must _also_ provide Apollo Server with the **graph ref** of the Studio graph to use, usually via the `APOLLO_GRAPH_REF` environment variable.
+
+The default value is `false`, in which case the landing page displays a basic `curl` command.
 
 You can configure the Explorer embedded on your Apollo Server endpoint with display and functional options. For supported options, see [`embed` options](#embed-options).
 
@@ -284,7 +292,7 @@ If you omit this, the Explorer defaults `includeCookies` to `false` or the curre
 
 ### `embed` options
 
-These are the fields you can include in the `embed` option you pass to the ApolloServerPluginLandingPageProductionDefault:
+These are the fields you can include in the `embed` option you pass to the `ApolloServerPluginLandingPageProductionDefault`:
 
 <table class="field-table api-ref">
   <thead>
