@@ -7,6 +7,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
+## v3.8.1
+
+- This is a patch release strictly for republishing over what appears to be a hiccup in NPMs service. [Issue #6469](https://github.com/apollographql/apollo-server/issues/6469)
+
 ## v3.8.0
 
 - Add `embed` as an option in the `ApolloServerPluginLandingPageLocalDefault` and `ApolloServerPluginLandingPageProductionDefault` plugins. If you pass the `embed` option to `ApolloServerPluginLandingPageLocalDefault`, the Apollo Studio Sandbox will be embedded on your Apollo Server endpoint. If you pass the `embed` option to `ApolloServerPluginLandingPageProductionDefault`, the Apollo Studio embedded Explorer will be embedded on your Apollo Server endpoint. In both cases, users can use the embedded app to run GraphQL operations without any special CORS setup. (NOTE: Some details of this feature rely on changes that will deployed to Apollo Studio on 2022-May-24. This note will be removed when these changes are deployed.)
