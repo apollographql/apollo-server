@@ -76,7 +76,7 @@
     "jest-config": "28.1.0",
     "jest-junit": "13.2.0",
     "jest-mock-random": "1.1.1",
-    "keyv": "4.2.9",
+    "keyv": "4.3.0",
     "lodash.sumby": "4.6.0",
     "nock": "13.2.4",
     "node-fetch": "2.6.7",
@@ -88,7 +88,7 @@
     "supertest": "6.2.3",
     "test-listen": "1.1.0",
     "ts-jest": "28.0.3",
-    "typescript": "4.6.4"
+    "typescript": "4.7.2"
   },
   "jest": {
     "projects": [
