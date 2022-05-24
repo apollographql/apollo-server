@@ -3,7 +3,11 @@ title: File uploads
 description: Enabling file uploads in Apollo Server
 ---
 
-You can add file upload support to Apollo Server via the third-party [`graphql-upload`](https://npm.im/graphql-upload) library. This package provides support for the `multipart/form-data` content-type.
+There are a few ways to accomplish file uploads in Apollo Server. Our [blog post](https://www.apollographql.com/blog/backend/file-uploads/file-upload-best-practices/) on file uploads goes in depth on the approaches we've taken, outlining the pros and cons of each.
+
+Apollo recommends handling the file upload itself out-of-band of your GraphQL server for the sake of simplicity and security. This "signed URL" approach allows your client to retrieve a URL from your GraphQL server (via S3 or other storage service) and upload the file to the URL rather than to your GraphQL server. The blog post mentioned above goes into detail on how to set this up.
+
+Another common approach involves adding file upload support directly to Apollo Server via the third-party [`graphql-upload`](https://npm.im/graphql-upload) library. This package provides support for the `multipart/form-data` content-type. **Note: this approach is vulnerable to a [CSRF mutation attack](https://github.com/apollographql/apollo-server/security/advisories/GHSA-2p3c-p3qw-69r4) unless Apollo Server is explicitly configured with `csrfPrevention: true`.** In the examples below, we demonstrate configuring CSRF prevention in order to prevent this vulnerability by always requiring a "preflight" OPTIONS request before executing an operation. When configuring your file upload client, you will need to send a non-empty `Apollo-Require-Preflight` header or Apollo Server will block the request. For example, if you use the `apollo-upload-client` package with Apollo Client Web, pass headers: `{'Apollo-Require-Preflight': 'true'}` to `createUploadLink`.
 
 **New in Apollo Server 3:** Apollo Server 3 does not contain a built-in integration with `graphql-upload` like in Apollo Server 2. Instead, the instructions below show how to integrate it yourself. You cannot do this with the "batteries-included" `apollo-server` library; you must use a web framework integration such as `apollo-server-express` instead. This page shows how to integrate `graphql-upload` with Express and Fastify. To implement similar functionality with another Node.js HTTP framework (e.g., Koa), see the [`graphql-upload` documentation](https://github.com/jaydenseric/graphql-upload) for more information. Some integrations might need to use `graphql-upload`'s `processRequest` directly.
 
@@ -73,6 +77,7 @@ async function startServer() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    // Using graphql-upload without CSRF prevention is very insecure.
     csrfPrevention: true,
   });
   await server.start();
@@ -174,6 +179,7 @@ const start = async () => {
     const server = new ApolloServer({
       typeDefs,
       resolvers,
+      // Using graphql-upload without CSRF prevention is very insecure.
       csrfPrevention: true,
     });
 

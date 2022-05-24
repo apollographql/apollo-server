@@ -199,8 +199,14 @@ Note that all HTTP header names are case-insensitive.
 
 HTTP requests that satisfy none of the conditions above will be rejected with a 400 status code and a message clearly explaining which headers need to be added in order to make the request succeed.
 
-**We highly recommend that you enable CSRF prevention by passing `csrfPrevention: true` to `new ApolloServer()`**. This feature will be enabled by default in Apollo Server 4. It should have no impact on legitimate use of your graph, *unless* you have clients that send `GET` requests and are not Apollo Client Web, Apollo iOS, or Apollo Kotlin. If you do send `GET` requests with other clients, you should configure them to send a non-empty `Apollo-Require-Preflight` header along with all requests.
+**We highly recommend that you enable CSRF prevention by passing `csrfPrevention: true` to `new ApolloServer()`**. This feature will be enabled by default in Apollo Server 4.
+
+It should have no impact on legitimate use of your graph *except* in these two cases:
+* you have clients that send `GET` requests and are not Apollo Client Web, Apollo iOS, or Apollo Kotlin
+* you have enabled [file uploads](../data/file-uploads) with `graphql-upload`
+
+If either of these apply to you, you should configure the relevant clients to send a non-empty `Apollo-Require-Preflight` header along with all requests.
 
 You can also configure the set of headers that allow execution. For example, if you use a GraphQL client that performs `GET` requests without sending `Content-Type`, `X-Apollo-Operation-Name`, or `Apollo-Require-Preflight` headers, but it does send a `Some-Special-Header` header, you can pass `csrfPrevention: { requestHeaders: ['Some-Special-Header'] }` to `new ApolloServer()`.  This option replaces checking for the two headers `X-Apollo-Operation-Name` and `Apollo-Require-Preflight` in the CSRF prevention logic. The check for `Content-Type` remains the same.
 
-Note that Apollo Server does not permit executing mutations in `GET` requests (just queries). As long as you ensure that only mutations can have side effects, you are somewhat protected from the "side effects" aspect of CSRFs even without enabling CSRF protection. However, you would still be vulnerable to XS-Search timing attacks.
+Note that Apollo Server does not permit executing mutations in `GET` requests (just queries). As long as you ensure that only mutations can have side effects, you are somewhat protected from the "side effects" aspect of CSRFs even without enabling CSRF protection. However, you would still be vulnerable to XS-Search timing attacks. In addition, file uploads as implemented by the [third-party `graphql-upload` package](../data/file-uploads) adds a special middleware that parses `POST` requests with a `Content-Type` of `multipart/form-data`. This is one of the three special `Content-Type`s that can be set on simple requests, so this lets your server process mutations sent in simple requests! **All users of `graphql-upload` should enable `csrfPrevention`** and configure their upload clients to send a non-empty `Apollo-Require-Preflight` header.
