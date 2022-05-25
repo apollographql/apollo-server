@@ -1,9 +1,29 @@
 # Integration Guide
-## Generic API for HTTP request and responses
+
+Apollo Server 4 comes with a well-defined API for processing HTTP requests and responses.
+
+Writing these integrations should be much easier in the new model, because the only responsibility of these packages will be translating requests and responses between the framework's native format and the types used by ApolloServer's API.
+
 ## Take in server
-## Use your framework specific middleware
-## Then try to start your server
+
+Framework integration packages can export functions or classes that take in `ApolloServer` and call its methods appropriately instead of adding their own methods to the object.
+
+Your integration should expect to intake an `ApolloServerStandalone` instance, after the `start()` function has been called upon it.
+
+This is often down by passing the server instance to your framework specific middleware function:
+
+```js
+// example of how to use the expressMiddleware[]
+  const server = new ApolloServer({ typeDefs: 'type Query {f: ID}' });
+  await server.start();
+  const app = express();
+  // Note lack of `json` here.
+  app.use(expressMiddleware(server));
+```
+
+Your integration is responsible for setting up any bodyparser or cors configuration itself.
+
 ## Here is a link to the apollo-express-middleware use it as reference:
 
-<!-- Link to express integration  -->
+<!-- TODO: Insert GH Link to express integration  -->
 packages/server/src/express/index.ts
