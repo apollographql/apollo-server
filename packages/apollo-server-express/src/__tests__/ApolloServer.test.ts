@@ -558,6 +558,97 @@ describe('apollo-server-express', () => {
             if (error.code !== 'EPIPE') throw error;
           }
         });
+
+        it('multipart requests work when Upload in schema', async () => {
+          const { port } = await createServer({
+            typeDefs: gql`
+              type Query {
+                f(f: Upload!): ID
+              }
+            `,
+          });
+
+          const body = new FormData();
+          body.append(
+            'operations',JSON.stringify({ query: '{__typename}',
+            }),
+          );
+          body.append('map', '{}');
+
+          try {
+            const resolved = await fetch(`http://localhost:${port}/graphql`, {
+              method: 'POST',
+              body: body as any,
+            });
+            const response = await resolved.json();
+            expect(response).toEqual({data: {__typename: 'Query'}});
+          } catch (error) {
+            // This error began appearing randomly and seems to be a dev dependency bug.
+            // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
+            if (error.code !== 'EPIPE') throw error;
+          }
+        });
+
+        it('multipart requests work when uploads: true is passed', async () => {
+          const { port } = await createServer({
+            typeDefs: gql`
+              type Query {
+                f: ID
+              }
+            `,
+            uploads: true,
+          });
+
+          const body = new FormData();
+          body.append(
+            'operations',JSON.stringify({ query: '{__typename}',
+            }),
+          );
+          body.append('map', '{}');
+
+          try {
+            const resolved = await fetch(`http://localhost:${port}/graphql`, {
+              method: 'POST',
+              body: body as any,
+            });
+            const response = await resolved.json();
+            expect(response).toEqual({data: {__typename: 'Query'}});
+          } catch (error) {
+            // This error began appearing randomly and seems to be a dev dependency bug.
+            // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
+            if (error.code !== 'EPIPE') throw error;
+          }
+        });
+
+        it('multipart requests do not work when uploads unspecified and Upload is not used in the schema', async () => {
+          const { port } = await createServer({
+            typeDefs: gql`
+              type Query {
+                f: ID
+              }
+            `,
+          });
+
+          const body = new FormData();
+          body.append(
+            'operations',JSON.stringify({ query: '{__typename}',
+            }),
+          );
+          body.append('map', '{}');
+
+          try {
+            const resolved = await fetch(`http://localhost:${port}/graphql`, {
+              method: 'POST',
+              body: body as any,
+            });
+            const response = await resolved.text();
+            expect(response).toEqual("POST body missing. Did you forget use body-parser middleware?");
+          } catch (error) {
+            // This error began appearing randomly and seems to be a dev dependency bug.
+            // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
+            if (error.code !== 'EPIPE') throw error;
+          }
+        });
       },
     );
 

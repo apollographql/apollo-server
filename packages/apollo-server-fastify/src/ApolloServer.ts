@@ -41,6 +41,7 @@ const fileUploadMiddleware = (
   done: (err: Error | null, body?: any) => void,
 ) => {
   if (
+    !server.disableUploads() &&
     (req.req as any)[kMultipart] &&
     typeof processFileUploads === 'function'
   ) {

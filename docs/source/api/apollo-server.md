@@ -158,7 +158,7 @@ An executable GraphQL schema. You usually don't need to provide this value, beca
 
 This field is most commonly used with [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses a special `buildFederatedSchema` function to generate its schema.
 
-Note that if you are using [file uploads](../data/file-uploads/), you need to add the `Upload` scalar to your schema manually before providing it here, as Apollo Server's automatic uploads integration does not apply if you use this particular option..
+Note that if you are using [file uploads](../data/file-uploads/), you need to add the `Upload` scalar to your schema manually before providing it here, as Apollo Server's automatic uploads integration does not apply if you use this particular option. (We do not recommend the use of file uploads in Apollo Server 2 for security reasons detailed on its page.)
 </td>
 </tr>
 
@@ -235,9 +235,11 @@ An object containing custom functions to use as additional [validation rules](ht
 </td>
 <td>
 
-By default, Apollo Server 2 [integrates](../data/file-uploads/) an outdated version of [the `graphql-upload` npm module](https://www.npmjs.com/package/graphql-upload#graphql-upload) into your schema which does not support Node 14. If you provide an object here, it will be passed as the third `options` argument to that module's `processRequest` option.
+By default, Apollo Server 2 [integrates](../data/file-uploads/) an outdated version of [the `graphql-upload` npm module](https://www.npmjs.com/package/graphql-upload#graphql-upload) into your schema which does not support Node 14 or newer. (As of v2.25.4, it is only enabled by default if you actually use the `Upload` scalar in your schema outside of its definition.) If you provide an object here, it will be passed as the third `options` argument to that module's `processRequest` option.
 
-We recommend instead that you pass `false` here, which will disable Apollo Server's integration with `graphql-upload`, and instead integrate the latest version of that module directly. This integration will be removed in Apollo Server 3.
+We recommend instead that you pass `false` here, which will disable Apollo Server's integration with `graphql-upload`. We then recommend that you find an alternate mechanism for accepting uploads in your app that does not involve `graphql-upload`, or that you upgrade to Apollo Server 3.7 and use its [CSRF prevention feature](https://www.apollographql.com/docs/apollo-server/security/cors/#preventing-cross-site-request-forgery-csrf).
+
+If you must use the upload feature with Apollo Server 2, then you can do so on Node 14 by passing `false` here and directly integrating the latest version of `graphql-upload` directly. This will probably expose your server to CSRF mutation vulnerabilities so you must find some way of protecting yourself. (We recommend protecting yourself by upgrading and using our protection feature as described in the previous paragraph.) This integration has been removed in Apollo Server 3.
 </td>
 </tr>
 

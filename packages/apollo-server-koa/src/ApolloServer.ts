@@ -36,7 +36,7 @@ const fileUploadMiddleware = (
   uploadsConfig: FileUploadOptions,
   server: ApolloServerBase,
 ) => async (ctx: Koa.Context, next: Function) => {
-  if (typeis(ctx.req, ['multipart/form-data'])) {
+  if (!server.disableUploads() && typeis(ctx.req, ['multipart/form-data'])) {
     try {
       ctx.request.body = await processFileUploads(
         ctx.req,

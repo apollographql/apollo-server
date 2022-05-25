@@ -74,7 +74,7 @@ export class ApolloServer extends ApolloServerBase {
           return h.continue;
         }
 
-        if (this.uploadsConfig && typeof processFileUploads === 'function') {
+        if (this.uploadsConfig && !this.disableUploads() && typeof processFileUploads === 'function') {
           await handleFileUploads(this.uploadsConfig)(request);
         }
 

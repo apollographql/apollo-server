@@ -41,7 +41,7 @@ export class ApolloServer extends ApolloServerBase {
     return async (req, res) => {
       this.graphqlPath = path || '/graphql';
 
-      if (typeof processFileUploads === 'function') {
+      if (!this.disableUploads() && typeof processFileUploads === 'function') {
         await this.handleFileUploads(req, res);
       }
 
