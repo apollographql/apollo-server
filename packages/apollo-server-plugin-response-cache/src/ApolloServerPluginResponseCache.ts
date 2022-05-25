@@ -72,9 +72,9 @@ interface Options<TContext = Record<string, any>> {
     requestContext: GraphQLRequestContext<TContext>,
   ): ValueOrPromise<any>;
 
-   // Define this hook if you want the cache key to use a prefix before the hash
-   // Example: {operationName}:{keyHash}
-   dynamicPrefix?(
+  // Define this hook if you want the cache key to use a prefix before the hash
+  // Example: {operationName}:{keyHash}
+  dynamicPrefix?(
     requestContext: GraphQLRequestContext<TContext>,
   ): ValueOrPromise<string>;
 
@@ -174,7 +174,7 @@ export default function plugin(
               ...baseCacheKey!,
               ...contextualCacheKeyFields,
             });
-            const serializedValue = await cache.get((dynamicPrefix + key));
+            const serializedValue = await cache.get(dynamicPrefix + key);
             if (serializedValue === undefined) {
               return null;
             }
@@ -200,7 +200,6 @@ export default function plugin(
           if (options.dynamicPrefix) {
             dynamicPrefix = await options.dynamicPrefix(requestContext);
           }
-
 
           baseCacheKey = {
             source: requestContext.source!,
@@ -306,7 +305,9 @@ export default function plugin(
             // still calls `cache.set` synchronously (ie, that it writes to
             // InMemoryLRUCache synchronously).
             cache
-              .set((dynamicPrefix + key), serializedValue, { ttl: policyIfCacheable.maxAge })
+              .set(dynamicPrefix + key, serializedValue, {
+                ttl: policyIfCacheable.maxAge,
+              })
               .catch(logger.warn);
           };
 
