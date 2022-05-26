@@ -26,6 +26,8 @@ import type {
   ApolloServerPlugin,
   BaseContext,
   GraphQLExecutor,
+  GraphQLRequest,
+  GraphQLRequestContext,
   GraphQLResponse,
   GraphQLServerListener,
   GraphQLServiceContext,
@@ -49,18 +51,8 @@ import {
   preventCsrf,
   recommendedCsrfPreventionRequestHeaders,
 } from './preventCsrf';
-import {
-  APQ_CACHE_PREFIX,
-  GraphQLRequest,
-  GraphQLRequestContext,
-  processGraphQLRequest,
-} from './requestPipeline';
-import {
-  cloneObject,
-  HeaderMap,
-  HttpQueryError,
-  prettyJSONStringify,
-} from './runHttpQuery';
+import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline';
+import { cloneObject, HeaderMap, prettyJSONStringify } from './runHttpQuery';
 import type {
   ApolloServerOptions,
   ApolloServerOptionsWithStaticSchema,
@@ -928,28 +920,6 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       plugin.__internal_installed_implicitly__ = true;
       plugins.push(plugin);
     }
-
-    // Special case: GET operations should only be queries (not mutations). We
-    // want to throw a particular HTTP error in that case.
-    plugins.unshift({
-      async requestDidStart() {
-        return {
-          async didResolveOperation({ operation, request }) {
-            if (
-              request.http?.method === 'GET' &&
-              operation.operation !== 'query'
-            ) {
-              throw new HttpQueryError(
-                405,
-                `GET supports only query operation`,
-                false,
-                new HeaderMap([['allow', 'POST']]),
-              );
-            }
-          },
-        };
-      },
-    });
 
     return plugins;
   }

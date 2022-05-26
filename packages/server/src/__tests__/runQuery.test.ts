@@ -12,6 +12,7 @@ import { ApolloServer } from '../ApolloServer';
 import type {
   ApolloServerPlugin,
   BaseContext,
+  GraphQLRequest,
   GraphQLRequestExecutionListener,
   GraphQLRequestListener,
   GraphQLRequestListenerDidResolveField,
@@ -20,7 +21,6 @@ import type {
   GraphQLRequestListenerValidationDidEnd,
   GraphQLResponse,
 } from '../externalTypes';
-import type { GraphQLRequest } from '../requestPipeline';
 import type { ApolloServerOptions } from '../types';
 import { LRUCacheStore, sizeCalculation } from '../utils/LRUCacheStore';
 

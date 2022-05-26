@@ -29,7 +29,6 @@ import {
   BadRequestError,
 } from './errors';
 import type {
-  GraphQLRequest,
   GraphQLResponse,
   GraphQLRequestContext,
   GraphQLExecutionResult,
@@ -44,13 +43,12 @@ import type {
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
   BaseContext,
+  HTTPGraphQLResponse,
 } from './externalTypes';
 
 import { Dispatcher } from './utils/dispatcher';
 
-export { GraphQLRequest, GraphQLResponse, GraphQLRequestContext };
-
-import { HeaderMap, HttpQueryError } from './runHttpQuery';
+import { HeaderMap } from './runHttpQuery';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
 
 export const APQ_CACHE_PREFIX = 'apq:';
@@ -77,6 +75,18 @@ function isBadUserInputGraphQLError(error: GraphQLError): Boolean {
   );
 }
 
+// Persisted query errors (especially "not found") need to be uncached, because
+// hopefully we're about to fill in the APQ cache and the same request will
+// succeed next time. We also want a 200 response to avoid any error handling
+// that may mask the contents of an error response. (Otherwise, the default
+// status code for a response with `errors` but no `data` (even null) is 400.)
+const getPersistedQueryErrorHttp = () => ({
+  statusCode: 200,
+  headers: new HeaderMap([
+    ['cache-control', 'private, no-cache, must-revalidate'],
+  ]),
+});
+
 export async function processGraphQLRequest<TContext extends BaseContext>(
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
@@ -97,7 +107,15 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     // It looks like we've received a persisted query. Check if we
     // support them.
     if (!internals.persistedQueries) {
-      return await sendErrorResponse(new PersistedQueryNotSupportedError());
+      return await sendErrorResponse(
+        new PersistedQueryNotSupportedError(),
+        undefined,
+        // Not super clear why we need this to be uncached (makes sense for
+        // PersistedQueryNotFoundError, because there we're about to fill the
+        // cache and make the next copy of the same request succeed) but we've
+        // been doing it for years so :shrug:
+        getPersistedQueryErrorHttp(),
+      );
     } else if (extensions.persistedQuery.version !== 1) {
       return await sendErrorResponse(
         new GraphQLError('Unsupported persisted query version'),
@@ -111,7 +129,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       if (query) {
         requestContext.metrics.persistedQueryHit = true;
       } else {
-        return await sendErrorResponse(new PersistedQueryNotFoundError());
+        return await sendErrorResponse(
+          new PersistedQueryNotFoundError(),
+          undefined,
+          getPersistedQueryErrorHttp(),
+        );
       }
     } else {
       const computedQueryHash = computeQueryHash(query);
@@ -239,6 +261,19 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   requestContext.operation = operation || undefined;
   // We'll set `operationName` to `null` for anonymous operations.
   requestContext.operationName = operation?.name?.value || null;
+
+  // Special case: GET operations should only be queries (not mutations). We
+  // want to throw a particular HTTP error in that case. (This matters because
+  // it's generally how HTTP requests should work, and additionally it makes us
+  // less vulnerable to mutations running over CSRF, if you turn off our CSRF
+  // prevention feature.)
+  if (request.http?.method === 'GET' && operation?.operation !== 'query') {
+    return await sendErrorResponse(
+      new GraphQLError('GET supports only query operation'),
+      undefined,
+      { statusCode: 405, headers: new HeaderMap([['allow', 'POST']]) },
+    );
+  }
 
   try {
     await dispatcher.invokeHook(
@@ -477,6 +512,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   async function sendErrorResponse(
     errorOrErrors: ReadonlyArray<GraphQLError> | GraphQLError,
     errorClass?: typeof ApolloError,
+    http?: Pick<HTTPGraphQLResponse, 'headers' | 'statusCode'>,
   ) {
     // If a single error is passed, it should still be encapsulated in an array.
     const errors = Array.isArray(errorOrErrors)
@@ -498,31 +534,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
               ),
         ),
       ),
+      http,
     };
-
-    // Persisted query errors (especially "not found") need to be uncached,
-    // because hopefully we're about to fill in the APQ cache and the same
-    // request will succeed next time. We also want a 200 response to avoid any
-    // error handling that may mask the contents of an error response.
-    if (
-      errors.every(
-        (err) =>
-          err instanceof PersistedQueryNotSupportedError ||
-          err instanceof PersistedQueryNotFoundError,
-      )
-    ) {
-      response.http = {
-        statusCode: 200,
-        headers: new HeaderMap([
-          ['cache-control', 'private, no-cache, must-revalidate'],
-        ]),
-      };
-    } else if (errors.length === 1 && errors[0] instanceof HttpQueryError) {
-      response.http = {
-        statusCode: errors[0].statusCode,
-        headers: errors[0].headers,
-      };
-    }
 
     return sendResponse(response);
   }
