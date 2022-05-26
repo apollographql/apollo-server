@@ -1,7 +1,8 @@
 import { formatApolloErrors } from './errors';
-import type { GraphQLRequest, GraphQLResponse } from './requestPipeline';
 import type {
   BaseContext,
+  GraphQLRequest,
+  GraphQLResponse,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
 } from './externalTypes';
@@ -60,10 +61,6 @@ export class HttpQueryError extends Error {
       bodyChunks: null,
     };
   }
-}
-
-export function isHttpQueryError(e: unknown): e is HttpQueryError {
-  return (e as any)?.name === 'HttpQueryError';
 }
 
 function fieldIfString(

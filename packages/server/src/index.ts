@@ -1,6 +1,6 @@
 // TODO(AS4): Evaluate the full exposed API.
 
-export { HttpQueryError, isHttpQueryError } from './runHttpQuery';
+export { HttpQueryError } from './runHttpQuery';
 
 export {
   ApolloError,

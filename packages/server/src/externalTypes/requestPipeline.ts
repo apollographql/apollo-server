@@ -31,7 +31,7 @@ export type GraphQLRequestContextValidationDidStart<
 export type GraphQLRequestContextDidResolveOperation<
   TContext extends BaseContext,
 > = GraphQLRequestContextValidationDidStart<TContext> &
-  WithRequired<GraphQLRequestContext<TContext>, 'operation' | 'operationName'>;
+  WithRequired<GraphQLRequestContext<TContext>, 'operationName'>;
 export type GraphQLRequestContextDidEncounterErrors<
   TContext extends BaseContext,
 > = WithRequired<GraphQLRequestContext<TContext>, 'metrics' | 'errors'>;
