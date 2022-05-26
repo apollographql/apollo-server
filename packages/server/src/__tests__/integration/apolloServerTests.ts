@@ -57,6 +57,7 @@ import type {
   CreateServerForIntegrationTestsResult,
 } from '.';
 import type { SchemaLoadOrUpdateCallback } from '../../types';
+import { HeaderMap } from '../../runHttpQuery';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -146,7 +147,9 @@ const makeGatewayMock = ({
 export function defineIntegrationTestSuiteApolloServerTests(
   createServerWithoutRememberingToCleanItUp: CreateServerForIntegrationTests,
   options: {
-    serverlessFramework?: boolean;
+    // Serverless integrations tell us that they start in the background,
+    // which affects some tests.
+    serverIsStartedInBackground?: boolean;
   } = {},
 ) {
   describe('apolloServerTests.ts', () => {
@@ -460,24 +463,39 @@ export function defineIntegrationTestSuiteApolloServerTests(
           expect(executor).toHaveBeenCalled();
         });
 
-        if (!options.serverlessFramework) {
-          // You don't have to call start on serverless frameworks (or in
-          // `apollo-server` which does not currently use this test suite).
-          it('rejected load promise is thrown by server.start', async () => {
-            const { gateway, triggers } = makeGatewayMock();
+        it('rejected load promise is thrown by server.start', async () => {
+          const { gateway, triggers } = makeGatewayMock();
 
-            const loadError = new Error(
-              'load error which should be be thrown by start',
-            );
-            triggers.rejectLoad(loadError);
+          const loadError = new Error(
+            'load error which should be be thrown by start',
+          );
+          triggers.rejectLoad(loadError);
 
+          if (options.serverIsStartedInBackground) {
+            // We should be able to run the server setup code (which calls
+            // startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests)
+            // but actual operations will fail, like the function name says.
+            const server = (await createServer({ gateway })).server;
             await expect(
-              createServerAndGetUrl({
-                gateway,
+              server.executeHTTPGraphQLRequest({
+                httpGraphQLRequest: {
+                  method: 'POST',
+                  headers: new HeaderMap([
+                    ['content-type', 'application-json'],
+                  ]),
+                  body: JSON.stringify({ query: '{__typename}' }),
+                  searchParams: {},
+                },
+                context: async () => ({}),
               }),
             ).rejects.toThrowError(loadError);
-          });
-        }
+          } else {
+            // createServer awaits start() so should throw.
+            await expect(createServer({ gateway })).rejects.toThrowError(
+              loadError,
+            );
+          }
+        });
 
         it('allows mocks as boolean', async () => {
           const typeDefs = gql`
@@ -2355,11 +2373,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
         const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
         triggers.resolveLoad({ schema, executor: async () => ({}) });
         const server = (await createServer({ gateway })).server;
-        if (options.serverlessFramework) {
-          // Serverless frameworks execute ApolloServer.start() in a dangling
-          // promise in the server constructor. To ensure that the server has
-          // started in the case of serverless, we make a query against it,
-          // which forces us to wait until after start.
+        if (options.serverIsStartedInBackground) {
+          // To ensure that the server has started in the case of serverless, we
+          // make a query against it, which forces us to wait until after start.
           //
           // This is also required because ApolloServer.stop() was not designed
           // to be executed concurrently with start(). (Without this query,
@@ -2603,13 +2619,13 @@ export function defineIntegrationTestSuiteApolloServerTests(
         });
       });
 
-      // Serverless frameworks don't have startup errors because they don't
-      // have a startup phase.
-      options.serverlessFramework ||
+      // If the server was started in the background, then createServer does not
+      // throw.
+      options.serverIsStartedInBackground ||
         describe('startup errors', () => {
           it('only one plugin can implement renderLandingPage', async () => {
             await expect(
-              createServerAndGetUrl(makeServerConfig(['x', 'y'])),
+              createServer(makeServerConfig(['x', 'y'])),
             ).rejects.toThrow(
               'Only one plugin can implement renderLandingPage.',
             );

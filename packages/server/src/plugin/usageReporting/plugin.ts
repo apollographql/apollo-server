@@ -106,7 +106,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
     async serverWillStart({
       logger: serverLogger,
       apollo,
-      serverlessFramework,
+      startedInBackground,
     }: GraphQLServiceContext): Promise<GraphQLServerListener> {
       // Use the plugin-specific logger if one is provided; otherwise the general server one.
       const logger = options.logger ?? serverLogger;
@@ -130,7 +130,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
       // environments aren't designed around letting us run a background task to
       // send reports later or hook into container destruction to flush buffered reports.
       const sendReportsImmediately =
-        options.sendReportsImmediately ?? serverlessFramework;
+        options.sendReportsImmediately ?? startedInBackground;
 
       // Since calculating the signature and referenced fields for usage
       // reporting is potentially an expensive operation, we'll cache the data

@@ -102,6 +102,12 @@ type ServerState<TContext extends BaseContext> =
       phase: 'starting';
       barrier: Resolvable<void>;
       schemaManager: SchemaManager<TContext>;
+      // This is set to true if you called
+      // startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests
+      // instead of start. The main purpose is that assertStarted allows you to
+      // still be in the starting phase if this is set. (This is the serverless
+      // use case.)
+      startedInBackground: boolean;
     }
   | {
       phase: 'failed to start';
@@ -161,7 +167,10 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   plugins: ApolloServerPlugin<TContext>[];
   parseOptions: ParseOptions;
   state: ServerState<TContext>;
-  stopOnTerminationSignals: boolean;
+  // `undefined` means we figure out what to do during _start (because
+  // the default depends on whether or not we used the background version
+  // of start).
+  stopOnTerminationSignals: boolean | undefined;
   executor: GraphQLExecutor<TContext> | null;
   csrfPreventionRequestHeaders: string[] | null;
 }
@@ -227,9 +236,13 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
 
     const state: ServerState<TContext> = config.gateway
       ? // ApolloServer has been initialized but we have not yet tried to load the
-        // schema from the gateway. That will wait until the user calls
-        // `server.start()` or `server.listen()`, or (in serverless frameworks)
-        // until the `this._start()` call at the end of this constructor.
+        // schema from the gateway. That will wait until `start()` or
+        // `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests()`
+        // is called. (These may be called by other helpers; for example,
+        // `standaloneServer` calls `start` for you inside its `listen` method,
+        // and a serverless framework integration would call
+        // startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests
+        // for you.)
         {
           phase: 'initialized',
           schemaManager: new SchemaManager({
@@ -306,14 +319,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       plugins,
       parseOptions: config.parseOptions ?? {},
       state,
-      // We handle signals if it was explicitly requested, or if we're in Node,
-      // not in a test, not in a serverless framework, and it wasn't explicitly
-      // turned off. (We only actually register the signal handlers once we've
-      // successfully started up, because there's nothing to stop otherwise.)
-      stopOnTerminationSignals:
-        typeof config.stopOnTerminationSignals === 'boolean'
-          ? config.stopOnTerminationSignals
-          : isNodeLike && nodeEnv !== 'test' && !this.serverlessFramework(),
+      stopOnTerminationSignals: config.stopOnTerminationSignals,
 
       executor: config.executor ?? null, // can be set by _start too
 
@@ -325,31 +331,15 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           : config.csrfPrevention.requestHeaders ??
             recommendedCsrfPreventionRequestHeaders,
     };
-
-    // The main entry point (createHandler) to serverless frameworks generally
-    // needs to be called synchronously from the top level of your entry point,
-    // unlike (eg) applyMiddleware, so we can't expect you to `await
-    // server.start()` before calling it. So we kick off the start
-    // asynchronously from the constructor, and failures are logged and cause
-    // later requests to fail (in `_ensureStarted`, called by
-    // `graphQLServerOptions` and from the serverless framework handlers).
-    // There's no way to make "the whole server fail" separately from making
-    // individual requests fail, but that's not entirely unreasonable for a
-    // "serverless" model.
-    // TODO(AS4): Make serverless model simpler (less boilerplate in integrations).
-    if (this.serverlessFramework()) {
-      this._start().catch((e) => this.logStartupError(e));
-    }
   }
 
   // Awaiting a call to `start` ensures that a schema has been loaded and that
   // all plugin `serverWillStart` hooks have been called. If either of these
   // processes throw, `start` will (async) throw as well.
   //
-  // If you're using the batteries-included `apollo-server` package, you don't
-  // need to call `start` yourself (in fact, it will throw if you do so); its
-  // `listen` method takes care of that for you (this is why the actual logic is
-  // in the `_start` helper).
+  // If you're using `standaloneServer`, you don't need to call `start` yourself
+  // (in fact, it will throw if you do so); its `listen` method takes care of
+  // that for you.
   //
   // If instead you're using an integration package for a non-serverless
   // framework (like Express), you must await a call to `start` immediately
@@ -357,34 +347,34 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
   // framework and starting to accept requests. `start` should only be called
   // once; if it throws and you'd like to retry, just create another
   // `ApolloServer`. (Calling `start` was optional in Apollo Server 2, but in
-  // Apollo Server 3 the methods like `server.applyMiddleware` use
-  // `assertStarted` to throw if `start` hasn't successfully completed.)
+  // Apollo Server 3+ the functions like `expressMiddleware` use `assertStarted`
+  // to throw if `start` hasn't successfully completed.)
   //
-  // Serverless integrations like Lambda (which override `serverlessFramework()`
-  // to return true) do not support calling `start()`, because their lifecycle
-  // doesn't allow you to wait before assigning a handler or allowing the
-  // handler to be called. So they call `_start()` at the end of the
-  // constructor, and don't really differentiate between startup failures and
+  // Serverless integrations like Lambda do not support calling `start()`,
+  // because their lifecycle doesn't allow you to wait before assigning a
+  // handler or allowing the handler to be called. So they call
+  // `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests()`
+  // instead, and don't really differentiate between startup failures and
   // request failures. This is hopefully appropriate for a "serverless"
   // framework. Serverless startup failures result in returning a redacted error
   // to the end user and logging the more detailed error.
   public async start(): Promise<void> {
-    if (this.serverlessFramework()) {
-      throw new Error(
-        'When using an ApolloServer subclass from a serverless framework ' +
-          "package, you don't need to call start(); just call createHandler().",
-      );
-    }
-
-    return await this._start();
+    return await this._start(false);
   }
 
-  // This is protected so that it can be called from `apollo-server`. It is
-  // otherwise an internal implementation detail.
-  protected async _start(): Promise<void> {
+  public startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests(): void {
+    this._start(true).catch((e) => this.logStartupError(e));
+  }
+
+  protected async _start(startedInBackground: boolean): Promise<void> {
     if (this.internals.state.phase !== 'initialized') {
+      // If we wanted we could make this error detectable and change
+      // `standaloneServer` to change the message to say not to call start() at
+      // all.
       throw new Error(
-        `called start() with surprising state ${this.internals.state.phase}`,
+        `You should only call 'start()' or ` +
+          `'startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests()' ` +
+          `once on your ApolloServer.`,
       );
     }
     const schemaManager = this.internals.state.schemaManager;
@@ -393,6 +383,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       phase: 'starting',
       barrier,
       schemaManager,
+      startedInBackground,
     };
     try {
       const toDispose: (() => Promise<void>)[] = [];
@@ -409,7 +400,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         logger: this.internals.logger,
         schema: schemaDerivedData.schema,
         apollo: this.internals.apolloConfig,
-        serverlessFramework: this.serverlessFramework(),
+        startedInBackground,
       };
 
       const taggedServerListeners = (
@@ -485,10 +476,10 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           .serverListener.renderLandingPage!();
       }
 
-      const toDisposeLast = this.maybeRegisterTerminationSignalHandlers([
-        'SIGINT',
-        'SIGTERM',
-      ]);
+      const toDisposeLast = this.maybeRegisterTerminationSignalHandlers(
+        ['SIGINT', 'SIGTERM'],
+        startedInBackground,
+      );
 
       this.internals.state = {
         phase: 'started',
@@ -511,9 +502,27 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
 
   private maybeRegisterTerminationSignalHandlers(
     signals: NodeJS.Signals[],
+    startedInBackground: boolean,
   ): (() => Promise<void>)[] {
     const toDisposeLast: (() => Promise<void>)[] = [];
-    if (!this.internals.stopOnTerminationSignals) {
+
+    // We handle signals if it was explicitly requested
+    // (stopOnTerminationSignals === true), or if we're in Node, not in a test,
+    // not in a serverless framework (which we guess based on whether they
+    // called
+    // startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests),
+    // and it wasn't explicitly turned off. (We only actually register the
+    // signal handlers once we've successfully started up, because there's
+    // nothing to stop otherwise.)
+    if (
+      this.internals.stopOnTerminationSignals === false ||
+      (this.internals.stopOnTerminationSignals === undefined &&
+        !(
+          isNodeLike &&
+          this.internals.nodeEnv !== 'test' &&
+          !startedInBackground
+        ))
+    ) {
       return toDisposeLast;
     }
 
@@ -551,26 +560,25 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
   }
 
   // This method is called at the beginning of each GraphQL request by
-  // `graphQLServerOptions`. Most of its logic is only helpful for serverless
-  // frameworks: unless you're in a serverless framework, you should have called
-  // `await server.start()` before the server got to the point of running
-  // GraphQL requests (`assertStarted` calls in the framework integrations
-  // verify that) and so the only cases for non-serverless frameworks that this
-  // should hit are 'started', 'stopping', and 'stopped'. For serverless
-  // frameworks, this lets the server wait until fully started before serving
-  // operations.
-  //
-  // It's also called via `ensureStarted` by serverless frameworks so that they
-  // can call `renderLandingPage` (or do other things like call a method on a base
-  // class that expects it to be started).
+  // `executeHTTPGraphQLRequest` and `executeOperation`. Most of its logic is
+  // only helpful if you started the server in the background (ie, for
+  // serverless frameworks): unless you're in a serverless framework, you should
+  // have called `await server.start()` before the server got to the point of
+  // running GraphQL requests (`assertStarted` calls in the framework
+  // integrations verify that) and so the only cases for non-serverless
+  // frameworks that this should hit are 'started', 'stopping', and 'stopped'.
+  // But if you started the server in the background (with
+  // startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests), this
+  // lets the server wait until fully started before serving operations.
   private async _ensureStarted(): Promise<RunningServerState<TContext>> {
     while (true) {
       switch (this.internals.state.phase) {
         case 'initialized':
-          // This error probably won't happen: serverless frameworks
-          // automatically call `_start` at the end of the constructor, and
-          // other frameworks call `assertStarted` before setting things up
-          // enough to make calling this function possible.
+          // This error probably won't happen: serverless framework integrations
+          // should call
+          // `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests`
+          // for you, and other frameworks call `assertStarted` before setting
+          // things up enough to make calling this function possible.
           throw new Error(
             'You need to call `server.start()` before using your Apollo Server.',
           );
@@ -592,12 +600,18 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         case 'draining': // We continue to run operations while draining.
           return this.internals.state;
         case 'stopping':
-          throw new Error(
-            'Cannot execute GraphQL operations while the server is stopping.',
-          );
         case 'stopped':
+          this.internals.logger.warn(
+            'A GraphQL operation was received during server shutdown. The ' +
+              'operation will fail. Consider draining the HTTP server on shutdown; ' +
+              'see https://go.apollo.dev/s/drain for details.',
+          );
           throw new Error(
-            'Cannot execute GraphQL operations after the server has stopped.',
+            `Cannot execute GraphQL operations ${
+              this.internals.state.phase === 'stopping'
+                ? 'while the server is stopping'
+                : 'after the server has stopped'
+            }.'`,
           );
         default:
           throw new UnreachableCaseError(this.internals.state);
@@ -605,16 +619,29 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     }
   }
 
-  // For serverless frameworks only. Just like `_ensureStarted` but hides its
-  // return value.
-  protected async ensureStarted() {
-    await this._ensureStarted();
-  }
-
+  // Framework integrations should call this to ensure that you've properly
+  // started your server before you get anywhere close to actually listening for
+  // incoming requests.
+  //
+  // There's a special case that if you called
+  // `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` and
+  // it hasn't finished starting up yet, this works too. This is intended for
+  // cases like a serverless integration (say, Google Cloud Functions) that
+  // calls
+  // `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` for
+  // you and then immediately sets up an integration based on another middleware
+  // like `expressMiddleware` which calls this function. We'd like this to be
+  // OK, but we still want normal Express users to start their ApolloServer
+  // before setting up their HTTP server unless they know what they are doing
+  // well enough to call the function with the long name themselves.
   public assertStarted(expressionForError: string) {
     if (
       this.internals.state.phase !== 'started' &&
-      this.internals.state.phase !== 'draining'
+      this.internals.state.phase !== 'draining' &&
+      !(
+        this.internals.state.phase === 'starting' &&
+        this.internals.state.startedInBackground
+      )
     ) {
       throw new Error(
         'You must `await server.start()` before calling `' +
@@ -625,10 +652,12 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
   }
 
   // Given an error that occurred during Apollo Server startup, log it with a
-  // helpful message. This should only happen with serverless frameworks; with
-  // other frameworks, you must `await server.start()` which will throw the
-  // startup error directly instead of logging (or `await server.listen()` for
-  // the batteries-included `apollo-server`).
+  // helpful message. This should happen when you call
+  // `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` (ie,
+  // in serverless frameworks); with other frameworks, you must `await
+  // server.start()` which will throw the startup error directly instead of
+  // logging. This gets called both immediately when the startup error happens,
+  // and on all subsequent requests.
   private logStartupError(err: Error) {
     this.internals.logger.error(
       'An error occurred during Apollo Server startup. All GraphQL requests ' +
@@ -804,10 +833,6 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     this.internals.state = { phase: 'stopped', stopError: null };
   }
 
-  protected serverlessFramework(): boolean {
-    return false;
-  }
-
   // This is called in the constructor before this.internals has been
   // initialized, so we make it static to make it clear it can't assume that
   // `this` has been fully initialized.
@@ -934,6 +959,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
   }
 
   // TODO(AS4): Make sure we like the name of this function.
+  // TODO(AS4): Should we make this into a function that never throws?
   public async executeHTTPGraphQLRequest({
     httpGraphQLRequest,
     context,
@@ -957,6 +983,9 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     // If enabled, check to ensure that this request was preflighted before doing
     // anything real (such as running the context function).
     if (this.internals.csrfPreventionRequestHeaders) {
+      // TODO(AS4): We introduced an error handling bug when we ported this to
+      // version-4: this throws HttpQueryError but we don't treat that specially
+      // here.
       preventCsrf(
         httpGraphQLRequest.headers,
         this.internals.csrfPreventionRequestHeaders,
@@ -1046,7 +1075,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     // start your server before calling it. (That also means you can use it with
     // `apollo-server` which doesn't support `start()`.)
     if (this.internals.state.phase === 'initialized') {
-      await this._start();
+      await this.start();
     }
 
     const schemaDerivedData = (

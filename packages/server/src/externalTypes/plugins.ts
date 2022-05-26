@@ -21,7 +21,8 @@ export interface GraphQLServiceContext {
   schema: GraphQLSchema;
   apollo: ApolloConfig;
   // TODO(AS4): Make sure we document that we removed `persistedQueries`.
-  serverlessFramework: boolean;
+  // TODO(AS4): Note change of serverlessFramework to startedInBackground.
+  startedInBackground: boolean;
 }
 
 export interface GraphQLSchemaContext {

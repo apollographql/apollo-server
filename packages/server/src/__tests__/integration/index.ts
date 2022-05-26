@@ -23,7 +23,7 @@ export type CreateServerForIntegrationTests = (
 export function defineIntegrationTestSuite(
   createServer: CreateServerForIntegrationTests,
   options: {
-    serverlessFramework?: boolean;
+    serverIsStartedInBackground?: boolean;
   } = {},
 ) {
   describe('integration tests', () => {
