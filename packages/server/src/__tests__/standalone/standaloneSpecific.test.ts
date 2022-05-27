@@ -8,7 +8,8 @@ describe('Typings: TContext inference', () => {
     });
 
     // HTTPApolloServer<BaseContext>
-    standaloneServer(server);
+    await standaloneServer(server, {}, { port: 0 });
+    await server.stop();
   });
 
   // `context` function can provide a superset of the `TContext` inferred by or
@@ -19,11 +20,16 @@ describe('Typings: TContext inference', () => {
     });
 
     // HTTPApolloServer<BaseContext>
-    standaloneServer(server, {
-      async context() {
-        return { foo: 'bar' };
+    await standaloneServer(
+      server,
+      {
+        async context() {
+          return { foo: 'bar' };
+        },
       },
-    });
+      { port: 0 },
+    );
+    await server.stop();
   });
 
   it('correctly infers `MyContext` when generic and `context` function are both provided', async () => {
@@ -43,11 +49,16 @@ describe('Typings: TContext inference', () => {
     });
 
     // HTTPApolloServer<MyContext>
-    standaloneServer(server, {
-      async context() {
-        return { foo: 'bar' };
+    await standaloneServer(
+      server,
+      {
+        async context() {
+          return { foo: 'bar' };
+        },
       },
-    });
+      { port: 0 },
+    );
+    await server.stop();
   });
 
   it('errors when `MyContext` is provided without a `context` function', async () => {
@@ -67,7 +78,8 @@ describe('Typings: TContext inference', () => {
     });
 
     // @ts-expect-error
-    standaloneServer(server);
+    await standaloneServer(server, {}, { port: 0 });
+    await server.stop();
   });
 
   it('errors when `MyContext` is provided without a compatible `context` function', async () => {
@@ -87,10 +99,15 @@ describe('Typings: TContext inference', () => {
     });
 
     // @ts-expect-error
-    standaloneServer(server, {
-      async context() {
-        return { notFoo: 'oops' };
+    await standaloneServer(
+      server,
+      {
+        async context() {
+          return { notFoo: 'oops' };
+        },
       },
-    });
+      { port: 0 },
+    );
+    await server.stop();
   });
 });

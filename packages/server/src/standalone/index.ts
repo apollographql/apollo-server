@@ -14,20 +14,25 @@ interface HTTPServerOptions<TContext extends BaseContext> {
   context?: ContextFunction<[ExpressContext], TContext>;
 }
 
-export function standaloneServer(
+export async function standaloneServer(
   server: ApolloServer<BaseContext>,
   options?: HTTPServerOptions<BaseContext>,
-): ApolloServerStandalone<BaseContext>;
-export function standaloneServer<TContext extends BaseContext>(
+  listenOptions?: ListenOptions,
+): Promise<{ url: string }>;
+export async function standaloneServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
   options: WithRequired<HTTPServerOptions<TContext>, 'context'>,
-): ApolloServerStandalone<TContext>;
-export function standaloneServer<TContext extends BaseContext>(
+  listenOptions?: ListenOptions,
+): Promise<{ url: string }>;
+export async function standaloneServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
   options?: HTTPServerOptions<TContext>,
-): ApolloServerStandalone<TContext> {
+  listenOptions: ListenOptions = { port: 4000 },
+): Promise<{ url: string }> {
   const context = options?.context ?? (async () => ({} as TContext));
-  return new ApolloServerStandalone<TContext>(server, { context });
+  return await new ApolloServerStandalone<TContext>(server, { context }).listen(
+    listenOptions,
+  );
 }
 
 class ApolloServerStandalone<TContext extends BaseContext> {
