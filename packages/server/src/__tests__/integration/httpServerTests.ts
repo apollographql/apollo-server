@@ -1529,7 +1529,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           query,
         });
 
-        expect(setSpy).toHaveBeenCalledWith(`apq:${hash}`, query, 900);
+        expect(setSpy).toHaveBeenCalledWith(`apq:${hash}`, query, { ttl: 900 });
         expect(didResolveSource.mock.calls[0][0]).toHaveProperty(
           'source',
           query,

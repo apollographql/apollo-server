@@ -79,12 +79,10 @@ describe('ApolloServer documentStore', () => {
     await server.start();
 
     await server.executeOperation(operations.simple.op);
-    const keys = documentStore['cache'].keys();
-
+    const keys = documentStore.keys();
     expect(keys).toHaveLength(1);
     const theKey = keys[0];
-    const [namespace, uuid, hash] = theKey.split(':');
-    expect(namespace).toBe('custom');
+    const [uuid, hash] = theKey.split(':');
     expect(typeof uuid).toBe('string');
     expect(hash).toEqual(operations.simple.hash);
 
