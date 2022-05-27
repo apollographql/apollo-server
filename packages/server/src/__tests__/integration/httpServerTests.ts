@@ -20,7 +20,7 @@ import {
   ValidationContext,
 } from 'graphql';
 import gql from 'graphql-tag';
-import Keyv from 'keyv';
+import { InMemoryLRUCache, KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { HTTPError } from 'superagent';
 import request from 'supertest';
 import type {
@@ -1512,10 +1512,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       }
 
-      let cache: Keyv<string>;
+      let cache: KeyValueCache<string>;
       let setSpy: jest.SpyInstance;
       beforeEach(async () => {
-        cache = new Keyv();
+        cache = new InMemoryLRUCache();
         setSpy = jest.spyOn(cache, 'set');
         didResolveSource = jest.fn();
         didEncounterErrors = jest.fn();

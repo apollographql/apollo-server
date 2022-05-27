@@ -307,11 +307,15 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     // While it shouldn't normally be necessary to wrap this `Promise` in a
     // `Promise.resolve` invocation, it seems that the underlying cache store
     // is returning a non-native `Promise` (e.g. Bluebird, etc.).
+    const ttl = internals.persistedQueries?.ttl;
     Promise.resolve(
       internals.persistedQueries.cache.set(
         queryHash,
         query,
-        internals.persistedQueries?.ttl ?? undefined,
+        // careful with zero here, explicitly checking for `null` or `undefined`
+        ttl != null
+          ? { ttl: internals.persistedQueries?.ttl }
+          : undefined,
       ),
     ).catch(internals.logger.warn);
   }

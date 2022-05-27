@@ -7,7 +7,7 @@ import type {
   GraphQLSchema,
   OperationDefinitionNode,
 } from 'graphql';
-import type Keyv from 'keyv';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { CachePolicy } from './cacheControl';
 import type { BaseContext } from './context';
 import type { HTTPGraphQLHead, HTTPGraphQLRequest } from './http';
@@ -53,7 +53,7 @@ export interface GraphQLRequestContext<TContext extends BaseContext> {
   readonly schema: GraphQLSchema;
 
   readonly contextValue: TContext;
-  readonly cache: Keyv<string>;
+  readonly cache: KeyValueCache<string>;
 
   readonly queryHash?: string;
 

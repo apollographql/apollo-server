@@ -8,7 +8,7 @@ import type {
   GraphQLSchema,
   ValidationContext,
 } from 'graphql';
-import type Keyv from 'keyv';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { ApolloConfig, ApolloConfigInput } from './config';
 import type { BaseContext, GraphQLExecutor } from './externalTypes';
 import type { PluginDefinition } from './externalTypes/plugins';
@@ -60,10 +60,10 @@ export interface GatewayInterface<TContext extends BaseContext> {
   stop(): Promise<void>;
 }
 
-export type DocumentStore = Keyv<DocumentNode>;
+export type DocumentStore = KeyValueCache<DocumentNode>;
 
 export interface PersistedQueryOptions {
-  cache?: Keyv<string>;
+  cache?: KeyValueCache<string>;
   /**
    * Specified in **seconds**, this time-to-live (TTL) value limits the lifespan
    * of how long the persisted query should be cached.  To specify a desired
@@ -100,7 +100,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   validationRules?: Array<(context: ValidationContext) => any>;
   executor?: GraphQLExecutor<TContext>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
-  cache?: Keyv<string>;
+  cache?: KeyValueCache<string>;
   includeStackTracesInErrorResponses?: boolean;
   logger?: Logger;
   allowBatchedHttpRequests?: boolean;

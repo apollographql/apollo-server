@@ -15,7 +15,11 @@ import {
   print,
   ValidationContext,
 } from 'graphql';
-import Keyv from 'keyv';
+import {
+  type KeyValueCache,
+  InMemoryLRUCache,
+  PrefixingKeyValueCache,
+} from '@apollo/utils.keyvaluecache';
 import loglevel from 'loglevel';
 import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
@@ -66,7 +70,6 @@ import type {
   PersistedQueryOptions,
   WithRequired,
 } from './types';
-import { LRUCacheStore, PrefixingKeyv } from './utils/LRUCacheStore';
 import { SchemaManager } from './utils/schemaManager';
 
 const NoIntrospection = (context: ValidationContext) => ({
@@ -160,7 +163,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   validationRules: Array<(context: ValidationContext) => any>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   includeStackTracesInErrorResponses: boolean;
-  cache: Keyv<string>;
+  cache: KeyValueCache<string>;
   persistedQueries?: WithRequired<PersistedQueryOptions, 'cache'>;
   nodeEnv: string;
   allowBatchedHttpRequests: boolean;
@@ -288,7 +291,12 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     // maintained Keyv packages or our own Keyv store `LRUCacheStore`).
     // TODO(AS4): warn users and provide better documentation around providing
     // an appropriate Keyv.
-    const cache = config.cache ?? new Keyv();
+    //
+    // FIXME: @glasser do we want to just use the
+    // InMemoryLRUCache here? Is there a reason we didn't before? I can write a
+    // lightweight KeyValueCache backed by a Map if that's what we want, but I'm
+    // not sure why we would?
+    const cache = config.cache ?? new InMemoryLRUCache();
 
     // Note that we avoid calling methods on `this` before `this.internals` is assigned
     // (thus a bunch of things being static methods above).
@@ -309,7 +317,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           ? undefined
           : {
               ...config.persistedQueries,
-              cache: new PrefixingKeyv(
+              cache: new PrefixingKeyValueCache(
                 config.persistedQueries?.cache ?? cache,
                 APQ_CACHE_PREFIX,
               ),
@@ -752,16 +760,14 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       // random prefix each time we get a new schema.
       documentStore:
         providedUnprefixedDocumentStore === undefined
-          ? new Keyv<DocumentNode>({
-              store: new LRUCacheStore({
-                // Create ~about~ a 30MiB cache by default. Configurable by providing
-                // your own `documentStore`.
-                maxSize: Math.pow(2, 20) * 30,
-              }),
-            })
+          ? new InMemoryLRUCache<DocumentNode>()
           : providedUnprefixedDocumentStore === null
           ? null
-          : new PrefixingKeyv(providedUnprefixedDocumentStore, `${uuid.v4()}:`),
+          : new PrefixingKeyValueCache(
+              // FIXME: is this still inferred as `any`? why?
+              providedUnprefixedDocumentStore,
+              `${uuid.v4()}:`,
+            ),
     };
   }
 

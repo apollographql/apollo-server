@@ -8,7 +8,7 @@ import {
   GraphQLString,
   parse,
 } from 'graphql';
-import Keyv from 'keyv';
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '../ApolloServer';
 import type {
   ApolloServerPlugin,
@@ -22,7 +22,6 @@ import type {
   GraphQLRequestListenerValidationDidEnd,
 } from '../externalTypes';
 import type { ApolloServerOptions } from '../types';
-import { LRUCacheStore, sizeCalculation } from '../utils/LRUCacheStore';
 
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,
@@ -1066,14 +1065,13 @@ describe('parsing and validation cache', () => {
     // of the two smaller queries. All three of these queries will never fit
     // into this cache, so we'll roll through them all.
     const maxSize =
-      // sizeCalculation is the same calculator that `LRUCacheStore` uses by default.
-      sizeCalculation(cacheRepresentationOfQuery(querySmall1)) +
-      sizeCalculation(cacheRepresentationOfQuery(querySmall2));
+      InMemoryLRUCache.sizeCalculation(
+        cacheRepresentationOfQuery(querySmall1),
+      ) +
+      InMemoryLRUCache.sizeCalculation(cacheRepresentationOfQuery(querySmall2));
 
-    const documentStore = new Keyv<DocumentNode>({
-      store: new LRUCacheStore<DocumentNode>({
-        maxSize,
-      }),
+    const documentStore = new InMemoryLRUCache<DocumentNode>({
+      maxSize,
     });
 
     const server = new ApolloServer({
