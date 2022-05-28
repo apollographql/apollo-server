@@ -127,7 +127,7 @@
     "qs-middleware": "1.0.3",
     "request-promise": "4.2.6",
     "requisition": "1.7.0",
-    "rollup": "2.75.0",
+    "rollup": "2.75.1",
     "supertest": "6.2.3",
     "test-listen": "1.1.0",
     "ts-jest": "28.0.3",
