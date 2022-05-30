@@ -1194,7 +1194,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const expected = '--blank--';
         app = await createApp({
           schema,
-          formatError: (error) => {
+          formatError: (_, error) => {
             expect(error instanceof Error).toBe(true);
             return { message: expected };
           },
@@ -1212,7 +1212,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const expected = '--blank--';
         app = await createApp({
           schema,
-          formatError: (error) => {
+          formatError: (_, error) => {
             expect(error instanceof Error).toBe(true);
             expect(error instanceof GraphQLError).toBe(true);
             return { message: expected };

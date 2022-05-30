@@ -1,9 +1,13 @@
-import { GraphQLError, GraphQLFormattedError } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLFormattedError,
+  GraphQLErrorExtensions,
+} from 'graphql';
 
 declare module 'graphql' {
   export interface GraphQLErrorExtensions {
+    code?: string;
     exception?: {
-      code?: string;
       stacktrace?: ReadonlyArray<string>;
     };
   }
@@ -127,8 +131,12 @@ export class BadRequestError extends GraphQLError {
 export function formatApolloErrors(
   errors: ReadonlyArray<unknown>,
   options: {
-    formatError?: (error: GraphQLError) => GraphQLFormattedError;
+    formatError?: (
+      formattedError: GraphQLFormattedError,
+      error: unknown,
+    ) => GraphQLFormattedError;
     includeStackTracesInErrorResponses?: boolean;
+    errorCode?: string;
   } = {},
 ): Array<GraphQLFormattedError> {
   // Errors that occur in graphql-tools can contain an errors array that contains the errors thrown in a merged schema
@@ -151,15 +159,15 @@ export function formatApolloErrors(
   //   flattenedErrors.push(error);
   // }
 
-  const { includeStackTracesInErrorResponses } = options;
+  const { includeStackTracesInErrorResponses, errorCode } = options;
 
-  const formatError = options.formatError ?? ((error) => error.toJSON());
+  const formatError = options.formatError ?? ((error) => error);
   return errors.map((error) => {
     try {
-      return formatError(enrichError(error));
+      return formatError(enrichError(error), error);
     } catch (err) {
       if (includeStackTracesInErrorResponses) {
-        return enrichError(err).toJSON();
+        return enrichError(err);
       } else {
         // obscure error
         return { message: 'Internal server error' };
@@ -167,7 +175,7 @@ export function formatApolloErrors(
     }
   });
 
-  function enrichError(maybeError: unknown) {
+  function enrichError(maybeError: unknown): GraphQLFormattedError {
     const error: Error =
       maybeError instanceof Error
         ? maybeError
@@ -178,24 +186,33 @@ export function formatApolloErrors(
         ? error
         : new GraphQLError(error.message, { originalError: error });
 
-    const execeptionExtensions = includeStackTracesInErrorResponses
-      ? {
-          ...graphqlError.extensions?.exception,
-          stack: graphqlError.stack?.split('\n'),
-        }
-      : null;
+    const extensions: GraphQLErrorExtensions = {
+      ...graphqlError.extensions,
+      code:
+        graphqlError.extensions.code ?? errorCode ?? 'INTERNAL_SERVER_ERROR',
+    };
 
-    return new GraphQLError(error.message, {
-      nodes: graphqlError.nodes,
-      source: graphqlError.source,
-      positions: graphqlError.positions,
-      path: graphqlError.path,
-      originalError: graphqlError.originalError,
-      extensions: {
-        ...graphqlError.extensions,
-        code: graphqlError.extensions.code || 'INTERNAL_SERVER_ERROR',
-        ...execeptionExtensions,
-      },
-    });
+    const { originalError } = graphqlError;
+    if (originalError != null && !(originalError instanceof GraphQLError)) {
+      const originalErrorEnumerableEntries = Object.entries(
+        originalError,
+      ).filter(([key]) => key !== 'extensions');
+
+      if (originalErrorEnumerableEntries.length > 0) {
+        extensions.exception = {
+          ...extensions.exception,
+          ...Object.fromEntries(originalErrorEnumerableEntries),
+        };
+      }
+    }
+
+    if (includeStackTracesInErrorResponses) {
+      extensions.exception = {
+        ...extensions.exception,
+        stacktrace: graphqlError.stack?.split('\n'),
+      };
+    }
+
+    return { ...graphqlError.toJSON(), extensions };
   }
 }

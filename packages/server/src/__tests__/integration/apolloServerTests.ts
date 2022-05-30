@@ -197,7 +197,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
 
           const formatError = jest.fn((error) => {
-            expect(error instanceof Error).toBe(true);
+            expect(error).toMatchObject({ message: expect.any(String) });
             return error;
           });
 
@@ -732,8 +732,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         });
 
         const formatError = jest.fn((error) => {
-          expect(error instanceof Error).toBe(true);
-          expect(error.constructor.name).toEqual('Error');
+          expect(error).toMatchObject({ message: expect.any(String) });
           return error;
         });
 
@@ -807,16 +806,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
           throw yuppieError;
         });
 
-        const formatError = jest.fn((error) => {
-          expect(error instanceof Error).toBe(true);
-          expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
-          expect(error.extensions.exception.name).toEqual('ValidationError');
-          expect(error.extensions.exception.message).toBeDefined();
-          const inputError = new UserInputError('User Input Error');
-          return {
-            message: inputError.message,
-            extensions: inputError.extensions,
-          };
+        const formatError = jest.fn(() => {
+          return new UserInputError('User Input Error').toJSON();
         });
 
         const uri = await createServerAndGetUrl({
@@ -842,12 +833,32 @@ export function defineIntegrationTestSuiteApolloServerTests(
         const result = await apolloFetch({
           query: '{fieldWhichWillError}',
         });
+
+        expect(throwError).toHaveBeenCalledTimes(1);
+        expect(formatError).toHaveBeenCalledTimes(1);
+        const formatErrorArgs: any = formatError.mock.calls[0];
+        expect(formatErrorArgs[0]).toMatchObject({
+          message: 'email must be a valid email',
+          path: ['fieldWhichWillError'],
+          locations: [{ line: 1, column: 2 }],
+          extensions: {
+            code: 'INTERNAL_SERVER_ERROR',
+            exception: {
+              name: 'ValidationError',
+              message: 'email must be a valid email',
+              type: undefined,
+              value: { email: 'invalid-email' },
+              errors: ['email must be a valid email'],
+              path: 'email',
+            },
+          },
+        });
+        expect(formatErrorArgs[1] instanceof Error).toBe(true);
+
         expect(result.data).toEqual({ fieldWhichWillError: null });
         expect(result.errors).toBeDefined();
         expect(result.errors[0].extensions.code).toEqual('BAD_USER_INPUT');
         expect(result.errors[0].message).toEqual('User Input Error');
-        expect(formatError).toHaveBeenCalledTimes(1);
-        expect(throwError).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -1384,15 +1395,19 @@ export function defineIntegrationTestSuiteApolloServerTests(
       });
 
       it('errors thrown in plugins call formatError and are wrapped', async () => {
+        const pluginError = new Error('nope');
         const pluginCalled = jest.fn(() => {
-          throw new Error('nope');
+          throw pluginError;
         });
-        const formatError = jest.fn((error) => {
-          expect(error instanceof Error).toBe(true);
+        const formatError = jest.fn((formattedError, error) => {
+          expect(error).toEqual(pluginError);
           // extension should be called before formatError
           expect(pluginCalled).toHaveBeenCalledTimes(1);
-          error.message = 'masked';
-          return error;
+
+          return {
+            ...formattedError,
+            message: 'masked',
+          };
         });
         const uri = await createServerAndGetUrl({
           typeDefs: gql`
@@ -2170,8 +2185,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
           typeDefs: allTypeDefs,
           resolvers,
           formatError(err) {
-            err.message = `Formatted: ${err.message}`;
-            return err;
+            return {
+              ...err,
+              message: `Formatted: ${err.message}`,
+            };
           },
           plugins: [
             ApolloServerPluginInlineTrace({

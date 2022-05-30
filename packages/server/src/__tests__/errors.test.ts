@@ -93,11 +93,14 @@ describe('Errors', () => {
         formatError,
         includeStackTracesInErrorResponses: true,
       });
-      expect(error.message).toEqual(message);
-      expect(error.extensions.key).toEqual(key);
-      expect(error.extensions.code).toEqual(code);
-      expect(error instanceof GraphQLError).toBe(true);
+
       expect(formatError).toHaveBeenCalledTimes(1);
+
+      const formatErrorArgs = formatError.mock.calls[0];
+      expect(formatErrorArgs[0].message).toEqual(message);
+      expect(formatErrorArgs[0].extensions.key).toEqual(key);
+      expect(formatErrorArgs[0].extensions.code).toEqual(code);
+      expect(formatErrorArgs[1]).toEqual(error);
     });
     it('Formats native Errors in a JSON-compatible way', () => {
       const error = new Error('Hello');

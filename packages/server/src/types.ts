@@ -3,7 +3,6 @@ import type { IMocks } from '@graphql-tools/mock';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type {
   DocumentNode,
-  GraphQLError,
   GraphQLFieldResolver,
   GraphQLFormattedError,
   GraphQLSchema,
@@ -93,7 +92,10 @@ export interface CSRFPreventionOptions {
 
 // TODO(AS4): Organize this.
 interface ApolloServerOptionsBase<TContext extends BaseContext> {
-  formatError?: (error: GraphQLError) => GraphQLFormattedError;
+  formatError?: (
+    formattedError: GraphQLFormattedError,
+    error: unknown,
+  ) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => any) | any;
   validationRules?: Array<(context: ValidationContext) => any>;
   executor?: GraphQLExecutor<TContext>;
