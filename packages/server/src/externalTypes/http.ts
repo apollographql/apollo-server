@@ -24,21 +24,24 @@ interface HTTPGraphQLResponseChunk {
   body: string;
 }
 
-export type HTTPGraphQLResponse = {
+export interface HTTPGraphQLHead {
   statusCode?: number;
   // need to figure out what headers this includes (eg JSON???)
   headers: Map<string, string>;
-} & (
-  | {
-      // TODO(AS4): document why we chose strings as output. (tl;dr: consistent
-      // rather than flexible JSON output. Can represent landing page. We can
-      // always add another entry point that returns un-serialized responses
-      // later.)
-      completeBody: string;
-      bodyChunks: null;
-    }
-  | {
-      completeBody: null;
-      bodyChunks: AsyncIterableIterator<HTTPGraphQLResponseChunk>;
-    }
-);
+}
+
+export type HTTPGraphQLResponse = HTTPGraphQLHead &
+  (
+    | {
+        // TODO(AS4): document why we chose strings as output. (tl;dr: consistent
+        // rather than flexible JSON output. Can represent landing page. We can
+        // always add another entry point that returns un-serialized responses
+        // later.)
+        completeBody: string;
+        bodyChunks: null;
+      }
+    | {
+        completeBody: null;
+        bodyChunks: AsyncIterableIterator<HTTPGraphQLResponseChunk>;
+      }
+  );

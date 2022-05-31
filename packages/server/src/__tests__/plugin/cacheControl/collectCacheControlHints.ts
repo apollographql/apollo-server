@@ -26,10 +26,10 @@ export async function collectCacheControlHintsAndPolicyIfCacheable(
         async requestDidStart() {
           return {
             async willSendResponse({ response, overallCachePolicy }) {
-              if (!response.extensions) {
-                response.extensions = {};
+              if (!response.result.extensions) {
+                response.result.extensions = {};
               }
-              response.extensions.__policyIfCacheable__ =
+              response.result.extensions.__policyIfCacheable__ =
                 overallCachePolicy.policyIfCacheable();
             },
           };
@@ -41,11 +41,11 @@ export async function collectCacheControlHintsAndPolicyIfCacheable(
   const response = await server.executeOperation({ query: source });
   await server.stop();
 
-  expect(response.errors).toBeUndefined();
+  expect(response.result.errors).toBeUndefined();
 
   return {
     hints: cacheHints,
-    policyIfCacheable: response.extensions!.__policyIfCacheable__,
+    policyIfCacheable: response.result.extensions!.__policyIfCacheable__ as any,
   };
 }
 

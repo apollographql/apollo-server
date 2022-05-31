@@ -117,7 +117,7 @@ describe('ApolloServer documentStore', () => {
     ).schemaManager.getSchemaDerivedData();
     expect(documentStore).toBeNull();
 
-    const result = await server.executeOperation(operations.simple.op);
+    const { result } = await server.executeOperation(operations.simple.op);
 
     expect(result.data).toEqual({ hello: 'world' });
   });

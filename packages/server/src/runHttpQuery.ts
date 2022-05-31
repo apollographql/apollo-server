@@ -2,7 +2,6 @@ import { formatApolloErrors } from './errors';
 import type {
   BaseContext,
   GraphQLRequest,
-  GraphQLResponse,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
 } from './externalTypes';
@@ -11,6 +10,8 @@ import {
   internalExecuteOperation,
   SchemaDerivedData,
 } from './ApolloServer';
+import type { FormattedExecutionResult } from 'graphql';
+import type { HTTPGraphQLHead } from './externalTypes/http';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just
 // do want to use (our own? somebody else's?) Headers class.
@@ -216,42 +217,24 @@ export async function runHttpQuery<TContext extends BaseContext>(
         ).asHTTPGraphQLResponse();
     }
 
-    const { graphQLResponse, responseHeadersAndStatusCode } =
-      await internalExecuteOperation({
-        graphQLRequest,
-        contextValue,
-        internals,
-        schemaDerivedData,
-      });
+    const graphQLResponse = await internalExecuteOperation({
+      graphQLRequest,
+      contextValue,
+      internals,
+      schemaDerivedData,
+    });
 
-    // This code is run on parse/validation errors and any other error that
-    // doesn't reach GraphQL execution
-    if (graphQLResponse.errors && typeof graphQLResponse.data === 'undefined') {
-      // don't include options, since the errors have already been formatted
-      return {
-        statusCode: graphQLResponse.http?.statusCode || 400,
-        headers: new HeaderMap([
-          ['content-type', 'application/json'],
-          ...(graphQLResponse.http?.headers ?? new Map()),
-        ]),
-        completeBody: prettyJSONStringify({
-          // TODO(AS4): Understand why we don't call formatApolloErrors here.
-          errors: graphQLResponse.errors,
-          extensions: graphQLResponse.extensions,
-        }),
-        bodyChunks: null,
-      };
-    }
+    const body = prettyJSONStringify(
+      orderExecutionResultFields(graphQLResponse.result),
+    );
 
-    const body = prettyJSONStringify(serializeGraphQLResponse(graphQLResponse));
-
-    responseHeadersAndStatusCode.headers.set(
+    graphQLResponse.http.headers.set(
       'content-length',
       Buffer.byteLength(body, 'utf8').toString(),
     );
 
     return {
-      ...responseHeadersAndStatusCode,
+      ...graphQLResponse.http,
       completeBody: body,
       bodyChunks: null,
     };
@@ -274,15 +257,15 @@ export async function runHttpQuery<TContext extends BaseContext>(
   }
 }
 
-function serializeGraphQLResponse(
-  response: GraphQLResponse,
-): Pick<GraphQLResponse, 'errors' | 'data' | 'extensions'> {
+function orderExecutionResultFields(
+  result: FormattedExecutionResult,
+): FormattedExecutionResult {
   // See https://github.com/facebook/graphql/pull/384 for why
   // errors comes first.
   return {
-    errors: response.errors,
-    data: response.data,
-    extensions: response.extensions,
+    errors: result.errors,
+    data: result.data,
+    extensions: result.extensions,
   };
 }
 
@@ -293,4 +276,11 @@ export function prettyJSONStringify(value: any) {
 
 export function cloneObject<T extends Object>(object: T): T {
   return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
+}
+
+export function newHTTPGraphQLHead(statusCode?: number): HTTPGraphQLHead {
+  return {
+    statusCode,
+    headers: new HeaderMap(),
+  };
 }

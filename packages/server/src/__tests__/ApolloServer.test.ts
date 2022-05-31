@@ -224,7 +224,9 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
-    const result = await server.executeOperation({ query: 'query { error }' });
+    const { result } = await server.executeOperation({
+      query: 'query { error }',
+    });
 
     expect(result.errors).toHaveLength(1);
     expect(result.errors?.[0].extensions).toStrictEqual({
@@ -240,7 +242,9 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
-    const result = await server.executeOperation({ query: 'query { error }' });
+    const { result } = await server.executeOperation({
+      query: 'query { error }',
+    });
 
     expect(result.errors).toHaveLength(1);
     const extensions = result.errors?.[0].extensions;
@@ -255,7 +259,7 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
-    const result = await server.executeOperation({ query: '{ hello }' });
+    const { result } = await server.executeOperation({ query: '{ hello }' });
     expect(result.errors).toBeUndefined();
     expect(result.data?.hello).toBe('world');
   });
@@ -267,7 +271,7 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
-    const result = await server.executeOperation({
+    const { result } = await server.executeOperation({
       query: gql`
         {
           hello
@@ -285,7 +289,7 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
-    const result = await server.executeOperation({ query: '{' });
+    const { result } = await server.executeOperation({ query: '{' });
     expect(result.errors).toHaveLength(1);
     expect(result.errors?.[0].extensions?.code).toBe('GRAPHQL_PARSE_FAILED');
   });
@@ -297,7 +301,7 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
-    const result = await server.executeOperation(
+    const { result } = await server.executeOperation(
       { query: '{ contextFoo }' },
       { foo: 'bla' },
     );
@@ -338,14 +342,14 @@ describe('ApolloServer executeOperation', () => {
         ],
       });
       await server.start();
-      const result = await server.executeOperation(
+      const { result } = await server.executeOperation(
         { query: '{ n }' },
         { foo: 123 },
       );
       expect(result.errors).toBeUndefined();
       expect(result.data?.n).toBe(123);
 
-      const result2 = await server.executeOperation(
+      const { result: result2 } = await server.executeOperation(
         { query: '{ n }' },
         // It knows that context.foo is a number so it doesn't work as a string.
         // @ts-expect-error

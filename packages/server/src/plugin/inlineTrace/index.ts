@@ -115,7 +115,8 @@ export function ApolloServerPluginInlineTrace<TContext extends BaseContext>(
           );
 
           const extensions =
-            response.extensions || (response.extensions = Object.create(null));
+            response.result.extensions ||
+            (response.result.extensions = Object.create(null));
 
           // This should only happen if another plugin is using the same name-
           // space within the `extensions` object and got to it before us.

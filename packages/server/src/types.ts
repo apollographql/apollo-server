@@ -11,12 +11,7 @@ import type {
 } from 'graphql';
 import type Keyv from 'keyv';
 import type { ApolloConfig, ApolloConfigInput } from './config';
-import type {
-  BaseContext,
-  GraphQLExecutor,
-  GraphQLRequestContext,
-  GraphQLResponse,
-} from './externalTypes';
+import type { BaseContext, GraphQLExecutor } from './externalTypes';
 import type { PluginDefinition } from './externalTypes/plugins';
 
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
@@ -102,10 +97,6 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   rootValue?: ((parsedQuery: DocumentNode) => any) | any;
   validationRules?: Array<(context: ValidationContext) => any>;
   executor?: GraphQLExecutor<TContext>;
-  formatResponse?: (
-    response: GraphQLResponse,
-    requestContext: GraphQLRequestContext<TContext>,
-  ) => GraphQLResponse | null;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   cache?: Keyv<string>;
   includeStackTracesInErrorResponses?: boolean;
