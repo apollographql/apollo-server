@@ -60,7 +60,7 @@ touch src/index.ts
 To keep things simple, `index.ts` will contain **all** of the code for this example application.
 
 ### Set up TypeScript
-Next we'll set up and configure TypeScript to compile our code. We'll install `typescript`, 'nodemon', and `concurrently` so we compile our run our code simultaneously:
+Next we'll set up and configure TypeScript to compile our code. We'll install `typescript`:
 
 ```bash
 npm install typescript
@@ -77,11 +77,11 @@ Inside your new `tsconfig.json` file add the following configuration:
 ```json title="tsconfig.json"
 {
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDirs": ["src"],
     "outDir": "dist",
     "lib": ["es2019"],
+    "target": "es2019",
     "module": "esnext",
-    "target": "ES2017",
     "moduleResolution": "node",
     "esModuleInterop": true
   }
@@ -90,16 +90,19 @@ Inside your new `tsconfig.json` file add the following configuration:
 
 For more information on any of the compiler options above check out the [TypeScript Compiler docs](https://www.typescriptlang.org/tsconfig).
 
-Finally we'll add a script to the `package.json` file you previously created:
+Finally we'll add a `type` and `script` to the `package.json` file you previously created:
 ```json title="package.json"
 {
   // ...etc.
+  "type": "module",
   "scripts": {
     "start": "tsc && node ./dist/index.js"
   },
   // other dependencies
 }
 ```
+
+Setting your project's type to `module` will enable you to use a top-level [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), which can make your code easier to read.
 
 ## Step 3: Define your GraphQL schema
 
@@ -196,9 +199,13 @@ const apolloServerInstance = new ApolloServer({
 
 // Passing in your newly created ApolloServerStandalone instance to the
 // standaloneServer function will enable you to start listening to your server
-standaloneServer(apolloServerInstance)
-  .listen({ port: 4000 })
-  .then(({ url }) => `🚀  Server ready at ${url}`);
+const { url } = await standaloneServer(apolloServerInstance, {
+  async context() {
+    return { token: 'hello' };
+  },
+}).listen({ port: 4000 });
+
+console.log(`🚀  Server ready at: ${url}`);
 ```
 
 ## Step 7: Start the server
@@ -213,7 +220,7 @@ npm start
 After TypeScript finishes compiling, you should see the following output:
 
 ```
-🚀 Server ready at http://localhost:4000/
+🚀 ApolloServer listening at: http://localhost:4000/
 ```
 
 We're up and running!
