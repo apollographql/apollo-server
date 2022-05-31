@@ -31,7 +31,7 @@
     "npm": "^8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.6.5",
+    "@apollo/client": "3.6.6",
     "@apollo/utils.createhash": "1.1.0",
     "@graphql-codegen/cli": "2.6.2",
     "@graphql-codegen/typescript-operations": "2.4.0",
@@ -84,7 +84,7 @@
     "qs-middleware": "1.0.3",
     "request-promise": "4.2.6",
     "requisition": "1.7.0",
-    "rollup": "2.75.3",
+    "rollup": "2.75.4",
     "supertest": "6.2.3",
     "test-listen": "1.1.0",
     "ts-jest": "28.0.3",
