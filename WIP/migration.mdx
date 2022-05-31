@@ -338,7 +338,7 @@ We found that in practice, that’s what people actually wanted in tests. If you
 ### Change CacheScope enum to a pure type
 In Apollo Server 3, you can use the [`@cacheControl`](/apollo-server/performance/caching/#in-your-schema-static) to define caching behavior on a per-field basis. Under the hood the `@cacheControl` directive uses a `CacheControlScope` enum.
 
-Users will write 'PUBLIC' directly instead of CacheScope.Public. Note that if they are using TypeScript this is still perfectly type-safe (a typo of `UPBLIC` will fail to compile); and if they're not using TypeScript, well, `CacheScope.Upblic` doesn't crash Node either, so perhaps they should use TypeScript if they care about such things.
+Users will write 'PUBLIC' directly instead of CacheScope.Public. Note that if they are using TypeScript this is still perfectly type-safe (a typo will fail to compile); and if they're not using TypeScript, well misspelling `public` doesn't crash Node either, so perhaps they should use TypeScript if they care about such things.
 
 In Apollo Server 4 the `CacheControlScope` enum has been changed into a union of strings type (`PUBLIC` or `PRIVATE`). This mean you can’t write `CacheScope.public` anymore
 - The enum CacheScope is now union of strings type
@@ -377,7 +377,7 @@ If anybody needs [Connect middleware](https://github.com/senchalabs/connect) it 
 Use `@apollo/server-plugin-operation-registry` instead.
 
 ## HTTP handling changes
-In JSON-encoded POST bodies, we expect variables and extensions (if provided) to be objects, not strings containing JSON string-ifications of objects
+In JSON-encoded POST bodies, we expect variables and extensions (if provided) to be objects, not strings containing JSON strings of objects:
 
 This works:
 ```

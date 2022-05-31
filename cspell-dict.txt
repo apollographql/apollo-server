@@ -67,6 +67,7 @@ FIXM
 functionapp
 Fuzzer
 gcloud
+genericized
 goofql
 graphiql
 graphqlcodegenerator
