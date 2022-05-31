@@ -27,7 +27,6 @@ export class HeaderMap extends Map<string, string> {
 
 export class HttpQueryError extends Error {
   public statusCode: number;
-  public isGraphQLError: boolean;
   // TODO(AS4): consider making this a map (or whatever type we settle on
   // for headers)
   public headers: Map<string, string>;
@@ -35,13 +34,11 @@ export class HttpQueryError extends Error {
   constructor(
     statusCode: number,
     message: string,
-    isGraphQLError: boolean = false,
     headers?: Map<string, string>,
   ) {
     super(message);
     this.name = 'HttpQueryError';
     this.statusCode = statusCode;
-    this.isGraphQLError = isGraphQLError;
     // This throws if any header names have capital leaders.
     this.headers = new HeaderMap(headers ?? []);
   }
@@ -215,7 +212,6 @@ export async function runHttpQuery<TContext extends BaseContext>(
         return new HttpQueryError(
           405,
           'Apollo Server supports only GET/POST requests.',
-          false,
           new HeaderMap([['allow', 'GET, POST']]),
         ).asHTTPGraphQLResponse();
     }
