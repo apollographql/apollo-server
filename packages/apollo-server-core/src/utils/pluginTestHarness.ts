@@ -23,7 +23,7 @@ import type {
   GraphQLRequestExecutionListener,
   GraphQLServerListener,
 } from 'apollo-server-plugin-base';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import { Dispatcher } from './dispatcher';
 import { getOperationAST, parse, validate as graphqlValidate } from 'graphql';
 import { newCachePolicy } from '../cachePolicy';

@@ -8,7 +8,7 @@ import type {
   CacheHint,
   ValueOrPromise,
 } from 'apollo-server-types';
-import { KeyValueCache, PrefixingKeyValueCache } from 'apollo-server-caching';
+import { KeyValueCache, PrefixingKeyValueCache } from '@apollo/utils.keyvaluecache';
 import { CacheScope } from 'apollo-server-types';
 
 // XXX This should use createSHA from apollo-server-core in order to work on

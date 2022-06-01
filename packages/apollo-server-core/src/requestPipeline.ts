@@ -53,7 +53,7 @@ import type {
 } from 'apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
-import { KeyValueCache, PrefixingKeyValueCache } from 'apollo-server-caching';
+import { KeyValueCache, PrefixingKeyValueCache } from '@apollo/utils.keyvaluecache';
 
 export { GraphQLRequest, GraphQLResponse, GraphQLRequestContext };
 

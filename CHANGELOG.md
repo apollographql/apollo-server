@@ -86,7 +86,7 @@ The version headers in this history reflect the versions of Apollo Server itself
   new ApolloServer({
     documentStore: new InMemoryLRUCache<DocumentNode>({
       maxSize: Math.pow(2, 20) * approximateDocumentStoreMiB,
-      sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
+      sizeCalculator: InMemoryLRUCache.sizeCalculator,
     }),
     ...moreOptions,
   })

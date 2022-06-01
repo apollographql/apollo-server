@@ -58,7 +58,7 @@ import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
 import type { AddressInfo } from 'net';
 import request, { Response } from 'supertest';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
