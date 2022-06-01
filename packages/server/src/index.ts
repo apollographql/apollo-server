@@ -14,7 +14,7 @@ export {
 // ApolloServer Base class
 export { ApolloServer } from './ApolloServer';
 export * from './types';
-export { standaloneServer } from './standalone';
+export { startStandaloneServer } from './standalone';
 
 export { ApolloConfig, ApolloConfigInput } from './config';
 

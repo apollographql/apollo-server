@@ -1,4 +1,4 @@
-import { standaloneServer } from '../../standalone';
+import { startStandaloneServer } from '../../standalone';
 import { ApolloServer } from '../../ApolloServer';
 
 describe('Typings: TContext inference', () => {
@@ -8,7 +8,7 @@ describe('Typings: TContext inference', () => {
     });
 
     // HTTPApolloServer<BaseContext>
-    await standaloneServer(server, {}, { port: 0 });
+    await startStandaloneServer(server, { listen: { port: 0 } });
     await server.stop();
   });
 
@@ -20,15 +20,12 @@ describe('Typings: TContext inference', () => {
     });
 
     // HTTPApolloServer<BaseContext>
-    await standaloneServer(
-      server,
-      {
-        async context() {
-          return { foo: 'bar' };
-        },
+    await startStandaloneServer(server, {
+      async context() {
+        return { foo: 'bar' };
       },
-      { port: 0 },
-    );
+      listen: { port: 0 },
+    });
     await server.stop();
   });
 
@@ -49,15 +46,12 @@ describe('Typings: TContext inference', () => {
     });
 
     // HTTPApolloServer<MyContext>
-    await standaloneServer(
-      server,
-      {
-        async context() {
-          return { foo: 'bar' };
-        },
+    await startStandaloneServer(server, {
+      async context() {
+        return { foo: 'bar' };
       },
-      { port: 0 },
-    );
+      listen: { port: 0 },
+    });
     await server.stop();
   });
 
@@ -78,7 +72,7 @@ describe('Typings: TContext inference', () => {
     });
 
     // @ts-expect-error
-    await standaloneServer(server, {}, { port: 0 });
+    await startStandaloneServer(server, {}, { port: 0 });
     await server.stop();
   });
 
@@ -99,15 +93,12 @@ describe('Typings: TContext inference', () => {
     });
 
     // @ts-expect-error
-    await standaloneServer(
-      server,
-      {
-        async context() {
-          return { notFoo: 'oops' };
-        },
+    await startStandaloneServer(server, {
+      async context() {
+        return { notFoo: 'oops' };
       },
-      { port: 0 },
-    );
+      listen: { port: 0 },
+    });
     await server.stop();
   });
 });

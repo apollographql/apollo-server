@@ -1,8 +1,7 @@
 import { ApolloServer } from '../../ApolloServer';
 import type { BaseContext } from '../../externalTypes';
-import { standaloneServer } from '../../standalone';
+import { startStandaloneServer } from '../../standalone';
 import type { ApolloServerOptions } from '../../types';
-import { urlForHttpServer } from '../../utils/urlForHttpServer';
 import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,
@@ -15,7 +14,10 @@ defineIntegrationTestSuite(async function (
 ): Promise<CreateServerForIntegrationTestsResult> {
   const opts = testOptions ? { context: testOptions.context } : undefined;
   const server = new ApolloServer(serverOptions);
-  const { url } = await standaloneServer(server, opts, { port: 0 });
+  const { url } = await startStandaloneServer(server, {
+    ...opts,
+    listen: { port: 0 },
+  });
 
   return {
     server,
