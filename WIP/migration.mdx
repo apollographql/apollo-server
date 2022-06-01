@@ -10,7 +10,7 @@ The focus of this major release is to improve Apollo Server's extensibility and 
 Apollo Server 4's alpha provides two of following features, with more to come with the full release:
 <!-- TODO: fill in -->
 - A simple well-defined API with a stable HTTP abstraction, enabling contributors to easily build integrations in other frameworks.
-- More consistent typing for TS users, including typing for `context`.
+- Consistent context typing for TS users, ensuring
 
 
 <!-- Do we want this? -->
@@ -196,7 +196,6 @@ and "the context value itself".
 In Apollo Server 4 we change this for clarity, `context` is the name of the "a function producing a context value":
 
 ```ts
-
 interface MyContext {
   token: string;
 }
@@ -369,13 +368,50 @@ Remove debug field from GraphQLRequestContext.
 Remove persistedQueries field from GraphQLServiceContext
 
 
+## New APIs
+
+### `addPlugin` function
+
+Apollo Server 4 introduces a new public function on the `ApolloServer` class, `addPlugin`. The `addPlugin` function enables you to add plugins to `ApolloServer` _before_ you start a server (i.e., before calling `server.start()`).
+
+```ts
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
+import { json } from 'body-parser';
+import { ApolloServer, ApolloServerPluginDrainHttpServer } from '@apollo/server';
+// TODO: Double check this import
+import { expressMiddleware } from '@apollo/server/express';
+import { typeDefs, resolvers } from ('./schema');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+// Add our ApolloServerPluginDrainHttpServer plug in *before* starting the server
+server.addPlugin(ApolloServerPluginDrainHttpServer({ httpServer }));
+
+await server.start();
+// Set up express middleware with body-parsing and cors
+app.use(cors(), json(), expressMiddleware(server));
+await new Promise<void>((resolve) => httpServer.listen({ port: 4000 }, resolve));
+
+console.log(`🚀 Server ready at http://localhost:4000`);
+```
+
+The new `addPlugin` function is useful if you'd like to pass the server itself to a plugin’s constructor.
+
+### New HTTP request execution API
+There’s a lot here :)
+Also we’ve changed the TypeScript names of the constructor options object from Config to ApolloServerOptions.
+
 
 # Upcoming Stuff to Cover:
 - Replace implementations of the cache interface with `keyv`
 We no longer maintain `apollo-server-cache-memcached` or `apollo-server-cache-redis`. The interfaces and classes for `apollo-server-caching` are now in `@apollo/utils.keyvaluecache`
 We now maintain (`@apollo/utils.keyv`) which wraps Keyv and lets you use their implementation of memcached and redis bindings (among others).
 Existing implementations of `KeyValueCache` should continue to work.
-
 
 - Explicit support in core for serverless-style startup error handling
 - Move other plugins to their own repositories
@@ -385,13 +421,3 @@ Existing implementations of `KeyValueCache` should continue to work.
 - Ensure errors thrown in context creation is handled in a helpful way
 - Apollo Server plugins: expose server instance to plugins
 - In general we just need to go over the full exported API and list what’s gone and where it’s gone
-
-## New APIs
-
-### server.addPlugin API
-
-You have to call it before `server.start()`. Useful if you want to pass the server itself to the plugin’s constructor.
-
-### New HTTP request execution API
-There’s a lot here :)
-Also we’ve changed the TypeScript names of the constructor options object from Config to ApolloServerOptions.
