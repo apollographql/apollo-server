@@ -2506,7 +2506,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         url = (await createServer(makeServerConfig([]))).url;
         await get().expect(
           200,
-          /apollo-server-landing-page.cdn.apollographql.com\/_latest.*isProd[^t]+false/s,
+          /embeddable-sandbox.cdn.apollographql.com\/_latest\/embeddable-sandbox.umd.production.min.js/s,
         );
       });
 
@@ -2521,7 +2521,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         ).url;
         await get().expect(
           200,
-          /apollo-server-landing-page.cdn.apollographql.com\/abcdef.*isProd[^t]+false/s,
+          /embeddable-sandbox.cdn.apollographql.com\/abcdef\/embeddable-sandbox.umd.production.min.js/s,
         );
       });
 
