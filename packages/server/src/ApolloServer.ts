@@ -141,7 +141,10 @@ export type ContextThunk<TContext extends BaseContext = BaseContext> =
 // TODO(AS4): Move this to its own file or something. Also organize the fields.
 
 export interface ApolloServerInternals<TContext extends BaseContext> {
-  formatError?: (error: GraphQLError) => GraphQLFormattedError;
+  formatError?: (
+    formattedError: GraphQLFormattedError,
+    error: unknown,
+  ) => GraphQLFormattedError;
   // TODO(AS4): Is there a way (with generics/codegen?) to make
   // this "any" more specific? In AS3 there was technically a
   // generic for it but it was used inconsistently.
@@ -980,8 +983,9 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         headers: new HeaderMap([['content-type', 'application/json']]),
         completeBody: prettyJSONStringify({
           errors: formatApolloErrors([e as Error], {
-            debug: this.internals.includeStackTracesInErrorResponses,
-            formatter: this.internals.formatError,
+            includeStackTracesInErrorResponses:
+              this.internals.includeStackTracesInErrorResponses,
+            formatError: this.internals.formatError,
           }),
         }),
         bodyChunks: null,

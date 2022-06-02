@@ -17,10 +17,6 @@ import {
   symbolUserFieldResolver,
 } from './utils/schemaInstrumentation';
 import {
-  ApolloError,
-  fromGraphQLError,
-  SyntaxError,
-  ValidationError,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
   formatApolloErrors,
@@ -206,7 +202,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       await parsingDidEnd(syntaxError as Error);
       // XXX: This cast is pretty sketchy, as other error types can be thrown
       // by parsingDidEnd!
-      return await sendErrorResponse(syntaxError as GraphQLError, SyntaxError);
+      return await sendErrorResponse(syntaxError, 'GRAPHQL_PARSE_FAILED');
     }
 
     const validationDidEnd = await dispatcher.invokeDidStartHook(
@@ -224,7 +220,10 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       await validationDidEnd();
     } else {
       await validationDidEnd(validationErrors);
-      return await sendErrorResponse(validationErrors, ValidationError);
+      return await sendErrorResponse(
+        validationErrors,
+        'GRAPHQL_VALIDATION_FAILED',
+      );
     }
 
     if (schemaDerivedData.documentStore) {
@@ -395,8 +394,10 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // https://github.com/graphql/graphql-js/issues/3169
       const resultErrors = result.errors?.map((e) => {
         if (isBadUserInputGraphQLError(e)) {
-          return fromGraphQLError(e, {
-            errorClass: UserInputError,
+          return new UserInputError(e.message, {
+            nodes: e.nodes,
+            originalError: e.originalError,
+            extensions: e.extensions,
           });
         }
         return e;
@@ -417,10 +418,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         'executionDidEnd',
         executionError as Error,
       );
-      // XXX: This cast is pretty sketchy, as other error types can be thrown
-      // in the try block!
       return await sendErrorResponse(
-        executionError as GraphQLError,
+        executionError,
         undefined,
         newHTTPGraphQLHead(500),
       );
@@ -497,8 +496,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   //
   // Then, if the HTTP status code is not yet set, it sets it to 400.
   async function sendErrorResponse(
-    errorOrErrors: ReadonlyArray<GraphQLError> | GraphQLError,
-    errorClass?: typeof ApolloError,
+    errorOrErrors: ReadonlyArray<unknown> | unknown,
+    errorCode?: string,
     http: HTTPGraphQLHead = newHTTPGraphQLHead(),
   ) {
     // If a single error is passed, it should still be encapsulated in an array.
@@ -509,18 +508,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     await didEncounterErrors(errors);
 
     requestContext.response.result = {
-      errors: formatErrors(
-        errors.map((err) =>
-          err instanceof ApolloError && !errorClass
-            ? err
-            : fromGraphQLError(
-                err,
-                errorClass && {
-                  errorClass,
-                },
-              ),
-        ),
-      ),
+      errors: formatErrors(errors, errorCode),
     };
 
     updateResponseHTTP(http);
@@ -534,10 +522,13 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
   function formatErrors(
     errors: ReadonlyArray<GraphQLError>,
+    errorCode?: string,
   ): ReadonlyArray<GraphQLFormattedError> {
     return formatApolloErrors(errors, {
-      formatter: internals.formatError,
-      debug: internals.includeStackTracesInErrorResponses,
+      errorCode,
+      formatError: internals.formatError,
+      includeStackTracesInErrorResponses:
+        internals.includeStackTracesInErrorResponses,
     });
   }
 

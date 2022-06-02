@@ -1,7 +1,6 @@
 import { GraphQLError } from 'graphql';
 
 import {
-  ApolloError,
   formatApolloErrors,
   AuthenticationError,
   ForbiddenError,
@@ -11,24 +10,6 @@ import {
 } from '../errors';
 
 describe('Errors', () => {
-  describe('ApolloError', () => {
-    const message = 'message';
-    it('defaults code to INTERNAL_SERVER_ERROR', () => {
-      const error = new ApolloError(message);
-      expect(error.message).toEqual(message);
-      expect(error.extensions.code).toBeUndefined();
-    });
-    it('allows code setting and additional properties', () => {
-      const code = 'CODE';
-      const key = 'value';
-      const error = new ApolloError(message, code, { key });
-      expect(error.message).toEqual(message);
-      expect(error.key).toBeUndefined();
-      expect(error.extensions.code).toEqual(code);
-      expect(error.extensions.key).toEqual(key);
-    });
-  });
-
   describe('formatApolloErrors', () => {
     type CreateFormatError =
       | ((
@@ -45,7 +26,9 @@ describe('Errors', () => {
       errors?: Error[],
     ) => {
       if (errors === undefined) {
-        const error = new ApolloError(message, code, { key });
+        const error = new GraphQLError(message, {
+          extensions: { code, key },
+        });
         return formatApolloErrors(
           [
             new GraphQLError(
@@ -65,7 +48,9 @@ describe('Errors', () => {
     };
 
     it('exposes a stacktrace in debug mode', () => {
-      const error = createFormattedError({ debug: true });
+      const error = createFormattedError({
+        includeStackTracesInErrorResponses: true,
+      });
       expect(error.message).toEqual(message);
       expect(error.extensions.key).toEqual(key);
       expect(error.extensions.exception.key).toBeUndefined();
@@ -87,10 +72,10 @@ describe('Errors', () => {
         ),
       ])[0];
       expect(error.message).toEqual(message);
-      expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
-      expect(error.extensions.exception).toHaveProperty('key', key);
+      expect(error.extensions?.code).toEqual('INTERNAL_SERVER_ERROR');
+      expect(error.extensions?.exception).toHaveProperty('key', key);
       // stacktrace should exist under exception
-      expect(error.extensions.exception).not.toHaveProperty('stacktrace');
+      expect(error.extensions?.exception).not.toHaveProperty('stacktrace');
     });
     it('exposes fields on error under exception field and provides code', () => {
       const error = createFormattedError();
@@ -99,19 +84,23 @@ describe('Errors', () => {
       expect(error.extensions.exception).toBeUndefined();
       expect(error.extensions.code).toEqual(code);
     });
-    it('calls formatter after exposing the code and stacktrace', () => {
-      const error = new ApolloError(message, code, { key });
-      const formatter = jest.fn();
-      formatApolloErrors([error], {
-        formatter,
-        debug: true,
+    it('calls formatError after exposing the code and stacktrace', () => {
+      const error = new GraphQLError(message, {
+        extensions: { code, key },
       });
-      expect(error.message).toEqual(message);
-      expect(error.extensions.key).toEqual(key);
-      expect(error.key).toBeUndefined();
-      expect(error.extensions.code).toEqual(code);
-      expect(error instanceof ApolloError).toBe(true);
-      expect(formatter).toHaveBeenCalledTimes(1);
+      const formatError = jest.fn();
+      formatApolloErrors([error], {
+        formatError,
+        includeStackTracesInErrorResponses: true,
+      });
+
+      expect(formatError).toHaveBeenCalledTimes(1);
+
+      const formatErrorArgs = formatError.mock.calls[0];
+      expect(formatErrorArgs[0].message).toEqual(message);
+      expect(formatErrorArgs[0].extensions.key).toEqual(key);
+      expect(formatErrorArgs[0].extensions.code).toEqual(code);
+      expect(formatErrorArgs[1]).toEqual(error);
     });
     it('Formats native Errors in a JSON-compatible way', () => {
       const error = new Error('Hello');
@@ -122,7 +111,7 @@ describe('Errors', () => {
   describe('Named Errors', () => {
     const message = 'message';
     function verifyError(
-      error: ApolloError,
+      error: GraphQLError,
       {
         code,
         errorClass,
@@ -132,7 +121,7 @@ describe('Errors', () => {
       expect(error.message).toEqual(message);
       expect(error.extensions.code).toEqual(code);
       expect(error.name).toEqual(name);
-      expect(error instanceof ApolloError).toBe(true);
+      expect(error instanceof GraphQLError).toBe(true);
       expect(error instanceof errorClass).toBe(true);
     }
 
@@ -166,8 +155,10 @@ describe('Errors', () => {
     });
     it('provides a user input error', () => {
       const error = new UserInputError(message, {
-        field1: 'property1',
-        field2: 'property2',
+        extensions: {
+          field1: 'property1',
+          field2: 'property2',
+        },
       });
       verifyError(error, {
         code: 'BAD_USER_INPUT',
@@ -186,9 +177,9 @@ describe('Errors', () => {
         ),
       ])[0];
 
-      expect(formattedError.extensions.field1).toEqual('property1');
-      expect(formattedError.extensions.field2).toEqual('property2');
-      expect(formattedError.extensions.exception).toBeUndefined();
+      expect(formattedError.extensions?.field1).toEqual('property1');
+      expect(formattedError.extensions?.field2).toEqual('property2');
+      expect(formattedError.extensions?.exception).toBeUndefined();
     });
   });
 });

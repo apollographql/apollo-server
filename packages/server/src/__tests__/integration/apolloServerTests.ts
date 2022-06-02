@@ -38,7 +38,6 @@ import {
   ApolloServerPluginUsageReportingOptions,
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginLandingPageGraphQLPlayground,
-  ApolloError,
   ApolloServerPluginLandingPageLocalDefault,
 } from '../..';
 import fetch from 'node-fetch';
@@ -198,7 +197,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
 
           const formatError = jest.fn((error) => {
-            expect(error instanceof Error).toBe(true);
+            expect(error).toMatchObject({ message: expect.any(String) });
             return error;
           });
 
@@ -733,8 +732,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         });
 
         const formatError = jest.fn((error) => {
-          expect(error instanceof Error).toBe(true);
-          expect(error.constructor.name).toEqual('Error');
+          expect(error).toMatchObject({ message: expect.any(String) });
           return error;
         });
 
@@ -808,16 +806,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
           throw yuppieError;
         });
 
-        const formatError = jest.fn((error) => {
-          expect(error instanceof Error).toBe(true);
-          expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
-          expect(error.extensions.exception.name).toEqual('ValidationError');
-          expect(error.extensions.exception.message).toBeDefined();
-          const inputError = new UserInputError('User Input Error');
-          return {
-            message: inputError.message,
-            extensions: inputError.extensions,
-          };
+        const formatError = jest.fn(() => {
+          return new UserInputError('User Input Error').toJSON();
         });
 
         const uri = await createServerAndGetUrl({
@@ -843,12 +833,32 @@ export function defineIntegrationTestSuiteApolloServerTests(
         const result = await apolloFetch({
           query: '{fieldWhichWillError}',
         });
+
+        expect(throwError).toHaveBeenCalledTimes(1);
+        expect(formatError).toHaveBeenCalledTimes(1);
+        const formatErrorArgs: any = formatError.mock.calls[0];
+        expect(formatErrorArgs[0]).toMatchObject({
+          message: 'email must be a valid email',
+          path: ['fieldWhichWillError'],
+          locations: [{ line: 1, column: 2 }],
+          extensions: {
+            code: 'INTERNAL_SERVER_ERROR',
+            exception: {
+              name: 'ValidationError',
+              message: 'email must be a valid email',
+              type: undefined,
+              value: { email: 'invalid-email' },
+              errors: ['email must be a valid email'],
+              path: 'email',
+            },
+          },
+        });
+        expect(formatErrorArgs[1] instanceof Error).toBe(true);
+
         expect(result.data).toEqual({ fieldWhichWillError: null });
         expect(result.errors).toBeDefined();
         expect(result.errors[0].extensions.code).toEqual('BAD_USER_INPUT');
         expect(result.errors[0].message).toEqual('User Input Error');
-        expect(formatError).toHaveBeenCalledTimes(1);
-        expect(throwError).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -1385,15 +1395,19 @@ export function defineIntegrationTestSuiteApolloServerTests(
       });
 
       it('errors thrown in plugins call formatError and are wrapped', async () => {
+        const pluginError = new Error('nope');
         const pluginCalled = jest.fn(() => {
-          throw new Error('nope');
+          throw pluginError;
         });
-        const formatError = jest.fn((error) => {
-          expect(error instanceof Error).toBe(true);
+        const formatError = jest.fn((formattedError, error) => {
+          expect(error).toEqual(pluginError);
           // extension should be called before formatError
           expect(pluginCalled).toHaveBeenCalledTimes(1);
-          error.message = 'masked';
-          return error;
+
+          return {
+            ...formattedError,
+            message: 'masked',
+          };
         });
         const uri = await createServerAndGetUrl({
           typeDefs: gql`
@@ -1761,7 +1775,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         expect(result.errors[0].extensions.exception.stacktrace).toBeDefined();
       });
 
-      it('shows ApolloError extensions in extensions (only!)', async () => {
+      it('shows error extensions in extensions (only!)', async () => {
         const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
@@ -1771,28 +1785,32 @@ export function defineIntegrationTestSuiteApolloServerTests(
           resolvers: {
             Query: {
               fieldWhichWillError: () => {
-                throw new ApolloError('Some message', 'SOME_CODE', {
-                  ext1: 'myExt',
+                throw new AuthenticationError('Some message', {
+                  extensions: { ext1: 'myExt' },
                 });
               },
             },
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'development',
+          includeStackTracesInErrorResponses: false,
         });
 
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{fieldWhichWillError}` });
         expect(result.data).toEqual({ fieldWhichWillError: null });
-
-        expect(result.errors).toBeDefined();
-        expect(result.errors.length).toEqual(1);
-        expect(result.errors[0].message).toEqual('Some message');
-        expect(result.errors[0].extensions.code).toEqual('SOME_CODE');
-        expect(result.errors[0].extensions.ext1).toEqual('myExt');
-        expect(result.errors[0].extensions.exception).toBeDefined();
-        expect(result.errors[0].extensions.exception.ext1).toBeUndefined();
+        expect(result.errors).toEqual([
+          {
+            message: 'Some message',
+            path: ['fieldWhichWillError'],
+            locations: [{ line: 1, column: 2 }],
+            extensions: {
+              code: 'UNAUTHENTICATED',
+              ext1: 'myExt',
+            },
+          },
+        ]);
       });
     });
 
@@ -2205,8 +2223,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
           typeDefs: allTypeDefs,
           resolvers,
           formatError(err) {
-            err.message = `Formatted: ${err.message}`;
-            return err;
+            return {
+              ...err,
+              message: `Formatted: ${err.message}`,
+            };
           },
           plugins: [
             ApolloServerPluginInlineTrace({
@@ -2297,6 +2317,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               extensions: { code: 'GRAPHQL_VALIDATION_FAILED' },
               message:
                 'Cannot query field "testString1" on type "QueryType". Did you mean "testString2"?',
+              locations: [{ line: 1, column: 2 }],
             },
           ]);
         },
