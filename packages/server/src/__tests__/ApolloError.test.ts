@@ -3,7 +3,7 @@ import { ForbiddenError, AuthenticationError } from '../errors';
 describe('ForbiddenError', () => {
   it('supports arbitrary data being passed', () => {
     const error = new ForbiddenError('My message', {
-      arbitrary: 'user_data',
+      extensions: { arbitrary: 'user_data' },
     });
 
     expect(error.extensions).toEqual({
@@ -16,7 +16,7 @@ describe('ForbiddenError', () => {
 describe('AuthenticationError', () => {
   it('supports arbitrary data being passed', () => {
     const error = new AuthenticationError('My message', {
-      arbitrary: 'user_data',
+      extensions: { arbitrary: 'user_data' },
     });
 
     expect(error.extensions).toEqual({

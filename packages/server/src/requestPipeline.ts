@@ -17,7 +17,6 @@ import {
   symbolUserFieldResolver,
 } from './utils/schemaInstrumentation';
 import {
-  fromGraphQLError,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
   formatApolloErrors,
@@ -395,8 +394,10 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // https://github.com/graphql/graphql-js/issues/3169
       const resultErrors = result.errors?.map((e) => {
         if (isBadUserInputGraphQLError(e)) {
-          return fromGraphQLError(e, {
-            errorClass: UserInputError,
+          return new UserInputError(e.message, {
+            nodes: e.nodes,
+            originalError: e.originalError,
+            extensions: e.extensions,
           });
         }
         return e;
@@ -417,7 +418,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         'executionDidEnd',
         executionError as Error,
       );
-      return await sendErrorResponse(executionError, undefined, newHTTPGraphQLHead(500));
+      return await sendErrorResponse(
+        executionError,
+        undefined,
+        newHTTPGraphQLHead(500),
+      );
     }
   }
 

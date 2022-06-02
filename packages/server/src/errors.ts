@@ -1,4 +1,5 @@
 import {
+  ASTNode,
   GraphQLError,
   GraphQLFormattedError,
   GraphQLErrorExtensions,
@@ -11,49 +12,6 @@ declare module 'graphql' {
       stacktrace?: ReadonlyArray<string>;
     };
   }
-}
-
-export interface ErrorOptions {
-  code?: string;
-  // This declaration means it takes any "class" that has a constructor that
-  // takes a single string, and should be invoked via the `new` operator.
-  errorClass?: new (message: string) => GraphQLError;
-}
-
-export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
-  const copy: GraphQLError = options?.errorClass
-    ? new options.errorClass(error.message)
-    : new GraphQLError(error.message);
-
-  // copy enumerable keys
-  for (const [key, value] of Object.entries(error)) {
-    // extensions are handled bellow
-    if (key !== 'extensions') {
-      (copy as any)[key] = value;
-    }
-  }
-
-  // merge extensions instead of just copying them
-  (copy as any).extensions = {
-    ...copy.extensions,
-    ...error.extensions,
-  };
-
-  // Fallback on default for code
-  if (!copy.extensions.code) {
-    copy.extensions.code = options?.code || 'INTERNAL_SERVER_ERROR';
-  }
-
-  // copy the original error, while keeping all values non-enumerable, so they
-  // are not printed unless directly referenced
-  Object.defineProperty(copy, 'originalError', { value: {} });
-  Object.getOwnPropertyNames(error).forEach((key) => {
-    Object.defineProperty(copy.originalError, key, {
-      value: (error as any)[key],
-    });
-  });
-
-  return copy;
 }
 
 export class SyntaxError extends GraphQLError {
@@ -73,16 +31,20 @@ export class ValidationError extends GraphQLError {
 }
 
 export class AuthenticationError extends GraphQLError {
-  constructor(message: string, extensions?: Record<string, any>) {
-    super(message, { extensions: { ...extensions, code: 'UNAUTHENTICATED' } });
+  constructor(message: string, options?: { extensions?: Record<string, any> }) {
+    super(message, {
+      extensions: { ...options?.extensions, code: 'UNAUTHENTICATED' },
+    });
 
     this.name = 'AuthenticationError';
   }
 }
 
 export class ForbiddenError extends GraphQLError {
-  constructor(message: string, extensions?: Record<string, any>) {
-    super(message, { extensions: { ...extensions, code: 'FORBIDDEN' } });
+  constructor(message: string, options?: { extensions?: Record<string, any> }) {
+    super(message, {
+      extensions: { ...options?.extensions, code: 'FORBIDDEN' },
+    });
 
     this.name = 'ForbiddenError';
   }
@@ -109,8 +71,19 @@ export class PersistedQueryNotSupportedError extends GraphQLError {
 }
 
 export class UserInputError extends GraphQLError {
-  constructor(message: string, extensions?: Record<string, any>) {
-    super(message, { extensions: { ...extensions, code: 'BAD_USER_INPUT' } });
+  constructor(
+    message: string,
+    options?: {
+      nodes?: ReadonlyArray<ASTNode> | undefined;
+      originalError?: Error;
+      extensions?: Record<string, any>;
+    },
+  ) {
+    super(message, {
+      nodes: options?.nodes,
+      originalError: options?.originalError,
+      extensions: { ...options?.extensions, code: 'BAD_USER_INPUT' },
+    });
 
     this.name = 'UserInputError';
   }

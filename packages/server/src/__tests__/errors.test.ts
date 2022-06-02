@@ -155,8 +155,10 @@ describe('Errors', () => {
     });
     it('provides a user input error', () => {
       const error = new UserInputError(message, {
-        field1: 'property1',
-        field2: 'property2',
+        extensions: {
+          field1: 'property1',
+          field2: 'property2',
+        },
       });
       verifyError(error, {
         code: 'BAD_USER_INPUT',
