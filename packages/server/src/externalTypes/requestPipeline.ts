@@ -1,20 +1,11 @@
-import type { GraphQLError } from 'graphql';
+import type { ExecutionResult } from 'graphql';
 import type { WithRequired } from '../types';
 import type { BaseContext } from './context';
 import type { GraphQLRequestContext } from './graphql';
 
 export type GraphQLExecutor<TContext extends BaseContext> = (
   requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-) => Promise<GraphQLExecutionResult>;
-
-// TODO(AS4): Can we just use graphql-js ExecutionResult? The main difference
-// seems to be any vs unknown, although we could at least use
-// `ExecutionResult<Record<string, any>, Record<string, any>>`.
-export type GraphQLExecutionResult = {
-  data?: Record<string, any> | null;
-  errors?: ReadonlyArray<GraphQLError>;
-  extensions?: Record<string, any>;
-};
+) => Promise<ExecutionResult>;
 
 export type GraphQLRequestContextDidResolveSource<
   TContext extends BaseContext,
@@ -51,4 +42,4 @@ export type GraphQLRequestContextExecutionDidStart<
 export type GraphQLRequestContextWillSendResponse<
   TContext extends BaseContext,
 > = GraphQLRequestContextDidResolveSource<TContext> &
-  WithRequired<GraphQLRequestContext<TContext>, 'metrics' | 'response'>;
+  WithRequired<GraphQLRequestContext<TContext>, 'metrics'>;

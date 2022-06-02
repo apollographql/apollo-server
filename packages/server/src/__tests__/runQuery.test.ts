@@ -1,5 +1,6 @@
 import {
   DocumentNode,
+  FormattedExecutionResult,
   GraphQLInt,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -19,7 +20,6 @@ import type {
   GraphQLRequestListenerExecutionDidEnd,
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
-  GraphQLResponse,
 } from '../externalTypes';
 import type { ApolloServerOptions } from '../types';
 import { LRUCacheStore, sizeCalculation } from '../utils/LRUCacheStore';
@@ -27,13 +27,26 @@ import { LRUCacheStore, sizeCalculation } from '../utils/LRUCacheStore';
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,
   request: GraphQLRequest,
-  context?: BaseContext,
-): Promise<GraphQLResponse> {
+): Promise<FormattedExecutionResult>;
+async function runQuery<TContext extends BaseContext>(
+  config: ApolloServerOptions<TContext>,
+  request: GraphQLRequest,
+  contextValue: TContext,
+): Promise<FormattedExecutionResult>;
+async function runQuery<TContext extends BaseContext>(
+  config: ApolloServerOptions<TContext>,
+  request: GraphQLRequest,
+  contextValue?: TContext,
+): Promise<FormattedExecutionResult> {
   const server = new ApolloServer(config);
   await server.start();
-  const response = await server.executeOperation(request, context ?? {});
+  const response = await server.executeOperation(
+    request,
+    // `as` safe because TContext must be BaseContext if no contextValue provided
+    contextValue ?? ({} as TContext),
+  );
   await server.stop();
-  return response;
+  return response.result;
 }
 
 const queryType = new GraphQLObjectType({
@@ -192,27 +205,6 @@ it('correctly passes in the context', async () => {
   const expected = { testContextValue: 'it still works' };
   const res = await runQuery({ schema }, { query }, { s: 'it still' });
   expect(res.data).toEqual(expected);
-});
-
-it('passes the options to formatResponse', async () => {
-  const query = `{ testContextValue }`;
-  const expected = { testContextValue: 'it still works' };
-  const res = await runQuery(
-    {
-      schema,
-      formatResponse: (
-        response_1: any,
-        { contextValue }: { contextValue: any },
-      ) => {
-        response_1['extensions'] = contextValue.s;
-        return response_1;
-      },
-    },
-    { query },
-    { s: 'it still' },
-  );
-  expect(res.data).toEqual(expected);
-  expect(res['extensions']).toEqual('it still');
 });
 
 it('correctly passes in variables (and arguments)', async () => {

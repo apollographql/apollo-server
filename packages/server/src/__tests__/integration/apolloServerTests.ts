@@ -659,7 +659,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 async didResolveOperation() {
                   throw new Error('known_error');
                 },
-                async willSendResponse({ response: { http, errors } }) {
+                async willSendResponse({
+                  response: {
+                    http,
+                    result: { errors },
+                  },
+                }) {
                   if (errors![0].message === 'known_error') {
                     http!.statusCode = 403;
                   }
@@ -680,7 +685,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             async requestDidStart() {
               return {
                 async willSendResponse({ response }) {
-                  response.extensions = { myExtension: true };
+                  response.result.extensions = { myExtension: true };
                 },
               };
             },
@@ -702,7 +707,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             async requestDidStart() {
               return {
                 async willSendResponse({ response }) {
-                  response.extensions = { myExtension: true };
+                  response.result.extensions = { myExtension: true };
                 },
               };
             },

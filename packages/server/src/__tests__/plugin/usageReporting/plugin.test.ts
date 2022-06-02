@@ -109,10 +109,10 @@ describe('end-to-end', () => {
           async requestDidStart() {
             return {
               async willSendResponse({ response, metrics }) {
-                if (!response.extensions) {
-                  response.extensions = {};
+                if (!response.result.extensions) {
+                  response.result.extensions = {};
                 }
-                response.extensions.__metrics__ = metrics;
+                response.result.extensions.__metrics__ = metrics;
               },
             };
           },
@@ -154,7 +154,7 @@ describe('end-to-end', () => {
 
     return {
       report,
-      metrics: response.extensions!.__metrics__ as GraphQLRequestMetrics,
+      metrics: response.result.extensions!.__metrics__ as GraphQLRequestMetrics,
     };
   }
 

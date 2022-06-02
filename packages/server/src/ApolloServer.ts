@@ -27,7 +27,6 @@ import type {
   BaseContext,
   GraphQLExecutor,
   GraphQLRequest,
-  GraphQLRequestContext,
   GraphQLResponse,
   GraphQLServerListener,
   GraphQLServiceContext,
@@ -52,7 +51,12 @@ import {
   recommendedCsrfPreventionRequestHeaders,
 } from './preventCsrf';
 import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline';
-import { cloneObject, HeaderMap, prettyJSONStringify } from './runHttpQuery';
+import {
+  cloneObject,
+  HeaderMap,
+  newHTTPGraphQLHead,
+  prettyJSONStringify,
+} from './runHttpQuery';
 import type {
   ApolloServerOptions,
   ApolloServerOptionsWithStaticSchema,
@@ -143,10 +147,6 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   // generic for it but it was used inconsistently.
   rootValue?: ((parsedQuery: DocumentNode) => any) | any;
   validationRules: Array<(context: ValidationContext) => any>;
-  formatResponse?: (
-    response: GraphQLResponse,
-    requestContext: GraphQLRequestContext<TContext>,
-  ) => GraphQLResponse | null;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   includeStackTracesInErrorResponses: boolean;
   cache: Keyv<string>;
@@ -281,7 +281,6 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         ...(config.validationRules ?? []),
         ...(introspectionEnabled ? [] : [NoIntrospection]),
       ],
-      formatResponse: config.formatResponse,
       fieldResolver: config.fieldResolver,
       includeStackTracesInErrorResponses:
         config.includeStackTracesInErrorResponses ??
@@ -1060,19 +1059,17 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           : request.query,
     };
 
-    return (
-      await internalExecuteOperation({
-        graphQLRequest,
-        // The typecast here is safe, because the only way `contextValue` can be
-        // null-ish is if we used the `contextValue?: BaseContext` override, in
-        // which case TContext is BaseContext and {} is ok. (This does depend on
-        // the fact we've hackily forced the class to be contravariant in
-        // TContext.)
-        contextValue: contextValue ?? ({} as TContext),
-        internals: this.internals,
-        schemaDerivedData,
-      })
-    ).graphQLResponse;
+    return await internalExecuteOperation({
+      graphQLRequest,
+      // The typecast here is safe, because the only way `contextValue` can be
+      // null-ish is if we used the `contextValue?: BaseContext` override, in
+      // which case TContext is BaseContext and {} is ok. (This does depend on
+      // the fact we've hackily forced the class to be contravariant in
+      // TContext.)
+      contextValue: contextValue ?? ({} as TContext),
+      internals: this.internals,
+      schemaDerivedData,
+    });
   }
 }
 
@@ -1088,39 +1085,31 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
   contextValue: TContext;
   internals: ApolloServerInternals<TContext>;
   schemaDerivedData: SchemaDerivedData;
-}): Promise<{
-  graphQLResponse: GraphQLResponse;
-  responseHeadersAndStatusCode: Pick<
-    HTTPGraphQLResponse,
-    'headers' | 'statusCode'
-  >;
-}> {
-  const httpGraphQLResponse = {
-    headers: new HeaderMap([['content-type', 'application/json']]),
-    statusCode: undefined,
+}): Promise<GraphQLResponse> {
+  const httpGraphQLHead = newHTTPGraphQLHead();
+  httpGraphQLHead.headers.set('content-type', 'application/json');
+
+  const requestContext = {
+    logger: internals.logger,
+    schema: schemaDerivedData.schema,
+    request: graphQLRequest,
+    response: { result: {}, http: httpGraphQLHead },
+    // We clone the context because there are some assumptions that every operation
+    // execution has a brand new context object; specifically, in order to implement
+    // willResolveField we put a Symbol on the context that is specific to a particular
+    // request pipeline execution. We could avoid this if we had a better way of
+    // instrumenting execution.
+    //
+    // We don't want to do a deep clone here, because one of the main advantages of
+    // using batched HTTP requests is to share context across operations for a
+    // single request.
+    contextValue: cloneObject(contextValue),
+    cache: internals.cache,
+    metrics: {},
+    overallCachePolicy: newCachePolicy(),
   };
-  return {
-    graphQLResponse: await processGraphQLRequest(schemaDerivedData, internals, {
-      logger: internals.logger,
-      schema: schemaDerivedData.schema,
-      request: graphQLRequest,
-      response: { http: httpGraphQLResponse },
-      // We clone the context because there are some assumptions that every operation
-      // execution has a brand new context object; specifically, in order to implement
-      // willResolveField we put a Symbol on the context that is specific to a particular
-      // request pipeline execution. We could avoid this if we had a better way of
-      // instrumenting execution.
-      //
-      // We don't want to do a deep clone here, because one of the main advantages of
-      // using batched HTTP requests is to share context across operations for a
-      // single request.
-      contextValue: cloneObject(contextValue),
-      cache: internals.cache,
-      metrics: {},
-      overallCachePolicy: newCachePolicy(),
-    }),
-    responseHeadersAndStatusCode: httpGraphQLResponse,
-  };
+  await processGraphQLRequest(schemaDerivedData, internals, requestContext);
+  return requestContext.response;
 }
 
 export type ImplicitlyInstallablePlugin<TContext extends BaseContext> =

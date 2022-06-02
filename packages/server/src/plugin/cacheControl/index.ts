@@ -254,7 +254,7 @@ export function ApolloServerPluginCacheControl<TContext extends BaseContext>(
           if (
             calculateHttpHeaders &&
             policyIfCacheable &&
-            !response.errors &&
+            !response.result.errors &&
             response.http
           ) {
             response.http.headers.set(

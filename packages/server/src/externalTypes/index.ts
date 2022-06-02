@@ -33,7 +33,6 @@ export {
   PluginDefinition,
 } from './plugins';
 export {
-  GraphQLExecutionResult,
   GraphQLExecutor,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextDidResolveOperation,

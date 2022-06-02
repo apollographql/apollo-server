@@ -37,8 +37,8 @@ import {
 import { PersistedQueryNotFoundError } from '../../errors';
 import type {
   BaseContext,
+  GraphQLRequestContext,
   GraphQLRequestListener,
-  GraphQLResponse,
 } from '../../externalTypes';
 
 const QueryRootType = new GraphQLObjectType({
@@ -1091,13 +1091,22 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
 
-      it('applies the formatResponse function', async () => {
+      it('willSendResponse can be equivalent to the old formatResponse function', async () => {
         app = await createApp({
           schema,
-          formatResponse(response: GraphQLResponse) {
-            response['extensions'] = { it: 'works' };
-            return response;
-          },
+          plugins: [
+            {
+              async requestDidStart() {
+                return {
+                  async willSendResponse(
+                    requestContext: GraphQLRequestContext<BaseContext>,
+                  ) {
+                    requestContext.response.result.extensions = { it: 'works' };
+                  },
+                };
+              },
+            },
+          ],
         });
         const expected = { it: 'works' };
         const req = request(app)

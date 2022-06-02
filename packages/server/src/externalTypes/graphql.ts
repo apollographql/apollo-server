@@ -3,15 +3,15 @@ import type { Trace } from '@apollo/usage-reporting-protobuf';
 import type { Logger } from '@apollo/utils.logger';
 import type {
   DocumentNode,
+  FormattedExecutionResult,
   GraphQLError,
-  GraphQLFormattedError,
   GraphQLSchema,
   OperationDefinitionNode,
 } from 'graphql';
 import type Keyv from 'keyv';
 import type { CachePolicy } from './cacheControl';
 import type { BaseContext } from './context';
-import type { HTTPGraphQLRequest, HTTPGraphQLResponse } from './http';
+import type { HTTPGraphQLHead, HTTPGraphQLRequest } from './http';
 
 export interface GraphQLRequest {
   query?: string;
@@ -23,17 +23,11 @@ export interface GraphQLRequest {
 
 export type VariableValues = { [name: string]: any };
 
-// TODO(AS4): does this differ in an interesting way from GraphQLExecutionResult
-// and graphql-js ExecutionResult? It does have `http` but perhaps this can be an
-// "extends". Ah, the difference is about formatted vs throwable errors? Let's
-// make sure we at least understand it.
 export interface GraphQLResponse {
-  data?: Record<string, any> | null;
-  errors?: ReadonlyArray<GraphQLFormattedError>;
-  extensions?: Record<string, any>;
-  // TODO(AS4): Seriously consider whether this type makes sense at all or whether
-  // http response should just be its own top level thing on HTTPRequestContext?
-  http?: Pick<HTTPGraphQLResponse, 'headers' | 'statusCode'>;
+  // TODO(AS4): for incremental delivery, maybe we'll have an iterator here
+  // instead of a single result?
+  result: FormattedExecutionResult;
+  http: HTTPGraphQLHead;
 }
 
 export interface GraphQLRequestMetrics {
@@ -53,7 +47,7 @@ export interface GraphQLRequestMetrics {
 
 export interface GraphQLRequestContext<TContext extends BaseContext> {
   readonly request: GraphQLRequest;
-  readonly response?: GraphQLResponse;
+  readonly response: GraphQLResponse;
 
   logger: Logger;
 
