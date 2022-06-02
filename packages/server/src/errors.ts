@@ -138,9 +138,11 @@ export function formatApolloErrors(
   return errors.map((error) => {
     try {
       return formatError(enrichError(error), error);
-    } catch (err) {
+    } catch (formattingError) {
       if (includeStackTracesInErrorResponses) {
-        return enrichError(err);
+        // includeStackTracesInErrorResponses is used in development
+        // so it will be helpful to show errors thrown by formatError hooks in that mode
+        return enrichError(formattingError);
       } else {
         // obscure error
         return {
