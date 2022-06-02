@@ -143,7 +143,10 @@ export function formatApolloErrors(
         return enrichError(err);
       } else {
         // obscure error
-        return { message: 'Internal server error' };
+        return {
+          message: 'Internal server error',
+          extensions: { code: 'INTERNAL_SERVER_ERROR' },
+        };
       }
     }
   });
