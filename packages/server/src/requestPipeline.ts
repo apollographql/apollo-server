@@ -221,7 +221,10 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       await validationDidEnd();
     } else {
       await validationDidEnd(validationErrors);
-      return await sendErrorResponse(validationErrors, 'GRAPHQL_VALIDATION_FAILED');
+      return await sendErrorResponse(
+        validationErrors,
+        'GRAPHQL_VALIDATION_FAILED',
+      );
     }
 
     if (schemaDerivedData.documentStore) {
@@ -519,7 +522,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     return formatApolloErrors(errors, {
       errorCode,
       formatError: internals.formatError,
-      includeStackTracesInErrorResponses: internals.includeStackTracesInErrorResponses,
+      includeStackTracesInErrorResponses:
+        internals.includeStackTracesInErrorResponses,
     });
   }
 

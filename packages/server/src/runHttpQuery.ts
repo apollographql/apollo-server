@@ -248,7 +248,8 @@ export async function runHttpQuery<TContext extends BaseContext>(
       headers: new HeaderMap([['content-type', 'application/json']]),
       completeBody: prettyJSONStringify({
         errors: formatApolloErrors([error as Error], {
-          includeStackTracesInErrorResponses: internals.includeStackTracesInErrorResponses,
+          includeStackTracesInErrorResponses:
+            internals.includeStackTracesInErrorResponses,
           formatError: internals.formatError,
         }),
       }),
