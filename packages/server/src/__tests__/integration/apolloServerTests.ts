@@ -1793,20 +1793,24 @@ export function defineIntegrationTestSuiteApolloServerTests(
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'development',
+          includeStackTracesInErrorResponses: false,
         });
 
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{fieldWhichWillError}` });
         expect(result.data).toEqual({ fieldWhichWillError: null });
-
-        expect(result.errors).toBeDefined();
-        expect(result.errors.length).toEqual(1);
-        expect(result.errors[0].message).toEqual('Some message');
-        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.ext1).toEqual('myExt');
-        expect(result.errors[0].extensions.exception).toBeDefined();
-        expect(result.errors[0].extensions.exception.ext1).toBeUndefined();
+        expect(result.errors).toEqual([
+          {
+            message: 'Some message',
+            path: ['fieldWhichWillError'],
+            locations: [{ line: 1, column: 2 }],
+            extensions: {
+              code: 'UNAUTHENTICATED',
+              ext1: 'myExt',
+            },
+          },
+        ]);
       });
     });
 
