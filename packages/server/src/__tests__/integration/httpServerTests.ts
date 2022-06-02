@@ -214,16 +214,16 @@ const schema = new GraphQLSchema({
 export function defineIntegrationTestSuiteHttpServerTests(
   createServer: CreateServerForIntegrationTests,
   options: {
-    serverlessFramework?: boolean;
+    serverIsStartedInBackground?: boolean;
   } = {},
 ) {
   describe('httpServerLevelTests.ts', () => {
-    let app: any;
     let didEncounterErrors: jest.MockedFunction<
       NonNullable<GraphQLRequestListener<BaseContext>['didEncounterErrors']>
     >;
 
     let serverToCleanUp: ApolloServer | null = null;
+    let extraCleanup: (() => Promise<void>) | null = null;
 
     async function createApp(
       config?: ApolloServerOptions<BaseContext>,
@@ -231,6 +231,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
     ): Promise<string> {
       const serverInfo = await createServer(config ?? { schema }, options);
       serverToCleanUp = serverInfo.server;
+      extraCleanup = serverInfo.extraCleanup ?? null;
       return serverInfo.url;
     }
 
@@ -240,15 +241,17 @@ export function defineIntegrationTestSuiteHttpServerTests(
     async function stopServer() {
       try {
         await serverToCleanUp?.stop();
+        await extraCleanup?.();
       } finally {
         serverToCleanUp = null;
+        extraCleanup = null;
       }
     }
     afterEach(stopServer);
 
     describe('graphqlHTTP', () => {
       it('rejects the request if the method is not POST or GET', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app)
           .head('/')
           // Make sure we get the error we're looking for, not the CSRF
@@ -262,7 +265,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('throws an error if POST body is empty', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app)
           .post('/')
           .type('text/plain')
@@ -275,7 +278,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('throws an error if POST body is missing even with content-type', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app).post('/').type('application/json').send();
         return req.then((res) => {
           expect(res.status).toEqual(400);
@@ -284,7 +287,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('throws an error if invalid content-type', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app)
           .post('/')
           .type('text/plain')
@@ -301,7 +304,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('throws an error if POST operation is missing', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app).post('/').send({});
         return req.then((res) => {
           expect(res.status).toEqual(400);
@@ -310,7 +313,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('throws an error if POST operation is empty', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app).post('/').send({ query: '' });
         return req.then((res) => {
           expect(res.status).toEqual(400);
@@ -319,7 +322,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('throws an error if POST JSON is malformed', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app)
           .post('/')
           .type('application/json')
@@ -331,7 +334,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('throws an error if GET query is missing', async () => {
-        app = await createApp();
+        const app = await createApp();
         const res = await request(app)
           .get(`/`)
           .set('apollo-require-preflight', 't');
@@ -352,7 +355,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle a basic GET request', async () => {
-        app = await createApp();
+        const app = await createApp();
         const expected = {
           testString: 'it works',
         };
@@ -370,7 +373,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle a basic implicit GET request', async () => {
-        app = await createApp();
+        const app = await createApp();
         const expected = {
           testString: 'it works',
         };
@@ -389,7 +392,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('throws error if trying to use mutation using GET request', async () => {
         didEncounterErrors = jest.fn();
-        app = await createApp({
+        const app = await createApp({
           schema,
           plugins: [
             {
@@ -428,7 +431,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('throws error if trying to use mutation with fragment using GET request', async () => {
         didEncounterErrors = jest.fn();
-        app = await createApp({
+        const app = await createApp({
           schema,
           plugins: [
             {
@@ -473,7 +476,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle a GET request with variables', async () => {
-        app = await createApp();
+        const app = await createApp();
         const query = {
           query: 'query test($echo: String){ testArgument(echo: $echo) }',
           variables: JSON.stringify({ echo: 'world' }),
@@ -492,7 +495,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle a basic request', async () => {
-        app = await createApp();
+        const app = await createApp();
         const expected = {
           testString: 'it works',
         };
@@ -604,7 +607,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('cache-control not set without any hints', async () => {
-        app = await createApp({
+        const app = await createApp({
           schema,
         });
         const expected = {
@@ -621,7 +624,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('cache-control set with dynamic hint', async () => {
-        app = await createApp({
+        const app = await createApp({
           schema,
         });
         const expected = {
@@ -638,7 +641,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('cache-control set with defaultMaxAge', async () => {
-        app = await createApp({
+        const app = await createApp({
           schema,
           plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
         });
@@ -656,7 +659,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('returns PersistedQueryNotSupported to a GET request if PQs disabled', async () => {
-        app = await createApp({
+        const app = await createApp({
           schema,
           persistedQueries: false,
         });
@@ -685,7 +688,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('returns PersistedQueryNotSupported to a POST request if PQs disabled', async () => {
-        app = await createApp({
+        const app = await createApp({
           schema,
           persistedQueries: false,
         });
@@ -714,7 +717,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('returns PersistedQueryNotFound to a GET request', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app)
           .get('/')
           .set('apollo-require-preflight', 't')
@@ -739,7 +742,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('returns PersistedQueryNotFound to a POST request', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app)
           .post('/')
           .send({
@@ -763,7 +766,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle a request with variables', async () => {
-        app = await createApp();
+        const app = await createApp();
         const expected = {
           testArgument: 'hello world',
         };
@@ -780,7 +783,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('POST does not handle a request with variables as string', async () => {
-        app = await createApp();
+        const app = await createApp();
         const res = await request(app).post('/').send({
           query: 'query test($echo: String!){ testArgument(echo: $echo) }',
           variables: '{ "echo": "world" }',
@@ -792,7 +795,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('POST does not handle a request with extensions as string', async () => {
-        app = await createApp();
+        const app = await createApp();
         const res = await request(app).post('/').send({
           query: 'query test($echo: String!){ testArgument(echo: $echo) }',
           extensions: '{ "echo": "world" }',
@@ -804,7 +807,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle a request with operationName', async () => {
-        app = await createApp();
+        const app = await createApp();
         const expected = {
           testString: 'it works',
         };
@@ -824,7 +827,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle introspection request', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app)
           .post('/')
           .send({ query: getIntrospectionQuery() });
@@ -837,7 +840,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('does not accept a query AST', async () => {
-        app = await createApp();
+        const app = await createApp();
         const req = request(app)
           .post('/')
           .send({
@@ -854,7 +857,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle batch requests', async () => {
-        app = await createApp({ schema, allowBatchedHttpRequests: true });
+        const app = await createApp({ schema, allowBatchedHttpRequests: true });
         const expected = [
           {
             data: {
@@ -891,7 +894,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle non-batch requests when allowBatchedHttpRequests is true', async () => {
-        app = await createApp({ schema, allowBatchedHttpRequests: true });
+        const app = await createApp({ schema, allowBatchedHttpRequests: true });
         const expected = {
           data: {
             testString: 'it works',
@@ -913,7 +916,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle batch requests with one element', async () => {
-        app = await createApp({ schema, allowBatchedHttpRequests: true });
+        const app = await createApp({ schema, allowBatchedHttpRequests: true });
         const expected = [
           {
             data: {
@@ -942,7 +945,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const parallels = 100;
         const delayPerReq = 40;
 
-        app = await createApp({ schema, allowBatchedHttpRequests: true });
+        const app = await createApp({ schema, allowBatchedHttpRequests: true });
         const expected = Array(parallels).fill({
           data: { testStringWithDelay: 'it works' },
         });
@@ -962,7 +965,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       }, 3000); // this test will fail due to timeout if running serially.
 
       it('disables batch requests by default', async () => {
-        app = await createApp();
+        const app = await createApp();
 
         const res = await request(app)
           .post('/')
@@ -989,7 +992,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('clones batch context', async () => {
-        app = await createApp(
+        const app = await createApp(
           {
             schema,
             allowBatchedHttpRequests: true,
@@ -1026,7 +1029,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('executes batch context if it is a function', async () => {
         let callCount = 0;
-        app = await createApp(
+        const app = await createApp(
           {
             schema,
             allowBatchedHttpRequests: true,
@@ -1075,7 +1078,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle a request with a mutation', async () => {
-        app = await createApp();
+        const app = await createApp();
         const expected = {
           testMutation: 'not really a mutation, but who cares: world',
         };
@@ -1092,7 +1095,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('willSendResponse can be equivalent to the old formatResponse function', async () => {
-        app = await createApp({
+        const app = await createApp({
           schema,
           plugins: [
             {
@@ -1123,7 +1126,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('passes the context to the resolver', async () => {
         const expected = 'context works';
-        app = await createApp(
+        const app = await createApp(
           {
             schema,
           },
@@ -1140,7 +1143,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('passes the rootValue to the resolver', async () => {
         const expected = 'it passes rootValue';
-        app = await createApp({
+        const app = await createApp({
           schema,
           rootValue: expected,
         });
@@ -1156,7 +1159,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       it('passes the rootValue function result to the resolver', async () => {
         const expectedQuery = 'query: it passes rootValue';
         const expectedMutation = 'mutation: it passes rootValue';
-        app = await createApp({
+        const app = await createApp({
           schema,
           rootValue: (documentNode: DocumentNode) => {
             const op = getOperationAST(documentNode, undefined);
@@ -1178,7 +1181,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('returns errors', async () => {
         const expected = 'Secret error message';
-        app = await createApp({
+        const app = await createApp({
           schema,
         });
         const req = request(app).post('/').send({
@@ -1192,7 +1195,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('applies formatError if provided', async () => {
         const expected = '--blank--';
-        app = await createApp({
+        const app = await createApp({
           schema,
           formatError: (_, error) => {
             expect(error instanceof Error).toBe(true);
@@ -1210,7 +1213,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('formatError receives error that passes instanceof checks', async () => {
         const expected = '--blank--';
-        app = await createApp({
+        const app = await createApp({
           schema,
           formatError: (_, error) => {
             expect(error instanceof Error).toBe(true);
@@ -1228,7 +1231,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('allows for custom error formatting to sanitize', async () => {
-        app = await createApp({
+        const app = await createApp({
           schema: TestSchema,
           formatError(error) {
             return { message: 'Custom error format: ' + error.message };
@@ -1251,7 +1254,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('allows for custom error formatting to elaborate', async () => {
-        app = await createApp({
+        const app = await createApp({
           schema: TestSchema,
           formatError(error) {
             return {
@@ -1280,7 +1283,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('sends internal server error when formatError fails', async () => {
-        app = await createApp({
+        const app = await createApp({
           schema,
           formatError: () => {
             throw new Error('I should be caught');
@@ -1308,7 +1311,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             },
           };
         };
-        app = await createApp({
+        const app = await createApp({
           schema,
           validationRules: [alwaysInvalidRule],
         });
@@ -1322,11 +1325,12 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
     });
 
-    if (options.serverlessFramework) {
-      // This tests the serverless-specific behavior that ensures that startup
-      // finishes before serving a request. Non-serverless frameworks don't have
-      // this behavior: they assert that you've done `await server.start()`
-      // earlier in the process.
+    if (options.serverIsStartedInBackground) {
+      // This tests the behavior designed for serverless frameworks that ensures
+      // that startup finishes before serving a request. We don't have to worry
+      // about this for non-serverless frameworks because you should have
+      // already done `await server.start()` before calling (eg)
+      // `expressMiddleware`.
       it('calls serverWillStart before serving a request', async () => {
         // We'll use this to determine the order in which
         // the events we're expecting to happen actually occur and validate
@@ -1336,11 +1340,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const pluginStartedBarrier = resolvable();
         const letPluginFinishBarrier = resolvable();
 
-        // We want this to create the app as fast as `createApp` will allow.
-        // for integrations whose `applyMiddleware` currently returns a
-        // Promise we want them to resolve at whatever eventual pace they
-        // will so we can make sure that things are happening in order.
-        const unawaitedApp = createApp({
+        // Create the server. This test only runs when
+        // serverIsStartedInBackground, so this serverWillStart plugin will run
+        // "in the background".
+        const url = await createApp({
           schema,
           plugins: [
             {
@@ -1354,19 +1357,8 @@ export function defineIntegrationTestSuiteHttpServerTests(
           ],
         });
 
-        // Account for the fact that `createApp` might return a Promise,
-        // and might not, depending on the integration's implementation of
-        // createApp.  This is entirely to account for the fact that
-        // non-async implementations of `applyMiddleware` leverage a
-        // middleware as the technique for yielding to `startWillStart`
-        // hooks while their `async` counterparts simply `await` those same
-        // hooks.  In a future where we make the behavior of `applyMiddleware`
-        // the same across all integrations, this should be changed to simply
-        // `await unawaitedApp`.
-        app = 'then' in unawaitedApp ? await unawaitedApp : unawaitedApp;
-
         // Intentionally fire off the request asynchronously, without await.
-        const res = request(app)
+        const res = request(url)
           .get('/')
           .set('apollo-require-preflight', 't')
           .query({
@@ -1377,9 +1369,9 @@ export function defineIntegrationTestSuiteHttpServerTests(
             return res;
           });
 
-        // At this point calls might be [] or ['zero'] because the back-compat
-        // code kicks off start() asynchronously. We can safely wait on
-        // the plugin's serverWillStart to begin.
+        // At this point calls might be [] or ['zero'] because we are starting
+        // in the background. We can safely wait on the plugin's serverWillStart
+        // to begin.
         await pluginStartedBarrier;
         expect(calls).toEqual(['zero']);
         letPluginFinishBarrier.resolve();
@@ -1394,7 +1386,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
     describe('status code', () => {
       it('allows setting a custom status code', async () => {
-        app = await createApp({
+        const app = await createApp({
           schema,
           plugins: [
             {
@@ -1482,7 +1474,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('when ttlSeconds is set, passes ttl to the apq cache set call', async () => {
-        app = await createApqApp({ ttl: 900 });
+        const app = await createApqApp({ ttl: 900 });
 
         await request(app).post('/').send({
           extensions,
@@ -1497,7 +1489,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('when ttlSeconds is unset, ttl is not passed to apq cache', async () => {
-        app = await createApqApp();
+        const app = await createApqApp();
 
         await request(app).post('/').send({
           extensions,
@@ -1516,7 +1508,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('errors when version is not specified', async () => {
-        app = await createApqApp();
+        const app = await createApqApp();
 
         const result = await request(app)
           .get('/')
@@ -1552,7 +1544,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('errors when version is unsupported', async () => {
-        app = await createApqApp();
+        const app = await createApqApp();
 
         const result = await request(app)
           .get('/')
@@ -1589,7 +1581,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('errors when hash is mismatched', async () => {
-        app = await createApqApp();
+        const app = await createApqApp();
 
         const result = await request(app)
           .get('/')
@@ -1628,7 +1620,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('returns PersistedQueryNotFound on the first try', async () => {
-        app = await createApqApp();
+        const app = await createApqApp();
 
         const result = await request(app).post('/').send({
           extensions,
@@ -1652,7 +1644,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         expect(didResolveSource).not.toHaveBeenCalled();
       });
       it('returns result on the second try', async () => {
-        app = await createApqApp();
+        const app = await createApqApp();
 
         await request(app).post('/').send({
           extensions,
@@ -1690,7 +1682,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('returns with batched persisted queries', async () => {
-        app = await createApqApp({}, true); // allow batching
+        const app = await createApqApp({}, true); // allow batching
 
         const errors = await request(app)
           .post('/')
@@ -1737,7 +1729,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('returns result on the persisted query', async () => {
-        app = await createApqApp();
+        const app = await createApqApp();
 
         await request(app).post('/').send({
           extensions,
@@ -1763,7 +1755,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('returns error when hash does not match', async () => {
-        app = await createApqApp();
+        const app = await createApqApp();
 
         const response = await request(app)
           .post('/')
@@ -1784,7 +1776,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('returns correct result using get request', async () => {
-        app = await createApqApp();
+        const app = await createApqApp();
 
         await request(app).post('/').send({
           extensions,

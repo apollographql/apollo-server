@@ -7,6 +7,7 @@ import {
   ApolloServerPluginUsageReporting,
 } from '../plugin';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import { HeaderMap } from '../runHttpQuery';
 
 const typeDefs = gql`
   type Query {
@@ -172,9 +173,10 @@ describe('ApolloServer start', () => {
     await expect(server.stop()).rejects.toThrow('no way 1');
   });
 
-  // This is specific to serverless because on server-ful frameworks, you can't
-  // get to executeOperation without server.start().
-  it('execute throws redacted message on serverless startup error', async () => {
+  // We care more specifically about this in the background start case because
+  // integrations shouldn't call executeHTTPGraphQLRequest if a "foreground"
+  // start fails.
+  it('executeHTTPGraphQLRequest throws redacted message if background start fails', async () => {
     const error = jest.fn();
     const logger = {
       debug: jest.fn(),
@@ -183,26 +185,27 @@ describe('ApolloServer start', () => {
       error,
     };
 
-    class ServerlessApolloServer extends ApolloServer<BaseContext> {
-      override serverlessFramework() {
-        return true;
-      }
-    }
-
-    const server = new ServerlessApolloServer({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
       plugins: [failToStartPlugin],
       logger,
     });
-    // Run the operation twice. We want to see the same error thrown and log
-    // message for the "kick it off" call as the subsequent call.
-    await expect(
-      server.executeOperation({ query: '{__typename}' }),
-    ).rejects.toThrow(redactedMessage);
-    await expect(
-      server.executeOperation({ query: '{__typename}' }),
-    ).rejects.toThrow(redactedMessage);
+    server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests();
+
+    for (const _ in [1, 2]) {
+      await expect(
+        server.executeHTTPGraphQLRequest({
+          httpGraphQLRequest: {
+            method: 'POST',
+            headers: new HeaderMap([['content-type', 'application-json']]),
+            body: JSON.stringify({ query: '{__typename}' }),
+            searchParams: {},
+          },
+          context: async () => ({}),
+        }),
+      ).rejects.toThrow(redactedMessage);
+    }
 
     // Three times: once for the actual background _start call, twice for the
     // two operations.
