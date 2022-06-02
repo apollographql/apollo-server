@@ -14,52 +14,37 @@ interface HTTPServerOptions<TContext extends BaseContext> {
   context?: ContextFunction<[ExpressContext], TContext>;
 }
 
-export function standaloneServer(
+export async function startStandaloneServer(
   server: ApolloServer<BaseContext>,
-  options?: HTTPServerOptions<BaseContext>,
-): ApolloServerStandalone<BaseContext>;
-export function standaloneServer<TContext extends BaseContext>(
+  options?: HTTPServerOptions<BaseContext> & { listen?: ListenOptions },
+): Promise<{ url: string }>;
+export async function startStandaloneServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
-  options: WithRequired<HTTPServerOptions<TContext>, 'context'>,
-): ApolloServerStandalone<TContext>;
-export function standaloneServer<TContext extends BaseContext>(
+  options: WithRequired<HTTPServerOptions<TContext>, 'context'> & {
+    listen?: ListenOptions;
+  },
+): Promise<{ url: string }>;
+export async function startStandaloneServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
-  options?: HTTPServerOptions<TContext>,
-): ApolloServerStandalone<TContext> {
+  options?: HTTPServerOptions<TContext> & { listen?: ListenOptions },
+): Promise<{ url: string }> {
+  const app: express.Express = express();
+  const httpServer: http.Server = http.createServer(app);
+
+  server.addPlugin(
+    ApolloServerPluginDrainHttpServer({ httpServer: httpServer }),
+  );
+
+  await server.start();
+
   const context = options?.context ?? (async () => ({} as TContext));
-  return new ApolloServerStandalone<TContext>(server, { context });
-}
+  app.use(cors(), json(), expressMiddleware(server, { context }));
 
-class ApolloServerStandalone<TContext extends BaseContext> {
-  private app: express.Express = express();
-  private httpServer: http.Server = http.createServer(this.app);
+  const listenOptions = options?.listen ?? { port: 4000 };
+  // Wait for server to start listening
+  await new Promise<void>((resolve) => {
+    httpServer.listen(listenOptions, resolve);
+  });
 
-  constructor(
-    private apolloServer: ApolloServer<TContext>,
-    private options: WithRequired<HTTPServerOptions<TContext>, 'context'>,
-  ) {}
-
-  async listen(
-    listenOptions: ListenOptions = { port: 4000 },
-  ): Promise<{ url: string }> {
-    this.apolloServer.addPlugin(
-      ApolloServerPluginDrainHttpServer({ httpServer: this.httpServer }),
-    );
-
-    await this.apolloServer.start();
-    this.app.use(
-      cors(),
-      json(),
-      expressMiddleware(this.apolloServer, {
-        context: this.options.context,
-      }),
-    );
-
-    // Wait for server to start listening
-    await new Promise<void>((resolve) => {
-      this.httpServer.listen(listenOptions, resolve);
-    });
-
-    return { url: urlForHttpServer(this.httpServer) };
-  }
+  return { url: urlForHttpServer(httpServer) };
 }
