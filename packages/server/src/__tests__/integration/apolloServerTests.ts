@@ -1774,6 +1774,40 @@ export function defineIntegrationTestSuiteApolloServerTests(
         expect(result.errors[0].extensions.exception).toBeDefined();
         expect(result.errors[0].extensions.exception.stacktrace).toBeDefined();
       });
+
+      it('shows error extensions in extensions (only!)', async () => {
+        const uri = await createServerAndGetUrl({
+          typeDefs: gql`
+            type Query {
+              fieldWhichWillError: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              fieldWhichWillError: () => {
+                throw new AuthenticationError('Some message', {
+                  extensions: { ext1: 'myExt' },
+                });
+              },
+            },
+          },
+          stopOnTerminationSignals: false,
+          nodeEnv: 'development',
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({ query: `{fieldWhichWillError}` });
+        expect(result.data).toEqual({ fieldWhichWillError: null });
+
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].message).toEqual('Some message');
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.ext1).toEqual('myExt');
+        expect(result.errors[0].extensions.exception).toBeDefined();
+        expect(result.errors[0].extensions.exception.ext1).toBeUndefined();
+      });
     });
 
     describe('Persisted Queries', () => {
