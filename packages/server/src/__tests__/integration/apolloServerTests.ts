@@ -501,6 +501,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
               /This data graph is missing a valid configuration. More details may be available in the server logs./,
             );
 
+            // The error is logged once immediately when startup fails, and
+            // again during the request.
             expect(error).toHaveBeenCalledTimes(2);
             expect(error.mock.calls[0][0]).toBe(
               `An error occurred during Apollo Server startup. All GraphQL requests will now fail. The startup error was: ${loadError.message}`,
