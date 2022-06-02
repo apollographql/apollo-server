@@ -1,0 +1,423 @@
+
+# Migrating to Apollo Server 4 (Alpha)
+<!-- TODO: add getting started link -->
+Apollo Server 4 is now out in [alpha](/docs/resources/release-stages). Check out our ["Getting Started" guide]() to get up and running quickly.
+
+> As the Apollo Server 4 rolls out we are in the process of bringing the rest of our documentation up to date. This migration guide covers all of the new changes between Apollo Server 3 and 4. Feel free to reference both the Apollo Server 3 docs in the meantime.
+
+The focus of this major release is to improve Apollo Server's extensibility and make it simpler to use, maintain, and document. To learn more about the inspiration behind this release, see the [Apollo Server Roadmap](https://github.com/apollographql/apollo-server/blob/main/ROADMAP.md)
+
+Apollo Server 4's alpha provides two of following features, with more to come with the full release:
+<!-- TODO: fill in -->
+- A simple well-defined API with a stable HTTP abstraction, enabling contributors to easily build integrations in other frameworks.
+- Consistent context typing for TS users, ensuring
+
+
+<!-- Do we want this? -->
+During Apollo Server 4's alpha we are actively looking to gather feedback and [issues](https://github.com/apollographql/apollo-server/issues/new/choose) from community members and customers.
+
+## Bumped dependencies
+
+### Node.js
+Apollo Server 4 supports Node.js 14 and later. This includes all [LTS and Current versions at the time of release](https://nodejs.org/en/about/releases/).
+
+If you're using an older version of Node.js, upgrade your runtime before upgrading to Apollo Server 4.
+
+### `graphql`
+
+Apollo Server has a peer dependency on `graphql` (the core JS GraphQL implementation), which means you are responsible for choosing the version installed in your app.
+
+Apollo Server 4 supports `graphql` v16.3.0 and later. (Apollo Server 3 supported `graphql` v15.3.0 through v16.)
+
+If you're using an older version of `graphql`, upgrade it to a supported version before upgrading to Apollo Server 4.
+
+## Removed constructor options
+
+The follow `ApolloServer` constructor options have been removed in favor of other configuration methods.
+
+<!-- TODO: FIGURE OUT WHAT'S UP HERE -->
+### `dataSources`
+
+Apollo Sever 4 removes the `dataSources` constructor option. The type returned from your context function matches the type available as context in your resolvers and plugins instead of the latter having an extra `dataSources` piece on it.
+
+You can now add data sources to your context like so:
+<!-- TODO: add working example folks can reference: https://github.com/apollographql/apollo-server/issues/6047#issuecomment-1115739665 -->
+
+### `modules`
+In Apollo Server 3 there are [several ways](https://github.com/apollographql/apollo-server/issues/6062) to provide your `ApolloServer` instance with a schema. One of these ways was by using a `modules` constructor option, which under the hood uses the `buildServiceDefinition` function from the `@apollographql/apollo-tooling` library, to specify a schema using an array of `typeDefs` and `resolvers` objects.
+
+To simplify the Apollo Server 4 API, we removed the `modules` constructor option and recommend that developers use the following syntax to create a schema when creating a new `ApolloServer` instance:
+```js
+  new ApolloServer({
+    typeDefs: modules.map({ typeDefs } => typeDefs,
+    resolvers: modules.map({ resolvers } => resolvers,
+  })
+```
+
+## Removed features
+
+### Dropped support for older versions of the gateway
+
+Apollo Server 4 drops support for [`@apollo/gateway` versions](/federation/api/apollo-gateway/) below v0.35.0.
+
+#### Dropping Redundant Gateway TypeScript types
+
+In Apollo Server 2, the TypeScript type used for the `gateway` constructor option is called `GraphQLService`. Apollo Server 3 introduced a new TypeScript type called `GatewayInterface`.
+
+Apollo Server 4 will drop exporting the `SchemaChangeCallback` and `GraphQLService` types, we recommend using the `GatewayInterface` type instead.
+
+This `GatewayInterface` requires the following:
+
+- The `stop` method must be present.
+- The `executor` method must async
+- The `apollo` option must always be passed to the `load` method.
+
+
+### `__resolveObject`
+
+In Apollo Server 4 we removed the dependency on `@apollographql/apollo-tooling`, in the process removing the `__resolveObject` pseudo-resolver. The `__resolveObject` function was a predecessor to
+the [`__resolveReference`](/federation/api/apollo-subgraph/#__resolvereference) method.
+
+### Remove features that wrap framework-specific libraries
+
+Apollo Server 3 includes core-maintained bindings for many additional web frameworks and serverless environments. These additional integrations are all maintained by the Apollo Server core team, who might not have the practical experience running servers that use most of these frameworks.
+
+These binding additionally  meant that every time the team wanted to add new features to Apollo Server very similar changes had to be made in every binding package, raising process friction and slowing down development.
+
+One of the driving focuses behind Apollo Server 4  is creating a stable and well-defined API, enabling developers to easily create and maintain integrations for new frameworks.
+
+<!-- TODO: breakdown what these removed integrations mean -->
+Removed most web framework integrations from the core
+Removed:
+- "packages/apollo-server-fastify",
+- "packages/apollo-server-hapi",
+- "packages/apollo-server-koa",
+- "packages/apollo-server-lambda",
+- "packages/apollo-server-micro",
+- "packages/apollo-server-cloud-functions",
+- "packages/apollo-server-cloudflare",
+- "packages/apollo-server-azure-functions",
+
+> We are looking for volunteers to maintain these integrations! See the [issues with the 'integration-collaborators' label](https://github.com/apollographql/apollo-server/labels/integration-collaborators) to join the discussion about your favorite web framework today.
+
+### Remove body-parser & CORS wrapping
+In Apollo Server 4, framework integration functions won't try to wrap these basic framework-specific libraries. If you want to use our Express middleware, you'll be required to use the standard body-parser middleware yourself.
+
+<!-- EXAMPLE OF Body parser and cors using express middleware -->
+```ts
+```
+
+
+Apollo Server 4's new `ApolloServerStandalone`(the replacement for the batteries-included `apollo-server` package) will still include both the `body-parser` and `cors` packages, but you can not configure those options.
+
+### Removed health checks
+
+Load balancers often use health checks to determine if a server is available and ready to serve traffic. In Apollo Server 3 the health check feature supported a simple HTTP-level health check that was enabled by default and would always return the 200 status code. In Apollo Server 4 we removed the health checks feature.
+
+We found that running a trivial GraphQL query was a much better way of checking the status of your server, because they ensure your server successfully serves traffic _and_ performs GraphQL operations.
+
+Every GraphQL server supports a trivial query that requests the [`__typename`](../schema/schema/#the-__typename-field) of the top-level `Query` type.  This means every GraphQL server can respond to a `GET` request to a URL such as:
+
+```bash
+https://your.server/?query=%7B__typename%7D
+```
+
+If for some reason running this query is not an acceptable health check, folks integrating Apollo Server into a web framework can define their own health check via their web framework directly.
+
+<!-- TODO: check into this and confirm we removed them -->
+We may consider leaving health check support in ApolloServerStandalone (where you can't easily add your own HTTP path handlers), if compelling arguments for why it's superior to using `?query=%7B__typename%7D` as health check are provided.
+
+## Removed path parsing
+Path parsing has been removed from Apollo Server 4. To further simplify the Apollo Server 4 API, if you'd like to mount your GraphQL server at a specified URL you can do so using your framework's specific middleware, like so:
+
+<!-- TODO: Insert example here using path parsing with express-middleware -->
+```ts
+app.use('/api/graphql', apolloServer.getMiddleware())
+```
+
+If you want to run GraphQL on a non-root path, use your web framework’s functionality for mounting the middleware at the path. (Previously, the middlewares defaulted to only processing `/graphql`, and the standalone server processed all requests.)
+
+## Removed Integrations
+
+### The `apollo-server` npm package is now `standaloneServer` function
+
+<!--  TODO: working example with explanation for the why and how to use it -->
+```ts
+import { ApolloServer, standaloneServer } from "@apollo/server";
+
+interface MyContext {
+  token: string;
+}
+
+const apolloServerInstance = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+
+const { url } = await standaloneServer(apolloServerInstance, {
+  context: async ({req, _res}) => ({
+    token: await getTokenForRequest(req),
+  }),
+}).listen({ port: 4000 });
+
+console.log(`ApolloServer listening at: ${url}`);
+
+```
+
+<!-- TODO: update syntax to below if necessary -->
+<!-- const { url } = await standaloneServer(apolloServer, listenOpts, serverOpts); -->
+
+
+## Changed constructor options
+We’ve changed the TypeScript names of the constructor options object from `Config` to `ApolloServerOptions`.
+
+### `debug`
+
+The `debug` constructor option is now `includeStackTracesInErrorResponses`:
+
+```ts
+
+const apolloServerInstance = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+  includeStackTracesInErrorResponses: true,
+});
+```
+
+(it also doesn’t change the default log level of the logger from `INFO` to `DEBUG` in the case where you don’t provide your own logger any more)
+
+## Changed Features
+
+### Renamed context
+
+In AS3 we use `context` for both "a function producing a context value"
+and "the context value itself".
+
+In Apollo Server 4 we change this for clarity, `context` is the name of the "a function producing a context value":
+
+```ts
+interface MyContext {
+  token: string;
+}
+
+const apolloServerInstance = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+
+const { url } = await standaloneServer(apolloServerInstance, {
+  context: async (req, _res) => ({
+    token: await getTokenForRequest(req),
+  }),
+}).listen({ port: 4000 });
+
+```
+
+If you are accessing the values of your context context value in a
+plugin (e.g., on `GraphQLRequestContext` or as a named argument to
+`willResolveField`) you should now use `contextValue`.
+
+### We no longer use Fetcher from `@apollo/utils.fetcher` instead of `apollo-server-env` for Fetch API TypeScript typing
+
+Semi-relatedly: removed `requestAgent` option from ApolloServerPluginUsageReporting
+
+Instead of:
+```
+    ApolloServerPluginUsageReporting({ requestAgent })
+```
+You can write:
+```
+    import fetch from 'node-fetch';
+    ApolloServerPluginUsageReporting({
+      fetcher: (url, options) => fetch(url, {
+        ...options,
+        agent: requestAgent,
+      }),
+    });
+```
+
+### CSRF prevention (new in AS3.7) is on by default
+By default, CSRF prevention is turned on in Apollo Server 4. For more information about CSRF prevention and CORS, see [Configuring CORS](/apollo-server/security/cors).
+
+### ApolloServer’s generic argument is your context object type
+Currently ApolloServer is genericized on the _arguments_ to the context function, rather the actual context object itself. We don't get type inference into resolvers, inline plugins, etc.
+
+Instead of passing context to the ApolloServer constructor at all, make it an argument to the integration function. That way the arguments aren't genericized; they are specific to the function you're calling. Make the complete context object a parameter to the "execute this request' function.
+
+We found a lot of places that `TContext` wasn't threaded through types and
+added it.
+
+Now you can do stuff like:
+
+```ts
+new ApolloServer<{ foo: number }>({
+    Query: {
+      n(_parent: any, _args: any, context): number {
+        return context.foo;
+      },
+    },
+  },
+  plugins: [
+    {
+      async requestDidStart({ context }) {
+        let n: number = context.foo;
+      },
+    },
+    // Plugins declared to be <BaseContext> still work.
+    ApolloServerPluginCacheControlDisabled(),
+  ],
+});
+```
+This also simplifies `executeOperation`, where you just pass a context
+object directly instead of arguments to your (probably already
+fake-for-testing) context function.
+
+### Context function is passed to your middleware-specific integration function (eg `expressMiddleware` or `standaloneServer`) instead of ApolloServer constructor
+
+`ApolloServerBase` is now just `ApolloServer`. Context function is now a
+named argument to the middleware; it's required if your context type is
+not the default BaseContext.
+
+Note that we differentiate in names between
+"contextFunction" (a function returning a context object) and "context"
+(the context object itself, eg as an argument to executeOperation).
+
+Context field on GraphQLRequestContext is now contextValue (and in argument to willResolveField)
+
+
+#### `server.executeOperation` now takes a context *value* rather than arguments to pass to your context function.
+
+This also simplifies executeOperation, where you just pass a context
+object directly instead of arguments to your (probably already
+fake-for-testing) context function.
+
+We found that in practice, that’s what people actually wanted in tests. If you want to test the behavior of your context function, you can unit-test it directly.
+
+
+### Change CacheScope enum to a pure type
+In Apollo Server 3, you can use the [`@cacheControl`](/apollo-server/performance/caching/#in-your-schema-static) to define caching behavior on a per-field basis. Under the hood the `@cacheControl` directive uses a `CacheControlScope` enum.
+
+Users will write 'PUBLIC' directly instead of CacheScope.Public. Note that if they are using TypeScript this is still perfectly type-safe (a typo will fail to compile); and if they're not using TypeScript, well misspelling `public` doesn't crash Node either, so perhaps they should use TypeScript if they care about such things.
+
+In Apollo Server 4 the `CacheControlScope` enum has been changed into a union of strings type (`PUBLIC` or `PRIVATE`). This mean you can’t write `CacheScope.public` anymore
+- The enum CacheScope is now union of strings type
+  - (scope: CacheScope.Private -> scope: 'PRIVATE')
+
+```ts
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+```
+
+## Combine many packages into a single @apollo/server
+<!--  TODO -->
+- apollo-server-core
+- apollo-server (the "batteries-included" package)
+- apollo-server-plugin-base
+- apollo-server-types
+- apollo-server-express
+- apollo-server-errors
+- apollo-reporting-protobuf
+
+### Express API is now a function `expressMiddleware` instead of getMiddleware/applyMiddleware methods on a subclass of ApolloServer
+
+<!-- link to /apollo-server/packages/server/src/express/index.ts -->
+Moreover, there is no subclassing of ApolloServer at all.
+
+`expressMiddleware` has no runtime dependency on `express` (or any other package) although `standaloneServer` does.
+
+## Express middleware no longer tries to also work with Express’ predecessor project “Connect”
+
+If anybody needs [Connect middleware](https://github.com/senchalabs/connect) they can add it themselves.
+
+
+## Operation registry plugin has a new name
+Use `@apollo/server-plugin-operation-registry` instead.
+
+## HTTP handling changes
+In JSON-encoded POST bodies, we expect variables and extensions (if provided) to be objects, not strings containing JSON strings of objects:
+
+This works:
+```
+{“query”: “{ __typename }”, extensions: {“foo”: 1}}
+```
+
+And this does not:
+```
+{“query”: “{ __typename }”, extensions: “{\“foo\”: 1}”}
+```
+
+HTTP batching is disabled by default instead of enabled by default.
+
+### HTTP batching as opt-in feature
+<!-- TODO: investigate more! -->
+
+## Plugin API changes
+
+Remove schemaHash field from GraphQLRequestContext
+This was a not particularly stable hash of the introspection JSON of a
+schema. It was different from the hash of the schema SDL used by schema
+reporting. It was created for the operation registry plugin but that
+plugin hasn't used it for a while and it was only kept around for
+backwards compatibility. So now it is gone.
+
+
+Remove debug field from GraphQLRequestContext.
+
+Remove persistedQueries field from GraphQLServiceContext
+
+
+## New APIs
+
+### `addPlugin` function
+
+Apollo Server 4 introduces a new public function on the `ApolloServer` class, `addPlugin`. The `addPlugin` function enables you to add plugins to `ApolloServer` _before_ you start a server (i.e., before calling `server.start()`).
+
+```ts
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
+import { json } from 'body-parser';
+import { ApolloServer, ApolloServerPluginDrainHttpServer } from '@apollo/server';
+// TODO: Double check this import
+import { expressMiddleware } from '@apollo/server/express';
+import { typeDefs, resolvers } from ('./schema');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+// Add our ApolloServerPluginDrainHttpServer plug in *before* starting the server
+server.addPlugin(ApolloServerPluginDrainHttpServer({ httpServer }));
+
+await server.start();
+// Set up express middleware with body-parsing and cors
+app.use(cors(), json(), expressMiddleware(server));
+await new Promise<void>((resolve) => httpServer.listen({ port: 4000 }, resolve));
+
+console.log(`🚀 Server ready at http://localhost:4000`);
+```
+
+The new `addPlugin` function is useful if you'd like to pass the server itself to a plugin’s constructor.
+
+### New HTTP request execution API
+There’s a lot here :)
+Also we’ve changed the TypeScript names of the constructor options object from Config to ApolloServerOptions.
+
+
+# Upcoming Stuff to Cover:
+- Replace implementations of the cache interface with `keyv`
+We no longer maintain `apollo-server-cache-memcached` or `apollo-server-cache-redis`. The interfaces and classes for `apollo-server-caching` are now in `@apollo/utils.keyvaluecache`
+We now maintain (`@apollo/utils.keyv`) which wraps Keyv and lets you use their implementation of memcached and redis bindings (among others).
+Existing implementations of `KeyValueCache` should continue to work.
+
+- Explicit support in core for serverless-style startup error handling
+- Move other plugins to their own repositories
+- Change usage reporting defaults backwards-incompatibly to send less data
+- Rethink ApolloError
+- ApolloServer.logger should probably be public readonly in AS4
+- Ensure errors thrown in context creation is handled in a helpful way
+- Apollo Server plugins: expose server instance to plugins
+- In general we just need to go over the full exported API and list what’s gone and where it’s gone

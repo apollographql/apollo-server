@@ -67,6 +67,7 @@ FIXM
 functionapp
 Fuzzer
 gcloud
+genericized
 goofql
 graphiql
 graphqlcodegenerator
@@ -84,6 +85,7 @@ iteratees
 josephg
 jsdelivr
 keyv
+keyvaluecache
 KHTML
 Kubernetes
 linearizability
