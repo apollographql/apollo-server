@@ -46,7 +46,7 @@
     "@types/cors": "2.8.12",
     "@types/express": "4.17.13",
     "@types/express-serve-static-core": "4.17.28",
-    "@types/jest": "27.5.1",
+    "@types/jest": "27.5.2",
     "@types/lodash": "4.14.182",
     "@types/lodash.sumby": "4.6.7",
     "@types/lodash.xorby": "4.7.7",
@@ -96,7 +96,7 @@
     ]
   },
   "volta": {
-    "node": "16.15.0",
-    "npm": "8.11.0"
+    "node": "16.15.1",
+    "npm": "8.12.0"
   }
 }
