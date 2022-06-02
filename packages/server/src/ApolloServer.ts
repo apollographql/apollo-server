@@ -967,6 +967,11 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     httpGraphQLRequest: HTTPGraphQLRequest;
     context: ContextThunk<TContext>;
   }): Promise<HTTPGraphQLResponse> {
+    // TODO(AS4): This throws if we started in the background and there was an
+    // error, but instead of throwing it should return an appropriate error
+    // response. Note that we can make the serverIsStartedInBackground case of
+    // the `rejected load promise is thrown by server.start` test tighter once
+    // we fix this.
     const runningServerState = await this._ensureStarted();
 
     if (

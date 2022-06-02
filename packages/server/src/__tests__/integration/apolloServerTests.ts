@@ -39,6 +39,7 @@ import {
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginUsageReportingDisabled,
 } from '../..';
 import fetch from 'node-fetch';
 import type {
@@ -57,7 +58,6 @@ import type {
   CreateServerForIntegrationTestsResult,
 } from '.';
 import type { SchemaLoadOrUpdateCallback } from '../../types';
-import { HeaderMap } from '../../runHttpQuery';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -154,6 +154,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 ) {
   describe('apolloServerTests.ts', () => {
     let serverToCleanUp: ApolloServer | null = null;
+    let extraCleanup: (() => Promise<void>) | null = null;
 
     async function createServer(
       config: ApolloServerOptions<BaseContext>,
@@ -164,6 +165,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         options,
       );
       serverToCleanUp = serverInfo.server;
+      extraCleanup = serverInfo.extraCleanup ?? null;
       return serverInfo;
     }
 
@@ -180,8 +182,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
     async function stopServer() {
       try {
         await serverToCleanUp?.stop();
+        await extraCleanup?.();
       } finally {
         serverToCleanUp = null;
+        extraCleanup = null;
       }
     }
     afterEach(stopServer);
@@ -475,20 +479,35 @@ export function defineIntegrationTestSuiteApolloServerTests(
             // We should be able to run the server setup code (which calls
             // startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests)
             // but actual operations will fail, like the function name says.
-            const server = (await createServer({ gateway })).server;
-            await expect(
-              server.executeHTTPGraphQLRequest({
-                httpGraphQLRequest: {
-                  method: 'POST',
-                  headers: new HeaderMap([
-                    ['content-type', 'application-json'],
-                  ]),
-                  body: JSON.stringify({ query: '{__typename}' }),
-                  searchParams: {},
-                },
-                context: async () => ({}),
-              }),
-            ).rejects.toThrowError(loadError);
+            // (But the error it throws should be masked.)
+            const error = jest.fn();
+            const logger = {
+              debug: jest.fn(),
+              info: jest.fn(),
+              warn: jest.fn(),
+              error,
+            };
+            const url = await createServerAndGetUrl({ gateway, logger });
+            // We don't need to call stop() on the server since it fails to start.
+            serverToCleanUp = null;
+            const res = await request(url)
+              .post('/')
+              .send({ query: '{__typename}' });
+            // TODO(AS4): This is currently throwing from
+            // executeHTTPGraphQLRequest but should instead be formatted either
+            // as text/plain or application/json.
+            expect(res.status).toEqual(500);
+            expect(res.text).toMatch(
+              /This data graph is missing a valid configuration. More details may be available in the server logs./,
+            );
+
+            expect(error).toHaveBeenCalledTimes(2);
+            expect(error.mock.calls[0][0]).toBe(
+              `An error occurred during Apollo Server startup. All GraphQL requests will now fail. The startup error was: ${loadError.message}`,
+            );
+            expect(error.mock.calls[1][0]).toBe(
+              `An error occurred during Apollo Server startup. All GraphQL requests will now fail. The startup error was: ${loadError.message}`,
+            );
           } else {
             // createServer awaits start() so should throw.
             await expect(createServer({ gateway })).rejects.toThrowError(
@@ -2346,17 +2365,15 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         const { gateway, triggers } = makeGatewayMock({ optionsSpy });
         triggers.resolveLoad({ schema, executor: async () => ({}) });
-        await createServerAndGetUrl(
-          {
-            gateway,
-            apollo: {
-              key: 'service:tester:1234abc',
-              graphRef: 'tester@staging',
-            },
-            logger: quietLogger,
+        const { server } = await createServer({
+          gateway,
+          apollo: {
+            key: 'service:tester:1234abc',
+            graphRef: 'tester@staging',
           },
-          { noRequestsMade: true },
-        );
+          logger: quietLogger,
+          plugins: [ApolloServerPluginUsageReportingDisabled()],
+        });
 
         expect(optionsSpy).toHaveBeenLastCalledWith({
           apollo: {
@@ -2366,6 +2383,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
             graphRef: 'tester@staging',
           },
         });
+
+        // Executing an operation ensures that (even if
+        // serverIsStartedInBackground) startup completes, so that we can
+        // legally call stop().
+        await server.executeOperation({ query: '{__typename}' });
       });
 
       it('unsubscribes from schema update on close', async () => {

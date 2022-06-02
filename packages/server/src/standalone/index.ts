@@ -2,13 +2,13 @@ import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
-import type { AddressInfo, ListenOptions } from 'net';
-import { format as urlFormat } from 'url';
+import type { ListenOptions } from 'net';
 import type { ApolloServer } from '../ApolloServer';
 import { ExpressContext, expressMiddleware } from '../express';
 import type { BaseContext, ContextFunction } from '../externalTypes';
 import { ApolloServerPluginDrainHttpServer } from '../plugin';
 import type { WithRequired } from '../types';
+import { urlForHttpServer } from '../utils/urlForHttpServer';
 
 interface HTTPServerOptions<TContext extends BaseContext> {
   context?: ContextFunction<[ExpressContext], TContext>;
@@ -60,23 +60,6 @@ class ApolloServerStandalone<TContext extends BaseContext> {
       this.httpServer.listen(listenOptions, resolve);
     });
 
-    const addressInfo = this.httpServer.address() as AddressInfo;
-
-    // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
-    // corresponding loopback ip. If this heuristic is wrong for your use case,
-    // explicitly specify a frontend host (in the `host` option to `listen`).
-    let hostForUrl = addressInfo.address;
-    if (hostForUrl === '' || hostForUrl === '::') {
-      hostForUrl = 'localhost';
-    }
-
-    const url = urlFormat({
-      protocol: 'http',
-      hostname: hostForUrl,
-      port: addressInfo.port,
-      pathname: '/',
-    });
-
-    return { url };
+    return { url: urlForHttpServer(this.httpServer) };
   }
 }

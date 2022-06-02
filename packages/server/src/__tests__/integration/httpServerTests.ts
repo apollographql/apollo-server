@@ -223,6 +223,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
     >;
 
     let serverToCleanUp: ApolloServer | null = null;
+    let extraCleanup: (() => Promise<void>) | null = null;
 
     async function createApp(
       config?: ApolloServerOptions<BaseContext>,
@@ -230,6 +231,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
     ): Promise<string> {
       const serverInfo = await createServer(config ?? { schema }, options);
       serverToCleanUp = serverInfo.server;
+      extraCleanup = serverInfo.extraCleanup ?? null;
       return serverInfo.url;
     }
 
@@ -239,8 +241,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
     async function stopServer() {
       try {
         await serverToCleanUp?.stop();
+        await extraCleanup?.();
       } finally {
         serverToCleanUp = null;
+        extraCleanup = null;
       }
     }
     afterEach(stopServer);

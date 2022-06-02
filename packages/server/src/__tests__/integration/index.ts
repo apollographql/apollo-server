@@ -7,11 +7,10 @@ import { defineIntegrationTestSuiteHttpServerTests } from './httpServerTests';
 export interface CreateServerForIntegrationTestsResult {
   server: ApolloServer<BaseContext>;
   url: string;
+  extraCleanup?: () => Promise<void>;
 }
 
 export interface CreateServerForIntegrationTestsOptions {
-  suppressStartCall?: boolean;
-  noRequestsMade?: boolean;
   context?: ContextThunk;
 }
 
