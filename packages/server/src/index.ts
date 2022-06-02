@@ -1,7 +1,5 @@
 // TODO(AS4): Evaluate the full exposed API.
 
-export { HttpQueryError } from './runHttpQuery';
-
 export {
   SyntaxError,
   ValidationError,

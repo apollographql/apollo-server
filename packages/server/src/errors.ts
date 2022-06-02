@@ -93,8 +93,10 @@ export class UserInputError extends GraphQLError {
 // document it, and maybe consider using it for more of the errors in
 // runHttpQuery instead of just returning text/plain errors.
 export class BadRequestError extends GraphQLError {
-  constructor(message: string, extensions?: Record<string, any>) {
-    super(message, { extensions: { ...extensions, code: 'BAD_REQUEST' } });
+  constructor(message: string, options?: { extensions?: Record<string, any> }) {
+    super(message, {
+      extensions: { ...options?.extensions, code: 'BAD_REQUEST' },
+    });
 
     this.name = 'BadRequestError';
   }
@@ -154,10 +156,7 @@ export function formatApolloErrors(
   });
 
   function enrichError(maybeError: unknown): GraphQLFormattedError {
-    const error: Error =
-      maybeError instanceof Error
-        ? maybeError
-        : new GraphQLError('Unexpected error value: ' + String(maybeError));
+    const error: Error = ensureError(maybeError);
 
     const graphqlError: GraphQLError =
       error instanceof GraphQLError
@@ -193,4 +192,10 @@ export function formatApolloErrors(
 
     return { ...graphqlError.toJSON(), extensions };
   }
+}
+
+export function ensureError(maybeError: unknown): Error {
+  return maybeError instanceof Error
+    ? maybeError
+    : new GraphQLError('Unexpected error value: ' + String(maybeError));
 }

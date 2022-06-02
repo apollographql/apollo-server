@@ -4,7 +4,8 @@ import type {
   HTTPGraphQLResponse,
 } from './externalTypes';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
-import { HeaderMap, HttpQueryError, runHttpQuery } from './runHttpQuery';
+import { HeaderMap, runHttpQuery } from './runHttpQuery';
+import { BadRequestError } from './errors';
 
 export async function runBatchHttpQuery<TContext extends BaseContext>(
   batchRequest: Omit<HTTPGraphQLRequest, 'body'> & { body: any[] },
@@ -78,8 +79,5 @@ export async function runPotentiallyBatchedHttpQuery<
       internals,
     );
   }
-  return new HttpQueryError(
-    400,
-    'Operation batching disabled.',
-  ).asHTTPGraphQLResponse();
+  throw new BadRequestError('Operation batching disabled.');
 }

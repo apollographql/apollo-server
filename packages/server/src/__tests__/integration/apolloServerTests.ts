@@ -58,9 +58,19 @@ import type {
   CreateServerForIntegrationTestsResult,
 } from '.';
 import type { SchemaLoadOrUpdateCallback } from '../../types';
+import type { Logger } from '@apollo/utils.logger';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
+
+function mockLogger(): Logger {
+  return {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+}
 
 const INTROSPECTION_QUERY = `
   {
@@ -480,13 +490,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             // startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests)
             // but actual operations will fail, like the function name says.
             // (But the error it throws should be masked.)
-            const error = jest.fn();
-            const logger = {
-              debug: jest.fn(),
-              info: jest.fn(),
-              warn: jest.fn(),
-              error,
-            };
+            const logger = mockLogger();
             const url = await createServerAndGetUrl({ gateway, logger });
             // We don't need to call stop() on the server since it fails to start.
             serverToCleanUp = null;
@@ -503,11 +507,13 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             // The error is logged once immediately when startup fails, and
             // again during the request.
-            expect(error).toHaveBeenCalledTimes(2);
-            expect(error.mock.calls[0][0]).toBe(
+            expect(logger.error).toHaveBeenCalledTimes(2);
+            expect(logger.error).toHaveBeenNthCalledWith(
+              1,
               `An error occurred during Apollo Server startup. All GraphQL requests will now fail. The startup error was: ${loadError.message}`,
             );
-            expect(error.mock.calls[1][0]).toBe(
+            expect(logger.error).toHaveBeenNthCalledWith(
+              2,
               `An error occurred during Apollo Server startup. All GraphQL requests will now fail. The startup error was: ${loadError.message}`,
             );
           } else {
@@ -766,6 +772,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
     describe('formatError', () => {
       it('wraps thrown error from validation rules', async () => {
+        const logger = mockLogger();
+
         const throwError = jest.fn(() => {
           throw new Error('nope');
         });
@@ -775,28 +783,63 @@ export function defineIntegrationTestSuiteApolloServerTests(
           return error;
         });
 
-        const uri = await createServerAndGetUrl({
+        const url = await createServerAndGetUrl({
           schema,
           validationRules: [throwError],
           introspection: true,
           formatError,
+          logger,
         });
 
-        const apolloFetch = createApolloFetch({ uri });
+        {
+          const res = await request(url)
+            .post('/')
+            .send({ query: INTROSPECTION_QUERY });
+          expect(res.status).toBe(500);
+          expect(res.body).toMatchInlineSnapshot(`
+            Object {
+              "errors": Array [
+                Object {
+                  "extensions": Object {
+                    "code": "INTERNAL_SERVER_ERROR",
+                  },
+                  "message": "Internal server error",
+                },
+              ],
+            }
+          `);
+          expect(formatError).toHaveBeenCalledTimes(1);
+          expect(throwError).toHaveBeenCalledTimes(1);
+          expect(logger.error).toHaveBeenCalledTimes(1);
+          expect(logger.error).toHaveBeenLastCalledWith(
+            'Unexpected error processing request: Error: nope',
+          );
+        }
 
-        const introspectionResult = await apolloFetch({
-          query: INTROSPECTION_QUERY,
-        });
-        expect(introspectionResult.data).toBeUndefined();
-        expect(introspectionResult.errors).toBeDefined();
-        expect(formatError).toHaveBeenCalledTimes(1);
-        expect(throwError).toHaveBeenCalledTimes(1);
-
-        const result = await apolloFetch({ query: TEST_STRING_QUERY });
-        expect(result.data).toBeUndefined();
-        expect(result.errors).toBeDefined();
-        expect(formatError).toHaveBeenCalledTimes(2);
-        expect(throwError).toHaveBeenCalledTimes(2);
+        {
+          const res = await request(url)
+            .post('/')
+            .send({ query: TEST_STRING_QUERY });
+          expect(res.status).toBe(500);
+          expect(res.body).toMatchInlineSnapshot(`
+            Object {
+              "errors": Array [
+                Object {
+                  "extensions": Object {
+                    "code": "INTERNAL_SERVER_ERROR",
+                  },
+                  "message": "Internal server error",
+                },
+              ],
+            }
+          `);
+          expect(formatError).toHaveBeenCalledTimes(2);
+          expect(throwError).toHaveBeenCalledTimes(2);
+          expect(logger.error).toHaveBeenCalledTimes(2);
+          expect(logger.error).toHaveBeenLastCalledWith(
+            'Unexpected error processing request: Error: nope',
+          );
+        }
       });
 
       it('works with errors similar to GraphQL errors, such as yup', async () => {
@@ -1439,7 +1482,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
           throw pluginError;
         });
         const formatError = jest.fn((formattedError, error) => {
-          expect(error).toEqual(pluginError);
+          // Errors thrown by plugins are generally replaced with "Internal
+          // server error" and logged.
+          expect(error.message).toBe('Internal server error');
           // extension should be called before formatError
           expect(pluginCalled).toHaveBeenCalledTimes(1);
 
@@ -1448,6 +1493,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
             message: 'masked',
           };
         });
+        const logger = mockLogger();
+        const unexpectedErrorProcessingRequest = jest.fn();
         const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
@@ -1459,6 +1506,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               fieldWhichWillError: () => {},
             },
           },
+          logger,
           plugins: [
             {
               async requestDidStart() {
@@ -1470,6 +1518,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   },
                 };
               },
+              unexpectedErrorProcessingRequest,
             },
           ],
           formatError,
@@ -1483,6 +1532,14 @@ export function defineIntegrationTestSuiteApolloServerTests(
         expect(result.errors).toBeDefined();
         expect(result.errors[0].message).toEqual('masked');
         expect(formatError).toHaveBeenCalledTimes(1);
+        expect(logger.error).toHaveBeenCalledTimes(1);
+        expect(logger.error).toHaveBeenCalledWith(
+          'Unexpected error processing request: Error: nope',
+        );
+        expect(unexpectedErrorProcessingRequest).toHaveBeenCalledTimes(1);
+        expect(
+          unexpectedErrorProcessingRequest.mock.calls[0][0].error,
+        ).toMatchInlineSnapshot(`[Error: nope]`);
       });
 
       describe('context field', () => {
@@ -1665,12 +1722,14 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 },
               },
             };
+            const contextCreationDidFail = jest.fn();
             const uri = await createServerAndGetUrl(
               {
                 typeDefs,
                 resolvers,
                 stopOnTerminationSignals: false,
                 nodeEnv: '',
+                plugins: [{ contextCreationDidFail }],
               },
               {
                 context: async () => {
@@ -1690,6 +1749,16 @@ export function defineIntegrationTestSuiteApolloServerTests(
             expect(e.extensions).toBeDefined();
             expect(e.extensions.code).toEqual('UNAUTHENTICATED');
             expect(e.extensions.exception.stacktrace).toBeDefined();
+
+            expect(contextCreationDidFail.mock.calls).toMatchInlineSnapshot(`
+              Array [
+                Array [
+                  Object {
+                    "error": [AuthenticationError: Context creation failed: valid result],
+                  },
+                ],
+              ]
+            `);
           });
         });
 
@@ -2658,6 +2727,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
     });
 
     describe('CSRF prevention', () => {
+      const invalidRequestErrors: Error[] = [];
+
       async function makeServer(
         csrfPrevention?: ApolloServerOptions<BaseContext>['csrfPrevention'],
       ): Promise<string> {
@@ -2666,6 +2737,13 @@ export function defineIntegrationTestSuiteApolloServerTests(
             typeDefs: 'type Query { x: ID }',
             resolvers: { Query: { x: () => 'foo' } },
             csrfPrevention,
+            plugins: [
+              {
+                async invalidRequestWasReceived({ error }) {
+                  invalidRequestErrors.push(error);
+                },
+              },
+            ],
           })
         ).url;
       }
@@ -2675,11 +2753,16 @@ export function defineIntegrationTestSuiteApolloServerTests(
       function succeeds(res: Response) {
         expect(res.status).toBe(200);
         expect(res.body).toEqual(response);
+        expect(invalidRequestErrors).toHaveLength(0);
       }
 
       function blocked(res: Response) {
         expect(res.status).toBe(400);
         expect(res.text).toMatch(/This operation has been blocked/);
+        expect(invalidRequestErrors).toHaveLength(1);
+        expect(invalidRequestErrors.pop()?.message).toMatch(
+          /This operation has been blocked/,
+        );
       }
 
       it('default', async () => {

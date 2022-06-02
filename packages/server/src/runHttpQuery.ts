@@ -1,4 +1,3 @@
-import { formatApolloErrors } from './errors';
 import type {
   BaseContext,
   GraphQLRequest,
@@ -12,6 +11,7 @@ import {
 } from './ApolloServer';
 import type { FormattedExecutionResult } from 'graphql';
 import type { HTTPGraphQLHead } from './externalTypes/http';
+import { BadRequestError } from './errors';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just
 // do want to use (our own? somebody else's?) Headers class.
@@ -23,41 +23,6 @@ export class HeaderMap extends Map<string, string> {
       throw Error(`Headers must be lower-case, unlike ${key}`);
     }
     return super.set(key, value);
-  }
-}
-
-export class HttpQueryError extends Error {
-  public statusCode: number;
-  // TODO(AS4): consider making this a map (or whatever type we settle on
-  // for headers)
-  public headers: Map<string, string>;
-
-  constructor(
-    statusCode: number,
-    message: string,
-    headers?: Map<string, string>,
-  ) {
-    super(message);
-    this.name = 'HttpQueryError';
-    this.statusCode = statusCode;
-    // This throws if any header names have capital leaders.
-    this.headers = new HeaderMap(headers ?? []);
-  }
-
-  // TODO(AS4): Do we really want any text/plain errors, or
-  // or should we unify error handling so that every single error
-  // works the same way (JSON + sent through the plugin system)?
-  asHTTPGraphQLResponse(): HTTPGraphQLResponse {
-    return {
-      statusCode: this.statusCode,
-      // Copy to HeaderMap to ensure lower-case keys.
-      headers: new HeaderMap([
-        ['content-type', 'text/plain'],
-        ...this.headers.entries(),
-      ]),
-      completeBody: this.message,
-      bodyChunks: null,
-    };
   }
 }
 
@@ -80,14 +45,12 @@ function jsonParsedFieldIfNonEmptyString(
     try {
       hopefullyRecord = JSON.parse(o[fieldName]);
     } catch {
-      throw new HttpQueryError(
-        400,
+      throw new BadRequestError(
         `The ${fieldName} search parameter contains invalid JSON.`,
       );
     }
     if (!isStringRecord(hopefullyRecord)) {
-      throw new HttpQueryError(
-        400,
+      throw new BadRequestError(
         `The ${fieldName} search parameter should contain a JSON-encoded object.`,
       );
     }
@@ -120,8 +83,7 @@ function ensureQueryIsStringOrMissing(query: any) {
   }
   // Check for a common error first.
   if (query.kind === 'Document') {
-    throw new HttpQueryError(
-      400,
+    throw new BadRequestError(
       "GraphQL queries must be strings. It looks like you're sending the " +
         'internal graphql-js representation of a parsed query in your ' +
         'request instead of a request in the GraphQL query language. You ' +
@@ -130,132 +92,102 @@ function ensureQueryIsStringOrMissing(query: any) {
         'the internal representation to a string for you.',
     );
   } else {
-    throw new HttpQueryError(400, 'GraphQL queries must be strings.');
+    throw new BadRequestError('GraphQL queries must be strings.');
   }
 }
 
-// This function should not throw.
+export const badMethodErrorMessage =
+  'Apollo Server supports only GET/POST requests.';
+
 export async function runHttpQuery<TContext extends BaseContext>(
   httpRequest: HTTPGraphQLRequest,
   contextValue: TContext,
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
-  try {
-    let graphQLRequest: GraphQLRequest;
+  let graphQLRequest: GraphQLRequest;
 
-    switch (httpRequest.method) {
-      case 'POST':
-        // TODO(AS4): If it's an array, some error about enabling batching?
-        if (!isNonEmptyStringRecord(httpRequest.body)) {
-          return new HttpQueryError(
-            400,
-            'POST body missing, invalid Content-Type, or JSON object has no keys.',
-          ).asHTTPGraphQLResponse();
-        }
+  switch (httpRequest.method) {
+    case 'POST':
+      // TODO(AS4): If it's an array, some error about enabling batching?
+      if (!isNonEmptyStringRecord(httpRequest.body)) {
+        throw new BadRequestError(
+          'POST body missing, invalid Content-Type, or JSON object has no keys.',
+        );
+      }
 
-        ensureQueryIsStringOrMissing(httpRequest.body.query);
+      ensureQueryIsStringOrMissing(httpRequest.body.query);
 
-        if (typeof httpRequest.body.variables === 'string') {
-          // TODO(AS4): make sure we note this change in migration
-          return new HttpQueryError(
-            400,
-            '`variables` in a POST body should be provided as an object, not a recursively JSON-encoded string.',
-          ).asHTTPGraphQLResponse();
-        }
+      if (typeof httpRequest.body.variables === 'string') {
+        // TODO(AS4): make sure we note this change in migration
+        throw new BadRequestError(
+          '`variables` in a POST body should be provided as an object, not a recursively JSON-encoded string.',
+        );
+      }
 
-        if (typeof httpRequest.body.extensions === 'string') {
-          // TODO(AS4): make sure we note this change in migration
-          return new HttpQueryError(
-            400,
-            '`extensions` in a POST body should be provided as an object, not a recursively JSON-encoded string.',
-          ).asHTTPGraphQLResponse();
-        }
+      if (typeof httpRequest.body.extensions === 'string') {
+        // TODO(AS4): make sure we note this change in migration
+        throw new BadRequestError(
+          '`extensions` in a POST body should be provided as an object, not a recursively JSON-encoded string.',
+        );
+      }
 
-        graphQLRequest = {
-          query: fieldIfString(httpRequest.body, 'query'),
-          operationName: fieldIfString(httpRequest.body, 'operationName'),
-          variables: fieldIfRecord(httpRequest.body, 'variables'),
-          extensions: fieldIfRecord(httpRequest.body, 'extensions'),
-          http: httpRequest,
-        };
+      graphQLRequest = {
+        query: fieldIfString(httpRequest.body, 'query'),
+        operationName: fieldIfString(httpRequest.body, 'operationName'),
+        variables: fieldIfRecord(httpRequest.body, 'variables'),
+        extensions: fieldIfRecord(httpRequest.body, 'extensions'),
+        http: httpRequest,
+      };
 
-        break;
-      case 'GET':
-        if (!isStringRecord(httpRequest.searchParams)) {
-          return new HttpQueryError(
-            400,
-            'GET query missing.',
-          ).asHTTPGraphQLResponse();
-        }
+      break;
+    case 'GET':
+      if (!isStringRecord(httpRequest.searchParams)) {
+        throw new BadRequestError('GET query missing.');
+      }
 
-        ensureQueryIsStringOrMissing(httpRequest.searchParams.query);
+      ensureQueryIsStringOrMissing(httpRequest.searchParams.query);
 
-        graphQLRequest = {
-          query: fieldIfString(httpRequest.searchParams, 'query'),
-          operationName: fieldIfString(
-            httpRequest.searchParams,
-            'operationName',
-          ),
-          variables: jsonParsedFieldIfNonEmptyString(
-            httpRequest.searchParams,
-            'variables',
-          ),
-          extensions: jsonParsedFieldIfNonEmptyString(
-            httpRequest.searchParams,
-            'extensions',
-          ),
-          http: httpRequest,
-        };
+      graphQLRequest = {
+        query: fieldIfString(httpRequest.searchParams, 'query'),
+        operationName: fieldIfString(httpRequest.searchParams, 'operationName'),
+        variables: jsonParsedFieldIfNonEmptyString(
+          httpRequest.searchParams,
+          'variables',
+        ),
+        extensions: jsonParsedFieldIfNonEmptyString(
+          httpRequest.searchParams,
+          'extensions',
+        ),
+        http: httpRequest,
+      };
 
-        break;
-      default:
-        return new HttpQueryError(
-          405,
-          'Apollo Server supports only GET/POST requests.',
-          new HeaderMap([['allow', 'GET, POST']]),
-        ).asHTTPGraphQLResponse();
-    }
-
-    const graphQLResponse = await internalExecuteOperation({
-      graphQLRequest,
-      contextValue,
-      internals,
-      schemaDerivedData,
-    });
-
-    const body = prettyJSONStringify(
-      orderExecutionResultFields(graphQLResponse.result),
-    );
-
-    graphQLResponse.http.headers.set(
-      'content-length',
-      Buffer.byteLength(body, 'utf8').toString(),
-    );
-
-    return {
-      ...graphQLResponse.http,
-      completeBody: body,
-      bodyChunks: null,
-    };
-  } catch (error) {
-    if (error instanceof HttpQueryError) {
-      return error.asHTTPGraphQLResponse();
-    }
-
-    return {
-      statusCode: 500,
-      headers: new HeaderMap([['content-type', 'application/json']]),
-      completeBody: prettyJSONStringify({
-        errors: formatApolloErrors([error as Error], {
-          includeStackTracesInErrorResponses:
-            internals.includeStackTracesInErrorResponses,
-          formatError: internals.formatError,
-        }),
-      }),
-      bodyChunks: null,
-    };
+      break;
+    default:
+      throw new BadRequestError(badMethodErrorMessage);
   }
+
+  const graphQLResponse = await internalExecuteOperation({
+    graphQLRequest,
+    contextValue,
+    internals,
+    schemaDerivedData,
+  });
+
+  const body = prettyJSONStringify(
+    orderExecutionResultFields(graphQLResponse.result),
+  );
+
+  graphQLResponse.http.headers.set(
+    'content-length',
+    Buffer.byteLength(body, 'utf8').toString(),
+  );
+
+  return {
+    ...graphQLResponse.http,
+    completeBody: body,
+    bodyChunks: null,
+  };
 }
 
 function orderExecutionResultFields(

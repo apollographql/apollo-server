@@ -45,6 +45,18 @@ export interface ApolloServerPlugin<TContext extends BaseContext> {
     requestContext: GraphQLRequestContext<TContext>,
   ): Promise<GraphQLRequestListener<TContext> | void>;
 
+  // TODO(AS4): Document all these.
+  unexpectedErrorProcessingRequest?({
+    requestContext,
+    error,
+  }: {
+    requestContext: GraphQLRequestContext<TContext>;
+    error: Error;
+  }): Promise<void>;
+  contextCreationDidFail?({ error }: { error: Error }): Promise<void>;
+  invalidRequestWasReceived?({ error }: { error: Error }): Promise<void>;
+  startupDidFail?({ error }: { error: Error }): Promise<void>;
+
   // See the similarly named field on ApolloServer for details. Note that it
   // appears that this only works if it is a *field*, not a *method*, which is
   // why `requestDidStart` (which takes a TContext wrapped in something) is not

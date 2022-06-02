@@ -21,7 +21,7 @@ import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
 import { newCachePolicy } from './cachePolicy';
 import { ApolloConfig, determineApolloConfig } from './config';
-import { formatApolloErrors } from './errors';
+import { BadRequestError, ensureError, formatApolloErrors } from './errors';
 import type {
   ApolloServerPlugin,
   BaseContext,
@@ -35,6 +35,7 @@ import type {
   LandingPage,
   PluginDefinition,
 } from './externalTypes';
+import type { HTTPGraphQLHead } from './externalTypes/http';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching';
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import {
@@ -52,6 +53,7 @@ import {
 } from './preventCsrf';
 import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline';
 import {
+  badMethodErrorMessage,
   cloneObject,
   HeaderMap,
   newHTTPGraphQLHead,
@@ -489,10 +491,24 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         toDispose,
         toDisposeLast,
       };
-    } catch (error) {
+    } catch (maybeError: unknown) {
+      const error = ensureError(maybeError);
+
+      try {
+        await Promise.all(
+          this.internals.plugins.map(async (plugin) =>
+            plugin.startupDidFail?.({ error }),
+          ),
+        );
+      } catch (pluginError) {
+        this.internals.logger.error(
+          `startupDidFail hook threw: ${pluginError}`,
+        );
+      }
+
       this.internals.state = {
         phase: 'failed to start',
-        error: error as Error,
+        error: error,
       };
       throw error;
     } finally {
@@ -959,7 +975,6 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
   }
 
   // TODO(AS4): Make sure we like the name of this function.
-  // TODO(AS4): Should we make this into a function that never throws?
   public async executeHTTPGraphQLRequest({
     httpGraphQLRequest,
     context,
@@ -967,71 +982,123 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     httpGraphQLRequest: HTTPGraphQLRequest;
     context: ContextThunk<TContext>;
   }): Promise<HTTPGraphQLResponse> {
-    // TODO(AS4): This throws if we started in the background and there was an
-    // error, but instead of throwing it should return an appropriate error
-    // response. Note that we can make the serverIsStartedInBackground case of
-    // the `rejected load promise is thrown by server.start` test tighter once
-    // we fix this.
-    const runningServerState = await this._ensureStarted();
-
-    if (
-      runningServerState.landingPage &&
-      this.prefersHTML(httpGraphQLRequest)
-    ) {
-      return {
-        headers: new HeaderMap([['content-type', 'text/html']]),
-        completeBody: runningServerState.landingPage.html,
-        bodyChunks: null,
-      };
-    }
-
-    // If enabled, check to ensure that this request was preflighted before doing
-    // anything real (such as running the context function).
-    if (this.internals.csrfPreventionRequestHeaders) {
-      // TODO(AS4): We introduced an error handling bug when we ported this to
-      // version-4: this throws HttpQueryError but we don't treat that specially
-      // here.
-      preventCsrf(
-        httpGraphQLRequest.headers,
-        this.internals.csrfPreventionRequestHeaders,
-      );
-    }
-
-    let contextValue: TContext;
     try {
-      contextValue = await context();
-    } catch (e: any) {
-      // XXX `any` isn't ideal, but this is the easiest thing for now, without
-      // introducing a strong `instanceof GraphQLError` requirement.
-      e.message = `Context creation failed: ${e.message}`;
-      // For errors that are not internal, such as authentication, we
-      // should provide a 400 response
-      const statusCode =
-        e.extensions &&
-        e.extensions.code &&
-        e.extensions.code !== 'INTERNAL_SERVER_ERROR'
-          ? 400
-          : 500;
-      return {
-        statusCode,
-        headers: new HeaderMap([['content-type', 'application/json']]),
-        completeBody: prettyJSONStringify({
-          errors: formatApolloErrors([e as Error], {
-            includeStackTracesInErrorResponses:
-              this.internals.includeStackTracesInErrorResponses,
-            formatError: this.internals.formatError,
-          }),
-        }),
-        bodyChunks: null,
-      };
-    }
+      let runningServerState;
+      try {
+        runningServerState = await this._ensureStarted();
+      } catch (error: unknown) {
+        // This is typically either the masked error from when background startup
+        // failed, or related to invoking this function before startup or
+        // during/after shutdown (due to lack of draining).
+        return this.errorResponse(error);
+      }
 
-    return await runPotentiallyBatchedHttpQuery(
-      httpGraphQLRequest,
-      contextValue,
-      runningServerState.schemaManager.getSchemaDerivedData(),
-      this.internals,
-    );
+      if (
+        runningServerState.landingPage &&
+        this.prefersHTML(httpGraphQLRequest)
+      ) {
+        return {
+          headers: new HeaderMap([['content-type', 'text/html']]),
+          completeBody: runningServerState.landingPage.html,
+          bodyChunks: null,
+        };
+      }
+
+      // If enabled, check to ensure that this request was preflighted before doing
+      // anything real (such as running the context function).
+      if (this.internals.csrfPreventionRequestHeaders) {
+        preventCsrf(
+          httpGraphQLRequest.headers,
+          this.internals.csrfPreventionRequestHeaders,
+        );
+      }
+
+      let contextValue: TContext;
+      try {
+        contextValue = await context();
+      } catch (maybeError: unknown) {
+        const error = ensureError(maybeError);
+        try {
+          await Promise.all(
+            this.internals.plugins.map(async (plugin) =>
+              plugin.contextCreationDidFail?.({
+                error,
+              }),
+            ),
+          );
+        } catch (pluginError) {
+          this.internals.logger.error(
+            `contextCreationDidFail hook threw: ${pluginError}`,
+          );
+        }
+
+        error.message = `Context creation failed: ${error.message}`;
+        // If we explicitly provide an error code that isn't
+        // INTERNAL_SERVER_ERROR, we'll treat it as a client error.
+        const statusCode =
+          error instanceof GraphQLError &&
+          error.extensions.code &&
+          error.extensions.code !== 'INTERNAL_SERVER_ERROR'
+            ? 400
+            : 500;
+        return this.errorResponse(error, newHTTPGraphQLHead(statusCode));
+      }
+
+      return await runPotentiallyBatchedHttpQuery(
+        httpGraphQLRequest,
+        contextValue,
+        runningServerState.schemaManager.getSchemaDerivedData(),
+        this.internals,
+      );
+    } catch (maybeError_: unknown) {
+      const maybeError = maybeError_; // fixes inference because catch vars are not const
+      if (maybeError instanceof BadRequestError) {
+        try {
+          await Promise.all(
+            this.internals.plugins.map(async (plugin) =>
+              plugin.invalidRequestWasReceived?.({ error: maybeError }),
+            ),
+          );
+        } catch (pluginError) {
+          this.internals.logger.error(
+            `invalidRequestWasReceived hook threw: ${pluginError}`,
+          );
+        }
+        return this.errorResponse(
+          maybeError,
+          // Quite hacky, but beats putting more stuff on GraphQLError
+          // subclasses, maybe?
+          maybeError.message === badMethodErrorMessage
+            ? {
+                statusCode: 405,
+                headers: new HeaderMap([['allow', 'GET, POST']]),
+              }
+            : newHTTPGraphQLHead(400),
+        );
+      }
+      return this.errorResponse(maybeError);
+    }
+  }
+
+  private errorResponse(
+    error: unknown,
+    httpGraphQLHead: HTTPGraphQLHead = newHTTPGraphQLHead(),
+  ): HTTPGraphQLResponse {
+    return {
+      statusCode: httpGraphQLHead.statusCode ?? 500,
+      headers: new HeaderMap([
+        ...httpGraphQLHead.headers,
+        ['content-type', 'application/json'],
+      ]),
+      completeBody: prettyJSONStringify({
+        errors: formatApolloErrors([error], {
+          includeStackTracesInErrorResponses:
+            this.internals.includeStackTracesInErrorResponses,
+          formatError: this.internals.formatError,
+        }),
+      }),
+      bodyChunks: null,
+    };
   }
 
   private prefersHTML(request: HTTPGraphQLRequest): boolean {
@@ -1146,7 +1213,27 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
     metrics: {},
     overallCachePolicy: newCachePolicy(),
   };
-  await processGraphQLRequest(schemaDerivedData, internals, requestContext);
+
+  try {
+    await processGraphQLRequest(schemaDerivedData, internals, requestContext);
+  } catch (maybeError: unknown) {
+    // processGraphQLRequest throwing usually means that either there's a bug in
+    // Apollo Server or some plugin hook threw unexpectedly.
+    const error = ensureError(maybeError);
+    // If *these* hooks throw then we'll still get a 500 but won't mask its
+    // error.
+    await Promise.all(
+      internals.plugins.map(async (plugin) =>
+        plugin.unexpectedErrorProcessingRequest?.({
+          requestContext,
+          error,
+        }),
+      ),
+    );
+    // Mask unexpected error externally.
+    internals.logger.error(`Unexpected error processing request: ${error}`);
+    throw new Error('Internal server error');
+  }
   return requestContext.response;
 }
 

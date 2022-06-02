@@ -134,16 +134,23 @@ const failToStartPlugin: ApolloServerPlugin<BaseContext> = {
 };
 
 describe('ApolloServer start', () => {
-  const redactedMessage =
-    'This data graph is missing a valid configuration. More details may be available in the server logs.';
-
   it('start throws on startup error', async () => {
+    const startupDidFail = jest.fn();
     const server = new ApolloServer({
       typeDefs,
       resolvers,
-      plugins: [failToStartPlugin],
+      plugins: [failToStartPlugin, { startupDidFail }],
     });
     await expect(server.start()).rejects.toThrow('nope');
+    expect(startupDidFail.mock.calls).toMatchInlineSnapshot(`
+      Array [
+        Array [
+          Object {
+            "error": [Error: nope],
+          },
+        ],
+      ]
+    `);
   });
 
   it('stop throws on stop error', async () => {
@@ -176,7 +183,7 @@ describe('ApolloServer start', () => {
   // We care more specifically about this in the background start case because
   // integrations shouldn't call executeHTTPGraphQLRequest if a "foreground"
   // start fails.
-  it('executeHTTPGraphQLRequest throws redacted message if background start fails', async () => {
+  it('executeHTTPGraphQLRequest returns redacted error if background start fails', async () => {
     const error = jest.fn();
     const logger = {
       debug: jest.fn(),
@@ -191,21 +198,44 @@ describe('ApolloServer start', () => {
       plugins: [failToStartPlugin],
       logger,
     });
+
     server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests();
 
-    for (const _ in [1, 2]) {
-      await expect(
-        server.executeHTTPGraphQLRequest({
-          httpGraphQLRequest: {
-            method: 'POST',
-            headers: new HeaderMap([['content-type', 'application-json']]),
-            body: JSON.stringify({ query: '{__typename}' }),
-            searchParams: {},
-          },
-          context: async () => ({}),
-        }),
-      ).rejects.toThrow(redactedMessage);
-    }
+    const request = {
+      httpGraphQLRequest: {
+        method: 'POST',
+        headers: new HeaderMap([['content-type', 'application-json']]),
+        body: JSON.stringify({ query: '{__typename}' }),
+        searchParams: {},
+      },
+      context: async () => ({}),
+    };
+
+    expect(await server.executeHTTPGraphQLRequest(request))
+      .toMatchInlineSnapshot(`
+      Object {
+        "bodyChunks": null,
+        "completeBody": "{\\"errors\\":[{\\"message\\":\\"This data graph is missing a valid configuration. More details may be available in the server logs.\\",\\"extensions\\":{\\"code\\":\\"INTERNAL_SERVER_ERROR\\"}}]}
+      ",
+        "headers": Map {
+          "content-type" => "application/json",
+        },
+        "statusCode": 500,
+      }
+    `);
+
+    expect(await server.executeHTTPGraphQLRequest(request))
+      .toMatchInlineSnapshot(`
+      Object {
+        "bodyChunks": null,
+        "completeBody": "{\\"errors\\":[{\\"message\\":\\"This data graph is missing a valid configuration. More details may be available in the server logs.\\",\\"extensions\\":{\\"code\\":\\"INTERNAL_SERVER_ERROR\\"}}]}
+      ",
+        "headers": Map {
+          "content-type" => "application/json",
+        },
+        "statusCode": 500,
+      }
+    `);
 
     // Three times: once for the actual background _start call, twice for the
     // two operations.
