@@ -7,7 +7,6 @@ import type {
   LandingPageConfig,
 } from './types';
 
-
 export function ApolloServerPluginLandingPageLocalDefault<
   TContext extends BaseContext,
 >(
