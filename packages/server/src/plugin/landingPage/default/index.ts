@@ -12,7 +12,11 @@ export function ApolloServerPluginLandingPageLocalDefault<
 >(
   options: ApolloServerPluginLandingPageLocalDefaultOptions = {},
 ): ImplicitlyInstallablePlugin<TContext> {
-  const { version, __internal_apolloStudioEnv__, ...rest } = options;
+  const { version, __internal_apolloStudioEnv__, ...rest } = {
+    // we default to Sandbox unless embed is specified as false
+    embed: true as const,
+    ...options,
+  };
   return ApolloServerPluginLandingPageDefault(version, {
     isProd: false,
     apolloStudioEnv: __internal_apolloStudioEnv__,
