@@ -1,4 +1,4 @@
-import { Trace } from '@apollo/usage-reporting-protobuf';
+import { Trace } from '../../../usageReportingProtobuf';
 import type { VariableValueOptions } from './options';
 
 // Creates trace details from request variables, given a specification for modifying

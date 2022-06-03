@@ -1,5 +1,4 @@
-// TODO(AS4): This seems like it could live in this package too.
-import type { Trace } from '@apollo/usage-reporting-protobuf';
+import type { Trace } from '../../usageReportingProtobuf';
 import type { Logger } from '@apollo/utils.logger';
 import type {
   DocumentNode,
