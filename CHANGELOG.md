@@ -9,7 +9,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
-- In the Apollo Server default production landing page plugin, when `embed: true` is passed, we no longer enforce types to require `graphRef`. If `graphRef` is not passed, we will just render the embedded Sandbox.
+- Clarification of a comment in the embedded flavor of the Apollo Server Production Landing Page Plugin
 
 ## v3.8.1
 
