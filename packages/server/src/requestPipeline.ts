@@ -314,7 +314,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         query,
         // Explicitly checking for `undefined` which means "not set" vs 0 or
         // null which means "no TTL".
-        ttl !== undefined ? { ttl: internals.persistedQueries?.ttl } : undefined,
+        ttl !== undefined
+          ? { ttl: internals.persistedQueries?.ttl }
+          : undefined,
       ),
     ).catch(internals.logger.warn);
   }
