@@ -291,11 +291,6 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     // maintained Keyv packages or our own Keyv store `LRUCacheStore`).
     // TODO(AS4): warn users and provide better documentation around providing
     // an appropriate Keyv.
-    //
-    // FIXME: @glasser do we want to just use the
-    // InMemoryLRUCache here? Is there a reason we didn't before? I can write a
-    // lightweight KeyValueCache backed by a Map if that's what we want, but I'm
-    // not sure why we would?
     const cache = config.cache ?? new InMemoryLRUCache();
 
     // Note that we avoid calling methods on `this` before `this.internals` is assigned

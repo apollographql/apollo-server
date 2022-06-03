@@ -52,11 +52,7 @@ describe('ApolloServer documentStore', () => {
 
     await server.executeOperation(operations.simple.op);
 
-    // FIXME
-    // expect(
-    //   documentStore['cache']
-    //     .calculatedSize,
-    // ).toBe(428);
+    expect(documentStore['cache'].calculatedSize).toBe(403);
 
     expect(await documentStore.get(operations.simple.hash)).toMatchObject(
       documentNodeMatcher,
