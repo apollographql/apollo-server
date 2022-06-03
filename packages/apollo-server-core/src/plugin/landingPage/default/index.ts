@@ -5,6 +5,7 @@ import type {
   ApolloServerPluginLandingPageProductionDefaultOptions,
   LandingPageConfig,
 } from './types';
+import type { WithRequired } from 'apollo-server-types';
 
 export function ApolloServerPluginLandingPageLocalDefault(
   options: ApolloServerPluginLandingPageLocalDefaultOptions = {},
@@ -59,9 +60,10 @@ function getConfigStringForHtml(config: LandingPageConfig) {
 
 const getEmbeddedExplorerHTML = (
   version: string,
-  config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions & {
-    graphRef: string;
-  },
+  config: WithRequired<
+    ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
+    'graphRef'
+  >,
 ) => {
   interface EmbeddableExplorerOptions {
     graphRef: string;
@@ -171,9 +173,10 @@ function ApolloServerPluginLandingPageDefault(
   const version = maybeVersion ?? '_latest';
 
   const embeddedExplorerConfigWithGraphRef:
-    | (ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions & {
-        graphRef: string;
-      })
+    | WithRequired<
+        ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
+        'graphRef'
+      >
     | undefined =
     'graphRef' in config && config.graphRef && !!config.embed
       ? { ...config, embed: config.embed, graphRef: config.graphRef }
