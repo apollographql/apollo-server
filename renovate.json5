@@ -82,6 +82,12 @@
       matchBaseBranches: ["main"],
       allowedVersions: "4.x"
     },
+    // cspell v6 drops Node 12 support. We let it upgrade on version-4.
+    {
+      matchPackageNames: ["cspell"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "5.x"
+    },
     // The next versions of these Hapi packages drop Node 12 support, so we can't
     // take them. (AS4 drops Node 12 support too, but we will also no longer
     // maintain a Hapi integration as part of core in AS4.)
