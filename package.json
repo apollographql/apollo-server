@@ -80,7 +80,6 @@
     "jest-config": "28.1.0",
     "jest-junit": "13.2.0",
     "jest-mock-random": "1.1.1",
-    "keyv": "4.3.0",
     "lodash.sumby": "4.6.0",
     "nock": "13.2.6",
     "node-fetch": "2.6.7",
