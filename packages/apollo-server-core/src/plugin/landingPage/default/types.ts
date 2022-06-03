@@ -75,7 +75,7 @@ export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
    * relying on the server's ApolloConfig, because if your server is publicly
    * accessible you may not want to display the graph ref publicly.)
    */
-  graphRef: string;
+  graphRef?: string;
   /**
    * Users can configure their landing page to render an embedded Explorer if
    * given a graphRef, or an embedded Sandbox if there is not graphRef provided.

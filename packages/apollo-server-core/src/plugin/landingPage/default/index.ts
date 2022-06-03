@@ -59,7 +59,9 @@ function getConfigStringForHtml(config: LandingPageConfig) {
 
 const getEmbeddedExplorerHTML = (
   version: string,
-  config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
+  config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions & {
+    graphRef: string;
+  },
 ) => {
   interface EmbeddableExplorerOptions {
     graphRef: string;
@@ -168,6 +170,15 @@ function ApolloServerPluginLandingPageDefault(
 ): ImplicitlyInstallablePlugin {
   const version = maybeVersion ?? '_latest';
 
+  const embeddedExplorerConfigWithGraphRef:
+    | (ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions & {
+        graphRef: string;
+      })
+    | undefined =
+    'graphRef' in config && config.graphRef && !!config.embed
+      ? { ...config, embed: config.embed, graphRef: config.graphRef }
+      : undefined;
+
   return {
     __internal_installed_implicitly__: false,
     async serverWillStart() {
@@ -227,8 +238,8 @@ curl --request POST \\
       </div>
     ${
       config.embed
-        ? 'graphRef' in config && config.graphRef
-          ? getEmbeddedExplorerHTML(version, config)
+        ? embeddedExplorerConfigWithGraphRef
+          ? getEmbeddedExplorerHTML(version, embeddedExplorerConfigWithGraphRef)
           : getEmbeddedSandboxHTML(version, config)
         : getNonEmbeddedLandingPageHTML(version, config)
     }
