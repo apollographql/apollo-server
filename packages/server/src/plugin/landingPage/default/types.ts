@@ -39,7 +39,7 @@ export interface ApolloServerPluginNonEmbeddedLandingPageLocalDefaultOptions
    * Users can configure their landing page to render an embedded Explorer if
    * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
    */
-  embed?: false;
+  embed: false;
 }
 
 export interface ApolloServerPluginNonEmbeddedLandingPageProductionDefaultOptions
@@ -64,7 +64,7 @@ export interface ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions
    * Users can configure their landing page to render an embedded Explorer if
    * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
    */
-  embed: true;
+  embed?: true;
 }
 
 export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
