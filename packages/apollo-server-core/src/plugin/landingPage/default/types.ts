@@ -80,10 +80,10 @@ export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
    * Users can configure their landing page to render an embedded Explorer if
    * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
    */
-  embed: true | ApolloServerPluginEmbeddedLandingPageProductionConfigOptions;
+  embed: true | EmbeddableExplorerOptions;
 }
 
-type ApolloServerPluginEmbeddedLandingPageProductionConfigOptions = {
+type EmbeddableExplorerOptions = {
   /**
    * Display options can be configured for the embedded Explorer.
    */
