@@ -71,12 +71,11 @@ export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
   extends ApolloServerPluginLandingPageDefaultBaseOptions {
   /**
    * Use this registered's graphs schema to populate the embedded Explorer.
-   * Required if passing `embed: true`
+   * Required if passing `embed: true`.
    */
   graphRef: string;
   /**
-   * Users can configure their landing page to render an embedded Explorer if
-   * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
+   * Users can configure their landing page to render an embedded Explorer.
    */
   embed: true | EmbeddableExplorerOptions;
 }
