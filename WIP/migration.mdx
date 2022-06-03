@@ -412,6 +412,7 @@ Also we’ve changed the TypeScript names of the constructor options object from
 We no longer maintain `apollo-server-cache-memcached` or `apollo-server-cache-redis`. The interfaces and classes for `apollo-server-caching` are now in `@apollo/utils.keyvaluecache`
 We now maintain (`@apollo/utils.keyv`) which wraps Keyv and lets you use their implementation of memcached and redis bindings (among others).
 Existing implementations of `KeyValueCache` should continue to work.
+- Mention that specifically redis users currently get a 3s default TTL, which will change when they move to Keyv. Our other cache implementations don't do this. This may or may not be worth mentioning since they should be reading the documentation for @keyv/redis when they make the switch and should configure it to their needs. But it wouldn't hurt to at least point it out.
 
 - Explicit support in core for serverless-style startup error handling
 - Move other plugins to their own repositories
