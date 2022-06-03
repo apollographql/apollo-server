@@ -102,7 +102,7 @@
     "body-parser": "1.20.0",
     "codecov": "3.8.3",
     "connect": "3.7.0",
-    "cspell": "5.21.2",
+    "cspell": "6.1.1",
     "deep-freeze": "0.0.1",
     "express": "4.18.1",
     "fastify": "3.29.0",
