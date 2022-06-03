@@ -8,7 +8,7 @@ import {
 } from '../plugin';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { HeaderMap } from '../runHttpQuery';
-import { mockLogger } from './logger.test';
+import { mockLogger } from './mockLogger';
 
 const typeDefs = gql`
   type Query {

@@ -1,17 +1,9 @@
 import { ApolloServer } from '../..';
 import gql from 'graphql-tag';
 import loglevel from 'loglevel';
+import { mockLogger } from './mockLogger';
 
 const KNOWN_DEBUG_MESSAGE = 'The server is starting.';
-
-export function mockLogger() {
-  return {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
-}
 
 describe('logger', () => {
   it('uses internal loglevel logger by default', async () => {

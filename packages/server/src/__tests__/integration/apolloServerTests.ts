@@ -58,7 +58,7 @@ import type {
   CreateServerForIntegrationTestsResult,
 } from '.';
 import type { SchemaLoadOrUpdateCallback } from '../../types';
-import { mockLogger } from '../logger.test';
+import { mockLogger } from '../mockLogger';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
