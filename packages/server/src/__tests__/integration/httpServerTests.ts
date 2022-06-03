@@ -250,7 +250,6 @@ export function defineIntegrationTestSuiteHttpServerTests(
     afterEach(stopServer);
 
     describe('graphqlHTTP', () => {
-      // In AS3 we did a 405 with `allow: GET, POST` instead; it was mild
       it('rejects the request if the method is not POST or GET', async () => {
         const app = await createApp();
         const req = request(app)

@@ -1,6 +1,7 @@
 import { ApolloServer } from '../..';
 import gql from 'graphql-tag';
 import loglevel from 'loglevel';
+import { mockLogger } from './mockLogger';
 
 const KNOWN_DEBUG_MESSAGE = 'The server is starting.';
 
@@ -32,7 +33,7 @@ describe('logger', () => {
   });
 
   it('uses custom logger when configured', async () => {
-    const debugSpy = jest.fn();
+    const logger = mockLogger();
     const server = new ApolloServer({
       typeDefs: gql`
         type Query {
@@ -46,15 +47,10 @@ describe('logger', () => {
           },
         },
       ],
-      logger: {
-        debug: debugSpy,
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-      },
+      logger,
     });
 
     await server.start();
-    expect(debugSpy).toHaveBeenCalledWith(KNOWN_DEBUG_MESSAGE);
+    expect(logger.debug).toHaveBeenCalledWith(KNOWN_DEBUG_MESSAGE);
   });
 });
