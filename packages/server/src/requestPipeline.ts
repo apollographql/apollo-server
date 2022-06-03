@@ -267,9 +267,15 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // it's generally how HTTP requests should work, and additionally it makes us
   // less vulnerable to mutations running over CSRF, if you turn off our CSRF
   // prevention feature.)
-  if (request.http?.method === 'GET' && operation?.operation !== 'query') {
+  if (
+    request.http?.method === 'GET' &&
+    operation?.operation &&
+    operation.operation !== 'query'
+  ) {
     return await sendErrorResponse(
-      new GraphQLError('GET supports only query operation'),
+      new BadRequestError(
+        `GET requests only support query operations, not ${operation.operation} operations`,
+      ),
       undefined,
       { statusCode: 405, headers: new HeaderMap([['allow', 'POST']]) },
     );

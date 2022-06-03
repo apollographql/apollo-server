@@ -1,5 +1,5 @@
 import MIMEType from 'whatwg-mimetype';
-import { HttpQueryError } from './runHttpQuery';
+import { BadRequestError } from './errors';
 
 // Our recommended set of CSRF prevention headers. Operations that do not
 // provide a content-type such as `application/json` (in practice, this
@@ -87,8 +87,7 @@ export function preventCsrf(
     return;
   }
 
-  throw new HttpQueryError(
-    400,
+  throw new BadRequestError(
     `This operation has been blocked as a potential Cross-Site Request Forgery ` +
       `(CSRF). Please either specify a 'content-type' header (with a type that ` +
       `is not one of ${NON_PREFLIGHTED_CONTENT_TYPES.join(', ')}) or provide ` +

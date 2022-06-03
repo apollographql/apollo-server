@@ -217,7 +217,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
     serverIsStartedInBackground?: boolean;
   } = {},
 ) {
-  describe('httpServerLevelTests.ts', () => {
+  describe('httpServerTests.ts', () => {
     let didEncounterErrors: jest.MockedFunction<
       NonNullable<GraphQLRequestListener<BaseContext>['didEncounterErrors']>
     >;
@@ -250,6 +250,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
     afterEach(stopServer);
 
     describe('graphqlHTTP', () => {
+      // In AS3 we did a 405 with `allow: GET, POST` instead; it was mild
       it('rejects the request if the method is not POST or GET', async () => {
         const app = await createApp();
         const req = request(app)
@@ -413,16 +414,26 @@ export function defineIntegrationTestSuiteHttpServerTests(
         await req.then((res) => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
-          expect((res.error as HTTPError).text).toMatch(
-            'GET supports only query operation',
-          );
+          expect(res.body).toMatchInlineSnapshot(`
+            Object {
+              "errors": Array [
+                Object {
+                  "extensions": Object {
+                    "code": "BAD_REQUEST",
+                  },
+                  "message": "GET requests only support query operations, not mutation operations",
+                },
+              ],
+            }
+          `);
         });
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
-                message: 'GET supports only query operation',
+                message:
+                  'GET requests only support query operations, not mutation operations',
               }),
             ]),
           }),
@@ -459,16 +470,26 @@ export function defineIntegrationTestSuiteHttpServerTests(
         await req.then((res) => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
-          expect((res.error as HTTPError).text).toMatch(
-            'GET supports only query operation',
-          );
+          expect(res.body).toMatchInlineSnapshot(`
+            Object {
+              "errors": Array [
+                Object {
+                  "extensions": Object {
+                    "code": "BAD_REQUEST",
+                  },
+                  "message": "GET requests only support query operations, not mutation operations",
+                },
+              ],
+            }
+          `);
         });
 
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
-                message: 'GET supports only query operation',
+                message:
+                  'GET requests only support query operations, not mutation operations',
               }),
             ]),
           }),
@@ -789,9 +810,18 @@ export function defineIntegrationTestSuiteHttpServerTests(
           variables: '{ "echo": "world" }',
         });
         expect(res.status).toEqual(400);
-        expect((res.error as HTTPError).text).toMatchInlineSnapshot(
-          `"\`variables\` in a POST body should be provided as an object, not a recursively JSON-encoded string."`,
-        );
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "errors": Array [
+              Object {
+                "extensions": Object {
+                  "code": "BAD_REQUEST",
+                },
+                "message": "\`variables\` in a POST body should be provided as an object, not a recursively JSON-encoded string.",
+              },
+            ],
+          }
+        `);
       });
 
       it('POST does not handle a request with extensions as string', async () => {
@@ -801,9 +831,18 @@ export function defineIntegrationTestSuiteHttpServerTests(
           extensions: '{ "echo": "world" }',
         });
         expect(res.status).toEqual(400);
-        expect((res.error as HTTPError).text).toMatchInlineSnapshot(
-          `"\`extensions\` in a POST body should be provided as an object, not a recursively JSON-encoded string."`,
-        );
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "errors": Array [
+              Object {
+                "extensions": Object {
+                  "code": "BAD_REQUEST",
+                },
+                "message": "\`extensions\` in a POST body should be provided as an object, not a recursively JSON-encoded string.",
+              },
+            ],
+          }
+        `);
       });
 
       it('can handle a request with operationName', async () => {
@@ -986,9 +1025,18 @@ export function defineIntegrationTestSuiteHttpServerTests(
           ]);
 
         expect(res.status).toEqual(400);
-        expect((res.error as HTTPError).text).toMatchInlineSnapshot(
-          `"Operation batching disabled."`,
-        );
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "errors": Array [
+              Object {
+                "extensions": Object {
+                  "code": "BAD_REQUEST",
+                },
+                "message": "Operation batching disabled.",
+              },
+            ],
+          }
+        `);
       });
 
       it('clones batch context', async () => {
