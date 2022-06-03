@@ -183,6 +183,7 @@ uuidv
 vendia
 Wallclock
 websockets
+whatwg
 Wheelock's
 xorby
 YOURNAME
