@@ -2254,6 +2254,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
     describe('Response caching', () => {
       let clock: FakeTimers.InstalledClock;
       beforeAll(() => {
+        // The ApolloServerPluginResponseCache uses Date.now() to derive the
+        // "age" header, so we want to use fake timers just for Date. (Faking
+        // all the timer methods messes up things like a setImmediate in
+        // ApolloServerPluginDrainHttpServer.)
         clock = FakeTimers.install({ toFake: ['Date'] });
       });
 
