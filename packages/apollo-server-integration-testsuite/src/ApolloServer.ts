@@ -4,8 +4,8 @@ import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
 import loglevel from 'loglevel';
+
 import { Report, Trace } from 'apollo-reporting-protobuf';
-import fakeTimers from '@sinonjs/fake-timers';
 
 import {
   GraphQLSchema,
@@ -55,6 +55,7 @@ import type {
 } from 'apollo-server-types';
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
+import FakeTimers from '@sinonjs/fake-timers';
 import type { AddressInfo } from 'net';
 import request, { Response } from 'supertest';
 import {
@@ -2251,19 +2252,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('Response caching', () => {
-      // async function sleep(ms: number) {
-      //   return new Promise((resolve) => setTimeout(resolve, ms));
-      // }
-      let clock: fakeTimers.InstalledClock;
+      let clock: FakeTimers.InstalledClock;
       beforeAll(() => {
-        clock = fakeTimers.install({ toFake: ['Date'] });
+        clock = FakeTimers.install({ toFake: ['Date'] });
       });
 
       afterAll(() => {
         clock.uninstall();
       });
 
-      fit('basic caching', async () => {
+      it('basic caching', async () => {
         class TTLTestingCache implements KeyValueCache<string> {
           constructor(
             private cache: Map<
@@ -2301,12 +2299,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
         const typeDefs = gql`
           type Query {
-            cached: String @cacheControl(maxAge: 3)
-            asyncCached: String @cacheControl(maxAge: 3)
-            asyncUncached: String @cacheControl(maxAge: 3)
-            asyncNoWrite: String @cacheControl(maxAge: 3)
+            cached: String @cacheControl(maxAge: 10)
+            asyncCached: String @cacheControl(maxAge: 10)
+            asyncUncached: String @cacheControl(maxAge: 10)
+            asyncNoWrite: String @cacheControl(maxAge: 10)
             uncached: String
-            private: String @cacheControl(maxAge: 1, scope: PRIVATE)
+            private: String @cacheControl(maxAge: 9, scope: PRIVATE)
           }
 
           enum CacheControlScope {
@@ -2466,7 +2464,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         {
           const result = await fetch();
           expectCacheMiss('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
           expect(httpHeader(result, 'age')).toBe(null);
         }
 
@@ -2474,29 +2474,33 @@ export function testApolloServer<AS extends ApolloServerBase>(
         {
           const result = await fetch();
           expectCacheHit('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
           expect(httpHeader(result, 'age')).toBe('0');
         }
 
         // Cache hit partway to ttl.
-        // await sleep(1 * 1000);
-        fakeTTLCache.advanceTime(1 * 1000);
-        clock.tick(1 * 1000);
+        fakeTTLCache.advanceTime(5 * 1000);
+        clock.tick(5 * 1000);
         {
           const result = await fetch();
           expectCacheHit('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
-          expect(httpHeader(result, 'age')).toBe('1');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+          expect(httpHeader(result, 'age')).toBe('5');
         }
 
         // Cache miss after ttl.
-        // await sleep(3 * 1000);
-        fakeTTLCache.advanceTime(3 * 1000);
-        clock.tick(3 * 1000);
+        fakeTTLCache.advanceTime(6 * 1000);
+        clock.tick(6 * 1000);
         {
           const result = await fetch();
           expectCacheMiss('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
           expect(httpHeader(result, 'age')).toBe(null);
         }
 
@@ -2538,14 +2542,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
             query: asyncNoWriteQuery,
           });
           expectCacheMiss('asyncNoWrite');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
         }
 
         // Cache hit.
         {
           const result = await fetch();
           expectCacheHit('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
           expect(httpHeader(result, 'age')).toBe('0');
         }
 
@@ -2632,7 +2640,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           // IDs, so it'll still tell HTTP-level caches to cache this, albeit
           // privately.
           expect(httpHeader(result, 'cache-control')).toBe(
-            'max-age=1, private',
+            'max-age=9, private',
           );
           expect(httpHeader(result, 'age')).toBe(null);
         }
@@ -2645,7 +2653,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data.private).toBe('value:private');
           expectCacheMiss('private');
           expect(httpHeader(result, 'cache-control')).toBe(
-            'max-age=1, private',
+            'max-age=9, private',
           );
         }
 
@@ -2658,7 +2666,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data.private).toBe('value:private');
           expectCacheMiss('private');
           expect(httpHeader(result, 'cache-control')).toBe(
-            'max-age=1, private',
+            'max-age=9, private',
           );
         }
 
@@ -2671,7 +2679,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data.private).toBe('value:private');
           expectCacheHit('private');
           expect(httpHeader(result, 'cache-control')).toBe(
-            'max-age=1, private',
+            'max-age=9, private',
           );
         }
 
@@ -2684,7 +2692,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data.private).toBe('value:private');
           expectCacheMiss('private');
           expect(httpHeader(result, 'cache-control')).toBe(
-            'max-age=1, private',
+            'max-age=9, private',
           );
         }
 
@@ -2696,7 +2704,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data.private).toBe('value:private');
           expectCacheMiss('private');
           expect(httpHeader(result, 'cache-control')).toBe(
-            'max-age=1, private',
+            'max-age=9, private',
           );
         }
 
@@ -2704,7 +2712,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         {
           const result = await doFetch({ query: basicQuery });
           expectCacheHit('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
         }
 
         // If you're logged in, though, you get your own cache shared with all
@@ -2719,7 +2729,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           expect(result.data.cached).toBe('value:cached');
           expectCacheMiss('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
         }
 
         // See, this other session sees it!
@@ -2730,7 +2742,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           expect(result.data.cached).toBe('value:cached');
           expectCacheHit('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
           expect(httpHeader(result, 'age')).toBe('0');
         }
 
@@ -2738,7 +2752,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         {
           const result = await doFetch({ query: basicQuery });
           expectCacheHit('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
         }
 
         // But what if we specifically ask to not read from the cache?
@@ -2749,13 +2765,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           expect(result.data.cached).toBe('value:cached');
           expectCacheMiss('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
         }
 
         // Let's expire the cache, and run again, not writing to the cache.
-        // await sleep(4 * 1000);
-        fakeTTLCache.advanceTime(4 * 1000);
-        clock.tick(4 * 1000);
+        fakeTTLCache.advanceTime(15 * 1000);
+        clock.tick(15 * 1000);
         {
           const result = await doFetch({
             query: basicQuery,
@@ -2763,7 +2780,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           expect(result.data.cached).toBe('value:cached');
           expectCacheMiss('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
         }
 
         // And now verify that in fact we did not write!
@@ -2773,9 +2792,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           expect(result.data.cached).toBe('value:cached');
           expectCacheMiss('cached');
-          expect(httpHeader(result, 'cache-control')).toBe('max-age=3, public');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
         }
-      }, 100000);
+      });
     });
 
     describe('Gateway', () => {

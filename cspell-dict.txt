@@ -79,6 +79,7 @@ iteratees
 josephg
 jsdelivr
 keyv
+keyvaluecache
 KHTML
 Kubernetes
 linearizability
