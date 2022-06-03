@@ -5,6 +5,7 @@
   "files": [],
   "include": [],
   "references": [
+    { "path": "./packages/plugin-response-cache" },
     { "path": "./packages/server" }
   ]
 }
