@@ -8,6 +8,7 @@ import {
 } from '../plugin';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { HeaderMap } from '../runHttpQuery';
+import { mockLogger } from './logger.test';
 
 const typeDefs = gql`
   type Query {
@@ -51,13 +52,7 @@ describe('ApolloServer construction', () => {
   });
 
   it('succeeds when passed a graphVariant in construction', () => {
-    const warn = jest.fn();
-    const logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn,
-      error: jest.fn(),
-    };
+    const logger = mockLogger();
     expect(
       () =>
         new ApolloServer({
@@ -70,8 +65,8 @@ describe('ApolloServer construction', () => {
           logger,
         }),
     ).not.toThrow();
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toMatch(
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn.mock.calls[0][0]).toMatch(
       /Apollo key but have not specified a graph ref/,
     );
   });
@@ -134,7 +129,7 @@ const failToStartPlugin: ApolloServerPlugin<BaseContext> = {
 };
 
 describe('ApolloServer start', () => {
-  it('start throws on startup error', async () => {
+  it('start throws on startup error and startupDidFail hook is called with error', async () => {
     const startupDidFail = jest.fn();
     const server = new ApolloServer({
       typeDefs,
@@ -184,13 +179,7 @@ describe('ApolloServer start', () => {
   // integrations shouldn't call executeHTTPGraphQLRequest if a "foreground"
   // start fails.
   it('executeHTTPGraphQLRequest returns redacted error if background start fails', async () => {
-    const error = jest.fn();
-    const logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error,
-    };
+    const logger = mockLogger();
 
     const server = new ApolloServer({
       typeDefs,
@@ -239,8 +228,8 @@ describe('ApolloServer start', () => {
 
     // Three times: once for the actual background _start call, twice for the
     // two operations.
-    expect(error).toHaveBeenCalledTimes(3);
-    for (const [message] of error.mock.calls) {
+    expect(logger.error).toHaveBeenCalledTimes(3);
+    for (const [message] of logger.error.mock.calls) {
       expect(message).toBe(
         'An error occurred during Apollo Server startup. All ' +
           'GraphQL requests will now fail. The startup error was: nope',

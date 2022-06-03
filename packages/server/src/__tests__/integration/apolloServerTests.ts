@@ -58,19 +58,10 @@ import type {
   CreateServerForIntegrationTestsResult,
 } from '.';
 import type { SchemaLoadOrUpdateCallback } from '../../types';
-import type { Logger } from '@apollo/utils.logger';
+import { mockLogger } from '../logger.test';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
-
-function mockLogger(): Logger {
-  return {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
-}
 
 const INTROSPECTION_QUERY = `
   {

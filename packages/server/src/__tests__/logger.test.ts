@@ -4,6 +4,15 @@ import loglevel from 'loglevel';
 
 const KNOWN_DEBUG_MESSAGE = 'The server is starting.';
 
+export function mockLogger() {
+  return {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+}
+
 describe('logger', () => {
   it('uses internal loglevel logger by default', async () => {
     const server = new ApolloServer({
@@ -32,7 +41,7 @@ describe('logger', () => {
   });
 
   it('uses custom logger when configured', async () => {
-    const debugSpy = jest.fn();
+    const logger = mockLogger();
     const server = new ApolloServer({
       typeDefs: gql`
         type Query {
@@ -46,15 +55,10 @@ describe('logger', () => {
           },
         },
       ],
-      logger: {
-        debug: debugSpy,
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-      },
+      logger,
     });
 
     await server.start();
-    expect(debugSpy).toHaveBeenCalledWith(KNOWN_DEBUG_MESSAGE);
+    expect(logger.debug).toHaveBeenCalledWith(KNOWN_DEBUG_MESSAGE);
   });
 });

@@ -508,7 +508,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
 
       this.internals.state = {
         phase: 'failed to start',
-        error: error,
+        error,
       };
       throw error;
     } finally {
