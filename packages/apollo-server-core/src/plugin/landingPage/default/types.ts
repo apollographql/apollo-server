@@ -70,20 +70,17 @@ export interface ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions
 export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
   extends ApolloServerPluginLandingPageDefaultBaseOptions {
   /**
-   * If specified, provide a link (with opt-in auto-redirect) to the Studio page
-   * for the given graphRef. (You need to explicitly pass this here rather than
-   * relying on the server's ApolloConfig, because if your server is publicly
-   * accessible you may not want to display the graph ref publicly.)
+   * Use this registered's graphs schema to populate the embedded Explorer.
+   * Required if passing `embed: true`.
    */
   graphRef: string;
   /**
-   * Users can configure their landing page to render an embedded Explorer if
-   * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
+   * Users can configure their landing page to render an embedded Explorer.
    */
-  embed: true | ApolloServerPluginEmbeddedLandingPageProductionConfigOptions;
+  embed: true | EmbeddableExplorerOptions;
 }
 
-type ApolloServerPluginEmbeddedLandingPageProductionConfigOptions = {
+type EmbeddableExplorerOptions = {
   /**
    * Display options can be configured for the embedded Explorer.
    */
