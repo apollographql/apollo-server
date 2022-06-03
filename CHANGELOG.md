@@ -7,10 +7,6 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
-## vNEXT
-
-- Clarification of a comment in the embedded flavor of the Apollo Server Production Landing Page Plugin
-
 ## v3.8.1
 
 - This is a patch release strictly for republishing over what appears to be a hiccup in NPMs service. [Issue #6469](https://github.com/apollographql/apollo-server/issues/6469)
