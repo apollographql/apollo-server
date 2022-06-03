@@ -5,3 +5,4 @@ src/**/__tests__/**
 dist/**/__tests__/**
 !package.json
 !README.md
+!usageReportingProtobuf/**/*

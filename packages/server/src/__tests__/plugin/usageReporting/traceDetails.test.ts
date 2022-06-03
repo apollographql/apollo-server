@@ -1,5 +1,5 @@
 import { makeTraceDetails } from '../../../plugin/usageReporting/traceDetails';
-import { Trace } from '@apollo/usage-reporting-protobuf';
+import { Trace } from '../../../../usageReportingProtobuf';
 import { GraphQLError } from 'graphql';
 
 const variables: Record<string, any> = {

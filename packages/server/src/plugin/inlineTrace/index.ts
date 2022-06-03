@@ -1,4 +1,4 @@
-import { Trace } from '@apollo/usage-reporting-protobuf';
+import { Trace } from '../../../usageReportingProtobuf';
 import { TraceTreeBuilder } from '../traceTreeBuilder';
 import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';

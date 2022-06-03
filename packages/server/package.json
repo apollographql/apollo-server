@@ -25,7 +25,7 @@
     "node": ">=12.0"
   },
   "dependencies": {
-    "@apollo/usage-reporting-protobuf": "^3.3.0",
+    "@apollo/protobufjs": "1.2.2",
     "@apollo/utils.createhash": "^1.1.0",
     "@apollo/utils.isnodelike": "^1.1.0",
     "@apollo/utils.logger": "^1.0.0",
@@ -40,6 +40,8 @@
     "@types/lru-cache": "^7.6.1",
     "@types/node-fetch": "^2.6.1",
     "async-retry": "^1.2.1",
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "graphql-tag": "^2.11.0",
     "keyv": "^4.2.2",

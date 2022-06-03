@@ -11,7 +11,7 @@ import {
   ITrace,
   ITracesAndStats,
   ContextualizedStats,
-} from '@apollo/usage-reporting-protobuf';
+} from '../../../../usageReportingProtobuf';
 import { pluginsEnabledForSchemaResolvers } from '../../../utils/schemaInstrumentation';
 import nock from 'nock';
 import sumBy from 'lodash.sumby';
