@@ -75,8 +75,7 @@ export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
    */
   graphRef: string;
   /**
-   * Users can configure their landing page to render an embedded Explorer if
-   * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
+   * Users can configure their landing page to render an embedded Explorer.
    */
   embed: true | EmbeddableExplorerOptions;
 }
