@@ -2267,16 +2267,20 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       it('basic caching', async () => {
         class TTLTestingCache implements KeyValueCache<string> {
+          private fakeTime = 0;
           constructor(
             private cache: Map<
               string,
-              { value: string; ttl: number | null }
+              { value: string; ttl: number | null; fakeTimeOnSet: number }
             > = new Map(),
           ) {}
 
           async get(key: string) {
             const entry = this.cache.get(key);
-            if (entry?.ttl && entry.ttl <= 0) {
+            if (
+              entry?.ttl &&
+              entry.ttl <= this.fakeTime - entry.fakeTimeOnSet
+            ) {
               await this.delete(key);
               return undefined;
             }
@@ -2288,7 +2292,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
             value: string,
             { ttl }: { ttl: number | null } = { ttl: null },
           ) {
-            this.cache.set(key, { value, ttl: ttl ? ttl * 1000 : null });
+            this.cache.set(key, {
+              value,
+              ttl: ttl ? ttl * 1000 : null,
+              fakeTimeOnSet: this.fakeTime,
+            });
           }
 
           async delete(key: string) {
@@ -2296,9 +2304,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           }
 
           advanceTime(ms: number) {
-            [...this.cache.values()].forEach(
-              (value) => value.ttl && (value.ttl -= ms),
-            );
+            this.fakeTime += ms;
           }
         }
         const typeDefs = gql`
