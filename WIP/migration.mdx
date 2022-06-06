@@ -348,9 +348,12 @@ And this does not:
 {“query”: “{ __typename }”, extensions: “{\“foo\”: 1}”}
 ```
 
-HTTP batching is disabled by default instead of enabled by default.
-
 ### HTTP batching as opt-in feature
+
+Apollo Server supports [HTTP batching](link TODO), which allows multiple GraphQL operations to be executed as part of a single HTTP request (sharing a single context function invocation as well). Note that HTTP batching is not supported by all GraphQL clients and does not currently support incremental delivery. HTTP batching can save performance by sharing a context object across operations, but can also make reasoning about the amount of work any given request can do harder.
+
+In Apollo Server 3, support for HTTP batching was on by default and could be disabled by passing `allowBatchedHttpRequests: false` to `new ApolloServer()`. In Apollo Server 4, you must explicitly enable this feature by passing `allowBatchedHttpRequests: true` to `new ApolloServer()`.
+
 <!-- TODO: investigate more! -->
 
 ## Plugin API changes
