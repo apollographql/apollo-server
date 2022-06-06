@@ -72,11 +72,18 @@ This `GatewayInterface` requires the following:
 - The `executor` method must async
 - The `apollo` option must always be passed to the `load` method.
 
+The `GraphQLExecutionResult` type (returned by `executor`) has been replaced by the similar `ExecutionResult` type from `graphql-js`. (The types are the same except that `data` and `extensions` are now `Record<string, unknown>` rather than `Record<string, any>`.)
+
 
 ### `__resolveObject`
 
 In Apollo Server 4 we removed the dependency on `@apollographql/apollo-tooling`, in the process removing the `__resolveObject` pseudo-resolver. The `__resolveObject` function was a predecessor to
 the [`__resolveReference`](/federation/api/apollo-subgraph/#__resolvereference) method.
+
+
+### `formatResponse`
+
+Removed `formatResponse` hook. The `willSendResponse` plugin API can accomplish similar goals. TODO show a replacement. TODO show example
 
 ### Remove features that wrap framework-specific libraries
 
@@ -108,7 +115,7 @@ In Apollo Server 4, framework integration functions won't try to wrap these basi
 ```
 
 
-Apollo Server 4's new `ApolloServerStandalone`(the replacement for the batteries-included `apollo-server` package) will still include both the `body-parser` and `cors` packages, but you can not configure those options.
+Apollo Server 4's new `startStandaloneServer` function(the replacement for the batteries-included `apollo-server` package) will still include both the `body-parser` and `cors` packages, but you can not configure those options.
 
 ### Removed health checks
 
@@ -124,9 +131,6 @@ https://your.server/?query=%7B__typename%7D
 
 If for some reason running this query is not an acceptable health check, folks integrating Apollo Server into a web framework can define their own health check via their web framework directly.
 
-<!-- TODO: check into this and confirm we removed them -->
-We may consider leaving health check support in ApolloServerStandalone (where you can't easily add your own HTTP path handlers), if compelling arguments for why it's superior to using `?query=%7B__typename%7D` as health check are provided.
-
 ## Removed path parsing
 Path parsing has been removed from Apollo Server 4. To further simplify the Apollo Server 4 API, if you'd like to mount your GraphQL server at a specified URL you can do so using your framework's specific middleware, like so:
 
@@ -135,15 +139,15 @@ Path parsing has been removed from Apollo Server 4. To further simplify the Apol
 app.use('/api/graphql', apolloServer.getMiddleware())
 ```
 
-If you want to run GraphQL on a non-root path, use your web framework’s functionality for mounting the middleware at the path. (Previously, the middlewares defaulted to only processing `/graphql`, and the standalone server processed all requests.)
+If you want to run GraphQL on a non-root path, use your web framework’s functionality for mounting the middleware at the path. (Previously, the middlewares defaulted to only processing `/graphql`, and the g server processed all requests.)
 
 ## Removed Integrations
 
-### The `apollo-server` npm package is now `standaloneServer` function
+### The `apollo-server` npm package is now the `startStandaloneServer` function
 
 <!--  TODO: working example with explanation for the why and how to use it -->
 ```ts
-import { ApolloServer, standaloneServer } from "@apollo/server";
+import { ApolloServer, startStandaloneServer } from "@apollo/server";
 
 interface MyContext {
   token: string;
@@ -154,18 +158,17 @@ const apolloServerInstance = new ApolloServer<MyContext>({
   resolvers,
 });
 
-const { url } = await standaloneServer(apolloServerInstance, {
+const { url } = await startStandaloneServer(apolloServerInstance, {
   context: async ({req, _res}) => ({
     token: await getTokenForRequest(req),
-  }),
-}).listen({ port: 4000 });
+  },
+  listen: { port: 4000 },
+});
 
 console.log(`ApolloServer listening at: ${url}`);
 
 ```
 
-<!-- TODO: update syntax to below if necessary -->
-<!-- const { url } = await standaloneServer(apolloServer, listenOpts, serverOpts); -->
 
 
 ## Changed constructor options
@@ -193,7 +196,7 @@ const apolloServerInstance = new ApolloServer<MyContext>({
 In AS3 we use `context` for both "a function producing a context value"
 and "the context value itself".
 
-In Apollo Server 4 we change this for clarity, `context` is the name of the "a function producing a context value":
+In Apollo Server 4 we change this for clarity. `context` continues to be used as the name of the "a function producing a context value":
 
 ```ts
 interface MyContext {
@@ -205,17 +208,15 @@ const apolloServerInstance = new ApolloServer<MyContext>({
   resolvers,
 });
 
-const { url } = await standaloneServer(apolloServerInstance, {
+const { url } = await startStandaloneServer(apolloServerInstance, {
   context: async (req, _res) => ({
     token: await getTokenForRequest(req),
   }),
-}).listen({ port: 4000 });
+});
 
 ```
 
-If you are accessing the values of your context context value in a
-plugin (e.g., on `GraphQLRequestContext` or as a named argument to
-`willResolveField`) you should now use `contextValue`.
+But any field containing a specific context value (such as on `GraphQLRequestContext`, the first argument to all plugin functions) is now named `contextValue`.
 
 ### We no longer use Fetcher from `@apollo/utils.fetcher` instead of `apollo-server-env` for Fetch API TypeScript typing
 
@@ -235,6 +236,24 @@ You can write:
       }),
     });
 ```
+
+### Local landing page defaults to embedded
+
+The default landing page for local development now is an embedded Apollo Sandbox which allows you to run operations with no CORS setup required. To return to the AS3 default of a splash page linking to Apollo Sandbox, pass `ApolloServerPluginLandingPageLocalDefault({embed: false})`.
+
+### Error handling changes
+
+#### Updates to ApolloError
+
+TODO, see #6355.
+
+#### Top-level error handling changes
+
+Previously, some errors (mostly those that indicated the GraphQL operation was not being provided correctly over HTTP/JSON) were returned as `text/plain` error messages. Now all responses (other than landing pages) rendered by Apollo Server are `application/json` JSON responses; single-error responses are rendered as `{"errors":[{"message": "..."}]}` like any other GraphQL error. The `formatError` hook is used on all of these errors.
+
+New plugin hooks `startupDidFail`, `contextCreationDidFail`, `invalidRequestWasReceived`, and `unexpectedErrorProcessingRequest` allow plugins to observe errors in new settings.
+
+If `resolveOperation` or the `execute` function throws, the error will be rendered with HTTP status code 500 rather than 400. (Note that `execute` throwing is distinct from `execute` returning a non-empty list of errors, which is the more common case.)
 
 ### CSRF prevention (new in AS3.7) is on by default
 By default, CSRF prevention is turned on in Apollo Server 4. For more information about CSRF prevention and CORS, see [Configuring CORS](/apollo-server/security/cors).
@@ -272,7 +291,7 @@ This also simplifies `executeOperation`, where you just pass a context
 object directly instead of arguments to your (probably already
 fake-for-testing) context function.
 
-### Context function is passed to your middleware-specific integration function (eg `expressMiddleware` or `standaloneServer`) instead of ApolloServer constructor
+### Context function is passed to your middleware-specific integration function (eg `expressMiddleware` or `startStandaloneServer`) instead of ApolloServer constructor
 
 `ApolloServerBase` is now just `ApolloServer`. Context function is now a
 named argument to the middleware; it's required if your context type is
@@ -325,7 +344,7 @@ enum CacheControlScope {
 <!-- link to /apollo-server/packages/server/src/express/index.ts -->
 Moreover, there is no subclassing of ApolloServer at all.
 
-`expressMiddleware` has no runtime dependency on `express` (or any other package) although `standaloneServer` does.
+`expressMiddleware` has no runtime dependency on `express` (or any other package) although `startStandaloneServer` does.
 
 ## Express middleware no longer tries to also work with Express’ predecessor project “Connect”
 
@@ -336,6 +355,9 @@ If anybody needs [Connect middleware](https://github.com/senchalabs/connect) the
 Use `@apollo/server-plugin-operation-registry` instead.
 
 ## HTTP handling changes
+
+### `variables` and `extensions` should not be doubly-encoded
+
 In JSON-encoded POST bodies, we expect variables and extensions (if provided) to be objects, not strings containing JSON strings of objects:
 
 This works:
@@ -370,6 +392,7 @@ Remove debug field from GraphQLRequestContext.
 
 Remove persistedQueries field from GraphQLServiceContext
 
+`GraphQLResponse` object (eg `requestContext.response`) has been refactored: the `data`, `errors`, and `extensions` fields are on a `result` sub-object. (This will change further for incremental delivery.) `data` and `extensions` are now `Record<string, unknown>` rather than `Record<string, any>` so more casts may be needed. `GraphQLRequestContext.response` and `GraphQLResponse.http` are now always set.
 
 ## New APIs
 
@@ -409,6 +432,16 @@ The new `addPlugin` function is useful if you'd like to pass the server itself t
 There’s a lot here :)
 Also we’ve changed the TypeScript names of the constructor options object from Config to ApolloServerOptions.
 
+## Server lifecycle
+
+### New approach to serverless frameworks
+
+Instead of subclassing `ApolloServer` and overriding `serverlessFramework()` to return true, serverless integrations differentiate themselves from other integrations by calling `server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests()`; other integrations expect the caller to first call `await server.start()` and validate this with `server.assertStarted()`.
+
+
+### New warning when starting to execute an operation during shutdown
+
+Apollo Server v3.2.0 added a "draining" phase to server shutdown which allows a server to complete in-progress operations before continuing to shut down. (This is set up automatically for you when using `startStandaloneServer` and can be configured with `ApolloServerPluginDrainHttpServer` when using `expressMiddleware` or other `http.Server`-based web servers.) If you do not drain your server, incoming operations can be sent to your server after it has already been stopped, which will fail. In Apollo Server 4, if a server receives an operation after the "draining" phase continues, it will log a warning encouraging you to set up draining before failing the operation.
 
 # Upcoming Stuff to Cover:
 - Replace implementations of the cache interface with `keyv`
