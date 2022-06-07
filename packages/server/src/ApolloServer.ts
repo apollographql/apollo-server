@@ -71,6 +71,7 @@ import type {
   WithRequired,
 } from './types';
 import { SchemaManager } from './utils/schemaManager';
+import { isDefined } from './utils/isDefined';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -435,11 +436,9 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         },
       );
 
-      const serverWillStops = taggedServerListeners.flatMap((l) =>
-        l.serverListener.serverWillStop
-          ? [l.serverListener.serverWillStop]
-          : [],
-      );
+      const serverWillStops = taggedServerListeners
+        .map((l) => l.serverListener.serverWillStop)
+        .filter(isDefined);
       if (serverWillStops.length) {
         toDispose.push(async () => {
           await Promise.all(
@@ -448,9 +447,9 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         });
       }
 
-      const drainServerCallbacks = taggedServerListeners.flatMap((l) =>
-        l.serverListener.drainServer ? [l.serverListener.drainServer] : [],
-      );
+      const drainServerCallbacks = taggedServerListeners
+        .map((l) => l.serverListener.drainServer)
+        .filter(isDefined);
       const drainServers = drainServerCallbacks.length
         ? async () => {
             await Promise.all(

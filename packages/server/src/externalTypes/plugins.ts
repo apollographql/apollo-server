@@ -1,7 +1,6 @@
 import type { Logger } from '@apollo/utils.logger';
 import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql';
 import type { ApolloConfig } from '../config';
-import type { AnyFunctionMap } from '../types';
 import type { BaseContext } from './context';
 import type { GraphQLRequestContext, GraphQLResponse } from './graphql';
 import type {
@@ -112,8 +111,7 @@ export type GraphQLRequestListenerDidResolveField = (
   result?: any,
 ) => void;
 
-export interface GraphQLRequestListener<TContext extends BaseContext>
-  extends AnyFunctionMap {
+export interface GraphQLRequestListener<TContext extends BaseContext> {
   didResolveSource?(
     requestContext: GraphQLRequestContextDidResolveSource<TContext>,
   ): Promise<void>;
@@ -173,8 +171,7 @@ export type GraphQLFieldResolverParams<
   info: GraphQLResolveInfo;
 };
 
-export interface GraphQLRequestExecutionListener<TContext extends BaseContext>
-  extends AnyFunctionMap {
+export interface GraphQLRequestExecutionListener<TContext extends BaseContext> {
   executionDidEnd?: GraphQLRequestListenerExecutionDidEnd;
   // willResolveField is not async because we've observed that it already has
   // quite a performance impact on execution even without involving the Promise
