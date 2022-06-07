@@ -60,8 +60,7 @@ import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import { newCachePolicy } from './cachePolicy';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
 import * as uuid from 'uuid';
-import { KeyvAdapter } from '@apollo/utils.keyvadapter';
-import Keyv from 'keyv';
+import { UnboundedCache } from './utils/UnboundedCache';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -711,7 +710,7 @@ export class ApolloServerBase<
       // random prefix each time we get a new schema.
       documentStore:
         this.config.documentStore === undefined
-          ? new KeyvAdapter(new Keyv())
+          ? new UnboundedCache()
           : this.config.documentStore === null
           ? null
           : new PrefixingKeyValueCache(
