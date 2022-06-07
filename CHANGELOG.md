@@ -7,6 +7,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
+## v3.9.0
+- Remove internal dependency on `apollo-server-caching`, switch over to `@apollo/utils.keyvaluecache`. This PR specifically also introduces Keyv as an unbounded cache solution, but will replace with our own simple implementation in a follow-up PR targeting this minor version release. [PR #6522](https://github.com/apollographql/apollo-server/pull/6522)
+
 ## v3.8.1
 
 - This is a patch release strictly for republishing over what appears to be a hiccup in NPMs service. [Issue #6469](https://github.com/apollographql/apollo-server/issues/6469)
