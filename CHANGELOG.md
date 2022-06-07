@@ -7,8 +7,14 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
-## v3.9.0
+
+## vNEXT
+
 - Remove internal dependency on `apollo-server-caching`, switch over to `@apollo/utils.keyvaluecache`. This PR specifically also introduces Keyv as an unbounded cache solution, but will replace with our own simple implementation in a follow-up PR targeting this minor version release. [PR #6522](https://github.com/apollographql/apollo-server/pull/6522)
+
+## v3.8.2
+
+- `apollo-server-core`: Fix usage reporting plugin "willResolveField called after stopTiming!" error caused by a race condition related to null bubbling. [Issue #4472](https://github.com/apollographql/apollo-server/issues/4472) [PR #6398](https://github.com/apollographql/apollo-server/pull/6398)
 
 ## v3.8.1
 
