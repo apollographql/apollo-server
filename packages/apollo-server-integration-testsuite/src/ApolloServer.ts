@@ -2271,20 +2271,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
           constructor(
             private cache: Map<
               string,
-              { value: string; ttl: number | null; fakeTimeOnSet: number }
+              { value: string; deadline: number | null }
             > = new Map(),
           ) {}
 
           async get(key: string) {
             const entry = this.cache.get(key);
-            if (
-              entry?.ttl &&
-              entry.ttl <= this.fakeTime - entry.fakeTimeOnSet
-            ) {
+            if (!entry) return undefined;
+            if (entry.deadline && entry.deadline <= this.fakeTime) {
               await this.delete(key);
               return undefined;
             }
-            return entry?.value;
+            return entry.value;
           }
 
           async set(
@@ -2294,8 +2292,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           ) {
             this.cache.set(key, {
               value,
-              ttl: ttl ? ttl * 1000 : null,
-              fakeTimeOnSet: this.fakeTime,
+              deadline: ttl ? this.fakeTime + ttl * 1000 : null,
             });
           }
 
