@@ -22,10 +22,10 @@ import {
   formatApolloErrors,
   UserInputError,
   BadRequestError,
+  ensureError,
 } from './errors';
 import type {
   GraphQLRequestContext,
-  GraphQLRequestListener,
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextExecutionDidStart,
   GraphQLRequestContextResponseForOperation,
@@ -38,7 +38,11 @@ import type {
   BaseContext,
 } from './externalTypes';
 
-import { Dispatcher } from './utils/dispatcher';
+import {
+  invokeDidStartHook,
+  invokeHooksUntilDefinedAndNonNull,
+  invokeSyncDidStartHook,
+} from './utils/dispatcher';
 
 import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
@@ -85,7 +89,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   internals: ApolloServerInternals<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
 ) {
-  const dispatcher = await initializeRequestListenerDispatcher();
+  const requestListeners = (
+    await Promise.all(
+      internals.plugins.map((p) => p.requestDidStart?.(requestContext)),
+    )
+  ).flatMap((l) => (l ? [l] : [])); // filter not null;
 
   const request = requestContext.request;
 
@@ -165,9 +173,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // retrieved this from our APQ cache, there's no guarantee that it is
   // syntactically correct, so this string should not be trusted as a valid
   // document until after it's parsed and validated.
-  await dispatcher.invokeHook(
-    'didResolveSource',
-    requestContext as GraphQLRequestContextDidResolveSource<TContext>,
+  await Promise.all(
+    requestListeners.map((l) =>
+      l.didResolveSource?.(
+        requestContext as GraphQLRequestContextDidResolveSource<TContext>,
+      ),
+    ),
   );
 
   // If we're configured with a document store (by default, we are), we'll
@@ -190,9 +201,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // If we still don't have a document, we'll need to parse and validate it.
   // With success, we'll attempt to save it into the store for future use.
   if (!requestContext.document) {
-    const parsingDidEnd = await dispatcher.invokeDidStartHook(
-      'parsingDidStart',
-      requestContext as GraphQLRequestContextParsingDidStart<TContext>,
+    const parsingDidEnd = await invokeDidStartHook(
+      requestListeners,
+      async (l) =>
+        l.parsingDidStart?.(
+          requestContext as GraphQLRequestContextParsingDidStart<TContext>,
+        ),
     );
 
     try {
@@ -205,9 +219,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       return await sendErrorResponse(syntaxError, 'GRAPHQL_PARSE_FAILED');
     }
 
-    const validationDidEnd = await dispatcher.invokeDidStartHook(
-      'validationDidStart',
-      requestContext as GraphQLRequestContextValidationDidStart<TContext>,
+    const validationDidEnd = await invokeDidStartHook(
+      requestListeners,
+      async (l) =>
+        l.validationDidStart?.(
+          requestContext as GraphQLRequestContextValidationDidStart<TContext>,
+        ),
     );
 
     const validationErrors = validate(
@@ -282,9 +299,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   }
 
   try {
-    await dispatcher.invokeHook(
-      'didResolveOperation',
-      requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
+    await Promise.all(
+      requestListeners.map((l) =>
+        l.didResolveOperation?.(
+          requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
+        ),
+      ),
     );
   } catch (err) {
     // XXX: This cast is pretty sketchy, as other error types can be thrown
@@ -321,38 +341,36 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     ).catch(internals.logger.warn);
   }
 
-  const responseFromPlugin = await dispatcher.invokeHooksUntilNonNull(
-    'responseForOperation',
-    requestContext as GraphQLRequestContextResponseForOperation<TContext>,
+  const responseFromPlugin = await invokeHooksUntilDefinedAndNonNull(
+    requestListeners,
+    async (l) =>
+      await l.responseForOperation?.(
+        requestContext as GraphQLRequestContextResponseForOperation<TContext>,
+      ),
   );
   if (responseFromPlugin !== null) {
     requestContext.response.result = responseFromPlugin.result;
     updateResponseHTTP(responseFromPlugin.http);
   } else {
-    const executionListeners: GraphQLRequestExecutionListener<TContext>[] = [];
-    (
-      await dispatcher.invokeHook(
-        'executionDidStart',
-        requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+    const executionListeners = (
+      await Promise.all(
+        requestListeners.map((l) =>
+          l.executionDidStart?.(
+            requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+          ),
+        ),
       )
-    ).forEach((executionListener) => {
-      if (executionListener) {
-        executionListeners.push(executionListener);
-      }
-    });
+    ).flatMap((l) => (l ? [l] : []));
     executionListeners.reverse();
 
-    const executionDispatcher = new Dispatcher(executionListeners);
-
-    if (executionDispatcher.hasHook('willResolveField')) {
+    if (executionListeners.some((l) => l.willResolveField)) {
       // Create a callback that will trigger the execution dispatcher's
       // `willResolveField` hook.  We will attach this to the context on a
       // symbol so it can be invoked by our `wrapField` method during execution.
       const invokeWillResolveField: GraphQLRequestExecutionListener<TContext>['willResolveField'] =
         (...args) =>
-          executionDispatcher.invokeSyncDidStartHook(
-            'willResolveField',
-            ...args,
+          invokeSyncDidStartHook(executionListeners, (l) =>
+            l.willResolveField?.(...args),
           );
 
       Object.defineProperty(
@@ -423,12 +441,13 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         errors: resultErrors ? formatErrors(resultErrors) : undefined,
       };
 
-      await executionDispatcher.invokeHook('executionDidEnd');
-    } catch (executionError) {
-      await executionDispatcher.invokeHook(
-        'executionDidEnd',
-        executionError as Error,
+      await Promise.all(executionListeners.map((l) => l.executionDidEnd?.()));
+    } catch (executionMaybeError: unknown) {
+      const executionError = ensureError(executionMaybeError);
+      await Promise.all(
+        executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
+
       return await sendErrorResponse(
         executionError,
         undefined,
@@ -480,9 +499,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   }
 
   async function invokeWillSendResponse() {
-    await dispatcher.invokeHook(
-      'willSendResponse',
-      requestContext as GraphQLRequestContextWillSendResponse<TContext>,
+    await Promise.all(
+      requestListeners.map((l) =>
+        l.willSendResponse?.(
+          requestContext as GraphQLRequestContextWillSendResponse<TContext>,
+        ),
+      ),
     );
   }
 
@@ -491,9 +513,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   async function didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
     requestContext.errors = errors;
 
-    return await dispatcher.invokeHook(
-      'didEncounterErrors',
-      requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
+    return await Promise.all(
+      requestListeners.map((l) =>
+        l.didEncounterErrors?.(
+          requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
+        ),
+      ),
     );
   }
 
@@ -541,19 +566,5 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       includeStackTracesInErrorResponses:
         internals.includeStackTracesInErrorResponses,
     });
-  }
-
-  async function initializeRequestListenerDispatcher(): Promise<
-    Dispatcher<GraphQLRequestListener<TContext>>
-  > {
-    const requestListeners: GraphQLRequestListener<TContext>[] = [];
-    for (const plugin of internals.plugins) {
-      if (!plugin.requestDidStart) continue;
-      const listener = await plugin.requestDidStart(requestContext);
-      if (listener) {
-        requestListeners.push(listener);
-      }
-    }
-    return new Dispatcher(requestListeners);
   }
 }

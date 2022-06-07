@@ -1,104 +1,51 @@
-import type { AnyFunctionMap, Args, AsFunction, StripPromise } from '../types';
-
-type DidEndHook<TArgs extends any[]> = (...args: TArgs) => void;
 type AsyncDidEndHook<TArgs extends any[]> = (...args: TArgs) => Promise<void>;
+type SyncDidEndHook<TArgs extends any[]> = (...args: TArgs) => void;
 
-export class Dispatcher<T extends AnyFunctionMap> {
-  constructor(protected targets: T[]) {}
+export async function invokeDidStartHook<T, TEndHookArgs extends unknown[]>(
+  targets: T[],
+  hook: (t: T) => Promise<AsyncDidEndHook<TEndHookArgs> | undefined | void>,
+): Promise<AsyncDidEndHook<TEndHookArgs>> {
+  const didEndHooks = (
+    await Promise.all(targets.map((target) => hook(target)))
+  ).flatMap((h) => (h ? [h] : [])); // filter not null
 
-  private callTargets<TMethodName extends keyof T>(
-    methodName: TMethodName,
-    ...args: Args<T[TMethodName]>
-  ): ReturnType<AsFunction<T[TMethodName]>>[] {
-    return this.targets.map((target) => {
-      const method = target[methodName];
-      if (typeof method === 'function') {
-        return method.apply(target, args);
-      }
-    });
-  }
+  didEndHooks.reverse();
 
-  public hasHook(methodName: keyof T): boolean {
-    return this.targets.some(
-      (target) => typeof target[methodName] === 'function',
-    );
-  }
-
-  public async invokeHook<
-    TMethodName extends keyof T,
-    THookReturn extends StripPromise<ReturnType<AsFunction<T[TMethodName]>>>,
-  >(
-    methodName: TMethodName,
-    ...args: Args<T[TMethodName]>
-  ): Promise<THookReturn[]> {
-    return Promise.all(this.callTargets(methodName, ...args));
-  }
-
-  public async invokeHooksUntilNonNull<TMethodName extends keyof T>(
-    methodName: TMethodName,
-    ...args: Args<T[TMethodName]>
-  ): Promise<StripPromise<ReturnType<AsFunction<T[TMethodName]>>> | null> {
-    for (const target of this.targets) {
-      const method = target[methodName];
-      if (typeof method !== 'function') {
-        continue;
-      }
-      const value = await method.apply(target, args);
-      if (value !== null) {
-        return value;
-      }
+  return async (...args: TEndHookArgs) => {
+    for (const didEndHook of didEndHooks) {
+      didEndHook(...args);
     }
-    return null;
-  }
+  };
+}
 
-  public async invokeDidStartHook<
-    TMethodName extends keyof T,
-    TEndHookArgs extends Args<
-      StripPromise<ReturnType<AsFunction<T[TMethodName]>>>
-    >,
-  >(
-    methodName: TMethodName,
-    ...args: Args<T[TMethodName]>
-  ): Promise<AsyncDidEndHook<TEndHookArgs>> {
-    const hookReturnValues: (AsyncDidEndHook<TEndHookArgs> | void)[] =
-      await Promise.all(this.callTargets(methodName, ...args));
+// Almost all hooks are async, but as a special case, willResolveField is sync
+// due to performance concerns.
+export function invokeSyncDidStartHook<T, TEndHookArgs extends unknown[]>(
+  targets: T[],
+  hook: (t: T) => SyncDidEndHook<TEndHookArgs> | undefined | void,
+): SyncDidEndHook<TEndHookArgs> {
+  const didEndHooks: SyncDidEndHook<TEndHookArgs>[] = targets
+    .map((target) => hook(target))
+    .flatMap((h) => (h ? [h] : []));
 
-    const didEndHooks = hookReturnValues.filter(
-      (hook): hook is AsyncDidEndHook<TEndHookArgs> => !!hook,
-    );
-    didEndHooks.reverse();
+  didEndHooks.reverse();
 
-    return async (...args: TEndHookArgs) => {
-      await Promise.all(didEndHooks.map((hook) => hook(...args)));
-    };
-  }
-
-  // Almost all hooks are async, but as a special case, willResolveField is sync
-  // due to performance concerns.
-  public invokeSyncDidStartHook<
-    TMethodName extends keyof T,
-    TEndHookArgs extends Args<ReturnType<AsFunction<T[TMethodName]>>>,
-  >(
-    methodName: TMethodName,
-    ...args: Args<T[TMethodName]>
-  ): DidEndHook<TEndHookArgs> {
-    const didEndHooks: DidEndHook<TEndHookArgs>[] = [];
-
-    for (const target of this.targets) {
-      const method = target[methodName];
-      if (typeof method === 'function') {
-        const didEndHook = method.apply(target, args);
-        if (didEndHook) {
-          didEndHooks.push(didEndHook);
-        }
-      }
+  return (...args: TEndHookArgs) => {
+    for (const didEndHook of didEndHooks) {
+      didEndHook(...args);
     }
-    didEndHooks.reverse();
+  };
+}
 
-    return (...args: TEndHookArgs) => {
-      for (const didEndHook of didEndHooks) {
-        didEndHook(...args);
-      }
-    };
+export async function invokeHooksUntilDefinedAndNonNull<T, TOut>(
+  targets: T[],
+  hook: (t: T) => Promise<TOut | null | undefined>,
+): Promise<TOut | null> {
+  for (const target of targets) {
+    const value = await hook(target);
+    if (value != null) {
+      return value;
+    }
   }
+  return null;
 }

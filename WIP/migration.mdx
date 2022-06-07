@@ -394,6 +394,8 @@ Remove persistedQueries field from GraphQLServiceContext
 
 `GraphQLResponse` object (eg `requestContext.response`) has been refactored: the `data`, `errors`, and `extensions` fields are on a `result` sub-object. (This will change further for incremental delivery.) `data` and `extensions` are now `Record<string, unknown>` rather than `Record<string, any>` so more casts may be needed. `GraphQLRequestContext.response` and `GraphQLResponse.http` are now always set.
 
+requestDidStart hooks are called in parallel rather than in series.
+
 ## New APIs
 
 ### `addPlugin` function
