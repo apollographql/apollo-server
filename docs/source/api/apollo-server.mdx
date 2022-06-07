@@ -209,12 +209,12 @@ To use `InMemoryLRUCache` but change its size to an amount `approximateDocumentS
 <div style="max-width: 400px;">
 
 ```typescript
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import type { DocumentNode } from 'graphql';
 new ApolloServer({
   documentStore: new InMemoryLRUCache<DocumentNode>({
     maxSize: Math.pow(2, 20) * approximateDocumentStoreMiB,
-    sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
+    sizeCalculation: InMemoryLRUCache.sizeCalculation,
   }),
   // ...
 })

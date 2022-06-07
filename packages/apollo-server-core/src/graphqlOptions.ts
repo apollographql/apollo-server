@@ -7,7 +7,7 @@ import type {
   GraphQLFormattedError,
   ParseOptions,
 } from 'graphql';
-import type { KeyValueCache } from 'apollo-server-caching';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { DataSource } from 'apollo-datasource';
 import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type {

@@ -6,7 +6,7 @@ import {
   KeyValueCache,
   InMemoryLRUCache,
   PrefixingKeyValueCache,
-} from 'apollo-server-caching';
+} from '@apollo/utils.keyvaluecache';
 import type { CacheOptions } from './RESTDataSource';
 
 export class HTTPCache {

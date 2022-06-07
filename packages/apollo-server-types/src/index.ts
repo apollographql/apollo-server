@@ -12,7 +12,7 @@ import type {
 } from 'graphql';
 
 // This seems like it could live in this package too.
-import type { KeyValueCache } from 'apollo-server-caching';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { Trace } from 'apollo-reporting-protobuf';
 import type { Logger } from '@apollo/utils.logger';
 

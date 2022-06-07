@@ -18,7 +18,7 @@ import type { GraphQLSchemaModule } from '@apollographql/apollo-tools';
 
 export type { GraphQLSchemaModule };
 
-import type { KeyValueCache } from 'apollo-server-caching';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 export type { KeyValueCache };
 
 export type Context<T = object> = T;
