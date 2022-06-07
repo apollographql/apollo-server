@@ -2,8 +2,8 @@ import gql from 'graphql-tag';
 import type { DocumentNode } from 'graphql';
 
 import { ApolloServerBase } from '../ApolloServer';
-import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 import assert from 'assert';
+import { UnboundedCache } from '../utils/UnboundedCache';
 
 const typeDefs = gql`
   type Query {
@@ -54,7 +54,7 @@ describe('ApolloServerBase documentStore', () => {
     const options = await server.graphQLServerOptions();
     const embeddedStore = options.documentStore;
     assert(embeddedStore);
-    expect(embeddedStore).toBeInstanceOf(KeyvAdapter);
+    expect(embeddedStore).toBeInstanceOf(UnboundedCache);
 
     await server.executeOperation(operations.simple.op);
 
