@@ -28,7 +28,7 @@ import type {
   GraphQLRequestListenerValidationDidEnd,
   GraphQLRequestContext,
 } from 'apollo-server-plugin-base';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import { newCachePolicy } from '../cachePolicy';
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
@@ -1157,12 +1157,12 @@ describe('runQuery', () => {
       // size of the two smaller queries.  All three of these queries will never
       // fit into this cache, so we'll roll through them all.
       const maxSize =
-        InMemoryLRUCache.jsonBytesSizeCalculator(parse(querySmall1)) +
-        InMemoryLRUCache.jsonBytesSizeCalculator(parse(querySmall2));
+        InMemoryLRUCache.sizeCalculation(parse(querySmall1)) +
+        InMemoryLRUCache.sizeCalculation(parse(querySmall2));
 
       const documentStore = new InMemoryLRUCache<DocumentNode>({
         maxSize,
-        sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
+        sizeCalculation: InMemoryLRUCache.sizeCalculation,
       });
 
       await runRequest({ plugins, documentStore, queryString: querySmall1 });
