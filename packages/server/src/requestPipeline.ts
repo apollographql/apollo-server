@@ -47,6 +47,7 @@ import {
 import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
 import type { HTTPGraphQLHead } from './externalTypes/http';
+import { isDefined } from './utils/isDefined';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 
@@ -93,7 +94,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     await Promise.all(
       internals.plugins.map((p) => p.requestDidStart?.(requestContext)),
     )
-  ).flatMap((l) => (l ? [l] : [])); // filter not null;
+  ).filter(isDefined);
 
   const request = requestContext.request;
 
@@ -360,7 +361,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
           ),
         ),
       )
-    ).flatMap((l) => (l ? [l] : []));
+    ).filter(isDefined);
     executionListeners.reverse();
 
     if (executionListeners.some((l) => l.willResolveField)) {

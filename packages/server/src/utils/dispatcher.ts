@@ -1,3 +1,5 @@
+import { isDefined } from './isDefined';
+
 type AsyncDidEndHook<TArgs extends any[]> = (...args: TArgs) => Promise<void>;
 type SyncDidEndHook<TArgs extends any[]> = (...args: TArgs) => void;
 
@@ -7,7 +9,7 @@ export async function invokeDidStartHook<T, TEndHookArgs extends unknown[]>(
 ): Promise<AsyncDidEndHook<TEndHookArgs>> {
   const didEndHooks = (
     await Promise.all(targets.map((target) => hook(target)))
-  ).flatMap((h) => (h ? [h] : [])); // filter not null
+  ).filter(isDefined);
 
   didEndHooks.reverse();
 
@@ -26,7 +28,7 @@ export function invokeSyncDidStartHook<T, TEndHookArgs extends unknown[]>(
 ): SyncDidEndHook<TEndHookArgs> {
   const didEndHooks: SyncDidEndHook<TEndHookArgs>[] = targets
     .map((target) => hook(target))
-    .flatMap((h) => (h ? [h] : []));
+    .filter(isDefined);
 
   didEndHooks.reverse();
 
