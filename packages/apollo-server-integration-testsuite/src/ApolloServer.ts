@@ -62,9 +62,6 @@ import {
   InMemoryLRUCache,
   type KeyValueCache,
 } from '@apollo/utils.keyvaluecache';
-// this imports from dist because we're performing `instanceof` checks and they
-// need to be done using the same class
-import { UnboundedCache } from 'apollo-server-core/dist/utils/UnboundedCache';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -2273,7 +2270,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
           typeDefs: `type Query { hello: String }`,
         });
 
-        expect(server['requestOptions'].cache).toBeInstanceOf(UnboundedCache);
+        // This could be an instanceof check but we don't really want to export
+        // the `UnboundedCache` class from `apollo-server-core`
+        expect(server['requestOptions'].cache!.constructor.name).toBe(
+          'UnboundedCache',
+        );
       });
 
       it('uses a bounded cache', async () => {
