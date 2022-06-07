@@ -27,6 +27,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
 });
 
 exports.handler = server.createHandler();
@@ -164,6 +165,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   context: ({ req, res }) => ({
     headers: req.headers,
     req,

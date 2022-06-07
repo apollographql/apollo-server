@@ -31,6 +31,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     // Sets a non-default option on the usage reporting plugin
     ApolloServerPluginUsageReporting({

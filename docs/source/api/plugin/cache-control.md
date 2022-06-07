@@ -21,6 +21,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginCacheControl({
       // Cache everything for 1 second by default.
@@ -42,6 +43,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [ApolloServerPluginCacheControlDisabled()],
 });
 ```

@@ -55,6 +55,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   dataSources: () => {
     return {
       moviesAPI: new MoviesAPI(),

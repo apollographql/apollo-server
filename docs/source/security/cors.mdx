@@ -99,6 +99,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,  // see below for more about this
+  cache: "bounded",
   cors: {
     origin: ["https://www.your-app.example", "https://studio.apollographql.com"]
   },
@@ -145,6 +146,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,  // see below for more about this
+  cache: "bounded",
   cors: {
     origin: yourOrigin,
     credentials: true

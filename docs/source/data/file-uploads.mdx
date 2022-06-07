@@ -79,6 +79,7 @@ async function startServer() {
     resolvers,
     // Using graphql-upload without CSRF prevention is very insecure.
     csrfPrevention: true,
+    cache: 'bounded',
   });
   await server.start();
 
@@ -181,6 +182,7 @@ const start = async () => {
       resolvers,
       // Using graphql-upload without CSRF prevention is very insecure.
       csrfPrevention: true,
+      cache: 'bounded',
     });
 
     // Start Apollo Server

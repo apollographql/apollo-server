@@ -116,6 +116,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
 });
 ```
 
@@ -139,10 +140,10 @@ const typeDefs = gql`
 
 // Validation function for checking "oddness"
 function oddValue(value) {
-  if (typeof value === "number" && Number.isInteger(value) && value % 2 !== 0) {
+  if (typeof value === 'number' && Number.isInteger(value) && value % 2 !== 0) {
     return value;
   }
-  throw new UserInputError("Provided value is not an odd integer");
+  throw new UserInputError('Provided value is not an odd integer');
 }
 
 const resolvers = {
@@ -155,7 +156,7 @@ const resolvers = {
       if (ast.kind === Kind.INT) {
         return oddValue(parseInt(ast.value, 10));
       }
-      throw new UserInputError("Provided value is not an odd integer");
+      throw new UserInputError('Provided value is not an odd integer');
     },
   }),
   Query: {
@@ -165,7 +166,12 @@ const resolvers = {
   }
 };
 
-const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
@@ -207,7 +213,12 @@ const resolvers = {
   // ...other resolvers...
 };
 
-const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)

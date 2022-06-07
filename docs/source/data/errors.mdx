@@ -343,6 +343,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   formatError: (err) => {
     // Don't give the specific errors to the client.
     if (err.message.startsWith('Database Error: ')) {
@@ -398,6 +399,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginUsageReporting({
       rewriteError(err) {
@@ -429,6 +431,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginUsageReporting({
       rewriteError(err) {
@@ -467,6 +470,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginUsageReporting({
       rewriteError(err) {
@@ -512,6 +516,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   plugins: [setHttpPlugin],
 });
 ```

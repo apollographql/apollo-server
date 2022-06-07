@@ -21,6 +21,7 @@ const server = new ApolloServer({
  typeDefs,
  resolvers,
  csrfPrevention: true,
+ cache: 'bounded',
  context: ({ req }) => {
    // Note: This example uses the `req` argument to access headers,
    // but the arguments received by `context` vary by integration.
@@ -229,7 +230,8 @@ One way of implementing the `@auth` directive is by constructing your schema usi
 new ApolloServer({
   schema: makeExecutableSchema({ typeDefs, resolvers, schemaTransforms }),
   csrfPrevention: true,
-})
+  cache: 'bounded',
+});
 ```
 
 ### Outside of GraphQL

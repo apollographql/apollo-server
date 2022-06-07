@@ -20,6 +20,7 @@ const server = new ApolloServer({
 	typeDefs,
 	resolvers,
   csrfPrevention: true,  // highly recommended
+  cache: 'bounded',
 });
 ```
 
@@ -726,6 +727,7 @@ async function startApolloServer() {
     typeDefs,
     resolvers,
     csrfPrevention: true,
+    cache: 'bounded',
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 

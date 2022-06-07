@@ -21,6 +21,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginInlineTrace({
       rewriteError: (err) => err.message.match(SENSITIVE_REGEX) ? null : err,
@@ -39,6 +40,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [ApolloServerPluginInlineTraceDisabled()],
 });
 ```
