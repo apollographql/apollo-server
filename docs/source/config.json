@@ -60,7 +60,7 @@
     },
     "API Reference": {
       "ApolloServer": "/api/apollo-server",
-      "@apollo/federation": "https://www.apollographql.com/docs/federation/api/apollo-federation/",
+      "@apollo/subgraph": "https://www.apollographql.com/docs/federation/api/apollo-subgraph/",
       "@apollo/gateway": "https://www.apollographql.com/docs/federation/api/apollo-gateway/"
     },
     "Built-in Plugins": {
