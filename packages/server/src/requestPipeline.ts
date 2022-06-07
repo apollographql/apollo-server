@@ -42,7 +42,7 @@ import {
   invokeDidStartHook,
   invokeHooksUntilDefinedAndNonNull,
   invokeSyncDidStartHook,
-} from './utils/dispatcher';
+} from './utils/invokeHooks';
 
 import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
