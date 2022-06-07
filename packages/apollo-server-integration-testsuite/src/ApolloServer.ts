@@ -2289,7 +2289,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const customCache = {} as KeyValueCache;
         const server = new ApolloServerBase({
           typeDefs: `type Query { hello: String }`,
-          cache: customCache
+          cache: customCache,
         });
 
         expect(server['requestOptions'].cache).toBe(customCache);
