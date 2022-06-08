@@ -278,7 +278,7 @@ export class ApolloServerBase<
           'Persisted queries are enabled and are using an unbounded cache. Your server' +
             ' is vulnerable to denial of service attacks via memory exhaustion. ' +
             'Set `cache: "bounded"` or `persistedQueries: false` in your ApolloServer ' +
-            'constructor, or see FIXME:DOCS for other alternatives.',
+            'constructor, or see https://go.apollo.dev/s/cache-backends for other alternatives.',
         );
       }
     }
