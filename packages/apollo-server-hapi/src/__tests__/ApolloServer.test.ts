@@ -350,6 +350,7 @@ describe('non-integration tests', () => {
             },
           },
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -379,6 +380,7 @@ describe('non-integration tests', () => {
             },
           },
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });

@@ -327,6 +327,7 @@ describe('apollo-server-express', () => {
             },
           },
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -356,6 +357,7 @@ describe('apollo-server-express', () => {
             },
           },
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
