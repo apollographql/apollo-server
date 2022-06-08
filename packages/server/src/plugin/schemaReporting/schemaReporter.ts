@@ -1,8 +1,6 @@
-import { gql } from '../../gql';
 import fetch from 'node-fetch';
 import type { GraphQLRequest } from '../../externalTypes';
 import type { Logger } from '@apollo/utils.logger';
-import { print } from 'graphql';
 import type {
   SchemaReport,
   SchemaReportMutationVariables,
@@ -11,21 +9,20 @@ import type {
 } from './generated/operations';
 import type { Fetcher } from '@apollo/utils.fetcher';
 
-export const schemaReportGql = print(gql`
-  mutation SchemaReport($report: SchemaReport!, $coreSchema: String) {
-    reportSchema(report: $report, coreSchema: $coreSchema) {
-      __typename
-      ... on ReportSchemaError {
-        message
-        code
-      }
-      ... on ReportSchemaResponse {
-        inSeconds
-        withCoreSchema
-      }
+export const schemaReportGql = `mutation SchemaReport($report: SchemaReport!, $coreSchema: String) {
+  reportSchema(report: $report, coreSchema: $coreSchema) {
+    __typename
+    ... on ReportSchemaError {
+      message
+      code
+    }
+    ... on ReportSchemaResponse {
+      inSeconds
+      withCoreSchema
     }
   }
-`);
+}
+`;
 
 // This class is meant to be a thin shim around the gql mutations.
 export class SchemaReporter {

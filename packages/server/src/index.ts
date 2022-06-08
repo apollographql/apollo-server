@@ -18,6 +18,4 @@ export { ApolloConfig, ApolloConfigInput } from './config';
 
 export * from './externalTypes';
 
-// TODO(AS4): Why re-export graphql-tag?
-export * from './gql';
 export * from './plugin';

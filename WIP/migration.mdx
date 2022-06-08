@@ -460,4 +460,5 @@ Existing implementations of `KeyValueCache` should continue to work.
 - ApolloServer.logger should probably be public readonly in AS4
 - Ensure errors thrown in context creation is handled in a helpful way
 - Apollo Server plugins: expose server instance to plugins
-- In general we just need to go over the full exported API and list what’s gone and where it’s gone
+- In general we just need to go over the full exported API and list what’s gone and where it’s gone. (This includes the re-export of `gql` from `graphql-tag`)
+
