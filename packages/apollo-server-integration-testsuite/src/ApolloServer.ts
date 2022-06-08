@@ -268,6 +268,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             schema,
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
+            cache: 'bounded',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -287,6 +288,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             introspection: true,
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
+            cache: 'bounded',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -1730,6 +1732,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1760,6 +1763,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -2294,6 +2298,71 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         expect(server['requestOptions'].cache).toBe(customCache);
+      });
+
+      it("warns in production mode when cache isn't configured and APQ isn't disabled", () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          error: jest.fn(),
+          info: jest.fn(),
+        };
+
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'production',
+          logger: mockLogger,
+        });
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringMatching(
+            /Persisted queries are enabled and are using an unbounded cache/,
+          ),
+        );
+      });
+
+      it("doesn't warn about cache configuration if: not production mode, cache configured, APQ disabled, or APQ cache configured", () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          error: jest.fn(),
+          info: jest.fn(),
+        };
+
+        // dev mode
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+        });
+
+        // cache configured
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'production',
+          logger: mockLogger,
+          cache: 'bounded',
+        });
+
+        // APQ disabled
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+          persistedQueries: false,
+        });
+
+        // APQ cache configured
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+          persistedQueries: {
+            cache: {} as KeyValueCache,
+          },
+        });
+
+        expect(mockLogger.warn).not.toHaveBeenCalled();
       });
 
       it('basic caching', async () => {
