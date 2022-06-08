@@ -91,64 +91,15 @@ const resolvers = {
 
 By default, data source implementations use Apollo Server's [`InMemoryLRUCache`](https://github.com/apollographql/apollo-server/blob/0aa0e4b20ef97576ce92733698a7842b61d8280e/packages/apollo-server-caching/src/InMemoryLRUCache.ts#L14) to store the results of past fetches.
 
-When you initialize Apollo Server, you can provide its constructor a _different_ cache object that implements the [`KeyValueCache` interface](https://github.com/apollographql/apollo-server/blob/0aa0e4b20ef97576ce92733698a7842b61d8280e/packages/apollo-server-caching/src/KeyValueCache.ts#L10-L14). This enables you to back your cache with shared stores like Memcached or Redis.
+When you initialize Apollo Server, you can provide its constructor a _different_ cache object that implements the [`KeyValueCache` interface](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface). This enables you to back your cache with shared stores like Memcached or Redis.
 
-### Using Memcached/Redis as a cache storage backend
+### Using an external cache backend
 
  When running multiple instances of your server, you should use a shared cache backend. This enables one server instance to use the cached result from _another_ instance.
 
-Apollo Server supports using [Memcached](https://memcached.org/) or [Redis](https://redis.io/) as cache stores via the [`apollo-server-cache-memcached`](https://www.npmjs.com/package/apollo-server-cache-memcached) and [`apollo-server-cache-redis`](https://www.npmjs.com/package/apollo-server-cache-redis) packages. You can specify which one to use by creating an instance and passing it into the `ApolloServer` constructor.
+Apollo Server supports using [Memcached](https://memcached.org/) or [Redis](https://redis.io/) (as well as other cache backends) via the [`keyv`](https://www.npmjs.com/package/keyv) package. Visit [Configuring external caching](../performance/cache-backends#configuring-external-caching) for more information and examples on configuring Apollo Server's cache.
 
-#### Memcached
-
-```js
-const { MemcachedCache } = require('apollo-server-cache-memcached');
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  csrfPrevention: true,
-  cache: new MemcachedCache(
-    ['memcached-server-1', 'memcached-server-2', 'memcached-server-3'],
-    { retries: 10, retry: 10000 }, // Options
-  ),
-  dataSources: () => ({
-    moviesAPI: new MoviesAPI(),
-  }),
-});
-```
-
-For the options you can pass to the underlying Memcached client, [see the documentation](https://github.com/3rd-Eden/memcached).
-
-#### Redis
-
-```js title="Redis"
-const { BaseRedisCache } = require('apollo-server-cache-redis');
-const Redis = require('ioredis');
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  csrfPrevention: true,
-  cache: new BaseRedisCache({
-    client: new Redis({
-      host: 'redis-server',
-    }),
-  }),
-  dataSources: () => ({
-    moviesAPI: new MoviesAPI(),
-  }),
-});
-```
-
-For the options you can pass to the underlying Redis client, [see the documentation](https://github.com/luin/ioredis).
-
-### Implementing your own cache backend
-
-You can create your own implementation of the [`KeyValueCache` interface](https://github.com/apollographql/apollo-server/blob/0aa0e4b20ef97576ce92733698a7842b61d8280e/packages/apollo-server-caching/src/KeyValueCache.ts#L10-L14) to connect to other caching data stores, or to optimize for your application's query characteristics.
-
-For more information, see the README in for [apollo-server-caching](https://www.npmjs.com/package/apollo-server-caching).
-
+You can also implement your own cache backend. Visit [Implementing your own cache backend](../performance/cache-backends#implementing-your-own-cache-backend) for more information on implementing the `KeyValueCache` interface.
 
 ## `RESTDataSource` reference
 

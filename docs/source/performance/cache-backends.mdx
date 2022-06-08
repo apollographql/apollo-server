@@ -1,0 +1,80 @@
+---
+title: Configuring cache backends
+description: How to configure Apollo Server's cache
+---
+
+# Configuring cache backends
+
+## Introduction
+
+Several features of Apollo Server (such as [automatic persisted queries](./performance/apq), the [response cache plugin](./performance/caching#caching-with-responsecacheplugin-advanced), and [`RESTDataSource`](./data/data-sources#restdatasource-reference)) take advantage of a cache backend. By default, Apollo Server uses a cache in memory but this can be configured to use a different backend such as Redis or Memcached.
+
+You can specify a cache backend using the `cache` option to the Apollo Server constructor. The cache backend must implement the [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface) interface from the `@apollo/utils.keyvaluecache` package. Apollo maintains an `InMemoryLRUCache` implementation in that package as well as a [`KeyvAdapter`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyvAdapter#keyvadapter-class) class from the `@apollo/utils.keyvadapter` package for wrapping the [`keyv`](https://www.npmjs.com/package/keyv) package which implements a number of useful cache backends.
+
+Unfortunately, the default configuration of Apollo Server exposes you to denial of service attacks.
+This is because APQs are enabled by default and the default cache in Apollo Server 3 is unbounded, meaning an attacker can exhaust your memory and crash your server. The default cache in Apollo Server 4 will be bounded; **we recommend opting in to that behavior by providing the `cache: "bounded"` option to your Apollo Server constructor or configuring the `cache` yourself.**
+
+## Configuring in-memory caching
+
+By default, Apollo Server's caching features use an unbounded cache. This is not safe for production use. If you'd like to configure the in-memory cache, Apollo provides the [`InMemoryLRUCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#inmemorylrucache) class from the `@apollo/utils.keyvaluecache` package. This class is a wrapper around the `lru-cache` package with a default maximum of approximately 30MiB of memory. The `InMemoryLRUCache` is configurable with the options from `lru-cache`. See the [`lru-cache` documentation`](https://www.npmjs.com/package/lru-cache) for more information on configuration options.
+
+### Example: using `InMemoryLRUCache`
+```ts
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
+
+const server = new ApolloServer({
+  // Note: this is equivalent to providing `cache: "bounded"`
+  cache: new InMemoryLRUCache(),
+});
+```
+
+### Example: configuring `InMemoryLRUCache`
+
+In this example, we've increased the default size and provided a default TTL. For more information on the options, see the [`lru-cache` documentation`](https://www.npmjs.com/package/lru-cache).
+```ts
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
+
+const server = new ApolloServer({
+  // ...
+  cache: new InMemoryLRUCache({
+    // ~100MiB
+    maxSize: Math.pow(2, 20) * 100,
+    // 5 minutes
+    ttl: 300000,
+  }),
+});
+```
+
+## Configuring external caching
+
+Apollo no longer maintains any caching backends directly. Instead, we recommend using the [`keyv`](https://www.npmjs.com/package/keyv) package along with the [`KeyvAdapter`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyvAdapter#keyvadapter-class) class provided by the `@apollo/utils.keyvadapter` package. `KeyvAdapter` simply wraps a `Keyv` instance and implements the `KeyValueCache` interface which is required by Apollo Server.
+
+### Example: using `Keyv` with Redis
+
+```ts
+import Keyv from 'keyv';
+import { KeyvAdapter } from '@apollo/utils.keyvadapter';
+
+const server = new ApolloServer({
+  // ...,
+  cache: new KeyvAdapter(new Keyv('redis://localhost:6379')),
+});
+```
+
+## Implementing your own cache backend
+
+If your requirements are more specialized or you prefer to implement your own cache backend, you can implement the `KeyValueCache` interface and pass it to Apollo Server's constructor.
+
+The interface is very simple:
+```ts
+interface KeyValueCache<V> {
+  get(key: string): Promise<V | undefined>;
+  // ttl is specified in seconds
+  set(key: string, value: V, options?: { ttl?: number | null }): Promise<void>;
+  delete(key: string): Promise<boolean | void>;
+}
+```
+
+## Legacy caching implementation
+
+Apollo Server < 3.9.0 used the `apollo-server-caching` package to implement caching. This package is no longer maintained and is not recommended for use. The `KeyValueCache` interface has been moved to the `@apollo/utils.keyvaluecache` package. The `InMemoryLRUCache` class has been moved there as well, however it now uses version 7 of `lru-cache` which accepts different options and no longer allows a cache to be unbounded. The `apollo-server-cache-redis` and `apollo-server-cache-memcached` packages are no longer being published; we recommend using `keyv` instead.

@@ -404,7 +404,7 @@ const server = new ApolloServer({
 ```
 ## Caching with `responseCachePlugin` (advanced)
 
-You can cache Apollo Server query responses in stores like Redis, Memcached, or Apollo Server's in-memory cache.
+You can cache Apollo Server query responses in stores like Redis, Memcached, or Apollo Server's in-memory cache. Visit the [caching backends](./cache-backends) documentation for more information on how to configure Apollo Server's cache.
 
 ### In-memory cache setup
 
@@ -421,15 +421,15 @@ const server = new ApolloServer({
 
 On initialization, this plugin automatically begins caching responses according to [field settings](#in-your-schema-static).
 
-The plugin uses the same in-memory LRU cache as Apollo Server's other features. For environments with multiple server instances, you might instead want to use a shared cache backend, such as [Memcached or Redis](#memcachedredis-setup).
+The plugin uses the same in-memory LRU cache as Apollo Server's other features. For environments with multiple server instances, you might instead want to use a shared cache backend, such as [Memcached or Redis](./cache-backends#configuring-external-caching).
 
 >In addition to the [`Cache-Control` HTTP header](#caching-with-a-cdn), the `responseCachePlugin` also sets the `Age` HTTP header to the number of seconds the returned value has been in the cache.
 
 ### Memcached/Redis setup
 
-See [Using Memcached/Redis as a cache storage backend](../data/data-sources/#using-memcachedredis-as-a-cache-storage-backend).
+See [Configuring external caching](./cache-backends#configuring-external-caching).
 
-> You can also [implement your own cache backend](../data/data-sources/#implementing-your-own-cache-backend).
+> You can also [implement your own cache backend](./cache-backends#implementing-your-own-cache-backend).
 
 
 ### Identifying users for `PRIVATE` responses

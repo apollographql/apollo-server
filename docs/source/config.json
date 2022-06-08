@@ -40,6 +40,7 @@
     },
     "Performance": {
       "Caching": "/performance/caching",
+      "Cache backends": "/performance/cache-backends",
       "Automatic persisted queries": "/performance/apq"
     },
     "Security": {
