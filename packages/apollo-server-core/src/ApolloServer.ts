@@ -728,7 +728,7 @@ export class ApolloServerBase<
       // random prefix each time we get a new schema.
       documentStore:
         this.config.documentStore === undefined
-          ? new UnboundedCache()
+          ? new InMemoryLRUCache()
           : this.config.documentStore === null
           ? null
           : new PrefixingKeyValueCache(
