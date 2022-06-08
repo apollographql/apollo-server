@@ -23,6 +23,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginSchemaReporting(),
   ],

@@ -207,6 +207,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
 
   // You can import plugins or define them in-line, as shown:
   plugins: [

@@ -38,6 +38,7 @@ const server = new ApolloServer({
   typesDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
 });
 ```
 

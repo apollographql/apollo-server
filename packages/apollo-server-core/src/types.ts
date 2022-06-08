@@ -40,7 +40,6 @@ type BaseConfig = Pick<
   | 'formatResponse'
   | 'fieldResolver'
   | 'dataSources'
-  | 'cache'
   | 'logger'
   | 'allowBatchedHttpRequests'
 >;
@@ -110,6 +109,7 @@ export interface Config<ContextFunctionParams = any> extends BaseConfig {
   nodeEnv?: string;
   documentStore?: DocumentStore | null;
   csrfPrevention?: CSRFPreventionOptions | boolean;
+  cache?: KeyValueCache | 'bounded';
 }
 
 export interface CSRFPreventionOptions {

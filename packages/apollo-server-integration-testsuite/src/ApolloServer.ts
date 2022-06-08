@@ -59,8 +59,8 @@ import FakeTimers from '@sinonjs/fake-timers';
 import type { AddressInfo } from 'net';
 import request, { Response } from 'supertest';
 import {
-  type KeyValueCache,
   InMemoryLRUCache,
+  type KeyValueCache,
 } from '@apollo/utils.keyvaluecache';
 
 const quietLogger = loglevel.getLogger('quiet');
@@ -2265,45 +2265,38 @@ export function testApolloServer<AS extends ApolloServerBase>(
         clock.uninstall();
       });
 
+      it('uses an unbounded cache by default', async () => {
+        const server = new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+        });
+
+        // This could be an instanceof check but we don't really want to export
+        // the `UnboundedCache` class from `apollo-server-core`
+        expect(server['requestOptions'].cache!.constructor.name).toBe(
+          'UnboundedCache',
+        );
+      });
+
+      it('uses a bounded cache', async () => {
+        const server = new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          cache: 'bounded',
+        });
+
+        expect(server['requestOptions'].cache).toBeInstanceOf(InMemoryLRUCache);
+      });
+
+      it('uses a custom cache', async () => {
+        const customCache = {} as KeyValueCache;
+        const server = new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          cache: customCache,
+        });
+
+        expect(server['requestOptions'].cache).toBe(customCache);
+      });
+
       it('basic caching', async () => {
-        class TTLTestingCache implements KeyValueCache<string> {
-          private fakeTime = 0;
-          constructor(
-            private cache: Map<
-              string,
-              { value: string; deadline: number | null }
-            > = new Map(),
-          ) {}
-
-          async get(key: string) {
-            const entry = this.cache.get(key);
-            if (!entry) return undefined;
-            if (entry.deadline && entry.deadline <= this.fakeTime) {
-              await this.delete(key);
-              return undefined;
-            }
-            return entry.value;
-          }
-
-          async set(
-            key: string,
-            value: string,
-            { ttl }: { ttl: number | null } = { ttl: null },
-          ) {
-            this.cache.set(key, {
-              value,
-              deadline: ttl ? this.fakeTime + ttl * 1000 : null,
-            });
-          }
-
-          async delete(key: string) {
-            this.cache.delete(key);
-          }
-
-          advanceTime(ms: number) {
-            this.fakeTime += ms;
-          }
-        }
         const typeDefs = gql`
           type Query {
             cached: String @cacheControl(maxAge: 10)
@@ -2359,12 +2352,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
           };
         });
 
-        const fakeTTLCache = new TTLTestingCache();
-
         const { url: uri } = await createApolloServer({
           typeDefs,
           resolvers,
-          cache: fakeTTLCache,
           plugins: [
             ApolloServerPluginResponseCache({
               sessionId: (requestContext: GraphQLRequestContext<any>) => {
@@ -2488,7 +2478,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         // Cache hit partway to ttl.
-        fakeTTLCache.advanceTime(5 * 1000);
         clock.tick(5 * 1000);
         {
           const result = await fetch();
@@ -2500,7 +2489,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         // Cache miss after ttl.
-        fakeTTLCache.advanceTime(6 * 1000);
         clock.tick(6 * 1000);
         {
           const result = await fetch();
@@ -2778,7 +2766,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }
 
         // Let's expire the cache, and run again, not writing to the cache.
-        fakeTTLCache.advanceTime(15 * 1000);
         clock.tick(15 * 1000);
         {
           const result = await doFetch({
