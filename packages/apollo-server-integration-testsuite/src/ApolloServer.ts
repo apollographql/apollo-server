@@ -2316,12 +2316,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringMatching(
-            /Apollo Server is running with an unbounded in-memory cache in production/,
+            /Persisted queries are enabled and are using an unbounded cache/,
           ),
         );
       })
 
-      it("doesn't warn about cache configuration if: dev mode, cache configured, or APQ disabled", () => {
+      it("doesn't warn about cache configuration if: not production mode, cache configured, APQ disabled, or APQ cache configured", () => {
         const mockLogger = {
           warn: jest.fn(),
           debug: jest.fn(),
@@ -2349,7 +2349,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           typeDefs: `type Query { hello: String }`,
           nodeEnv: 'development',
           logger: mockLogger,
-          persistedQueries: false
+          persistedQueries: false,
         });
 
         // APQ cache configured
@@ -2359,11 +2359,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
           logger: mockLogger,
           persistedQueries: {
             cache: {} as KeyValueCache,
-          }
+          },
         });
 
         expect(mockLogger.warn).not.toHaveBeenCalled();
-      })
+      });
 
       it('basic caching', async () => {
         const typeDefs = gql`

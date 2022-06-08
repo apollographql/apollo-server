@@ -261,25 +261,24 @@ export class ApolloServerBase<
         : noIntro;
     }
 
-    if (
-      this.config.nodeEnv === 'production' &&
-      !requestOptions.cache &&
-      (requestOptions.persistedQueries === undefined ||
-        (requestOptions.persistedQueries &&
-          !requestOptions.persistedQueries.cache &&
-          !requestOptions.persistedQueries.ttl))
-    ) {
-      this.logger.warn(
-        'Apollo Server is running with an unbounded in-memory cache in production. ' +
-          "Please configure either Apollo Server's `cache` or `persistedQueries` " +
-          'options, or simply set `cache: "bounded"` in your ApolloServer ' +
-          'constructor to prevent this. FIXME: link to docs for more info.',
-      );
-    }
     if (requestOptions.cache === 'bounded') {
       requestOptions.cache = new InMemoryLRUCache();
     }
 
+    if (
+      !isDev &&
+      !requestOptions.cache &&
+      (requestOptions.persistedQueries === undefined ||
+        (requestOptions.persistedQueries &&
+          !requestOptions.persistedQueries.cache))
+    ) {
+      this.logger.warn(
+        'Persisted queries are enabled and are using an unbounded cache. Your server' +
+          ' is vulnerable to denial of service attacks via memory exhaustion. ' +
+          'Set `cache: "bounded"` or `persistedQueries: false` in your ApolloServer ' +
+          'constructor, or see FIXME:DOCS for other alternatives.',
+      );
+    }
     if (!requestOptions.cache) {
       requestOptions.cache = new UnboundedCache();
     }
