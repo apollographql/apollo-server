@@ -3,7 +3,7 @@ import type { DocumentNode } from 'graphql';
 
 import { ApolloServerBase } from '../ApolloServer';
 import assert from 'assert';
-import { UnboundedCache } from '../utils/UnboundedCache';
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 
 const typeDefs = gql`
   type Query {
@@ -54,7 +54,7 @@ describe('ApolloServerBase documentStore', () => {
     const options = await server.graphQLServerOptions();
     const embeddedStore = options.documentStore;
     assert(embeddedStore);
-    expect(embeddedStore).toBeInstanceOf(UnboundedCache);
+    expect(embeddedStore).toBeInstanceOf(InMemoryLRUCache);
 
     await server.executeOperation(operations.simple.op);
 
