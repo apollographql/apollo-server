@@ -2319,7 +2319,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             /Persisted queries are enabled and are using an unbounded cache/,
           ),
         );
-      })
+      });
 
       it("doesn't warn about cache configuration if: not production mode, cache configured, APQ disabled, or APQ cache configured", () => {
         const mockLogger = {
