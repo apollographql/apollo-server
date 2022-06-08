@@ -2300,6 +2300,23 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(server['requestOptions'].cache).toBe(customCache);
       });
 
+      it("warns in production mode when cache isn't configured and APQ isn't disabled", () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          error: jest.fn(),
+          info: jest.fn(),
+        };
+
+        const server = new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'production',
+          logger: mockLogger,
+        });
+
+        expect(mockLogger.warn).toHaveBeenCalledWith();
+      })
+
       it('basic caching', async () => {
         const typeDefs = gql`
           type Query {
