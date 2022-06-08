@@ -261,6 +261,17 @@ export class ApolloServerBase<
         : noIntro;
     }
 
+    if (
+      this.config.nodeEnv === 'production' &&
+      !requestOptions.cache &&
+      requestOptions.persistedQueries === undefined
+    ) {
+      this.logger.warn(
+        'Apollo Server is running with an unbounded in-memory cache in production.' +
+          'Please configure the cache or simply set `cache: "bounded"` in your ' +
+          'ApolloServer constructor to prevent this.',
+      );
+    }
     if (requestOptions.cache === 'bounded') {
       requestOptions.cache = new InMemoryLRUCache();
     }

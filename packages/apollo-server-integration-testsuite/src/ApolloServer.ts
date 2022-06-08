@@ -268,6 +268,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             schema,
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
+            cache: 'bounded',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -287,6 +288,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             introspection: true,
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
+            cache: 'bounded',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -1730,6 +1732,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1760,6 +1763,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });

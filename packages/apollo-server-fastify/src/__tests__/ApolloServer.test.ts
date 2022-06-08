@@ -346,6 +346,7 @@ describe('apollo-server-fastify', () => {
             },
           },
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -375,6 +376,7 @@ describe('apollo-server-fastify', () => {
             },
           },
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
