@@ -39,6 +39,7 @@ async function startApolloServer() {
     typeDefs,
     resolvers,
     csrfPrevention: true,
+    cache: 'bounded',
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 

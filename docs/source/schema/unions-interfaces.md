@@ -132,6 +132,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
 });
 
 server.listen().then(({ url }) => {

@@ -134,6 +134,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   // The max age is calculated in seconds
   plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
 });
@@ -206,6 +207,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   // highlight-start
   persistedQueries: {
     cache: new MemcachedCache(
@@ -231,6 +233,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   // highlight-start
   persistedQueries: {
     cache: new BaseRedisCache({
@@ -257,6 +260,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   // highlight-start
   persistedQueries: {
     cache: new BaseRedisCache({
@@ -288,6 +292,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   // highlight-start
   persistedQueries: {
     cache: new BaseRedisCache({
@@ -318,6 +323,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   persistedQueries: {
     // highlight-start
     ttl: 900, // 15 minutes
@@ -333,6 +339,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   persistedQueries: {
     ttl: null, // highlight-line
   },
@@ -350,6 +357,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   persistedQueries: false, // highlight-line
 });
 ```

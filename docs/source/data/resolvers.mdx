@@ -145,7 +145,12 @@ const resolvers = {
 
 // Pass schema definition and resolvers to the
 // ApolloServer constructor
-const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 // Launch the server
 server.listen().then(({ url }) => {
@@ -323,7 +328,12 @@ const resolvers = {
 
 // Pass schema definition and resolvers to the
 // ApolloServer constructor
-const server = new ApolloServer({ typeDefs, resolvers, csrfPrevention: true });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 // Launch the server
 server.listen().then(({ url }) => {
@@ -388,6 +398,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   context: ({ req }) => ({
     authScope: getScope(req.headers.authorization)
   })

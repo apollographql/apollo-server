@@ -261,8 +261,12 @@ export class ApolloServerBase<
         : noIntro;
     }
 
-    if (!requestOptions.cache) {
+    if (requestOptions.cache === 'bounded') {
       requestOptions.cache = new InMemoryLRUCache();
+    }
+
+    if (!requestOptions.cache) {
+      requestOptions.cache = new UnboundedCache();
     }
 
     if (requestOptions.persistedQueries !== false) {

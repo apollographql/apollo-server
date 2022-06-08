@@ -29,17 +29,19 @@ To configure these default plugins while still using same `NODE_ENV`-based logic
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginLandingPageLocalDefault,
-         ApolloServerPluginLandingPageProductionDefault
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault
 } from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     // Install a landing page plugin based on NODE_ENV
-    process.env.NODE_ENV === 'production'
+    process.env.NODE_ENV === "production"
       ? ApolloServerPluginLandingPageProductionDefault({
           graphRef: "my-graph-id@my-graph-variant",
           footer: false,
@@ -428,6 +430,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginLandingPageGraphQLPlayground(),
   ],
@@ -512,6 +515,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginLandingPageDisabled(),
   ],
