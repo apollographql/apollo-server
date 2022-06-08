@@ -267,7 +267,7 @@ export class ApolloServerBase<
       requestOptions.persistedQueries === undefined
     ) {
       this.logger.warn(
-        'Apollo Server is running with an unbounded in-memory cache in production.' +
+        'Apollo Server is running with an unbounded in-memory cache in production. ' +
           'Please configure the cache or simply set `cache: "bounded"` in your ' +
           'ApolloServer constructor to prevent this.',
       );

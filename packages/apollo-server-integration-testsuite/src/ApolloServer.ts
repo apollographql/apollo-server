@@ -2308,13 +2308,61 @@ export function testApolloServer<AS extends ApolloServerBase>(
           info: jest.fn(),
         };
 
-        const server = new ApolloServerBase({
+        new ApolloServerBase({
           typeDefs: `type Query { hello: String }`,
           nodeEnv: 'production',
           logger: mockLogger,
         });
 
-        expect(mockLogger.warn).toHaveBeenCalledWith();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringMatching(
+            /Apollo Server is running with an unbounded in-memory cache in production/,
+          ),
+        );
+      })
+
+      it("doesn't warn about cache configuration if: dev mode, cache configured, or APQ disabled", () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          error: jest.fn(),
+          info: jest.fn(),
+        };
+
+        // dev mode
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+        });
+
+        // cache configured
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'production',
+          logger: mockLogger,
+          cache: 'bounded',
+        });
+
+        // APQ disabled
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+          persistedQueries: false
+        });
+
+        // APQ cache configured
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+          persistedQueries: {
+            cache: {} as KeyValueCache,
+          }
+        });
+
+        expect(mockLogger.warn).not.toHaveBeenCalled();
       })
 
       it('basic caching', async () => {
