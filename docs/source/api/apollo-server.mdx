@@ -203,7 +203,7 @@ A key-value cache that Apollo Server uses to store previously encountered GraphQ
 
 Whenever Apollo Server receives an incoming operation, it checks whether that exact operation is present in its `documentStore`. If it's present, Apollo Server can safely skip parsing and validating the operation, thereby improving performance.
 
-The default `documentStore` is an [`InMemoryLRUCache`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/InMemoryLRUCache.ts) with an approximate size of 30MiB. This is usually sufficient unless the server processes a large number of unique operations. Provide this option if you want to change the cache size or store the cache information in an alternate location.
+The default `documentStore` is a [`InMemoryLRUCache`](https://github.com/apollographql/apollo-utils/blob/main/packages/keyValueCache/src/InMemoryLRUCache.ts) with an approximate size of 30MiB. This is usually sufficient unless the server processes a large number of unique operations. Provide this option if you want to change the cache size or store the cache information in an alternate location.
 
 To use `InMemoryLRUCache` but change its size to an amount `approximateDocumentStoreMiB`:
 

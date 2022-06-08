@@ -89,7 +89,7 @@ const resolvers = {
 
 ## Caching
 
-By default, data source implementations use Apollo Server's [`InMemoryLRUCache`](https://github.com/apollographql/apollo-server/blob/0aa0e4b20ef97576ce92733698a7842b61d8280e/packages/apollo-server-caching/src/InMemoryLRUCache.ts#L14) to store the results of past fetches.
+By default, data source implementations use Apollo Server's in-memory cache to store the results of past fetches.
 
 When you initialize Apollo Server, you can provide its constructor a _different_ cache object that implements the [`KeyValueCache` interface](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface). This enables you to back your cache with shared stores like Memcached or Redis.
 
