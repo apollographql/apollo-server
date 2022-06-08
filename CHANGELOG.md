@@ -13,6 +13,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 - Remove internal dependency on `apollo-server-caching`, switch over to `@apollo/utils.keyvaluecache`. This PR specifically also introduces Keyv as an unbounded cache solution, but will replace with our own simple implementation in a follow-up PR targeting this minor version release. [PR #6522](https://github.com/apollographql/apollo-server/pull/6522)
 - Remove dependency on `keyv`/`@apollo/utils.keyvadapter` in favor of a simple `Map`-backed cache which implements TTL [PR #6535](https://github.com/apollographql/apollo-server/pull/6535)
 - Add `cache: "bounded"` configuration option, allowing users to opt into bounded request cache (recommended) [PR #6536](https://github.com/apollographql/apollo-server/pull/6536)
+- Remove `apollo-server-caching` and `apollo-server-cache-*` packages [PR #6541](https://github.com/apollographql/apollo-server/pull/6541)
 
 ## v3.8.2
 
