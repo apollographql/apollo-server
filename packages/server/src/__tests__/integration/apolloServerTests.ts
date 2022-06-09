@@ -31,7 +31,6 @@ import {
   ApolloServerOptions,
   ApolloServer,
   GatewayInterface,
-  GraphQLServiceConfig,
   ApolloServerPluginInlineTrace,
   ApolloServerPluginUsageReporting,
   ApolloServerPluginUsageReportingOptions,
@@ -39,13 +38,13 @@ import {
   ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloServerPluginLandingPageLocalDefault,
   ApolloServerPluginUsageReportingDisabled,
-} from '../..';
-import fetch from 'node-fetch';
-import type {
+  SchemaLoadOrUpdateCallback,
   BaseContext,
+  GraphQLExecutor,
   GraphQLRequestContextExecutionDidStart,
   PluginDefinition,
-} from '../../externalTypes';
+} from '../..';
+import fetch from 'node-fetch';
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import type { AddressInfo } from 'net';
@@ -56,7 +55,6 @@ import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,
 } from '.';
-import type { SchemaLoadOrUpdateCallback } from '../../types';
 import { mockLogger } from '../mockLogger';
 import gql from 'graphql-tag';
 
@@ -96,21 +94,18 @@ const schema = new GraphQLSchema({
 });
 
 const makeGatewayMock = ({
+  executor,
+  schema,
   optionsSpy = (_options) => {},
   unsubscribeSpy = () => {},
 }: {
+  executor: GraphQLExecutor<BaseContext> | null;
+  schema: GraphQLSchema;
   optionsSpy?: (_options: any) => void;
   unsubscribeSpy?: () => void;
-} = {}) => {
-  let resolution: GraphQLServiceConfig<BaseContext> | null = null;
-  let rejection: Error | null = null;
-  const eventuallyAssigned = {
-    resolveLoad: (config: GraphQLServiceConfig<BaseContext>) => {
-      resolution = config;
-    },
-    rejectLoad: (err: Error) => {
-      rejection = err;
-    },
+}) => {
+  const triggers = {
+    // This gets updated later, when ApolloServer calls gateway.load().
     triggerSchemaChange: null as SchemaLoadOrUpdateCallback | null,
   };
 
@@ -120,29 +115,23 @@ const makeGatewayMock = ({
       optionsSpy(options);
       // Make sure it's async
       await new Promise((res) => setImmediate(res));
-      if (rejection) {
-        throw rejection;
-      }
-      if (resolution) {
-        listeners.forEach((cb) =>
-          cb({
-            apiSchema: resolution!.schema,
-            coreSupergraphSdl: printSchema(resolution!.schema),
-          }),
-        );
-        return resolution;
-      }
-      throw Error('Neither resolving nor rejecting?');
+      listeners.forEach((cb) =>
+        cb({
+          apiSchema: schema,
+          coreSupergraphSdl: printSchema(schema),
+        }),
+      );
+      return { executor };
     },
     onSchemaLoadOrUpdate: (callback) => {
       listeners.push(callback);
-      eventuallyAssigned.triggerSchemaChange = callback;
+      triggers.triggerSchemaChange = callback;
       return unsubscribeSpy;
     },
     stop: async () => {},
   };
 
-  return { gateway: mockedGateway, triggers: eventuallyAssigned };
+  return { gateway: mockedGateway, triggers };
 };
 
 export function defineIntegrationTestSuiteApolloServerTests(
@@ -452,9 +441,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             Promise.resolve({ data: { testString: 'hi - but federated!' } }),
           );
 
-          const { gateway, triggers } = makeGatewayMock();
-
-          triggers.resolveLoad({ schema, executor });
+          const { gateway } = makeGatewayMock({ schema, executor });
 
           const uri = await createServerAndGetUrl({
             gateway,
@@ -469,12 +456,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
         });
 
         it('rejected load promise is thrown by server.start', async () => {
-          const { gateway, triggers } = makeGatewayMock();
-
           const loadError = new Error(
             'load error which should be be thrown by start',
           );
-          triggers.rejectLoad(loadError);
+          const gateway: GatewayInterface<BaseContext> = {
+            async load() {
+              throw loadError;
+            },
+            onSchemaLoadOrUpdate() {
+              return () => {};
+            },
+            async stop() {},
+          };
 
           if (options.serverIsStartedInBackground) {
             // We should be able to run the server setup code (which calls
@@ -2380,9 +2373,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               ? Promise.resolve({ data: { testString1: 'hello' } })
               : Promise.resolve({ data: { testString2: 'aloha' } });
 
-          const { gateway, triggers } = makeGatewayMock();
-
-          triggers.resolveLoad({
+          const { gateway, triggers } = makeGatewayMock({
             schema: makeQueryTypeWithField('testString1'),
             executor,
           });
@@ -2425,8 +2416,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
       it('passes apollo data to the gateway', async () => {
         const optionsSpy = jest.fn();
 
-        const { gateway, triggers } = makeGatewayMock({ optionsSpy });
-        triggers.resolveLoad({ schema, executor: async () => ({}) });
+        const { gateway } = makeGatewayMock({
+          schema,
+          executor: async () => ({}),
+          optionsSpy,
+        });
         const { server } = await createServer({
           gateway,
           apollo: {
@@ -2454,8 +2448,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
       it('unsubscribes from schema update on close', async () => {
         const unsubscribeSpy = jest.fn();
-        const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
-        triggers.resolveLoad({ schema, executor: async () => ({}) });
+        const { gateway } = makeGatewayMock({
+          schema,
+          executor: async () => ({}),
+          unsubscribeSpy,
+        });
         const server = (await createServer({ gateway })).server;
         if (options.serverIsStartedInBackground) {
           // To ensure that the server has started in the case of serverless, we
@@ -2486,9 +2483,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
           return { data: { testString: 'hi - but federated!' } };
         };
 
-        const { gateway, triggers } = makeGatewayMock();
+        const { gateway } = makeGatewayMock({ schema, executor });
 
-        triggers.resolveLoad({ schema, executor });
         const uri = await createServerAndGetUrl({
           gateway,
         });
@@ -2552,9 +2548,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           return { data: { [`testString${i}`]: `${i}` } };
         };
 
-        const { gateway, triggers } = makeGatewayMock();
-
-        triggers.resolveLoad({
+        const { gateway, triggers } = makeGatewayMock({
           schema: getSchemaUpdateWithField('testString1').apiSchema,
           executor,
         });

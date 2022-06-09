@@ -1,17 +1,33 @@
+import type { WithRequired } from '@apollo/utils.withrequired';
 import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';
-import http from 'http';
+import http, { IncomingMessage, ServerResponse } from 'http';
 import type { ListenOptions } from 'net';
 import type { ApolloServer } from '../ApolloServer';
-import { ExpressContext, expressMiddleware } from '../express';
+import { expressMiddleware } from '../express';
 import type { BaseContext, ContextFunction } from '../externalTypes';
 import { ApolloServerPluginDrainHttpServer } from '../plugin';
-import type { WithRequired } from '../types';
 import { urlForHttpServer } from '../utils/urlForHttpServer';
 
+// Note that while we do use express and expressMiddleware to implement the
+// standalone server, this is an internal implementation detail. We could
+// rewrite this to have no dependencies other than the core http package.
+// Because of this, our TypeScript types encourage users to only use
+// functionality of `req` and `res` that are part of the core http
+// implementations rather than the Express-specific subclasses; if you need
+// typesafe access to Express-specific properties, just use expressMiddleware
+// directly.
+export interface StandaloneServerContextFunctionArgument {
+  req: IncomingMessage;
+  res: ServerResponse;
+}
+
 interface HTTPServerOptions<TContext extends BaseContext> {
-  context?: ContextFunction<[ExpressContext], TContext>;
+  context?: ContextFunction<
+    [StandaloneServerContextFunctionArgument],
+    TContext
+  >;
 }
 
 export async function startStandaloneServer(

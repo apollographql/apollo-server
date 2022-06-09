@@ -1,6 +1,6 @@
 import type { Logger } from '@apollo/utils.logger';
 import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql';
-import type { ApolloConfig } from '../config';
+import type { ApolloConfig } from './constructor';
 import type { BaseContext } from './context';
 import type { GraphQLRequestContext, GraphQLResponse } from './graphql';
 import type {
@@ -14,8 +14,7 @@ import type {
   GraphQLRequestContextWillSendResponse,
 } from './requestPipeline';
 
-// TODO(AS4): Rename this type to Server rather than Service or something.
-export interface GraphQLServiceContext {
+export interface GraphQLServerContext {
   logger: Logger;
   schema: GraphQLSchema;
   apollo: ApolloConfig;
@@ -37,7 +36,7 @@ export type PluginDefinition<TContext extends BaseContext> =
 
 export interface ApolloServerPlugin<TContext extends BaseContext> {
   serverWillStart?(
-    service: GraphQLServiceContext,
+    service: GraphQLServerContext,
   ): Promise<GraphQLServerListener | void>;
 
   requestDidStart?(

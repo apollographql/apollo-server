@@ -36,6 +36,7 @@ import type {
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
   BaseContext,
+  HTTPGraphQLHead,
 } from './externalTypes';
 
 import {
@@ -46,7 +47,6 @@ import {
 
 import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
-import type { HTTPGraphQLHead } from './externalTypes/http';
 import { isDefined } from './utils/isDefined';
 
 export const APQ_CACHE_PREFIX = 'apq:';

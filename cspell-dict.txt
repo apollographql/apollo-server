@@ -48,6 +48,8 @@ docstrings
 Doyensec
 DRYRUN
 eastus
+embeddable
+Embeddable
 endregion
 engineproxy
 Engineproxy
@@ -185,7 +187,6 @@ Wallclock
 websockets
 whatwg
 Wheelock's
+withrequired
 xorby
 YOURNAME
-Embeddable
-embeddable

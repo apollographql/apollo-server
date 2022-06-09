@@ -1,32 +1,5 @@
 import { createHash } from '@apollo/utils.createhash';
-
-// Configuration for how Apollo Server talks to the Apollo registry, as passed
-// to the ApolloServer constructor. Each field can also be provided as an
-// environment variable.
-export interface ApolloConfigInput {
-  // Your Apollo API key. Environment variable: APOLLO_KEY.
-  key?: string;
-  // The graph ref for your graph, eg `my-graph@my-variant` or `my-graph` to use
-  // your graph's default variant. Environment variable: APOLLO_GRAPH_REF. For
-  // backwards compatibility, may alternatively specify the ref as graphId and
-  // graphVariant separately.
-  graphRef?: string;
-  // TODO(AS4): Consider dropping support for specifying ID and variant separately.
-  //
-  // The graph ID of your graph, eg `my-graph`. Environment variable:
-  // APOLLO_GRAPH_ID.
-  graphId?: string;
-  // Your graph's variant name, eg `my-variant`. Environment variable:
-  // APOLLO_GRAPH_VARIANT.
-  graphVariant?: string;
-}
-
-// some defaults filled in from the ApolloConfigInput passed to the constructor.
-export interface ApolloConfig {
-  key?: string;
-  keyHash?: string;
-  graphRef?: string;
-}
+import type { ApolloConfig, ApolloConfigInput } from './externalTypes';
 
 // This function combines the `apollo` constructor argument and some environment
 // variables to come up with a full ApolloConfig.

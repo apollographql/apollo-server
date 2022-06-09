@@ -1,7 +1,6 @@
 import express from 'express';
 import request from 'supertest';
-import { ApolloServer } from '../..';
-import { expressMiddleware } from '../../express';
+import { ApolloServer, expressMiddleware } from '../..';
 
 it('gives helpful error if body-parser middleware is not installed', async () => {
   const server = new ApolloServer({ typeDefs: 'type Query {f: ID}' });

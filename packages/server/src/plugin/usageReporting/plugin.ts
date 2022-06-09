@@ -18,7 +18,7 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestListener,
   GraphQLServerListener,
-  GraphQLServiceContext,
+  GraphQLServerContext,
 } from '../../externalTypes';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import type { HeaderMap } from '../../runHttpQuery';
@@ -107,7 +107,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
       logger: serverLogger,
       apollo,
       startedInBackground,
-    }: GraphQLServiceContext): Promise<GraphQLServerListener> {
+    }: GraphQLServerContext): Promise<GraphQLServerListener> {
       // Use the plugin-specific logger if one is provided; otherwise the general server one.
       const logger = options.logger ?? serverLogger;
       const { key, graphRef } = apollo;

@@ -1,6 +1,7 @@
 import type {
   BaseContext,
   GraphQLRequest,
+  HTTPGraphQLHead,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
 } from './externalTypes';
@@ -10,7 +11,6 @@ import {
   SchemaDerivedData,
 } from './ApolloServer';
 import type { FormattedExecutionResult } from 'graphql';
-import type { HTTPGraphQLHead } from './externalTypes/http';
 import { BadRequestError } from './errors';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just

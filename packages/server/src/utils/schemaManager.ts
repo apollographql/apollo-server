@@ -1,13 +1,14 @@
 import type { Logger } from '@apollo/utils.logger';
 import type { GraphQLSchema } from 'graphql';
 import type { SchemaDerivedData } from '../ApolloServer';
-import type { ApolloConfig } from '../config';
 import type {
+  ApolloConfig,
   BaseContext,
+  GatewayInterface,
   GraphQLExecutor,
   GraphQLSchemaContext,
+  Unsubscriber,
 } from '../externalTypes';
-import type { GatewayInterface, Unsubscriber } from '../types';
 
 type SchemaDerivedDataProvider = (
   apiSchema: GraphQLSchema,

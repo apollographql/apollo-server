@@ -24,7 +24,7 @@ import loglevel from 'loglevel';
 import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
 import { newCachePolicy } from './cachePolicy';
-import { ApolloConfig, determineApolloConfig } from './config';
+import { determineApolloConfig } from './determineApolloConfig';
 import { BadRequestError, ensureError, formatApolloErrors } from './errors';
 import type {
   ApolloServerPlugin,
@@ -33,13 +33,18 @@ import type {
   GraphQLRequest,
   GraphQLResponse,
   GraphQLServerListener,
-  GraphQLServiceContext,
+  GraphQLServerContext,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
   LandingPage,
   PluginDefinition,
+  ApolloConfig,
+  ApolloServerOptions,
+  DocumentStore,
+  PersistedQueryOptions,
+  HTTPGraphQLHead,
+  ContextThunk,
 } from './externalTypes';
-import type { HTTPGraphQLHead } from './externalTypes/http';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching';
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import {
@@ -63,15 +68,10 @@ import {
   newHTTPGraphQLHead,
   prettyJSONStringify,
 } from './runHttpQuery';
-import type {
-  ApolloServerOptions,
-  ApolloServerOptionsWithStaticSchema,
-  DocumentStore,
-  PersistedQueryOptions,
-  WithRequired,
-} from './types';
 import { SchemaManager } from './utils/schemaManager';
 import { isDefined } from './utils/isDefined';
+import type { WithRequired } from '@apollo/utils.withrequired';
+import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -146,9 +146,6 @@ class UnreachableCaseError extends Error {
     super(`Unreachable case: ${val}`);
   }
 }
-
-export type ContextThunk<TContext extends BaseContext = BaseContext> =
-  () => Promise<TContext>;
 
 // TODO(AS4): Move this to its own file or something. Also organize the fields.
 
@@ -372,7 +369,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     this._start(true).catch((e) => this.logStartupError(e));
   }
 
-  protected async _start(startedInBackground: boolean): Promise<void> {
+  private async _start(startedInBackground: boolean): Promise<void> {
     if (this.internals.state.phase !== 'initialized') {
       // If we wanted we could make this error detectable and change
       // `standaloneServer` to change the message to say not to call start() at
@@ -402,7 +399,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       });
 
       const schemaDerivedData = schemaManager.getSchemaDerivedData();
-      const service: GraphQLServiceContext = {
+      const service: GraphQLServerContext = {
         logger: this.internals.logger,
         schema: schemaDerivedData.schema,
         apollo: this.internals.apolloConfig,

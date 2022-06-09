@@ -1,5 +1,5 @@
+import type { WithRequired } from '@apollo/utils.withrequired';
 import type { ExecutionResult } from 'graphql';
-import type { WithRequired } from '../types';
 import type { BaseContext } from './context';
 import type { GraphQLRequestContext } from './graphql';
 
