@@ -21,5 +21,6 @@
     "lib": ["es2019", "esnext.asynciterable"],
     "types": ["node"],
     "baseUrl": ".",
+    "resolveJsonModule": true,
   }
 }
