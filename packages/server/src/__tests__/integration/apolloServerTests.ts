@@ -28,7 +28,6 @@ import { createApolloFetch, ApolloFetch, ParsedResponse } from './apolloFetch';
 import {
   AuthenticationError,
   UserInputError,
-  gql,
   ApolloServerOptions,
   ApolloServer,
   GatewayInterface,
@@ -59,6 +58,7 @@ import type {
 } from '.';
 import type { SchemaLoadOrUpdateCallback } from '../../types';
 import { mockLogger } from '../mockLogger';
+import gql from 'graphql-tag';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);

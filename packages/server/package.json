@@ -43,7 +43,6 @@
     "body-parser": "^1.20.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "graphql-tag": "^2.11.0",
     "loglevel": "^1.6.8",
     "lru-cache": "^7.10.1",
     "negotiator": "^0.6.3",

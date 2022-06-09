@@ -1,5 +1,5 @@
 import { ApolloServer } from '../ApolloServer';
-import { ApolloServerOptions, GatewayInterface, gql } from '..';
+import type { ApolloServerOptions, GatewayInterface } from '..';
 import type { GraphQLSchema } from 'graphql';
 import type { ApolloServerPlugin, BaseContext } from '../externalTypes';
 import {
@@ -9,6 +9,7 @@ import {
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { HeaderMap } from '../runHttpQuery';
 import { mockLogger } from './mockLogger';
+import gql from 'graphql-tag';
 
 const typeDefs = gql`
   type Query {
