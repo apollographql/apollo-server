@@ -1,7 +1,7 @@
 // This class is a helper for ApolloServerPluginUsageReporting and
 // ApolloServerPluginInlineTrace.
 import { GraphQLError, GraphQLResolveInfo, ResponsePath } from 'graphql';
-import { Trace, google } from '../../usageReportingProtobuf';
+import { Trace, google } from '@apollo/usage-reporting-protobuf';
 import type { Logger } from '@apollo/utils.logger';
 
 function internalError(message: string) {

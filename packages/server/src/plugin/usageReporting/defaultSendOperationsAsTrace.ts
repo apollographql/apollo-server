@@ -1,5 +1,5 @@
 import LRUCache from 'lru-cache';
-import type { Trace } from '../../../usageReportingProtobuf';
+import type { Trace } from '@apollo/usage-reporting-protobuf';
 import { iterateOverTrace } from './iterateOverTrace';
 import { DurationHistogram } from './durationHistogram';
 

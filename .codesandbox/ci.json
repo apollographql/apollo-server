@@ -2,6 +2,7 @@
   "buildCommand": "compile",
   "installCommand": "install-with-npm-8.5",
   "packages": [
+    "packages/usage-reporting-protobuf",
     "packages/server"
   ],
   "sandboxes": ["apollo-server-typescript-3opde","apollo-server"],

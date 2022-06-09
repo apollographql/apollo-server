@@ -1,4 +1,4 @@
-import { Trace } from '../../../../usageReportingProtobuf';
+import { Trace } from '@apollo/usage-reporting-protobuf';
 import { dateToProtoTimestamp } from '../../../plugin/traceTreeBuilder';
 import {
   OurContextualizedStats,

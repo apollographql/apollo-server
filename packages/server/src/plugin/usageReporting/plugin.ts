@@ -1,4 +1,4 @@
-import { Report, ReportHeader, Trace } from '../../../usageReportingProtobuf';
+import { Report, ReportHeader, Trace } from '@apollo/usage-reporting-protobuf';
 import type { Fetcher, FetcherResponse } from '@apollo/utils.fetcher';
 import {
   usageReportingSignature,
