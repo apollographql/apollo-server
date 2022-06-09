@@ -1,4 +1,4 @@
-import { ForbiddenError, AuthenticationError } from '../errors';
+import { ForbiddenError, AuthenticationError } from '..';
 
 describe('ForbiddenError', () => {
   it('supports arbitrary data being passed', () => {

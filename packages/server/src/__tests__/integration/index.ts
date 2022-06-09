@@ -1,6 +1,9 @@
-import type { ApolloServer, ApolloServerOptions } from '../..';
-import type { ContextThunk } from '../../ApolloServer';
-import type { BaseContext } from '../../externalTypes';
+import type {
+  ApolloServer,
+  ApolloServerOptions,
+  BaseContext,
+  ContextThunk,
+} from '../..';
 import { defineIntegrationTestSuiteApolloServerTests } from './apolloServerTests';
 import { defineIntegrationTestSuiteHttpServerTests } from './httpServerTests';
 

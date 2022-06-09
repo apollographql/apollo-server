@@ -2,7 +2,7 @@ import assert from 'assert';
 import type { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
-import { ApolloServer } from '../ApolloServer';
+import { ApolloServer } from '..';
 
 const typeDefs = gql`
   type Query {
@@ -52,7 +52,9 @@ describe('ApolloServer documentStore', () => {
 
     await server.executeOperation(operations.simple.op);
 
-    expect(documentStore['cache'].calculatedSize).toBe(403);
+    expect(
+      (documentStore as InMemoryLRUCache<DocumentNode>)['cache'].calculatedSize,
+    ).toBe(403);
 
     expect(await documentStore.get(operations.simple.hash)).toMatchObject(
       documentNodeMatcher,

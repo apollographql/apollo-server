@@ -10,13 +10,18 @@ export {
   CachePolicy,
   CacheScope,
 } from './cacheControl';
-export { BaseContext, ContextFunction } from './context';
+export { BaseContext, ContextFunction, ContextThunk } from './context';
 export {
   GraphQLRequest,
   GraphQLRequestContext,
+  GraphQLRequestMetrics,
   GraphQLResponse,
 } from './graphql';
-export { HTTPGraphQLRequest, HTTPGraphQLResponse } from './http';
+export {
+  HTTPGraphQLRequest,
+  HTTPGraphQLResponse,
+  HTTPGraphQLHead,
+} from './http';
 export {
   ApolloServerPlugin,
   GraphQLFieldResolverParams,
@@ -28,7 +33,7 @@ export {
   GraphQLRequestListenerValidationDidEnd,
   GraphQLSchemaContext,
   GraphQLServerListener,
-  GraphQLServiceContext,
+  GraphQLServerContext,
   LandingPage,
   PluginDefinition,
 } from './plugins';
@@ -43,3 +48,15 @@ export {
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextWillSendResponse,
 } from './requestPipeline';
+export {
+  Unsubscriber,
+  SchemaLoadOrUpdateCallback,
+  GatewayLoadResult,
+  GatewayInterface,
+  DocumentStore,
+  ApolloConfigInput,
+  ApolloConfig,
+  PersistedQueryOptions,
+  CSRFPreventionOptions,
+  ApolloServerOptions,
+} from './constructor';

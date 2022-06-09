@@ -1,13 +1,13 @@
 import { GraphQLError } from 'graphql';
 
 import {
-  formatApolloErrors,
   AuthenticationError,
   ForbiddenError,
   ValidationError,
   UserInputError,
   SyntaxError,
-} from '../errors';
+} from '..';
+import { formatApolloErrors } from '../errors';
 
 describe('Errors', () => {
   describe('formatApolloErrors', () => {

@@ -9,29 +9,21 @@ import type {
   ValidationContext,
 } from 'graphql';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
-import type { ApolloConfig, ApolloConfigInput } from './config';
-import type { BaseContext, GraphQLExecutor } from './externalTypes';
-import type { PluginDefinition } from './externalTypes/plugins';
-
-export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
+import type { BaseContext, GraphQLExecutor } from '.';
+import type { PluginDefinition } from './plugins';
 
 export type Unsubscriber = () => void;
-
-// TODO(AS4): rename
-export type GraphQLServiceConfig<TContext extends BaseContext> = {
-  schema: GraphQLSchema;
-  executor: GraphQLExecutor<TContext> | null;
-};
 
 export type SchemaLoadOrUpdateCallback = (schemaContext: {
   apiSchema: GraphQLSchema;
   coreSupergraphSdl: string;
 }) => void;
 
+export interface GatewayLoadResult<TContext extends BaseContext> {
+  executor: GraphQLExecutor<TContext> | null;
+}
 export interface GatewayInterface<TContext extends BaseContext> {
-  load(options: {
-    apollo: ApolloConfig;
-  }): Promise<GraphQLServiceConfig<TContext>>;
+  load(options: { apollo: ApolloConfig }): Promise<GatewayLoadResult<TContext>>;
 
   onSchemaLoadOrUpdate(callback: SchemaLoadOrUpdateCallback): Unsubscriber;
 
@@ -39,6 +31,34 @@ export interface GatewayInterface<TContext extends BaseContext> {
 }
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
+
+// Configuration for how Apollo Server talks to the Apollo registry, as passed
+// to the ApolloServer constructor. Each field can also be provided as an
+// environment variable.
+export interface ApolloConfigInput {
+  // Your Apollo API key. Environment variable: APOLLO_KEY.
+  key?: string;
+  // The graph ref for your graph, eg `my-graph@my-variant` or `my-graph` to use
+  // your graph's default variant. Environment variable: APOLLO_GRAPH_REF. For
+  // backwards compatibility, may alternatively specify the ref as graphId and
+  // graphVariant separately.
+  graphRef?: string;
+  // TODO(AS4): Consider dropping support for specifying ID and variant separately.
+  //
+  // The graph ID of your graph, eg `my-graph`. Environment variable:
+  // APOLLO_GRAPH_ID.
+  graphId?: string;
+  // Your graph's variant name, eg `my-variant`. Environment variable:
+  // APOLLO_GRAPH_VARIANT.
+  graphVariant?: string;
+}
+
+// some defaults filled in from the ApolloConfigInput passed to the constructor.
+export interface ApolloConfig {
+  key?: string;
+  keyHash?: string;
+  graphRef?: string;
+}
 
 export interface PersistedQueryOptions {
   cache?: KeyValueCache<string>;
@@ -99,7 +119,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   parseOptions?: IExecutableSchemaDefinition<TContext>['parseOptions'];
 }
 
-export interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
+interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
   gateway: GatewayInterface<TContext>;
   schema?: undefined;
@@ -107,7 +127,7 @@ export interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
   resolvers?: undefined;
 }
 
-export interface ApolloServerOptionsWithSchema<TContext extends BaseContext>
+interface ApolloServerOptionsWithSchema<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
   schema: GraphQLSchema;
   gateway?: undefined;
@@ -115,7 +135,7 @@ export interface ApolloServerOptionsWithSchema<TContext extends BaseContext>
   resolvers?: undefined;
 }
 
-export interface ApolloServerOptionsWithTypeDefs<TContext extends BaseContext>
+interface ApolloServerOptionsWithTypeDefs<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
   // These two options are always only passed directly through to
   // makeExecutableSchema. (If you don't want to use makeExecutableSchema, pass
@@ -126,6 +146,7 @@ export interface ApolloServerOptionsWithTypeDefs<TContext extends BaseContext>
   schema?: undefined;
 }
 
+// Used internally in ApolloServer.ts but not publicly exported.
 export type ApolloServerOptionsWithStaticSchema<TContext extends BaseContext> =
   (
     | ApolloServerOptionsWithSchema<TContext>

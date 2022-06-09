@@ -169,6 +169,7 @@ console.log(`ApolloServer listening at: ${url}`);
 
 ```
 
+Note that you should only assume that the objects passed to your context function are http.IncomingMessage and http.ServerResponse objects, not necessarily their Express subclasses.
 
 
 ## Changed constructor options
@@ -390,7 +391,7 @@ backwards compatibility. So now it is gone.
 
 Remove debug field from GraphQLRequestContext.
 
-Remove persistedQueries field from GraphQLServiceContext
+Remove persistedQueries field from GraphQLServerContext
 
 `GraphQLResponse` object (eg `requestContext.response`) has been refactored: the `data`, `errors`, and `extensions` fields are on a `result` sub-object. (This will change further for incremental delivery.) `data` and `extensions` are now `Record<string, unknown>` rather than `Record<string, any>` so more casts may be needed. `GraphQLRequestContext.response` and `GraphQLResponse.http` are now always set.
 

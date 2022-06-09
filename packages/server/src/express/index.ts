@@ -1,3 +1,4 @@
+import type { WithRequired } from '@apollo/utils.withrequired';
 import type express from 'express';
 import type { ApolloServer } from '..';
 import type {
@@ -5,16 +6,14 @@ import type {
   ContextFunction,
   HTTPGraphQLRequest,
 } from '../externalTypes';
-import type { WithRequired } from '../types';
 
-// TODO(AS4): Better name for ExpressContext?
-export interface ExpressContext {
+export interface ExpressContextFunctionArgument {
   req: express.Request;
   res: express.Response;
 }
 
 export interface ExpressMiddlewareOptions<TContext extends BaseContext> {
-  context?: ContextFunction<[ExpressContext], TContext>;
+  context?: ContextFunction<[ExpressContextFunctionArgument], TContext>;
 }
 
 // TODO(AS4): Figure out exact naming (eg is this Express-specific or just Node
@@ -38,11 +37,11 @@ export function expressMiddleware<TContext extends BaseContext>(
   // only be left out if you're using BaseContext as your context, and {} is a
   // valid BaseContext.
   const defaultContext: ContextFunction<
-    [ExpressContext],
+    [ExpressContextFunctionArgument],
     any
   > = async () => ({});
 
-  const context: ContextFunction<[ExpressContext], TContext> =
+  const context: ContextFunction<[ExpressContextFunctionArgument], TContext> =
     options?.context ?? defaultContext;
 
   return (req, res, next) => {
@@ -79,8 +78,6 @@ export function expressMiddleware<TContext extends BaseContext>(
       body: req.body,
     };
 
-    // TODO(AS4): Make batching optional and off by default; perhaps move it
-    // to a separate middleware.
     server
       .executeHTTPGraphQLRequest({
         httpGraphQLRequest,

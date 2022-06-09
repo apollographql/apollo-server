@@ -1,10 +1,7 @@
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import loglevel from 'loglevel';
-import {
-  makeHTTPRequestHeaders,
-  ApolloServerPluginUsageReporting,
-} from '../../../plugin/usageReporting/plugin';
+import { makeHTTPRequestHeaders } from '../../../plugin/usageReporting/plugin';
 import {
   Trace,
   Report,
@@ -17,12 +14,15 @@ import nock from 'nock';
 import sumBy from 'lodash.sumby';
 import { mockRandom, resetMockRandom } from 'jest-mock-random';
 import { gunzipSync } from 'zlib';
-import type { ApolloServerPluginUsageReportingOptions } from '../../../plugin/usageReporting/options';
-import type { GraphQLRequestContextDidResolveOperation } from '../../../externalTypes';
 import { HeaderMap } from '../../../runHttpQuery';
-import { ApolloServer } from '../../../ApolloServer';
-import type { GraphQLRequestMetrics } from '../../../externalTypes/graphql';
-import { ApolloServerPluginCacheControlDisabled } from '../../../plugin';
+import {
+  ApolloServer,
+  ApolloServerPluginCacheControlDisabled,
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginUsageReportingOptions,
+  GraphQLRequestContextDidResolveOperation,
+  GraphQLRequestMetrics,
+} from '../../..';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);

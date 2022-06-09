@@ -1,4 +1,4 @@
-import { ApolloServer } from '../ApolloServer';
+import { ApolloServer } from '..';
 import type { ApolloServerOptions, GatewayInterface } from '..';
 import type { GraphQLSchema } from 'graphql';
 import type { ApolloServerPlugin, BaseContext } from '../externalTypes';

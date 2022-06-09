@@ -9,8 +9,9 @@ import {
   parse,
 } from 'graphql';
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
-import { ApolloServer } from '../ApolloServer';
-import type {
+import {
+  ApolloServer,
+  ApolloServerOptions,
   ApolloServerPlugin,
   BaseContext,
   GraphQLRequest,
@@ -20,8 +21,7 @@ import type {
   GraphQLRequestListenerExecutionDidEnd,
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
-} from '../externalTypes';
-import type { ApolloServerOptions } from '../types';
+} from '..';
 
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,

@@ -32,14 +32,12 @@ import {
   ApolloServerOptions,
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlDisabled,
-  PersistedQueryOptions,
-} from '../..';
-import { PersistedQueryNotFoundError } from '../../errors';
-import type {
   BaseContext,
   GraphQLRequestContext,
   GraphQLRequestListener,
-} from '../../externalTypes';
+  PersistedQueryOptions,
+} from '../..';
+import { PersistedQueryNotFoundError } from '../../errors';
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',

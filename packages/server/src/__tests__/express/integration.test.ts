@@ -6,9 +6,9 @@ import {
   ApolloServer,
   ApolloServerOptions,
   ApolloServerPluginDrainHttpServer,
+  BaseContext,
+  expressMiddleware,
 } from '../..';
-import { expressMiddleware } from '../../express';
-import type { BaseContext } from '../../externalTypes';
 import { urlForHttpServer } from '../../utils/urlForHttpServer';
 import type {
   CreateServerForIntegrationTestsOptions,
