@@ -8,6 +8,7 @@ import { schemaIsFederated } from '../schemaIsFederated';
 import type { SchemaReport } from './generated/operations';
 import type { BaseContext } from '../../externalTypes';
 import type { Fetcher } from '@apollo/utils.fetcher';
+import { version } from '../../../package.json';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**
@@ -138,9 +139,7 @@ export function ApolloServerPluginSchemaReporting<TContext extends BaseContext>(
         // "An identifier for the server instance. Length must be <= 256 characters.
         serverId:
           process.env.APOLLO_SERVER_ID || process.env.HOSTNAME || os.hostname(),
-        libraryVersion: `@apollo/server@${
-          require('../../../package.json').version
-        }`,
+        libraryVersion: `@apollo/server@${version}`,
       };
       let currentSchemaReporter: SchemaReporter | undefined;
 

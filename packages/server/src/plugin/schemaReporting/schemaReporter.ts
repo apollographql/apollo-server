@@ -8,6 +8,7 @@ import type {
   ReportSchemaResponse,
 } from './generated/operations';
 import type { Fetcher } from '@apollo/utils.fetcher';
+import { version } from '../../../package.json';
 
 export const schemaReportGql = `mutation SchemaReport($report: SchemaReport!, $coreSchema: String) {
   reportSchema(report: $report, coreSchema: $coreSchema) {
@@ -53,7 +54,7 @@ export class SchemaReporter {
       'Content-Type': 'application/json',
       'x-api-key': options.apiKey,
       'apollographql-client-name': 'ApolloServerPluginSchemaReporting',
-      'apollographql-client-version': require('../../../package.json').version,
+      'apollographql-client-version': version,
     };
 
     this.endpointUrl =
