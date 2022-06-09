@@ -52,24 +52,24 @@ describe('ApolloServer construction', () => {
     ).not.toThrow();
   });
 
-  it('succeeds when passed a graphVariant in construction', () => {
+  it('succeeds when passed a graphVariant in construction', async () => {
     const logger = mockLogger();
-    expect(
-      () =>
-        new ApolloServer({
-          typeDefs,
-          resolvers,
-          apollo: {
-            graphVariant: 'foo',
-            key: 'service:real:key',
-          },
-          logger,
-        }),
-    ).not.toThrow();
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      apollo: {
+        graphVariant: 'foo',
+        key: 'service:real:key',
+      },
+      logger,
+    });
+    expect(logger.warn).toHaveBeenCalledTimes(0);
+    await server.start();
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.warn.mock.calls[0][0]).toMatch(
       /Apollo key but have not specified a graph ref/,
     );
+    await server.stop();
   });
 
   it('throws when a GraphQLSchema is not provided to the schema configuration option', () => {
@@ -255,6 +255,7 @@ describe('ApolloServer executeOperation', () => {
     expect(result.errors?.[0].extensions).toStrictEqual({
       code: 'INTERNAL_SERVER_ERROR',
     });
+    await server.stop();
   });
 
   it('returns error information with details when debug is enabled', async () => {
@@ -273,6 +274,7 @@ describe('ApolloServer executeOperation', () => {
     const extensions = result.errors?.[0].extensions;
     expect(extensions).toHaveProperty('code', 'INTERNAL_SERVER_ERROR');
     expect(extensions).toHaveProperty('exception.stacktrace');
+    await server.stop();
   });
 
   it('works with string', async () => {
@@ -285,6 +287,7 @@ describe('ApolloServer executeOperation', () => {
     const { result } = await server.executeOperation({ query: '{ hello }' });
     expect(result.errors).toBeUndefined();
     expect(result.data?.hello).toBe('world');
+    await server.stop();
   });
 
   it('works with AST', async () => {
@@ -303,6 +306,7 @@ describe('ApolloServer executeOperation', () => {
     });
     expect(result.errors).toBeUndefined();
     expect(result.data?.hello).toBe('world');
+    await server.stop();
   });
 
   it('parse errors', async () => {
@@ -315,6 +319,7 @@ describe('ApolloServer executeOperation', () => {
     const { result } = await server.executeOperation({ query: '{' });
     expect(result.errors).toHaveLength(1);
     expect(result.errors?.[0].extensions?.code).toBe('GRAPHQL_PARSE_FAILED');
+    await server.stop();
   });
 
   it('passes its second argument as context object', async () => {
@@ -330,6 +335,7 @@ describe('ApolloServer executeOperation', () => {
     );
     expect(result.errors).toBeUndefined();
     expect(result.data?.contextFoo).toBe('bla');
+    await server.stop();
   });
 
   describe('context generic typing', () => {
@@ -380,6 +386,7 @@ describe('ApolloServer executeOperation', () => {
       );
       // GraphQL will be sad that a string was returned from an Int! field.
       expect(result2.errors).toBeDefined();
+      await server.stop();
     });
 
     // This works due to the __forceTContextToBeContravariant hack.
@@ -482,5 +489,6 @@ describe('ApolloServer addPlugin', () => {
     ).toThrowErrorMatchingInlineSnapshot(
       `"Can't add plugins after the server has started"`,
     );
+    await server.stop();
   });
 });
