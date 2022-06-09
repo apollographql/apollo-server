@@ -10,7 +10,7 @@ import {
   ITypeStat,
   ReportHeader,
   Trace,
-} from '../../../usageReportingProtobuf';
+} from '@apollo/usage-reporting-protobuf';
 import type { ReferencedFieldsByType } from '@apollo/utils.usagereporting';
 import { DurationHistogram } from './durationHistogram';
 import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace';

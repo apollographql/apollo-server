@@ -21,11 +21,7 @@
     "codegen": "graphql-codegen",
     "prettier-check": "prettier --check .",
     "prettier-fix": "prettier --write .",
-    "spell-check": "cspell lint '**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)",
-    "protobuf-generate": "rm -rf packages/server/usageReportingProtobuf/generated && mkdir packages/server/usageReportingProtobuf/generated && npm run protobuf-pbjs && npm run protobuf-pbts",
-    "protobuf-pbjs": "apollo-pbjs --target static-module --out packages/server/usageReportingProtobuf/generated/protobuf.js --wrap commonjs --force-number --no-from-object packages/server/usageReportingProtobuf/reports.proto",
-    "protobuf-pbts": "apollo-pbts -o packages/server/usageReportingProtobuf/generated/protobuf.d.ts packages/server/usageReportingProtobuf/generated/protobuf.js",
-    "protobuf-update": "curl -sSfo packages/server/usageReportingProtobuf/reports.proto https://usage-reporting.api.apollographql.com/proto/reports.proto"
+    "spell-check": "cspell lint '**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)"
   },
   "workspaces": [
     "packages/*"

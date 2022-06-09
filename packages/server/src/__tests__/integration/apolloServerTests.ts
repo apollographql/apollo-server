@@ -5,7 +5,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import loglevel from 'loglevel';
 
-import { Report, Trace } from '../../../usageReportingProtobuf';
+import { Report, Trace } from '@apollo/usage-reporting-protobuf';
 
 import {
   GraphQLSchema,
