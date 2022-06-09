@@ -1,4 +1,5 @@
-import { ApolloServer, startStandaloneServer } from '../..';
+import { ApolloServer } from '../..';
+import { startStandaloneServer } from '../../standalone';
 import type { ApolloServerOptions, BaseContext } from '../..';
 import type {
   CreateServerForIntegrationTestsOptions,

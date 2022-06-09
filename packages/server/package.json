@@ -2,8 +2,9 @@
   "name": "@apollo/server",
   "version": "3.6.7",
   "description": "Core engine for Apollo GraphQL server",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "bundled/index.cjs.js",
+  "types": "bundled/index.d.ts",
+  "module": "bundled/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server",

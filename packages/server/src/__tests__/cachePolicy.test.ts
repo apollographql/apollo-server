@@ -1,5 +1,5 @@
 import type { CachePolicy } from '..';
-import { newCachePolicy } from '../cachePolicy';
+import { newCachePolicy } from '../internal';
 
 describe('newCachePolicy', () => {
   let cachePolicy: CachePolicy;

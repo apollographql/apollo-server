@@ -8,7 +8,7 @@ import {
   BaseContext,
   expressMiddleware,
 } from '../..';
-import { urlForHttpServer } from '../../utils/urlForHttpServer';
+import { urlForHttpServer } from '../../internal';
 import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,

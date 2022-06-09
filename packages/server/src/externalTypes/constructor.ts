@@ -1,3 +1,4 @@
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { Logger } from '@apollo/utils.logger';
 import type { IMocks } from '@graphql-tools/mock';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
@@ -8,9 +9,9 @@ import type {
   GraphQLSchema,
   ValidationContext,
 } from 'graphql';
-import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
-import type { BaseContext, GraphQLExecutor } from '.';
+import type { BaseContext } from './context';
 import type { PluginDefinition } from './plugins';
+import type { GraphQLExecutor } from './requestPipeline';
 
 export type Unsubscriber = () => void;
 

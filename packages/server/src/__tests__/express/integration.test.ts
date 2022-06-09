@@ -5,11 +5,11 @@ import http from 'http';
 import {
   ApolloServer,
   ApolloServerOptions,
-  ApolloServerPluginDrainHttpServer,
   BaseContext,
   expressMiddleware,
 } from '../..';
-import { urlForHttpServer } from '../../utils/urlForHttpServer';
+import { ApolloServerPluginDrainHttpServer } from '../../plugin/drainHttpServer';
+import { urlForHttpServer } from '../../internal';
 import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,

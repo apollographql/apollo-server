@@ -1,10 +1,9 @@
 import type { GraphQLSchema } from 'graphql';
+import { ApolloServer, CacheHint } from '../../..';
 import {
-  ApolloServer,
   ApolloServerPluginCacheControl,
-  ApolloServerPluginCacheControlOptions,
-  CacheHint,
-} from '../../..';
+  type ApolloServerPluginCacheControlOptions,
+} from '../../../plugin/cacheControl';
 
 export async function collectCacheControlHintsAndPolicyIfCacheable(
   schema: GraphQLSchema,

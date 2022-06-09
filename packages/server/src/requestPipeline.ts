@@ -1,43 +1,43 @@
 import { createHash } from '@apollo/utils.createhash';
 import {
-  specifiedRules,
-  getOperationAST,
+  execute as graphqlExecute,
   ExecutionArgs,
+  ExecutionResult,
+  getOperationAST,
   GraphQLError,
   GraphQLFormattedError,
-  validate,
-  parse,
-  execute as graphqlExecute,
   Kind,
-  ExecutionResult,
+  parse,
+  specifiedRules,
+  validate,
 } from 'graphql';
 import {
-  symbolExecutionDispatcherWillResolveField,
-  enablePluginsForSchemaResolvers,
-  symbolUserFieldResolver,
-} from './utils/schemaInstrumentation';
-import {
-  PersistedQueryNotSupportedError,
-  PersistedQueryNotFoundError,
-  formatApolloErrors,
-  UserInputError,
   BadRequestError,
   ensureError,
+  formatApolloErrors,
+  PersistedQueryNotFoundError,
+  PersistedQueryNotSupportedError,
+  UserInputError,
 } from './errors';
 import type {
+  BaseContext,
   GraphQLRequestContext,
+  GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextExecutionDidStart,
-  GraphQLRequestContextResponseForOperation,
-  GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextParsingDidStart,
+  GraphQLRequestContextResponseForOperation,
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextWillSendResponse,
-  GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
-  BaseContext,
   HTTPGraphQLHead,
 } from './externalTypes';
+import {
+  enablePluginsForSchemaResolvers,
+  symbolExecutionDispatcherWillResolveField,
+  symbolUserFieldResolver,
+} from './utils/schemaInstrumentation';
 
 import {
   invokeDidStartHook,
@@ -45,8 +45,9 @@ import {
   invokeSyncDidStartHook,
 } from './utils/invokeHooks';
 
-import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
+import { HeaderMap } from './internal';
+import { newHTTPGraphQLHead } from './runHttpQuery';
 import { isDefined } from './utils/isDefined';
 
 export const APQ_CACHE_PREFIX = 'apq:';

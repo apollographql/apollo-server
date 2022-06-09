@@ -4,11 +4,10 @@ import cors from 'cors';
 import express from 'express';
 import http, { IncomingMessage, ServerResponse } from 'http';
 import type { ListenOptions } from 'net';
-import type { ApolloServer } from '../ApolloServer';
-import { expressMiddleware } from '../express';
-import type { BaseContext, ContextFunction } from '../externalTypes';
-import { ApolloServerPluginDrainHttpServer } from '../plugin';
-import { urlForHttpServer } from '../utils/urlForHttpServer';
+import type { ApolloServer, BaseContext, ContextFunction } from '..';
+import { expressMiddleware } from '..';
+import { urlForHttpServer } from '../internal';
+import { ApolloServerPluginDrainHttpServer } from '../plugin/drainHttpServer';
 
 // Note that while we do use express and expressMiddleware to implement the
 // standalone server, this is an internal implementation detail. We could

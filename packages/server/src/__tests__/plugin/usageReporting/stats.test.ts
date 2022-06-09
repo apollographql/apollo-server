@@ -1,5 +1,5 @@
 import { Trace } from '@apollo/usage-reporting-protobuf';
-import { dateToProtoTimestamp } from '../../../plugin/traceTreeBuilder';
+import { dateToProtoTimestamp } from '../../../plugin/internal';
 import {
   OurContextualizedStats,
   SizeEstimator,

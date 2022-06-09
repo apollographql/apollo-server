@@ -1,11 +1,9 @@
 import { GraphQLError } from 'graphql';
 import {
-  ApolloServer,
   ApolloServerPluginCacheControl,
-  ApolloServerPluginCacheControlOptions,
-  CacheHint,
-  HTTPGraphQLResponse,
-} from '../../..';
+  type ApolloServerPluginCacheControlOptions,
+} from '../../../plugin/cacheControl';
+import { ApolloServer, CacheHint, HTTPGraphQLResponse } from '../../..';
 
 describe('plugin', () => {
   describe('willSendResponse', () => {

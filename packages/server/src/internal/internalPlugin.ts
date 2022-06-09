@@ -1,4 +1,4 @@
-import type { BaseContext, ApolloServerPlugin } from './externalTypes';
+import type { BaseContext, ApolloServerPlugin } from '..';
 
 // This file's exports should not be exported from the overall
 // @apollo/server module.
@@ -27,4 +27,16 @@ export function pluginIsInternal<TContext extends BaseContext>(
   // We could call the function and compare it to the list above, but this seems
   // good enough.
   return '__internal_plugin_id__' in plugin;
+}
+
+// This helps with landing page plugins.
+export type ImplicitlyInstallablePlugin<TContext extends BaseContext> =
+  ApolloServerPlugin<TContext> & {
+    __internal_installed_implicitly__: boolean;
+  };
+
+export function isImplicitlyInstallablePlugin<TContext extends BaseContext>(
+  p: ApolloServerPlugin<TContext>,
+): p is ImplicitlyInstallablePlugin<TContext> {
+  return '__internal_installed_implicitly__' in p;
 }

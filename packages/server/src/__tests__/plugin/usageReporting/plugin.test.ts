@@ -14,15 +14,17 @@ import nock from 'nock';
 import sumBy from 'lodash.sumby';
 import { mockRandom, resetMockRandom } from 'jest-mock-random';
 import { gunzipSync } from 'zlib';
-import { HeaderMap } from '../../../runHttpQuery';
+import { HeaderMap } from '../../../internal';
 import {
   ApolloServer,
-  ApolloServerPluginCacheControlDisabled,
-  ApolloServerPluginUsageReporting,
-  ApolloServerPluginUsageReportingOptions,
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestMetrics,
+  ApolloServerPluginCacheControlDisabled,
 } from '../../..';
+import {
+  type ApolloServerPluginUsageReportingOptions,
+  ApolloServerPluginUsageReporting,
+} from '../../../plugin/usageReporting';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);

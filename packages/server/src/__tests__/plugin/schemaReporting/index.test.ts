@@ -1,8 +1,8 @@
 import {
   ApolloServer,
-  ApolloServerPluginSchemaReporting,
   ApolloServerPluginUsageReportingDisabled,
 } from '../../..';
+import { ApolloServerPluginSchemaReporting } from '../../../plugin/schemaReporting';
 
 describe('end-to-end', () => {
   it('fails for unparsable overrideReportedSchema', async () => {

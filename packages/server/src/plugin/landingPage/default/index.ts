@@ -1,5 +1,5 @@
-import type { BaseContext } from '../../../externalTypes';
-import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
+import type { BaseContext } from '../../..';
+import type { ImplicitlyInstallablePlugin } from '../../../internal';
 import type {
   ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
   ApolloServerPluginLandingPageLocalDefaultOptions,

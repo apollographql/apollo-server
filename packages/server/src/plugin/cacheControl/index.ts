@@ -1,9 +1,3 @@
-import type {
-  BaseContext,
-  CacheAnnotation,
-  CacheHint,
-  CacheScope,
-} from '../../externalTypes';
 import {
   DirectiveNode,
   getNamedType,
@@ -14,9 +8,15 @@ import {
   isObjectType,
   responsePathAsArray,
 } from 'graphql';
-import { newCachePolicy } from '../../cachePolicy';
-import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import LRUCache from 'lru-cache';
+import type {
+  BaseContext,
+  CacheAnnotation,
+  CacheHint,
+  CacheScope,
+} from '../..';
+import type { InternalApolloServerPlugin } from '../../internal';
+import { newCachePolicy } from '../../internal';
 
 export interface ApolloServerPluginCacheControlOptions {
   /**

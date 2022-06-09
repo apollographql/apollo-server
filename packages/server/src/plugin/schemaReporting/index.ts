@@ -1,13 +1,12 @@
-import { createHash } from '@apollo/utils.createhash';
-import os from 'os';
-import type { InternalApolloServerPlugin } from '../../internalPlugin';
-import { v4 as uuidv4 } from 'uuid';
-import { printSchema, validateSchema, buildSchema } from 'graphql';
-import { packageVersion, SchemaReporter } from './schemaReporter';
-import { schemaIsFederated } from '../schemaIsFederated';
-import type { SchemaReport } from './generated/operations';
-import type { BaseContext } from '../../externalTypes';
 import type { Fetcher } from '@apollo/utils.fetcher';
+import { buildSchema, printSchema, validateSchema } from 'graphql';
+import os from 'os';
+import { v4 as uuidv4 } from 'uuid';
+import type { BaseContext } from '../..';
+import type { InternalApolloServerPlugin } from '../../internal';
+import { computeCoreSchemaHash, schemaIsFederated } from '../internal';
+import type { SchemaReport } from './generated/operations';
+import { packageVersion, SchemaReporter } from './schemaReporter';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**
@@ -195,8 +194,4 @@ export function ApolloServerPluginSchemaReporting<TContext extends BaseContext>(
       };
     },
   };
-}
-
-export function computeCoreSchemaHash(schema: string): string {
-  return createHash('sha256').update(schema).digest('hex');
 }

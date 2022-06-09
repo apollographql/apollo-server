@@ -1,11 +1,11 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
 import type express from 'express';
-import type { ApolloServer } from '..';
 import type {
+  ApolloServer,
   BaseContext,
   ContextFunction,
   HTTPGraphQLRequest,
-} from '../externalTypes';
+} from '..';
 
 export interface ExpressContextFunctionArgument {
   req: express.Request;
