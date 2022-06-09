@@ -37,7 +37,6 @@ import type {
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
   LandingPage,
-  PluginDefinition,
   ApolloConfig,
   ApolloServerOptions,
   DocumentStore,
@@ -228,13 +227,18 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
 
     const isDev = nodeEnv !== 'production';
 
-    // Plugins will be instantiated if they aren't already, and this.plugins
-    // is populated accordingly.
-    const plugins = ApolloServer.ensurePluginInstantiation(
-      config.plugins,
-      isDev,
-      apolloConfig,
-      logger,
+    // Plugins can be (for some reason) provided as a function, which we have to
+    // call first to get the actual plugin. Note that more plugins can be added
+    // before `start()` with `addPlugin()` (eg, plugins that want to take this
+    // ApolloServer as an argument), and `start()` will call
+    // `ensurePluginInstantiation` to add default plugins.
+    const plugins: ApolloServerPlugin<TContext>[] = (config.plugins ?? []).map(
+      (plugin) => {
+        if (typeof plugin === 'function') {
+          return plugin();
+        }
+        return plugin;
+      },
     );
 
     const state: ServerState<TContext> = config.gateway
@@ -389,6 +393,10 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       startedInBackground,
     };
     try {
+      // Now that you can't call addPlugin any more, add default plugins like
+      // usage reporting if they're not already added.
+      this.addDefaultPlugins();
+
       const toDispose: (() => Promise<void>)[] = [];
       const executor = await schemaManager.start();
       if (executor) {
@@ -845,21 +853,9 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     this.internals.state = { phase: 'stopped', stopError: null };
   }
 
-  // This is called in the constructor before this.internals has been
-  // initialized, so we make it static to make it clear it can't assume that
-  // `this` has been fully initialized.
-  private static ensurePluginInstantiation<TContext extends BaseContext>(
-    userPlugins: PluginDefinition<TContext>[] = [],
-    isDev: boolean,
-    apolloConfig: ApolloConfig,
-    logger: Logger,
-  ): ApolloServerPlugin<TContext>[] {
-    const plugins = userPlugins.map((plugin) => {
-      if (typeof plugin === 'function') {
-        return plugin();
-      }
-      return plugin;
-    });
+  private addDefaultPlugins() {
+    const { plugins, apolloConfig, logger, nodeEnv } = this.internals;
+    const isDev = nodeEnv !== 'production';
 
     const alreadyHavePluginWithInternalId = (id: InternalPluginId) =>
       plugins.some(
@@ -959,8 +955,6 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       plugin.__internal_installed_implicitly__ = true;
       plugins.push(plugin);
     }
-
-    return plugins;
   }
 
   public addPlugin(plugin: ApolloServerPlugin<TContext>) {
