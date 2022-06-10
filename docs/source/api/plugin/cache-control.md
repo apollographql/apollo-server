@@ -24,7 +24,7 @@ const server = new ApolloServer({
   plugins: [
     ApolloServerPluginCacheControl({
       // Cache everything for 1 second by default.
-      defaultMaxAge: 1000,
+      defaultMaxAge: 1,
       // Don't send the `cache-control` response header.
       calculateHttpHeaders: false,
     }),
