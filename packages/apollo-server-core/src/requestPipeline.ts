@@ -547,21 +547,23 @@ export async function processGraphQLRequest<TContext>(
       ? errorOrErrors
       : [errorOrErrors];
 
-    await didEncounterErrors(errors);
+    // If a error class is passed wrap the error in the error class to provide
+    // more details to the error.
+    const classifiedErrors = errors.map((err) =>
+      err instanceof ApolloError && !errorClass
+        ? err
+        : fromGraphQLError(
+            err,
+            errorClass && {
+              errorClass,
+            },
+          ),
+    );
+
+    await didEncounterErrors(classifiedErrors);
 
     const response: GraphQLResponse = {
-      errors: formatErrors(
-        errors.map((err) =>
-          err instanceof ApolloError && !errorClass
-            ? err
-            : fromGraphQLError(
-                err,
-                errorClass && {
-                  errorClass,
-                },
-              ),
-        ),
-      ),
+      errors: formatErrors(classifiedErrors),
     };
 
     // Persisted query errors (especially "not found") need to be uncached,
