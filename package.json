@@ -55,9 +55,9 @@
     "apollo-server-types": "file:packages/apollo-server-types"
   },
   "devDependencies": {
-    "@apollo/client": "3.6.6",
+    "@apollo/client": "3.6.7",
     "@graphql-codegen/cli": "2.6.2",
-    "@graphql-codegen/typescript-operations": "2.4.1",
+    "@graphql-codegen/typescript-operations": "2.4.2",
     "@graphql-tools/mock": "8.6.12",
     "@graphql-tools/schema": "8.3.14",
     "@graphql-tools/utils": "8.6.13",
