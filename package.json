@@ -67,7 +67,7 @@
     "@rollup/plugin-json": "4.1.0",
     "@sinonjs/fake-timers": "9.1.2",
     "@types/async-retry": "1.4.4",
-    "@types/aws-lambda": "8.10.99",
+    "@types/aws-lambda": "8.10.100",
     "@types/body-parser": "1.19.2",
     "@types/connect": "3.4.35",
     "@types/cors": "2.8.12",
