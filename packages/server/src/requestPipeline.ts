@@ -212,7 +212,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
     try {
       requestContext.document = parse(query, internals.parseOptions);
-      parsingDidEnd();
+      await parsingDidEnd();
     } catch (syntaxError) {
       await parsingDidEnd(syntaxError as Error);
       // XXX: This cast is pretty sketchy, as other error types can be thrown
