@@ -15,6 +15,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 - Add `cache: "bounded"` configuration option, allowing users to opt into bounded request cache (recommended) [PR #6536](https://github.com/apollographql/apollo-server/pull/6536)
 - Remove `apollo-server-caching` and `apollo-server-cache-*` packages [PR #6541](https://github.com/apollographql/apollo-server/pull/6541)
 - Warn when APQ cache is unbounded in production (which is default) [PR #6545](https://github.com/apollographql/apollo-server/pull/6545)
+- Await `parsingDidEnd` `Promise`. Note from @trevor-scheer: I don't think this resolves the issue it intended to. See [Issue #6567](https://github.com/apollographql/apollo-server/pull/6567) for details. [PR #6559](https://github.com/apollographql/apollo-server/pull/6559)
 
 ## v3.8.2
 
