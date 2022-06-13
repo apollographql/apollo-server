@@ -97,9 +97,9 @@ When you initialize Apollo Server, you can provide its constructor a _different_
 
  When running multiple instances of your server, you should use a shared cache backend. This enables one server instance to use the cached result from _another_ instance.
 
-Apollo Server supports using [Memcached](https://memcached.org/) or [Redis](https://redis.io/) (as well as other cache backends) via the [`keyv`](https://www.npmjs.com/package/keyv) package. Visit [Configuring external caching](../performance/cache-backends#configuring-external-caching) for more information and examples on configuring Apollo Server's cache.
+Apollo Server supports using [Memcached](https://memcached.org/), [Redis](https://redis.io/), or other cache backends via the [`keyv`](https://www.npmjs.com/package/keyv) package. For examples, see [Configuring external caching](../performance/cache-backends#configuring-external-caching).
 
-You can also implement your own cache backend. Visit [Implementing your own cache backend](../performance/cache-backends#implementing-your-own-cache-backend) for more information on implementing the `KeyValueCache` interface.
+You can also choose to implement your own cache backend. For more information, see [Implementing your own cache backend](../performance/cache-backends#implementing-your-own-cache-backend).
 
 ## `RESTDataSource` reference
 

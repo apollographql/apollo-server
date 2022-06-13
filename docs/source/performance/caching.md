@@ -404,7 +404,7 @@ const server = new ApolloServer({
 ```
 ## Caching with `responseCachePlugin` (advanced)
 
-You can cache Apollo Server query responses in stores like Redis, Memcached, or Apollo Server's in-memory cache. Visit the [caching backends](./cache-backends) documentation for more information on how to configure Apollo Server's cache.
+You can cache Apollo Server query responses in stores like Redis, Memcached, or Apollo Server's in-memory cache. For more information, see [Configuring cache backends](./cache-backends).
 
 ### In-memory cache setup
 

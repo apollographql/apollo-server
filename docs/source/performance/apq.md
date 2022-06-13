@@ -182,7 +182,9 @@ How exactly this works depends on exactly which CDN you chose. Configure your CD
 
 By default, Apollo Server stores its APQ registry within its local in-memory cache. If you provide a different `cache` as a top-level option to the `ApolloServer` constructor, Apollo Server uses that cache instead.
 
-You can also designate a cache _specifically_ for the APQ registry. To do so, provide an instance of your preferred cache class to the `ApolloServer` constructor as a `cache` option nested inside the `persistedQueries` options object. The `persistedQueries.cache` option is a [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface) just like Apollo Server's `cache` object and can be configured as such. Visit [configuring cache backends](./cache-backends) for more information on configuring the in-memory cache, setting up an external cache like Redis, or writing your own cache implementation.
+You can also designate a cache _specifically_ for the APQ registry. To do so, provide an instance of your preferred cache class to the `ApolloServer` constructor as a `cache` option nested within the `persistedQueries` options object. The `persistedQueries.cache` option is a [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface), which accepts the same configuration options as Apollo Server's `cache` object (also a `KeyValueCache`). 
+
+To learn how to configure the in-memory cache, set up an external cache, or write your own cache implementation, see [Configuring cache backends](./cache-backends).
 
 ## Disabling APQ
 
