@@ -8,6 +8,8 @@ import type {
   ReportSchemaResponse,
 } from './generated/operations';
 import type { Fetcher } from '@apollo/utils.fetcher';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export const schemaReportGql = `mutation SchemaReport($report: SchemaReport!, $coreSchema: String) {
   reportSchema(report: $report, coreSchema: $coreSchema) {
@@ -23,6 +25,10 @@ export const schemaReportGql = `mutation SchemaReport($report: SchemaReport!, $c
   }
 }
 `;
+
+export const packageVersion = JSON.parse(
+  readFileSync(join(__dirname, '..', '..', '..', 'package.json'), 'utf-8'),
+).version as string;
 
 // This class is meant to be a thin shim around the gql mutations.
 export class SchemaReporter {
@@ -53,7 +59,7 @@ export class SchemaReporter {
       'Content-Type': 'application/json',
       'x-api-key': options.apiKey,
       'apollographql-client-name': 'ApolloServerPluginSchemaReporting',
-      'apollographql-client-version': require('../../../package.json').version,
+      'apollographql-client-version': packageVersion,
     };
 
     this.endpointUrl =

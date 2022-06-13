@@ -36,10 +36,16 @@ import type {
 } from './options';
 import { OurReport } from './stats';
 import { makeTraceDetails } from './traceDetails';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
-  agentVersion: `@apollo/server@${require('../../../package.json').version}`,
+  agentVersion: `@apollo/server@${
+    JSON.parse(
+      readFileSync(join(__dirname, '..', '..', '..', 'package.json'), 'utf-8'),
+    ).version
+  }`,
   runtimeVersion: `node ${process.version}`,
   // XXX not actually uname, but what node has easily.
   uname: `${os.platform()}, ${os.type()}, ${os.release()}, ${os.arch()})`,

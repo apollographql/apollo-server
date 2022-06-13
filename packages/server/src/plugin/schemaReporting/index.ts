@@ -3,7 +3,7 @@ import os from 'os';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { v4 as uuidv4 } from 'uuid';
 import { printSchema, validateSchema, buildSchema } from 'graphql';
-import { SchemaReporter } from './schemaReporter';
+import { packageVersion, SchemaReporter } from './schemaReporter';
 import { schemaIsFederated } from '../schemaIsFederated';
 import type { SchemaReport } from './generated/operations';
 import type { BaseContext } from '../../externalTypes';
@@ -138,9 +138,7 @@ export function ApolloServerPluginSchemaReporting<TContext extends BaseContext>(
         // "An identifier for the server instance. Length must be <= 256 characters.
         serverId:
           process.env.APOLLO_SERVER_ID || process.env.HOSTNAME || os.hostname(),
-        libraryVersion: `@apollo/server@${
-          require('../../../package.json').version
-        }`,
+        libraryVersion: `@apollo/server@${packageVersion}`,
       };
       let currentSchemaReporter: SchemaReporter | undefined;
 
