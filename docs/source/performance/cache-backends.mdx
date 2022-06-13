@@ -9,7 +9,7 @@ Apollo Server has several features that take advantage of a cache backend (e.g.,
 
 You can specify a cache backend by passing a `cache` option to the `ApolloServer` constructor. Your specified cache backend must implement the [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface) interface from the `@apollo/utils.keyvaluecache` package.
 
-There are many cache backend implementations to choose from, including several implementations wrapped by Apollo. For example, Apollo maintains an implementation of `InMemoryLRUCache` in the `@apollo/utils.keyvaluecache` package. Apollo also provides a wrapper class for the  [`keyv` package](https://www.npmjs.com/package/keyv) (which implements several cache backends) named [`KeyvAdapter`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyvAdapter#keyvadapter-class) in the `@apollo/utils.keyvadapter` package.
+There are many cache backend implementations to choose from, including several implementations provided by Apollo. For example, Apollo maintains an implementation of `InMemoryLRUCache` in the `@apollo/utils.keyvaluecache` package. Apollo also provides a wrapper class for the  [`keyv` package](https://www.npmjs.com/package/keyv) (which implements several cache backends) named [`KeyvAdapter`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyvAdapter#keyvadapter-class) in the `@apollo/utils.keyvadapter` package.
 
 ## Ensuring a bounded cache
 
