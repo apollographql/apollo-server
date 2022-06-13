@@ -101,5 +101,23 @@
       "matchPackageNames": ["node-fetch", "@types/node-fetch"],
       "allowedVersions": "2.x"
     },
+    // apollo-server-fastify supports Fastify v3. In the past it has been a challenge
+    // to support multiple major versions of web frameworks due to the tight coupling
+    // between Apollo Server core and the framework integration code. (In fact we only
+    // went from Fastify v2 support to Fastify v3 support with AS3.0.) Our solution for
+    // AS4 is to release and version framework integrations separately, and to allow
+    // direct users of the integrations to maintain them. So we are not going to update
+    // AS3 to work with Fastify v4; the Fastify/Apollo Server community can decide whether
+    // the best approach for AS4 is to maintain separate apollo-server-fastify-v3 and
+    // apollo-server-fastify-v4 packages, or to publish a package that manages to work
+    // with both, or something else. (This integration is gone on the version-4 branch.)
+    {
+      matchPackageNames: ["fastify", "@fastify/accepts"],
+      allowedVersions: "3.x",
+    },
+    {
+      matchPackageNames: ["@fastify/cors"],
+      allowedVersions: "7.x",
+    },
   ]
 }
