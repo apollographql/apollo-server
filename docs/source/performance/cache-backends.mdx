@@ -3,13 +3,9 @@ title: Configuring cache backends
 description: How to configure Apollo Server's cache
 ---
 
-# Configuring cache backends
-
-## Introduction
-
 Apollo Server has several features that take advantage of a cache backend (e.g., [automatic persisted queries](./performance/apq), the [response cache plugin](./performance/caching#caching-with-responsecacheplugin-advanced), and [`RESTDataSource`](./data/data-sources#restdatasource-reference)). By default, Apollo Server uses a cache in memory, but you can configure it to use a different backend such as Redis or Memcached.
 
-You can specify a cache backend by passing a `cache` option to the `ApolloServer` constructor. Your specified cache backend _must_ implement the [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface) interface from the `@apollo/utils.keyvaluecache` package. 
+You can specify a cache backend by passing a `cache` option to the `ApolloServer` constructor. Your specified cache backend _must_ implement the [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface) interface from the `@apollo/utils.keyvaluecache` package.
 
 There are many cache backend implementations to choose from, including several implementations wrapped by Apollo. For example, Apollo maintains an implementation of `InMemoryLRUCache` in the `@apollo/utils.keyvaluecache` package. Apollo also provides a wrapper class for the  [`keyv` package](https://www.npmjs.com/package/keyv) (which implements several cache backends) named [`KeyvAdapter`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyvAdapter#keyvadapter-class) in the `@apollo/utils.keyvadapter` package.
 
@@ -18,9 +14,9 @@ This is because APQs are enabled by default and the default cache in Apollo Serv
 
 ## Configuring in-memory caching
 
-**Apollo Server's default caching features use an unbounded cache, which is not safe for production use.** If you'd like to configure the in-memory cache, Apollo provides the [`InMemoryLRUCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#inmemorylrucache) class from the `@apollo/utils.keyvaluecache` package. 
+**Apollo Server's default caching features use an unbounded cache, which is not safe for production use.** If you'd like to configure the in-memory cache, Apollo provides the [`InMemoryLRUCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#inmemorylrucache) class from the `@apollo/utils.keyvaluecache` package.
 
-The `InMemoryLRUCache` class is a wrapper around the `lru-cache` package and has a default maximum of approximately 30MiB of memory. You can configure an instance of `InMemoryLRUCache` with the same options as found in the `lru-cache` package, see the [`lru-cache` documentation](https://www.npmjs.com/package/lru-cache) for more details. 
+The `InMemoryLRUCache` class is a wrapper around the `lru-cache` package and has a default maximum of approximately 30MiB of memory. You can configure an instance of `InMemoryLRUCache` with the same options as found in the `lru-cache` package, see the [`lru-cache` documentation](https://www.npmjs.com/package/lru-cache) for more details.
 
 ### Example: using `InMemoryLRUCache`
 ```ts
@@ -81,7 +77,7 @@ interface KeyValueCache<V> {
 
 ## Legacy caching implementation
 
-Before Apollo Server 3.9+, we used the `apollo-server-caching` package to implement caching. The `apollo-server-caching` package is no longer maintained, and we do not recommend using it. The `KeyValueCache` interface has been moved and is now in the `@apollo/utils.keyvaluecache` package. 
+Before Apollo Server 3.9+, we used the `apollo-server-caching` package to implement caching. The `apollo-server-caching` package is no longer maintained, and we do not recommend using it. The `KeyValueCache` interface has been moved and is now in the `@apollo/utils.keyvaluecache` package.
 
 The `InMemoryLRUCache` class has also moved to the `@apollo/utils.keyvaluecache` package. The `InMemoryLRUCache` class now uses version 7 of `lru-cache`, accepting different configuration options and no longer allowing a cache to be unbounded.
 
