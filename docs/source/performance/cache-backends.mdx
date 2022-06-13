@@ -18,9 +18,8 @@ This is because APQs are enabled by default and the default cache in Apollo Serv
 
 **Apollo Server's default caching features use an unbounded cache, which is not safe for production use.** If you'd like to configure the in-memory cache, Apollo provides the [`InMemoryLRUCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#inmemorylrucache) class from the `@apollo/utils.keyvaluecache` package.
 
-The `InMemoryLRUCache` class is a wrapper around the `lru-cache` package and has a default maximum of approximately 30MiB of memory. You can configure an instance of `InMemoryLRUCache` with the same options as found in the `lru-cache` package, see the [`lru-cache` documentation](https://www.npmjs.com/package/lru-cache) for more details.
+The `InMemoryLRUCache` class is a wrapper around the `lru-cache` package and has a default maximum of approximately 30MiB of memory. You can configure an instance of `InMemoryLRUCache` with the same options as found in the `lru-cache` package, see the [`lru-cache` documentation](https://www.npmjs.com/package/lru-cache) for more details. You can use Apollo's `InMemoryLRUCache` by passing it to the `cache` option of the `ApolloServer` constructor like so:
 
-### Example: using `InMemoryLRUCache`
 ```ts
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 
@@ -29,8 +28,6 @@ const server = new ApolloServer({
   cache: new InMemoryLRUCache(),
 });
 ```
-
-### Example: configuring `InMemoryLRUCache`
 
 In this example, we've increased the default size and provided a default TTL. For more information on these configuration options, see the [`lru-cache` documentation`](https://www.npmjs.com/package/lru-cache).
 ```ts
@@ -41,8 +38,8 @@ const server = new ApolloServer({
   cache: new InMemoryLRUCache({
     // ~100MiB
     maxSize: Math.pow(2, 20) * 100,
-    // 5 minutes
-    ttl: 300000,
+    // 5 minutes (in milliseconds)
+    ttl: 300_000,
   }),
 });
 ```
