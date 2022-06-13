@@ -3,7 +3,7 @@ title: Configuring cache backends
 description: How to configure Apollo Server's cache
 ---
 
-> ⚠️ New in Apollo Server 3.9: we **highly recommend** that all users pass `cache: "bounded"` or configure their cache in a manner which isn't unbounded (which is current default behavior) to protect your server from attacks which exhaust available memory causing a DOS. Continue reading for more information on configuring Apollo Server's cache.
+> ⚠️ New in Apollo Server 3.9: we **highly recommend** that all users pass `cache: "bounded"` or configure their cache in a manner which isn't unbounded (which is current default behavior) to protect your server from attacks which exhaust available memory causing a DOS. See [Ensuring a bounded cache](#ensuring-a-bounded-cache) immediately below for more details.
 
 Apollo Server has several features that take advantage of a cache backend (e.g., [automatic persisted queries](./performance/apq), the [response cache plugin](./performance/caching#caching-with-responsecacheplugin-advanced), and [`RESTDataSource`](./data/data-sources#restdatasource-reference)). By default, Apollo Server uses a cache in memory, but you can configure it to use a different backend such as Redis or Memcached.
 
@@ -11,8 +11,10 @@ You can specify a cache backend by passing a `cache` option to the `ApolloServer
 
 There are many cache backend implementations to choose from, including several implementations wrapped by Apollo. For example, Apollo maintains an implementation of `InMemoryLRUCache` in the `@apollo/utils.keyvaluecache` package. Apollo also provides a wrapper class for the  [`keyv` package](https://www.npmjs.com/package/keyv) (which implements several cache backends) named [`KeyvAdapter`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyvAdapter#keyvadapter-class) in the `@apollo/utils.keyvadapter` package.
 
+## Ensuring a bounded cache
+
 Unfortunately, the default configuration of Apollo Server exposes you to denial of service attacks.
-This is because APQs are enabled by default and the default cache in Apollo Server 3 is unbounded, meaning an attacker can exhaust your memory and crash your server. The default cache in Apollo Server 4 will be bounded; **we recommend opting in to that behavior by providing the `cache: "bounded"` option to your Apollo Server constructor or configuring the `cache` yourself.**
+This is because APQs are enabled by default and the default cache in Apollo Server 3 is unbounded, meaning an attacker can exhaust your memory and crash your server. The default cache in Apollo Server 4 will be bounded; **we recommend opting in to that behavior by providing the `cache: "bounded"` option to your Apollo Server constructor or configuring the `cache` yourself.** Alternatively, you can disable APQs by passing `persistedQueries: false` or configure the APQ cache separately by passing a `KeyValueCache` to `persistedQueries: { cache }`.
 
 ## Configuring in-memory caching
 
