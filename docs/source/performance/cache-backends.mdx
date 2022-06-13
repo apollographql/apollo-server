@@ -46,9 +46,7 @@ const server = new ApolloServer({
 
 ## Configuring external caching
 
-Apollo no longer maintains any caching backends directly. Instead, we recommend using the [`keyv`](https://www.npmjs.com/package/keyv) package along with the [`KeyvAdapter`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyvAdapter#keyvadapter-class) class provided by the `@apollo/utils.keyvadapter` package. `KeyvAdapter` simply wraps a `Keyv` instance and implements the `KeyValueCache` interface which is required by Apollo Server.
-
-### Example: using `Keyv` with Redis
+Apollo no longer maintains any caching backends directly. Instead, we recommend using the [`keyv`](https://www.npmjs.com/package/keyv) package along with the [`KeyvAdapter`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyvAdapter#keyvadapter-class) class provided by the `@apollo/utils.keyvadapter` package. `KeyvAdapter` simply wraps a `Keyv` instance and implements the `KeyValueCache` interface which is required by Apollo Server. You can use the `KeyvAdapter` class to wrap a `Keyv` instance and provide it to the `cache` option of the `ApolloServer` constructor like so:
 
 ```ts
 import Keyv from 'keyv';
