@@ -26,10 +26,10 @@ The `InMemoryLRUCache` class is a wrapper around the `lru-cache` package and has
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 
 const server = new ApolloServer({
-  // Note: this is equivalent to providing `cache: "bounded"`
   cache: new InMemoryLRUCache(),
 });
 ```
+> The equivalent of this is provided out-of-the-box by Apollo Server 3.9+ by passing `cache: "bounded"` and doesn't require you to install the `@apollo/utils.keyvaluecache` package.
 
 In this example, we've increased the default size and provided a default TTL. For more information on these configuration options, see the [`lru-cache` documentation`](https://www.npmjs.com/package/lru-cache).
 ```ts
