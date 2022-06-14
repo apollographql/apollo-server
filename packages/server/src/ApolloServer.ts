@@ -24,7 +24,11 @@ import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
 import { newCachePolicy } from './cachePolicy.js';
 import { determineApolloConfig } from './determineApolloConfig.js';
-import { BadRequestError, ensureError, formatApolloErrors } from './errors.js';
+import {
+  BadRequestError,
+  ensureError,
+  normalizeAndFormatErrors,
+} from './errors.js';
 import type {
   ApolloServerPlugin,
   BaseContext,
@@ -1064,7 +1068,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         ['content-type', 'application/json'],
       ]),
       completeBody: prettyJSONStringify({
-        errors: formatApolloErrors([error], {
+        errors: normalizeAndFormatErrors([error], {
           includeStackTracesInErrorResponses:
             this.internals.includeStackTracesInErrorResponses,
           formatError: this.internals.formatError,
