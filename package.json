@@ -35,7 +35,7 @@
     "npm": "^8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.6.7",
+    "@apollo/client": "3.6.8",
     "@apollo/utils.createhash": "1.1.0",
     "@graphql-codegen/cli": "2.6.2",
     "@graphql-codegen/typescript-operations": "2.4.2",
@@ -90,7 +90,7 @@
     "rollup": "2.75.6",
     "supertest": "6.2.3",
     "test-listen": "1.1.0",
-    "ts-jest": "28.0.4",
+    "ts-jest": "28.0.5",
     "typescript": "4.7.3"
   },
   "jest": {
