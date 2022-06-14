@@ -182,9 +182,45 @@ How exactly this works depends on exactly which CDN you chose. Configure your CD
 
 By default, Apollo Server stores its APQ registry within its local in-memory cache. If you provide a different `cache` as a top-level option to the `ApolloServer` constructor, Apollo Server uses that cache instead.
 
-You can also designate a cache _specifically_ for the APQ registry. To do so, provide an instance of your preferred cache class to the `ApolloServer` constructor as a `cache` option nested within the `persistedQueries` options object. The `persistedQueries.cache` option is a [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface), which accepts the same configuration options as Apollo Server's `cache` object (also a `KeyValueCache`). 
+You can also designate a cache _specifically_ for the APQ registry. To do so, provide an instance of your preferred cache class to the `ApolloServer` constructor as a `cache` option nested within the `persistedQueries` options object. The `persistedQueries.cache` option is a [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface), which accepts the same configuration options as Apollo Server's `cache` object (also a `KeyValueCache`).
 
 To learn how to configure the in-memory cache, set up an external cache, or write your own cache implementation, see [Configuring cache backends](./cache-backends).
+
+## Adjusting cache time-to-live (TTL)
+
+The cache time-to-live (TTL) value determines how long a registered APQ remains in the cache. If a cached query's TTL elapses and the query is purged, it's re-registered the next time it's sent by a client.
+
+Apollo Server's default in-memory store does not specify a TTL for APQ (an APQ remains cached until it is overwritten by the cache's standard eviction policy). For all other [supported stores](#cache-configuration), the default TTL is 300 seconds. You can override or disable this value by setting the `ttl` attribute of the `persistedQueries` option, in seconds:
+
+```ts
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+  persistedQueries: {
+    // highlight-start
+    ttl: 900, // 15 minutes
+    // highlight-end
+  },
+});
+```
+
+To disable TTL entirely, specify `null` for the value of `ttl`:
+
+```ts
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+  persistedQueries: {
+    ttl: null, // highlight-line
+  },
+});
+```
+
+As with the default behavior of the in-memory cache, this leaves APQs in the cache until they are overwritten by the cache's standard eviction policy.
 
 ## Disabling APQ
 
