@@ -31,13 +31,6 @@ import {
   ApolloServerOptions,
   ApolloServer,
   GatewayInterface,
-  ApolloServerPluginInlineTrace,
-  ApolloServerPluginUsageReporting,
-  ApolloServerPluginUsageReportingOptions,
-  ApolloServerPluginLandingPageDisabled,
-  ApolloServerPluginLandingPageGraphQLPlayground,
-  ApolloServerPluginLandingPageLocalDefault,
-  ApolloServerPluginUsageReportingDisabled,
   SchemaLoadOrUpdateCallback,
   BaseContext,
   GraphQLExecutor,
@@ -57,6 +50,17 @@ import type {
 } from '.';
 import { mockLogger } from '../mockLogger';
 import gql from 'graphql-tag';
+import {
+  ApolloServerPluginUsageReportingOptions,
+  ApolloServerPluginUsageReporting,
+} from '../../plugin/usageReporting';
+import { ApolloServerPluginInlineTrace } from '../../plugin/inlineTrace';
+import {
+  ApolloServerPluginLandingPageDisabled,
+  ApolloServerPluginUsageReportingDisabled,
+} from '../../plugin/disabled';
+import { ApolloServerPluginLandingPageLocalDefault } from '../../plugin/landingPage/default';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '../../plugin/landingPage/graphqlPlayground';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);

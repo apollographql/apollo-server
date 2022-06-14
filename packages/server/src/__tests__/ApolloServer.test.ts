@@ -2,10 +2,8 @@ import { ApolloServer } from '..';
 import type { ApolloServerOptions, GatewayInterface } from '..';
 import type { GraphQLSchema } from 'graphql';
 import type { ApolloServerPlugin, BaseContext } from '../externalTypes';
-import {
-  ApolloServerPluginCacheControlDisabled,
-  ApolloServerPluginUsageReporting,
-} from '../plugin';
+import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled';
+import { ApolloServerPluginUsageReporting } from '../plugin/usageReporting';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { HeaderMap } from '../runHttpQuery';
 import { mockLogger } from './mockLogger';

@@ -7,7 +7,7 @@ import type { ListenOptions } from 'net';
 import type { ApolloServer } from '../ApolloServer';
 import { expressMiddleware } from '../express';
 import type { BaseContext, ContextFunction } from '../externalTypes';
-import { ApolloServerPluginDrainHttpServer } from '../plugin';
+import { ApolloServerPluginDrainHttpServer } from '../plugin/drainHttpServer';
 import { urlForHttpServer } from '../utils/urlForHttpServer';
 
 // Note that while we do use express and expressMiddleware to implement the

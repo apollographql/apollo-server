@@ -17,12 +17,14 @@ import { gunzipSync } from 'zlib';
 import { HeaderMap } from '../../../runHttpQuery';
 import {
   ApolloServer,
-  ApolloServerPluginCacheControlDisabled,
-  ApolloServerPluginUsageReporting,
-  ApolloServerPluginUsageReportingOptions,
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestMetrics,
 } from '../../..';
+import {
+  ApolloServerPluginUsageReportingOptions,
+  ApolloServerPluginUsageReporting,
+} from '../../../plugin/usageReporting';
+import { ApolloServerPluginCacheControlDisabled } from '../../../plugin/disabled';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);

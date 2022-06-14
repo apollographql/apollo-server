@@ -1,4 +1,4 @@
-import { ApolloServer } from '../..';
+import { ApolloServer } from '..';
 import gql from 'graphql-tag';
 import loglevel from 'loglevel';
 import { mockLogger } from './mockLogger';

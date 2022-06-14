@@ -2,8 +2,49 @@
   "name": "@apollo/server",
   "version": "3.6.7",
   "description": "Core engine for Apollo GraphQL server",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./standalone": {
+      "require": "./dist/standalone/index.js",
+      "types": "./dist/standalone/index.d.ts"
+    },
+    "./plugin/cacheControl": {
+      "require": "./dist/plugin/cacheControl/index.js",
+      "types": "./dist/plugin/cacheControl/index.d.ts"
+    },
+    "./plugin/disabled": {
+      "require": "./dist/plugin/disabled.js",
+      "types": "./dist/plugin/disabled.d.ts"
+    },
+    "./plugin/drainHttpServer": {
+      "require": "./dist/plugin/drainHttpServer/index.js",
+      "types": "./dist/plugin/drainHttpServer/index.d.ts"
+    },
+    "./plugin/inlineTrace": {
+      "require": "./dist/plugin/inlineTrace/index.js",
+      "types": "./dist/plugin/inlineTrace/index.d.ts"
+    },
+    "./plugin/landingPage/default": {
+      "require": "./dist/plugin/landingPage/default/index.js",
+      "types": "./dist/plugin/landingPage/default/index.d.ts"
+    },
+    "./plugin/landingPage/graphqlPlayground": {
+      "require": "./dist/plugin/landingPage/graphqlPlayground/index.js",
+      "types": "./dist/plugin/landingPage/graphqlPlayground/index.d.ts"
+    },
+    "./plugin/schemaReporting": {
+      "require": "./dist/plugin/schemaReporting/index.js",
+      "types": "./dist/plugin/schemaReporting/index.d.ts"
+    },
+    "./plugin/usageReporting": {
+      "require": "./dist/plugin/usageReporting/index.js",
+      "types": "./dist/plugin/usageReporting/index.d.ts"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server",
