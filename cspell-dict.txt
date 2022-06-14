@@ -89,6 +89,7 @@ Loftis
 loglevel
 Luca
 MAXAGE
+memjs
 mget
 Mget
 microrouter
