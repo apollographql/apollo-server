@@ -3,7 +3,7 @@ title: Configuring cache backends
 description: How to configure Apollo Server's cache
 ---
 
-> ⚠️ New in Apollo Server 3.9: we **highly recommend** that all users pass `cache: "bounded"` or configure their cache in a manner which isn't unbounded (which is current default behavior) to protect your server from attacks which exhaust available memory causing a DOS. See [Ensuring a bounded cache](#ensuring-a-bounded-cache) immediately below for more details.
+> ⚠️ **New in Apollo Server 3.9:** We _strongly recommend_ that all users pass `cache: "bounded"` or configure their cache in a manner that isn't unbounded (which is current default behavior). This protects your server from attacks that exhaust available memory, causing a DOS. See [Ensuring a bounded cache](#ensuring-a-bounded-cache) immediately below for more details.
 
 Many Apollo Server features take advantage of a cache backend (these features include [automatic persisted queries](./performance/apq), the [response cache plugin](./performance/caching#caching-with-responsecacheplugin-advanced), and [`RESTDataSource`](./data/data-sources#restdatasource-reference)). Apollo Server uses an in-memory cache by default, but you can configure it to use a different backend, such as Redis or Memcached.
 
