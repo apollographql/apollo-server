@@ -1,5 +1,7 @@
-import { Trace } from '@apollo/usage-reporting-protobuf';
+import proto from '@apollo/usage-reporting-protobuf';
 import type { VariableValueOptions } from './options';
+
+const { Trace } = proto;
 
 // Creates trace details from request variables, given a specification for modifying
 // values of private or sensitive variables.
@@ -12,7 +14,7 @@ export function makeTraceDetails(
   variables: Record<string, any>,
   sendVariableValues?: VariableValueOptions,
   operationString?: string,
-): Trace.Details {
+): proto.Trace.Details {
   const details = new Trace.Details();
   const variablesToRecord = (() => {
     if (sendVariableValues && 'transform' in sendVariableValues) {

@@ -1,10 +1,11 @@
-import { Trace } from '@apollo/usage-reporting-protobuf';
-import { TraceTreeBuilder } from '../traceTreeBuilder';
+import proto from '@apollo/usage-reporting-protobuf';
+import { TraceTreeBuilder } from '../traceTreeBuilder.js';
 import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
-import { schemaIsFederated } from '../schemaIsFederated';
+import { schemaIsFederated } from '../schemaIsFederated.js';
 import type { BaseContext } from '../../externalTypes';
 
+const { Trace } = proto;
 export interface ApolloServerPluginInlineTraceOptions {
   /**
    * By default, all errors from this service get included in the trace.  You

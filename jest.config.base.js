@@ -1,6 +1,6 @@
-const { defaults } = require('jest-config');
+import { defaults } from 'jest-config';
 
-module.exports = {
+export default {
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/../../jest.setup.js'],
   preset: 'ts-jest',
@@ -9,10 +9,16 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   moduleFileExtensions: [...defaults.moduleFileExtensions, 'ts', 'tsx'],
   clearMocks: true,
+  extensionsToTreatAsEsm: ['.ts'],
   globals: {
     'ts-jest': {
+      useESM: true,
       tsconfig: '<rootDir>/src/__tests__/tsconfig.json',
       diagnostics: false,
     },
+  },
+  moduleNameMapper: {
+    // Ignore '.js' at the end of imports; part of ESM support.
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
 };

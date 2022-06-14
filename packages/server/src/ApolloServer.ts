@@ -23,9 +23,9 @@ import {
 import loglevel from 'loglevel';
 import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
-import { newCachePolicy } from './cachePolicy';
-import { determineApolloConfig } from './determineApolloConfig';
-import { BadRequestError, ensureError, formatApolloErrors } from './errors';
+import { newCachePolicy } from './cachePolicy.js';
+import { determineApolloConfig } from './determineApolloConfig.js';
+import { BadRequestError, ensureError, formatApolloErrors } from './errors.js';
 import type {
   ApolloServerPlugin,
   BaseContext,
@@ -44,22 +44,22 @@ import type {
   HTTPGraphQLHead,
   ContextThunk,
 } from './externalTypes';
-import { runPotentiallyBatchedHttpQuery } from './httpBatching';
-import { InternalPluginId, pluginIsInternal } from './internalPlugin';
+import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
+import { InternalPluginId, pluginIsInternal } from './internalPlugin.js';
 import {
   preventCsrf,
   recommendedCsrfPreventionRequestHeaders,
-} from './preventCsrf';
-import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline';
+} from './preventCsrf.js';
+import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline.js';
 import {
   badMethodErrorMessage,
   cloneObject,
   HeaderMap,
   newHTTPGraphQLHead,
   prettyJSONStringify,
-} from './runHttpQuery';
-import { SchemaManager } from './utils/schemaManager';
-import { isDefined } from './utils/isDefined';
+} from './runHttpQuery.js';
+import { SchemaManager } from './utils/schemaManager.js';
+import { isDefined } from './utils/isDefined.js';
 import type { WithRequired } from '@apollo/utils.withrequired';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor';
 
@@ -857,7 +857,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     {
       if (!alreadyHavePluginWithInternalId('CacheControl')) {
         const { ApolloServerPluginCacheControl } = await import(
-          './plugin/cacheControl'
+          './plugin/cacheControl/index.js'
         );
         plugins.push(ApolloServerPluginCacheControl());
       }
@@ -874,7 +874,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           // the fact that the person who wrote this line also was the original
           // author of the comment above in #1105, they don't quite understand why this was important.)
           const { ApolloServerPluginUsageReporting } = await import(
-            './plugin/usageReporting'
+            './plugin/usageReporting/index.js'
           );
           plugins.unshift(ApolloServerPluginUsageReporting());
         } else {
@@ -896,7 +896,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       if (!alreadyHavePlugin && enabledViaEnvVar) {
         if (apolloConfig.key) {
           const { ApolloServerPluginSchemaReporting } = await import(
-            './plugin/schemaReporting'
+            './plugin/schemaReporting/index.js'
           );
           plugins.push(ApolloServerPluginSchemaReporting());
         } else {
@@ -921,7 +921,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         // pre-ApolloServerPluginInlineTrace where we would also avoid doing
         // this if an API key was configured and log a warning.)
         const { ApolloServerPluginInlineTrace } = await import(
-          './plugin/inlineTrace'
+          './plugin/inlineTrace/index.js'
         );
         plugins.push(
           ApolloServerPluginInlineTrace({ __onlyIfSchemaIsFederated: true }),
@@ -949,7 +949,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       const {
         ApolloServerPluginLandingPageLocalDefault,
         ApolloServerPluginLandingPageProductionDefault,
-      } = await import('./plugin/landingPage/default');
+      } = await import('./plugin/landingPage/default/index.js');
       const plugin: ApolloServerPlugin<TContext> = isDev
         ? ApolloServerPluginLandingPageLocalDefault()
         : ApolloServerPluginLandingPageProductionDefault();

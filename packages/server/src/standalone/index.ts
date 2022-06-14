@@ -1,14 +1,14 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
-import { json } from 'body-parser';
+import bodyParser from 'body-parser'; // note that importing 'json' directly doesn't work in ESM
 import cors from 'cors';
 import express from 'express';
 import http, { IncomingMessage, ServerResponse } from 'http';
 import type { ListenOptions } from 'net';
 import type { ApolloServer } from '../ApolloServer';
-import { expressMiddleware } from '../express';
+import { expressMiddleware } from '../express/index.js';
 import type { BaseContext, ContextFunction } from '../externalTypes';
-import { ApolloServerPluginDrainHttpServer } from '../plugin/drainHttpServer';
-import { urlForHttpServer } from '../utils/urlForHttpServer';
+import { ApolloServerPluginDrainHttpServer } from '../plugin/drainHttpServer/index.js';
+import { urlForHttpServer } from '../utils/urlForHttpServer.js';
 
 // Note that while we do use express and expressMiddleware to implement the
 // standalone server, this is an internal implementation detail. We could
@@ -54,7 +54,7 @@ export async function startStandaloneServer<TContext extends BaseContext>(
   await server.start();
 
   const context = options?.context ?? (async () => ({} as TContext));
-  app.use(cors(), json(), expressMiddleware(server, { context }));
+  app.use(cors(), bodyParser.json(), expressMiddleware(server, { context }));
 
   const listenOptions = options?.listen ?? { port: 4000 };
   // Wait for server to start listening

@@ -3,5 +3,6 @@
 src/**/__tests__/**
 !dist/**/*
 dist/**/__tests__/**
+dist/**/*.tsbuildinfo
 !package.json
 !README.md

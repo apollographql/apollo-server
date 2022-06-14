@@ -4,25 +4,25 @@
  * is re-exported by the root (via * export), so add exports to this file with
  * intention (it's public API).
  */
-export {
+export type {
   CacheAnnotation,
   CacheHint,
   CachePolicy,
   CacheScope,
 } from './cacheControl';
-export { BaseContext, ContextFunction, ContextThunk } from './context';
-export {
+export type { BaseContext, ContextFunction, ContextThunk } from './context';
+export type {
   GraphQLRequest,
   GraphQLRequestContext,
   GraphQLRequestMetrics,
   GraphQLResponse,
 } from './graphql';
-export {
+export type {
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
   HTTPGraphQLHead,
 } from './http';
-export {
+export type {
   ApolloServerPlugin,
   GraphQLFieldResolverParams,
   GraphQLRequestExecutionListener,
@@ -37,7 +37,7 @@ export {
   LandingPage,
   PluginDefinition,
 } from './plugins';
-export {
+export type {
   GraphQLExecutor,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextDidResolveOperation,
@@ -48,7 +48,7 @@ export {
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextWillSendResponse,
 } from './requestPipeline';
-export {
+export type {
   Unsubscriber,
   SchemaLoadOrUpdateCallback,
   GatewayLoadResult,

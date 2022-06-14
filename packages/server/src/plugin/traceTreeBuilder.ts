@@ -1,8 +1,10 @@
 // This class is a helper for ApolloServerPluginUsageReporting and
 // ApolloServerPluginInlineTrace.
 import { GraphQLError, GraphQLResolveInfo, ResponsePath } from 'graphql';
-import { Trace, google } from '@apollo/usage-reporting-protobuf';
+import proto from '@apollo/usage-reporting-protobuf';
 import type { Logger } from '@apollo/utils.logger';
+
+const { Trace, google } = proto;
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
@@ -24,7 +26,7 @@ export class TraceTreeBuilder {
   });
   public startHrTime?: [number, number];
   private stopped = false;
-  private nodes = new Map<string, Trace.Node>([
+  private nodes = new Map<string, proto.Trace.Node>([
     [responsePathAsString(), this.rootNode],
   ]);
   private readonly rewriteError?: (err: GraphQLError) => GraphQLError | null;
@@ -117,7 +119,7 @@ export class TraceTreeBuilder {
 
   private addProtobufError(
     path: ReadonlyArray<string | number> | undefined,
-    error: Trace.Error,
+    error: proto.Trace.Error,
   ) {
     if (!this.startHrTime) {
       throw internalError('addProtobufError called before startTiming!');
@@ -146,7 +148,7 @@ export class TraceTreeBuilder {
     node.error.push(error);
   }
 
-  private newNode(path: ResponsePath): Trace.Node {
+  private newNode(path: ResponsePath): proto.Trace.Node {
     const node = new Trace.Node();
     const id = path.key;
     if (typeof id === 'number') {
@@ -160,7 +162,7 @@ export class TraceTreeBuilder {
     return node;
   }
 
-  private ensureParentNode(path: ResponsePath): Trace.Node {
+  private ensureParentNode(path: ResponsePath): proto.Trace.Node {
     const parentPath = responsePathAsString(path.prev);
     const parentNode = this.nodes.get(parentPath);
     if (parentNode) {
@@ -260,7 +262,7 @@ function responsePathAsString(p?: ResponsePath): string {
   return res;
 }
 
-function errorToProtobufError(error: GraphQLError): Trace.Error {
+function errorToProtobufError(error: GraphQLError): proto.Trace.Error {
   return new Trace.Error({
     message: error.message,
     location: (error.locations || []).map(
@@ -271,7 +273,9 @@ function errorToProtobufError(error: GraphQLError): Trace.Error {
 }
 
 // Converts a JS Date into a Timestamp.
-export function dateToProtoTimestamp(date: Date): google.protobuf.Timestamp {
+export function dateToProtoTimestamp(
+  date: Date,
+): proto.google.protobuf.Timestamp {
   const totalMillis = +date;
   const millis = totalMillis % 1000;
   return new google.protobuf.Timestamp({

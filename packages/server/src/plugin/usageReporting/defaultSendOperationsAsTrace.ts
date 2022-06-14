@@ -1,7 +1,7 @@
 import LRUCache from 'lru-cache';
 import type { Trace } from '@apollo/usage-reporting-protobuf';
-import { iterateOverTrace } from './iterateOverTrace';
-import { DurationHistogram } from './durationHistogram';
+import { iterateOverTrace } from './iterateOverTrace.js';
+import { DurationHistogram } from './durationHistogram.js';
 
 export function defaultSendOperationsAsTrace() {
   // We keep an LRU cache mapping from a trace key (which consists of the

@@ -1,4 +1,4 @@
-import { isDefined } from './isDefined';
+import { isDefined } from './isDefined.js';
 
 type AsyncDidEndHook<TArgs extends any[]> = (...args: TArgs) => Promise<void>;
 type SyncDidEndHook<TArgs extends any[]> = (...args: TArgs) => void;

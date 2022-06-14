@@ -4,8 +4,8 @@ import type {
   HTTPGraphQLResponse,
 } from './externalTypes';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
-import { HeaderMap, runHttpQuery } from './runHttpQuery';
-import { BadRequestError } from './errors';
+import { HeaderMap, runHttpQuery } from './runHttpQuery.js';
+import { BadRequestError } from './errors.js';
 
 export async function runBatchHttpQuery<TContext extends BaseContext>(
   batchRequest: Omit<HTTPGraphQLRequest, 'body'> & { body: any[] },

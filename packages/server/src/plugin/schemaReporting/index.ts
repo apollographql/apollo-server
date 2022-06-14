@@ -3,11 +3,12 @@ import os from 'os';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import { v4 as uuidv4 } from 'uuid';
 import { printSchema, validateSchema, buildSchema } from 'graphql';
-import { packageVersion, SchemaReporter } from './schemaReporter';
-import { schemaIsFederated } from '../schemaIsFederated';
+import { SchemaReporter } from './schemaReporter.js';
+import { schemaIsFederated } from '../schemaIsFederated.js';
 import type { SchemaReport } from './generated/operations';
 import type { BaseContext } from '../../externalTypes';
 import type { Fetcher } from '@apollo/utils.fetcher';
+import { packageVersion } from '../../packageVersion.js';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**

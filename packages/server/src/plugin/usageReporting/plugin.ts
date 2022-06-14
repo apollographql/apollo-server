@@ -1,4 +1,4 @@
-import { Report, ReportHeader, Trace } from '@apollo/usage-reporting-protobuf';
+import proto from '@apollo/usage-reporting-protobuf';
 import type { Fetcher, FetcherResponse } from '@apollo/utils.fetcher';
 import {
   usageReportingSignature,
@@ -22,30 +22,27 @@ import type {
 } from '../../externalTypes';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import type { HeaderMap } from '../../runHttpQuery';
-import { computeCoreSchemaHash } from '../schemaReporting';
-import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder';
-import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
+import { computeCoreSchemaHash } from '../schemaReporting/index.js';
+import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder.js';
+import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace.js';
 import {
   createOperationDerivedDataCache,
   OperationDerivedData,
   operationDerivedDataCacheKey,
-} from './operationDerivedDataCache';
+} from './operationDerivedDataCache.js';
 import type {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
 } from './options';
-import { OurReport } from './stats';
-import { makeTraceDetails } from './traceDetails';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { OurReport } from './stats.js';
+import { makeTraceDetails } from './traceDetails.js';
+import { packageVersion } from '../../packageVersion.js';
+
+const { ReportHeader } = proto;
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
-  agentVersion: `@apollo/server@${
-    JSON.parse(
-      readFileSync(join(__dirname, '..', '..', '..', 'package.json'), 'utf-8'),
-    ).version
-  }`,
+  agentVersion: `@apollo/server@${packageVersion}`,
   runtimeVersion: `node ${process.version}`,
   // XXX not actually uname, but what node has easily.
   uname: `${os.platform()}, ${os.type()}, ${os.release()}, ${os.arch()})`,
@@ -53,7 +50,7 @@ const reportHeaderDefaults = {
 
 class ReportData {
   report!: OurReport;
-  readonly header: ReportHeader;
+  readonly header: proto.ReportHeader;
   constructor(executableSchemaId: string, graphRef: string) {
     this.header = new ReportHeader({
       ...reportHeaderDefaults,
@@ -249,11 +246,11 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
 
         report.ensureCountsAreIntegers();
 
-        const protobufError = Report.verify(report);
+        const protobufError = proto.Report.verify(report);
         if (protobufError) {
           throw new Error(`Error encoding report: ${protobufError}`);
         }
-        const message = Report.encode(report).finish();
+        const message = proto.Report.encode(report).finish();
 
         // Potential follow-up: we can compare message.length to
         // report.sizeEstimator.bytes and use it to "learn" if our estimation is
@@ -272,7 +269,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           //
           // We decode the report rather than printing the original `report`
           // so that it includes all of the pre-encoded traces.
-          const decodedReport = Report.decode(message);
+          const decodedReport = proto.Report.decode(message);
           logger.warn(
             `Apollo usage report: ${JSON.stringify(decodedReport.toJSON())}`,
           );
@@ -406,11 +403,11 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         let includeOperationInUsageReporting: boolean | null = null;
 
         if (http) {
-          treeBuilder.trace.http = new Trace.HTTP({
+          treeBuilder.trace.http = new proto.Trace.HTTP({
             method:
-              Trace.HTTP.Method[
-                http.method as keyof typeof Trace.HTTP.Method
-              ] || Trace.HTTP.Method.UNKNOWN,
+              proto.Trace.HTTP.Method[
+                http.method as keyof typeof proto.Trace.HTTP.Method
+              ] || proto.Trace.HTTP.Method.UNKNOWN,
             // Host and path are not used anywhere on the backend, so let's not bother
             // trying to parse request.url to get them, which is a potential
             // source of bugs because integrations have different behavior here.
@@ -597,13 +594,13 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
             const policyIfCacheable =
               requestContext.overallCachePolicy.policyIfCacheable();
             if (policyIfCacheable) {
-              treeBuilder.trace.cachePolicy = new Trace.CachePolicy({
+              treeBuilder.trace.cachePolicy = new proto.Trace.CachePolicy({
                 scope:
                   policyIfCacheable.scope === 'PRIVATE'
-                    ? Trace.CachePolicy.Scope.PRIVATE
+                    ? proto.Trace.CachePolicy.Scope.PRIVATE
                     : policyIfCacheable.scope === 'PUBLIC'
-                    ? Trace.CachePolicy.Scope.PUBLIC
-                    : Trace.CachePolicy.Scope.UNKNOWN,
+                    ? proto.Trace.CachePolicy.Scope.PUBLIC
+                    : proto.Trace.CachePolicy.Scope.UNKNOWN,
                 // Convert from seconds to ns.
                 maxAgeNs: policyIfCacheable.maxAge * 1e9,
               });
@@ -674,7 +671,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                   operationDerivedData.referencedFieldsByType;
               }
 
-              const protobufError = Trace.verify(trace);
+              const protobufError = proto.Trace.verify(trace);
               if (protobufError) {
                 throw new Error(`Error encoding trace: ${protobufError}`);
               }
@@ -790,7 +787,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
 }
 
 export function makeHTTPRequestHeaders(
-  http: Trace.IHTTP,
+  http: proto.Trace.IHTTP,
   headers: HeaderMap,
   sendHeaders?: SendValuesBaseOptions,
 ): void {
@@ -826,7 +823,7 @@ export function makeHTTPRequestHeaders(
       case 'set-cookie':
         break;
       default:
-        http!.requestHeaders![key] = new Trace.HTTP.Values({
+        http!.requestHeaders![key] = new proto.Trace.HTTP.Values({
           value: [value],
         });
     }

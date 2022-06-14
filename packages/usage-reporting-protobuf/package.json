@@ -2,6 +2,7 @@
   "name": "@apollo/usage-reporting-protobuf",
   "version": "3.3.1",
   "description": "Protobuf format for Apollo usage reporting",
+  "type": "commonjs",
   "main": "generated/index.js",
   "types": "generated/index.d.ts",
   "scripts": {

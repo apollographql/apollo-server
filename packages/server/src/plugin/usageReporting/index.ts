@@ -1,5 +1,5 @@
-export { ApolloServerPluginUsageReporting } from './plugin';
-export {
+export { ApolloServerPluginUsageReporting } from './plugin.js';
+export type {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
   VariableValueOptions,
