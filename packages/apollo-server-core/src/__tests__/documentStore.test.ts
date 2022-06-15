@@ -2,7 +2,8 @@ import gql from 'graphql-tag';
 import type { DocumentNode } from 'graphql';
 
 import { ApolloServerBase } from '../ApolloServer';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import assert from 'assert';
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 
 const typeDefs = gql`
   type Query {
@@ -51,12 +52,12 @@ describe('ApolloServerBase documentStore', () => {
     await server.start();
 
     const options = await server.graphQLServerOptions();
-    const embeddedStore = options.documentStore as any;
+    const embeddedStore = options.documentStore;
+    assert(embeddedStore);
     expect(embeddedStore).toBeInstanceOf(InMemoryLRUCache);
 
     await server.executeOperation(operations.simple.op);
 
-    expect(await embeddedStore.getTotalSize()).toBe(403);
     expect(await embeddedStore.get(operations.simple.hash)).toMatchObject(
       documentNodeMatcher,
     );

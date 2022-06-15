@@ -152,6 +152,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
 });
 
 // The `listen` method launches a web server.

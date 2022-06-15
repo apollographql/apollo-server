@@ -25,6 +25,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginUsageReporting({
       fieldLevelInstrumentation: 0.5,
@@ -454,6 +455,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [ApolloServerPluginUsageReportingDisabled()],
 });
 ```

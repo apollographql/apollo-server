@@ -316,6 +316,7 @@ describe('apollo-server-koa', () => {
             },
           },
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -345,6 +346,7 @@ describe('apollo-server-koa', () => {
             },
           },
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });

@@ -20,6 +20,7 @@ const server = new ApolloServer({
 	typeDefs,
 	resolvers,
   csrfPrevention: true,  // highly recommended
+  cache: 'bounded',
 });
 ```
 
@@ -202,19 +203,19 @@ A key-value cache that Apollo Server uses to store previously encountered GraphQ
 
 Whenever Apollo Server receives an incoming operation, it checks whether that exact operation is present in its `documentStore`. If it's present, Apollo Server can safely skip parsing and validating the operation, thereby improving performance.
 
-The default `documentStore` is an [`InMemoryLRUCache`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/InMemoryLRUCache.ts) with an approximate size of 30MiB. This is usually sufficient unless the server processes a large number of unique operations. Provide this option if you want to change the cache size or store the cache information in an alternate location.
+The default `documentStore` is an [`InMemoryLRUCache`](https://github.com/apollographql/apollo-utils/blob/main/packages/keyValueCache/src/InMemoryLRUCache.ts) with an approximate size of 30MiB. This is usually sufficient unless the server processes a large number of unique operations. Provide this option if you want to change the cache size or store the cache information in an alternate location.
 
 To use `InMemoryLRUCache` but change its size to an amount `approximateDocumentStoreMiB`:
 
 <div style="max-width: 400px;">
 
 ```typescript
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import type { DocumentNode } from 'graphql';
 new ApolloServer({
   documentStore: new InMemoryLRUCache<DocumentNode>({
     maxSize: Math.pow(2, 20) * approximateDocumentStoreMiB,
-    sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
+    sizeCalculation: InMemoryLRUCache.sizeCalculation,
   }),
   // ...
 })
@@ -225,6 +226,26 @@ new ApolloServer({
 Pass `null` to disable this cache entirely.
 
 Available in Apollo Server v3.4.0 and later.
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `cache`
+
+`KeyValueCache | "bounded"`
+</td>
+<td>
+
+A `KeyValueCache` which Apollo Server uses for several features, including APQs and full response caching. This cache is also available to Apollo Server's data sources and plugins.
+
+By default, the cache that Apollo Server 3 uses is unbounded. We _strongly recommend_ that all users pass `cache: "bounded"` or configure their cache in a manner that isn't unbounded. This protects your server from attacks that exhaust available memory, causing a DOS.
+
+The default bounded cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
+
+To learn more about configuring Apollo Server's cache, see [Configuring cache backends](../performance/cache-backends).
+
 </td>
 </tr>
 
@@ -429,7 +450,7 @@ The default value is `true`. Set this to `false` to use mocked resolvers only fo
 
 ##### `nodeEnv`
 
-`String`
+`string`
 </td>
 <td>
 
@@ -562,7 +583,7 @@ Returns a `Promise` that resolves to an object containing the following properti
 
 ##### `url`
 
-`String`
+`string`
 </td>
 <td>
 
@@ -726,6 +747,7 @@ async function startApolloServer() {
     typeDefs,
     resolvers,
     csrfPrevention: true,
+    cache: 'bounded',
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
@@ -774,7 +796,7 @@ async function startApolloServer() {
 
 ##### `path`
 
-`String`
+`string`
 </td>
 <td>
 

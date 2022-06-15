@@ -14,7 +14,7 @@ import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
-} from 'apollo-server-caching';
+} from '@apollo/utils.keyvaluecache';
 import type {
   ApolloServerPlugin,
   GraphQLServiceContext,
@@ -60,6 +60,7 @@ import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import { newCachePolicy } from './cachePolicy';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
 import * as uuid from 'uuid';
+import { UnboundedCache } from './utils/UnboundedCache';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -260,8 +261,26 @@ export class ApolloServerBase<
         : noIntro;
     }
 
-    if (!requestOptions.cache) {
+    if (requestOptions.cache === 'bounded') {
       requestOptions.cache = new InMemoryLRUCache();
+    }
+
+    if (!requestOptions.cache) {
+      requestOptions.cache = new UnboundedCache();
+
+      if (
+        !isDev &&
+        (requestOptions.persistedQueries === undefined ||
+          (requestOptions.persistedQueries &&
+            !requestOptions.persistedQueries.cache))
+      ) {
+        this.logger.warn(
+          'Persisted queries are enabled and are using an unbounded cache. Your server' +
+            ' is vulnerable to denial of service attacks via memory exhaustion. ' +
+            'Set `cache: "bounded"` or `persistedQueries: false` in your ApolloServer ' +
+            'constructor, or see https://go.apollo.dev/s/cache-backends for other alternatives.',
+        );
+      }
     }
 
     if (requestOptions.persistedQueries !== false) {
@@ -709,7 +728,7 @@ export class ApolloServerBase<
       // random prefix each time we get a new schema.
       documentStore:
         this.config.documentStore === undefined
-          ? this.initializeDocumentStore()
+          ? new InMemoryLRUCache()
           : this.config.documentStore === null
           ? null
           : new PrefixingKeyValueCache(
@@ -904,20 +923,6 @@ export class ApolloServerBase<
       plugin.__internal_installed_implicitly__ = true;
       this.plugins.push(plugin);
     }
-  }
-
-  private initializeDocumentStore(): InMemoryLRUCache<DocumentNode> {
-    return new InMemoryLRUCache<DocumentNode>({
-      // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
-      // since the technique to calculate the size of a DocumentNode is
-      // only using JSON.stringify on the DocumentNode (and thus doesn't account
-      // for unicode characters, etc.), but it should do a reasonable job at
-      // providing a caching document store for most operations.
-      //
-      // If you want to tweak the max size, pass in your own documentStore.
-      maxSize: Math.pow(2, 20) * 30,
-      sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
-    });
   }
 
   // This function is used by the integrations to generate the graphQLOptions

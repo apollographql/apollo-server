@@ -65,15 +65,6 @@
       matchBaseBranches: ["main"],
       allowedVersions: "5.x"
     },
-    // On version-4 we no longer are maintaining specific Redis cache bindings
-    // (instead we use the Keyv project). So we're not going to make the
-    // backwards-incompatible v4->v5 upgrade to this Redis library on
-    // apollo-server-cache-redis in AS3.
-    {
-      matchPackageNames: ["ioredis", "@types/ioredis"],
-      matchBaseBranches: ["main"],
-      allowedVersions: "4.x"
-    },
     // We've transitioned from lerna to changesets on version-4. We don't need
     // to take the major upgrade on main. (Plus we can't because it drops Node
     // 12 support.)

@@ -352,8 +352,11 @@ describe('HTTPCache', () => {
 
     await httpCache.fetch(new Request('https://api.example.com/people/1'));
 
-    expect(storeSet.mock.calls[0][2]).toEqual({ ttl: 30 });
-
+    expect(storeSet).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      { ttl: 30 },
+    );
     storeSet.mockRestore();
   });
 
@@ -367,7 +370,11 @@ describe('HTTPCache', () => {
 
     await httpCache.fetch(new Request('https://api.example.com/people/1'));
 
-    expect(storeSet.mock.calls[0][2]).toEqual({ ttl: 60 });
+    expect(storeSet).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      { ttl: 60 },
+    );
 
     storeSet.mockRestore();
   });

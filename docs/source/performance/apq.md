@@ -134,6 +134,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   // The max age is calculated in seconds
   plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
 });
@@ -181,131 +182,9 @@ How exactly this works depends on exactly which CDN you chose. Configure your CD
 
 By default, Apollo Server stores its APQ registry within its local in-memory cache. If you provide a different `cache` as a top-level option to the `ApolloServer` constructor, Apollo Server uses that cache instead.
 
-You can also designate a cache _specifically_ for the APQ registry. To do so, provide an instance of your preferred cache class to the `ApolloServer` constructor as a `cache` option nested inside the `persistedQueries` options object. The following backing data stores are supported:
+You can also designate a cache _specifically_ for the APQ registry. To do so, provide an instance of your preferred cache class to the `ApolloServer` constructor as a `cache` option nested within the `persistedQueries` options object. The `persistedQueries.cache` option is a [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface), which accepts the same configuration options as Apollo Server's `cache` object (also a `KeyValueCache`).
 
-| Data store  | Class name  | Library  |
-|---|---|---|
-| Local in-memory cache (default)  | `InMemoryLRUCache`  | [`apollo-server-caching`](https://npm.im/apollo-server-caching)  |
-| Memcached  | `MemcachedCache`  | [`apollo-server-cache-memcached`](https://npm.im/apollo-server-cache-memcached)  |
-| Redis (single instance or Sentinel)  | `RedisCache`  | [`apollo-server-cache-redis`](https://npm.im/apollo-server-cache-redis)  |
-| Redis Cluster | `RedisClusterCache`| [`apollo-server-cache-redis`](https://npm.im/apollo-server-cache-redis)|
-
-Examples for supported data stores are provided below.
-
-### Memcached
-
-```shell
-$ npm install apollo-server-cache-memcached
-```
-
-```javascript
-const { MemcachedCache } = require('apollo-server-cache-memcached');
-const { ApolloServer } = require('apollo-server');
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  csrfPrevention: true,
-  // highlight-start
-  persistedQueries: {
-    cache: new MemcachedCache(
-      ['memcached-1.local', 'memcached-2.local', 'memcached-3.local'],
-      { retries: 10, retry: 10000 }, // Options
-    ),
-  },
-  // highlight-end
-});
-```
-
-### Redis (single instance)
-
-```shell
-$ npm install apollo-server-cache-redis ioredis
-```
-
-```javascript
-const { BaseRedisCache } = require('apollo-server-cache-redis');
-const Redis = require('ioredis');
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  csrfPrevention: true,
-  // highlight-start
-  persistedQueries: {
-    cache: new BaseRedisCache({
-      client: new Redis({
-        host: 'redis-server',
-      }),
-    }),
-  },
-  // highlight-end
-});
-```
-
-### Redis (Sentinel)
-
-```shell
-$ npm install apollo-server-cache-redis ioredis
-```
-
-```javascript
-const { BaseRedisCache } = require('apollo-server-cache-redis');
-const Redis = require('ioredis');
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  csrfPrevention: true,
-  // highlight-start
-  persistedQueries: {
-    cache: new BaseRedisCache({
-      client: new Redis({
-        sentinels: [{
-          host: 'sentinel-host-01',
-          port: 26379
-         }],
-        password: 'my_password',
-        name: 'service_name',
-      }),
-    }),
-  },
-  // highlight-end
-});
-```
-
-### Redis Cluster
-
-```shell
-$ npm install apollo-server-cache-redis ioredis
-```
-
-```javascript
-const { BaseRedisCache } = require('apollo-server-cache-redis');
-const Redis = require('ioredis');
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  csrfPrevention: true,
-  // highlight-start
-  persistedQueries: {
-    cache: new BaseRedisCache({
-      // Note that this uses the "noMgetClient" option rather than "client",
-      // which avoids using the mget command which doesn't work in cluster mode.
-      noMgetClient: new Redis.Cluster(
-        [{
-          host: 'redis-node-01-host',
-        }],
-        {
-          // Other Redis cluster client options
-        }
-      ),
-    }),
-  },
-  // highlight-end
-});
-```
+To learn how to configure the in-memory cache, set up an external cache, or write your own cache implementation, see [Configuring cache backends](./cache-backends).
 
 ## Adjusting cache time-to-live (TTL)
 
@@ -313,11 +192,12 @@ The cache time-to-live (TTL) value determines how long a registered APQ remains 
 
 Apollo Server's default in-memory store does not specify a TTL for APQ (an APQ remains cached until it is overwritten by the cache's standard eviction policy). For all other [supported stores](#cache-configuration), the default TTL is 300 seconds. You can override or disable this value by setting the `ttl` attribute of the `persistedQueries` option, in seconds:
 
-```javascript
+```ts
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   persistedQueries: {
     // highlight-start
     ttl: 900, // 15 minutes
@@ -328,11 +208,12 @@ const server = new ApolloServer({
 
 To disable TTL entirely, specify `null` for the value of `ttl`:
 
-```javascript
+```ts
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   persistedQueries: {
     ttl: null, // highlight-line
   },
@@ -350,6 +231,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  cache: 'bounded',
   persistedQueries: false, // highlight-line
 });
 ```

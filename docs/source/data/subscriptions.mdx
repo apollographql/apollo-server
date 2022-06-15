@@ -82,6 +82,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
     const server = new ApolloServer({
       schema,
       csrfPrevention: true,
+      cache: "bounded",
     });
     ```
 
@@ -108,6 +109,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
       const server = new ApolloServer({
         schema,
         csrfPrevention: true,
+        cache: "bounded",
         plugins: [
           // Proper shutdown for the HTTP server.
           ApolloServerPluginDrainHttpServer({ httpServer }),
@@ -168,6 +170,7 @@ const serverCleanup = useServer({ schema }, wsServer);
 const server = new ApolloServer({
   schema,
   csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     // Proper shutdown for the HTTP server.
     ApolloServerPluginDrainHttpServer({ httpServer }),

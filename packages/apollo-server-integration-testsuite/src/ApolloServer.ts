@@ -58,7 +58,10 @@ import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
 import type { AddressInfo } from 'net';
 import request, { Response } from 'supertest';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import {
+  InMemoryLRUCache,
+  type KeyValueCache,
+} from '@apollo/utils.keyvaluecache';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -265,6 +268,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             schema,
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
+            cache: 'bounded',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -284,6 +288,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             introspection: true,
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
+            cache: 'bounded',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -1727,6 +1732,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1757,6 +1763,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -2251,16 +2258,111 @@ export function testApolloServer<AS extends ApolloServerBase>(
     describe('Response caching', () => {
       let clock: FakeTimers.InstalledClock;
       beforeAll(() => {
-        // These tests use the default InMemoryLRUCache, which is backed by the
-        // lru-cache npm module, whose maxAge feature is based on `Date.now()`
-        // (no setTimeout or anything like that). So we want to use fake timers
-        // just for Date. (Faking all the timer methods messes up things like a
-        // setImmediate in ApolloServerPluginDrainHttpServer.)
+        // The ApolloServerPluginResponseCache uses Date.now() to derive the
+        // "age" header, so we want to use fake timers just for Date. (Faking
+        // all the timer methods messes up things like a setImmediate in
+        // ApolloServerPluginDrainHttpServer.)
         clock = FakeTimers.install({ toFake: ['Date'] });
       });
 
       afterAll(() => {
         clock.uninstall();
+      });
+
+      it('uses an unbounded cache by default', async () => {
+        const server = new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+        });
+
+        // This could be an instanceof check but we don't really want to export
+        // the `UnboundedCache` class from `apollo-server-core`
+        expect(server['requestOptions'].cache!.constructor.name).toBe(
+          'UnboundedCache',
+        );
+      });
+
+      it('uses a bounded cache', async () => {
+        const server = new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          cache: 'bounded',
+        });
+
+        expect(server['requestOptions'].cache).toBeInstanceOf(InMemoryLRUCache);
+      });
+
+      it('uses a custom cache', async () => {
+        const customCache = {} as KeyValueCache;
+        const server = new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          cache: customCache,
+        });
+
+        expect(server['requestOptions'].cache).toBe(customCache);
+      });
+
+      it("warns in production mode when cache isn't configured and APQ isn't disabled", () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          error: jest.fn(),
+          info: jest.fn(),
+        };
+
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'production',
+          logger: mockLogger,
+        });
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringMatching(
+            /Persisted queries are enabled and are using an unbounded cache/,
+          ),
+        );
+      });
+
+      it("doesn't warn about cache configuration if: not production mode, cache configured, APQ disabled, or APQ cache configured", () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          error: jest.fn(),
+          info: jest.fn(),
+        };
+
+        // dev mode
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+        });
+
+        // cache configured
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'production',
+          logger: mockLogger,
+          cache: 'bounded',
+        });
+
+        // APQ disabled
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+          persistedQueries: false,
+        });
+
+        // APQ cache configured
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+          persistedQueries: {
+            cache: {} as KeyValueCache,
+          },
+        });
+
+        expect(mockLogger.warn).not.toHaveBeenCalled();
       });
 
       it('basic caching', async () => {
