@@ -121,7 +121,7 @@
     "lodash.sumby": "4.6.0",
     "memcached-mock": "0.1.0",
     "mock-req": "0.2.0",
-    "nock": "13.2.6",
+    "nock": "13.2.7",
     "node-fetch": "2.6.7",
     "prettier": "2.7.0",
     "qs-middleware": "1.0.3",
