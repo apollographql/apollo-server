@@ -238,11 +238,11 @@ Available in Apollo Server v3.4.0 and later.
 </td>
 <td>
 
-A `KeyValueCache` which Apollo Server uses for a number of features like APQs and full response caching. This cache is also provided to DataSources and plugins.
+A `KeyValueCache` which Apollo Server uses for several features, including APQs and full response caching. This cache is also available to Apollo Server's data sources and plugins.
 
-By default, the cache is unbounded. We don't recommend this, since a malicious client can run your server out of memory and cause it to crash by filling it with APQs.
+By default, the cache that Apollo Server 3 uses is unbounded. We _strongly recommend_ that all users pass `cache: "bounded"` or configure their cache in a manner that isn't unbounded. This protects your server from attacks that exhaust available memory, causing a DOS.
 
-If you don't want to configure your own cache, you should set `cache: "bounded"`. The bounded cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
+The default bounded cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
 
 To learn more about configuring Apollo Server's cache, see [Configuring cache backends](../performance/cache-backends).
 
@@ -450,7 +450,7 @@ The default value is `true`. Set this to `false` to use mocked resolvers only fo
 
 ##### `nodeEnv`
 
-`String`
+`string`
 </td>
 <td>
 
@@ -583,7 +583,7 @@ Returns a `Promise` that resolves to an object containing the following properti
 
 ##### `url`
 
-`String`
+`string`
 </td>
 <td>
 
@@ -796,7 +796,7 @@ async function startApolloServer() {
 
 ##### `path`
 
-`String`
+`string`
 </td>
 <td>
 

@@ -5,7 +5,7 @@ description: How to configure Apollo Server's cache
 
 > ⚠️ **New in Apollo Server 3.9:** We _strongly recommend_ that all users pass `cache: "bounded"` or configure their cache in a manner that isn't unbounded (which is current default behavior). This protects your server from attacks that exhaust available memory, causing a DOS. See [Ensuring a bounded cache](#ensuring-a-bounded-cache) immediately below for more details.
 
-Many Apollo Server features take advantage of a cache backend (these features include [automatic persisted queries](./performance/apq), the [response cache plugin](./performance/caching#caching-with-responsecacheplugin-advanced), and [`RESTDataSource`](./data/data-sources#restdatasource-reference)). Apollo Server uses an in-memory cache by default, but you can configure it to use a different backend, such as Redis or Memcached.
+Many Apollo Server features take advantage of a cache backend (these features include [automatic persisted queries](./apq), the [response cache plugin](./caching#caching-with-responsecacheplugin-advanced), and [`RESTDataSource`](../data/data-sources#restdatasource-reference)). Apollo Server uses an in-memory cache by default, but you can configure it to use a different backend, such as Redis or Memcached.
 
 You can specify a cache backend by passing a `cache` option to the `ApolloServer` constructor. Your specified cache backend must implement the [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface) interface from the `@apollo/utils.keyvaluecache` package.
 
@@ -31,7 +31,7 @@ const server = new ApolloServer({
 ```
 > The equivalent of this is provided out-of-the-box by Apollo Server 3.9+ by passing `cache: "bounded"` and doesn't require you to install the `@apollo/utils.keyvaluecache` package.
 
-In this example, we've increased the default size and provided a default TTL. For more information on these configuration options, see the [`lru-cache` documentation`](https://www.npmjs.com/package/lru-cache).
+In this example, we've increased the default size and provided a default TTL. For more information on these configuration options, see the [`lru-cache` documentation](https://www.npmjs.com/package/lru-cache).
 ```ts
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 
@@ -52,7 +52,7 @@ Apollo no longer maintains any caching backends directly. Instead, we recommend 
 
 1. Install the required packages
 ```bash
-npm install keyv @keyv/redis @apollo/utils.keyvadapter
+npm install keyv @apollo/utils.keyvadapter
 ```
 
 2. Configure the Apollo Server `cache`
@@ -62,7 +62,7 @@ import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 
 const server = new ApolloServer({
   // ...,
-  cache: new KeyvAdapter(new Keyv('redis://localhost:6379')),
+  cache: new KeyvAdapter(new Keyv()), // highlight-line
 });
 ```
 
@@ -101,8 +101,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
-  cache: new KeyvAdapter(new Keyv("redis://user:pass@localhost:6379")),
+  cache: new KeyvAdapter(new Keyv("redis://user:pass@localhost:6379")), // highlight-line
 });
+```
 
 ### Redis Sentinel
 ```ts
@@ -113,6 +114,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  // highlight-start
   cache: new KeyvAdapter(
     new Keyv("redis://user:pass@localhost:6379", {
       sentinels: [
@@ -121,6 +123,7 @@ const server = new ApolloServer({
       ],
     })
   ),
+  // highlight-end
 });
 ```
 
@@ -142,18 +145,22 @@ import KeyvRedis from "@keyv/redis";
 import Redis from "ioredis";
 import { KeyvAdapter } from "@apollo/utils.keyvadapter";
 
+// highlight-start
 const cluster = new Redis.Cluster([
   { host: "localhost", port: 26379 },
   { host: "localhost", port: 26380 },
 ]);
+// highlight-end
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
+  // highlight-start
   cache: new KeyvAdapter(new Keyv({ store: new KeyvRedis(cluster) }), {
     disableBatchReads: true,
   }),
+  // highlight-end
 });
 ```
 
@@ -177,6 +184,7 @@ import KeyvMemcache from "@keyv/memcache";
 import { KeyvAdapter } from "@apollo/utils.keyvadapter";
 
 // servers is a comma-separated list of strings
+// highlight-start
 const servers = [
   "user:pass@localhost:11211",
   "user:pass@localhost:11222"
@@ -186,12 +194,13 @@ const memcache = new KeyvMemcache(servers, {
   retries: 10,
   expires: 60,
 });
+// highlight-end
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
-  cache: new KeyvAdapter(new Keyv({ store: memcache })),
+  cache: new KeyvAdapter(new Keyv({ store: memcache })), // highlight-line
 });
 ```
 

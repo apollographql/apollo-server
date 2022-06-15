@@ -10,12 +10,14 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
-- Remove internal dependency on `apollo-server-caching`, switch over to `@apollo/utils.keyvaluecache`. This PR specifically also introduces Keyv as an unbounded cache solution, but will replace with our own simple implementation in a follow-up PR targeting this minor version release. [PR #6522](https://github.com/apollographql/apollo-server/pull/6522)
-- Remove dependency on `keyv`/`@apollo/utils.keyvadapter` in favor of a simple `Map`-backed cache which implements TTL [PR #6535](https://github.com/apollographql/apollo-server/pull/6535)
-- Add `cache: "bounded"` configuration option, allowing users to opt into bounded request cache (recommended) [PR #6536](https://github.com/apollographql/apollo-server/pull/6536)
-- Remove `apollo-server-caching` and `apollo-server-cache-*` packages [PR #6541](https://github.com/apollographql/apollo-server/pull/6541)
-- Warn when APQ cache is unbounded in production (which is default) [PR #6545](https://github.com/apollographql/apollo-server/pull/6545)
-- Await `parsingDidEnd` `Promise`. Note from @trevor-scheer: I don't think this resolves the issue it intended to. See [Issue #6567](https://github.com/apollographql/apollo-server/pull/6567) for details. [PR #6559](https://github.com/apollographql/apollo-server/pull/6559)
+- Nothing yet! Stay tuned.
+
+## v3.9.0
+
+- ⚠️ **SECURITY** `apollo-server-core`: The default configuration of Apollo Server is vulnerable to denial of service attacks via memory exhaustion. If you do not currently specify the `cache` option to `new ApolloServer()`, we strongly recommend you specify `cache: 'bounded'`, which replaces the default in-memory unbounded cache with a 30MB in-memory cache, or disable automatic persisted queries with `persistedQueries: null`. Apollo Server now logs a warning in production if you do not configure the cache or disable APQs. See [the docs](https://www.apollographql.com/docs/apollo-server/performance/cache-backends#ensuring-a-bounded-cache) for more details.
+- The `apollo-server-caching` package is no longer published. The TypeScript types `KeyValueCache` and `KeyValueCacheSetOptions` and the classes `PrefixingKeyValueCache` and `InMemoryLRUCache` can be imported from `@apollo/utils.keyvaluecache` instead. The first three exports are identical; `InMemoryLRUCache` is based on `lru-cache` v7 instead of v6, and no longer supports creating unbounded caches (which was the default behavior for `apollo-server-caching`'s `InMemoryLRUCache`). [PR #6522](https://github.com/apollographql/apollo-server/pull/6522)
+- The `apollo-server-cache-redis` and `apollo-server-cache-memcached` packages are no longer published (though previous versions continue to work). We recommend that users of these packages migrate to `@apollo/utils.keyvadapter`, which lets you connect to Redis, Memcached, or any other backend supported by the [Keyv](https://www.npmjs.com/package/keyv) project. See [the new cache backend docs](https://www.apollographql.com/docs/apollo-server/performance/cache-backends) for more details. [PR #6541](https://github.com/apollographql/apollo-server/pull/6541)
+- Avoid unhandled rejection errors if the end hook from a `parsingDidStart` plugin method rejects. [Issue #6567](https://github.com/apollographql/apollo-server/pull/6567) [PR #6559](https://github.com/apollographql/apollo-server/pull/6559)
 
 ## v3.8.2
 
