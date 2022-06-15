@@ -22,7 +22,7 @@ export function defaultSendOperationsAsTrace() {
     // us to evaluate the need with more validated input from those that receive
     // it.
     maxSize: Math.pow(2, 20),
-    length: (_val, key) => {
+    sizeCalculation: (_val, key) => {
       return (key && Buffer.byteLength(key)) || 0;
     },
   });
