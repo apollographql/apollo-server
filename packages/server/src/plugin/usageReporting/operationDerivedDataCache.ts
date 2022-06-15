@@ -16,7 +16,7 @@ export function createOperationDerivedDataCache({
   let lastDisposals: number = 0;
   return new LRUCache<string, OperationDerivedData>({
     // Calculate the length of cache objects by the JSON.stringify byteLength.
-    length(obj) {
+    sizeCalculation(obj) {
       return Buffer.byteLength(JSON.stringify(obj), 'utf8');
     },
     // 10MiB limit, very much approximately since we can't be sure how V8 might
