@@ -102,6 +102,7 @@ microrouter
 middlewares
 Middlewares
 millis
+mktemp
 monodocs
 mygraph
 myvariant
@@ -119,6 +120,8 @@ pbts
 pook
 Pook
 pooks
+postcompile
+precompile
 preflighted
 preflighting
 prepended
@@ -135,6 +138,7 @@ retryable
 revalidates
 roadmap
 ROADMAP
+rollup
 runtimes
 safelist
 safelisted

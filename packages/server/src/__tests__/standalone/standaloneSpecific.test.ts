@@ -1,4 +1,5 @@
-import { ApolloServer, startStandaloneServer } from '../..';
+import { ApolloServer } from '../..';
+import { startStandaloneServer } from '../../standalone';
 
 describe('Typings: TContext inference', () => {
   it('correctly infers BaseContext when no `context` function is provided', async () => {

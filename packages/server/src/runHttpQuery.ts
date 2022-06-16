@@ -9,9 +9,9 @@ import {
   ApolloServerInternals,
   internalExecuteOperation,
   SchemaDerivedData,
-} from './ApolloServer';
+} from './ApolloServer.js';
 import type { FormattedExecutionResult } from 'graphql';
-import { BadRequestError } from './errors';
+import { BadRequestError } from './errors.js';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just
 // do want to use (our own? somebody else's?) Headers class.

@@ -14,7 +14,7 @@ import {
   isObjectType,
   responsePathAsArray,
 } from 'graphql';
-import { newCachePolicy } from '../../cachePolicy';
+import { newCachePolicy } from '../../cachePolicy.js';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import LRUCache from 'lru-cache';
 

@@ -1,19 +1,19 @@
 import {
-  google,
-  IContextualizedStats,
-  IFieldStat,
-  IPathErrorStats,
-  IQueryLatencyStats,
-  IReport,
-  IStatsContext,
-  ITracesAndStats,
-  ITypeStat,
-  ReportHeader,
+  type google,
+  type IContextualizedStats,
+  type IFieldStat,
+  type IPathErrorStats,
+  type IQueryLatencyStats,
+  type IReport,
+  type IStatsContext,
+  type ITracesAndStats,
+  type ITypeStat,
+  type ReportHeader,
   Trace,
-} from '../../../usageReportingProtobuf';
+} from '@apollo/usage-reporting-protobuf';
 import type { ReferencedFieldsByType } from '@apollo/utils.usagereporting';
-import { DurationHistogram } from './durationHistogram';
-import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace';
+import { DurationHistogram } from './durationHistogram.js';
+import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace.js';
 
 // protobuf.js exports both a class and an interface (starting with I) for each
 // message type. The class is what it produces when it decodes the message; the

@@ -27,16 +27,16 @@ import type {
   CreateServerForIntegrationTests,
   CreateServerForIntegrationTestsOptions,
 } from '.';
-import {
+import type {
   ApolloServer,
   ApolloServerOptions,
-  ApolloServerPluginCacheControl,
-  ApolloServerPluginCacheControlDisabled,
   BaseContext,
   GraphQLRequestContext,
   GraphQLRequestListener,
   PersistedQueryOptions,
 } from '../..';
+import { ApolloServerPluginCacheControl } from '../../plugin/cacheControl';
+import { ApolloServerPluginCacheControlDisabled } from '../../plugin/disabled';
 import { PersistedQueryNotFoundError } from '../../errors';
 
 const QueryRootType = new GraphQLObjectType({

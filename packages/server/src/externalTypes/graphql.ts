@@ -1,4 +1,4 @@
-import type { Trace } from '../../usageReportingProtobuf';
+import type { Trace } from '@apollo/usage-reporting-protobuf';
 import type { Logger } from '@apollo/utils.logger';
 import type {
   DocumentNode,

@@ -1,4 +1,4 @@
-import { Report, ReportHeader, Trace } from '../../../usageReportingProtobuf';
+import { Report, ReportHeader, Trace } from '@apollo/usage-reporting-protobuf';
 import type { Fetcher, FetcherResponse } from '@apollo/utils.fetcher';
 import {
   usageReportingSignature,
@@ -22,30 +22,25 @@ import type {
 } from '../../externalTypes';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import type { HeaderMap } from '../../runHttpQuery';
-import { computeCoreSchemaHash } from '../schemaReporting';
-import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder';
-import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
+import { computeCoreSchemaHash } from '../schemaReporting/index.js';
+import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder.js';
+import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace.js';
 import {
   createOperationDerivedDataCache,
   OperationDerivedData,
   operationDerivedDataCacheKey,
-} from './operationDerivedDataCache';
+} from './operationDerivedDataCache.js';
 import type {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
 } from './options';
-import { OurReport } from './stats';
-import { makeTraceDetails } from './traceDetails';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { OurReport } from './stats.js';
+import { makeTraceDetails } from './traceDetails.js';
+import { packageVersion } from '../../packageVersion.js';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
-  agentVersion: `@apollo/server@${
-    JSON.parse(
-      readFileSync(join(__dirname, '..', '..', '..', 'package.json'), 'utf-8'),
-    ).version
-  }`,
+  agentVersion: `@apollo/server@${packageVersion}`,
   runtimeVersion: `node ${process.version}`,
   // XXX not actually uname, but what node has easily.
   uname: `${os.platform()}, ${os.type()}, ${os.release()}, ${os.arch()})`,

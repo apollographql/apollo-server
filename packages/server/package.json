@@ -2,8 +2,59 @@
   "name": "@apollo/server",
   "version": "3.6.7",
   "description": "Core engine for Apollo GraphQL server",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/cjs/index.d.ts"
+    },
+    "./standalone": {
+      "import": "./dist/esm/standalone/index.js",
+      "require": "./dist/cjs/standalone/index.js",
+      "types": "./dist/cjs/standalone/index.d.ts"
+    },
+    "./plugin/cacheControl": {
+      "import": "./dist/esm/plugin/cacheControl/index.js",
+      "require": "./dist/cjs/plugin/cacheControl/index.js",
+      "types": "./dist/cjs/plugin/cacheControl/index.d.ts"
+    },
+    "./plugin/disabled": {
+      "import": "./dist/esm/plugin/disabled.js",
+      "require": "./dist/cjs/plugin/disabled.js",
+      "types": "./dist/cjs/plugin/disabled.d.ts"
+    },
+    "./plugin/drainHttpServer": {
+      "import": "./dist/esm/plugin/drainHttpServer/index.js",
+      "require": "./dist/cjs/plugin/drainHttpServer/index.js",
+      "types": "./dist/cjs/plugin/drainHttpServer/index.d.ts"
+    },
+    "./plugin/inlineTrace": {
+      "import": "./dist/esm/plugin/inlineTrace/index.js",
+      "require": "./dist/cjs/plugin/inlineTrace/index.js",
+      "types": "./dist/cjs/plugin/inlineTrace/index.d.ts"
+    },
+    "./plugin/landingPage/default": {
+      "import": "./dist/esm/plugin/landingPage/default/index.js",
+      "require": "./dist/cjs/plugin/landingPage/default/index.js",
+      "types": "./dist/cjs/plugin/landingPage/default/index.d.ts"
+    },
+    "./plugin/landingPage/graphqlPlayground": {
+      "import": "./dist/esm/plugin/landingPage/graphqlPlayground/index.js",
+      "require": "./dist/cjs/plugin/landingPage/graphqlPlayground/index.js",
+      "types": "./dist/cjs/plugin/landingPage/graphqlPlayground/index.d.ts"
+    },
+    "./plugin/schemaReporting": {
+      "import": "./dist/esm/plugin/schemaReporting/index.js",
+      "require": "./dist/cjs/plugin/schemaReporting/index.js",
+      "types": "./dist/cjs/plugin/schemaReporting/index.d.ts"
+    },
+    "./plugin/usageReporting": {
+      "import": "./dist/esm/plugin/usageReporting/index.js",
+      "require": "./dist/cjs/plugin/usageReporting/index.js",
+      "types": "./dist/cjs/plugin/usageReporting/index.d.ts"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server",
@@ -25,7 +76,7 @@
     "node": ">=12.0"
   },
   "dependencies": {
-    "@apollo/protobufjs": "1.2.2",
+    "@apollo/usage-reporting-protobuf": "^3.3.0",
     "@apollo/utils.createhash": "^1.1.0",
     "@apollo/utils.fetcher": "^1.0.0",
     "@apollo/utils.isnodelike": "^1.1.0",

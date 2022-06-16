@@ -3,10 +3,12 @@
   "private": true,
   "license": "MIT",
   "repository": "github:apollographql/apollo-server",
+  "type": "module",
   "scripts": {
     "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/ **/tsconfig*tsbuildinfo",
-    "compile": "tsc --build tsconfig.build.json",
-    "compile:clean": "tsc --build tsconfig.build.json --clean",
+    "precompile": "node scripts/precompile.mjs",
+    "postcompile": "node scripts/postcompile.mjs",
+    "compile": "tsc --build tsconfig.build.json packages/server/tsconfig.cjs.json; x=$?; mv packages/server/src/.packageVersion.ts.original packages/server/src/packageVersion.ts; exit $x",
     "watch": "tsc --build tsconfig.build.json --watch",
     "install-with-npm-8.5": "npm i -g npm@^8.5.0 && npm i",
     "postinstall": "npm run compile",
@@ -14,6 +16,9 @@
     "test": "jest --verbose",
     "test:clean": "jest --clearCache",
     "test:watch": "jest --verbose --watchAll",
+    "test:smoke": "npm run test:smoke:prepare && npm run test:smoke:run",
+    "test:smoke:prepare": "npm run compile && smoke-test/prepare.sh",
+    "test:smoke:run": "smoke-test/smoke-test.sh",
     "testonly": "npm test",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2  --reporters=default --reporters=jest-junit",
     "coverage": "npm test -- --coverage",
@@ -21,11 +26,7 @@
     "codegen": "graphql-codegen",
     "prettier-check": "prettier --check .",
     "prettier-fix": "prettier --write .",
-    "spell-check": "cspell lint '**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)",
-    "protobuf-generate": "rm -rf packages/server/usageReportingProtobuf/generated && mkdir packages/server/usageReportingProtobuf/generated && npm run protobuf-pbjs && npm run protobuf-pbts",
-    "protobuf-pbjs": "apollo-pbjs --target static-module --out packages/server/usageReportingProtobuf/generated/protobuf.js --wrap commonjs --force-number --no-from-object packages/server/usageReportingProtobuf/reports.proto",
-    "protobuf-pbts": "apollo-pbts -o packages/server/usageReportingProtobuf/generated/protobuf.d.ts packages/server/usageReportingProtobuf/generated/protobuf.js",
-    "protobuf-update": "curl -sSfo packages/server/usageReportingProtobuf/reports.proto https://usage-reporting.api.apollographql.com/proto/reports.proto"
+    "spell-check": "cspell lint '**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)"
   },
   "workspaces": [
     "packages/*"
@@ -44,7 +45,6 @@
     "@graphql-tools/utils": "8.6.13",
     "@josephg/resolvable": "1.0.1",
     "@rollup/plugin-commonjs": "22.0.0",
-    "@rollup/plugin-json": "4.1.0",
     "@types/async-retry": "1.4.4",
     "@types/body-parser": "1.19.2",
     "@types/cors": "2.8.12",
@@ -87,6 +87,7 @@
     "qs-middleware": "1.0.3",
     "request-promise": "4.2.6",
     "requisition": "1.7.0",
+    "rimraf": "^3.0.2",
     "rollup": "2.75.6",
     "supertest": "6.2.3",
     "test-listen": "1.1.0",

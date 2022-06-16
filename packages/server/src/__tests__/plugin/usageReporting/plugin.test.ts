@@ -8,7 +8,7 @@ import {
   ITrace,
   ITracesAndStats,
   ContextualizedStats,
-} from '../../../../usageReportingProtobuf';
+} from '@apollo/usage-reporting-protobuf';
 import { pluginsEnabledForSchemaResolvers } from '../../../utils/schemaInstrumentation';
 import nock from 'nock';
 import sumBy from 'lodash.sumby';
@@ -17,12 +17,14 @@ import { gunzipSync } from 'zlib';
 import { HeaderMap } from '../../../runHttpQuery';
 import {
   ApolloServer,
-  ApolloServerPluginCacheControlDisabled,
-  ApolloServerPluginUsageReporting,
-  ApolloServerPluginUsageReportingOptions,
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestMetrics,
 } from '../../..';
+import {
+  ApolloServerPluginUsageReportingOptions,
+  ApolloServerPluginUsageReporting,
+} from '../../../plugin/usageReporting';
+import { ApolloServerPluginCacheControlDisabled } from '../../../plugin/disabled';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);

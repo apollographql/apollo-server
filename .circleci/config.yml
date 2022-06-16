@@ -44,6 +44,13 @@ jobs:
       - store_test_results:
           path: junit.xml
 
+  Smoke test built package:
+    docker:
+    - image: cimg/base:stable
+    steps:
+      - setup-node
+      - run: npm run test:smoke
+
   Prettier:
     docker:
     - image: cimg/base:stable
@@ -90,3 +97,4 @@ workflows:
       - "Check for FIXM\x45"
       - Prettier
       - Spell check
+      - Smoke test built package

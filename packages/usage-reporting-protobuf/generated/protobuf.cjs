@@ -73,7 +73,7 @@ $root.Trace = (function() {
      * @memberof Trace
      * @instance
      */
-    Trace.prototype.durationNs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    Trace.prototype.durationNs = 0;
 
     /**
      * Trace root.
@@ -485,11 +485,7 @@ $root.Trace = (function() {
             object.clientName = "";
             object.clientVersion = "";
             object.http = null;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.durationNs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.durationNs = options.longs === String ? "0" : 0;
+            object.durationNs = 0;
             object.root = null;
             object.cachePolicy = null;
             object.signature = "";
@@ -597,7 +593,7 @@ $root.Trace = (function() {
          * @memberof Trace.CachePolicy
          * @instance
          */
-        CachePolicy.prototype.maxAgeNs = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+        CachePolicy.prototype.maxAgeNs = 0;
 
         /**
          * Creates a new CachePolicy instance using the specified properties.
@@ -732,11 +728,7 @@ $root.Trace = (function() {
             var object = {};
             if (options.defaults) {
                 object.scope = options.enums === String ? "UNKNOWN" : 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, false);
-                    object.maxAgeNs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.maxAgeNs = options.longs === String ? "0" : 0;
+                object.maxAgeNs = 0;
             }
             if (message.scope != null && message.hasOwnProperty("scope"))
                 object.scope = options.enums === String ? $root.Trace.CachePolicy.Scope[message.scope] : message.scope;
@@ -1035,7 +1027,7 @@ $root.Trace = (function() {
          * @memberof Trace.Error
          * @instance
          */
-        Error.prototype.timeNs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+        Error.prototype.timeNs = 0;
 
         /**
          * Error json.
@@ -1199,11 +1191,7 @@ $root.Trace = (function() {
                 object.location = [];
             if (options.defaults) {
                 object.message = "";
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, true);
-                    object.timeNs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.timeNs = options.longs === String ? "0" : 0;
+                object.timeNs = 0;
                 object.json = "";
             }
             if (message.message != null && message.hasOwnProperty("message"))
@@ -2093,7 +2081,7 @@ $root.Trace = (function() {
          * @memberof Trace.Node
          * @instance
          */
-        Node.prototype.startTime = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+        Node.prototype.startTime = 0;
 
         /**
          * Node endTime.
@@ -2101,7 +2089,7 @@ $root.Trace = (function() {
          * @memberof Trace.Node
          * @instance
          */
-        Node.prototype.endTime = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+        Node.prototype.endTime = 0;
 
         /**
          * Node error.
@@ -2356,16 +2344,8 @@ $root.Trace = (function() {
             if (options.defaults) {
                 object.type = "";
                 object.cachePolicy = null;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, true);
-                    object.startTime = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.startTime = options.longs === String ? "0" : 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, true);
-                    object.endTime = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.endTime = options.longs === String ? "0" : 0;
+                object.startTime = 0;
+                object.endTime = 0;
                 object.parentType = "";
                 object.originalFieldName = "";
             }
@@ -3124,7 +3104,7 @@ $root.Trace = (function() {
              * @memberof Trace.QueryPlanNode.FetchNode
              * @instance
              */
-            FetchNode.prototype.sentTimeOffset = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+            FetchNode.prototype.sentTimeOffset = 0;
 
             /**
              * FetchNode sentTime.
@@ -3309,11 +3289,7 @@ $root.Trace = (function() {
                     object.serviceName = "";
                     object.traceParsingFailed = false;
                     object.trace = null;
-                    if ($util.Long) {
-                        var long = new $util.Long(0, 0, true);
-                        object.sentTimeOffset = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.sentTimeOffset = options.longs === String ? "0" : 0;
+                    object.sentTimeOffset = 0;
                     object.sentTime = null;
                     object.receivedTime = null;
                 }
@@ -4107,7 +4083,7 @@ $root.PathErrorStats = (function() {
      * @memberof PathErrorStats
      * @instance
      */
-    PathErrorStats.prototype.errorsCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    PathErrorStats.prototype.errorsCount = 0;
 
     /**
      * PathErrorStats requestsWithErrorsCount.
@@ -4115,7 +4091,7 @@ $root.PathErrorStats = (function() {
      * @memberof PathErrorStats
      * @instance
      */
-    PathErrorStats.prototype.requestsWithErrorsCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    PathErrorStats.prototype.requestsWithErrorsCount = 0;
 
     /**
      * Creates a new PathErrorStats instance using the specified properties.
@@ -4268,16 +4244,8 @@ $root.PathErrorStats = (function() {
         if (options.objects || options.defaults)
             object.children = {};
         if (options.defaults) {
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.errorsCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.errorsCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.requestsWithErrorsCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.requestsWithErrorsCount = options.longs === String ? "0" : 0;
+            object.errorsCount = 0;
+            object.requestsWithErrorsCount = 0;
         }
         var keys2;
         if (message.children && (keys2 = Object.keys(message.children)).length) {
@@ -4366,7 +4334,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.requestCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.requestCount = 0;
 
     /**
      * QueryLatencyStats cacheHits.
@@ -4374,7 +4342,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.cacheHits = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.cacheHits = 0;
 
     /**
      * QueryLatencyStats persistedQueryHits.
@@ -4382,7 +4350,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.persistedQueryHits = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.persistedQueryHits = 0;
 
     /**
      * QueryLatencyStats persistedQueryMisses.
@@ -4390,7 +4358,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.persistedQueryMisses = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.persistedQueryMisses = 0;
 
     /**
      * QueryLatencyStats cacheLatencyCount.
@@ -4414,7 +4382,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.requestsWithErrorsCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.requestsWithErrorsCount = 0;
 
     /**
      * QueryLatencyStats publicCacheTtlCount.
@@ -4438,7 +4406,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.registeredOperationCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.registeredOperationCount = 0;
 
     /**
      * QueryLatencyStats forbiddenOperationCount.
@@ -4446,7 +4414,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.forbiddenOperationCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.forbiddenOperationCount = 0;
 
     /**
      * QueryLatencyStats requestsWithoutFieldInstrumentation.
@@ -4454,7 +4422,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.requestsWithoutFieldInstrumentation = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.requestsWithoutFieldInstrumentation = 0;
 
     /**
      * Creates a new QueryLatencyStats instance using the specified properties.
@@ -4778,47 +4746,15 @@ $root.QueryLatencyStats = (function() {
             object.privateCacheTtlCount = [];
         }
         if (options.defaults) {
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.requestCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.requestCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.cacheHits = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.cacheHits = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.persistedQueryHits = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.persistedQueryHits = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.persistedQueryMisses = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.persistedQueryMisses = options.longs === String ? "0" : 0;
+            object.requestCount = 0;
+            object.cacheHits = 0;
+            object.persistedQueryHits = 0;
+            object.persistedQueryMisses = 0;
             object.rootErrorStats = null;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.requestsWithErrorsCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.requestsWithErrorsCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.registeredOperationCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.registeredOperationCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.forbiddenOperationCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.forbiddenOperationCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.requestsWithoutFieldInstrumentation = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.requestsWithoutFieldInstrumentation = options.longs === String ? "0" : 0;
+            object.requestsWithErrorsCount = 0;
+            object.registeredOperationCount = 0;
+            object.forbiddenOperationCount = 0;
+            object.requestsWithoutFieldInstrumentation = 0;
         }
         if (message.requestCount != null && message.hasOwnProperty("requestCount"))
             if (typeof message.requestCount === "number")
@@ -5554,7 +5490,7 @@ $root.FieldStat = (function() {
      * @memberof FieldStat
      * @instance
      */
-    FieldStat.prototype.errorsCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    FieldStat.prototype.errorsCount = 0;
 
     /**
      * FieldStat observedExecutionCount.
@@ -5562,7 +5498,7 @@ $root.FieldStat = (function() {
      * @memberof FieldStat
      * @instance
      */
-    FieldStat.prototype.observedExecutionCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    FieldStat.prototype.observedExecutionCount = 0;
 
     /**
      * FieldStat estimatedExecutionCount.
@@ -5570,7 +5506,7 @@ $root.FieldStat = (function() {
      * @memberof FieldStat
      * @instance
      */
-    FieldStat.prototype.estimatedExecutionCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    FieldStat.prototype.estimatedExecutionCount = 0;
 
     /**
      * FieldStat requestsWithErrorsCount.
@@ -5578,7 +5514,7 @@ $root.FieldStat = (function() {
      * @memberof FieldStat
      * @instance
      */
-    FieldStat.prototype.requestsWithErrorsCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    FieldStat.prototype.requestsWithErrorsCount = 0;
 
     /**
      * FieldStat latencyCount.
@@ -5774,26 +5710,10 @@ $root.FieldStat = (function() {
             object.latencyCount = [];
         if (options.defaults) {
             object.returnType = "";
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.errorsCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.errorsCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.observedExecutionCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.observedExecutionCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.requestsWithErrorsCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.requestsWithErrorsCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.estimatedExecutionCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.estimatedExecutionCount = options.longs === String ? "0" : 0;
+            object.errorsCount = 0;
+            object.observedExecutionCount = 0;
+            object.requestsWithErrorsCount = 0;
+            object.estimatedExecutionCount = 0;
         }
         if (message.returnType != null && message.hasOwnProperty("returnType"))
             object.returnType = message.returnType;
@@ -6292,7 +6212,7 @@ $root.Report = (function() {
      * @memberof Report
      * @instance
      */
-    Report.prototype.operationCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    Report.prototype.operationCount = 0;
 
     /**
      * Creates a new Report instance using the specified properties.
@@ -6459,11 +6379,7 @@ $root.Report = (function() {
         if (options.defaults) {
             object.header = null;
             object.endTime = null;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.operationCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.operationCount = options.longs === String ? "0" : 0;
+            object.operationCount = 0;
         }
         if (message.header != null && message.hasOwnProperty("header"))
             object.header = $root.ReportHeader.toObject(message.header, options);
@@ -7093,7 +7009,7 @@ $root.google = (function() {
              * @memberof google.protobuf.Timestamp
              * @instance
              */
-            Timestamp.prototype.seconds = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+            Timestamp.prototype.seconds = 0;
 
             /**
              * Timestamp nanos.
@@ -7229,11 +7145,7 @@ $root.google = (function() {
                     options = {};
                 var object = {};
                 if (options.defaults) {
-                    if ($util.Long) {
-                        var long = new $util.Long(0, 0, false);
-                        object.seconds = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.seconds = options.longs === String ? "0" : 0;
+                    object.seconds = 0;
                     object.nanos = 0;
                 }
                 if (message.seconds != null && message.hasOwnProperty("seconds"))

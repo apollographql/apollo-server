@@ -1,6 +1,6 @@
 import type http from 'http';
 import type { ApolloServerPlugin, BaseContext } from '../../externalTypes';
-import { Stopper } from './stoppable';
+import { Stopper } from './stoppable.js';
 
 /**
  * Options for ApolloServerPluginDrainHttpServer.

@@ -4,8 +4,8 @@ import {
   getNamedType,
   GraphQLObjectType,
   GraphQLFieldResolver,
-} from 'graphql/type';
-import { defaultFieldResolver } from 'graphql/execution';
+  defaultFieldResolver,
+} from 'graphql';
 import type {
   BaseContext,
   GraphQLRequestExecutionListener,

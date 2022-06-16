@@ -6,7 +6,7 @@ import type {
   BaseContext,
 } from '../../externalTypes';
 import type { Logger } from '@apollo/utils.logger';
-import type { Trace } from '../../../usageReportingProtobuf';
+import type { Trace } from '@apollo/usage-reporting-protobuf';
 import type { Fetcher } from '@apollo/utils.fetcher';
 
 export interface ApolloServerPluginUsageReportingOptions<

@@ -23,9 +23,9 @@ import {
 import loglevel from 'loglevel';
 import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
-import { newCachePolicy } from './cachePolicy';
-import { determineApolloConfig } from './determineApolloConfig';
-import { BadRequestError, ensureError, formatApolloErrors } from './errors';
+import { newCachePolicy } from './cachePolicy.js';
+import { determineApolloConfig } from './determineApolloConfig.js';
+import { BadRequestError, ensureError, formatApolloErrors } from './errors.js';
 import type {
   ApolloServerPlugin,
   BaseContext,
@@ -44,31 +44,22 @@ import type {
   HTTPGraphQLHead,
   ContextThunk,
 } from './externalTypes';
-import { runPotentiallyBatchedHttpQuery } from './httpBatching';
-import { InternalPluginId, pluginIsInternal } from './internalPlugin';
-import {
-  ApolloServerPluginCacheControl,
-  ApolloServerPluginInlineTrace,
-  ApolloServerPluginLandingPageLocalDefault,
-  ApolloServerPluginLandingPageProductionDefault,
-  ApolloServerPluginSchemaReporting,
-  ApolloServerPluginSchemaReportingOptions,
-  ApolloServerPluginUsageReporting,
-} from './plugin';
+import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
+import { InternalPluginId, pluginIsInternal } from './internalPlugin.js';
 import {
   preventCsrf,
   recommendedCsrfPreventionRequestHeaders,
-} from './preventCsrf';
-import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline';
+} from './preventCsrf.js';
+import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline.js';
 import {
   badMethodErrorMessage,
   cloneObject,
   HeaderMap,
   newHTTPGraphQLHead,
   prettyJSONStringify,
-} from './runHttpQuery';
-import { SchemaManager } from './utils/schemaManager';
-import { isDefined } from './utils/isDefined';
+} from './runHttpQuery.js';
+import { SchemaManager } from './utils/schemaManager.js';
+import { isDefined } from './utils/isDefined.js';
 import type { WithRequired } from '@apollo/utils.withrequired';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor';
 
@@ -395,7 +386,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     try {
       // Now that you can't call addPlugin any more, add default plugins like
       // usage reporting if they're not already added.
-      this.addDefaultPlugins();
+      await this.addDefaultPlugins();
 
       const toDispose: (() => Promise<void>)[] = [];
       const executor = await schemaManager.start();
@@ -853,7 +844,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     this.internals.state = { phase: 'stopped', stopError: null };
   }
 
-  private addDefaultPlugins() {
+  private async addDefaultPlugins() {
     const { plugins, apolloConfig, logger, nodeEnv } = this.internals;
     const isDev = nodeEnv !== 'production';
 
@@ -865,6 +856,9 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     // Special case: cache control is on unless you explicitly disable it.
     {
       if (!alreadyHavePluginWithInternalId('CacheControl')) {
+        const { ApolloServerPluginCacheControl } = await import(
+          './plugin/cacheControl/index.js'
+        );
         plugins.push(ApolloServerPluginCacheControl());
       }
     }
@@ -879,6 +873,9 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           // Keep this plugin first so it wraps everything. (Unfortunately despite
           // the fact that the person who wrote this line also was the original
           // author of the comment above in #1105, they don't quite understand why this was important.)
+          const { ApolloServerPluginUsageReporting } = await import(
+            './plugin/usageReporting/index.js'
+          );
           plugins.unshift(ApolloServerPluginUsageReporting());
         } else {
           logger.warn(
@@ -898,8 +895,10 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       const enabledViaEnvVar = process.env.APOLLO_SCHEMA_REPORTING === 'true';
       if (!alreadyHavePlugin && enabledViaEnvVar) {
         if (apolloConfig.key) {
-          const options: ApolloServerPluginSchemaReportingOptions = {};
-          plugins.push(ApolloServerPluginSchemaReporting(options));
+          const { ApolloServerPluginSchemaReporting } = await import(
+            './plugin/schemaReporting/index.js'
+          );
+          plugins.push(ApolloServerPluginSchemaReporting());
         } else {
           throw new Error(
             "You've enabled schema reporting by setting the APOLLO_SCHEMA_REPORTING " +
@@ -921,6 +920,9 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         // federated" mode.  (This is slightly different than the
         // pre-ApolloServerPluginInlineTrace where we would also avoid doing
         // this if an API key was configured and log a warning.)
+        const { ApolloServerPluginInlineTrace } = await import(
+          './plugin/inlineTrace/index.js'
+        );
         plugins.push(
           ApolloServerPluginInlineTrace({ __onlyIfSchemaIsFederated: true }),
         );
@@ -944,6 +946,10 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       'LandingPageDisabled',
     );
     if (!alreadyHavePlugin) {
+      const {
+        ApolloServerPluginLandingPageLocalDefault,
+        ApolloServerPluginLandingPageProductionDefault,
+      } = await import('./plugin/landingPage/default/index.js');
       const plugin: ApolloServerPlugin<TContext> = isDev
         ? ApolloServerPluginLandingPageLocalDefault()
         : ApolloServerPluginLandingPageProductionDefault();

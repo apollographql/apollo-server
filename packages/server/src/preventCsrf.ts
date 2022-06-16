@@ -1,5 +1,5 @@
 import MIMEType from 'whatwg-mimetype';
-import { BadRequestError } from './errors';
+import { BadRequestError } from './errors.js';
 
 // Our recommended set of CSRF prevention headers. Operations that do not
 // provide a content-type such as `application/json` (in practice, this

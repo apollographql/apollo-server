@@ -15,7 +15,7 @@ import {
   symbolExecutionDispatcherWillResolveField,
   enablePluginsForSchemaResolvers,
   symbolUserFieldResolver,
-} from './utils/schemaInstrumentation';
+} from './utils/schemaInstrumentation.js';
 import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
@@ -23,7 +23,7 @@ import {
   UserInputError,
   BadRequestError,
   ensureError,
-} from './errors';
+} from './errors.js';
 import type {
   GraphQLRequestContext,
   GraphQLRequestContextDidResolveSource,
@@ -43,11 +43,11 @@ import {
   invokeDidStartHook,
   invokeHooksUntilDefinedAndNonNull,
   invokeSyncDidStartHook,
-} from './utils/invokeHooks';
+} from './utils/invokeHooks.js';
 
-import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery';
+import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery.js';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
-import { isDefined } from './utils/isDefined';
+import { isDefined } from './utils/isDefined.js';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 

@@ -1,19 +1,15 @@
+export { ApolloServer } from './ApolloServer.js';
+// Note that this is purely a type export.
+export * from './externalTypes/index.js';
+
+// TODO(AS4): consider moving to `@apollo/server/errors`
 export {
   SyntaxError,
   ValidationError,
   AuthenticationError,
   ForbiddenError,
   UserInputError,
-} from './errors';
+} from './errors.js';
 
-export { ApolloServer } from './ApolloServer';
-export { expressMiddleware } from './express';
-export { startStandaloneServer } from './standalone';
-
-export * from './externalTypes';
-
-export * from './plugin';
-
-// TODO(AS4): We do need to export usage reporting protobuf for the purpose of
-// gateway, but we really don't want that to be in top level. Look into this as
-// part of #6243.
+// TODO(AS4): consider moving to `@apollo/server/express`
+export { expressMiddleware } from './express/index.js';
