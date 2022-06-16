@@ -83,7 +83,7 @@
     "lodash.sumby": "4.6.0",
     "nock": "13.2.7",
     "node-fetch": "2.6.7",
-    "prettier": "2.7.0",
+    "prettier": "2.7.1",
     "qs-middleware": "1.0.3",
     "request-promise": "4.2.6",
     "requisition": "1.7.0",
