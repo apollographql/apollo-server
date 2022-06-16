@@ -2,13 +2,20 @@
   "name": "@apollo/usage-reporting-protobuf",
   "version": "3.3.1",
   "description": "Protobuf format for Apollo usage reporting",
-  "type": "commonjs",
-  "main": "generated/index.js",
-  "types": "generated/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./generated/protobuf.mjs",
+      "require": "./generated/protobuf.cjs",
+      "types": "./generated/protobuf.d.ts"
+    }
+  },
+  "types": "generated/protobuf.d.ts",
   "scripts": {
-    "generate": "rm -rf generated && mkdir generated && npm run pbjs && npm run pbts && cp src/index.* generated",
-    "pbjs": "apollo-pbjs --target static-module --out generated/protobuf.js --wrap commonjs --force-number --no-from-object src/reports.proto",
-    "pbts": "apollo-pbts -o generated/protobuf.d.ts generated/protobuf.js",
+    "generate": "rm -rf generated && mkdir generated && npm run pbjs-cjs && npm run pbjs-esm && npm run pbts",
+    "pbjs-cjs": "apollo-pbjs --target static-module --out generated/protobuf.cjs --wrap commonjs --force-number --no-from-object src/reports.proto",
+    "pbjs-esm": "apollo-pbjs --target static-module --out generated/protobuf.mjs --es6 --force-number --no-from-object src/reports.proto",
+    "pbts": "mv generated/protobuf.{c,}js && apollo-pbts -o generated/protobuf.d.ts generated/protobuf.js && mv generated/protobuf.{,c}js",
     "update-proto": "curl -sSfo src/reports.proto https://usage-reporting.api.apollographql.com/proto/reports.proto"
   },
   "repository": {
@@ -29,7 +36,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "@apollo/protobufjs": "1.2.2"
+    "@apollo/protobufjs": "1.2.4"
   },
   "volta": {
     "extends": "../../package.json"

@@ -1,21 +1,19 @@
-import type {
-  google,
-  IContextualizedStats,
-  IFieldStat,
-  IPathErrorStats,
-  IQueryLatencyStats,
-  IReport,
-  IStatsContext,
-  ITracesAndStats,
-  ITypeStat,
-  ReportHeader,
+import {
+  type google,
+  type IContextualizedStats,
+  type IFieldStat,
+  type IPathErrorStats,
+  type IQueryLatencyStats,
+  type IReport,
+  type IStatsContext,
+  type ITracesAndStats,
+  type ITypeStat,
+  type ReportHeader,
+  Trace,
 } from '@apollo/usage-reporting-protobuf';
-import proto from '@apollo/usage-reporting-protobuf';
 import type { ReferencedFieldsByType } from '@apollo/utils.usagereporting';
 import { DurationHistogram } from './durationHistogram.js';
 import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace.js';
-
-const { Trace } = proto;
 
 // protobuf.js exports both a class and an interface (starting with I) for each
 // message type. The class is what it produces when it decodes the message; the
@@ -66,7 +64,7 @@ export class OurReport implements Required<IReport> {
     referencedFieldsByType,
   }: {
     statsReportKey: string;
-    trace: proto.Trace;
+    trace: Trace;
     asTrace: boolean;
     includeTracesContributingToStats: boolean;
     referencedFieldsByType: ReferencedFieldsByType;
@@ -161,7 +159,7 @@ class StatsByContext {
     }
   }
 
-  addTrace(trace: proto.Trace, sizeEstimator: SizeEstimator) {
+  addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
     this.getContextualizedStats(trace, sizeEstimator).addTrace(
       trace,
       sizeEstimator,
@@ -169,7 +167,7 @@ class StatsByContext {
   }
 
   private getContextualizedStats(
-    trace: proto.Trace,
+    trace: Trace,
     sizeEstimator: SizeEstimator,
   ): OurContextualizedStats {
     const statsContext: IStatsContext = {
@@ -211,7 +209,7 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
   // We only add to the estimate when adding whole sub-messages. If it really
   // mattered, we could do a lot more careful things like incrementing it
   // whenever a numeric field on queryLatencyStats gets incremented over 0.
-  addTrace(trace: proto.Trace, sizeEstimator: SizeEstimator) {
+  addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
     const { fieldExecutionWeight } = trace;
     if (!fieldExecutionWeight) {
       this.queryLatencyStats.requestsWithoutFieldInstrumentation++;
@@ -262,10 +260,7 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
 
     let hasError = false;
 
-    const traceNodeStats = (
-      node: proto.Trace.INode,
-      path: ResponseNamePath,
-    ) => {
+    const traceNodeStats = (node: Trace.INode, path: ResponseNamePath) => {
       // Generate error stats and error path information
       if (node.error?.length) {
         hasError = true;

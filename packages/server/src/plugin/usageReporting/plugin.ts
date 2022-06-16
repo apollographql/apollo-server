@@ -1,4 +1,4 @@
-import proto from '@apollo/usage-reporting-protobuf';
+import { Report, ReportHeader, Trace } from '@apollo/usage-reporting-protobuf';
 import type { Fetcher, FetcherResponse } from '@apollo/utils.fetcher';
 import {
   usageReportingSignature,
@@ -38,8 +38,6 @@ import { OurReport } from './stats.js';
 import { makeTraceDetails } from './traceDetails.js';
 import { packageVersion } from '../../packageVersion.js';
 
-const { ReportHeader } = proto;
-
 const reportHeaderDefaults = {
   hostname: os.hostname(),
   agentVersion: `@apollo/server@${packageVersion}`,
@@ -50,7 +48,7 @@ const reportHeaderDefaults = {
 
 class ReportData {
   report!: OurReport;
-  readonly header: proto.ReportHeader;
+  readonly header: ReportHeader;
   constructor(executableSchemaId: string, graphRef: string) {
     this.header = new ReportHeader({
       ...reportHeaderDefaults,
@@ -246,11 +244,11 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
 
         report.ensureCountsAreIntegers();
 
-        const protobufError = proto.Report.verify(report);
+        const protobufError = Report.verify(report);
         if (protobufError) {
           throw new Error(`Error encoding report: ${protobufError}`);
         }
-        const message = proto.Report.encode(report).finish();
+        const message = Report.encode(report).finish();
 
         // Potential follow-up: we can compare message.length to
         // report.sizeEstimator.bytes and use it to "learn" if our estimation is
@@ -269,7 +267,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           //
           // We decode the report rather than printing the original `report`
           // so that it includes all of the pre-encoded traces.
-          const decodedReport = proto.Report.decode(message);
+          const decodedReport = Report.decode(message);
           logger.warn(
             `Apollo usage report: ${JSON.stringify(decodedReport.toJSON())}`,
           );
@@ -403,11 +401,11 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         let includeOperationInUsageReporting: boolean | null = null;
 
         if (http) {
-          treeBuilder.trace.http = new proto.Trace.HTTP({
+          treeBuilder.trace.http = new Trace.HTTP({
             method:
-              proto.Trace.HTTP.Method[
-                http.method as keyof typeof proto.Trace.HTTP.Method
-              ] || proto.Trace.HTTP.Method.UNKNOWN,
+              Trace.HTTP.Method[
+                http.method as keyof typeof Trace.HTTP.Method
+              ] || Trace.HTTP.Method.UNKNOWN,
             // Host and path are not used anywhere on the backend, so let's not bother
             // trying to parse request.url to get them, which is a potential
             // source of bugs because integrations have different behavior here.
@@ -594,13 +592,13 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
             const policyIfCacheable =
               requestContext.overallCachePolicy.policyIfCacheable();
             if (policyIfCacheable) {
-              treeBuilder.trace.cachePolicy = new proto.Trace.CachePolicy({
+              treeBuilder.trace.cachePolicy = new Trace.CachePolicy({
                 scope:
                   policyIfCacheable.scope === 'PRIVATE'
-                    ? proto.Trace.CachePolicy.Scope.PRIVATE
+                    ? Trace.CachePolicy.Scope.PRIVATE
                     : policyIfCacheable.scope === 'PUBLIC'
-                    ? proto.Trace.CachePolicy.Scope.PUBLIC
-                    : proto.Trace.CachePolicy.Scope.UNKNOWN,
+                    ? Trace.CachePolicy.Scope.PUBLIC
+                    : Trace.CachePolicy.Scope.UNKNOWN,
                 // Convert from seconds to ns.
                 maxAgeNs: policyIfCacheable.maxAge * 1e9,
               });
@@ -671,7 +669,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                   operationDerivedData.referencedFieldsByType;
               }
 
-              const protobufError = proto.Trace.verify(trace);
+              const protobufError = Trace.verify(trace);
               if (protobufError) {
                 throw new Error(`Error encoding trace: ${protobufError}`);
               }
@@ -787,7 +785,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
 }
 
 export function makeHTTPRequestHeaders(
-  http: proto.Trace.IHTTP,
+  http: Trace.IHTTP,
   headers: HeaderMap,
   sendHeaders?: SendValuesBaseOptions,
 ): void {
@@ -823,7 +821,7 @@ export function makeHTTPRequestHeaders(
       case 'set-cookie':
         break;
       default:
-        http!.requestHeaders![key] = new proto.Trace.HTTP.Values({
+        http!.requestHeaders![key] = new Trace.HTTP.Values({
           value: [value],
         });
     }
