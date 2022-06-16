@@ -1,6 +1,8 @@
 // This script updates packageVersion.ts to contain the version from
 // package.json before compilation, and puts the original contents in
 // .packageVersion.ts.original. A postcompile script moves the file back.
+//
+// This script expects to be run from the project root (as `npm run` does).
 
 import assert from 'assert';
 import path from 'path';

@@ -5,6 +5,8 @@
 // doesn't revert the packageVersion.ts update from precompile.ts; that gets
 // done directly in the compile script, whether or not tsc succeeds.)
 
+// This script
+
 import path from 'path';
 import { writeFileSync } from 'fs';
 import rimraf from 'rimraf';
