@@ -6,7 +6,8 @@
 
 This is the Fastify integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md)
 
-As of Apollo Server 3, this package supports Fastify v3 only.
+~~As of Apollo Server 3, this package supports Fastify v3 only.~~
+This fork works with Fastify v4!
 
 A full example of how to use `apollo-server-fastify` can be found in [the docs](https://www.apollographql.com/docs/apollo-server/integrations/middleware/#apollo-server-fastify).
 

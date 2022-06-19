@@ -1,3 +1,9 @@
+# A fork that supports fastify v4
+# Install with `npm install @derockdev/apollo-server-fastify
+## This fork will be up until apollo natively supports fastify v4
+
+original readme:
+
 # <a href='https://www.apollographql.com/'><img src='https://user-images.githubusercontent.com/841294/53402609-b97a2180-39ba-11e9-8100-812bab86357c.png' height='100' alt='Apollo Server'></a>
 ## A TypeScript GraphQL Server for Express, Koa, Hapi, Lambda, and more.
 
