@@ -2594,7 +2594,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         return request(url).get('/');
       }
 
-      function get(accept: string = 'text/html') {
+      function get(accept = 'text/html') {
         return getWithoutAcceptHeader().set('accept', accept);
       }
 

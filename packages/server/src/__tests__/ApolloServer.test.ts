@@ -356,9 +356,9 @@ describe('ApolloServer executeOperation', () => {
           {
             // Works with plugins too!
             async requestDidStart({ contextValue }) {
-              let n: number = contextValue.foo;
+              const n: number = contextValue.foo;
               // @ts-expect-error
-              let s: string = contextValue.foo;
+              const s: string = contextValue.foo;
               // Make sure both variables are used (so the only expected error
               // is the type error).
               JSON.stringify({ n, s });
@@ -410,9 +410,9 @@ describe('ApolloServer executeOperation', () => {
         plugins: [
           ApolloServerPluginUsageReporting({
             generateClientInfo({ contextValue }) {
-              let n: number = contextValue.foo;
+              const n: number = contextValue.foo;
               // @ts-expect-error
-              let s: string = contextValue.foo;
+              const s: string = contextValue.foo;
               // Make sure both variables are used (so the only expected error
               // is the type error).
               return {

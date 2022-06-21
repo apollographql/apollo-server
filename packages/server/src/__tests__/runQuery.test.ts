@@ -973,13 +973,13 @@ describe('parsing and validation cache', () => {
 
   function forgeLargerTestQuery(
     count: number,
-    prefix: string = 'prefix',
+    prefix = 'prefix',
   ): string {
     if (count <= 0) {
       count = 1;
     }
 
-    let query: string = '';
+    let query = '';
 
     for (let q = 0; q < count; q++) {
       query += ` ${prefix}_${count}: testString\n`;
