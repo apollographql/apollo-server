@@ -5,4 +5,4 @@ export type {
   VariableValueOptions,
   ClientInfo,
   GenerateClientInfo,
-} from './options';
+} from './options.js';
