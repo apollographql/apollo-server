@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/standalone",
+  "type": "module",
+  "main": "../dist/cjs/standalone/index.js",
+  "module": "../dist/esm/standalone/index.js",
+  "types": "../dist/esm/standalone/index.d.ts",
+  "sideEffects": false
+}

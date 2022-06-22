@@ -22,3 +22,8 @@ npx rollup smoke-test-no-express.mjs --config rollup.config.js --silent --file "
 grep 'function createApplication' "$ROLLUP_OUT_DIR"/bundle.mjs
 # ... and that the one that doesn't, doesn't.
 ! grep 'function createApplication' "$ROLLUP_OUT_DIR"/bundle-no-express.mjs
+
+# Ensure basic TypeScript builds work.
+tsc --build tsconfig.{esm,cjs}.json
+node generated/tsc/smoke-test.cjs
+node generated/tsc/smoke-test.mjs

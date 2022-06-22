@@ -1,4 +1,7 @@
 *
+# Include the package.json files that give us deep imports.
+!**/package.json
+node_modules/**/*
 !src/**/*
 src/**/__tests__/**
 !dist/**/*
