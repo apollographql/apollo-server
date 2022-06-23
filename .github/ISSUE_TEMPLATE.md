@@ -1,7 +1,7 @@
 <!--
 * ❓ Questions?
           Use Stack Overflow (http://stackoverflow.com/questions/tagged/apollo)
-          or discuss it on our Spectrum.chat community (https://spectrum.chat/apollo).
+          or discuss it on our Community Forum (https://community.apollographql.com).
 * 💡 Feature requests?
           Please search for an existing feature request before opening a new one.
           If there is an existing feature request, use the 👍 to show your support

@@ -5,8 +5,8 @@ contact_links:
     about: >-
       Many questions are already answered on Stack Overflow!
       We suggest starting here!
-  - name: "💬 Questions: Spectrum Community Support"
-    url: https://spectrum.chat/apollo/apollo-server
+  - name: "💬 Questions: Community Support"
+    url: https://community.apollographql.com
     about: >-
       If you're unable to find an answer on Stack Overflow, the Apollo
-      Server channel on our Apollo Community Spectrum is the next best place.
+      Community Forum is the next best place.
