@@ -1,5 +1,4 @@
 import type { Logger } from '@apollo/utils.logger';
-import type { IMocks } from '@graphql-tools/mock';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type {
   DocumentNode,
@@ -148,13 +147,8 @@ interface ApolloServerOptionsWithTypeDefs<TContext extends BaseContext>
 
 // Used internally in ApolloServer.ts but not publicly exported.
 export type ApolloServerOptionsWithStaticSchema<TContext extends BaseContext> =
-  (
-    | ApolloServerOptionsWithSchema<TContext>
-    | ApolloServerOptionsWithTypeDefs<TContext>
-  ) & {
-    mocks?: boolean | IMocks;
-    mockEntireSchema?: boolean;
-  };
+  | ApolloServerOptionsWithSchema<TContext>
+  | ApolloServerOptionsWithTypeDefs<TContext>;
 
 export type ApolloServerOptions<TContext extends BaseContext> =
   | ApolloServerOptionsWithGateway<TContext>
