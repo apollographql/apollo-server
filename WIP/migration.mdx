@@ -60,6 +60,12 @@ To simplify the Apollo Server 4 API, we removed the `modules` constructor option
 
 Apollo Server 4 drops support for [`@apollo/gateway` versions](/federation/api/apollo-gateway/) below v0.35.0.
 
+### Removed mocking
+
+`mocks` and `mockEntireSchema` constructor options removed. These were a thin
+layer around a subset of the functionality of a hard-coded version of
+`@graphql-tools/mocks`, which can be used directly (TODO: show migration).
+
 #### Dropping Redundant Gateway TypeScript types
 
 In Apollo Server 2, the TypeScript type used for the `gateway` constructor option is called `GraphQLService`. Apollo Server 3 introduced a new TypeScript type called `GatewayInterface`.
