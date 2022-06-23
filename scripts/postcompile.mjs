@@ -11,6 +11,7 @@ import path from 'path';
 import { writeFileSync } from 'fs';
 import rimraf from 'rimraf';
 
+// Tell Node what kinds of files the ".js" files in these subdirectories are.
 writeFileSync(
   path.join('packages', 'server', 'dist', 'esm', 'package.json'),
   JSON.stringify({ type: 'module' }),
@@ -20,5 +21,5 @@ writeFileSync(
   JSON.stringify({ type: 'commonjs' }),
 );
 
-// Remove CJS .d.ts files.
+// Remove CJS .d.ts files: we don't need two copies!
 rimraf.sync('packages/server/dist/cjs/**/*.d.ts');
