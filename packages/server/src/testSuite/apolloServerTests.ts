@@ -24,7 +24,11 @@ import { execute } from '@apollo/client/link/core';
 import { createHttpLink } from '@apollo/client/link/http';
 import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 
-import { createApolloFetch, ApolloFetch, ParsedResponse } from './apolloFetch';
+import {
+  createApolloFetch,
+  ApolloFetch,
+  ParsedResponse,
+} from './apolloFetch.js';
 import {
   AuthenticationError,
   UserInputError,
@@ -36,7 +40,7 @@ import {
   GraphQLExecutor,
   GraphQLRequestContextExecutionDidStart,
   PluginDefinition,
-} from '..';
+} from '../index.js';
 import fetch from 'node-fetch';
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
@@ -47,19 +51,19 @@ import type {
   CreateServerForIntegrationTests,
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,
-} from '.';
+} from './index.js';
 import gql from 'graphql-tag';
 import {
   ApolloServerPluginUsageReportingOptions,
   ApolloServerPluginUsageReporting,
-} from '../plugin/usageReporting';
-import { ApolloServerPluginInlineTrace } from '../plugin/inlineTrace';
+} from '../plugin/usageReporting/index.js';
+import { ApolloServerPluginInlineTrace } from '../plugin/inlineTrace/index.js';
 import {
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginUsageReportingDisabled,
-} from '../plugin/disabled';
-import { ApolloServerPluginLandingPageLocalDefault } from '../plugin/landingPage/default';
-import { ApolloServerPluginLandingPageGraphQLPlayground } from '../plugin/landingPage/graphqlPlayground';
+} from '../plugin/disabled/index.js';
+import { ApolloServerPluginLandingPageLocalDefault } from '../plugin/landingPage/default/index.js';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '../plugin/landingPage/graphqlPlayground/index.js';
 import {
   jest,
   describe,

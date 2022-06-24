@@ -26,7 +26,7 @@ import request from 'supertest';
 import type {
   CreateServerForIntegrationTests,
   CreateServerForIntegrationTestsOptions,
-} from '.';
+} from './index.js';
 import type {
   ApolloServer,
   ApolloServerOptions,
@@ -34,11 +34,18 @@ import type {
   GraphQLRequestContext,
   GraphQLRequestListener,
   PersistedQueryOptions,
-} from '..';
-import { ApolloServerPluginCacheControl } from '../plugin/cacheControl';
-import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled';
-import { PersistedQueryNotFoundError } from '../errors';
-import { jest, it, expect, beforeEach, afterEach, describe } from '@jest/globals';
+} from '../index.js';
+import { ApolloServerPluginCacheControl } from '../plugin/cacheControl/index.js';
+import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled/index.js';
+import { PersistedQueryNotFoundError } from '../errors.js';
+import {
+  jest,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  describe,
+} from '@jest/globals';
 import type { Mock, SpyInstance } from 'jest-mock';
 
 const QueryRootType = new GraphQLObjectType({
