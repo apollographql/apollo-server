@@ -28,9 +28,9 @@
       "require": "./dist/cjs/plugin/cacheControl/index.js"
     },
     "./plugin/disabled": {
-      "types": "./dist/esm/plugin/disabled.d.ts",
-      "import": "./dist/esm/plugin/disabled.js",
-      "require": "./dist/cjs/plugin/disabled.js"
+      "types": "./dist/esm/plugin/disabled/index.d.ts",
+      "import": "./dist/esm/plugin/disabled/index.js",
+      "require": "./dist/cjs/plugin/disabled/index.js"
     },
     "./plugin/drainHttpServer": {
       "types": "./dist/esm/plugin/drainHttpServer/index.d.ts",
