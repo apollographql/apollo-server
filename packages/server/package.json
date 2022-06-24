@@ -3,56 +3,59 @@
   "version": "3.6.7",
   "description": "Core engine for Apollo GraphQL server",
   "type": "module",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/esm/index.d.ts",
       "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/cjs/index.d.ts"
+      "require": "./dist/cjs/index.js"
     },
     "./standalone": {
+      "types": "./dist/esm/standalone/index.d.ts",
       "import": "./dist/esm/standalone/index.js",
-      "require": "./dist/cjs/standalone/index.js",
-      "types": "./dist/cjs/standalone/index.d.ts"
+      "require": "./dist/cjs/standalone/index.js"
     },
     "./plugin/cacheControl": {
+      "types": "./dist/esm/plugin/cacheControl/index.d.ts",
       "import": "./dist/esm/plugin/cacheControl/index.js",
-      "require": "./dist/cjs/plugin/cacheControl/index.js",
-      "types": "./dist/cjs/plugin/cacheControl/index.d.ts"
+      "require": "./dist/cjs/plugin/cacheControl/index.js"
     },
     "./plugin/disabled": {
+      "types": "./dist/esm/plugin/disabled.d.ts",
       "import": "./dist/esm/plugin/disabled.js",
-      "require": "./dist/cjs/plugin/disabled.js",
-      "types": "./dist/cjs/plugin/disabled.d.ts"
+      "require": "./dist/cjs/plugin/disabled.js"
     },
     "./plugin/drainHttpServer": {
+      "types": "./dist/esm/plugin/drainHttpServer/index.d.ts",
       "import": "./dist/esm/plugin/drainHttpServer/index.js",
-      "require": "./dist/cjs/plugin/drainHttpServer/index.js",
-      "types": "./dist/cjs/plugin/drainHttpServer/index.d.ts"
+      "require": "./dist/cjs/plugin/drainHttpServer/index.js"
     },
     "./plugin/inlineTrace": {
+      "types": "./dist/esm/plugin/inlineTrace/index.d.ts",
       "import": "./dist/esm/plugin/inlineTrace/index.js",
-      "require": "./dist/cjs/plugin/inlineTrace/index.js",
-      "types": "./dist/cjs/plugin/inlineTrace/index.d.ts"
+      "require": "./dist/cjs/plugin/inlineTrace/index.js"
     },
     "./plugin/landingPage/default": {
+      "types": "./dist/esm/plugin/landingPage/default/index.d.ts",
       "import": "./dist/esm/plugin/landingPage/default/index.js",
-      "require": "./dist/cjs/plugin/landingPage/default/index.js",
-      "types": "./dist/cjs/plugin/landingPage/default/index.d.ts"
+      "require": "./dist/cjs/plugin/landingPage/default/index.js"
     },
     "./plugin/landingPage/graphqlPlayground": {
+      "types": "./dist/esm/plugin/landingPage/graphqlPlayground/index.d.ts",
       "import": "./dist/esm/plugin/landingPage/graphqlPlayground/index.js",
-      "require": "./dist/cjs/plugin/landingPage/graphqlPlayground/index.js",
-      "types": "./dist/cjs/plugin/landingPage/graphqlPlayground/index.d.ts"
+      "require": "./dist/cjs/plugin/landingPage/graphqlPlayground/index.js"
     },
     "./plugin/schemaReporting": {
+      "types": "./dist/esm/plugin/schemaReporting/index.d.ts",
       "import": "./dist/esm/plugin/schemaReporting/index.js",
-      "require": "./dist/cjs/plugin/schemaReporting/index.js",
-      "types": "./dist/cjs/plugin/schemaReporting/index.d.ts"
+      "require": "./dist/cjs/plugin/schemaReporting/index.js"
     },
     "./plugin/usageReporting": {
+      "types": "./dist/esm/plugin/usageReporting/index.d.ts",
       "import": "./dist/esm/plugin/usageReporting/index.js",
-      "require": "./dist/cjs/plugin/usageReporting/index.js",
-      "types": "./dist/cjs/plugin/usageReporting/index.d.ts"
+      "require": "./dist/cjs/plugin/usageReporting/index.js"
     }
   },
   "repository": {
@@ -85,7 +88,6 @@
     "@apollo/utils.usagereporting": "^1.0.0",
     "@apollo/utils.withrequired": "^1.0.0",
     "@apollographql/graphql-playground-html": "1.6.29",
-    "@graphql-tools/mock": "^8.1.2",
     "@graphql-tools/schema": "^8.0.0",
     "@josephg/resolvable": "^1.0.0",
     "@types/express-serve-static-core": "4.17.29",

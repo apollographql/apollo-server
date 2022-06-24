@@ -32,3 +32,5 @@ node_modules/
 
 # Volta binaries (when using direnv/.envrc)
 .volta
+
+smoke-test/generated

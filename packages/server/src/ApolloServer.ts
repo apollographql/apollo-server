@@ -1,6 +1,5 @@
 import { isNodeLike } from '@apollo/utils.isnodelike';
 import type { Logger } from '@apollo/utils.logger';
-import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
@@ -262,10 +261,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
         {
           phase: 'initialized',
           schemaManager: new SchemaManager({
-            apiSchema: ApolloServer.maybeAddMocksToConstructedSchema(
-              ApolloServer.constructSchema(config),
-              config,
-            ),
+            apiSchema: ApolloServer.constructSchema(config),
             schemaDerivedDataProvider: (schema) =>
               ApolloServer.generateSchemaDerivedData(
                 schema,
@@ -700,25 +696,6 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       typeDefs: augmentedTypeDefs,
       resolvers,
       parseOptions,
-    });
-  }
-
-  private static maybeAddMocksToConstructedSchema<TContext extends BaseContext>(
-    schema: GraphQLSchema,
-    config: ApolloServerOptionsWithStaticSchema<TContext>,
-  ): GraphQLSchema {
-    const { mocks, mockEntireSchema } = config;
-    if (mocks === false) {
-      return schema;
-    }
-    if (!mocks && typeof mockEntireSchema === 'undefined') {
-      return schema;
-    }
-    return addMocksToSchema({
-      schema,
-      mocks: mocks === true || typeof mocks === 'undefined' ? {} : mocks,
-      preserveResolvers:
-        typeof mockEntireSchema === 'undefined' ? false : !mockEntireSchema,
     });
   }
 
