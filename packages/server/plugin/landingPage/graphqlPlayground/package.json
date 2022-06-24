@@ -1,8 +1,8 @@
 {
   "name": "@apollo/server/plugin/landingPage/graphqlPlayground",
   "type": "module",
-  "main": "../dist/cjs/plugin/landingPage/graphqlPlayground/index.js",
-  "module": "../dist/esm/plugin/landingPage/graphqlPlayground/index.js",
-  "types": "../dist/esm/plugin/landingPage/graphqlPlayground/index.d.ts",
+  "main": "../../../dist/cjs/plugin/landingPage/graphqlPlayground/index.js",
+  "module": "../../../dist/esm/plugin/landingPage/graphqlPlayground/index.js",
+  "types": "../../../dist/esm/plugin/landingPage/graphqlPlayground/index.d.ts",
   "sideEffects": false
 }

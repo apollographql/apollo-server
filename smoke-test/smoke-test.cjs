@@ -3,7 +3,22 @@ const { startStandaloneServer } = require('@apollo/server/standalone');
 const fetch = require('make-fetch-happen');
 const assert = require('assert');
 
+async function validateAllImports() {
+  require('@apollo/server');
+  require('@apollo/server/plugin/cacheControl');
+  require('@apollo/server/plugin/disabled');
+  require('@apollo/server/plugin/drainHttpServer');
+  require('@apollo/server/plugin/inlineTrace');
+  require('@apollo/server/plugin/landingPage/default');
+  require('@apollo/server/plugin/landingPage/graphqlPlayground');
+  require('@apollo/server/plugin/schemaReporting');
+  require('@apollo/server/plugin/usageReporting');
+  require('@apollo/server/standalone');
+}
+
 async function smokeTest() {
+  await validateAllImports();
+
   const s = new ApolloServer({
     typeDefs: 'type Query {hello:String}',
     resolvers: {

@@ -1,10 +1,24 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled;
 import fetch from 'make-fetch-happen';
 import assert from 'assert';
 
+async function validateAllImports() {
+  await import('@apollo/server');
+  await import('@apollo/server/plugin/cacheControl');
+  await import('@apollo/server/plugin/disabled');
+  await import('@apollo/server/plugin/drainHttpServer');
+  await import('@apollo/server/plugin/inlineTrace');
+  await import('@apollo/server/plugin/landingPage/default');
+  await import('@apollo/server/plugin/landingPage/graphqlPlayground');
+  await import('@apollo/server/plugin/schemaReporting');
+  await import('@apollo/server/plugin/usageReporting');
+  await import('@apollo/server/standalone');
+}
+
 async function smokeTest() {
+  await validateAllImports();
+
   const s = new ApolloServer({
     typeDefs: 'type Query {hello:String}',
     resolvers: {
