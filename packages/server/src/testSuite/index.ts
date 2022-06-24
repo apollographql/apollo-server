@@ -3,9 +3,10 @@ import type {
   ApolloServerOptions,
   BaseContext,
   ContextThunk,
-} from '../..';
+} from '..';
 import { defineIntegrationTestSuiteApolloServerTests } from './apolloServerTests';
 import { defineIntegrationTestSuiteHttpServerTests } from './httpServerTests';
+import { describe } from '@jest/globals';
 
 export interface CreateServerForIntegrationTestsResult {
   server: ApolloServer<BaseContext>;

@@ -9,8 +9,8 @@ import { urlForHttpServer } from '../../utils/urlForHttpServer';
 import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,
-} from '../integration';
-import { defineIntegrationTestSuite } from '../integration';
+} from '../../testSuite';
+import { defineIntegrationTestSuite } from '../../testSuite';
 
 defineIntegrationTestSuite(async function (
   serverOptions: ApolloServerOptions<BaseContext>,

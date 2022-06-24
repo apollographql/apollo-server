@@ -22,6 +22,11 @@
       "import": "./dist/esm/standalone/index.js",
       "require": "./dist/cjs/standalone/index.js"
     },
+    "./testSuite": {
+      "types": "./dist/esm/testSuite/index.d.ts",
+      "import": "./dist/esm/testSuite/index.js",
+      "require": "./dist/cjs/testSuite/index.js"
+    },
     "./plugin/cacheControl": {
       "types": "./dist/esm/plugin/cacheControl/index.d.ts",
       "import": "./dist/esm/plugin/cacheControl/index.js",
@@ -110,7 +115,17 @@
     "whatwg-mimetype": "^3.0.0"
   },
   "peerDependencies": {
-    "graphql": "^16.5.0"
+    "graphql": "^16.5.0",
+    "jest": "28.x",
+    "ts-jest": "28.x"
+  },
+  "peerDependenciesMeta": {
+    "jest": {
+      "optional": true
+    },
+    "ts-jest": {
+      "optional": true
+    }
   },
   "volta": {
     "extends": "../../package.json"

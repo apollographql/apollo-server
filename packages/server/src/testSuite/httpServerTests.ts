@@ -34,10 +34,12 @@ import type {
   GraphQLRequestContext,
   GraphQLRequestListener,
   PersistedQueryOptions,
-} from '../..';
-import { ApolloServerPluginCacheControl } from '../../plugin/cacheControl';
-import { ApolloServerPluginCacheControlDisabled } from '../../plugin/disabled';
-import { PersistedQueryNotFoundError } from '../../errors';
+} from '..';
+import { ApolloServerPluginCacheControl } from '../plugin/cacheControl';
+import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled';
+import { PersistedQueryNotFoundError } from '../errors';
+import { jest, it, expect, beforeEach, afterEach, describe } from '@jest/globals';
+import type { Mock, SpyInstance } from 'jest-mock';
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
@@ -216,7 +218,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
   } = {},
 ) {
   describe('httpServerTests.ts', () => {
-    let didEncounterErrors: jest.MockedFunction<
+    let didEncounterErrors: Mock<
       NonNullable<GraphQLRequestListener<BaseContext>['didEncounterErrors']>
     >;
 
@@ -1477,11 +1479,11 @@ export function defineIntegrationTestSuiteHttpServerTests(
         },
       };
 
-      let didEncounterErrors: jest.MockedFunction<
+      let didEncounterErrors: Mock<
         NonNullable<GraphQLRequestListener<BaseContext>['didEncounterErrors']>
       >;
 
-      let didResolveSource: jest.MockedFunction<
+      let didResolveSource: Mock<
         NonNullable<GraphQLRequestListener<BaseContext>['didResolveSource']>
       >;
 
@@ -1510,7 +1512,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
       }
 
       let cache: KeyValueCache<string>;
-      let setSpy: jest.SpyInstance;
+      let setSpy: SpyInstance<typeof cache.set>;
       beforeEach(async () => {
         cache = new InMemoryLRUCache();
         setSpy = jest.spyOn(cache, 'set');
