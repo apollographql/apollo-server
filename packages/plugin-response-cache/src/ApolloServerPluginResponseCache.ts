@@ -6,7 +6,6 @@ import type {
   GraphQLRequestListener,
   GraphQLResponse,
 } from '@apollo/server';
-import { newHTTPGraphQLHead } from '@apollo/server';
 import { createHash } from '@apollo/utils.createhash';
 import {
   KeyValueCache,
@@ -176,7 +175,13 @@ export default function plugin<TContext extends BaseContext>(
             requestContext.overallCachePolicy.replace(value.cachePolicy);
             requestContext.metrics.responseCacheHit = true;
             age = Math.round((+new Date() - value.cacheTime) / 1000);
-            return { result: { data: value.data }, http: newHTTPGraphQLHead() };
+            return {
+              result: { data: value.data },
+              http: {
+                statusCode: undefined,
+                headers: new Map(),
+              },
+            };
           }
 
           // Call hooks. Save values which will be used in willSendResponse as well.

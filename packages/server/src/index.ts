@@ -13,5 +13,3 @@ export {
 
 // TODO(AS4): consider moving to `@apollo/server/express`
 export { expressMiddleware } from './express/index.js';
-
-export { newHTTPGraphQLHead } from './runHttpQuery.js';
