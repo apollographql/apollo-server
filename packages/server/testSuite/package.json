@@ -1,8 +1,8 @@
 {
   "name": "@apollo/server/testSuite",
   "type": "module",
-  "main": "../dist/cjs/standalone/index.js",
-  "module": "../dist/esm/standalone/index.js",
-  "types": "../dist/esm/standalone/index.d.ts",
+  "main": "../dist/cjs/testSuite/index.js",
+  "module": "../dist/esm/testSuite/index.js",
+  "types": "../dist/esm/testSuite/index.d.ts",
   "sideEffects": false
 }
