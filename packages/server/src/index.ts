@@ -9,6 +9,7 @@ export {
   AuthenticationError,
   ForbiddenError,
   UserInputError,
+  PersistedQueryNotFoundError,
 } from './errors.js';
 
 // TODO(AS4): consider moving to `@apollo/server/express`

@@ -1,0 +1,13 @@
+*
+# Include the package.json files that give us deep imports.
+!**/package.json
+node_modules/**/*
+!src/**/*
+src/**/__tests__/**
+!dist/**/*
+dist/**/__tests__/**
+dist/**/*.tsbuildinfo
+!package.json
+!README.md
+
+# FIXME audit this

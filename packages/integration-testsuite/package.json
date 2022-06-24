@@ -1,0 +1,35 @@
+{
+  "name": "@apollo/server-integration-testsuite",
+  "version": "4.0.0",
+  "description": "Test suite for Apollo Server integrations",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/integration-testsuite"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript",
+    "Jest"
+  ],
+  "author": "Apollo <packages@apollographql.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "engines": {
+    "node": ">=14.0"
+  },
+  "peerDependencies": {
+    "@apollo/server": "^3.6.7",
+    "jest": "28.x"
+  },
+  "volta": {
+    "extends": "../../package.json"
+  }
+}

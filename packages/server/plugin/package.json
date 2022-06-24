@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/plugin",
+  "type": "module",
+  "main": "../dist/cjs/plugin/index.js",
+  "module": "../dist/esm/plugin/index.js",
+  "types": "../dist/esm/plugin/index.d.ts",
+  "sideEffects": false
+}
