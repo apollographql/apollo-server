@@ -6,5 +6,7 @@
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__"],
-  "references": []
+  "references": [
+    { "path": "../integration-testsuite" },
+  ]
 }

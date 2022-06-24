@@ -8,9 +8,5 @@
     "outDir": "./dist"
   },
   "include": ["src/**/*"],
-  "references": [
-    {
-      "path": "../server"
-    }
-  ]
+  "references": []
 }

@@ -14,7 +14,7 @@ import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,
 } from '../integration';
-import { defineIntegrationTestSuite } from '../integration';
+import { defineIntegrationTestSuite } from '@apollo/server-integration-testsuite';
 
 defineIntegrationTestSuite(async function (
   serverOptions: ApolloServerOptions<BaseContext>,
