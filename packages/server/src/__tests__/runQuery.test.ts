@@ -971,10 +971,7 @@ describe('parsing and validation cache', () => {
     };
   }
 
-  function forgeLargerTestQuery(
-    count: number,
-    prefix = 'prefix',
-  ): string {
+  function forgeLargerTestQuery(count: number, prefix = 'prefix'): string {
     if (count <= 0) {
       count = 1;
     }
