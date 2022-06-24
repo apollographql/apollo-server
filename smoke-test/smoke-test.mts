@@ -1,5 +1,6 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 import fetch from 'make-fetch-happen';
 import assert from 'assert';
 
