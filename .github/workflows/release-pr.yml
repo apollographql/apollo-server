@@ -20,9 +20,6 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: 16.x
-
-      - name: Ensure npm version 8.5.0
-        run: npm i -g npm@8.5.0
       - name: Install Dependencies
         run: npm i
 
