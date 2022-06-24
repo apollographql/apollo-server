@@ -12,6 +12,11 @@
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
+    "./express4": {
+      "types": "./dist/esm/express4/index.d.ts",
+      "import": "./dist/esm/express4/index.js",
+      "require": "./dist/cjs/express4/index.js"
+    },
     "./standalone": {
       "types": "./dist/esm/standalone/index.d.ts",
       "import": "./dist/esm/standalone/index.js",

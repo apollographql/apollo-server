@@ -2,12 +2,8 @@ import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
-import {
-  ApolloServer,
-  ApolloServerOptions,
-  BaseContext,
-  expressMiddleware,
-} from '../..';
+import { ApolloServer, ApolloServerOptions, BaseContext } from '../..';
+import { expressMiddleware } from '../../express4';
 import { urlForHttpServer } from '../../utils/urlForHttpServer';
 import type {
   CreateServerForIntegrationTestsOptions,
