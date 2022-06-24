@@ -133,13 +133,11 @@ export default function plugin<TContext extends BaseContext>(
   options: Options = Object.create(null),
 ): ApolloServerPlugin<TContext> {
   return {
-    async requestDidStart(): // outerRequestContext: GraphQLRequestContext<any>,
-    Promise<GraphQLRequestListener<any>> {
+    async requestDidStart(
+      outerRequestContext: GraphQLRequestContext<any>,
+    ): Promise<GraphQLRequestListener<any>> {
       const cache = new PrefixingKeyValueCache(
-        // FIXME: undo the bang and uncomment the || once the keyv changes are reverted on v4
-        options.cache!,
-        // ||
-        // outerRequestContext.cache!,
+        options.cache ?? outerRequestContext.cache,
         'fqc:',
       );
 
