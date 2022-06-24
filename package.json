@@ -26,7 +26,8 @@
     "codegen": "graphql-codegen",
     "prettier-check": "prettier --check .",
     "prettier-fix": "prettier --write .",
-    "spell-check": "cspell lint '**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)"
+    "spell-check": "cspell lint '**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)",
+    "changeset-publish": "changeset publish"
   },
   "workspaces": [
     "packages/*"
@@ -38,6 +39,8 @@
   "devDependencies": {
     "@apollo/client": "3.6.9",
     "@apollo/utils.createhash": "1.1.0",
+    "@changesets/changelog-github": "^0.4.5",
+    "@changesets/cli": "^2.23.0",
     "@graphql-codegen/cli": "2.6.2",
     "@graphql-codegen/typescript-operations": "2.4.2",
     "@graphql-tools/mock": "8.6.13",
