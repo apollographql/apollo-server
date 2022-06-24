@@ -1,26 +1,19 @@
 import type {
   ApolloServerPlugin,
-  GraphQLRequestListener,
-  GraphQLRequestContext,
-  GraphQLResponse,
-  CacheHint,
   BaseContext,
+  CacheHint,
+  GraphQLRequestContext,
+  GraphQLRequestListener,
+  GraphQLResponse,
 } from '@apollo/server';
+import { newHTTPGraphQLHead } from '@apollo/server';
+import { createHash } from '@apollo/utils.createhash';
 import {
   KeyValueCache,
   PrefixingKeyValueCache,
 } from '@apollo/utils.keyvaluecache';
 
 type ValueOrPromise<T> = T | Promise<T>;
-
-// XXX This should use createSHA from apollo-server-core in order to work on
-// non-Node environments. I'm not sure where that should end up ---
-// apollo-server-sha as its own tiny module? apollo-server-env seems bad because
-// that would add sha.js to unnecessary places, I think?
-import { createHash } from '@apollo/utils.createhash';
-import { CacheScope } from 'packages/server/src/plugin/schemaReporting/generated/operations';
-import { newHTTPGraphQLHead } from 'packages/server/src/runHttpQuery';
-
 interface Options<TContext = Record<string, any>> {
   // Underlying cache used to save results. All writes will be under keys that
   // start with 'fqc:' and are followed by a fixed-size cryptographic hash of a
@@ -302,7 +295,7 @@ export default function plugin<TContext extends BaseContext>(
               .catch(logger.warn);
           };
 
-          const isPrivate = policyIfCacheable.scope === CacheScope.Private;
+          const isPrivate = policyIfCacheable.scope === 'PRIVATE';
           if (isPrivate) {
             if (!options.sessionId) {
               logger.warn(

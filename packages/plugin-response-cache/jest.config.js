@@ -1,3 +1,3 @@
-const config = require('../../jest.config.base');
+import baseConfig from '../../jest.config.base.js';
 
-module.exports = Object.assign(Object.create(null), config);
+export default baseConfig;

@@ -8,7 +8,7 @@
     "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/ **/tsconfig*tsbuildinfo",
     "precompile": "node scripts/precompile.mjs",
     "postcompile": "node scripts/postcompile.mjs",
-    "compile": "tsc --build tsconfig.build.json packages/server/tsconfig.cjs.json; x=$?; mv packages/server/src/.packageVersion.ts.original packages/server/src/packageVersion.ts; exit $x",
+    "compile": "tsc --build tsconfig.build.json packages/*/tsconfig.cjs.json; x=$?; mv packages/server/src/.packageVersion.ts.original packages/server/src/packageVersion.ts; exit $x",
     "watch": "tsc --build tsconfig.build.json --watch",
     "install-with-npm-8.5": "npm i -g npm@^8.5.0 && npm i",
     "postinstall": "npm run compile",
