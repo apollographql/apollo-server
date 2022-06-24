@@ -352,24 +352,24 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
 
 class OurQueryLatencyStats implements Required<IQueryLatencyStats> {
   latencyCount: DurationHistogram = new DurationHistogram();
-  requestCount: number = 0;
-  requestsWithoutFieldInstrumentation: number = 0;
-  cacheHits: number = 0;
-  persistedQueryHits: number = 0;
-  persistedQueryMisses: number = 0;
+  requestCount = 0;
+  requestsWithoutFieldInstrumentation = 0;
+  cacheHits = 0;
+  persistedQueryHits = 0;
+  persistedQueryMisses = 0;
   cacheLatencyCount: DurationHistogram = new DurationHistogram();
   rootErrorStats: OurPathErrorStats = new OurPathErrorStats();
-  requestsWithErrorsCount: number = 0;
+  requestsWithErrorsCount = 0;
   publicCacheTtlCount: DurationHistogram = new DurationHistogram();
   privateCacheTtlCount: DurationHistogram = new DurationHistogram();
-  registeredOperationCount: number = 0;
-  forbiddenOperationCount: number = 0;
+  registeredOperationCount = 0;
+  forbiddenOperationCount = 0;
 }
 
 class OurPathErrorStats implements Required<IPathErrorStats> {
   children: { [k: string]: OurPathErrorStats } = Object.create(null);
-  errorsCount: number = 0;
-  requestsWithErrorsCount: number = 0;
+  errorsCount = 0;
+  requestsWithErrorsCount = 0;
 
   getChild(subPath: string, sizeEstimator: SizeEstimator): OurPathErrorStats {
     const existing = this.children[subPath];
@@ -414,13 +414,13 @@ class OurTypeStat implements Required<ITypeStat> {
 }
 
 class OurFieldStat implements Required<IFieldStat> {
-  errorsCount: number = 0;
-  observedExecutionCount: number = 0;
+  errorsCount = 0;
+  observedExecutionCount = 0;
   // Note that this number isn't necessarily an integer while it is being
   // aggregated. Before encoding as a protobuf we call ensureCountsAreIntegers
   // which floors it.
-  estimatedExecutionCount: number = 0;
-  requestsWithErrorsCount: number = 0;
+  estimatedExecutionCount = 0;
+  requestsWithErrorsCount = 0;
   latencyCount: DurationHistogram = new DurationHistogram();
 
   constructor(readonly returnType: string) {}

@@ -13,7 +13,7 @@ export function createOperationDerivedDataCache({
   logger: Logger;
 }): LRUCache<string, OperationDerivedData> {
   let lastWarn: Date;
-  let lastDisposals: number = 0;
+  let lastDisposals = 0;
   return new LRUCache<string, OperationDerivedData>({
     // Calculate the length of cache objects by the JSON.stringify byteLength.
     sizeCalculation(obj) {

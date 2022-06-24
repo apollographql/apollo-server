@@ -2,12 +2,12 @@ import { DurationHistogram } from '../../../plugin/usageReporting/durationHistog
 
 describe('Duration histogram tests', () => {
   it('generateEmptyHistogram', () => {
-    let emptyDurationHistogram = new DurationHistogram();
+    const emptyDurationHistogram = new DurationHistogram();
     expect([]).toEqual(emptyDurationHistogram.toArray());
   });
 
   it('nonEmptyHistogram', () => {
-    let nonEmptyDurationHistogram = new DurationHistogram();
+    const nonEmptyDurationHistogram = new DurationHistogram();
     nonEmptyDurationHistogram.incrementBucket(100);
     expect([-100, 1]).toEqual(nonEmptyDurationHistogram.toArray());
 
@@ -36,7 +36,7 @@ describe('Duration histogram tests', () => {
       buckets: number[],
       initSize = 118,
     ) {
-      let histogram = new DurationHistogram({ initSize });
+      const histogram = new DurationHistogram({ initSize });
       buckets.forEach((val, bucket) => {
         histogram.incrementBucket(bucket, val);
       });
@@ -72,9 +72,9 @@ describe('Duration histogram tests', () => {
   });
 
   it('combineHistogram', () => {
-    let firstHistogram = new DurationHistogram({ initSize: 0 });
+    const firstHistogram = new DurationHistogram({ initSize: 0 });
     firstHistogram.incrementBucket(20);
-    let secondHistogram = new DurationHistogram();
+    const secondHistogram = new DurationHistogram();
     secondHistogram.incrementBucket(40);
     secondHistogram.incrementBucket(100, 10);
 

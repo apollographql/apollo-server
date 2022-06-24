@@ -19,7 +19,7 @@ describe('@rollup/plugin-commonjs', () => {
     const { output } = await bundle.generate(outputOptions);
     await bundle.close();
     const indexBundle = output[0].code;
-    var varDefinedAfterBundle;
+    let varDefinedAfterBundle;
     eval(`${indexBundle}; varDefinedAfterBundle = 'foo';`);
     expect(varDefinedAfterBundle).toEqual('foo');
   });
