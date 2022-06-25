@@ -151,12 +151,18 @@ export class ApolloServer extends ApolloServerBase {
     // POST ROUTE
     const postOptions = { ...route, ...routePost };
 
-    // if we have post route options which contain no cors options, but have
+    // for backward compatibility, set default cors when route options are not specified
+    if (!route) {
+      postOptions.cors = cors ?? { origin: 'ignore' };
+    }
+
+    // if we have POST route options which contain no cors options, but have
     // specified cors options separately, then merge them in
-    if (!!cors && postOptions.cors == null) {
+    // this ONLY applies if routePost was specified (for backward compatibility)
+    if (!!routePost && !!cors && routePost.cors == null) {
       postOptions.cors = cors;
       // else if we have no cors options as all, default them
-    } else if (postOptions.cors == null) {
+    } else if (!!routePost && postOptions.cors == null) {
       postOptions.cors = { origin: 'ignore' };
     }
 
@@ -170,12 +176,18 @@ export class ApolloServer extends ApolloServerBase {
     // GET ROUTE
     const getOptions = { ...route, ...routeGet };
 
-    // if we have get route options which contain no cors options, but have
+    // for backward compatibility, set default cors when route options are not specified
+    if (!route) {
+      getOptions.cors = cors ?? { origin: 'ignore' };
+    }
+
+    // if we have GET route options which contain no cors options, but have
     // specified cors options separately, then merge them in
-    if (!!getOptions && !!cors && getOptions.cors == null) {
+    // this ONLY applies if routeGet was specified (for backward compatibility)
+    if (!!routeGet && !!cors && routeGet.cors == null) {
       getOptions.cors = cors;
       // else if we have no cors options as all, default them
-    } else if (!!getOptions && getOptions.cors == null) {
+    } else if (!!routeGet && getOptions.cors == null) {
       getOptions.cors = { origin: 'ignore' };
     }
 
