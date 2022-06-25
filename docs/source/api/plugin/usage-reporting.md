@@ -1,6 +1,5 @@
 ---
 title: "API Reference: Usage reporting plugin"
-sidebar_title: Usage reporting
 api_reference: true
 ---
 
@@ -8,7 +7,7 @@ Apollo Server's built-in usage reporting plugin gathers data on how your clients
 
 ## Default installation
 
-Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](/monitoring/metrics/#connecting-to-apollo-studio). You usually do this by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables. No other action is required.
+Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](../../monitoring/metrics/#connecting-to-apollo-studio). You usually do this by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables. No other action is required.
 
 If you don't provide an API key and graph ref, this plugin is not installed.
 
@@ -25,9 +24,11 @@ import { ApolloServerPluginUsageReporting } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginUsageReporting({
-      sendVariableValues: { all: true },
+      fieldLevelInstrumentation: 0.5,
     }),
   ],
 });
@@ -343,11 +344,11 @@ The default value is `100`.
 
 ###### `logger`
 
-[`Logger`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L166-L172)
+[`Logger`](https://www.npmjs.com/package/@apollo/utils.logger)
 </td>
 <td>
 
-If you provide this object, the plugin sends it all log messages related to Apollo Studio communication, instead of sending them to the default logger. The object must implement all methods of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L166-L172).
+If you provide this object, the plugin sends it all log messages related to Apollo Studio communication, instead of sending them to the default logger. The object must implement all methods of [the `Logger` interface](https://www.npmjs.com/package/@apollo/utils.logger).
 
 </td>
 </tr>
@@ -423,8 +424,8 @@ Specify this function to create a signature for a query. This option is not reco
 |--------|-------------|
 | `{ none: true }` | If you provide this object, no GraphQL variable values are sent to Apollo Studio. This is the default behavior. |
 | `{ all: true }` |  If you provide this object, **all** GraphQL variable values are sent to Apollo Studio. |
-| `{ onlyNames: ["apple", "orange"]}`| If you provide an object with this structure, only values of the GraphQL variables with names that appear in the array are sent to Apollo Studio. Case-sensitive. |
-| `{ exceptNames: ["apple", "orange"]}`| If you provide an object with this structure, all GraphQL variable values **except** values of variables with names that appear in the array are sent to Apollo Studio. Case-sensitive. |
+| `{ onlyNames: ["apple", "orange"]}`| If you provide an object with this structure, only values of the GraphQL variables with names that appear in the array are sent to Apollo Studio. To filter individual fields of a variable that contains an input type, use the `transform` function below instead. Case-sensitive. |
+| `{ exceptNames: ["apple", "orange"]}`| If you provide an object with this structure, all GraphQL variable values **except** values of the variables with names that appear in the array are sent to Apollo Studio. To filter individual fields of a variable that contains an input type, use the `transform` function below instead. Case-sensitive. |
 | `{ transform: ({ variables, operationString)} => { ... } }` | <p>The value of `transform` is a function that takes the values of all GraphQL variables for an operation and the operation string. The function returns a new variables map containing values for the operation's variables that should be sent to Apollo Studio. This map does not need to contain all of the operation's variables, but it cannot _add_ variables to the map. You should not mutate `variables` itself or any of the values contained in it.</p><p>For security reasons, if an error occurs in the `transform` function, **all** variable values are replaced with `[PREDICATE_FUNCTION_ERROR]`. |
 
 #### Valid `sendHeaders` object signatures
@@ -453,6 +454,8 @@ import { ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [ApolloServerPluginUsageReportingDisabled()],
 });
 ```

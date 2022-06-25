@@ -81,6 +81,7 @@ describe('apollo-server-fastify', () => {
     async () => {
       await serverToCleanUp?.stop();
     },
+    { integrationName: 'fastify' },
   );
 });
 
@@ -345,6 +346,7 @@ describe('apollo-server-fastify', () => {
             },
           },
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -374,6 +376,7 @@ describe('apollo-server-fastify', () => {
             },
           },
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });

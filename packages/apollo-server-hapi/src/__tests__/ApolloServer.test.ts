@@ -426,6 +426,7 @@ describe('non-integration tests', () => {
               },
             },
             nodeEnv: 'production',
+            cache: 'bounded',
           })
         ).apolloServerInfo;
 
@@ -457,6 +458,7 @@ describe('non-integration tests', () => {
               },
             },
             nodeEnv: 'production',
+            cache: 'bounded',
           })
         ).apolloServerInfo;
 

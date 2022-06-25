@@ -1,6 +1,5 @@
 ---
 title: Apollo Server plugin event reference
-sidebar_title: Event reference
 ---
 
 > **New in Apollo Server 3:** All plugin lifecycle methods are `async`, _except for [`willResolveField`](#willresolvefield) and [`schemaDidLoadOrUpdate`](#schemadidloadorupdate)_.
@@ -105,7 +104,7 @@ This event enables you to serve a [custom landing page](../testing/build-run-que
 
 You define your plugin's `renderLandingPage` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, which enables it to read values passed to `serverWillStart`:
 
-```js{5-22}:title=index.js
+```js {5-22} title="index.js"
 const server = new ApolloServer({
   // ... other configuration ...
 
@@ -352,6 +351,8 @@ You provide your `willResolveField` handler in the object returned by your [`exe
 Your `willResolveField` handler can optionally return an ["end hook"](./plugins/#end-hooks) function that's invoked with the resolver's result (or the error that it throws). The end hook is called when your resolver has _fully_ resolved (e.g., if the resolver returns a Promise, the hook is called with the Promise's eventual resolved result).
 
 `willResolveField` and its end hook are synchronous plugin APIs (i.e., they do not return `Promise`s).
+
+`willResolveField` only fires when a field is resolved inside the Apollo Server itself; it does not fire at all if the server is a Gateway.
 
 #### Example
 

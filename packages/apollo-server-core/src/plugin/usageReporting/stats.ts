@@ -13,7 +13,7 @@ import {
   IReport,
 } from 'apollo-reporting-protobuf';
 import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace';
-import type { ReferencedFieldsByType } from './referencedFields';
+import type { ReferencedFieldsByType } from '@apollo/utils.usagereporting';
 
 // protobuf.js exports both a class and an interface (starting with I) for each
 // message type. The class is what it produces when it decodes the message; the
@@ -38,7 +38,7 @@ export class OurReport implements Required<IReport> {
   readonly tracesPerQuery: Record<string, OurTracesAndStats> =
     Object.create(null);
   endTime: google.protobuf.ITimestamp | null = null;
-
+  operationCount = 0;
   // A rough estimate of the number of bytes currently in the report. We start
   // at zero and don't count `header` and `endTime`, which have the same size
   // for every report. This really is a rough estimate, so we don't stress too

@@ -3,10 +3,13 @@
     "apollo-open-source",
     "group:graphqlcodegeneratorMonorepo",
     "group:graphql-toolsMonorepo",
+    "group:jestMonorepo",
+    "group:jestPlusTSJest",
+    "group:jestPlusTypes",
   ],
   "schedule": null,
   baseBranches: ["main", "version-4"],
-  // Override this value set in apollo-open-source and apollo-docs back to the default.
+  // Override this value set in apollo-open-source back to the default.
   // It's nice to be able to see PRs for everything in the Dependency Dashboard.
   prCreation: "immediate",
   // Disable circleci manager; see apollographql/federation's renovate file for details.
@@ -21,18 +24,6 @@
   //   old branch point. GH auto-merge doesn't have that property so it's a bit more likely that
   //   a deps update could break the build if there are recent related changes.
   platformAutomerge: false,
-  // We've run into some weird problems where Renovate will notice that a
-  // package has the same version in the root and in docs/ and make sure that a
-  // package is only installed in the root node_modules and not
-  // docs/node_modules. Unfortunately our Netlify doc build system only runs
-  // `npm i` under docs so this breaks. Rather than spend much effort figuring
-  // out how to make Netlify install more things or make Renovate not do this,
-  // let's just stop doing Renovate on the docs subdirectory. The docs team is
-  // currently working on a big overhaul that will remove docs/package.json
-  // entirely anyway. (Note that if you want to revert this change, you'll want
-  // to add back a bunch of docs-specific config that was removed when this line
-  // was added.)
-  ignorePaths: ["**/docs/**"],
   "packageRules": [
     // Bunch up all non-major dependencies into a single PR.  In the common case
     // where the upgrades apply cleanly, this causes less noise and is resolved faster
@@ -74,11 +65,32 @@
       matchBaseBranches: ["main"],
       allowedVersions: "5.x"
     },
-    // make-fetch-happen is used by the op reg plugin, which uses a cache API
-    // that is removed in v9.
+    // We've transitioned from lerna to changesets on version-4. We don't need
+    // to take the major upgrade on main. (Plus we can't because it drops Node
+    // 12 support.)
     {
-      "matchPackageNames": ["make-fetch-happen"],
-      "allowedVersions": "8.x"
+      matchPackageNames: ["lerna"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "4.x"
+    },
+    // cspell v6 drops Node 12 support. We let it upgrade on version-4.
+    {
+      matchPackageNames: ["cspell"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "5.x"
+    },
+    // The next versions of these Hapi packages drop Node 12 support, so we can't
+    // take them. (AS4 drops Node 12 support too, but we will also no longer
+    // maintain a Hapi integration as part of core in AS4.)
+    {
+      matchPackageNames: ["@hapi/accept"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "5.x",
+    },
+    {
+      matchPackageNames: ["@hapi/boom"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "9.x",
     },
     // node-fetch v3 only ships as ESM. We currently build to CommonJS and even
     // if we start publishing as ESM (#5627) we're not going to go ESM-only
@@ -88,6 +100,24 @@
     {
       "matchPackageNames": ["node-fetch", "@types/node-fetch"],
       "allowedVersions": "2.x"
+    },
+    // apollo-server-fastify supports Fastify v3. In the past it has been a challenge
+    // to support multiple major versions of web frameworks due to the tight coupling
+    // between Apollo Server core and the framework integration code. (In fact we only
+    // went from Fastify v2 support to Fastify v3 support with AS3.0.) Our solution for
+    // AS4 is to release and version framework integrations separately, and to allow
+    // direct users of the integrations to maintain them. So we are not going to update
+    // AS3 to work with Fastify v4; the Fastify/Apollo Server community can decide whether
+    // the best approach for AS4 is to maintain separate apollo-server-fastify-v3 and
+    // apollo-server-fastify-v4 packages, or to publish a package that manages to work
+    // with both, or something else. (This integration is gone on the version-4 branch.)
+    {
+      matchPackageNames: ["fastify", "@fastify/accepts"],
+      allowedVersions: "3.x",
+    },
+    {
+      matchPackageNames: ["@fastify/cors"],
+      allowedVersions: "7.x",
     },
   ]
 }

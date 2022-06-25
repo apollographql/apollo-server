@@ -14,7 +14,7 @@ import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
-} from 'apollo-server-caching';
+} from '@apollo/utils.keyvaluecache';
 import type {
   ApolloServerPlugin,
   GraphQLServiceContext,
@@ -42,7 +42,8 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import type { Logger, SchemaHash, ApolloConfig } from 'apollo-server-types';
+import type { SchemaHash, ApolloConfig } from 'apollo-server-types';
+import type { Logger } from '@apollo/utils.logger';
 import { cloneObject } from './runHttpQuery';
 import isNodeLike from './utils/isNodeLike';
 import { determineApolloConfig } from './determineApolloConfig';
@@ -58,6 +59,8 @@ import {
 import { InternalPluginId, pluginIsInternal } from './internalPlugin';
 import { newCachePolicy } from './cachePolicy';
 import { GatewayIsTooOldError, SchemaManager } from './utils/schemaManager';
+import * as uuid from 'uuid';
+import { UnboundedCache } from './utils/UnboundedCache';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -124,6 +127,21 @@ class UnreachableCaseError extends Error {
   }
 }
 
+// Our recommended set of CSRF prevention headers. Operations that do not
+// provide a content-type such as `application/json` (in practice, this
+// means GET operations) must include at least one of these headers.
+// Apollo Client Web's default behavior is to always sends a
+// `content-type` even for `GET`, and Apollo iOS and Apollo Kotlin always
+// send `x-apollo-operation-name`. So if you set
+// `csrfPreventionRequestHeaders: true` then any `GET` operation from these
+// three client projects and any `POST` operation at all should work
+// successfully; if you need `GET`s from another kind of client to work,
+// just add `apollo-require-preflight: true` to their requests.
+const recommendedCsrfPreventionRequestHeaders = [
+  'x-apollo-operation-name',
+  'apollo-require-preflight',
+];
+
 export class ApolloServerBase<
   // The type of the argument to the `context` function for this integration.
   ContextFunctionParams = any,
@@ -136,6 +154,7 @@ export class ApolloServerBase<
   private context?: Context | ContextFunction<ContextFunctionParams>;
   private apolloConfig: ApolloConfig;
   protected plugins: ApolloServerPlugin[] = [];
+  protected csrfPreventionRequestHeaders: string[] | null;
 
   private parseOptions: ParseOptions;
   private config: Config<ContextFunctionParams>;
@@ -170,6 +189,7 @@ export class ApolloServerBase<
       mocks,
       mockEntireSchema,
       documentStore,
+      csrfPrevention,
       ...requestOptions
     } = this.config;
 
@@ -205,6 +225,16 @@ export class ApolloServerBase<
     this.parseOptions = parseOptions;
     this.context = context;
 
+    this.csrfPreventionRequestHeaders =
+      csrfPrevention === true
+        ? recommendedCsrfPreventionRequestHeaders
+        : csrfPrevention === false
+        ? null
+        : csrfPrevention === undefined
+        ? null // In AS4, change this to be equivalent to 'true'.
+        : csrfPrevention.requestHeaders ??
+          recommendedCsrfPreventionRequestHeaders;
+
     const isDev = this.config.nodeEnv !== 'production';
 
     // We handle signals if it was explicitly requested, or if we're in Node,
@@ -231,8 +261,26 @@ export class ApolloServerBase<
         : noIntro;
     }
 
-    if (!requestOptions.cache) {
+    if (requestOptions.cache === 'bounded') {
       requestOptions.cache = new InMemoryLRUCache();
+    }
+
+    if (!requestOptions.cache) {
+      requestOptions.cache = new UnboundedCache();
+
+      if (
+        !isDev &&
+        (requestOptions.persistedQueries === undefined ||
+          (requestOptions.persistedQueries &&
+            !requestOptions.persistedQueries.cache))
+      ) {
+        this.logger.warn(
+          'Persisted queries are enabled and are using an unbounded cache. Your server' +
+            ' is vulnerable to denial of service attacks via memory exhaustion. ' +
+            'Set `cache: "bounded"` or `persistedQueries: false` in your ApolloServer ' +
+            'constructor, or see https://go.apollo.dev/s/cache-backends for other alternatives.',
+        );
+      }
     }
 
     if (requestOptions.persistedQueries !== false) {
@@ -670,15 +718,23 @@ export class ApolloServerBase<
     return {
       schema,
       schemaHash,
-      // The DocumentStore is schema-derived because we put documents in it after
-      // checking that they pass GraphQL validation against the schema and use
-      // this to skip validation as well as parsing. So we can't reuse the same
-      // DocumentStore for different schemas because that might make us treat
-      // invalid operations as valid.
+      // The DocumentStore is schema-derived because we put documents in it
+      // after checking that they pass GraphQL validation against the schema and
+      // use this to skip validation as well as parsing. So we can't reuse the
+      // same DocumentStore for different schemas because that might make us
+      // treat invalid operations as valid. If we're using the default
+      // DocumentStore, then we just create it from scratch each time we get a
+      // new schema. If we're using a user-provided DocumentStore, then we use a
+      // random prefix each time we get a new schema.
       documentStore:
         this.config.documentStore === undefined
-          ? this.initializeDocumentStore()
-          : this.config.documentStore,
+          ? new InMemoryLRUCache()
+          : this.config.documentStore === null
+          ? null
+          : new PrefixingKeyValueCache(
+              this.config.documentStore,
+              `${uuid.v4()}:`,
+            ),
     };
   }
 
@@ -867,20 +923,6 @@ export class ApolloServerBase<
       plugin.__internal_installed_implicitly__ = true;
       this.plugins.push(plugin);
     }
-  }
-
-  private initializeDocumentStore(): InMemoryLRUCache<DocumentNode> {
-    return new InMemoryLRUCache<DocumentNode>({
-      // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
-      // since the technique to calculate the size of a DocumentNode is
-      // only using JSON.stringify on the DocumentNode (and thus doesn't account
-      // for unicode characters, etc.), but it should do a reasonable job at
-      // providing a caching document store for most operations.
-      //
-      // If you want to tweak the max size, pass in your own documentStore.
-      maxSize: Math.pow(2, 20) * 30,
-      sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
-    });
   }
 
   // This function is used by the integrations to generate the graphQLOptions

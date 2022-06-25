@@ -1,19 +1,19 @@
 [build]
-  base    = "docs"
-  publish = "docs/public"
-  command = "gatsby build"
+  ignore = "exit 0"
 
 [build.environment]
   NODE_VERSION = "16"
-  NPM_VERSION  = "8"
 
-[context.production.environment]
-  PREFIX_PATHS = "true"
-[context.branch-deploy.environment]
-  PREFIX_PATHS = "true"
-
-# for debugging algolia indexing
-[dev]
-  command = "npm run build"
-[context.dev.environment]
-  SKIP_INDEXING = "false"
+[context.deploy-preview.build]
+  base = "docs"
+  ignore = "git diff --quiet HEAD^ HEAD ."
+  command = """\
+  cd ../
+  rm -rf monodocs
+  git clone https://github.com/apollographql/docs --branch main --single-branch monodocs
+  cd monodocs
+  npm i
+  cp -r ../docs local
+  DOCS_LOCAL=true npm run build \
+  """
+  publish = "../monodocs/public"

@@ -2,8 +2,6 @@
 title: Migrating to Apollo Server 3
 ---
 
-import { ExpansionPanel } from 'gatsby-theme-apollo-docs';
-
 Apollo Server 3 is generally available.
 
 The focus of this major-version release is to provide a lighter, nimbler core library as a foundation for future features and improved extensibility.
@@ -49,7 +47,7 @@ Additionally, Apollo Server 3 [no longer re-exports all of the exports from the 
 
 We hope to add more fully-integrated subscription support to Apollo Server in a future version.
 
-> Note that the `subscriptions-transport-ws` library is not actively maintained. An alternative, actively-maintained `graphql-ws` package exists, which we intend to support in a future release. These libraries implement different protocols for GraphQL subscriptions over WebSocket, so you need to adjust your client to support `graphql-ws`. At the time of release of Apollo Server 3, the `graphql-ws` protocol is not yet supported by GraphQL Playground or the Apollo Studio Explorer.
+> Note that the `subscriptions-transport-ws` library is no longer maintained. A newer, actively-maintained `graphql-ws` package exists. These libraries implement different protocols for GraphQL subscriptions over WebSocket, so you need to adjust your client to support `graphql-ws`. This migration guide shows how to reenable `subscriptions-transport-ws` to make your transition from Apollo Server 2 to Apollo Server 3 as easy as possible, but we recommend that you then migrate from `subscriptions-transport-ws` to `graphql-ws` once you've finished the upgrade. The [subscriptions documentation](./data/subscriptions/) shows how to use the newer `graphql-ws` rather than the unmaintained `subscriptions-transport-ws`.
 
 #### Reenabling subscriptions
 
@@ -103,6 +101,9 @@ Then, complete the following:
       // These are imported from `graphql`.
       execute,
       subscribe,
+      // This `server` is the instance returned from `new ApolloServer`.
+      // Ensures the same graphql validation rules are applied to both the Subscription Server and the ApolloServer
+      validationRules: server.requestOptions.validationRules
       // Providing `onConnect` is the `SubscriptionServer` equivalent to the
       // `context` function in `ApolloServer`. Please [see the docs](https://github.com/apollographql/subscriptions-transport-ws#constructoroptions-socketoptions--socketserver)
       // for more information on this hook.
@@ -124,7 +125,7 @@ Then, complete the following:
 
 1. Add a plugin to your `ApolloServer` constructor to close the `SubscriptionServer`.
 
-    ```javascript:title=index.js-10
+    ```javascript title="index.js-10"
     const server = new ApolloServer({
       schema,
       plugins: [{
@@ -166,19 +167,7 @@ import typeDefs from "./typeDefs";
     resolvers,
   });
 
-  const subscriptionServer = SubscriptionServer.create({
-    schema,
-    execute,
-    subscribe,
-    onConnect() {
-      // lookup userId by token, etc.
-      return { userId };
-    },
-  }, {
-    server: httpServer,
-    path: server.graphqlPath,
-  });
-
+  let subscriptionServer;
   const server = new ApolloServer({
     schema,
     context() {
@@ -195,6 +184,20 @@ import typeDefs from "./typeDefs";
       }
     }],
   });
+  
+  subscriptionServer = SubscriptionServer.create({
+    schema,
+    execute,
+    subscribe,
+    onConnect() {
+      // lookup userId by token, etc.
+      return { userId };
+    },
+  }, {
+    server: httpServer,
+    path: server.graphqlPath,
+  });
+  
   await server.start();
   server.applyMiddleware({ app });
 
@@ -212,9 +215,11 @@ Apollo Server 2 provides built-in support for file uploads via an outdated versi
 
 This built-in support is removed in Apollo Server 3. To use `graphql-upload`, you can choose an appropriate version and integrate it yourself. Note that `graphql-upload` does not support federation or every [Node.js framework](./integrations/middleware/) supported by Apollo Server.
 
-To use `graphql-upload` with Apollo Server 3, see the [documentation on enabling file uploads in Apollo Server](../data/file-uploads/). Note that if your project currently uses uploads with the "batteries-included" `apollo-server` package, you must first [swap to `apollo-server-express`](./integrations/middleware/#swapping-out-apollo-server).
+To use `graphql-upload` with Apollo Server 3, see the [documentation on enabling file uploads in Apollo Server](./data/file-uploads/). Note that if your project currently uses uploads with the "batteries-included" `apollo-server` package, you must first [swap to `apollo-server-express`](./integrations/middleware/#swapping-out-apollo-server).
 
-Additionally, Apollo Server 3 [no longer re-exports the `GraphQLUpload` symbol from the `graphql-uploads` package](#exports-from-graphql-upload).
+**Warning: using `graphql-upload` in your server without proper mitigation increases your server's vulnerability to Cross-Site Request Forgery (CSRF) attacks.** This affected the default configuration of Apollo Server 2 and will affect you if you manually integrate with `graphql-upload`. We do not typically recommend the use of `graphql-upload` and think that file uploads generally work best out of band from your GraphQL API; however, if you do want to use `graphql-upload` then you **must** take actions to protect your users from CSRF attacks. The easiest way to do this is to ensure you are using at least Apollo Server 3.7 and enable our [CSRF prevention](./security/cors#preventing-cross-site-request-forgery-csrf) feature by passing `csrfPrevention: true` to `new ApolloServer()`. Note that you will have to configure your upload client (like `apollo-upload-client`) to pass a non-empty `Apollo-Require-Preflight` header to your server once this feature is enabled.
+
+Additionally, Apollo Server 3 [no longer re-exports the `GraphQLUpload` symbol from the `graphql-upload` package](#exports-from-graphql-upload).
 
 ### GraphQL Playground
 
@@ -341,7 +346,7 @@ If you've written your own extensions (passed to `new ApolloServer({extensions: 
 
 In later versions of Apollo Server (including Apollo Server 3), you instead provide this configuration via a combination of the `apollo` constructor option, plugins, and `APOLLO_`-prefixed environment variables. Apollo Server 3 does not support the `engine` constructor option or the `ENGINE_`-prefixed environment variables.
 
-If your project still uses the `engine` option or the `ENGINE_`-prefixed environment variables, see [Migrating from the `engine` option](../v2/migration-engine-plugins) before upgrading to Apollo Server 3.
+If your project still uses the `engine` option or the `ENGINE_`-prefixed environment variables, see [Migrating from the `engine` option](/apollo-server/v2/migration-engine-plugins) before upgrading to Apollo Server 3.
 
 Note that if you are using Studio, make sure to [set your graph ref or graph ID](#guessing-apollo-studio-graph-id-from-api-key).
 
@@ -404,7 +409,7 @@ new ApolloServer({
 
 ### `cacheControl`
 
-In Apollo Server 2, [cache policy support](../performance/caching/) is configured via the `cacheControl` constructor option. There are several improvements to the semantics of cache policies in Apollo Server 3, as well as changes to how caching is configured.
+In Apollo Server 2, [cache policy support](./performance/caching/) is configured via the `cacheControl` constructor option. There are several improvements to the semantics of cache policies in Apollo Server 3, as well as changes to how caching is configured.
 
 The `cacheControl` constructor option is removed in Apollo Server 3. To customize cache control, you instead manually install the [cache control plugin](./api/plugin/cache-control/) and provide custom options to it.
 
@@ -605,7 +610,7 @@ Apollo Server 2 exports every symbol exported by [`graphql-subscriptions`](https
 
 ### Exports from `graphql-upload`
 
-Apollo Server 2 exports the `GraphQLUpload` symbol from (our fork of) `graphql-upload`. Apollo Server 3 no longer has built-in `graphql-upload` integration. See [the documentation on how to enable file uploads in Apollo Server 3](../data/file-uploads/).
+Apollo Server 2 exports the `GraphQLUpload` symbol from (our fork of) `graphql-upload`. Apollo Server 3 no longer has built-in `graphql-upload` integration. See [the documentation on how to enable file uploads in Apollo Server 3](./data/file-uploads/).
 
 ### Exports related to GraphQL Playground
 
@@ -637,7 +642,7 @@ Apollo Server 2 has a deprecated field `ApolloServer.schema` (which doesn't work
 
 ### `apollo-server-testing`
 
-Apollo Server 2 contains a package `apollo-server-testing`. This package is a thin wrapper around the `server.executeOperation` method. As of Apollo Server 2.25.0, we no longer document this package and instead [document using `executeOperation` directly](../testing/testing/).
+Apollo Server 2 contains a package `apollo-server-testing`. This package is a thin wrapper around the `server.executeOperation` method. As of Apollo Server 2.25.0, we no longer document this package and instead [document using `executeOperation` directly](./testing/testing/).
 
 In Apollo Server 3, we no longer publish this package. It's possible that the Apollo Server 2 version of this package might work with Apollo Server 3 servers. If you do use `apollo-server-testing`, we suggest that you migrate to using `executeOperation` directly (with at least 2.25.0 of Apollo Server) before upgrading to Apollo Server 3.
 
@@ -661,7 +666,7 @@ await server.executeOperation({ query: MUTATION });
 
 ### `apollo-datasource-rest`: `baseURL` override change
 
-When you create a [`RESTDataSource`](../data/data-sources/) subclass, you need to provide its `baseURL`. This can be done via `this.baseURL = ...` in the constructor or `resolveURL`, or via `baseURL = ...` at the class level.
+When you create a [`RESTDataSource`](./data/data-sources/) subclass, you need to provide its `baseURL`. This can be done via `this.baseURL = ...` in the constructor or `resolveURL`, or via `baseURL = ...` at the class level.
 
 In Apollo Server 2 you can _also_ provide `baseURL` via a getter like `get baseURL() { ... }`. Apollo Server 3 is compiled with TypeScript 4, which [no longer supports overriding a property with an accessor](https://devblogs.microsoft.com/typescript/announcing-typescript-4-0/#properties-overriding-accessors-and-vice-versa-is-an-error), so this is no longer allowed.
 
@@ -702,7 +707,7 @@ We don't expect this to affect many users and we have not publicly suggested usi
 
 In Apollo Server 2, some [plugin events](./integrations/plugins-event-reference/) are synchronous (their return value is not a `Promise`), and some are "maybe-asynchronous" (they could return a `Promise` if they wanted, but didn't have to). This means that you can't do asynchronous work in the former events, and the typings for the latter events are somewhat complex.
 
-In Apollo Server 3, _almost_ all plugin methods are always asynchronous: they always return a `Promise` type. This includes [end hooks](../integrations/plugins/#end-hooks) as well. The exceptions are `willResolveField` and its end hook and `schemaDidLoadOrUpdate`, which are always synchronous.
+In Apollo Server 3, _almost_ all plugin methods are always asynchronous: they always return a `Promise` type. This includes [end hooks](./integrations/plugins/#end-hooks) as well. The exceptions are `willResolveField` and its end hook and `schemaDidLoadOrUpdate`, which are always synchronous.
 
 In practice, this means that all of your plugin events should use `async` functions or methods. If you are using TypeScript, you need to do this for your code to compile.
 
@@ -710,7 +715,7 @@ In practice, this means that all of your plugin events should use `async` functi
 
 #### `willSendResponse` is called more consistently
 
-In Apollo Server 2, some errors related to [persisted queries](../performance/apq/) invoke the `requestDidStart` and `didEncounterError` plugin events _without_ invoking the `willSendResponse` event afterwards.
+In Apollo Server 2, some errors related to [persisted queries](./performance/apq/) invoke the `requestDidStart` and `didEncounterError` plugin events _without_ invoking the `willSendResponse` event afterwards.
 
 In Apollo Server 3, any request that makes it far enough to invoke `requestDidStart` also invokes `willSendResponse`. See [this PR](https://github.com/apollographql/apollo-server/pull/5287) for details.
 
@@ -720,7 +725,7 @@ In Apollo Server 2, the `executionDidStart` plugin event could return nothing, a
 
 In Apollo Server 3, `executionDidStart` must return either nothing or an object. If you previously returned a function, you can now return an object with an `executionDidEnd` field like so:
 
-```javascript{7-11}
+```javascript {7-11}
 const server = new ApolloServer({
   schema,
   plugins: [{
@@ -739,7 +744,7 @@ const server = new ApolloServer({
 });
 ```
 
-For more information, you can check out the related plugin documentation on [end hooks](../integrations/plugins/#end-hooks).
+For more information, you can check out the related plugin documentation on [end hooks](./integrations/plugins/#end-hooks).
 
 #### Gateway interface renamed and simplified
 
@@ -763,7 +768,7 @@ In Apollo Server 3, these errors are handled in a more consistent manner across 
 
 #### Initializing an error
 
-In Apollo Server 2, [error extensions](../data/errors/#including-custom-error-details) can be passed to the `ApolloError` constructor either as the third argument, *or* as an `extensions` option on the third argument.
+In Apollo Server 2, [error extensions](./data/errors/#including-custom-error-details) can be passed to the `ApolloError` constructor either as the third argument, *or* as an `extensions` option on the third argument.
 
 In other words, these two lines are equivalent with Apollo Server 2:
 

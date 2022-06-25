@@ -29,7 +29,7 @@ $ APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_REF=my-graph@my-variant \
 
 #### Communicating with Studio
 
-By default, Apollo Server aggregates your traces and sends them in batches to Studio every minute. This behavior is highly configurable, and you can change the parameters in the [Usage Reporting plugin's configuration](https://www.apollographql.com/docs/apollo-server/api/plugin/usage-reporting/#custom-installation). 
+By default, Apollo Server aggregates your traces and sends them in batches to Studio every minute. This behavior is highly configurable, and you can change the parameters in the [Usage Reporting plugin's configuration](https://www.apollographql.com/docs/apollo-server/api/plugin/usage-reporting/#custom-installation).
 
 ### Identifying distinct clients
 
@@ -55,13 +55,15 @@ version in the [`ApolloClient` constructor](https://www.apollographql.com/docs/r
 
 For more advanced cases, or to use headers other than the default headers, pass a `generateClientInfo` function into the [usage reporting plugin](../api/plugin/usage-reporting/):
 
-```js{9-24}
+```js {10-25}
 const { ApolloServer } = require("apollo-server");
 const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginUsageReporting({
       generateClientInfo: ({
@@ -70,8 +72,8 @@ const server = new ApolloServer({
         const headers = request.http && request.http.headers;
         if(headers) {
           return {
-            clientName: headers['apollographql-client-name'],
-            clientVersion: headers['apollographql-client-version'],
+            clientName: headers["apollographql-client-name"],
+            clientVersion: headers["apollographql-client-version"],
           };
         } else {
           return {
@@ -124,6 +126,8 @@ const myPlugin = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
   plugins: [
     myPlugin
   ]

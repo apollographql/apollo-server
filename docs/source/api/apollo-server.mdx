@@ -1,10 +1,7 @@
 ---
 title: "API Reference: ApolloServer"
-sidebar_title: ApolloServer
 api_reference: true
 ---
-
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 
 This API reference documents the `ApolloServer` class.
 
@@ -21,7 +18,9 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 ```js
 const server = new ApolloServer({
 	typeDefs,
-	resolvers
+	resolvers,
+  csrfPrevention: true,  // highly recommended
+  cache: 'bounded',
 });
 ```
 
@@ -204,30 +203,49 @@ A key-value cache that Apollo Server uses to store previously encountered GraphQ
 
 Whenever Apollo Server receives an incoming operation, it checks whether that exact operation is present in its `documentStore`. If it's present, Apollo Server can safely skip parsing and validating the operation, thereby improving performance.
 
-The default `documentStore` is an [`InMemoryLRUCache`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/InMemoryLRUCache.ts) with an approximate size of 30MiB. This is usually sufficient unless the server processes a large number of unique operations. Provide this option if you want to change the cache size or store the cache information in an alternate location.
+The default `documentStore` is an [`InMemoryLRUCache`](https://github.com/apollographql/apollo-utils/blob/main/packages/keyValueCache/src/InMemoryLRUCache.ts) with an approximate size of 30MiB. This is usually sufficient unless the server processes a large number of unique operations. Provide this option if you want to change the cache size or store the cache information in an alternate location.
 
 To use `InMemoryLRUCache` but change its size to an amount `approximateDocumentStoreMiB`:
 
 <div style="max-width: 400px;">
 
 ```typescript
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import type { DocumentNode } from 'graphql';
 new ApolloServer({
   documentStore: new InMemoryLRUCache<DocumentNode>({
     maxSize: Math.pow(2, 20) * approximateDocumentStoreMiB,
-    sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
+    sizeCalculation: InMemoryLRUCache.sizeCalculation,
   }),
+  // ...
 })
 ```
 
 </div>
 
-**Do not share a `documentStore` between multiple `ApolloServer` instances**, _unless_ you assign a unique prefix to each instance's entries (for example, using [`PrefixingKeyValueCache`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-caching/src/PrefixingKeyValueCache.ts)). Apollo Server skips parsing and validating any operation that's present in its `documentStore`, so if servers with _different_ schemas share the _same_ `documentStore`, a server might execute an operation that its schema doesn't support.
-
 Pass `null` to disable this cache entirely.
 
 Available in Apollo Server v3.4.0 and later.
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `cache`
+
+`KeyValueCache | "bounded"`
+</td>
+<td>
+
+A `KeyValueCache` which Apollo Server uses for several features, including APQs and full response caching. This cache is also available to Apollo Server's data sources and plugins.
+
+By default, the cache that Apollo Server 3 uses is unbounded. We _strongly recommend_ that all users pass `cache: "bounded"` or configure their cache in a manner that isn't unbounded. This protects your server from attacks that exhaust available memory, causing a DOS.
+
+The default bounded cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
+
+To learn more about configuring Apollo Server's cache, see [Configuring cache backends](../performance/cache-backends).
+
 </td>
 </tr>
 
@@ -236,6 +254,19 @@ Available in Apollo Server v3.4.0 and later.
 <td colspan="2">
 
 **Networking options**
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `csrfPrevention`
+
+`Boolean` or `Object`
+</td>
+<td>
+
+Passing `true` enables Apollo Server's [CSRF and XS-Search prevention](../security/cors#preventing-cross-site-request-forgery-csrf) features. This flag is **highly recommended** for all users and will be enabled by default in Apollo Server 4. Enabling this feature prevents certain `GET` requests from executing GraphQL operations. If your server has clients that send `GET` requests and those clients are _not_ one of Apollo Client Web, Apollo iOS, or Apollo Kotlin, you might need to modify the configuration of those clients before enabling this feature. For more details, see [the full CSRF prevention documentation](../security/cors#preventing-cross-site-request-forgery-csrf).
 </td>
 </tr>
 
@@ -372,11 +403,11 @@ Defaults to `true` unless the `NODE_ENV` environment variable is `production` or
 
 ##### `logger`
 
-[`Logger`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L178-L184)
+[`Logger`](https://www.npmjs.com/package/@apollo/utils.logger)
 </td>
 <td>
 
-An object to use for logging in place of `console`. If provided, this object must implement all methods of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L178-L184).
+An object to use for logging in place of `console`. If provided, this object must implement all methods of [the `Logger` interface](https://www.npmjs.com/package/@apollo/utils.logger).
 
 If you provide this value, Apollo Server automatically logs all messages of _all_ severity levels (`debug` through `error`), regardless of whether the `debug` option is set to `true`. It is the responsibility of the logger to determine how to handle logged messages of each level.
 
@@ -419,7 +450,7 @@ The default value is `true`. Set this to `false` to use mocked resolvers only fo
 
 ##### `nodeEnv`
 
-`String`
+`string`
 </td>
 <td>
 
@@ -552,7 +583,7 @@ Returns a `Promise` that resolves to an object containing the following properti
 
 ##### `url`
 
-`String`
+`string`
 </td>
 <td>
 
@@ -588,7 +619,7 @@ The async `start` method instructs Apollo Server to prepare to handle incoming o
 
 Always call `await server.start()` *before* calling `server.applyMiddleware` and starting your HTTP server. This allows you to react to Apollo Server startup failures by crashing your process instead of starting to serve traffic.
 
-If the only thing you are doing with your server is calling [`executeOperation`](../../testing/testing/) on it (ie, you're not actually starting an HTTP server), you don't have to call `start()`; `executeOperation` will do that for you.
+If the only thing you are doing with your server is calling [`executeOperation`](../testing/testing/) on it (ie, you're not actually starting an HTTP server), you don't have to call `start()`; `executeOperation` will do that for you.
 
 This method was optional in Apollo Server 2 but is required in Apollo Server 3.
 
@@ -703,7 +734,7 @@ Here's an example of using `applyMiddleware` with `apollo-server-express`.
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const { ApolloServerPluginDrainHttpServer } = require('apollo-server-core');
@@ -715,6 +746,8 @@ async function startApolloServer() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
+    cache: 'bounded',
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
@@ -763,7 +796,7 @@ async function startApolloServer() {
 
 ##### `path`
 
-`String`
+`string`
 </td>
 <td>
 

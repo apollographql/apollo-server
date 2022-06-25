@@ -32,15 +32,10 @@ function setHeaders(
 // using Micro's `send` functionality.
 export function graphqlMicro(
   options: GraphQLOptions | MicroGraphQLOptionsFunction,
+  csrfPreventionRequestHeaders?: string[] | null,
 ): RequestHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
-  }
-
-  if (arguments.length > 1) {
-    throw new Error(
-      `Apollo Server expects exactly one argument, got ${arguments.length}`,
-    );
   }
 
   const graphqlHandler = async (req: MicroRequest, res: ServerResponse) => {
@@ -56,12 +51,16 @@ export function graphqlMicro(
         : url.parse(req.url!, true).query;
 
     try {
-      const { graphqlResponse, responseInit } = await runHttpQuery([req, res], {
-        method: req.method!,
-        options,
-        query: query as any,
-        request: convertNodeHttpToRequest(req),
-      });
+      const { graphqlResponse, responseInit } = await runHttpQuery(
+        [req, res],
+        {
+          method: req.method!,
+          options,
+          query: query as any,
+          request: convertNodeHttpToRequest(req),
+        },
+        csrfPreventionRequestHeaders,
+      );
       setHeaders(res, responseInit.headers!);
       const statusCode = responseInit.status || 200;
       send(res, statusCode, graphqlResponse);

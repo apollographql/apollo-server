@@ -3,8 +3,6 @@ title: Integration testing
 description: Utilities for testing Apollo Server
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Apollo Server uses a [multi-step request pipeline](../integrations/plugins/#request-lifecycle-event-flow) to validate and execute incoming GraphQL operations. This pipeline supports integration with custom plugins at each step, which can affect an operation's execution. Because of this, it's important to perform **integration tests** with a variety of operations to ensure your request pipeline works as expected.
 
 There are two main options for integration testing with Apollo Server:
@@ -24,7 +22,7 @@ Below is a simplified example of setting up a test using the JavaScript testing 
 
 <MultiCodeBlock>
 
-```ts:title=index.test.ts
+```ts title="index.test.ts"
 // For clarity in this example we included our typeDefs and resolvers above our test,
 // but in a real world situation you'd be importing these in from different files
 const typeDefs = gql`
@@ -59,11 +57,11 @@ it('returns hello with the provided name', async () => {
 
 Note that when testing, any errors in parsing, validating, and executing your GraphQL operation are returned in the `errors` field of the operation result. As with any GraphQL response, these errors are not _thrown_.
 
-Unlike with a normal instance of `ApolloServer`,  you don't need to call [`start`](../../api/apollo-server/#start) before calling `executeOperation`. The server instance calls `start` automatically for you if it hasn't been called already, and any startup errors are thrown.
+Unlike with a normal instance of `ApolloServer`,  you don't need to call [`start`](../api/apollo-server/#start) before calling `executeOperation`. The server instance calls `start` automatically for you if it hasn't been called already, and any startup errors are thrown.
 
 To expand on the example above, here's a full integration test being run against a test instance of `ApolloServer`. This test imports all of the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `ApolloServer`.
 
-```js:title=integration.test.js
+```js title="integration.test.js"
 it('fetches single launch', async () => {
   const userAPI = new UserAPI({ store });
   const launchAPI = new LaunchAPI();
@@ -100,13 +98,13 @@ To use your server's defined `context` function, you can pass a second argument 
 
 Instead of bypassing the HTTP layer, you might want to fully run your server and test it with a real HTTP client. Apollo Server doesn't provide built-in support for this at this time.
 
-You can run operations against your server using a combination of any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](https://www.apollographql.com/docs/react/api/link/apollo-link-http/) . There are also community packages available such as [`apollo-server-integration-testing`](https://www.npmjs.com/package/apollo-server-integration-testing), which uses mocked Express request and response objects.
+You can run operations against your server using a combination of any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](/react/api/link/apollo-link-http/) . There are also community packages available such as [`apollo-server-integration-testing`](https://www.npmjs.com/package/apollo-server-integration-testing), which uses mocked Express request and response objects.
 
 Below is an example of writing an end-to-end test using the `apollo-server` package and `supertest`:
 
 <MultiCodeBlock>
 
-```ts:title=server.test.ts
+```ts title="server.test.ts"
 /// we import a function that we wrote to create a new instance of Apollo Server
 import { createApolloServer } from '../server';
 

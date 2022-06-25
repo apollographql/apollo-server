@@ -13,15 +13,10 @@ export interface AzureFunctionGraphQLOptionsFunction {
 
 export function graphqlAzureFunction(
   options: GraphQLOptions | AzureFunctionGraphQLOptionsFunction,
+  csrfPreventionRequestHeaders?: string[] | null,
 ): AzureFunction {
   if (!options) {
     throw new Error('Apollo Server requires options.');
-  }
-
-  if (arguments.length > 1) {
-    throw new Error(
-      `Apollo Server expects exactly one argument, got ${arguments.length}`,
-    );
   }
 
   const graphqlHandler: AzureFunction = (context, request, callback): void => {
@@ -32,19 +27,23 @@ export function graphqlAzureFunction(
       });
       return;
     }
-    runHttpQuery([request, context], {
-      method: request.method,
-      options: options,
-      query:
-        request.method === 'POST' && request.body
-          ? request.body
-          : request.query,
-      request: {
-        url: request.url,
+    runHttpQuery(
+      [request, context],
+      {
         method: request.method,
-        headers: new Headers(request.headers),
+        options: options,
+        query:
+          request.method === 'POST' && request.body
+            ? request.body
+            : request.query,
+        request: {
+          url: request.url,
+          method: request.method,
+          headers: new Headers(request.headers),
+        },
       },
-    }).then(
+      csrfPreventionRequestHeaders,
+    ).then(
       ({ graphqlResponse, responseInit }) => {
         callback(null, {
           body: graphqlResponse,

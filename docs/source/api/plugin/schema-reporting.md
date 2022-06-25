@@ -1,6 +1,5 @@
 ---
 title: "API Reference: Schema reporting plugin"
-sidebar_title: Schema reporting
 api_reference: true
 ---
 
@@ -23,6 +22,8 @@ import { ApolloServerPluginSchemaReporting } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginSchemaReporting(),
   ],
@@ -82,6 +83,7 @@ new ApolloServer({
       overrideReportedSchema: schema
     }),
   ],
+  // ...
 })
 ```
 </td>

@@ -1,6 +1,5 @@
 ---
 title: "API Reference: Inline trace plugin"
-sidebar_title: Inline trace
 api_reference: true
 ---
 
@@ -21,6 +20,8 @@ import { ApolloServerPluginInlineTrace } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginInlineTrace({
       rewriteError: (err) => err.message.match(SENSITIVE_REGEX) ? null : err,
@@ -38,6 +39,8 @@ import { ApolloServerPluginInlineTraceDisabled } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [ApolloServerPluginInlineTraceDisabled()],
 });
 ```

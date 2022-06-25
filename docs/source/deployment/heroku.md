@@ -1,6 +1,5 @@
 ---
 title: Deploying with Heroku
-sidebar_title: Heroku
 ---
 
 Heroku is a common platform-as-a-service solution that enables you to deploy Apollo Server and have a running GraphQL endpoint in a matter of minutes.
@@ -51,13 +50,13 @@ server.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
 
 By default, Heroku apps look for a [Procfile](https://devcenter.heroku.com/articles/procfile) in your root directory that contains commands run by the app on startup. For a basic Apollo Server application, this file should at least contain a line similar to the following:
 
-```shell:title=Procfile
+```shell title="Procfile"
 web: node index.js
 ```
 
 Replace `node index.js` with whichever command you use to start your Apollo Server instance.
 
-> A Procfile is not _required_ to run Apollo Server on Heroku. If you don't provide a Procfile, attempts to run the `start script` that's defined in your `package.json` file.
+> A Procfile is not _required_ to run Apollo Server on Heroku. If you don't provide a Procfile, Heroku attempts to run the `start script` that's defined in your `package.json` file.
 
 ## Deploying the project
 

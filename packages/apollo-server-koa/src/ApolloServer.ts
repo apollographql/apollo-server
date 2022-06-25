@@ -98,7 +98,7 @@ export class ApolloServer extends ApolloServerBase {
     this.graphqlPath = path;
 
     if (cors === true || cors === undefined) {
-      // Unlike the express `cors` package, `fastify-cors`, or Hapi, Koa's cors
+      // Unlike the express `cors` package, `@fastify/cors`, or Hapi, Koa's cors
       // handling defaults to reflecting the incoming origin instead of '*'.
       // Let's make it match.
       middlewares.push(
@@ -141,16 +141,20 @@ export class ApolloServer extends ApolloServerBase {
         }
 
         try {
-          const { graphqlResponse, responseInit } = await runHttpQuery([ctx], {
-            method: ctx.request.method,
-            options: () => this.createGraphQLServerOptions(ctx),
-            query:
-              ctx.request.method === 'POST'
-                ? // fallback to ctx.req.body for koa-multer support
-                  (ctx.request as any).body || (ctx.req as any).body
-                : ctx.request.query,
-            request: convertNodeHttpToRequest(ctx.req),
-          });
+          const { graphqlResponse, responseInit } = await runHttpQuery(
+            [ctx],
+            {
+              method: ctx.request.method,
+              options: () => this.createGraphQLServerOptions(ctx),
+              query:
+                ctx.request.method === 'POST'
+                  ? // fallback to ctx.req.body for koa-multer support
+                    (ctx.request as any).body || (ctx.req as any).body
+                  : ctx.request.query,
+              request: convertNodeHttpToRequest(ctx.req),
+            },
+            this.csrfPreventionRequestHeaders,
+          );
           if (responseInit.headers) {
             Object.entries(responseInit.headers).forEach(
               ([headerName, value]) => ctx.set(headerName, value),

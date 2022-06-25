@@ -2,7 +2,7 @@
 // ApolloServerPluginInlineTrace.
 import { GraphQLError, GraphQLResolveInfo, ResponsePath } from 'graphql';
 import { Trace, google } from 'apollo-reporting-protobuf';
-import type { Logger } from 'apollo-server-types';
+import type { Logger } from '@apollo/utils.logger';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
@@ -11,7 +11,17 @@ function internalError(message: string) {
 export class TraceTreeBuilder {
   private rootNode = new Trace.Node();
   private logger: Logger = console;
-  public trace = new Trace({ root: this.rootNode });
+  public trace = new Trace({
+    root: this.rootNode,
+    // By default, each trace counts as one operation for the sake of field
+    // execution counts. If we end up calling the fieldLevelInstrumentation
+    // callback (once we've successfully resolved the operation) then we
+    // may set this to a higher number; but we'll start it at 1 so that traces
+    // that don't successfully resolve the operation (eg parse failures) or
+    // where we don't call the callback because a plugin set captureTraces to
+    // true have a reasonable default.
+    fieldExecutionWeight: 1,
+  });
   public startHrTime?: [number, number];
   private stopped = false;
   private nodes = new Map<string, Trace.Node>([
@@ -58,7 +68,49 @@ export class TraceTreeBuilder {
       throw internalError('willResolveField called before startTiming!');
     }
     if (this.stopped) {
-      throw internalError('willResolveField called after stopTiming!');
+      // We've been stopped, which means execution is done... and yet we're
+      // still resolving more fields? How can that be? Shouldn't we throw an
+      // error or something?
+      //
+      // Well... we used to do exactly that. But this "shouldn't happen" error
+      // showed up in practice! Turns out that graphql-js can actually continue
+      // to execute more fields indefinitely long after `execute()` resolves!
+      // That's because parallelism on a selection set is implemented using
+      // `Promise.all`, and as soon as one of its arguments (ie, one field)
+      // throws an error, the combined Promise resolves, but there's no
+      // "cancellation" of the Promises that are the other arguments to
+      // `Promise.all`. So the code contributing to those Promises keeps on
+      // chugging away indefinitely.
+      //
+      // Concrete example: let’s say you have
+      //
+      //    { x y { ARBITRARY_SELECTION_SET } }
+      //
+      // where x has a non-null return type, and x and y both have resolvers
+      // that return Promises. And let’s say that x returns a Promise that
+      // rejects (or resolves to null). What this means is that we’re going to
+      // eventually end up with `data: null` (nothing under y will actually
+      // matter), but graphql-js execution will continue running whatever is
+      // under ARBITRARY_SELECTION_SET without any sort of short circuiting. In
+      // fact, the Promise returned from execute itself can happily resolve
+      // while execution is still chugging away on an arbitrary amount of fields
+      // under that ARBITRARY_SELECTION_SET. There’s no way to detect from the
+      // outside "all the execution related to this operation is done", nor to
+      // "short-circuit" execution so that it stops going.
+      //
+      // So, um. We will record any field whose execution we manage to observe
+      // before we "stop" the TraceTreeBuilder (whether it is one that actually
+      // ends up in the response or whether it gets thrown away due to null
+      // bubbling), but if we get any more fields afterwards, we just ignore
+      // them rather than throwing a confusing error.
+      //
+      // (That said, the error we used to throw here generally was hidden
+      // anyway, for the same reason: it comes from a branch of execution that
+      // ends up not being included in the response. But
+      // https://github.com/graphql/graphql-js/pull/3529 means that this
+      // sometimes crashed execution anyway. Our error never caught any actual
+      // problematic cases, so keeping it around doesn't really help.)
+      return () => {};
     }
 
     const path = info.path;

@@ -1,4 +1,4 @@
-import type { KeyValueCache } from 'apollo-server-caching';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 export interface DataSourceConfig<TContext> {
   context: TContext;

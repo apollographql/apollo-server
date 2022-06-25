@@ -9,9 +9,6 @@
     { "path": "./packages/apollo-datasource-rest" },
     { "path": "./packages/apollo-server" },
     { "path": "./packages/apollo-server-azure-functions" },
-    { "path": "./packages/apollo-server-cache-memcached" },
-    { "path": "./packages/apollo-server-cache-redis" },
-    { "path": "./packages/apollo-server-caching" },
     { "path": "./packages/apollo-server-cloud-functions" },
     { "path": "./packages/apollo-server-cloudflare" },
     { "path": "./packages/apollo-server-core" },
@@ -23,7 +20,6 @@
     { "path": "./packages/apollo-server-lambda" },
     { "path": "./packages/apollo-server-micro" },
     { "path": "./packages/apollo-server-plugin-base" },
-    { "path": "./packages/apollo-server-plugin-operation-registry" },
     { "path": "./packages/apollo-server-plugin-response-cache" },
   ]
 }

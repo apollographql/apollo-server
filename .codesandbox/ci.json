@@ -6,9 +6,6 @@
     "packages/apollo-reporting-protobuf",
     "packages/apollo-server",
     "packages/apollo-server-azure-functions",
-    "packages/apollo-server-cache-memcached",
-    "packages/apollo-server-cache-redis",
-    "packages/apollo-server-caching",
     "packages/apollo-server-cloud-functions",
     "packages/apollo-server-cloudflare",
     "packages/apollo-server-core",
@@ -21,7 +18,6 @@
     "packages/apollo-server-lambda",
     "packages/apollo-server-micro",
     "packages/apollo-server-plugin-base",
-    "packages/apollo-server-plugin-operation-registry",
     "packages/apollo-server-plugin-response-cache",
     "packages/apollo-server-types"
   ],

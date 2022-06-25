@@ -107,6 +107,7 @@ export class ApolloServer extends ApolloServerBase {
                 : request.query,
             request: convertNodeHttpToRequest(request.raw.req),
           },
+          this.csrfPreventionRequestHeaders,
         );
 
         const response = h.response(graphqlResponse);

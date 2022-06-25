@@ -1,6 +1,5 @@
 ---
 title: "API Reference: Cache control plugin"
-sidebar_title: Cache control
 api_reference: true
 ---
 
@@ -21,10 +20,12 @@ import { ApolloServerPluginCacheControl } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginCacheControl({
       // Cache everything for 1 second by default.
-      defaultMaxAge: 1000,
+      defaultMaxAge: 1,
       // Don't send the `cache-control` response header.
       calculateHttpHeaders: false,
     }),
@@ -41,6 +42,8 @@ import { ApolloServerPluginCacheControlDisabled } from "apollo-server-core";
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [ApolloServerPluginCacheControlDisabled()],
 });
 ```

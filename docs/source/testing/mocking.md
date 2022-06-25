@@ -122,7 +122,7 @@ Instead of providing a boolean to the `mocks` option, you can provide an object 
 
 By default, the functions in `mocks` take precedence over any currently defined resolvers. In the below example, both `Query.hello` and `Query.resolved` return `Hello`.
 
-```js{16-20}
+```js {16-20}
 const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`

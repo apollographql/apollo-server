@@ -1,10 +1,7 @@
 ---
 title: Choosing an Apollo Server package
-sidebar_title: Choosing which package to use
 description: Use the right package for your project
 ---
-
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 
 Apollo Server is distributed as a collection of different packages for different environments and web frameworks. You can choose which package to use based on your project.
 
@@ -129,11 +126,16 @@ Let's say our `apollo-server` implementation uses the following code:
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from "apollo-server";
 
 async function startApolloServer(typeDefs, resolvers) {
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    csrfPrevention: true,
+    cache: "bounded",
+  });
   const { url } = await server.listen();
   console.log(`🚀 Server ready at ${url}`);
 }
@@ -153,7 +155,7 @@ Next, we can modify our code to match the following:
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-express';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import express from 'express';
@@ -168,6 +170,8 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
+    cache: 'bounded',
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
@@ -200,7 +204,7 @@ All Apollo Server packages depend on `apollo-server-core`, which contains the co
 
 All Apollo Server packages (and `apollo-server-core`) are published to npm with the same version number, even if certain packages have no changes for a particular version. This makes it more straightforward to discuss a particular version of Apollo Server without needing to specify a package name.
 
-Certain support libraries (such as `apollo-server-caching`, `apollo-server-types`, and `apollo-server-plugin-base`) use their own versioning and are published only when they change or one of their dependencies changes.
+Certain support libraries (such as `apollo-server-types` and `apollo-server-plugin-base`) use their own versioning and are published only when they change or one of their dependencies changes.
 
 ### Common options
 
@@ -226,11 +230,16 @@ npm install apollo-server graphql
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from 'apollo-server';
 
 async function startApolloServer(typeDefs, resolvers) {
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    csrfPrevention: true,
+    cache: 'bounded',
+  });
   const { url } = await server.listen();
   console.log(`🚀 Server ready at ${url}`);
 }
@@ -256,7 +265,7 @@ npm install apollo-server-express apollo-server-core express graphql
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-express';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import express from 'express';
@@ -268,6 +277,8 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
+    cache: 'bounded',
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
   await server.start();
@@ -298,12 +309,12 @@ You can call `server.getMiddleware` instead of `server.applyMiddleware` if you w
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-fastify apollo-server-core fastify graphql
+npm install apollo-server-fastify apollo-server-core fastify graphql
 ```
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-fastify';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
@@ -326,6 +337,8 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
+    cache: 'bounded',
     plugins: [
       fastifyAppClosePlugin(app),
       ApolloServerPluginDrainHttpServer({ httpServer: app.server }),
@@ -359,12 +372,12 @@ You _must_ `await server.start()` before calling `server.createHandler`. You can
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-hapi @hapi/hapi graphql
+npm install apollo-server-hapi @hapi/hapi graphql
 ```
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import {
   ApolloServer,
   ApolloServerPluginStopHapiServer
@@ -376,6 +389,8 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
+    cache: 'bounded',
     plugins: [ApolloServerPluginStopHapiServer({ hapiServer: app })],
   });
 
@@ -423,12 +438,12 @@ You _must_ `await server.start()` before calling `server.applyMiddleware`. You c
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-koa apollo-server-core koa graphql
+npm install apollo-server-koa apollo-server-core koa graphql
 ```
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-koa';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import Koa from 'koa';
@@ -439,6 +454,8 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: true,
+    cache: 'bounded',
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
@@ -474,15 +491,20 @@ You can call `server.getMiddleware` instead of `server.applyMiddleware` if you w
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above. You should put this code in a file called `index.js` in order for the `micro` CLI to find it.
 
 ```
-$ npm install apollo-server-micro micro graphql
+npm install apollo-server-micro micro graphql
 ```
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-micro';
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 module.exports = server.start().then(() => server.createHandler());
 ```
@@ -511,15 +533,20 @@ This package is a layer around `apollo-server-express`, which uses the [`@vendia
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-lambda graphql
+npm install apollo-server-lambda graphql
 ```
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-lambda';
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 exports.handler = server.createHandler();
 ```
@@ -537,15 +564,20 @@ Because the Cloud Functions Node.js runtime uses Express, `apollo-server-cloud-f
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-cloud-functions graphql
+npm install apollo-server-cloud-functions graphql
 ```
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-cloud-functions';
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 exports.handler = server.createHandler();
 ```
@@ -562,15 +594,20 @@ For more details on using `apollo-server-cloud-functions`, see the [documentatio
 The following example is roughly equivalent to the [`apollo-server` example](#apollo-server) above.
 
 ```
-$ npm install apollo-server-azure-functions graphql
+npm install apollo-server-azure-functions graphql
 ```
 
 <MultiCodeBlock>
 
-```ts:title=index.ts
+```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-azure-functions';
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 exports.handler = server.createHandler();
 ```

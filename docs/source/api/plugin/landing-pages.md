@@ -1,6 +1,5 @@
 ---
 title: "API Reference: Landing page plugins"
-sidebar_title: Landing pages
 api_reference: true
 ---
 
@@ -30,16 +29,19 @@ To configure these default plugins while still using same `NODE_ENV`-based logic
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginLandingPageLocalDefault,
-         ApolloServerPluginLandingPageProductionDefault
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault
 } from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     // Install a landing page plugin based on NODE_ENV
-    process.env.NODE_ENV === 'production'
+    process.env.NODE_ENV === "production"
       ? ApolloServerPluginLandingPageProductionDefault({
           graphRef: "my-graph-id@my-graph-variant",
           footer: false,
@@ -57,7 +59,7 @@ The `ApolloServerPluginLandingPageLocalDefault` plugin shows a landing page welc
 
 <img class="screenshot" src="../../images/as-landing-page.jpg" alt="Apollo Server default landing page" width="350"/>
 
-This landing page is designed for use in local development, where `NODE_ENV` is not set to `production`. It provides a copyable command-line snippet showing how to run operations via `curl`, and it also links to Apollo Sandbox (a hosted GraphQL IDE that runs entirely inside your browser and doesn't require an account).
+This landing page is designed for use in local development, where `NODE_ENV` is not set to `production`. It provides a copyable command-line snippet showing how to run operations via `curl`, and it also links to [Apollo Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox) (a hosted GraphQL IDE that runs entirely inside your browser and doesn't require an account). You can choose to embed the Apollo Sandbox on your endpoint if you pass `embed: true`.
 
 ### Options
 
@@ -101,6 +103,40 @@ By default, the landing page displays a footer that links to the documentation t
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `includeCookies`
+
+`boolean`
+</td>
+<td>
+
+If `true`, the embedded Apollo Studio Explorer includes cookies in its GraphQL requests to your server.
+
+The default value is `false`, unless the user changes the setting in the Explorer UI.
+
+If you omit this, the Explorer defaults `includeCookies` to `false` or the current user setting.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `embed`
+
+`boolean`
+</td>
+<td>
+
+If `true`, the Apollo Server landing page renders an embedded version of Apollo Sandbox at its GraphQL endpoint URL. This enables visitors to query the endpoint directly and use additional Sandbox features if signed in with their Apollo account.
+
+The default value is `false`, in which case the landing page instead displays a link to open the non-embedded version of Sandbox.
+
+</td>
+</tr>
+
 </tbody>
 </table>
 
@@ -111,7 +147,7 @@ The `ApolloServerPluginLandingPageProductionDefault` shows a minimalist landing 
 
 <img class="screenshot" src="../../images/as-landing-page-production.jpg" alt="Apollo Server default landing page" width="350"/>
 
-This landing page is designed for use in production. It provides a copyable command-line snippet showing how to run operations with your server. By default, the only visible reference to Apollo is a footer explaining how to customize the page. You can also configure it to add a link to query your graph with the Apollo Studio Explorer.
+This landing page is designed for use in production. It provides a copyable command-line snippet showing how to run operations with your server. By default, the only visible reference to Apollo is a footer explaining how to customize the page. You can also configure it to add a link to query your graph with the [Apollo Explorer](https://www.apollographql.com/docs/studio/explorer). You can choose to embed the Apollo Explorer on your endpoint if you pass the `embed` [option](#embed-options).
 
 ### Options
 
@@ -219,6 +255,27 @@ An object containing initial HTTP header values to populate in the Explorer on l
 <tr>
 <td>
 
+###### `embed`
+
+`boolean | ApolloServerPluginEmbedded`
+`LandingPageProductionConfigOptions`
+</td>
+<td>
+
+If `true` or you provide an options object, the Apollo Server landing page renders an embedded version of the Apollo Studio Explorer at its GraphQL endpoint URL. This enables visitors to query the endpoint directly and use additional Explorer features if signed in with their Apollo account.
+
+To embed the Explorer, you must _also_ provide Apollo Server with the **graph ref** of the Studio graph to use, usually via the `APOLLO_GRAPH_REF` environment variable.
+
+The default value is `false`, in which case the landing page displays a basic `curl` command.
+
+You can configure the Explorer embedded on your Apollo Server endpoint with display and functional options. For supported options, see [`embed` options](#embed-options).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `includeCookies`
 
 `boolean`
@@ -232,6 +289,126 @@ If you omit this, the Explorer defaults `includeCookies` to `false` or the curre
 </td>
 </tr>
 
+</tbody>
+</table>
+
+### `embed` options
+
+These are the fields you can include in the `embed` option you pass to the `ApolloServerPluginLandingPageProductionDefault`:
+
+<table class="field-table api-ref">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+##### `displayOptions`
+
+`Object`
+
+</td>
+<td>
+
+An object containing additional display options related to the visual state of the embedded Explorer on page load.
+
+For supported subfields, see [`displayOptions` options](#embeddisplayoptions-options).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `persistExplorerState`
+
+`boolean`
+</td>
+<td>
+
+If `true`, the embedded Explorer uses `localStorage` to persist its state (including operations, tabs, variables, and headers) between user sessions. This state is automatically populated in the Explorer on page load.
+
+If `false`, the embedded Explorer loads with an example query based on your schema (unless you provide [`document`](#document)).
+
+The default value is `false`.
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+
+
+### `embed.displayOptions` options
+
+These are the fields you can include in the `displayOptions` option you pass to the embedded Explorer plugin:
+
+<table class="field-table api-ref">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+##### `docsPanelState`
+
+`"open" | "closed"`
+
+</td>
+<td>
+
+If `open`, the Explorer's Documentation panel (the left column) is initially expanded. If `closed`, the panel is initially collapsed.
+
+The default value is `open`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `showHeadersAndEnvVars`
+
+`true | false`
+
+</td>
+<td>
+
+If `true`, the embedded Explorer includes the panels for setting request headers and environment variables. If `false`, those panels are not present.
+
+The default value is `true`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `theme`
+
+`"dark" | "light"`
+
+</td>
+<td>
+
+If `dark`, the Explorer's dark theme is used. If `light`, the light theme is used.
+
+The default value is `dark`.
+
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -252,6 +429,8 @@ import {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginLandingPageGraphQLPlayground(),
   ],
@@ -335,6 +514,8 @@ import {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: "bounded",
   plugins: [
     ApolloServerPluginLandingPageDisabled(),
   ],

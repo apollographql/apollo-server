@@ -154,7 +154,7 @@ export class ApolloServer extends ApolloServerBase {
     if (url === this.graphqlPath) {
       const graphqlHandler = graphqlMicro(() => {
         return this.createGraphQLServerOptions(req, res);
-      });
+      }, this.csrfPreventionRequestHeaders);
       const responseData = await graphqlHandler(req, res);
       send(res, 200, responseData);
       handled = true;

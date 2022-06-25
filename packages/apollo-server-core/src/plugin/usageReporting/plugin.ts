@@ -19,7 +19,7 @@ import {
   OperationDerivedData,
   operationDerivedDataCacheKey,
 } from './operationDerivedDataCache';
-import { defaultUsageReportingSignature } from './defaultUsageReportingSignature';
+import { usageReportingSignature } from '@apollo/utils.usagereporting';
 import type {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
@@ -34,7 +34,7 @@ import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace';
 import {
   calculateReferencedFieldsByType,
   ReferencedFieldsByType,
-} from './referencedFields';
+} from '@apollo/utils.usagereporting';
 import type LRUCache from 'lru-cache';
 
 const reportHeaderDefaults = {
@@ -232,7 +232,10 @@ export function ApolloServerPluginUsageReporting<TContext>(
         const { report } = reportData;
         reportData.reset();
 
-        if (Object.keys(report.tracesPerQuery).length === 0) {
+        if (
+          Object.keys(report.tracesPerQuery).length === 0 &&
+          report.operationCount === 0
+        ) {
           return;
         }
 
@@ -538,11 +541,6 @@ export function ApolloServerPluginUsageReporting<TContext>(
 
                 metrics.captureTraces =
                   !!treeBuilder.trace.fieldExecutionWeight;
-              } else if (metrics.captureTraces) {
-                // Some other plugin already decided that we are capturing traces.
-                // (For example, you may be running ApolloServerPluginInlineTrace
-                // and this is a request with the header that requests tracing.)
-                treeBuilder.trace.fieldExecutionWeight = 1;
               }
             }
           },
@@ -571,13 +569,22 @@ export function ApolloServerPluginUsageReporting<TContext>(
               treeBuilder.didEncounterErrors(requestContext.errors);
             }
 
+            const resolvedOperation = !!requestContext.operation;
+
             // If we got an error before we called didResolveOperation (eg parse or
             // validation error), check to see if we should include the request.
             await maybeCallIncludeRequestHook(requestContext);
 
             treeBuilder.stopTiming();
+            const executableSchemaId =
+              overriddenExecutableSchemaId ??
+              executableSchemaIdForSchema(schema);
+            const reportData = getReportData(executableSchemaId);
 
-            if (includeOperationInUsageReporting === false) return;
+            if (includeOperationInUsageReporting === false) {
+              if (resolvedOperation) reportData.report.operationCount++;
+              return;
+            }
 
             treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
             treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
@@ -644,6 +651,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
                 statsReportKey = `## GraphQLUnknownOperationName\n`;
               }
 
+              const isExecutable = statsReportKey === undefined;
+
               if (statsReportKey) {
                 if (options.sendUnexecutableOperationDocuments) {
                   trace.unexecutedOperationBody = requestContext.source;
@@ -667,6 +676,8 @@ export function ApolloServerPluginUsageReporting<TContext>(
                 throw new Error(`Error encoding trace: ${protobufError}`);
               }
 
+              if (resolvedOperation) report.operationCount++;
+
               report.addTrace({
                 statsReportKey,
                 trace,
@@ -675,9 +686,16 @@ export function ApolloServerPluginUsageReporting<TContext>(
                 // organization's plan allows for viewing traces *and* we
                 // actually captured this as a full trace *and*
                 // sendOperationAsTrace says so.
+                //
+                // (As an edge case, if the reason metrics.captureTraces is
+                // falsey is that this is an unexecutable operation and thus we
+                // never ran the code in didResolveOperation that sets
+                // metrics.captureTrace, we allow it to be sent as a trace. This
+                // means we'll still send some parse and validation failures as
+                // traces, for the sake of the Errors page.)
                 asTrace:
                   graphMightSupportTraces &&
-                  !!metrics.captureTraces &&
+                  (!isExecutable || !!metrics.captureTraces) &&
                   sendOperationAsTrace(trace, statsReportKey),
                 includeTracesContributingToStats,
                 referencedFieldsByType,
@@ -728,7 +746,7 @@ export function ApolloServerPluginUsageReporting<TContext>(
               }
 
               const generatedSignature = (
-                options.calculateSignature || defaultUsageReportingSignature
+                options.calculateSignature || usageReportingSignature
               )(requestContext.document, requestContext.operationName || '');
 
               const generatedOperationDerivedData: OperationDerivedData = {

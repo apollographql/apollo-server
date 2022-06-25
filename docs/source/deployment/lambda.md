@@ -1,6 +1,5 @@
 ---
 title: Deploying with AWS Lambda
-sidebar_title: Lambda
 description: How to deploy Apollo Server with AWS Lambda
 ---
 
@@ -13,8 +12,8 @@ This guide explains how to setup Apollo Server 2 to run on AWS Lambda using Serv
 The following must be done before following this guide:
 
 - Setup an AWS account
-- [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/installing.html)
-- [Configure the AWS CLI with user credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+- [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [Configure the AWS CLI with user credentials](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html)
 - Install the serverless framework from NPM
   - `npm install -g serverless`
 
@@ -51,7 +50,12 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 exports.graphqlHandler = server.createHandler();
 ```
@@ -90,7 +94,26 @@ functions:
         cors: true
 ```
 
-### Running the Serverless Framework
+### Running Locally
+Using the `serverless` CLI, we can invoke our function locally to make sure it is running properly. As with any GraphQL "server", we need to send an operation for the schema to run as an HTTP request. You can store a mock HTTP request locally in a `query.json` file:
+
+```json
+{
+  "httpMethod": "POST",
+  "path": "/",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {},
+  "body": "{\"operationName\": null, \"variables\": null, \"query\": \"{ hello }\"}"
+}
+```
+
+```sh
+serverless invoke local -f graphql -p query.json
+```
+
+### Deploying the Code
 
 After configuring the Serverless Framework, all you have to do to deploy is run `serverless deploy`
 
@@ -192,6 +215,8 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
   context: ({ event, context, express }) => ({
     headers: event.headers,
     functionName: context.functionName,

@@ -204,7 +204,7 @@ export class ApolloServer extends ApolloServerBase {
           };
           graphqlAzureFunction(async () => {
             return this.createGraphQLServerOptions(req, context);
-          })(context, req, callbackFilter);
+          }, this.csrfPreventionRequestHeaders)(context, req, callbackFilter);
         })
         .catch((err) => context.done(err));
     };

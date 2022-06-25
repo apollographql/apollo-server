@@ -1,131 +1,31 @@
 import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
-
-export interface ApolloServerPluginLandingPageDefaultBaseOptions {
-  /**
-   * By default, the landing page plugin uses the latest version of the landing
-   * page published to Apollo's CDN. If you'd like to pin the current version,
-   * pass the SHA served at
-   * https://apollo-server-landing-page.cdn.apollographql.com/_latest/version.txt
-   * here.
-   */
-  version?: string;
-  /**
-   * Set to false to suppress the footer which explains how to configure the
-   * landing page.
-   */
-  footer?: boolean;
-  /**
-   * Users can configure their landing page to link to Studio Explorer with a
-   * document loaded in the UI.
-   */
-  document?: string;
-  /**
-   * Users can configure their landing page to link to Studio Explorer with
-   * variables loaded in the UI.
-   */
-  variables?: Record<string, string>;
-  /**
-   * Users can configure their landing page to link to Studio Explorer with
-   * headers loaded in the UI.
-   */
-  headers?: Record<string, string>;
-  /**
-   * Users can configure their landing page to link to Studio Explorer with the
-   * setting to include/exclude cookies loaded in the UI.
-   */
-  includeCookies?: boolean;
-  // For Apollo use only.
-  __internal_apolloStudioEnv__?: 'staging' | 'prod';
-}
-
-export interface ApolloServerPluginLandingPageLocalDefaultOptions
-  extends ApolloServerPluginLandingPageDefaultBaseOptions {}
-
-export interface ApolloServerPluginLandingPageProductionDefaultOptions
-  extends ApolloServerPluginLandingPageDefaultBaseOptions {
-  /**
-   * If specified, provide a link (with opt-in auto-redirect) to the Studio page
-   * for the given graphRef. (You need to explicitly pass this here rather than
-   * relying on the server's ApolloConfig, because if your server is publicly
-   * accessible you may not want to display the graph ref publicly.)
-   */
-  graphRef?: string;
-}
-
-// The actual config object read by the landing page's React component.
-interface LandingPageConfig {
-  graphRef?: string | undefined;
-  isProd?: boolean;
-  apolloStudioEnv?: 'staging' | 'prod';
-  document?: string;
-  variables?: Record<string, string>;
-  headers?: Record<string, string>;
-  includeCookies?: boolean;
-  footer?: boolean;
-}
+import type {
+  ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
+  ApolloServerPluginLandingPageLocalDefaultOptions,
+  ApolloServerPluginLandingPageProductionDefaultOptions,
+  LandingPageConfig,
+} from './types';
 
 export function ApolloServerPluginLandingPageLocalDefault(
   options: ApolloServerPluginLandingPageLocalDefaultOptions = {},
 ): ImplicitlyInstallablePlugin {
-  // We list known keys explicitly to get better typechecking, but we pass
-  // through extras in case we've added new keys to the splash page and haven't
-  // quite updated the plugin yet.
-  const {
-    version,
-    __internal_apolloStudioEnv__,
-    footer,
-    document,
-    variables,
-    headers,
-    includeCookies,
-    ...rest
-  } = options;
-  return ApolloServerPluginLandingPageDefault(
-    version,
-    encodeConfig({
-      isProd: false,
-      apolloStudioEnv: __internal_apolloStudioEnv__,
-      footer,
-      document,
-      variables,
-      headers,
-      includeCookies,
-      ...rest,
-    }),
-  );
+  const { version, __internal_apolloStudioEnv__, ...rest } = options;
+  return ApolloServerPluginLandingPageDefault(version, {
+    isProd: false,
+    apolloStudioEnv: __internal_apolloStudioEnv__,
+    ...rest,
+  });
 }
 
 export function ApolloServerPluginLandingPageProductionDefault(
   options: ApolloServerPluginLandingPageProductionDefaultOptions = {},
 ): ImplicitlyInstallablePlugin {
-  // We list known keys explicitly to get better typechecking, but we pass
-  // through extras in case we've added new keys to the splash page and haven't
-  // quite updated the plugin yet.
-  const {
-    version,
-    __internal_apolloStudioEnv__,
-    footer,
-    document,
-    variables,
-    headers,
-    includeCookies,
-    graphRef,
-    ...rest
-  } = options;
-  return ApolloServerPluginLandingPageDefault(
-    version,
-    encodeConfig({
-      isProd: true,
-      apolloStudioEnv: __internal_apolloStudioEnv__,
-      footer,
-      document,
-      variables,
-      headers,
-      includeCookies,
-      graphRef,
-      ...rest,
-    }),
-  );
+  const { version, __internal_apolloStudioEnv__, ...rest } = options;
+  return ApolloServerPluginLandingPageDefault(version, {
+    isProd: true,
+    apolloStudioEnv: __internal_apolloStudioEnv__,
+    ...rest,
+  });
 }
 
 // A triple encoding! Wow! First we use JSON.stringify to turn our object into a
@@ -140,12 +40,134 @@ function encodeConfig(config: LandingPageConfig): string {
   return JSON.stringify(encodeURIComponent(JSON.stringify(config)));
 }
 
+// This function turns an object into a string and replaces
+// <, >, &, ' with their unicode chars to avoid adding html tags to
+// the landing page html that might be passed from the config.
+// The only place these characters can appear in the output of
+// JSON.stringify is within string literals, where they can equally
+// well appear \u-escaped. This specifically means that
+// `</script>` won't terminate the script block early.
+// (Perhaps we should have done this instead of the triple-encoding
+// of encodeConfig for the main landing page.)
+function getConfigStringForHtml(config: LandingPageConfig) {
+  return JSON.stringify(config)
+    .replace('<', '\\u003c')
+    .replace('>', '\\u003e')
+    .replace('&', '\\u0026')
+    .replace("'", '\\u0027');
+}
+
+const getEmbeddedExplorerHTML = (
+  version: string,
+  config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
+) => {
+  interface EmbeddableExplorerOptions {
+    graphRef: string;
+    target: string;
+
+    initialState?: {
+      document?: string;
+      variables?: Record<string, any>;
+      headers?: Record<string, string>;
+      displayOptions: {
+        docsPanelState?: 'open' | 'closed'; // default to 'open',
+        showHeadersAndEnvVars?: boolean; // default to `false`
+        theme?: 'dark' | 'light';
+      };
+    };
+    persistExplorerState?: boolean; // defaults to 'false'
+
+    endpointUrl: string;
+
+    includeCookies?: boolean; // defaults to 'false'
+  }
+  const productionLandingPageConfigOrDefault = {
+    displayOptions: {},
+    persistExplorerState: false,
+    ...(typeof config.embed === 'boolean' ? {} : config.embed),
+  };
+  const embeddedExplorerParams: Omit<EmbeddableExplorerOptions, 'endpointUrl'> =
+    {
+      ...config,
+      target: '#embeddableExplorer',
+      initialState: {
+        ...config,
+        displayOptions: {
+          ...productionLandingPageConfigOrDefault.displayOptions,
+        },
+      },
+      persistExplorerState:
+        productionLandingPageConfigOrDefault.persistExplorerState,
+    };
+
+  return `
+<style>
+  iframe {
+    background-color: white;
+  }
+</style>
+<div
+style="width: 100vw; height: 100vh; position: absolute; top: 0;"
+id="embeddableExplorer"
+></div>
+<script src="https://embeddable-explorer.cdn.apollographql.com/${version}/embeddable-explorer.umd.production.min.js"></script>
+<script>
+  var endpointUrl = window.location.href;
+  var embeddedExplorerConfig = ${getConfigStringForHtml(
+    embeddedExplorerParams,
+  )};
+  new window.EmbeddedExplorer({
+    ...embeddedExplorerConfig,
+    endpointUrl,
+  });
+</script>
+`;
+};
+
+const getEmbeddedSandboxHTML = (version: string, config: LandingPageConfig) => {
+  return `
+<style>
+  iframe {
+    background-color: white;
+  }
+</style>
+<div
+style="width: 100vw; height: 100vh; position: absolute; top: 0;"
+id="embeddableSandbox"
+></div>
+<script src="https://embeddable-sandbox.cdn.apollographql.com/${version}/embeddable-sandbox.umd.production.min.js"></script>
+<script>
+  var initialEndpoint = window.location.href;
+  new window.EmbeddedSandbox({
+    target: '#embeddableSandbox',
+    initialEndpoint,
+    includeCookies: ${config.includeCookies ?? 'false'},
+  });
+</script>
+`;
+};
+
+const getNonEmbeddedLandingPageHTML = (
+  version: string,
+  config: LandingPageConfig,
+) => {
+  const encodedConfig = encodeConfig(config);
+
+  return `
+<script>window.landingPage = ${encodedConfig};</script>
+<script src="https://apollo-server-landing-page.cdn.apollographql.com/${version}/static/js/main.js"></script>`;
+};
+
 // Helper for the two actual plugin functions.
 function ApolloServerPluginLandingPageDefault(
   maybeVersion: string | undefined,
-  encodedConfig: string,
+  config: LandingPageConfig & {
+    isProd: boolean;
+    apolloStudioEnv: 'staging' | 'prod' | undefined;
+  },
 ): ImplicitlyInstallablePlugin {
   const version = maybeVersion ?? '_latest';
+
   return {
     __internal_installed_implicitly__: false,
     async serverWillStart() {
@@ -203,9 +225,14 @@ curl --request POST \\
   --url '<script>document.write(window.location.href)</script>' \\
   --data '{"query":"query { __typename }"}'</code>
       </div>
+    ${
+      config.embed
+        ? 'graphRef' in config && config.graphRef
+          ? getEmbeddedExplorerHTML(version, config)
+          : getEmbeddedSandboxHTML(version, config)
+        : getNonEmbeddedLandingPageHTML(version, config)
+    }
     </div>
-    <script>window.landingPage = ${encodedConfig};</script>
-    <script src="https://apollo-server-landing-page.cdn.apollographql.com/${version}/static/js/main.js"></script>
   </body>
 </html>
           `;

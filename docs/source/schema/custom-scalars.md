@@ -86,7 +86,7 @@ In [the example above](#example-the-date-scalar), `parseLiteral` converts the AS
 
 After you define your `GraphQLScalarType` instance, you include it in the same [resolver map](../data/resolvers/#defining-a-resolver) that contains resolvers for your schema's other types and fields:
 
-```js{21-24}
+```js {21-24}
 const { ApolloServer, gql } = require('apollo-server');
 const { GraphQLScalarType, Kind } = require('graphql');
 
@@ -114,7 +114,9 @@ const resolvers = {
 
 const server = new ApolloServer({
   typeDefs,
-  resolvers
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
 });
 ```
 
@@ -122,7 +124,7 @@ const server = new ApolloServer({
 
 In this example, we create a custom scalar called `Odd` that can only contain odd integers:
 
-```js:title=index.js
+```js title="index.js"
 const { ApolloServer, gql, UserInputError } = require('apollo-server');
 const { GraphQLScalarType, Kind } = require('graphql');
 
@@ -138,10 +140,10 @@ const typeDefs = gql`
 
 // Validation function for checking "oddness"
 function oddValue(value) {
-  if (typeof value === "number" && Number.isInteger(value) && value % 2 !== 0) {
+  if (typeof value === 'number' && Number.isInteger(value) && value % 2 !== 0) {
     return value;
   }
-  throw new UserInputError("Provided value is not an odd integer");
+  throw new UserInputError('Provided value is not an odd integer');
 }
 
 const resolvers = {
@@ -154,7 +156,7 @@ const resolvers = {
       if (ast.kind === Kind.INT) {
         return oddValue(parseInt(ast.value, 10));
       }
-      throw new UserInputError("Provided value is not an odd integer");
+      throw new UserInputError('Provided value is not an odd integer');
     },
   }),
   Query: {
@@ -164,7 +166,12 @@ const resolvers = {
   }
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
@@ -206,7 +213,12 @@ const resolvers = {
   // ...other resolvers...
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+});
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)

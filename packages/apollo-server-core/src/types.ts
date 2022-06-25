@@ -18,7 +18,7 @@ import type { GraphQLSchemaModule } from '@apollographql/apollo-tools';
 
 export type { GraphQLSchemaModule };
 
-import type { KeyValueCache } from 'apollo-server-caching';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 export type { KeyValueCache };
 
 export type Context<T = object> = T;
@@ -40,7 +40,6 @@ type BaseConfig = Pick<
   | 'formatResponse'
   | 'fieldResolver'
   | 'dataSources'
-  | 'cache'
   | 'logger'
   | 'allowBatchedHttpRequests'
 >;
@@ -109,4 +108,22 @@ export interface Config<ContextFunctionParams = any> extends BaseConfig {
   apollo?: ApolloConfigInput;
   nodeEnv?: string;
   documentStore?: DocumentStore | null;
+  csrfPrevention?: CSRFPreventionOptions | boolean;
+  cache?: KeyValueCache | 'bounded';
+}
+
+export interface CSRFPreventionOptions {
+  // CSRF prevention works by only processing operations from requests whose
+  // structure indicates that if they were sent by a web browser, then the
+  // browser would have had to send a preflight OPTIONS request already. We do
+  // this by specifying some headers that a browser will never automatically set
+  // and which will trigger the browser to preflight. Apollo Server will reject
+  // any operation that does not set at least one of these headers *and* does
+  // not set a content-type (to a header whose parsed type is not
+  // application/x-www-form-urlencoded, multipart/form-data, or text/plain). If
+  // CSRF prevention is enabled (eg, with `csrfPrevention: true`) this list
+  // defaults to ['x-apollo-operation-name', 'apollo-require-preflight']. This
+  // will allow POST operations from any client and GET operations from Apollo
+  // Client Web, Apollo iOS, and Apollo Kotlin.
+  requestHeaders?: string[];
 }

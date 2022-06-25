@@ -7,8 +7,8 @@ import {
   runHttpQuery,
 } from 'apollo-server-core';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import accepts from 'fastify-accepts';
-import fastifyCors from 'fastify-cors';
+import accepts from '@fastify/accepts';
+import fastifyCors from '@fastify/cors';
 
 export interface ServerRegistration {
   path?: string;
@@ -117,6 +117,7 @@ export class ApolloServer<
                       : request.query) as any,
                     request: convertNodeHttpToRequest(request.raw),
                   },
+                  this.csrfPreventionRequestHeaders,
                 );
 
                 if (responseInit.headers) {

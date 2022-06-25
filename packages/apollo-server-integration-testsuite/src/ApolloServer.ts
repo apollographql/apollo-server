@@ -15,6 +15,7 @@ import {
   ValidationContext,
   FieldDefinitionNode,
   ResponsePath,
+  DocumentNode,
 } from 'graphql';
 
 // Note that by doing deep imports here we don't need to install React.
@@ -56,7 +57,11 @@ import type {
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import FakeTimers from '@sinonjs/fake-timers';
 import type { AddressInfo } from 'net';
-import request from 'supertest';
+import request, { Response } from 'supertest';
+import {
+  InMemoryLRUCache,
+  type KeyValueCache,
+} from '@apollo/utils.keyvaluecache';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -191,7 +196,7 @@ export interface StopServerFunc {
 export function testApolloServer<AS extends ApolloServerBase>(
   createApolloServer: CreateServerFunc<AS>,
   stopServer: StopServerFunc,
-  options: { serverlessFramework?: boolean } = {},
+  options: { serverlessFramework?: boolean; integrationName?: string } = {},
 ) {
   describe('ApolloServer', () => {
     afterEach(stopServer);
@@ -263,6 +268,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             schema,
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
+            cache: 'bounded',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -282,6 +288,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             introspection: true,
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
+            cache: 'bounded',
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -1725,6 +1732,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -1755,6 +1763,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'production',
+          cache: 'bounded',
         });
 
         const apolloFetch = createApolloFetch({ uri });
@@ -2249,16 +2258,111 @@ export function testApolloServer<AS extends ApolloServerBase>(
     describe('Response caching', () => {
       let clock: FakeTimers.InstalledClock;
       beforeAll(() => {
-        // These tests use the default InMemoryLRUCache, which is backed by the
-        // lru-cache npm module, whose maxAge feature is based on `Date.now()`
-        // (no setTimeout or anything like that). So we want to use fake timers
-        // just for Date. (Faking all the timer methods messes up things like a
-        // setImmediate in ApolloServerPluginDrainHttpServer.)
+        // The ApolloServerPluginResponseCache uses Date.now() to derive the
+        // "age" header, so we want to use fake timers just for Date. (Faking
+        // all the timer methods messes up things like a setImmediate in
+        // ApolloServerPluginDrainHttpServer.)
         clock = FakeTimers.install({ toFake: ['Date'] });
       });
 
       afterAll(() => {
         clock.uninstall();
+      });
+
+      it('uses an unbounded cache by default', async () => {
+        const server = new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+        });
+
+        // This could be an instanceof check but we don't really want to export
+        // the `UnboundedCache` class from `apollo-server-core`
+        expect(server['requestOptions'].cache!.constructor.name).toBe(
+          'UnboundedCache',
+        );
+      });
+
+      it('uses a bounded cache', async () => {
+        const server = new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          cache: 'bounded',
+        });
+
+        expect(server['requestOptions'].cache).toBeInstanceOf(InMemoryLRUCache);
+      });
+
+      it('uses a custom cache', async () => {
+        const customCache = {} as KeyValueCache;
+        const server = new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          cache: customCache,
+        });
+
+        expect(server['requestOptions'].cache).toBe(customCache);
+      });
+
+      it("warns in production mode when cache isn't configured and APQ isn't disabled", () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          error: jest.fn(),
+          info: jest.fn(),
+        };
+
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'production',
+          logger: mockLogger,
+        });
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringMatching(
+            /Persisted queries are enabled and are using an unbounded cache/,
+          ),
+        );
+      });
+
+      it("doesn't warn about cache configuration if: not production mode, cache configured, APQ disabled, or APQ cache configured", () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          error: jest.fn(),
+          info: jest.fn(),
+        };
+
+        // dev mode
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+        });
+
+        // cache configured
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'production',
+          logger: mockLogger,
+          cache: 'bounded',
+        });
+
+        // APQ disabled
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+          persistedQueries: false,
+        });
+
+        // APQ cache configured
+        new ApolloServerBase({
+          typeDefs: `type Query { hello: String }`,
+          nodeEnv: 'development',
+          logger: mockLogger,
+          persistedQueries: {
+            cache: {} as KeyValueCache,
+          },
+        });
+
+        expect(mockLogger.warn).not.toHaveBeenCalled();
       });
 
       it('basic caching', async () => {
@@ -2759,47 +2863,63 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('Gateway', () => {
-      it('receives schema updates from the gateway', async () => {
-        const makeQueryTypeWithField = (fieldName: string) =>
-          new GraphQLSchema({
-            query: new GraphQLObjectType({
-              name: 'QueryType',
-              fields: {
-                [fieldName]: {
-                  type: GraphQLString,
+      it.each([true, false])(
+        'receives schema updates from the gateway (with document store: %s)',
+        async (withDocumentStore: boolean) => {
+          const makeQueryTypeWithField = (fieldName: string) =>
+            new GraphQLSchema({
+              query: new GraphQLObjectType({
+                name: 'QueryType',
+                fields: {
+                  [fieldName]: {
+                    type: GraphQLString,
+                  },
                 },
-              },
-            }),
+              }),
+            });
+
+          const executor = (req: GraphQLRequestContextExecutionDidStart<any>) =>
+            (req.source as string).match(/1/)
+              ? Promise.resolve({ data: { testString1: 'hello' } })
+              : Promise.resolve({ data: { testString2: 'aloha' } });
+
+          const { gateway, triggers } = makeGatewayMock();
+
+          triggers.resolveLoad({
+            schema: makeQueryTypeWithField('testString1'),
+            executor,
           });
 
-        const executor = (req: GraphQLRequestContextExecutionDidStart<any>) =>
-          (req.source as string).match(/1/)
-            ? Promise.resolve({ data: { testString1: 'hello' } })
-            : Promise.resolve({ data: { testString2: 'aloha' } });
+          const { url: uri } = await createApolloServer({
+            gateway,
+            documentStore: withDocumentStore
+              ? new InMemoryLRUCache<DocumentNode>()
+              : undefined,
+          });
 
-        const { gateway, triggers } = makeGatewayMock();
+          const apolloFetch = createApolloFetch({ uri });
+          const result1 = await apolloFetch({ query: '{testString1}' });
 
-        triggers.resolveLoad({
-          schema: makeQueryTypeWithField('testString1'),
-          executor,
-        });
+          expect(result1.data).toEqual({ testString1: 'hello' });
+          expect(result1.errors).toBeUndefined();
 
-        const { url: uri } = await createApolloServer({
-          gateway,
-        });
+          triggers.triggerSchemaChange!(makeQueryTypeWithField('testString2'));
 
-        const apolloFetch = createApolloFetch({ uri });
-        const result1 = await apolloFetch({ query: '{testString1}' });
+          const result2 = await apolloFetch({ query: '{testString2}' });
+          expect(result2.data).toEqual({ testString2: 'aloha' });
+          expect(result2.errors).toBeUndefined();
 
-        expect(result1.data).toEqual({ testString1: 'hello' });
-        expect(result1.errors).toBeUndefined();
-
-        triggers.triggerSchemaChange!(makeQueryTypeWithField('testString2'));
-
-        const result2 = await apolloFetch({ query: '{testString2}' });
-        expect(result2.data).toEqual({ testString2: 'aloha' });
-        expect(result2.errors).toBeUndefined();
-      });
+          const invalidResult = await apolloFetch({ query: '{testString1}' });
+          expect(invalidResult.data).toBeUndefined();
+          expect(invalidResult.errors).toEqual([
+            {
+              extensions: { code: 'GRAPHQL_VALIDATION_FAILED' },
+              message:
+                'Cannot query field "testString1" on type "QueryType". Did you mean "testString2"?',
+            },
+          ]);
+        },
+      );
 
       it('passes apollo data to the gateway', async () => {
         const optionsSpy = jest.fn();
@@ -3106,6 +3226,178 @@ export function testApolloServer<AS extends ApolloServerBase>(
             );
           });
         });
+    });
+
+    describe('CSRF prevention', () => {
+      async function makeServer(
+        csrfPrevention: Config['csrfPrevention'],
+      ): Promise<http.Server> {
+        return (
+          await createApolloServer({
+            typeDefs: 'type Query { x: ID }',
+            resolvers: { Query: { x: () => 'foo' } },
+            csrfPrevention,
+          })
+        ).httpServer;
+      }
+      const operation = { query: '{x}' };
+      const response = { data: { x: 'foo' } };
+
+      function succeeds(res: Response) {
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual(response);
+      }
+
+      function blocked(res: Response, noContentType?: boolean) {
+        if (noContentType && options.integrationName === 'fastify') {
+          // fastify blocks POSTs that don't specify text/plain or
+          // application/json content-types by default
+          // (https://www.fastify.io/docs/latest/Reference/ContentTypeParser/)
+          // so this request doesn't even get to our checks.
+          expect(res.status).toBe(415);
+        } else {
+          expect(res.status).toBe(400);
+          expect(res.text).toMatch(/This operation has been blocked/);
+        }
+      }
+
+      it('csrfPrevention: true', async () => {
+        const httpServer = await makeServer(true);
+
+        // Normal POSTs work.
+        succeeds(
+          await request(httpServer)
+            .post('/graphql')
+            .set('content-type', 'application/json')
+            .send(JSON.stringify(operation)),
+        );
+
+        // POST without content-type is blocked.
+        blocked(
+          await request(httpServer)
+            .post('/graphql')
+            .send(JSON.stringify(operation)),
+          true,
+        );
+
+        // POST with text/plain is blocked.
+        blocked(
+          await request(httpServer)
+            .post('/graphql')
+            .set('content-type', 'text/plain')
+            .send(JSON.stringify(operation)),
+        );
+
+        // GET without content-type is blocked.
+        blocked(await request(httpServer).get('/graphql').query(operation));
+
+        // GET with json content-type succeeds (this is what Apollo Client Web
+        // does).
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('content-type', 'application/json')
+            .query(operation),
+        );
+
+        // GET with text/plain content-type is blocked (because this is not
+        // preflighted).
+        blocked(
+          await request(httpServer)
+            .get('/graphql')
+            .set('content-type', 'text/plain')
+            .query(operation),
+        );
+
+        // GET with an invalid content-type (no slash) actually succeeds, since
+        // this will be preflighted, although it would be reasonable if it
+        // didn't.
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('content-type', 'invalid')
+            .query(operation),
+        );
+
+        // Adding parameters to the content-type and spaces doesn't stop it from
+        // being blocked.
+        blocked(
+          await request(httpServer)
+            .get('/graphql')
+            .set('content-type', '    text/plain   ; charset=utf-8')
+            .query(operation),
+        );
+
+        // But we can do the space and charset around json and have that be fine.
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('content-type', '    application/json   ; charset=utf-8')
+            .query(operation),
+        );
+
+        // This header set by iOS and Kotlin lets us bypass the check (and would
+        // cause a preflight in the browser).
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('x-apollo-operation-name', 'foo')
+            .query(operation),
+        );
+
+        // This header that you can set manually lets us bypass the check (and
+        // would cause a preflight in the browser).
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('apollo-require-preflight', 'bar')
+            .query(operation),
+        );
+
+        // But this random header is not good enough.
+        blocked(
+          await request(httpServer)
+            .get('/graphql')
+            .set('please-preflight-me', 'bar')
+            .query(operation),
+        );
+      });
+
+      it('csrfPrevention: {requestHeaders}', async () => {
+        const httpServer = await makeServer({ requestHeaders: ['xxx', 'yyy'] });
+
+        // GET without content-type is blocked.
+        blocked(await request(httpServer).get('/graphql').query(operation));
+
+        // The headers we configured work, separately and together.
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('xxx', 'foo')
+            .query(operation),
+        );
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('yyy', 'bar')
+            .query(operation),
+        );
+        succeeds(
+          await request(httpServer)
+            .get('/graphql')
+            .set('xxx', 'foo')
+            .set('yyy', 'bar')
+            .query(operation),
+        );
+
+        // But this default header doesn't work.
+        blocked(
+          await request(httpServer)
+            .get('/graphql')
+            .set('apollo-require-preflight', 'bar')
+            .query(operation),
+        );
+      });
     });
   });
 }

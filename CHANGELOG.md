@@ -7,7 +7,56 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
+
 ## vNEXT
+
+- Nothing yet! Stay tuned.
+
+## v3.9.0
+
+- ⚠️ **SECURITY** `apollo-server-core`: The default configuration of Apollo Server is vulnerable to denial of service attacks via memory exhaustion. If you do not currently specify the `cache` option to `new ApolloServer()`, we strongly recommend you specify `cache: 'bounded'`, which replaces the default in-memory unbounded cache with a 30MB in-memory cache, or disable automatic persisted queries with `persistedQueries: false`. Apollo Server now logs a warning in production if you do not configure the cache or disable APQs. See [the docs](https://www.apollographql.com/docs/apollo-server/performance/cache-backends#ensuring-a-bounded-cache) for more details.
+- The `apollo-server-caching` package is no longer published. The TypeScript types `KeyValueCache` and `KeyValueCacheSetOptions` and the classes `PrefixingKeyValueCache` and `InMemoryLRUCache` can be imported from `@apollo/utils.keyvaluecache` instead. The first three exports are identical; `InMemoryLRUCache` is based on `lru-cache` v7 instead of v6, and no longer supports creating unbounded caches (which was the default behavior for `apollo-server-caching`'s `InMemoryLRUCache`). [PR #6522](https://github.com/apollographql/apollo-server/pull/6522)
+- The `apollo-server-cache-redis` and `apollo-server-cache-memcached` packages are no longer published (though previous versions continue to work). We recommend that users of these packages migrate to `@apollo/utils.keyvadapter`, which lets you connect to Redis, Memcached, or any other backend supported by the [Keyv](https://www.npmjs.com/package/keyv) project. See [the new cache backend docs](https://www.apollographql.com/docs/apollo-server/performance/cache-backends) for more details. [PR #6541](https://github.com/apollographql/apollo-server/pull/6541)
+- Avoid unhandled rejection errors if the end hook from a `parsingDidStart` plugin method rejects. [Issue #6567](https://github.com/apollographql/apollo-server/pull/6567) [PR #6559](https://github.com/apollographql/apollo-server/pull/6559)
+
+## v3.8.2
+
+- `apollo-server-core`: Fix usage reporting plugin "willResolveField called after stopTiming!" error caused by a race condition related to null bubbling. [Issue #4472](https://github.com/apollographql/apollo-server/issues/4472) [PR #6398](https://github.com/apollographql/apollo-server/pull/6398)
+
+## v3.8.1
+
+- This is a patch release strictly for republishing over what appears to be a hiccup in NPMs service. [Issue #6469](https://github.com/apollographql/apollo-server/issues/6469)
+
+## v3.8.0
+
+- Add `embed` as an option in the `ApolloServerPluginLandingPageLocalDefault` and `ApolloServerPluginLandingPageProductionDefault` plugins. If you pass the `embed` option to `ApolloServerPluginLandingPageLocalDefault`, the Apollo Studio Sandbox will be embedded on your Apollo Server endpoint. If you pass the `embed` option to `ApolloServerPluginLandingPageProductionDefault`, the Apollo Studio embedded Explorer will be embedded on your Apollo Server endpoint. In both cases, users can use the embedded app to run GraphQL operations without any special CORS setup.
+- Add a few missing dependencies to packages. [PR #6393](https://github.com/apollographql/apollo-server/pull/6393)
+- Factor out some usage reporting code to a shared package in the [`apollo-utils` repository](https://github.com/apollographql/apollo-utils/). Should not be a visible change.  [PR #6449](https://github.com/apollographql/apollo-server/pull/6449)
+
+## v3.7.0
+
+- ⚠️ **SECURITY** `apollo-server-core`: Apollo Server now includes protection against [CSRF](https://owasp.org/www-community/attacks/csrf) and XS-Search attacks. We **highly recommend** enabling this feature by passing `csrfPrevention: true` to `new ApolloServer()`. If you rely on the ability to execute GraphQL operations via HTTP `GET` requests using a client other than Apollo Client Web, Apollo iOS, or Apollo Kotlin (formerly Apollo Android), you may need to first change the configuration of that client. See [the CSRF prevention docs](https://www.apollographql.com/docs/apollo-server/security/cors#preventing-cross-site-request-forgery-csrf) for more details. This vulnerability was reported by Jeffrey Hofmann; the feature was designed with advice from Luca Carettoni of Doyensec.
+
+## v3.6.8
+
+- `apollo-server-fastify`: This package now depends on the `@fastify/accepts` and `@fastify/cors` packages rather than their older deprecated names `fastify-accepts` and `fastify-cors`. There is no behavior change (except that you will no longer see deprecation messages). [PR #6366](https://github.com/apollographql/apollo-server/pull/6366)
+- `apollo-server-types`: The `Logger` TypeScript interface is now re-exported from the new `@apollo/utils.logger` package instead of defined directly in this package; other packages import it from the new package. There should be no observable change. [PR #6229](https://github.com/apollographql/apollo-server/pull/6229)
+
+## v3.6.7
+
+- `apollo-server-core`: Update `@apollographql/apollo-tools` dependency to the latest version which now properly lists its peer dependencies. This fixes a problem with using Yarn3 PnP [PR #6273](https://github.com/apollographql/apollo-server/pull/6273)
+
+## v3.6.6
+
+- ⚠️ **SECURITY** `apollo-server-core`: Apollo Server 3.4.0 introduced a new `documentStore` constructor option (replacing the `experimental_approximateDocumentStoreMiB` option) which allows you to customize an internal cache used by ApolloServer to memoize the results of parsing and validating GraphQL operations. When this option was combined with the `gateway` option, it was possible for Apollo Server to attempt to execute invalid GraphQL operations. Specifically, if a server processed an operation and then its schema was updated with a change that made that operation no longer valid, the server could still attempt to execute the operation again without re-validating it against the new schema. The problem only lasts until the server is restarted. This release changes the semantics of the `documentStore` option so that a different key prefix is used each time the schema is updated. (As a side effect, you no longer have to be careful to avoid sharing a `documentStore` between multiple `ApolloServer` objects.)  **This update is highly recommended for any users that specify both `documentStore` and `gateway` in `new ApolloServer()`.**
+
+## v3.6.5
+
+- `apollo-server-plugin-usage-reporting`: Stop distributing unnecessary `generated/reports.proto` file. Count executable operations. [PR #6239](https://github.com/apollographql/apollo-server/pull/6239)
+
+## v3.6.4
+
+- `apollo-server-core`: Fixes a regression in v3.6.0 where usage reporting would never send traces for unexecutable operations (parse errors, validation errors, and unknown operation name errors). While "traces" for these operations won't actually contain an execution tree, they can contain interesting errors. [Issue #6193](https://github.com/apollographql/apollo-server/issues/6193) [PR #6194](https://github.com/apollographql/apollo-server/pull/6194)
 
 ## v3.6.3
 
@@ -53,7 +102,7 @@ The version headers in this history reflect the versions of Apollo Server itself
   new ApolloServer({
     documentStore: new InMemoryLRUCache<DocumentNode>({
       maxSize: Math.pow(2, 20) * approximateDocumentStoreMiB,
-      sizeCalculator: InMemoryLRUCache.jsonBytesSizeCalculator,
+      sizeCalculator: InMemoryLRUCache.sizeCalculator,
     }),
     ...moreOptions,
   })
