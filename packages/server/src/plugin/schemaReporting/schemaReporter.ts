@@ -70,7 +70,7 @@ export class SchemaReporter {
     this.fetcher = options.fetcher ?? fetch;
   }
 
-  public stopped(): Boolean {
+  public stopped(): boolean {
     return this.isStopped;
   }
 

@@ -415,8 +415,7 @@ import http from 'http';
 import cors from 'cors';
 import { json } from 'body-parser';
 import { ApolloServer, ApolloServerPluginDrainHttpServer } from '@apollo/server';
-// TODO: Double check this import
-import { expressMiddleware } from '@apollo/server/express';
+import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs, resolvers } from ('./schema');
 
 const server = new ApolloServer({

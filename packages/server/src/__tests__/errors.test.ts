@@ -7,7 +7,7 @@ import {
   UserInputError,
   SyntaxError,
 } from '..';
-import { formatApolloErrors } from '../errors';
+import { formatApolloErrors } from '../errors.js';
 
 describe('Errors', () => {
   describe('formatApolloErrors', () => {

@@ -11,6 +11,3 @@ export {
   UserInputError,
   PersistedQueryNotFoundError,
 } from './errors.js';
-
-// TODO(AS4): consider moving to `@apollo/server/express`
-export { expressMiddleware } from './express/index.js';

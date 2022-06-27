@@ -303,8 +303,8 @@ export interface ApolloServerPluginUsageReportingOptions<
 }
 
 export type SendValuesBaseOptions =
-  | { onlyNames: Array<String> }
-  | { exceptNames: Array<String> }
+  | { onlyNames: Array<string> }
+  | { exceptNames: Array<string> }
   | { all: true }
   | { none: true };
 
