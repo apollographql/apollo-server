@@ -1,12 +1,12 @@
-// import type http from 'http';
+import type http from 'http';
 import { createHash } from '@apollo/utils.createhash';
-// import { URL } from 'url';
-// import express from 'express';
-// import bodyParser from 'body-parser';
+import { URL } from 'url';
+import express from 'express';
+import bodyParser from 'body-parser';
 import loglevel from 'loglevel';
 
 import {
-  // Report,
+  Report,
   Trace
 } from '@apollo/usage-reporting-protobuf';
 
@@ -43,7 +43,7 @@ import {
 import fetch from 'node-fetch';
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
-// import type { AddressInfo } from 'net';
+import type { AddressInfo } from 'net';
 import request, { Response } from 'supertest';
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import type {
@@ -52,17 +52,17 @@ import type {
   CreateServerForIntegrationTestsResult,
 } from '.';
 import gql from 'graphql-tag';
-// import {
-//   ApolloServerPluginUsageReportingOptions,
-//   ApolloServerPluginUsageReporting,
-// } from '@apollo/server/plugin/usageReporting';
-// import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
-// import {
-//   ApolloServerPluginLandingPageDisabled,
-//   ApolloServerPluginUsageReportingDisabled,
-// } from '@apollo/server/plugin/disabled';
-// import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-// import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server/plugin/landingPage/graphqlPlayground';
+import {
+  ApolloServerPluginUsageReportingOptions,
+  ApolloServerPluginUsageReporting,
+} from '@apollo/server/plugin/usageReporting';
+import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
+import {
+  ApolloServerPluginLandingPageDisabled,
+  ApolloServerPluginUsageReportingDisabled,
+} from '@apollo/server/plugin/disabled';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server/plugin/landingPage/graphqlPlayground';
 import {
   jest,
   describe,
@@ -71,6 +71,7 @@ import {
   afterEach,
   it,
 } from '@jest/globals';
+import type { Mock } from 'jest-mock';
 
 const quietLogger = loglevel.getLogger('quiet');
 export function mockLogger() {
@@ -879,536 +880,536 @@ export function defineIntegrationTestSuiteApolloServerTests(
     });
 
     describe('lifecycle', () => {
-      // describe('for Apollo usage reporting', () => {
-      //   let reportIngress: MockReportIngress;
-
-      //   class MockReportIngress {
-      //     private app: express.Application;
-      //     private server?: http.Server;
-      //     private reports: Report[] = [];
-      //     public readonly promiseOfReports: Promise<Report[]>;
-
-      //     constructor() {
-      //       let reportResolver: (reports: Report[]) => void;
-      //       this.promiseOfReports = new Promise<Report[]>((resolve) => {
-      //         reportResolver = resolve;
-      //       });
-
-      //       this.app = express();
-      //       this.app.use((req, _res, next) => {
-      //         // body parser requires a content-type
-      //         req.headers['content-type'] = 'text/plain';
-      //         next();
-      //       });
-      //       this.app.use(
-      //         bodyParser.raw({
-      //           inflate: true,
-      //           type: '*/*',
-      //         }),
-      //       );
-
-      //       this.app.use((req, res) => {
-      //         const report = Report.decode(req.body);
-      //         this.reports.push(report);
-      //         res.end();
-
-      //         // Resolve any outstanding Promises with our new report data.
-      //         reportResolver(this.reports);
-      //       });
-      //     }
-
-      //     async listen(): Promise<http.Server> {
-      //       return await new Promise((resolve) => {
-      //         const server = (this.server = this.app.listen(
-      //           0,
-      //           // Intentionally IPv4.
-      //           '127.0.0.1',
-      //           () => {
-      //             resolve(server);
-      //           },
-      //         ));
-      //       });
-      //     }
-
-      //     async stop(): Promise<void> {
-      //       if (!this.server) {
-      //         return;
-      //       }
-
-      //       return new Promise((resolve) => {
-      //         this.server?.close(() => resolve());
-      //       });
-      //     }
-
-      //     getUrl(): string {
-      //       if (!this.server) {
-      //         throw new Error('must listen before getting URL');
-      //       }
-      //       const { family, address, port } =
-      //         this.server.address() as AddressInfo;
-
-      //       // @ts-expect-error until https://github.com/DefinitelyTyped/DefinitelyTyped/pull/60042
-      //       if (family !== 'IPv4' && family !== 4) {
-      //         throw new Error(`The family was unexpectedly ${family}.`);
-      //       }
-      //       return new URL(`http://${address}:${port}`).toString();
-      //     }
-      //   }
-
-      //   beforeEach(async () => {
-      //     reportIngress = new MockReportIngress();
-      //     return await reportIngress.listen();
-      //   });
-
-      //   afterEach((done) => {
-      //     (reportIngress.stop() || Promise.resolve()).then(() => done());
-      //   });
-
-      //   describe('traces', () => {
-      //     let throwError: Mock;
-      //     let apolloFetch: ApolloFetch;
-
-      //     beforeEach(async () => {
-      //       throwError = jest.fn();
-      //     });
-
-      //     const setupApolloServerAndFetchPair = async (
-      //       usageReportingOptions: Partial<
-      //         ApolloServerPluginUsageReportingOptions<any>
-      //       > = {},
-      //       constructorOptions: Partial<CreateServerForIntegrationTests> = {},
-      //       plugins: PluginDefinition<BaseContext>[] = [],
-      //     ) => {
-      //       const uri = await createServerAndGetUrl({
-      //         typeDefs: gql`
-      //           enum CacheControlScope {
-      //             PUBLIC
-      //             PRIVATE
-      //           }
-
-      //           directive @cacheControl(
-      //             maxAge: Int
-      //             scope: CacheControlScope
-      //           ) on FIELD_DEFINITION | OBJECT | INTERFACE
-
-      //           type Query {
-      //             fieldWhichWillError: String
-      //             justAField: String @cacheControl(maxAge: 5, scope: PRIVATE)
-      //           }
-      //         `,
-      //         resolvers: {
-      //           Query: {
-      //             fieldWhichWillError: () => {
-      //               throwError();
-      //             },
-      //             justAField: () => 'a string',
-      //           },
-      //         },
-      //         apollo: {
-      //           key: 'service:my-app:secret',
-      //           graphRef: 'my-app@current',
-      //         },
-      //         plugins: [
-      //           ApolloServerPluginUsageReporting({
-      //             endpointUrl: reportIngress.getUrl(),
-      //             maxUncompressedReportSize: 1,
-      //             logger: quietLogger,
-      //             ...usageReportingOptions,
-      //           }),
-      //           ...plugins,
-      //         ],
-      //         includeStackTracesInErrorResponses: true,
-      //         stopOnTerminationSignals: false,
-      //         nodeEnv: '',
-      //         ...constructorOptions,
-      //       });
-
-      //       apolloFetch = createApolloFetch({ uri });
-      //     };
-
-      //     it('cachePolicy', async () => {
-      //       await setupApolloServerAndFetchPair();
-
-      //       const result = await apolloFetch({
-      //         query: `{justAField}`,
-      //       });
-      //       expect(result.errors).toBeUndefined();
-      //       expect(result.data).toEqual({
-      //         justAField: 'a string',
-      //       });
-
-      //       const reports = await reportIngress.promiseOfReports;
-      //       expect(reports.length).toBe(1);
-      //       const trace = Object.values(reports[0].tracesPerQuery)[0]
-      //         .trace![0] as Trace;
-
-      //       expect(trace.cachePolicy).toBeDefined();
-      //       expect(trace.cachePolicy?.maxAgeNs).toBe(5e9);
-      //       expect(trace.cachePolicy?.scope).toBe(
-      //         Trace.CachePolicy.Scope.PRIVATE,
-      //       );
-      //     });
-
-      //     it('does not expose stack', async () => {
-      //       throwError.mockImplementationOnce(() => {
-      //         throw new Error('how do I stack up?');
-      //       });
-
-      //       await setupApolloServerAndFetchPair();
-
-      //       const result = await apolloFetch({
-      //         query: `{fieldWhichWillError}`,
-      //       });
-      //       expect(result.data).toEqual({
-      //         fieldWhichWillError: null,
-      //       });
-      //       expect(result.errors).toBeDefined();
-
-      //       // The original error message should still be sent to the client.
-      //       expect(result.errors[0].message).toEqual('how do I stack up?');
-      //       expect(throwError).toHaveBeenCalledTimes(1);
-
-      //       const reports = await reportIngress.promiseOfReports;
-      //       expect(reports.length).toBe(1);
-      //       const trace = Object.values(reports[0].tracesPerQuery)[0]
-      //         .trace![0] as Trace;
-
-      //       // There should be no error at the root, our error is a child.
-      //       expect(trace.root!.error).toStrictEqual([]);
-
-      //       // There should only be one child.
-      //       expect(trace.root!.child!.length).toBe(1);
-
-      //       // The error should not have the stack in it.
-      //       expect(trace.root!.child![0].error![0]).not.toHaveProperty('stack');
-      //       expect(
-      //         JSON.parse(trace.root!.child![0].error![0].json!),
-      //       ).not.toHaveProperty('stack');
-      //     });
-
-      //     it('sets the trace key to operationName when it is defined', async () => {
-      //       await setupApolloServerAndFetchPair();
-
-      //       const result = await apolloFetch({
-      //         query: `query AnOperationName {justAField}`,
-      //       });
-      //       expect(result.data).toEqual({
-      //         justAField: 'a string',
-      //       });
-      //       expect(result.errors).not.toBeDefined();
-
-      //       const reports = await reportIngress.promiseOfReports;
-      //       expect(reports.length).toBe(1);
-
-      //       expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(
-      //         /^# AnOperationName\n/,
-      //       );
-      //     });
-
-      //     it('sets the trace key to unknown operation for missing operation', async () => {
-      //       await setupApolloServerAndFetchPair();
-
-      //       await apolloFetch({
-      //         query: `query notQ {justAField}`,
-      //         operationName: 'q',
-      //       });
-
-      //       const reports = await reportIngress.promiseOfReports;
-      //       expect(reports.length).toBe(1);
-
-      //       expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe(
-      //         '## GraphQLUnknownOperationName\n',
-      //       );
-      //     });
-
-      //     it('sets the trace key to parse failure when non-parsable gql', async () => {
-      //       await setupApolloServerAndFetchPair();
-
-      //       await apolloFetch({
-      //         query: `{nonExistentField`,
-      //       });
-
-      //       const reports = await reportIngress.promiseOfReports;
-      //       expect(reports.length).toBe(1);
-
-      //       expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe(
-      //         '## GraphQLParseFailure\n',
-      //       );
-      //     });
-
-      //     it('sets the trace key to validation failure when invalid operation', async () => {
-      //       await setupApolloServerAndFetchPair();
-
-      //       await apolloFetch({
-      //         query: `{nonExistentField}`,
-      //       });
-
-      //       const reports = await reportIngress.promiseOfReports;
-      //       expect(reports.length).toBe(1);
-
-      //       expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe(
-      //         '## GraphQLValidationFailure\n',
-      //       );
-      //     });
-
-      //     it('sets the trace key to "-" when operationName is undefined', async () => {
-      //       await setupApolloServerAndFetchPair();
-
-      //       const result = await apolloFetch({
-      //         query: `{justAField}`,
-      //       });
-      //       expect(result.data).toEqual({
-      //         justAField: 'a string',
-      //       });
-      //       expect(result.errors).not.toBeDefined();
-
-      //       const reports = await reportIngress.promiseOfReports;
-      //       expect(reports.length).toBe(1);
-
-      //       expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
-      //     });
-
-      //     it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
-      //       await setupApolloServerAndFetchPair({}, {}, [
-      //         {
-      //           async requestDidStart() {
-      //             return {
-      //               didResolveOperation() {
-      //                 throw new Error('known_error');
-      //               },
-      //             };
-      //           },
-      //         },
-      //       ]);
-
-      //       const result = await apolloFetch({
-      //         query: `{ aliasedField: justAField }`,
-      //       });
-
-      //       expect(result.errors).toBeDefined();
-      //       expect(result.errors[0].extensions).toBeDefined();
-      //       expect(result.errors[0].message).toEqual('known_error');
-
-      //       const reports = await reportIngress.promiseOfReports;
-      //       expect(reports.length).toBe(1);
-
-      //       expect(Object.keys(reports[0].tracesPerQuery)[0]).not.toEqual(
-      //         '# -\n{ aliasedField: justAField }',
-      //       );
-      //     });
-
-      //     it("doesn't internal server error on an APQ", async () => {
-      //       await setupApolloServerAndFetchPair();
-
-      //       const TEST_STRING_QUERY = `
-      //         { onlyForThisApqTest${
-      //           Math.random().toString().split('.')[1]
-      //         }: justAField }
-      //       `;
-      //       const hash = createHash('sha256')
-      //         .update(TEST_STRING_QUERY)
-      //         .digest('hex');
-
-      //       const result = await apolloFetch({
-      //         extensions: {
-      //           persistedQuery: {
-      //             version: 1,
-      //             sha256Hash: hash,
-      //           },
-      //         },
-      //       });
-
-      //       // Having a persisted query not found error is fine.
-      //       expect(result.errors).toContainEqual(
-      //         expect.objectContaining({
-      //           extensions: expect.objectContaining({
-      //             code: 'PERSISTED_QUERY_NOT_FOUND',
-      //           }),
-      //         }),
-      //       );
-
-      //       // However, having an internal server error is not okay!
-      //       expect(result.errors).not.toContainEqual(
-      //         expect.objectContaining({
-      //           extensions: expect.objectContaining({
-      //             code: 'INTERNAL_SERVER_ERROR',
-      //           }),
-      //         }),
-      //       );
-      //     });
-
-      //     describe('error munging', () => {
-      //       describe('rewriteError', () => {
-      //         it('new error', async () => {
-      //           throwError.mockImplementationOnce(() => {
-      //             throw new Error('rewriteError nope');
-      //           });
-
-      //           await setupApolloServerAndFetchPair({
-      //             rewriteError: () =>
-      //               new GraphQLError('rewritten as a new error'),
-      //           });
-
-      //           const result = await apolloFetch({
-      //             query: `{fieldWhichWillError}`,
-      //           });
-      //           expect(result.data).toEqual({
-      //             fieldWhichWillError: null,
-      //           });
-      //           expect(result.errors).toBeDefined();
-
-      //           // The original error message should be sent to the client.
-      //           expect(result.errors[0].message).toEqual('rewriteError nope');
-      //           expect(throwError).toHaveBeenCalledTimes(1);
-
-      //           const reports = await reportIngress.promiseOfReports;
-      //           expect(reports.length).toBe(1);
-      //           const trace = Object.values(reports[0].tracesPerQuery)[0]
-      //             .trace![0] as Trace;
-      //           // There should be no error at the root, our error is a child.
-      //           expect(trace.root!.error).toStrictEqual([]);
-
-      //           // There should only be one child.
-      //           expect(trace.root!.child!.length).toBe(1);
-
-      //           // The child should maintain the path, but have its message
-      //           // rewritten.
-      //           expect(trace.root!.child![0].error).toMatchObject([
-      //             {
-      //               json: '{"message":"rewritten as a new error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
-      //               message: 'rewritten as a new error',
-      //               location: [{ column: 2, line: 1 }],
-      //             },
-      //           ]);
-      //         });
-
-      //         it('modified error', async () => {
-      //           throwError.mockImplementationOnce(() => {
-      //             throw new Error('rewriteError mod nope');
-      //           });
-
-      //           await setupApolloServerAndFetchPair({
-      //             rewriteError: (err) => {
-      //               err.message = 'rewritten as a modified error';
-      //               return err;
-      //             },
-      //           });
-
-      //           const result = await apolloFetch({
-      //             query: `{fieldWhichWillError}`,
-      //           });
-      //           expect(result.data).toEqual({
-      //             fieldWhichWillError: null,
-      //           });
-      //           expect(result.errors).toBeDefined();
-      //           expect(result.errors[0].message).toEqual(
-      //             'rewriteError mod nope',
-      //           );
-      //           expect(throwError).toHaveBeenCalledTimes(1);
-
-      //           const reports = await reportIngress.promiseOfReports;
-      //           expect(reports.length).toBe(1);
-      //           const trace = Object.values(reports[0].tracesPerQuery)[0]
-      //             .trace![0] as Trace;
-      //           // There should be no error at the root, our error is a child.
-      //           expect(trace.root!.error).toStrictEqual([]);
-
-      //           // There should only be one child.
-      //           expect(trace.root!.child!.length).toBe(1);
-
-      //           // The child should maintain the path, but have its message
-      //           // rewritten.
-      //           expect(trace.root!.child![0].error).toMatchObject([
-      //             {
-      //               json: '{"message":"rewritten as a modified error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
-      //               message: 'rewritten as a modified error',
-      //               location: [{ column: 2, line: 1 }],
-      //             },
-      //           ]);
-      //         });
-
-      //         it('nulled error', async () => {
-      //           throwError.mockImplementationOnce(() => {
-      //             throw new Error('rewriteError null nope');
-      //           });
-
-      //           await setupApolloServerAndFetchPair({
-      //             rewriteError: () => null,
-      //           });
-
-      //           const result = await apolloFetch({
-      //             query: `{fieldWhichWillError}`,
-      //           });
-      //           expect(result.data).toEqual({
-      //             fieldWhichWillError: null,
-      //           });
-      //           expect(result.errors).toBeDefined();
-      //           expect(result.errors[0].message).toEqual(
-      //             'rewriteError null nope',
-      //           );
-      //           expect(throwError).toHaveBeenCalledTimes(1);
-
-      //           const reports = await reportIngress.promiseOfReports;
-      //           expect(reports.length).toBe(1);
-      //           const trace = Object.values(reports[0].tracesPerQuery)[0]
-      //             .trace![0] as Trace;
-
-      //           // There should be no error at the root, our error is a child.
-      //           expect(trace.root!.error).toStrictEqual([]);
-
-      //           // There should only be one child.
-      //           expect(trace.root!.child!.length).toBe(1);
-
-      //           // There should be no error in the trace for this property!
-      //           expect(trace.root!.child![0].error).toStrictEqual([]);
-      //         });
-      //       });
-
-      //       it('undefined error', async () => {
-      //         throwError.mockImplementationOnce(() => {
-      //           throw new Error('rewriteError undefined whoops');
-      //         });
-
-      //         await setupApolloServerAndFetchPair({
-      //           rewriteError: () => undefined as any,
-      //         });
-
-      //         const result = await apolloFetch({
-      //           query: `{fieldWhichWillError}`,
-      //         });
-      //         expect(result.data).toEqual({
-      //           fieldWhichWillError: null,
-      //         });
-      //         expect(result.errors).toBeDefined();
-      //         expect(result.errors[0].message).toEqual(
-      //           'rewriteError undefined whoops',
-      //         );
-      //         expect(throwError).toHaveBeenCalledTimes(1);
-
-      //         const reports = await reportIngress.promiseOfReports;
-      //         expect(reports.length).toBe(1);
-      //         const trace = Object.values(reports[0].tracesPerQuery)[0]
-      //           .trace![0] as Trace;
-
-      //         // There should be no error at the root, our error is a child.
-      //         expect(trace.root!.error).toStrictEqual([]);
-
-      //         // There should only be one child.
-      //         expect(trace.root!.child!.length).toBe(1);
-
-      //         // The child should maintain the path, but have its message
-      //         // rewritten.
-      //         expect(trace.root!.child![0].error).toMatchObject([
-      //           {
-      //             json: '{"message":"rewriteError undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
-      //             message: 'rewriteError undefined whoops',
-      //             location: [{ column: 2, line: 1 }],
-      //           },
-      //         ]);
-      //       });
-      //     });
-      //   });
-      // });
+      describe('for Apollo usage reporting', () => {
+        let reportIngress: MockReportIngress;
+
+        class MockReportIngress {
+          private app: express.Application;
+          private server?: http.Server;
+          private reports: Report[] = [];
+          public readonly promiseOfReports: Promise<Report[]>;
+
+          constructor() {
+            let reportResolver: (reports: Report[]) => void;
+            this.promiseOfReports = new Promise<Report[]>((resolve) => {
+              reportResolver = resolve;
+            });
+
+            this.app = express();
+            this.app.use((req, _res, next) => {
+              // body parser requires a content-type
+              req.headers['content-type'] = 'text/plain';
+              next();
+            });
+            this.app.use(
+              bodyParser.raw({
+                inflate: true,
+                type: '*/*',
+              }),
+            );
+
+            this.app.use((req, res) => {
+              const report = Report.decode(req.body);
+              this.reports.push(report);
+              res.end();
+
+              // Resolve any outstanding Promises with our new report data.
+              reportResolver(this.reports);
+            });
+          }
+
+          async listen(): Promise<http.Server> {
+            return await new Promise((resolve) => {
+              const server = (this.server = this.app.listen(
+                0,
+                // Intentionally IPv4.
+                '127.0.0.1',
+                () => {
+                  resolve(server);
+                },
+              ));
+            });
+          }
+
+          async stop(): Promise<void> {
+            if (!this.server) {
+              return;
+            }
+
+            return new Promise((resolve) => {
+              this.server?.close(() => resolve());
+            });
+          }
+
+          getUrl(): string {
+            if (!this.server) {
+              throw new Error('must listen before getting URL');
+            }
+            const { family, address, port } =
+              this.server.address() as AddressInfo;
+
+            // @ts-expect-error until https://github.com/DefinitelyTyped/DefinitelyTyped/pull/60042
+            if (family !== 'IPv4' && family !== 4) {
+              throw new Error(`The family was unexpectedly ${family}.`);
+            }
+            return new URL(`http://${address}:${port}`).toString();
+          }
+        }
+
+        beforeEach(async () => {
+          reportIngress = new MockReportIngress();
+          return await reportIngress.listen();
+        });
+
+        afterEach((done) => {
+          (reportIngress.stop() || Promise.resolve()).then(() => done());
+        });
+
+        describe('traces', () => {
+          let throwError: Mock;
+          let apolloFetch: ApolloFetch;
+
+          beforeEach(async () => {
+            throwError = jest.fn();
+          });
+
+          const setupApolloServerAndFetchPair = async (
+            usageReportingOptions: Partial<
+              ApolloServerPluginUsageReportingOptions<any>
+            > = {},
+            constructorOptions: Partial<CreateServerForIntegrationTests> = {},
+            plugins: PluginDefinition<BaseContext>[] = [],
+          ) => {
+            const uri = await createServerAndGetUrl({
+              typeDefs: gql`
+                enum CacheControlScope {
+                  PUBLIC
+                  PRIVATE
+                }
+
+                directive @cacheControl(
+                  maxAge: Int
+                  scope: CacheControlScope
+                ) on FIELD_DEFINITION | OBJECT | INTERFACE
+
+                type Query {
+                  fieldWhichWillError: String
+                  justAField: String @cacheControl(maxAge: 5, scope: PRIVATE)
+                }
+              `,
+              resolvers: {
+                Query: {
+                  fieldWhichWillError: () => {
+                    throwError();
+                  },
+                  justAField: () => 'a string',
+                },
+              },
+              apollo: {
+                key: 'service:my-app:secret',
+                graphRef: 'my-app@current',
+              },
+              plugins: [
+                ApolloServerPluginUsageReporting({
+                  endpointUrl: reportIngress.getUrl(),
+                  maxUncompressedReportSize: 1,
+                  logger: quietLogger,
+                  ...usageReportingOptions,
+                }),
+                ...plugins,
+              ],
+              includeStackTracesInErrorResponses: true,
+              stopOnTerminationSignals: false,
+              nodeEnv: '',
+              ...constructorOptions,
+            });
+
+            apolloFetch = createApolloFetch({ uri });
+          };
+
+          it('cachePolicy', async () => {
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `{justAField}`,
+            });
+            expect(result.errors).toBeUndefined();
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+            const trace = Object.values(reports[0].tracesPerQuery)[0]
+              .trace![0] as Trace;
+
+            expect(trace.cachePolicy).toBeDefined();
+            expect(trace.cachePolicy?.maxAgeNs).toBe(5e9);
+            expect(trace.cachePolicy?.scope).toBe(
+              Trace.CachePolicy.Scope.PRIVATE,
+            );
+          });
+
+          it('does not expose stack', async () => {
+            throwError.mockImplementationOnce(() => {
+              throw new Error('how do I stack up?');
+            });
+
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `{fieldWhichWillError}`,
+            });
+            expect(result.data).toEqual({
+              fieldWhichWillError: null,
+            });
+            expect(result.errors).toBeDefined();
+
+            // The original error message should still be sent to the client.
+            expect(result.errors[0].message).toEqual('how do I stack up?');
+            expect(throwError).toHaveBeenCalledTimes(1);
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+            const trace = Object.values(reports[0].tracesPerQuery)[0]
+              .trace![0] as Trace;
+
+            // There should be no error at the root, our error is a child.
+            expect(trace.root!.error).toStrictEqual([]);
+
+            // There should only be one child.
+            expect(trace.root!.child!.length).toBe(1);
+
+            // The error should not have the stack in it.
+            expect(trace.root!.child![0].error![0]).not.toHaveProperty('stack');
+            expect(
+              JSON.parse(trace.root!.child![0].error![0].json!),
+            ).not.toHaveProperty('stack');
+          });
+
+          it('sets the trace key to operationName when it is defined', async () => {
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `query AnOperationName {justAField}`,
+            });
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+            expect(result.errors).not.toBeDefined();
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(
+              /^# AnOperationName\n/,
+            );
+          });
+
+          it('sets the trace key to unknown operation for missing operation', async () => {
+            await setupApolloServerAndFetchPair();
+
+            await apolloFetch({
+              query: `query notQ {justAField}`,
+              operationName: 'q',
+            });
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe(
+              '## GraphQLUnknownOperationName\n',
+            );
+          });
+
+          it('sets the trace key to parse failure when non-parsable gql', async () => {
+            await setupApolloServerAndFetchPair();
+
+            await apolloFetch({
+              query: `{nonExistentField`,
+            });
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe(
+              '## GraphQLParseFailure\n',
+            );
+          });
+
+          it('sets the trace key to validation failure when invalid operation', async () => {
+            await setupApolloServerAndFetchPair();
+
+            await apolloFetch({
+              query: `{nonExistentField}`,
+            });
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toBe(
+              '## GraphQLValidationFailure\n',
+            );
+          });
+
+          it('sets the trace key to "-" when operationName is undefined', async () => {
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `{justAField}`,
+            });
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+            expect(result.errors).not.toBeDefined();
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
+          });
+
+          it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
+            await setupApolloServerAndFetchPair({}, {}, [
+              {
+                async requestDidStart() {
+                  return {
+                    didResolveOperation() {
+                      throw new Error('known_error');
+                    },
+                  };
+                },
+              },
+            ]);
+
+            const result = await apolloFetch({
+              query: `{ aliasedField: justAField }`,
+            });
+
+            expect(result.errors).toBeDefined();
+            expect(result.errors[0].extensions).toBeDefined();
+            expect(result.errors[0].message).toEqual('known_error');
+
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).not.toEqual(
+              '# -\n{ aliasedField: justAField }',
+            );
+          });
+
+          it("doesn't internal server error on an APQ", async () => {
+            await setupApolloServerAndFetchPair();
+
+            const TEST_STRING_QUERY = `
+              { onlyForThisApqTest${
+                Math.random().toString().split('.')[1]
+              }: justAField }
+            `;
+            const hash = createHash('sha256')
+              .update(TEST_STRING_QUERY)
+              .digest('hex');
+
+            const result = await apolloFetch({
+              extensions: {
+                persistedQuery: {
+                  version: 1,
+                  sha256Hash: hash,
+                },
+              },
+            });
+
+            // Having a persisted query not found error is fine.
+            expect(result.errors).toContainEqual(
+              expect.objectContaining({
+                extensions: expect.objectContaining({
+                  code: 'PERSISTED_QUERY_NOT_FOUND',
+                }),
+              }),
+            );
+
+            // However, having an internal server error is not okay!
+            expect(result.errors).not.toContainEqual(
+              expect.objectContaining({
+                extensions: expect.objectContaining({
+                  code: 'INTERNAL_SERVER_ERROR',
+                }),
+              }),
+            );
+          });
+
+          describe('error munging', () => {
+            describe('rewriteError', () => {
+              it('new error', async () => {
+                throwError.mockImplementationOnce(() => {
+                  throw new Error('rewriteError nope');
+                });
+
+                await setupApolloServerAndFetchPair({
+                  rewriteError: () =>
+                    new GraphQLError('rewritten as a new error'),
+                });
+
+                const result = await apolloFetch({
+                  query: `{fieldWhichWillError}`,
+                });
+                expect(result.data).toEqual({
+                  fieldWhichWillError: null,
+                });
+                expect(result.errors).toBeDefined();
+
+                // The original error message should be sent to the client.
+                expect(result.errors[0].message).toEqual('rewriteError nope');
+                expect(throwError).toHaveBeenCalledTimes(1);
+
+                const reports = await reportIngress.promiseOfReports;
+                expect(reports.length).toBe(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace![0] as Trace;
+                // There should be no error at the root, our error is a child.
+                expect(trace.root!.error).toStrictEqual([]);
+
+                // There should only be one child.
+                expect(trace.root!.child!.length).toBe(1);
+
+                // The child should maintain the path, but have its message
+                // rewritten.
+                expect(trace.root!.child![0].error).toMatchObject([
+                  {
+                    json: '{"message":"rewritten as a new error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                    message: 'rewritten as a new error',
+                    location: [{ column: 2, line: 1 }],
+                  },
+                ]);
+              });
+
+              it('modified error', async () => {
+                throwError.mockImplementationOnce(() => {
+                  throw new Error('rewriteError mod nope');
+                });
+
+                await setupApolloServerAndFetchPair({
+                  rewriteError: (err) => {
+                    err.message = 'rewritten as a modified error';
+                    return err;
+                  },
+                });
+
+                const result = await apolloFetch({
+                  query: `{fieldWhichWillError}`,
+                });
+                expect(result.data).toEqual({
+                  fieldWhichWillError: null,
+                });
+                expect(result.errors).toBeDefined();
+                expect(result.errors[0].message).toEqual(
+                  'rewriteError mod nope',
+                );
+                expect(throwError).toHaveBeenCalledTimes(1);
+
+                const reports = await reportIngress.promiseOfReports;
+                expect(reports.length).toBe(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace![0] as Trace;
+                // There should be no error at the root, our error is a child.
+                expect(trace.root!.error).toStrictEqual([]);
+
+                // There should only be one child.
+                expect(trace.root!.child!.length).toBe(1);
+
+                // The child should maintain the path, but have its message
+                // rewritten.
+                expect(trace.root!.child![0].error).toMatchObject([
+                  {
+                    json: '{"message":"rewritten as a modified error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                    message: 'rewritten as a modified error',
+                    location: [{ column: 2, line: 1 }],
+                  },
+                ]);
+              });
+
+              it('nulled error', async () => {
+                throwError.mockImplementationOnce(() => {
+                  throw new Error('rewriteError null nope');
+                });
+
+                await setupApolloServerAndFetchPair({
+                  rewriteError: () => null,
+                });
+
+                const result = await apolloFetch({
+                  query: `{fieldWhichWillError}`,
+                });
+                expect(result.data).toEqual({
+                  fieldWhichWillError: null,
+                });
+                expect(result.errors).toBeDefined();
+                expect(result.errors[0].message).toEqual(
+                  'rewriteError null nope',
+                );
+                expect(throwError).toHaveBeenCalledTimes(1);
+
+                const reports = await reportIngress.promiseOfReports;
+                expect(reports.length).toBe(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace![0] as Trace;
+
+                // There should be no error at the root, our error is a child.
+                expect(trace.root!.error).toStrictEqual([]);
+
+                // There should only be one child.
+                expect(trace.root!.child!.length).toBe(1);
+
+                // There should be no error in the trace for this property!
+                expect(trace.root!.child![0].error).toStrictEqual([]);
+              });
+            });
+
+            it('undefined error', async () => {
+              throwError.mockImplementationOnce(() => {
+                throw new Error('rewriteError undefined whoops');
+              });
+
+              await setupApolloServerAndFetchPair({
+                rewriteError: () => undefined as any,
+              });
+
+              const result = await apolloFetch({
+                query: `{fieldWhichWillError}`,
+              });
+              expect(result.data).toEqual({
+                fieldWhichWillError: null,
+              });
+              expect(result.errors).toBeDefined();
+              expect(result.errors[0].message).toEqual(
+                'rewriteError undefined whoops',
+              );
+              expect(throwError).toHaveBeenCalledTimes(1);
+
+              const reports = await reportIngress.promiseOfReports;
+              expect(reports.length).toBe(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace![0] as Trace;
+
+              // There should be no error at the root, our error is a child.
+              expect(trace.root!.error).toStrictEqual([]);
+
+              // There should only be one child.
+              expect(trace.root!.child!.length).toBe(1);
+
+              // The child should maintain the path, but have its message
+              // rewritten.
+              expect(trace.root!.child![0].error).toMatchObject([
+                {
+                  json: '{"message":"rewriteError undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                  message: 'rewriteError undefined whoops',
+                  location: [{ column: 2, line: 1 }],
+                },
+              ]);
+            });
+          });
+        });
+      });
 
       it('errors thrown in plugins call formatError and are wrapped', async () => {
         const pluginError = new Error('nope');
@@ -2001,158 +2002,158 @@ export function defineIntegrationTestSuiteApolloServerTests(
       });
     });
 
-    // describe('usage reporting', () => {
-    //   // async function makeFakeUsageReportingServer({
-    //   //   status,
-    //   //   waitWriteResponse = false,
-    //   // }: {
-    //   //   status: number;
-    //   //   waitWriteResponse?: boolean;
-    //   // }) {
-    //   //   const writeResponsePromise = resolvable();
-    //   //   const fakeUsageReportingServer = http.createServer(async (_, res) => {
-    //   //     await writeResponsePromise;
-    //   //     res.writeHead(status);
-    //   //     res.end('Important text in the body');
-    //   //   });
-    //   //   await new Promise<void>((resolve) => {
-    //   //     fakeUsageReportingServer.listen(0, '127.0.0.1', () => {
-    //   //       resolve();
-    //   //     });
-    //   //   });
+    describe('usage reporting', () => {
+      async function makeFakeUsageReportingServer({
+        status,
+        waitWriteResponse = false,
+      }: {
+        status: number;
+        waitWriteResponse?: boolean;
+      }) {
+        const writeResponsePromise = resolvable();
+        const fakeUsageReportingServer = http.createServer(async (_, res) => {
+          await writeResponsePromise;
+          res.writeHead(status);
+          res.end('Important text in the body');
+        });
+        await new Promise<void>((resolve) => {
+          fakeUsageReportingServer.listen(0, '127.0.0.1', () => {
+            resolve();
+          });
+        });
 
-    //   //   async function closeServer() {
-    //   //     await new Promise<void>((resolve) =>
-    //   //       fakeUsageReportingServer.close(() => resolve()),
-    //   //     );
-    //   //   }
+        async function closeServer() {
+          await new Promise<void>((resolve) =>
+            fakeUsageReportingServer.close(() => resolve()),
+          );
+        }
 
-    //   //   const { family, address, port } =
-    //   //     fakeUsageReportingServer.address() as AddressInfo;
-    //   //   // @ts-expect-error until https://github.com/DefinitelyTyped/DefinitelyTyped/pull/60042
-    //   //   if (family !== 'IPv4' && family !== 4) {
-    //   //     throw new Error(`The family was unexpectedly ${family}.`);
-    //   //   }
+        const { family, address, port } =
+          fakeUsageReportingServer.address() as AddressInfo;
+        // @ts-expect-error until https://github.com/DefinitelyTyped/DefinitelyTyped/pull/60042
+        if (family !== 'IPv4' && family !== 4) {
+          throw new Error(`The family was unexpectedly ${family}.`);
+        }
 
-    //   //   const fakeUsageReportingUrl = `http://${address}:${port}`;
+        const fakeUsageReportingUrl = `http://${address}:${port}`;
 
-    //   //   if (!waitWriteResponse) {
-    //   //     writeResponsePromise.resolve();
-    //   //   }
+        if (!waitWriteResponse) {
+          writeResponsePromise.resolve();
+        }
 
-    //   //   return {
-    //   //     closeServer,
-    //   //     fakeUsageReportingUrl,
-    //   //     writeResponseResolve: () => writeResponsePromise.resolve(),
-    //   //   };
-    //   // }
+        return {
+          closeServer,
+          fakeUsageReportingUrl,
+          writeResponseResolve: () => writeResponsePromise.resolve(),
+        };
+      }
 
-    //   // describe('graphql server functions even when Apollo servers are down', () => {
-    //   //   async function testWithStatus(
-    //   //     status: number,
-    //   //     expectedRequestCount: number,
-    //   //   ) {
-    //   //     const networkError = status === 0;
+      describe('graphql server functions even when Apollo servers are down', () => {
+        async function testWithStatus(
+          status: number,
+          expectedRequestCount: number,
+        ) {
+          const networkError = status === 0;
 
-    //   //     const { closeServer, fakeUsageReportingUrl, writeResponseResolve } =
-    //   //       await makeFakeUsageReportingServer({
-    //   //         status,
-    //   //         waitWriteResponse: true,
-    //   //       });
+          const { closeServer, fakeUsageReportingUrl, writeResponseResolve } =
+            await makeFakeUsageReportingServer({
+              status,
+              waitWriteResponse: true,
+            });
 
-    //   //     try {
-    //   //       // To simulate a network error, we create and close the server.
-    //   //       // This lets us still generate a port that is hopefully unused.
-    //   //       if (networkError) {
-    //   //         await closeServer();
-    //   //       }
+          try {
+            // To simulate a network error, we create and close the server.
+            // This lets us still generate a port that is hopefully unused.
+            if (networkError) {
+              await closeServer();
+            }
 
-    //   //       let requestCount = 0;
-    //   //       const requestAgent = new http.Agent({ keepAlive: false });
-    //   //       const realCreateConnection = (requestAgent as any).createConnection;
-    //   //       (requestAgent as any).createConnection = function () {
-    //   //         requestCount++;
-    //   //         return realCreateConnection.apply(this, arguments);
-    //   //       };
+            let requestCount = 0;
+            const requestAgent = new http.Agent({ keepAlive: false });
+            const realCreateConnection = (requestAgent as any).createConnection;
+            (requestAgent as any).createConnection = function () {
+              requestCount++;
+              return realCreateConnection.apply(this, arguments);
+            };
 
-    //   //       let reportErrorPromiseResolve: (error: Error) => void;
-    //   //       const reportErrorPromise = new Promise<Error>(
-    //   //         (resolve) => (reportErrorPromiseResolve = resolve),
-    //   //       );
-    //   //       const uri = await createServerAndGetUrl({
-    //   //         typeDefs: gql`
-    //   //           type Query {
-    //   //             something: String!
-    //   //           }
-    //   //         `,
-    //   //         resolvers: { Query: { something: () => 'hello' } },
-    //   //         apollo: {
-    //   //           key: 'service:my-app:secret',
-    //   //           graphRef: 'my-app@current',
-    //   //         },
-    //   //         plugins: [
-    //   //           ApolloServerPluginUsageReporting({
-    //   //             endpointUrl: fakeUsageReportingUrl,
-    //   //             reportIntervalMs: 1,
-    //   //             maxAttempts: 3,
-    //   //             fetcher: (url, options) =>
-    //   //               fetch(url, { ...options, agent: requestAgent }),
-    //   //             logger: quietLogger,
-    //   //             reportErrorFunction(error: Error) {
-    //   //               reportErrorPromiseResolve(error);
-    //   //             },
-    //   //           }),
-    //   //         ],
-    //   //       });
+            let reportErrorPromiseResolve: (error: Error) => void;
+            const reportErrorPromise = new Promise<Error>(
+              (resolve) => (reportErrorPromiseResolve = resolve),
+            );
+            const uri = await createServerAndGetUrl({
+              typeDefs: gql`
+                type Query {
+                  something: String!
+                }
+              `,
+              resolvers: { Query: { something: () => 'hello' } },
+              apollo: {
+                key: 'service:my-app:secret',
+                graphRef: 'my-app@current',
+              },
+              plugins: [
+                ApolloServerPluginUsageReporting({
+                  endpointUrl: fakeUsageReportingUrl,
+                  reportIntervalMs: 1,
+                  maxAttempts: 3,
+                  fetcher: (url, options) =>
+                    fetch(url, { ...options, agent: requestAgent }),
+                  logger: quietLogger,
+                  reportErrorFunction(error: Error) {
+                    reportErrorPromiseResolve(error);
+                  },
+                }),
+              ],
+            });
 
-    //   //       const apolloFetch = createApolloFetch({ uri });
+            const apolloFetch = createApolloFetch({ uri });
 
-    //   //       // Run a GraphQL query. Ensure that it returns successfully even
-    //   //       // though reporting is going to fail. (Note that reporting can't
-    //   //       // actually have failed yet (except in the network-error case)
-    //   //       // because we haven't let writeResponsePromise resolve.)
-    //   //       const result = await apolloFetch({
-    //   //         query: `{ something }`,
-    //   //       });
-    //   //       expect(result.data.something).toBe('hello');
+            // Run a GraphQL query. Ensure that it returns successfully even
+            // though reporting is going to fail. (Note that reporting can't
+            // actually have failed yet (except in the network-error case)
+            // because we haven't let writeResponsePromise resolve.)
+            const result = await apolloFetch({
+              query: `{ something }`,
+            });
+            expect(result.data.something).toBe('hello');
 
-    //   //       if (!networkError) {
-    //   //         // Allow reporting to return its response (for every retry).
-    //   //         writeResponseResolve();
-    //   //       }
+            if (!networkError) {
+              // Allow reporting to return its response (for every retry).
+              writeResponseResolve();
+            }
 
-    //   //       // Make sure we can get the error from reporting.
-    //   //       const sendingError = await reportErrorPromise;
-    //   //       expect(sendingError).toBeTruthy();
-    //   //       if (networkError) {
-    //   //         expect(sendingError.message).toContain(
-    //   //           'Error sending report to Apollo servers',
-    //   //         );
-    //   //         expect(sendingError.message).toContain('ECONNREFUSED');
-    //   //       } else {
-    //   //         expect(sendingError.message).toBe(
-    //   //           `Error sending report to Apollo servers: HTTP status ${status}, Important text in the body`,
-    //   //         );
-    //   //       }
-    //   //       expect(requestCount).toBe(expectedRequestCount);
-    //   //     } finally {
-    //   //       if (!networkError) {
-    //   //         await closeServer();
-    //   //       }
-    //   //     }
-    //   //   }
+            // Make sure we can get the error from reporting.
+            const sendingError = await reportErrorPromise;
+            expect(sendingError).toBeTruthy();
+            if (networkError) {
+              expect(sendingError.message).toContain(
+                'Error sending report to Apollo servers',
+              );
+              expect(sendingError.message).toContain('ECONNREFUSED');
+            } else {
+              expect(sendingError.message).toBe(
+                `Error sending report to Apollo servers: HTTP status ${status}, Important text in the body`,
+              );
+            }
+            expect(requestCount).toBe(expectedRequestCount);
+          } finally {
+            if (!networkError) {
+              await closeServer();
+            }
+          }
+        }
 
-    //   //   it('with retryable error', async () => {
-    //   //     await testWithStatus(500, 3);
-    //   //   });
-    //   //   it('with network error', async () => {
-    //   //     await testWithStatus(0, 3);
-    //   //   });
-    //   //   it('with non-retryable error', async () => {
-    //   //     await testWithStatus(400, 1);
-    //   //   });
-    //   // });
-    // });
+        it('with retryable error', async () => {
+          await testWithStatus(500, 3);
+        });
+        it('with network error', async () => {
+          await testWithStatus(0, 3);
+        });
+        it('with non-retryable error', async () => {
+          await testWithStatus(400, 1);
+        });
+      });
+    });
 
     describe('Federated tracing', () => {
       // Enable federated tracing by pretending to be federated.
@@ -2282,46 +2283,46 @@ export function defineIntegrationTestSuiteApolloServerTests(
         }
       });
 
-      // it('includes errors in federated trace', async () => {
-      //   const uri = await createServerAndGetUrl({
-      //     typeDefs: allTypeDefs,
-      //     resolvers,
-      //     formatError(err) {
-      //       return {
-      //         ...err,
-      //         message: `Formatted: ${err.message}`,
-      //       };
-      //     },
-      //     plugins: [
-      //       ApolloServerPluginInlineTrace({
-      //         rewriteError(err) {
-      //           err.message = `Rewritten for Usage Reporting: ${err.message}`;
-      //           return err;
-      //         },
-      //       }),
-      //     ],
-      //   });
+      it('includes errors in federated trace', async () => {
+        const uri = await createServerAndGetUrl({
+          typeDefs: allTypeDefs,
+          resolvers,
+          formatError(err) {
+            return {
+              ...err,
+              message: `Formatted: ${err.message}`,
+            };
+          },
+          plugins: [
+            ApolloServerPluginInlineTrace({
+              rewriteError(err) {
+                err.message = `Rewritten for Usage Reporting: ${err.message}`;
+                return err;
+              },
+            }),
+          ],
+        });
 
-      //   const apolloFetch = createApolloFetchAsIfFromGateway(uri);
+        const apolloFetch = createApolloFetchAsIfFromGateway(uri);
 
-      //   const result = await apolloFetch({
-      //     query: `{ error }`,
-      //   });
+        const result = await apolloFetch({
+          query: `{ error }`,
+        });
 
-      //   expect(result.data).toStrictEqual({ error: null });
-      //   expect(result.errors).toBeTruthy();
-      //   expect(result.errors.length).toBe(1);
-      //   expect(result.errors[0].message).toBe('Formatted: It broke');
+        expect(result.data).toStrictEqual({ error: null });
+        expect(result.errors).toBeTruthy();
+        expect(result.errors.length).toBe(1);
+        expect(result.errors[0].message).toBe('Formatted: It broke');
 
-      //   const ftv1: string = result.extensions.ftv1;
+        const ftv1: string = result.extensions.ftv1;
 
-      //   expect(ftv1).toBeTruthy();
-      //   const encoded = Buffer.from(ftv1, 'base64');
-      //   const trace = Trace.decode(encoded);
-      //   expect(trace.root!.child![0].error![0].message).toBe(
-      //     'Rewritten for Usage Reporting: It broke',
-      //   );
-      // });
+        expect(ftv1).toBeTruthy();
+        const encoded = Buffer.from(ftv1, 'base64');
+        const trace = Trace.decode(encoded);
+        expect(trace.root!.child![0].error![0].message).toBe(
+          'Rewritten for Usage Reporting: It broke',
+        );
+      });
     });
 
     describe('Gateway', () => {
@@ -2385,38 +2386,38 @@ export function defineIntegrationTestSuiteApolloServerTests(
         },
       );
 
-      // it('passes apollo data to the gateway', async () => {
-      //   const optionsSpy = jest.fn();
+      it('passes apollo data to the gateway', async () => {
+        const optionsSpy = jest.fn();
 
-      //   const { gateway } = makeGatewayMock({
-      //     schema,
-      //     executor: async () => ({}),
-      //     optionsSpy,
-      //   });
-      //   const { server } = await createServer({
-      //     gateway,
-      //     apollo: {
-      //       key: 'service:tester:1234abc',
-      //       graphRef: 'tester@staging',
-      //     },
-      //     logger: quietLogger,
-      //     plugins: [ApolloServerPluginUsageReportingDisabled()],
-      //   });
+        const { gateway } = makeGatewayMock({
+          schema,
+          executor: async () => ({}),
+          optionsSpy,
+        });
+        const { server } = await createServer({
+          gateway,
+          apollo: {
+            key: 'service:tester:1234abc',
+            graphRef: 'tester@staging',
+          },
+          logger: quietLogger,
+          plugins: [ApolloServerPluginUsageReportingDisabled()],
+        });
 
-      //   expect(optionsSpy).toHaveBeenLastCalledWith({
-      //     apollo: {
-      //       key: 'service:tester:1234abc',
-      //       keyHash:
-      //         '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',
-      //       graphRef: 'tester@staging',
-      //     },
-      //   });
+        expect(optionsSpy).toHaveBeenLastCalledWith({
+          apollo: {
+            key: 'service:tester:1234abc',
+            keyHash:
+              '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',
+            graphRef: 'tester@staging',
+          },
+        });
 
-      //   // Executing an operation ensures that (even if
-      //   // serverIsStartedInBackground) startup completes, so that we can
-      //   // legally call stop().
-      //   await server.executeOperation({ query: '{__typename}' });
-      // });
+        // Executing an operation ensures that (even if
+        // serverIsStartedInBackground) startup completes, so that we can
+        // legally call stop().
+        await server.executeOperation({ query: '{__typename}' });
+      });
 
       it('unsubscribes from schema update on close', async () => {
         const unsubscribeSpy = jest.fn();
@@ -2602,46 +2603,46 @@ export function defineIntegrationTestSuiteApolloServerTests(
         );
       });
 
-      // it('can specify version for LocalDefault', async () => {
-      //   url = (
-      //     await createServer({
-      //       typeDefs: 'type Query {x: ID}',
-      //       plugins: [
-      //         ApolloServerPluginLandingPageLocalDefault({ version: 'abcdef' }),
-      //       ],
-      //     })
-      //   ).url;
-      //   await get().expect(
-      //     200,
-      //     /embeddable-sandbox.cdn.apollographql.com\/abcdef\/embeddable-sandbox.umd.production.min.js/s,
-      //   );
-      // });
+      it('can specify version for LocalDefault', async () => {
+        url = (
+          await createServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [
+              ApolloServerPluginLandingPageLocalDefault({ version: 'abcdef' }),
+            ],
+          })
+        ).url;
+        await get().expect(
+          200,
+          /embeddable-sandbox.cdn.apollographql.com\/abcdef\/embeddable-sandbox.umd.production.min.js/s,
+        );
+      });
 
-      // it('can install playground with specific version', async () => {
-      //   url = (
-      //     await createServer({
-      //       typeDefs: 'type Query {x: ID}',
-      //       plugins: [
-      //         ApolloServerPluginLandingPageGraphQLPlayground({
-      //           version: '9.8.7',
-      //         }),
-      //       ],
-      //     })
-      //   ).url;
-      //   await get()
-      //     .expect(/Playground/)
-      //     .expect(/react@9\.8\.7/);
-      // });
+      it('can install playground with specific version', async () => {
+        url = (
+          await createServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [
+              ApolloServerPluginLandingPageGraphQLPlayground({
+                version: '9.8.7',
+              }),
+            ],
+          })
+        ).url;
+        await get()
+          .expect(/Playground/)
+          .expect(/react@9\.8\.7/);
+      });
 
-      // it('can be disabled', async () => {
-      //   url = (
-      //     await createServer({
-      //       typeDefs: 'type Query {x: ID}',
-      //       plugins: [ApolloServerPluginLandingPageDisabled()],
-      //     })
-      //   ).url;
-      //   await get().expect(serveNoLandingPage);
-      // });
+      it('can be disabled', async () => {
+        url = (
+          await createServer({
+            typeDefs: 'type Query {x: ID}',
+            plugins: [ApolloServerPluginLandingPageDisabled()],
+          })
+        ).url;
+        await get().expect(serveNoLandingPage);
+      });
 
       describe('basic functionality', () => {
         beforeEach(async () => {
