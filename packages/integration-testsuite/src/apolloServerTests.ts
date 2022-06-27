@@ -1,4 +1,4 @@
-import type http from 'http';
+import http from 'http';
 import { createHash } from '@apollo/utils.createhash';
 import { URL } from 'url';
 import express from 'express';
