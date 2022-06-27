@@ -75,7 +75,7 @@ import {
 import type { Mock } from 'jest-mock';
 
 const quietLogger = loglevel.getLogger('quiet');
-export function mockLogger() {
+function mockLogger() {
   return {
     debug: jest.fn(),
     info: jest.fn(),
