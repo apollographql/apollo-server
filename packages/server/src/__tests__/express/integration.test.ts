@@ -8,10 +8,7 @@ import { ApolloServerPluginDrainHttpServer } from '../../plugin/drainHttpServer'
 import { urlForHttpServer } from '../../utils/urlForHttpServer';
 import { defineIntegrationTestSuite } from '@apollo/server-integration-testsuite';
 
-defineIntegrationTestSuite(async function (
-  serverOptions,
-  testOptions,
-) {
+defineIntegrationTestSuite(async function (serverOptions, testOptions) {
   const app = express();
   const httpServer = http.createServer(app);
   const server = new ApolloServer({

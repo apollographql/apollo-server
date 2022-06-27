@@ -5,10 +5,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import loglevel from 'loglevel';
 
-import {
-  Report,
-  Trace
-} from '@apollo/usage-reporting-protobuf';
+import { Report, Trace } from '@apollo/usage-reporting-protobuf';
 
 import {
   GraphQLSchema,
@@ -27,7 +24,11 @@ import { execute } from '@apollo/client/link/core';
 import { createHttpLink } from '@apollo/client/link/http';
 import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 
-import { createApolloFetch, ApolloFetch, ParsedResponse } from './apolloFetch';
+import {
+  createApolloFetch,
+  ApolloFetch,
+  ParsedResponse,
+} from './apolloFetch.js';
 import {
   AuthenticationError,
   UserInputError,
