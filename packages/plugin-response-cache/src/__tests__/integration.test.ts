@@ -95,19 +95,19 @@ describe('Response caching', () => {
       cache: fakeTTLCache,
       plugins: [
         ApolloServerPluginResponseCache({
-          sessionId: (requestContext: GraphQLRequestContext<any>) => {
+          async sessionId(requestContext: GraphQLRequestContext<any>) {
             return (
               requestContext.request.http!.headers.get('session-id') || null
             );
           },
-          extraCacheKeyData: (requestContext: GraphQLRequestContext<any>) => {
+          async extraCacheKeyData(requestContext: GraphQLRequestContext<any>) {
             return (
               requestContext.request.http!.headers.get(
                 'extra-cache-key-data',
               ) || null
             );
           },
-          shouldReadFromCache: (requestContext: GraphQLRequestContext<any>) => {
+          async shouldReadFromCache(requestContext: GraphQLRequestContext<any>) {
             if (requestContext.request.http!.headers.get('no-read-from-cache'))
               return false;
 
@@ -121,7 +121,7 @@ describe('Response caching', () => {
 
             return true;
           },
-          shouldWriteToCache: (requestContext: GraphQLRequestContext<any>) => {
+          async shouldWriteToCache(requestContext: GraphQLRequestContext<any>) {
             if (requestContext.request.http!.headers.get('no-write-to-cache'))
               return false;
 

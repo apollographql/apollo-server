@@ -12,7 +12,6 @@ import {
   PrefixingKeyValueCache,
 } from '@apollo/utils.keyvaluecache';
 
-type ValueOrPromise<T> = T | Promise<T>;
 interface Options<TContext = Record<string, any>> {
   // Underlying cache used to save results. All writes will be under keys that
   // start with 'fqc:' and are followed by a fixed-size cryptographic hash of a
@@ -22,28 +21,29 @@ interface Options<TContext = Record<string, any>> {
   // (ie, the cache passed to the ApolloServer constructor).
   cache?: KeyValueCache;
 
-  // Define this hook if you're setting any cache hints with scope PRIVATE.
-  // This should return a session ID if the user is "logged in", or null if
-  // there is no "logged in" user.
+  // Define this hook if you're setting any cache hints with scope PRIVATE. This
+  // should return a session ID if the user is "logged in", or null if there is
+  // no "logged in" user.
   //
   // If a cacheable response has any PRIVATE nodes, then:
-  // - If this hook is not defined, a warning will be logged and it will not be cached.
+  // - If this hook is not defined, a warning will be logged and it will not be
+  //   cached.
   // - Else if this hook returns null, it will not be cached.
   // - Else it will be cached under a cache key tagged with the session ID and
   //   mode "private".
   //
   // If a cacheable response has no PRIVATE nodes, then:
-  // - If this hook is not defined or returns null, it will be cached under a cache
-  //   key tagged with the mode "no session".
+  // - If this hook is not defined or returns null, it will be cached under a
+  //   cache key tagged with the mode "no session".
   // - Else it will be cached under a cache key tagged with the mode
   //   "authenticated public".
   //
   // When reading from the cache:
-  // - If this hook is not defined or returns null, look in the cache under a cache
-  //   key tagged with the mode "no session".
-  // - Else look in the cache under a cache key tagged with the session ID and the
-  //   mode "private". If no response is found in the cache, then look under a cache
-  //   key tagged with the mode "authenticated public".
+  // - If this hook is not defined or returns null, look in the cache under a
+  //   cache key tagged with the mode "no session".
+  // - Else look in the cache under a cache key tagged with the session ID and
+  //   the mode "private". If no response is found in the cache, then look under
+  //   a cache key tagged with the mode "authenticated public".
   //
   // This allows the cache to provide different "public" results to anonymous
   // users and logged in users ("no session" vs "authenticated public").
@@ -54,9 +54,13 @@ interface Options<TContext = Record<string, any>> {
   //
   // This hook may return a promise because, for example, you might need to
   // validate a cookie against an external service.
+  //
+  // Note: this hook has been updated in Apollo Server v4 to only return a
+  // Promise. This function should always be `await`ed, that way non-TS users
+  // won't experience a breakage (we can await Promises as well as values).
   sessionId?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): ValueOrPromise<string | null>;
+  ): Promise<string | null>;
 
   // Define this hook if you want the cache key to vary based on some aspect of
   // the request other than the query document, operation name, variables, and
@@ -64,21 +68,33 @@ interface Options<TContext = Record<string, any>> {
   // to return a string derived from
   // requestContext.request.http.headers.get('Accept-Language'). The data may
   // be anything that can be JSON-stringified.
+  //
+  // Note: this hook has been updated in Apollo Server v4 to only return a
+  // Promise. This function should always be `await`ed, that way non-TS users
+  // won't experience a breakage (we can await Promises as well as values).
   extraCacheKeyData?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): ValueOrPromise<any>;
+  ): Promise<any>;
 
   // If this hook is defined and returns false, the plugin will not read
   // responses from the cache.
+  //
+  // Note: this hook has been updated in Apollo Server v4 to only return a
+  // Promise. This function should always be `await`ed, that way non-TS users
+  // won't experience a breakage (we can await Promises as well as values).
   shouldReadFromCache?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): ValueOrPromise<boolean>;
+  ): Promise<boolean>;
 
   // If this hook is defined and returns false, the plugin will not write the
   // response to the cache.
+  //
+  // Note: this hook has been updated in Apollo Server v4 to only return a
+  // Promise. This function should always be `await`ed, that way non-TS users
+  // won't experience a breakage (we can await Promises as well as values).
   shouldWriteToCache?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): ValueOrPromise<boolean>;
+  ): Promise<boolean>;
 }
 
 enum SessionMode {
