@@ -87,6 +87,7 @@
     "jest": "28.1.1",
     "jest-config": "28.1.1",
     "jest-junit": "13.2.0",
+    "jest-mock": "28.1.1",
     "jest-mock-random": "1.1.1",
     "lodash.sumby": "4.6.0",
     "nock": "13.2.7",

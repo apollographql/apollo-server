@@ -1,16 +1,8 @@
 import { ApolloServer } from '../..';
-import type { ApolloServerOptions, BaseContext } from '../..';
 import { startStandaloneServer } from '../../standalone';
-import type {
-  CreateServerForIntegrationTestsOptions,
-  CreateServerForIntegrationTestsResult,
-} from '../integration';
-import { defineIntegrationTestSuite } from '../integration';
+import { defineIntegrationTestSuite } from '@apollo/server-integration-testsuite';
 
-defineIntegrationTestSuite(async function (
-  serverOptions: ApolloServerOptions<BaseContext>,
-  testOptions?: CreateServerForIntegrationTestsOptions,
-): Promise<CreateServerForIntegrationTestsResult> {
+defineIntegrationTestSuite(async function (serverOptions, testOptions) {
   const opts = testOptions ? { context: testOptions.context } : undefined;
   const server = new ApolloServer(serverOptions);
   const { url } = await startStandaloneServer(server, {
