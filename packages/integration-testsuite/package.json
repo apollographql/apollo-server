@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server-integration-testsuite",
-  "version": "4.0.0",
+  "version": "3.6.7",
   "description": "Test suite for Apollo Server integrations",
   "type": "module",
   "main": "dist/index.js",
