@@ -1,22 +1,36 @@
-import { ApolloServer, GraphQLRequest, GraphQLRequestContext } from '@apollo/server';
+import {
+  ApolloServer,
+  GraphQLRequest,
+  GraphQLRequestContext,
+} from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import FakeTimers from '@sinonjs/fake-timers';
 import ApolloServerPluginResponseCache from '../index.js';
 import request, { type Response } from 'supertest';
 
 describe('Response caching', () => {
-  let clock: FakeTimers.InstalledClock;
   beforeAll(() => {
-    // These tests use the default InMemoryLRUCache, which is backed by the
-    // lru-cache npm module, whose maxAge feature is based on `Date.now()`
-    // (no setTimeout or anything like that). So we want to use fake timers
-    // just for Date. (Faking all the timer methods messes up things like a
-    // setImmediate in ApolloServerPluginDrainHttpServer.)
-    clock = FakeTimers.install({ toFake: ['Date'] });
+    jest.useFakeTimers({
+      doNotFake: [
+        'hrtime',
+        'nextTick',
+        'performance',
+        'queueMicrotask',
+        'requestAnimationFrame',
+        'cancelAnimationFrame',
+        'requestIdleCallback',
+        'cancelIdleCallback',
+        'setImmediate',
+        'clearImmediate',
+        'setInterval',
+        'clearInterval',
+        'setTimeout',
+        'clearTimeout',
+      ],
+    });
   });
 
   afterAll(() => {
-    clock.uninstall();
+    jest.useRealTimers();
   });
 
   it('basic caching', async () => {
@@ -73,9 +87,12 @@ describe('Response caching', () => {
       };
     });
 
+    const fakeTTLCache = new FakeableTTLTestingCache();
+
     const server = new ApolloServer({
       typeDefs,
       resolvers,
+      cache: fakeTTLCache,
       plugins: [
         ApolloServerPluginResponseCache({
           sessionId: (requestContext: GraphQLRequestContext<any>) => {
@@ -136,13 +153,13 @@ describe('Response caching', () => {
         .type('application/json')
         .set(opts?.headers ?? {})
         .send({ query: opts?.query ?? basicQuery });
-      expect(result.body.data.cached).toBe('value:cached');
       return result;
     }
 
     // Cache miss
     {
       const result = await fetch();
+      expect(result.body.data.cached).toBe('value:cached');
       expectCacheMiss('cached');
       expect(httpHeader(result, 'cache-control')).toBe('max-age=10, public');
       expect(httpHeader(result, 'age')).toBe(null);
@@ -151,24 +168,27 @@ describe('Response caching', () => {
     // Cache hit
     {
       const result = await fetch();
+      expect(result.body.data.cached).toBe('value:cached');
       expectCacheHit('cached');
       expect(httpHeader(result, 'cache-control')).toBe('max-age=10, public');
       expect(httpHeader(result, 'age')).toBe('0');
     }
 
     // Cache hit partway to ttl.
-    clock.tick(5 * 1000);
+    jest.advanceTimersByTime(5 * 1000);
     {
       const result = await fetch();
+      expect(result.body.data.cached).toBe('value:cached');
       expectCacheHit('cached');
       expect(httpHeader(result, 'cache-control')).toBe('max-age=10, public');
       expect(httpHeader(result, 'age')).toBe('5');
     }
 
     // Cache miss after ttl.
-    clock.tick(6 * 1000);
+    jest.advanceTimersByTime(6 * 1000);
     {
       const result = await fetch();
+      expect(result.body.data.cached).toBe('value:cached');
       expectCacheMiss('cached');
       expect(httpHeader(result, 'cache-control')).toBe('max-age=10, public');
       expect(httpHeader(result, 'age')).toBe(null);
@@ -176,27 +196,27 @@ describe('Response caching', () => {
 
     // Cache hit async
     {
-      await fetch({
-        query: '{asyncCached}',
-      });
+      const result = await fetch({ query: '{asyncCached}' });
+      expect(result.body.data.asyncCached).toBe('value:asyncCached');
       expectCacheMiss('asyncCached');
+    }
 
-      await fetch({
-        query: '{asyncCached}',
-      });
+    {
+      const result = await fetch({ query: '{asyncCached}' });
+      expect(result.body.data.asyncCached).toBe('value:asyncCached');
       expectCacheHit('asyncCached');
     }
 
     // Cache Miss async
     {
-      await fetch({
-        query: '{asyncUncached}',
-      });
+      const result = await fetch({ query: '{asyncUncached}' });
+      expect(result.body.data.asyncUncached).toBe('value:asyncUncached');
       expectCacheMiss('asyncUncached');
+    }
 
-      await fetch({
-        query: '{asyncUncached}',
-      });
+    {
+      const result = await fetch({ query: '{asyncUncached}' });
+      expect(result.body.data.asyncUncached).toBe('value:asyncUncached');
       expectCacheMiss('asyncUncached');
     }
 
@@ -415,7 +435,7 @@ describe('Response caching', () => {
     }
 
     // Let's expire the cache, and run again, not writing to the cache.
-    clock.tick(15 * 1000);
+    jest.advanceTimersByTime(15 * 1000);
     {
       const result = await fetch({
         query: basicQuery,
@@ -439,3 +459,37 @@ describe('Response caching', () => {
     await server.stop();
   });
 });
+
+class FakeableTTLTestingCache {
+  constructor(
+    private cache: Map<
+      string,
+      { value: string; deadline: number | null }
+    > = new Map(),
+  ) {}
+
+  async get(key: string) {
+    const entry = this.cache.get(key);
+    if (!entry) return undefined;
+    if (entry.deadline && entry.deadline <= Date.now()) {
+      await this.delete(key);
+      return undefined;
+    }
+    return entry.value;
+  }
+
+  async set(
+    key: string,
+    value: string,
+    { ttl }: { ttl: number | null } = { ttl: null },
+  ) {
+    this.cache.set(key, {
+      value,
+      deadline: ttl ? Date.now() + ttl * 1000 : null,
+    });
+  }
+
+  async delete(key: string) {
+    this.cache.delete(key);
+  }
+}
