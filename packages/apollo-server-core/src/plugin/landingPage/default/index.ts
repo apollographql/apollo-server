@@ -142,7 +142,11 @@ id="embeddableSandbox"
     target: '#embeddableSandbox',
     initialEndpoint,
     includeCookies: ${config.includeCookies ?? 'false'},
-    initialState: ${config},
+    initialState: ${JSON.stringify({
+      document: config.document ?? undefined,
+      variables: config.variables ?? undefined,
+      headers: config.headers ?? undefined,
+    })},
   });
 </script>
 `;
