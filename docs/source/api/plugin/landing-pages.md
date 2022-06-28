@@ -124,7 +124,7 @@ If you omit this, the Explorer initially loads an example query based on your sc
 
 ###### `variables`
 
-`Record<string, string>`
+`Record<string, string | Record>`
 </td>
 <td>
 
@@ -274,7 +274,7 @@ If you omit this, the Explorer initially loads an example query based on your sc
 
 ###### `variables`
 
-`Record<string, string>`
+`Record<string, string | Record>`
 </td>
 <td>
 
