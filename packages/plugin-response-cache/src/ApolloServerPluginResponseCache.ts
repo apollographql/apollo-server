@@ -12,7 +12,7 @@ import {
   PrefixingKeyValueCache,
 } from '@apollo/utils.keyvaluecache';
 
-interface Options<TContext = Record<string, any>> {
+export interface ApolloServerPluginResponseCacheOptions<TContext extends BaseContext> {
   // Underlying cache used to save results. All writes will be under keys that
   // start with 'fqc:' and are followed by a fixed-size cryptographic hash of a
   // JSON object with keys representing the query document, operation name,
@@ -146,7 +146,7 @@ function isGraphQLQuery(requestContext: GraphQLRequestContext<any>) {
 }
 
 export default function plugin<TContext extends BaseContext>(
-  options: Options = Object.create(null),
+  options: ApolloServerPluginResponseCacheOptions<TContext> = Object.create(null),
 ): ApolloServerPlugin<TContext> {
   return {
     async requestDidStart(
