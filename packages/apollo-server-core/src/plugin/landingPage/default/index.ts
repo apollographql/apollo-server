@@ -142,6 +142,7 @@ id="embeddableSandbox"
     target: '#embeddableSandbox',
     initialEndpoint,
     includeCookies: ${config.includeCookies ?? 'false'},
+    initialState: ${config},
   });
 </script>
 `;
