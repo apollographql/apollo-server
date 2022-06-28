@@ -107,7 +107,9 @@ describe('Response caching', () => {
               ) || null
             );
           },
-          async shouldReadFromCache(requestContext: GraphQLRequestContext<any>) {
+          async shouldReadFromCache(
+            requestContext: GraphQLRequestContext<any>,
+          ) {
             if (requestContext.request.http!.headers.get('no-read-from-cache'))
               return false;
 
