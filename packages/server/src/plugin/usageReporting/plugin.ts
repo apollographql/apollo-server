@@ -464,7 +464,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         //   - PersistedQueryNotSupportedError
         //   - Missing `query` error
         // We may want to report them some other way later!
-        let didResolveSource: boolean = false;
+        let didResolveSource = false;
 
         return {
           async didResolveSource(requestContext) {

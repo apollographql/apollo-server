@@ -58,6 +58,13 @@ jobs:
       - setup-node
       - run: npm run prettier-check
 
+  ESLint:
+    docker:
+    - image: cimg/base:stable
+    steps:
+      - setup-node
+      - run: npm run lint
+
   Spell check:
     docker:
     - image: cimg/base:stable
@@ -96,5 +103,6 @@ workflows:
                 - "18"
       - "Check for FIXM\x45"
       - Prettier
+      - ESLint
       - Spell check
       - Smoke test built package
