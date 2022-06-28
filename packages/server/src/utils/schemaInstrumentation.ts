@@ -79,7 +79,7 @@ function wrapField<TContext extends BaseContext>(
       originalFieldResolve || userFieldResolver || defaultFieldResolver;
 
     try {
-      let result = fieldResolver(source, args, contextValue, info);
+      const result = fieldResolver(source, args, contextValue, info);
 
       // Call the stack's handlers either immediately (if result is not a
       // Promise) or once the Promise is done. Then return that same

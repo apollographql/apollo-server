@@ -65,7 +65,7 @@ export class Stopper {
     );
   }
 
-  async stop(stopGracePeriodMillis: number = Infinity): Promise<boolean> {
+  async stop(stopGracePeriodMillis = Infinity): Promise<boolean> {
     let gracefully = true;
 
     // In the off-chance that we are calling `stop` directly from within the

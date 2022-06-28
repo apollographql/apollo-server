@@ -9,19 +9,19 @@ export type {
   CacheHint,
   CachePolicy,
   CacheScope,
-} from './cacheControl';
-export type { BaseContext, ContextFunction, ContextThunk } from './context';
+} from './cacheControl.js';
+export type { BaseContext, ContextFunction, ContextThunk } from './context.js';
 export type {
   GraphQLRequest,
   GraphQLRequestContext,
   GraphQLRequestMetrics,
   GraphQLResponse,
-} from './graphql';
+} from './graphql.js';
 export type {
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
   HTTPGraphQLHead,
-} from './http';
+} from './http.js';
 export type {
   ApolloServerPlugin,
   GraphQLFieldResolverParams,
@@ -36,7 +36,7 @@ export type {
   GraphQLServerContext,
   LandingPage,
   PluginDefinition,
-} from './plugins';
+} from './plugins.js';
 export type {
   GraphQLExecutor,
   GraphQLRequestContextDidEncounterErrors,
@@ -47,7 +47,7 @@ export type {
   GraphQLRequestContextResponseForOperation,
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextWillSendResponse,
-} from './requestPipeline';
+} from './requestPipeline.js';
 export type {
   Unsubscriber,
   SchemaLoadOrUpdateCallback,
@@ -59,4 +59,4 @@ export type {
   PersistedQueryOptions,
   CSRFPreventionOptions,
   ApolloServerOptions,
-} from './constructor';
+} from './constructor.js';

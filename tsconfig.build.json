@@ -5,7 +5,8 @@
   "files": [],
   "include": [],
   "references": [
+    { "path": "./packages/integration-testsuite/" },
     { "path": "./packages/plugin-response-cache" },
-    { "path": "./packages/server" }
+    { "path": "./packages/server" },
   ]
 }

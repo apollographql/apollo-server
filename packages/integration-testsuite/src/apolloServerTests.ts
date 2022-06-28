@@ -24,7 +24,11 @@ import { execute } from '@apollo/client/link/core';
 import { createHttpLink } from '@apollo/client/link/http';
 import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 
-import { createApolloFetch, ApolloFetch, ParsedResponse } from './apolloFetch';
+import {
+  createApolloFetch,
+  ApolloFetch,
+  ParsedResponse,
+} from './apolloFetch.js';
 import {
   AuthenticationError,
   UserInputError,
@@ -36,7 +40,7 @@ import {
   GraphQLExecutor,
   GraphQLRequestContextExecutionDidStart,
   PluginDefinition,
-} from '../..';
+} from '@apollo/server';
 import fetch from 'node-fetch';
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
@@ -48,21 +52,38 @@ import type {
   CreateServerForIntegrationTestsOptions,
   CreateServerForIntegrationTestsResult,
 } from '.';
-import { mockLogger } from '../mockLogger';
 import gql from 'graphql-tag';
 import {
   ApolloServerPluginUsageReportingOptions,
   ApolloServerPluginUsageReporting,
-} from '../../plugin/usageReporting';
-import { ApolloServerPluginInlineTrace } from '../../plugin/inlineTrace';
+} from '@apollo/server/plugin/usageReporting';
+import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
 import {
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginUsageReportingDisabled,
-} from '../../plugin/disabled';
-import { ApolloServerPluginLandingPageLocalDefault } from '../../plugin/landingPage/default';
-import { ApolloServerPluginLandingPageGraphQLPlayground } from '../../plugin/landingPage/graphqlPlayground';
+} from '@apollo/server/plugin/disabled';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server/plugin/landingPage/graphqlPlayground';
+import {
+  jest,
+  describe,
+  expect,
+  beforeEach,
+  afterEach,
+  it,
+} from '@jest/globals';
+import type { Mock } from 'jest-mock';
 
 const quietLogger = loglevel.getLogger('quiet');
+function mockLogger() {
+  return {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+}
+
 quietLogger.setLevel(loglevel.levels.WARN);
 
 const INTROSPECTION_QUERY = `
@@ -440,7 +461,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         });
 
         it("accepts a gateway's schema and calls its executor", async () => {
-          const executor = jest.fn();
+          const executor = jest.fn<GraphQLExecutor<{}>>();
           executor.mockReturnValue(
             Promise.resolve({ data: { testString: 'hi - but federated!' } }),
           );
@@ -942,11 +963,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
         });
 
         afterEach((done) => {
-          (reportIngress.stop() || Promise.resolve()).then(done);
+          (reportIngress.stop() || Promise.resolve()).then(() => done());
         });
 
         describe('traces', () => {
-          let throwError: jest.Mock;
+          let throwError: Mock;
           let apolloFetch: ApolloFetch;
 
           beforeEach(async () => {
@@ -1409,7 +1430,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           };
         });
         const logger = mockLogger();
-        const unexpectedErrorProcessingRequest = jest.fn();
+        const unexpectedErrorProcessingRequest = jest.fn<() => Promise<void>>();
         const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
@@ -1452,9 +1473,13 @@ export function defineIntegrationTestSuiteApolloServerTests(
           'Unexpected error processing request: Error: nope',
         );
         expect(unexpectedErrorProcessingRequest).toHaveBeenCalledTimes(1);
-        expect(
-          unexpectedErrorProcessingRequest.mock.calls[0][0].error,
-        ).toMatchInlineSnapshot(`[Error: nope]`);
+        expect(unexpectedErrorProcessingRequest).toHaveBeenCalledWith(
+          expect.objectContaining({
+            error: expect.objectContaining({
+              message: 'nope',
+            }),
+          }),
+        );
       });
 
       describe('context field', () => {
@@ -1637,7 +1662,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 },
               },
             };
-            const contextCreationDidFail = jest.fn();
+            const contextCreationDidFail = jest.fn<() => Promise<void>>();
             const uri = await createServerAndGetUrl(
               {
                 typeDefs,
@@ -1934,29 +1959,47 @@ export function defineIntegrationTestSuiteApolloServerTests(
         }
       });
 
-      it('returns correct result for persisted query link', (done) => {
+      it('returns correct result for persisted query link', async () => {
         const variables = { id: 1 };
         const link = createPersistedQueryLink({
           sha256: (query) => createHash('sha256').update(query).digest('hex'),
         }).concat(createHttpLink({ uri, fetch } as any));
 
-        execute(link, { query, variables } as any).subscribe((result) => {
-          expect(result.data).toEqual({ testString: 'test string' });
-          done();
-        }, done.fail);
+        const promise = resolvable();
+        execute(link, {
+          query,
+          variables,
+        }).subscribe(
+          (result) => {
+            expect(result.data).toEqual({ testString: 'test string' });
+            promise.resolve();
+          },
+          // onerror
+          () => expect(false).toBe(true),
+        );
+        await promise;
+        expect.assertions(1);
       });
 
-      it('returns correct result for persisted query link using get request', (done) => {
+      it('returns correct result for persisted query link using get request', async () => {
         const variables = { id: 1 };
         const link = createPersistedQueryLink({
           sha256: (query) => createHash('sha256').update(query).digest('hex'),
           useGETForHashedQueries: true,
         }).concat(createHttpLink({ uri, fetch } as any));
 
-        execute(link, { query, variables } as any).subscribe((result) => {
-          expect(result.data).toEqual({ testString: 'test string' });
-          done();
-        }, done.fail);
+        const promise = resolvable();
+        execute(link, { query, variables } as any).subscribe(
+          (result) => {
+            expect(result.data).toEqual({ testString: 'test string' });
+            promise.resolve();
+          },
+          //onerror
+          () => expect(false).toBe(true),
+        );
+
+        await promise;
+        expect.assertions(1);
       });
     });
 
@@ -2521,7 +2564,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         return request(url).get('/');
       }
 
-      function get(accept: string = 'text/html') {
+      function get(accept = 'text/html') {
         return getWithoutAcceptHeader().set('accept', accept);
       }
 

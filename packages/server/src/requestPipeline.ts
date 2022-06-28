@@ -57,7 +57,7 @@ function computeQueryHash(query: string) {
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
-function isBadUserInputGraphQLError(error: GraphQLError): Boolean {
+function isBadUserInputGraphQLError(error: GraphQLError): boolean {
   return (
     error.nodes?.length === 1 &&
     error.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
