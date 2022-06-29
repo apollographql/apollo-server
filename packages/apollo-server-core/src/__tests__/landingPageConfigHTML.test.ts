@@ -1,4 +1,7 @@
-import { getEmbeddedExplorerHTML, getEmbeddedSandboxHTML } from '../plugin/landingPage/default/index';
+import {
+  getEmbeddedExplorerHTML,
+  getEmbeddedSandboxHTML,
+} from '../plugin/landingPage/default/index';
 
 const version = '_latest';
 
@@ -12,7 +15,7 @@ describe('Landing Page Config HTML', () => {
           a: 'val',
           b: 1,
           c: true,
-        }
+        },
       },
       headers: { authorization: 'true' },
       embed: {
@@ -23,7 +26,7 @@ describe('Landing Page Config HTML', () => {
         },
         persistExplorerState: true,
       },
-      graphRef: 'acephei@current'
+      graphRef: 'graph@current',
     };
     const expected = `
 <style>
@@ -38,7 +41,7 @@ id="embeddableExplorer"
 <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js"></script>
 <script>
   var endpointUrl = window.location.href;
-  var embeddedExplorerConfig = {"includeCookies":true,"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"embed":{"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"},"persistExplorerState":true},"graphRef":"acephei@current","target":"#embeddableExplorer","initialState":{"includeCookies":true,"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"embed":{"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"},"persistExplorerState":true},"graphRef":"acephei@current","displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"}},"persistExplorerState":true};
+  var embeddedExplorerConfig = {"includeCookies":true,"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"embed":{"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"},"persistExplorerState":true},"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"includeCookies":true,"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"embed":{"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"},"persistExplorerState":true},"graphRef":"graph@current","displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"}},"persistExplorerState":true};
   new window.EmbeddedExplorer({
     ...embeddedExplorerConfig,
     endpointUrl,
@@ -53,7 +56,7 @@ id="embeddableExplorer"
     const config = {
       includeCookies: false,
       embed: true as true,
-      graphRef: 'acephei@current'
+      graphRef: 'graph@current',
     };
     const expected = `
 <style>
@@ -68,7 +71,7 @@ id="embeddableExplorer"
 <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js"></script>
 <script>
   var endpointUrl = window.location.href;
-  var embeddedExplorerConfig = {"includeCookies":false,"embed":true,"graphRef":"acephei@current","target":"#embeddableExplorer","initialState":{"includeCookies":false,"embed":true,"graphRef":"acephei@current","displayOptions":{}},"persistExplorerState":false};
+  var embeddedExplorerConfig = {"includeCookies":false,"embed":true,"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"includeCookies":false,"embed":true,"graphRef":"graph@current","displayOptions":{}},"persistExplorerState":false};
   new window.EmbeddedExplorer({
     ...embeddedExplorerConfig,
     endpointUrl,
@@ -88,7 +91,7 @@ id="embeddableExplorer"
           a: 'val',
           b: 1,
           c: true,
-        }
+        },
       },
       headers: { authorization: 'true' },
       displayOptions: {

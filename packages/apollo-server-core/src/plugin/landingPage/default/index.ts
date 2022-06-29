@@ -124,7 +124,10 @@ id="embeddableExplorer"
 `;
 };
 
-export const getEmbeddedSandboxHTML = (version: string, config: LandingPageConfig) => {
+export const getEmbeddedSandboxHTML = (
+  version: string,
+  config: LandingPageConfig,
+) => {
   return `
 <style>
   iframe {
