@@ -21,7 +21,7 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
    * Users can configure their landing page to link to Studio Explorer with
    * variables loaded in the UI.
    */
-  variables?: Record<string, string>;
+  variables?: Record<string, any>;
   /**
    * Users can configure their landing page to link to Studio Explorer with
    * headers loaded in the UI.
