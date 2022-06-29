@@ -2,13 +2,19 @@ import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
-import { ApolloServer } from '../..';
+import { ApolloServer, ApolloServerOptions, BaseContext } from '../../index.js';
 import { expressMiddleware } from '../../express4';
 import { urlForHttpServer } from '../../utils/urlForHttpServer';
-import { defineIntegrationTestSuite } from '@apollo/server-integration-testsuite';
+import {
+  defineIntegrationTestSuite,
+  CreateServerForIntegrationTestsOptions,
+} from '@apollo/server-integration-testsuite';
 
 defineIntegrationTestSuite(
-  async function (serverOptions, testOptions) {
+  async function (
+    serverOptions: ApolloServerOptions<BaseContext>,
+    testOptions?: CreateServerForIntegrationTestsOptions,
+  ) {
     const app = express();
     const httpServer = http.createServer(app);
     // For started-in-background servers (ie serverless) we typically don't
