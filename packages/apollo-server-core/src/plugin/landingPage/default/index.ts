@@ -57,7 +57,7 @@ function getConfigStringForHtml(config: LandingPageConfig) {
     .replace("'", '\\u0027');
 }
 
-const getEmbeddedExplorerHTML = (
+export const getEmbeddedExplorerHTML = (
   version: string,
   config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
 ) => {
@@ -124,7 +124,7 @@ id="embeddableExplorer"
 `;
 };
 
-const getEmbeddedSandboxHTML = (version: string, config: LandingPageConfig) => {
+export const getEmbeddedSandboxHTML = (version: string, config: LandingPageConfig) => {
   return `
 <style>
   iframe {
