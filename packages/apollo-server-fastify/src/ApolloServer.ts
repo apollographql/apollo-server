@@ -156,7 +156,9 @@ export class ApolloServer<
     )
   }
 
-  /** @deprecated please use {@link ApolloServer.plugin} */
+  /**
+   * @deprecated please use {@link plugin}
+   * */
   public createHandler(options: ApolloFastifyPluginOptions = {}) {
     return (fastify: FastifyInstance) => (
       this.sharedHandler(fastify, options)
@@ -179,11 +181,17 @@ function prefersHtml(request: FastifyRequest) {
   }
 }
 
-/** @deprecated please use {@link ApolloFastifyContext} */
+/**
+ * @deprecated please use {@link ApolloFastifyContext}
+ * */
 export type FastifyContext = ApolloFastifyContext;
 
-/** @deprecated please use {@link ApolloFastifyConfig} */
+/**
+* @deprecated please use {@link ApolloFastifyConfig}
+* */
 export type ApolloServerFastifyConfig = ApolloFastifyConfig;
 
-/** @deprecated please use {@link ApolloFastifyPluginOptions} */
+/**
+* @deprecated please use {@link ApolloFastifyPluginOptions}
+* */
 export type ServerRegistration = ApolloFastifyPluginOptions;
