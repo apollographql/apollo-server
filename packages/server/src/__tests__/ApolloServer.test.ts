@@ -315,8 +315,35 @@ describe('ApolloServer executeOperation', () => {
     await server.start();
 
     const { result } = await server.executeOperation({ query: '{' });
-    expect(result.errors).toHaveLength(1);
-    expect(result.errors?.[0].extensions?.code).toBe('GRAPHQL_PARSE_FAILED');
+    expect(result.errors).toEqual([
+      {
+        message: 'Syntax Error: Expected Name, found <EOF>.',
+        locations: [{ line: 1, column: 2 }],
+        extensions: {
+          code: 'GRAPHQL_PARSE_FAILED',
+        },
+      },
+    ]);
+    await server.stop();
+  });
+
+  it('validation errors', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+    });
+    await server.start();
+
+    const { result } = await server.executeOperation({ query: '{ unknown }' });
+    expect(result.errors).toEqual([
+      {
+        message: 'Cannot query field "unknown" on type "Query".',
+        locations: [{ line: 1, column: 3 }],
+        extensions: {
+          code: 'GRAPHQL_VALIDATION_FAILED',
+        },
+      },
+    ]);
     await server.stop();
   });
 
