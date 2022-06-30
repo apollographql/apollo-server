@@ -156,7 +156,7 @@ export class ApolloServer<
     )
   }
 
-  /** @deprecated please use {@link plugin} */
+  /** @deprecated please use {@link ApolloServer.plugin} */
   public createHandler(options: ApolloFastifyPluginOptions = {}) {
     return (fastify: FastifyInstance) => (
       this.sharedHandler(fastify, options)
