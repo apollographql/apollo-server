@@ -119,5 +119,12 @@
       matchPackageNames: ["@fastify/cors"],
       allowedVersions: "7.x",
     },
+    {
+      // 2.7.0 dropped support for node 12.
+      // More details: https://github.com/ardatan/graphql-tools/pull/4487#issuecomment-1175555916
+      matchPackageNames: ["@graphql-codegen/cli"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "2.6.x"
+    },
   ]
 }
