@@ -2,18 +2,15 @@ import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
-import { ApolloServer, ApolloServerOptions, BaseContext } from '../../index.js';
-import { expressMiddleware } from '../../express4';
-import { ApolloServerPluginDrainHttpServer } from '../../plugin/drainHttpServer';
-import { urlForHttpServer } from '../../utils/urlForHttpServer';
-import {
-  defineIntegrationTestSuite,
-  CreateServerForIntegrationTestsOptions,
-} from '@apollo/server-integration-testsuite';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { urlForHttpServer } from './urlForHttpServer';
+import { defineIntegrationTestSuite } from '@apollo/server-integration-testsuite';
 
 defineIntegrationTestSuite(async function (
-  serverOptions: ApolloServerOptions<BaseContext>,
-  testOptions?: CreateServerForIntegrationTestsOptions,
+  serverOptions,
+  testOptions,
 ) {
   const app = express();
   const httpServer = http.createServer(app);
