@@ -8,6 +8,5 @@
     { "path": "./packages/integration-testsuite/" },
     { "path": "./packages/plugin-response-cache/src/__tests__/" },
     { "path": "./packages/server/src/__tests__/" },
-
   ]
 }
