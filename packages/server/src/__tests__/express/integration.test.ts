@@ -2,9 +2,9 @@ import { json } from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
-import { ApolloServer, ApolloServerOptions, BaseContext } from '../../index.js';
-import { expressMiddleware } from '../../express4';
-import { ApolloServerPluginDrainHttpServer } from '../../plugin/drainHttpServer';
+import { ApolloServer, ApolloServerOptions, BaseContext } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { urlForHttpServer } from '../../utils/urlForHttpServer';
 import {
   defineIntegrationTestSuite,
