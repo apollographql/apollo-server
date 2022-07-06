@@ -106,6 +106,52 @@ By default, the landing page displays a footer that links to the documentation t
 <tr>
 <td>
 
+###### `document`
+
+`string`
+</td>
+<td>
+
+A GraphQL document (eg, query or mutation) to populate in the Studio Explorer's editor on load.
+
+If you omit this, the Explorer initially loads an example query based on your schema.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `variables`
+
+`Record<string, string | Record>`
+</td>
+<td>
+
+An object containing initial variable values to populate in the Explorer on load.
+
+If provided, these variables should apply to the initial query you provide in `document`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `headers`
+
+`Record<string, string>`
+</td>
+<td>
+
+An object containing initial HTTP header values to populate in the Explorer on load.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `includeCookies`
 
 `boolean`
@@ -228,7 +274,7 @@ If you omit this, the Explorer initially loads an example query based on your sc
 
 ###### `variables`
 
-`Record<string, string>`
+`Record<string, string | Record>`
 </td>
 <td>
 

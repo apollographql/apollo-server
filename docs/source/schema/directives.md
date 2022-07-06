@@ -3,6 +3,8 @@ title: Directives
 description: Configure GraphQL types, fields, and arguments
 ---
 
+> Looking for Apollo Federation directives? See [Federation-specific GraphQL directives](/federation/federated-types/federated-directives/).
+
 A **directive** decorates part of a GraphQL schema or operation with additional configuration. Tools like Apollo Server (and [Apollo Client](https://www.apollographql.com/docs/react/local-state/managing-state-with-field-policies/#querying)) can read a GraphQL document's directives and perform custom logic as appropriate.
 
 Directives are preceded by the `@` character, like so:
