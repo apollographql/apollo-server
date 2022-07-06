@@ -339,6 +339,71 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
 
+      it('returns an error on parse failure', async () => {
+        const app = await createApp();
+        const res = await request(app).post('/').send({
+          query: `{`,
+        });
+
+        expect(res.status).toEqual(400);
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "errors": Array [
+              Object {
+                "extensions": Object {
+                  "code": "GRAPHQL_PARSE_FAILED",
+                },
+                "locations": Array [
+                  Object {
+                    "column": 2,
+                    "line": 1,
+                  },
+                ],
+                "message": "Syntax Error: Expected Name, found <EOF>.",
+              },
+            ],
+          }
+        `);
+      });
+
+      it('returns an error on validation failure', async () => {
+        const app = await createApp();
+        const res = await request(app).post('/').send({
+          query: `{ hello }`,
+        });
+
+        expect(res.status).toEqual(400);
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "errors": Array [
+              Object {
+                "extensions": Object {
+                  "code": "GRAPHQL_VALIDATION_FAILED",
+                },
+                "locations": Array [
+                  Object {
+                    "column": 3,
+                    "line": 1,
+                  },
+                ],
+                "message": "Cannot query field \\"hello\\" on type \\"QueryType\\".",
+              },
+            ],
+          }
+        `);
+      });
+
+      it('FIXME', async () => {
+        const app = await createApp();
+        const res = await request(app).post('/').send({
+          query: `query BadName { testString }`,
+          operationName: 'NotBadName',
+        });
+
+        expect(res.status).toEqual(400);
+        expect(res.body).toMatchInlineSnapshot();
+      });
+
       it('throws an error if GET query is missing', async () => {
         const app = await createApp();
         const res = await request(app)
