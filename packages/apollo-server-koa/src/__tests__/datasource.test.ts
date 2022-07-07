@@ -11,6 +11,7 @@ import {
 import { gql } from 'apollo-server-core';
 import type { AddressInfo } from 'net';
 import type { IResolvers } from '@graphql-tools/utils';
+import KoaRouter from '@koa/router';
 
 export class IdAPI extends RESTDataSource {
   // We will set this inside tests.
@@ -46,7 +47,6 @@ const resolvers: IResolvers<any, any, { dataSources: { id: IdAPI } }> = {
 describe('apollo-server-koa', () => {
   const { ApolloServer } = require('../ApolloServer');
   const Koa = require('koa');
-  const KoaRouter = require('koa-router');
 
   let restCalls = 0;
   const restAPI = new Koa();
