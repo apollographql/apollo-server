@@ -1,6 +1,7 @@
 ---
 title: Data sources
 description: Manage connections to databases and REST APIs
+api_reference: true
 ---
 
 **Data sources** are classes that Apollo Server can use to encapsulate fetching data from a particular source, such as a database or a REST API. These classes help handle caching, deduplication, and errors while resolving operations.
@@ -96,6 +97,14 @@ By default, data source implementations use Apollo Server's in-memory cache to s
 
 When you initialize Apollo Server, you can provide its constructor a _different_ cache object that implements the [`KeyValueCache` interface](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface). This enables you to back your cache with shared stores like Memcached or Redis.
 
+```js title=server.js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  cache: new MyCustomKeyValueCache()
+});
+```
+
 ### Using an external cache backend
 
  When running multiple instances of your server, you should use a shared cache backend. This enables one server instance to use the cached result from _another_ instance.
@@ -104,7 +113,7 @@ Apollo Server supports using [Memcached](https://memcached.org/), [Redis](https:
 
 You can also choose to implement your own cache backend. For more information, see [Implementing your own cache backend](../performance/cache-backends#implementing-your-own-cache-backend).
 
-## `RESTDataSource` reference
+## `RESTDataSource`
 
 The `RESTDataSource` abstract class helps you fetch data from REST APIs. Your server defines a separate subclass of `RESTDataSource` for each REST API it communicates with.
 
@@ -115,6 +124,36 @@ npm install apollo-datasource-rest
 ```
 
 You then extend the `RESTDataSource` class and implement whatever data-fetching methods your resolvers need. These methods can use built-in convenience methods (like `get` and `post`) to perform HTTP requests, helping you add query parameters, parse JSON results, and handle errors.
+
+### API reference
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td colspan="2">
+
+        **Constructor options**
+      </td>
+    </tr>
+    <tr class="required">
+      <td>
+        ##### `httpFetch`
+
+        typeof `fetch`
+      </td>
+      <td>
+        Override the `fetch` implementation used when sending requests to the datasource
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ### Example
 
