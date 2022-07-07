@@ -73,7 +73,7 @@ interface Options<TContext = Record<string, any>> {
   // be anything that can be JSON-stringified.
   extraCacheKeyData?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): ValueOrPromise<any>;
+  ): ValueOrPromise<any & { cacheKeyPrefix?: string | null }>;
 
   // If this hook is defined and returns false, the plugin will not read
   // responses from the cache.
@@ -102,7 +102,9 @@ interface BaseCacheKey {
   source: string;
   operationName: string | null;
   variables: { [name: string]: any };
-  extra: any;
+  // Note: There is a special key, `cacheKeyPrefix`, that will be prepended to
+  // the cache key.
+  extra: any & { cacheKeyPrefix?: string | null };
 }
 
 interface ContextualCacheKey {
@@ -128,8 +130,11 @@ interface CacheValue {
 
 type CacheKey = BaseCacheKey & ContextualCacheKey;
 
-function cacheKeyString(key: CacheKey) {
-  return sha(JSON.stringify(key));
+export function getCacheKeyString(key: CacheKey, hashKey = sha) {
+  const shaValue = hashKey(JSON.stringify(key));
+  return key.extra?.cacheKeyPrefix
+    ? key.extra?.cacheKeyPrefix + shaValue
+    : shaValue;
 }
 
 function isGraphQLQuery(requestContext: GraphQLRequestContext<any>) {
@@ -165,7 +170,7 @@ export default function plugin(
           async function cacheGet(
             contextualCacheKeyFields: ContextualCacheKey,
           ): Promise<GraphQLResponse | null> {
-            const key = cacheKeyString({
+            const key = getCacheKeyString({
               ...baseCacheKey!,
               ...contextualCacheKeyFields,
             });
@@ -278,7 +283,7 @@ export default function plugin(
           const cacheSetInBackground = (
             contextualCacheKeyFields: ContextualCacheKey,
           ): void => {
-            const key = cacheKeyString({
+            const key = getCacheKeyString({
               ...baseCacheKey!,
               ...contextualCacheKeyFields,
             });
