@@ -49,6 +49,9 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   httpCache!: HTTPCache;
   context!: TContext;
   memoizedResults = new Map<string, Promise<any>>();
+  baseURL?: string;
+  getCacheEnabled: boolean = true;
+  getCacheTTL?: number;
 
   constructor(private httpFetch?: typeof fetch) {
     super();
@@ -58,8 +61,6 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     this.context = config.context;
     this.httpCache = new HTTPCache(config.cache, this.httpFetch);
   }
-
-  baseURL?: string;
 
   // By default, we use the full request URL as the cache key.
   // You can override this to remove query parameters or compute a cache key in any way that makes sense.
@@ -246,7 +247,6 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     }
 
     const request = new Request(String(url), options);
-
     const cacheKey = this.cacheKeyFor(request);
 
     const performRequest = async () => {
@@ -266,15 +266,21 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
       });
     };
 
-    if (request.method === 'GET') {
-      let promise = this.memoizedResults.get(cacheKey);
-      if (promise) return promise;
+    // Cache GET requests based on the calculated cache key
+    // You can disable the entire cache with getCacheEnabled=false
+    if (this.getCacheEnabled) {
+      if (request.method === 'GET') {
+        let promise = this.memoizedResults.get(cacheKey);
+        if (promise) return promise;
 
-      promise = performRequest();
-      this.memoizedResults.set(cacheKey, promise);
-      return promise;
+        promise = performRequest();
+        this.memoizedResults.set(cacheKey, promise);
+        return promise;
+      } else {
+        this.memoizedResults.delete(cacheKey);
+        return performRequest();
+      }
     } else {
-      this.memoizedResults.delete(cacheKey);
       return performRequest();
     }
   }

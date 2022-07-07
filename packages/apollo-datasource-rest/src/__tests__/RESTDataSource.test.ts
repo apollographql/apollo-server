@@ -5,7 +5,11 @@ import {
   AuthenticationError,
   ForbiddenError,
 } from 'apollo-server-errors';
-import { RESTDataSource, RequestOptions } from '../RESTDataSource';
+import {
+  RESTDataSource,
+  RequestOptions,
+  CacheOptions
+} from "../RESTDataSource";
 
 import { HTTPCache } from '../HTTPCache';
 import { MapKeyValueCache } from './MapKeyValueCache';
@@ -631,6 +635,26 @@ describe('RESTDataSource', () => {
         'https://api.example.com/foo/1?api_key=secret',
       );
     });
+
+    it('allows disabling the GET cache', async () => {
+      const dataSource = new (class extends RESTDataSource {
+        override baseURL = 'https://api.example.com';
+        override getCacheEnabled = false;
+
+        getFoo(id: number) {
+          return this.get(`foo/${id}`);
+        }
+      })();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+      fetch.mockJSONResponseOnce();
+
+      await Promise.all([dataSource.getFoo(1), dataSource.getFoo(1)]);
+
+      expect(fetch).toBeCalledTimes(2);
+    });
   });
 
   describe('error handling', () => {
@@ -777,6 +801,71 @@ describe('RESTDataSource', () => {
         expect.any(Object),
         expect.any(Function),
       );
+    });
+  });
+
+  describe('http cache', () => {
+    it('allows setting cache options for each request', async () => {
+      const dataSource = new (class extends RESTDataSource {
+        override baseURL = 'https://api.example.com';
+        override getCacheEnabled = false;
+
+        getFoo(id: number) {
+          return this.get(`foo/${id}`);
+        }
+
+        // Set a long TTL for every request
+        // @ts-ignore
+        override cacheOptionsFor(_, __): CacheOptions | undefined {
+          return {
+            ttl: 1000000
+          };
+        }
+      })();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+      await dataSource.getFoo(1);
+
+      // Call a second time which should be cached
+      fetch.mockJSONResponseOnce();
+      await dataSource.getFoo(1);
+
+      expect(fetch).toBeCalledTimes(1);
+    });
+
+    it('allows setting a short TTL for the cache', async () => {
+      const dataSource = new (class extends RESTDataSource {
+        override baseURL = 'https://api.example.com';
+        override getCacheEnabled = false;
+
+        getFoo(id: number) {
+          return this.get(`foo/${id}`);
+        }
+
+        // Set a short TTL for every request
+        // @ts-ignore
+        override cacheOptionsFor(_, __): CacheOptions | undefined {
+          return {
+            ttl: 1
+          };
+        }
+      })();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+      await dataSource.getFoo(1);
+
+      // Sleep for a little to expire cache
+      await new Promise((r) => setTimeout(r, 2000));
+
+      // Call a second time which should be invalid now
+      fetch.mockJSONResponseOnce();
+      await dataSource.getFoo(1);
+
+      expect(fetch).toBeCalledTimes(2);
     });
   });
 });
