@@ -279,6 +279,15 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     request.operationName,
   );
 
+  debugger;
+  if (request.operationName && !operation) {
+    console.log('should be 400')
+    return await sendErrorResponse(
+      new BadRequestError(`FIXME`),
+      newHTTPGraphQLHead(400),
+    );
+  }
+
   requestContext.operation = operation || undefined;
   // We'll set `operationName` to `null` for anonymous operations.
   requestContext.operationName = operation?.name?.value || null;

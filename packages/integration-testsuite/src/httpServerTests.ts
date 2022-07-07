@@ -393,7 +393,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         `);
       });
 
-      it('FIXME', async () => {
+      it.only('FIXME', async () => {
         const app = await createApp();
         const res = await request(app).post('/').send({
           query: `query BadName { testString }`,
