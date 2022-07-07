@@ -18,16 +18,10 @@ export {
 
 export {
 	ApolloServer,
-	ApolloFastifyConfig,
-	ApolloFastifyContext,
-	ApolloFastifyPluginOptions,
-
-	// Deprecated types
-	FastifyContext,
 	ServerRegistration,
+	ApolloFastifyPluginOptions,
 	ApolloServerFastifyConfig,
+	FastifyContext,
 } from './ApolloServer';
 
-export {
-	FastifyCorsOptions,
-} from '@fastify/cors';
+export { FastifyCorsOptions } from '@fastify/cors';
