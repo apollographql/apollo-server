@@ -86,6 +86,13 @@ interface Options<TContext = Record<string, any>> {
   shouldWriteToCache?(
     requestContext: GraphQLRequestContext<TContext>,
   ): ValueOrPromise<boolean>;
+
+  // This hook allows one to replace the function that is used to create a cache
+  // key. If not it will fall back to what happens today.
+  generateCacheKey?(
+    requestContext: GraphQLRequestContext<TContext>,
+    keyData: unknown,
+  ): string;
 }
 
 enum SessionMode {
@@ -165,10 +172,19 @@ export default function plugin(
           async function cacheGet(
             contextualCacheKeyFields: ContextualCacheKey,
           ): Promise<GraphQLResponse | null> {
-            const key = cacheKeyString({
+            let key;
+
+            const cacheKeyData = {
               ...baseCacheKey!,
               ...contextualCacheKeyFields,
-            });
+            };
+
+            if (options.generateCacheKey) {
+              key = options.generateCacheKey(requestContext, cacheKeyData);
+            } else {
+              key = cacheKeyString(cacheKeyData);
+            }
+
             const serializedValue = await cache.get(key);
             if (serializedValue === undefined) {
               return null;
@@ -278,10 +294,19 @@ export default function plugin(
           const cacheSetInBackground = (
             contextualCacheKeyFields: ContextualCacheKey,
           ): void => {
-            const key = cacheKeyString({
+            let key;
+
+            const cacheKeyData = {
               ...baseCacheKey!,
               ...contextualCacheKeyFields,
-            });
+            };
+
+            if (options.generateCacheKey) {
+              key = options.generateCacheKey(requestContext, cacheKeyData);
+            } else {
+              key = cacheKeyString(cacheKeyData);
+            }
+
             const value: CacheValue = {
               data,
               cachePolicy: policyIfCacheable,
