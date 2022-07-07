@@ -129,29 +129,79 @@ You then extend the `RESTDataSource` class and implement whatever data-fetching 
 
 <table class="field-table">
   <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
+  <tr>
+    <th>Name /<br/>Type</th>
+    <th>Description</th>
+  </tr>
   </thead>
-
   <tbody>
-    <tr>
-      <td colspan="2">
+  <tr>
+    <td colspan="2">
 
-        **Constructor options**
-      </td>
-    </tr>
-    <tr class="required">
-      <td>
-        ##### `httpFetch`
+      **Constructor options**
+    </td>
+  </tr>
 
-        typeof `fetch`
-      </td>
-      <td>
-        Override the `fetch` implementation used when sending requests to the datasource
-      </td>
-    </tr>
+  <tr>
+    <td>
+
+      ##### `healthCheckPath`
+
+      `string` or `null`
+    </td>
+    <td>
+
+      Disable [HTTP-level health checks](../monitoring/health-checks/#http-level-health-checks) by passing `null`, or change the path on which it is served from the default of `/.well-known/apollo/server-health`.
+
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+
+      ##### `onHealthCheck`
+
+      `Function`
+    </td>
+    <td>
+
+      A custom function to execute when Apollo Server receives a request at the [HTTP-level health check](../monitoring/health-checks/#http-level-health-checks) endpoint.
+
+    </td>
+  </tr>
+
+
+  <tr>
+    <td>
+
+      ##### `cors`
+
+      `Object` or `Boolean`
+    </td>
+    <td>
+
+      An `Object` containing [configuration options](https://github.com/expressjs/cors#configuration-options) for the server's CORS behavior. Provide `false` to remove CORS middleware entirely.
+
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+
+      ##### `stopGracePeriodMillis`
+
+      `number`
+    </td>
+    <td>
+
+      The amount of time to wait after [`ApolloServer.stop()`](#stop) is called (including via a [termination signal](#stoponterminationsignals)) before forcefully closing all active connections. If you pass `Infinity`, Apollo Server waits indefinitely for all active connections to go idle.
+
+      The default value is `10_000` (10 seconds).
+
+    </td>
+  </tr>
+
+
   </tbody>
 </table>
 
