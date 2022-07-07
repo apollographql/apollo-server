@@ -51,7 +51,6 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   memoizedResults = new Map<string, Promise<any>>();
   baseURL?: string;
   getCacheEnabled: boolean = true;
-  getCacheTTL?: number;
 
   constructor(private httpFetch?: typeof fetch) {
     super();
@@ -247,6 +246,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     }
 
     const request = new Request(String(url), options);
+
     const cacheKey = this.cacheKeyFor(request);
 
     const performRequest = async () => {
