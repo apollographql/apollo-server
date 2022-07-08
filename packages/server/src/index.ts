@@ -9,4 +9,5 @@ export {
   AuthenticationError,
   ForbiddenError,
   UserInputError,
+  PersistedQueryNotFoundError,
 } from './errors.js';

@@ -19,10 +19,12 @@ import {
 import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
-  formatApolloErrors,
   UserInputError,
   BadRequestError,
+  ValidationError,
+  SyntaxError,
   ensureError,
+  normalizeAndFormatErrors,
 } from './errors.js';
 import type {
   GraphQLRequestContext,
@@ -111,7 +113,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     if (!internals.persistedQueries) {
       return await sendErrorResponse(
         new PersistedQueryNotSupportedError(),
-        undefined,
         // Not super clear why we need this to be uncached (makes sense for
         // PersistedQueryNotFoundError, because there we're about to fill the
         // cache and make the next copy of the same request succeed) but we've
@@ -133,7 +134,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       } else {
         return await sendErrorResponse(
           new PersistedQueryNotFoundError(),
-          undefined,
           getPersistedQueryErrorHttp(),
         );
       }
@@ -217,7 +217,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       await parsingDidEnd(syntaxError as Error);
       // XXX: This cast is pretty sketchy, as other error types can be thrown
       // by parsingDidEnd!
-      return await sendErrorResponse(syntaxError, 'GRAPHQL_PARSE_FAILED');
+      return await sendErrorResponse(
+        syntaxError instanceof GraphQLError
+          ? new SyntaxError(syntaxError)
+          : syntaxError,
+      );
     }
 
     const validationDidEnd = await invokeDidStartHook(
@@ -239,8 +243,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     } else {
       await validationDidEnd(validationErrors);
       return await sendErrorResponse(
-        validationErrors,
-        'GRAPHQL_VALIDATION_FAILED',
+        validationErrors.map((error) => new ValidationError(error)),
       );
     }
 
@@ -294,7 +297,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       new BadRequestError(
         `GET requests only support query operations, not ${operation.operation} operations`,
       ),
-      undefined,
       { statusCode: 405, headers: new HeaderMap([['allow', 'POST']]) },
     );
   }
@@ -312,7 +314,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     // by didResolveOperation!
     return await sendErrorResponse(
       err as GraphQLError,
-      undefined,
       newHTTPGraphQLHead(500),
     );
   }
@@ -449,11 +450,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
 
-      return await sendErrorResponse(
-        executionError,
-        undefined,
-        newHTTPGraphQLHead(500),
-      );
+      return await sendErrorResponse(executionError, newHTTPGraphQLHead(500));
     }
   }
 
@@ -534,7 +531,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // Then, if the HTTP status code is not yet set, it sets it to 400.
   async function sendErrorResponse(
     errorOrErrors: ReadonlyArray<unknown> | unknown,
-    errorCode?: string,
     http: HTTPGraphQLHead = newHTTPGraphQLHead(),
   ) {
     // If a single error is passed, it should still be encapsulated in an array.
@@ -545,7 +541,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     await didEncounterErrors(errors);
 
     requestContext.response.result = {
-      errors: formatErrors(errors, errorCode),
+      errors: formatErrors(errors),
     };
 
     updateResponseHTTP(http);
@@ -558,11 +554,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   }
 
   function formatErrors(
-    errors: ReadonlyArray<GraphQLError>,
-    errorCode?: string,
+    errors: ReadonlyArray<unknown>,
   ): ReadonlyArray<GraphQLFormattedError> {
-    return formatApolloErrors(errors, {
-      errorCode,
+    return normalizeAndFormatErrors(errors, {
       formatError: internals.formatError,
       includeStackTracesInErrorResponses:
         internals.includeStackTracesInErrorResponses,

@@ -8,6 +8,7 @@
     "lib": ["es2019", "es2019.array", "esnext.asynciterable", "dom"],
   },
   "references": [
-    { "path": "../../" }
+    { "path": "../../" },
+    { "path": "../../../integration-testsuite" }
   ]
 }

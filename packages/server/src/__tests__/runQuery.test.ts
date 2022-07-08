@@ -777,7 +777,7 @@ describe('request pipeline life-cycle hooks', () => {
       },
     ];
 
-    it('called when an error occurs', async () => {
+    it('called when an parsing error occurs', async () => {
       await runQuery(
         {
           schema,
@@ -788,7 +788,34 @@ describe('request pipeline life-cycle hooks', () => {
 
       expect(didEncounterErrors).toBeCalledWith(
         expect.objectContaining({
-          errors: expect.arrayContaining([expect.any(Error)]),
+          errors: expect.arrayContaining([
+            expect.objectContaining({
+              message: 'Syntax Error: Expected Name, found "}".',
+              extensions: { code: 'GRAPHQL_PARSE_FAILED' },
+            }),
+          ]),
+        }),
+      );
+    });
+
+    it('called when a validation error occurs', async () => {
+      await runQuery(
+        {
+          schema,
+          plugins,
+        },
+        { query: '{ testStringWithParseError }' },
+      );
+
+      expect(didEncounterErrors).toBeCalledWith(
+        expect.objectContaining({
+          errors: expect.arrayContaining([
+            expect.objectContaining({
+              message:
+                'Cannot query field "testStringWithParseError" on type "QueryType".',
+              extensions: { code: 'GRAPHQL_VALIDATION_FAILED' },
+            }),
+          ]),
         }),
       );
     });

@@ -15,16 +15,31 @@ declare module 'graphql' {
 }
 
 export class SyntaxError extends GraphQLError {
-  constructor(message: string) {
-    super(message, { extensions: { code: 'GRAPHQL_PARSE_FAILED' } });
+  constructor(graphqlError: GraphQLError) {
+    super(graphqlError.message, {
+      source: graphqlError.source,
+      positions: graphqlError.positions,
+      extensions: {
+        ...graphqlError.extensions,
+        code: 'GRAPHQL_PARSE_FAILED',
+      },
+      originalError: graphqlError,
+    });
 
     this.name = 'SyntaxError';
   }
 }
 
 export class ValidationError extends GraphQLError {
-  constructor(message: string) {
-    super(message, { extensions: { code: 'GRAPHQL_VALIDATION_FAILED' } });
+  constructor(graphqlError: GraphQLError) {
+    super(graphqlError.message, {
+      nodes: graphqlError.nodes,
+      extensions: {
+        ...graphqlError.extensions,
+        code: 'GRAPHQL_VALIDATION_FAILED',
+      },
+      originalError: graphqlError.originalError ?? graphqlError,
+    });
 
     this.name = 'ValidationError';
   }
@@ -102,8 +117,10 @@ export class BadRequestError extends GraphQLError {
   }
 }
 
+// This function accepts any value that were thrown and convert it to GraphQLFormatterError.
+// It also add default extensions.code and copy stack trace onto an extension if requested.
 // This function should not throw.
-export function formatApolloErrors(
+export function normalizeAndFormatErrors(
   errors: ReadonlyArray<unknown>,
   options: {
     formatError?: (
@@ -111,37 +128,14 @@ export function formatApolloErrors(
       error: unknown,
     ) => GraphQLFormattedError;
     includeStackTracesInErrorResponses?: boolean;
-    errorCode?: string;
   } = {},
 ): Array<GraphQLFormattedError> {
-  // Errors that occur in graphql-tools can contain an errors array that contains the errors thrown in a merged schema
-  // https://github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L104-L107
-  //
-  // They are are wrapped in an extra GraphQL error
-  // https://github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L109-L113
-  // which calls:
-  // https://github.com/graphql/graphql-js/blob/0a30b62964/src/error/locatedError.js#L18-L37
-  // Some processing for these nested errors could be done here:
-  //
-  // if (Array.isArray((error as any).errors)) {
-  //   (error as any).errors.forEach(e => flattenedErrors.push(e));
-  // } else if (
-  //   (error as any).originalError &&
-  //   Array.isArray((error as any).originalError.errors)
-  // ) {
-  //   (error as any).originalError.errors.forEach(e => flattenedErrors.push(e));
-  // } else {
-  //   flattenedErrors.push(error);
-  // }
-
-  const { includeStackTracesInErrorResponses, errorCode } = options;
-
   const formatError = options.formatError ?? ((error) => error);
   return errors.map((error) => {
     try {
       return formatError(enrichError(error), error);
     } catch (formattingError) {
-      if (includeStackTracesInErrorResponses) {
+      if (options.includeStackTracesInErrorResponses) {
         // includeStackTracesInErrorResponses is used in development
         // so it will be helpful to show errors thrown by formatError hooks in that mode
         return enrichError(formattingError);
@@ -165,8 +159,7 @@ export function formatApolloErrors(
 
     const extensions: GraphQLErrorExtensions = {
       ...graphqlError.extensions,
-      code:
-        graphqlError.extensions.code ?? errorCode ?? 'INTERNAL_SERVER_ERROR',
+      code: graphqlError.extensions.code ?? 'INTERNAL_SERVER_ERROR',
     };
 
     const { originalError } = graphqlError;
@@ -183,7 +176,7 @@ export function formatApolloErrors(
       }
     }
 
-    if (includeStackTracesInErrorResponses) {
+    if (options.includeStackTracesInErrorResponses) {
       extensions.exception = {
         ...extensions.exception,
         stacktrace: graphqlError.stack?.split('\n'),

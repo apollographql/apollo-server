@@ -7,10 +7,10 @@ import {
   UserInputError,
   SyntaxError,
 } from '..';
-import { formatApolloErrors } from '../errors.js';
+import { normalizeAndFormatErrors } from '../errors.js';
 
 describe('Errors', () => {
-  describe('formatApolloErrors', () => {
+  describe('normalizeAndFormatErrors', () => {
     type CreateFormatError =
       | ((
           options: Record<string, any>,
@@ -29,7 +29,7 @@ describe('Errors', () => {
         const error = new GraphQLError(message, {
           extensions: { code, key },
         });
-        return formatApolloErrors(
+        return normalizeAndFormatErrors(
           [
             new GraphQLError(
               error.message,
@@ -43,7 +43,7 @@ describe('Errors', () => {
           options,
         )[0];
       } else {
-        return formatApolloErrors(errors, options);
+        return normalizeAndFormatErrors(errors, options);
       }
     };
 
@@ -61,7 +61,7 @@ describe('Errors', () => {
     it('hides stacktrace by default', () => {
       const thrown = new Error(message);
       (thrown as any).key = key;
-      const error = formatApolloErrors([
+      const error = normalizeAndFormatErrors([
         new GraphQLError(
           thrown.message,
           undefined,
@@ -89,7 +89,7 @@ describe('Errors', () => {
         extensions: { code, key },
       });
       const formatError = jest.fn();
-      formatApolloErrors([error], {
+      normalizeAndFormatErrors([error], {
         formatError,
         includeStackTracesInErrorResponses: true,
       });
@@ -104,7 +104,7 @@ describe('Errors', () => {
     });
     it('Formats native Errors in a JSON-compatible way', () => {
       const error = new Error('Hello');
-      const [formattedError] = formatApolloErrors([error]);
+      const [formattedError] = normalizeAndFormatErrors([error]);
       expect(JSON.parse(JSON.stringify(formattedError)).message).toBe('Hello');
     });
   });
@@ -140,14 +140,14 @@ describe('Errors', () => {
       });
     });
     it('provides a syntax error', () => {
-      verifyError(new SyntaxError(message), {
+      verifyError(new SyntaxError(new GraphQLError(message)), {
         code: 'GRAPHQL_PARSE_FAILED',
         errorClass: SyntaxError,
         name: 'SyntaxError',
       });
     });
     it('provides a validation error', () => {
-      verifyError(new ValidationError(message), {
+      verifyError(new ValidationError(new GraphQLError(message)), {
         code: 'GRAPHQL_VALIDATION_FAILED',
         errorClass: ValidationError,
         name: 'ValidationError',
@@ -166,7 +166,7 @@ describe('Errors', () => {
         name: 'UserInputError',
       });
 
-      const formattedError = formatApolloErrors([
+      const formattedError = normalizeAndFormatErrors([
         new GraphQLError(
           error.message,
           undefined,
