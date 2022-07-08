@@ -91,6 +91,7 @@
     "jest-junit": "14.0.0",
     "jest-mock": "28.1.1",
     "jest-mock-random": "1.1.1",
+    "jest-serializer-html": "^7.1.0",
     "lodash.sumby": "4.6.0",
     "nock": "13.2.8",
     "node-fetch": "2.6.7",
