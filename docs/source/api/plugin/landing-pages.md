@@ -112,7 +112,7 @@ By default, the landing page displays a footer that links to the documentation t
 </td>
 <td>
 
-A GraphQL document (eg, query or mutation) to populate in the Studio Explorer's editor on load.
+A GraphQL document (eg, query or mutation) to populate in the Studio Sandbox Explorer's editor on load.
 
 If you omit this, the Explorer initially loads an example query based on your schema.
 
@@ -124,7 +124,7 @@ If you omit this, the Explorer initially loads an example query based on your sc
 
 ###### `variables`
 
-`Record<string, string | Record>`
+`Record<string, any>`
 </td>
 <td>
 
@@ -274,7 +274,7 @@ If you omit this, the Explorer initially loads an example query based on your sc
 
 ###### `variables`
 
-`Record<string, string | Record>`
+`Record<string, any>`
 </td>
 <td>
 
