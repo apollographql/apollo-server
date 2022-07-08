@@ -172,18 +172,14 @@ export default function plugin(
           async function cacheGet(
             contextualCacheKeyFields: ContextualCacheKey,
           ): Promise<GraphQLResponse | null> {
-            let key;
-
             const cacheKeyData = {
               ...baseCacheKey!,
               ...contextualCacheKeyFields,
             };
 
-            if (options.generateCacheKey) {
-              key = options.generateCacheKey(requestContext, cacheKeyData);
-            } else {
-              key = cacheKeyString(cacheKeyData);
-            }
+            const key = options.generateCacheKey
+              ? options.generateCacheKey(requestContext, cacheKeyData)
+              : cacheKeyString(cacheKeyData);
 
             const serializedValue = await cache.get(key);
             if (serializedValue === undefined) {
@@ -294,18 +290,14 @@ export default function plugin(
           const cacheSetInBackground = (
             contextualCacheKeyFields: ContextualCacheKey,
           ): void => {
-            let key;
-
             const cacheKeyData = {
               ...baseCacheKey!,
               ...contextualCacheKeyFields,
             };
 
-            if (options.generateCacheKey) {
-              key = options.generateCacheKey(requestContext, cacheKeyData);
-            } else {
-              key = cacheKeyString(cacheKeyData);
-            }
+            const key = options.generateCacheKey
+              ? options.generateCacheKey(requestContext, cacheKeyData)
+              : cacheKeyString(cacheKeyData);
 
             const value: CacheValue = {
               data,
