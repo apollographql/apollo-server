@@ -25,6 +25,7 @@ import {
   SyntaxError,
   ensureError,
   normalizeAndFormatErrors,
+  UnknownOperationNameError,
 } from './errors.js';
 import type {
   GraphQLRequestContext,
@@ -73,6 +74,10 @@ function isBadUserInputGraphQLError(error: GraphQLError): boolean {
         `Variable "$${error.nodes[0].variable.name.value}" of non-null type `,
       ))
   );
+}
+
+function isUnknownOperationNameError(error: GraphQLError): boolean {
+  return error.message.startsWith(`Unknown operation named`);
 }
 
 // Persisted query errors (especially "not found") need to be uncached, because
@@ -279,15 +284,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     request.operationName,
   );
 
-  debugger;
-  if (request.operationName && !operation) {
-    console.log('should be 400')
-    return await sendErrorResponse(
-      new BadRequestError(`FIXME`),
-      newHTTPGraphQLHead(400),
-    );
-  }
-
   requestContext.operation = operation || undefined;
   // We'll set `operationName` to `null` for anonymous operations.
   requestContext.operationName = operation?.name?.value || null;
@@ -440,11 +436,23 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
             extensions: e.extensions,
           });
         }
+
+        if (isUnknownOperationNameError(e)) {
+          return new UnknownOperationNameError(e.message, {
+            nodes: e.nodes,
+            originalError: e.originalError,
+            extensions: e.extensions,
+          });
+        }
         return e;
       });
 
       if (resultErrors) {
         await didEncounterErrors(resultErrors);
+      }
+
+      if (resultErrors?.length && !('data' in result)) {
+        return await sendErrorResponse(resultErrors);
       }
 
       requestContext.response.result = {

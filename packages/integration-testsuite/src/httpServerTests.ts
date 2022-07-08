@@ -393,7 +393,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         `);
       });
 
-      it.only('FIXME', async () => {
+      it('unknown operation name returns 400 and a specific error with code', async () => {
         const app = await createApp();
         const res = await request(app).post('/').send({
           query: `query BadName { testString }`,
@@ -401,7 +401,18 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
 
         expect(res.status).toEqual(400);
-        expect(res.body).toMatchInlineSnapshot();
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "errors": Array [
+              Object {
+                "extensions": Object {
+                  "code": "UNKNOWN_OPERATION_NAME",
+                },
+                "message": "Unknown operation named \\"NotBadName\\".",
+              },
+            ],
+          }
+        `);
       });
 
       it('throws an error if GET query is missing', async () => {
