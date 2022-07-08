@@ -88,7 +88,13 @@ interface Options<TContext = Record<string, any>> {
   ): ValueOrPromise<boolean>;
 
   // This hook allows one to replace the function that is used to create a cache
-  // key. If not it will fall back to what happens today.
+  // key. By default, it is the SHA-256 (from the Node `crypto` package) of the result of
+  // calling `JSON.stringify(keyData)`. You can override this to customize the serialization
+  // or the hash, or to make other changes like adding a prefix to keys to allow for
+  // app-specific prefix-based cache invalidation. You may assume that `keyData` is an object
+  // and that all relevant data will be found by the kind of iteration performed by
+  // `JSON.stringify`, but you should not assume anything about the particular fields on
+  // `keyData`.
   generateCacheKey?(
     requestContext: GraphQLRequestContext<TContext>,
     keyData: unknown,
