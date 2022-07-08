@@ -155,6 +155,10 @@ export default function plugin(
         'fqc:',
       );
 
+      const generateCacheKey = options.generateCacheKey
+        ? options.generateCacheKey
+        : (_: any, key: any) => sha(JSON.stringify(key));
+
       let sessionId: string | null = null;
       let baseCacheKey: BaseCacheKey | null = null;
       let age: number | null = null;
@@ -177,9 +181,7 @@ export default function plugin(
               ...contextualCacheKeyFields,
             };
 
-            const key = options.generateCacheKey
-              ? options.generateCacheKey(requestContext, cacheKeyData)
-              : cacheKeyString(cacheKeyData);
+            const key = generateCacheKey(requestContext, cacheKeyData);
 
             const serializedValue = await cache.get(key);
             if (serializedValue === undefined) {
@@ -295,9 +297,7 @@ export default function plugin(
               ...contextualCacheKeyFields,
             };
 
-            const key = options.generateCacheKey
-              ? options.generateCacheKey(requestContext, cacheKeyData)
-              : cacheKeyString(cacheKeyData);
+            const key = generateCacheKey(requestContext, cacheKeyData);
 
             const value: CacheValue = {
               data,
