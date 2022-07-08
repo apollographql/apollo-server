@@ -9,14 +9,11 @@ import request, { type Response } from 'supertest';
 
 describe('Response caching', () => {
   beforeAll(() => {
-    // These tests use the `FakeableTTLTestingCache` whose maxAge feature is
-    // based on `Date.now()` (no setTimeout or anything like that). So we want
-    // to use fake timers just for Date. (Faking all the timer methods messes up
-    // things like a setImmediate in ApolloServerPluginDrainHttpServer.) The
-    // default AS cache (`InMemoryLRUCache`) uses `lru-cache` internally, which
-    // we've had issues mocking timers for. Presumably this has something to do
-    // with the way that `lru-cache` grabs its `perf` function:
-    // https://github.com/isaacs/node-lru-cache/blob/118a078cc0ea3a17f7b2ff4caf04e6aa3a33b136/index.js#L1-L6
+    // This explicitly mocks only `Date`. The `Date` mock is utilized by the
+    // `ApolloServerPluginResponseCache` (for `age` and `cacheTime`
+    // calculation). It's also used by the `FakeableTTLTestingCache` which is
+    // implemented at the bottom of this file. See comments on the cache
+    // implementation for more details.
     jest.useFakeTimers({
       doNotFake: [
         'hrtime',
@@ -470,6 +467,13 @@ describe('Response caching', () => {
   });
 });
 
+// The default AS cache (`InMemoryLRUCache`) uses `lru-cache` internally, which
+// we've had issues mocking timers for. Presumably this has something to do with
+// the way that `lru-cache` grabs its `perf` function:
+// https://github.com/isaacs/node-lru-cache/blob/118a078cc0ea3a17f7b2ff4caf04e6aa3a33b136/index.js#L1-L6
+// This test suite already mocks `Date` (because
+// `ApolloServerPluginResponseCache` uses it internally), so we used that for
+// time calculation in this mock cache as well.
 class FakeableTTLTestingCache {
   constructor(
     private cache: Map<
