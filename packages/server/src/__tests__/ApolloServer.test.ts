@@ -414,8 +414,13 @@ describe('ApolloServer executeOperation', () => {
       await server.stop();
     });
 
-    // This works due to the __forceTContextToBeContravariant hack.
-    it('context is contravariant', () => {
+    // This works due to using `in` on the TContext generic.
+    it('generic TContext argument is invariant (in out)', () => {
+      // You cannot assign a server that wants a specific context to
+      // one that wants a more vague context. That's because
+      // `server1.executeOperation(request, {})` should typecheck, but that's
+      // not good enough for the ApolloServer that expects its context to have
+      // `foo` on it.
       // @ts-expect-error
       const server1: ApolloServer<{}> = new ApolloServer<{
         foo: number;
@@ -423,11 +428,18 @@ describe('ApolloServer executeOperation', () => {
       // avoid the expected error just being an unused variable
       expect(server1).toBeDefined();
 
-      // The opposite is OK: we can pass a more specific context object to
-      // something expecting less.
+      // The opposite is also not allowed, for a more subtle reason. If this
+      // compiled, then you would be able to call `server2.addPlugin` with an
+      // `ApolloServerPlugin<{foo: number}>`. That plugin is allowed to
+      // assume that its hooks will be called with `contextValue` including
+      // a `foo` field. But that's not the case for an `ApolloServer<{}>`!
+      // So in fact, you shouldn't be able to assign an ApolloServer<X>
+      // to ApolloServer<Y> when X and Y are different.
+      // @ts-expect-error
       const server2: ApolloServer<{
         foo: number;
       }> = new ApolloServer<{}>({ typeDefs: 'type Query{id: ID}' });
+      // avoid the expected error just being an unused variable
       expect(server2).toBeDefined();
     });
 
@@ -474,6 +486,7 @@ describe('ApolloServer executeOperation', () => {
 
       // @ts-expect-error
       takesPlugin<BaseContext>(specificPlugin);
+      // @ts-expect-error
       takesPlugin<SpecificContext>(basePlugin);
 
       new ApolloServer<BaseContext>({
@@ -483,6 +496,7 @@ describe('ApolloServer executeOperation', () => {
       });
       new ApolloServer<SpecificContext>({
         typeDefs: 'type Query { x: ID }',
+        // @ts-expect-error
         plugins: [basePlugin],
       });
     });

@@ -154,11 +154,9 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   validationRules: Array<(context: ValidationContext) => any>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   includeStackTracesInErrorResponses: boolean;
-  cache: KeyValueCache<string>;
   persistedQueries?: WithRequired<PersistedQueryOptions, 'cache'>;
   nodeEnv: string;
   allowBatchedHttpRequests: boolean;
-  logger: Logger;
   apolloConfig: ApolloConfig;
   plugins: ApolloServerPlugin<TContext>[];
   parseOptions: ParseOptions;
@@ -179,43 +177,37 @@ function defaultLogger(): Logger {
   return loglevelLogger;
 }
 
-export class ApolloServer<TContext extends BaseContext = BaseContext> {
+// We really want to prevent this from being legal:
+//
+//     const s: ApolloServer<{}> =
+//       new ApolloServer<{importantContextField: boolean}>({ ... });
+//     s.executeOperation({query}, {});
+//
+// ie, if you declare an ApolloServer whose context values must be of a certain
+// type, you can't assign it to a variable whose context values are less
+// constrained and then pass in a context value missing important fields.
+//
+// We also want this to be illegal:
+//
+//     const sBase = new ApolloServer<{}>({ ... });
+//     const s: ApolloServer<{importantContextField: boolean}> = sBase;
+//     s.addPlugin({async requestDidStart({contextValue: {importantContextField}}) { ... }})
+//     sBase.executeOperation({query}, {});
+//
+// so you shouldn't be able to assign an ApolloServer to a variable whose
+// context values are more constrained, either. So we want to declare that
+// ApolloServer is *invariant* in TContext, which we do with `in out` (a
+// TypeScript 4.7 feature).
+export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
   private internals: ApolloServerInternals<TContext>;
 
-  // We really want to prevent this from being legal:
-  //
-  //     const s: ApolloServer<{}> =
-  //       new ApolloServer<{importantContextField: boolean}>({ ... });
-  //     s.executeOperation({query}, {});
-  //
-  // ie, if you declare an ApolloServer whose context values must be of a
-  // certain type, you can't assign it to a variable whose context values are
-  // less constrained and then pass in a context value missing important fields.
-  // That is, we want ApolloServer to be "contravariant" in TContext. TypeScript
-  // just added a feature to implement this directly
-  // (https://github.com/microsoft/TypeScript/pull/48240) which we hopefully can
-  // use once it's released (ideally down-leveling our generated .d.ts once
-  // https://github.com/sandersn/downlevel-dts/issues/73 is implemented). But
-  // until then, having a field with a function that takes TContext does the
-  // trick. (Why isn't having a method like executeOperation good enough?
-  // TypeScript doesn't treat method arguments contravariantly, just standalone
-  // functions.)  We have a ts-expect-error test for this behavior (search
-  // "contravariant").
-  //
-  // We only care about the compile-time effects of this field. It is not
-  // private because that wouldn't work due to
-  // https://github.com/microsoft/TypeScript/issues/38953 We will remove this
-  // once `out TContext` is available. Note that when we replace this with `out
-  // TContext`, we may make it so that users of older TypeScript versions no
-  // longer have this protection.
-  //
-  // TODO(AS4): upgrade to TS 4.7 when it is released and use that instead.
-  protected __forceTContextToBeContravariant?: (contextValue: TContext) => void;
+  public readonly cache: KeyValueCache<string>;
+  public readonly logger: Logger;
 
   constructor(config: ApolloServerOptions<TContext>) {
     const nodeEnv = config.nodeEnv ?? process.env.NODE_ENV ?? '';
 
-    const logger = config.logger ?? defaultLogger();
+    this.logger = config.logger ?? defaultLogger();
 
     const apolloConfig = determineApolloConfig(config.apollo);
 
@@ -254,7 +246,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
                 schema,
                 config.documentStore,
               ),
-            logger,
+            logger: this.logger,
           }),
         }
       : // We construct the schema synchronously so that we can fail fast if the
@@ -271,7 +263,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
                 schema,
                 config.documentStore,
               ),
-            logger,
+            logger: this.logger,
           }),
         };
 
@@ -284,7 +276,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     // maintained Keyv packages or our own Keyv store `LRUCacheStore`).
     // TODO(AS4): warn users and provide better documentation around providing
     // an appropriate Keyv.
-    const cache = config.cache ?? new InMemoryLRUCache();
+    this.cache = config.cache ?? new InMemoryLRUCache();
 
     // Note that we avoid calling methods on `this` before `this.internals` is assigned
     // (thus a bunch of things being static methods above).
@@ -299,20 +291,18 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       includeStackTracesInErrorResponses:
         config.includeStackTracesInErrorResponses ??
         (nodeEnv !== 'production' && nodeEnv !== 'test'),
-      cache,
       persistedQueries:
         config.persistedQueries === false
           ? undefined
           : {
               ...config.persistedQueries,
               cache: new PrefixingKeyValueCache(
-                config.persistedQueries?.cache ?? cache,
+                config.persistedQueries?.cache ?? this.cache,
                 APQ_CACHE_PREFIX,
               ),
             },
       nodeEnv,
       allowBatchedHttpRequests: config.allowBatchedHttpRequests ?? false,
-      logger,
       apolloConfig,
       plugins,
       parseOptions: config.parseOptions ?? {},
@@ -398,8 +388,8 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       });
 
       const schemaDerivedData = schemaManager.getSchemaDerivedData();
-      const service: GraphQLServerContext = {
-        logger: this.internals.logger,
+      const service: GraphQLServerContext<TContext> = {
+        server: this,
         schema: schemaDerivedData.schema,
         apollo: this.internals.apolloConfig,
         startedInBackground,
@@ -499,9 +489,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           ),
         );
       } catch (pluginError) {
-        this.internals.logger.error(
-          `startupDidFail hook threw: ${pluginError}`,
-        );
+        this.logger.error(`startupDidFail hook threw: ${pluginError}`);
       }
 
       this.internals.state = {
@@ -551,8 +539,8 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       try {
         await this.stop();
       } catch (e) {
-        this.internals.logger.error(`stop() threw during ${signal} shutdown`);
-        this.internals.logger.error(e);
+        this.logger.error(`stop() threw during ${signal} shutdown`);
+        this.logger.error(e);
         // Can't rely on the signal handlers being removed.
         process.exit(1);
       }
@@ -615,7 +603,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           return this.internals.state;
         case 'stopping':
         case 'stopped':
-          this.internals.logger.warn(
+          this.logger.warn(
             'A GraphQL operation was received during server shutdown. The ' +
               'operation will fail. Consider draining the HTTP server on shutdown; ' +
               'see https://go.apollo.dev/s/drain for details.',
@@ -673,7 +661,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
   // logging. This gets called both immediately when the startup error happens,
   // and on all subsequent requests.
   private logStartupError(err: Error) {
-    this.internals.logger.error(
+    this.logger.error(
       'An error occurred during Apollo Server startup. All GraphQL requests ' +
         'will now fail. The startup error was: ' +
         (err?.message || err),
@@ -826,7 +814,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
   }
 
   private async addDefaultPlugins() {
-    const { plugins, apolloConfig, logger, nodeEnv } = this.internals;
+    const { plugins, apolloConfig, nodeEnv } = this.internals;
     const isDev = nodeEnv !== 'production';
 
     const alreadyHavePluginWithInternalId = (id: InternalPluginId) =>
@@ -859,7 +847,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
           );
           plugins.unshift(ApolloServerPluginUsageReporting());
         } else {
-          logger.warn(
+          this.logger.warn(
             'You have specified an Apollo key but have not specified a graph ref; usage ' +
               'reporting is disabled. To enable usage reporting, set the `APOLLO_GRAPH_REF` ' +
               'environment variable to `your-graph-id@your-graph-variant`. To disable this ' +
@@ -1004,7 +992,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
             ),
           );
         } catch (pluginError) {
-          this.internals.logger.error(
+          this.logger.error(
             `contextCreationDidFail hook threw: ${pluginError}`,
           );
         }
@@ -1022,6 +1010,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       }
 
       return await runPotentiallyBatchedHttpQuery(
+        this,
         httpGraphQLRequest,
         contextValue,
         runningServerState.schemaManager.getSchemaDerivedData(),
@@ -1037,7 +1026,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
             ),
           );
         } catch (pluginError) {
-          this.internals.logger.error(
+          this.logger.error(
             `invalidRequestWasReceived hook threw: ${pluginError}`,
           );
         }
@@ -1142,6 +1131,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
     };
 
     return await internalExecuteOperation({
+      server: this,
       graphQLRequest,
       // The typecast here is safe, because the only way `contextValue` can be
       // null-ish is if we used the `contextValue?: BaseContext` override, in
@@ -1150,6 +1140,7 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
       // TContext.)
       contextValue: contextValue ?? ({} as TContext),
       internals: this.internals,
+      logger: this.logger,
       schemaDerivedData,
     });
   }
@@ -1158,21 +1149,25 @@ export class ApolloServer<TContext extends BaseContext = BaseContext> {
 // Shared code between runHttpQuery (ie executeHTTPGraphQLRequest) and
 // executeOperation to set up a request context and invoke the request pipeline.
 export async function internalExecuteOperation<TContext extends BaseContext>({
+  server,
   graphQLRequest,
   contextValue,
   internals,
+  logger,
   schemaDerivedData,
 }: {
+  server: ApolloServer<TContext>;
   graphQLRequest: GraphQLRequest;
   contextValue: TContext;
   internals: ApolloServerInternals<TContext>;
+  logger: Logger;
   schemaDerivedData: SchemaDerivedData;
 }): Promise<GraphQLResponse> {
   const httpGraphQLHead = newHTTPGraphQLHead();
   httpGraphQLHead.headers.set('content-type', 'application/json');
 
   const requestContext = {
-    logger: internals.logger,
+    server,
     schema: schemaDerivedData.schema,
     request: graphQLRequest,
     response: { result: {}, http: httpGraphQLHead },
@@ -1186,13 +1181,17 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
     // using batched HTTP requests is to share context across operations for a
     // single request.
     contextValue: cloneObject(contextValue),
-    cache: internals.cache,
     metrics: {},
     overallCachePolicy: newCachePolicy(),
   };
 
   try {
-    await processGraphQLRequest(schemaDerivedData, internals, requestContext);
+    await processGraphQLRequest(
+      schemaDerivedData,
+      internals,
+      logger,
+      requestContext,
+    );
   } catch (maybeError: unknown) {
     // processGraphQLRequest throwing usually means that either there's a bug in
     // Apollo Server or some plugin hook threw unexpectedly.
@@ -1208,7 +1207,7 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
       ),
     );
     // Mask unexpected error externally.
-    internals.logger.error(`Unexpected error processing request: ${error}`);
+    logger.error(`Unexpected error processing request: ${error}`);
     throw new Error('Internal server error');
   }
   return requestContext.response;

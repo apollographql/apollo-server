@@ -15,14 +15,14 @@ describe('logger', () => {
       `,
       plugins: [
         {
-          async serverWillStart({ logger }) {
+          async serverWillStart({ server: { logger } }) {
             logger.debug(KNOWN_DEBUG_MESSAGE);
           },
         },
       ],
     });
 
-    const defaultLogger = server['internals'].logger as loglevel.Logger;
+    const defaultLogger = server.logger as loglevel.Logger;
     const debugSpy = jest.spyOn(defaultLogger, 'debug');
     await server.start();
 
@@ -42,7 +42,7 @@ describe('logger', () => {
       `,
       plugins: [
         {
-          async serverWillStart({ logger }) {
+          async serverWillStart({ server: { logger } }) {
             logger.debug(KNOWN_DEBUG_MESSAGE);
           },
         },

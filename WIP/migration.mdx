@@ -403,6 +403,10 @@ Remove persistedQueries field from GraphQLServerContext
 
 requestDidStart hooks are called in parallel rather than in series.
 
+The `logger` and `cache` fields are no longer on `GraphQLRequestContext`. Instead, `GraphQLRequestContext` has a `server: ApolloServer` field, and `logger` and `cache` are public readonly fields on `ApolloServer`.
+
+The `logger` field is no longer part of the argument to `serverWillStart`, but `server` is instead, and `logger` is a public readonly field on `ApolloServer`.
+
 ## New APIs
 
 ### `addPlugin` function

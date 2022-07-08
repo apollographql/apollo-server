@@ -1,5 +1,4 @@
 import type { Trace } from '@apollo/usage-reporting-protobuf';
-import type { Logger } from '@apollo/utils.logger';
 import type {
   DocumentNode,
   FormattedExecutionResult,
@@ -7,10 +6,10 @@ import type {
   GraphQLSchema,
   OperationDefinitionNode,
 } from 'graphql';
-import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { CachePolicy } from './cacheControl';
 import type { BaseContext } from './context';
 import type { HTTPGraphQLHead, HTTPGraphQLRequest } from './http';
+import type { ApolloServer } from '../ApolloServer';
 
 export interface GraphQLRequest {
   query?: string;
@@ -45,15 +44,14 @@ export interface GraphQLRequestMetrics {
 }
 
 export interface GraphQLRequestContext<TContext extends BaseContext> {
+  readonly server: ApolloServer<TContext>;
+
   readonly request: GraphQLRequest;
   readonly response: GraphQLResponse;
-
-  logger: Logger;
 
   readonly schema: GraphQLSchema;
 
   readonly contextValue: TContext;
-  readonly cache: KeyValueCache<string>;
 
   readonly queryHash?: string;
 

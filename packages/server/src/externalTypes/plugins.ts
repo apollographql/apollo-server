@@ -1,5 +1,5 @@
-import type { Logger } from '@apollo/utils.logger';
 import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql';
+import type { ApolloServer } from '../ApolloServer';
 import type { ApolloConfig } from './constructor';
 import type { BaseContext } from './context';
 import type { GraphQLRequestContext, GraphQLResponse } from './graphql';
@@ -14,8 +14,8 @@ import type {
   GraphQLRequestContextWillSendResponse,
 } from './requestPipeline';
 
-export interface GraphQLServerContext {
-  logger: Logger;
+export interface GraphQLServerContext<TContext extends BaseContext> {
+  server: ApolloServer<TContext>;
   schema: GraphQLSchema;
   apollo: ApolloConfig;
   // TODO(AS4): Make sure we document that we removed `persistedQueries`.
@@ -34,9 +34,9 @@ export type PluginDefinition<TContext extends BaseContext> =
   | ApolloServerPlugin<TContext>
   | (() => ApolloServerPlugin<TContext>);
 
-export interface ApolloServerPlugin<TContext extends BaseContext> {
+export interface ApolloServerPlugin<in out TContext extends BaseContext> {
   serverWillStart?(
-    service: GraphQLServerContext,
+    service: GraphQLServerContext<TContext>,
   ): Promise<GraphQLServerListener | void>;
 
   requestDidStart?(
@@ -54,14 +54,6 @@ export interface ApolloServerPlugin<TContext extends BaseContext> {
   contextCreationDidFail?({ error }: { error: Error }): Promise<void>;
   invalidRequestWasReceived?({ error }: { error: Error }): Promise<void>;
   startupDidFail?({ error }: { error: Error }): Promise<void>;
-
-  // See the similarly named field on ApolloServer for details. Note that it
-  // appears that this only works if it is a *field*, not a *method*, which is
-  // why `requestDidStart` (which takes a TContext wrapped in something) is not
-  // sufficient.
-  //
-  // TODO(AS4): Upgrade to TS 4.7 and use `in` instead.
-  __forceTContextToBeContravariant?: (contextValue: TContext) => void;
 }
 
 export interface GraphQLServerListener {
