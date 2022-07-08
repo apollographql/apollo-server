@@ -99,7 +99,7 @@
     "request-promise": "4.2.6",
     "requisition": "1.7.0",
     "rimraf": "3.0.2",
-    "rollup": "2.75.7",
+    "rollup": "2.76.0",
     "supertest": "6.2.4",
     "test-listen": "1.1.0",
     "ts-jest": "28.0.5",
