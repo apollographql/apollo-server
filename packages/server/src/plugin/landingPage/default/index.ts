@@ -1,11 +1,14 @@
 import type { BaseContext } from '../../../externalTypes';
 import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
 import type {
-  ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
   ApolloServerPluginLandingPageLocalDefaultOptions,
   ApolloServerPluginLandingPageProductionDefaultOptions,
   LandingPageConfig,
 } from './types';
+import {
+  getEmbeddedExplorerHTML,
+  getEmbeddedSandboxHTML,
+} from './getEmbeddedHTML.js';
 
 export function ApolloServerPluginLandingPageLocalDefault<
   TContext extends BaseContext,
@@ -48,113 +51,6 @@ export function ApolloServerPluginLandingPageProductionDefault<
 function encodeConfig(config: LandingPageConfig): string {
   return JSON.stringify(encodeURIComponent(JSON.stringify(config)));
 }
-
-// This function turns an object into a string and replaces
-// <, >, &, ' with their unicode chars to avoid adding html tags to
-// the landing page html that might be passed from the config.
-// The only place these characters can appear in the output of
-// JSON.stringify is within string literals, where they can equally
-// well appear \u-escaped. This specifically means that
-// `</script>` won't terminate the script block early.
-// (Perhaps we should have done this instead of the triple-encoding
-// of encodeConfig for the main landing page.)
-function getConfigStringForHtml(config: LandingPageConfig) {
-  return JSON.stringify(config)
-    .replace('<', '\\u003c')
-    .replace('>', '\\u003e')
-    .replace('&', '\\u0026')
-    .replace("'", '\\u0027');
-}
-
-const getEmbeddedExplorerHTML = (
-  version: string,
-  config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
-) => {
-  interface EmbeddableExplorerOptions {
-    graphRef: string;
-    target: string;
-
-    initialState?: {
-      document?: string;
-      variables?: Record<string, any>;
-      headers?: Record<string, string>;
-      displayOptions: {
-        docsPanelState?: 'open' | 'closed'; // default to 'open',
-        showHeadersAndEnvVars?: boolean; // default to `false`
-        theme?: 'dark' | 'light';
-      };
-    };
-    persistExplorerState?: boolean; // defaults to 'false'
-
-    endpointUrl: string;
-
-    includeCookies?: boolean; // defaults to 'false'
-  }
-  const productionLandingPageConfigOrDefault = {
-    displayOptions: {},
-    persistExplorerState: false,
-    ...(typeof config.embed === 'boolean' ? {} : config.embed),
-  };
-  const embeddedExplorerParams: Omit<EmbeddableExplorerOptions, 'endpointUrl'> =
-    {
-      ...config,
-      target: '#embeddableExplorer',
-      initialState: {
-        ...config,
-        displayOptions: {
-          ...productionLandingPageConfigOrDefault.displayOptions,
-        },
-      },
-      persistExplorerState:
-        productionLandingPageConfigOrDefault.persistExplorerState,
-    };
-
-  return `
-<style>
-  iframe {
-    background-color: white;
-  }
-</style>
-<div
-style="width: 100vw; height: 100vh; position: absolute; top: 0;"
-id="embeddableExplorer"
-></div>
-<script src="https://embeddable-explorer.cdn.apollographql.com/${version}/embeddable-explorer.umd.production.min.js"></script>
-<script>
-  var endpointUrl = window.location.href;
-  var embeddedExplorerConfig = ${getConfigStringForHtml(
-    embeddedExplorerParams,
-  )};
-  new window.EmbeddedExplorer({
-    ...embeddedExplorerConfig,
-    endpointUrl,
-  });
-</script>
-`;
-};
-
-const getEmbeddedSandboxHTML = (version: string, config: LandingPageConfig) => {
-  return `
-<style>
-  iframe {
-    background-color: white;
-  }
-</style>
-<div
-style="width: 100vw; height: 100vh; position: absolute; top: 0;"
-id="embeddableSandbox"
-></div>
-<script src="https://embeddable-sandbox.cdn.apollographql.com/${version}/embeddable-sandbox.umd.production.min.js"></script>
-<script>
-  var initialEndpoint = window.location.href;
-  new window.EmbeddedSandbox({
-    target: '#embeddableSandbox',
-    initialEndpoint,
-    includeCookies: ${config.includeCookies ?? 'false'},
-  });
-</script>
-`;
-};
 
 const getNonEmbeddedLandingPageHTML = (
   version: string,

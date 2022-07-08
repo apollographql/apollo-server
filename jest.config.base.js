@@ -14,7 +14,7 @@ export default {
     'ts-jest': {
       useESM: true,
       tsconfig: '<rootDir>/src/__tests__/tsconfig.json',
-      diagnostics: false,
+      diagnostics: true,
     },
   },
   moduleNameMapper: {

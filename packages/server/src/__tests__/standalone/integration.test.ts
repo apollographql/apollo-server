@@ -1,5 +1,5 @@
-import { ApolloServer } from '../..';
-import { startStandaloneServer } from '../../standalone';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 import { defineIntegrationTestSuite } from '@apollo/server-integration-testsuite';
 
 defineIntegrationTestSuite(async function (serverOptions, testOptions) {
