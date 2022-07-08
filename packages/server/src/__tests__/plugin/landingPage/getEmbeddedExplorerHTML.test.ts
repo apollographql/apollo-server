@@ -1,5 +1,5 @@
-import { getEmbeddedExplorerHTML } from '../default/index';
-import type { ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions } from '../default/types';
+import { getEmbeddedExplorerHTML } from '../../../plugin/landingPage/default/getEmbeddedHTML';
+import type { ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions } from '../../../plugin/landingPage/default/types';
 
 const version = '_latest';
 expect.addSnapshotSerializer(require('jest-serializer-html'));
