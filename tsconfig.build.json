@@ -7,5 +7,6 @@
   "references": [
     { "path": "./packages/integration-testsuite/" },
     { "path": "./packages/server" },
+    { "path": "./packages/server/tsconfig.cjs.json" },
   ]
 }
