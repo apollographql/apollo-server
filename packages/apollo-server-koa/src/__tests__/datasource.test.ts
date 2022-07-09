@@ -11,6 +11,9 @@ import {
 import { gql } from 'apollo-server-core';
 import type { AddressInfo } from 'net';
 import type { IResolvers } from '@graphql-tools/utils';
+import KoaRouter from '@koa/router';
+import Koa from 'koa';
+import { ApolloServer } from '../ApolloServer';
 
 export class IdAPI extends RESTDataSource {
   // We will set this inside tests.
@@ -44,10 +47,6 @@ const resolvers: IResolvers<any, any, { dataSources: { id: IdAPI } }> = {
 };
 
 describe('apollo-server-koa', () => {
-  const { ApolloServer } = require('../ApolloServer');
-  const Koa = require('koa');
-  const KoaRouter = require('koa-router');
-
   let restCalls = 0;
   const restAPI = new Koa();
   const router = new KoaRouter();
@@ -111,7 +110,7 @@ describe('apollo-server-koa', () => {
 
     server.applyMiddleware({ app });
     httpServer = await new Promise<http.Server>((resolve) => {
-      const s = app.listen({ port: 0 }, () => resolve(s));
+      const s: http.Server = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 
@@ -144,7 +143,7 @@ describe('apollo-server-koa', () => {
 
     server.applyMiddleware({ app });
     httpServer = await new Promise<http.Server>((resolve) => {
-      const s = app.listen({ port: 0 }, () => resolve(s));
+      const s: http.Server = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 
