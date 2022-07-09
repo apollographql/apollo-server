@@ -967,8 +967,8 @@ export class ApolloServerBase<
 
   /**
    * This method is primarily meant for testing: it allows you to execute a
-   * GraphQL operation via the request pipeline without going through without
-   * going through the HTTP layer. Note that this means that any handling you do
+   * GraphQL operation via the request pipeline without going through the HTTP layer.
+   * Note that this means that any handling you do
    * in your server at the HTTP level will not affect this call!
    *
    * For convenience, you can provide `request.query` either as a string or a
