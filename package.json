@@ -45,7 +45,7 @@
     "@changesets/changelog-github": "^0.4.5",
     "@changesets/cli": "2.23.1",
     "@graphql-codegen/cli": "2.8.0",
-    "@graphql-codegen/typescript-operations": "2.5.0",
+    "@graphql-codegen/typescript-operations": "2.5.1",
     "@graphql-tools/mock": "8.7.0",
     "@graphql-tools/schema": "8.5.0",
     "@graphql-tools/utils": "8.8.0",
