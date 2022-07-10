@@ -19,7 +19,7 @@ export {
 export {
 	ApolloServer,
 	ServerRegistration,
-	ApolloFastifyPluginOptions,
+	FastifyPluginOptions,
 	ApolloServerFastifyConfig,
 	FastifyContext,
 } from './ApolloServer';
