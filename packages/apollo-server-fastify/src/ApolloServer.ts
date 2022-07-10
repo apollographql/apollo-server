@@ -34,21 +34,17 @@ const pluginOptions: PluginOptions = {
 export class ApolloServer<
   ContextFunctionParams = FastifyContext,
 > extends ApolloServerBase<ContextFunctionParams> {
-
-  public plugin =
-    fp<FastifyPluginOptions>(
-      // Unbound this error if passed directly
-      (fastify, options) => this.sharedHandler(fastify, options),
-      pluginOptions,
-    );
+  public plugin = fp<FastifyPluginOptions>(
+    // Unbound this error if passed directly
+    (fastify, options) => this.sharedHandler(fastify, options),
+    pluginOptions,
+  );
 
   /**
    * @deprecated please use {@link plugin}
    * */
   public createHandler(options?: FastifyPluginOptions) {
-    return (fastify: FastifyInstance) => (
-      this.sharedHandler(fastify, options)
-    );
+    return (fastify: FastifyInstance) => this.sharedHandler(fastify, options);
   }
 
   private async createGraphQLServerOptions(
@@ -56,17 +52,20 @@ export class ApolloServer<
     reply: FastifyReply,
   ): Promise<GraphQLOptions> {
     const contextParams: FastifyContext = { request, reply };
-    return this.graphQLServerOptions(contextParams)
+    return this.graphQLServerOptions(contextParams);
   }
 
-  private async fastifyRequestToCoreQuery({ request, reply }: FastifyContext): Promise<HttpQueryRequest> {
+  private async requestToCoreQuery(
+    context: FastifyContext,
+  ): Promise<HttpQueryRequest> {
+    const { request, reply } = context;
     return {
       method: request.method || 'POST',
       request: convertNodeHttpToRequest(request.raw),
       options: await this.createGraphQLServerOptions(request, reply),
-      query: (
-        request.method === 'POST' ? request.body : request.query
-      ) as Record<string, unknown>,
+      query: (request.method === 'POST'
+        ? request.body
+        : request.query) as Record<string, unknown>,
     };
   }
 
@@ -112,7 +111,7 @@ export class ApolloServer<
     }
 
     await fastify.register(
-      async instance => {
+      async (instance) => {
         await instance.register(fastifyAccepts);
 
         if (cors === true) {
@@ -140,12 +139,11 @@ export class ApolloServer<
             }
 
             try {
-              const { graphqlResponse, responseInit } =
-                await runHttpQuery(
-                  [],
-                  await this.fastifyRequestToCoreQuery({ request, reply }),
-                  this.csrfPreventionRequestHeaders,
-                );
+              const { graphqlResponse, responseInit } = await runHttpQuery(
+                [],
+                await this.requestToCoreQuery({ request, reply }),
+                this.csrfPreventionRequestHeaders,
+              );
 
               if (responseInit.headers) {
                 reply.headers(responseInit.headers);
@@ -168,10 +166,10 @@ export class ApolloServer<
               return error.message;
             }
           },
-        })
+        });
       },
       { prefix: this.graphqlPath },
-    )
+    );
   }
 }
 
@@ -183,7 +181,10 @@ function prefersHtml(request: FastifyRequest): boolean {
     const types = accepts.types();
 
     if (Array.isArray(types)) {
-      return types.find(x => x === 'text/html' || x === 'application/json') === 'text/html';
+      return (
+        types.find((x) => x === 'text/html' || x === 'application/json') ===
+        'text/html'
+      );
     } else {
       return false;
     }
@@ -191,6 +192,6 @@ function prefersHtml(request: FastifyRequest): boolean {
 }
 
 /**
-* @deprecated please use {@link FastifyPluginOptions}
-* */
+ * @deprecated please use {@link FastifyPluginOptions}
+ * */
 export type ServerRegistration = FastifyPluginOptions;
