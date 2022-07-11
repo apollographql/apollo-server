@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "composite": true,
-    "target": "es2019",
+    "target": "es2020",
     "module": "esnext",
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -18,7 +18,7 @@
     "noUnusedLocals": true,
     "forceConsistentCasingInFileNames": true,
     "importsNotUsedAsValues": "error",
-    "lib": ["es2019", "esnext.asynciterable"],
+    "lib": ["es2020"],
     "types": ["node"],
     "baseUrl": ".",
   }
