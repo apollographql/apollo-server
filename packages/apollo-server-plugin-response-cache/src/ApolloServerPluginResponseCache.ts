@@ -95,13 +95,11 @@ interface Options<TContext = Record<string, any>> {
   // and that all relevant data will be found by the kind of iteration performed by
   // `JSON.stringify`, but you should not assume anything about the particular fields on
   // `keyData`.
-  generateCacheKey?: GenerateCacheKeyFunction;
+  generateCacheKey?(
+    requestContext: GraphQLRequestContext<Record<string, any>>,
+    keyData: unknown,
+  ): string;
 }
-
-type GenerateCacheKeyFunction = (
-  requestContext: GraphQLRequestContext<Record<string, any>>,
-  keyData: unknown,
-) => string;
 
 enum SessionMode {
   NoSession,
@@ -113,17 +111,27 @@ function sha(s: string) {
   return createHash('sha256').update(s).digest('hex');
 }
 
-interface BaseCacheKey {
+interface BaseCacheKeyData {
   source: string;
   operationName: string | null;
   variables: { [name: string]: any };
   extra: any;
 }
 
-interface ContextualCacheKey {
+interface ContextualCacheKeyData {
   sessionMode: SessionMode;
   sessionId?: string | null;
 }
+
+// We split the CacheKey type into two pieces just for convenience in the code
+// below. Note that we don't actually export this type publicly (the
+// generateCacheKey hook gets an `unknown` argument).
+type CacheKeyData = BaseCacheKeyData & ContextualCacheKeyData;
+
+type GenerateCacheKeyFunction = (
+  requestContext: GraphQLRequestContext<Record<string, any>>,
+  keyData: CacheKeyData,
+) => string;
 
 interface CacheValue {
   // Note: we only store data responses in the cache, not errors.
@@ -161,7 +169,7 @@ export default function plugin(
         options.generateCacheKey ?? ((_, key) => sha(JSON.stringify(key)));
 
       let sessionId: string | null = null;
-      let baseCacheKey: BaseCacheKey | null = null;
+      let baseCacheKey: BaseCacheKeyData | null = null;
       let age: number | null = null;
 
       return {
@@ -175,7 +183,7 @@ export default function plugin(
           }
 
           async function cacheGet(
-            contextualCacheKeyFields: ContextualCacheKey,
+            contextualCacheKeyFields: ContextualCacheKeyData,
           ): Promise<GraphQLResponse | null> {
             const cacheKeyData = {
               ...baseCacheKey!,
@@ -291,7 +299,7 @@ export default function plugin(
           }
 
           const cacheSetInBackground = (
-            contextualCacheKeyFields: ContextualCacheKey,
+            contextualCacheKeyFields: ContextualCacheKeyData,
           ): void => {
             const cacheKeyData = {
               ...baseCacheKey!,
