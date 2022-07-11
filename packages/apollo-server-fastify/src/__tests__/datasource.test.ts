@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance } from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
@@ -42,10 +42,16 @@ const resolvers = {
   },
 };
 
-let restCalls = 0;
-const restAPI = fastify();
+interface Route {
+  Params: {
+    id: string,
+  },
+}
 
-restAPI.get<any>('/id/:id', (request, reply) => {
+let restCalls = 0;
+const restAPI = Fastify();
+
+restAPI.get<Route>('/id/:id', (request, reply) => {
   const id = request.params.id;
   restCalls++;
   reply.header('Content-Type', 'application/json');
@@ -53,7 +59,7 @@ restAPI.get<any>('/id/:id', (request, reply) => {
   reply.send({ id });
 });
 
-restAPI.get<any>('/str/:id', (request, reply) => {
+restAPI.get<Route>('/str/:id', (request, reply) => {
   const id = request.params.id;
   restCalls++;
   reply.header('Content-Type', 'text/plain');
@@ -62,14 +68,14 @@ restAPI.get<any>('/str/:id', (request, reply) => {
 });
 
 describe('apollo-server-fastify', () => {
-  let app: FastifyInstance;
+  let fastify: FastifyInstance;
 
   beforeAll(async () => {
-    await restAPI.listen(restPort);
+    await restAPI.listen({ port: restPort });
   });
 
   afterAll(async () => {
-    await new Promise<void>((resolve) => restAPI.close(() => resolve()));
+    await new Promise<void>(resolve => restAPI.close(() => resolve()));
   });
 
   let server: ApolloServer;
@@ -80,7 +86,7 @@ describe('apollo-server-fastify', () => {
 
   afterEach(async () => {
     await server.stop();
-    await new Promise<void>((resolve) => app.close(() => resolve()));
+    await new Promise<void>(resolve => fastify.close(() => resolve()));
   });
 
   it('uses the cache', async () => {
@@ -92,11 +98,13 @@ describe('apollo-server-fastify', () => {
       }),
     });
     await server.start();
-    app = fastify();
 
-    app.register(server.createHandler());
-    await app.listen(0);
-    const { url: uri } = createServerInfo(server, app.server);
+    fastify = Fastify();
+
+    fastify.register(server.plugin);
+    await fastify.listen({ port: 0 });
+
+    const { url: uri } = createServerInfo(server, fastify.server);
 
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{ id }' });
@@ -120,12 +128,14 @@ describe('apollo-server-fastify', () => {
         id: new IdAPI(),
       }),
     });
-    await server.start();
-    app = fastify();
 
-    app.register(server.createHandler());
-    await app.listen(0);
-    const { url: uri } = createServerInfo(server, app.server);
+    await server.start();
+
+    fastify = Fastify();
+
+    fastify.register(server.plugin);
+    await fastify.listen({ port: 0 });
+    const { url: uri } = createServerInfo(server, fastify.server);
 
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{ id: stringId }' });

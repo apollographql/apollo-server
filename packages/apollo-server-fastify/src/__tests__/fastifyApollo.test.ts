@@ -35,14 +35,18 @@ describe('integration:Fastify', () => {
       serverToCleanUp = null;
       app = fastify();
       const config = (options.graphqlOptions as Config) || { schema: Schema };
+
       const server = new ApolloServer({
         ...config,
         plugins: [...(config.plugins ?? []), fastifyAppClosePlugin(app)],
       });
+
       await server.start();
+
       serverToCleanUp = server;
-      app.register(server.createHandler());
-      await app.listen(0);
+      app.register(server.plugin);
+
+      await app.listen({ port: 0 });
 
       return app.server;
     },

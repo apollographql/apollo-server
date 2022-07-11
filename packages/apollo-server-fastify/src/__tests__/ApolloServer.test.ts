@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import fastify from 'fastify';
+import Fastify from 'fastify';
 import request from 'supertest';
 
 import {
@@ -50,7 +50,7 @@ describe('apollo-server-fastify', () => {
   testApolloServer(
     async (config: any, options) => {
       serverToCleanUp = null;
-      const app = fastify();
+      const fastify = Fastify();
       const server = new ApolloServer({
         ...config,
         plugins: [
@@ -64,9 +64,9 @@ describe('apollo-server-fastify', () => {
           // close call, but it seems like a good idea to invoke app.close in
           // case the user registered any onClose hooks?)
           // See https://github.com/apollographql/apollo-server/issues/5642
-          fastifyAppClosePlugin(app),
+          fastifyAppClosePlugin(fastify),
           ApolloServerPluginDrainHttpServer({
-            httpServer: app.server,
+            httpServer: fastify.server,
           }),
         ],
       });
@@ -74,9 +74,9 @@ describe('apollo-server-fastify', () => {
         await server.start();
         serverToCleanUp = server;
       }
-      app.register(server.createHandler({ path: options?.graphqlPath }));
-      await app.listen(port);
-      return createServerInfo(server, app.server);
+      await fastify.register(server.plugin, { path: options?.graphqlPath });
+      await fastify.listen({ port });
+      return createServerInfo(server, fastify.server);
     },
     async () => {
       await serverToCleanUp?.stop();
@@ -95,15 +95,15 @@ describe('apollo-server-fastify', () => {
     options: Partial<ServerRegistration> = {},
     mockDecorators: boolean = false,
   ) {
-    const app = fastify();
+    const fastify = Fastify();
     server = new ApolloServer({
       stopOnTerminationSignals: false,
       ...serverOptions,
       plugins: [
         ...(serverOptions.plugins ?? []),
-        fastifyAppClosePlugin(app),
+        fastifyAppClosePlugin(fastify),
         ApolloServerPluginDrainHttpServer({
-          httpServer: app.server,
+          httpServer: fastify.server,
         }),
       ],
     });
@@ -113,14 +113,14 @@ describe('apollo-server-fastify', () => {
       replyDecorator = jest.fn();
       requestDecorator = jest.fn();
 
-      app.decorateReply('replyDecorator', replyDecorator);
-      app.decorateRequest('requestDecorator', requestDecorator);
+      fastify.decorateReply('replyDecorator', replyDecorator);
+      fastify.decorateRequest('requestDecorator', requestDecorator);
     }
 
-    app.register(server.createHandler(options));
-    await app.listen(port);
+    await fastify.register(server.plugin, options);
+    await fastify.listen({ port });
 
-    return createServerInfo(server, app.server);
+    return createServerInfo(server, fastify.server);
   }
 
   afterEach(async () => {
