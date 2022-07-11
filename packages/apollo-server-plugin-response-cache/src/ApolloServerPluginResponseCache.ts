@@ -139,12 +139,6 @@ interface CacheValue {
   cacheTime: number; // epoch millis, used to calculate Age header
 }
 
-type CacheKey = BaseCacheKey & ContextualCacheKey;
-
-function cacheKeyString(key: CacheKey) {
-  return sha(JSON.stringify(key));
-}
-
 function isGraphQLQuery(requestContext: GraphQLRequestContext<any>) {
   return requestContext.operation?.operation === 'query';
 }
