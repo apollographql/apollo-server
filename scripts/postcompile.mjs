@@ -12,14 +12,16 @@ import { writeFileSync } from 'fs';
 import rimraf from 'rimraf';
 
 // Tell Node what kinds of files the ".js" files in these subdirectories are.
-writeFileSync(
-  path.join('packages', 'server', 'dist', 'esm', 'package.json'),
-  JSON.stringify({ type: 'module' }),
-);
-writeFileSync(
-  path.join('packages', 'server', 'dist', 'cjs', 'package.json'),
-  JSON.stringify({ type: 'commonjs' }),
-);
+for (const dir of ['plugin-response-cache', 'server']) {
+  writeFileSync(
+    path.join('packages', dir, 'dist', 'esm', 'package.json'),
+    JSON.stringify({ type: 'module' }),
+  );
+  writeFileSync(
+    path.join('packages', dir, 'dist', 'cjs', 'package.json'),
+    JSON.stringify({ type: 'commonjs' }),
+  );
 
-// Remove CJS .d.ts files: we don't need two copies!
-rimraf.sync('packages/server/dist/cjs/**/*.d.ts');
+  // Remove CJS .d.ts files: we don't need two copies!
+  rimraf.sync(`packages/${dir}/dist/cjs/**/*.d.ts`);
+}
