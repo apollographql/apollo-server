@@ -11,6 +11,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 ## vNEXT
 
 - Add `document`, `variables`, `headers` as an option in the `ApolloServerPluginLandingPageLocalDefault` plugins. The embedded version of Apollo Sandbox can now use these options as an initial state. [PR #6628](https://github.com/apollographql/apollo-server/pull/6628)
+- Add `generateCacheKey` to `ApolloServerPluginResponseCache` to allow for custom cache keys. [PR #6655](https://github.com/apollographql/apollo-server/pull/6655)
 
 ## v3.9.0
 

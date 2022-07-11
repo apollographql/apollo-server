@@ -86,7 +86,22 @@ interface Options<TContext = Record<string, any>> {
   shouldWriteToCache?(
     requestContext: GraphQLRequestContext<TContext>,
   ): ValueOrPromise<boolean>;
+
+  // This hook allows one to replace the function that is used to create a cache
+  // key. By default, it is the SHA-256 (from the Node `crypto` package) of the result of
+  // calling `JSON.stringify(keyData)`. You can override this to customize the serialization
+  // or the hash, or to make other changes like adding a prefix to keys to allow for
+  // app-specific prefix-based cache invalidation. You may assume that `keyData` is an object
+  // and that all relevant data will be found by the kind of iteration performed by
+  // `JSON.stringify`, but you should not assume anything about the particular fields on
+  // `keyData`.
+  generateCacheKey?: GenerateCacheKeyFunction;
 }
+
+type GenerateCacheKeyFunction = (
+  requestContext: GraphQLRequestContext<Record<string, any>>,
+  keyData: unknown,
+) => string;
 
 enum SessionMode {
   NoSession,
@@ -126,12 +141,6 @@ interface CacheValue {
   cacheTime: number; // epoch millis, used to calculate Age header
 }
 
-type CacheKey = BaseCacheKey & ContextualCacheKey;
-
-function cacheKeyString(key: CacheKey) {
-  return sha(JSON.stringify(key));
-}
-
 function isGraphQLQuery(requestContext: GraphQLRequestContext<any>) {
   return requestContext.operation?.operation === 'query';
 }
@@ -147,6 +156,9 @@ export default function plugin(
         options.cache || outerRequestContext.cache!,
         'fqc:',
       );
+
+      const generateCacheKey: GenerateCacheKeyFunction =
+        options.generateCacheKey ?? ((_, key) => sha(JSON.stringify(key)));
 
       let sessionId: string | null = null;
       let baseCacheKey: BaseCacheKey | null = null;
@@ -165,10 +177,13 @@ export default function plugin(
           async function cacheGet(
             contextualCacheKeyFields: ContextualCacheKey,
           ): Promise<GraphQLResponse | null> {
-            const key = cacheKeyString({
+            const cacheKeyData = {
               ...baseCacheKey!,
               ...contextualCacheKeyFields,
-            });
+            };
+
+            const key = generateCacheKey(requestContext, cacheKeyData);
+
             const serializedValue = await cache.get(key);
             if (serializedValue === undefined) {
               return null;
@@ -278,10 +293,13 @@ export default function plugin(
           const cacheSetInBackground = (
             contextualCacheKeyFields: ContextualCacheKey,
           ): void => {
-            const key = cacheKeyString({
+            const cacheKeyData = {
               ...baseCacheKey!,
               ...contextualCacheKeyFields,
-            });
+            };
+
+            const key = generateCacheKey(requestContext, cacheKeyData);
+
             const value: CacheValue = {
               data,
               cachePolicy: policyIfCacheable,
