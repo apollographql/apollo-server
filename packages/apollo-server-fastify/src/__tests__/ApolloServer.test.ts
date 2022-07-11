@@ -134,7 +134,7 @@ describe('apollo-server-fastify', () => {
   });
 
   describe('createGraphQLServerOptions', () => {
-    it('provides FastifyRequest and FastifyReply to ContextFunction', async () => {
+    it('provides FastifyRequest and FastifyReply to ContextFunc', async () => {
       interface ContextArgs {
         request: FastifyRequest & {
           requestDecorator: () => any;
