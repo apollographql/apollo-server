@@ -158,9 +158,7 @@ export default function plugin(
       );
 
       const generateCacheKey: GenerateCacheKeyFunction =
-        options.generateCacheKey
-          ? options.generateCacheKey
-          : (_, key) => sha(JSON.stringify(key));
+        options.generateCacheKey ?? ((_, key) => sha(JSON.stringify(key)));
 
       let sessionId: string | null = null;
       let baseCacheKey: BaseCacheKey | null = null;
