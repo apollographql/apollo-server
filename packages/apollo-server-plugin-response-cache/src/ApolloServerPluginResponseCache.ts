@@ -95,11 +95,13 @@ interface Options<TContext = Record<string, any>> {
   // and that all relevant data will be found by the kind of iteration performed by
   // `JSON.stringify`, but you should not assume anything about the particular fields on
   // `keyData`.
-  generateCacheKey?(
-    requestContext: GraphQLRequestContext<TContext>,
-    keyData: unknown,
-  ): string;
+  generateCacheKey?: GenerateCacheKeyFunction;
 }
+
+type GenerateCacheKeyFunction = (
+  requestContext: GraphQLRequestContext<Record<string, any>>,
+  keyData: unknown,
+) => string;
 
 enum SessionMode {
   NoSession,
@@ -155,9 +157,10 @@ export default function plugin(
         'fqc:',
       );
 
-      const generateCacheKey = options.generateCacheKey
-        ? options.generateCacheKey
-        : (_: any, key: any) => sha(JSON.stringify(key));
+      const generateCacheKey: GenerateCacheKeyFunction =
+        options.generateCacheKey
+          ? options.generateCacheKey
+          : (_, key) => sha(JSON.stringify(key));
 
       let sessionId: string | null = null;
       let baseCacheKey: BaseCacheKey | null = null;
