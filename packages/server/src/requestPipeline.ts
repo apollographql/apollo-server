@@ -419,7 +419,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       if (!requestContext.operation) {
         if (!result.errors?.length) {
           throw new Error(
-            'Unexpected error: `graphql-js` did not resolve an operation or return errors',
+            'Unexpected error: Apollo Server did not resolve an operation but execute did not return errors',
           );
         }
         const error = result.errors[0];
