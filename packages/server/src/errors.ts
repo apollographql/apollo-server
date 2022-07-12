@@ -116,7 +116,10 @@ export class OperationResolutionError extends GraphQLError {
     super(message, {
       nodes: options?.nodes,
       originalError: options?.originalError,
-      extensions: { ...options?.extensions, code: 'OPERATION_RESOLUTION_FAILURE' },
+      extensions: {
+        ...options?.extensions,
+        code: 'OPERATION_RESOLUTION_FAILURE',
+      },
     });
 
     this.name = 'OperationResolutionError';
