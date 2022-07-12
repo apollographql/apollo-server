@@ -393,7 +393,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         `);
       });
 
-      it('unknown operation name returns 400 and a specific error with code', async () => {
+      it('unknown operation name returns 400 and OPERATION_RESOLUTION_FAILURE', async () => {
         const app = await createApp();
         const res = await request(app).post('/').send({
           query: `query BadName { testString }`,
@@ -406,9 +406,35 @@ export function defineIntegrationTestSuiteHttpServerTests(
             "errors": Array [
               Object {
                 "extensions": Object {
-                  "code": "UNKNOWN_OPERATION_NAME",
+                  "code": "OPERATION_RESOLUTION_FAILURE",
                 },
                 "message": "Unknown operation named \\"NotBadName\\".",
+              },
+            ],
+          }
+        `);
+      });
+
+      it('multiple operations with no `operationName` specified returns 400 and OPERATION_RESOLUTION_FAILURE', async () => {
+        const app = await createApp();
+        const res = await request(app)
+          .post('/')
+          .send({
+            query: `
+            query One { testString }
+            query Two { testString }
+          `,
+          });
+
+        expect(res.status).toEqual(400);
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "errors": Array [
+              Object {
+                "extensions": Object {
+                  "code": "OPERATION_RESOLUTION_FAILURE",
+                },
+                "message": "Must provide operation name if query contains multiple operations.",
               },
             ],
           }

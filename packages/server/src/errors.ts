@@ -104,7 +104,7 @@ export class UserInputError extends GraphQLError {
   }
 }
 
-export class UnknownOperationNameError extends GraphQLError {
+export class OperationResolutionError extends GraphQLError {
   constructor(
     message: string,
     options?: {
@@ -116,10 +116,10 @@ export class UnknownOperationNameError extends GraphQLError {
     super(message, {
       nodes: options?.nodes,
       originalError: options?.originalError,
-      extensions: { ...options?.extensions, code: 'UNKNOWN_OPERATION_NAME' },
+      extensions: { ...options?.extensions, code: 'OPERATION_RESOLUTION_FAILURE' },
     });
 
-    this.name = 'UnknownOperationNameError';
+    this.name = 'OperationResolutionError';
   }
 }
 

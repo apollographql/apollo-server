@@ -25,7 +25,7 @@ import {
   SyntaxError,
   ensureError,
   normalizeAndFormatErrors,
-  UnknownOperationNameError,
+  OperationResolutionError,
 } from './errors.js';
 import type {
   GraphQLRequestContext,
@@ -74,10 +74,6 @@ function isBadUserInputGraphQLError(error: GraphQLError): boolean {
         `Variable "$${error.nodes[0].variable.name.value}" of non-null type `,
       ))
   );
-}
-
-function isUnknownOperationNameError(error: GraphQLError): boolean {
-  return error.message.startsWith(`Unknown operation named`);
 }
 
 // Persisted query errors (especially "not found") need to be uncached, because
@@ -417,6 +413,24 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
       );
 
+      // If we don't have an operation, there's no reason to go further. We know
+      // `result` will consist of one error (returned by `graphql-js`'s
+      // `buildExecutionContext`).
+      if (!requestContext.operation && result.errors?.length) {
+        const error = result.errors[0];
+        const err = new OperationResolutionError(error.message, {
+          nodes: error.nodes,
+          originalError: error.originalError,
+          extensions: error.extensions,
+        });
+
+        await Promise.all(
+          executionListeners.map((l) => l.executionDidEnd?.(err)),
+        );
+
+        return await sendErrorResponse(err, newHTTPGraphQLHead(400));
+      }
+
       // The first thing that execution does is coerce the request's variables
       // to the types declared in the operation, which can lead to errors if
       // they are of the wrong type. It also makes sure that all non-null
@@ -437,22 +451,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
           });
         }
 
-        if (isUnknownOperationNameError(e)) {
-          return new UnknownOperationNameError(e.message, {
-            nodes: e.nodes,
-            originalError: e.originalError,
-            extensions: e.extensions,
-          });
-        }
         return e;
       });
 
       if (resultErrors) {
         await didEncounterErrors(resultErrors);
-      }
-
-      if (resultErrors?.length && !('data' in result)) {
-        return await sendErrorResponse(resultErrors);
       }
 
       requestContext.response.result = {
