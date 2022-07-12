@@ -39,7 +39,7 @@ export function ApolloServerPluginInlineTrace<TContext extends BaseContext>(
     __internal_plugin_id__() {
       return 'InlineTrace';
     },
-    async serverWillStart({ schema, logger }) {
+    async serverWillStart({ schema, server }) {
       // Handle the case that the plugin was implicitly installed. We only want it
       // to actually be active if the schema appears to be federated. If you don't
       // like the log line, just install `ApolloServerPluginInlineTrace()` in
@@ -47,7 +47,7 @@ export function ApolloServerPluginInlineTrace<TContext extends BaseContext>(
       if (enabled === null) {
         enabled = schemaIsFederated(schema);
         if (enabled) {
-          logger.info(
+          server.logger.info(
             'Enabling inline tracing for this federated service. To disable, use ' +
               'ApolloServerPluginInlineTraceDisabled.',
           );

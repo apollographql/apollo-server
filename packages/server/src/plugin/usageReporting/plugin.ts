@@ -18,7 +18,6 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestListener,
   GraphQLServerListener,
-  GraphQLServerContext,
 } from '../../externalTypes';
 import type { InternalApolloServerPlugin } from '../../internalPlugin';
 import type { HeaderMap } from '../../runHttpQuery';
@@ -105,12 +104,12 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
     },
 
     async serverWillStart({
-      logger: serverLogger,
+      server,
       apollo,
       startedInBackground,
-    }: GraphQLServerContext): Promise<GraphQLServerListener> {
+    }): Promise<GraphQLServerListener> {
       // Use the plugin-specific logger if one is provided; otherwise the general server one.
-      const logger = options.logger ?? serverLogger;
+      const logger = options.logger ?? server.logger;
       const { key, graphRef } = apollo;
       if (!(key && graphRef)) {
         throw new Error(
@@ -382,14 +381,11 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
       };
 
       requestDidStartHandler = ({
-        logger: requestLogger,
         metrics,
         schema,
         request: { http, variables },
       }): GraphQLRequestListener<TContext> => {
-        // Request specific log output should go into the `logger` from the
-        // request context when it's provided.
-        const logger = requestLogger ?? options.logger ?? serverLogger;
+        const logger = options.logger ?? server.logger;
         const treeBuilder: TraceTreeBuilder = new TraceTreeBuilder({
           rewriteError: options.rewriteError,
           logger,

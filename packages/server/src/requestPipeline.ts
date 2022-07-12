@@ -51,6 +51,7 @@ import {
 import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery.js';
 import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
 import { isDefined } from './utils/isDefined.js';
+import type { Logger } from '@apollo/utils.logger';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 
@@ -91,6 +92,7 @@ const getPersistedQueryErrorHttp = () => ({
 export async function processGraphQLRequest<TContext extends BaseContext>(
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
+  logger: Logger,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
 ) {
   const requestListeners = (
@@ -193,7 +195,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         queryHash,
       );
     } catch (err) {
-      internals.logger.warn(
+      logger.warn(
         'An error occurred while attempting to read from the documentStore. ' +
           (err as Error)?.message || err,
       );
@@ -264,7 +266,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       Promise.resolve(
         schemaDerivedData.documentStore.set(queryHash, requestContext.document),
       ).catch((err) =>
-        internals.logger.warn(
+        logger.warn(
           'Could not store validated document. ' + err?.message || err,
         ),
       );
@@ -341,7 +343,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
           ? { ttl: internals.persistedQueries?.ttl }
           : undefined,
       ),
-    ).catch(internals.logger.warn);
+    ).catch(logger.warn);
   }
 
   const responseFromPlugin = await invokeHooksUntilDefinedAndNonNull(

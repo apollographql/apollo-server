@@ -72,8 +72,9 @@ export function ApolloServerPluginSchemaReporting<TContext extends BaseContext>(
     __internal_plugin_id__() {
       return 'SchemaReporting';
     },
-    async serverWillStart({ apollo, schema, logger }) {
+    async serverWillStart({ apollo, schema, server }) {
       const { key, graphRef } = apollo;
+      const { logger } = server;
       if (!key) {
         throw Error(
           'To use ApolloServerPluginSchemaReporting, you must provide an Apollo API ' +

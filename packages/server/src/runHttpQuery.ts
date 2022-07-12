@@ -6,12 +6,14 @@ import type {
   HTTPGraphQLResponse,
 } from './externalTypes';
 import {
+  ApolloServer,
   ApolloServerInternals,
   internalExecuteOperation,
   SchemaDerivedData,
 } from './ApolloServer.js';
 import type { FormattedExecutionResult } from 'graphql';
 import { BadRequestError } from './errors.js';
+import type { Logger } from '@apollo/utils.logger';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just
 // do want to use (our own? somebody else's?) Headers class.
@@ -100,10 +102,12 @@ export const badMethodErrorMessage =
   'Apollo Server supports only GET/POST requests.';
 
 export async function runHttpQuery<TContext extends BaseContext>(
+  server: ApolloServer<TContext>,
   httpRequest: HTTPGraphQLRequest,
   contextValue: TContext,
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
+  logger: Logger,
 ): Promise<HTTPGraphQLResponse> {
   let graphQLRequest: GraphQLRequest;
 
@@ -168,9 +172,11 @@ export async function runHttpQuery<TContext extends BaseContext>(
   }
 
   const graphQLResponse = await internalExecuteOperation({
+    server,
     graphQLRequest,
     contextValue,
     internals,
+    logger,
     schemaDerivedData,
   });
 
