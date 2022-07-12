@@ -1,12 +1,16 @@
 // This script updates packageVersion.ts to contain the version from
-// package.json before compilation, and puts the original contents in
-// .packageVersion.ts.original. A postcompile script moves the file back.
+// package.json. That file is gitignored and this script gets run by
+// "precompile" (which is itself run by "postinstall").
+//
+// This assumes that we always publish packages from a fresh checkout rather
+// than running `changeset version` and then `changeset publish` from the same
+// checkout without `npm run compile` or `npm install` in between.
 //
 // This script expects to be run from the project root (as `npm run` does).
 
 import assert from 'assert';
 import path from 'path';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 
 const { version } = JSON.parse(
   readFileSync(path.join('packages', 'server', 'package.json'), 'utf-8'),
@@ -17,27 +21,10 @@ assert.strictEqual(
   '"version" field missing from package.json',
 );
 
-const versionTSPath = path.join(
-  'packages',
-  'server',
-  'src',
-  'packageVersion.ts',
-);
-const versionTSOriginalPath = path.join(
-  'packages',
-  'server',
-  'src',
-  '.packageVersion.ts.original',
-);
+const versionTSDirectory = path.join('packages', 'server', 'src', 'generated');
+mkdirSync(versionTSDirectory, { recursive: true });
 
-const originalContents = readFileSync(versionTSPath, 'utf-8');
-writeFileSync(versionTSOriginalPath, originalContents);
-const updatedContents = originalContents.replace(/\blocal\b/, version);
-
-assert.notStrictEqual(
-  updatedContents.indexOf(version),
-  -1,
-  'Failed to update version.ts with @apollo/server version',
+writeFileSync(
+  path.join(versionTSDirectory, 'packageVersion.ts'),
+  `export const packageVersion = ${JSON.stringify(version)};\n`,
 );
-
-writeFileSync(versionTSPath, updatedContents);

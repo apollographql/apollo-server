@@ -35,7 +35,7 @@ import type {
 } from './options';
 import { OurReport } from './stats.js';
 import { makeTraceDetails } from './traceDetails.js';
-import { packageVersion } from '../../packageVersion.js';
+import { packageVersion } from '../../generated/packageVersion.js';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
