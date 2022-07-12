@@ -418,17 +418,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // `buildExecutionContext`).
       if (!requestContext.operation && result.errors?.length) {
         const error = result.errors[0];
-        const err = new OperationResolutionError(error.message, {
+        throw new OperationResolutionError(error.message, {
           nodes: error.nodes,
           originalError: error.originalError,
           extensions: error.extensions,
         });
-
-        await Promise.all(
-          executionListeners.map((l) => l.executionDidEnd?.(err)),
-        );
-
-        return await sendErrorResponse(err, newHTTPGraphQLHead(400));
       }
 
       // The first thing that execution does is coerce the request's variables
@@ -464,12 +458,18 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
       await Promise.all(executionListeners.map((l) => l.executionDidEnd?.()));
     } catch (executionMaybeError: unknown) {
+
       const executionError = ensureError(executionMaybeError);
       await Promise.all(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
 
-      return await sendErrorResponse(executionError, newHTTPGraphQLHead(500));
+      const errorStatusCode =
+        executionMaybeError instanceof OperationResolutionError ? 400 : 500;
+      return await sendErrorResponse(
+        executionError,
+        newHTTPGraphQLHead(errorStatusCode),
+      );
     }
   }
 
