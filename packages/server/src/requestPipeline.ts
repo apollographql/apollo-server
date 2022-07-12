@@ -25,6 +25,7 @@ import {
   SyntaxError,
   ensureError,
   normalizeAndFormatErrors,
+  OperationResolutionError,
 } from './errors.js';
 import type {
   GraphQLRequestContext,
@@ -412,6 +413,23 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
       );
 
+      // If we don't have an operation, there's no reason to go further. We know
+      // `result` will consist of one error (returned by `graphql-js`'s
+      // `buildExecutionContext`).
+      if (!requestContext.operation) {
+        if (!result.errors?.length) {
+          throw new Error(
+            'Unexpected error: Apollo Server did not resolve an operation but execute did not return errors',
+          );
+        }
+        const error = result.errors[0];
+        throw new OperationResolutionError(error.message, {
+          nodes: error.nodes,
+          originalError: error.originalError,
+          extensions: error.extensions,
+        });
+      }
+
       // The first thing that execution does is coerce the request's variables
       // to the types declared in the operation, which can lead to errors if
       // they are of the wrong type. It also makes sure that all non-null
@@ -450,7 +468,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
 
-      return await sendErrorResponse(executionError, newHTTPGraphQLHead(500));
+      const errorStatusCode =
+        executionMaybeError instanceof OperationResolutionError ? 400 : 500;
+      return await sendErrorResponse(
+        executionError,
+        newHTTPGraphQLHead(errorStatusCode),
+      );
     }
   }
 

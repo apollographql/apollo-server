@@ -104,6 +104,28 @@ export class UserInputError extends GraphQLError {
   }
 }
 
+export class OperationResolutionError extends GraphQLError {
+  constructor(
+    message: string,
+    options?: {
+      nodes?: ReadonlyArray<ASTNode> | undefined;
+      originalError?: Error;
+      extensions?: Record<string, any>;
+    },
+  ) {
+    super(message, {
+      nodes: options?.nodes,
+      originalError: options?.originalError,
+      extensions: {
+        ...options?.extensions,
+        code: 'OPERATION_RESOLUTION_FAILURE',
+      },
+    });
+
+    this.name = 'OperationResolutionError';
+  }
+}
+
 // TODO(AS4): We added this in AS4. Is that a good idea? We should at least
 // document it, and maybe consider using it for more of the errors in
 // runHttpQuery instead of just returning text/plain errors.
