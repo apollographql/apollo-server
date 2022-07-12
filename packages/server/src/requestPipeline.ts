@@ -450,7 +450,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
             extensions: e.extensions,
           });
         }
-
         return e;
       });
 
