@@ -416,7 +416,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // If we don't have an operation, there's no reason to go further. We know
       // `result` will consist of one error (returned by `graphql-js`'s
       // `buildExecutionContext`).
-      if (!requestContext.operation && result.errors?.length) {
+      if (!requestContext.operation) {
+        if (!result.errors?.length) {
+          throw new Error(
+            'Unexpected error: `graphql-js` did not resolve an operation or return errors',
+          );
+        }
         const error = result.errors[0];
         throw new OperationResolutionError(error.message, {
           nodes: error.nodes,
@@ -458,7 +463,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
       await Promise.all(executionListeners.map((l) => l.executionDidEnd?.()));
     } catch (executionMaybeError: unknown) {
-
       const executionError = ensureError(executionMaybeError);
       await Promise.all(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
