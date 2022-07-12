@@ -219,9 +219,35 @@ Paste this string into the Operations panel and click the blue button in the upp
 
 <img class="screenshot" src="./images/sandbox-response.jpg" width="400" alt="Sandbox response panel"/>
 
+One of the most important concepts of GraphQL is that clients can choose to query _only for the fields they need_. Delete `author` from the query string and execute it again. The response updates to include only the `title` field for each book!
+
 > **Note:** If your server is deployed to an environment where `NODE_ENV` is set to `production`, introspection is **disabled** by default. This prevents Apollo Sandbox from working properly. To enable introspection, set `introspection: true` in [the options to `ApolloServer`'s constructor](./api/apollo-server/#constructor).
 
-One of the most important concepts of GraphQL is that clients can choose to query _only for the fields they need_. Delete `author` from the query string and execute it again. The response updates to include only the `title` field for each book!
+> **Note:** If you have a CORS configuration set up, your Apollo Server endpoint will need to whitelist
+https://studio.apollographql.com to use Sandbox on apollographql.com. You can choose instead to
+configure the landing page to embed the Apollo Sandbox on your endpoint. In the embedded Sandbox,
+all requests go through your Apollo Server endpoint, so no CORS configuration is required.
+See all configuration options for the landing pages [here](/api/plugin/landing-pages/).
+
+```js title="index.js"
+// The ApolloServer constructor requires two parameters: your schema
+// definition and your set of resolvers.
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+  cache: 'bounded',
+  // modify your landing page config with the `plugins` option
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
+});
+
+// The `listen` method launches a web server.
+server.listen().then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+});
+```
 
 ## Combined example
 
