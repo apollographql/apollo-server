@@ -8,7 +8,7 @@ import type {
   ReportSchemaResponse,
 } from './generated/operations';
 import type { Fetcher } from '@apollo/utils.fetcher';
-import { packageVersion } from '../../packageVersion.js';
+import { packageVersion } from '../../generated/packageVersion.js';
 
 export const schemaReportGql = `mutation SchemaReport($report: SchemaReport!, $coreSchema: String) {
   reportSchema(report: $report, coreSchema: $coreSchema) {

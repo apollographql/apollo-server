@@ -8,7 +8,7 @@ import { schemaIsFederated } from '../schemaIsFederated.js';
 import type { SchemaReport } from './generated/operations';
 import type { BaseContext } from '../../externalTypes';
 import type { Fetcher } from '@apollo/utils.fetcher';
-import { packageVersion } from '../../packageVersion.js';
+import { packageVersion } from '../../generated/packageVersion.js';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**
