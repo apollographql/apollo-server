@@ -14,6 +14,16 @@ export interface InternalApolloServerPlugin<TContext extends BaseContext>
   __internal_plugin_id__(): InternalPluginId;
 }
 
+// Helper function for writing internal plugins which lets you write an object
+// that is type-checked as InternalApolloServerPlugin but is still only of type
+// ApolloServerPlugin (as appropriate for externally-exported plugin-returning
+// functions).
+export function internalPlugin<TContext extends BaseContext>(
+  p: InternalApolloServerPlugin<TContext>,
+): ApolloServerPlugin<TContext> {
+  return p;
+}
+
 export type InternalPluginId =
   | 'CacheControl'
   | 'LandingPageDisabled'

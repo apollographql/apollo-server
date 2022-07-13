@@ -1,4 +1,5 @@
 import type {
+  ApolloServerPlugin,
   BaseContext,
   CacheAnnotation,
   CacheHint,
@@ -15,7 +16,7 @@ import {
   responsePathAsArray,
 } from 'graphql';
 import { newCachePolicy } from '../../cachePolicy.js';
-import type { InternalApolloServerPlugin } from '../../internalPlugin';
+import { internalPlugin } from '../../internalPlugin.js';
 import LRUCache from 'lru-cache';
 
 export interface ApolloServerPluginCacheControlOptions {
@@ -39,7 +40,7 @@ export interface ApolloServerPluginCacheControlOptions {
 
 export function ApolloServerPluginCacheControl<TContext extends BaseContext>(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
-): InternalApolloServerPlugin<TContext> {
+): ApolloServerPlugin<TContext> {
   let typeAnnotationCache: LRUCache<GraphQLCompositeType, CacheAnnotation>;
 
   let fieldAnnotationCache: LRUCache<
@@ -47,7 +48,7 @@ export function ApolloServerPluginCacheControl<TContext extends BaseContext>(
     CacheAnnotation
   >;
 
-  return {
+  return internalPlugin({
     __internal_plugin_id__() {
       return 'CacheControl';
     },
@@ -267,7 +268,7 @@ export function ApolloServerPluginCacheControl<TContext extends BaseContext>(
         },
       };
     },
-  };
+  });
 }
 
 function cacheAnnotationFromDirectives(

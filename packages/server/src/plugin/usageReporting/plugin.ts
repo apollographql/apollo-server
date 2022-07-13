@@ -12,6 +12,7 @@ import fetch from 'node-fetch';
 import os from 'os';
 import { gzip } from 'zlib';
 import type {
+  ApolloServerPlugin,
   BaseContext,
   GraphQLRequestContext,
   GraphQLRequestContextDidResolveOperation,
@@ -19,7 +20,7 @@ import type {
   GraphQLRequestListener,
   GraphQLServerListener,
 } from '../../externalTypes';
-import type { InternalApolloServerPlugin } from '../../internalPlugin';
+import { internalPlugin } from '../../internalPlugin.js';
 import type { HeaderMap } from '../../runHttpQuery';
 import { computeCoreSchemaHash } from '../schemaReporting/index.js';
 import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder.js';
@@ -65,7 +66,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
   options: ApolloServerPluginUsageReportingOptions<TContext> = Object.create(
     null,
   ),
-): InternalApolloServerPlugin<TContext> {
+): ApolloServerPlugin<TContext> {
   // Note: We'd like to change the default to false in Apollo Server 4, so that
   // the default usage reporting experience doesn't include *anything* that
   // could potentially be PII (like error messages) --- just operations and
@@ -84,7 +85,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
   let requestDidStartHandler: (
     requestContext: GraphQLRequestContext<TContext>,
   ) => GraphQLRequestListener<TContext>;
-  return {
+  return internalPlugin({
     __internal_plugin_id__() {
       return 'UsageReporting';
     },
@@ -777,7 +778,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         },
       };
     },
-  };
+  });
 }
 
 export function makeHTTPRequestHeaders(

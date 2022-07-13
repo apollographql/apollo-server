@@ -1,9 +1,9 @@
 import { Trace } from '@apollo/usage-reporting-protobuf';
 import { TraceTreeBuilder } from '../traceTreeBuilder.js';
 import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
-import type { InternalApolloServerPlugin } from '../../internalPlugin';
+import { internalPlugin } from '../../internalPlugin.js';
 import { schemaIsFederated } from '../schemaIsFederated.js';
-import type { BaseContext } from '../../externalTypes';
+import type { ApolloServerPlugin, BaseContext } from '../../externalTypes';
 
 export interface ApolloServerPluginInlineTraceOptions {
   /**
@@ -33,9 +33,9 @@ export interface ApolloServerPluginInlineTraceOptions {
 // usage reporting ingress.
 export function ApolloServerPluginInlineTrace<TContext extends BaseContext>(
   options: ApolloServerPluginInlineTraceOptions = Object.create(null),
-): InternalApolloServerPlugin<TContext> {
+): ApolloServerPlugin<TContext> {
   let enabled: boolean | null = options.__onlyIfSchemaIsFederated ? null : true;
-  return {
+  return internalPlugin({
     __internal_plugin_id__() {
       return 'InlineTrace';
     },
@@ -128,5 +128,5 @@ export function ApolloServerPluginInlineTrace<TContext extends BaseContext>(
         },
       };
     },
-  };
+  });
 }
