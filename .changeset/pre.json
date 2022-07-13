@@ -7,5 +7,7 @@
     "@apollo/server": "3.6.7",
     "@apollo/usage-reporting-protobuf": "3.3.1"
   },
-  "changesets": []
+  "changesets": [
+    "small-cycles-hammer"
+  ]
 }
