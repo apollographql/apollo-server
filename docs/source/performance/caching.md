@@ -472,3 +472,4 @@ In addition to [the `sessionId` function](#identifying-users-for-private-respons
 | `extraCacheKeyData` | This function's return value (any JSON-stringifiable object) is added to the key for the cached response. For example, if your API includes translatable text, this function can return a string derived from `requestContext.request.http.headers.get('Accept-Language')`. |
 | `shouldReadFromCache` | If this function returns `false`, Apollo Server _skips_ the cache for the incoming operation, even if a valid response is available. |
 | `shouldWriteToCache` | If this function returns `false`, Apollo Server doesn't cache its response for the incoming operation, even if the response's `maxAge` is greater than `0`. |
+| `generateCacheKey` | Customize generation of the cache key. By default, this is the SHA256 hash of the JSON encoding of an object containing relevant data. |
