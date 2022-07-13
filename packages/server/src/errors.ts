@@ -172,12 +172,7 @@ export function normalizeAndFormatErrors(
   });
 
   function enrichError(maybeError: unknown): GraphQLFormattedError {
-    const error: Error = ensureError(maybeError);
-
-    const graphqlError: GraphQLError =
-      error instanceof GraphQLError
-        ? error
-        : new GraphQLError(error.message, { originalError: error });
+    const graphqlError = ensureGraphQLError(maybeError);
 
     const extensions: GraphQLErrorExtensions = {
       ...graphqlError.extensions,
@@ -213,4 +208,12 @@ export function ensureError(maybeError: unknown): Error {
   return maybeError instanceof Error
     ? maybeError
     : new GraphQLError('Unexpected error value: ' + String(maybeError));
+}
+
+export function ensureGraphQLError(maybeError: unknown): GraphQLError {
+  const error: Error = ensureError(maybeError);
+
+  return error instanceof GraphQLError
+    ? error
+    : new GraphQLError(error.message, { originalError: error });
 }

@@ -2,7 +2,6 @@ import { createHash } from '@apollo/utils.createhash';
 import {
   specifiedRules,
   getOperationAST,
-  ExecutionArgs,
   GraphQLError,
   GraphQLFormattedError,
   validate,
@@ -26,6 +25,7 @@ import {
   ensureError,
   normalizeAndFormatErrors,
   OperationResolutionError,
+  ensureGraphQLError,
 } from './errors.js';
 import type {
   GraphQLRequestContext,
@@ -115,7 +115,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     // support them.
     if (!internals.persistedQueries) {
       return await sendErrorResponse(
-        new PersistedQueryNotSupportedError(),
+        [new PersistedQueryNotSupportedError()],
         // Not super clear why we need this to be uncached (makes sense for
         // PersistedQueryNotFoundError, because there we're about to fill the
         // cache and make the next copy of the same request succeed) but we've
@@ -123,9 +123,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         getPersistedQueryErrorHttp(),
       );
     } else if (extensions.persistedQuery.version !== 1) {
-      return await sendErrorResponse(
+      return await sendErrorResponse([
         new GraphQLError('Unsupported persisted query version'),
-      );
+      ]);
     }
 
     queryHash = extensions.persistedQuery.sha256Hash;
@@ -136,7 +136,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         requestContext.metrics.persistedQueryHit = true;
       } else {
         return await sendErrorResponse(
-          new PersistedQueryNotFoundError(),
+          [new PersistedQueryNotFoundError()],
           getPersistedQueryErrorHttp(),
         );
       }
@@ -148,9 +148,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // new and potentially malicious query is associated with
       // an existing hash.
       if (queryHash !== computedQueryHash) {
-        return await sendErrorResponse(
+        return await sendErrorResponse([
           new GraphQLError('provided sha does not match query'),
-        );
+        ]);
       }
 
       // We won't write to the persisted query cache until later.
@@ -162,11 +162,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   } else if (query) {
     queryHash = computeQueryHash(query);
   } else {
-    return await sendErrorResponse(
+    return await sendErrorResponse([
       new BadRequestError(
         'GraphQL operations must contain a non-empty `query` or a `persistedQuery` extension.',
       ),
-    );
+    ]);
   }
 
   requestContext.queryHash = queryHash;
@@ -194,10 +194,10 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       requestContext.document = await schemaDerivedData.documentStore.get(
         queryHash,
       );
-    } catch (err) {
+    } catch (err: unknown) {
       logger.warn(
         'An error occurred while attempting to read from the documentStore. ' +
-          (err as Error)?.message || err,
+          ensureError(err).message,
       );
     }
   }
@@ -215,17 +215,14 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
     try {
       requestContext.document = parse(query, internals.parseOptions);
-      await parsingDidEnd();
-    } catch (syntaxError) {
-      await parsingDidEnd(syntaxError as Error);
-      // XXX: This cast is pretty sketchy, as other error types can be thrown
-      // by parsingDidEnd!
-      return await sendErrorResponse(
-        syntaxError instanceof GraphQLError
-          ? new SyntaxError(syntaxError)
-          : syntaxError,
-      );
+    } catch (syntaxMaybeError: unknown) {
+      const error = ensureError(syntaxMaybeError);
+      await parsingDidEnd(error);
+      return await sendErrorResponse([
+        new SyntaxError(ensureGraphQLError(error)),
+      ]);
     }
+    await parsingDidEnd();
 
     const validationDidEnd = await invokeDidStartHook(
       requestListeners,
@@ -297,9 +294,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     operation.operation !== 'query'
   ) {
     return await sendErrorResponse(
-      new BadRequestError(
-        `GET requests only support query operations, not ${operation.operation} operations`,
-      ),
+      [
+        new BadRequestError(
+          `GET requests only support query operations, not ${operation.operation} operations`,
+        ),
+      ],
       { statusCode: 405, headers: new HeaderMap([['allow', 'POST']]) },
     );
   }
@@ -312,11 +311,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         ),
       ),
     );
-  } catch (err) {
-    // XXX: This cast is pretty sketchy, as other error types can be thrown
-    // by didResolveOperation!
+  } catch (err: unknown) {
     return await sendErrorResponse(
-      err as GraphQLError,
+      [ensureGraphQLError(err)],
       newHTTPGraphQLHead(500),
     );
   }
@@ -473,7 +470,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       const errorStatusCode =
         executionMaybeError instanceof OperationResolutionError ? 400 : 500;
       return await sendErrorResponse(
-        executionError,
+        [ensureGraphQLError(executionError)],
         newHTTPGraphQLHead(errorStatusCode),
       );
     }
@@ -487,26 +484,21 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   ): Promise<ExecutionResult> {
     const { request, document } = requestContext;
 
-    const executionArgs: ExecutionArgs = {
-      schema: schemaDerivedData.schema,
-      document,
-      rootValue:
-        typeof internals.rootValue === 'function'
-          ? internals.rootValue(document)
-          : internals.rootValue,
-      contextValue: requestContext.contextValue,
-      variableValues: request.variables,
-      operationName: request.operationName,
-      fieldResolver: internals.fieldResolver,
-    };
-
     if (internals.executor) {
-      // XXX Nothing guarantees that the only errors thrown or returned
-      // in result.errors are GraphQLErrors, even though other code
-      // (eg usage reporting) assumes that.
       return await internals.executor(requestContext);
     } else {
-      return await graphqlExecute(executionArgs);
+      return await graphqlExecute({
+        schema: schemaDerivedData.schema,
+        document,
+        rootValue:
+          typeof internals.rootValue === 'function'
+            ? internals.rootValue(document)
+            : internals.rootValue,
+        contextValue: requestContext.contextValue,
+        variableValues: request.variables,
+        operationName: request.operationName,
+        fieldResolver: internals.fieldResolver,
+      });
     }
   }
 
@@ -555,14 +547,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   //
   // Then, if the HTTP status code is not yet set, it sets it to 400.
   async function sendErrorResponse(
-    errorOrErrors: ReadonlyArray<unknown> | unknown,
+    errors: ReadonlyArray<GraphQLError>,
     http: HTTPGraphQLHead = newHTTPGraphQLHead(),
   ) {
-    // If a single error is passed, it should still be encapsulated in an array.
-    const errors = Array.isArray(errorOrErrors)
-      ? errorOrErrors
-      : [errorOrErrors];
-
     await didEncounterErrors(errors);
 
     requestContext.response.result = {
