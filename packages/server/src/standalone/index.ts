@@ -23,7 +23,7 @@ export interface StandaloneServerContextFunctionArgument {
   res: ServerResponse;
 }
 
-interface HTTPServerOptions<TContext extends BaseContext> {
+export interface StartStandaloneServerOptions<TContext extends BaseContext> {
   context?: ContextFunction<
     [StandaloneServerContextFunctionArgument],
     TContext
@@ -32,17 +32,19 @@ interface HTTPServerOptions<TContext extends BaseContext> {
 
 export async function startStandaloneServer(
   server: ApolloServer<BaseContext>,
-  options?: HTTPServerOptions<BaseContext> & { listen?: ListenOptions },
-): Promise<{ url: string }>;
-export async function startStandaloneServer<TContext extends BaseContext>(
-  server: ApolloServer<TContext>,
-  options: WithRequired<HTTPServerOptions<TContext>, 'context'> & {
+  options?: StartStandaloneServerOptions<BaseContext> & {
     listen?: ListenOptions;
   },
 ): Promise<{ url: string }>;
 export async function startStandaloneServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
-  options?: HTTPServerOptions<TContext> & { listen?: ListenOptions },
+  options: WithRequired<StartStandaloneServerOptions<TContext>, 'context'> & {
+    listen?: ListenOptions;
+  },
+): Promise<{ url: string }>;
+export async function startStandaloneServer<TContext extends BaseContext>(
+  server: ApolloServer<TContext>,
+  options?: StartStandaloneServerOptions<TContext> & { listen?: ListenOptions },
 ): Promise<{ url: string }> {
   const app: express.Express = express();
   const httpServer: http.Server = http.createServer(app);
