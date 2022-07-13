@@ -1,4 +1,3 @@
-import { createHash } from '@apollo/utils.createhash';
 import os from 'os';
 import { internalPlugin } from '../../internalPlugin.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,6 +8,7 @@ import type { SchemaReport } from './generated/operations';
 import type { ApolloServerPlugin, BaseContext } from '../../externalTypes';
 import type { Fetcher } from '@apollo/utils.fetcher';
 import { packageVersion } from '../../generated/packageVersion.js';
+import { computeCoreSchemaHash } from '../../utils/computeCoreSchemaHash.js';
 
 export interface ApolloServerPluginSchemaReportingOptions {
   /**
@@ -197,8 +197,4 @@ export function ApolloServerPluginSchemaReporting<TContext extends BaseContext>(
       };
     },
   });
-}
-
-export function computeCoreSchemaHash(schema: string): string {
-  return createHash('sha256').update(schema).digest('hex');
 }

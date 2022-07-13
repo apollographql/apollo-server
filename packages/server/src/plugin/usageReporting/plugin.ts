@@ -22,7 +22,6 @@ import type {
 } from '../../externalTypes';
 import { internalPlugin } from '../../internalPlugin.js';
 import type { HeaderMap } from '../../runHttpQuery';
-import { computeCoreSchemaHash } from '../schemaReporting/index.js';
 import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder.js';
 import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace.js';
 import {
@@ -37,6 +36,7 @@ import type {
 import { OurReport } from './stats.js';
 import { makeTraceDetails } from './traceDetails.js';
 import { packageVersion } from '../../generated/packageVersion.js';
+import { computeCoreSchemaHash } from '../../utils/computeCoreSchemaHash.js';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
