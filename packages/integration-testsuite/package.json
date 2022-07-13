@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server-integration-testsuite",
-  "version": "3.6.7",
+  "version": "4.0.0-alpha.0",
   "description": "Test suite for Apollo Server integrations",
   "type": "module",
   "main": "dist/index.js",
@@ -30,7 +30,7 @@
     "@apollo/client": "^3.6.9",
     "@apollo/utils.keyvaluecache": "^1.0.1",
     "@apollo/utils.createhash": "^1.1.0",
-    "@apollo/usage-reporting-protobuf": "^3.3.1",
+    "@apollo/usage-reporting-protobuf": "^4.0.0-alpha.0",
     "@josephg/resolvable": "^1.0.1",
     "body-parser": "^1.20.0",
     "express": "^4.18.1",
@@ -40,7 +40,7 @@
     "supertest": "^6.2.3"
   },
   "peerDependencies": {
-    "@apollo/server": "^3.6.7",
+    "@apollo/server": "^4.0.0-alpha.0",
     "@jest/globals": "28.x",
     "graphql": "^16.5.0",
     "jest": "28.x"

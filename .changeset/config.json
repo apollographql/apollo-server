@@ -6,8 +6,8 @@
   ],
   "commit": false,
   "fixed": [["@apollo/server", "@apollo/server-integration-testsuite"]],
-  "access": "restricted",
-  "baseBranch": "main",
+  "access": "public",
+  "baseBranch": "version-4",
   "updateInternalDependencies": "patch",
   "ignore": []
 }
