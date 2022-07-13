@@ -1213,6 +1213,12 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
   return requestContext.response;
 }
 
+// Unlike InternalPlugins (where we can decide whether to install the default
+// plugin based on looking at which plugins are installed),
+// ImplicitlyInstallablePlugins (ie the default landing page plugin) can't
+// determine if they're needed until later in startup. Specifically, we can't
+// know if we've defined our own landing page until after serverWillStart
+// plugins have run.
 export type ImplicitlyInstallablePlugin<TContext extends BaseContext> =
   ApolloServerPlugin<TContext> & {
     __internal_installed_implicitly__: boolean;

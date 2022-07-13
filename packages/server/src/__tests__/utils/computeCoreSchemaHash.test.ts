@@ -1,5 +1,5 @@
-import { computeCoreSchemaHash } from '../../../plugin/schemaReporting';
 import { printSchema, buildSchema } from 'graphql';
+import { computeCoreSchemaHash } from '../../utils/computeCoreSchemaHash.js';
 
 describe('Executable Schema Id', () => {
   const unsortedGQLSchemaDocument = `

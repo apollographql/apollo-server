@@ -1,4 +1,4 @@
-import type { BaseContext } from '../../../externalTypes';
+import type { ApolloServerPlugin, BaseContext } from '../../../externalTypes';
 import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
 import type {
   ApolloServerPluginLandingPageLocalDefaultOptions,
@@ -10,11 +10,16 @@ import {
   getEmbeddedSandboxHTML,
 } from './getEmbeddedHTML.js';
 
+export type {
+  ApolloServerPluginLandingPageLocalDefaultOptions,
+  ApolloServerPluginLandingPageProductionDefaultOptions,
+};
+
 export function ApolloServerPluginLandingPageLocalDefault<
   TContext extends BaseContext,
 >(
   options: ApolloServerPluginLandingPageLocalDefaultOptions = {},
-): ImplicitlyInstallablePlugin<TContext> {
+): ApolloServerPlugin<TContext> {
   const { version, __internal_apolloStudioEnv__, ...rest } = {
     // we default to Sandbox unless embed is specified as false
     embed: true as const,
@@ -31,7 +36,7 @@ export function ApolloServerPluginLandingPageProductionDefault<
   TContext extends BaseContext,
 >(
   options: ApolloServerPluginLandingPageProductionDefaultOptions = {},
-): ImplicitlyInstallablePlugin<TContext> {
+): ApolloServerPlugin<TContext> {
   const { version, __internal_apolloStudioEnv__, ...rest } = options;
   return ApolloServerPluginLandingPageDefault(version, {
     isProd: true,
