@@ -230,8 +230,9 @@ all requests go through your Apollo Server endpoint so no CORS configuration is 
 See all configuration options for the landing pages [here](/api/plugin/landing-pages/).
 
 ```js title="index.js" {9-12}
-import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
-// The ApolloServer constructor requires two parameters: your schema
+import {
+  ApolloServerPluginLandingPageLocalDefault
+} from "apollo-server-core";// The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 const server = new ApolloServer({
   typeDefs,
