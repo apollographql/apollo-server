@@ -223,13 +223,14 @@ One of the most important concepts of GraphQL is that clients can choose to quer
 
 > **Note:** If your server is deployed to an environment where `NODE_ENV` is set to `production`, introspection is **disabled** by default. This prevents Apollo Sandbox from working properly. To enable introspection, set `introspection: true` in [the options to `ApolloServer`'s constructor](./api/apollo-server/#constructor).
 
-> **Note:** If you have a CORS configuration set up, your Apollo Server endpoint will need to whitelist
-https://studio.apollographql.com to use Sandbox on apollographql.com. You can choose instead to
-configure the landing page to embed the Apollo Sandbox on your endpoint. In the embedded Sandbox,
-all requests go through your Apollo Server endpoint, so no CORS configuration is required.
+> **Note:** If you have a CORS configured, your Apollo Server endpoint will need to safelist
+https://studio.apollographql.com to use Sandbox on apollographql.com. Instead, you can choose to
+configure the landing page to embed the Apollo Sandbox for your endpoint. In the embedded Sandbox,
+all requests go through your Apollo Server endpoint so no CORS configuration is required.
 See all configuration options for the landing pages [here](/api/plugin/landing-pages/).
 
 ```js title="index.js"
+import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 const server = new ApolloServer({
