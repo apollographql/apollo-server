@@ -50,7 +50,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   context!: TContext;
   memoizedResults = new Map<string, Promise<any>>();
   baseURL?: string;
-  getCacheEnabled: boolean = true;
+  requestCacheEnabled: boolean = true;
 
   constructor(private httpFetch?: typeof fetch) {
     super();
@@ -268,7 +268,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
     // Cache GET requests based on the calculated cache key
     // You can disable the entire cache with getCacheEnabled=false
-    if (this.getCacheEnabled) {
+    if (this.requestCacheEnabled) {
       if (request.method === 'GET') {
         let promise = this.memoizedResults.get(cacheKey);
         if (promise) return promise;

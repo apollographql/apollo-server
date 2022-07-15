@@ -1,7 +1,6 @@
 ---
 title: Data sources
 description: Manage connections to databases and REST APIs
-api_reference: true
 ---
 
 **Data sources** are classes that Apollo Server can use to encapsulate fetching data from a particular source, such as a database or a REST API. These classes help handle caching, deduplication, and errors while resolving operations.
@@ -97,7 +96,7 @@ By default, data source implementations use Apollo Server's in-memory cache to s
 
 When you initialize Apollo Server, you can provide its constructor a _different_ cache object that implements the [`KeyValueCache` interface](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface). This enables you to back your cache with shared stores like Memcached or Redis.
 
-```js title=server.js
+```js title="server.js"
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -125,85 +124,77 @@ npm install apollo-datasource-rest
 
 You then extend the `RESTDataSource` class and implement whatever data-fetching methods your resolvers need. These methods can use built-in convenience methods (like `get` and `post`) to perform HTTP requests, helping you add query parameters, parse JSON results, and handle errors.
 
-### API reference
+### API Reference
+To see the all the properties and functions that can be overridden, the [source code](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest) is always the best option.
 
-<table class="field-table">
-  <thead>
-  <tr>
-    <th>Name /<br/>Type</th>
-    <th>Description</th>
-  </tr>
-  </thead>
-  <tbody>
-  <tr>
-    <td colspan="2">
+#### Constructor Parameters
+##### `httpFetch`
 
-      **Constructor options**
-    </td>
-  </tr>
+Optional constructor option which allows overriding the `fetch` implementation used when calling data sources.
 
-  <tr>
-    <td>
+#### Overridable Properties
+##### `baseURL`
+Optional value to use for all the REST calls. If it is set in your class implementation, this base URL is used as the prefix for all calls. If it is not set, then the value passed to the REST call is exactly the value used.
 
-      ##### `healthCheckPath`
+```js title="baseURL.js"
+class MoviesAPI extends RESTDataSource {
+  constructor() {
+    super();
+    this.baseURL = 'https://movies-api.example.com/';
+  }
 
-      `string` or `null`
-    </td>
-    <td>
+  // GET
+  async getMovie(id) {
+    return this.get(
+      `movies/${encodeURIComponent(id)}` // path
+    );
+  }
+}
+```
 
-      Disable [HTTP-level health checks](../monitoring/health-checks/#http-level-health-checks) by passing `null`, or change the path on which it is served from the default of `/.well-known/apollo/server-health`.
+##### `requestCacheEnabled`
+By default, `RESTDataSource` caches all outgoing GET **requests** in a separate memoized cache from the regular response cache. It does this to prevent duplicate calls that might happen in rapid succession.
+If a request is made with the same cache key (URL by default) with an HTTP method other than GET, the cached request is then cleared.
 
-    </td>
-  </tr>
+If you would like to disable the GET request cache, set the `requestCacheEnabled` property to `false`.
 
-  <tr>
-    <td>
+```js title="requestCacheEnabled.js"
+class MoviesAPI extends RESTDataSource {
+  constructor() {
+    super();
+    // Defaults to true
+    this.requestCacheEnabled = false;
+  }
 
-      ##### `onHealthCheck`
+  // Outgoing requests are never cached, however the response cache is still enabled
+  async getMovie(id) {
+    return this.get(
+      `https://movies-api.example.com/movies/${encodeURIComponent(id)}` // path
+    );
+  }
+}
+```
 
-      `Function`
-    </td>
-    <td>
+#### Overridable methods
 
-      A custom function to execute when Apollo Server receives a request at the [HTTP-level health check](../monitoring/health-checks/#http-level-health-checks) endpoint.
+##### `cacheKeyFor`
+By default, `RESTDatasource` uses the full request URL as the cache key. Override this method to remove query parameters or compute a custom cache key.
 
-    </td>
-  </tr>
+For example, you could use this to use header fields as part of the cache key. Even though we do validate header fields and don't serve responses from cache when they don't match, new responses overwrite old ones with different header fields.
 
+##### `willSendRequest`
+This method is invoked just before the fetch call is made. If a `Promise` is returned from this method it will wait until the promise is completed to continue executing the request.
 
-  <tr>
-    <td>
+##### `cacheOptionsFor`
+Allows setting the `CacheOptions` to be used for each request/response in the HTTPCache. This is separate from the request-only cache.
 
-      ##### `cors`
+##### `didReceiveResponse`
+By default, this method checks if the response was returned successfully and parses the response into the result object. If the response had an error, it detects which type of HTTP error and throws the error result.
 
-      `Object` or `Boolean`
-    </td>
-    <td>
+If you override this behaviour, be sure to implement the proper error handling.
 
-      An `Object` containing [configuration options](https://github.com/expressjs/cors#configuration-options) for the server's CORS behavior. Provide `false` to remove CORS middleware entirely.
-
-    </td>
-  </tr>
-
-  <tr>
-    <td>
-
-      ##### `stopGracePeriodMillis`
-
-      `number`
-    </td>
-    <td>
-
-      The amount of time to wait after [`ApolloServer.stop()`](#stop) is called (including via a [termination signal](#stoponterminationsignals)) before forcefully closing all active connections. If you pass `Infinity`, Apollo Server waits indefinitely for all active connections to go idle.
-
-      The default value is `10_000` (10 seconds).
-
-    </td>
-  </tr>
-
-
-  </tbody>
-</table>
+##### `didEncounterError`
+By default, this method just throws the `error` it was given. If you override this method, you can choose to either perform some additional logic and still throw, or to swallow the error by not throwing the error result.
 
 ### Example
 
