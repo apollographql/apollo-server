@@ -8,8 +8,8 @@ import {
 import {
   RESTDataSource,
   RequestOptions,
-  CacheOptions
-} from "../RESTDataSource";
+  CacheOptions,
+} from '../RESTDataSource';
 
 import { HTTPCache } from '../HTTPCache';
 import { MapKeyValueCache } from './MapKeyValueCache';
@@ -818,7 +818,7 @@ describe('RESTDataSource', () => {
         // @ts-ignore
         override cacheOptionsFor(_, __): CacheOptions | undefined {
           return {
-            ttl: 1000000
+            ttl: 1000000,
           };
         }
       })();
@@ -848,7 +848,7 @@ describe('RESTDataSource', () => {
         // @ts-ignore
         override cacheOptionsFor(_, __): CacheOptions | undefined {
           return {
-            ttl: 1
+            ttl: 1,
           };
         }
       })();

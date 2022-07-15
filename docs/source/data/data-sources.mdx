@@ -132,7 +132,7 @@ To see the all the properties and functions that can be overridden, the [source 
 
 Optional constructor option which allows overriding the `fetch` implementation used when calling data sources.
 
-#### Overridable Properties
+#### Properties
 ##### `baseURL`
 Optional value to use for all the REST calls. If it is set in your class implementation, this base URL is used as the prefix for all calls. If it is not set, then the value passed to the REST call is exactly the value used.
 
@@ -175,7 +175,7 @@ class MoviesAPI extends RESTDataSource {
 }
 ```
 
-#### Overridable methods
+#### Methods
 
 ##### `cacheKeyFor`
 By default, `RESTDatasource` uses the full request URL as the cache key. Override this method to remove query parameters or compute a custom cache key.
@@ -191,7 +191,7 @@ Allows setting the `CacheOptions` to be used for each request/response in the HT
 ##### `didReceiveResponse`
 By default, this method checks if the response was returned successfully and parses the response into the result object. If the response had an error, it detects which type of HTTP error and throws the error result.
 
-If you override this behaviour, be sure to implement the proper error handling.
+If you override this behavior, be sure to implement the proper error handling.
 
 ##### `didEncounterError`
 By default, this method just throws the `error` it was given. If you override this method, you can choose to either perform some additional logic and still throw, or to swallow the error by not throwing the error result.
