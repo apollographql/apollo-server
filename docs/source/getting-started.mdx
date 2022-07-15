@@ -229,20 +229,23 @@ configure the landing page to embed the Apollo Sandbox for your endpoint. In the
 all requests go through your Apollo Server endpoint so no CORS configuration is required.
 See all configuration options for the landing pages [here](/api/plugin/landing-pages/).
 
-```js title="index.js" {9-12}
+```js title="index.js"
 import {
   ApolloServerPluginLandingPageLocalDefault
-} from "apollo-server-core";// The ApolloServer constructor requires two parameters: your schema
+} from "apollo-server-core";
+// The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  // highlight-start
   // modify your landing page config with the `plugins` option
   plugins: [
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
+  // highlight-end
 });
 
 // The `listen` method launches a web server.
