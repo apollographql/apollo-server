@@ -267,7 +267,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     };
 
     // Cache GET requests based on the calculated cache key
-    // You can disable the entire cache with getCacheEnabled=false
+    // Disabling the request cache does not disable the response cache
     if (this.requestCacheEnabled) {
       if (request.method === 'GET') {
         let promise = this.memoizedResults.get(cacheKey);
