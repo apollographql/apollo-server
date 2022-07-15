@@ -41,6 +41,80 @@ class MoviesAPI extends RESTDataSource {
 }
 ```
 
+## API Reference
+View the source code to see the all the properties and functions that can be overridden and their specific parameters. This section lists the usage and default behavior of the `RESTDatasource` class.
+
+### Constructor Parameters
+#### `httpFetch`
+
+Optional constructor option which allows overriding the `fetch` implementation used when calling data sources.
+
+### Properties
+#### `baseURL`
+Optional value to use for all the REST calls. If it is set in your class implementation, this base URL is used as the prefix for all calls. If it is not set, then the value passed to the REST call is exactly the value used.
+
+```js title="baseURL.js"
+class MoviesAPI extends RESTDataSource {
+  constructor() {
+    super();
+    this.baseURL = 'https://movies-api.example.com/';
+  }
+
+  // GET
+  async getMovie(id) {
+    return this.get(
+      `movies/${encodeURIComponent(id)}` // path
+    );
+  }
+}
+```
+
+#### `requestCacheEnabled`
+By default, `RESTDataSource` caches all outgoing GET **requests** in a separate memoized cache from the regular response cache. It does this to prevent duplicate calls that might happen in rapid succession.
+If a request is made with the same cache key (URL by default) with an HTTP method other than GET, the cached request is then cleared.
+
+If you would like to disable the GET request cache, set the `requestCacheEnabled` property to `false`.
+
+```js title="requestCacheEnabled.js"
+class MoviesAPI extends RESTDataSource {
+  constructor() {
+    super();
+    // Defaults to true
+    this.requestCacheEnabled = false;
+  }
+
+  // Outgoing requests are never cached, however the response cache is still enabled
+  async getMovie(id) {
+    return this.get(
+      `https://movies-api.example.com/movies/${encodeURIComponent(id)}` // path
+    );
+  }
+}
+```
+
+### Methods
+
+#### `cacheKeyFor`
+By default, `RESTDatasource` uses the full request URL as the cache key. Override this method to remove query parameters or compute a custom cache key.
+
+For example, you could use this to use header fields as part of the cache key. Even though we do validate header fields and don't serve responses from cache when they don't match, new responses overwrite old ones with different header fields.
+
+#### `willSendRequest`
+This method is invoked just before the fetch call is made. If a `Promise` is returned from this method it will wait until the promise is completed to continue executing the request.
+
+#### `cacheOptionsFor`
+Allows setting the `CacheOptions` to be used for each request/response in the HTTPCache. This is separate from the request-only cache.
+
+#### `didReceiveResponse`
+By default, this method checks if the response was returned successfully and parses the response into the result object. If the response had an error, it detects which type of HTTP error and throws the error result.
+
+If you override this behavior, be sure to implement the proper error handling.
+
+#### `didEncounterError`
+By default, this method just throws the `error` it was given. If you override this method, you can choose to either perform some additional logic and still throw, or to swallow the error by not throwing the error result.
+
+
+## Examples
 ### HTTP Methods
 
 The `get` method on the [RESTDataSource](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest) makes an HTTP `GET` request. Similarly, there are methods built-in to allow for POST, PUT, PATCH, and DELETE requests.
