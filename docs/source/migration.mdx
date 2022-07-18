@@ -831,7 +831,65 @@ expect(result.data?.hello).toBe('Hello world!'); // -> true
 </MultiCodeBlock>
 
 
-### Top-level error handling changes
+### Error handling changes
+
+#### ApolloError removal
+
+`ApolloError` and `toApolloError` were removed in favor of using `GraphQLError` directly.
+`GraphQLError` is exported by the `graphql` package, and you can use it in your code:
+```
+import { GraphQLError } from 'graphql';
+
+// ...
+throw new GraphQLError(message, {
+  extensions: { code: 'YOUR_ERROR_CODE' },
+});
+```
+
+Note: If you previously passed the optional `code` argument as such:
+```
+throw new ApolloError(message, 'YOUR_ERROR_CODE');
+```
+You now need to pass it inside `extensions`. See above example.
+
+#### Changes to `formatError` hook
+
+Apollo Server 3 supported the `formatError` hook with the following signature:
+```
+(error: GraphQLError) => GraphQLFormattedError
+```
+
+In Apollo Server 4, it became:
+```
+(formattedError: GraphQLFormattedError, error: unknown) => GraphQLFormattedError
+```
+Where `formattedError` is instance `GraphQLError` serialized as plain-old object according to [GraphQL specification](https://spec.graphql.org/draft/#sec-Errors).
+If you need some field from the error that isn't part of `GraphQLFormattedError`, you can access the value that was thrown initially as an `error` argument.
+
+So now you can format errors as such:
+```
+  formatError: (formattedError, error) => {
+    // Don't give the specific errors to the client.
+    if (error instanceof CustomDBError) {
+      return { message: 'Internal server error' };
+    }
+
+    // Strip `Validation: ` prefix and use `extensions.code` instead
+    if (formattedError.message.startsWith('Validation:')) {
+      return {
+        ...formattedError,
+        message: formattedError.message.replace(/^Validation: /, ''),
+        extensions: { ...formattedError?.extensions, code: 'VALIDATION' },
+      };
+    }
+
+    // Otherwise, return the original error. The error can also
+    // be manipulated in other ways, as long as it's returned.
+    return formattedError;
+  },
+```
+
+#### Top-level error handling changes
 
 Apollo Server 3 returns specific errors relating to GraphQL operations over HTTP/JSON as `text/plain` error messages.
 
