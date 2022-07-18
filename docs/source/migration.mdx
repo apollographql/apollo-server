@@ -1070,7 +1070,58 @@ By default, Apollo Server 4 uses a bounded in-memory cache backend (which _is sa
 
 For examples of using both `KeyvAdapter` and `InMemoryLRUCache`, see [Configuring external caching](/apollo-server/performance/cache-backends#configuring-external-caching).
 
-### Top-level error handling changes
+### Error handling changes
+
+#### ApolloError removal
+
+`ApolloError` together with `toApolloError` were removed in favor of using `GraphQLError` directly.
+`GraphQLError` is exported by `graphql` package and you can use it in your code:
+```
+import { GraphQLError } from 'graphql';
+
+// ...
+throw new GraphQLError(message, {
+  extensions: { code: 'YOUR_ERROR_CODE' },
+});
+```
+
+#### Changes to `formatError` hook
+
+Apollo Server 3 supported `formatError` hook with following signature:
+```
+(error: GraphQLError) => GraphQLFormattedError
+```
+
+In Apollo Server 4 it became:
+```
+(formattedError: GraphQLFormattedError, error: unknown) => GraphQLFormattedError
+```
+Where `formattedError` is instance `GraphQLError` serialized as plain-old object according to [GraphQL specification](https://spec.graphql.org/draft/#sec-Errors) and original `error` is value that were thrown.
+
+So now you can format errors as such:
+```
+  formatError: (formattedError, error) => {
+    // Don't give the specific errors to the client.
+    if (error instanceof CustomDBError) {
+      return { message: 'Internal server error' };
+    }
+
+    // Strip `Validation: ` prefix and use `extensions.code` instead
+    if (formattedError.message.startsWith('Validation:')) {
+      return {
+        ...formattedError,
+        message: formattedError.message.replace(/^Validation: /, ''),
+        extensions: { ...formattedError?.extensions, code: 'VALIDATION' },
+      };
+    }
+
+    // Otherwise return the original error. The error can also
+    // be manipulated in other ways, as long as it's returned.
+    return formattedError;
+  },
+```
+
+#### Top-level error handling changes
 
 Apollo Server 3 returns specific errors relating to GraphQL operations over HTTP/JSON as `text/plain` error messages.
 
