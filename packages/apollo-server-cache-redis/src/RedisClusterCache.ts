@@ -21,7 +21,6 @@ export class RedisClusterCache implements KeyValueCache {
     } else {
       this.client = new Cluster(value as ClusterNode[], options);
     }
-    this.client.mget
 
     this.loader = new DataLoader<string, string | null>(
       (keys = []) =>
