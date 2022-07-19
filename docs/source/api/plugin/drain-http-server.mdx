@@ -34,6 +34,9 @@ const http = require('http');
 
 async function startApolloServer() {
   const app = express();
+  // Our httpServer handles incoming requests to our Express app.
+  // Below, we tell Apollo Server to "drain" this httpServer,
+  // enabling our servers to shut down gracefully.
   const httpServer = http.createServer(app);
   const server = new ApolloServer({
     typeDefs,
