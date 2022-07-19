@@ -184,11 +184,6 @@ export async function runHttpQuery<TContext extends BaseContext>(
     orderExecutionResultFields(graphQLResponse.result),
   );
 
-  graphQLResponse.http.headers.set(
-    'content-length',
-    Buffer.byteLength(body, 'utf8').toString(),
-  );
-
   return {
     ...graphQLResponse.http,
     completeBody: body,

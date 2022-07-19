@@ -636,6 +636,27 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
 
+      // Apollo Server doesn't calculate content-length itself because most web
+      // frameworks (eg, Express if you use res.send, Lambda, etc) add them
+      // automatically if you send your response as one chunk (which we do: see
+      // HTTPGraphQLResponse.completeBody). If your framework doesn't, you
+      // should calculate it yourself (with Buffer.byteLength, not string
+      // length) so that this test passes.
+      it('responses have content-length headers', async () => {
+        const app = await createApp();
+        const expected = {
+          testArgument: 'hello 🧡💘💚',
+        };
+        const res = await request(app).post('/').send({
+          query: '{ testArgument(echo: "🧡💘💚") }',
+        });
+        expect(res.status).toEqual(200);
+        expect(res.body.data).toEqual(expected);
+        expect(res.headers['content-length']).toEqual(
+          Buffer.byteLength(res.text).toString(),
+        );
+      });
+
       describe('cache-control', () => {
         const books = [
           {
@@ -1036,6 +1057,9 @@ export function defineIntegrationTestSuiteHttpServerTests(
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
+          expect(res.header['content-length']).toEqual(
+            Buffer.byteLength(res.text, 'utf8').toString(),
+          );
         });
       });
 
