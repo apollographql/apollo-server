@@ -10,7 +10,7 @@ This tutorial helps you:
 * Run an instance of Apollo Server that lets you execute queries against your schema
 
 This tutorial assumes that you are familiar with the command line and
-JavaScript and have installed a recent Node.js (16+) version. Additionally, for those interested, this tutorial includes an optional section describing how to set up Apollo Server with TypeScript.
+JavaScript and have installed a recent Node.js (14+) version. Additionally, for those interested, this tutorial includes an optional section describing how to set up Apollo Server with TypeScript.
 
 <!-- TODO: before releasing, double-check imports & links -->
 
@@ -34,10 +34,10 @@ Your project directory now contains a `package.json` file.
 
 ## Step 2: Install dependencies
 Applications that run Apollo Server require two top-level dependencies:
-* [`@apollo/server`](https://www.npmjs.com/package/@apollo/server) is the core library for Apollo Server itself, which helps you define the shape of your data and how to fetch it.
-* [`graphql`](https://npm.im/graphql) is the library used to build a GraphQL schema and execute queries against it.
+* [`graphql`](https://npm.im/graphql) (also known as `graphql-js`) is the library that implements the core GraphQL parsing and execution algorithms.
+* [`@apollo/server`](https://www.npmjs.com/package/@apollo/server) is the main library for Apollo Server itself, which understands how to turn HTTP requests and responses into GraphQL operations, and runs them in an extensible context with support for plugins and other features.
 
-Run the following command to install all of these packages and save them in
+Run the following command to install both of these packages and save them in
 your project's `node_modules` directory:
 
 ```bash
@@ -87,7 +87,7 @@ touch tsconfig.json
 
 For more information on the compiler options above, see the [TypeScript Compiler docs](https://www.typescriptlang.org/tsconfig).
 
-5. Finally, add a `type` and `scripts` to your `package.json` file:
+5. Finally, replace the default `scripts` entry in your `package.json` file with these `type` and `scripts` entries:
 ```json title="package.json"
 {
   // ...etc.
@@ -101,6 +101,13 @@ For more information on the compiler options above, see the [TypeScript Compiler
 
 The above `start` script tells TypeScript to compile your code into JavaScript before using `node` to run that compiled code. Setting your project's [`type` to `module`](https://nodejs.org/api/packages.html#approach-1-use-an-es-module-wrapper) loads your JavaScript files as ES modules, enabling you to use top-level [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function) calls.
 
+6. You can now run `npm start`, which should successfully compile and run your empty `index.ts` file, printing something like the following:
+
+```
+> graphql-server-example@1.0.0 start
+> tsc && node ./dist/index.js
+```
+
 </ExpansionPanel>
 
 <ExpansionPanel title="Set up with JavaScript">
@@ -113,15 +120,19 @@ If you are using JavaScript, create a `index.js` file that will contain **all** 
   touch index.js
 ```
 
-Then add the following script to your `package.json`:
-
+Now replace the default `scripts` entry in your `package.json` file with these `type` and `scripts` entries:
 ```json title="package.json"
 {
+  // ...etc.
+  "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "tsc && node ./dist/index.js"
   },
+  // other dependencies
 }
 ```
+
+Setting your project's [`type` to `module`](https://nodejs.org/api/packages.html#approach-1-use-an-es-module-wrapper) loads your JavaScript files as ES modules, enabling you to use top-level [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function) calls.
 
 </ExpansionPanel>
 
@@ -138,31 +149,8 @@ Open `index.ts` in your preferred code editor and paste the following into it:
 <MultiCodeBlock>
 
 ```ts title="index.ts"
-import { ApolloServer, startStandaloneServer } from '@apollo/server';
-
-// A schema is a collection of type definitions (hence "typeDefs")
-// that together define the "shape" of queries that are executed against
-// your data.
-const typeDefs = `#graphql
-  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
-
-  # This "Book" type defines the queryable fields for every book in our data source.
-  type Book {
-    title: String
-    author: String
-  }
-
-  # The "Query" type is special: it lists all of the available queries that
-  # clients can execute, along with the return type for each. In this
-  # case, the "books" query returns an array of zero or more Books (defined above).
-  type Query {
-    books: [Book]
-  }
-`;
-```
-
-```js title="index.js"
-import { ApolloServer, startStandaloneServer } from '@apollo/server';
+import { ApolloServer } from '@apollo/server'; // preserve-line
+import { startStandaloneServer } from '@apollo/server/standalone'; // preserve-line
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -216,19 +204,6 @@ const books = [
 ];
 ```
 
-```js title="index.js"
-const books = [
-  {
-    title: 'The Awakening',
-    author: 'Kate Chopin',
-  },
-  {
-    title: 'City of Glass',
-    author: 'Paul Auster',
-  },
-];
-```
-
 </MultiCodeBlock>
 
 This snippet defines a simple data set that clients can query. Notice that the two objects in the array each match the structure of the `Book` type we defined in our schema.
@@ -267,7 +242,7 @@ Add the following to the bottom of your `index.ts` file:
 ```ts title="index.ts"
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
-const apolloServerInstance = new ApolloServer({
+const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
@@ -276,7 +251,7 @@ const apolloServerInstance = new ApolloServer({
 //  1. creates an Express app
 //  2. installs your ApolloServer instance as middleware
 //  3. prepares your app to handle incoming requests
-const { url } = await startStandaloneServer(apolloServerInstance, {
+const { url } = await startStandaloneServer(server, {
   listen: { port: 4000 },
 });
 
@@ -341,12 +316,14 @@ One of the most important concepts of GraphQL is that clients can choose to quer
 ## Combined example
 
 You can view and fork this complete example on CodeSandbox:
-<!-- TODO: Fix this sandbox link after docs examples is up -->
+<!-- TODO(AS4): Fix this sandbox link after docs examples is up, and make sure it matches the final version -->
 <a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/RK/add-as4-getting-started/apollo-server/v4/getting-started?fontsize=14&hidenavigation=1&theme=dark">
   <img alt="Edit server-getting-started" src="https://codesandbox.io/static/img/play-codesandbox.svg" />
 </a>
 
 ## Next steps
+
+TODO(AS4): Should we temporarily remove this while we don't have full docs?
 
 This example application is a great starting point for working with
 Apollo Server. Check out the following resources to learn more about the basics
