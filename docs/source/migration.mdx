@@ -1085,6 +1085,12 @@ throw new GraphQLError(message, {
 });
 ```
 
+Note: If you previously passed optional `code` argument as such:
+```
+throw new ApolloError(message, 'YOUR_ERROR_CODE');
+```
+You now need to pass it inside `extensions`, see above example.
+
 #### Changes to `formatError` hook
 
 Apollo Server 3 supported `formatError` hook with following signature:
@@ -1096,7 +1102,8 @@ In Apollo Server 4 it became:
 ```
 (formattedError: GraphQLFormattedError, error: unknown) => GraphQLFormattedError
 ```
-Where `formattedError` is instance `GraphQLError` serialized as plain-old object according to [GraphQL specification](https://spec.graphql.org/draft/#sec-Errors) and original `error` is value that were thrown.
+Where `formattedError` is instance `GraphQLError` serialized as plain-old object according to [GraphQL specification](https://spec.graphql.org/draft/#sec-Errors).
+If you need some field from the error that isn't part of `GraphQLFormattedError`, you can access the value that was thrown initially as `error` argument.
 
 So now you can format errors as such:
 ```
