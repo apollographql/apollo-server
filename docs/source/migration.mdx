@@ -1074,8 +1074,8 @@ For examples of using both `KeyvAdapter` and `InMemoryLRUCache`, see [Configurin
 
 #### ApolloError removal
 
-`ApolloError` together with `toApolloError` were removed in favor of using `GraphQLError` directly.
-`GraphQLError` is exported by `graphql` package and you can use it in your code:
+`ApolloError` and `toApolloError` were removed in favor of using `GraphQLError` directly.
+`GraphQLError` is exported by the `graphql` package, and you can use it in your code:
 ```
 import { GraphQLError } from 'graphql';
 
@@ -1085,25 +1085,25 @@ throw new GraphQLError(message, {
 });
 ```
 
-Note: If you previously passed optional `code` argument as such:
+Note: If you previously passed the optional `code` argument as such:
 ```
 throw new ApolloError(message, 'YOUR_ERROR_CODE');
 ```
-You now need to pass it inside `extensions`, see above example.
+You now need to pass it inside `extensions`. See above example.
 
 #### Changes to `formatError` hook
 
-Apollo Server 3 supported `formatError` hook with following signature:
+Apollo Server 3 supported the `formatError` hook with the following signature:
 ```
 (error: GraphQLError) => GraphQLFormattedError
 ```
 
-In Apollo Server 4 it became:
+In Apollo Server 4, it became:
 ```
 (formattedError: GraphQLFormattedError, error: unknown) => GraphQLFormattedError
 ```
 Where `formattedError` is instance `GraphQLError` serialized as plain-old object according to [GraphQL specification](https://spec.graphql.org/draft/#sec-Errors).
-If you need some field from the error that isn't part of `GraphQLFormattedError`, you can access the value that was thrown initially as `error` argument.
+If you need some field from the error that isn't part of `GraphQLFormattedError`, you can access the value that was thrown initially as an `error` argument.
 
 So now you can format errors as such:
 ```
@@ -1122,7 +1122,7 @@ So now you can format errors as such:
       };
     }
 
-    // Otherwise return the original error. The error can also
+    // Otherwise, return the original error. The error can also
     // be manipulated in other ways, as long as it's returned.
     return formattedError;
   },
