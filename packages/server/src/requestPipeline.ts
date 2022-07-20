@@ -26,7 +26,6 @@ import {
   normalizeAndFormatErrors,
   OperationResolutionError,
   ensureGraphQLError,
-  ApolloServerErrorCode,
 } from './errors.js';
 import type {
   GraphQLRequestContext,
@@ -408,6 +407,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       enablePluginsForSchemaResolvers(schemaDerivedData.schema);
     }
 
+    let statusCodeIfExecuteThrows = 500;
     try {
       const result = await execute(
         requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
@@ -422,6 +422,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
             'Unexpected error: Apollo Server did not resolve an operation but execute did not return errors',
           );
         }
+        statusCodeIfExecuteThrows = 400;
         throw new OperationResolutionError(result.errors[0]);
       }
 
@@ -454,19 +455,14 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
       await Promise.all(executionListeners.map((l) => l.executionDidEnd?.()));
     } catch (executionMaybeError: unknown) {
-      const executionError = ensureGraphQLError(executionMaybeError);
+      const executionError = ensureError(executionMaybeError);
       await Promise.all(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
 
-      const errorStatusCode =
-        executionError.extensions.code ===
-        ApolloServerErrorCode.OPERATION_RESOLUTION_FAILURE
-          ? 400
-          : 500;
       return await sendErrorResponse(
-        [executionError],
-        newHTTPGraphQLHead(errorStatusCode),
+        [ensureGraphQLError(executionError)],
+        newHTTPGraphQLHead(statusCodeIfExecuteThrows),
       );
     }
   }
