@@ -24,9 +24,9 @@ TODO: Maybe rename section?
 
 Apollo Server 3 ships with a fixed set of integrations with a variety of web frameworks and serverless environments, but does not provided a supported mechanism for integrating with additional frameworks. In Apollo Server 3, changes to framework integrations could only be released with lockstep versioning with Apollo Server itself, which has made it challenging to support multiple major versions of frameworks or make other integration-specific changes. Each of these integrations are released in a separate package, such as `apollo-server-express` or `apollo-server-lambda`. The core logic is implemented in a variety of packages, most notably `apollo-server-core`. This package defines an `ApolloServer` "base" class, and each integration package exports a subclass with the same name with slightly different APIs. Additionally, the `apollo-server` package is a "batteries-included" package which wraps `apollo-server-express` and provides a full HTTP server without the need to learn about a particular web framework, while providing minimal opportunities for HTTP-level customization.
 
-Apollo Server 4 takes a different approach. The Apollo Server core team no longer maintains most of these integrations. Instead, Apollo Server now has a simple stable web framework integration API (including explicit support for serverless framework life cycles). The new `@apollo/server` package contains the `ApolloServer` class, as well as an Express 4 integration (similar to AS3's `apollo-server-express` package) and a standalone server (similar to AS3's `apollo-server` package). There are no subclasses in AS4: there is a single `ApolloServer` class with a single API, and integrations use that API.
+Apollo Server 4 takes a different approach to integrations. Apollo Server 4 has a stable web framework integration API, which includes explicit support for serverless framework life cycles. The new `@apollo/server` package contains the `ApolloServer` class, an [Express 4 integration](#migrating-from-apollo-server-express) (similar to AS3's `apollo-server-express` package), and a [standalone server](#migrating-from-apollo-server) (similar to AS3's `apollo-server` package). There are no subclasses in AS4; there is a single `ApolloServer` class with a single API that all integrations use.
 
-The Apollo Server core team no longer maintains the other integrations. We will work with the broader open source community, allowing users of other web frameworks to make the best choices for their framework's integrations rather than expecting the core team to be intimately familiar with the best practices of a dozen different projects. Our hope is that there will exist upgrade paths for all of AS3's integrations by the time we release v4.0.0; if you'd like to help, we have [an issue calling for maintainers for each integration](https://github.com/apollographql/apollo-server/labels/integration-collaborators).
+In Apollo Server 3, the Apollo Server core team is responsible for maintaining all integration packages. With Apollo Server 4, the AS core team will stop directly maintaining most integration packages. We will instead work with the broader open source community to maintain Apollo Server integrations, enabling those who regularly use different web frameworks to make the best choices for their framework's integration.  If you'd like to help maintain an integration, please [see this issue calling for integration maintainers](https://github.com/apollographql/apollo-server/labels/integration-collaborators).
 
 For those migrating from Apollo Server 3 to Apollo Server 4, use the below flowchart to see your migration path:
 
@@ -40,7 +40,7 @@ graph TB;
   class useStandAlone,useExpressMiddleware secondary;
 ```
 
-If you are currently using the `apollo-server` package, you should use the [`startStandaloneServer`](#startstandaloneserver-function) function. If you are using the `apollo-server-express` package, you should use the [`expressMiddleware`](#expressmiddleware) function. These functions, as well as the `ApolloServer` class, are exported from the new `@apollo/server` package.
+If you are currently using the `apollo-server` package, you should use the [`startStandaloneServer`](#migrating-from-apollo-server) function. If you are using the `apollo-server-express` package, you should use the [`expressMiddleware`](#migrating-from-apollo-server-express) function. These functions and the `ApolloServer` class are all exported from the [`@apollo/server` package](https://www.npmjs.com/package/@apollo/server).
 
 If you are using any other Apollo Server 3 framework integration package, you can’t upgrade during the AS4 alpha release _yet_. Please help us by [building new integrations](/building-integrations) or [discussing how to maintain existing integrations](https://github.com/apollographql/apollo-server/labels/integration-collaborators) to ensure there is an Apollo Server 4 integration for your favorite framework.
 
@@ -107,11 +107,13 @@ async function startApolloServer() {
 
 ### Migrating from `apollo-server-express`
 
-If you used the `apollo-server-express` package in Apollo Server 3, you'll want to use the `expressMiddleware` function in Apollo Server 4 instead of the `applyMiddleware` method. The changes include:
+If you used the `apollo-server-express` package in Apollo Server 3, you'll use the `expressMiddleware` function in Apollo Server 4 (instead of using `applyMiddleware`). 
 
-- Installing `@apollo/server`, `cors`, and `body-parser` instead of `apollo-server-express` and `apollo-server-core`
-- Importing symbols from `@apollo/server` instead of `apollo-server-express` and `apollo-server-core`
-- Explicitly adding `cors` and `bodyParser.json()
+To migrate from AS3's `apollo-server-express` package to using the `expressMiddleware` function, you'll need to do the following:
+- Install the `@apollo/server`, `cors`, and `body-parser` packages.
+- Import symbols from `@apollo/server` (instead of `apollo-server-express` and `apollo-server-core`).
+- Add `cors` and `bodyParser.json()` to your server setup.
+- Remove the Apollo Server 3 `apollo-server-express` and `apollo-server-core` packages.
 
 Note that by default, `apollo-server-express` in AS3 would only actually respond to operations on `/graphql`, so we explicitly mount `expressMiddleware` at that path in AS4.
 
@@ -188,9 +190,9 @@ async function startApolloServer() {
 </MultiCodeBlock>
 
 
-### Integrations no longer part of core
+### Removed integrations
 
-The Apollo Server core team is no longer maintaining the following integration packages in Apollo Server 4. We are [looking for collaborators](https://github.com/apollographql/apollo-server/labels/integration-collaborators) who actively use these platforms to maintain AS4-compatible integration packages and will add links here once they exist.
+The Apollo Server core team no longer maintains the following integration packages in Apollo Server 4. We are [looking for collaborators](https://github.com/apollographql/apollo-server/labels/integration-collaborators) who actively use these platforms to maintain AS4-compatible integration packages. 
 
 Apollo Server 4 removes the below integration packages:
 * [`apollo-server-fastify`](https://www.npmjs.com/package/apollo-server-fastify)
@@ -202,9 +204,9 @@ Apollo Server 4 removes the below integration packages:
 * [`apollo-server-cloudflare`](https://www.npmjs.com/package/apollo-server-cloudflare)
 * [`apollo-server-azure-functions`](https://www.npmjs.com/package/apollo-server-azure-functions)
 
-Additionally, in Apollo Server 3 the `apollo-server-express` package supported both Express and its older predecessor [Connect](https://github.com/senchalabs/connect) using the same code. In Apollo Server 4, `expressMiddleware` no longer supports Connect. An interested developer could [build a Connect-specific middleware](/integrations/building-integrations) using the Apollo Server 4 API. A PR to this migration guide is welcome if someone does this!
+In Apollo Server 3, the `apollo-server-express` package supported both Express and its older predecessor [Connect](https://github.com/senchalabs/connect). In Apollo Server 4, `expressMiddleware` no longer supports Connect. An interested developer could [build a Connect-specific middleware](/integrations/building-integrations), and a PR to this migration guide is welcome if someone does this!
 
-### Other packages merged into `@apollo/server`
+### Packages merged into `@apollo/server`
 
 As described above, the functionality provided by the `apollo-server-core`, `apollo-server`, and `apollo-server-express` packages in AS3 has been combined into the single `@apollo/server` package in AS4.
 
@@ -214,7 +216,7 @@ But wait: there's more! The following packages have *also* been combined into `@
 - [`apollo-server-types`](https://www.npmjs.com/package/apollo-server-types)
 
 
-### Other renamed packages
+### Renamed packages
 
 The `apollo-server-plugin-response-cache` and `apollo-server-plugin-operation-registry` plugin packages have been renamed to `@apollo/server-plugin-response-cache` and `@apollo/server-plugin-operation-registry` respectively.
 
@@ -251,9 +253,9 @@ The following `ApolloServer` constructor options have been removed in favor of o
 
 ### `dataSources`
 
-In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/data/data-sources#adding-data-sources-to-apollo-server) essentially added a post-processing step to your app's context function which created `DataSource` subclasses and added them to a `dataSources` field on your [`context`](/apollo-server/data/resolvers/#the-context-argument) object. This meant that the type returned by your `context` function and the context type received by resolvers and plugins were actually different. This also obfuscated the fact that the `DataSource` objects were created once per request like the rest of the context object.
+In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](/apollo-server/data/resolvers/#the-context-argument) object. This means the TypeScript types returned by the `context` function and the `context` types received in the resolvers and plugins are _different_. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
 
-In Apollo Server 4, we have removed the `dataSources` constructor option. You can treat `DataSources` like any other part of your `context` object.
+In Apollo Server 4, we have removed the `dataSources` constructor option. You can treat `DataSources` like any other part of your `context` object:
 
 TODO: rewrite as before and after (and fully review)
 
