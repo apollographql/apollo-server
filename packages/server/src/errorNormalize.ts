@@ -5,6 +5,7 @@ import {
   GraphQLErrorExtensions,
   GraphQLFormattedError,
 } from 'graphql';
+import { ApolloServerErrorCode } from './errors/index.js';
 
 declare module 'graphql' {
   export interface GraphQLErrorExtensions {
@@ -41,7 +42,7 @@ export function normalizeAndFormatErrors(
         // obscure error
         return {
           message: 'Internal server error',
-          extensions: { code: 'INTERNAL_SERVER_ERROR' },
+          extensions: { code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR },
         };
       }
     }
@@ -52,7 +53,9 @@ export function normalizeAndFormatErrors(
 
     const extensions: GraphQLErrorExtensions = {
       ...graphqlError.extensions,
-      code: graphqlError.extensions.code ?? 'INTERNAL_SERVER_ERROR',
+      code:
+        graphqlError.extensions.code ??
+        ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
     };
 
     const { originalError } = graphqlError;

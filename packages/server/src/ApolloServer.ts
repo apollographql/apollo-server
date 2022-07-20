@@ -1000,7 +1000,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         const statusCode =
           error instanceof GraphQLError &&
           error.extensions.code &&
-          error.extensions.code !== 'INTERNAL_SERVER_ERROR'
+          error.extensions.code !== ApolloServerErrorCode.INTERNAL_SERVER_ERROR
             ? 400
             : 500;
         return this.errorResponse(error, newHTTPGraphQLHead(statusCode));
