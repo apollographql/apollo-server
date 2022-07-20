@@ -1,6 +1,6 @@
 import {
-  ASTNode,
   GraphQLError,
+  GraphQLErrorOptions,
   GraphQLFormattedError,
   GraphQLErrorExtensions,
 } from 'graphql';
@@ -14,15 +14,35 @@ declare module 'graphql' {
   }
 }
 
-export class SyntaxError extends GraphQLError {
+class GraphQLErrorWithCode extends GraphQLError {
+  constructor(
+    message: string,
+    code: ApolloServerErrorCode,
+    options?: GraphQLErrorOptions,
+  ) {
+    super(message, {
+      ...options,
+      extensions: { ...options?.extensions, code },
+    });
+  }
+}
+
+export enum ApolloServerErrorCode {
+  GRAPHQL_PARSE_FAILED = 'GRAPHQL_PARSE_FAILED',
+  GRAPHQL_VALIDATION_FAILED = 'GRAPHQL_VALIDATION_FAILED',
+  PERSISTED_QUERY_NOT_FOUND = 'PERSISTED_QUERY_NOT_FOUND',
+  PERSISTED_QUERY_NOT_SUPPORTED = 'PERSISTED_QUERY_NOT_SUPPORTED',
+  BAD_USER_INPUT = 'BAD_USER_INPUT',
+  OPERATION_RESOLUTION_FAILURE = 'OPERATION_RESOLUTION_FAILURE',
+  BAD_REQUEST = 'BAD_REQUEST',
+}
+
+export class SyntaxError extends GraphQLErrorWithCode {
   constructor(graphqlError: GraphQLError) {
-    super(graphqlError.message, {
+    super(graphqlError.message, ApolloServerErrorCode.GRAPHQL_PARSE_FAILED, {
       source: graphqlError.source,
       positions: graphqlError.positions,
-      extensions: {
-        ...graphqlError.extensions,
-        code: 'GRAPHQL_PARSE_FAILED',
-      },
+      extensions: graphqlError.extensions,
       originalError: graphqlError,
     });
 
@@ -30,97 +50,65 @@ export class SyntaxError extends GraphQLError {
   }
 }
 
-export class ValidationError extends GraphQLError {
+export class ValidationError extends GraphQLErrorWithCode {
   constructor(graphqlError: GraphQLError) {
-    super(graphqlError.message, {
-      nodes: graphqlError.nodes,
-      extensions: {
-        ...graphqlError.extensions,
-        code: 'GRAPHQL_VALIDATION_FAILED',
+    super(
+      graphqlError.message,
+      ApolloServerErrorCode.GRAPHQL_VALIDATION_FAILED,
+      {
+        nodes: graphqlError.nodes,
+        extensions: graphqlError.extensions,
+        originalError: graphqlError.originalError ?? graphqlError,
       },
-      originalError: graphqlError.originalError ?? graphqlError,
-    });
+    );
 
     this.name = 'ValidationError';
   }
 }
 
-export class AuthenticationError extends GraphQLError {
-  constructor(message: string, options?: { extensions?: Record<string, any> }) {
-    super(message, {
-      extensions: { ...options?.extensions, code: 'UNAUTHENTICATED' },
-    });
-
-    this.name = 'AuthenticationError';
-  }
-}
-
-export class ForbiddenError extends GraphQLError {
-  constructor(message: string, options?: { extensions?: Record<string, any> }) {
-    super(message, {
-      extensions: { ...options?.extensions, code: 'FORBIDDEN' },
-    });
-
-    this.name = 'ForbiddenError';
-  }
-}
-
-export class PersistedQueryNotFoundError extends GraphQLError {
+export class PersistedQueryNotFoundError extends GraphQLErrorWithCode {
   constructor() {
-    super('PersistedQueryNotFound', {
-      extensions: { code: 'PERSISTED_QUERY_NOT_FOUND' },
-    });
-
+    super(
+      'PersistedQueryNotFound',
+      ApolloServerErrorCode.PERSISTED_QUERY_NOT_FOUND,
+    );
     this.name = 'PersistedQueryNotFoundError';
   }
 }
 
-export class PersistedQueryNotSupportedError extends GraphQLError {
+export class PersistedQueryNotSupportedError extends GraphQLErrorWithCode {
   constructor() {
-    super('PersistedQueryNotSupported', {
-      extensions: { code: 'PERSISTED_QUERY_NOT_SUPPORTED' },
-    });
-
+    super(
+      'PersistedQueryNotSupported',
+      ApolloServerErrorCode.PERSISTED_QUERY_NOT_SUPPORTED,
+    );
     this.name = 'PersistedQueryNotSupportedError';
   }
 }
 
-export class UserInputError extends GraphQLError {
-  constructor(
-    message: string,
-    options?: {
-      nodes?: ReadonlyArray<ASTNode> | undefined;
-      originalError?: Error;
-      extensions?: Record<string, any>;
-    },
-  ) {
-    super(message, {
-      nodes: options?.nodes,
-      originalError: options?.originalError,
-      extensions: { ...options?.extensions, code: 'BAD_USER_INPUT' },
+export class UserInputError extends GraphQLErrorWithCode {
+  constructor(graphqlError: GraphQLError) {
+    super(graphqlError.message, ApolloServerErrorCode.BAD_USER_INPUT, {
+      nodes: graphqlError.nodes,
+      originalError: graphqlError.originalError ?? graphqlError,
+      extensions: graphqlError.extensions,
     });
 
     this.name = 'UserInputError';
   }
 }
 
-export class OperationResolutionError extends GraphQLError {
-  constructor(
-    message: string,
-    options?: {
-      nodes?: ReadonlyArray<ASTNode> | undefined;
-      originalError?: Error;
-      extensions?: Record<string, any>;
-    },
-  ) {
-    super(message, {
-      nodes: options?.nodes,
-      originalError: options?.originalError,
-      extensions: {
-        ...options?.extensions,
-        code: 'OPERATION_RESOLUTION_FAILURE',
+export class OperationResolutionError extends GraphQLErrorWithCode {
+  constructor(graphqlError: GraphQLError) {
+    super(
+      graphqlError.message,
+      ApolloServerErrorCode.OPERATION_RESOLUTION_FAILURE,
+      {
+        nodes: graphqlError.nodes,
+        originalError: graphqlError.originalError ?? graphqlError,
+        extensions: graphqlError.extensions,
       },
-    });
+    );
 
     this.name = 'OperationResolutionError';
   }
@@ -129,11 +117,9 @@ export class OperationResolutionError extends GraphQLError {
 // TODO(AS4): We added this in AS4. Is that a good idea? We should at least
 // document it, and maybe consider using it for more of the errors in
 // runHttpQuery instead of just returning text/plain errors.
-export class BadRequestError extends GraphQLError {
-  constructor(message: string, options?: { extensions?: Record<string, any> }) {
-    super(message, {
-      extensions: { ...options?.extensions, code: 'BAD_REQUEST' },
-    });
+export class BadRequestError extends GraphQLErrorWithCode {
+  constructor(message: string) {
+    super(message, ApolloServerErrorCode.BAD_REQUEST);
 
     this.name = 'BadRequestError';
   }

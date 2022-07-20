@@ -25,9 +25,9 @@ import * as uuid from 'uuid';
 import { newCachePolicy } from './cachePolicy.js';
 import { determineApolloConfig } from './determineApolloConfig.js';
 import {
-  BadRequestError,
   ensureError,
   normalizeAndFormatErrors,
+  ApolloServerErrorCode,
 } from './errors.js';
 import type {
   ApolloServerPlugin,
@@ -1018,7 +1018,10 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       );
     } catch (maybeError_: unknown) {
       const maybeError = maybeError_; // fixes inference because catch vars are not const
-      if (maybeError instanceof BadRequestError) {
+      if (
+        maybeError instanceof GraphQLError &&
+        maybeError.extensions.code === ApolloServerErrorCode.BAD_REQUEST
+      ) {
         try {
           await Promise.all(
             this.internals.plugins.map(async (plugin) =>

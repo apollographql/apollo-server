@@ -1,12 +1,5 @@
 import { GraphQLError } from 'graphql';
 
-import {
-  AuthenticationError,
-  ForbiddenError,
-  ValidationError,
-  UserInputError,
-  SyntaxError,
-} from '..';
 import { normalizeAndFormatErrors } from '../errors.js';
 
 describe('Errors', () => {
@@ -106,80 +99,6 @@ describe('Errors', () => {
       const error = new Error('Hello');
       const [formattedError] = normalizeAndFormatErrors([error]);
       expect(JSON.parse(JSON.stringify(formattedError)).message).toBe('Hello');
-    });
-  });
-  describe('Named Errors', () => {
-    const message = 'message';
-    function verifyError(
-      error: GraphQLError,
-      {
-        code,
-        errorClass,
-        name,
-      }: { code: string; errorClass: any; name: string },
-    ) {
-      expect(error.message).toEqual(message);
-      expect(error.extensions.code).toEqual(code);
-      expect(error.name).toEqual(name);
-      expect(error instanceof GraphQLError).toBe(true);
-      expect(error instanceof errorClass).toBe(true);
-    }
-
-    it('provides an authentication error', () => {
-      verifyError(new AuthenticationError(message), {
-        code: 'UNAUTHENTICATED',
-        errorClass: AuthenticationError,
-        name: 'AuthenticationError',
-      });
-    });
-    it('provides a forbidden error', () => {
-      verifyError(new ForbiddenError(message), {
-        code: 'FORBIDDEN',
-        errorClass: ForbiddenError,
-        name: 'ForbiddenError',
-      });
-    });
-    it('provides a syntax error', () => {
-      verifyError(new SyntaxError(new GraphQLError(message)), {
-        code: 'GRAPHQL_PARSE_FAILED',
-        errorClass: SyntaxError,
-        name: 'SyntaxError',
-      });
-    });
-    it('provides a validation error', () => {
-      verifyError(new ValidationError(new GraphQLError(message)), {
-        code: 'GRAPHQL_VALIDATION_FAILED',
-        errorClass: ValidationError,
-        name: 'ValidationError',
-      });
-    });
-    it('provides a user input error', () => {
-      const error = new UserInputError(message, {
-        extensions: {
-          field1: 'property1',
-          field2: 'property2',
-        },
-      });
-      verifyError(error, {
-        code: 'BAD_USER_INPUT',
-        errorClass: UserInputError,
-        name: 'UserInputError',
-      });
-
-      const formattedError = normalizeAndFormatErrors([
-        new GraphQLError(
-          error.message,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          error,
-        ),
-      ])[0];
-
-      expect(formattedError.extensions?.field1).toEqual('property1');
-      expect(formattedError.extensions?.field2).toEqual('property2');
-      expect(formattedError.extensions?.exception).toBeUndefined();
     });
   });
 });

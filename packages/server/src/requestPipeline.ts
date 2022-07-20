@@ -26,6 +26,7 @@ import {
   normalizeAndFormatErrors,
   OperationResolutionError,
   ensureGraphQLError,
+  ApolloServerErrorCode,
 } from './errors.js';
 import type {
   GraphQLRequestContext,
@@ -421,12 +422,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
             'Unexpected error: Apollo Server did not resolve an operation but execute did not return errors',
           );
         }
-        const error = result.errors[0];
-        throw new OperationResolutionError(error.message, {
-          nodes: error.nodes,
-          originalError: error.originalError,
-          extensions: error.extensions,
-        });
+        throw new OperationResolutionError(result.errors[0]);
       }
 
       // The first thing that execution does is coerce the request's variables
@@ -442,11 +438,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // https://github.com/graphql/graphql-js/issues/3169
       const resultErrors = result.errors?.map((e) => {
         if (isBadUserInputGraphQLError(e)) {
-          return new UserInputError(e.message, {
-            nodes: e.nodes,
-            originalError: e.originalError,
-            extensions: e.extensions,
-          });
+          return new UserInputError(e);
         }
         return e;
       });
@@ -462,15 +454,18 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
       await Promise.all(executionListeners.map((l) => l.executionDidEnd?.()));
     } catch (executionMaybeError: unknown) {
-      const executionError = ensureError(executionMaybeError);
+      const executionError = ensureGraphQLError(executionMaybeError);
       await Promise.all(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
 
       const errorStatusCode =
-        executionMaybeError instanceof OperationResolutionError ? 400 : 500;
+        executionError.extensions.code ===
+        ApolloServerErrorCode.OPERATION_RESOLUTION_FAILURE
+          ? 400
+          : 500;
       return await sendErrorResponse(
-        [ensureGraphQLError(executionError)],
+        [executionError],
         newHTTPGraphQLHead(errorStatusCode),
       );
     }
