@@ -24,11 +24,8 @@ import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
 import { newCachePolicy } from './cachePolicy.js';
 import { determineApolloConfig } from './determineApolloConfig.js';
-import {
-  ensureError,
-  normalizeAndFormatErrors,
-  ApolloServerErrorCode,
-} from './errors.js';
+import { ensureError, normalizeAndFormatErrors } from './errorNormalize.js';
+import { ApolloServerErrorCode } from './errors/index.js';
 import type {
   ApolloServerPlugin,
   BaseContext,

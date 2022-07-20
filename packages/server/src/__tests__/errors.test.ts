@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 
-import { normalizeAndFormatErrors } from '../errors.js';
+import { normalizeAndFormatErrors } from '../errorNormalize.js';
 
 describe('Errors', () => {
   describe('normalizeAndFormatErrors', () => {

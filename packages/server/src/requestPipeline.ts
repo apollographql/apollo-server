@@ -22,11 +22,13 @@ import {
   BadRequestError,
   ValidationError,
   SyntaxError,
+  OperationResolutionError,
+} from './internalErrorClasses.js';
+import {
   ensureError,
   normalizeAndFormatErrors,
-  OperationResolutionError,
   ensureGraphQLError,
-} from './errors.js';
+} from './errorNormalize.js';
 import type {
   GraphQLRequestContext,
   GraphQLRequestContextDidResolveSource,
