@@ -107,7 +107,7 @@ async function startApolloServer() {
 
 ### Migrating from `apollo-server-express`
 
-If you used the `apollo-server-express` package in Apollo Server 3, you'll use the `expressMiddleware` function in Apollo Server 4 (instead of using `applyMiddleware`). 
+If you used the `apollo-server-express` package in Apollo Server 3, you'll use the `expressMiddleware` function in Apollo Server 4 (instead of using `applyMiddleware`).
 
 To migrate from AS3's `apollo-server-express` package to using the `expressMiddleware` function, you'll need to do the following:
 - Install the `@apollo/server`, `cors`, and `body-parser` packages.
@@ -192,7 +192,7 @@ async function startApolloServer() {
 
 ### Removed integrations
 
-The Apollo Server core team no longer maintains the following integration packages in Apollo Server 4. We are [looking for collaborators](https://github.com/apollographql/apollo-server/labels/integration-collaborators) who actively use these platforms to maintain AS4-compatible integration packages. 
+The Apollo Server core team no longer maintains the following integration packages in Apollo Server 4. We are [looking for collaborators](https://github.com/apollographql/apollo-server/labels/integration-collaborators) who actively use these platforms to maintain AS4-compatible integration packages.
 
 Apollo Server 4 removes the below integration packages:
 * [`apollo-server-fastify`](https://www.npmjs.com/package/apollo-server-fastify)
@@ -215,6 +215,10 @@ But wait: there's more! The following packages have *also* been combined into `@
 - [`apollo-server-plugin-base`](https://www.npmjs.com/package/apollo-server-plugin-base)
 - [`apollo-server-types`](https://www.npmjs.com/package/apollo-server-types)
 
+
+### Plugins are now in `@apollo/server`
+
+TODO: describe that plugins are now in `@apollo/server` at deep imports
 
 ### Renamed packages
 
@@ -488,6 +492,8 @@ new ApolloServer({
 })
 ```
 
+The corresponding `GraphQLSchemaModule` TypeScript type is no longer exported.
+
 ### `mocks` and `mockEntireSchema`
 In Apollo Server 3, the `mocks` and `mockEntireSchema` constructor options enabled Apollo Server to return simulated data for GraphQL operations based on your server's schema.
 
@@ -605,6 +611,12 @@ If you really want to have a health check in your HTTP server that is unrelated 
 In Apollo Server 3, several web framework integrations allowed you to "mount" them at a particular URL path and then use the `path` option (which defaults to `/graphql`) to specify that they should actually only process requests at a deeper path.
 
 In Apollo Server 4, web framework integrations such as `expressMiddleware` expect that they will be mounted at the appropriate path in the first place using the web framework's routing features. If you used an integration such as `apollo-server-express` and did not configure `path` in AS3, then to maintain the same behavior you should explicitly mount your middleware at `/graphql`.  (Note that the batteries-included `apollo-server` package in AS3 (replaced by `startStandaloneServer` in AS4) served at all URLs instead of having the default of `/graphql`.)
+
+
+### `gql` GraphQL tag
+
+TODO: explain that `gql` probably isn't even that important for servers but can be gotten directly from `graphql-tag`
+
 
 ### `__resolveObject`
 
@@ -1026,9 +1038,6 @@ new ApolloServer({
 
 Some changes only affect TypeScript typings, not runtime behavior. For example, we have changed some of the names of TypeScript interfaces to be more clear, and we've changed what packages we use to define other interfaces. (Changes that affect more than just typings (like renaming `GraphQLServiceContext` and `GraphQLServiceConfig`) are described elsewhere.)
 
-### `Config` type name
-
-In Apollo Server 4, the TypeScript name of the constructor options object has changed from `Config` to the more aptly named `ApolloServerOptions`.
 
 ### Improved typing for `context`
 
@@ -1071,3 +1080,23 @@ In Apollo Server 3, the `apollo-server-env` package primarily provides TypeScrip
 
 Apollo Server 4 introduces `@apollo/utils.fetcher`, which defines a minimal fetch API (`Fetcher`) that provides Fetch API TypeScript typings. It is similar to `apollo-server-env` but has a clearer name and only supports argument structures that are likely to be compatible across many implementations of the Fetch API. (Specifically, it does not allow you to pass `Request` or `Headers` objects to `fetch`, because libraries often only know how to recognize their own implementations of these interfaces.)
 
+
+### Renamed types
+
+This section lists TypeScript-only types (such as interfaces, but not classes) whose name has been changed in Apollo Server 4 (not including those mentioned elsewhere in this guide).
+
+The name of the constructor options type has changed from `Config` to the more aptly named `ApolloServerOptions`. Some integration packages exported their own version of this type such as `ApolloServerExpressConfig`; these are no longer necessary because there is only one `ApolloServer` type with only one constructor in AS4.
+
+Two types in `apollo-server-express` now have more explicit names exported from `@apollo/server/express4`. `GetMiddlewareOptions` is now `ExpressMiddlewareOptions`, and `ExpressContext` is now `ExpressContextFunctionArgument`.
+
+### Removed types
+
+This section lists TypeScript-only types (such as interfaces, but not classes) which have been removed in Apollo Server 4 (not including those mentioned elsewhere in this guide).
+
+`GraphQLOptions` was an internal type used to create integrations which was only exported for technical reasons. It no longer exists.
+
+`ServerRegistration` was related to `applyMiddleware`, which no longer exists.
+
+`CorsOptions` and `OptionsJson` were re-exported from the `cors` and `body-parser` packages. Because Apollo Server 4 no longer handles these tasks for you, these types are no longer re-exported.
+
+`ServerInfo` (returned from `server.listen()` in `apollo-server`) no longer exists. `startStandaloneServer` returns a simpler data structure that currently has no type name.
