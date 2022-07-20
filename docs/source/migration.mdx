@@ -615,7 +615,9 @@ In Apollo Server 4, web framework integrations such as `expressMiddleware` expec
 
 ### `gql` GraphQL tag
 
-TODO: explain that `gql` probably isn't even that important for servers but can be gotten directly from `graphql-tag`
+Apollo Server 3 depends on the [`graphql-tag`](https://www.npmjs.com/package/graphql-tag) npm package and re-exports its `gql` template tag function. This function is essentially a caching wrapper around `graphql-js`'s parser. Additionally, some editors know to treat the contents of `gql` strings as GraphQL. You can use this template tag if you want to define your schemas inline in your TS/JS files. (However, no Apollo Server APIs actually require you to pass in parsed documents; for example, the `typeDefs` constructor option can be a string or a parsed document.)
+
+Apollo Server 4 does not depend on or re-export the `graphql-tag` function. If you would like to continue to use `gql` in your server, simply `npm install graphql-tag` and `import gql from 'graphql-tag'` instead of `import { gql } from 'apollo-server'`. That said, you can also consider putting your schema in separate `*.graphql` files, or writing them inline as a normal string whose first line is `#graphql`; editors that recognize gql tags typically also treat these formats as GraphQL as well.
 
 
 ### `ApolloError`
