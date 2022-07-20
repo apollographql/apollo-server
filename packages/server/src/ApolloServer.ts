@@ -24,11 +24,8 @@ import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
 import { newCachePolicy } from './cachePolicy.js';
 import { determineApolloConfig } from './determineApolloConfig.js';
-import {
-  BadRequestError,
-  ensureError,
-  normalizeAndFormatErrors,
-} from './errors.js';
+import { ensureError, normalizeAndFormatErrors } from './errorNormalize.js';
+import { ApolloServerErrorCode } from './errors/index.js';
 import type {
   ApolloServerPlugin,
   BaseContext,
@@ -1003,7 +1000,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         const statusCode =
           error instanceof GraphQLError &&
           error.extensions.code &&
-          error.extensions.code !== 'INTERNAL_SERVER_ERROR'
+          error.extensions.code !== ApolloServerErrorCode.INTERNAL_SERVER_ERROR
             ? 400
             : 500;
         return this.errorResponse(error, newHTTPGraphQLHead(statusCode));
@@ -1018,7 +1015,10 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       );
     } catch (maybeError_: unknown) {
       const maybeError = maybeError_; // fixes inference because catch vars are not const
-      if (maybeError instanceof BadRequestError) {
+      if (
+        maybeError instanceof GraphQLError &&
+        maybeError.extensions.code === ApolloServerErrorCode.BAD_REQUEST
+      ) {
         try {
           await Promise.all(
             this.internals.plugins.map(async (plugin) =>

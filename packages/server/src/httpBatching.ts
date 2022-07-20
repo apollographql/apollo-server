@@ -9,7 +9,7 @@ import type {
   SchemaDerivedData,
 } from './ApolloServer';
 import { HeaderMap, runHttpQuery } from './runHttpQuery.js';
-import { BadRequestError } from './errors.js';
+import { BadRequestError } from './internalErrorClasses.js';
 
 export async function runBatchHttpQuery<TContext extends BaseContext>(
   server: ApolloServer<TContext>,

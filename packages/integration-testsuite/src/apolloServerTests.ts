@@ -29,9 +29,7 @@ import {
   ApolloFetch,
   ParsedResponse,
 } from './apolloFetch.js';
-import {
-  AuthenticationError,
-  UserInputError,
+import type {
   ApolloServerOptions,
   ApolloServer,
   GatewayInterface,
@@ -825,7 +823,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
         });
 
         const formatError = jest.fn(() => {
-          return new UserInputError('User Input Error').toJSON();
+          return {
+            message: 'User Input Error',
+            extensions: { code: 'BAD_USER_INPUT' },
+          };
         });
 
         const uri = await createServerAndGetUrl({
@@ -1673,7 +1674,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
               },
               {
                 context: async () => {
-                  throw new AuthenticationError('valid result');
+                  throw new GraphQLError('valid result', {
+                    extensions: { code: 'SOME_CODE' },
+                  });
                 },
               },
             );
@@ -1687,14 +1690,14 @@ export function defineIntegrationTestSuiteApolloServerTests(
             const e = result.errors[0];
             expect(e.message).toMatch('valid result');
             expect(e.extensions).toBeDefined();
-            expect(e.extensions.code).toEqual('UNAUTHENTICATED');
+            expect(e.extensions.code).toEqual('SOME_CODE');
             expect(e.extensions.exception.stacktrace).toBeDefined();
 
             expect(contextCreationDidFail.mock.calls).toMatchInlineSnapshot(`
               Array [
                 Array [
                   Object {
-                    "error": [AuthenticationError: Context creation failed: valid result],
+                    "error": [GraphQLError: Context creation failed: valid result],
                   },
                 ],
               ]
@@ -1743,7 +1746,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
           resolvers: {
             Query: {
               fieldWhichWillError: () => {
-                throw new AuthenticationError('we the best music');
+                throw new GraphQLError('we the best music', {
+                  extensions: { code: 'SOME_CODE' },
+                });
               },
             },
           },
@@ -1759,7 +1764,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
-        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.code).toEqual('SOME_CODE');
         expect(result.errors[0].extensions.exception).toBeUndefined();
       });
 
@@ -1773,7 +1778,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
           resolvers: {
             Query: {
               fieldWhichWillError: () => {
-                throw new AuthenticationError('we the best music');
+                throw new GraphQLError('we the best music', {
+                  extensions: { code: 'SOME_CODE' },
+                });
               },
             },
           },
@@ -1788,7 +1795,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
-        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.code).toEqual('SOME_CODE');
         expect(result.errors[0].extensions.exception).toBeUndefined();
       });
 
@@ -1802,7 +1809,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
           resolvers: {
             Query: {
               fieldWhichWillError: () => {
-                throw new AuthenticationError('we the best music');
+                throw new GraphQLError('we the best music', {
+                  extensions: { code: 'SOME_CODE' },
+                });
               },
             },
           },
@@ -1818,7 +1827,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
-        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.code).toEqual('SOME_CODE');
         expect(result.errors[0].extensions.exception).toBeDefined();
         expect(result.errors[0].extensions.exception.stacktrace).toBeDefined();
       });
@@ -1833,8 +1842,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
           resolvers: {
             Query: {
               fieldWhichWillError: () => {
-                throw new AuthenticationError('Some message', {
-                  extensions: { ext1: 'myExt' },
+                throw new GraphQLError('Some message', {
+                  extensions: { ext1: 'myExt', code: 'SOME_CODE' },
                 });
               },
             },
@@ -1854,7 +1863,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             path: ['fieldWhichWillError'],
             locations: [{ line: 1, column: 2 }],
             extensions: {
-              code: 'UNAUTHENTICATED',
+              code: 'SOME_CODE',
               ext1: 'myExt',
             },
           },

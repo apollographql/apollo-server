@@ -22,11 +22,13 @@ import {
   BadRequestError,
   ValidationError,
   SyntaxError,
+  OperationResolutionError,
+} from './internalErrorClasses.js';
+import {
   ensureError,
   normalizeAndFormatErrors,
-  OperationResolutionError,
   ensureGraphQLError,
-} from './errors.js';
+} from './errorNormalize.js';
 import type {
   GraphQLRequestContext,
   GraphQLRequestContextDidResolveSource,
@@ -407,6 +409,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       enablePluginsForSchemaResolvers(schemaDerivedData.schema);
     }
 
+    let statusCodeIfExecuteThrows = 500;
     try {
       const result = await execute(
         requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
@@ -421,12 +424,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
             'Unexpected error: Apollo Server did not resolve an operation but execute did not return errors',
           );
         }
-        const error = result.errors[0];
-        throw new OperationResolutionError(error.message, {
-          nodes: error.nodes,
-          originalError: error.originalError,
-          extensions: error.extensions,
-        });
+        statusCodeIfExecuteThrows = 400;
+        throw new OperationResolutionError(result.errors[0]);
       }
 
       // The first thing that execution does is coerce the request's variables
@@ -442,11 +441,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // https://github.com/graphql/graphql-js/issues/3169
       const resultErrors = result.errors?.map((e) => {
         if (isBadUserInputGraphQLError(e)) {
-          return new UserInputError(e.message, {
-            nodes: e.nodes,
-            originalError: e.originalError,
-            extensions: e.extensions,
-          });
+          return new UserInputError(e);
         }
         return e;
       });
@@ -467,11 +462,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
 
-      const errorStatusCode =
-        executionMaybeError instanceof OperationResolutionError ? 400 : 500;
       return await sendErrorResponse(
         [ensureGraphQLError(executionError)],
-        newHTTPGraphQLHead(errorStatusCode),
+        newHTTPGraphQLHead(statusCodeIfExecuteThrows),
       );
     }
   }

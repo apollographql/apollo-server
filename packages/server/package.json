@@ -12,6 +12,11 @@
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
+    "./errors": {
+      "types": "./dist/esm/errors/index.d.ts",
+      "import": "./dist/esm/errors/index.js",
+      "require": "./dist/cjs/errors/index.js"
+    },
     "./express4": {
       "types": "./dist/esm/express4/index.d.ts",
       "import": "./dist/esm/express4/index.js",

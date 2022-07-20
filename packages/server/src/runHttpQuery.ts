@@ -12,7 +12,7 @@ import {
   SchemaDerivedData,
 } from './ApolloServer.js';
 import type { FormattedExecutionResult } from 'graphql';
-import { BadRequestError } from './errors.js';
+import { BadRequestError } from './internalErrorClasses.js';
 import type { Logger } from '@apollo/utils.logger';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just
