@@ -24,6 +24,7 @@ class GraphQLErrorWithCode extends GraphQLError {
       ...options,
       extensions: { ...options?.extensions, code },
     });
+    this.name = this.constructor.name;
   }
 }
 
@@ -45,8 +46,6 @@ export class SyntaxError extends GraphQLErrorWithCode {
       extensions: graphqlError.extensions,
       originalError: graphqlError,
     });
-
-    this.name = 'SyntaxError';
   }
 }
 
@@ -61,8 +60,6 @@ export class ValidationError extends GraphQLErrorWithCode {
         originalError: graphqlError.originalError ?? graphqlError,
       },
     );
-
-    this.name = 'ValidationError';
   }
 }
 
@@ -72,7 +69,6 @@ export class PersistedQueryNotFoundError extends GraphQLErrorWithCode {
       'PersistedQueryNotFound',
       ApolloServerErrorCode.PERSISTED_QUERY_NOT_FOUND,
     );
-    this.name = 'PersistedQueryNotFoundError';
   }
 }
 
@@ -82,7 +78,6 @@ export class PersistedQueryNotSupportedError extends GraphQLErrorWithCode {
       'PersistedQueryNotSupported',
       ApolloServerErrorCode.PERSISTED_QUERY_NOT_SUPPORTED,
     );
-    this.name = 'PersistedQueryNotSupportedError';
   }
 }
 
@@ -93,8 +88,6 @@ export class UserInputError extends GraphQLErrorWithCode {
       originalError: graphqlError.originalError ?? graphqlError,
       extensions: graphqlError.extensions,
     });
-
-    this.name = 'UserInputError';
   }
 }
 
@@ -109,8 +102,6 @@ export class OperationResolutionError extends GraphQLErrorWithCode {
         extensions: graphqlError.extensions,
       },
     );
-
-    this.name = 'OperationResolutionError';
   }
 }
 
@@ -120,8 +111,6 @@ export class OperationResolutionError extends GraphQLErrorWithCode {
 export class BadRequestError extends GraphQLErrorWithCode {
   constructor(message: string) {
     super(message, ApolloServerErrorCode.BAD_REQUEST);
-
-    this.name = 'BadRequestError';
   }
 }
 
