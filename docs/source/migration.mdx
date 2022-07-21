@@ -1173,11 +1173,9 @@ Several Apollo Server 4 changes only affect TypeScript typings, not runtime beha
 
 ### Improved typing for `context`
 
-In Apollo Server 3, you don't tell TypeScript what type your context value is, so there is no compile-time check that the type returned by your `context` function matches the context value type read by your resolvers and plugins. `ApolloServer` does have a generic parameter, but that parameter is the type of the arguments *passed to* your context function (and is specified by your web integration) rather than your app's context value type.
+In Apollo Server 3, you never specify the type of your context value when setting your server. This means there is no compile-time check that the type `context` function returns matches the type of your context value (read by your resolvers and plugins). `ApolloServer` has a generic parameter, but that parameter is the type of the *arguments passed* to your `context` function , _not_ the type of your app's context value.
 
-In Apollo Server 4, you can type your `context` by passing an argument to `ApolloServer`'s integration function. This gives you proper `context` typing throughout, providing you with `context` type inference and enabling you to ensure your `context` object is complete before executing requests. (We no longer need a generic parameter for the type of the arguments to the context function, since the context function is passed directly to the framework-specific middleware function such as `expressMiddleware` which can define the correct type directly.)
-
-You can set up `context` TypeScript typing with  `ApolloServer`, like so:
+In Apollo Server 4, you specify the type of your context value as a generic parameter to `ApolloServer`. This gives you proper `context` typing throughout, ensuring that the type returned from your `context` function matches the type available in your resolvers and plugins. For example:
 
 ```ts
 // You can optionally create a TS interface to set up types
@@ -1190,11 +1188,20 @@ interface MyContext {
 // context's types to ApolloServer's integration function.
 const server = new ApolloServer<MyContext>({
   typeDefs,
-  resolvers,
-  plugins: [
-    // Plugins declared to be <BaseContext> still work.
-    ApolloServerPluginCacheControlDisabled(),
-  ],
+  resolvers: {
+    Query: {
+      hello: (root, args, { token }) {
+        return token;  // token is properly inferred as a string
+      },
+    },
+  },
+  plugins: [{
+    async requestDidStart({ contextValue }) {
+      // token is properly inferred as a string; note that in AS4 you
+      // write `contextValue` rather than `context` in plugins.
+      console.log(contextValue.token);
+    },
+  }],
 });
 
 const { url } = await startStandaloneServer(apolloServerInstance, {
