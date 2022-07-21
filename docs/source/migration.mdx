@@ -741,7 +741,7 @@ ApolloServerPluginUsageReporting({
 
 ### Older Gateway types
 
-The `gateway` option to the `ApolloServer` constructor is designed to be used with Apollo Gateway, but can also be used with your own implementation of the gateway interface. Several changes have been made to that interface in Apollo Server 4.
+The `gateway` option to the `ApolloServer` constructor is designed for use with the `ApolloGateway` class from the `@apollo/gateway` package. Apollo Server 4 changes the details of how Apollo Server interacts with this object. If you are using a [supported version of `@apollo/gateway`](#apollo-gateway) as your server's `gateway`, the changes will not affect you. However, if you provide something other than an `ApolloGateway` instance to this option, you might need to adjust your custom code.
 
 In Apollo Server 2, the TypeScript type used for the `gateway` constructor option is called `GraphQLService`. In Apollo Server 3, the TypeScript type is called `GatewayInterface`, but the `apollo-server-core` package continued to export an identical `GraphQLService` type as well.
 
