@@ -58,6 +58,7 @@ which we will explain in more detail down below. It is your integration's
 responsibility to take this object and construct a response accordingly, based
 on the conventions that apply to your framework.
 
+FIXME: are there actual errors to handle any differently?
 ### Error Handling
 
 The `executeHTTPGraphQLRequest` method does not throw. Instead, it returns an
@@ -90,7 +91,7 @@ permitted signatures, while the third is the actual implementation (omitted for
 now).
 
 ```ts
-export interface ExpressMiddlewareOptions<TContext extends BaseContext> {
+interface ExpressMiddlewareOptions<TContext extends BaseContext> {
   context?: ContextFunction<[ExpressContextFunctionArgument], TContext>;
 }
 
@@ -139,31 +140,202 @@ server.assertStarted('expressMiddleware()');
 For serverless integrations where the handler must be returned synchronously,
 users should _not_ call `server.start()` and instead, the integration should
 call `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests`.
-
-The handler you return should call `assertStarted` immediately inside
-the function body:
-```ts
-server.assertStarted('serverlessHandler()');
-```
+Since serverless integrations handle starting the server instance, they don't
+need to call `assertStarted`.
 
 ### Computing Context
 
-```ts
-  // This `any` is safe because the overload above shows that context can
-  // only be left out if you're using BaseContext as your context, and {} is a
-  // valid BaseContext.
-  const defaultContext: ContextFunction<
-    [ExpressContextFunctionArgument],
-    any
-  > = async () => ({});
+A request handler has access to all kinds of useful information about the
+incoming request which is often useful during GraphQL execution. For this
+reason, integrations should provide a hook to users which allows them to
+generate their GraphQL context object based on the incoming request.
 
-  const context: ContextFunction<[ExpressContextFunctionArgument], TContext> =
-    options?.context ?? defaultContext;
+If no `context` function is provided, an empty GraphQL context object is
+sufficient (see `defaultContext` below).
+
+When a user provides a `context` function, it should be called with the request
+object and any other contextual information that the handler receives when it's
+called. In Express, the handler receives `req` and `res` objects which we pass
+along to the user's `context` function.
+
+Apollo Server exports the `ContextFunction` type, which is a generic type that
+is useful for integrations in defining their API. The first type argument
+defines the arguments that will be passed to your user's `context` function. The
+Express integration uses it above in the `ExpressMiddlewareOptions` interface so
+that users get a strongly typed `context` function with correct parameter
+typings. The second type argument defines the return type of the user's
+`context` function, and should be the same `TContext` generic as used in the
+`ApolloServer` instance.
+
+```ts
+interface ExpressContextFunctionArgument {
+  req: express.Request;
+  res: express.Response;
+}
+
+const defaultContext: ContextFunction<
+  [ExpressContextFunctionArgument],
+  any
+> = async () => ({});
+
+const context: ContextFunction<[ExpressContextFunctionArgument], TContext> =
+  options?.context ?? defaultContext;
 ```
 
+### Handling Requests
+
+This section is where implementations can expect to diverge from the Express implementation the most. The request handler has 4 main functions:
+1. Ensure the request is valid
+2. Construct an `HTTPGraphQLRequest` object from the incoming request
+3. Execute the GraphQL request via Apollo Server
+4. Return a well-formed response to the client
 
 
+#### Ensure the request is valid
 
+During this step, the Express handler checks for the existence of a `body` on the request. The Express handler expects the use of the `body-parser` package to parse the request body into a JavaScript object. We know that if there's no `body` on the request, the middleware isn't configured properly so we respond with an error.
+
+
+```ts
+if (!req.body) {
+  res.status(500);
+  res.send(
+    '`req.body` is not set; this probably means you forgot to set up the ' +
+      '`body-parser` middleware before the Apollo Server middleware.',
+  );
+  return;
+}
+```
+
+Because the Express implementation uses the `body-parser` package, all requests
+with a `content-type: application/json` header will either be parsed into a
+JavaScript object or an error will be returned before the handler is even
+called. It's an integration's responsibility to ensure that the body is parsed
+appropriately based on the `content-type` header and that errors are returned
+for invalid requests.
+
+FIXME: add note about qs and get query string parameter parsing
+
+Apollo Server expects a few "types" of requests:
+* `POST` GraphQL Request: `POST` with a `content-type: application/json` header
+  * Request body is a JSON object with the following properties:
+    * `query` (required): GraphQL query string
+    * `variables`: JSON object containing GraphQL variables if provided
+    * `operationName`: GraphQL operation name string if provided
+    * `extensions`: JSON object containing arbitrary extension data if provided
+* `POST` APQ GraphQL Request: `POST` with a `content-type: application/json` header
+  * Request body is a JSON object with the following properties:
+    * `extensions`: JSON object containing a `persistedQuery` object with
+      `version` and `sha256Hash` properties
+* `GET` GraphQL Request: `GET` with a `content-type: text/plain` header
+  * The following query parameters are URL encoded:
+    * `query` (required): GraphQL query string
+    * `variables`: JSON object containing GraphQL variables if provided
+    * `operationName`: GraphQL operation name string if provided
+    * `extensions`: JSON object containing arbitrary extension data if provided
+* `GET` APQ GraphQL Request: `GET` with a `content-type: text/plain` header
+  * The following query parameters are URL encoded:
+    * `extensions`: JSON object containing a `persistedQuery` object with
+      `version` and `sha256Hash` properties
+* Landing page request: `GET` with an `accept: text/html` header
+
+FIXME: restructure this^
+
+#### Constructing the `HTTPGraphQLRequest` object
+
+```ts
+interface HTTPGraphQLRequest {
+  method: string;
+  headers: Map<string, string>;
+  searchParams: any;
+  body: any;
+}
+```
+
+With the request body parsed, we can now construct an `HTTPGraphQLRequest`. Apollo Server handles the logic of `GET` vs `POST`, applicable headers, and whether to look in `searchParams` or `body` for the GraphQL-specific parts of the query.
+
+Express handles the body parsing as well as parsing any query parameters, so constructing the `HTTPGraphQLRequest` only requires us to transform the `headers` into a `Map` like so:
+
+```ts
+const headers = new Map<string, string>();
+for (const [key, value] of Object.entries(req.headers)) {
+  if (value !== undefined) {
+    // Node/Express headers can be an array or a single value. We join
+    // multi-valued headers with `, ` just like the Fetch API's `Headers`
+    // does. We assume that keys are already lower-cased (as per the Node
+    // docs on IncomingMessage.headers) and so we don't bother to lower-case
+    // them or combine across multiple keys that would lower-case to the
+    // same value.
+    headers.set(key, Array.isArray(value) ? value.join(', ') : value);
+  }
+}
+
+const httpGraphQLRequest: HTTPGraphQLRequest = {
+  method: req.method.toUpperCase(),
+  headers,
+  searchParams: req.query,
+  body: req.body,
+};
+```
+
+#### Execute the GraphQL request
+
+Now that we have an `HTTPGraphQLRequest` object, we can use it to execute the GraphQL request.
+
+```ts
+const result = await server
+  .executeHTTPGraphQLRequest({
+    httpGraphQLRequest,
+    context: () => context({ req, res }),
+  });
+```
+
+Here, `httpGraphQLRequest` is the `HTTPGraphQLRequest` object constructed above.
+The `context` function is the one we determined above, either provided by the
+user or the default one. Note how we pass the `req` and `res` objects we
+received from Express to the `context` function (as promised by our
+`ExpressContextFunctionArgument` type).
+
+#### Send the response
+
+The `HTTPGraphQLResponse` type is what we expect after awaiting the Promise
+returned by `executeHTTPGraphQLRequest`. At this point, the handler should
+respond to the client as appropriate based on the conventions of the framework.
+
+```ts
+interface HTTPGraphQLHead {
+  statusCode?: number;
+  headers: Map<string, string>;
+}
+
+type HTTPGraphQLResponse = HTTPGraphQLHead &
+  (
+    | {
+        completeBody: string;
+        bodyChunks: null;
+      }
+    | {
+        completeBody: null;
+        bodyChunks: AsyncIterableIterator<HTTPGraphQLResponseChunk>;
+      }
+  );
+```
+
+The express implementation uses the `res` object in order to update the response
+with the appropriate status code and headers as well as send the body like so:
+
+```ts
+if (httpGraphQLResponse.completeBody === null) {
+  // TODO(AS4): Implement incremental delivery or improve error handling.
+  throw Error('Incremental delivery not implemented');
+}
+
+for (const [key, value] of httpGraphQLResponse.headers) {
+  res.setHeader(key, value);
+}
+res.statusCode = httpGraphQLResponse.statusCode || 200;
+res.send(httpGraphQLResponse.completeBody);
+```
 
 
 ## General integration patterns
