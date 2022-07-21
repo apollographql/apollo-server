@@ -10,7 +10,7 @@
 You can use Apollo Server as:
 
 * A stand-alone GraphQL server
-* The GraphQL server for a [subgraph](https://www.apollographql.com/docs/federation/subgraphs) in a federated supergraph
+* The GraphQL server for a [subgraph](https://www.apollographql.com/docs/federation/subgraphs/) in a federated supergraph
 * The gateway for a [federated supergraph](https://www.apollographql.com/docs/federation/)
 
 Apollo Server provides a simple API for integrating with any Node.js web framework or serverless environment. The `@apollo/server` package itself ships with a standalone zero-dependency web server, and a middleware implementation for [the Express web framework](https://expressjs.com/). Integrations with other environments are community-maintained.
@@ -26,14 +26,14 @@ This `@apollo/server` package is new with Apollo Server 4. Previous major versio
 
 ## Documentation
 
-Full documentation for Apollo Server is available in [our documentation site](https://www.apollographql.com/docs/apollo-server/). This README shows the basics of getting a server running (both standalone and with Express), but most features are only documented in our docs site.
+Full documentation for Apollo Server is available on [our documentation site](https://www.apollographql.com/docs/apollo-server/). This README shows the basics of getting a server running (both standalone and with Express), but most features are only documented on our docs site.
 
 
 ## Getting started: standalone server
 
 > You can also check out the [getting started](https://www.apollographql.com/docs/apollo-server/getting-started) guide in the Apollo Server docs for more details, including examples in both TypeScript and JavaScript.
 
-Apollo Server's standalone server lets you get a GraphQL server up and running quickly without needing to set up an HTTP server yourself. It allows all the same configuration of GraphQL logic as the Express integration, but does not provide the ability to make fine-grained tweaks to HTTP-specific behavior of your server.
+Apollo Server's standalone server lets you get a GraphQL server up and running quickly without needing to set up an HTTP server yourself. It allows all the same configuration of GraphQL logic as the Express integration, but does not provide the ability to make fine-grained tweaks to the HTTP-specific behavior of your server.
 
 First, install Apollo Server and the JavaScript implementation of the core GraphQL algorithms:
 
