@@ -26,7 +26,7 @@ Apollo Server 3 is distributed as a [fixed set of packages](/apollo-server/integ
 
 In Apollo Server 3, the `apollo-server-core` package defines an `ApolloServer` "base" class, which each integration package (e.g., `apollo-server-express`,`apollo-server-lambda`, etc. ) exports as a subclass with the same name and a slightly different API.  This packaging structure means that new integration package releases are lockstep versioned to Apollo Server itself, making it challenging to support major versions of frameworks and add integration-specific changes.
 
-Apollo Server 4 takes a different approach to integrations. Apollo Server 4 has a stable web framework integration API, which includes explicit support for serverless framework life cycles. The new `@apollo/server` package contains the `ApolloServer` class, an [Express 4 integration](#migrating-from-apollo-server-express) (similar to AS3's `apollo-server-express` package), and a [standalone server](#migrating-from-apollo-server) (similar to AS3's `apollo-server` package). There are no subclasses in AS4; there is a single `ApolloServer` class with a single API that all integrations use.
+Apollo Server 4 takes a different approach to integrations. Apollo Server 4 has a stable web framework integration API, which includes explicit support for serverless framework life cycles. The new `@apollo/server` package contains the `ApolloServer` class, an [Express 4 integration](#migrating-from-apollo-server-express) (similar to AS3's `apollo-server-express` package), a [standalone server](#migrating-from-apollo-server) (similar to AS3's `apollo-server` package), and a set of core plugins (similar to AS3's `apollo-server-core` package). There are no subclasses in AS4; there is a single `ApolloServer` class with a single API that all integrations use.
 
 In Apollo Server 3, the Apollo Server core team is responsible for maintaining all integration packages. With Apollo Server 4, the AS core team will stop directly maintaining most integration packages. We will instead work with the broader open source community to maintain Apollo Server integrations, enabling those who regularly use different web frameworks to make the best choices for their framework's integration.  If you'd like to help maintain an integration, please [see this issue calling for integration maintainers](https://github.com/apollographql/apollo-server/labels/integration-collaborators).
 
@@ -216,9 +216,9 @@ In Apollo Server 3, the `apollo-server-express` package supported both Express a
 
 ### Packages merged into `@apollo/server`
 
-As described above, the functionality provided by the `apollo-server-core`, `apollo-server`, and `apollo-server-express` packages in AS3 has been combined into the single `@apollo/server` package in AS4.
+As shown above, Apollo Server 4 combines the functionality of the  `apollo-server`, `apollo-server-express`, and `apollo-server-core` packages into a new `@apollo/server` package.
 
-But wait: there's more! The following packages have *also* been combined into `@apollo/server`:
+But wait: there's more! The `@apollo/server` package also combines the following packages:
 - [`apollo-server-errors`](https://www.npmjs.com/package/apollo-server-errors)
 - [`apollo-server-plugin-base`](https://www.npmjs.com/package/apollo-server-plugin-base)
 - [`apollo-server-types`](https://www.npmjs.com/package/apollo-server-types)
