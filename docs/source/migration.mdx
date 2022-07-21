@@ -56,9 +56,9 @@ The following sections shows how servers using `apollo-server` and `apollo-serve
 
 ### Migrating from `apollo-server`
 
-In Apollo Server 3, the `apollo-server` package is a "batteries-included" package that wraps `apollo-server-express`, providing an HTTP server with minimal HTTP-level customization. 
+In Apollo Server 3, the `apollo-server` package is a "batteries-included" package that wraps `apollo-server-express`, providing an HTTP server with minimal HTTP-level customization.
 
-If you used the "batteries included" `apollo-server` package in Apollo Server 3, you'll use the `startStandaloneServer` function in Apollo Server 4: 
+If you used the "batteries included" `apollo-server` package in Apollo Server 3, you'll use the `startStandaloneServer` function in Apollo Server 4 instead of `server.listen()`.
 
 <MultiCodeBlock>
 
@@ -108,9 +108,11 @@ async function startApolloServer() {
 
 </MultiCodeBlock>
 
-Note that we start our server using `startStandaloneServer(server)` (instead of calling `server.listen()`). 
+The `startStandaloneServer` function doesn't enable you to configure your server's CORS behavior. If you used the `cors` constructor option in Apollo Server 3 to customize your CORS settings, use the [`expressMiddleware` function](#migrating-from-apollo-server-express) instead.
 
-> The `startStandaloneServer` function doesn't enable you to configure your server's CORS setting. If you want to customize your CORS settings, use the [`expressMiddleware` function](#migrating-from-apollo-server-express) instead.
+Similarly, if you used the `stopGracePeriodMillis` constructor option in Apollo Server 3, use the [`expressMiddleware` function](#migrating-from-apollo-server-express) and specify `stopGracePeriodMillis` to the `ApolloServerPluginDrainHttpServer` plugin.
+
+
 ### Migrating from `apollo-server-express`
 
 If you used the `apollo-server-express` package in Apollo Server 3, you'll use the `expressMiddleware` function in Apollo Server 4 (instead of using `applyMiddleware`).
