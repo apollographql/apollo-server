@@ -35,7 +35,7 @@ Your project directory now contains a `package.json` file.
 ## Step 2: Install dependencies
 Applications that run Apollo Server require two top-level dependencies:
 * [`graphql`](https://npm.im/graphql) (also known as `graphql-js`) is the library that implements the core GraphQL parsing and execution algorithms.
-* [`@apollo/server`](https://www.npmjs.com/package/@apollo/server) is the main library for Apollo Server itself, which understands how to turn HTTP requests and responses into GraphQL operations, and runs them in an extensible context with support for plugins and other features.
+* [`@apollo/server`](https://www.npmjs.com/package/@apollo/server) is the main library for Apollo Server itself. Apollo Server knows how to turn HTTP requests and responses into GraphQL operations and run them in an extensible context with support for plugins and other features.
 
 Run the following command to install both of these packages and save them in
 your project's `node_modules` directory:
@@ -87,7 +87,7 @@ touch tsconfig.json
 
 For more information on the compiler options above, see the [TypeScript Compiler docs](https://www.typescriptlang.org/tsconfig).
 
-5. Finally, replace the default `scripts` entry in your `package.json` file with these `type` and `scripts` entries:
+5. Finally, replace the default `scripts` entry in your `package.json` file with the following `type` and `scripts` entries:
 ```json title="package.json"
 {
   // ...etc.
@@ -101,7 +101,7 @@ For more information on the compiler options above, see the [TypeScript Compiler
 
 The above `start` script tells TypeScript to compile your code into JavaScript before using `node` to run that compiled code. Setting your project's [`type` to `module`](https://nodejs.org/api/packages.html#approach-1-use-an-es-module-wrapper) loads your JavaScript files as ES modules, enabling you to use top-level [`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function) calls.
 
-6. You can now run `npm start`, which should successfully compile and run your empty `index.ts` file, printing something like the following:
+6. You can now run `npm start`, which should successfully compile and run your empty `index.ts` file, printing something like this:
 
 ```
 > graphql-server-example@1.0.0 start
@@ -126,7 +126,7 @@ Now replace the default `scripts` entry in your `package.json` file with these `
   // ...etc.
   "type": "module",
   "scripts": {
-    "start": "tsc && node ./dist/index.js"
+    "start": "node index.js"
   },
   // other dependencies
 }
