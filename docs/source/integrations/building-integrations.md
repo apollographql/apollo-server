@@ -1,17 +1,27 @@
 ---
-title: Building Integrations for Apollo Server
+title: Building Web Framework Integrations for Apollo Server
 description: ""
 ---
 
-> This document is intended for integration _authors_. Before building your own integration, we recommend first looking to see if there's already a widely used package for your integration of choice that might suit your needs.
+> This document is intended for web framework integration _authors_. Before
+> building your own integration, we recommend first looking to see if there's
+> already a widely used package for your integration of choice that might suit
+> your needs.
 
-One of the driving forces behind Apollo Server 4 is the creation of a stable, well-defined API for processing HTTP requests and responses. Apollo Server 4's API enables external collaborators (like you) to build integrations with Apollo Server in their web framework of choice.
+One of the driving forces behind Apollo Server 4 is the creation of a stable,
+well-defined API for processing HTTP requests and responses. Apollo Server 4's
+API enables external collaborators (like you) to build integrations with Apollo
+Server in their web framework of choice.
 
-The primary responsibility of an Apollo Server integration is to translate requests and responses between a web framework's native format to the format that `ApolloServer` uses.
+The primary responsibility of an Apollo Server integration is to translate
+requests and responses between a web framework's native format to the format
+that `ApolloServer` uses.
 
 ## Overview
 
-Let's start by getting a general sense of what an integration package is responsible for. This is an outline of the higher-level concepts to get you acquainted with server initialization and the lifecycle of a request.
+Let's start by getting a general sense of what an integration package is
+responsible for. This is an outline of the higher-level concepts to get you
+acquainted with server initialization and the lifecycle of a request.
 
 ### Ensuring successful startup
 
@@ -22,7 +32,10 @@ ready to receive requests. This means that users of your integration are
 expected to `await server.start()` _before_ handing off the server instance to
 your integration.
 
-Serverless integrations should first call the `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method and need not require their users to call `server.start()`. Calling this function will allow calling `assertStarted` while still in the "starting" state.
+Serverless integrations should first call the
+`startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method
+and need not require their users to call `server.start()`. Calling this function
+will allow calling `assertStarted` while still in the "starting" state.
 
 ### Handling requests
 
@@ -184,7 +197,8 @@ const context: ContextFunction<[ExpressContextFunctionArgument], TContext> =
 
 ### Handling Requests
 
-This section is where implementations can expect to diverge from the Express implementation the most. The request handler has 4 main functions:
+This section is where implementations can expect to diverge from the Express
+implementation the most. The request handler has 4 main functions:
 1. Ensure the request is valid
 2. Construct an `HTTPGraphQLRequest` object from the incoming request
 3. Execute the GraphQL request via Apollo Server
@@ -193,7 +207,11 @@ This section is where implementations can expect to diverge from the Express imp
 
 #### Ensure the request is valid
 
-During this step, the Express handler checks for the existence of a `body` on the request. The Express handler expects the use of the `body-parser` package to parse the request body into a JavaScript object. We know that if there's no `body` on the request, the middleware isn't configured properly so we respond with an error.
+During this step, the Express handler checks for the existence of a `body` on
+the request. The Express handler expects the use of the `body-parser` package to
+parse the request body into a JavaScript object. We know that if there's no
+`body` on the request, the middleware isn't configured properly so we respond
+with an error.
 
 
 ```ts
@@ -223,7 +241,8 @@ Apollo Server expects a few "types" of requests:
     * `variables`: JSON object containing GraphQL variables if provided
     * `operationName`: GraphQL operation name string if provided
     * `extensions`: JSON object containing arbitrary extension data if provided
-* `POST` APQ GraphQL Request: `POST` with a `content-type: application/json` header
+* `POST` APQ GraphQL Request: `POST` with a `content-type: application/json`
+  header
   * Request body is a JSON object with the following properties:
     * `extensions`: JSON object containing a `persistedQuery` object with
       `version` and `sha256Hash` properties
@@ -252,9 +271,14 @@ interface HTTPGraphQLRequest {
 }
 ```
 
-With the request body parsed, we can now construct an `HTTPGraphQLRequest`. Apollo Server handles the logic of `GET` vs `POST`, applicable headers, and whether to look in `searchParams` or `body` for the GraphQL-specific parts of the query.
+With the request body parsed, we can now construct an `HTTPGraphQLRequest`.
+Apollo Server handles the logic of `GET` vs `POST`, applicable headers, and
+whether to look in `searchParams` or `body` for the GraphQL-specific parts of
+the query.
 
-Express handles the body parsing as well as parsing any query parameters, so constructing the `HTTPGraphQLRequest` only requires us to transform the `headers` into a `Map` like so:
+Express handles the body parsing as well as parsing any query parameters, so
+constructing the `HTTPGraphQLRequest` only requires us to transform the
+`headers` into a `Map` like so:
 
 ```ts
 const headers = new Map<string, string>();
@@ -280,7 +304,8 @@ const httpGraphQLRequest: HTTPGraphQLRequest = {
 
 #### Execute the GraphQL request
 
-Now that we have an `HTTPGraphQLRequest` object, we can use it to execute the GraphQL request.
+Now that we have an `HTTPGraphQLRequest` object, we can use it to execute the
+GraphQL request.
 
 ```ts
 const result = await server
@@ -336,50 +361,3 @@ for (const [key, value] of httpGraphQLResponse.headers) {
 res.statusCode = httpGraphQLResponse.statusCode || 200;
 res.send(httpGraphQLResponse.completeBody);
 ```
-
-
-## General integration patterns
-
-<!-- TODO: fix link to point to main once version-4 is merged  -->
-> See the [`expressMiddleware` function](https://github.com/apollographql/apollo-server/blob/36482f5eb56a0421c1eb47e3ebf0e60e033573ab/packages/server/src/express/index.ts) for an example of integrating [Express](https://github.com/expressjs/express) with Apollo Server.
-
-Your integration should accept an `ApolloServer` instance _after_ that instance has called the `server.start()` method:
-
-```ts
-// Create a new instance of ApolloServer
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-// The async start method instructs Apollo Server to
-// prepare to handle incoming operations.
-await server.start();
-```
-
-> Serverless integrations will accept an `ApolloServer` instance _before_ its called any start-related functions. For more details, see [New approach to serverless frameworks](#new-approach-to-serverless-frameworks).
-
-You can pass the "started" `ApolloServer` instance into your framework-specific middleware. With your framework-specific middleware set up, you can then start your chosen framework's server:
-
-```ts
-// 1. Create our ApolloServer instance and start it
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-await server.start();
-
-// 2. Create our framework specific server
-const app = express();
-
-// 3. Set up our middleware for our framework specific server.
-app.use(cors(), bodyParser.json(), expressMiddleware(server));
-
-// 4. Start the framework specific server
-app.listen({ port: 4000 }, () => {
-  console.log(`🚀 Server ready at http://localhost:4000`);
-});
-```
-
-Note that your integration is responsible for setting up [body-parser](https://www.npmjs.com/package/body-parser) and [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) configuration.
-
