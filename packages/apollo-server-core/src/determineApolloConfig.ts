@@ -50,7 +50,7 @@ export function determineApolloConfig(
     if (graphVariant) {
       throw new Error(
         'Cannot specify both graph ref and graph variant. Please use ' +
-          '`apollo.graphRef` or `APOLLO_GRAPH_REF` without also setting the graph ID.',
+          '`apollo.graphRef` or `APOLLO_GRAPH_REF` without also setting the graph variant.',
       );
     }
   } else if (graphId) {
