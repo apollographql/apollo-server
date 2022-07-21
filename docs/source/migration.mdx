@@ -56,7 +56,9 @@ The following sections shows how servers using `apollo-server` and `apollo-serve
 
 ### Migrating from `apollo-server`
 
-If you used the batteries-included `apollo-server` package in Apollo Server 3, you'll want to use the `startStandaloneServer` function in Apollo Server 4. Call `startStandaloneServer(server)` instead of `server.listen()`. Note that you cannot configure CORS settings with `startStandaloneServer`; if you want to change CORS settings from the default, use `expressMiddleware` instead.
+In Apollo Server 3, the `apollo-server` package is a "batteries-included" package that wraps `apollo-server-express`, providing an HTTP server with minimal HTTP-level customization. 
+
+If you used the "batteries included" `apollo-server` package in Apollo Server 3, you'll use the `startStandaloneServer` function in Apollo Server 4: 
 
 <MultiCodeBlock>
 
@@ -106,7 +108,9 @@ async function startApolloServer() {
 
 </MultiCodeBlock>
 
+Note that we start our server using `startStandaloneServer(server)` (instead of calling `server.listen()`). 
 
+> The `startStandaloneServer` function doesn't enable you to configure your server's CORS setting. If you want to customize your CORS settings, use the [`expressMiddleware` function](#migrating-from-apollo-server-express) instead.
 ### Migrating from `apollo-server-express`
 
 If you used the `apollo-server-express` package in Apollo Server 3, you'll use the `expressMiddleware` function in Apollo Server 4 (instead of using `applyMiddleware`).
