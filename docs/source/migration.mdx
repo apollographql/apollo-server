@@ -48,11 +48,11 @@ If you are using any other Apollo Server 3 framework integration package, you ca
 
 There are a few other high-level changes to how you work with framework integrations. There are more details on each of these changes in later sections.
 
-- In Apollo Server 3, you pass your `context` function to the `ApolloServer` constructor. The parameters received by this function depend on which `ApolloServer` subclass you are using. Because Apollo Server 4 does not use subclassing, you no longer pass your `context` function to the `ApolloServer` constructor; instead, you pass it to your integration function (eg, `expressMiddleware` or `startStandaloneServer`).
-- In Apollo Server 3, the framework integrations automatically set up their framework's HTTP body parsing and CORS header writing for you, and you could configure that functionality in a framework-specific way via the Apollo Server API. In Apollo Server 4, it's your responsibility to set up these standard features yourself. Specifically, when using `expressMiddleware`, you should install the `body-parser` and `cors` npm packages and use them in your Express app, just like with any other JSON-based API server. Note that `startStandaloneServer` does set up these packages for you automatically, but does not allow you to configure their behavior.
-- In Apollo Server 3, some framework integrations take a `path` option that lets you configure on what URL path they listen on, with a default of `/graphql`. This feature overlapped with the router features defined by web frameworks and has been removed in Apollo Server 4. This means that to provide the same API when migrating, you'll want to explicitly mount `expressMiddleware` at `/graphql`. (Note that the AS3 batteries-included server `apollo-server` listened on all paths, not just `/graphql`.)
+- Your [`context` function](#context-initialization-function) is passed to your integration function (eg, `expressMiddleware` or `startStandaloneServer`) instead of the `ApolloServer` constructor.
+- When using a framework integration, you now need to [set up HTTP body parsing and CORS yourself](#body-parser-and-cors) using your framework's standard functionality.
+- Instead of [telling the framework integration function what URL path to listen](#path-parsing) on with a `path` option, pass that path directly to your framework's router. If you did not specify a path, the default in Apollo Server 3 was `/graphql`, so to preserve existing behavior you should explicitly specify that path now.
 
-The follow sections show how servers using `apollo-server` and `apollo-server-express` need to change to use the new API.
+The following sections shows how servers using `apollo-server` and `apollo-server-express` need to change to use the new API.
 
 ### Migrating from `apollo-server`
 
@@ -619,6 +619,15 @@ In Apollo Server 3, many framework integrations enable you to use the `path` opt
 In Apollo Server 4, you should use your framework's routing feature to mount your integration at the URL path where you want Apollo Server to process requests.  For example, if you are using `apollo-server-express` in AS3 and would like to continue using the default `/graphql` path, you should now mount the `expressMiddleware` function at the `/graphql` path.
 
 > Apollo Server 3's batteries-included `apollo-server` package, replaced by `startStandAloneServer` in Apollo Server 4,  serves all URLs (i.e., rather than only listening on `/graphql`).
+
+
+### `body-parser` and `cors`
+
+In Apollo Server 3, framework integrations automatically set up their framework's HTTP body parsing and CORS response header functionality for you, and you could configure that functionality in a framework-specific way via the Apollo Server API. The details of this configuration varied by integration, but typically involved options passed to either the `ApolloServer` constructor or a method such as `applyMiddleware`, with names such as `bodyParserConfig` and `cors`.
+
+In Apollo Server 4, it's your responsibility to set up these standard features yourself when using a web framework. Specifically, when using `expressMiddleware`, you should install the `body-parser` and `cors` npm packages and use them in your Express app, just like with any other JSON-based API server. If you passed a `cors` option to `applyMiddleware` or `getMiddleware`, you should pass the same value to the `cors` function. If you passed a `bodyParserConfig` option to `applyMiddleware` or `getMiddleware`, you should pass the same value to the `body-parser` package's `json` function.
+
+Note that `startStandaloneServer` does set up body parsing and CORS functionality for you, but does not allow you to configure their behavior. In Apollo Server 3, you could configure the batteries-included `apollo-server`'s CORS behavior via the `cors` constructor option (although you could not configure body parsing). In Apollo Server 4, if you need to configure CORS behavior, use `expressMiddleware` rather than `startStandaloneServer`.
 
 
 ### `gql` GraphQL tag
