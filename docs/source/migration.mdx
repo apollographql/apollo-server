@@ -595,24 +595,47 @@ const server = new ApolloServer({
 ```
 
 ### `formatResponse` hook
-In Apollo Server 3, the `formatResponse` hook enables you to transform the structure of GraphQL response objects before they're sent to a client.
 
-Apollo Server 4 removes the `formatResponse` hook. We instead recommend using the `willSendResponse` plugin to do the same thing:
+In Apollo Server 3, the `formatResponse` hook enables you to transform the structure of GraphQL response objects before they're sent to a client. This hook is called only after an operation executes (not if there is an error like a parse error that prevents execution). It receives the `response` `GraphQLResponse` and the `requestContext` (which does not yet contain the `response`). If it returns a non-null `GraphQLResponse`, that response is used instead of the one it received. This hook is provided as a top-level constructor argument, not as part of the plugin API.
 
-TODO: write as before and after
+There is also a `willSendResponse` plugin hook. This plugin hook is called at a similar place in the lifecycle to `formatResponse`. It receives a `requestContext`; the `GraphQLResponse` is on this object in the `response` field. It may mutate `requestContext.response`. It is called for all requests that get far enough to invoke `requestDidStart` (ie, any request where the JSON body can be properly parsed, etc). Anything that the `formatResponse` hook can do can also be accomplished with the `willSendResponse` plugin hook.
+
+Apollo Server 4 removes the `formatResponse` hook. We instead recommend using the `willSendResponse` plugin to do the same thing. (Note that [the structure of `GraphQLResponse` has also changed](#graphqlresponse) so that most of its fields are nested under a `result` field.) You can tell if an operation made it to the execution phase by seeing if the result has a `data` field, so if it was important that your `formatResponse` hook is only called if execution occurred, you can check for the existence of this field. (There are some small edge cases here: for example, an error in the coercion of variable values would result in calling `formatResponse` but will not have `data` in the result. If differentiating these edge cases is important to you, open an issue and we'll help.)
+
+For example, if your Apollo Server 3 code used `formatResponse` like this:
 
 ```ts
-const apolloServerInstance = new ApolloServer<MyContext>({
+new ApolloServer({
+  typeDefs,
+  resolvers,
+  formatResponse({ response, requestContext }) {
+    return {
+      ...response,
+      extensions: {
+        ...(response.extensions),
+        hello: 'world',
+      },
+    },
+  },
+}),
+```
+
+your Apollo Server 4 code could use `willSendResponse` like this:
+
+```ts
+new ApolloServer<MyContext>({
   typeDefs,
   resolvers,
   plugins: [
     {
       async requestDidStart() {
         return {
-            // The willSendResponse event fires whenever Apollo Server is
-            // about to send a response for a GraphQL operation.
-          async willSendResponse({ response }) {
-            // Transform the response's structure as needed
+          async willSendResponse(requestContext) {
+            const { response } = requestContext;
+            response.result.extensions = {
+              ...(response.result.extensions),
+              hello: 'world',
+            };
           },
         };
       },
