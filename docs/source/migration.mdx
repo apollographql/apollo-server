@@ -112,7 +112,12 @@ async function startApolloServer() {
 
 </MultiCodeBlock>
 
-The `listen` option to `startStandaloneServer` replaces the arguments to the `server.listen()` function. (If you passed no arguments to `server.listen()`, you don't need to specify a `listen` option.) This object has the same type as the [options argument passed to Node's `net.Server.listen`](https://nodejs.org/api/net.html#serverlistenoptions-callback).
+The `startStandaloneServer` function accepts two arguments; the first is the instance of `ApolloServer` that should begin listening for incoming requests. The second is an object for configuring your server's options, which most notably accepts the following properties:
+
+| Name  | Description  |
+|---|---|
+| `context` | <p>The optional [`context` initialization function](#context-initialization-function).</p><p>In Apollo Server 3, this is provided to the constructor.</p><p>In Apollo Server 4, this is provided to `startStandaloneServer`.</p><br/><p>This function receives `req` and `res` options. Note that in Apollo Server 4, these are based on Node's built-in `http.IncomingMessage` and `http.ServerResponse` types rather than Express's similar types; if you need to access Express-specific properties in your `context` function, use `expressMiddleware` instead.</p> |
+| `listen` |  <p>You can optionally provide a `listen` option. The `listen` option accepts an object with the same type as the [options argument passed to Node's `net.Server.listen`](https://nodejs.org/api/net.html#serverlistenoptions-callback). For example, if you called `server.listen(4321)` in Apollo Server 3, pass `listen: { port: 4321 }` in Apollo Server 4. If you didn't pass any arguments to Apollo Server 3's `server.listen()` method, you don't need to specify a `listen` option in Apollo Server 4.</p> |
 
 The `startStandaloneServer` function doesn't enable you to configure your server's CORS behavior. If you used the `cors` constructor option in Apollo Server 3 to customize your CORS settings, use the [`expressMiddleware` function](#migrating-from-apollo-server-express) instead.
 
