@@ -199,66 +199,53 @@ const context: ContextFunction<[ExpressContextFunctionArgument], TContext> =
 
 This section is where implementations can expect to diverge from the Express
 implementation the most. The request handler has 4 main functions:
-1. Ensure the request is valid
+1. Parsing the request
 2. Construct an `HTTPGraphQLRequest` object from the incoming request
 3. Execute the GraphQL request via Apollo Server
 4. Return a well-formed response to the client
 
+#### Parsing the request
 
-#### Ensure the request is valid
+Apollo Server responds to a variety of requests, handling queries via `GET`
+and `POST`, full GraphQL queries and APQs, and landing pages like Explorer.
+Fortunately, this is all part of Apollo Server's core logic and isn't something
+that integrations need to worry about.
 
-During this step, the Express handler checks for the existence of a `body` on
-the request. The Express handler expects the use of the `body-parser` package to
-parse the request body into a JavaScript object. We know that if there's no
-`body` on the request, the middleware isn't configured properly so we respond
-with an error.
+Integrations _are_ responsible for parsing the request in order to correctly
+construct the `HTTPGraphQLRequest` that Apollo Server expects. This
+means parsing the request body as well as the query string if present.
 
+In the Express integration, users are expected to use the `body-parser` JSON
+middleware which handles parsing JSON request bodies when the `content-type`
+header is set to `application/json`. Integrations can choose to require a
+similar middleware or plugin for their ecosystem or handle body parsing
+themselves. A correctly parsed body should look like this:
 
 ```ts
-if (!req.body) {
-  res.status(500);
-  res.send(
-    '`req.body` is not set; this probably means you forgot to set up the ' +
-      '`body-parser` middleware before the Apollo Server middleware.',
-  );
-  return;
+{
+  query?: string;
+  variables?: Record<string, any>;
+  operationName?: string;
+  extensions?: Record<string, any>;
 }
 ```
 
-Because the Express implementation uses the `body-parser` package, all requests
-with a `content-type: application/json` header will either be parsed into a
-JavaScript object or an error will be returned before the handler is even
-called. It's an integration's responsibility to ensure that the body is parsed
-appropriately based on the `content-type` header and that errors are returned
-for invalid requests.
+Integrations are also responsible for parsing the query string if present.
+Express does this by default, handing off the parsed query string as an object
+(`req.query`) to the request handler. A correctly parsed query string should
+look like this:
 
-FIXME: add note about qs and get query string parameter parsing
+```ts
+{
+  query?: string;
+  variables?: string;
+  operationName?: string;
+  extensions?: string;
+}
+```
 
-Apollo Server expects a few "types" of requests:
-* `POST` GraphQL Request: `POST` with a `content-type: application/json` header
-  * Request body is a JSON object with the following properties:
-    * `query` (required): GraphQL query string
-    * `variables`: JSON object containing GraphQL variables if provided
-    * `operationName`: GraphQL operation name string if provided
-    * `extensions`: JSON object containing arbitrary extension data if provided
-* `POST` APQ GraphQL Request: `POST` with a `content-type: application/json`
-  header
-  * Request body is a JSON object with the following properties:
-    * `extensions`: JSON object containing a `persistedQuery` object with
-      `version` and `sha256Hash` properties
-* `GET` GraphQL Request: `GET` with a `content-type: text/plain` header
-  * The following query parameters are URL encoded:
-    * `query` (required): GraphQL query string
-    * `variables`: JSON object containing GraphQL variables if provided
-    * `operationName`: GraphQL operation name string if provided
-    * `extensions`: JSON object containing arbitrary extension data if provided
-* `GET` APQ GraphQL Request: `GET` with a `content-type: text/plain` header
-  * The following query parameters are URL encoded:
-    * `extensions`: JSON object containing a `persistedQuery` object with
-      `version` and `sha256Hash` properties
-* Landing page request: `GET` with an `accept: text/html` header
-
-FIXME: restructure this^
+Note that `variables` and `extensions` are a `string` instead of a `Record`. No
+additional parsing of the individual query string parts should be necessary.
 
 #### Constructing the `HTTPGraphQLRequest` object
 
@@ -276,9 +263,9 @@ Apollo Server handles the logic of `GET` vs `POST`, applicable headers, and
 whether to look in `searchParams` or `body` for the GraphQL-specific parts of
 the query.
 
-Express handles the body parsing as well as parsing any query parameters, so
-constructing the `HTTPGraphQLRequest` only requires us to transform the
-`headers` into a `Map` like so:
+The only thing left for us to compute is the `headers` object! Apollo Server
+expects a `Map` of headers. In the Express implementation, we construct the
+`Map` by iterating over the `headers` object like so:
 
 ```ts
 const headers = new Map<string, string>();
@@ -293,7 +280,16 @@ for (const [key, value] of Object.entries(req.headers)) {
     headers.set(key, Array.isArray(value) ? value.join(', ') : value);
   }
 }
+```
 
+Apollo Server expects header keys to be lower-cased. If your framework allows
+duplicate keys, the values should be merged into the same key, joined by a
+`, ` as shown above.
+
+Now that we have all the parts of an `HTTPGraphQLRequest`, we can build the
+object and hand it off to Apollo Server for execution.
+
+```ts
 const httpGraphQLRequest: HTTPGraphQLRequest = {
   method: req.method.toUpperCase(),
   headers,
