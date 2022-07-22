@@ -630,11 +630,18 @@ const server = new ApolloServer({
 
 ### `formatResponse` hook
 
-In Apollo Server 3, the `formatResponse` hook enables you to transform the structure of GraphQL response objects before they're sent to a client. This hook is called only after an operation executes (not if there is an error like a parse error that prevents execution). It receives the `response` `GraphQLResponse` and the `requestContext` (which does not yet contain the `response`). If it returns a non-null `GraphQLResponse`, that response is used instead of the one it received. This hook is provided as a top-level constructor argument, not as part of the plugin API.
+Apollo Server 3 provides the `formatResponse` hook as a top-level constructor argument. The `formatResponse` hook is called after an operation successfully gets to the "execution" stage, and it enables you to transform the structure of GraphQL response objects before they're sent to a client.  
 
-There is also a `willSendResponse` plugin hook. This plugin hook is called at a similar place in the lifecycle to `formatResponse`. It receives a `requestContext`; the `GraphQLResponse` is on this object in the `response` field. It may mutate `requestContext.response`. It is called for all requests that get far enough to invoke `requestDidStart` (ie, any request where the JSON body can be properly parsed, etc). Anything that the `formatResponse` hook can do can also be accomplished with the `willSendResponse` plugin hook.
+The `formatResponse` hook receives a successful operation's `response`, `GraphQLResponse`, and `requestContext` (which doesn't have a `response` yet). If the `formatResponse` hook returns a non-null `GraphQLResponse`, it uses that response instead of the initially received `response` argument. 
 
-Apollo Server 4 removes the `formatResponse` hook. We instead recommend using the `willSendResponse` plugin to do the same thing. (Note that [the structure of `GraphQLResponse` has also changed](#graphqlresponse) so that most of its fields are nested under a `result` field.) You can tell if an operation made it to the execution phase by seeing if the result has a `data` field, so if it was important that your `formatResponse` hook is only called if execution occurred, you can check for the existence of this field. (There are some small edge cases here: for example, an error in the coercion of variable values would result in calling `formatResponse` but will not have `data` in the result. If differentiating these edge cases is important to you, open an issue and we'll help.)
+
+Apollo Server 4 removes the `formatResponse` hook. We instead recommend using the `willSendResponse` plugin hook, which enables you to do everything you previously did with `formatResponse`. The `willSendResponse` plugin hook receives an operation's `requestContext`, which has a `response` field containing the `GraphQLResponse` object. Note that the `willSendResponse` hook may mutate the `requestContext.response` field. 
+
+> Note that Apollo Server 4 changes the structure of `GraphQLResponse`; [see below for more details](#graphqlresponse). 
+
+Apollo Server calls the `willSendResponse` plugin hook for all requests that get far enough to invoke `requestDidStart` (i.e., requests with a parsable JSON body, etc. ). This means that Apollo Server calls the `willSendResponse` hook in more contexts than the previous `formatResponse` hook. 
+
+To only use the `willSendResponse` hook after an operation's "execution" stage (i.e., like the previous `formatResponse` hook), you can make a filter checking for the existence of a `data` field in the result. If an operation has a `data` field in the result, it has made it to the execution phase. Note, there are some edge cases: for example, an error in the coercion of variable values calls `formatResponse` but doesn't have `data` in the result. If differentiating these edge cases is important to you, please open an issue, and we'll help. 
 
 For example, if your Apollo Server 3 code used `formatResponse` like this:
 
