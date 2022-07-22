@@ -719,8 +719,6 @@ import gql from 'graphql-tag';
 
 (Note that `gql` is a named export of `apollo-server` but is the default export of `graphql-tag`.)
 
-However, no Apollo Server APIs (in v3 or v4) actually require you to pass in the parsed document produced by a `gql` template string; for example, the `typeDefs` constructor option allows your schema to be specified either as a string or as a parsed document. Rather than switching to the `graphql-tag` package, you may wish to simply specify your schema as a string (whether inline in your source file, or in a separate `*.graphql` file read by `fs.readFileSync`). Note that most editors that recognize `gql` tags also treat any string starting with `#graphql` as GraphQL.
-
 
 ### `ApolloError`
 
