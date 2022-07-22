@@ -46,7 +46,7 @@ If you are currently using the `apollo-server` package, you should use the [`sta
 
 If you are using any other Apollo Server 3 framework integration package, you can’t upgrade during the AS4 alpha release _yet_. Please help us by [building new integrations](/building-integrations) or [discussing how to maintain existing integrations](https://github.com/apollographql/apollo-server/labels/integration-collaborators) to ensure there is an Apollo Server 4 integration for your favorite framework.
 
-Below are a few high-level changes for using framework integrations: 
+Below are a few high-level changes for using framework integrations:
 
 - Your [`context` function](#context-initialization-function) is passed to your integration function (eg, `expressMiddleware` or `startStandaloneServer`) instead of the `ApolloServer` constructor.
 - When using a framework integration, you now need to [set up HTTP body parsing and CORS yourself](#body-parser-and-cors) using your framework's standard functionality.
@@ -239,7 +239,7 @@ But wait: there's more! The `@apollo/server` package also combines the following
 In Apollo Server 3, the `apollo-server-core` package exports built-in plugins, such as `ApolloServerUsageReporting`, at the top level. This means you have to install both the `apollo-server-core` package and the package you use to import `ApolloServer` (e.g., `apollo-server` or `apollo-server-express`).
 
 In Apollo Server 4, these built-in plugins are part of the main `@apollo/server` package, which also imports the `ApolloServer` class. The  `@apollo/server` package exports these built-in plugins with deep exports. This means you use deep imports for each built-in plugin, enabling you to evaluate only the plugin you use in your app and making it easier for bundlers to eliminate unused code.
- 
+
  The  `@apollo/server` package exports the following plugins:
 
 | Plugin | Import path |
@@ -300,9 +300,9 @@ If you're using an older version of `graphql`, upgrade it to a supported version
 
 ### `typescript`
 
-If you use Apollo Server with TypeScript, you must use TypeScript v4.7.0 or newer. 
+If you use Apollo Server with TypeScript, you must use TypeScript v4.7.0 or newer.
 
-For background, Apollo Server uses type system features introduced in v4.7. We'd like to put out ["downleveled"](https://github.com/sandersn/downlevel-dts) versions of `@apollo/server`'s type definitions for older versions of TypeScript, but have found TypeScript's `typesVersions` feature [challenging to use](https://github.com/apollographql/apollo-server/issues/6423). 
+For background, Apollo Server uses type system features introduced in v4.7. We'd like to put out ["downleveled"](https://github.com/sandersn/downlevel-dts) versions of `@apollo/server`'s type definitions for older versions of TypeScript, but have found TypeScript's `typesVersions` feature [challenging to use](https://github.com/apollographql/apollo-server/issues/6423).
 
 If supporting older versions of TypeScript is important to you and you'd like to help us get `typesVersions` working, we'd appreciate PRs!
 
@@ -322,9 +322,9 @@ The following `ApolloServer` constructor options have been removed in favor of o
 
 ### `dataSources`
 
-> ⚠️ This feature is in active development and does not currently work as described. 
+> ⚠️ This feature is in active development and does not currently work as described.
 >
-> The Apollo Server 4 alpha doesn't support importing from the `apollo-datasource-rest` package. We intend to [rename](https://github.com/apollographql/apollo-server/issues/6048) the `apollo-datasource-rest` package to `@apollo/datasource-rest` and update it to be fully compatible with Apollo Server 4. 
+> The Apollo Server 4 alpha doesn't support importing from the `apollo-datasource-rest` package. We intend to [rename](https://github.com/apollographql/apollo-server/issues/6048) the `apollo-datasource-rest` package to `@apollo/datasource-rest` and update it to be fully compatible with Apollo Server 4.
 In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](/apollo-server/data/resolvers/#the-context-argument) object. This means the TypeScript types returned by the `context` function and the `context` types received in the resolvers and plugins are _different_. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
 
 Apollo Server 4 removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object.
@@ -384,7 +384,7 @@ Here's how you would write the same code in Apollo Server 4. (Note that `RESTDat
 
 <MultiCodeBlock>
 
-```ts { 25-27, 37, 40-42)
+```ts {25-27, 37, 40-42}
 import { RESTDataSource, RESTDataSourceOptions } from '@apollo/datasource-rest';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
@@ -435,7 +435,7 @@ await startStandaloneServer(server, {
 
 </MultiCodeBlock>
 
-If you want to access your entire context's value within your `DataSource`, you can do so by making your context value a `class`(enabling it to refer to itself via `this` in its constructor):
+If you want to access your entire context's value within your `DataSource`, you can do so by making your context value a `class` (enabling it to refer to itself via `this` in its constructor):
 
 <MultiCodeBlock>
 
