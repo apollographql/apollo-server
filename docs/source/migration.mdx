@@ -6,7 +6,7 @@ title: Migrating to Apollo Server 4 (Alpha)
 >
 >  Apollo Server 4 introduces many across-the-board changes, and we are working on updating our documentation to reflect these changes. This article explains which features _do_ require code changes and how to make them.
 
-<!-- TODO: before releasing, double-check imports & links -->
+<!-- TODO(AS4): before releasing, double-check imports & links -->
 
 This major release focuses on improving Apollo Server's extensibility and making it simpler to use, maintain, and document. To learn more about the inspiration behind this release, see the [Apollo Server Roadmap](https://github.com/apollographql/apollo-server/blob/main/ROADMAP.md).
 
@@ -290,8 +290,6 @@ If you're using an older version of `graphql`, upgrade it to a supported version
 
 ### `@apollo/gateway`
 
-TODO: double check this (including getting numbers for 0.x and 2.x)
-
 If you use Apollo Server with Apollo Gateway, Apollo Server 4 drops support for [`@apollo/gateway` versions](/federation/api/apollo-gateway/) below v0.35.0.
 
 
@@ -303,226 +301,166 @@ The following `ApolloServer` constructor options have been removed in favor of o
 
 In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](/apollo-server/data/resolvers/#the-context-argument) object. This means the TypeScript types returned by the `context` function and the `context` types received in the resolvers and plugins are _different_. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
 
-In Apollo Server 4, we have removed the `dataSources` constructor option. You can treat `DataSources` like any other part of your `context` object:
+In Apollo Server 4, we have removed the `dataSources` constructor option. You can treat `DataSources` like any other part of your `context` object.
 
-TODO: rewrite as before and after (and fully review)
+The one way that Apollo Server 3 treats `DataSource`s specially is that immediately after construction, it would invoke `dataSource.initialize({ cache, context })` on each `DataSource`. So in Apollo Server 4, you should just pass `cache` and `context` to the constructor yourself if you need them. In Apollo Server 4, you can find the `cache` as a new readonly field on the `ApolloServer` itself.
 
-<MultiCodeBlock>
-
-```ts {12, 20, 35-44}
-// Simple example data source
-class DogsDataSource {
-  constructor() {}
-
-  async getDogs() {
-    return [{ name: 'Fido' }];
-  }
-}
-
-// We can create a TS interface to ensure our dataSources are
-// correctly typed in our context
-interface MyContext {
-  dataSources: {
-    dogs: DogsDataSource;
-  }
-}
-
-// Create a new ApolloServer instance passing in the
-// MyContext interface
-const server = new ApolloServer<MyContext>({
-  typeDefs: `
-    type Query { dog: Dog }
-    type Dog { name: String }
-  `,
-  resolvers: {
-    Query: {
-      dog: async (_, __, context) => {
-        return (await context.dataSources.dogs.getDogs())[0];
-      },
-    },
-  },
-});
-
-const { url } = await startStandaloneServer(server, {
-  async context() {
-    // This function is called for every incoming operation, and
-    // returns the context object
-    return {
-      // Create a new instance of each data source for every operation
-      dataSources: {
-        dogs: new DogsDataSource(),
-      },
-    };
-  },
-  listen: { port: 4000 },
-});
-
-console.log(`Server ready at ${url}`);
-```
-
-```js {25-34}
-// Simple example data source
-class DogsDataSource {
-  constructor() {}
-
-  async getDogs() {
-    return [{ name: 'Fido' }];
-  }
-}
-
-const server = new ApolloServer({
-  typeDefs: `
-    type Query { dog: Dog }
-    type Dog { name: String }
-  `,
-  resolvers: {
-    Query: {
-      dog: async (_, __, context) => {
-        return (await context.dataSources.dogs.getDogs())[0];
-      },
-    },
-  },
-});
-
-const { url } = await startStandaloneServer(server, {
-  async context() {
-    // This function is called for every incoming operation, and
-    // returns the context object
-    return {
-      // Create a new instance of each data source for every operation
-      dataSources: {
-        dogs: new DogsDataSource(),
-      },
-    };
-  },
-  listen: { port: 4000 },
-});
-
-console.log(`Server ready at ${url}`);
-```
-
-</MultiCodeBlock>
-
-In the above example, we create a `DogsDataSource` class and then instantiate a new `DogsDataSource` within our `context` initialization function. Now, with every incoming operation, our `context` initialization function returns an object containing a new instance of `DogsDataSource`, accessible to our resolvers from `context.dataSources.dogs`.
-
-> For more details about creating `context` in Apollo Server 4, see [`context` initialization function](#context-initialization-function).
-
-Expand the panel below to see another example of setting up a data source with the `RESTDataSource` class:
-
-TODO: fully review example
-
-<ExpansionPanel title="Click to expand">
+Let's say this is your code that uses a `RESTDataSource`-based `DataSource` with Apollo Server 3:
 
 <MultiCodeBlock>
 
 ```ts
-import { ApolloServer, startStandaloneServer } from '@apollo/server';
 import { RESTDataSource } from 'apollo-datasource-rest';
-import { KeyValueCache } from '@apollo/utils.keyvaluecache';
+import { ApolloServer } from 'apollo-server';
 
-// RESTDataSource example
-class BooksAPI extends RESTDataSource {
-  private cache: KeyValueCache<string>;
-  constructor(cache) {
-    super();
-    this.baseURL = 'https://the-one-api.dev/v2/';
-    // initialize the data source with our cache
-    this.initialize(cache);
+class MoviesAPI extends RESTDataSource {
+  baseURL = 'https://movies-api.example.com/';
+
+  willSendRequest(request: RequestOptions) {
+    request.headers.set('Authorization', this.context.token);
   }
 
-  async getBooks() {
-    const { docs } = await this.get(`book/`);
-    return docs;
+  async getMovie(id: string): Movie {
+    return this.get(`movies/${encodeURIComponent(id)}`);
   }
 }
 
-// We can create a TS interface to ensure our dataSources are
-// correctly typed in our context
-interface MyContext {
+interface ContextValue {
+  token: string;
   dataSources: {
-    booksAPI: BooksAPI;
+    moviesAPI: MoviesAPI;
   }
-}
-
-const server = new ApolloServer<MyContext>({
-  typeDefs: `
-    type Query { getBooks: [Book] }
-    type Book { name: String, _id: String }
-  `,
-  resolvers: {
-    Query: {
-      getBooks: async (_, __, context) => {
-        return await context.dataSources.booksAPI.getBooks();
-      },
-    },
-  },
-});
-
-const { url } = await startStandaloneServer(server, {
-  async context() {
-    return {
-      dataSources: {
-        booksAPI: new BooksAPI({ cache: server['internals'].cache }),
-      },
-    };
-  },
-  listen: { port: 4000 },
-});
-
-console.log(`Server ready at ${url}`);
-```
-
-```js
-import { ApolloServer, startStandaloneServer } from '@apollo/server';
-import { RESTDataSource } from 'apollo-datasource-rest';
-
-// RESTDataSource example
-class BooksAPI extends RESTDataSource {
-  constructor(cache) {
-    super();
-    this.baseURL = 'https://the-one-api.dev/v2/';
-    // initialize the data source with our cache
-    this.initialize(cache);
-  }
-
-  async getBooks() {
-    const { docs } = await this.get(`book/`);
-    return docs;
-  }
-}
-
+};
 
 const server = new ApolloServer({
-  typeDefs: `
-    type Query { getBooks: [Book] }
-    type Book { name: String, _id: String }
-  `,
-  resolvers: {
-    Query: {
-      getBooks: async (_, __, context) => {
-        return await context.dataSources.booksAPI.getBooks();
-      },
-    },
-  },
-});
-
-const { url } = await startStandaloneServer(server, {
-  async context() {
+  typeDefs,
+  resolvers,
+  context: ({ req: ExpressRequest }): Omit<ContextValue, 'dataSources'> => {
     return {
-      dataSources: {
-        booksAPI: new BooksAPI({ cache: server['internals'].cache }),
-      },
+      token: getTokenFromRequest(req),
     };
   },
-  listen: { port: 4000 },
+  dataSources: (): ContextValue['dataSources'] => {
+    return {
+      moviesAPI: new MoviesAPI(),
+    };
+  },
 });
 
-console.log(`Server ready at ${url}`);
+await server.listen();
 ```
 
 </MultiCodeBlock>
 
-</ExpansionPanel>
+<!-- TODO(AS4): Update the next line before release -->
+
+Here's how you would write the same code in Apollo Server 4. (Note that `RESTDataSource` has moved to a new package name (or at least it will [by the time AS4 is released](https://github.com/apollographql/apollo-server/issues/6048)).)
+
+<MultiCodeBlock>
+
+```ts
+import { RESTDataSource, RESTDataSourceOptions } from '@apollo/datasource-rest';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+
+class MoviesAPI extends RESTDataSource {
+  baseURL = 'https://movies-api.example.com/';
+  private token: string;
+
+  constructor(options: { token: string } & RESTDataSourceOptions) {
+    super(options);  // this should send `cache` through
+    this.token = options.token;
+  }
+
+  willSendRequest(request: RequestOptions) {
+    request.headers.set('Authorization', this.token);
+  }
+
+  async getMovie(id: string): Movie {
+    return this.get(`movies/${encodeURIComponent(id)}`);
+  }
+}
+
+interface ContextValue {
+  token: string;
+  dataSources: {
+    moviesAPI: MoviesAPI;
+  }
+};
+
+const server = new ApolloServer<ContextValue>({
+  typeDefs,
+  resolvers,
+});
+await startStandaloneServer(server, {
+  context: ({ req }) => {
+    const token = getTokenFromRequest(req);
+    const { cache } = server;
+    return {
+      token,
+      dataSources: {
+        moviesAPI: new MoviesAPI({ cache, token }),
+      },
+    };
+  },
+});
+```
+
+</MultiCodeBlock>
+
+If you actually need access to the entire context value within your `DataSource` rather than just particular fields, you can make your context value be a `class`, which is allowed to refer to itself via `this` in its constructor:
+
+<MultiCodeBlock>
+
+```ts
+import { RESTDataSource, RESTDataSourceOptions } from '@apollo/datasource-rest';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { IncomingMessage } from 'http';
+
+class MoviesAPI extends RESTDataSource {
+  baseURL = 'https://movies-api.example.com/';
+  private contextValue: ContextValue;
+
+  constructor(options: { contextValue: ContextValue } & RESTDataSourceOptions) {
+    super(options);  // this should send `cache` through
+    this.contextValue = options.contextValue;
+  }
+
+  willSendRequest(request: RequestOptions) {
+    request.headers.set('Authorization', this.contextValue.token);
+  }
+
+  async getMovie(id: string): Movie {
+    return this.get(`movies/${encodeURIComponent(id)}`);
+  }
+}
+
+class ContextValue {
+  public token: string;
+  public dataSources: {
+    moviesAPI: MoviesAPI;
+  }
+  constructor({ req, server }: { req: IncomingMessage, server: ApolloServer }) {
+    this.token = getTokenFromRequest(req);
+    const { cache } = server;
+    this.dataSources = {
+      moviesAPI: new MoviesAPI({ cache, contextValue: this }),
+    };
+  }
+}
+
+const server = new ApolloServer<ContextValue>({
+  typeDefs,
+  resolvers,
+});
+await startStandaloneServer(server, {
+  context: ({ req }) => new ContextValue({ req, server }),
+});
+```
+
+</MultiCodeBlock>
+
 
 ### `modules`
 In Apollo Server 3, there are [several ways](https://github.com/apollographql/apollo-server/issues/6062) to provide your `ApolloServer` instance with a schema. One of the most common ways is to provide `typeDefs` and `resolvers` options (each of which can optionally be an array). Another way is using the `modules` option with an array of objects, each object containing `typeDefs` and `resolvers` keys.  Under the hood, these two options use entirely different logic to do the same thing.
@@ -657,7 +595,7 @@ In Apollo Server 3, many framework integrations enable you to use the `path` opt
 
 In Apollo Server 4, you should use your framework's routing feature to mount your integration at the URL path where you want Apollo Server to process requests.  For example, if you are using `apollo-server-express` in AS3 and would like to continue using the default `/graphql` path, you should now mount the `expressMiddleware` function at the `/graphql` path.
 
-> Apollo Server 3's batteries-included `apollo-server` package, replaced by `startStandAloneServer` in Apollo Server 4,  serves all URLs (i.e., rather than only listening on `/graphql`).
+> Apollo Server 3's batteries-included `apollo-server` package, replaced by `startStandaloneServer` in Apollo Server 4,  serves all URLs (i.e., rather than only listening on `/graphql`).
 
 
 ### `body-parser` and `cors`
@@ -779,6 +717,8 @@ The `gateway` option to the `ApolloServer` constructor is designed for use with 
 In Apollo Server 2, the TypeScript type used for the `gateway` constructor option is called `GraphQLService`. In Apollo Server 3, the TypeScript type is called `GatewayInterface`, but the `apollo-server-core` package continued to export an identical `GraphQLService` type as well.
 
 In Apollo Server 4, the legacy `GraphQLService` type is no longer exported; use `GatewayInterface` instead.
+
+In Apollo Server 3, your `gateway` may define either `onSchemaChange` or the newer `onSchemaLoadOrUpdate`. In Apollo Server 4, your `gateway` must define `onSchemaLoadOrUpdate`.
 
 In Apollo Server 3, the `GatewayInterface.load` method returns `Promise<GraphQLServiceConfig>`, which contains a `schema` and an `executor`. In Apollo Server 4, `GraphQLServiceConfig` has been renamed `GatewayLoadResult`, and it only has an `executor` field; you can use the `onSchemaLoadOrUpdate` hook if you want to receive the schema.
 
@@ -1174,7 +1114,7 @@ new ApolloServer({
 
 ### Local landing page defaults to Embedded Apollo Sandbox
 
-In Apollo Server 3, the default development landing page is a splash page containing a link to the Apollo Sandbox (hosted at `https://studio.apollographql.com/`). This Sandbox only works if your server's CORS configuration allows the origin `https://studio.apollographql.com/ `. The [`ApolloServerPluginLandingPageLocalDefault`](apollo-server/testing/build-run-queries/#configuring-the-default-landing-page) plugin enables you to embed Apollo Sandbox directly on your server's landing page. Passing `embed: true` to the `ApolloServerPluginLandingPageLocalDefault` plugin allows your sandbox to make same-origin requests to your server with no additional CORS configuration.
+In Apollo Server 3, the default development landing page is a splash page containing a link to the Apollo Sandbox (hosted at `https://studio.apollographql.com/`). This Sandbox only works if your server's CORS configuration allows the origin `https://studio.apollographql.com/ `. The [`ApolloServerPluginLandingPageLocalDefault`](/apollo-server/testing/build-run-queries/#configuring-the-default-landing-page) plugin enables you to embed Apollo Sandbox directly on your server's landing page. Passing `embed: true` to the `ApolloServerPluginLandingPageLocalDefault` plugin allows your sandbox to make same-origin requests to your server with no additional CORS configuration.
 
 In Apollo Server 4, the default development landing page is the *embedded* Apollo Sandbox.  Note that nothing changes about the default production landing page.
 
