@@ -13,7 +13,8 @@ import { BadRequestError } from './internalErrorClasses.js';
 
 export async function runBatchHttpQuery<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
-  batchRequest: Omit<HTTPGraphQLRequest, 'body'> & { body: any[] },
+  batchRequest: HTTPGraphQLRequest,
+  body: unknown[],
   contextValue: TContext,
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
@@ -26,10 +27,10 @@ export async function runBatchHttpQuery<TContext extends BaseContext>(
     completeBody: '',
   };
   const responseBodies = await Promise.all(
-    batchRequest.body.map(async (body: any) => {
+    body.map(async (bodyPiece: unknown) => {
       const singleRequest: HTTPGraphQLRequest = {
         ...batchRequest,
-        body,
+        body: bodyPiece,
       };
 
       const response = await runHttpQuery(
@@ -85,6 +86,7 @@ export async function runPotentiallyBatchedHttpQuery<
     return await runBatchHttpQuery(
       server,
       httpGraphQLRequest,
+      httpGraphQLRequest.body as unknown[],
       contextValue,
       schemaDerivedData,
       internals,

@@ -194,7 +194,7 @@ describe('ApolloServer start', () => {
         method: 'POST',
         headers: new HeaderMap([['content-type', 'application-json']]),
         body: JSON.stringify({ query: '{__typename}' }),
-        searchParams: {},
+        search: '',
       },
       context: async () => ({}),
     };

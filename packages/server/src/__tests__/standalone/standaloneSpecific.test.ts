@@ -72,7 +72,7 @@ describe('Typings: TContext inference', () => {
     });
 
     // @ts-expect-error
-    await startStandaloneServer(server, {}, { port: 0 });
+    await startStandaloneServer(server, { listen: { port: 0 } });
     await server.stop();
   });
 

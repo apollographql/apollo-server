@@ -50,7 +50,8 @@ describe('plugin', () => {
           httpGraphQLRequest: {
             method: 'GET',
             headers: new Map([['apollo-require-preflight', 't']]),
-            searchParams: { query: '{hello}' },
+            // cspell:ignore Bhello
+            search: 'query=%7Bhello%7D',
             body: {},
           },
           context: async () => ({}),

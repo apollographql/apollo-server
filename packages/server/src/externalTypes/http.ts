@@ -5,14 +5,17 @@ export interface HTTPGraphQLRequest {
   // lowercase header name, multiple headers joined with ', ' like Headers.get
   // does
   headers: Map<string, string>;
-  // no name normalization. can theoretically have deeply nested stuff if you
-  // use a search parameter parser like `qs` (used by `express` by default) that does
-  // that and you want to look for that in your own plugin. AS itself will only
-  // look for a handful of keys and will validate their value types.
-  searchParams: any;
+  /**
+   * The part of the URL after the question mark (not including the #fragment),
+   * or the empty string if there is no question mark. Including the question
+   * mark in this string is allowed but not required. Do not %-decode this
+   * string. You can get this from a standard Node request with
+   * `url.parse(request.url).search ?? ''`.
+   */
+  search: string;
   // read by your body-parser or whatever. we poke at it to make it into
   // the right real type.
-  body: any;
+  body: unknown;
 }
 
 // TODO(AS4): Should this be exported for integrations?
