@@ -26,7 +26,7 @@ Apollo Server 3 is distributed as a [fixed set of packages](/apollo-server/integ
 
 In Apollo Server 3, the `apollo-server-core` package defines an `ApolloServer` "base" class, which each integration package (e.g., `apollo-server-express`,`apollo-server-lambda`, etc. ) exports as a subclass with the same name and a slightly different API.  This packaging structure means that new integration package releases are lockstep versioned to Apollo Server itself, making it challenging to support major versions of frameworks and add integration-specific changes.
 
-Apollo Server 4 takes a different approach to integrations. Apollo Server 4 has a stable web framework integration API, which includes explicit support for serverless framework life cycles. The new `@apollo/server` package contains the `ApolloServer` class, an [Express 4 integration](#migrating-from-apollo-server-express) (similar to AS3's `apollo-server-express` package), a [standalone server](#migrating-from-apollo-server) (similar to AS3's `apollo-server` package), and a set of core plugins (similar to AS3's `apollo-server-core` package). There are no subclasses in AS4; there is a single `ApolloServer` class with a single API that all integrations use.
+Apollo Server 4 takes a different approach to integrations. Apollo Server 4 has a stable web framework integration API, which includes explicit support for serverless framework life cycles. The new `@apollo/server` package contains the `ApolloServer` class, an [Express 4 integration](#migrating-from-apollo-server-express) (similar to AS3's `apollo-server-express` package), a [standalone server](#migrating-from-apollo-server) (similar to AS3's `apollo-server` package), and a set of [core plugins](#plugins-are-now-in-apollo-server) (similar to AS3's `apollo-server-core` package). There are no subclasses in AS4; there is a single `ApolloServer` class with a single API that all integrations use.
 
 In Apollo Server 3, the Apollo Server core team is responsible for maintaining all integration packages. With Apollo Server 4, the AS core team will stop directly maintaining most integration packages. We will instead work with the broader open source community to maintain Apollo Server integrations, enabling those who regularly use different web frameworks to make the best choices for their framework's integration.  If you'd like to help maintain an integration, please [see this issue calling for integration maintainers](https://github.com/apollographql/apollo-server/labels/integration-collaborators).
 
@@ -226,7 +226,40 @@ But wait: there's more! The `@apollo/server` package also combines the following
 
 ### Plugins are now in `@apollo/server`
 
-TODO: describe that plugins are now in `@apollo/server` at deep imports
+In Apollo Server 3, built in plugins such as `ApolloServerUsageReporting` are exported from `apollo-server-core` at the top level. You need to install this package in addition to the package (like `apollo-server` or `apollo-server-express`) from which you import `ApolloServer`.
+
+In Apollo Server 3, the built in packages are in `@apollo/server`, the same npm package as `ApolloServer`. However, they are exported from deep exports. (Using deep imports means that you only have to evaluate the code associated with the plugins you actually use, and it's easier for JS bundlers to eliminate unused code.
+
+| Plugin | Import path |
+|--------|-------------|
+| `ApolloServerPluginCacheControl` | `@apollo/server/plugin/cacheControl` |
+| `ApolloServerPluginCacheControlDisabled` | `@apollo/server/plugin/disabled` |
+| `ApolloServerPluginDrainHttpServer` | `@apollo/server/plugin/drainHttpServer` |
+| `ApolloServerPluginInlineTrace` | `@apollo/server/plugin/inlineTrace` |
+| `ApolloServerPluginInlineTraceDisabled` | `@apollo/server/plugin/disabled` |
+| `ApolloServerPluginLandingPageDisabled` | `@apollo/server/plugin/disabled` |
+| `ApolloServerPluginLandingPageGraphQLPlayground` | `@apollo/server/plugin/landingPage/graphqlPlayground` |
+| `ApolloServerPluginLandingPageLocalDefault` | `@apollo/server/plugin/landingPage/default` |
+| `ApolloServerPluginLandingPageProductionDefault` | `@apollo/server/plugin/landingPage/default` |
+| `ApolloServerPluginSchemaReporting` | `@apollo/server/plugin/schemaReporting` |
+| `ApolloServerPluginUsageReporting` | `@apollo/server/plugin/usageReporting` |
+| `ApolloServerPluginUsageReportingDisabled` | `@apollo/server/plugin/disabled` |
+
+For example, replace this Apollo Server 3 code:
+
+```ts
+import { ApolloServerPluginUsageReporting } from 'apollo-server-core';
+```
+
+with this Apollo Server 4 code:
+
+```ts
+import { ApolloServerPluginUsageReporting } from '@apollo/server/plugin/usageReporting';
+```
+
+You should also remove the dependency on `apollo-server-core` from your project.
+
+TypeScript types associated with these plugins (such as `ApolloServerPluginUsageReportingOptions`) are exported from the same deep import as the plugin.
 
 ### Renamed packages
 
