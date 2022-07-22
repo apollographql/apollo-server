@@ -21,7 +21,7 @@ that `ApolloServer` uses.
 
 This guide demonstrates how to go about building a framework integration for
 Apollo Server at a conceptual level. Below, we will explain the concepts using
-code snippets from our [Express integration](FIXME: link) for illustration.
+code snippets from our [Express integration](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/src/express4/index.ts) for illustration.
 
 ### Main function signature
 
