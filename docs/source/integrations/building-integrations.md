@@ -254,6 +254,10 @@ object containing helpful errors and a specific `statusCode` when applicable.
 You should handle this object accordingly, based on the error handling
 conventions that apply to your framework.
 
+In the Express integration, this doesn't require any special handling. The
+non-error case handles setting the status code and headers, then responds with
+the execution result just as it would in the error case.
+
 #### Send the response
 
 The `HTTPGraphQLResponse` type is what we expect after awaiting the Promise
@@ -283,11 +287,6 @@ The express implementation uses the `res` object in order to update the response
 with the appropriate status code and headers as well as send the body like so:
 
 ```ts
-if (httpGraphQLResponse.completeBody === null) {
-  // TODO(AS4): Implement incremental delivery or improve error handling.
-  throw Error('Incremental delivery not implemented');
-}
-
 for (const [key, value] of httpGraphQLResponse.headers) {
   res.setHeader(key, value);
 }
