@@ -18,9 +18,7 @@ During Apollo Server 4's alpha, we are actively looking to gather feedback and [
 
 > For a list of all breaking changes, see the [changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md).
 
-## Package-level changes
-
-TODO: Maybe rename section?
+## The new `@apollo/server` package
 
 Apollo Server 3 is distributed as a [fixed set of packages](/apollo-server/integrations/middleware) for integrating with different web frameworks and environments.  The main "batteries-included" [`apollo-server` package](/apollo-server/integrations/middleware#apollo-server) reduces setup time by providing a minimally customizable GraphQL server. Apollo Server 3 doesn't provide a way to add new integrations for additional frameworks.
 
@@ -239,7 +237,7 @@ But wait: there's more! The `@apollo/server` package also combines the following
 - [`apollo-server-types`](https://www.npmjs.com/package/apollo-server-types)
 
 
-### Plugins are now in `@apollo/server`
+### Plugins are in deep imports
 
 In Apollo Server 3, the `apollo-server-core` package exports built-in plugins, such as `ApolloServerUsageReporting`, at the top level. This means you have to install both the `apollo-server-core` package and the package you use to import `ApolloServer` (e.g., `apollo-server` or `apollo-server-express`).
 
@@ -277,16 +275,6 @@ import { ApolloServerPluginUsageReporting } from '@apollo/server/plugin/usageRep
 Once you've updated your imports, you can remove your project's dependency on `apollo-server-core`.
 
 You can export each plugin's associated TypeScript types (e.g., `ApolloServerPluginUsageReportingOptions`) from the same deep import as that plugin.
-
-### Renamed packages
-
-The following packages have been renamed in Apollo Server 4:
- * `apollo-server-plugin-response-cache` is now [`@apollo/server-plugin-response-cache`](https://www.npmjs.com/package/@apollo/server-plugin-response-cache).
- * `apollo-server-plugin-operation-registry` is now [`@apollo/server-plugin-operation-registry`](https://www.npmjs.com/package/@apollo/server-plugin-operation-registry).
- * `apollo-reporting-protobuf` (an internal implementation detail for the usage reporting plugin) is now [`@apollo/usage-reporting-protobuf`](https://www.npmjs.com/package/@apollo/usage-reporting-protobuf).
-
-Note that once AS4 is released, all actively maintained Apollo packages will start with `@apollo/`. This leaves the `apollo-` namespace open for community integration packages (e.g., `apollo-server-integration-fastify`).
-
 
 ## Bumped dependencies
 
@@ -863,7 +851,7 @@ Whereas this query would be invalid:
 ```
 
 
-## Changed Features
+## Changed features
 
 ### New approach to serverless frameworks
 
@@ -1267,6 +1255,16 @@ new ApolloServer({
 ```
 
 </MultiCodeBlock>
+
+## Renamed packages
+
+The following packages have been renamed in Apollo Server 4:
+ * `apollo-server-plugin-response-cache` is now [`@apollo/server-plugin-response-cache`](https://www.npmjs.com/package/@apollo/server-plugin-response-cache).
+ * `apollo-server-plugin-operation-registry` is now [`@apollo/server-plugin-operation-registry`](https://www.npmjs.com/package/@apollo/server-plugin-operation-registry).
+ * `apollo-reporting-protobuf` (an internal implementation detail for the usage reporting plugin) is now [`@apollo/usage-reporting-protobuf`](https://www.npmjs.com/package/@apollo/usage-reporting-protobuf).
+
+Note that once AS4 is released, all actively maintained Apollo packages will start with `@apollo/`. This leaves the `apollo-` namespace open for community integration packages (e.g., `apollo-server-integration-fastify`).
+
 
 ## TypeScript-only changes
 
