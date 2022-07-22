@@ -14,6 +14,7 @@ import {
 import type { FormattedExecutionResult } from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
 import type { Logger } from '@apollo/utils.logger';
+import { URLSearchParams } from 'url';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just
 // do want to use (our own? somebody else's?) Headers class.
@@ -38,27 +39,45 @@ function fieldIfString(
   return undefined;
 }
 
-function jsonParsedFieldIfNonEmptyString(
-  o: Record<string, any>,
+function searchParamIfSpecifiedOnce(
+  searchParams: URLSearchParams,
+  paramName: string,
+) {
+  const values = searchParams.getAll(paramName);
+  switch (values.length) {
+    case 0:
+      return undefined;
+    case 1:
+      return values[0];
+    default:
+      throw new BadRequestError(
+        `The '${paramName}' search parameter may only be specified once.`,
+      );
+  }
+}
+
+function jsonParsedSearchParamIfSpecifiedOnce(
+  searchParams: URLSearchParams,
   fieldName: string,
 ): Record<string, any> | undefined {
-  if (typeof o[fieldName] === 'string' && o[fieldName]) {
-    let hopefullyRecord;
-    try {
-      hopefullyRecord = JSON.parse(o[fieldName]);
-    } catch {
-      throw new BadRequestError(
-        `The ${fieldName} search parameter contains invalid JSON.`,
-      );
-    }
-    if (!isStringRecord(hopefullyRecord)) {
-      throw new BadRequestError(
-        `The ${fieldName} search parameter should contain a JSON-encoded object.`,
-      );
-    }
-    return hopefullyRecord;
+  const value = searchParamIfSpecifiedOnce(searchParams, fieldName);
+  if (value === undefined) {
+    return undefined;
   }
-  return undefined;
+  let hopefullyRecord;
+  try {
+    hopefullyRecord = JSON.parse(value);
+  } catch {
+    throw new BadRequestError(
+      `The ${fieldName} search parameter contains invalid JSON.`,
+    );
+  }
+  if (!isStringRecord(hopefullyRecord)) {
+    throw new BadRequestError(
+      `The ${fieldName} search parameter should contain a JSON-encoded object.`,
+    );
+  }
+  return hopefullyRecord;
 }
 
 function fieldIfRecord(
@@ -112,7 +131,7 @@ export async function runHttpQuery<TContext extends BaseContext>(
   let graphQLRequest: GraphQLRequest;
 
   switch (httpRequest.method) {
-    case 'POST':
+    case 'POST': {
       // TODO(AS4): If it's an array, some error about enabling batching?
       if (!isNonEmptyStringRecord(httpRequest.body)) {
         throw new BadRequestError(
@@ -145,28 +164,30 @@ export async function runHttpQuery<TContext extends BaseContext>(
       };
 
       break;
-    case 'GET':
-      if (!isStringRecord(httpRequest.searchParams)) {
-        throw new BadRequestError('GET query missing.');
-      }
+    }
 
-      ensureQueryIsStringOrMissing(httpRequest.searchParams.query);
+    case 'GET': {
+      const searchParams = new URLSearchParams(httpRequest.search);
 
       graphQLRequest = {
-        query: fieldIfString(httpRequest.searchParams, 'query'),
-        operationName: fieldIfString(httpRequest.searchParams, 'operationName'),
-        variables: jsonParsedFieldIfNonEmptyString(
-          httpRequest.searchParams,
+        query: searchParamIfSpecifiedOnce(searchParams, 'query'),
+        operationName: searchParamIfSpecifiedOnce(
+          searchParams,
+          'operationName',
+        ),
+        variables: jsonParsedSearchParamIfSpecifiedOnce(
+          searchParams,
           'variables',
         ),
-        extensions: jsonParsedFieldIfNonEmptyString(
-          httpRequest.searchParams,
+        extensions: jsonParsedSearchParamIfSpecifiedOnce(
+          searchParams,
           'extensions',
         ),
         http: httpRequest,
       };
 
       break;
+    }
     default:
       throw new BadRequestError(badMethodErrorMessage);
   }

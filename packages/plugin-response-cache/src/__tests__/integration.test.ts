@@ -142,7 +142,9 @@ describe('Response caching', () => {
       ],
     });
 
-    const { url } = await startStandaloneServer(server);
+    const { url } = await startStandaloneServer(server, {
+      listen: { port: 0 },
+    });
 
     function httpHeader(result: Response, header: string): string | null {
       const value = result.headers[header] ?? null;

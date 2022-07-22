@@ -603,6 +603,19 @@ export function defineIntegrationTestSuiteHttpServerTests(
         );
       });
 
+      it('does not accept multiple query search parameters', async () => {
+        const app = await createApp();
+        const res = await request(app)
+          // cspell:ignore Bfoo Bbar
+          .get('/?query=%7Bfoo%7D&query=%7Bbar%7D')
+          .set('apollo-require-preflight', 't')
+          .send();
+        expect(res.status).toEqual(400);
+        expect(res.text).toMatch(
+          "The 'query' search parameter may only be specified once",
+        );
+      });
+
       it('can handle a GET request with variables', async () => {
         const app = await createApp();
         const query = {

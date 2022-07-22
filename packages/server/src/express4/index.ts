@@ -6,6 +6,7 @@ import type {
   ContextFunction,
   HTTPGraphQLRequest,
 } from '../externalTypes';
+import { parse as urlParse } from 'url';
 
 export interface ExpressContextFunctionArgument {
   req: express.Request;
@@ -74,7 +75,7 @@ export function expressMiddleware<TContext extends BaseContext>(
     const httpGraphQLRequest: HTTPGraphQLRequest = {
       method: req.method.toUpperCase(),
       headers,
-      searchParams: req.query,
+      search: urlParse(req.url).search ?? '',
       body: req.body,
     };
 
