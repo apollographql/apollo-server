@@ -495,21 +495,21 @@ new ApolloServer({
 The corresponding `GraphQLSchemaModule` TypeScript type is no longer exported.
 
 ### `mocks` and `mockEntireSchema`
-In Apollo Server 3, the `mocks` and `mockEntireSchema` constructor options enabled Apollo Server to return simulated data for GraphQL operations based on your server's schema. Under the hood, Apollo Server 3's mocking functionality is provided via an outdated version of the [`@graphql-tools/mocks`](https://www.npmjs.com/package/@graphql-tools/mock) library.
+In Apollo Server 3, the `mocks` and `mockEntireSchema` constructor options enable Apollo Server to return simulated data for GraphQL operations based on your server's schema. Under the hood, Apollo Server 3's mocking functionality is provided via an outdated version of the [`@graphql-tools/mocks`](https://www.npmjs.com/package/@graphql-tools/mock) library.
 
 Apollo Server 4 removes both the `mocks` and `mockEntireSchema` constructor options. You can directly incorporate the `@graphql-tools/mock` package into your app, enabling you to get the most up-to-date mocking features. For more details on configuring mocks, see the [`@graphql-tools/mocks` docs](https://www.graphql-tools.com/docs/mocking).
 
-The follow examples show different ways of using the `mocks` and `mockEntireSchema` constructor options in Apollo Server 3 on the left, and the corresponding way of using `@graphql-tools/mock` directly on the right. (Note that you can apply these changes while still using Apollo Server 3, if you'd like your upgrade to be more incremental.)
+The following examples compare using the `mocks` and `mockEntireSchema` constructor options in Apollo Server 3 on the left and a replacement using `@graphql-tools/mock` on the right. You can also incrementally apply these changes in Apollo Server 3 without affecting behavior.
 
 <CodeColumns>
 
-```ts
+```ts title="Apollo Server 3"
 new ApolloServer({
   mocks: true,
 });
 ```
 
-```ts
+```ts  title="Apollo Server 4"
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
@@ -524,22 +524,24 @@ new ApolloServer({
 
 <CodeColumns>
 
-```ts
+```ts title="Apollo Server 3"
 const mocks = {
   Int: () => 6,
 };
+
 new ApolloServer({
   mocks,
 });
 ```
 
-```ts
+```ts title="Apollo Server 4"
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
 const mocks = {
   Int: () => 6,
 };
+
 new ApolloServer({
   schema: addMocksToSchema({
     schema: makeExecutableSchema({ typeDefs, resolvers }),
@@ -552,7 +554,7 @@ new ApolloServer({
 
 <CodeColumns>
 
-```ts {6}
+```ts {6}  title="Apollo Server 3"
 const mocks = {
   Int: () => 6,
 };
@@ -562,7 +564,7 @@ new ApolloServer({
 });
 ```
 
-```ts {11}
+```ts {11} title="Apollo Server 4"
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
@@ -638,7 +640,7 @@ new ApolloServer({
 }),
 ```
 
-your Apollo Server 4 code could use `willSendResponse` like this:
+your Apollo Server 4 code can use `willSendResponse`, like so:
 
 ```ts
 new ApolloServer<MyContext>({
@@ -679,7 +681,7 @@ Every GraphQL server supports a trivial query that requests the [`__typename`](/
 https://your.server/?query=%7B__typename%7D
 ```
 
-(Note that you should configure your health check to send a `apollo-require-preflight: true` request along with this method so that it is not blocked by the [CSRF prevention](/apollo-server/security/cors/#preventing-cross-site-request-forgery-csrf) security feature.)
+> You should also send an `apollo-require-preflight: true` header alongside your health check, so it isn't blocked by the [CSRF prevention](/apollo-server/security/cors/#preventing-cross-site-request-forgery-csrf) feature.
 
 If you want a health check for your HTTP server unrelated to the health of the GraphQL execution engine (i.e., like Apollo Server 3's health check feature), you can add a GET handler that always succeeds to your web framework.
 
@@ -823,7 +825,7 @@ For example, below is a valid query:
 
 ```json
 {
-  "query": "{ __typename }", extensions: { "foo": 1 }
+  "query": "{ __typename }", "extensions": { "foo": 1 }
 }
 ```
 
@@ -831,7 +833,7 @@ Whereas this query would be invalid:
 
 ```json
 {
-  "query": "{ __typename }", extensions: "{ \"foo\": 1 }"
+  "query": "{ __typename }", "extensions": "{ \"foo\": 1 }"
 }
 ```
 
