@@ -19,12 +19,8 @@ that `ApolloServer` uses.
 
 ## Overview
 
-Let's start by getting a general sense of what an integration package is
-responsible for. This is an outline of the higher-level concepts to get you
-acquainted with server initialization and the lifecycle of a request.
-
 This guide demonstrates how to go about building a framework integration for
-Apollo Server at a conceptual level. Below, we will explain the concepts, using
+Apollo Server at a conceptual level. Below, we will explain the concepts using
 code snippets from our [Express integration](FIXME: link) for illustration.
 
 ### Main function signature
@@ -72,7 +68,7 @@ generic is shared by the `ApolloServer` instance as well as the user-provided
 `context` function. This ensures that users type their server and their context
 function correctly.
 
-### Ensuring successful startup
+### Ensure successful startup
 
 For standard integrations, users should await `server.start()` before passing
 their server instance to your integration. This ensures that the server starts
@@ -90,7 +86,7 @@ and need not require their users to call `server.start()`. Since serverless
 integrations handle starting the server instance, they don't need to call
 `assertStarted`.
 
-### Computing Context
+### Compute GraphQL Context
 
 A request handler has access to all kinds of useful information about the
 incoming request which is often useful during GraphQL execution. Integrations
@@ -131,7 +127,7 @@ const context: ContextFunction<[ExpressContextFunctionArgument], TContext> =
 
 The `context` function that we have here will be _called_ in the execution step.
 
-### Handling Requests
+### Handle Requests
 
 Integration packages should be implemented as some form of request handler or
 framework plugin. Handlers typically receive information about each request
@@ -145,7 +141,7 @@ The request handler has 4 main functions, which we will discuss in detail below:
 3. Execute the GraphQL request via Apollo Server
 4. Return a well-formed response to the client
 
-#### Parsing the request
+#### Parse the request
 
 Apollo Server responds to a variety of requests, handling queries via `GET` and
 `POST`, full GraphQL queries and APQs, and landing pages like Explorer.
@@ -173,7 +169,7 @@ GraphQL requests can also be sent via a `GET` request by sending the relevant
 information via query string parameters. Apollo Server expects the raw query
 string for these types of requests.
 
-#### Constructing the `HTTPGraphQLRequest` object
+#### Construct the `HTTPGraphQLRequest` object
 
 With the request body parsed, we can now construct an `HTTPGraphQLRequest`.
 Apollo Server handles the logic of `GET` vs `POST`, applicable headers, and
@@ -244,7 +240,7 @@ user or the default. Note how we pass the `req` and `res` objects we received
 from Express to the `context` function (as promised by our
 `ExpressContextFunctionArgument` type).
 
-#### Error Handling
+#### Handle errors
 
 The `executeHTTPGraphQLRequest` method does not throw. Instead, it returns an
 object containing helpful errors and a specific `statusCode` when applicable.
