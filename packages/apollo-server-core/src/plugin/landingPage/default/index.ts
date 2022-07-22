@@ -186,6 +186,19 @@ function ApolloServerPluginLandingPageDefault(
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script>
+      var darkMode = window.matchMedia(
+        '(prefers-color-scheme: dark)'
+      ).matches;
+      var link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = \`https://apollo-server-landing-page.cdn.apollographql.com/_latest/assets/favicon$\{darkMode ? '-dark' : ''\}.png\`;
+      document.head.appendChild(link);
+      var touchLink = document.createElement('link');
+      touchLink.rel = 'apple-touch-icon';
+      touchLink.href = \`https://apollo-server-landing-page.cdn.apollographql.com/_latest/assets/favicon$\{darkMode ? '-dark' : ''\}.png\`;
+      document.head.appendChild(link);
+    </script>
     <link
       rel="icon"
       href="https://apollo-server-landing-page.cdn.apollographql.com/${version}/assets/favicon.png"
