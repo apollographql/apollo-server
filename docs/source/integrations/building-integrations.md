@@ -183,9 +183,9 @@ const search = parse(req.url).search ?? '';
 #### Construct the `HTTPGraphQLRequest` object
 
 With the request body parsed, we can now construct an `HTTPGraphQLRequest`.
-Apollo Server handles the logic of `GET` vs `POST`, applicable headers, and
-whether to look in `searchParams` or `body` for the GraphQL-specific parts of
-the query.
+Apollo Server handles the logic of `GET` vs `POST`, relevant headers, and
+whether to look in `body` or `search` for the GraphQL-specific parts of the
+query.
 
 ```ts
 interface HTTPGraphQLRequest {
@@ -205,12 +205,6 @@ iterating over the `headers` object like so:
 const headers = new Map<string, string>();
 for (const [key, value] of Object.entries(req.headers)) {
   if (value !== undefined) {
-    // Node/Express headers can be an array or a single value. We join
-    // multi-valued headers with `, ` just like the Fetch API's `Headers`
-    // does. We assume that keys are already lower-cased (as per the Node
-    // docs on IncomingMessage.headers) and so we don't bother to lower-case
-    // them or combine across multiple keys that would lower-case to the
-    // same value.
     headers.set(key, Array.isArray(value) ? value.join(', ') : value);
   }
 }
@@ -218,7 +212,9 @@ for (const [key, value] of Object.entries(req.headers)) {
 
 Apollo Server expects header keys to be lower-cased. If your framework allows
 duplicate keys, the values should be merged into the same lower-cased key,
-joined by a `, ` as shown above.
+joined by a `, ` as shown above. Express provides lower-cased header keys, so
+our snippet above operates under that assumption and may not be a sufficient
+approach for your framework.
 
 Now that we have all the parts of an `HTTPGraphQLRequest`, we can build the
 object like so:
@@ -227,8 +223,8 @@ object like so:
 const httpGraphQLRequest: HTTPGraphQLRequest = {
   method: req.method.toUpperCase(),
   headers,
-  searchParams: req.query,
   body: req.body,
+  search: req.query,
 };
 ```
 
@@ -245,10 +241,10 @@ const result = await server
   });
 ```
 
-Here, `httpGraphQLRequest` is the `HTTPGraphQLRequest` object constructed above.
-The `context` function is the one we determined above, either provided by the
-user or the default. Note how we pass the `req` and `res` objects we received
-from Express to the `context` function (as promised by our
+Here, `httpGraphQLRequest` is the `HTTPGraphQLRequest` object we just
+constructed. The `context` function is the one we determined earlier, either
+provided by the user or the default. Note how we pass the `req` and `res`
+objects we received from Express to the `context` function (as promised by our
 `ExpressContextFunctionArgument` type).
 
 #### Handle errors
