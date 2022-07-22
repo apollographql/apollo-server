@@ -477,40 +477,91 @@ new ApolloServer({
 The corresponding `GraphQLSchemaModule` TypeScript type is no longer exported.
 
 ### `mocks` and `mockEntireSchema`
-In Apollo Server 3, the `mocks` and `mockEntireSchema` constructor options enabled Apollo Server to return simulated data for GraphQL operations based on your server's schema.
+In Apollo Server 3, the `mocks` and `mockEntireSchema` constructor options enabled Apollo Server to return simulated data for GraphQL operations based on your server's schema. Under the hood, Apollo Server 3's mocking functionality is provided via an outdated version of the [`@graphql-tools/mocks`](https://www.npmjs.com/package/@graphql-tools/mock) library.
+
+Apollo Server 4 removes both the `mocks` and `mockEntireSchema` constructor options. You can directly incorporate the `@graphql-tools/mock` package into your app, enabling you to get the most up-to-date mocking features. For more details on configuring mocks, see the [`@graphql-tools/mocks` docs](https://www.graphql-tools.com/docs/mocking).
+
+The follow examples show different ways of using the `mocks` and `mockEntireSchema` constructor options in Apollo Server 3 on the left, and the corresponding way of using `@graphql-tools/mock` directly on the right. (Note that you can apply these changes while still using Apollo Server 3, if you'd like your upgrade to be more incremental.)
+
+<CodeColumns>
 
 ```ts
-// Apollo Server 3 constructor
-const server = new ApolloServer({
-  typeDefs,
+new ApolloServer({
   mocks: true,
 });
 ```
 
-Under the hood, Apollo Server 3's mocking functionality is provided via an outdated version of the [`@graphql-tools/mocks`](https://www.npmjs.com/package/@graphql-tools/mock) library.
-
-Apollo Server 4 removes both the `mocks` and `mockEntireSchema` constructor options. You can directly incorporate the `@graphql-tools/mock` package into your app, enabling you to get the most up-to-date mocking features. For more details on configuring mocks, see the [`@graphql-tools/mocks` docs](https://www.graphql-tools.com/docs/mocking).
-
-TODO: show as before/after, including being clear that mockEntireSchema is the opposite of preserveResolvers
-
-```ts {5-10}
+```ts
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
-const server = new ApolloServer({
+new ApolloServer({
   schema: addMocksToSchema({
     schema: makeExecutableSchema({ typeDefs, resolvers }),
-    // you can set preserveResolvers to false to make the server skip
-    // your resolvers and return the default mocked data
-    preserveResolvers: false,
   }),
 });
-
-const { url } = await startStandaloneServer(server, { listen: { port: 4000 } });
-
-// Querying your server returns mocked data!
-console.log(`🚀 Server listening at: ${url}`);
 ```
+
+</CodeColumns>
+
+<CodeColumns>
+
+```ts
+const mocks = {
+  Int: () => 6,
+};
+new ApolloServer({
+  mocks,
+});
+```
+
+```ts
+import { addMocksToSchema } from '@graphql-tools/mock';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+
+const mocks = {
+  Int: () => 6,
+};
+new ApolloServer({
+  schema: addMocksToSchema({
+    schema: makeExecutableSchema({ typeDefs, resolvers }),
+    mocks,
+  }),
+});
+```
+
+</CodeColumns>
+
+<CodeColumns>
+
+```ts {6}
+const mocks = {
+  Int: () => 6,
+};
+new ApolloServer({
+  mocks,
+  mockEntireSchema: false,
+});
+```
+
+```ts {11}
+import { addMocksToSchema } from '@graphql-tools/mock';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+
+const mocks = {
+  Int: () => 6,
+};
+new ApolloServer({
+  schema: addMocksToSchema({
+    schema: makeExecutableSchema({ typeDefs, resolvers }),
+    mocks,
+    preserveResolvers: true,
+  }),
+});
+```
+
+</CodeColumns>
+
 
 ### `debug`
 
