@@ -4,5 +4,8 @@
   "main": "../../dist/cjs/plugin/schemaReporting/index.js",
   "module": "../../dist/esm/plugin/schemaReporting/index.js",
   "types": "../../dist/esm/plugin/schemaReporting/index.d.ts",
+  "typesVersions": {
+    "<4.7": { "*": ["dist/ts3.4/plugin/schemaReporting/*"] }
+  },
   "sideEffects": false
 }

@@ -4,5 +4,8 @@
   "main": "../../dist/cjs/plugin/usageReporting/index.js",
   "module": "../../dist/esm/plugin/usageReporting/index.js",
   "types": "../../dist/esm/plugin/usageReporting/index.d.ts",
+  "typesVersions": {
+    "<4.7": { "*": ["dist/ts3.4/plugin/usageReporting/*"] }
+  },
   "sideEffects": false
 }

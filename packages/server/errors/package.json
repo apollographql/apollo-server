@@ -3,6 +3,9 @@
   "type": "module",
   "main": "../dist/cjs/errors/index.js",
   "module": "../dist/esm/errors/index.js",
-  "types": "../dist/esm/errors/index.d.ts",
+  "typesVersions": {
+    "<4.7": { "index.d.ts": ["../dist/ts3.4/errors/index.d.ts"] },
+    ">=4.7": { "index.d.ts": ["../dist/esm/errors/index.d.ts"] }
+  },
   "sideEffects": false
 }

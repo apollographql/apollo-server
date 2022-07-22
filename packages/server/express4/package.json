@@ -3,6 +3,9 @@
   "type": "module",
   "main": "../dist/cjs/express4/index.js",
   "module": "../dist/esm/express4/index.js",
-  "types": "../dist/esm/express4/index.d.ts",
+  "typesVersions": {
+    "<4.7": { "index.d.ts": ["../dist/ts3.4/express4/index.d.ts"] },
+    ">=4.7": { "index.d.ts": ["../dist/esm/express4/index.d.ts"] }
+  },
   "sideEffects": false
 }

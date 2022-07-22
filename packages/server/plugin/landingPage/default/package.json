@@ -4,5 +4,8 @@
   "main": "../../../dist/cjs/plugin/landingPage/default/index.js",
   "module": "../../../dist/esm/plugin/landingPage/default/index.js",
   "types": "../../../dist/esm/plugin/landingPage/default/index.d.ts",
+  "typesVersions": {
+    "<4.7": { "*": ["dist/ts3.4/plugin/landingPage/default/*"] }
+  },
   "sideEffects": false
 }

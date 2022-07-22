@@ -10,6 +10,7 @@
 import path from 'path';
 import { writeFileSync } from 'fs';
 import rimraf from 'rimraf';
+import { execSync } from 'child_process';
 
 // Tell Node what kinds of files the ".js" files in these subdirectories are.
 for (const dir of ['plugin-response-cache', 'server']) {
@@ -24,4 +25,10 @@ for (const dir of ['plugin-response-cache', 'server']) {
 
   // Remove CJS .d.ts files: we don't need two copies!
   rimraf.sync(`packages/${dir}/dist/cjs/**/*.d.ts`);
+
+  // Rewrite .d.ts files so that older versions of TypeScript can process them.
+  // `typesVersions` keys in package.json files help TypeScript find these.
+  execSync(
+    `downlevel-dts packages/${dir}/dist/esm/ packages/${dir}/dist/ts3.4/`,
+  );
 }

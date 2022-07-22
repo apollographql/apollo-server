@@ -3,6 +3,9 @@
   "type": "module",
   "main": "../dist/cjs/standalone/index.js",
   "module": "../dist/esm/standalone/index.js",
-  "types": "../dist/esm/standalone/index.d.ts",
+  "typesVersions": {
+    "<4.7": { "index.d.ts": ["../dist/ts3.4/standalone/index.d.ts"] },
+    ">=4.7": { "index.d.ts": ["../dist/esm/standalone/index.d.ts"] }
+  },
   "sideEffects": false
 }

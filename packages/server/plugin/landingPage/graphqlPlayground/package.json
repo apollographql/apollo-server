@@ -4,5 +4,8 @@
   "main": "../../../dist/cjs/plugin/landingPage/graphqlPlayground/index.js",
   "module": "../../../dist/esm/plugin/landingPage/graphqlPlayground/index.js",
   "types": "../../../dist/esm/plugin/landingPage/graphqlPlayground/index.d.ts",
+  "typesVersions": {
+    "<4.7": { "*": ["dist/ts3.4/plugin/landingPage/graphqlPlayground/*"] }
+  },
   "sideEffects": false
 }
