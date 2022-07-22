@@ -171,7 +171,14 @@ Apollo Server; validation of the request will happen there.
 
 GraphQL requests can also be sent via a `GET` request by sending the relevant
 information via query string parameters. Apollo Server expects the raw query
-string for these types of requests.
+string for these types of requests. The Express integration computes the query
+string given the full URL similarly to the following example:
+
+```ts
+import { parse } from 'url';
+
+const search = parse(req.url).search ?? '';
+```
 
 #### Construct the `HTTPGraphQLRequest` object
 
