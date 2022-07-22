@@ -11,7 +11,7 @@ import {
   internalExecuteOperation,
   SchemaDerivedData,
 } from './ApolloServer.js';
-import type { FormattedExecutionResult } from 'graphql';
+import { FormattedExecutionResult, Kind } from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
 import type { Logger } from '@apollo/utils.logger';
 import { URLSearchParams } from 'url';
@@ -30,11 +30,12 @@ export class HeaderMap extends Map<string, string> {
 }
 
 function fieldIfString(
-  o: Record<string, any>,
+  o: Record<string, unknown>,
   fieldName: string,
 ): string | undefined {
-  if (typeof o[fieldName] === 'string') {
-    return o[fieldName];
+  const value = o[fieldName];
+  if (typeof value === 'string') {
+    return value;
   }
   return undefined;
 }
@@ -59,7 +60,7 @@ function searchParamIfSpecifiedOnce(
 function jsonParsedSearchParamIfSpecifiedOnce(
   searchParams: URLSearchParams,
   fieldName: string,
-): Record<string, any> | undefined {
+): Record<string, unknown> | undefined {
   const value = searchParamIfSpecifiedOnce(searchParams, fieldName);
   if (value === undefined) {
     return undefined;
@@ -81,29 +82,32 @@ function jsonParsedSearchParamIfSpecifiedOnce(
 }
 
 function fieldIfRecord(
-  o: Record<string, any>,
+  o: Record<string, unknown>,
   fieldName: string,
-): Record<string, any> | undefined {
-  if (isStringRecord(o[fieldName])) {
-    return o[fieldName];
+): Record<string, unknown> | undefined {
+  const value = o[fieldName];
+  if (isStringRecord(value)) {
+    return value;
   }
   return undefined;
 }
 
-function isStringRecord(o: any): o is Record<string, any> {
-  return o && typeof o === 'object' && !Buffer.isBuffer(o) && !Array.isArray(o);
+function isStringRecord(o: unknown): o is Record<string, unknown> {
+  return (
+    !!o && typeof o === 'object' && !Buffer.isBuffer(o) && !Array.isArray(o)
+  );
 }
 
-function isNonEmptyStringRecord(o: any): o is Record<string, any> {
+function isNonEmptyStringRecord(o: unknown): o is Record<string, unknown> {
   return isStringRecord(o) && Object.keys(o).length > 0;
 }
 
-function ensureQueryIsStringOrMissing(query: any) {
+function ensureQueryIsStringOrMissing(query: unknown) {
   if (!query || typeof query === 'string') {
     return;
   }
   // Check for a common error first.
-  if (query.kind === 'Document') {
+  if ((query as any).kind === Kind.DOCUMENT) {
     throw new BadRequestError(
       "GraphQL queries must be strings. It looks like you're sending the " +
         'internal graphql-js representation of a parsed query in your ' +
@@ -225,7 +229,7 @@ function orderExecutionResultFields(
 }
 
 // The result of a curl does not appear well in the terminal, so we add an extra new line
-export function prettyJSONStringify(value: any) {
+export function prettyJSONStringify(value: FormattedExecutionResult) {
   return JSON.stringify(value) + '\n';
 }
 

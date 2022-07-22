@@ -15,7 +15,7 @@ export interface HTTPGraphQLRequest {
   search: string;
   // read by your body-parser or whatever. we poke at it to make it into
   // the right real type.
-  body: any;
+  body: unknown;
 }
 
 // TODO(AS4): Should this be exported for integrations?
