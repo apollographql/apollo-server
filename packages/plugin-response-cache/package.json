@@ -34,6 +34,6 @@
   },
   "peerDependencies": {
     "@apollo/server": "^4.0.0-alpha.0",
-    "graphql": "^16.0.0"
+    "graphql": "^16.5.0"
   }
 }
