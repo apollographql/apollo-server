@@ -88,10 +88,10 @@ integrations handle starting the server instance, they don't need to call
 
 ### Compute GraphQL Context
 
-A request handler has access to all kinds of useful information about the
-incoming request which is often useful during GraphQL execution. Integrations
-should provide a hook to users which allows them to generate their GraphQL
-context object based on the incoming request.
+A request handler has access to all kinds of information about the incoming
+request which can be useful during GraphQL execution. Integrations should
+provide a hook to users which allows them to generate their GraphQL context
+object based on the incoming request.
 
 If no `context` function is provided, an empty GraphQL context object is
 sufficient (see `defaultContext` below).
@@ -103,12 +103,12 @@ along to the user's `context` function.
 
 Apollo Server exports the `ContextFunction` type, which is a generic type that
 is useful for integrations in defining their API. The first type argument
-defines the arguments that will be passed to your user's `context` function. The
-Express integration uses it above in the `ExpressMiddlewareOptions` interface so
-that users get a strongly typed `context` function with correct parameter
-typings. The second type argument defines the return type of the user's
-`context` function, and should be the same `TContext` generic as used in the
-`ApolloServer` instance.
+defines the arguments that the integration will pass to your user's `context`
+function. The Express integration uses it above in the
+`ExpressMiddlewareOptions` interface so that users get a strongly typed
+`context` function with correct parameter typings. The second type argument
+defines the return type of the user's `context` function, and should be the same
+`TContext` generic as used in the `ApolloServer` instance.
 
 ```ts
 interface ExpressContextFunctionArgument {
@@ -164,6 +164,10 @@ parsed body should have this shape:
   extensions?: Record<string, any>;
 }
 ```
+
+This shape is what we expect from a normal parsed request and is just for
+illustration purposes. Your integration should pass along whatever it parses to
+Apollo Server; validation of the request will happen there.
 
 GraphQL requests can also be sent via a `GET` request by sending the relevant
 information via query string parameters. Apollo Server expects the raw query
