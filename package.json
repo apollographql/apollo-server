@@ -42,8 +42,8 @@
   "devDependencies": {
     "@apollo/client": "3.6.9",
     "@apollo/utils.createhash": "1.1.0",
-    "@changesets/changelog-github": "0.4.5",
-    "@changesets/cli": "2.23.2",
+    "@changesets/changelog-github": "0.4.6",
+    "@changesets/cli": "2.24.0",
     "@graphql-codegen/cli": "2.9.1",
     "@graphql-codegen/typescript-operations": "2.5.2",
     "@graphql-tools/mock": "8.7.0",
