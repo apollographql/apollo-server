@@ -23,75 +23,9 @@ Let's start by getting a general sense of what an integration package is
 responsible for. This is an outline of the higher-level concepts to get you
 acquainted with server initialization and the lifecycle of a request.
 
-### Ensuring successful startup
-
-`ApolloServer` provides a method `assertStarted` for ensuring that the
-`ApolloServer` instance was started successfully. For non-serverless
-integrations, calling this function will ensure that the server instance is
-ready to receive requests. This means that users of your integration are
-expected to `await server.start()` _before_ handing off the server instance to
-your integration.
-
-Serverless integrations should first call the
-`startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method
-and need not require their users to call `server.start()`. Calling this function
-will allow calling `assertStarted` while still in the "starting" state.
-
-### Handling requests
-
-Integration packages should be implemented as some form of request handler or
-framework plugin. Handlers typically receive information about each request
-including common HTTP parts (method, headers, and body) and likely some other
-useful contextual information. Integrations are responsible for mapping this
-information into a consistent format for Apollo Server.
-
-Integrations provide a mapped request to Apollo Server's
-`executeHTTPGraphQLRequest` method, where GraphQL execution begins. This method
-is `await`ed and returns the response object computed by Apollo Server.
-
-### Context Creation
-
-Creating the context object for GraphQL execution happens as a part of request
-handling in the above section. The `executeHTTPGraphQLRequest` method receives
-an argument consisting of two parts, the second of which is the GraphQL context
-object.
-
-The GraphQL context object is typically user-generated and depends on the
-incoming request. The most common approach to implementing this is to call a
-user-provided function which receives request information (the same information
-that your handler receives) as a parameter and returns the GraphQL context
-object. Your integration is responsible for calling the user-provided function
-and passing the context object it returns to `executeHTTPGraphQLRequest`.
-
-### Response
-
-The return value of awaiting `executeHTTPGraphQLRequest` contains a status code
-(if applicable), response headers, and a body. The body can take multiple forms,
-which we will explain in more detail down below. It is your integration's
-responsibility to take this object and construct a response accordingly, based
-on the conventions that apply to your framework.
-
-FIXME: are there actual errors to handle any differently?
-### Error Handling
-
-The `executeHTTPGraphQLRequest` method does not throw. Instead, it returns an
-object containing helpful errors and a specific `statusCode` when applicable.
-You should handle this object accordingly, based on the error handling
-conventions that apply to your framework.
-
-### Typings
-
-Apollo _strongly_ recommends TypeScript for all packages, especially packages
-intended to be used by others. `ApolloServer` is strongly typed and exports a
-few useful types for integration authors. We'll go into more details on how to
-use these types below.
-
-## Implementation
-
-This implementation guide leans heavily on the [Express integration](FIXME:
-link) as an example. Below, we will use code snippets to illustrate the concepts
-discussed above as well as explain patterns in the Express integration that you
-might find useful in your own integration.
+This guide demonstrates how to go about building a framework integration for
+Apollo Server at a conceptual level. Below, we will explain the concepts, using
+code snippets from our [Express integration](FIXME: link) for illustration.
 
 ### Main function signature
 
@@ -138,30 +72,30 @@ generic is shared by the `ApolloServer` instance as well as the user-provided
 `context` function. This ensures that users type their server and their context
 function correctly.
 
-### Server initialization
+### Ensuring successful startup
 
 For standard integrations, users should await `server.start()` before passing
 their server instance to your integration. This ensures that the server starts
 correctly and that any errors encountered at startup are handled by the user.
 
-To guarantee that the server has started, we use the `assertStarted` method like
-so:
+To guarantee that the server has started, we use the `assertStarted` method on
+Apollo Server like so:
 ```ts
 server.assertStarted('expressMiddleware()');
 ```
 
-For serverless integrations where the handler must be returned synchronously,
-users should _not_ call `server.start()` and instead, the integration should
-call `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests`.
-Since serverless integrations handle starting the server instance, they don't
-need to call `assertStarted`.
+Serverless integrations should first call the
+`startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method
+and need not require their users to call `server.start()`. Since serverless
+integrations handle starting the server instance, they don't need to call
+`assertStarted`.
 
 ### Computing Context
 
 A request handler has access to all kinds of useful information about the
-incoming request which is often useful during GraphQL execution. For this
-reason, integrations should provide a hook to users which allows them to
-generate their GraphQL context object based on the incoming request.
+incoming request which is often useful during GraphQL execution. Integrations
+should provide a hook to users which allows them to generate their GraphQL
+context object based on the incoming request.
 
 If no `context` function is provided, an empty GraphQL context object is
 sufficient (see `defaultContext` below).
@@ -195,31 +129,36 @@ const context: ContextFunction<[ExpressContextFunctionArgument], TContext> =
   options?.context ?? defaultContext;
 ```
 
+The `context` function that we have here will be _called_ in the execution step.
+
 ### Handling Requests
 
-This section is where implementations can expect to diverge from the Express
-implementation the most. The request handler has 4 main functions:
-1. Parsing the request
+Integration packages should be implemented as some form of request handler or
+framework plugin. Handlers typically receive information about each request
+including common HTTP parts (i.e. `method, `headers`, and `body`) and likely
+some other useful contextual information. Integrations are responsible for
+mapping this information into a consistent format for Apollo Server.
+
+The request handler has 4 main functions, which we will discuss in detail below:
+1. Parse the request
 2. Construct an `HTTPGraphQLRequest` object from the incoming request
 3. Execute the GraphQL request via Apollo Server
 4. Return a well-formed response to the client
 
 #### Parsing the request
 
-Apollo Server responds to a variety of requests, handling queries via `GET`
-and `POST`, full GraphQL queries and APQs, and landing pages like Explorer.
+Apollo Server responds to a variety of requests, handling queries via `GET` and
+`POST`, full GraphQL queries and APQs, and landing pages like Explorer.
 Fortunately, this is all part of Apollo Server's core logic and isn't something
 that integrations need to worry about.
 
-Integrations _are_ responsible for parsing the request in order to correctly
-construct the `HTTPGraphQLRequest` that Apollo Server expects. This
-means parsing the request body as well as the query string if present.
-
-In the Express integration, users are expected to use the `body-parser` JSON
-middleware which handles parsing JSON request bodies when the `content-type`
-header is set to `application/json`. Integrations can choose to require a
-similar middleware or plugin for their ecosystem or handle body parsing
-themselves. A correctly parsed body should look like this:
+Integrations _are_ responsible for parsing the request body in order to
+correctly construct the `HTTPGraphQLRequest` that Apollo Server expects. In the
+Express integration, users are expected to use the `body-parser` JSON middleware
+which handles parsing JSON request bodies when the `content-type` header is set
+to `application/json`. Integrations can choose to require a similar middleware
+or plugin for their ecosystem or handle body parsing themselves. A correctly
+parsed body should have this shape:
 
 ```ts
 {
@@ -230,42 +169,30 @@ themselves. A correctly parsed body should look like this:
 }
 ```
 
-Integrations are also responsible for parsing the query string if present.
-Express does this by default, handing off the parsed query string as an object
-(`req.query`) to the request handler. A correctly parsed query string should
-look like this:
-
-```ts
-{
-  query?: string;
-  variables?: string;
-  operationName?: string;
-  extensions?: string;
-}
-```
-
-Note that `variables` and `extensions` are a `string` instead of a `Record`. No
-additional parsing of the individual query string parts should be necessary.
+GraphQL requests can also be sent via a `GET` request by sending the relevant
+information via query string parameters. Apollo Server expects the raw query
+string for these types of requests.
 
 #### Constructing the `HTTPGraphQLRequest` object
-
-```ts
-interface HTTPGraphQLRequest {
-  method: string;
-  headers: Map<string, string>;
-  searchParams: any;
-  body: any;
-}
-```
 
 With the request body parsed, we can now construct an `HTTPGraphQLRequest`.
 Apollo Server handles the logic of `GET` vs `POST`, applicable headers, and
 whether to look in `searchParams` or `body` for the GraphQL-specific parts of
 the query.
 
-The only thing left for us to compute is the `headers` object! Apollo Server
-expects a `Map` of headers. In the Express implementation, we construct the
-`Map` by iterating over the `headers` object like so:
+```ts
+interface HTTPGraphQLRequest {
+  method: string;
+  headers: Map<string, string>;
+  search: string;
+  body: any;
+}
+```
+
+We now have the `method`, `body`, and `search` properties computed. The only
+thing left for us to compute is the `headers` object! Apollo Server expects a
+`Map` of headers. In the Express implementation, we construct the `Map` by
+iterating over the `headers` object like so:
 
 ```ts
 const headers = new Map<string, string>();
@@ -283,11 +210,11 @@ for (const [key, value] of Object.entries(req.headers)) {
 ```
 
 Apollo Server expects header keys to be lower-cased. If your framework allows
-duplicate keys, the values should be merged into the same key, joined by a
-`, ` as shown above.
+duplicate keys, the values should be merged into the same lower-cased key,
+joined by a `, ` as shown above.
 
 Now that we have all the parts of an `HTTPGraphQLRequest`, we can build the
-object and hand it off to Apollo Server for execution.
+object like so:
 
 ```ts
 const httpGraphQLRequest: HTTPGraphQLRequest = {
@@ -300,8 +227,8 @@ const httpGraphQLRequest: HTTPGraphQLRequest = {
 
 #### Execute the GraphQL request
 
-Now that we have an `HTTPGraphQLRequest` object, we can use it to execute the
-GraphQL request.
+With the `HTTPGraphQLRequest` we created above, we now execute the GraphQL
+request.
 
 ```ts
 const result = await server
@@ -313,9 +240,16 @@ const result = await server
 
 Here, `httpGraphQLRequest` is the `HTTPGraphQLRequest` object constructed above.
 The `context` function is the one we determined above, either provided by the
-user or the default one. Note how we pass the `req` and `res` objects we
-received from Express to the `context` function (as promised by our
+user or the default. Note how we pass the `req` and `res` objects we received
+from Express to the `context` function (as promised by our
 `ExpressContextFunctionArgument` type).
+
+#### Error Handling
+
+The `executeHTTPGraphQLRequest` method does not throw. Instead, it returns an
+object containing helpful errors and a specific `statusCode` when applicable.
+You should handle this object accordingly, based on the error handling
+conventions that apply to your framework.
 
 #### Send the response
 
