@@ -224,7 +224,7 @@ const httpGraphQLRequest: HTTPGraphQLRequest = {
   method: req.method.toUpperCase(),
   headers,
   body: req.body,
-  search: req.query,
+  search: parse(req.url).search ?? '',
 };
 ```
 
