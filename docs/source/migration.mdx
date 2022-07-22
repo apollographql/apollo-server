@@ -296,7 +296,16 @@ Apollo Server has a peer dependency on [`graphql`](https://www.npmjs.com/package
 If you're using an older version of `graphql`, upgrade it to a supported version before upgrading to Apollo Server 4.
 
 
+### `typescript`
+
+If you use Apollo Server with TypeScript, you must use TypeScript v4.7.0 or newer. (Apollo Server uses type system features introduced in v4.7. We would like to put ["downleveled"](https://github.com/sandersn/downlevel-dts) versions of the type definitions in `@apollo/server` as well for use with older versions of TypeScript, but have found using TypeScript's `typesVersions` feature [to be challenging](https://github.com/apollographql/apollo-server/issues/6423). If support for older versions of TypeScript is important to you and you would like to help us get `typesVersions` working, we'd appreciate PRs.)
+
+
 ### `@apollo/gateway`
+
+<!-- TODO(AS4): Fix before release -->
+
+> Note: The current alpha of Apollo Server does not work as an Apollo Gateway. We will fix this before the final v4.0.0 release. You can use this alpha to serve subgraphs, just not Gateways.
 
 If you use Apollo Server with Apollo Gateway, Apollo Server 4 drops support for [`@apollo/gateway` versions](/federation/api/apollo-gateway/) below v0.35.0.
 
@@ -366,7 +375,7 @@ Here's how you would write the same code in Apollo Server 4. (Note that `RESTDat
 
 <MultiCodeBlock>
 
-```ts { 25-27, 37, 40-42) 
+```ts { 25-27, 37, 40-42)
 import { RESTDataSource, RESTDataSourceOptions } from '@apollo/datasource-rest';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
@@ -1137,6 +1146,10 @@ In Apollo Server 4, `requestDidStart` hooks are called in parallel rather than i
 Apollo Server 4 more consistently handles errors thrown by multiple plugin hooks.  Each error is wrapped in an "Unexpected error handling request" error and invoked using the new `unexpectedErrorProcessingRequest` plugin hook.
 
 ### Custom `gateway` implementations
+
+<!-- TODO(AS4): Fix before release -->
+
+> Note: The current alpha of Apollo Server does not work as an Apollo Gateway. We will fix this before the final v4.0.0 release. You can use this alpha to serve subgraphs, just not Gateways.
 
 The `gateway` option to the `ApolloServer` constructor is designed for use with the `ApolloGateway` class from the `@apollo/gateway` package. Apollo Server 4 changes the details of how Apollo Server interacts with this object. If you are using a [supported version of `@apollo/gateway`](#apollo-gateway) as your server's `gateway`, the changes will not affect you. However, if you provide something other than an `ApolloGateway` instance to this option, you might need to adjust your custom code.
 
