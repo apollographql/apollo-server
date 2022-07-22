@@ -185,7 +185,7 @@ interface HTTPGraphQLRequest {
   method: string;
   headers: Map<string, string>;
   search: string;
-  body: any;
+  body: unknown;
 }
 ```
 
