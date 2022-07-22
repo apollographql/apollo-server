@@ -86,7 +86,7 @@ async function startApolloServer() {
 
 </MultiCodeBlock>
 
-is equivalent to this Apollo Server 4 code:
+changes to look like this in Apollo Server 4:
 
 <MultiCodeBlock>
 
@@ -165,7 +165,7 @@ async function startApolloServer() {
 
 </MultiCodeBlock>
 
-is equivalent to this Apollo Server 4 code:
+changes to look like this in Apollo Server 4:
 
 <MultiCodeBlock>
 
@@ -236,7 +236,7 @@ But wait: there's more! The `@apollo/server` package also combines the following
 
 ### Plugins are now in `@apollo/server`
 
-In Apollo Server 3, built in plugins such as `ApolloServerUsageReporting` are exported from `apollo-server-core` at the top level. You need to install this package in addition to the package (like `apollo-server` or `apollo-server-express`) from which you import `ApolloServer`.
+In Apollo Server 3, the `apollo-server-core` package exports built-in plugins, such as `ApolloServerUsageReporting`, at the top level. This means you have to install both the `apollo-server-core` package and the package you use to import `ApolloServer` (e.g., `apollo-server` or `apollo-server-express`).
 
 In Apollo Server 3, the built in packages are in `@apollo/server`, the same npm package as `ApolloServer`. However, they are exported from deep exports. (Using deep imports means that you only have to evaluate the code associated with the plugins you actually use, and it's easier for JS bundlers to eliminate unused code.
 
@@ -267,7 +267,7 @@ with this Apollo Server 4 code:
 import { ApolloServerPluginUsageReporting } from '@apollo/server/plugin/usageReporting';
 ```
 
-You should also remove the dependency on `apollo-server-core` from your project.
+Once you've updated your imports, you can remove your project's dependency on `apollo-server-core`.
 
 TypeScript types associated with these plugins (such as `ApolloServerPluginUsageReportingOptions`) are exported from the same deep import as the plugin.
 
@@ -309,15 +309,15 @@ The following `ApolloServer` constructor options have been removed in favor of o
 
 In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](/apollo-server/data/resolvers/#the-context-argument) object. This means the TypeScript types returned by the `context` function and the `context` types received in the resolvers and plugins are _different_. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
 
-In Apollo Server 4, we have removed the `dataSources` constructor option. You can treat `DataSources` like any other part of your `context` object.
+Apollo Server 4 removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object.
 
-The one way that Apollo Server 3 treats `DataSource`s specially is that immediately after construction, it would invoke `dataSource.initialize({ cache, context })` on each `DataSource`. So in Apollo Server 4, you should just pass `cache` and `context` to the constructor yourself if you need them. In Apollo Server 4, you can find the `cache` as a new readonly field on the `ApolloServer` itself.
+In Apollo Server 3, immediately after constructing each `DataSource` subclass, Apollo Server invokes the `dataSource.initialize({ cache, context })` function on each new `DataSource`. If you need to replicate this behavior in Apollo Server 4, you can pass the `cache` and `context` arguments to each `DataSource` constructor. In Apollo Server 4, you can find `cache` as a new readonly field on `ApolloServer`.
 
-Let's say this is your code that uses a `RESTDataSource`-based `DataSource` with Apollo Server 3:
+For example,  below, we use the `RESTDataSource` class to create a `DataSource` with Apollo Server 3:
 
 <MultiCodeBlock>
 
-```ts
+```ts {4-14, 21-35}
 import { RESTDataSource } from 'apollo-datasource-rest';
 import { ApolloServer } from 'apollo-server';
 
@@ -366,7 +366,7 @@ Here's how you would write the same code in Apollo Server 4. (Note that `RESTDat
 
 <MultiCodeBlock>
 
-```ts
+```ts { 25-27, 37, 40-42) 
 import { RESTDataSource, RESTDataSourceOptions } from '@apollo/datasource-rest';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
@@ -400,6 +400,7 @@ const server = new ApolloServer<ContextValue>({
   typeDefs,
   resolvers,
 });
+
 await startStandaloneServer(server, {
   context: ({ req }) => {
     const token = getTokenFromRequest(req);
@@ -416,11 +417,11 @@ await startStandaloneServer(server, {
 
 </MultiCodeBlock>
 
-If you actually need access to the entire context value within your `DataSource` rather than just particular fields, you can make your context value be a `class`, which is allowed to refer to itself via `this` in its constructor:
+If you want to access your entire context's value within your `DataSource`, you can do so by making your context value a `class`(enabling it to refer to itself via `this` in its constructor):
 
 <MultiCodeBlock>
 
-```ts
+```ts {24-36}
 import { RESTDataSource, RESTDataSourceOptions } from '@apollo/datasource-rest';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
