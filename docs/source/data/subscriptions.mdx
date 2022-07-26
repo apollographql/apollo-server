@@ -57,7 +57,10 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
 
     ```ts title="index.ts"
     import { createServer } from 'http';
-    import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
+    import {
+      ApolloServerPluginDrainHttpServer,
+      ApolloServerPluginLandingPageLocalDefault,
+    } from "apollo-server-core";
     import { makeExecutableSchema } from '@graphql-tools/schema';
     import { WebSocketServer } from 'ws';
     import { useServer } from 'graphql-ws/lib/use/ws';
@@ -83,6 +86,16 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
       schema,
       csrfPrevention: true,
       cache: "bounded",
+      plugins: [
+        /**
+        * What's up with this embed: true option?
+        * These are our recommended settings for using AS;
+        * they aren't the defaults in AS3 for backwards-compatibility reasons but
+        * will be the defaults in AS4. For production environments, use
+        * ApolloServerPluginLandingPageProductionDefault instead.
+        **/
+        ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+      ],
     });
     ```
 
@@ -124,6 +137,14 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
               };
             },
           },
+          /**
+          * What's up with this embed: true option?
+          * These are our recommended settings for using AS;
+          * they aren't the defaults in AS3 for backwards-compatibility reasons but
+          * will be the defaults in AS4. For production environments, use
+          * ApolloServerPluginLandingPageProductionDefault instead.
+          **/
+          ApolloServerPluginLandingPageLocalDefault({ embed: true }),
         ],
       });
     ```
@@ -185,6 +206,14 @@ const server = new ApolloServer({
         };
       },
     },
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 await server.start();

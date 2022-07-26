@@ -133,6 +133,16 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 server.listen().then(({ url }) => {

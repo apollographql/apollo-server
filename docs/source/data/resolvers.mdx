@@ -109,6 +109,9 @@ The following example defines a hardcoded data set, a schema, and a resolver map
 
 ```javascript
 const { ApolloServer, gql } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 
 // Hardcoded data store
 const books = [
@@ -150,6 +153,16 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    /**
+     * What's up with this embed: true option?
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 // Launch the server
@@ -242,6 +255,9 @@ Here's a code sample that can resolve the query above with this resolver chain:
 
 ```javascript
 const { ApolloServer, gql } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 
 const libraries = [
   {
@@ -333,6 +349,16 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    /**
+     * What's up with this embed: true option?
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 // Launch the server
@@ -401,8 +427,18 @@ const server = new ApolloServer({
   cache: 'bounded',
   context: ({ req }) => ({
     authScope: getScope(req.headers.authorization)
-  })
-}));
+  }),
+  plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
+});
 
 // Example resolver
 (parent, args, context, info) => {

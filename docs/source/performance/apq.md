@@ -128,7 +128,10 @@ type Author @cacheControl(maxAge: 60) {
 See [the cache control documentation](./caching) for more details, including how to define the `@cacheControl` directive, how to specify hints dynamically inside resolvers, how to set a default `maxAge` for all fields, and how to specify that a field should be cached for specific users only (in which case CDNs should ignore it). For example, to set a default max age other than `0` modify the Apollo Server constructor to include `cacheControl`:
 
 ```js
-import { ApolloServerPluginCacheControl } from 'apollo-server-core';
+import {
+  ApolloServerPluginCacheControl,
+  ApolloServerPluginLandingPageLocalDefault,
+} from 'apollo-server-core';
 
 const server = new ApolloServer({
   typeDefs,
@@ -136,7 +139,17 @@ const server = new ApolloServer({
   csrfPrevention: true,
   cache: 'bounded',
   // The max age is calculated in seconds
-  plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
+  plugins: [
+    ApolloServerPluginCacheControl({ defaultMaxAge: 5 }),
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 
@@ -203,6 +216,16 @@ const server = new ApolloServer({
     ttl: 900, // 15 minutes
     // highlight-end
   },
+  plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 
@@ -217,6 +240,16 @@ const server = new ApolloServer({
   persistedQueries: {
     ttl: null, // highlight-line
   },
+  plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 
@@ -233,5 +266,15 @@ const server = new ApolloServer({
   csrfPrevention: true,
   cache: 'bounded',
   persistedQueries: false, // highlight-line
+  plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```

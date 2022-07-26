@@ -19,7 +19,10 @@ You can configure the usage reporting plugin's behavior by including it in the `
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginUsageReporting } from "apollo-server-core";
+import {
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
@@ -30,6 +33,14 @@ const server = new ApolloServer({
     ApolloServerPluginUsageReporting({
       fieldLevelInstrumentation: 0.5,
     }),
+    /**
+     * What's up with this embed: true option?
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
@@ -449,14 +460,27 @@ If you _don't_ want to install the usage reporting plugin and you _are_ providin
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
+import {
+  ApolloServerPluginUsageReportingDisabled,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: "bounded",
-  plugins: [ApolloServerPluginUsageReportingDisabled()],
+  plugins: [
+    ApolloServerPluginUsageReportingDisabled(),
+    /**
+     * What's up with this embed: true option?
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

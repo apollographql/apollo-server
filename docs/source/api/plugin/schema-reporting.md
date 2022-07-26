@@ -17,7 +17,10 @@ Additionally, you must explicitly enable schema reporting. If you just want to t
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginSchemaReporting } from "apollo-server-core";
+import {
+  ApolloServerPluginSchemaReporting,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
@@ -26,6 +29,14 @@ const server = new ApolloServer({
   cache: "bounded",
   plugins: [
     ApolloServerPluginSchemaReporting(),
+    /**
+     * What's up with this embed: true option?
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```

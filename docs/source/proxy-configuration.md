@@ -27,6 +27,9 @@ After the `global-agent` dependency has been installed, invoke its `bootstrap` m
 
 ```js {2-5}
 const { ApolloServer, gql } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
 const { bootstrap: bootstrapGlobalAgent } = require('global-agent');
 
 // Setup global support for environment variable based proxy configuration.
@@ -39,6 +42,16 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  /**
+   * What's up with this embed: true option?
+   * These are our recommended settings for using AS;
+   * they aren't the defaults in AS3 for backwards-compatibility reasons but
+   * will be the defaults in AS4. For production environments, use
+   * ApolloServerPluginLandingPageProductionDefault instead.
+  **/
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

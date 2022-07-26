@@ -14,6 +14,9 @@ Here's an example that uses HTTPS in production and HTTP in development:
 ```ts title="index.ts"
 import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+} from 'apollo-server-core';
 import typeDefs from './graphql/schema';
 import resolvers from './graphql/resolvers';
 import fs from 'fs';
@@ -35,6 +38,16 @@ async function startApolloServer() {
     resolvers,
     csrfPrevention: true,
     cache: 'bounded',
+    plugins: [
+      /**
+      * What's up with this embed: true option?
+      * These are our recommended settings for using AS;
+      * they aren't the defaults in AS3 for backwards-compatibility reasons but
+      * will be the defaults in AS4. For production environments, use
+      * ApolloServerPluginLandingPageProductionDefault instead.
+      **/
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
   await server.start();
 

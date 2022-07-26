@@ -35,6 +35,9 @@ Next, set up the schema's type definitions and resolvers, and pass them to the `
 // graphql.js
 
 const { ApolloServer, gql } = require('apollo-server-lambda');
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -55,6 +58,16 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 exports.graphqlHandler = server.createHandler();
@@ -197,6 +210,9 @@ The `event` object contains the API Gateway event (HTTP headers, HTTP method, bo
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -224,6 +240,16 @@ const server = new ApolloServer({
     context,
     expressRequest: express.req,
   }),
+  plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 exports.graphqlHandler = server.createHandler();

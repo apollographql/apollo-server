@@ -15,7 +15,10 @@ If you want to configure this plugin, import it from the `apollo-server-core` pa
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginCacheControl } from "apollo-server-core";
+import {
+  ApolloServerPluginCacheControl,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
@@ -29,6 +32,14 @@ const server = new ApolloServer({
       // Don't send the `cache-control` response header.
       calculateHttpHeaders: false,
     }),
+    /**
+     * What's up with this embed: true option?
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
@@ -37,14 +48,27 @@ If you don't want to use cache control at all, you can explicitly disable it wit
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginCacheControlDisabled } from "apollo-server-core";
+import {
+  ApolloServerPluginCacheControlDisabled,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: "bounded",
-  plugins: [ApolloServerPluginCacheControlDisabled()],
+  plugins: [
+    ApolloServerPluginCacheControlDisabled(),
+    /**
+     * What's up with this embed: true option?
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

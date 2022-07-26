@@ -274,6 +274,9 @@ This example defines an `@uppercase` directive for this purpose:
 
 ```js title="index.js"
 const { ApolloServer, gql } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 const { mapSchema, getDirective, MapperKind } = require('@graphql-tools/utils');
 const { defaultFieldResolver } = require('graphql');
@@ -342,6 +345,16 @@ const server = new ApolloServer({
   schema,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 server.listen().then(({ url }) => {

@@ -79,6 +79,9 @@ To set up the `apollo-server-azure-functions` library, replace the content of yo
 
 ```javascript
 const { ApolloServer, gql } = require('apollo-server-azure-functions');
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
 
 // Schema definition.
 const typeDefs = gql`
@@ -100,6 +103,16 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 exports.graphqlHandler = server.createHandler();
 ```

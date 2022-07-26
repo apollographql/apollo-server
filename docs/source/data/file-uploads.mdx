@@ -23,6 +23,9 @@ const {
   graphqlUploadExpress, // A Koa implementation is also exported.
 } = require('graphql-upload');
 const { finished } = require('stream/promises');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 
 const typeDefs = gql`
   # The implementation for this scalar is provided by the
@@ -80,6 +83,16 @@ async function startServer() {
     // Using graphql-upload without CSRF prevention is very insecure.
     csrfPrevention: true,
     cache: 'bounded',
+    plugins: [
+      /**
+       * What's up with this embed: true option?
+       * These are our recommended settings for using AS;
+       * they aren't the defaults in AS3 for backwards-compatibility reasons but
+       * will be the defaults in AS4. For production environments, use
+       * ApolloServerPluginLandingPageProductionDefault instead.
+      **/
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
   await server.start();
 
@@ -104,6 +117,9 @@ startServer();
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-fastify');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const { GraphQLUpload, processRequest } = require('graphql-upload');
 const { finished } = require('stream/promises');
 
@@ -183,6 +199,16 @@ const start = async () => {
       // Using graphql-upload without CSRF prevention is very insecure.
       csrfPrevention: true,
       cache: 'bounded',
+      plugins: [
+        /**
+         * What's up with this embed: true option?
+         * These are our recommended settings for using AS;
+         * they aren't the defaults in AS3 for backwards-compatibility reasons but
+         * will be the defaults in AS4. For production environments, use
+         * ApolloServerPluginLandingPageProductionDefault instead.
+        **/
+        ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+      ],
     });
 
     // Start Apollo Server

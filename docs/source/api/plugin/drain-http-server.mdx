@@ -28,7 +28,10 @@ Here's a basic example of how to use it with Express. See the [framework integra
 ```ts title="index.ts"
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
-const { ApolloServerPluginDrainHttpServer } = require('apollo-server-core');
+const {
+  ApolloServerPluginDrainHttpServer,
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const { typeDefs, resolvers } = require('./schema');
 const http = require('http');
 
@@ -40,7 +43,17 @@ async function startApolloServer() {
     resolvers,
     csrfPrevention: true,
     cache: 'bounded',
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      /**
+       * What's up with this embed: true option?
+       * These are our recommended settings for using AS;
+       * they aren't the defaults in AS3 for backwards-compatibility reasons but
+       * will be the defaults in AS4. For production environments, use
+       * ApolloServerPluginLandingPageProductionDefault instead.
+      **/
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
 
   await server.start();

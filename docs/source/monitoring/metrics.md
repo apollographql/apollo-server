@@ -57,7 +57,10 @@ For more advanced cases, or to use headers other than the default headers, pass 
 
 ```js {10-25}
 const { ApolloServer } = require("apollo-server");
-const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
+const {
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 
 const server = new ApolloServer({
   typeDefs,
@@ -83,6 +86,14 @@ const server = new ApolloServer({
         }
       },
     }),
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 
@@ -129,7 +140,15 @@ const server = new ApolloServer({
   csrfPrevention: true,
   cache: 'bounded',
   plugins: [
-    myPlugin
+    myPlugin,
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ]
 });
 ```

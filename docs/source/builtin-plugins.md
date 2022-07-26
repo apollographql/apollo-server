@@ -25,7 +25,10 @@ You can install a plugin that isn't installed by default (or customize a default
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginUsageReporting } from "apollo-server-core";
+import {
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginLandingPageLocalDefault
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
@@ -37,6 +40,14 @@ const server = new ApolloServer({
     ApolloServerPluginUsageReporting({
       sendVariableValues: { all: true },
     }),
+    /**
+     * What's up with this embed: true option?
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```

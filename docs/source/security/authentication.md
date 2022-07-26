@@ -16,6 +16,9 @@ The example below extracts a user token from the HTTP `Authorization` header inc
 
 ```js
 const { ApolloServer } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 
 const server = new ApolloServer({
  typeDefs,
@@ -39,6 +42,16 @@ const server = new ApolloServer({
    // Add the user to the context
    return { user };
  },
+ plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 server.listen().then(({ url }) => {
@@ -231,6 +244,16 @@ new ApolloServer({
   schema: makeExecutableSchema({ typeDefs, resolvers, schemaTransforms }),
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    /**
+    * What's up with this embed: true option?
+    * These are our recommended settings for using AS;
+    * they aren't the defaults in AS3 for backwards-compatibility reasons but
+    * will be the defaults in AS4. For production environments, use
+    * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

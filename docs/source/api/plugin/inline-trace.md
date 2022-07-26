@@ -15,7 +15,10 @@ If you want to configure this plugin (or if you want to use it in a graph that i
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginInlineTrace } from "apollo-server-core";
+import {
+  ApolloServerPluginInlineTrace,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
@@ -26,6 +29,14 @@ const server = new ApolloServer({
     ApolloServerPluginInlineTrace({
       rewriteError: (err) => err.message.match(SENSITIVE_REGEX) ? null : err,
     }),
+    /**
+     * What's up with this embed: true option?
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
@@ -34,14 +45,27 @@ If you don't want to use the inline trace plugin even though your schema defines
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginInlineTraceDisabled } from "apollo-server-core";
+import {
+  ApolloServerPluginInlineTraceDisabled,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: "bounded",
-  plugins: [ApolloServerPluginInlineTraceDisabled()],
+  plugins: [
+    ApolloServerPluginInlineTraceDisabled(),
+    /**
+     * What's up with this embed: true option?
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 
