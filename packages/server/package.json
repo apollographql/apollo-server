@@ -100,7 +100,7 @@
     "@apollographql/graphql-playground-html": "1.6.29",
     "@graphql-tools/schema": "^8.0.0",
     "@josephg/resolvable": "^1.0.0",
-    "@types/express-serve-static-core": "4.17.29",
+    "@types/express-serve-static-core": "4.17.30",
     "@types/express": "4.17.13",
     "@types/node-fetch": "^2.6.1",
     "async-retry": "^1.2.1",
