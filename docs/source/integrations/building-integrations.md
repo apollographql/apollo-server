@@ -97,7 +97,7 @@ const context: ContextFunction<[ExpressContextFunctionArgument], TContext> =
   options?.context ?? defaultContext;
 ```
 
-Note, the `context` function is _called_ during the execution step.
+Note, the `context` function is _called_ during the [execution step](#execute-the-graphql-request).
 
 ### Handle Requests
 
@@ -106,18 +106,18 @@ We recommend implementing your integration package as either a request handler o
 A request handler has 4 main responsibilities:
 1. [Parse the request](#parse-the-request)
 2. [Construct an `HTTPGraphQLRequest` object](#construct-the-httpgraphqlrequest-object) from the incoming request
-3. [Execute the GraphQL request](#execute-the-graphql-request) via Apollo Server
+3. [Execute the GraphQL request](#execute-the-graphql-request) using Apollo Server
 4. Return a well-formed [response to the client](#send-the-response)
 
 #### Parse the request
 
-Apollo Server responds to a variety of requests, such as HTTP requests (i.e., `GET` and `POST`), APQs, and landing page requests (e.g., Apollo Sandbox). Fortunately, this is all part of Apollo Server's core logic and isn't something integration authors need to worry about.
+Apollo Server responds to a variety of requests, such as HTTP requests (i.e., `GET` and `POST`), APQs, and landing page requests (e.g., Apollo Sandbox). Fortunately, this is all part of Apollo Server's core logic, and it isn't something integration authors need to worry about.
 
 Integrations _are_ responsible for parsing a request's body and using the values to construct the `HTTPGraphQLRequest` that Apollo Server expects.
 
-In the Express integration, users are expected to use the `body-parser` JSON middleware, which handles parsing JSON request bodies when the `content-type` header is set to `application/json`. Integrations can choose to require a similar middleware or plugin for their ecosystem or handle body parsing themselves.
+In Apollo Ever 4's Express integration, a user sets up the `body-parser` JSON middleware, which handles parsing JSON request bodies with a `content-type` of `application/json`. Integrations can require a similar middleware (or plugin) for their ecosystem, or they can handle body parsing themselves.
 
-A correctly parsed body should have this shape:
+For example, a correctly parsed body should have a shape resembling this:
 
 ```ts
 {
@@ -128,15 +128,11 @@ A correctly parsed body should have this shape:
 }
 ```
 
-This shape is what we expect from a normal parsed request and is just for
-illustration purposes. Your integration should pass along whatever it parses to
-Apollo Server; validation of the request will happen there.
+Your integration should pass along whatever it parses to Apollo Server; Apollo Server will handle validating the parsed request.
 
-GraphQL requests can also be sent via a `GET` request by sending the relevant
-information via query string parameters. Apollo Server expects the raw query
-string for these types of requests. The Express integration computes the query
-string given the full URL similarly to the following example:
+Apollo Server also accepts GraphQL queries [sent using `POST` or `GET` requests](/apollo-server/v3/requests) with query string parameters. Apollo Server expects a raw query string for these types of HTTP requests.
 
+Apollo Ever 4's Express integration computes the query string using the request's full URL, like so:
 ```ts
 import { parse } from 'url';
 
@@ -145,10 +141,7 @@ const search = parse(req.url).search ?? '';
 
 #### Construct the `HTTPGraphQLRequest` object
 
-With the request body parsed, we can now construct an `HTTPGraphQLRequest`.
-Apollo Server handles the logic of `GET` vs `POST`, relevant headers, and
-whether to look in `body` or `search` for the GraphQL-specific parts of the
-query.
+With the request body parsed, we can now construct an `HTTPGraphQLRequest`:
 
 ```ts
 interface HTTPGraphQLRequest {
@@ -159,10 +152,11 @@ interface HTTPGraphQLRequest {
 }
 ```
 
-We now have the `method`, `body`, and `search` properties computed. The only
-thing left for us to compute is the `headers` object! Apollo Server expects a
-`Map` of headers. In the Express implementation, we construct the `Map` by
-iterating over the `headers` object like so:
+Apollo Server handles the logic of extracting the HTTP method (i.e., `GET` vs. `POST`), relevant headers, and it knows whether to check the `body` or `search` fields for the GraphQL-specific parts of a query. So, Apollo Server handles your `method`, `body`, and `search` properties for the `HTTPGraphQLRequest`.
+
+Finally, Apollo Server expects the `headers` property to return a `Map` of headers.
+
+In the Express integration, we construct a `Map` by iterating over the `headers` object, like so:
 
 ```ts
 const headers = new Map<string, string>();
@@ -173,14 +167,12 @@ for (const [key, value] of Object.entries(req.headers)) {
 }
 ```
 
-Apollo Server expects header keys to be lower-cased. If your framework allows
-duplicate keys, the values should be merged into the same lower-cased key,
-joined by a `, ` as shown above. Express provides lower-cased header keys, so
-our snippet above operates under that assumption and may not be a sufficient
-approach for your framework.
+Apollo Server expects header keys to be unique and lower-case. If your framework permits duplicate keys, you'll need to merge the values of those extra keys into a single key, joined by `, ` (as shown above).
+
+Express already provides lower-cased header keys in the above code snippet, so the same approach might not be sufficient for your framework.
 
 Now that we have all the parts of an `HTTPGraphQLRequest`, we can build the
-object like so:
+object, like so:
 
 ```ts
 const httpGraphQLRequest: HTTPGraphQLRequest = {
@@ -193,8 +185,8 @@ const httpGraphQLRequest: HTTPGraphQLRequest = {
 
 #### Execute the GraphQL request
 
-With the `HTTPGraphQLRequest` we created above, we now execute the GraphQL
-request.
+Using the `HTTPGraphQLRequest` we created above, we now execute the GraphQL
+request:
 
 ```ts
 const result = await server
@@ -204,11 +196,7 @@ const result = await server
   });
 ```
 
-Here, `httpGraphQLRequest` is the `HTTPGraphQLRequest` object we just
-constructed. The `context` function is the one we determined earlier, either
-provided by the user or the default. Note how we pass the `req` and `res`
-objects we received from Express to the `context` function (as promised by our
-`ExpressContextFunctionArgument` type).
+In the above code snippet, the `httpGraphQLRequest` variable is our `HTTPGraphQLRequest` object. The `context` function is the [one we determined earlier](#compute-graphql-context) (either given to us by the user or our default context). Note how we pass the `req` and `res` objects we received from Express to the `context` function (as promised by our `ExpressContextFunctionArgument` type).
 
 #### Handle errors
 
@@ -223,9 +211,7 @@ the execution result just as it would in the error case.
 
 #### Send the response
 
-The `HTTPGraphQLResponse` type is what we expect after awaiting the Promise
-returned by `executeHTTPGraphQLRequest`. At this point, the handler should
-respond to the client as appropriate based on the conventions of the framework.
+After awaiting the Promise returned by `executeHTTPGraphQLRequest`, we receive an `HTTPGraphQLResponse` type. At this point, your handler should respond to the client based on the conventions of your framework.
 
 ```ts
 interface HTTPGraphQLHead {
@@ -246,8 +232,8 @@ type HTTPGraphQLResponse = HTTPGraphQLHead &
   );
 ```
 
-The express implementation uses the `res` object in order to update the response
-with the appropriate status code and headers as well as send the body like so:
+The Express implementation uses the `res` object to update the response
+with the appropriate status code and headers, and it sends the body:
 
 ```ts
 for (const [key, value] of httpGraphQLResponse.headers) {
