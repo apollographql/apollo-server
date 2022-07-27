@@ -26,8 +26,7 @@ to provide the strongest possible types for the `ApolloServer` instance and the
 user's `context` function.
 
 The first two `expressMiddleware` definitions are the
-permitted signatures, while the third is the actual implementation (omitted for
-now):
+permitted signatures, while the third is the actual implementation:
 
 ```ts
 interface ExpressMiddlewareOptions<TContext extends BaseContext> {
@@ -52,7 +51,7 @@ export function expressMiddleware<TContext extends BaseContext>(
 
 In the first `expressMiddleware` signature above, if a user doesn't provide `options`, there isn't a user-provided `context` function to call. The resulting `context` object is a `BaseContext` (or `{}`). So, the first argument's expected type is `ApolloServer<BaseContext>`.
 
-The second `expressMiddleware` signature _requires_ that `options` receives a `context` property. This means that Apollo Server expects the `context` object's type to be the _same_ as the type returned by the user-provided `context` function. Apollo Server uses the `TContext` type to represent the generic type of the GraphQL context object. Above, both the `ApolloServer` instance and the user-provided `context` function share the `TContext` generic, ensuring users correctly type their server and `context` function.
+The second `expressMiddleware` signature _requires_ that `options` receives a `context` property. This means that Apollo Server expects the `context` object's type to be the _same_ as the user-provided `context` function's type. Apollo Server uses the `TContext` type to represent the generic type of the GraphQL context object. Above, both the `ApolloServer` instance and the user-provided `context` function share the `TContext` generic, ensuring users correctly type their server and `context` function.
 
 ### Ensure successful startup
 
@@ -80,7 +79,7 @@ If a user doesn't provide a `context` function, an empty GraphQL context object 
 Apollo Server exports a generic `ContextFunction` type, which can be useful for integrations defining their APIs. Above, the [`expressMiddleware` function signature](#main-function-signature) uses the `ContextFunction` type in the `ExpressMiddlewareOptions` interface, giving users a strongly typed
 `context` function with correct parameter typings.
 
-The `ContextFunction` type's first type argument specifies which arguments an integration needs to pass to a user's `context` function. The second type argument defines the return type of a user's `context` function, which should use the same `TContext` generic that `ApolloServer` uses:
+The `ContextFunction` type's first variable specifies which arguments an integration needs to pass to a user's `context` function. The second variable defines the return type of a user's `context` function, which should use the same `TContext` generic that `ApolloServer` uses:
 
 ```ts
 interface ExpressContextFunctionArgument {
