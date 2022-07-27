@@ -141,13 +141,6 @@ const server = new ApolloServer({
   // The max age is calculated in seconds
   plugins: [
     ApolloServerPluginCacheControl({ defaultMaxAge: 5 }),
-    /**
-    * What's up with this embed: true option?
-    * These are our recommended settings for using AS;
-    * they aren't the defaults in AS3 for backwards-compatibility reasons but
-    * will be the defaults in AS4. For production environments, use
-    * ApolloServerPluginLandingPageProductionDefault instead.
-    **/
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
@@ -217,13 +210,6 @@ const server = new ApolloServer({
     // highlight-end
   },
   plugins: [
-    /**
-    * What's up with this embed: true option?
-    * These are our recommended settings for using AS;
-    * they aren't the defaults in AS3 for backwards-compatibility reasons but
-    * will be the defaults in AS4. For production environments, use
-    * ApolloServerPluginLandingPageProductionDefault instead.
-    **/
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
@@ -241,13 +227,6 @@ const server = new ApolloServer({
     ttl: null, // highlight-line
   },
   plugins: [
-    /**
-    * What's up with this embed: true option?
-    * These are our recommended settings for using AS;
-    * they aren't the defaults in AS3 for backwards-compatibility reasons but
-    * will be the defaults in AS4. For production environments, use
-    * ApolloServerPluginLandingPageProductionDefault instead.
-    **/
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
@@ -267,13 +246,6 @@ const server = new ApolloServer({
   cache: 'bounded',
   persistedQueries: false, // highlight-line
   plugins: [
-    /**
-    * What's up with this embed: true option?
-    * These are our recommended settings for using AS;
-    * they aren't the defaults in AS3 for backwards-compatibility reasons but
-    * will be the defaults in AS4. For production environments, use
-    * ApolloServerPluginLandingPageProductionDefault instead.
-    **/
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });

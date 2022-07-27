@@ -87,13 +87,6 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
       csrfPrevention: true,
       cache: "bounded",
       plugins: [
-        /**
-        * What's up with this embed: true option?
-        * These are our recommended settings for using AS;
-        * they aren't the defaults in AS3 for backwards-compatibility reasons but
-        * will be the defaults in AS4. For production environments, use
-        * ApolloServerPluginLandingPageProductionDefault instead.
-        **/
         ApolloServerPluginLandingPageLocalDefault({ embed: true }),
       ],
     });
@@ -137,13 +130,6 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
               };
             },
           },
-          /**
-          * What's up with this embed: true option?
-          * These are our recommended settings for using AS;
-          * they aren't the defaults in AS3 for backwards-compatibility reasons but
-          * will be the defaults in AS4. For production environments, use
-          * ApolloServerPluginLandingPageProductionDefault instead.
-          **/
           ApolloServerPluginLandingPageLocalDefault({ embed: true }),
         ],
       });
@@ -206,13 +192,6 @@ const server = new ApolloServer({
         };
       },
     },
-    /**
-    * What's up with this embed: true option?
-    * These are our recommended settings for using AS;
-    * they aren't the defaults in AS3 for backwards-compatibility reasons but
-    * will be the defaults in AS4. For production environments, use
-    * ApolloServerPluginLandingPageProductionDefault instead.
-    **/
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });

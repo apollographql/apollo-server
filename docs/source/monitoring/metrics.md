@@ -86,13 +86,6 @@ const server = new ApolloServer({
         }
       },
     }),
-    /**
-    * What's up with this embed: true option?
-    * These are our recommended settings for using AS;
-    * they aren't the defaults in AS3 for backwards-compatibility reasons but
-    * will be the defaults in AS4. For production environments, use
-    * ApolloServerPluginLandingPageProductionDefault instead.
-    **/
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
@@ -141,13 +134,6 @@ const server = new ApolloServer({
   cache: 'bounded',
   plugins: [
     myPlugin,
-    /**
-    * What's up with this embed: true option?
-    * These are our recommended settings for using AS;
-    * they aren't the defaults in AS3 for backwards-compatibility reasons but
-    * will be the defaults in AS4. For production environments, use
-    * ApolloServerPluginLandingPageProductionDefault instead.
-    **/
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ]
 });
