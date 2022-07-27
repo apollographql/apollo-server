@@ -2,19 +2,17 @@
 title: Migrating to Apollo Server 4 (Alpha)
 ---
 
-> ⚠️ **Apollo Server 4 is out in public alpha.** It is not yet feature-complete, and breaking changes might occur between this release and general availability. [Learn about release stages.](https://www.apollographql.com/docs/resources/release-stages/#open-source-release-stages)
+> ⚠️ **Apollo Server 4 is currently in public alpha.** It is not yet feature-complete, and breaking changes might occur between this release and general availability. [Learn about release stages.](/resources/release-stages/#open-source-release-stages)
 >
-> At this time, this alpha is intended primarily for community members to start to developing integrations between Apollo Server and their favorite web frameworks. Not all users can upgrade their servers to this alpha yet. For example, this alpha can't host an Apollo Gateway and doesn't work with `RESTDataSource`.
+> This alpha primarily aims to enable community members to develop integrations between Apollo Server and their favorite web frameworks. Many Apollo Server 3 users **can't upgrade** to this alpha yet. For example, the Apollo Server 4 alpha removes multiple web framework integrations and doesn't support using `RESTDataSource` or hosting an Apollo Gateway.
 >
->  Apollo Server 4 introduces many across-the-board changes, and we are working on updating our documentation to reflect these changes. This article explains which features _do_ require code changes and how to make them.
-
-<!-- TODO(AS4): before releasing, double-check imports & links -->
+> We are working on updating our documentation to reflect the changes introduced in Apollo Server 4. This article explains which features _do_ require code changes and how to make them.
 
 This major release focuses on improving Apollo Server's extensibility and making it simpler to use, maintain, and document. To learn more about the inspiration behind this release, see the [Apollo Server Roadmap](https://github.com/apollographql/apollo-server/blob/main/ROADMAP.md).
 
 The Apollo Server 4 alpha provides the following features, with more to come in the full release:
 * A simple well-defined API with a stable HTTP abstraction, enabling contributors to easily [build and maintain integrations](/integrations/building-integrations) in their preferred frameworks.
-* A new `@apollo/server` package, combining numerous [smaller packages](#combining-packages-into-apolloserver) and including the [`startStandaloneServer`](#startstandaloneserver) and [`expressMiddleware`](#expressmiddleware) functions.
+* A new `@apollo/server` package, combining numerous [smaller packages](#packages-merged-into-apolloserver) and including the [`startStandaloneServer`](#migrate-from-apollo-server) and [`expressMiddleware`](#migrate-from-apollo-server-express) functions.
 
 During Apollo Server 4's alpha, we are actively looking to gather feedback and [issues](https://github.com/apollographql/apollo-server/issues/new/choose) from community members and customers.
 
@@ -22,39 +20,39 @@ During Apollo Server 4's alpha, we are actively looking to gather feedback and [
 
 ## The new `@apollo/server` package
 
-Apollo Server 3 is distributed as a [fixed set of packages](/apollo-server/integrations/middleware) for integrating with different web frameworks and environments.  The main "batteries-included" [`apollo-server` package](/apollo-server/integrations/middleware#apollo-server) reduces setup time by providing a minimally customizable GraphQL server. Apollo Server 3 doesn't provide a way to add new integrations for additional frameworks.
+Apollo Server 3 is distributed as a [fixed set of packages](/apollo-server/integrations/middleware) for integrating with different web frameworks and environments.  The main "batteries-included" [`apollo-server` package](/apollo-server/integrations/middleware#apollo-server) reduces setup time by providing a minimally customizable GraphQL server.
 
-In Apollo Server 3, the `apollo-server-core` package defines an `ApolloServer` "base" class, which each integration package (e.g., `apollo-server-express`,`apollo-server-lambda`, etc. ) exports as a subclass with the same name and a slightly different API.  This packaging structure means that new integration package releases are lockstep versioned to Apollo Server itself, making it challenging to support major versions of frameworks and add integration-specific changes.
+In Apollo Server 3, the `apollo-server-core` package defines an `ApolloServer` "base" class, which each integration package (e.g., `apollo-server-express`,`apollo-server-lambda`, etc. ) exports as a subclass with the same name and a slightly different API.  This packaging structure means that new integration package releases are lockstep versioned to Apollo Server itself, making it challenging to support major versions of frameworks and add integration-specific changes. Additionally, Apollo Server 3 doesn't provide a way to add new integrations for additional frameworks.
 
-Apollo Server 4 takes a different approach to integrations. Apollo Server 4 has a stable web framework integration API, which includes explicit support for serverless framework life cycles. The new `@apollo/server` package contains the `ApolloServer` class, an [Express 4 integration](#migrating-from-apollo-server-express) (similar to AS3's `apollo-server-express` package), a [standalone server](#migrating-from-apollo-server) (similar to AS3's `apollo-server` package), and a set of [core plugins](#plugins-are-now-in-apollo-server) (similar to AS3's `apollo-server-core` package). There are no subclasses in AS4; there is a single `ApolloServer` class with a single API that all integrations use.
+Apollo Server 4 takes a different approach to integrations. Apollo Server 4 has a stable web framework integration API, which includes explicit support for serverless framework life cycles. The new `@apollo/server` package contains the `ApolloServer` class, an [Express 4 integration](#migrate-from-apollo-server-express) (similar to Apollo Server 3's `apollo-server-express` package), a [standalone server](#migrate-from-apollo-server) (similar to Apollo Server 3's `apollo-server` package), and a set of [core plugins](#plugins-are-in-deep-imports) (similar to Apollo Server 3's `apollo-server-core` package). There are no subclasses in Apollo Server 4; there is a single `ApolloServer` class with a single API that all integrations use.
 
-In Apollo Server 3, the Apollo Server core team is responsible for maintaining all integration packages. With Apollo Server 4, the AS core team will stop directly maintaining most integration packages. We will instead work with the broader open source community to maintain Apollo Server integrations, enabling those who regularly use different web frameworks to make the best choices for their framework's integration.  If you'd like to help maintain an integration, please [see this issue calling for integration maintainers](https://github.com/apollographql/apollo-server/labels/integration-collaborators).
+In Apollo Server 3, the Apollo Server core team was responsible for maintaining every integration package. With Apollo Server 4, the AS core team will stop directly maintaining most integration packages. We will instead work with the broader open source community [to maintain Apollo Server integrations](https://github.com/apollographql/apollo-server/labels/integration-collaborators), enabling those who regularly use different web frameworks to make the best choices for their framework's integration.
 
 For those migrating from Apollo Server 3 to Apollo Server 4, use the below flowchart to see your migration path:
 
 ```mermaid
 graph TB;
-  server("Am I using the apollo-server package?");
-  server--No-->express("Am I using the apollo-server-express package?");
+  server("Am I using the <code>apollo-server</code> package?");
+  server--No-->express("Am I using the <code>apollo-server-express</code> package?");
   server--Yes-->useStandAlone("Use the <code>startStandaloneServer</code> function");
   express--No-->buildIntegration("You can’t upgrade during the alpha <b>yet*</b>");
   express--Yes-->useExpressMiddleware("Use the <code>expressMiddleware</code> function");
   class useStandAlone,useExpressMiddleware secondary;
 ```
 
-If you are currently using the `apollo-server` package, you should use the [`startStandaloneServer`](#migrating-from-apollo-server) function. If you are using the `apollo-server-express` package, you should use the [`expressMiddleware`](#migrating-from-apollo-server-express) function. These functions and the `ApolloServer` class are all exported from the [`@apollo/server` package](https://www.npmjs.com/package/@apollo/server).
+If you are currently using the `apollo-server` package, you should use the [`startStandaloneServer`](#migrate-from-apollo-server) function. If you are using the `apollo-server-express` package, you should use the [`expressMiddleware`](#migrate-from-apollo-server-express) function. The [`@apollo/server` package](https://www.npmjs.com/package/@apollo/server) exports these functions alongside the  `ApolloServer` class.
 
-If you are using any other Apollo Server 3 framework integration package, you can’t upgrade during the AS4 alpha release _yet_. Please help us by [building new integrations](/building-integrations) or [discussing how to maintain existing integrations](https://github.com/apollographql/apollo-server/labels/integration-collaborators) to ensure there is an Apollo Server 4 integration for your favorite framework.
+If you are using any other Apollo Server 3 framework integration package, you can’t upgrade during the Apollo Server 4 alpha release _yet_. Please help us by [building new integrations](./integrations/building-integrations) or [discussing how to maintain existing integrations](https://github.com/apollographql/apollo-server/labels/integration-collaborators) to ensure there is an Apollo Server 4 integration for your favorite framework.
 
 Below are a few high-level changes for using framework integrations:
 
-- Your [`context` function](#context-initialization-function) is passed to your integration function (eg, `expressMiddleware` or `startStandaloneServer`) instead of the `ApolloServer` constructor.
-- When using a framework integration, you now need to [set up HTTP body parsing and CORS yourself](#body-parser-and-cors) using your framework's standard functionality.
-- Instead of [telling the framework integration function what URL path to listen](#path-parsing) on with a `path` option, pass that path directly to your framework's router. If you did not specify a path, the default in Apollo Server 3 was `/graphql`, so to preserve existing behavior you should explicitly specify that path now.
+- You can pass your [`context` initialization function](#context-initialization-function) directly to your framework's integration function (e.g., `expressMiddleware` or `startStandaloneServer`) instead of the `ApolloServer` constructor.
+- You are responsible for [setting up HTTP body parsing and CORS](#body-parser-and-cors) using your framework integration's standard functionality.
+- If you want your server to listen on a specific URL path, pass that path directly to your framework's router instead of using the [`path` option](#path-parsing). Note, if you did not specify a URL path, the default in Apollo Server 3 was `/graphql`, so to preserve existing behavior, you should explicitly specify that path.
 
-The following sections shows how servers using `apollo-server` and `apollo-server-express` need to change to use the new API.
+The following sections show how servers using `apollo-server` and `apollo-server-express` can update to Apollo Server 4.
 
-### Migrating from `apollo-server`
+### Migrate from `apollo-server`
 
 In Apollo Server 3, the `apollo-server` package is a "batteries-included" package that wraps `apollo-server-express`, providing an HTTP server with minimal HTTP-level customization.
 
@@ -116,25 +114,24 @@ The `startStandaloneServer` function accepts two arguments; the first is the ins
 
 | Name  | Description  |
 |---|---|
-| `context` | <p>The optional [`context` initialization function](#context-initialization-function).</p><p>In Apollo Server 3, this is provided to the constructor.</p><p>In Apollo Server 4, this is provided to `startStandaloneServer`.</p><br/><p>This function receives `req` and `res` options. Note that in Apollo Server 4, these are based on Node's built-in `http.IncomingMessage` and `http.ServerResponse` types rather than Express's similar types; if you need to access Express-specific properties in your `context` function, use `expressMiddleware` instead.</p> |
-| `listen` |  <p>You can optionally provide a `listen` option. The `listen` option accepts an object with the same type as the [options argument passed to Node's `net.Server.listen`](https://nodejs.org/api/net.html#serverlistenoptions-callback). For example, if you called `server.listen(4321)` in Apollo Server 3, pass `listen: { port: 4321 }` in Apollo Server 4. If you didn't pass any arguments to Apollo Server 3's `server.listen()` method, you don't need to specify a `listen` option in Apollo Server 4.</p> |
+| `context` | <p>An optional [`context` initialization function](#context-initialization-function). The `context` function receives `req` and `res` options; [see below for more details.](#context-initialization-function)</p><br/><p>In Apollo Server 3, you pass the `context` function to the constructor. In Apollo Server 4, you pass the `context` function to `startStandaloneServer`.</p> |
+| `listen` |  <p>An optional `listen` configuration option. The `listen` option accepts an object with the same properties as the [`net.Server.listen` options object](https://nodejs.org/api/net.html#serverlistenoptions-callback). </p><br /><p>For example, in Apollo Server 3, if you call `server.listen(4321)`, you'll now pass `listen: { port: 4321 }` in Apollo Server 4. If you didn't pass any arguments to Apollo Server 3's `server.listen()` method, you don't need to specify a `listen` option in Apollo Server 4.</p> |
 
-The `startStandaloneServer` function doesn't enable you to configure your server's CORS behavior. If you used the `cors` constructor option in Apollo Server 3 to customize your CORS settings, use the [`expressMiddleware` function](#migrating-from-apollo-server-express) instead.
+The `startStandaloneServer` function doesn't enable you to configure your server's CORS behavior. If you previously used the `cors` constructor option to customize your CORS settings in Apollo Server 3, use the [`expressMiddleware` function](#migrating-from-apollo-server-express) in Apollo Server 4.
 
 Similarly, if you used the `stopGracePeriodMillis` constructor option in Apollo Server 3, use the [`expressMiddleware` function](#migrating-from-apollo-server-express) and specify `stopGracePeriodMillis` to the `ApolloServerPluginDrainHttpServer` plugin.
 
-
-### Migrating from `apollo-server-express`
+### Migrate from `apollo-server-express`
 
 If you used the `apollo-server-express` package in Apollo Server 3, you'll now use the `expressMiddleware` function in Apollo Server 4 (i.e., instead of using `server.applyMiddleware` or `server.getMiddleware`).
 
-To migrate from AS3's `apollo-server-express` package to using the `expressMiddleware` function, you'll need to do the following:
-- Install the `@apollo/server`, `cors`, and `body-parser` packages.
-- Import symbols from `@apollo/server` (i.e., instead of from `apollo-server-express` and `apollo-server-core`).
-- Add `cors` and `bodyParser.json()` to your server setup.
-- Remove the Apollo Server 3 `apollo-server-express` and `apollo-server-core` packages.
+To migrate from Apollo Server 3's `apollo-server-express` package to using the `expressMiddleware` function, you'll need to do the following:
+1. Install the `@apollo/server`, `cors`, and `body-parser` packages.
+2. Import symbols from `@apollo/server` (i.e., instead of from `apollo-server-express` and `apollo-server-core`).
+3. Add `cors` and `bodyParser.json()` to your server setup.
+4. Remove the Apollo Server 3 `apollo-server-express` and `apollo-server-core` packages.
 
-If using `apollo-server-express`'s default `/graphql` URL path (i.e., not specifying another URL with the [path option](/apollo-server/api/apollo-server/#path)), you can mount `expressMiddleware` at `/graphql` to maintain the same behavior.  To use another URL path, mount your server (with `app.use`) at the specified path.
+Finally, if you are using `apollo-server-express`'s default `/graphql` URL path (i.e., not specifying another URL with the [path option](/apollo-server/api/apollo-server/#path)), you can mount `expressMiddleware` at `/graphql` to maintain behavior.  To use another URL path, mount your server (with `app.use`) at the specified path.
 
 This Apollo Server 3 code:
 
@@ -215,7 +212,7 @@ async function startApolloServer() {
 
 ### Removed integrations
 
-The Apollo Server core team no longer maintains the following integration packages in Apollo Server 4. We are [looking for collaborators](https://github.com/apollographql/apollo-server/labels/integration-collaborators) who actively use these platforms to maintain AS4-compatible integration packages.
+The Apollo Server core team no longer maintains the following integration packages in Apollo Server 4. We are [looking for collaborators](https://github.com/apollographql/apollo-server/labels/integration-collaborators) who actively use these platforms to maintain Apollo Server 4 compatible integration packages.
 
 Apollo Server 4 removes the below integration packages:
 * [`apollo-server-fastify`](https://www.npmjs.com/package/apollo-server-fastify)
@@ -375,7 +372,7 @@ await server.listen();
 
 <!-- TODO(AS4): Update the next line before release -->
 
-Here's how you would write the same code in Apollo Server 4. (Note that `RESTDataSource` has moved to a new package name (or at least it will [by the time AS4 is released](https://github.com/apollographql/apollo-server/issues/6048)).)
+Here's how you would write the same code in Apollo Server 4. (Note that `RESTDataSource` has moved to a new package name (or at least it will [by the time Apollo Server 4 is released](https://github.com/apollographql/apollo-server/issues/6048)).)
 
 <MultiCodeBlock>
 
@@ -704,7 +701,7 @@ If you want a health check for your HTTP server unrelated to the health of the G
 
 In Apollo Server 3, many framework integrations enable you to use the `path` option to configure the [URL path](/apollo-server/api/apollo-server/#path) where Apollo Server processes requests. By default, the `path` option uses the `/graphql` URL path.
 
-In Apollo Server 4, you should use your framework's routing feature to mount your integration at the URL path where you want Apollo Server to process requests.  For example, if you are using `apollo-server-express` in AS3 and would like to continue using the default `/graphql` path, you should now mount the `expressMiddleware` function at the `/graphql` path.
+In Apollo Server 4, you should use your framework's routing feature to mount your integration at the URL path where you want Apollo Server to process requests.  For example, if you are using `apollo-server-express` in Apollo Server 3 and would like to continue using the default `/graphql` path, you should now mount the `expressMiddleware` function at the `/graphql` path.
 
 > Apollo Server 3's batteries-included `apollo-server` package, replaced by `startStandaloneServer` in Apollo Server 4,  serves all URLs (i.e., rather than only listening on `/graphql`).
 
@@ -1220,7 +1217,7 @@ import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 import Keyv from 'keyv';
 
 new ApolloServer({
-  // DANGEROUS: Match the unsafe default AS3 behavior with an
+  // DANGEROUS: Match the unsafe default behavior of Apollo Server 3's with an
   // unbounded in-memory cache.
   cache: new KeyvAdapter(new Keyv()),
   // ...
@@ -1265,7 +1262,7 @@ The following packages have been renamed in Apollo Server 4:
  * `apollo-server-plugin-operation-registry` is now [`@apollo/server-plugin-operation-registry`](https://www.npmjs.com/package/@apollo/server-plugin-operation-registry).
  * `apollo-reporting-protobuf` (an internal implementation detail for the usage reporting plugin) is now [`@apollo/usage-reporting-protobuf`](https://www.npmjs.com/package/@apollo/usage-reporting-protobuf).
 
-Note that once AS4 is released, all actively maintained Apollo packages will start with `@apollo/`. This leaves the `apollo-` namespace open for community integration packages (e.g., `apollo-server-integration-fastify`).
+Note that once Apollo Server 4 is released, all actively maintained Apollo packages will start with `@apollo/`. This leaves the `apollo-` namespace open for community integration packages (e.g., `apollo-server-integration-fastify`).
 
 
 ## TypeScript-only changes
@@ -1299,7 +1296,7 @@ const server = new ApolloServer<MyContext>({
   },
   plugins: [{
     async requestDidStart({ contextValue }) {
-      // token is properly inferred as a string; note that in AS4 you
+      // token is properly inferred as a string; note that in Apollo Server 4 you
       // write `contextValue` rather than `context` in plugins.
       console.log(contextValue.token);
     },
