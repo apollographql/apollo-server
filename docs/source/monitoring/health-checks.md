@@ -31,6 +31,7 @@ If you'd like the health check to do more than just "always return success", you
 
 ```js {10-18}
 import { ApolloServer, gql } from 'apollo-server';
+import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
 
 // Undefined for brevity.
 const typeDefs = gql``;
@@ -48,6 +49,9 @@ const server = new ApolloServer({
       throw new Error('...');
     }
   },
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 server.listen().then(({ url }) => {

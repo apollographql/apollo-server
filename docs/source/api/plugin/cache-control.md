@@ -15,7 +15,10 @@ If you want to configure this plugin, import it from the `apollo-server-core` pa
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginCacheControl } from "apollo-server-core";
+import {
+  ApolloServerPluginCacheControl,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
@@ -29,6 +32,7 @@ const server = new ApolloServer({
       // Don't send the `cache-control` response header.
       calculateHttpHeaders: false,
     }),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
@@ -37,14 +41,20 @@ If you don't want to use cache control at all, you can explicitly disable it wit
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginCacheControlDisabled } from "apollo-server-core";
+import {
+  ApolloServerPluginCacheControlDisabled,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: "bounded",
-  plugins: [ApolloServerPluginCacheControlDisabled()],
+  plugins: [
+    ApolloServerPluginCacheControlDisabled(),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

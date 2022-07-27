@@ -16,6 +16,9 @@ The example below extracts a user token from the HTTP `Authorization` header inc
 
 ```js
 const { ApolloServer } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 
 const server = new ApolloServer({
  typeDefs,
@@ -39,6 +42,9 @@ const server = new ApolloServer({
    // Add the user to the context
    return { user };
  },
+ plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 server.listen().then(({ url }) => {
@@ -231,6 +237,9 @@ new ApolloServer({
   schema: makeExecutableSchema({ typeDefs, resolvers, schemaTransforms }),
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

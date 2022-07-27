@@ -28,7 +28,10 @@ Here's a basic example of how to use it with Express. See the [framework integra
 ```ts title="index.ts"
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
-const { ApolloServerPluginDrainHttpServer } = require('apollo-server-core');
+const {
+  ApolloServerPluginDrainHttpServer,
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const { typeDefs, resolvers } = require('./schema');
 const http = require('http');
 
@@ -43,7 +46,10 @@ async function startApolloServer() {
     resolvers,
     csrfPrevention: true,
     cache: 'bounded',
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
 
   await server.start();

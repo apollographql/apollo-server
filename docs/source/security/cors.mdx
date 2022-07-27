@@ -103,12 +103,15 @@ const server = new ApolloServer({
   cors: {
     origin: ["https://www.your-app.example", "https://studio.apollographql.com"]
   },
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 
 Under the hood, the batteries-included `apollo-server` wraps around middleware provided by the [`cors`](https://github.com/expressjs/cors#configuration-options) npm package, enabling you to configure the `Access-Control-Allow-Origin` header via the `origin` option. The example above enables CORS requests from `https://www.your-app.example`, along with `https://studio.apollographql.com`.
 
-> Note if you plan to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a GraphQL web IDE you should include `https://studio.apollographql.com` in your list of valid origins.
+> Note if you plan to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a GraphQL web IDE you should include `https://studio.apollographql.com` in your list of valid origins. However, if you choose to embed the [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/embed-explorer/) or [Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox/#embedding-sandbox), you don't need to add Studio to your CORS configuration at all. Requests will go through the page embedding Studio.
 
 If you're using another integration of Apollo Server, you can add the `cors` configuration option to your framework-specific middleware function to change your server's CORS behavior. To learn more about the CORS defaults and options for your integration of Apollo Server, see [CORS configuration options](../api/apollo-server/#cors-1).
 
@@ -151,6 +154,9 @@ const server = new ApolloServer({
     origin: yourOrigin,
     credentials: true
   },
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

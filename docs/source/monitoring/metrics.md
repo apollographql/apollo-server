@@ -57,7 +57,10 @@ For more advanced cases, or to use headers other than the default headers, pass 
 
 ```js {10-25}
 const { ApolloServer } = require("apollo-server");
-const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
+const {
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 
 const server = new ApolloServer({
   typeDefs,
@@ -83,6 +86,7 @@ const server = new ApolloServer({
         }
       },
     }),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 
@@ -129,7 +133,8 @@ const server = new ApolloServer({
   csrfPrevention: true,
   cache: 'bounded',
   plugins: [
-    myPlugin
+    myPlugin,
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ]
 });
 ```

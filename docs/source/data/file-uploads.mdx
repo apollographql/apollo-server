@@ -23,6 +23,9 @@ const {
   graphqlUploadExpress, // A Koa implementation is also exported.
 } = require('graphql-upload');
 const { finished } = require('stream/promises');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 
 const typeDefs = gql`
   # The implementation for this scalar is provided by the
@@ -80,6 +83,9 @@ async function startServer() {
     // Using graphql-upload without CSRF prevention is very insecure.
     csrfPrevention: true,
     cache: 'bounded',
+    plugins: [
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
   await server.start();
 
@@ -104,6 +110,9 @@ startServer();
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-fastify');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const { GraphQLUpload, processRequest } = require('graphql-upload');
 const { finished } = require('stream/promises');
 
@@ -183,6 +192,9 @@ const start = async () => {
       // Using graphql-upload without CSRF prevention is very insecure.
       csrfPrevention: true,
       cache: 'bounded',
+      plugins: [
+        ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+      ],
     });
 
     // Start Apollo Server

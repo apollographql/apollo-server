@@ -19,7 +19,10 @@ You can configure the usage reporting plugin's behavior by including it in the `
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginUsageReporting } from "apollo-server-core";
+import {
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
@@ -30,6 +33,7 @@ const server = new ApolloServer({
     ApolloServerPluginUsageReporting({
       fieldLevelInstrumentation: 0.5,
     }),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
@@ -449,14 +453,20 @@ If you _don't_ want to install the usage reporting plugin and you _are_ providin
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginUsageReportingDisabled } from "apollo-server-core";
+import {
+  ApolloServerPluginUsageReportingDisabled,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: "bounded",
-  plugins: [ApolloServerPluginUsageReportingDisabled()],
+  plugins: [
+    ApolloServerPluginUsageReportingDisabled(),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

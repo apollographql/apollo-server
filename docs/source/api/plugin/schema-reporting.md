@@ -17,7 +17,10 @@ Additionally, you must explicitly enable schema reporting. If you just want to t
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginSchemaReporting } from "apollo-server-core";
+import {
+  ApolloServerPluginSchemaReporting,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
@@ -26,6 +29,7 @@ const server = new ApolloServer({
   cache: "bounded",
   plugins: [
     ApolloServerPluginSchemaReporting(),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```

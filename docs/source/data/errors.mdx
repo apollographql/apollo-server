@@ -344,6 +344,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: "bounded",
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
   formatError: (err) => {
     // Don't give the specific errors to the client.
     if (err.message.startsWith('Database Error: ')) {
@@ -394,7 +397,10 @@ Let's say our server is `throw`ing an `AuthenticationError` whenever an incorrec
 
 ```js {7-17}
 const { ApolloServer, AuthenticationError } = require("apollo-server");
-const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
+const {
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -412,6 +418,7 @@ const server = new ApolloServer({
         return err;
       }
     }),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
@@ -426,7 +433,10 @@ We can check these properties when determining whether an error should be report
 
 ```js {7-17}
 const { ApolloServer } = require("apollo-server");
-const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
+const {
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -445,6 +455,7 @@ const server = new ApolloServer({
         return err;
       }
     }),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
@@ -465,7 +476,10 @@ The `rewriteError` function can ensure that such information is not sent to Apol
 
 ```js {7-13}
 const { ApolloServer } = require("apollo-server");
-const { ApolloServerPluginUsageReporting } = require("apollo-server-core");
+const {
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -479,6 +493,7 @@ const server = new ApolloServer({
         return err;
       }
     }),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
@@ -517,6 +532,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
-  plugins: [setHttpPlugin],
+  plugins: [
+    setHttpPlugin,
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```

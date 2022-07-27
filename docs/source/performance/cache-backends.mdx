@@ -102,6 +102,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: new KeyvAdapter(new Keyv("redis://user:pass@localhost:6379")), // highlight-line
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 
@@ -124,6 +127,9 @@ const server = new ApolloServer({
     })
   ),
   // highlight-end
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 
@@ -161,6 +167,9 @@ const server = new ApolloServer({
     disableBatchReads: true,
   }),
   // highlight-end
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 
@@ -201,6 +210,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: new KeyvAdapter(new Keyv({ store: memcache })), // highlight-line
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

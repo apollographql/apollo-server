@@ -25,7 +25,10 @@ You can install a plugin that isn't installed by default (or customize a default
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginUsageReporting } from "apollo-server-core";
+import {
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginLandingPageLocalDefault
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
@@ -37,6 +40,7 @@ const server = new ApolloServer({
     ApolloServerPluginUsageReporting({
       sendVariableValues: { all: true },
     }),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }), // recommended
   ],
 });
 ```

@@ -146,6 +146,10 @@ backward compatibility.)
 Add the following to the bottom of `index.js`:
 
 ```js title="index.js"
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
+
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 const server = new ApolloServer({
@@ -153,6 +157,16 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  /**
+   * What's up with this embed: true option?
+   * These are our recommended settings for using AS;
+   * they aren't the defaults in AS3 for backwards-compatibility reasons but
+   * will be the defaults in AS4. For production environments, use
+   * ApolloServerPluginLandingPageProductionDefault instead.
+  **/
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 // The `listen` method launches a web server.
@@ -188,6 +202,8 @@ Visit `http://localhost:4000` in your browser. Apollo Server's default landing p
 
 Click **Query your server** to open Sandbox.
 
+> **Note:** If your server is deployed to an environment where `NODE_ENV` is set to `production`, introspection is **disabled** by default. This prevents Apollo Sandbox from working properly. To enable introspection, set `introspection: true` in [the options to `ApolloServer`'s constructor](./api/apollo-server/#constructor).
+
 > You can also:
 >
 > * Select **Automatically redirect to Studio next time** if you want to open Sandbox automatically whenever you visit `localhost:4000`
@@ -218,8 +234,6 @@ query GetBooks {
 Paste this string into the Operations panel and click the blue button in the upper right. The results (from our hardcoded data set) appear in the Response panel:
 
 <img class="screenshot" src="./images/sandbox-response.jpg" width="400" alt="Sandbox response panel"/>
-
-> **Note:** If your server is deployed to an environment where `NODE_ENV` is set to `production`, introspection is **disabled** by default. This prevents Apollo Sandbox from working properly. To enable introspection, set `introspection: true` in [the options to `ApolloServer`'s constructor](./api/apollo-server/#constructor).
 
 One of the most important concepts of GraphQL is that clients can choose to query _only for the fields they need_. Delete `author` from the query string and execute it again. The response updates to include only the `title` field for each book!
 

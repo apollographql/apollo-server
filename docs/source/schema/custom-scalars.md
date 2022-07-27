@@ -88,6 +88,9 @@ After you define your `GraphQLScalarType` instance, you include it in the same [
 
 ```js {21-24}
 const { ApolloServer, gql } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const { GraphQLScalarType, Kind } = require('graphql');
 
 const typeDefs = gql`
@@ -117,6 +120,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 
@@ -126,6 +132,9 @@ In this example, we create a custom scalar called `Odd` that can only contain od
 
 ```js title="index.js"
 const { ApolloServer, gql, UserInputError } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const { GraphQLScalarType, Kind } = require('graphql');
 
 // Basic schema
@@ -171,6 +180,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 server.listen().then(({ url }) => {
@@ -194,6 +206,9 @@ Then `require` the `GraphQLJSON` object and add it to the resolver map as usual:
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
 const GraphQLJSON = require('graphql-type-json');
 
 const typeDefs = gql`
@@ -218,6 +233,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 server.listen().then(({ url }) => {

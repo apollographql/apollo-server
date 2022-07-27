@@ -27,6 +27,9 @@ After the `global-agent` dependency has been installed, invoke its `bootstrap` m
 
 ```js {2-5}
 const { ApolloServer, gql } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
 const { bootstrap: bootstrapGlobalAgent } = require('global-agent');
 
 // Setup global support for environment variable based proxy configuration.
@@ -39,6 +42,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

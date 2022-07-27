@@ -128,6 +128,9 @@ Let's say our `apollo-server` implementation uses the following code:
 
 ```ts title="index.ts"
 import { ApolloServer } from "apollo-server";
+import {
+  ApolloServerPluginLandingPageLocalDefault
+} from "apollo-server-core";
 
 async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
@@ -135,6 +138,9 @@ async function startApolloServer(typeDefs, resolvers) {
     resolvers,
     csrfPrevention: true,
     cache: "bounded",
+    plugins: [
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
   const { url } = await server.listen();
   console.log(`🚀 Server ready at ${url}`);
@@ -157,7 +163,10 @@ Next, we can modify our code to match the following:
 
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-express';
-import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
+import {
+  ApolloServerPluginDrainHttpServer,
+  ApolloServerPluginLandingPageLocalDefault,
+} from 'apollo-server-core';
 import express from 'express';
 import http from 'http';
 
@@ -176,7 +185,10 @@ async function startApolloServer(typeDefs, resolvers) {
     resolvers,
     csrfPrevention: true,
     cache: 'bounded',
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
 
   // More required logic for integrating with Express
@@ -243,6 +255,9 @@ async function startApolloServer(typeDefs, resolvers) {
     resolvers,
     csrfPrevention: true,
     cache: 'bounded',
+    plugins: [
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
   const { url } = await server.listen();
   console.log(`🚀 Server ready at ${url}`);
@@ -271,7 +286,10 @@ npm install apollo-server-express apollo-server-core express graphql
 
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-express';
-import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
+import {
+  ApolloServerPluginDrainHttpServer,
+  ApolloServerPluginLandingPageLocalDefault,
+} from 'apollo-server-core';
 import express from 'express';
 import http from 'http';
 
@@ -283,7 +301,10 @@ async function startApolloServer(typeDefs, resolvers) {
     resolvers,
     csrfPrevention: true,
     cache: 'bounded',
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
   await server.start();
   server.applyMiddleware({ app });
@@ -320,7 +341,10 @@ npm install apollo-server-fastify apollo-server-core fastify graphql
 
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-fastify';
-import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
+import {
+  ApolloServerPluginDrainHttpServer,
+  ApolloServerPluginLandingPageLocalDefault,
+} from 'apollo-server-core';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import fastify, { FastifyInstance } from 'fastify';
 
@@ -346,6 +370,7 @@ async function startApolloServer(typeDefs, resolvers) {
     plugins: [
       fastifyAppClosePlugin(app),
       ApolloServerPluginDrainHttpServer({ httpServer: app.server }),
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
     ],
   });
 
@@ -386,6 +411,9 @@ import {
   ApolloServer,
   ApolloServerPluginStopHapiServer
 } from 'apollo-server-hapi';
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+} from 'apollo-server-core';
 import Hapi from '@hapi/hapi';
 
 async function startApolloServer(typeDefs, resolvers) {
@@ -395,7 +423,10 @@ async function startApolloServer(typeDefs, resolvers) {
     resolvers,
     csrfPrevention: true,
     cache: 'bounded',
-    plugins: [ApolloServerPluginStopHapiServer({ hapiServer: app })],
+    plugins: [
+      ApolloServerPluginStopHapiServer({ hapiServer: app }),
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
 
   await server.start();
@@ -431,7 +462,10 @@ npm install apollo-server-koa apollo-server-core koa graphql
 
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-koa';
-import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
+import {
+  ApolloServerPluginDrainHttpServer,
+  ApolloServerPluginLandingPageLocalDefault,
+} from 'apollo-server-core';
 import Koa from 'koa';
 import http from 'http';
 
@@ -442,7 +476,10 @@ async function startApolloServer(typeDefs, resolvers) {
     resolvers,
     csrfPrevention: true,
     cache: 'bounded',
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
 
   await server.start();
@@ -484,12 +521,16 @@ npm install apollo-server-micro micro graphql
 
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-micro';
+import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 module.exports = server.start().then(() => server.createHandler());
@@ -526,12 +567,16 @@ npm install apollo-server-lambda graphql
 
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-lambda';
+import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 exports.handler = server.createHandler();
@@ -557,12 +602,16 @@ npm install apollo-server-cloud-functions graphql
 
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-cloud-functions';
+import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 exports.handler = server.createHandler();
@@ -587,12 +636,16 @@ npm install apollo-server-azure-functions graphql
 
 ```ts title="index.ts"
 import { ApolloServer } from 'apollo-server-azure-functions';
+import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 exports.handler = server.createHandler();

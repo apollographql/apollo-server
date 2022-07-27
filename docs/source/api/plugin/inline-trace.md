@@ -15,7 +15,10 @@ If you want to configure this plugin (or if you want to use it in a graph that i
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginInlineTrace } from "apollo-server-core";
+import {
+  ApolloServerPluginInlineTrace,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
@@ -26,6 +29,7 @@ const server = new ApolloServer({
     ApolloServerPluginInlineTrace({
       rewriteError: (err) => err.message.match(SENSITIVE_REGEX) ? null : err,
     }),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
@@ -34,14 +38,20 @@ If you don't want to use the inline trace plugin even though your schema defines
 
 ```js
 import { ApolloServer } from "apollo-server";
-import { ApolloServerPluginInlineTraceDisabled } from "apollo-server-core";
+import {
+  ApolloServerPluginInlineTraceDisabled,
+  ApolloServerPluginLandingPageLocalDefault,
+} from "apollo-server-core";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
   cache: "bounded",
-  plugins: [ApolloServerPluginInlineTraceDisabled()],
+  plugins: [
+    ApolloServerPluginInlineTraceDisabled(),
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 ```
 

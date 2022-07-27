@@ -223,7 +223,7 @@ const server = new ApolloServer({
       async serverWillStart() {
         console.log('Server starting up!');
       },
-    }
+    },
   ],
 })
 ```
