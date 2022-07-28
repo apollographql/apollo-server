@@ -110,11 +110,11 @@ A request handler has 4 main responsibilities:
 
 #### Parse the request
 
-Apollo Server responds to a variety of requests, such as HTTP requests (i.e., `GET` and `POST`), APQs, and landing page requests (e.g., Apollo Sandbox). Fortunately, this is all part of Apollo Server's core logic, and it isn't something integration authors need to worry about.
+Apollo Server responds to a variety of requests via both `GET` and `POST` such as standard GraphQL queries, APQs, and landing page requests (e.g., Apollo Sandbox). Fortunately, this is all part of Apollo Server's core logic, and it isn't something integration authors need to worry about.
 
 Integrations _are_ responsible for parsing a request's body and using the values to construct the `HTTPGraphQLRequest` that Apollo Server expects.
 
-In Apollo Ever 4's Express integration, a user sets up the `body-parser` JSON middleware, which handles parsing JSON request bodies with a `content-type` of `application/json`. Integrations can require a similar middleware (or plugin) for their ecosystem, or they can handle body parsing themselves.
+In Apollo Server 4's Express integration, a user sets up the `body-parser` JSON middleware, which handles parsing JSON request bodies with a `content-type` of `application/json`. Integrations can require a similar middleware (or plugin) for their ecosystem, or they can handle body parsing themselves.
 
 For example, a correctly parsed body should have a shape resembling this:
 
@@ -129,9 +129,9 @@ For example, a correctly parsed body should have a shape resembling this:
 
 Your integration should pass along whatever it parses to Apollo Server; Apollo Server will handle validating the parsed request.
 
-Apollo Server also accepts GraphQL queries [sent using `POST` or `GET` requests](/apollo-server/v3/requests) with query string parameters. Apollo Server expects a raw query string for these types of HTTP requests.
+Apollo Server also accepts GraphQL queries [sent using `GET`](/apollo-server/v3/requests) with query string parameters. Apollo Server expects a raw query string for these types of HTTP requests. Apollo Server is indifferent to whether or not the `?` is included at the beginning of your query string. Fragments (starting with `#`) at the end of a URL should not be included.
 
-Apollo Ever 4's Express integration computes the query string using the request's full URL, like so:
+Apollo Server 4's Express integration computes the query string using the request's full URL, like so:
 ```ts
 import { parse } from 'url';
 
@@ -153,7 +153,7 @@ interface HTTPGraphQLRequest {
 
 Apollo Server handles the logic of extracting the HTTP method (i.e., `GET` vs. `POST`), relevant headers, and it knows whether to check the `body` or `search` fields for the GraphQL-specific parts of a query. So, Apollo Server handles your `method`, `body`, and `search` properties for the `HTTPGraphQLRequest`.
 
-Finally, Apollo Server expects the `headers` property to return a `Map` of headers.
+Finally, Apollo Server expects the `headers` property to be a `Map` of headers.
 
 In the Express integration, we construct a `Map` by iterating over the `headers` object, like so:
 
@@ -232,7 +232,7 @@ type HTTPGraphQLResponse = HTTPGraphQLHead &
 ```
 
 The Express implementation uses the `res` object to update the response
-with the appropriate status code and headers, and it sends the body:
+with the appropriate status code and headers, and finally sends the body:
 
 ```ts
 for (const [key, value] of httpGraphQLResponse.headers) {
