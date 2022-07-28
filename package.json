@@ -46,9 +46,9 @@
     "@changesets/cli": "2.24.1",
     "@graphql-codegen/cli": "2.11.0",
     "@graphql-codegen/typescript-operations": "2.5.2",
-    "@graphql-tools/mock": "8.7.0",
-    "@graphql-tools/schema": "8.5.0",
-    "@graphql-tools/utils": "8.8.0",
+    "@graphql-tools/mock": "8.7.1",
+    "@graphql-tools/schema": "8.5.1",
+    "@graphql-tools/utils": "8.9.0",
     "@josephg/resolvable": "1.0.1",
     "@rollup/plugin-commonjs": "22.0.1",
     "@types/async-retry": "1.4.4",
@@ -113,6 +113,6 @@
   },
   "volta": {
     "node": "16.16.0",
-    "npm": "8.15.0"
+    "npm": "8.15.1"
   }
 }
