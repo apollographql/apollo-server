@@ -158,7 +158,7 @@ Apollo Server handles the logic of `GET` vs. `POST`, relevant headers, and
 whether to look in `body` or `search` for the GraphQL-specific parts of the
 query. So, we have our `method`, `body`, and `search` properties for the `HTTPGraphQLRequest`.
 
-Finally, we have to create the `headers` property because Apollo Server expects `headers` to return a `Map`.
+Finally, we have to create the `headers` property because Apollo Server expects `headers` to be a `Map`.
 
 In the Express integration, we construct a `Map` by iterating over the `headers` object, like so:
 
