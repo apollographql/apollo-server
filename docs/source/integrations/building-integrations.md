@@ -17,6 +17,9 @@ Server in their web framework of choice.
 The primary responsibility of an Apollo Server integration is to translate
 requests and responses between a web framework's native format to the format used by `ApolloServer`. This article conceptually covers how to build an integration, using the [Express integration](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/src/express4/index.ts) (i.e.,`expressMiddleware`) as an example.
 
+<!-- (AS4) TODO replace link once on main -->
+> For more examples, see these Apollo Server 4 [integrations demos for both Fastify and Lambda](https://github.com/apollographql/server-v4-integration-demos/tree/main/packages).
+
 ### Main function signature
 
 Let's start by looking at the main function signature. The below snippet uses
@@ -151,9 +154,11 @@ interface HTTPGraphQLRequest {
 }
 ```
 
-Apollo Server handles the logic of extracting the HTTP method (i.e., `GET` vs. `POST`), relevant headers, and it knows whether to check the `body` or `search` fields for the GraphQL-specific parts of a query. So, Apollo Server handles your `method`, `body`, and `search` properties for the `HTTPGraphQLRequest`.
+Apollo Server handles the logic of `GET` vs `POST`, relevant headers, and
+whether to look in `body` or `search` for the GraphQL-specific parts of the
+query. So, we have our `method`, `body`, and `search` properties for the `HTTPGraphQLRequest`.
 
-Finally, Apollo Server expects the `headers` property to return a `Map` of headers.
+The only thing left to do is to handle `headers`, because Apollo Server expects the `headers` property to return a `Map` of headers.
 
 In the Express integration, we construct a `Map` by iterating over the `headers` object, like so:
 
