@@ -4,7 +4,7 @@ title: Migrating to Apollo Server 4 (Alpha)
 
 > ⚠️ **Apollo Server 4 is currently in public alpha.** It is not yet feature-complete, and breaking changes might occur between this release and general availability. [Learn about release stages.](/resources/release-stages/#open-source-release-stages)
 >
-> This alpha primarily aims to enable community members to develop integrations between Apollo Server and their favorite web frameworks. Many Apollo Server 3 users **can't upgrade** to this alpha yet. For example, this alpha removes multiple web framework integrations and doesn't support using `RESTDataSource` or hosting an Apollo Gateway.
+> This alpha primarily aims to enable community members to develop integrations between Apollo Server and their favorite web frameworks. Many Apollo Server 3 users **can't upgrade** to this alpha yet. For example, this alpha [removes multiple web framework integrations](#removed-integrations) and doesn't support using [`RESTDataSource`](#datasources) or hosting an [Apollo Gateway](#apollogateway).
 >
 > We are working on updating our documentation to reflect the changes introduced in Apollo Server 4. This article explains which features _do_ require code changes and how to make them.
 
@@ -20,9 +20,9 @@ During Apollo Server 4's alpha, we are actively looking to gather feedback and [
 
 ## The new `@apollo/server` package
 
-Apollo Server 3 is distributed as a [fixed set of packages](/apollo-server/integrations/middleware) for integrating with different web frameworks and environments.  The main "batteries-included" [`apollo-server` package](/apollo-server/integrations/middleware#apollo-server) reduces setup time by providing a minimally customizable GraphQL server.
+Apollo Server 3 is distributed as a [fixed set of packages](/apollo-server/integrations/middleware) for integrating with different web frameworks and environments. The main "batteries-included" [`apollo-server` package](/apollo-server/integrations/middleware#apollo-server) reduces setup time by providing a minimally customizable GraphQL server.
 
-In Apollo Server 3, the `apollo-server-core` package defines an `ApolloServer` "base" class, which each integration package (e.g., `apollo-server-express`,`apollo-server-lambda`, etc. ) exports as a subclass with the same name and a slightly different API.  This packaging structure means that new integration package releases are lockstep versioned to Apollo Server itself, making it challenging to support major versions of frameworks and add integration-specific changes. Additionally, Apollo Server 3 doesn't provide a way to add new integrations for additional frameworks.
+In Apollo Server 3, the `apollo-server-core` package defines an `ApolloServer` "base" class, which each integration package (e.g., `apollo-server-express`,`apollo-server-lambda`, etc. ) exports as a subclass with the same name and a slightly different API. This packaging structure means that new integration package releases are lockstep versioned to Apollo Server itself, making it challenging to support major versions of frameworks and add integration-specific changes. Additionally, Apollo Server 3 doesn't provide a way to add new integrations for additional frameworks.
 
 Apollo Server 4 takes a different approach to integrations. Apollo Server 4 has a stable web framework integration API, which includes explicit support for serverless framework life cycles.
 
@@ -122,7 +122,7 @@ The `startStandaloneServer` function accepts two arguments; the first is the ins
 
 | Name  | Description  |
 |---|---|
-| `context` | <p>An optional [`context` initialization function](#context-initialization-function). The `context` function receives `req` and `res` options; [see below for more details.](#context-initialization-function)</p><br/><p>In Apollo Server 3, you pass the `context` function to the constructor. In Apollo Server 4, you pass the `context` function to `startStandaloneServer`.</p> |
+| `context` | <p>An optional `context` initialization function. The `context` function receives `req` and `res` options; [see below for more details.](#context-initialization-function)</p><br/><p>In Apollo Server 3, you pass the `context` function to the constructor. In Apollo Server 4, you pass the `context` function to `startStandaloneServer`.</p> |
 | `listen` |  <p>An optional `listen` configuration option. The `listen` option accepts an object with the same properties as the [`net.Server.listen` options object](https://nodejs.org/api/net.html#serverlistenoptions-callback). </p><br /><p>For example, in Apollo Server 3, if you used `server.listen(4321)`, you'll now pass `listen: { port: 4321 }` to the `startStandaloneServer` function in Apollo Server 4. If you didn't pass any arguments to Apollo Server 3's `server.listen()` method; you don't need to specify this `listen` option.</p> |
 
 The `startStandaloneServer` function doesn't enable you to configure your server's CORS behavior. If you previously used the `cors` constructor option to customize your CORS settings in Apollo Server 3, use the [`expressMiddleware` function](#migrate-from-apollo-server-express) in Apollo Server 4.
