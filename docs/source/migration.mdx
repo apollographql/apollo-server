@@ -968,9 +968,9 @@ In the [`expressMiddleware`](#migrating-from-apollo-server-express) function, th
 
 ### `executeOperation` accepts context value
 
-The [`server.executeOperation`](/apollo-server/api/apollo-server/#executeoperation) method enables you to execute GraphQL operations by specifying an operation's text directly instead of doing so via an HTTP request. This is especially helpful for testing.
+The [`server.executeOperation`](/apollo-server/api/apollo-server/#executeoperation) method enables you to execute GraphQL operations by specifying an operation's text directly instead of doing so via an HTTP request. The `executeOperation` method is useful for [testing your server](/apollo-server/testing/testing).
 
-In Apollo Server 3, you specify an operation's context value indirectly by passing a second optional argument to `executeOperation `, which is then passed to your `ApolloServer` instance's `context` function. For example, if you're using `apollo-server-express`, you can construct an Express request and response and then pass them to `executeOperation` as a `{ req, res }` object.
+In Apollo Server 3, you can indirectly specify the operation's context value by passing a second optional argument to `executeOperation`; `ApolloServer` passes this argument to its `context` function. For example, if you're using `apollo-server-express`, you can construct an Express request and response and then pass them to `executeOperation` as a `{ req, res }` object.
 
 In Apollo Server 4, the `executeOperation` method optionally receives a context value directly, bypassing your `context` function. If you want to test the behavior of your `context` function, we recommend running actual HTTP requests against your server.
 
