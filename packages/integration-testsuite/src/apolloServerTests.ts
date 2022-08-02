@@ -2724,13 +2724,22 @@ export function defineIntegrationTestSuiteApolloServerTests(
         expect(invalidRequestErrors).toHaveLength(0);
       }
 
-      function blocked(res: Response) {
-        expect(res.status).toBe(400);
-        expect(res.text).toMatch(/This operation has been blocked/);
-        expect(invalidRequestErrors).toHaveLength(1);
-        expect(invalidRequestErrors.pop()?.message).toMatch(
-          /This operation has been blocked/,
-        );
+      // When Apollo Server itself blocks a request, it returns status code 400
+      // with a particular message. With some web frameworks, a request without
+      // a parsable Content-Type will make it to our middleware and get blocked
+      // by us; with other frameworks (eg Fastify) the framework itself will
+      // block it earlier in some cases. This function is thus relaxed for the
+      // one particular case where Fastify returns a 415 earlier; we can relax
+      // it further if other integrations need it.
+      function blocked(res: Response, statusCodes = [400]) {
+        expect(statusCodes).toContain(res.status);
+        if (res.status === 400) {
+          expect(res.text).toMatch(/This operation has been blocked/);
+          expect(invalidRequestErrors).toHaveLength(1);
+          expect(invalidRequestErrors.pop()?.message).toMatch(
+            /This operation has been blocked/,
+          );
+        }
       }
 
       it('default', async () => {
@@ -2745,7 +2754,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
         );
 
         // POST without content-type is blocked.
-        blocked(await request(url).post('/').send(JSON.stringify(operation)));
+        blocked(
+          await request(url).post('/').send(JSON.stringify(operation)),
+          [400, 415],
+        );
 
         // POST with text/plain is blocked.
         blocked(
