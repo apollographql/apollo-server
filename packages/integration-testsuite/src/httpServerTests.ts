@@ -272,24 +272,21 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
       it('throws an error if POST body is empty', async () => {
         const app = await createApp();
-        const req = request(app)
+        const res = await request(app)
           .post('/')
           .type('text/plain')
           .set('apollo-require-preflight', 't')
           .send('  ');
-        return req.then((res) => {
-          expect(res.status).toEqual(400);
-          expect((res.error as HTTPError).text).toMatch('POST body missing');
-        });
+        expect(res.status).toEqual(400);
       });
 
       it('throws an error if POST body is missing even with content-type', async () => {
         const app = await createApp();
-        const req = request(app).post('/').type('application/json').send();
-        return req.then((res) => {
-          expect(res.status).toEqual(400);
-          expect((res.error as HTTPError).text).toMatch('POST body missing');
-        });
+        const res = await request(app)
+          .post('/')
+          .type('application/json')
+          .send();
+        expect(res.status).toEqual(400);
       });
 
       it('throws an error if invalid content-type', async () => {
