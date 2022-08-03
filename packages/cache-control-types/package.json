@@ -1,0 +1,22 @@
+{
+  "name": "@apollo/cache-control-types",
+  "version": "0.0.0",
+  "description": "TypeScript types for Apollo Server info.cacheControl",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apollographql/apollo-utils.git",
+    "directory": "packages/cache-control-types/"
+  },
+  "keywords": [
+    "apollo",
+    "graphql",
+    "typescript",
+    "node"
+  ],
+  "author": "Apollo <packages@apollographql.com>",
+  "license": "MIT",
+  "peerDependencies": {
+    "graphql": "14.x || 15.x || 16.x"
+  }
+}
