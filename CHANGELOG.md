@@ -10,7 +10,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
-- _Nothing yet! Stay tuned._
+- Fix the TypeScript declaration of the `fieldLevelInstrumentation` option to `ApolloServerPluginUsageReporting` to show that the function may return a number in addition to a boolean. This now matches the implementation and docs. [PR #6763](https://github.com/apollographql/apollo-server/pull/6763)
 
 ## v3.10.0
 

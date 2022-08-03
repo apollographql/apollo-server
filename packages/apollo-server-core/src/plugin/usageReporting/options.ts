@@ -120,7 +120,7 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
     | number
     | ((
         request: GraphQLRequestContextDidResolveOperation<TContext>,
-      ) => Promise<boolean>);
+      ) => Promise<number | boolean>);
 
   /**
    * This option allows you to choose if a particular request should be
