@@ -248,7 +248,7 @@ To define what Apollo Server does when it encounters your directive, you can cre
 
 For example, here's a possible transformer function for the default `@deprecated` directive:
 
-```js title="directives.js"
+```ts title="directives.ts"
 import { mapSchema, getDirective, MapperKind } from '@graphql-tools/utils';
 
 function deprecatedDirectiveTransformer(schema, directiveName) {
@@ -292,7 +292,9 @@ This example defines an `@uppercase` directive for this purpose:
 
 <ExpansionPanel title="Click to expand">
 
-```js title="index.js"
+<MultiCodeBlock>
+
+```ts title="index.ts"
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { makeExecutableSchema } from '@graphql-tools/schema';
@@ -366,6 +368,8 @@ const { url } = await startStandaloneServer(server, { listen: { port: 4000 } });
 
 console.log(`🚀 Server listening at: ${url}`);
 ```
+
+</MultiCodeBlock>
 
 </ExpansionPanel>
 

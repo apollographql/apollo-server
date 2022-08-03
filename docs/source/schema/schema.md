@@ -37,7 +37,7 @@ _Most_ of the schema types you define have one or more **fields**:
 ```graphql
 # This Book type has two fields: title and author
 type Book {
-  title: String  # returns a String
+  title: String # returns a String
   author: Author # returns an Author
 }
 ```
@@ -78,22 +78,21 @@ type Author {
 }
 ```
 
-* If `!` appears _inside_ the square brackets, the returned list can't include _items_ that are `null`.
-* If `!` appears _outside_ the square brackets, _the list itself_ can't be `null`.
-* In _any_ case, it's valid for a list field to return an _empty_ list.
-
+- If `!` appears _inside_ the square brackets, the returned list can't include _items_ that are `null`.
+- If `!` appears _outside_ the square brackets, _the list itself_ can't be `null`.
+- In _any_ case, it's valid for a list field to return an _empty_ list.
 
 ## Supported types
 
 Every type definition in a GraphQL schema belongs to one of the following categories:
 
-* [Scalar](#scalar-types)
-* [Object](#object-types)
-  * This includes the three special **root operation types**: [`Query`](#the-query-type), [`Mutation`](#the-mutation-type), and [`Subscription`](#the-subscription-type).
-* [Input](#input-types)
-* [Enum](#enum-types)
-* [Union](#union-and-interface-types)
-* [Interface](#union-and-interface-types)
+- [Scalar](#scalar-types)
+- [Object](#object-types)
+  - This includes the three special **root operation types**: [`Query`](#the-query-type), [`Mutation`](#the-mutation-type), and [`Subscription`](#the-subscription-type).
+- [Input](#input-types)
+- [Enum](#enum-types)
+- [Union](#union-and-interface-types)
+- [Interface](#union-and-interface-types)
 
 Each of these is described below.
 
@@ -103,11 +102,11 @@ Scalar types are similar to primitive types in your favorite programming languag
 
 GraphQL's default scalar types are:
 
-* `Int`: A signed 32‐bit integer
-* `Float`: A signed double-precision floating-point value
-* `String`: A UTF‐8 character sequence
-* `Boolean`: `true` or `false`
-* `ID` (serialized as a `String`): A unique identifier that's often used to refetch an object or as the key for a cache. Although it's serialized as a `String`, an `ID`  is not intended to be human‐readable.
+- `Int`: A signed 32‐bit integer
+- `Float`: A signed double-precision floating-point value
+- `String`: A UTF‐8 character sequence
+- `Boolean`: `true` or `false`
+- `ID` (serialized as a `String`): A unique identifier that's often used to refetch an object or as the key for a cache. Although it's serialized as a `String`, an `ID` is not intended to be human‐readable.
 
 These primitive types cover the majority of use cases. For more specific use cases, you can create [custom scalar types](./custom-scalars/).
 
@@ -369,20 +368,20 @@ Sometimes, a backend forces a different value for an enum internally than in the
 
 The following example uses color hex codes for each `AllowedColor`'s internal value:
 
-```js
+```ts
 const resolvers = {
   AllowedColor: {
     RED: '#f00',
     GREEN: '#0f0',
     BLUE: '#00f',
-  }
+  },
   // ...other resolver definitions...
 };
 ```
 
 These internal values don't change the public API at all. Apollo Server resolvers accept these values instead of the schema values, as shown:
 
-```js
+```ts
 const resolvers = {
   AllowedColor: {
     RED: '#f00',
@@ -394,7 +393,7 @@ const resolvers = {
     avatar: (parent, args) => {
       // args.borderColor is '#f00', '#0f0', or '#00f'
     },
-  }
+  },
 };
 ```
 
@@ -408,10 +407,10 @@ As your organization grows and evolves, your graph grows and evolves with it. Ne
 
 Most _additive_ changes to a schema are safe and backward compatible. However, changes that remove or alter _existing_ behavior might be _breaking_ changes for one or more of your existing clients. All of the following schema changes are potentially breaking changes:
 
-* Removing a type or field
-* Renaming a type or field
-* Adding [nullability](#field-nullability) to a field
-* Removing a field's arguments
+- Removing a type or field
+- Renaming a type or field
+- Adding [nullability](#field-nullability) to a field
+- Removing a field's arguments
 
 A graph management tool such as [Apollo Studio](https://studio.apollographql.com/) helps you understand whether a potential schema change will impact any of your active clients. Studio also provides field-level performance metrics, schema history tracking, and advanced security via operation safelisting.
 
@@ -443,10 +442,10 @@ A well documented schema helps provide an enhanced development experience, becau
 
 The GraphQL specification is flexible and doesn't impose specific naming guidelines. However, it's helpful to establish a set of conventions to ensure consistency across your organization. We recommend the following:
 
-* **Field names** should use `camelCase`. Many GraphQL clients are written in JavaScript, Java, Kotlin, or Swift, all of which recommend `camelCase` for variable names.
-* **Type names** should use `PascalCase`. This matches how classes are defined in the languages mentioned above.
-* **Enum names** should use `PascalCase`.
-* **Enum values** should use `ALL_CAPS`, because they are similar to constants.
+- **Field names** should use `camelCase`. Many GraphQL clients are written in JavaScript, Java, Kotlin, or Swift, all of which recommend `camelCase` for variable names.
+- **Type names** should use `PascalCase`. This matches how classes are defined in the languages mentioned above.
+- **Enum names** should use `PascalCase`.
+- **Enum values** should use `ALL_CAPS`, because they are similar to constants.
 
 These conventions help ensure that most clients don't need to define extra logic to transform the results returned by your server.
 
@@ -527,7 +526,7 @@ A client could then execute a mutation against the schema with the following str
 
 ```graphql
 mutation updateMyUser {
-  updateUserEmail(id: 1, email: "jane@example.com"){
+  updateUserEmail(id: 1, email: "jane@example.com") {
     id
     name
     email
@@ -601,10 +600,10 @@ Our `updateUserEmail` mutation would specify `UpdateUserEmailMutationResponse` a
 
 Let’s break this down field by field:
 
-* `code` is a string that represents the status of the data transfer. Think of it like an HTTP status code.
-* `success` is a boolean that indicates whether the mutation was successful. This allows a coarse check by the client to know if there were failures.
-* `message` is a human-readable string that describes the result of the mutation. It is intended to be used in the UI of the product.
-* `user` is added by the implementing type `UpdateUserEmailMutationResponse` to return the newly updated user to the client.
+- `code` is a string that represents the status of the data transfer. Think of it like an HTTP status code.
+- `success` is a boolean that indicates whether the mutation was successful. This allows a coarse check by the client to know if there were failures.
+- `message` is a human-readable string that describes the result of the mutation. It is intended to be used in the UI of the product.
+- `user` is added by the implementing type `UpdateUserEmailMutationResponse` to return the newly updated user to the client.
 
 If a mutation modifies _multiple_ types (like our earlier example of "liking" a blog post), its implementing type can include a separate field for each type that's modified:
 
