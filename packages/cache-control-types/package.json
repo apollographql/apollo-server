@@ -1,6 +1,6 @@
 {
   "name": "@apollo/cache-control-types",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "TypeScript types for Apollo Server info.cacheControl",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

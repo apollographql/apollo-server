@@ -1,5 +1,11 @@
 # @apollo/cache-control-types
 
+## 1.0.2
+
+### Patch Changes
+
+- [#173](https://github.com/apollographql/apollo-utils/pull/173) [`b231e5d`](https://github.com/apollographql/apollo-utils/commit/b231e5d57d4598661f22cb7338ecd2fff0222b54) Thanks [@glasser](https://github.com/glasser)! - Fix build when combined with the old `declare module`
+
 ## 1.0.1
 
 ### Patch Changes
