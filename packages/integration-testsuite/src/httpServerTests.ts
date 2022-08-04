@@ -47,6 +47,10 @@ import {
 } from '@jest/globals';
 import type { Mock, SpyInstance } from 'jest-mock';
 import { cacheControlFromInfo } from '@apollo/cache-control-types';
+import {
+  ApolloServerErrorCode,
+  unwrapResolverError,
+} from '@apollo/server/errors';
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
@@ -174,11 +178,20 @@ const queryType = new GraphQLObjectType({
     testError: {
       type: GraphQLString,
       resolve() {
-        throw new Error('Secret error message');
+        throw new MyError('Secret error message');
+      },
+    },
+    testGraphQLError: {
+      type: GraphQLString,
+      resolve() {
+        throw new MyGraphQLError('Secret error message');
       },
     },
   },
 });
+
+class MyError extends Error {}
+class MyGraphQLError extends GraphQLError {}
 
 const mutationType = new GraphQLObjectType({
   name: 'MutationType',
@@ -1401,23 +1414,96 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
 
-      it('formatError receives error that passes instanceof checks', async () => {
+      it('formatError receives error that can be unwrapped to pass instanceof checks', async () => {
         const expected = '--blank--';
+        let error: unknown;
         const app = await createApp({
           schema,
-          formatError: (_, error) => {
-            expect(error instanceof Error).toBe(true);
-            expect(error instanceof GraphQLError).toBe(true);
+          formatError: (_, e) => {
+            error = e;
             return { message: expected };
           },
         });
-        const req = request(app).post('/').send({
+        const res = await request(app).post('/').send({
           query: 'query test{ testError }',
         });
-        return req.then((res) => {
-          expect(res.status).toEqual(200);
-          expect(res.body.errors[0].message).toEqual(expected);
+        expect(res.status).toEqual(200);
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "data": Object {
+              "testError": null,
+            },
+            "errors": Array [
+              Object {
+                "message": "--blank--",
+              },
+            ],
+          }
+        `);
+        expect(error).toBeInstanceOf(GraphQLError);
+        expect(error).toHaveProperty('path');
+        expect(unwrapResolverError(error)).toBeInstanceOf(MyError);
+      });
+
+      it('formatError receives error that passes instanceof checks when GraphQLError', async () => {
+        const expected = '--blank--';
+        let error: unknown;
+        const app = await createApp({
+          schema,
+          formatError: (_, e) => {
+            error = e;
+            return { message: expected };
+          },
         });
+        const res = await request(app).post('/').send({
+          query: 'query test{ testGraphQLError }',
+        });
+        expect(res.status).toEqual(200);
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "data": Object {
+              "testGraphQLError": null,
+            },
+            "errors": Array [
+              Object {
+                "message": "--blank--",
+              },
+            ],
+          }
+        `);
+        expect(error).toBeInstanceOf(GraphQLError);
+        // This is the locatedError so it's not our error.
+        expect(error).not.toBeInstanceOf(MyGraphQLError);
+        expect(error).toHaveProperty('path');
+        expect(unwrapResolverError(error)).toBeInstanceOf(MyGraphQLError);
+      });
+
+      it('formatError receives correct error for parse failure', async () => {
+        const expected = '--blank--';
+        let gotCorrectCode = false;
+        const app = await createApp({
+          schema,
+          formatError: (_, error) => {
+            gotCorrectCode =
+              (error as any).extensions.code ===
+              ApolloServerErrorCode.GRAPHQL_PARSE_FAILED;
+            return { message: expected };
+          },
+        });
+        const res = await request(app).post('/').send({
+          query: '}',
+        });
+        expect(res.status).toEqual(400);
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "errors": Array [
+              Object {
+                "message": "--blank--",
+              },
+            ],
+          }
+        `);
+        expect(gotCorrectCode).toBe(true);
       });
 
       it('allows for custom error formatting to sanitize', async () => {

@@ -150,7 +150,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   rootValue?: ((parsedQuery: DocumentNode) => any) | any;
   validationRules: Array<(context: ValidationContext) => any>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
-  includeStackTracesInErrorResponses: boolean;
+  includeStacktraceInErrorResponses: boolean;
   persistedQueries?: WithRequired<PersistedQueryOptions, 'cache'>;
   nodeEnv: string;
   allowBatchedHttpRequests: boolean;
@@ -285,8 +285,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         ...(introspectionEnabled ? [] : [NoIntrospection]),
       ],
       fieldResolver: config.fieldResolver,
-      includeStackTracesInErrorResponses:
-        config.includeStackTracesInErrorResponses ??
+      includeStacktraceInErrorResponses:
+        config.includeStacktraceInErrorResponses ??
         (nodeEnv !== 'production' && nodeEnv !== 'test'),
       persistedQueries:
         config.persistedQueries === false
@@ -1058,8 +1058,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       ]),
       completeBody: prettyJSONStringify({
         errors: normalizeAndFormatErrors([error], {
-          includeStackTracesInErrorResponses:
-            this.internals.includeStackTracesInErrorResponses,
+          includeStacktraceInErrorResponses:
+            this.internals.includeStacktraceInErrorResponses,
           formatError: this.internals.formatError,
         }),
       }),

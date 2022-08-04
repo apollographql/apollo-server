@@ -166,10 +166,10 @@ The `startStandaloneServer` function accepts two arguments; the first is the ins
 <td>
 
   An optional `listen` configuration option. The `listen` option accepts an object with the same properties as the [`net.Server.listen` options object](https://nodejs.org/api/net.html#serverlistenoptions-callback).
-  
+
   For example, in Apollo Server 3, if you used `server.listen(4321)`, you'll now pass `listen: { port: 4321 }` to the `startStandaloneServer` function in Apollo Server 4. If you didn't pass any arguments to Apollo Server 3's `server.listen()` method; you don't need to specify this `listen` option.
 </td>
-  
+
 </tr>
 
 </tbody>
@@ -654,15 +654,15 @@ In Apollo Server 3, the `debug` constructor option (which defaults to `true` unl
    - Apollo Server 3 rarely sends messages at the `DEBUG` level, so this primarily affects plugins that use the provided `logger` to send `DEBUG` messages.
 - The `debug` flag is also available to plugins on `GraphQLRequestContext` to use as they wish.
 
-Apollo Server 4 removes the `debug` constructor option. In its place is a new `includeStackTracesInErrorResponses` option which controls its namesake feature. Like `debug`, this option defaults to `true` unless the `NODE_ENV` environment variable is either `production` or `test`.
+Apollo Server 4 removes the `debug` constructor option. In its place is a new `includeStacktraceInErrorResponses` option which controls its namesake feature. Like `debug`, this option defaults to `true` unless the `NODE_ENV` environment variable is either `production` or `test`.
 
-If you use `debug` in Apollo Server 3, you can use `includeStackTracesInErrorResponses` with the same value in Apollo Server 4:
+If you use `debug` in Apollo Server 3, you can use `includeStacktraceInErrorResponses` with the same value in Apollo Server 4:
 
 ```ts
 const apolloServerInstance = new ApolloServer<MyContext>({
   typeDefs,
   resolvers,
-  includeStackTracesInErrorResponses: true,
+  includeStacktraceInErrorResponses: true,
 });
 ```
 
@@ -678,6 +678,8 @@ const server = new ApolloServer({
   // ...
 });
 ```
+
+(Note that the stack traces themselves have moved from `extensions.exception.stacktrace` to `extensions.stacktrace`.)
 
 ### `formatResponse` hook
 
@@ -1082,7 +1084,9 @@ expect(result.data?.hello).toBe('Hello world!'); // -> true
 
 </MultiCodeBlock>
 
-### `formatError` hook improvements
+### Error formatting changes
+
+#### `formatError` improvements
 
 Apollo Server 3 supports the `formatError` hook, which has the following signature:
 
@@ -1100,12 +1104,17 @@ In Apollo Server 4, this becomes:
 
 Above, `formattedError` is the default JSON object sent in the response according to the [GraphQL specification](https://spec.graphql.org/draft/#sec-Errors), and `error` is the originally thrown error. If you need a field from the original error that isn't in `GraphQLFormattedError`, you can access that value from the `error` argument.
 
+One caveat: if the error was thrown inside a resolver, `error` is not the error your resolver code threw; it is a `GraphQLError` wrapping it and adding helpful context such as the `path` in the operation to the resolver's field. If you want the exact error you threw, Apollo Server 4 provides the `unwrapResolverError` function in `@apollo/server/errors`, which removes this outer layer if you pass it a resolver error (and returns its argument otherwise).
+
 So, you can format errors like this:
 
 ```ts
+import { unwrapResolverError } from '@apollo/server/errors';
+
+new ApolloServer({
   formatError: (formattedError, error) => {
     // Don't give the specific errors to the client.
-    if (error instanceof CustomDBError) {
+    if (unwrapResolverError(error) instanceof CustomDBError) {
       return { message: 'Internal server error' };
     }
 
@@ -1122,7 +1131,91 @@ So, you can format errors like this:
     // be manipulated in other ways, as long as it's returned.
     return formattedError;
   },
+  // ...
+});
 ```
+
+#### `error.extensions.exception` is removed
+
+When Apollo Server 3 formats an error, it may add an extension called `exception`. This extension is an object with a field for every *enumerable* property of the originally thrown error. (This does not apply if the originally thrown error was already a `GraphQLError`.) In addition, [when in dev/debug mode](#debug), `exception` contains an array of strings called `stacktrace`.
+
+For example, if this code runs in a resolver:
+
+```js
+const e = new Error("hello");
+e.extraProperty = "bye";
+throw e;
+```
+
+then (in debug mode) Apollo Server 3 will format the error like this:
+
+```js
+{
+  "errors": [
+    {
+      "message": "hello",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": ["x"],
+      "extensions": {
+        "code": "INTERNAL_SERVER_ERROR",
+        "exception": {
+          "extraProperty": "bye",
+          "stacktrace": [
+            "Error: hello",
+            "    at Object.x (file:///private/tmp/as3-t/server.mjs:8:27)",
+            "    at field.resolve (/private/tmp/as3-t/node_modules/apollo-server-core/dist/utils/schemaInstrumentation.js:56:26)",
+            // more lines elided
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+It was often hard to predict exactly which properties of which errors would be publicly exposed in this manner, which could lead to surprising information leaks.
+
+In Apollo Server 4, there is no `exception` extension. The `stacktrace` is provided directly on `extensions`. If you'd like to copy some or all properties from the original error onto the formatted error, you can do that with the `formatError` hook.
+
+If you'd like your errors to be formatted like they are in Apollo Server 3 (with the stack trace and the enumerable properties of the original error on the `exception` extension), you can provide this `formatError` implementation:
+
+<MultiCodeBlock>
+
+```ts
+function formatError(
+  formattedError: GraphQLFormattedError,
+  error: unknown,
+) {
+  const originalError = unwrapResolverError(error);
+  const exception: Record<string, unknown> = {
+    ...(typeof originalError === 'object' ? originalError : null),
+  };
+  delete exception.extensions;
+  if (formattedError.extensions?.stacktrace) {
+    exception.stacktrace = formattedError.extensions.stacktrace;
+  }
+  const extensions: Record<string, unknown> = {
+    ...formattedError.extensions,
+    exception,
+  };
+  delete extensions.stacktrace;
+  return {
+    ...formattedError,
+    extensions,
+  };
+}
+```
+
+</MultiCodeBlock>
+
+Apollo Server 3.5.0 and newer included a TypeScript `declare module` declaration that teaches TypeScript that `error.extensions.exception.stacktrace` is an array of strings on *all* `GraphQLError` objects. Apollo Server 4 does not provide a replacement for this: that is, we do not tell TypeScript the type of `error.extensions.code` or `error.extensions.stacktrace`. (The Apollo Server 3 `declare module` declaration also incorrectly teaches TypeScript that `error.extensions.exception.code` is a string, which should have been `error.extensions.code` instead.)
+
+
 
 ### HTTP error handling changes
 
@@ -1390,7 +1483,7 @@ The `@apollo/utils.fetcher` package has a more precise name and only supports ar
 
 ### `@apollo/cache-control-types`
 
-In Apollo Server 3, you could import the `CacheScope`, `CacheHint`, `CacheAnnotation`, `CachePolicy`, and `ResolveInfoCacheControl` types from your chosen Apollo Server package. 
+In Apollo Server 3, you could import the `CacheScope`, `CacheHint`, `CacheAnnotation`, `CachePolicy`, and `ResolveInfoCacheControl` types from your chosen Apollo Server package.
 
 In Apollo Server 4,  the new `@apollo/cache-control-types` package exports the [`CacheScope`](#cachescope-type), `CacheHint`, `CacheAnnotation`, `CachePolicy`, and `ResolveInfoCacheControl` types. This enables libraries that work with multiple GraphQL servers (such as `@apollo/subgraph`) to refer to these types without depending on `@apollo/server`.
 
