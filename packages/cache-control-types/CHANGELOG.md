@@ -1,5 +1,11 @@
 # @apollo/cache-control-types
 
+## 1.0.1
+
+### Patch Changes
+
+- [#171](https://github.com/apollographql/apollo-utils/pull/171) [`e8d3a72`](https://github.com/apollographql/apollo-utils/commit/e8d3a72834b80930478d21e9bf1fa50d039c127a) Thanks [@glasser](https://github.com/glasser)! - Add missing "main" to package.json
+
 ## 1.0.0
 
 ### Major Changes
