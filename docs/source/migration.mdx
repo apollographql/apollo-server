@@ -1099,7 +1099,7 @@ export type CacheScope = 'PUBLIC' | 'PRIVATE';
 
 You can no longer type `CacheScope.Public` or `CacheScope.Private`. Instead, just use the string `'PUBLIC'` or `'PRIVATE'`. Values defined as `CacheScope` will only accept those two values, so any typos are still caught at compile time.
 
-`CacheScope` is now exported from the new `@apollo/cache-control-types` package rather than from an Apollo Server package directly. This enables libraries that work with multiple GraphQL servers (such as `@apollo/subgraph`) to refer to it without needing to depend on all of `@apollo/server`.
+You can now import `CacheScope` from the new `@apollo/cache-control-types` package (instead of importing it from an Apollo Server package). This enables libraries that work with multiple GraphQL servers (such as `@apollo/subgraph`) to refer to `CacheScope` without depending on `@apollo/server`.
 
 ## Plugin API changes
 
