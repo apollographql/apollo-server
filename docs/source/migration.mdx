@@ -196,7 +196,7 @@ This Apollo Server 3 code:
 <MultiCodeBlock>
 
 ```ts title="apollo-server-3.ts"
-// npm install apollo-server-express apollo-server-core express graphql http
+// npm install apollo-server-express apollo-server-core express graphql
 import { ApolloServer } from 'apollo-server-express';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import express from 'express';
@@ -230,7 +230,7 @@ looks like this in Apollo Server 4:
 <MultiCodeBlock>
 
 ```ts title="apollo-server-4.ts"
-// npm install @apollo/server express graphql cors body-parser http
+// npm install @apollo/server express graphql cors body-parser
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
@@ -329,7 +329,7 @@ with this Apollo Server 4 code:
 import { ApolloServerPluginUsageReporting } from '@apollo/server/plugin/usageReporting';
 ```
 
-You can also export each plugin's associated TypeScript types (e.g., `ApolloServerPluginUsageReportingOptions`) from the same deep import as that plugin.
+You can also import each plugin's associated TypeScript types (e.g., `ApolloServerPluginUsageReportingOptions`) from the same deep import as that plugin.
 
 Once you've updated your imports, you can remove your project's dependency on `apollo-server-core`.
 
@@ -724,7 +724,7 @@ new ApolloServer<MyContext>({
           async willSendResponse(requestContext) {
             const { response } = requestContext;
             // Augment response with an extension, as long
-            // as the operation is actually executed.
+            // as the operation actually executed.
             if ('data' in response.result) {
               response.result.extensions = {
                 ...(response.result.extensions),
@@ -797,7 +797,7 @@ The `apollo-server` package exports `gql`  as a named export, whereas the `gql` 
 
 ### `ApolloError`
 
-Apollo Server 4 removes both `ApolloError` and `toApolloError` in favor of  using `GraphQLError`.
+Apollo Server 4 removes both `ApolloError` and `toApolloError` in favor of using `GraphQLError`.
 
 The `graphql` package exports `GraphQLError`, and you can use it like so:
 ```ts
@@ -1170,7 +1170,7 @@ Most plugin API hooks take a `GraphQLRequestContext` object as their first argum
 
 The `context` field has been renamed `contextValue` for consistency with the `graphql-js` API and to help differentiate from the `context` option of integration functions (the *function* which returns a context value).
 
-Apollo Server 4 removes the  `logger` and `cache` fields from `GraphQLRequestContext`. These fields are now available as `public readonly` fields on the `ApolloServer` object.  The `GraphQLRequestContext` object now provides the `ApolloServer` object in a new field named `server`. This means you can replace `requestContext.logger` and `requestContext.cache` with `requestContext.server.logger` and `requestContext.server.cache` respectively.
+Apollo Server 4 removes the  `logger` and `cache` fields from `GraphQLRequestContext`. These fields are now available as `public readonly` fields on the `ApolloServer` object.  The `GraphQLRequestContext` object now provides the `ApolloServer` object in a new field named `server`. This means you should replace `requestContext.logger` and `requestContext.cache` with `requestContext.server.logger` and `requestContext.server.cache` respectively.
 
 Apollo Server 4 removes the `schemaHash` field from `GraphQLRequestContext`. This field is an unstable hash of a JSON encoding resulting from running a GraphQL introspection query against your schema. The `schemaHash` field is not guaranteed to change when the schema changes (e.g., it is not affected by changes to schema directive applications). If you want a schema hash, you can use `graphql-js`'s `printSchema` function on the `schema` field and then hash the output.
 
@@ -1183,13 +1183,13 @@ Apollo Server 4 makes several changes to the `GraphQLServerContext` object.
 
 Apollo Server 4 renames the TypeScript type for the argument to the `serverWillStart` plugin hook from  `GraphQLServiceContext` to `GraphQLServerContext`, for consistency with the hook name.
 
-Apollo Server 4  removes the `logger` field from the `GraphQLServerContext` object. This field is now available as a `public readonly` field on the `ApolloServer` object, which `GraphQLServerContext` provides via a new field named `server`. This means `serviceContext.logger` can be replaced with `serverContext.server.logger`.
+Apollo Server 4  removes the `logger` field from the `GraphQLServerContext` object. This field is now available as a `public readonly` field on the `ApolloServer` object, which `GraphQLServerContext` provides via a new field named `server`. This means `serviceContext.logger` should be replaced with `serverContext.server.logger`.
 
 Apollo Server 4 removes the `schemaHash` field (see the [previous section](#fields-on-graphqlrequestcontext) for details).
 
 Apollo Server 4 removes the `persistedQueries` field from `GraphQLServerContext`. We don't have a reason for providing this particular configuration to plugins, but if having this field is important for you, please file a GitHub issue.
 
-Apollo Server 4 removes the `serverlessFramework` field, with the new `startedInBackground` field providing essentially the same information. In Apollo Server 3,  the `serverlessFramework` field returns `true` if use a subclass of `ApolloServer` for a serverless framework. In Apollo Server 4, there are no subclasses, and the [new API](#new-approach-to-serverless-frameworks) handles startup errors in a serverless-friendly way. The `startedInBackground` field returns `true` if your server starts using the `server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests()` method.
+Apollo Server 4 removes the `serverlessFramework` field, with the new `startedInBackground` field providing essentially the same information. In Apollo Server 3, the `serverlessFramework` field returns `true` if using a subclass of `ApolloServer` for a serverless framework. In Apollo Server 4, there are no subclasses, and the [new API](#new-approach-to-serverless-frameworks) handles startup errors in a serverless-friendly way. The `startedInBackground` field returns `true` if your server is started using the `server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests()` method (which should be done by your serverless integration).
 
 ### `GraphQLRequest`
 
