@@ -22,8 +22,6 @@ flowchart LR;
   class restAPI,sql secondary;
 ```
 
-
-
 ## Open-source implementations
 
 All data source implementations extend the generic [`DataSource` abstract class](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-datasource/src/index.ts), which is included in the `apollo-datasource` package. Subclasses of a `DataSource` should define whatever logic is required to communicate with a particular store or API.
@@ -32,19 +30,18 @@ Apollo and the larger community maintain the following open-source implementatio
 
 > Do you maintain a `DataSource` implementation that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/blob/main/docs/source/data/data-sources.md) to be added to the list!
 
-| Class            | Source    | For Use With          |
-|------------------|-----------|-----------------------|
-| [`RESTDataSource`](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest) | Apollo    | REST APIs ([see below](#restdatasource-reference)) |
-| [`HTTPDataSource`](https://github.com/StarpTech/apollo-datasource-http)  | Community | HTTP/REST APIs (newer community alternative to `RESTDataSource`) |
-| [`SQLDataSource`](https://github.com/cvburgess/SQLDataSource)  | Community | SQL databases (via [Knex.js](http://knexjs.org/)) |
-| [`MongoDataSource`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/) | Community | MongoDB |
-| [`CosmosDataSource`](https://github.com/andrejpk/apollo-datasource-cosmosdb) | Community | Azure Cosmos DB |
-| [`FirestoreDataSource`](https://github.com/swantzter/apollo-datasource-firestore) | Community | Cloud Firestore |
+| Class                                                                                                        | Source    | For Use With                                                     |
+| ------------------------------------------------------------------------------------------------------------ | --------- | ---------------------------------------------------------------- |
+| [`RESTDataSource`](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest) | Apollo    | REST APIs ([see below](#restdatasource-reference))               |
+| [`HTTPDataSource`](https://github.com/StarpTech/apollo-datasource-http)                                      | Community | HTTP/REST APIs (newer community alternative to `RESTDataSource`) |
+| [`SQLDataSource`](https://github.com/cvburgess/SQLDataSource)                                                | Community | SQL databases (via [Knex.js](http://knexjs.org/))                |
+| [`MongoDataSource`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/)                              | Community | MongoDB                                                          |
+| [`CosmosDataSource`](https://github.com/andrejpk/apollo-datasource-cosmosdb)                                 | Community | Azure Cosmos DB                                                  |
+| [`FirestoreDataSource`](https://github.com/swantzter/apollo-datasource-firestore)                            | Community | Cloud Firestore                                                  |
 
 If none of these implementations applies to your use case, you can create your own custom `DataSource` subclass.
 
 > Apollo does not provide official support for community-maintained libraries. We cannot guarantee that community-maintained libraries adhere to best practices, or that they will continue to be maintained.
-
 
 ## Adding data sources to Apollo Server
 
@@ -55,10 +52,8 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
-  cache: "bounded",
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
+  cache: 'bounded',
+  plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
   dataSources: () => {
     return {
       moviesAPI: new MoviesAPI(),
@@ -68,9 +63,9 @@ const server = new ApolloServer({
 });
 ```
 
-* As shown, the `dataSources` option is a _function_. This function returns an _object_ containing instances of your `DataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
-* Apollo Server calls this function for _every incoming operation_. It automatically assigns the returned object to the `dataSources` field of [the `context` object](./resolvers/#the-context-argument) that's passed between your server's resolvers.
-* Also as shown, **the function should create a new instance of each data source for each operation.** If multiple operations share a single data source instance, you might accidentally combine results from multiple operations.
+- As shown, the `dataSources` option is a _function_. This function returns an _object_ containing instances of your `DataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
+- Apollo Server calls this function for _every incoming operation_. It automatically assigns the returned object to the `dataSources` field of [the `context` object](./resolvers/#the-context-argument) that's passed between your server's resolvers.
+- Also as shown, **the function should create a new instance of each data source for each operation.** If multiple operations share a single data source instance, you might accidentally combine results from multiple operations.
 
 Your resolvers can now access your data sources from the shared `context` object and use them to fetch data:
 
@@ -98,7 +93,7 @@ When you initialize Apollo Server, you can provide its constructor a _different_
 
 ### Using an external cache backend
 
- When running multiple instances of your server, you should use a shared cache backend. This enables one server instance to use the cached result from _another_ instance.
+When running multiple instances of your server, you should use a shared cache backend. This enables one server instance to use the cached result from _another_ instance.
 
 Apollo Server supports using [Memcached](https://memcached.org/), [Redis](https://redis.io/), or other cache backends via the [`keyv`](https://www.npmjs.com/package/keyv) package. For examples, see [Configuring external caching](../performance/cache-backends#configuring-external-caching).
 
@@ -165,7 +160,7 @@ class MoviesAPI extends RESTDataSource {
   // GET
   async getMovie(id) {
     return this.get(
-      `movies/${encodeURIComponent(id)}` // path
+      `movies/${encodeURIComponent(id)}`, // path
     );
   }
 
@@ -207,8 +202,9 @@ class MoviesAPI extends RESTDataSource {
 > Note the use of [`encodeURIComponent`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent). This is a standard JavaScript function that encodes special characters in a URI, preventing a possible injection attack vector.
 
 For a simple example, suppose our REST endpoint responded to the following URLs:
-* DELETE `/movies/:id`
-* DELETE `/movies/:id/characters`
+
+- DELETE `/movies/:id`
+- DELETE `/movies/:id/characters`
 
 A "malicious" client could provide an `:id` of `1/characters` to target the delete `characters` endpoint when it was the singular `movie` endpoint that we were trying to delete. URI encoding prevents this kind of injection by transforming the `/` into `%2F`. This can then be correctly decoded and interpreted by the server and won't be treated as a path segment.
 
@@ -218,8 +214,8 @@ For all HTTP convenience methods, the **first parameter** is the relative path o
 
 The **second parameter** depends on the HTTP method:
 
-* For HTTP methods with a request body (`post`, `put`, `patch`), the second parameter _is_ the request body.
-* For HTTP methods _without_ a request body, the second parameter is an object with keys and values corresponding to the request's query parameters.
+- For HTTP methods with a request body (`post`, `put`, `patch`), the second parameter _is_ the request body.
+- For HTTP methods _without_ a request body, the second parameter is an object with keys and values corresponding to the request's query parameters.
 
 For all methods, the **third parameter** is an `init` object that enables you to provide additional options (such as headers and referrers) to the `fetch` API that's used to send the request. For details, [see MDN's fetch docs](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters).
 
@@ -228,7 +224,6 @@ For all methods, the **third parameter** is an `init` object that enables you to
 `RESTDataSource` includes a `willSendRequest` method that you can override to modify outgoing requests before they're sent. For example, you can use this method to add headers or query parameters. This method is most commonly used for authorization or other concerns that apply to all sent requests.
 
 Data sources also have access to the GraphQL operation context, which is useful for storing a user token or other relevant information.
-
 
 #### Setting a header
 
@@ -288,9 +283,9 @@ DataLoader is great for its intended use case, but it’s less helpful when load
 
 When layering GraphQL over REST APIs, it's most helpful to have a resource cache that:
 
-* Saves data across multiple GraphQL requests
-* Can be shared across multiple GraphQL servers
-* Provides cache management features like expiry and invalidation that use standard HTTP cache control headers
+- Saves data across multiple GraphQL requests
+- Can be shared across multiple GraphQL servers
+- Provides cache management features like expiry and invalidation that use standard HTTP cache control headers
 
 #### Batching with REST APIs
 
