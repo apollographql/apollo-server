@@ -1,3 +1,4 @@
+import { cacheControlFromInfo } from '@apollo/cache-control-types';
 import type {
   GraphQLScalarType,
   GraphQLFieldResolver,
@@ -38,8 +39,8 @@ describe('dynamic cache control', () => {
 
     const resolvers: GraphQLResolvers = {
       Query: {
-        droid: (_source, _args, _context, { cacheControl }) => {
-          cacheControl.setCacheHint({ maxAge: 60 });
+        droid: (_source, _args, _context, info) => {
+          cacheControlFromInfo(info).setCacheHint({ maxAge: 60 });
           return {
             id: 2001,
             name: 'R2-D2',
@@ -82,8 +83,8 @@ describe('dynamic cache control', () => {
 
     const resolvers: GraphQLResolvers = {
       Query: {
-        droid: (_source, _args, _context, { cacheControl }) => {
-          cacheControl.cacheHint.restrict({ maxAge: 60 });
+        droid: (_source, _args, _context, info) => {
+          cacheControlFromInfo(info).cacheHint.restrict({ maxAge: 60 });
           return {
             id: 2001,
             name: 'R2-D2',
@@ -126,8 +127,8 @@ describe('dynamic cache control', () => {
 
     const resolvers: GraphQLResolvers = {
       Query: {
-        droid: (_source, _args, _context, { cacheControl }) => {
-          cacheControl.setCacheHint({ scope: 'PRIVATE' });
+        droid: (_source, _args, _context, info) => {
+          cacheControlFromInfo(info).setCacheHint({ scope: 'PRIVATE' });
           return {
             id: 2001,
             name: 'R2-D2',
@@ -172,8 +173,8 @@ describe('dynamic cache control', () => {
 
     const resolvers: GraphQLResolvers = {
       Query: {
-        droid: (_source, _args, _context, { cacheControl }) => {
-          cacheControl.setCacheHint({ maxAge: 120 });
+        droid: (_source, _args, _context, info) => {
+          cacheControlFromInfo(info).setCacheHint({ maxAge: 120 });
           return {
             id: 2001,
             name: 'R2-D2',

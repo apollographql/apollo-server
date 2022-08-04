@@ -46,6 +46,7 @@ import {
   afterEach,
 } from '@jest/globals';
 import type { Mock, SpyInstance } from 'jest-mock';
+import { cacheControlFromInfo } from '@apollo/cache-control-types';
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
@@ -132,7 +133,7 @@ const queryType = new GraphQLObjectType({
     testPersonWithCacheControl: {
       type: personType,
       resolve(_source, _args, _context, info) {
-        info.cacheControl.setCacheHint({ maxAge: 11 });
+        cacheControlFromInfo(info).setCacheHint({ maxAge: 11 });
         return { firstName: 'Jane', lastName: 'Doe' };
       },
     },

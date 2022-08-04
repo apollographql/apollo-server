@@ -40,6 +40,7 @@
     "npm": "^8.5.0"
   },
   "devDependencies": {
+    "@apollo/cache-control-types": "1.0.2",
     "@apollo/client": "3.6.9",
     "@apollo/utils.createhash": "1.1.0",
     "@changesets/changelog-github": "0.4.6",
