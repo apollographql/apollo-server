@@ -6,7 +6,7 @@ import type {
   GraphQLSchema,
   OperationDefinitionNode,
 } from 'graphql';
-import type { CachePolicy } from './cacheControl';
+import type { CachePolicy } from '@apollo/cache-control-types';
 import type { BaseContext } from './context';
 import type { HTTPGraphQLHead, HTTPGraphQLRequest } from './http';
 import type { ApolloServer } from '../ApolloServer';

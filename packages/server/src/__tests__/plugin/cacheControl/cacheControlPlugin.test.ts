@@ -3,7 +3,8 @@ import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
 } from '../../../plugin/cacheControl';
-import { ApolloServer, CacheHint, HTTPGraphQLResponse } from '../../..';
+import { ApolloServer, HTTPGraphQLResponse } from '../../..';
+import type { CacheHint } from '@apollo/cache-control-types';
 
 describe('plugin', () => {
   describe('willSendResponse', () => {

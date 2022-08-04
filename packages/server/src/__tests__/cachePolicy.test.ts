@@ -1,4 +1,4 @@
-import type { CachePolicy } from '..';
+import type { CachePolicy } from '@apollo/cache-control-types';
 import { newCachePolicy } from '../cachePolicy.js';
 
 describe('newCachePolicy', () => {

@@ -1,10 +1,4 @@
-import type {
-  ApolloServerPlugin,
-  BaseContext,
-  CacheAnnotation,
-  CacheHint,
-  CacheScope,
-} from '../../externalTypes';
+import type { ApolloServerPlugin, BaseContext } from '../../externalTypes';
 import {
   DirectiveNode,
   getNamedType,
@@ -18,6 +12,21 @@ import {
 import { newCachePolicy } from '../../cachePolicy.js';
 import { internalPlugin } from '../../internalPlugin.js';
 import LRUCache from 'lru-cache';
+import type {
+  CacheHint,
+  CacheScope,
+  GraphQLResolveInfoWithCacheControl,
+} from '@apollo/cache-control-types';
+
+/**
+ * CacheAnnotation represents the contents of a `@cacheControl` directive.
+ * (`inheritMaxAge` is part of this interface and not CacheHint, because
+ * `inheritMaxAge` isn't a contributing piece of a cache policy: it just means
+ * to not apply default values in some contexts.)
+ */
+interface CacheAnnotation extends CacheHint {
+  inheritMaxAge?: true;
+}
 
 export interface ApolloServerPluginCacheControlOptions {
   /**
@@ -131,7 +140,10 @@ export function ApolloServerPluginCacheControl<TContext extends BaseContext>(
             const fakeFieldPolicy = newCachePolicy();
             return {
               willResolveField({ info }) {
-                info.cacheControl = {
+                // This `as` is "safe" in the sense that this is the statement
+                // that makes a GraphQLResolveInfo into a
+                // GraphQLResolveInfoWithCacheControl.
+                (info as GraphQLResolveInfoWithCacheControl).cacheControl = {
                   setCacheHint: (dynamicHint: CacheHint) => {
                     fakeFieldPolicy.replace(dynamicHint);
                   },
@@ -184,7 +196,10 @@ export function ApolloServerPluginCacheControl<TContext extends BaseContext>(
                 fieldPolicy.replace(fieldAnnotation);
               }
 
-              info.cacheControl = {
+              // This `as` is "safe" in the sense that this is the statement
+              // that makes a GraphQLResolveInfo into a
+              // GraphQLResolveInfoWithCacheControl.
+              (info as GraphQLResolveInfoWithCacheControl).cacheControl = {
                 setCacheHint: (dynamicHint: CacheHint) => {
                   fieldPolicy.replace(dynamicHint);
                 },
