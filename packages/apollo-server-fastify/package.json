@@ -35,7 +35,7 @@
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   },
   "peerDependencies": {
-    "fastify": "^3.17.0",
+    "fastify": "^3.17.0 || ^4",
     "graphql": "^15.3.0 || ^16.0.0"
   }
 }
