@@ -98,7 +98,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   executor?: GraphQLExecutor<TContext>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   cache?: KeyValueCache<string>;
-  includeStackTracesInErrorResponses?: boolean;
+  includeStacktraceInErrorResponses?: boolean;
   logger?: Logger;
   allowBatchedHttpRequests?: boolean;
 

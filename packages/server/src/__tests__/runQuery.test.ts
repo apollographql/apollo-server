@@ -138,13 +138,13 @@ it('returns a syntax error if the query string contains one', async () => {
 // Maybe we used to log field errors and we want to make sure we don't do that?
 // Our Jest tests automatically fail if anything is logged to the console.
 it.each([true, false])(
-  'does not call console.error if in an error occurs and includeStackTracesInErrorResponses is %s',
-  async (includeStackTracesInErrorResponses) => {
+  'does not call console.error if in an error occurs and includeStacktraceInErrorResponses is %s',
+  async (includeStacktraceInErrorResponses) => {
     const query = `query { testError }`;
     const res = await runQuery(
       {
         schema,
-        includeStackTracesInErrorResponses,
+        includeStacktraceInErrorResponses,
       },
       { query },
     );

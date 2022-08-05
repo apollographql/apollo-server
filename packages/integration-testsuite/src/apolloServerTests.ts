@@ -775,110 +775,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
           );
         }
       });
-
-      it('works with errors similar to GraphQL errors, such as yup', async () => {
-        // https://npm.im/yup is a package that produces a particular type of
-        // error that we test compatibility with. This test was first brought
-        // with https://github.com/apollographql/apollo-server/pull/1288. We
-        // used to use the actual `yup` package to generate the error, but we
-        // don't need to actually bundle that dependency just to test
-        // compatibility with that particular error shape.  To be honest, it's
-        // not clear from the original PR which attribute of this error need be
-        // mocked, but for the sake not not breaking anything, all of yup's
-        // error properties have been reproduced here.
-        const throwError = jest.fn(async () => {
-          // Intentionally `any` because this is a custom Error class with
-          // various custom properties (like `value` and `params`).
-          const yuppieError: any = new Error('email must be a valid email');
-          yuppieError.name = 'ValidationError';
-
-          // Set `message` to enumerable, which `yup` does and `Error` doesn't.
-          Object.defineProperty(yuppieError, 'message', {
-            enumerable: true,
-          });
-
-          // Set other properties which `yup` sets.
-          yuppieError.path = 'email';
-          yuppieError.type = undefined;
-          yuppieError.value = { email: 'invalid-email' };
-          yuppieError.errors = ['email must be a valid email'];
-          yuppieError.inner = [];
-          yuppieError.params = {
-            path: 'email',
-            value: 'invalid-email',
-            originalValue: 'invalid-email',
-            label: undefined,
-            regex: /@/,
-          };
-
-          // This stack is fake, but roughly what `yup` generates!
-          yuppieError.stack = [
-            'ValidationError: email must be a valid email',
-            '    at createError (yup/lib/util/createValidation.js:64:35)',
-            '    at yup/lib/util/createValidation.js:113:108',
-            '    at process._tickCallback (internal/process/next_tick.js:68:7)',
-          ].join('\n');
-
-          throw yuppieError;
-        });
-
-        const formatError = jest.fn(() => {
-          return {
-            message: 'User Input Error',
-            extensions: { code: 'BAD_USER_INPUT' },
-          };
-        });
-
-        const uri = await createServerAndGetUrl({
-          typeDefs: gql`
-            type Query {
-              fieldWhichWillError: String
-            }
-          `,
-          resolvers: {
-            Query: {
-              fieldWhichWillError: () => {
-                return throwError();
-              },
-            },
-          },
-          introspection: true,
-          includeStackTracesInErrorResponses: true,
-          formatError,
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-
-        const result = await apolloFetch({
-          query: '{fieldWhichWillError}',
-        });
-
-        expect(throwError).toHaveBeenCalledTimes(1);
-        expect(formatError).toHaveBeenCalledTimes(1);
-        const formatErrorArgs: any = formatError.mock.calls[0];
-        expect(formatErrorArgs[0]).toMatchObject({
-          message: 'email must be a valid email',
-          path: ['fieldWhichWillError'],
-          locations: [{ line: 1, column: 2 }],
-          extensions: {
-            code: 'INTERNAL_SERVER_ERROR',
-            exception: {
-              name: 'ValidationError',
-              message: 'email must be a valid email',
-              type: undefined,
-              value: { email: 'invalid-email' },
-              errors: ['email must be a valid email'],
-              path: 'email',
-            },
-          },
-        });
-        expect(formatErrorArgs[1] instanceof Error).toBe(true);
-
-        expect(result.data).toEqual({ fieldWhichWillError: null });
-        expect(result.errors).toBeDefined();
-        expect(result.errors[0].extensions.code).toEqual('BAD_USER_INPUT');
-        expect(result.errors[0].message).toEqual('User Input Error');
-      });
     });
 
     describe('lifecycle', () => {
@@ -1020,7 +916,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 }),
                 ...plugins,
               ],
-              includeStackTracesInErrorResponses: true,
+              includeStacktraceInErrorResponses: true,
               stopOnTerminationSignals: false,
               nodeEnv: '',
               ...constructorOptions,
@@ -1459,7 +1355,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             },
           ],
           formatError,
-          includeStackTracesInErrorResponses: true,
+          includeStacktraceInErrorResponses: true,
         });
         const apolloFetch = createApolloFetch({ uri });
         const result = await apolloFetch({
@@ -1691,7 +1587,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             expect(e.message).toMatch('valid result');
             expect(e.extensions).toBeDefined();
             expect(e.extensions.code).toEqual('SOME_CODE');
-            expect(e.extensions.exception.stacktrace).toBeDefined();
+            expect(e.extensions.stacktrace).toBeDefined();
 
             expect(contextCreationDidFail.mock.calls).toMatchInlineSnapshot(`
               Array [
@@ -1765,7 +1661,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('SOME_CODE');
-        expect(result.errors[0].extensions.exception).toBeUndefined();
+        expect(result.errors[0].extensions).not.toHaveProperty('exception');
       });
 
       it('propagates error codes with null response in production', async () => {
@@ -1796,7 +1692,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('SOME_CODE');
-        expect(result.errors[0].extensions.exception).toBeUndefined();
+        expect(result.errors[0].extensions).not.toHaveProperty('exception');
       });
 
       it('propagates error codes in dev mode', async () => {
@@ -1828,8 +1724,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('SOME_CODE');
-        expect(result.errors[0].extensions.exception).toBeDefined();
-        expect(result.errors[0].extensions.exception.stacktrace).toBeDefined();
+        expect(result.errors[0].extensions).not.toHaveProperty('exception');
+        expect(result.errors[0].extensions.stacktrace).toBeDefined();
       });
 
       it('shows error extensions in extensions (only!)', async () => {
@@ -1850,7 +1746,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           },
           stopOnTerminationSignals: false,
           nodeEnv: 'development',
-          includeStackTracesInErrorResponses: false,
+          includeStacktraceInErrorResponses: false,
         });
 
         const apolloFetch = createApolloFetch({ uri });
