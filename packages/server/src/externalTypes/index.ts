@@ -4,12 +4,6 @@
  * is re-exported by the root (via * export), so add exports to this file with
  * intention (it's public API).
  */
-export type {
-  CacheAnnotation,
-  CacheHint,
-  CachePolicy,
-  CacheScope,
-} from './cacheControl.js';
 export type { BaseContext, ContextFunction, ContextThunk } from './context.js';
 export type {
   GraphQLRequest,

@@ -1,5 +1,6 @@
+import type { CacheHint } from '@apollo/cache-control-types';
 import type { GraphQLSchema } from 'graphql';
-import { ApolloServer, CacheHint } from '../../..';
+import { ApolloServer } from '../../..';
 import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,

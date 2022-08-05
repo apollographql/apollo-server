@@ -1152,6 +1152,7 @@ In Apollo Server 4, if your server _hasn't_ set up draining and it receives an o
 If you are using the `startStandaloneServer` function, your server drains automatically. If you are using `expressMiddleware` or another `http.Server`-based web server, you can add draining using the  [`ApolloServerPluginDrainHttpServer` plugin](/apollo-server/api/plugin/drain-http-server/#using-the-plugin).
 
 ### `CacheScope` type
+
 In Apollo Server 4,  `CacheScope` is now a union of strings (`PUBLIC` or `PRIVATE`) rather than an enum:
 
 ```ts
@@ -1159,6 +1160,8 @@ export type CacheScope = 'PUBLIC' | 'PRIVATE';
 ```
 
 You can no longer type `CacheScope.Public` or `CacheScope.Private`. Instead, just use the string `'PUBLIC'` or `'PRIVATE'`. Values defined as `CacheScope` will only accept those two values, so any typos are still caught at compile time.
+
+You can now import `CacheScope` from the new `@apollo/cache-control-types` package (instead of importing it from an Apollo Server package). This enables libraries that work with multiple GraphQL servers (such as `@apollo/subgraph`) to refer to `CacheScope` without depending on `@apollo/server`.
 
 ## Plugin API changes
 
@@ -1384,6 +1387,39 @@ In Apollo Server 3, the `apollo-server-env` package primarily provides TypeScrip
 Apollo Server 4 introduces `@apollo/utils.fetcher`, which defines a minimal fetch API (`Fetcher`) that provides Fetch API TypeScript typings.
 
 The `@apollo/utils.fetcher` package has a more precise name and only supports argument structures that are likely to be compatible across implementations of the Fetch API. Specifically, `@apollo/utils.fetcher` doesn't permit you to pass `Request` or `Headers` objects to `fetch` because libraries often can only recognize their implementations of these interfaces.
+
+### `@apollo/cache-control-types`
+
+In Apollo Server 3, you could import the `CacheScope`, `CacheHint`, `CacheAnnotation`, `CachePolicy`, and `ResolveInfoCacheControl` types from your chosen Apollo Server package. 
+
+In Apollo Server 4,  the new `@apollo/cache-control-types` package exports the [`CacheScope`](#cachescope-type), `CacheHint`, `CacheAnnotation`, `CachePolicy`, and `ResolveInfoCacheControl` types. This enables libraries that work with multiple GraphQL servers (such as `@apollo/subgraph`) to refer to these types without depending on `@apollo/server`.
+
+Apollo Server 4 no longer uses the `declare module` TypeScript feature to declare that all `GraphQLResolveInfo` objects (i.e., the `info` argument to resolvers) have a `cacheControl` field. Instead, `@apollo/cache-control-types` provides a `GraphQLResolveInfoWithCacheControl` interface that you can cast `info` to (if you don't want run-time validation), or if you do want runtime validation, you can use the `maybeCacheControlFromInfo` and `cacheControlFromInfo` functions.
+
+For example, if you had this resolver in Apollo Server 3:
+
+```ts
+  someField(parent, args, context, { cacheControl }) {
+    cacheControl.setCacheHint({ maxAge: 100 });
+  }
+```
+
+you can write this in Apollo Server 4:
+
+```ts
+import { cacheControlFromInfo } from '@apollo/cache-control-types';
+
+// ...
+  someField(parent, args, context, info) {
+    cacheControlFromInfo(info).setCacheHint({ maxAge: 100 });
+  }
+```
+
+Alternatively, you can declare `info` to be of type `GraphQLResolveInfoWithCacheControl`. For example, if using `graphql-code-generator` with `typescript-resolvers`, you can use the `customResolveInfo` option.
+
+Note: this is a TypeScript-specific change. The runtime representation hasn't changed, and JavaScript code can continue to access `info.cacheControl` directly.
+
+The `CacheAnnotation` type is no longer exported from any package.
 
 ### Renamed types
 

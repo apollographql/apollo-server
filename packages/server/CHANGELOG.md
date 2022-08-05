@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.0.0-alpha.2
+
+### Patch Changes
+
+- [#6357](https://github.com/apollographql/apollo-server/pull/6357) [`f736b4980`](https://github.com/apollographql/apollo-server/commit/f736b4980b39f3b563939b100eff85e073189cb1) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Port #6709 from AS3 (improve an error message)
+
 ## 4.0.0-alpha.1
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.0-alpha.2
+
+### Patch Changes
+
+- [#6760](https://github.com/apollographql/apollo-server/pull/6760) [`052f1b548`](https://github.com/apollographql/apollo-server/commit/052f1b548c7f882d4cee1c6730cd15463086af6b) Thanks [@glasser](https://github.com/glasser)! - Relax error-handling expectations to work better with Fastify
+
+- Updated dependencies [[`f736b4980`](https://github.com/apollographql/apollo-server/commit/f736b4980b39f3b563939b100eff85e073189cb1)]:
+  - @apollo/server@4.0.0-alpha.2
+
 ## 4.0.0-alpha.1
 
 ### Patch Changes

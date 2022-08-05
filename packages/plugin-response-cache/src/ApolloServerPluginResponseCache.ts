@@ -1,7 +1,7 @@
+import type { CacheHint } from '@apollo/cache-control-types';
 import type {
   ApolloServerPlugin,
   BaseContext,
-  CacheHint,
   GraphQLRequestContext,
   GraphQLRequestListener,
   GraphQLResponse,
