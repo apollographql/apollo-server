@@ -9,27 +9,26 @@ Whenever Apollo Server encounters errors while processing a GraphQL operation, i
 
 Here's an example error response caused by misspelling the `__typename` field in a query:
 
-
 <ExpansionPanel title="Click to expand">
 
 ```json
 {
-  "errors":[
+  "errors": [
     {
-      "message":"Cannot query field \"__typenam\" on type \"Query\".",
-      "locations":[
+      "message": "Cannot query field \"__typenam\" on type \"Query\".",
+      "locations": [
         {
-          "line":1,
-          "column":2
+          "line": 1,
+          "column": 2
         }
       ],
-      "extensions":{
-        "code":"GRAPHQL_VALIDATION_FAILED",
-        "exception":{
-          "stacktrace":[
+      "extensions": {
+        "code": "GRAPHQL_VALIDATION_FAILED",
+        "exception": {
+          "stacktrace": [
             "GraphQLError: Cannot query field \"__typenam\" on type \"Query\".",
             "    at Object.Field (/my_project/node_modules/graphql/validation/rules/FieldsOnCorrectTypeRule.js:48:31)",
-            "    ...additional lines...",
+            "    ...additional lines..."
           ]
         }
       }
@@ -40,16 +39,26 @@ Here's an example error response caused by misspelling the `__typename` field in
 
 </ExpansionPanel>
 
-To help with debugging, Apollo Server defines error subclasses that represent different types of errors that can occur while handling a GraphQL operation (such as `SyntaxError` and `ValidationError`). These subclasses each return a different [error code](#error-codes), which enables requesting clients to respond differently to different error types.
+To help with debugging, Apollo Server provides a `ApolloServerErrorCode` enum that you can use to check if your error is one of the [different types recognized by Apollo Server](#error-codes).
 
-These built-in error subclasses inherit from the generic `ApolloError` class, and they're all defined in [the `apollo-server-errors` package](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-errors/src/index.ts). You can also [create your own custom errors and codes](#custom-errors).
+If Apollo Server recognizes your error type, you can write custom logic to handle that error, like so:
+
+```ts
+import { ApolloServerErrorCode } from '@apollo/server/errors';
+
+if (error.extensions?.code === ApolloServerErrorCode.GRAPHQL_PARSE_FAILED) {
+  // handle the error
+}
+```
+
+You can also [create your own custom errors and codes](#custom-errors), enabling requesting clients to respond differently to different error types.
 
 ## Error codes
 
 <table class="field-table">
   <thead>
     <tr>
-      <th>Code /<br/>Subclass</th>
+      <th>Code</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -61,11 +70,11 @@ These built-in error subclasses inherit from the generic `ApolloError` class, an
 
 ###### `GRAPHQL_PARSE_FAILED`
 
-`SyntaxError`
 </td>
 <td>
 
 The GraphQL operation string contains a syntax error.
+
 </td>
 </tr>
 
@@ -74,11 +83,11 @@ The GraphQL operation string contains a syntax error.
 
 ###### `GRAPHQL_VALIDATION_FAILED`
 
-`ValidationError`
 </td>
 <td>
 
 The GraphQL operation is not valid against the server's schema.
+
 </td>
 </tr>
 
@@ -87,11 +96,11 @@ The GraphQL operation is not valid against the server's schema.
 
 ###### `BAD_USER_INPUT`
 
-`UserInputError`
 </td>
 <td>
 
 The GraphQL operation includes an invalid value for a field argument.
+
 </td>
 </tr>
 
@@ -100,11 +109,11 @@ The GraphQL operation includes an invalid value for a field argument.
 
 ###### `UNAUTHENTICATED`
 
-`AuthenticationError`
 </td>
 <td>
 
 The server failed to authenticate with a required data source, such as a REST API.
+
 </td>
 </tr>
 
@@ -113,11 +122,11 @@ The server failed to authenticate with a required data source, such as a REST AP
 
 ###### `FORBIDDEN`
 
-`ForbiddenError`
 </td>
 <td>
 
 The server was unauthorized to access a required data source, such as a REST API.
+
 </td>
 </tr>
 
@@ -126,11 +135,11 @@ The server was unauthorized to access a required data source, such as a REST API
 
 ###### `PERSISTED_QUERY_NOT_FOUND`
 
-`PersistedQueryNotFoundError`
 </td>
 <td>
 
 A client sent the hash of a query string to execute via [automatic persisted queries](../performance/apq/), but the query was not in the APQ cache.
+
 </td>
 </tr>
 
@@ -139,11 +148,11 @@ A client sent the hash of a query string to execute via [automatic persisted que
 
 ###### `PERSISTED_QUERY_NOT_SUPPORTED`
 
-`PersistedQueryNotSupportedError`
 </td>
 <td>
 
 A client sent the hash of a query string to execute via [automatic persisted queries](../performance/apq/), but the server has disabled APQ.
+
 </td>
 </tr>
 
@@ -152,19 +161,48 @@ A client sent the hash of a query string to execute via [automatic persisted que
 
 ###### `INTERNAL_SERVER_ERROR`
 
-None
 </td>
 <td>
 
 An unspecified error occurred.
 
 This is the default error code returned by any `ApolloError` instance that doesn't specify a different code.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `OPERATION_RESOLUTION_FAILURE`
+
+</td>
+<td>
+
+An unspecified error occurred.
+
+This is the default error code returned by any `ApolloError` instance that doesn't specify a different code.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `BAD_REQUEST`
+
+</td>
+<td>
+
+An unspecified error occurred.
+
+This is the default error code returned by any `ApolloError` instance that doesn't specify a different code.
+
 </td>
 </tr>
 
 </tbody>
 </table>
-
 
 ## Throwing errors
 
@@ -177,11 +215,7 @@ For example, this resolver throws a [`UserInputError`](#bad_user_input) if the i
 <ExpansionPanel title="Click to expand">
 
 ```js {20-25}
-const {
-  ApolloServer,
-  gql,
-  UserInputError
-} = require('apollo-server');
+const { ApolloServer, gql, UserInputError } = require('apollo-server');
 
 const typeDefs = gql`
   type Query {
@@ -219,11 +253,7 @@ This example builds on the one above by adding the name of the GraphQL argument 
 <ExpansionPanel title="Click to expand">
 
 ```js {22-24}
-const {
-  ApolloServer,
-  gql,
-  UserInputError
-} = require('apollo-server');
+const { ApolloServer, gql, UserInputError } = require('apollo-server');
 
 const typeDefs = gql`
   type Query {
@@ -241,7 +271,7 @@ const resolvers = {
     userWithID: (parent, args, context) => {
       if (args.id < 1) {
         throw new UserInputError('Invalid argument value', {
-          argumentName: 'id'
+          argumentName: 'id',
         });
       }
       // ...fetch correct user...
@@ -267,9 +297,7 @@ This results in a response like the following:
           "column": 3
         }
       ],
-      "path": [
-        "userWithID"
-      ],
+      "path": ["userWithID"],
       "extensions": {
         "argumentName": "id",
         "code": "BAD_USER_INPUT",
@@ -277,7 +305,7 @@ This results in a response like the following:
           "stacktrace": [
             "UserInputError: Invalid argument value",
             "    at userWithID (/my-project/index.js:25:13)",
-            "    ...more lines...",
+            "    ...more lines..."
           ]
         }
       }
@@ -305,7 +333,7 @@ export class MyError extends ApolloError {
   }
 }
 
-throw new MyError('My error message')
+throw new MyError('My error message');
 ```
 
 #### Direct initialization
@@ -343,10 +371,8 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
-  cache: "bounded",
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
+  cache: 'bounded',
+  plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
   formatError: (err) => {
     // Don't give the specific errors to the client.
     if (err.message.startsWith('Database Error: ')) {
@@ -386,17 +412,17 @@ To accomplish this, you can provide a `rewriteError` function to the [usage repo
 
 Your `rewriteError` function is called for each error (a `GraphQLError` or an `ApolloError`) to be reported to Studio. The error is provided as the function's first argument. The function can either:
 
-* Return a modified form of the error (e.g., by changing the `err.message` to remove potentially sensitive information)
-* Return `null` to prevent the error from being reported entirely
+- Return a modified form of the error (e.g., by changing the `err.message` to remove potentially sensitive information)
+- Return `null` to prevent the error from being reported entirely
 
->**For federated graphs**, instead define `rewriteError` in each subgraph's [inline trace plugin](../api/plugin/inline-trace/#rewriteerror). Do not define it in the gateway.
+> **For federated graphs**, instead define `rewriteError` in each subgraph's [inline trace plugin](../api/plugin/inline-trace/#rewriteerror). Do not define it in the gateway.
 
 #### Example: Ignoring common low-severity errors
 
 Let's say our server is `throw`ing an `AuthenticationError` whenever an incorrect password is provided. We can avoid reporting these errors to Apollo Studio by defining `rewriteError`, like so:
 
 ```js {7-17}
-const { ApolloServer, AuthenticationError } = require("apollo-server");
+const { ApolloServer, AuthenticationError } = require('apollo-server');
 const {
   ApolloServerPluginUsageReporting,
   ApolloServerPluginLandingPageLocalDefault,
@@ -405,7 +431,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
-  cache: "bounded",
+  cache: 'bounded',
   plugins: [
     ApolloServerPluginUsageReporting({
       rewriteError(err) {
@@ -416,7 +442,7 @@ const server = new ApolloServer({
 
         // All other errors will be reported.
         return err;
-      }
+      },
     }),
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
@@ -432,7 +458,7 @@ When generating an error (e.g., `new ApolloError("Failure!")`), the error's `mes
 We can check these properties when determining whether an error should be reported to Apollo Studio using the `rewriteError` function as follows:
 
 ```js {7-17}
-const { ApolloServer } = require("apollo-server");
+const { ApolloServer } = require('apollo-server');
 const {
   ApolloServerPluginUsageReporting,
   ApolloServerPluginLandingPageLocalDefault,
@@ -441,19 +467,19 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
-  cache: "bounded",
+  cache: 'bounded',
   plugins: [
     ApolloServerPluginUsageReporting({
       rewriteError(err) {
         // Using a more stable, known error property (e.g. `err.code`) would be
         // more defensive, however checking the `message` might serve most needs!
-        if (err.message && err.message.startsWith("Known error message")) {
+        if (err.message && err.message.startsWith('Known error message')) {
           return null;
         }
 
         // All other errors should still be reported!
         return err;
-      }
+      },
     }),
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
@@ -469,13 +495,15 @@ If it is necessary to change an error prior to reporting it to Apollo Studio (fo
 Consider an example where the error contains a piece of information like an API key:
 
 ```js
-throw new ApolloError("The x-api-key:12345 doesn't have sufficient privileges.");
+throw new ApolloError(
+  "The x-api-key:12345 doesn't have sufficient privileges.",
+);
 ```
 
 The `rewriteError` function can ensure that such information is not sent to Apollo Studio and potentially revealed outside its intended scope:
 
 ```js {7-13}
-const { ApolloServer } = require("apollo-server");
+const { ApolloServer } = require('apollo-server');
 const {
   ApolloServerPluginUsageReporting,
   ApolloServerPluginLandingPageLocalDefault,
@@ -484,14 +512,14 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
-  cache: "bounded",
+  cache: 'bounded',
   plugins: [
     ApolloServerPluginUsageReporting({
       rewriteError(err) {
         // Make sure that a specific pattern is removed from all error messages.
-        err.message = err.message.replace(/x-api-key:[A-Z0-9-]+/, "REDACTED");
+        err.message = err.message.replace(/x-api-key:[A-Z0-9-]+/, 'REDACTED');
         return err;
-      }
+      },
     }),
     ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
@@ -512,7 +540,6 @@ You can set custom fields on your HTTP response by using a [plugin](../integrati
 
 As an example, here is how you could set a custom response header and status code based on a GraphQL error:
 
-
 ```js
 const setHttpPlugin = {
   async requestDidStart() {
@@ -522,9 +549,9 @@ const setHttpPlugin = {
         if (response?.errors?.[0]?.message === 'teapot') {
           response.http.status = 418;
         }
-      }
+      },
     };
-  }
+  },
 };
 
 const server = new ApolloServer({
