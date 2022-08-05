@@ -11,7 +11,7 @@ description: Persistent GraphQL read operations
 
 **Subscriptions** are long-lasting GraphQL read operations that can update their result whenever a particular server-side event occurs. Most commonly, updated results are _pushed_ from the server to subscribing clients. For example, a chat application's server might use a subscription to push newly received messages to all clients in a particular chat room.
 
-Because subscription updates are usually pushed by the server (instead of polled by the client), they usually use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP.
+Because subscription updates are usually pushed by the server (instead of polled by the client), they generally use [the WebSocket protocol](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) instead of HTTP.
 
 > **Important:** Compared to queries and mutations, subscriptions are significantly more complex to implement. Before you begin, [confirm that your use case requires subscriptions](/react/data/subscriptions/#when-to-use-subscriptions).
 
@@ -152,6 +152,8 @@ import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
+import bodyParser from 'body-parser';
+import cors from 'cors';
 import resolvers from './resolvers';
 import typeDefs from './typeDefs';
 
@@ -195,7 +197,12 @@ const server = new ApolloServer({
   ],
 });
 await server.start();
-server.applyMiddleware({ app });
+app.use(
+  '/graphql',
+  cors<cors.CorsRequest>(),
+  bodyParser.json(),
+  expressMiddleware(server),
+);
 
 const PORT = 4000;
 // Now that our HTTP server is fully set up, we can listen to it.
@@ -399,11 +406,11 @@ Use `withFilter` to make sure clients get exactly the subscription updates they 
 
 ## Basic runnable example
 
-An example server is available on [GitHub](https://github.com/apollographql/docs-examples/blob/main/apollo-server/v3/subscriptions-graphql-ws/src/index.ts) and CodeSandbox:
+An example server is available on [GitHub](https://github.com/apollographql/docs-examples/blob/main/apollo-server/v4/subscriptions-graphql-ws/src/index.ts) and CodeSandbox:
 
-<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v3/subscriptions-graphql-ws?fontsize=14&hidenavigation=1&initialpath=%2Fgraphql&theme=dark">
+<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v4/subscriptions-graphql-ws?fontsize=14&hidenavigation=1&initialpath=%2Fgraphql&theme=dark">
   <img
-    alt="Edit server-subscriptions-as3"
+    alt="Edit server-subscriptions-as4"
     src="https://codesandbox.io/static/img/play-codesandbox.svg"
   />
 </a>
@@ -455,7 +462,7 @@ Below is an example of the common use case of extracting an authentication token
 const getDynamicContext = async (ctx, msg, args) => {
   // ctx is the graphql-ws Context where connectionParams live
   if (ctx.connectionParams.authentication) {
-    const currentUser = await findUser(connectionParams.authentication);
+    const currentUser = await findUser(ctx.connectionParams.authentication);
     return { currentUser };
   }
   // Otherwise let our resolvers know we don't have a current user
@@ -545,7 +552,7 @@ const findUser = async (authToken) => {
 
 const getDynamicContext = async (ctx, msg, args) => {
   if (ctx.connectionParams.authentication) {
-    const currentUser = await findUser(connectionParams.authentication);
+    const currentUser = await findUser(ctx.connectionParams.authentication);
     return { currentUser };
   }
   // Let the resolvers know we don't have a current user so they can
@@ -705,7 +712,9 @@ Use [`WebSocketLink`](/react/api/link/apollo-link-ws/)
 
 ### Switching to `graphql-ws`
 
-> The following steps assume you've already [swapped to the `apollo-server-express` package](../integrations/middleware/#swapping-out-apollo-server).
+<!-- TODO(AS4) swap out link once we have a expressMiddleware func article -->
+
+> The following steps assume you've already [swapped to using the `expressMiddleware` function](./migration#migrating-from-apollo-server-express).
 
 To switch from `subscriptions-transport-ws` to `graphql-ws`, you can follow the steps below.
 

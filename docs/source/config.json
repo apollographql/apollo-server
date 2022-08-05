@@ -22,13 +22,6 @@
       "File uploads": "/data/file-uploads",
       "Subscriptions": "/data/subscriptions"
     },
-    "Development Workflow": {
-      "Build and run queries": "/testing/build-run-queries",
-      "Request format": "/requests",
-      "Mocking": "/testing/mocking",
-      "Integration testing": "/testing/testing",
-      "Apollo Studio Explorer": "https://www.apollographql.com/docs/studio/explorer/"
-    },
     "Integrations": {
       "Building integrations": "/integrations/building-integrations"
     }

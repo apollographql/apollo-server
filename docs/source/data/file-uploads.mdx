@@ -9,25 +9,31 @@ Apollo recommends handling the file upload itself out-of-band of your GraphQL se
 
 Another common approach involves adding file upload support directly to Apollo Server via the third-party [`graphql-upload`](https://npm.im/graphql-upload) library. This package provides support for the `multipart/form-data` content-type. **Note: this approach is vulnerable to a [CSRF mutation attack](https://github.com/apollographql/apollo-server/security/advisories/GHSA-2p3c-p3qw-69r4) unless Apollo Server is explicitly configured with `csrfPrevention: true`.** In the examples below, we demonstrate configuring CSRF prevention in order to prevent this vulnerability by always requiring a "preflight" OPTIONS request before executing an operation. When configuring your file upload client, you will need to send a non-empty `Apollo-Require-Preflight` header or Apollo Server will block the request. For example, if you use the `apollo-upload-client` package with Apollo Client Web, pass headers: `{'Apollo-Require-Preflight': 'true'}` to `createUploadLink`.
 
-**New in Apollo Server 3:** Apollo Server 3 does not contain a built-in integration with `graphql-upload` like in Apollo Server 2. Instead, the instructions below show how to integrate it yourself. You cannot do this with the "batteries-included" `apollo-server` library; you must use a web framework integration such as `apollo-server-express` instead. This page shows how to integrate `graphql-upload` with Express and Fastify. To implement similar functionality with another Node.js HTTP framework (e.g., Koa), see the [`graphql-upload` documentation](https://github.com/jaydenseric/graphql-upload) for more information. Some integrations might need to use `graphql-upload`'s `processRequest` directly.
+> ⚠️ This approach is vulnerable to a [CSRF mutation attacks](https://github.com/apollographql/apollo-server/security/advisories/GHSA-2p3c-p3qw-69r4) if you turn off Apollo Server 4's default CSRF Protection (e.g., passing `csrfPrevention: false` to your `ApolloServer` constructor).
+
+The examples below show how to avoid a CSRF vulnerability by requiring a "preflight" `OPTIONS` request before executing an operation. When configuring your file upload client, you must send a non-empty `Apollo-Require-Preflight` header, or Apollo Server will block the request. For example, if you use the `apollo-upload-client` package with Apollo Client Web, you should pass the `{'Apollo-Require-Preflight': 'true'}` header to `createUploadLink`.
+
+<!-- TODO:AS4 confirm if this is true -->
+
+**New in Apollo Server 4:** The `startStandaloneServer` function doesn't support file uploads, you must use another Apollo Server 4 integration. This article shows how to integrate `graphql-upload` using Apollo Server 4's Express integration (i.e., `expressMiddleware`).
+
+To implement similar functionality with another Node.js HTTP framework (e.g., Koa), see the [`graphql-upload` documentation](https://github.com/jaydenseric/graphql-upload) for more information. Note that some integrations might need to use `graphql-upload`'s `processRequest` directly.
 
 ### Integrating with Express
 
 <MultiCodeBlock>
 
 ```ts title="index.ts"
-const express = require('express');
-const { ApolloServer, gql } = require('apollo-server-express');
-const {
-  GraphQLUpload,
-  graphqlUploadExpress, // A Koa implementation is also exported.
-} = require('graphql-upload');
-const { finished } = require('stream/promises');
-const {
-  ApolloServerPluginLandingPageLocalDefault,
-} = require('apollo-server-core');
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import { finished } from 'stream/promises';
+import GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs';
+import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
 
-const typeDefs = gql`
+const typeDefs = `#graphql
   # The implementation for this scalar is provided by the
   # 'GraphQLUpload' export from the 'graphql-upload' package
   # in the resolver map below.
@@ -89,10 +95,13 @@ async function startServer() {
 
   const app = express();
 
-  // This middleware should be added before calling `applyMiddleware`.
-  app.use(graphqlUploadExpress());
-
-  server.applyMiddleware({ app });
+  app.use(
+    '/graphql',
+    graphqlUploadExpress(),
+    cors<cors.CorsRequest>(),
+    bodyParser.json(),
+    expressMiddleware(server),
+  );
 
   await new Promise<void>((r) => app.listen({ port: 4000 }, r));
 

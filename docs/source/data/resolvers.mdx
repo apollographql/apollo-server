@@ -77,7 +77,11 @@ const users = [
 ];
 ```
 
+<!-- TODO (AS4): add this back in once data sources are up
+
 > To learn how to fetch data from an external source (like a database or REST API), see [Data sources](./data-sources/).
+
+-->
 
 Now we can define a resolver for the `user` field, like so:
 
@@ -389,15 +393,31 @@ Resolver functions are passed four arguments: `parent`, `args`, `context`, and `
 
 ### The `context` argument
 
-The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./data-sources/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
+> ⚠️ The Apollo Server 4 alpha doesn't currently support using [`RESTDataSource`](./migration/#datasources), a class commonly used to fetch data from a database or a REST API. This feature is in active development, so check back frequently for updates.
+
+The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions.
+
+<!-- TODO(AS4) Add this paragraph in once data sources work
+If you're using [dataloaders to batch requests](./data-sources/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
+-->
 
 **Resolvers should never destructively modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
 
-To provide an initial `context` to your resolvers, add a `context` initialization function to the `ApolloServer` constructor. This function is called with every request, so you can customize the context based on each request's details (such as HTTP headers).
+To provide an initial `context` to your resolvers, add a `context` initialization function to your integration function (e.g., `expressMiddleware` or `startStandaloneServer`). This function is called _with every request_, so you can customize the context based on each request's details (such as HTTP headers).
 
-```js
-// Constructor
-const server = new ApolloServer({
+<Disclaimer />
+
+<MultiCodeBlock>
+
+```ts
+import { GraphQLError } from 'graphql';
+
+interface MyContext {
+  // Context typing
+  authScope?: String;
+}
+
+const server = new ApolloServer<MyContext>({
   typeDefs,
   resolvers,
   csrfPrevention: true,
@@ -415,11 +435,18 @@ const server = new ApolloServer({
 };
 ```
 
-> This example assumes you're using either the `apollo-server` or `apollo-server-express` package, both of which use Express. The fields of the object passed to your `context` function might differ if you're using middleware besides Express. [See the API reference for details.](../api/apollo-server/#middleware-specific-context-fields)
->
-> For more information on middleware in general, see [Choosing an Apollo Server package](../integrations/middleware/).
+</MultiCodeBlock>
 
-Context initialization can be asynchronous, allowing database connections and other operations to complete:
+> This example assumes you're using either the `startStandaloneServer` or `expressMiddleware`, both of which use Express under the hood. The fields of the object passed to your `context` function might differ if you're using a different integration.
+
+The `context` function should return an object, which is then accessible to your server's resolvers and plugins (via the `contextValue` field).
+
+<!-- TODO (AS4): update these links once we have an article with other integration functions and an updated API article.
+
+[See the API reference for more details.](../api/apollo-server/#middleware-specific-context-fields) For more information
+-->
+
+Context initialization can be asynchronous, enabling database connections and other operations to complete:
 
 ```js
 context: async () => ({
