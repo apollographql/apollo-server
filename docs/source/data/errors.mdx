@@ -159,29 +159,14 @@ A client sent the hash of a query string to execute via [automatic persisted que
 <tr>
 <td>
 
-###### `INTERNAL_SERVER_ERROR`
-
-</td>
-<td>
-
-An unspecified error occurred.
-
-This is the default error code returned by any `ApolloError` instance that doesn't specify a different code.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 ###### `OPERATION_RESOLUTION_FAILURE`
 
 </td>
 <td>
 
-An unspecified error occurred.
+The request was parsed successfully and is valid, but the server couldn't resolve which operation to run.
 
-This is the default error code returned by any `ApolloError` instance that doesn't specify a different code.
+This error occurs when a request contains multiple named operations without specifying which operation to run, or if the specified operation isn't included in the request.
 
 </td>
 </tr>
@@ -194,12 +179,25 @@ This is the default error code returned by any `ApolloError` instance that doesn
 </td>
 <td>
 
+An error occurred before your server could attempt to parse the given GraphQL operation. 
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `INTERNAL_SERVER_ERROR`
+
+</td>
+<td>
+
 An unspecified error occurred.
 
 This is the default error code returned by any `ApolloError` instance that doesn't specify a different code.
 
 </td>
 </tr>
+
 
 </tbody>
 </table>
