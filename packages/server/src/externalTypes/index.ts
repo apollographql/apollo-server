@@ -32,7 +32,6 @@ export type {
   PluginDefinition,
 } from './plugins.js';
 export type {
-  GraphQLExecutor,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextDidResolveSource,
@@ -43,10 +42,6 @@ export type {
   GraphQLRequestContextWillSendResponse,
 } from './requestPipeline.js';
 export type {
-  Unsubscriber,
-  SchemaLoadOrUpdateCallback,
-  GatewayLoadResult,
-  GatewayInterface,
   DocumentStore,
   ApolloConfigInput,
   ApolloConfig,

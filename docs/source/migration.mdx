@@ -359,7 +359,7 @@ If supporting older versions of TypeScript is important to you and you'd like to
 
 ### `@apollo/gateway`
 
-<!-- TODO(AS4): Fix before release -->
+<!-- TODO(AS4): Fix before release. This now works at runtime; TS builds may require a new release of Gateway, and we'll update the docs when that's ready. -->
 
 > ⚠️ Note: The alpha version of Apollo Server 4 does **not** work as an [Apollo Gateway](/federation/gateway). You can still use this alpha to serve [subgraphs](/federation/subgraphs), just not Gateways. We will fix this before the general release of Apollo Server 4.
 
@@ -740,6 +740,45 @@ new ApolloServer<MyContext>({
   ],
 });
 ```
+
+### `executor`
+
+In Apollo Server 3, there are two different ways to specify a replacement for `graphql-js`'s execution functionality. Both of them involve defining a function of the type `GraphQLExecutor`. One way is to specify that function directly as the `executor` constructor option. The other way involves using the `gateway` option.
+
+In Apollo Server 4, this redundancy has been removed: there is no longer an `executor` constructor option. (Additionally, the TypeScript `GraphQLExecutor` type has been renamed `GatewayExector` and moved to the `@apollo/server-gateway-interface` package.)
+
+If your Apollo Server 3 code defined an `executor` function and used it like this:
+
+<MultiCodeBlock>
+
+```ts
+new ApolloServer({
+  executor,
+  // ...
+});
+```
+
+</MultiCodeBlock>
+
+your Apollo Server code can use `gateway`, like so:
+
+<MultiCodeBlock>
+
+```ts
+new ApolloServer({
+  gateway: {
+    async load() {
+      return { executor };
+    },
+    onSchemaLoadOrUpdate() {
+      return () => {};
+    },
+    async stop() {},
+  },
+});
+```
+
+</MultiCodeBlock>
 
 
 ## Removed features
@@ -1326,14 +1365,18 @@ Apollo Server 4 more consistently handles errors thrown by multiple plugin hooks
 
 The `gateway` option to the `ApolloServer` constructor is designed to be used with the `ApolloGateway` class from the `@apollo/gateway` package. Apollo Server 4 changes the details of how Apollo Server interacts with this object. If you use a [supported version of `@apollo/gateway`](#apollo-gateway) as your server's `gateway`, these changes won't affect you. However, if you provide something _other_ than an `ApolloGateway` instance to this option, you might need to adjust your custom code.
 
-In Apollo Server 2, the TypeScript type used for the `gateway` constructor option is called `GraphQLService`. In Apollo Server 3, the TypeScript type changed to `GatewayInterface`, but the `apollo-server-core` package continued to export an identical `GraphQLService` type. Apollo Server 4 no longer exports the legacy `GraphQLService` type. Instead, use `GatewayInterface`.
+All the TypeScript types you need to define your `gateway` are now part of the `@apollo/server-gateway-interface` package rather than being exported from an Apollo Server package directly. Additionally, many of these types have been renamed.
+
+In Apollo Server 2, the TypeScript type used for the `gateway` constructor option is called `GraphQLService`. In Apollo Server 3, the TypeScript type changed to `GatewayInterface`, but the `apollo-server-core` package continued to export an identical `GraphQLService` type. Apollo Server 4 no longer exports the legacy `GraphQLService` type. Instead, use `GatewayInterface`, now exported from `@apollo/server-gateway-interface`.
 
 In Apollo Server 3, your `gateway` may define either `onSchemaChange` or the newer `onSchemaLoadOrUpdate`. In Apollo Server 4, your `gateway` must define `onSchemaLoadOrUpdate`.
 
-In Apollo Server 3, the `GatewayInterface.load` method returns `Promise<GraphQLServiceConfig>`, which contains a `schema` and an `executor`. Apollo Server 4 renames `GraphQLServiceConfig` to `GatewayLoadResult`, which now only has an `executor` field. You can use the `onSchemaLoadOrUpdate` hook if you want to receive the schema.
+In Apollo Server 3, the `GatewayInterface.load` method returns `Promise<GraphQLServiceConfig>`, which contains a `schema` and an `executor`. Apollo Server 4 renames `GraphQLServiceConfig` to `GatewayLoadResult` (exported from `@apollo/server-gateway-interface`), which now only has an `executor` field. You can use the `onSchemaLoadOrUpdate` hook if you want to receive the schema.
 
-In Apollo Server 3, `GatewayInterface.load` returned an object with an `executor` field with the TypeScript type `GraphQLExecutor`. The `executor` field returned the `GraphQLExecutionResult` type, a type defined by Apollo Server 3. In Apollo Server 4, the `GraphQLExecutor` type now returns the `ExecutionResult` type from `graphql-js`. These two types are essentially the same, except that in `ExecutionResult` the  `data` and `extensions` fields are now `Record<string, unknown>`, rather than `Record<string, any>`.
-
+Additionally, the following types have been renamed and are now exported from `@apollo/server-gateway-interface`:
+- `GraphQLExecutor` is now `GatewayExecutor`
+- `SchemaLoadOrUpdateCallback` is now `GatewaySchemaLoadOrUpdateCallback`
+- `Unsubscriber` is now `GatewayUnsubscriber`
 
 
 ## Changes to defaults

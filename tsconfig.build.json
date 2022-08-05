@@ -10,5 +10,6 @@
     { "path": "./packages/plugin-response-cache/tsconfig.cjs.json" },
     { "path": "./packages/server" },
     { "path": "./packages/server/tsconfig.cjs.json" },
+    { "path": "./packages/server-gateway-interface" },
   ]
 }

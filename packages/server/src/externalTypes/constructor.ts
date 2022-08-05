@@ -8,26 +8,9 @@ import type {
   ValidationContext,
 } from 'graphql';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
-import type { BaseContext, GraphQLExecutor } from '.';
+import type { GatewayInterface } from '@apollo/server-gateway-interface';
+import type { BaseContext } from '.';
 import type { PluginDefinition } from './plugins';
-
-export type Unsubscriber = () => void;
-
-export type SchemaLoadOrUpdateCallback = (schemaContext: {
-  apiSchema: GraphQLSchema;
-  coreSupergraphSdl: string;
-}) => void;
-
-export interface GatewayLoadResult<TContext extends BaseContext> {
-  executor: GraphQLExecutor<TContext> | null;
-}
-export interface GatewayInterface<TContext extends BaseContext> {
-  load(options: { apollo: ApolloConfig }): Promise<GatewayLoadResult<TContext>>;
-
-  onSchemaLoadOrUpdate(callback: SchemaLoadOrUpdateCallback): Unsubscriber;
-
-  stop(): Promise<void>;
-}
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
 
@@ -95,7 +78,6 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   ) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => any) | any;
   validationRules?: Array<(context: ValidationContext) => any>;
-  executor?: GraphQLExecutor<TContext>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   cache?: KeyValueCache<string>;
   includeStacktraceInErrorResponses?: boolean;
@@ -120,7 +102,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
 
 interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
-  gateway: GatewayInterface<TContext>;
+  gateway: GatewayInterface;
   schema?: undefined;
   typeDefs?: undefined;
   resolvers?: undefined;

@@ -4,7 +4,8 @@
   "packages": [
     "packages/integration-testsuite",
     "packages/server",
-    "packages/usage-reporting-protobuf"
+    "packages/usage-reporting-protobuf",
+    "packages/server-gateway-interface"
   ],
   "sandboxes": ["apollo-server-typescript-3opde","apollo-server"],
   "node": "16"

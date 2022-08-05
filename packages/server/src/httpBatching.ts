@@ -39,7 +39,6 @@ export async function runBatchHttpQuery<TContext extends BaseContext>(
         contextValue,
         schemaDerivedData,
         internals,
-        server.logger,
       );
 
       if (response.completeBody === null) {
@@ -79,7 +78,6 @@ export async function runPotentiallyBatchedHttpQuery<
       contextValue,
       schemaDerivedData,
       internals,
-      server.logger,
     );
   }
   if (internals.allowBatchedHttpRequests) {
