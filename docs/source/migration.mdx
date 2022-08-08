@@ -745,7 +745,7 @@ new ApolloServer<MyContext>({
 
 In Apollo Server 3, there are two different ways to specify a replacement for `graphql-js`'s execution functionality. Both of them involve defining a function of the type `GraphQLExecutor`. One way is to specify that function directly as the `executor` constructor option. The other way involves using the `gateway` option.
 
-In Apollo Server 4, this redundancy has been removed: there is no longer an `executor` constructor option. (Additionally, the TypeScript `GraphQLExecutor` type has been renamed `GatewayExector` and moved to the `@apollo/server-gateway-interface` package.)
+In Apollo Server 4, this redundancy has been removed: there is no longer an `executor` constructor option. (Additionally, the TypeScript `GraphQLExecutor` type has been renamed `GatewayExecutor` and moved to the `@apollo/server-gateway-interface` package.)
 
 If your Apollo Server 3 code defined an `executor` function and used it like this:
 
