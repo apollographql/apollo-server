@@ -70,7 +70,7 @@ import type {
 // Next, there's `request`. We don't know of a use case for mutating the
 // *request* at execution time. If there was a real use case, we could add a
 // function that copies pieces back from the gateway `request` to the AS4
-// request, but we're not bothering to yet. and `response`.
+// request, but we're not bothering to yet.
 //
 // Finally, there's `response`. Sure, the executor *could* mutate `response`.
 // But the main thing the executor is doing is *returning* a response, which
