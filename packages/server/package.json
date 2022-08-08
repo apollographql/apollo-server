@@ -90,7 +90,7 @@
   },
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.2",
-    "@apollo/server-gateway-interface": "^0.0.0",
+    "@apollo/server-gateway-interface": "^1.0.0",
     "@apollo/usage-reporting-protobuf": "^4.0.0-alpha.1",
     "@apollo/utils.createhash": "^1.1.0",
     "@apollo/utils.fetcher": "^1.0.0",

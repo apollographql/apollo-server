@@ -6,7 +6,4 @@
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__"],
-  "references": [
-    { "path": "../server-gateway-interface" },
-  ],
 }
