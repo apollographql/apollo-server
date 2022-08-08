@@ -9,6 +9,7 @@ import type {
 } from 'graphql';
 import type { Logger } from '@apollo/utils.logger';
 import type { Trace } from '@apollo/usage-reporting-protobuf';
+import type { FetcherHeaders } from '@apollo/utils.fetcher';
 
 export interface GatewayInterface {
   onSchemaLoadOrUpdate(
@@ -76,7 +77,7 @@ export interface GatewayGraphQLRequest {
 export interface GatewayHTTPRequest {
   readonly method: string;
   readonly url: string;
-  readonly headers: GatewayHTTPHeaders;
+  readonly headers: FetcherHeaders;
 }
 
 export interface GatewayGraphQLResponse {
@@ -87,21 +88,8 @@ export interface GatewayGraphQLResponse {
 }
 
 export interface GatewayHTTPResponse {
-  readonly headers: GatewayHTTPHeaders;
+  readonly headers: FetcherHeaders;
   status?: number;
-}
-
-export interface GatewayHTTPHeaders {
-  append(name: string, value: string): void;
-  delete(name: string): void;
-  get(name: string): string | null;
-  has(name: string): boolean;
-  set(name: string, value: string): void;
-
-  entries(): Iterator<[string, string]>;
-  keys(): Iterator<string>;
-  values(): Iterator<string>;
-  [Symbol.iterator](): Iterator<[string, string]>;
 }
 
 export type GatewaySchemaHash = string & { __fauxpaque: 'SchemaHash' };
