@@ -29,7 +29,6 @@ import { ApolloServerErrorCode } from './errors/index.js';
 import type {
   ApolloServerPlugin,
   BaseContext,
-  GraphQLExecutor,
   GraphQLRequest,
   GraphQLResponse,
   GraphQLServerListener,
@@ -62,6 +61,7 @@ import { SchemaManager } from './utils/schemaManager.js';
 import { isDefined } from './utils/isDefined.js';
 import type { WithRequired } from '@apollo/utils.withrequired';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor';
+import type { GatewayExecutor } from '@apollo/server-gateway-interface';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -84,20 +84,20 @@ export type SchemaDerivedData = {
   documentStore: DocumentStore | null;
 };
 
-type RunningServerState<TContext extends BaseContext> = {
-  schemaManager: SchemaManager<TContext>;
+type RunningServerState = {
+  schemaManager: SchemaManager;
   landingPage: LandingPage | null;
 };
 
-type ServerState<TContext extends BaseContext> =
+type ServerState =
   | {
       phase: 'initialized';
-      schemaManager: SchemaManager<TContext>;
+      schemaManager: SchemaManager;
     }
   | {
       phase: 'starting';
       barrier: Resolvable<void>;
-      schemaManager: SchemaManager<TContext>;
+      schemaManager: SchemaManager;
       // This is set to true if you called
       // startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests
       // instead of start. The main purpose is that assertStarted allows you to
@@ -114,11 +114,11 @@ type ServerState<TContext extends BaseContext> =
       drainServers: (() => Promise<void>) | null;
       toDispose: (() => Promise<void>)[];
       toDisposeLast: (() => Promise<void>)[];
-    } & RunningServerState<TContext>)
+    } & RunningServerState)
   | ({
       phase: 'draining';
       barrier: Resolvable<void>;
-    } & RunningServerState<TContext>)
+    } & RunningServerState)
   | {
       phase: 'stopping';
       barrier: Resolvable<void>;
@@ -157,12 +157,12 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   apolloConfig: ApolloConfig;
   plugins: ApolloServerPlugin<TContext>[];
   parseOptions: ParseOptions;
-  state: ServerState<TContext>;
+  state: ServerState;
   // `undefined` means we figure out what to do during _start (because
   // the default depends on whether or not we used the background version
   // of start).
   stopOnTerminationSignals: boolean | undefined;
-  executor: GraphQLExecutor<TContext> | null;
+  gatewayExecutor: GatewayExecutor | null;
   csrfPreventionRequestHeaders: string[] | null;
 }
 
@@ -224,7 +224,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       },
     );
 
-    const state: ServerState<TContext> = config.gateway
+    const state: ServerState = config.gateway
       ? // ApolloServer has been initialized but we have not yet tried to load the
         // schema from the gateway. That will wait until `start()` or
         // `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests()`
@@ -306,7 +306,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       state,
       stopOnTerminationSignals: config.stopOnTerminationSignals,
 
-      executor: config.executor ?? null, // can be set by _start too
+      gatewayExecutor: null, // set by _start
 
       csrfPreventionRequestHeaders:
         config.csrfPrevention === true || config.csrfPrevention === undefined
@@ -378,7 +378,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       const toDispose: (() => Promise<void>)[] = [];
       const executor = await schemaManager.start();
       if (executor) {
-        this.internals.executor = executor;
+        this.internals.gatewayExecutor = executor;
       }
       toDispose.push(async () => {
         await schemaManager.stop();
@@ -569,7 +569,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
   // But if you started the server in the background (with
   // startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests), this
   // lets the server wait until fully started before serving operations.
-  private async _ensureStarted(): Promise<RunningServerState<TContext>> {
+  private async _ensureStarted(): Promise<RunningServerState> {
     while (true) {
       switch (this.internals.state.phase) {
         case 'initialized':
@@ -750,7 +750,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // The cast here is because TS doesn't understand that this.state can
         // change during the await
         // (https://github.com/microsoft/TypeScript/issues/9998).
-        const state = this.internals.state as ServerState<TContext>;
+        const state = this.internals.state as ServerState;
         if (state.phase !== 'stopped') {
           throw Error(`Surprising post-stopping state ${state.phase}`);
         }
@@ -1140,7 +1140,6 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       // TContext.)
       contextValue: contextValue ?? ({} as TContext),
       internals: this.internals,
-      logger: this.logger,
       schemaDerivedData,
     });
   }
@@ -1153,14 +1152,12 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
   graphQLRequest,
   contextValue,
   internals,
-  logger,
   schemaDerivedData,
 }: {
   server: ApolloServer<TContext>;
   graphQLRequest: GraphQLRequest;
   contextValue: TContext;
   internals: ApolloServerInternals<TContext>;
-  logger: Logger;
   schemaDerivedData: SchemaDerivedData;
 }): Promise<GraphQLResponse> {
   const httpGraphQLHead = newHTTPGraphQLHead();
@@ -1188,8 +1185,8 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
   try {
     await processGraphQLRequest(
       schemaDerivedData,
+      server,
       internals,
-      logger,
       requestContext,
     );
   } catch (maybeError: unknown) {
@@ -1207,7 +1204,7 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
       ),
     );
     // Mask unexpected error externally.
-    logger.error(`Unexpected error processing request: ${error}`);
+    server.logger.error(`Unexpected error processing request: ${error}`);
     throw new Error('Internal server error');
   }
   return requestContext.response;

@@ -32,11 +32,7 @@ import {
 import type {
   ApolloServerOptions,
   ApolloServer,
-  GatewayInterface,
-  SchemaLoadOrUpdateCallback,
   BaseContext,
-  GraphQLExecutor,
-  GraphQLRequestContextExecutionDidStart,
   PluginDefinition,
 } from '@apollo/server';
 import fetch from 'node-fetch';
@@ -71,6 +67,12 @@ import {
   it,
 } from '@jest/globals';
 import type { Mock } from 'jest-mock';
+import type {
+  GatewayExecutor,
+  GatewayGraphQLRequestContext,
+  GatewayInterface,
+  GatewaySchemaLoadOrUpdateCallback,
+} from '@apollo/server-gateway-interface';
 
 const quietLogger = loglevel.getLogger('quiet');
 function mockLogger() {
@@ -122,18 +124,18 @@ const makeGatewayMock = ({
   optionsSpy = (_options) => {},
   unsubscribeSpy = () => {},
 }: {
-  executor: GraphQLExecutor<BaseContext> | null;
+  executor: GatewayExecutor | null;
   schema: GraphQLSchema;
   optionsSpy?: (_options: any) => void;
   unsubscribeSpy?: () => void;
 }) => {
   const triggers = {
     // This gets updated later, when ApolloServer calls gateway.load().
-    triggerSchemaChange: null as SchemaLoadOrUpdateCallback | null,
+    triggerSchemaChange: null as GatewaySchemaLoadOrUpdateCallback | null,
   };
 
-  const listeners: SchemaLoadOrUpdateCallback[] = [];
-  const mockedGateway: GatewayInterface<BaseContext> = {
+  const listeners: GatewaySchemaLoadOrUpdateCallback[] = [];
+  const mockedGateway: GatewayInterface = {
     load: async (options) => {
       optionsSpy(options);
       // Make sure it's async
@@ -459,7 +461,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         });
 
         it("accepts a gateway's schema and calls its executor", async () => {
-          const executor = jest.fn<GraphQLExecutor<{}>>();
+          const executor = jest.fn<GatewayExecutor>();
           executor.mockReturnValue(
             Promise.resolve({ data: { testString: 'hi - but federated!' } }),
           );
@@ -482,7 +484,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           const loadError = new Error(
             'load error which should be be thrown by start',
           );
-          const gateway: GatewayInterface<BaseContext> = {
+          const gateway: GatewayInterface = {
             async load() {
               throw loadError;
             },
@@ -2247,7 +2249,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               }),
             });
 
-          const executor = (req: GraphQLRequestContextExecutionDidStart<any>) =>
+          const executor = (req: GatewayGraphQLRequestContext) =>
             (req.source as string).match(/1/)
               ? Promise.resolve({ data: { testString1: 'hello' } })
               : Promise.resolve({ data: { testString2: 'aloha' } });
@@ -2417,9 +2419,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           };
         });
 
-        const executor = async (
-          req: GraphQLRequestContextExecutionDidStart<any>,
-        ) => {
+        const executor = async (req: GatewayGraphQLRequestContext) => {
           const source = req.source as string;
           const { startPromise, endPromise, i } = executorData[source];
           startPromise.resolve();

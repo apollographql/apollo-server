@@ -1,11 +1,6 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
-import type { ExecutionResult } from 'graphql';
 import type { BaseContext } from './context';
 import type { GraphQLRequestContext } from './graphql';
-
-export type GraphQLExecutor<TContext extends BaseContext> = (
-  requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-) => Promise<ExecutionResult>;
 
 export type GraphQLRequestContextDidResolveSource<
   TContext extends BaseContext,

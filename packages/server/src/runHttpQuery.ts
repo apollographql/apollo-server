@@ -13,7 +13,6 @@ import {
 } from './ApolloServer.js';
 import { FormattedExecutionResult, Kind } from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
-import type { Logger } from '@apollo/utils.logger';
 import { URLSearchParams } from 'url';
 
 // TODO(AS4): keep rethinking whether Map is what we want or if we just
@@ -130,7 +129,6 @@ export async function runHttpQuery<TContext extends BaseContext>(
   contextValue: TContext,
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
-  logger: Logger,
 ): Promise<HTTPGraphQLResponse> {
   let graphQLRequest: GraphQLRequest;
 
@@ -201,7 +199,6 @@ export async function runHttpQuery<TContext extends BaseContext>(
     graphQLRequest,
     contextValue,
     internals,
-    logger,
     schemaDerivedData,
   });
 

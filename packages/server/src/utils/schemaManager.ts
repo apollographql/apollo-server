@@ -1,14 +1,12 @@
 import type { Logger } from '@apollo/utils.logger';
 import type { GraphQLSchema } from 'graphql';
-import type { SchemaDerivedData } from '../ApolloServer';
 import type {
-  ApolloConfig,
-  BaseContext,
+  GatewayExecutor,
   GatewayInterface,
-  GraphQLExecutor,
-  GraphQLSchemaContext,
-  Unsubscriber,
-} from '../externalTypes';
+  GatewayUnsubscriber,
+} from '@apollo/server-gateway-interface';
+import type { SchemaDerivedData } from '../ApolloServer';
+import type { ApolloConfig, GraphQLSchemaContext } from '../externalTypes';
 
 type SchemaDerivedDataProvider = (
   apiSchema: GraphQLSchema,
@@ -27,7 +25,7 @@ type SchemaDerivedDataProvider = (
  * a callback was async, consider instead resolving a Promise in a non-async
  * callback and having your async code wait on the Promise in setTimeout().)
  */
-export class SchemaManager<TContext extends BaseContext> {
+export class SchemaManager {
   private readonly logger: Logger;
   private readonly schemaDerivedDataProvider: SchemaDerivedDataProvider;
   private readonly onSchemaLoadOrUpdateListeners = new Set<
@@ -41,9 +39,9 @@ export class SchemaManager<TContext extends BaseContext> {
   private readonly modeSpecificState:
     | {
         readonly mode: 'gateway';
-        readonly gateway: GatewayInterface<TContext>;
+        readonly gateway: GatewayInterface;
         readonly apolloConfig: ApolloConfig;
-        unsubscribeFromGateway?: Unsubscriber;
+        unsubscribeFromGateway?: GatewayUnsubscriber;
       }
     | {
         readonly mode: 'schema';
@@ -53,7 +51,7 @@ export class SchemaManager<TContext extends BaseContext> {
 
   constructor(
     options: (
-      | { gateway: GatewayInterface<TContext>; apolloConfig: ApolloConfig }
+      | { gateway: GatewayInterface; apolloConfig: ApolloConfig }
       | { apiSchema: GraphQLSchema }
     ) & {
       logger: Logger;
@@ -88,7 +86,7 @@ export class SchemaManager<TContext extends BaseContext> {
    *   asynchronously notify them of schema updates.
    * - If we started a gateway, returns the gateway's executor; otherwise null.
    */
-  public async start(): Promise<GraphQLExecutor<TContext> | null> {
+  public async start(): Promise<GatewayExecutor | null> {
     if (this.modeSpecificState.mode === 'gateway') {
       const gateway = this.modeSpecificState.gateway;
       if (gateway.onSchemaLoadOrUpdate) {
@@ -136,7 +134,7 @@ export class SchemaManager<TContext extends BaseContext> {
    */
   public onSchemaLoadOrUpdate(
     callback: (schemaContext: GraphQLSchemaContext) => void,
-  ): Unsubscriber {
+  ): GatewayUnsubscriber {
     if (!this.schemaContext) {
       throw new Error('You must call start() before onSchemaLoadOrUpdate()');
     }

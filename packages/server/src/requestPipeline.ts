@@ -50,10 +50,15 @@ import {
   invokeSyncDidStartHook,
 } from './utils/invokeHooks.js';
 
+import { makeGatewayGraphQLRequestContext } from './utils/makeGatewayGraphQLRequestContext.js';
+
 import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery.js';
-import type { ApolloServerInternals, SchemaDerivedData } from './ApolloServer';
+import type {
+  ApolloServer,
+  ApolloServerInternals,
+  SchemaDerivedData,
+} from './ApolloServer';
 import { isDefined } from './utils/isDefined.js';
-import type { Logger } from '@apollo/utils.logger';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 
@@ -93,8 +98,8 @@ const getPersistedQueryErrorHttp = () => ({
 
 export async function processGraphQLRequest<TContext extends BaseContext>(
   schemaDerivedData: SchemaDerivedData,
+  server: ApolloServer<TContext>,
   internals: ApolloServerInternals<TContext>,
-  logger: Logger,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
 ) {
   const requestListeners = (
@@ -197,7 +202,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         queryHash,
       );
     } catch (err: unknown) {
-      logger.warn(
+      server.logger.warn(
         'An error occurred while attempting to read from the documentStore. ' +
           ensureError(err).message,
       );
@@ -265,7 +270,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       Promise.resolve(
         schemaDerivedData.documentStore.set(queryHash, requestContext.document),
       ).catch((err) =>
-        logger.warn(
+        server.logger.warn(
           'Could not store validated document. ' + err?.message || err,
         ),
       );
@@ -342,7 +347,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
           ? { ttl: internals.persistedQueries?.ttl }
           : undefined,
       ),
-    ).catch(logger.warn);
+    ).catch(server.logger.warn);
   }
 
   const responseFromPlugin = await invokeHooksUntilDefinedAndNonNull(
@@ -477,8 +482,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   ): Promise<ExecutionResult> {
     const { request, document } = requestContext;
 
-    if (internals.executor) {
-      return await internals.executor(requestContext);
+    if (internals.gatewayExecutor) {
+      const result = await internals.gatewayExecutor(
+        makeGatewayGraphQLRequestContext(requestContext, server, internals),
+      );
+      return result;
     } else {
       return await graphqlExecute({
         schema: schemaDerivedData.schema,

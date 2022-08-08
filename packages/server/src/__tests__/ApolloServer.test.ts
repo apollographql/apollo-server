@@ -1,5 +1,5 @@
 import { ApolloServer } from '..';
-import type { ApolloServerOptions, GatewayInterface } from '..';
+import type { ApolloServerOptions } from '..';
 import { GraphQLError, GraphQLSchema } from 'graphql';
 import type { ApolloServerPlugin, BaseContext } from '../externalTypes';
 import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled/index.js';
@@ -8,6 +8,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { HeaderMap } from '../runHttpQuery.js';
 import { mockLogger } from './mockLogger.js';
 import gql from 'graphql-tag';
+import type { GatewayInterface } from '@apollo/server-gateway-interface';
 
 const typeDefs = gql`
   type Query {
@@ -91,7 +92,7 @@ describe('ApolloServer construction', () => {
 
   it('TypeScript enforces schema-related option combinations', async () => {
     const schema = makeExecutableSchema({ typeDefs, resolvers });
-    const gateway: GatewayInterface<BaseContext> = {
+    const gateway: GatewayInterface = {
       async load() {
         return { schema, executor: null };
       },
