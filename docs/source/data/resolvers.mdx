@@ -441,9 +441,9 @@ const server = new ApolloServer<MyContext>({
 
 The `context` function should return an object, which is then accessible to your server's resolvers and plugins (via the `contextValue` field).
 
-<!-- TODO (AS4): update these links once we have an article with other integration functions and an updated API article.
+<!-- TODO (AS4): update these links once we have an article with other integration functions
 
-[See the API reference for more details.](../api/apollo-server/#middleware-specific-context-fields) For more information
+[For more details on Apollo Server integrations, see [Choosing an Apollo Server package](/apollo-server/api/apollo-server/#middleware-specific-context-fields).
 -->
 
 Context initialization can be asynchronous, enabling database connections and other operations to complete:
