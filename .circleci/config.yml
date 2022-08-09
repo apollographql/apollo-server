@@ -65,6 +65,13 @@ jobs:
       - setup-node
       - run: npm run lint
 
+  Changesets:
+    docker:
+    - image: cimg/base:stable
+    steps:
+      - setup-node
+      - run: npm run changeset-check
+
   Spell check:
     docker:
     - image: cimg/base:stable
@@ -106,3 +113,4 @@ workflows:
       - ESLint
       - Spell check
       - Smoke test built package
+      - Changesets
