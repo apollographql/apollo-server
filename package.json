@@ -56,7 +56,7 @@
     "@graphql-codegen/cli": "2.6.4",
     "@graphql-codegen/typescript-operations": "2.5.3",
     "@graphql-tools/mock": "8.7.2",
-    "@graphql-tools/schema": "8.5.1",
+    "@graphql-tools/schema": "9.0.0",
     "@graphql-tools/utils": "8.9.1",
     "@hapi/hapi": "20.2.2",
     "@josephg/resolvable": "1.0.1",

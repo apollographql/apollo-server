@@ -31,7 +31,7 @@
     "@apollographql/apollo-tools": "^0.5.3",
     "@apollographql/graphql-playground-html": "1.6.29",
     "@graphql-tools/mock": "^8.1.2",
-    "@graphql-tools/schema": "^8.0.0",
+    "@graphql-tools/schema": "^9.0.0",
     "@josephg/resolvable": "^1.0.0",
     "apollo-datasource": "file:../apollo-datasource",
     "apollo-reporting-protobuf": "file:../apollo-reporting-protobuf",
