@@ -15,7 +15,7 @@
         "Migrating to Apollo Server 4": "/migration",
         "Changelog": "https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md"
       },
-      "Integrations": {
+      "Server frameworks": {
         "Building integrations": "/integrations/building-integrations"
       }
   }
