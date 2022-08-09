@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-utils#readme",
   "engines": {
-    "node": ">=14.0"
+    "node": ">=12.0"
   },
   "dependencies": {
     "@apollo/utils.fetcher": "^1.0.0",
