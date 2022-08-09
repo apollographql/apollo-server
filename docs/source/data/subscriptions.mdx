@@ -42,7 +42,9 @@ subscription PostFeed {
 
 ## Enabling subscriptions
 
-> Beginning in Apollo Server 3, subscriptions are **not** supported by the "batteries-included" `apollo-server` package. To enable subscriptions, you must first [swap to the `apollo-server-express` package](../integrations/middleware/#swapping-out-apollo-server) (or any other Apollo Server integration package that supports subscriptions).
+<!-- TODO(AS4): Replace link when there is an expressMiddleware article-->
+
+> Subscriptions are **not** supported by Apollo Server 4's `startStandaloneServer` function. To enable subscriptions, you must first [swap to using the `expressMiddleware` function](./migration#migrate-from-apollo-server-express) (or any other Apollo Server integration package that supports subscriptions).
 >
 > The following steps assume you've already swapped to `apollo-server-express`.
 
@@ -108,7 +110,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
    const serverCleanup = useServer({ schema }, wsServer);
    ```
 
-6. Add [plugins](../integrations/plugins) to your `ApolloServer` constructor to shutdown both the HTTP server and the `WebSocketServer`:
+6. Add [plugins](/apollo-server/integrations/plugins) to your `ApolloServer` constructor to shutdown both the HTTP server and the `WebSocketServer`:
 
    ```ts title="index.ts"
    const server = new ApolloServer({
@@ -714,7 +716,7 @@ Use [`WebSocketLink`](/react/api/link/apollo-link-ws/)
 
 <!-- TODO(AS4) swap out link once we have a expressMiddleware func article -->
 
-> The following steps assume you've already [swapped to using the `expressMiddleware` function](./migration#migrating-from-apollo-server-express).
+> The following steps assume you've already [swapped to using the `expressMiddleware` function](./migration#migrate-from-apollo-server-express).
 
 To switch from `subscriptions-transport-ws` to `graphql-ws`, you can follow the steps below.
 
@@ -824,7 +826,7 @@ useServer(
 
 See [Operation Context](#operation-context) for more examples of setting GraphQL operation `context`.
 
-4. Add a [plugin](../integrations/plugins) to your `ApolloServer` constructor to properly shutdown your new `WebSocketServer`:
+4. Add a [plugin](/apollo-server/integrations/plugins) to your `ApolloServer` constructor to properly shutdown your new `WebSocketServer`:
 
 ```ts title="index.ts"
 const server = new ApolloServer({
