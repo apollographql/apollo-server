@@ -8,9 +8,13 @@
     "@apollo/usage-reporting-protobuf": "3.3.1"
   },
   "changesets": [
+    "eleven-needles-collect",
     "hip-cheetahs-fail",
     "lazy-emus-hunt",
+    "pink-eggs-draw",
     "small-cycles-hammer",
+    "small-suits-compare",
+    "spicy-lions-deliver",
     "violet-mayflies-help"
   ]
 }
