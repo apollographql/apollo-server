@@ -1,5 +1,11 @@
 # @apollo/server-gateway-interface
 
+## 1.0.1
+
+### Patch Changes
+
+- [#179](https://github.com/apollographql/apollo-utils/pull/179) [`27547f8`](https://github.com/apollographql/apollo-utils/commit/27547f836dae5da88c51198ff83e7c042988b635) Thanks [@glasser](https://github.com/glasser)! - Declare support for Node 12
+
 ## 1.0.0
 
 ### Major Changes
