@@ -672,7 +672,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       return config.schema;
     }
 
-    const { typeDefs, resolvers, parseOptions } = config;
+    const { typeDefs, resolvers } = config;
     const augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
 
     // For convenience, we allow you to pass a few options that we pass through
@@ -684,7 +684,6 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     return makeExecutableSchema({
       typeDefs: augmentedTypeDefs,
       resolvers,
-      parseOptions,
     });
   }
 

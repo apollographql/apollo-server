@@ -1295,6 +1295,49 @@ You can no longer type `CacheScope.Public` or `CacheScope.Private`. Instead, jus
 
 You can now import `CacheScope` from the new `@apollo/cache-control-types` package (instead of importing it from an Apollo Server package). This enables libraries that work with multiple GraphQL servers (such as `@apollo/subgraph`) to refer to `CacheScope` without depending on `@apollo/server`.
 
+
+### `parseOptions` only affects operation parsing
+
+In Apollo Server 3, the `parseOptions` constructor option is used to modify how GraphQL parsing works in two unrelated places: when parsing GraphQL operations, and when parsing the schema if the schema is provided via `typeDefs`. If you are using `typeDefs`, you cannot control these options (such as `noLocation`) independently. In addition, the TypeScript definition of the `parseOptions` option uses a type (from the `@graphql-tools/schema` package whose `makeExecutableSchema` function implements the `typeDefs` option) that contains options such as `assumeValidSDL` which are only relevant for parsing schemas.
+
+In Apollo Server 4, the `parseOptions` constructor option is only used when parsing GraphQL operations, and its TypeScript type only contains options relevant to parsing operations.
+
+If you used both of the `parseOptions` and `typeDefs` constructor options in Apollo Server 3 like this:
+
+```ts
+const parseOptions = { noLocation: true };
+new ApolloServer({
+  typeDefs,
+  resolvers,
+  parseOptions,
+});
+```
+
+and you would like to continue to apply the same options to both operation and schema parsing in Apollo Server 4, run `npm install @graphql-tools/schema`, and change your code to this:
+
+```ts
+import { makeExecutableSchema } from '@graphql-tools/schema';
+
+
+const parseOptions = { noLocation: true };
+new ApolloServer({
+  schema: makeExecutableSchema({
+    typeDefs,
+    resolvers,
+    // Note that if you're using `@graphql-tools/schema` v9 or newer, the parse
+    // options such as noLocation are passed *directly* to makeExecutableSchema,
+    // which we accomplish here with the `...` syntax.
+    // In older versions, pass it as a single option named `parseOptions`
+    // (ie, remove the `...`).
+    ...parseOptions,
+  }),
+  // This one affects operation parsing. Note that if you set any SDL-specific
+  // options in parseOptions, you'll need to pass a `parseOptions` here that
+  // does not contain those options.
+  parseOptions,
+});
+```
+
 ## Plugin API changes
 
 ### Fields on `GraphQLRequestContext`
