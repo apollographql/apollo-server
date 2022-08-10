@@ -29,6 +29,14 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
         graphRef: 'graph@current',
       };
     expect(getEmbeddedExplorerHTML(version, config)).toMatchInlineSnapshot(`
+      <div class="fallback">
+        <h1>
+          Welcome to Apollo Server
+        </h1>
+        <p>
+          Apollo Explorer cannot be loaded; it appears that you might be offline.
+        </p>
+      </div>
       <style>
         iframe {
           background-color: white;
@@ -59,6 +67,14 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
         graphRef: 'graph@current',
       };
     expect(getEmbeddedExplorerHTML(version, config)).toMatchInlineSnapshot(`
+      <div class="fallback">
+        <h1>
+          Welcome to Apollo Server
+        </h1>
+        <p>
+          Apollo Explorer cannot be loaded; it appears that you might be offline.
+        </p>
+      </div>
       <style>
         iframe {
           background-color: white;

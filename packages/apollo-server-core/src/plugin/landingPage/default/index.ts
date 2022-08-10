@@ -101,6 +101,10 @@ export const getEmbeddedExplorerHTML = (
     };
 
   return `
+<div class="fallback">
+  <h1>Welcome to Apollo Server</h1>
+  <p>Apollo Explorer cannot be loaded; it appears that you might be offline.</p>
+</div>
 <style>
   iframe {
     background-color: white;
@@ -129,6 +133,10 @@ export const getEmbeddedSandboxHTML = (
   config: LandingPageConfig,
 ) => {
   return `
+<div class="fallback">
+  <h1>Welcome to Apollo Server</h1>
+  <p>Apollo Sandbox cannot be loaded; it appears that you might be offline.</p>
+</div>
 <style>
   iframe {
     background-color: white;
@@ -162,6 +170,10 @@ const getNonEmbeddedLandingPageHTML = (
   const encodedConfig = encodeConfig(config);
 
   return `
+ <div class="fallback">
+  <h1>Welcome to Apollo Server</h1>
+  <p>The full landing page cannot be loaded; it appears that you might be offline.</p>
+</div>
 <script>window.landingPage = ${encodedConfig};</script>
 <script src="https://apollo-server-landing-page.cdn.apollographql.com/${version}/static/js/main.js"></script>`;
 };
@@ -224,15 +236,6 @@ function ApolloServerPluginLandingPageDefault(
           100% {opacity:1; }
         }
       </style>
-      <div class="fallback">
-        <h1>Welcome to Apollo Server</h1>
-        <p>It appears that you might be offline. POST to this endpoint to query your graph:</p>
-        <code style="white-space: pre;">
-curl --request POST \\
-  --header 'content-type: application/json' \\
-  --url '<script>document.write(window.location.href)</script>' \\
-  --data '{"query":"query { __typename }"}'</code>
-      </div>
     ${
       config.embed
         ? 'graphRef' in config && config.graphRef

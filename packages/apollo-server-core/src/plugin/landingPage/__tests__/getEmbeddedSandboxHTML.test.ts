@@ -20,6 +20,14 @@ describe('Landing Page Config HTML', () => {
       embed: true,
     };
     expect(getEmbeddedSandboxHTML(version, config)).toMatchInlineSnapshot(`
+      <div class="fallback">
+        <h1>
+          Welcome to Apollo Server
+        </h1>
+        <p>
+          Apollo Sandbox cannot be loaded; it appears that you might be offline.
+        </p>
+      </div>
       <style>
         iframe {
           background-color: white;
@@ -49,6 +57,14 @@ describe('Landing Page Config HTML', () => {
       embed: true,
     };
     expect(getEmbeddedSandboxHTML(version, config)).toMatchInlineSnapshot(`
+      <div class="fallback">
+        <h1>
+          Welcome to Apollo Server
+        </h1>
+        <p>
+          Apollo Sandbox cannot be loaded; it appears that you might be offline.
+        </p>
+      </div>
       <style>
         iframe {
           background-color: white;

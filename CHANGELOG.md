@@ -10,6 +10,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+## v3.10.1
+
+- ⚠️ **SECURITY**: The default landing page contained HTML to display a sample `curl` command which is made visible if the full landing page bundle could not be fetched from Apollo's CDN. The server's URL is directly interpolated into this command inside the browser from `window.location.href`. On some older browsers such as IE11, this value is not URI-encoded. On such browsers, opening a malicious URL pointing at an Apollo Router could cause execution of attacker-controlled JavaScript. In this release, the fallback page does not display a `curl` command. More details are available at the [security advisory](https://github.com/apollographql/apollo-server/security/advisories/GHSA-2fvv-qxrq-7jq6).
+- Improve error message when both a graph ref and a graph variant are specified. [PR #6709](https://github.com/apollographql/apollo-server/pull/6709)
 - Fix the TypeScript declaration of the `fieldLevelInstrumentation` option to `ApolloServerPluginUsageReporting` to show that the function may return a number in addition to a boolean. This now matches the implementation and docs. [PR #6763](https://github.com/apollographql/apollo-server/pull/6763)
 
 ## v3.10.0
