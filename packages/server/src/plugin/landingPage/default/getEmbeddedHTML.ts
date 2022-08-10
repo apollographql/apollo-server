@@ -64,6 +64,10 @@ export const getEmbeddedExplorerHTML = (
     };
 
   return `
+<div class="fallback">
+  <h1>Welcome to Apollo Server</h1>
+  <p>Apollo Explorer cannot be loaded; it appears that you might be offline.</p>
+</div>
 <style>
   iframe {
     background-color: white;
@@ -92,6 +96,10 @@ export const getEmbeddedSandboxHTML = (
   config: LandingPageConfig,
 ) => {
   return `
+<div class="fallback">
+  <h1>Welcome to Apollo Server</h1>
+  <p>Apollo Sandbox cannot be loaded; it appears that you might be offline.</p>
+</div>
 <style>
   iframe {
     background-color: white;
