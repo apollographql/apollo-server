@@ -5,6 +5,7 @@ import type {
   GraphQLFieldResolver,
   GraphQLFormattedError,
   GraphQLSchema,
+  ParseOptions,
   ValidationContext,
 } from 'graphql';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
@@ -93,11 +94,9 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   documentStore?: DocumentStore | null;
   csrfPrevention?: CSRFPreventionOptions | boolean;
 
-  // This is used for two different things: parsing the schema if you're a
-  // SchemaFromTypeDefsConfig, *and* parsing operations. Arguably this is a bit
-  // weird. If you need to parse schemas with different options, just be a
-  // SchemaProvidedConfig and call makeExecutableSchema yourself.
-  parseOptions?: IExecutableSchemaDefinition<TContext>['parseOptions'];
+  // Used for parsing operations; unlike in AS3, this is not also used for
+  // parsing the schema.
+  parseOptions?: ParseOptions;
 }
 
 interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
