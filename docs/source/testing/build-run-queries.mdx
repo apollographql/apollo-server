@@ -42,7 +42,7 @@ You can install either of these plugins manually to configure its behavior.
 
 For example, below we set up our local environment to serve up a landing page with a non-embedded version of Apollo Sandbox:
 
-```js title="index.js"
+```ts title="index.ts"
 import { ApolloServer } from '@apollo/server';
 // highlight-start
 import {
@@ -80,17 +80,21 @@ A previous version of Apollo Server (v2) serves GraphQL Playground from its base
 
 You can replicate this behavior in Apollo Server 4 by providing the following plugin to the `ApolloServer` constructor:
 
-```js {1,7-9} title="index.js"
+```ts title="index.ts"
 import { ApolloServer } from '@apollo/server';
+// highlight-start
 import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server/plugin/landingPage/graphqlPlayground';
+// highlight-end
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   plugins: [
+    // highlight-start
     ApolloServerPluginLandingPageGraphQLPlayground({
       // options
     }),
+    // highlight-end
   ],
 });
 ```
@@ -99,9 +103,9 @@ You can configure GraphQL Playground's behavior by [providing options to this pl
 
 ### Custom landing page
 
-You can serve a custom HTML landing page from Apollo Server's base URL. To do so, define your own [custom plugin](/apollo-server/integrations/plugins/) that calls the [`renderLandingPage` method](../integrations/plugins-event-reference/#renderlandingpage), like so:
+You can serve a custom HTML landing page from Apollo Server's base URL. To do so, define your own [custom plugin](/apollo-server/integrations/plugins/) that calls the [`renderLandingPage` method](/apollo-server/integrations/plugins-event-reference/#renderlandingpage), like so:
 
-```js {5-22} title="index.js"
+```ts title="index.ts"
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -109,19 +113,21 @@ const server = new ApolloServer({
     {
       async serverWillStart() {
         return {
+          // highlight-start
           async renderLandingPage() {
             const html = `
-<!DOCTYPE html>
-<html>
-  <head>
-  </head>
-  <body>
-    <h1>Hello world!</h1>
-  </body>
-</html>`;
+              <!DOCTYPE html>
+              <html>
+                <head>
+                </head>
+                <body>
+                  <h1>Hello world!</h1>
+                </body>
+              </html>`;
             return { html };
           },
         };
+        // highlight-end
       },
     },
   ],
@@ -132,12 +138,14 @@ const server = new ApolloServer({
 
 You can disable Apollo Server's landing page by providing the following plugin to the `ApolloServer` constructor:
 
-```js {1,7} title="index.js"
-const { ApolloServerPluginLandingPageDisabled } = require('apollo-server-core');
+```ts {1,7} title="index.ts"
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  // highlight-start
   plugins: [ApolloServerPluginLandingPageDisabled()],
+  // highlight-end
 });
 ```
