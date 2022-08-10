@@ -47,12 +47,26 @@ export interface ApolloServerPluginUsageReportingOptions<
    */
   sendHeaders?: SendValuesBaseOptions;
   /**
-   * By default, all errors get reported to Apollo servers. You can specify
-   * a filter function to exclude specific errors from being reported by
-   * returning an explicit `null`, or you can mask certain details of the error
-   * by modifying it and returning the modified error.
+   * By default, if a trace contains errors, the errors are reported to Apollo
+   * servers with the message `<masked>`. The errors are associated with
+   * specific paths in the operation, but do not include the original error
+   * message or any extensions such as the error `code`, as those details may
+   * contain your users' private data. The extension `maskedBy:
+   * 'ApolloServerPluginUsageReporting'` is added.
+   *
+   * If you'd like details about the error included in traces, set this option.
+   * This option can take several forms:
+   *
+   * - { masked: true }: mask error messages and omit extensions (DEFAULT)
+   * - { unmodified: true }: send all error messages and extensions to Apollo
+   *   servers
+   * - { transform: ... }: a custom function for transforming errors. This
+   *   function receives a `GraphQLError` and may return a `GraphQLError`
+   *   (either a new error, or its potentially-modified argument) or `null`.
+   *   This error is used in the report to Apollo servers; if `null`, the error
+   *   is not included in traces or error statistics.
    */
-  rewriteError?: (err: GraphQLError) => GraphQLError | null;
+  sendErrorsInTraces?: SendErrorsOptions;
 
   // We should strongly consider changing the default to false in AS4.
 
@@ -320,6 +334,11 @@ export type VariableValueOptions =
       ) => Record<string, any>;
     }
   | SendValuesBaseOptions;
+
+export type SendErrorsOptions =
+  | { unmodified: true }
+  | { masked: true }
+  | { transform: (err: GraphQLError) => GraphQLError | null };
 
 export interface ClientInfo {
   clientName?: string;

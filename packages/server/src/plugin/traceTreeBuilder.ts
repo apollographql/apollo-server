@@ -3,6 +3,8 @@
 import { GraphQLError, GraphQLResolveInfo, ResponsePath } from 'graphql';
 import { Trace, google } from '@apollo/usage-reporting-protobuf';
 import type { Logger } from '@apollo/utils.logger';
+import type { SendErrorsOptions } from './usageReporting';
+import { UnreachableCaseError } from '../utils/UnreachableCaseError.js';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
@@ -10,7 +12,7 @@ function internalError(message: string) {
 
 export class TraceTreeBuilder {
   private rootNode = new Trace.Node();
-  private logger: Logger = console;
+  private logger: Logger = console; // TODO(AS4): why have this default?
   public trace = new Trace({
     root: this.rootNode,
     // By default, each trace counts as one operation for the sake of field
@@ -27,14 +29,29 @@ export class TraceTreeBuilder {
   private nodes = new Map<string, Trace.Node>([
     [responsePathAsString(), this.rootNode],
   ]);
-  private readonly rewriteError?: (err: GraphQLError) => GraphQLError | null;
+  private readonly transformError:
+    | ((err: GraphQLError) => GraphQLError | null)
+    | null;
 
   public constructor(options: {
+    maskedBy: string;
     logger?: Logger;
-    rewriteError?: (err: GraphQLError) => GraphQLError | null;
+    sendErrors?: SendErrorsOptions;
   }) {
-    this.rewriteError = options.rewriteError;
-    if (options.logger) this.logger = options.logger;
+    const { logger, sendErrors, maskedBy } = options;
+    if (!sendErrors || 'masked' in sendErrors) {
+      this.transformError = () =>
+        new GraphQLError('<masked>', {
+          extensions: { maskedBy },
+        });
+    } else if ('transform' in sendErrors) {
+      this.transformError = sendErrors.transform;
+    } else if ('unmodified' in sendErrors) {
+      this.transformError = null;
+    } else {
+      throw new UnreachableCaseError(sendErrors);
+    }
+    if (logger) this.logger = logger;
   }
 
   public startTiming() {
@@ -99,10 +116,10 @@ export class TraceTreeBuilder {
       }
 
       // In terms of reporting, errors can be re-written by the user by
-      // utilizing the `rewriteError` parameter.  This allows changing
+      // utilizing the `transformError` parameter.  This allows changing
       // the message or stack to remove potentially sensitive information.
       // Returning `null` will result in the error not being reported at all.
-      const errorForReporting = this.rewriteAndNormalizeError(err);
+      const errorForReporting = this.transformAndNormalizeError(err);
 
       if (errorForReporting === null) {
         return;
@@ -171,9 +188,9 @@ export class TraceTreeBuilder {
     return this.newNode(path.prev!);
   }
 
-  private rewriteAndNormalizeError(err: GraphQLError): GraphQLError | null {
-    if (this.rewriteError) {
-      // Before passing the error to the user-provided `rewriteError` function,
+  private transformAndNormalizeError(err: GraphQLError): GraphQLError | null {
+    if (this.transformError) {
+      // Before passing the error to the user-provided `transformError` function,
       // we'll make a shadow copy of the error so the user is free to change
       // the object as they see fit.
 
@@ -189,7 +206,7 @@ export class TraceTreeBuilder {
         err,
       );
 
-      const rewrittenError = this.rewriteError(clonedError);
+      const rewrittenError = this.transformError(clonedError);
 
       // Returning an explicit `null` means the user is requesting that the error
       // not be reported to Apollo.
@@ -204,21 +221,20 @@ export class TraceTreeBuilder {
         return err;
       }
 
-      // We only allow rewriteError to change the message and extensions of the
+      // We only allow transformError to change the message and extensions of the
       // error; we keep everything else the same. That way people don't have to
       // do extra work to keep the error on the same trace node. We also keep
       // extensions the same if it isn't explicitly changed (to, eg, {}). (Note
       // that many of the fields of GraphQLError are not enumerable and won't
       // show up in the trace (even in the json field) anyway.)
-      return new GraphQLError(
-        rewrittenError.message,
-        err.nodes,
-        err.source,
-        err.positions,
-        err.path,
-        err.originalError,
-        rewrittenError.extensions || err.extensions,
-      );
+      return new GraphQLError(rewrittenError.message, {
+        nodes: err.nodes,
+        source: err.source,
+        positions: err.positions,
+        path: err.path,
+        originalError: err.originalError,
+        extensions: rewrittenError.extensions || err.extensions,
+      });
     }
     return err;
   }

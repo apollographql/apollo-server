@@ -59,6 +59,7 @@ import {
 } from './runHttpQuery.js';
 import { SchemaManager } from './utils/schemaManager.js';
 import { isDefined } from './utils/isDefined.js';
+import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
 import type { WithRequired } from '@apollo/utils.withrequired';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor';
 import type { GatewayExecutor } from '@apollo/server-gateway-interface';
@@ -127,15 +128,6 @@ type ServerState =
       phase: 'stopped';
       stopError: Error | null;
     };
-
-// Throw this in places that should be unreachable (because all other cases have
-// been handled, reducing the type of the argument to `never`). TypeScript will
-// complain if in fact there is a valid type for the argument.
-class UnreachableCaseError extends Error {
-  constructor(val: never) {
-    super(`Unreachable case: ${val}`);
-  }
-}
 
 // TODO(AS4): Move this to its own file or something. Also organize the fields.
 

@@ -1139,15 +1139,17 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
 
           describe('error munging', () => {
-            describe('rewriteError', () => {
+            describe('sendErrorsInTraces', () => {
               it('new error', async () => {
                 throwError.mockImplementationOnce(() => {
-                  throw new Error('rewriteError nope');
+                  throw new Error('transform nope');
                 });
 
                 await setupApolloServerAndFetchPair({
-                  rewriteError: () =>
-                    new GraphQLError('rewritten as a new error'),
+                  sendErrorsInTraces: {
+                    transform: () =>
+                      new GraphQLError('rewritten as a new error'),
+                  },
                 });
 
                 const result = await apolloFetch({
@@ -1159,7 +1161,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 expect(result.errors).toBeDefined();
 
                 // The original error message should be sent to the client.
-                expect(result.errors[0].message).toEqual('rewriteError nope');
+                expect(result.errors[0].message).toEqual('transform nope');
                 expect(throwError).toHaveBeenCalledTimes(1);
 
                 const reports = await reportIngress.promiseOfReports;
@@ -1185,13 +1187,15 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
               it('modified error', async () => {
                 throwError.mockImplementationOnce(() => {
-                  throw new Error('rewriteError mod nope');
+                  throw new Error('transform mod nope');
                 });
 
                 await setupApolloServerAndFetchPair({
-                  rewriteError: (err) => {
-                    err.message = 'rewritten as a modified error';
-                    return err;
+                  sendErrorsInTraces: {
+                    transform: (err) => {
+                      err.message = 'rewritten as a modified error';
+                      return err;
+                    },
                   },
                 });
 
@@ -1202,9 +1206,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   fieldWhichWillError: null,
                 });
                 expect(result.errors).toBeDefined();
-                expect(result.errors[0].message).toEqual(
-                  'rewriteError mod nope',
-                );
+                expect(result.errors[0].message).toEqual('transform mod nope');
                 expect(throwError).toHaveBeenCalledTimes(1);
 
                 const reports = await reportIngress.promiseOfReports;
@@ -1230,11 +1232,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
               it('nulled error', async () => {
                 throwError.mockImplementationOnce(() => {
-                  throw new Error('rewriteError null nope');
+                  throw new Error('transform null nope');
                 });
 
                 await setupApolloServerAndFetchPair({
-                  rewriteError: () => null,
+                  sendErrorsInTraces: { transform: () => null },
                 });
 
                 const result = await apolloFetch({
@@ -1244,9 +1246,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   fieldWhichWillError: null,
                 });
                 expect(result.errors).toBeDefined();
-                expect(result.errors[0].message).toEqual(
-                  'rewriteError null nope',
-                );
+                expect(result.errors[0].message).toEqual('transform null nope');
                 expect(throwError).toHaveBeenCalledTimes(1);
 
                 const reports = await reportIngress.promiseOfReports;
@@ -1267,11 +1267,14 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             it('undefined error', async () => {
               throwError.mockImplementationOnce(() => {
-                throw new Error('rewriteError undefined whoops');
+                throw new Error('transform undefined whoops');
               });
 
               await setupApolloServerAndFetchPair({
-                rewriteError: () => undefined as any,
+                sendErrorsInTraces: {
+                  // @ts-expect-error (not allowed to be undefined)
+                  transform: () => undefined,
+                },
               });
 
               const result = await apolloFetch({
@@ -1282,7 +1285,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               });
               expect(result.errors).toBeDefined();
               expect(result.errors[0].message).toEqual(
-                'rewriteError undefined whoops',
+                'transform undefined whoops',
               );
               expect(throwError).toHaveBeenCalledTimes(1);
 
@@ -1301,8 +1304,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
               // rewritten.
               expect(trace.root!.child![0].error).toMatchObject([
                 {
-                  json: '{"message":"rewriteError undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
-                  message: 'rewriteError undefined whoops',
+                  json: '{"message":"transform undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                  message: 'transform undefined whoops',
                   location: [{ column: 2, line: 1 }],
                 },
               ]);
@@ -2203,9 +2206,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
           },
           plugins: [
             ApolloServerPluginInlineTrace({
-              rewriteError(err) {
-                err.message = `Rewritten for Usage Reporting: ${err.message}`;
-                return err;
+              includeErrors: {
+                transform(err) {
+                  err.message = `Rewritten for Usage Reporting: ${err.message}`;
+                  return err;
+                },
               },
             }),
           ],

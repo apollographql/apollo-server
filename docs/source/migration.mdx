@@ -930,6 +930,50 @@ ApolloServerPluginUsageReporting({
 });
 ```
 
+### `rewriteError` plugin option
+
+In Apollo Server 3, you can specify a function to rewrite errors before sending them to Apollo's server via the `rewriteError` option to `ApolloServerPluginUsageReporting` (for monoliths) and `ApolloServerPluginInlineTrace` (for subgraphs).
+
+In Apollo Server 4, you specify the same function as the `transform` option on the `sendErrorsInTrace` option to `ApolloServerPluginUsageReporting` and the `includeErrors` option to `ApolloServerPluginInlineTrace`.
+
+(Additionally, the [default behavior has changed to mask errors](#usage-reporting-and-inline-trace-plugins-mask-errors-by-default).)
+
+So, where you previously wrote:
+
+```ts
+// monoliths
+new ApolloServer({
+  plugins: [ApolloServerPluginUsageReporting({ rewriteError })],
+  // ...
+})
+
+// subgraphs
+new ApolloServer({
+  plugins: [ApolloServerPluginInlineTrace({ rewriteError })],
+  // ...
+})
+```
+
+you can now write:
+
+```ts
+// monoliths
+new ApolloServer({
+  plugins: [ApolloServerPluginUsageReporting({
+    sendErrorsInTrace: { transform: rewriteError },
+  })],
+  // ...
+})
+
+// subgraphs
+new ApolloServer({
+  plugins: [ApolloServerPluginInlineTrace({
+    includeErrors: { transform: rewriteError },
+  })],
+  // ...
+})
+```
+
 
 ### Doubly-escaped `variables` and `extensions` in requests
 
@@ -1502,6 +1546,35 @@ new ApolloServer({
 ```
 
 </MultiCodeBlock>
+
+
+### Usage reporting and inline trace plugins mask errors by default
+
+In Apollo Server 3, traces sent to Apollo's servers from monolith servers by the usage reporting plugin contain the full message and extensions of every GraphQL error that occurs in the operation by default. Similarly, inline traces sent from subgraphs to Apollo Gateways (which are then sent to Apollo's servers) contain full error details by default. You can modify or drop these errors with `rewriteError` options to the appropriate plugins.
+
+In Apollo Server 4, error details are *not* included in traces by default. By default, error messages are replaced with `<masked>` and error extensions are replaced with a single extension `maskedBy` naming the plugin which performed the masking (`ApolloServerPluginUsageReporting` or `ApolloServerPluginInlineTrace`).
+
+To restore the Apollo Server 3 behavior, you can pass `{ unmodified: true }` to an option on each plugin:
+
+```ts
+// monoliths
+new ApolloServer({
+  plugins: [ApolloServerPluginUsageReporting({
+    sendErrorsInTrace: { unmodified: true },
+  })],
+  // ...
+})
+
+// subgraphs
+new ApolloServer({
+  plugins: [ApolloServerPluginInlineTrace({
+    includeErrors: { unmodified: true },
+  })],
+  // ...
+})
+```
+
+(As [described above](#rewriteerror-plugin-option), the `rewriteError` option has been replaced by a `transform` option on `sendErrorsInTrace` or `includeErrors`.)
 
 ## Renamed packages
 

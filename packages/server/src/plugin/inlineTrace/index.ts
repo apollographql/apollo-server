@@ -1,18 +1,31 @@
 import { Trace } from '@apollo/usage-reporting-protobuf';
 import { TraceTreeBuilder } from '../traceTreeBuilder.js';
-import type { ApolloServerPluginUsageReportingOptions } from '../usageReporting/options';
+import type { SendErrorsOptions } from '../usageReporting/index.js';
 import { internalPlugin } from '../../internalPlugin.js';
 import { schemaIsFederated } from '../schemaIsFederated.js';
 import type { ApolloServerPlugin, BaseContext } from '../../externalTypes';
 
 export interface ApolloServerPluginInlineTraceOptions {
   /**
-   * By default, all errors from this service get included in the trace.  You
-   * can specify a filter function to exclude specific errors from being
-   * reported by returning an explicit `null`, or you can mask certain details
-   * of the error by modifying it and returning the modified error.
+   * By default, if a trace contains errors, the errors are included in the
+   * trace with the message `<masked>`. The errors are associated with specific
+   * paths in the operation, but do not include the original error message or
+   * any extensions such as the error `code`, as those details may contain your
+   * users' private data. The extension `maskedBy:
+   * 'ApolloServerPluginInlineTrace'` is added.
+   *
+   * If you'd like details about the error included in traces, set this option.
+   * This option can take several forms:
+   *
+   * - { masked: true }: mask error messages and omit extensions (DEFAULT)
+   * - { unmodified: true }: include all error messages and extensions
+   * - { transform: ... }: a custom function for transforming errors. This
+   *   function receives a `GraphQLError` and may return a `GraphQLError`
+   *   (either a new error, or its potentially-modified argument) or `null`.
+   *   This error is used in the trace; if `null`, the error is not included in
+   *   traces or error statistics.
    */
-  rewriteError?: ApolloServerPluginUsageReportingOptions<never>['rewriteError'];
+  includeErrors?: SendErrorsOptions;
   /**
    * This option is for internal use by `@apollo/server` only.
    *
@@ -60,7 +73,8 @@ export function ApolloServerPluginInlineTrace<TContext extends BaseContext>(
       }
 
       const treeBuilder = new TraceTreeBuilder({
-        rewriteError: options.rewriteError,
+        maskedBy: 'ApolloServerPluginInlineTrace',
+        sendErrors: options.includeErrors,
       });
 
       // XXX Provide a mechanism to customize this logic.
