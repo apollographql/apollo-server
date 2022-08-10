@@ -126,5 +126,14 @@
       matchBaseBranches: ["main"],
       allowedVersions: "2.6.x"
     },
+    {
+      // 9.x no longer has a parseOptions parameter to makeExecutableSchema, so there's
+      // no way to compatibly define the type for our parseOptions constructor parameter.
+      // (In AS4 we solve this by just not using our parseOptions for makeExecutableSchema;
+      // see #6788.)
+      matchPackageNames: ["@graphql-tools/schema"],
+      matchBaseBranches: ["main"],
+      allowedVersions: "8.x"
+    },
   ]
 }
