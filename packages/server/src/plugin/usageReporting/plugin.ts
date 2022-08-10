@@ -388,7 +388,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
       }): GraphQLRequestListener<TContext> => {
         const logger = options.logger ?? server.logger;
         const treeBuilder: TraceTreeBuilder = new TraceTreeBuilder({
-          rewriteError: options.rewriteError,
+          maskedBy: 'ApolloServerPluginUsageReporting',
+          sendErrors: options.sendErrorsInTraces,
           logger,
         });
         treeBuilder.startTiming();
