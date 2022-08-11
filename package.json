@@ -78,7 +78,7 @@
     "@typescript-eslint/eslint-plugin": "5.33.0",
     "@typescript-eslint/parser": "5.33.0",
     "@vendia/serverless-express": "4.10.1",
-    "apollo-gateway-0-oldest-supported": "npm:@apollo/gateway@0.50.1",
+    "apollo-gateway-0-oldest-supported": "npm:@apollo/gateway@2.0.5",
     "apollo-gateway-0-before-asgi": "npm:@apollo/gateway@0.51.0",
     "apollo-gateway-0-latest": "npm:@apollo/gateway@0.52.0",
     "apollo-gateway-2-oldest-supported": "npm:@apollo/gateway@2.0.0",
