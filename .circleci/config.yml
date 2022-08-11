@@ -74,6 +74,7 @@ jobs:
     docker:
     - image: cimg/base:stable
     steps:
+      - run: echo Ensure there is at least one step
       - unless:
           condition:
             matches:
