@@ -23,11 +23,11 @@ query GetBestSellers($category: ProductCategory) {
 }
 ```
 
- Here's an example of a valid POST request body for that query:
+Here's an example of a valid POST request body for that query:
 
 ```json
 {
-  "query":"query GetBestSellers($category: ProductCategory){bestSellers(category: $category){title}}",
+  "query": "query GetBestSellers($category: ProductCategory){bestSellers(category: $category){title}}",
   "operationName": "GetBestSellers",
   "variables": { "category": "BOOKS" }
 }
@@ -46,11 +46,13 @@ curl --request POST \
 
 > Apollo Server's default landing page provides a `curl` command you can use to execute a test query on your own server:
 >
-> <img class="screenshot" src="./images/as-landing-page-production.jpg" width="500" />
+> <img class="screenshot" src="../images/as-landing-page-production.jpg" width="500" />
 
 ### Batching
 
-You can send a batch of queries in a single `POST` request by providing a JSON-encoded array of query objects, like so:
+By default, Apollo Server 4 [doesn't support batching HTTP requests](../migration#http-batching-is-off-by-default). To enable HTTP batching, you must explicitly pass `allowBatchedHttpRequests: true` to the `ApolloServer` constructor.
+
+If you have enabled HTTP batching, you can send a batch of queries in a single `POST` request by providing a JSON-encoded array of query objects, like so:
 
 ```json
 [
@@ -65,8 +67,6 @@ You can send a batch of queries in a single `POST` request by providing a JSON-e
 
 If you send a batched request, Apollo Server responds with a corresponding array of GraphQL responses.
 
-You can disable the processing of batched requests by passing `allowBatchedHttpRequests: false` to the `ApolloServer` constructor.
-
 ## GET requests
 
 Apollo Server also accepts `GET` requests for queries (but not mutations). With a `GET` request, query details (`query`, `operationName`, `variables`) are provided as URL query parameters. The `variables` option is a URL-escaped JSON object.
@@ -80,9 +80,9 @@ curl --request GET \
   https://rover.apollo.dev/quickstart/products/graphql?query=query%20GetBestSellers%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D
 ```
 
-Unlike with `POST` requests, `GET` requests do not require a `Content-Type` header. If you have Apollo Server's [CSRF prevention security feature](./security/cors#preventing-cross-site-request-forgery-csrf) enabled with its default configuration (**highly recommended**), `GET` requests that don't contain a `Content-Type` header must contain one of the following:
+Unlike with `POST` requests, `GET` requests do not require a `Content-Type` header. However, if you have Apollo Server 4's default [CSRF prevention](./security/cors#preventing-cross-site-request-forgery-csrf) feature enabled, `GET` requests that don't contain a `Content-Type` header must contain one of the following:
 
- * A non-empty `X-Apollo-Operation-Name` header
- * A non-empty `Apollo-Require-Preflight` header
- 
+- A non-empty `X-Apollo-Operation-Name` header
+- A non-empty `Apollo-Require-Preflight` header
+
 For more details, see [the CSRF prevention documentation](./security/cors#preventing-cross-site-request-forgery-csrf).

@@ -3,20 +3,22 @@ title: Integration testing
 description: Utilities for testing Apollo Server
 ---
 
-Apollo Server uses a [multi-step request pipeline](../integrations/plugins/#request-lifecycle-event-flow) to validate and execute incoming GraphQL operations. This pipeline supports integration with custom plugins at each step, which can affect an operation's execution. Because of this, it's important to perform **integration tests** with a variety of operations to ensure your request pipeline works as expected.
+Apollo Server uses a [multi-step request pipeline](/apollo-server/integrations/plugins/#request-lifecycle-event-flow) to validate and execute incoming GraphQL operations. This pipeline supports integration with custom plugins at each step, which can affect an operation's execution. Because of this, it's important to perform **integration tests** with a variety of operations to ensure your request pipeline works as expected.
 
 There are two main options for integration testing with Apollo Server:
-* Using `ApolloServer`'s `executeOperation` method.
-* Setting up an HTTP client to query your server.
+
+- Using `ApolloServer`'s `executeOperation` method.
+- Setting up an HTTP client to query your server.
 
 ## Testing using `executeOperation`
 
 Apollo Server's `executeOperation` method enables you to run operations through the request pipeline _without_ sending an HTTP request.
 
 The [`executeOperation` method](../api/apollo-server/#executeoperation) accepts the following arguments:
-* An object that describes the GraphQL operation to execute.
-  * This object must include a `query` field specifying the GraphQL operation to run. You can use `executeOperation` to execute both queries and mutations, but both use the `query` field.
-* An optional argument that is passed in to the `ApolloServer` instance's [`context` function](../data/resolvers/#the-context-argument).
+
+- An object that describes the GraphQL operation to execute.
+  - This object must include a `query` field specifying the GraphQL operation to run. You can use `executeOperation` to execute both queries and mutations, but both use the `query` field.
+- An optional object that is used as the operation's [`context`](../data/resolvers/#the-context-argument) value.
 
 Below is a simplified example of setting up a test using the JavaScript testing library [Jest](https://jestjs.io/):
 
@@ -40,16 +42,18 @@ const resolvers = {
 it('returns hello with the provided name', async () => {
   const testServer = new ApolloServer({
     typeDefs,
-    resolvers
+    resolvers,
   });
 
-  const result = await testServer.executeOperation({
+  const response = await testServer.executeOperation({
     query: 'query SayHelloWorld($name: String) { hello(name: $name) }',
     variables: { name: 'world' },
   });
 
-  expect(result.errors).toBeUndefined();
-  expect(result.data?.hello).toBe('Hello world!');
+  console.log(response);
+
+  expect(response.result.errors).toBeUndefined();
+  expect(response.result.data?.hello).toBe('Hello world!');
 });
 ```
 
@@ -57,9 +61,11 @@ it('returns hello with the provided name', async () => {
 
 Note that when testing, any errors in parsing, validating, and executing your GraphQL operation are returned in the `errors` field of the operation result. As with any GraphQL response, these errors are not _thrown_.
 
-Unlike with a normal instance of `ApolloServer`,  you don't need to call [`start`](../api/apollo-server/#start) before calling `executeOperation`. The server instance calls `start` automatically for you if it hasn't been called already, and any startup errors are thrown.
+Unlike with a normal instance of `ApolloServer`, you don't need to start your server (e.g., using `startStandaloneServer` or `expressMiddleware`) before calling `executeOperation`. The server instance will start automatically and throw any startup errors.
 
-To expand on the example above, here's a full integration test being run against a test instance of `ApolloServer`. This test imports all of the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `ApolloServer`.
+To expand on the example above, here's a full integration test being run against a test instance of `ApolloServer`. This test imports all of the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `ApolloServer`:
+
+> ⚠️ The Apollo Server 4 alpha doesn't currently support using [`RESTDataSource`](./migration#datasources), a class commonly used to fetch data from a database or a REST API. This feature is in active development, but in the meantime the below code snippet doesn't work as described.
 
 ```js title="integration.test.js"
 it('fetches single launch', async () => {
@@ -83,7 +89,10 @@ it('fetches single launch', async () => {
   ]);
 
   // run the query against the server and snapshot the output
-  const res = await server.executeOperation({ query: GET_LAUNCH, variables: { id: 1 } });
+  const res = await server.executeOperation({
+    query: GET_LAUNCH,
+    variables: { id: 1 },
+  });
   expect(res).toMatchSnapshot();
 });
 ```
@@ -92,7 +101,7 @@ The example above includes a test-specific [`context` function](../data/resolver
 
 To use your server's defined `context` function, you can pass a second argument to `executeOperation`, which is then passed to your server's `context` function. Note that to use your server's `context` function you need to put together an object with the correct [middleware-specific context fields](../api/apollo-server/#middleware-specific-context-fields) for your implementation.
 
->For examples of both integration and end-to-end testing we recommend checking out the [tests included in the Apollo fullstack tutorial](https://github.com/apollographql/fullstack-tutorial/tree/master/final/server/src/__tests__).
+> For examples of both integration and end-to-end testing we recommend checking out the [tests included in the Apollo fullstack tutorial](https://github.com/apollographql/fullstack-tutorial/tree/master/final/server/src/__tests__).
 
 ## End-to-end testing
 
@@ -148,5 +157,8 @@ describe('e2e demo', () => {
 You can also view and fork this complete example on CodeSandbox:
 
 <a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v3/integration-testing?fontsize=14&hidenavigation=1&theme=dark">
-  <img alt="Edit integration-testing" src="https://codesandbox.io/static/img/play-codesandbox.svg" />
+  <img
+    alt="Edit integration-testing"
+    src="https://codesandbox.io/static/img/play-codesandbox.svg"
+  />
 </a>
