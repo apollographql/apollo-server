@@ -48,9 +48,9 @@
     "@changesets/cli": "2.24.2",
     "@graphql-codegen/cli": "2.11.5",
     "@graphql-codegen/typescript-operations": "2.5.3",
-    "@graphql-tools/mock": "8.7.2",
+    "@graphql-tools/mock": "8.7.3",
     "@graphql-tools/schema": "8.5.1",
-    "@graphql-tools/utils": "8.9.1",
+    "@graphql-tools/utils": "8.10.0",
     "@josephg/resolvable": "1.0.1",
     "@rollup/plugin-commonjs": "22.0.2",
     "@types/async-retry": "1.4.4",
@@ -82,7 +82,7 @@
     "body-parser": "1.20.0",
     "codecov": "3.8.3",
     "cors": "2.8.5",
-    "cspell": "6.6.0",
+    "cspell": "6.6.1",
     "eslint": "8.21.0",
     "eslint-plugin-import": "2.26.0",
     "express": "4.18.1",
@@ -115,6 +115,6 @@
   },
   "volta": {
     "node": "16.16.0",
-    "npm": "8.16.0"
+    "npm": "8.17.0"
   }
 }
