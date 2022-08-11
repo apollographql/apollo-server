@@ -100,7 +100,7 @@
     "@apollo/utils.usagereporting": "^1.0.0",
     "@apollo/utils.withrequired": "^1.0.0",
     "@apollographql/graphql-playground-html": "1.6.29",
-    "@graphql-tools/schema": "^8.0.0",
+    "@graphql-tools/schema": "^9.0.0",
     "@josephg/resolvable": "^1.0.0",
     "@types/express-serve-static-core": "4.17.30",
     "@types/express": "4.17.13",

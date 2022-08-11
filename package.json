@@ -49,7 +49,7 @@
     "@graphql-codegen/cli": "2.11.6",
     "@graphql-codegen/typescript-operations": "2.5.3",
     "@graphql-tools/mock": "8.7.3",
-    "@graphql-tools/schema": "8.5.1",
+    "@graphql-tools/schema": "9.0.1",
     "@graphql-tools/utils": "8.10.0",
     "@josephg/resolvable": "1.0.1",
     "@rollup/plugin-commonjs": "22.0.2",
