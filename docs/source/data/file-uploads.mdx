@@ -5,9 +5,9 @@ description: Enabling file uploads in Apollo Server
 
 There are a few ways to accomplish file uploads in Apollo Server. Our [blog post](https://www.apollographql.com/blog/backend/file-uploads/file-upload-best-practices/) on file uploads goes in depth on the approaches we've taken, outlining the pros and cons of each.
 
-Apollo recommends handling the file upload itself out-of-band of your GraphQL server for the sake of simplicity and security. This "signed URL" approach allows your client to retrieve a URL from your GraphQL server (via S3 or other storage service) and upload the file to the URL rather than to your GraphQL server. The blog post mentioned above goes into detail on how to set this up.
+Apollo recommends handling the file upload itself out-of-band of your GraphQL server for the sake of simplicity and security. This "signed URL" approach enables your client to retrieve a URL from your GraphQL server (via S3 or other storage service) and upload the file to the URL rather than to your GraphQL server. For details on how to set this up, see our [blog post](https://www.apollographql.com/blog/backend/file-uploads/file-upload-best-practices/).
 
-Another common approach involves adding file upload support directly to Apollo Server via the third-party [`graphql-upload`](https://npm.im/graphql-upload) library. This package provides support for the `multipart/form-data` content-type. **Note: this approach is vulnerable to a [CSRF mutation attack](https://github.com/apollographql/apollo-server/security/advisories/GHSA-2p3c-p3qw-69r4) unless Apollo Server is explicitly configured with `csrfPrevention: true`.** In the examples below, we demonstrate configuring CSRF prevention in order to prevent this vulnerability by always requiring a "preflight" OPTIONS request before executing an operation. When configuring your file upload client, you will need to send a non-empty `Apollo-Require-Preflight` header or Apollo Server will block the request. For example, if you use the `apollo-upload-client` package with Apollo Client Web, pass headers: `{'Apollo-Require-Preflight': 'true'}` to `createUploadLink`.
+Another common approach is to add file upload support directly to Apollo Server via the third-party [`graphql-upload`](https://npm.im/graphql-upload) library. This package provides support for the `multipart/form-data` content-type.
 
 > ⚠️ This approach is vulnerable to a [CSRF mutation attacks](https://github.com/apollographql/apollo-server/security/advisories/GHSA-2p3c-p3qw-69r4) if you turn off Apollo Server 4's default CSRF Protection (e.g., passing `csrfPrevention: false` to your `ApolloServer` constructor).
 
@@ -64,7 +64,7 @@ const resolvers = {
   Upload: GraphQLUpload,
 
   Mutation: {
-    singleUpload: async (parent, { file }) => {
+    singleUpload: async (_, { file }) => {
       const { createReadStream, filename, mimetype, encoding } = await file;
 
       // Invoking the `createReadStream` will return a Readable Stream.
@@ -86,13 +86,9 @@ async function startServer() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    // Using graphql-upload without CSRF prevention is very insecure.
-    csrfPrevention: true,
-    cache: 'bounded',
-    plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
   });
-  await server.start();
 
+  await server.start();
   const app = express();
 
   app.use(
@@ -105,7 +101,7 @@ async function startServer() {
 
   await new Promise<void>((r) => app.listen({ port: 4000 }, r));
 
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
+  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 }
 
 startServer();
@@ -113,6 +109,7 @@ startServer();
 
 </MultiCodeBlock>
 
+<!-- TODO(AS4) update once we have a stable fastify integration for folks
 ### Integrating with Fastify
 
 ```js
@@ -214,4 +211,4 @@ const start = async () => {
 };
 
 start();
-```
+``` -->

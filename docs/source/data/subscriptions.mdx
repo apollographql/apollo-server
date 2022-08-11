@@ -3,11 +3,9 @@ title: Subscriptions in Apollo Server
 description: Persistent GraphQL read operations
 ---
 
-> **Apollo Server 3 removes built-in support for subscriptions.** You can reenable support as [described below](#enabling-subscriptions).
->
 > **Subscriptions are not currently supported in [Apollo Federation](/federation/).**
 >
-> This article has been updated to use the `graphql-ws` library to add support for subscriptions to Apollo Server. We no longer recommend using the previously documented `subscriptions-transport-ws`, because this library is not actively maintained. For more information about the differences between the two libraries, see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
+> This article uses the `graphql-ws` library to add support for subscriptions to Apollo Server 4. We no longer recommend using the previously documented `subscriptions-transport-ws`, because this library is not actively maintained. For more information about the differences between the two libraries, see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
 
 **Subscriptions** are long-lasting GraphQL read operations that can update their result whenever a particular server-side event occurs. Most commonly, updated results are _pushed_ from the server to subscribing clients. For example, a chat application's server might use a subscription to push newly received messages to all clients in a particular chat room.
 
@@ -46,24 +44,21 @@ subscription PostFeed {
 
 > Subscriptions are **not** supported by Apollo Server 4's `startStandaloneServer` function. To enable subscriptions, you must first [swap to using the `expressMiddleware` function](./migration#migrate-from-apollo-server-express) (or any other Apollo Server integration package that supports subscriptions).
 >
-> The following steps assume you've already swapped to `apollo-server-express`.
+> The following steps assume you've already swapped to `expressMiddleware`.
 
 To run both an Express app _and_ a separate WebSocket server for subscriptions, we'll create an `http.Server` instance that effectively wraps the two and becomes our new `listen`er.
 
-1. Install `graphql-ws`, `ws`, `@graphql-tools/schema`, and `apollo-server-core`:
+1. Install `graphql-ws`, `ws`, and `@graphql-tools/schema`:
 
    ```bash
-   npm install graphql-ws ws @graphql-tools/schema apollo-server-core
+   npm install graphql-ws ws @graphql-tools/schema
    ```
 
 2. Add the following imports to the file where you initialize your `ApolloServer` instance (we'll use these in later steps):
 
    ```ts title="index.ts"
    import { createServer } from 'http';
-   import {
-     ApolloServerPluginDrainHttpServer,
-     ApolloServerPluginLandingPageLocalDefault,
-   } from 'apollo-server-core';
+   import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
    import { makeExecutableSchema } from '@graphql-tools/schema';
    import { WebSocketServer } from 'ws';
    import { useServer } from 'graphql-ws/lib/use/ws';
@@ -87,9 +82,6 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
    // ...
    const server = new ApolloServer({
      schema,
-     csrfPrevention: true,
-     cache: 'bounded',
-     plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
    });
    ```
 
@@ -115,8 +107,6 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
    ```ts title="index.ts"
    const server = new ApolloServer({
      schema,
-     csrfPrevention: true,
-     cache: 'bounded',
      plugins: [
        // Proper shutdown for the HTTP server.
        ApolloServerPluginDrainHttpServer({ httpServer }),
@@ -131,7 +121,6 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
            };
          },
        },
-       ApolloServerPluginLandingPageLocalDefault({ embed: true }),
      ],
    });
    ```
@@ -147,10 +136,11 @@ A completed example of setting up subscriptions is shown below:
 <MultiCodeBlock>
 
 ```ts title="index.ts"
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { createServer } from 'http';
 import express from 'express';
-import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
@@ -179,8 +169,6 @@ const serverCleanup = useServer({ schema }, wsServer);
 // Set up ApolloServer.
 const server = new ApolloServer({
   schema,
-  csrfPrevention: true,
-  cache: 'bounded',
   plugins: [
     // Proper shutdown for the HTTP server.
     ApolloServerPluginDrainHttpServer({ httpServer }),
@@ -195,9 +183,9 @@ const server = new ApolloServer({
         };
       },
     },
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
+
 await server.start();
 app.use(
   '/graphql',
@@ -209,9 +197,7 @@ app.use(
 const PORT = 4000;
 // Now that our HTTP server is fully set up, we can listen to it.
 httpServer.listen(PORT, () => {
-  console.log(
-    `Server is now running on http://localhost:${PORT}${server.graphqlPath}`,
-  );
+  console.log(`Server is now running on http://localhost:${PORT}/graphql`);
 });
 ```
 

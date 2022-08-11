@@ -18,8 +18,8 @@ type ExampleType {
 
 This example shows the `@deprecated` directive, which is a [default directive](#default-directives) (i.e., it's part of the [GraphQL specification](http://spec.graphql.org/June2018/#sec--deprecated)). It demonstrates the following about directives:
 
-* Directives can take arguments of their own (`reason` in this case).
-* Directives appear _after_ the declaration of what they decorate (the `oldField` field in this case)
+- Directives can take arguments of their own (`reason` in this case).
+- Directives appear _after_ the declaration of what they decorate (the `oldField` field in this case)
 
 ## Valid locations
 
@@ -39,7 +39,7 @@ This indicates that `@deprecated` can decorate any of the four listed locations.
 # ARGUMENT_DEFINITION
 # Note: @deprecated arguments _must_ be optional.
 directive @withDeprecatedArgs(
-  deprecatedArg: String @deprecated(reason: "Use `newArg`"),
+  deprecatedArg: String @deprecated(reason: "Use `newArg`")
   newArg: String
 ) on FIELD
 
@@ -79,8 +79,8 @@ The [GraphQL spec](https://spec.graphql.org/June2018/#sec-Type-System.Directives
 
 The [GraphQL specification](http://spec.graphql.org/June2018/#sec-Type-System.Directives) defines the following default directives:
 
-| Directive | Description |
-|-----------|-------------|
-| `@deprecated(reason: String)` | Marks the schema definition of a field or enum value as deprecated with an optional reason. |
-| `@skip(if: Boolean!)` | If `true`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
-| `@include(if: Boolean!)` | If `false`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
+| Directive                     | Description                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `@deprecated(reason: String)` | Marks the schema definition of a field or enum value as deprecated with an optional reason.          |
+| `@skip(if: Boolean!)`         | If `true`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server.  |
+| `@include(if: Boolean!)`      | If `false`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
