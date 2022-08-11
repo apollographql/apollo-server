@@ -4,7 +4,7 @@ title: Migrating to Apollo Server 4 (Alpha)
 
 > ⚠️ **Apollo Server 4 is currently in public alpha.** It is not yet feature-complete, and breaking changes might occur between this release and general availability. [Learn about release stages.](/resources/release-stages/#open-source-release-stages)
 >
-> This alpha primarily aims to enable community members to develop integrations between Apollo Server and their favorite web frameworks. Many Apollo Server 3 users **can't upgrade** to this alpha yet. For example, this alpha [removes multiple web framework integrations](#removed-integrations) and doesn't support using [`RESTDataSource`](#datasources) or hosting an [Apollo Gateway](#apollogateway).
+> This alpha primarily aims to enable community members to develop integrations between Apollo Server and their favorite web frameworks. Many Apollo Server 3 users **can't upgrade** to this alpha yet. For example, this alpha [removes multiple web framework integrations](#removed-integrations) and doesn't support using [`RESTDataSource`](#datasources).
 >
 > We are working on updating our documentation to reflect the changes introduced in Apollo Server 4. This article explains which features _do_ require code changes and how to make them.
 
@@ -347,6 +347,7 @@ Apollo Server has a peer dependency on [`graphql`](https://www.npmjs.com/package
 
 If you're using an older version of `graphql`, upgrade it to a supported version before upgrading to Apollo Server 4.
 
+Note that upgrading `graphql` may require you to upgrade other libraries that are installed in your project. For example, if you use Apollo Server with Apollo Gateway, you should upgrade Apollo Gateway to at least v0.50.1 or any v2.x version for full `graphql` 16 support before upgrading to Apollo Server 4.
 
 ### TypeScript
 
@@ -356,14 +357,6 @@ For background, Apollo Server uses type system features introduced in v4.7. We w
 
 If supporting older versions of TypeScript is important to you and you'd like to help us get `typesVersions` working, we'd appreciate PRs!
 
-
-### `@apollo/gateway`
-
-<!-- TODO(AS4): Fix before release. This now works at runtime; TS builds may require a new release of Gateway, and we'll update the docs when that's ready. -->
-
-> ⚠️ Note: The alpha version of Apollo Server 4 does **not** work as an [Apollo Gateway](/federation/gateway). You can still use this alpha to serve [subgraphs](/federation/subgraphs), just not Gateways. We will fix this before the general release of Apollo Server 4.
-
-If you use Apollo Server with Apollo Gateway, Apollo Server 4 drops support for [`@apollo/gateway` versions](/federation/api/apollo-gateway/) below v0.35.0.
 
 
 ## Removed constructor options
@@ -1446,11 +1439,7 @@ Apollo Server 4 more consistently handles errors thrown by multiple plugin hooks
 
 ### Custom `gateway` implementations
 
-<!-- TODO(AS4): Fix before release -->
-
-> ⚠️ Note: The alpha version of Apollo Server 4 does **not** work as an [Apollo Gateway](/federation/gateway). You can still use this alpha to serve [subgraphs](/federation/subgraphs), just not Gateways. We will fix this before the general release of Apollo Server 4.
-
-The `gateway` option to the `ApolloServer` constructor is designed to be used with the `ApolloGateway` class from the `@apollo/gateway` package. Apollo Server 4 changes the details of how Apollo Server interacts with this object. If you use a [supported version of `@apollo/gateway`](#apollo-gateway) as your server's `gateway`, these changes won't affect you. However, if you provide something _other_ than an `ApolloGateway` instance to this option, you might need to adjust your custom code.
+The `gateway` option to the `ApolloServer` constructor is designed to be used with the `ApolloGateway` class from the `@apollo/gateway` package. Apollo Server 4 changes the details of how Apollo Server interacts with this object. If you use [any version of `@apollo/gateway` that supports `graphql` 16](#graphql) as your server's `gateway`, these changes won't affect you. However, if you provide something _other_ than an `ApolloGateway` instance to this option, you might need to adjust your custom code.
 
 All the TypeScript types you need to define your `gateway` are now part of the `@apollo/server-gateway-interface` package rather than being exported from an Apollo Server package directly. Additionally, many of these types have been renamed.
 
