@@ -135,7 +135,9 @@
       matchBaseBranches: ["main"],
       allowedVersions: "8.x"
     },
-    // TODO: add a comment, just trying to get in front of Renovate here
+    // On version-4, we install a bunch of different copies of `@apollo/gateway` (with various
+    // aliiases). We want them to be stuck at specific versions, or to track only a particular
+    // major version.
     {
       matchPackageNames: ["apollo-gateway-0-oldest-supported"],
       allowedVersions: "0.50.1",
@@ -158,6 +160,7 @@
     },
     {
       matchPackageNames: ["apollo-gateway-2-latest"],
+      // Once 2.1.0 is released, we should switch to "2.x" here and change out of alphas.
       allowedVersions: "2.1.0-alpha.3",
     },
   ]
