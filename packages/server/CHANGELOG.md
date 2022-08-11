@@ -1,5 +1,17 @@
 # @apollo/server
 
+## 4.0.0-alpha.4
+
+### Patch Changes
+
+- [#6788](https://github.com/apollographql/apollo-server/pull/6788) [`13f809ca6`](https://github.com/apollographql/apollo-server/commit/13f809ca6c5e1f0be9d05823f1194a8743321a79) Thanks [@glasser](https://github.com/glasser)! - `parseOptions` is now only used for parsing operations, not for schemas too. Its TS type now only includes options recognized by `graphql-js` itself.
+
+* [#6785](https://github.com/apollographql/apollo-server/pull/6785) [`96178c570`](https://github.com/apollographql/apollo-server/commit/96178c57070af574fbcff7f51b73924c576725db) Thanks [@renovate](https://github.com/apps/renovate)! - Update internal use of `@graphql-tools/schema` from v8 to v9. This should be a no-op; we have already removed the feature that would have been affected by the API change in this upgrade (passing `parseOptions` to `makeExecutableSchema`).
+
+- [#6792](https://github.com/apollographql/apollo-server/pull/6792) [`400f7867b`](https://github.com/apollographql/apollo-server/commit/400f7867b521359fd7213547c88fcf3fc8fbe94c) Thanks [@glasser](https://github.com/glasser)! - Port GHSA-2fvv-qxrq-7jq6 fix from v3 (remove XSS from default landing page HTML)
+
+* [#6794](https://github.com/apollographql/apollo-server/pull/6794) [`7445d3377`](https://github.com/apollographql/apollo-server/commit/7445d3377d16cdc65506131572c0a616d3a6324c) Thanks [@glasser](https://github.com/glasser)! - Usage reporting and inline trace plugins: replace `rewriteError` with `sendErrorsInTraces`/`includeErrors`, and mask all errors by default.
+
 ## 4.0.0-alpha.3
 
 ### Patch Changes
