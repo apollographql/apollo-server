@@ -1313,7 +1313,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             it('unmodified', async () => {
               throwError.mockImplementationOnce(() => {
-                throw new Error('should be unmodified');
+                throw new GraphQLError('should be unmodified', {
+                  extensions: { custom: 'extension' },
+                });
               });
 
               await setupApolloServerAndFetchPair({
@@ -1344,18 +1346,27 @@ export function defineIntegrationTestSuiteApolloServerTests(
               expect(trace.root!.child!.length).toBe(1);
 
               // The child should maintain the path and message
-              expect(trace.root!.child![0].error).toMatchObject([
-                {
-                  json: '{"message":"should be unmodified","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
-                  message: 'should be unmodified',
-                  location: [{ column: 2, line: 1 }],
-                },
-              ]);
+              expect(trace.root!.child![0].error).toMatchInlineSnapshot(`
+                Array [
+                  Object {
+                    "json": "{\\"message\\":\\"should be unmodified\\",\\"locations\\":[{\\"line\\":1,\\"column\\":2}],\\"path\\":[\\"fieldWhichWillError\\"],\\"extensions\\":{\\"custom\\":\\"extension\\"}}",
+                    "location": Array [
+                      Object {
+                        "column": 2,
+                        "line": 1,
+                      },
+                    ],
+                    "message": "should be unmodified",
+                  },
+                ]
+              `);
             });
 
             it('masked', async () => {
               throwError.mockImplementationOnce(() => {
-                throw new Error('should be masked');
+                throw new GraphQLError('should be masked', {
+                  extensions: { custom: 'extension' },
+                });
               });
 
               await setupApolloServerAndFetchPair({
@@ -1386,13 +1397,20 @@ export function defineIntegrationTestSuiteApolloServerTests(
               expect(trace.root!.child!.length).toBe(1);
 
               // The child should maintain the path, but have its message masked
-              expect(trace.root!.child![0].error).toMatchObject([
-                {
-                  json: '{"message":"<masked>","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"],"extensions":{"maskedBy":"ApolloServerPluginUsageReporting"}}',
-                  message: '<masked>',
-                  location: [{ column: 2, line: 1 }],
-                },
-              ]);
+              expect(trace.root!.child![0].error).toMatchInlineSnapshot(`
+                Array [
+                  Object {
+                    "json": "{\\"message\\":\\"<masked>\\",\\"locations\\":[{\\"line\\":1,\\"column\\":2}],\\"path\\":[\\"fieldWhichWillError\\"],\\"extensions\\":{\\"maskedBy\\":\\"ApolloServerPluginUsageReporting\\"}}",
+                    "location": Array [
+                      Object {
+                        "column": 2,
+                        "line": 1,
+                      },
+                    ],
+                    "message": "<masked>",
+                  },
+                ]
+              `);
             });
           });
         });
