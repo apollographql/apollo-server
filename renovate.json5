@@ -135,5 +135,30 @@
       matchBaseBranches: ["main"],
       allowedVersions: "8.x"
     },
+    // TODO: add a comment, just trying to get in front of Renovate here
+    {
+      matchPackageNames: ["apollo-gateway-0-oldest-supported"],
+      allowedVersions: "0.50.1",
+    },
+    {
+      matchPackageNames: ["apollo-gateway-0-before-asgi"],
+      allowedVersions: "0.51.0",
+    },
+    {
+      matchPackageNames: ["apollo-gateway-0-latest"],
+      allowedVersions: "0.x",
+    },
+    {
+      matchPackageNames: ["apollo-gateway-2-oldest-supported"],
+      allowedVersions: "2.0.0",
+    },
+    {
+      matchPackageNames: ["apollo-gateway-2-before-asgi"],
+      allowedVersions: "2.0.5",
+    },
+    {
+      matchPackageNames: ["apollo-gateway-2-latest"],
+      allowedVersions: "2.1.0-alpha.3",
+    },
   ]
 }
