@@ -1,0 +1,370 @@
+---
+title: Creating schema directives
+description: Apply custom logic to GraphQL types, fields, and arguments
+---
+
+> Before you create a custom schema directive, [learn the basics about directives](./directives).
+
+Your schema can define custom directives that can then decorate _other_ parts of your schema:
+
+```graphql title="schema.graphql"
+# Definition
+directive @uppercase on FIELD_DEFINITION
+
+type Query {
+  # Usage
+  hello: String @uppercase
+}
+```
+
+> See an example implementation of this directive on CodeSandbox:
+>
+> <a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v3/custom-directives/upper-case-directive?fontsize=14&hidenavigation=1&theme=dark">
+>   <img alt="Edit upper-case-directive" src="https://codesandbox.io/static/img/play-codesandbox.svg" />
+> </a>
+
+When you start up your app, you can use directives to transform your executable schema's behavior before you provide that schema to Apollo Server. For example, you can modify the resolver function for any decorated field (for the schema above, it could transform the `hello` resolver's original result to uppercase).
+
+## Defining
+
+A directive definition looks like this:
+
+```graphql title="schema.graphql"
+directive @deprecated(
+  reason: String = "No longer supported"
+) on FIELD_DEFINITION | ENUM_VALUE
+```
+
+* This is the definition for the `@deprecated` directive in the [GraphQL spec](https://spec.graphql.org/June2018/#sec--deprecated).
+* The directive takes one optional argument (`reason`) with a default value (`"No longer supported"`).
+* The directive can decorate any number of `FIELD_DEFINITION`s and `ENUM_VALUE`s in your schema.
+
+### Supported locations
+
+Your custom directive can appear _only_ in the schema locations you list after the `on` keyword in the directive's definition.
+
+The table below lists all available locations in a GraphQL schema. Your directive can support any combination of these locations.
+
+<table class="field-table api-ref">
+  <thead>
+    <tr>
+      <th>Name /<br/>MapperKind</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+###### `SCALAR`
+
+`SCALAR_TYPE`
+</td>
+<td>
+
+The definition of a [custom scalar](./custom-scalars/)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `OBJECT`
+
+`OBJECT_TYPE`
+</td>
+<td>
+
+The definition of an [object type](./schema/#object-types/)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `FIELD_DEFINITION`
+
+`OBJECT_FIELD`
+</td>
+<td>
+
+The definition of a field within any defined type _except_ an [input type](./schema/#input-types) (see `INPUT_FIELD_DEFINITION`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `ARGUMENT_DEFINITION`
+
+`ARGUMENT`
+</td>
+<td>
+
+The definition of a field argument
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `INTERFACE`
+
+`INTERFACE_TYPE`
+</td>
+<td>
+
+The definition of an [interface](unions-interfaces/#interface-type)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `UNION`
+
+`UNION_TYPE`
+</td>
+<td>
+
+The definition of a [union](./unions-interfaces/#union-type)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `ENUM`
+
+`ENUM_TYPE`
+</td>
+<td>
+
+The definition of an [enum](./schema/#enum-types)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `ENUM_VALUE`
+
+`ENUM_VALUE`
+</td>
+<td>
+
+The definition of one value within an [enum](./schema/#enum-types)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `INPUT_OBJECT`
+
+`INPUT_OBJECT_TYPE`
+</td>
+<td>
+
+The definition of an [input type](./schema/#input-types)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `INPUT_FIELD_DEFINITION`
+
+`INPUT_OBJECT_FIELD`
+</td>
+<td>
+
+The definition of a field within an [input type](./schema/#input-types)
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `SCHEMA`
+
+`ROOT_OBJECT`
+</td>
+<td>
+
+The top-level `schema` object declaration with `query`, `mutation`, and/or `subscription` fields ([this declaration is usually omitted](https://spec.graphql.org/June2018/#example-e2969))
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## Implementing
+
+> **Important:** Apollo Server 3 does not provide built-in support for custom directives. To enable this support, you need to install certain `@graphql-tools` libraries.
+>
+> This article uses `@graphql-tools` version 8. Previous versions use a different API for custom directives. If you're using an earlier version of `@graphql-tools`, see the [Apollo Server v2 docs](/apollo-server/v2/schema/creating-directives).
+
+After you define your directive and its valid locations, you still need to define the logic that Apollo Server executes whenever it _encounters_ the directive in your schema.
+
+To define custom directive logic with `@graphql-tools` v8 and later, you can create **transformer functions** that transform an executable schema's behavior based on the directives that are present in it.
+
+#### 1. Install required libraries
+
+First, install the following `@graphql-tools` libraries:
+
+```bash
+npm install @graphql-tools/schema @graphql-tools/utils
+```
+
+#### 2. Define directive logic
+
+To define what Apollo Server does when it encounters your directive, you can create a **transformer function**. This function uses the `mapSchema` function to iterate through locations in your schema (field definitions, type definitions, etc.) and perform transformations wherever it encounters a particular directive (or set of directives).
+
+For example, here's a possible transformer function for the default `@deprecated` directive:
+
+```js title="directives.js"
+const { mapSchema, getDirective, MapperKind } = require('@graphql-tools/utils');
+
+function deprecatedDirectiveTransformer(schema, directiveName) {
+  return  mapSchema(schema, {
+
+    // Executes once for each object field definition in the schema
+    [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+      const deprecatedDirective = getDirective(schema, fieldConfig, directiveName)?.[0];
+      if (deprecatedDirective) {
+        fieldConfig.deprecationReason = deprecatedDirective['reason'];
+        return fieldConfig;
+      }
+    },
+
+    // Executes once for each enum value definition in the schema
+    [MapperKind.ENUM_VALUE]: (enumValueConfig) => {
+      const deprecatedDirective = getDirective(schema, enumValueConfig, directiveName)?.[0];
+      if (deprecatedDirective) {
+        enumValueConfig.deprecationReason = deprecatedDirective['reason'];
+        return enumValueConfig;
+      }
+    }
+  });
+};
+```
+
+As shown, the second parameter you pass `mapSchema` is an object with keys that represent one or more locations in your schema. The `MapperKind` enum value for each supported location is listed in [the table above](#supported-locations).
+
+### Example: Uppercasing strings
+
+Suppose you want to convert certain `String` fields in your schema to uppercase before they're returned.
+
+This example defines an `@uppercase` directive for this purpose:
+
+<ExpansionPanel title="Click to expand">
+
+```js title="index.js"
+const { ApolloServer, gql } = require('apollo-server');
+const {
+  ApolloServerPluginLandingPageLocalDefault,
+} = require('apollo-server-core');
+const { makeExecutableSchema } = require('@graphql-tools/schema');
+const { mapSchema, getDirective, MapperKind } = require('@graphql-tools/utils');
+const { defaultFieldResolver } = require('graphql');
+
+// Our GraphQL schema
+const typeDefs = gql`
+  directive @upper on FIELD_DEFINITION
+
+  type Query {
+    hello: String @upper
+  }
+`;
+
+// Our resolvers (notice the hard-coded string is *not* all-caps)
+const resolvers = {
+  Query: {
+    hello() {
+      return 'Hello World!';
+    }
+  }
+};
+
+// This function takes in a schema and adds upper-casing logic
+// to every resolver for an object field that has a directive with
+// the specified name (we're using `upper`)
+function upperDirectiveTransformer(schema, directiveName) {
+  return mapSchema(schema, {
+
+    // Executes once for each object field in the schema
+    [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+
+      // Check whether this field has the specified directive
+      const upperDirective = getDirective(schema, fieldConfig, directiveName)?.[0];
+
+      if (upperDirective) {
+
+        // Get this field's original resolver
+        const { resolve = defaultFieldResolver } = fieldConfig;
+
+        // Replace the original resolver with a function that *first* calls
+        // the original resolver, then converts its result to upper case
+        fieldConfig.resolve = async function (source, args, context, info) {
+          const result = await resolve(source, args, context, info);
+          if (typeof result === 'string') {
+            return result.toUpperCase();
+          }
+          return result;
+        }
+        return fieldConfig;
+      }
+    }
+  });
+}
+
+// Create the base executable schema
+let schema = makeExecutableSchema({
+  typeDefs,
+  resolvers
+});
+
+// Transform the schema by applying directive logic
+schema = upperDirectiveTransformer(schema, 'upper');
+
+// Provide the schema to the ApolloServer constructor
+const server = new ApolloServer({
+  schema,
+  csrfPrevention: true,
+  cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
+
+</ExpansionPanel>
+
+This code _replaces_ the resolver of an `@uppercase` field with a new function. This new function first calls the _original_ resolver, then transforms its result to uppercase (assuming it's a string) before returning it.
+
+### Additional examples
+
+For additional examples of transforming executable schemas with directives and `mapSchema`, see the [`@graphql-tools` docs](https://www.graphql-tools.com/docs/schema-directives#implementing-schema-directives).
+
+## What about query directives?
+
+Although directive syntax can also appear in GraphQL queries sent from the client, implementing query directives requires runtime transformation of query documents. We have deliberately restricted this implementation to transformations that take place at server construction time.
+
+We believe confining this logic to your schema is more sustainable than burdening your clients with it, though you can probably imagine a similar sort of abstraction for implementing query directives. If that possibility becomes a need for you, let us know.
