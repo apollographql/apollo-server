@@ -1310,6 +1310,92 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 },
               ]);
             });
+
+            it('unmodified', async () => {
+              throwError.mockImplementationOnce(() => {
+                throw new Error('should be unmodified');
+              });
+
+              await setupApolloServerAndFetchPair({
+                sendErrorsInTraces: {
+                  unmodified: true,
+                },
+              });
+
+              const result = await apolloFetch({
+                query: `{fieldWhichWillError}`,
+              });
+              expect(result.data).toEqual({
+                fieldWhichWillError: null,
+              });
+              expect(result.errors).toBeDefined();
+              expect(result.errors[0].message).toEqual(
+                'should be unmodified',
+              );
+              expect(throwError).toHaveBeenCalledTimes(1);
+
+              const reports = await reportIngress.promiseOfReports;
+              expect(reports.length).toBe(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace![0] as Trace;
+
+              // There should be no error at the root, our error is a child.
+              expect(trace.root!.error).toStrictEqual([]);
+
+              // There should only be one child.
+              expect(trace.root!.child!.length).toBe(1);
+
+              // The child should maintain the path and message
+              expect(trace.root!.child![0].error).toMatchObject([
+                {
+                  json: '{"message":"should be unmodified","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                  message: 'should be unmodified',
+                  location: [{ column: 2, line: 1 }],
+                },
+              ]);
+            });
+
+            it('masked', async () => {
+              throwError.mockImplementationOnce(() => {
+                throw new Error('should be masked');
+              });
+
+              await setupApolloServerAndFetchPair({
+                sendErrorsInTraces: {
+                  masked: true,
+                },
+              });
+
+              const result = await apolloFetch({
+                query: `{fieldWhichWillError}`,
+              });
+              expect(result.data).toEqual({
+                fieldWhichWillError: null,
+              });
+              expect(result.errors).toBeDefined();
+              expect(result.errors[0].message).toEqual('should be masked');
+              expect(throwError).toHaveBeenCalledTimes(1);
+
+              const reports = await reportIngress.promiseOfReports;
+              expect(reports.length).toBe(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace![0] as Trace;
+
+              // There should be no error at the root, our error is a child.
+              expect(trace.root!.error).toStrictEqual([]);
+
+              // There should only be one child.
+              expect(trace.root!.child!.length).toBe(1);
+
+              // The child should maintain the path, but have its message masked
+              expect(trace.root!.child![0].error).toMatchObject([
+                {
+                  json: '{"message":"<masked>","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"],"extensions":{"maskedBy":"ApolloServerPluginUsageReporting"}}',
+                  message: '<masked>',
+                  location: [{ column: 2, line: 1 }],
+                },
+              ]);
+            });
           });
         });
       });
