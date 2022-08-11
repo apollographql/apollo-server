@@ -351,7 +351,8 @@ The `ApolloServer` constructor accepts a `formatError` hook that is run on each 
 The `formatError` hook receives two arguments: the first is the error formatted as a JSON object (to be spent with the response), and the second is the original error.
 
 > The `formatError` function does _not_ modify errors that are sent to Apollo Studio as part of usage reporting. See [For Apollo Studio reporting](#for-apollo-studio-reporting).
-> The below example returns a user-friendly message whenever Apollo Server throws a `GRAPHQL_VALIDATION_FAILED` error:
+
+The below example returns a user-friendly message whenever Apollo Server throws a `GRAPHQL_VALIDATION_FAILED` error:
 
 ```ts
 import { ApolloServerErrorCode } from '@apollo/server/errors';
@@ -406,10 +407,9 @@ You can use Apollo Studio to analyze your server's error rates. If you connect A
 
 To accomplish this, you can provide a `rewriteError` function to the [usage reporting plugin](/apollo-server/api/plugin/usage-reporting/).
 
-<!-- TODO(AS4) is this still true? -->
-
 > The usage reporting plugin is installed automatically with its default configuration if you provide an Apollo API key to Apollo Server. To define a custom `rewriteError` function, you need to install the plugin explicitly with a custom configuration, as shown in examples below.
-> Your `rewriteError` function is called for each error (`GraphQLError`) to be reported to Studio. The error is provided as the function's first argument. The function can either:
+
+Your `rewriteError` function is called for each error (`GraphQLError`) to be reported to Studio. The error is provided as the function's first argument. The function can either:
 
 - Return a modified form of the error (e.g., by changing the `err.message` to remove potentially sensitive information)
 - Return `null` to prevent the error from being reported entirely
