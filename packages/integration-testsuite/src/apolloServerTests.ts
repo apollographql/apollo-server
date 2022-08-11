@@ -1329,9 +1329,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 fieldWhichWillError: null,
               });
               expect(result.errors).toBeDefined();
-              expect(result.errors[0].message).toEqual(
-                'should be unmodified',
-              );
+              expect(result.errors[0].message).toEqual('should be unmodified');
               expect(throwError).toHaveBeenCalledTimes(1);
 
               const reports = await reportIngress.promiseOfReports;
