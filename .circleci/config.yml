@@ -77,7 +77,7 @@ jobs:
       - unless:
           condition:
             matches:
-              pattern: "^changeset-release/"
+              pattern: "^changeset-release/.+$"
               value: << pipeline.git.branch >>
           steps:
             - setup-node
