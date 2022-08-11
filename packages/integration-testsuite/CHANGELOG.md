@@ -1,5 +1,16 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.0-alpha.4
+
+### Patch Changes
+
+- [#6795](https://github.com/apollographql/apollo-server/pull/6795) [`363fd308d`](https://github.com/apollographql/apollo-server/commit/363fd308d09c8df0428b059cbe6743a723ac65b2) Thanks [@bonnici](https://github.com/bonnici)! - Added unit tests to cover `unmodified` and `masked` error reporting options
+
+* [#6794](https://github.com/apollographql/apollo-server/pull/6794) [`7445d3377`](https://github.com/apollographql/apollo-server/commit/7445d3377d16cdc65506131572c0a616d3a6324c) Thanks [@glasser](https://github.com/glasser)! - Usage reporting and inline trace plugins: replace `rewriteError` with `sendErrorsInTraces`/`includeErrors`, and mask all errors by default.
+
+* Updated dependencies [[`13f809ca6`](https://github.com/apollographql/apollo-server/commit/13f809ca6c5e1f0be9d05823f1194a8743321a79), [`96178c570`](https://github.com/apollographql/apollo-server/commit/96178c57070af574fbcff7f51b73924c576725db), [`400f7867b`](https://github.com/apollographql/apollo-server/commit/400f7867b521359fd7213547c88fcf3fc8fbe94c), [`7445d3377`](https://github.com/apollographql/apollo-server/commit/7445d3377d16cdc65506131572c0a616d3a6324c)]:
+  - @apollo/server@4.0.0-alpha.4
+
 ## 4.0.0-alpha.3
 
 ### Patch Changes
