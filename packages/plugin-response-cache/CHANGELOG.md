@@ -1,5 +1,14 @@
 # @apollo/server-plugin-response-cache
 
+## 4.0.0-alpha.3
+
+### Patch Changes
+
+- [#6806](https://github.com/apollographql/apollo-server/pull/6806) [`bccc230f0`](https://github.com/apollographql/apollo-server/commit/bccc230f05761c15098df9a5e9f57f0c65cf4fa6) Thanks [@glasser](https://github.com/glasser)! - Rename response.http.statusCode back to status like it was in AS3.
+
+- Updated dependencies [[`bccc230f0`](https://github.com/apollographql/apollo-server/commit/bccc230f05761c15098df9a5e9f57f0c65cf4fa6)]:
+  - @apollo/server@4.0.0-alpha.5
+
 ## 4.0.0-alpha.2
 
 ### Patch Changes
