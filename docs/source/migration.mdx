@@ -1437,7 +1437,7 @@ In Apollo Server 4, `requestDidStart` hooks are called in parallel rather than i
 
 Apollo Server 4 more consistently handles errors thrown by multiple plugin hooks.  Each error is wrapped in an "Unexpected error handling request" error and invoked using the new `unexpectedErrorProcessingRequest` plugin hook.
 
-### Custom `gateway` implementations
+### Custom `gateway` and `GraphQLDataSource` implementations
 
 The `gateway` option to the `ApolloServer` constructor is designed to be used with the `ApolloGateway` class from the `@apollo/gateway` package. Apollo Server 4 changes the details of how Apollo Server interacts with this object. If you use [any version of `@apollo/gateway` that supports `graphql` 16](#graphql) as your server's `gateway`, these changes won't affect you. However, if you provide something _other_ than an `ApolloGateway` instance to this option, you might need to adjust your custom code.
 
@@ -1449,11 +1449,16 @@ In Apollo Server 3, your `gateway` may define either `onSchemaChange` or the new
 
 In Apollo Server 3, the `GatewayInterface.load` method returns `Promise<GraphQLServiceConfig>`, which contains a `schema` and an `executor`. Apollo Server 4 renames `GraphQLServiceConfig` to `GatewayLoadResult` (exported from `@apollo/server-gateway-interface`), which now only has an `executor` field. You can use the `onSchemaLoadOrUpdate` hook if you want to receive the schema.
 
+In Apollo Server 3, the `executor` function took an argument of type `GraphQLRequestContextExecutionDidStart`. While Apollo Server 4 still has a type with this name, that type is *not* the argument to the `executor`. Instead, the argument to the executor has type `GatewayGraphQLRequestContext` (exported from `@apollo/server-gateway-interface`). The structure of this data type matches the structure of `GraphQLRequestContextExecutionDidStart` from *Apollo Server 3*, not the structure in Apollo Server 4.
+
+Similarly, if you create a custom `GraphQLDataSource` type (returned from `@apollo/gateway`'s `buildService` hook), the argument to its `process` method has changed from being Apollo Server 3's `GraphQLRequestContext` to the same `GatewayGraphQLRequestContext`. (For clarity: `GraphQLDataSource` is the class which Apollo Gateway uses to talk to subgraphs; it is unrelated to the Apollo Server 3 [`dataSources` option](#datasources).)
+
 Additionally, the following types have been renamed and are now exported from `@apollo/server-gateway-interface`:
 - `GraphQLExecutor` is now `GatewayExecutor`
 - `SchemaLoadOrUpdateCallback` is now `GatewaySchemaLoadOrUpdateCallback`
 - `Unsubscriber` is now `GatewayUnsubscriber`
 
+With the exception of requiring `onSchemaLoadOrUpdate`, all the changes described above are about the *names* and exporting packages of the TypeScript types; the actual runtime API between Apollo Server and Apollo Gateway is unchanged in Apollo Server 4. That is, you should just have to update type declarations, not the runtime code itself.
 
 ## Changes to defaults
 
