@@ -219,7 +219,7 @@ export default function plugin<TContext extends BaseContext>(
             return {
               result: { data: value.data },
               http: {
-                statusCode: undefined,
+                status: undefined,
                 headers: new Map(),
               },
             };

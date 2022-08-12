@@ -211,7 +211,7 @@ describe('ApolloServer start', () => {
         "headers": Map {
           "content-type" => "application/json",
         },
-        "statusCode": 500,
+        "status": 500,
       }
     `);
 
@@ -224,7 +224,7 @@ describe('ApolloServer start', () => {
         "headers": Map {
           "content-type" => "application/json",
         },
-        "statusCode": 500,
+        "status": 500,
       }
     `);
 

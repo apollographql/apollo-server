@@ -1669,7 +1669,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
               async requestDidStart() {
                 return {
                   async willSendResponse({ response: { http } }) {
-                    http!.statusCode = 403;
+                    http!.status = 403;
                   },
                 };
               },
