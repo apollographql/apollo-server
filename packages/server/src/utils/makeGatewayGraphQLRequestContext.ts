@@ -129,8 +129,8 @@ export function makeGatewayGraphQLRequestContext<TContext extends BaseContext>(
   if ('extensions' in as4Result) {
     response.extensions = as4Result.extensions;
   }
-  if ('statusCode' in as4RequestContext.response.http) {
-    response.http!.status = as4RequestContext.response.http.statusCode;
+  if ('status' in as4RequestContext.response.http) {
+    response.http!.status = as4RequestContext.response.http.status;
   }
 
   return {

@@ -988,13 +988,13 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         error.message = `Context creation failed: ${error.message}`;
         // If we explicitly provide an error code that isn't
         // INTERNAL_SERVER_ERROR, we'll treat it as a client error.
-        const statusCode =
+        const status =
           error instanceof GraphQLError &&
           error.extensions.code &&
           error.extensions.code !== ApolloServerErrorCode.INTERNAL_SERVER_ERROR
             ? 400
             : 500;
-        return this.errorResponse(error, newHTTPGraphQLHead(statusCode));
+        return this.errorResponse(error, newHTTPGraphQLHead(status));
       }
 
       return await runPotentiallyBatchedHttpQuery(
@@ -1027,7 +1027,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           // subclasses, maybe?
           maybeError.message === badMethodErrorMessage
             ? {
-                statusCode: 405,
+                status: 405,
                 headers: new HeaderMap([['allow', 'GET, POST']]),
               }
             : newHTTPGraphQLHead(400),
@@ -1042,7 +1042,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     httpGraphQLHead: HTTPGraphQLHead = newHTTPGraphQLHead(),
   ): HTTPGraphQLResponse {
     return {
-      statusCode: httpGraphQLHead.statusCode ?? 500,
+      status: httpGraphQLHead.status ?? 500,
       headers: new HeaderMap([
         ...httpGraphQLHead.headers,
         ['content-type', 'application/json'],

@@ -646,7 +646,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   },
                 }) {
                   if (errors![0].message === 'known_error') {
-                    http!.statusCode = 403;
+                    http!.status = 403;
                   }
                 },
               };
