@@ -7,6 +7,7 @@
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import type {
   ApolloServerPlugin,
+  BaseContext,
   GraphQLServerListener,
 } from '../../../externalTypes';
 
@@ -26,11 +27,13 @@ export type ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Parameters<
   typeof renderPlaygroundPage
 >[0];
 
-export function ApolloServerPluginLandingPageGraphQLPlayground(
+export function ApolloServerPluginLandingPageGraphQLPlayground<
+  TContext extends BaseContext,
+>(
   options: ApolloServerPluginLandingPageGraphQLPlaygroundOptions = Object.create(
     null,
   ),
-): ApolloServerPlugin<any> {
+): ApolloServerPlugin<TContext> {
   return {
     async serverWillStart(): Promise<GraphQLServerListener> {
       return {
