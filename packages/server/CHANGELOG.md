@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.0.0-alpha.6
+
+### Patch Changes
+
+- [#6357](https://github.com/apollographql/apollo-server/pull/6357) [`b98c7dc7c`](https://github.com/apollographql/apollo-server/commit/b98c7dc7c455efce9c6215ba86074f5c1f6fff04) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Test changeset to test #6809
+
 ## 4.0.0-alpha.5
 
 ### Patch Changes
