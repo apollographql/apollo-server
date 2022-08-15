@@ -1383,7 +1383,7 @@ Most plugin API hooks take a `GraphQLRequestContext` object as their first argum
 
 The `context` field has been renamed `contextValue` for consistency with the `graphql-js` API and to help differentiate from the `context` option of integration functions (the *function* which returns a context value).
 
-Apollo Server 4 removes the  `logger` and `cache` fields from `GraphQLRequestContext`. These fields are now available as `public readonly` fields on the `ApolloServer` object.  The `GraphQLRequestContext` object now provides the `ApolloServer` object in a new field named `server`. This means you should replace `requestContext.logger` and `requestContext.cache` with `requestContext.server.logger` and `requestContext.server.cache` respectively.
+The `GraphQLRequestContext.logger` field is now `readonly`. If you depended on the ability to change the `logger`, please file an issue.
 
 Apollo Server 4 removes the `schemaHash` field from `GraphQLRequestContext`. This field is an unstable hash of a JSON encoding resulting from running a GraphQL introspection query against your schema. The `schemaHash` field is not guaranteed to change when the schema changes (e.g., it is not affected by changes to schema directive applications). If you want a schema hash, you can use `graphql-js`'s `printSchema` function on the `schema` field and then hash the output.
 
@@ -1395,8 +1395,6 @@ Apollo Server 4 removes the `debug` field from `GraphQLRequestContext` because `
 Apollo Server 4 makes several changes to the `GraphQLServerContext` object.
 
 Apollo Server 4 renames the TypeScript type for the argument to the `serverWillStart` plugin hook from  `GraphQLServiceContext` to `GraphQLServerContext`, for consistency with the hook name.
-
-Apollo Server 4  removes the `logger` field from the `GraphQLServerContext` object. This field is now available as a `public readonly` field on the `ApolloServer` object, which `GraphQLServerContext` provides via a new field named `server`. This means `serviceContext.logger` should be replaced with `serverContext.server.logger`.
 
 Apollo Server 4 removes the `schemaHash` field (see the [previous section](#fields-on-graphqlrequestcontext) for details).
 
@@ -1430,6 +1428,44 @@ Additionally, the  `data` and `extensions` fields are both type `Record<string, 
 The value of `http.headers` is now a `Map` (with lower-case keys) rather than a Fetch API `Headers` object.
 
 > We plan to implement experimental support for incremental delivery (`@defer`/`@stream`) before the v4.0.0 release and expect this to change the structure of `GraphQLResponse` further.
+
+### `plugins` constructor argument does not take factory functions
+
+In Apollo Server 3, each element of the `plugins` array provided to `new ApolloServer` could either be an `ApolloServerPlugin` (ie, an object with fields like `requestDidStart`) or a zero-argument "factory" function returning an `ApolloServerPlugin`.
+
+In Apollo Server 4, each element must be an `ApolloServerPlugin`. If you used a factory function in order to refer to the `ApolloServer` object itself when setting up your plugin, you may want to use the new `ApolloServer.addPlugin` method which you may call on your `ApolloServer` before you call `start` or `startStandaloneServer`.
+
+For example, if your Apollo Server 3 code looked like this:
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer({
+  typeDefs,
+  plugins: [
+    makeFirstPlugin,
+    () => makeSecondPlugin(server),
+  ],
+});
+```
+
+</MultiCodeBlock>
+
+then your Apollo Server 4 code can look like this:
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer({
+  typeDefs,
+  plugins: [
+    makeFirstPlugin(),
+  ],
+});
+server.addPlugin(makeSecondPlugin(server));
+```
+
+</MultiCodeBlock>
 
 ### Changes to plugin semantics
 
