@@ -3,7 +3,7 @@ title: Operation request format
 description: How to send requests to Apollo Server over HTTP
 ---
 
-> Also check out this post from the Apollo blog: [Making GraphQL Requests using HTTP Methods](https://www.apollographql.com/blog/graphql/basics/making-graphql-requests-using-http-methods/)
+> Check out this post from the Apollo blog: [Making GraphQL Requests using HTTP Methods](https://www.apollographql.com/blog/graphql/basics/making-graphql-requests-using-http-methods/).
 
 By default, almost every GraphQL IDE and client library takes care of sending operations in a format that Apollo Server supports. This article describes that format, which is also described on [graphql.org](https://graphql.org/learn/serving-over-http/) and in [this preliminary spec](https://github.com/graphql/graphql-over-http).
 
@@ -44,7 +44,7 @@ curl --request POST \
   https://rover.apollo.dev/quickstart/products/graphql
 ```
 
-> Apollo Server's default landing page provides a `curl` command you can use to execute a test query on your own server:
+> Apollo Server's default production landing page provides a `curl` command you can use to execute a test query on your own server:
 >
 > <img class="screenshot" src="../images/as-landing-page-production.jpg" width="500" />
 

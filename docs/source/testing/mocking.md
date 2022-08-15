@@ -202,9 +202,7 @@ const mocks = {
 
 ### Using existing resolvers with mocks
 
-The default behavior for mocks is to overwrite the resolvers already present in the schema.
-
-To use your server's existing resolvers while mocking, set the `makeExecutableSchema` function's `preserveResolvers` option to `true`:
+By default, mocks overwrite your server's existing resolvers. To use your server's resolvers while mocking, set the `makeExecutableSchema` function's `preserveResolvers` option to `true`:
 
 ```ts
 import { ApolloServer } from '@apollo/server';

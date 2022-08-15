@@ -2,17 +2,13 @@
 title: Build and run queries against Apollo Server
 ---
 
-In non-production environments, Apollo Server 3 serves the following landing page from its base URL (`http://localhost:4000` by default):
+In non-production environments, Apollo Server 4's landing page is an embedded version of [Apollo Sandbox](/studio/explorer/sandbox) (served at `http://localhost:4000` by default):
 
 <img class="screenshot" src="../images/as-landing-page.jpg" alt="Apollo Server default landing page" width="350"/>
 
 > Apollo Server serves a different landing page [in production](#production-vs-non-production).
 
-## Apollo Sandbox
-
-The landing page above provides a link to [Apollo Sandbox](https://studio.apollographql.com/sandbox), a powerful web IDE that enables you to build and run operations against your server (or any other reachable server). Sandbox is a special instance of the [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/) that doesn't require an Apollo account.
-
-<img class="screenshot" src="../images/sandbox.jpg" alt="Apollo Sandbox"/>
+[Apollo Sandbox](https://studio.apollographql.com/sandbox) is a special mode of Apollo Studio used for local development, which doesn't require an Apollo account. Sandbox includes the [Apollo Studio Explorer](/studio/explorer/explorer), a powerful web IDE that enables you to build and run operations against your server (or any other reachable server).
 
 ## Production vs. non-production
 
@@ -26,7 +22,7 @@ For this reason, if you choose to [change your Apollo Server landing page](#chan
 
 ## Changing the landing page
 
-You can change the landing page that's served from Apollo Server's base URL. In addition to [configuring the default landing page](#configuring-the-default-landing-page), you can serve [GraphQL Playground](#graphql-playground) (an open-source GraphQL IDE), a completely [custom landing page](#custom-landing-page), or you can [disable the landing page entirely](#disabling-the-landing-page).
+You can change the landing page that's served from Apollo Server's base URL. You can choose to [configure the default landing page](#configuring-the-default-landing-page), serve [GraphQL Playground](#graphql-playground) (an open-source GraphQL IDE), create a completely [custom landing page](#custom-landing-page), or you can [disable the landing page entirely](#disabling-the-landing-page).
 
 You do this by installing one of a few different Apollo Server **plugins**.
 
@@ -39,7 +35,7 @@ Apollo Server uses one of these plugins to display its default landing page, dep
 
 You can install either of these plugins manually to configure its behavior.
 
-This sample replicates Apollo Server's default behavior, except it removes the footer that each landing page displays:
+For example, below, we set up our local landing page to serve up a splash page which contains a link to the Apollo Sandbox:
 
 ```js {1-4,10-12} title="index.js"
 const {
