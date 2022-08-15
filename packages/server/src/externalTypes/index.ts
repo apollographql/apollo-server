@@ -29,7 +29,6 @@ export type {
   GraphQLServerListener,
   GraphQLServerContext,
   LandingPage,
-  PluginDefinition,
 } from './plugins.js';
 export type {
   GraphQLRequestContextDidEncounterErrors,

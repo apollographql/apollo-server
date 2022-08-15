@@ -3,7 +3,7 @@ import { TraceTreeBuilder } from '../traceTreeBuilder.js';
 import type { SendErrorsOptions } from '../usageReporting/index.js';
 import { internalPlugin } from '../../internalPlugin.js';
 import { schemaIsFederated } from '../schemaIsFederated.js';
-import type { ApolloServerPlugin, BaseContext } from '../../externalTypes';
+import type { ApolloServerPlugin } from '../../externalTypes';
 
 export interface ApolloServerPluginInlineTraceOptions {
   /**
@@ -44,15 +44,15 @@ export interface ApolloServerPluginInlineTraceOptions {
 // on the `extensions`.`ftv1` property of the response.  The Apollo Gateway
 // utilizes this data to construct the full trace and submit it to Apollo's
 // usage reporting ingress.
-export function ApolloServerPluginInlineTrace<TContext extends BaseContext>(
+export function ApolloServerPluginInlineTrace(
   options: ApolloServerPluginInlineTraceOptions = Object.create(null),
-): ApolloServerPlugin<TContext> {
+): ApolloServerPlugin {
   let enabled: boolean | null = options.__onlyIfSchemaIsFederated ? null : true;
   return internalPlugin({
     __internal_plugin_id__() {
       return 'InlineTrace';
     },
-    async serverWillStart({ schema, server }) {
+    async serverWillStart({ schema, logger }) {
       // Handle the case that the plugin was implicitly installed. We only want it
       // to actually be active if the schema appears to be federated. If you don't
       // like the log line, just install `ApolloServerPluginInlineTrace()` in
@@ -60,7 +60,7 @@ export function ApolloServerPluginInlineTrace<TContext extends BaseContext>(
       if (enabled === null) {
         enabled = schemaIsFederated(schema);
         if (enabled) {
-          server.logger.info(
+          logger.info(
             'Enabling inline tracing for this federated service. To disable, use ' +
               'ApolloServerPluginInlineTraceDisabled.',
           );

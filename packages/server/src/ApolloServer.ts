@@ -42,6 +42,7 @@ import type {
   PersistedQueryOptions,
   HTTPGraphQLHead,
   ContextThunk,
+  GraphQLRequestContext,
 } from './externalTypes';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
 import { InternalPluginId, pluginIsInternal } from './internalPlugin.js';
@@ -202,20 +203,6 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
     const isDev = nodeEnv !== 'production';
 
-    // Plugins can be (for some reason) provided as a function, which we have to
-    // call first to get the actual plugin. Note that more plugins can be added
-    // before `start()` with `addPlugin()` (eg, plugins that want to take this
-    // ApolloServer as an argument), and `start()` will call
-    // `ensurePluginInstantiation` to add default plugins.
-    const plugins: ApolloServerPlugin<TContext>[] = (config.plugins ?? []).map(
-      (plugin) => {
-        if (typeof plugin === 'function') {
-          return plugin();
-        }
-        return plugin;
-      },
-    );
-
     const state: ServerState = config.gateway
       ? // ApolloServer has been initialized but we have not yet tried to load the
         // schema from the gateway. That will wait until `start()` or
@@ -293,7 +280,10 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       nodeEnv,
       allowBatchedHttpRequests: config.allowBatchedHttpRequests ?? false,
       apolloConfig,
-      plugins,
+      // Note that more plugins can be added before `start()` with `addPlugin()`
+      // (eg, plugins that want to take this ApolloServer as an argument), and
+      // `start()` will call `addDefaultPlugins` to add default plugins.
+      plugins: config.plugins ?? [],
       parseOptions: config.parseOptions ?? {},
       state,
       stopOnTerminationSignals: config.stopOnTerminationSignals,
@@ -377,8 +367,9 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       });
 
       const schemaDerivedData = schemaManager.getSchemaDerivedData();
-      const service: GraphQLServerContext<TContext> = {
-        server: this,
+      const service: GraphQLServerContext = {
+        logger: this.logger,
+        cache: this.cache,
         schema: schemaDerivedData.schema,
         apollo: this.internals.apolloConfig,
         startedInBackground,
@@ -1154,8 +1145,9 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
   const httpGraphQLHead = newHTTPGraphQLHead();
   httpGraphQLHead.headers.set('content-type', 'application/json');
 
-  const requestContext = {
-    server,
+  const requestContext: GraphQLRequestContext<TContext> = {
+    logger: server.logger,
+    cache: server.cache,
     schema: schemaDerivedData.schema,
     request: graphQLRequest,
     response: { result: {}, http: httpGraphQLHead },

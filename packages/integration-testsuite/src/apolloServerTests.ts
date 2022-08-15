@@ -33,7 +33,7 @@ import type {
   ApolloServerOptions,
   ApolloServer,
   BaseContext,
-  PluginDefinition,
+  ApolloServerPlugin,
 } from '@apollo/server';
 import fetch from 'node-fetch';
 
@@ -541,7 +541,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
       let serverInstance: ApolloServer<BaseContext>;
 
       const setupApolloServerAndFetchPairForPlugins = async (
-        plugins: PluginDefinition<BaseContext>[] = [],
+        plugins: ApolloServerPlugin<BaseContext>[] = [],
       ) => {
         const { server, url } = await createServer(
           {
@@ -878,7 +878,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               ApolloServerPluginUsageReportingOptions<any>
             > = {},
             constructorOptions: Partial<CreateServerForIntegrationTests> = {},
-            plugins: PluginDefinition<BaseContext>[] = [],
+            plugins: ApolloServerPlugin<BaseContext>[] = [],
           ) => {
             const uri = await createServerAndGetUrl({
               typeDefs: gql`

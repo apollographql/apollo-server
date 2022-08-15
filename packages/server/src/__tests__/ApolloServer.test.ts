@@ -489,19 +489,27 @@ describe('ApolloServer executeOperation', () => {
         },
       };
 
+      // A plugin that expects specific fields to be set is not a plugin that
+      // doesn't promise to set any fields.
       // @ts-expect-error
       takesPlugin<BaseContext>(specificPlugin);
-      // @ts-expect-error
+      // This is OK: plugins only get to read context, not write it, so a plugin
+      // that reads no interesting fields can be used as a plugin that is
+      // hypothetically allowed to read some interesting fields but chooses not
+      // to.
       takesPlugin<SpecificContext>(basePlugin);
 
+      // You can't use a plugin that expects specific fields to exist with a
+      // server that doesn't require them to be set when executing operations.
       new ApolloServer<BaseContext>({
         typeDefs: 'type Query { x: ID }',
         // @ts-expect-error
         plugins: [specificPlugin],
       });
+      // A plugin that doesn't expect any fields to be set works fine with a
+      // server that sets some fields when executing operations.
       new ApolloServer<SpecificContext>({
         typeDefs: 'type Query { x: ID }',
-        // @ts-expect-error
         plugins: [basePlugin],
       });
     });

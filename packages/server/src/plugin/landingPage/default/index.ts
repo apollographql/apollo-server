@@ -15,11 +15,9 @@ export type {
   ApolloServerPluginLandingPageProductionDefaultOptions,
 };
 
-export function ApolloServerPluginLandingPageLocalDefault<
-  TContext extends BaseContext,
->(
+export function ApolloServerPluginLandingPageLocalDefault(
   options: ApolloServerPluginLandingPageLocalDefaultOptions = {},
-): ApolloServerPlugin<TContext> {
+): ApolloServerPlugin {
   const { version, __internal_apolloStudioEnv__, ...rest } = {
     // we default to Sandbox unless embed is specified as false
     embed: true as const,
@@ -32,11 +30,9 @@ export function ApolloServerPluginLandingPageLocalDefault<
   });
 }
 
-export function ApolloServerPluginLandingPageProductionDefault<
-  TContext extends BaseContext,
->(
+export function ApolloServerPluginLandingPageProductionDefault(
   options: ApolloServerPluginLandingPageProductionDefaultOptions = {},
-): ApolloServerPlugin<TContext> {
+): ApolloServerPlugin {
   const { version, __internal_apolloStudioEnv__, ...rest } = options;
   return ApolloServerPluginLandingPageDefault(version, {
     isProd: true,

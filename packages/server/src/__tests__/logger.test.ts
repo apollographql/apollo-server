@@ -15,7 +15,7 @@ describe('logger', () => {
       `,
       plugins: [
         {
-          async serverWillStart({ server: { logger } }) {
+          async serverWillStart({ logger }) {
             logger.debug(KNOWN_DEBUG_MESSAGE);
           },
         },
@@ -42,7 +42,7 @@ describe('logger', () => {
       `,
       plugins: [
         {
-          async serverWillStart({ server: { logger } }) {
+          async serverWillStart({ logger }) {
             logger.debug(KNOWN_DEBUG_MESSAGE);
           },
         },

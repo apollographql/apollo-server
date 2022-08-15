@@ -1,5 +1,6 @@
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
+import type { Logger } from '@apollo/utils.logger';
 import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql';
-import type { ApolloServer } from '../ApolloServer';
 import type { ApolloConfig } from './constructor';
 import type { BaseContext } from './context';
 import type { GraphQLRequestContext, GraphQLResponse } from './graphql';
@@ -14,8 +15,10 @@ import type {
   GraphQLRequestContextWillSendResponse,
 } from './requestPipeline';
 
-export interface GraphQLServerContext<TContext extends BaseContext> {
-  server: ApolloServer<TContext>;
+export interface GraphQLServerContext {
+  readonly logger: Logger;
+  readonly cache: KeyValueCache<string>;
+
   schema: GraphQLSchema;
   apollo: ApolloConfig;
   // TODO(AS4): Make sure we document that we removed `persistedQueries`.
@@ -28,15 +31,11 @@ export interface GraphQLSchemaContext {
   coreSupergraphSdl?: string;
 }
 
-// A plugin can return an interface that matches `ApolloServerPlugin`, or a
-// factory function that returns `ApolloServerPlugin`.
-export type PluginDefinition<TContext extends BaseContext> =
-  | ApolloServerPlugin<TContext>
-  | (() => ApolloServerPlugin<TContext>);
-
-export interface ApolloServerPlugin<in out TContext extends BaseContext> {
+export interface ApolloServerPlugin<
+  in TContext extends BaseContext = BaseContext,
+> {
   serverWillStart?(
-    service: GraphQLServerContext<TContext>,
+    service: GraphQLServerContext,
   ): Promise<GraphQLServerListener | void>;
 
   requestDidStart?(

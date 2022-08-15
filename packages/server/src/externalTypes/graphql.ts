@@ -9,7 +9,8 @@ import type {
 import type { CachePolicy } from '@apollo/cache-control-types';
 import type { BaseContext } from './context';
 import type { HTTPGraphQLHead, HTTPGraphQLRequest } from './http';
-import type { ApolloServer } from '../ApolloServer';
+import type { Logger } from '@apollo/utils.logger';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 export interface GraphQLRequest {
   query?: string;
@@ -44,7 +45,8 @@ export interface GraphQLRequestMetrics {
 }
 
 export interface GraphQLRequestContext<TContext extends BaseContext> {
-  readonly server: ApolloServer<TContext>;
+  readonly logger: Logger;
+  readonly cache: KeyValueCache<string>;
 
   readonly request: GraphQLRequest;
   readonly response: GraphQLResponse;
