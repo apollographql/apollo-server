@@ -136,7 +136,7 @@
       allowedVersions: "8.x"
     },
     // On version-4, we install a bunch of different copies of `@apollo/gateway` (with various
-    // aliiases). We want them to be stuck at specific versions, or to track only a particular
+    // aliases). We want them to be stuck at specific versions, or to track only a particular
     // major version.
     {
       matchPackageNames: ["apollo-gateway-0-oldest-supported"],
