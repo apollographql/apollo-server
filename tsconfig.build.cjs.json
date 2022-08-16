@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "composite": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./packages/plugin-landing-page-graphql-playground/tsconfig.cjs.json" },
+    { "path": "./packages/plugin-response-cache/tsconfig.cjs.json" },
+    { "path": "./packages/server/tsconfig.cjs.json" },
+  ]
+}
