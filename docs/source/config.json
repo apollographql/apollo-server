@@ -19,7 +19,6 @@
     "Fetching Data": {
       "Resolvers": "/data/resolvers",
       "Error handling": "/data/errors",
-      "File uploads": "/data/file-uploads",
       "Subscriptions": "/data/subscriptions"
     },
     "Server frameworks": {

@@ -374,7 +374,7 @@ const server = new ApolloServer({
   // highlight-end
 });
 
-const { url } = await startStandaloneServer(server, { listen: { port: 4000 } });
+const { url } = await startStandaloneServer(server);
 console.log(`🚀 Server listening at: ${url}`);
 ```
 
@@ -395,7 +395,7 @@ formatError: (formattedError, error) => {
 
 If you want to access the originally thrown error (without the JSON formatting), you can use `formatError`'s second argument.
 
-For example, if you are using a database library in your app and you'd like your server to do something when it throws a specific type of database error:
+For example, if you are using a database package in your app and you'd like your server to do something when it throws a specific type of database error:
 
 ```ts
  formatError: (formattedError, error) => {
@@ -405,11 +405,11 @@ For example, if you are using a database library in your app and you'd like your
   },
 ```
 
-However, if a _resolver_ throws the error, a `GraphQLError` is wrapped around that initially thrown error.
+However, if a _resolver_ throws the error, a `GraphQLError` is wrapped around the initially thrown error.
 
-The `unwrapResolverError` function either removes the `GraphQLError` wrapping from a resolver error or returns the error unaltered if it isn't from a resolver.
+The `unwrapResolverError` function can remove the `GraphQLError` wrapping from a resolver error or return the error unaltered if it isn't from a resolver.
 
-So we can rewrite the above code snippet to work for errors thrown in and outside of resolvers, like so:
+So, we can rewrite the above code snippet to work for errors thrown in and outside of resolvers, like so:
 
 ```ts {7-9}
 import { unwrapResolverError } from '@apollo/server/errors';
@@ -433,22 +433,9 @@ new ApolloServer({
 
 You can use Apollo Studio to analyze your server's error rates. By default, the operations sent to Studio as detailed traces _don't_ contain error details.
 
-If you _do_ want error information sent to Studio, you can choose to send to either send all errors unmodified or you can modify or redact specific errors before they're transmitted:
+If you _do_ want error information sent to Studio, you can send every error, or you can modify or redact specific errors before they're transmitted:
 
-```
-new ApolloServer({
-  // etc.
-  plugins: [
-    ApolloServerPluginUsageReporting({
-      sendErrorsInTrace: { transform: rewriteError },
-    }),
-  ],
-});
-```
-
-To mask or transform errors, you can pass a function to the `sendErrorsInTrace.transform` option for the [usage reporting plugin](/apollo-server/api/plugin/usage-reporting/):
-
-```ts {4-6}
+```ts {7}
 new ApolloServer({
   // etc.
   plugins: [
@@ -461,6 +448,19 @@ new ApolloServer({
 });
 ```
 
+To mask or transform errors, you can pass a function to the `sendErrorsInTrace.transform` option for the [usage reporting plugin](/apollo-server/api/plugin/usage-reporting/):
+
+```ts {4-6}
+new ApolloServer({
+  // etc.
+  plugins: [
+    ApolloServerPluginUsageReporting({
+      sendErrorsInTrace: { transform: functionToRewriteErrors },
+    }),
+  ],
+});
+```
+
 > The usage reporting plugin is installed automatically with its default configuration if you provide an Apollo API key to Apollo Server. To customize the usage reporting plugin's behavior, you need to install it explicitly with a custom configuration, as shown in the examples below.
 
 The function you pass to `transform` is called for each error (`GraphQLError`) to be reported to Studio. The error is provided as the function's first argument. The function can either:
@@ -468,7 +468,7 @@ The function you pass to `transform` is called for each error (`GraphQLError`) t
 - Return a modified form of the error (e.g., by changing the `err.message` to remove potentially sensitive information)
 - Return `null` to prevent the error from being reported entirely
 
-[As mentioned above](#for-client-responses), you can use the `unwrapResolverError` (from `@apollo/server/errors`) to remove the `GraphQLError` wrapping the original error.
+[As mentioned above](#for-client-responses), you can use the `unwrapResolverError` (from `@apollo/server/errors`) to remove the `GraphQLError` wrapping an original error.
 
 <!-- TODO(AS4) Replace link once plugin docs are updated -->
 

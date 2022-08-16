@@ -339,7 +339,7 @@ function upperDirectiveTransformer(schema, directiveName) {
 
         // Replace the original resolver with a function that *first* calls
         // the original resolver, then converts its result to upper case
-        fieldConfig.resolve = async function (source, args, context, info) {
+        fieldConfig.resolve = async function (source, args, contextValue, info) {
           const result = await resolve(source, args, context, info);
           if (typeof result === 'string') {
             return result.toUpperCase();
@@ -364,7 +364,7 @@ schema = upperDirectiveTransformer(schema, 'upper');
 // Provide the schema to the ApolloServer constructor
 const server = new ApolloServer({ schema });
 
-const { url } = await startStandaloneServer(server, { listen: { port: 4000 } });
+const { url } = await startStandaloneServer(server);
 
 console.log(`🚀 Server listening at: ${url}`);
 ```
