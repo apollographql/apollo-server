@@ -22,7 +22,7 @@
       "File uploads": "/data/file-uploads",
       "Subscriptions": "/data/subscriptions"
     },
-    "Integrations": {
+    "Server frameworks": {
       "Building integrations": "/integrations/building-integrations"
     }
   }
