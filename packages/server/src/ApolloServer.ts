@@ -71,7 +71,7 @@ const NoIntrospection = (context: ValidationContext) => ({
       context.reportError(
         new GraphQLError(
           'GraphQL introspection is not allowed by Apollo Server, but the query contained __schema or __type. To enable introspection, pass introspection: true to ApolloServer in production',
-          [node],
+          { nodes: [node] },
         ),
       );
     }
