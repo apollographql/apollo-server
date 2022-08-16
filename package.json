@@ -75,7 +75,7 @@
     "@types/hapi__hapi": "20.0.12",
     "@types/jest": "28.1.7",
     "@types/koa__router": "8.0.11",
-    "@types/lodash": "4.14.182",
+    "@types/lodash": "4.14.183",
     "@types/lodash.sumby": "4.6.7",
     "@types/lodash.xorby": "4.7.7",
     "@types/lru-cache": "5.1.1",
