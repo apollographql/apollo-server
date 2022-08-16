@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.0.0-alpha.7
+
+### Patch Changes
+
+- [#6817](https://github.com/apollographql/apollo-server/pull/6817) [`eca003fdc`](https://github.com/apollographql/apollo-server/commit/eca003fdc75bdb63153e68119b9891d2bffc6545) Thanks [@glasser](https://github.com/glasser)! - Move ApolloServerPluginGraphQLPlayground into its own package.
+
 ## 4.0.0-alpha.6
 
 ### Patch Changes
