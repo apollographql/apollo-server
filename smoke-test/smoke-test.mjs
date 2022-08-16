@@ -10,7 +10,6 @@ await import('@apollo/server/plugin/disabled');
 await import('@apollo/server/plugin/drainHttpServer');
 await import('@apollo/server/plugin/inlineTrace');
 await import('@apollo/server/plugin/landingPage/default');
-await import('@apollo/server/plugin/landingPage/graphqlPlayground');
 await import('@apollo/server/plugin/schemaReporting');
 await import('@apollo/server/plugin/usageReporting');
 await import('@apollo/server/standalone');
