@@ -3,6 +3,8 @@ title: Subscriptions in Apollo Server
 description: Persistent GraphQL read operations
 ---
 
+>**Apollo Server does not provide built-in support for subscriptions.** You can enable support for subscriptions as [described below](#enabling-subscriptions).
+>
 > **Subscriptions are not currently supported in [Apollo Federation](/federation/).**
 >
 > This article uses the `graphql-ws` library to add support for subscriptions to Apollo Server 4. We no longer recommend using the previously documented `subscriptions-transport-ws`, because this library is not actively maintained. For more information about the differences between the two libraries, see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
@@ -92,8 +94,8 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
    const wsServer = new WebSocketServer({
      // This is the `httpServer` we created in a previous step.
      server: httpServer,
-     // Pass a different path here if your ApolloServer serves at
-     // a different path.
+     // Pass a different path here if app.use
+     // serves expressMiddleware at a different path
      path: '/graphql',
    });
 
@@ -237,7 +239,7 @@ The `subscribe` function **must** return an object of type `AsyncIterator`, a st
 
 > The `PubSub` class is **not** recommended for production environments, because it's an in-memory event system that only supports a single server instance. After you get subscriptions working in development, we strongly recommend switching it out for a different subclass of the abstract [`PubSubEngine` class](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-engine.ts). Recommended subclasses are listed in [Production `PubSub` libraries](#production-pubsub-libraries).
 
-Apollo Server uses a **publish-subscribe** (**pub/sub**) model to track events that update active subscriptions. The [`graphql-subscriptions` library](https://github.com/apollographql/graphql-subscriptions) provides the `PubSub` class as a basic in-memory event bus to help you get started:
+You can use the **publish-subscribe** (**pub/sub**) model to track events that update active subscriptions. The [`graphql-subscriptions` library](https://github.com/apollographql/graphql-subscriptions) provides the `PubSub` class as a basic in-memory event bus to help you get started:
 
 To use the `graphql-subscriptions` package, first install it like so:
 
@@ -592,11 +594,11 @@ If none of these libraries fits your use case, you can also create your own `Pub
 
 This article previously demonstrated using the `subscriptions-transport-ws` library to set up subscriptions. However, this library is no longer actively maintained. You can still use it with Apollo Server, but we strongly recommend using [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) instead.
 
-For more information on using Apollo Server with `subscriptions-transport-ws`, you can view the [previous version of this article](https://github.com/apollographql/apollo-server/blob/4b82967c10a69aa104848a8c9d15c591b528918c/docs/source/data/subscriptions.mdx).
+For details on how to switch from `subscriptions-transport-ws` to `graphql-ws`, follow the steps in the [Apollo Server 3 docs](/apollo-server/v3/data/subscriptions/#switching-to-graphql-ws).
 
 ### Updating subscription clients
 
-If you intend to [switch from `subscriptions-transport-ws` to `graphql-ws`](#switching-to-graphql-ws) you will need to update the following clients:
+If you intend to [switch from `subscriptions-transport-ws` to `graphql-ws`](/apollo-server/v3/data/subscriptions/#switching-to-graphql-ws) you will need to update the following clients:
 
 <table>
   <thead>
@@ -697,141 +699,3 @@ Use [`WebSocketLink`](/react/api/link/apollo-link-ws/)
 
 </tbody>
 </table>
-
-### Switching to `graphql-ws`
-
-<!-- TODO(AS4) swap out link once we have a expressMiddleware func article -->
-
-> The following steps assume you've already [swapped to using the `expressMiddleware` function](./migration#migrate-from-apollo-server-express).
-
-To switch from `subscriptions-transport-ws` to `graphql-ws`, you can follow the steps below.
-
-1. Install `graphql-ws` and `ws` into your app:
-
-   ```bash
-   npm install graphql-ws ws
-   ```
-
-2. Add the following imports to the file where you initialize your HTTP and subscription servers:
-
-   ```ts title="index.ts"
-   import { WebSocketServer } from 'ws';
-   import { useServer } from 'graphql-ws/lib/use/ws';
-   ```
-
-3. Instantiate a `WebSocketServer` to use as your new subscription server. This server will replace the `SubscriptionServer` from `subscriptions-transport-ws`.
-
-<CodeColumns>
-
-```ts {2} title="index.ts"
-// Creating the WebSocket subscription server
-const wsServer = new WebSocketServer({
-  // This is the `httpServer` returned by createServer(app);
-  server: httpServer,
-  // Pass a different path here if your ApolloServer serves at
-  // a different path.
-  path: '/graphql',
-});
-
-// Passing in an instance of a GraphQLSchema and
-// telling the WebSocketServer to start listening
-const serverCleanup = useServer({ schema }, wsServer);
-```
-
-```ts title="Old Subscription Server"
-const subscriptionServer = SubscriptionServer.create(
-  {
-    schema,
-    // These are imported from `graphql`.
-    execute,
-    subscribe,
-  },
-  {
-    server: httpServer,
-    path: '/graphql',
-  },
-);
-```
-
-</CodeColumns>
-
-If your `SubscriptionServer` extracts information from a subscription to use in your GraphQL operation [`context`](./resolvers/#the-context-argument), you can configure your new WebSocket server to do the same.
-
-For example, if your `SubscriptionServer` checks a client's authentication token and adds the current user to the GraphQL operation context:
-
-```ts title="Old Subscription Server"
-const subscriptionServer = SubscriptionServer.create(
-  {
-    schema,
-    execute,
-    subscribe,
-    // This will check authentication every time a
-    // client first connects to the subscription server.
-    async onConnect(connectionParams) {
-      if (connectionParams.authentication) {
-        const currentUser = await findUser(connectionParams.authentication);
-        return { currentUser };
-      }
-      throw new Error('Missing auth token!');
-    },
-  },
-  {
-    server: httpServer,
-    path: '/graphql',
-  },
-);
-```
-
-You can replicate this behavior by providing a `context` option to the first argument passed to the `useServer` function.
-
-In the example below, we check a client's authentication every time they send a `subscription` operation. If that user exists, we then add the current user to our GraphQL operation context:
-
-```ts title="New Subscription Server"
-const getDynamicContext = async (ctx, msg, args) => {
-  // ctx is the `graphql-ws` Context where connectionParams live
-  if (ctx.connectionParams.authentication) {
-    const currentUser = await findUser(connectionParams.authentication);
-    return { currentUser };
-  }
-  return { currentUser: null };
-};
-
-useServer(
-  {
-    schema,
-    // Adding a context property lets you add data to your GraphQL operation context.
-    context: (ctx, msg, args) => {
-      // Returning an object here will add that information to our
-      // GraphQL context, which all of our resolvers have access to.
-      return getDynamicContext(ctx, msg, args);
-    },
-  },
-  wsServer,
-);
-```
-
-See [Operation Context](#operation-context) for more examples of setting GraphQL operation `context`.
-
-4. Add a [plugin](/apollo-server/integrations/plugins) to your `ApolloServer` constructor to properly shutdown your new `WebSocketServer`:
-
-```ts title="index.ts"
-const server = new ApolloServer({
-  schema,
-  plugins: [
-    // Proper shutdown for the WebSocket server.
-    {
-      async serverWillStart() {
-        return {
-          async drainServer() {
-            await serverCleanup.dispose();
-          },
-        };
-      },
-    },
-  ],
-});
-```
-
-5. Ensure you are `listen`ing to your `httpServer` call. You can now remove the code related to your `SubscriptionServer`, start your HTTP server, and test that everything works.
-
-If everything is running smoothly, you can (and should) uninstall `subscriptions-transport-ws`. The final step is to [update all your subscription clients](#updating-subscription-clients) to ensure they use the same subscription protocol.

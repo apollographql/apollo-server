@@ -13,8 +13,7 @@
       "Schema basics": "/schema/schema",
       "Unions and interfaces": "/schema/unions-interfaces",
       "Custom scalars": "/schema/custom-scalars",
-      "Directives": "/schema/directives",
-      "Creating directives": "/schema/creating-directives"
+      "Directives": "/schema/directives"
     },
     "Fetching Data": {
       "Resolvers": "/data/resolvers",
