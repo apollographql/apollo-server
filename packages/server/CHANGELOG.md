@@ -1,5 +1,43 @@
 # @apollo/server
 
+## 4.0.0-alpha.7
+
+### Patch Changes
+
+- [#6817](https://github.com/apollographql/apollo-server/pull/6817) [`eca003fdc`](https://github.com/apollographql/apollo-server/commit/eca003fdc75bdb63153e68119b9891d2bffc6545) Thanks [@glasser](https://github.com/glasser)! - Move ApolloServerPluginGraphQLPlayground into its own package.
+
+## 4.0.0-alpha.6
+
+### Patch Changes
+
+- [#6814](https://github.com/apollographql/apollo-server/pull/6814) [`cf0fcf49a`](https://github.com/apollographql/apollo-server/commit/cf0fcf49afa9b8ee12840f5ac4bf1be6320cb7e1) Thanks [@glasser](https://github.com/glasser)! - Several changes relating to plugins:
+
+  - Remove the `server` field on `GraphQLRequestContext` and `GraphQLServerContext` (ie, the arguments to most plugin hook methods). This was added during AS4 development and did not exist in AS3.
+
+  - Add `logger` and `cache` fields to `GraphQLRequestContext` and `GraphQLServerContext`. The `logger` fields and `GraphQLRequestContext.cache` existed in AS3 and had been previously removed for redundancy with the `server` field. (Unlike in AS3, `logger` is readonly.)
+
+  - `ApolloServerPlugin` is now declared as `<in TContext extends BaseContext = BaseContext>` rather than `<in out TContext>`. This means that you can declare a plugin that doesn't care about `contextValue` to simply implement `ApolloServerPlugin` and it will work with any `ApolloServer<NoMatterWhatContext>`. This should make it easy to write plugins that don't care about context.
+
+  - Remove the ability to specify a factory function as an element of the `plugins` list in the `ApolloServer` constructor. (Reducing the number of ways to specify constructor options helps keep type errors simpler.) As far as we know the main use case for this (referring to the `ApolloServer` itself when creating the plugin) can be handled with the new-in-AS4 `ApolloServer.addPlugin` method.
+
+## 4.0.0-alpha.5
+
+### Patch Changes
+
+- [#6806](https://github.com/apollographql/apollo-server/pull/6806) [`bccc230f0`](https://github.com/apollographql/apollo-server/commit/bccc230f05761c15098df9a5e9f57f0c65cf4fa6) Thanks [@glasser](https://github.com/glasser)! - Rename response.http.statusCode back to status like it was in AS3.
+
+## 4.0.0-alpha.4
+
+### Patch Changes
+
+- [#6788](https://github.com/apollographql/apollo-server/pull/6788) [`13f809ca6`](https://github.com/apollographql/apollo-server/commit/13f809ca6c5e1f0be9d05823f1194a8743321a79) Thanks [@glasser](https://github.com/glasser)! - `parseOptions` is now only used for parsing operations, not for schemas too. Its TS type now only includes options recognized by `graphql-js` itself.
+
+* [#6785](https://github.com/apollographql/apollo-server/pull/6785) [`96178c570`](https://github.com/apollographql/apollo-server/commit/96178c57070af574fbcff7f51b73924c576725db) Thanks [@renovate](https://github.com/apps/renovate)! - Update internal use of `@graphql-tools/schema` from v8 to v9. This should be a no-op; we have already removed the feature that would have been affected by the API change in this upgrade (passing `parseOptions` to `makeExecutableSchema`).
+
+- [#6792](https://github.com/apollographql/apollo-server/pull/6792) [`400f7867b`](https://github.com/apollographql/apollo-server/commit/400f7867b521359fd7213547c88fcf3fc8fbe94c) Thanks [@glasser](https://github.com/glasser)! - Port GHSA-2fvv-qxrq-7jq6 fix from v3 (remove XSS from default landing page HTML)
+
+* [#6794](https://github.com/apollographql/apollo-server/pull/6794) [`7445d3377`](https://github.com/apollographql/apollo-server/commit/7445d3377d16cdc65506131572c0a616d3a6324c) Thanks [@glasser](https://github.com/glasser)! - Usage reporting and inline trace plugins: replace `rewriteError` with `sendErrorsInTraces`/`includeErrors`, and mask all errors by default.
+
 ## 4.0.0-alpha.3
 
 ### Patch Changes

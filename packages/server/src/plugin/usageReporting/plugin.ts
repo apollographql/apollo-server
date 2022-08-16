@@ -105,12 +105,12 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
     },
 
     async serverWillStart({
-      server,
+      logger: serverLogger,
       apollo,
       startedInBackground,
     }): Promise<GraphQLServerListener> {
       // Use the plugin-specific logger if one is provided; otherwise the general server one.
-      const logger = options.logger ?? server.logger;
+      const logger = options.logger ?? serverLogger;
       const { key, graphRef } = apollo;
       if (!(key && graphRef)) {
         throw new Error(
@@ -386,7 +386,6 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         schema,
         request: { http, variables },
       }): GraphQLRequestListener<TContext> => {
-        const logger = options.logger ?? server.logger;
         const treeBuilder: TraceTreeBuilder = new TraceTreeBuilder({
           maskedBy: 'ApolloServerPluginUsageReporting',
           sendErrors: options.sendErrorsInTraces,

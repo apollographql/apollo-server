@@ -11,7 +11,7 @@ import type {
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { GatewayInterface } from '@apollo/server-gateway-interface';
 import type { BaseContext } from '.';
-import type { PluginDefinition } from './plugins';
+import type { ApolloServerPlugin } from './plugins';
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
 
@@ -86,7 +86,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   allowBatchedHttpRequests?: boolean;
 
   introspection?: boolean;
-  plugins?: PluginDefinition<TContext>[];
+  plugins?: ApolloServerPlugin<TContext>[];
   persistedQueries?: PersistedQueryOptions | false;
   stopOnTerminationSignals?: boolean;
   apollo?: ApolloConfigInput;

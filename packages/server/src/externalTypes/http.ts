@@ -28,7 +28,7 @@ interface HTTPGraphQLResponseChunk {
 }
 
 export interface HTTPGraphQLHead {
-  statusCode?: number;
+  status?: number;
   // TODO(AS4): need to figure out what headers this includes (eg JSON???)
   headers: Map<string, string>;
 }

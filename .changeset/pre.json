@@ -5,16 +5,26 @@
     "@apollo/server-integration-testsuite": "3.6.7",
     "@apollo/server-plugin-response-cache": "3.6.7",
     "@apollo/server": "3.6.7",
-    "@apollo/usage-reporting-protobuf": "3.3.1"
+    "@apollo/usage-reporting-protobuf": "3.3.1",
+    "@apollo/server-plugin-landing-page-graphql-playground": "3.0.0"
   },
   "changesets": [
     "eleven-needles-collect",
+    "famous-parents-argue",
     "hip-cheetahs-fail",
     "lazy-emus-hunt",
+    "neat-buckets-marry",
+    "ninety-panthers-accept",
+    "ninety-tips-unite",
+    "old-insects-smash",
     "pink-eggs-draw",
     "small-cycles-hammer",
     "small-suits-compare",
     "spicy-lions-deliver",
-    "violet-mayflies-help"
+    "spicy-pugs-deliver",
+    "stale-sheep-search",
+    "twenty-cooks-repair",
+    "violet-mayflies-help",
+    "wet-kiwis-play"
   ]
 }

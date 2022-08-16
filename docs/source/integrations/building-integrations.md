@@ -205,7 +205,7 @@ In the above code snippet, the `httpGraphQLRequest` variable is our `HTTPGraphQL
 #### Handle errors
 
 The `executeHTTPGraphQLRequest` method does not throw. Instead, it returns an
-object containing helpful errors and a specific `statusCode` when applicable.
+object containing helpful errors and a specific `status` when applicable.
 You should handle this object accordingly, based on the error handling
 conventions that apply to your framework.
 
@@ -219,7 +219,7 @@ After awaiting the Promise returned by `executeHTTPGraphQLRequest`, we receive a
 
 ```ts
 interface HTTPGraphQLHead {
-  statusCode?: number;
+  status?: number;
   headers: Map<string, string>;
 }
 
@@ -243,6 +243,6 @@ with the appropriate status code and headers, and finally sends the body:
 for (const [key, value] of httpGraphQLResponse.headers) {
   res.setHeader(key, value);
 }
-res.statusCode = httpGraphQLResponse.statusCode || 200;
+res.statusCode = httpGraphQLResponse.status || 200;
 res.send(httpGraphQLResponse.completeBody);
 ```

@@ -93,7 +93,7 @@ export function expressMiddleware<TContext extends BaseContext>(
         for (const [key, value] of httpGraphQLResponse.headers) {
           res.setHeader(key, value);
         }
-        res.statusCode = httpGraphQLResponse.statusCode || 200;
+        res.statusCode = httpGraphQLResponse.status || 200;
         res.send(httpGraphQLResponse.completeBody);
       })
       .catch(next);

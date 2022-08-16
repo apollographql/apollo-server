@@ -4,7 +4,7 @@ title: Migrating to Apollo Server 4 (Alpha)
 
 > ⚠️ **Apollo Server 4 is currently in public alpha.** It is not yet feature-complete, and breaking changes might occur between this release and general availability. [Learn about release stages.](/resources/release-stages/#open-source-release-stages)
 >
-> This alpha primarily aims to enable community members to develop integrations between Apollo Server and their favorite web frameworks. Many Apollo Server 3 users **can't upgrade** to this alpha yet. For example, this alpha [removes multiple web framework integrations](#removed-integrations) and doesn't support using [`RESTDataSource`](#datasources) or hosting an [Apollo Gateway](#apollogateway).
+> This alpha primarily aims to enable community members to develop integrations between Apollo Server and their favorite web frameworks. Many Apollo Server 3 users **can't upgrade** to this alpha yet. For example, this alpha [removes multiple web framework integrations](#removed-integrations) and doesn't support using [`RESTDataSource`](#datasources).
 >
 > We are working on updating our documentation to reflect the changes introduced in Apollo Server 4. This article explains which features _do_ require code changes and how to make them.
 
@@ -300,7 +300,9 @@ In Apollo Server 3, the `apollo-server-core` package exports built-in plugins, l
 
 In Apollo Server 4, these built-in plugins are part of the main `@apollo/server` package, which also imports the `ApolloServer` class. The  `@apollo/server` package exports these built-in plugins with deep exports. This means you use deep imports for each built-in plugin, enabling you to evaluate only the plugin you use in your app and making it easier for bundlers to eliminate unused code.
 
- The  `@apollo/server` package exports the following plugins:
+There's one exception: the plugin `ApolloServerPluginLandingPageGraphQLPlayground` has been moved to its own package `@apollo/server-plugin-landing-page-graphql-playground` which must be installed separately. (This plugin installs the [unmaintained](https://github.com/graphql/graphql-playground/issues/1143) project GraphQL Playground as a landing page, and is provided for compatibility with Apollo Server 2. We encourage you to switch to the [default landing page](/apollo-server/v3/api/plugin/landing-pages), which installs the similar but the actively maintained Apollo Sandbox instead.)
+
+ Apollo Server exports the following plugins:
 
 | Plugin | Import path |
 |--------|-------------|
@@ -310,7 +312,7 @@ In Apollo Server 4, these built-in plugins are part of the main `@apollo/server`
 | `ApolloServerPluginInlineTrace` | `@apollo/server/plugin/inlineTrace` |
 | `ApolloServerPluginInlineTraceDisabled` | `@apollo/server/plugin/disabled` |
 | `ApolloServerPluginLandingPageDisabled` | `@apollo/server/plugin/disabled` |
-| `ApolloServerPluginLandingPageGraphQLPlayground` | `@apollo/server/plugin/landingPage/graphqlPlayground` |
+| `ApolloServerPluginLandingPageGraphQLPlayground` | `@apollo/server-plugin-landing-page-graphql-playground` |
 | `ApolloServerPluginLandingPageLocalDefault` | `@apollo/server/plugin/landingPage/default` |
 | `ApolloServerPluginLandingPageProductionDefault` | `@apollo/server/plugin/landingPage/default` |
 | `ApolloServerPluginSchemaReporting` | `@apollo/server/plugin/schemaReporting` |
@@ -347,6 +349,7 @@ Apollo Server has a peer dependency on [`graphql`](https://www.npmjs.com/package
 
 If you're using an older version of `graphql`, upgrade it to a supported version before upgrading to Apollo Server 4.
 
+Note that upgrading `graphql` may require you to upgrade other libraries that are installed in your project. For example, if you use Apollo Server with Apollo Gateway, you should upgrade Apollo Gateway to at least v0.50.1 or any v2.x version for full `graphql` 16 support before upgrading to Apollo Server 4.
 
 ### TypeScript
 
@@ -356,14 +359,6 @@ For background, Apollo Server uses type system features introduced in v4.7. We w
 
 If supporting older versions of TypeScript is important to you and you'd like to help us get `typesVersions` working, we'd appreciate PRs!
 
-
-### `@apollo/gateway`
-
-<!-- TODO(AS4): Fix before release. This now works at runtime; TS builds may require a new release of Gateway, and we'll update the docs when that's ready. -->
-
-> ⚠️ Note: The alpha version of Apollo Server 4 does **not** work as an [Apollo Gateway](/federation/gateway). You can still use this alpha to serve [subgraphs](/federation/subgraphs), just not Gateways. We will fix this before the general release of Apollo Server 4.
-
-If you use Apollo Server with Apollo Gateway, Apollo Server 4 drops support for [`@apollo/gateway` versions](/federation/api/apollo-gateway/) below v0.35.0.
 
 
 ## Removed constructor options
@@ -1390,7 +1385,7 @@ Most plugin API hooks take a `GraphQLRequestContext` object as their first argum
 
 The `context` field has been renamed `contextValue` for consistency with the `graphql-js` API and to help differentiate from the `context` option of integration functions (the *function* which returns a context value).
 
-Apollo Server 4 removes the  `logger` and `cache` fields from `GraphQLRequestContext`. These fields are now available as `public readonly` fields on the `ApolloServer` object.  The `GraphQLRequestContext` object now provides the `ApolloServer` object in a new field named `server`. This means you should replace `requestContext.logger` and `requestContext.cache` with `requestContext.server.logger` and `requestContext.server.cache` respectively.
+The `GraphQLRequestContext.logger` field is now `readonly`. If you depended on the ability to change the `logger`, please file an issue.
 
 Apollo Server 4 removes the `schemaHash` field from `GraphQLRequestContext`. This field is an unstable hash of a JSON encoding resulting from running a GraphQL introspection query against your schema. The `schemaHash` field is not guaranteed to change when the schema changes (e.g., it is not affected by changes to schema directive applications). If you want a schema hash, you can use `graphql-js`'s `printSchema` function on the `schema` field and then hash the output.
 
@@ -1402,8 +1397,6 @@ Apollo Server 4 removes the `debug` field from `GraphQLRequestContext` because `
 Apollo Server 4 makes several changes to the `GraphQLServerContext` object.
 
 Apollo Server 4 renames the TypeScript type for the argument to the `serverWillStart` plugin hook from  `GraphQLServiceContext` to `GraphQLServerContext`, for consistency with the hook name.
-
-Apollo Server 4  removes the `logger` field from the `GraphQLServerContext` object. This field is now available as a `public readonly` field on the `ApolloServer` object, which `GraphQLServerContext` provides via a new field named `server`. This means `serviceContext.logger` should be replaced with `serverContext.server.logger`.
 
 Apollo Server 4 removes the `schemaHash` field (see the [previous section](#fields-on-graphqlrequestcontext) for details).
 
@@ -1434,9 +1427,47 @@ export interface GraphQLResponse {
 
 Additionally, the  `data` and `extensions` fields are both type `Record<string, unknown>`, rather than `Record<string, any>`.
 
-The value of `http.headers` is now a `Map` (with lower-case keys) rather than a Fetch API `Headers` object.
+The value of `http.headers` is now a `Map` rather than a Fetch API `Headers` object. All keys in this map must be lower-case; if you insert any header name with capital letters, it will through.
 
 > We plan to implement experimental support for incremental delivery (`@defer`/`@stream`) before the v4.0.0 release and expect this to change the structure of `GraphQLResponse` further.
+
+### `plugins` constructor argument does not take factory functions
+
+In Apollo Server 3, each element of the `plugins` array provided to `new ApolloServer` could either be an `ApolloServerPlugin` (ie, an object with fields like `requestDidStart`) or a zero-argument "factory" function returning an `ApolloServerPlugin`.
+
+In Apollo Server 4, each element must be an `ApolloServerPlugin`. If you used a factory function in order to refer to the `ApolloServer` object itself when setting up your plugin, you may want to use the new `ApolloServer.addPlugin` method which you may call on your `ApolloServer` before you call `start` or `startStandaloneServer`.
+
+For example, if your Apollo Server 3 code looked like this:
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer({
+  typeDefs,
+  plugins: [
+    makeFirstPlugin,
+    () => makeSecondPlugin(server),
+  ],
+});
+```
+
+</MultiCodeBlock>
+
+then your Apollo Server 4 code can look like this:
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer({
+  typeDefs,
+  plugins: [
+    makeFirstPlugin(),
+  ],
+});
+server.addPlugin(makeSecondPlugin(server));
+```
+
+</MultiCodeBlock>
 
 ### Changes to plugin semantics
 
@@ -1444,13 +1475,9 @@ In Apollo Server 4, `requestDidStart` hooks are called in parallel rather than i
 
 Apollo Server 4 more consistently handles errors thrown by multiple plugin hooks.  Each error is wrapped in an "Unexpected error handling request" error and invoked using the new `unexpectedErrorProcessingRequest` plugin hook.
 
-### Custom `gateway` implementations
+### Custom `gateway` and `GraphQLDataSource` implementations
 
-<!-- TODO(AS4): Fix before release -->
-
-> ⚠️ Note: The alpha version of Apollo Server 4 does **not** work as an [Apollo Gateway](/federation/gateway). You can still use this alpha to serve [subgraphs](/federation/subgraphs), just not Gateways. We will fix this before the general release of Apollo Server 4.
-
-The `gateway` option to the `ApolloServer` constructor is designed to be used with the `ApolloGateway` class from the `@apollo/gateway` package. Apollo Server 4 changes the details of how Apollo Server interacts with this object. If you use a [supported version of `@apollo/gateway`](#apollo-gateway) as your server's `gateway`, these changes won't affect you. However, if you provide something _other_ than an `ApolloGateway` instance to this option, you might need to adjust your custom code.
+The `gateway` option to the `ApolloServer` constructor is designed to be used with the `ApolloGateway` class from the `@apollo/gateway` package. Apollo Server 4 changes the details of how Apollo Server interacts with this object. If you use [any version of `@apollo/gateway` that supports `graphql` 16](#graphql) as your server's `gateway`, these changes won't affect you. However, if you provide something _other_ than an `ApolloGateway` instance to this option, you might need to adjust your custom code.
 
 All the TypeScript types you need to define your `gateway` are now part of the `@apollo/server-gateway-interface` package rather than being exported from an Apollo Server package directly. Additionally, many of these types have been renamed.
 
@@ -1460,11 +1487,16 @@ In Apollo Server 3, your `gateway` may define either `onSchemaChange` or the new
 
 In Apollo Server 3, the `GatewayInterface.load` method returns `Promise<GraphQLServiceConfig>`, which contains a `schema` and an `executor`. Apollo Server 4 renames `GraphQLServiceConfig` to `GatewayLoadResult` (exported from `@apollo/server-gateway-interface`), which now only has an `executor` field. You can use the `onSchemaLoadOrUpdate` hook if you want to receive the schema.
 
+In Apollo Server 3, the `executor` function took an argument of type `GraphQLRequestContextExecutionDidStart`. While Apollo Server 4 still has a type with this name, that type is *not* the argument to the `executor`. Instead, the argument to the executor has type `GatewayGraphQLRequestContext` (exported from `@apollo/server-gateway-interface`). The structure of this data type matches the structure of `GraphQLRequestContextExecutionDidStart` from *Apollo Server 3*, not the structure in Apollo Server 4.
+
+Similarly, if you create a custom `GraphQLDataSource` type (returned from `@apollo/gateway`'s `buildService` hook), the argument to its `process` method has changed from being Apollo Server 3's `GraphQLRequestContext` to the same `GatewayGraphQLRequestContext`. (For clarity: `GraphQLDataSource` is the class which Apollo Gateway uses to talk to subgraphs; it is unrelated to the Apollo Server 3 [`dataSources` option](#datasources).)
+
 Additionally, the following types have been renamed and are now exported from `@apollo/server-gateway-interface`:
 - `GraphQLExecutor` is now `GatewayExecutor`
 - `SchemaLoadOrUpdateCallback` is now `GatewaySchemaLoadOrUpdateCallback`
 - `Unsubscriber` is now `GatewayUnsubscriber`
 
+With the exception of requiring `onSchemaLoadOrUpdate`, all the changes described above are about the *names* and exporting packages of the TypeScript types; the actual runtime API between Apollo Server and Apollo Gateway is unchanged in Apollo Server 4. That is, you should just have to update type declarations, not the runtime code itself.
 
 ## Changes to defaults
 

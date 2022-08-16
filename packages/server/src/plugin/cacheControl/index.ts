@@ -1,4 +1,4 @@
-import type { ApolloServerPlugin, BaseContext } from '../../externalTypes';
+import type { ApolloServerPlugin } from '../../externalTypes';
 import {
   DirectiveNode,
   getNamedType,
@@ -47,9 +47,9 @@ export interface ApolloServerPluginCacheControlOptions {
   __testing__cacheHints?: Map<string, CacheHint>;
 }
 
-export function ApolloServerPluginCacheControl<TContext extends BaseContext>(
+export function ApolloServerPluginCacheControl(
   options: ApolloServerPluginCacheControlOptions = Object.create(null),
-): ApolloServerPlugin<TContext> {
+): ApolloServerPlugin {
   let typeAnnotationCache: LRUCache<GraphQLCompositeType, CacheAnnotation>;
 
   let fieldAnnotationCache: LRUCache<

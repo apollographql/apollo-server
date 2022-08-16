@@ -28,7 +28,24 @@ commands:
           - run: volta pin node@<< parameters.node-version >>
       - run: node --version
       - run: npm --version
-      - node/install-packages
+      # For now, we ignore `engine` constraints in package.json when running on
+      # Node 18. That's because we install a bunch of versions of
+      # @apollo/gateway for compatibility testing, including some from the era
+      # where we liked putting `<` engine constraints on all our packages. If
+      # this gets awkward, we can stop testing those old versions, or test them
+      # somewhere more self-contained like the smoke-test.
+      - when:
+          condition:
+            equal: [ '18', << parameters.node-version >> ]
+          steps:
+            - node/install-packages:
+                override-ci-command: npm ci --no-engine-strict
+      - unless:
+          condition:
+            equal: [ '18', << parameters.node-version >> ]
+          steps:
+            - node/install-packages
+
 
 jobs:
   NodeJS:
@@ -65,12 +82,24 @@ jobs:
       - setup-node
       - run: npm run lint
 
+  # Ensure that any PR that changes packages has a changeset on it (perhaps
+  # an empty one created with `changeset --empty`).
+  # We run the Changesets job itself on all branches so that we can require
+  # it to pass, but we don't run any steps on the "Version Packages" PRs
+  # themselves.
   Changesets:
     docker:
     - image: cimg/base:stable
     steps:
-      - setup-node
-      - run: npm run changeset-check
+      - run: echo Ensure there is at least one step
+      - unless:
+          condition:
+            matches:
+              pattern: "^changeset-release/.+$"
+              value: << pipeline.git.branch >>
+          steps:
+            - setup-node
+            - run: npm run changeset-check
 
   Spell check:
     docker:

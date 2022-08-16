@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist/esm"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["**/__tests__"],
+  "references": [
+    {
+      "path": "../server"
+    }
+  ]
+}

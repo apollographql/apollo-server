@@ -33,7 +33,7 @@ import type {
   ApolloServerOptions,
   ApolloServer,
   BaseContext,
-  PluginDefinition,
+  ApolloServerPlugin,
 } from '@apollo/server';
 import fetch from 'node-fetch';
 
@@ -57,7 +57,7 @@ import {
   ApolloServerPluginUsageReportingDisabled,
 } from '@apollo/server/plugin/disabled';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server/plugin/landingPage/graphqlPlayground';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground';
 import {
   jest,
   describe,
@@ -541,7 +541,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
       let serverInstance: ApolloServer<BaseContext>;
 
       const setupApolloServerAndFetchPairForPlugins = async (
-        plugins: PluginDefinition<BaseContext>[] = [],
+        plugins: ApolloServerPlugin<BaseContext>[] = [],
       ) => {
         const { server, url } = await createServer(
           {
@@ -646,7 +646,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   },
                 }) {
                   if (errors![0].message === 'known_error') {
-                    http!.statusCode = 403;
+                    http!.status = 403;
                   }
                 },
               };
@@ -878,7 +878,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               ApolloServerPluginUsageReportingOptions<any>
             > = {},
             constructorOptions: Partial<CreateServerForIntegrationTests> = {},
-            plugins: PluginDefinition<BaseContext>[] = [],
+            plugins: ApolloServerPlugin<BaseContext>[] = [],
           ) => {
             const uri = await createServerAndGetUrl({
               typeDefs: gql`
@@ -1309,6 +1309,108 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   location: [{ column: 2, line: 1 }],
                 },
               ]);
+            });
+
+            it('unmodified', async () => {
+              throwError.mockImplementationOnce(() => {
+                throw new GraphQLError('should be unmodified', {
+                  extensions: { custom: 'extension' },
+                });
+              });
+
+              await setupApolloServerAndFetchPair({
+                sendErrorsInTraces: {
+                  unmodified: true,
+                },
+              });
+
+              const result = await apolloFetch({
+                query: `{fieldWhichWillError}`,
+              });
+              expect(result.data).toEqual({
+                fieldWhichWillError: null,
+              });
+              expect(result.errors).toBeDefined();
+              expect(result.errors[0].message).toEqual('should be unmodified');
+              expect(throwError).toHaveBeenCalledTimes(1);
+
+              const reports = await reportIngress.promiseOfReports;
+              expect(reports.length).toBe(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace![0] as Trace;
+
+              // There should be no error at the root, our error is a child.
+              expect(trace.root!.error).toStrictEqual([]);
+
+              // There should only be one child.
+              expect(trace.root!.child!.length).toBe(1);
+
+              // The child should maintain the path and message
+              expect(trace.root!.child![0].error).toMatchInlineSnapshot(`
+                Array [
+                  Object {
+                    "json": "{\\"message\\":\\"should be unmodified\\",\\"locations\\":[{\\"line\\":1,\\"column\\":2}],\\"path\\":[\\"fieldWhichWillError\\"],\\"extensions\\":{\\"custom\\":\\"extension\\"}}",
+                    "location": Array [
+                      Object {
+                        "column": 2,
+                        "line": 1,
+                      },
+                    ],
+                    "message": "should be unmodified",
+                  },
+                ]
+              `);
+            });
+
+            it('masked', async () => {
+              throwError.mockImplementationOnce(() => {
+                throw new GraphQLError('should be masked', {
+                  extensions: { custom: 'extension' },
+                });
+              });
+
+              await setupApolloServerAndFetchPair({
+                sendErrorsInTraces: {
+                  masked: true,
+                },
+              });
+
+              const result = await apolloFetch({
+                query: `{fieldWhichWillError}`,
+              });
+              expect(result.data).toEqual({
+                fieldWhichWillError: null,
+              });
+              expect(result.errors).toBeDefined();
+              expect(result.errors[0].message).toEqual('should be masked');
+              expect(throwError).toHaveBeenCalledTimes(1);
+
+              const reports = await reportIngress.promiseOfReports;
+              expect(reports.length).toBe(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace![0] as Trace;
+
+              // There should be no error at the root, our error is a child.
+              expect(trace.root!.error).toStrictEqual([]);
+
+              // There should only be one child.
+              expect(trace.root!.child!.length).toBe(1);
+
+              // The child should maintain the path, but have its message masked
+              expect(trace.root!.child![0].error).toMatchInlineSnapshot(`
+                Array [
+                  Object {
+                    "json": "{\\"message\\":\\"<masked>\\",\\"locations\\":[{\\"line\\":1,\\"column\\":2}],\\"path\\":[\\"fieldWhichWillError\\"],\\"extensions\\":{\\"maskedBy\\":\\"ApolloServerPluginUsageReporting\\"}}",
+                    "location": Array [
+                      Object {
+                        "column": 2,
+                        "line": 1,
+                      },
+                    ],
+                    "message": "<masked>",
+                  },
+                ]
+              `);
             });
           });
         });

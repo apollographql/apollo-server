@@ -1,7 +1,7 @@
 {
-  "name": "@apollo/server-plugin-response-cache",
-  "version": "4.0.0-alpha.4",
-  "description": "Apollo Server full query response cache",
+  "name": "@apollo/server-plugin-landing-page-graphql-playground",
+  "version": "4.0.0-alpha.0",
+  "description": "Apollo Server landing page plugin for GraphQL Playground",
   "type": "module",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -16,7 +16,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server",
-    "directory": "packages/plugin-response-cache"
+    "directory": "packages/plugin-landing-page-graphql-playground"
   },
   "keywords": [],
   "author": "Apollo <packages@apollographql.com>",
@@ -29,11 +29,9 @@
     "node": ">=14.0"
   },
   "dependencies": {
-    "@apollo/utils.createhash": "^1.1.0",
-    "@apollo/utils.keyvaluecache": "^1.0.1"
+    "@apollographql/graphql-playground-html": "1.6.29"
   },
   "peerDependencies": {
-    "@apollo/server": "^4.0.0-alpha.6",
-    "graphql": "^16.5.0"
+    "@apollo/server": "^4.0.0-alpha.7"
   }
 }

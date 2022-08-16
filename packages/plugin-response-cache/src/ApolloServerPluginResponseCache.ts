@@ -174,7 +174,7 @@ export default function plugin<TContext extends BaseContext>(
       outerRequestContext: GraphQLRequestContext<any>,
     ): Promise<GraphQLRequestListener<any>> {
       const cache = new PrefixingKeyValueCache(
-        options.cache ?? outerRequestContext.server.cache,
+        options.cache ?? outerRequestContext.cache,
         'fqc:',
       );
 
@@ -219,7 +219,7 @@ export default function plugin<TContext extends BaseContext>(
             return {
               result: { data: value.data },
               http: {
-                statusCode: undefined,
+                status: undefined,
                 headers: new Map(),
               },
             };
@@ -267,7 +267,7 @@ export default function plugin<TContext extends BaseContext>(
         },
 
         async willSendResponse(requestContext) {
-          const logger = requestContext.server.logger || console;
+          const logger = requestContext.logger || console;
 
           if (!isGraphQLQuery(requestContext)) {
             return;

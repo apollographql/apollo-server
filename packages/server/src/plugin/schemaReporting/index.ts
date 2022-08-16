@@ -5,7 +5,7 @@ import { printSchema, validateSchema, buildSchema } from 'graphql';
 import { SchemaReporter } from './schemaReporter.js';
 import { schemaIsFederated } from '../schemaIsFederated.js';
 import type { SchemaReport } from './generated/operations';
-import type { ApolloServerPlugin, BaseContext } from '../../externalTypes';
+import type { ApolloServerPlugin } from '../../externalTypes';
 import type { Fetcher } from '@apollo/utils.fetcher';
 import { packageVersion } from '../../generated/packageVersion.js';
 import { computeCoreSchemaHash } from '../../utils/computeCoreSchemaHash.js';
@@ -58,23 +58,22 @@ export interface ApolloServerPluginSchemaReportingOptions {
   fetcher?: Fetcher;
 }
 
-export function ApolloServerPluginSchemaReporting<TContext extends BaseContext>(
+export function ApolloServerPluginSchemaReporting(
   {
     initialDelayMaxMs,
     overrideReportedSchema,
     endpointUrl,
     fetcher,
   }: ApolloServerPluginSchemaReportingOptions = Object.create(null),
-): ApolloServerPlugin<TContext> {
+): ApolloServerPlugin {
   const bootId = uuidv4();
 
   return internalPlugin({
     __internal_plugin_id__() {
       return 'SchemaReporting';
     },
-    async serverWillStart({ apollo, schema, server }) {
+    async serverWillStart({ apollo, schema, logger }) {
       const { key, graphRef } = apollo;
-      const { logger } = server;
       if (!key) {
         throw Error(
           'To use ApolloServerPluginSchemaReporting, you must provide an Apollo API ' +

@@ -90,7 +90,7 @@ function isBadUserInputGraphQLError(error: GraphQLError): boolean {
 // that may mask the contents of an error response. (Otherwise, the default
 // status code for a response with `errors` but no `data` (even null) is 400.)
 const getPersistedQueryErrorHttp = () => ({
-  statusCode: 200,
+  status: 200,
   headers: new HeaderMap([
     ['cache-control', 'private, no-cache, must-revalidate'],
   ]),
@@ -306,7 +306,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
           `GET requests only support query operations, not ${operation.operation} operations`,
         ),
       ],
-      { statusCode: 405, headers: new HeaderMap([['allow', 'POST']]) },
+      { status: 405, headers: new HeaderMap([['allow', 'POST']]) },
     );
   }
 
@@ -414,7 +414,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       enablePluginsForSchemaResolvers(schemaDerivedData.schema);
     }
 
-    let statusCodeIfExecuteThrows = 500;
+    let statusIfExecuteThrows = 500;
     try {
       const result = await execute(
         requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
@@ -429,7 +429,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
             'Unexpected error: Apollo Server did not resolve an operation but execute did not return errors',
           );
         }
-        statusCodeIfExecuteThrows = 400;
+        statusIfExecuteThrows = 400;
         throw new OperationResolutionError(result.errors[0]);
       }
 
@@ -469,7 +469,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
       return await sendErrorResponse(
         [ensureGraphQLError(executionError)],
-        newHTTPGraphQLHead(statusCodeIfExecuteThrows),
+        newHTTPGraphQLHead(statusIfExecuteThrows),
       );
     }
   }
@@ -504,8 +504,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   }
 
   function updateResponseHTTP(http: HTTPGraphQLHead) {
-    if (http.statusCode) {
-      requestContext.response.http.statusCode = http.statusCode;
+    if (http.status) {
+      requestContext.response.http.status = http.status;
     }
     for (const [name, value] of http.headers) {
       // TODO(AS4): this is overwriting rather than appending. However we should
@@ -559,8 +559,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
     updateResponseHTTP(http);
 
-    if (!requestContext.response.http.statusCode) {
-      requestContext.response.http.statusCode = 400;
+    if (!requestContext.response.http.status) {
+      requestContext.response.http.status = 400;
     }
 
     await invokeWillSendResponse();

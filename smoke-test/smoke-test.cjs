@@ -10,7 +10,6 @@ async function validateAllImports() {
   require('@apollo/server/plugin/drainHttpServer');
   require('@apollo/server/plugin/inlineTrace');
   require('@apollo/server/plugin/landingPage/default');
-  require('@apollo/server/plugin/landingPage/graphqlPlayground');
   require('@apollo/server/plugin/schemaReporting');
   require('@apollo/server/plugin/usageReporting');
   require('@apollo/server/standalone');

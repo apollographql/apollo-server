@@ -1,0 +1,7 @@
+{
+  "extends": "../../../../tsconfig.test.base",
+  "include": ["gatewayCompatibility2.test.ts"],
+  "references": [
+    { "path": "../../" },
+  ]
+}

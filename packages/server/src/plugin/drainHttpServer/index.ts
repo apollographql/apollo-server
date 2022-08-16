@@ -1,5 +1,5 @@
 import type http from 'http';
-import type { ApolloServerPlugin, BaseContext } from '../../externalTypes';
+import type { ApolloServerPlugin } from '../../externalTypes';
 import { Stopper } from './stoppable.js';
 
 /**
@@ -23,9 +23,9 @@ export interface ApolloServerPluginDrainHttpServerOptions {
  * See https://www.apollographql.com/docs/apollo-server/api/plugin/drain-http-server/
  * for details.
  */
-export function ApolloServerPluginDrainHttpServer<TContext extends BaseContext>(
+export function ApolloServerPluginDrainHttpServer(
   options: ApolloServerPluginDrainHttpServerOptions,
-): ApolloServerPlugin<TContext> {
+): ApolloServerPlugin {
   const stopper = new Stopper(options.httpServer);
   return {
     async serverWillStart() {

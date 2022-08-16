@@ -51,9 +51,9 @@ export async function runBatchHttpQuery<TContext extends BaseContext>(
         combinedResponse.headers.set(key, value);
       }
       // If two responses both want to set the status code, one of them will win.
-      // Note that the normal success case leaves statusCode empty.
-      if (response.statusCode) {
-        combinedResponse.statusCode = response.statusCode;
+      // Note that the normal success case leaves status empty.
+      if (response.status) {
+        combinedResponse.status = response.status;
       }
       return response.completeBody;
     }),

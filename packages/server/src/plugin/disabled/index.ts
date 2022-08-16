@@ -6,10 +6,8 @@ import type {
   InternalPluginId,
 } from '../../internalPlugin';
 
-function disabledPlugin<TContext extends BaseContext>(
-  id: InternalPluginId,
-): ApolloServerPlugin<TContext> {
-  const plugin: InternalApolloServerPlugin<TContext> = {
+function disabledPlugin(id: InternalPluginId): ApolloServerPlugin {
+  const plugin: InternalApolloServerPlugin<BaseContext> = {
     __internal_plugin_id__() {
       return id;
     },
@@ -17,26 +15,18 @@ function disabledPlugin<TContext extends BaseContext>(
   return plugin;
 }
 
-export function ApolloServerPluginCacheControlDisabled<
-  TContext extends BaseContext,
->(): ApolloServerPlugin<TContext> {
+export function ApolloServerPluginCacheControlDisabled(): ApolloServerPlugin<BaseContext> {
   return disabledPlugin('CacheControl');
 }
 
-export function ApolloServerPluginInlineTraceDisabled<
-  TContext extends BaseContext,
->(): ApolloServerPlugin<TContext> {
+export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin<BaseContext> {
   return disabledPlugin('InlineTrace');
 }
 
-export function ApolloServerPluginLandingPageDisabled<
-  TContext extends BaseContext,
->(): ApolloServerPlugin<TContext> {
+export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin<BaseContext> {
   return disabledPlugin('LandingPageDisabled');
 }
 
-export function ApolloServerPluginUsageReportingDisabled<
-  TContext extends BaseContext,
->(): ApolloServerPlugin<TContext> {
+export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin<BaseContext> {
   return disabledPlugin('UsageReporting');
 }
