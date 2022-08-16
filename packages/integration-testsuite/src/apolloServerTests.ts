@@ -57,7 +57,7 @@ import {
   ApolloServerPluginUsageReportingDisabled,
 } from '@apollo/server/plugin/disabled';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server/plugin/landingPage/graphqlPlayground';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground';
 import {
   jest,
   describe,

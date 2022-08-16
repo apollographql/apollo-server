@@ -5,10 +5,7 @@
 // specifying `version` when installing the plugin.
 
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
-import type {
-  ApolloServerPlugin,
-  GraphQLServerListener,
-} from '../../../externalTypes';
+import type { ApolloServerPlugin, GraphQLServerListener } from '@apollo/server';
 
 // This specifies the React version of our fork of GraphQL Playground,
 // `@apollographql/graphql-playground-react`.  It is related to, but not to

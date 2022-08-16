@@ -52,11 +52,6 @@
       "import": "./dist/esm/plugin/landingPage/default/index.js",
       "require": "./dist/cjs/plugin/landingPage/default/index.js"
     },
-    "./plugin/landingPage/graphqlPlayground": {
-      "types": "./dist/esm/plugin/landingPage/graphqlPlayground/index.d.ts",
-      "import": "./dist/esm/plugin/landingPage/graphqlPlayground/index.js",
-      "require": "./dist/cjs/plugin/landingPage/graphqlPlayground/index.js"
-    },
     "./plugin/schemaReporting": {
       "types": "./dist/esm/plugin/schemaReporting/index.d.ts",
       "import": "./dist/esm/plugin/schemaReporting/index.js",
@@ -99,7 +94,6 @@
     "@apollo/utils.logger": "^1.0.0",
     "@apollo/utils.usagereporting": "^1.0.0",
     "@apollo/utils.withrequired": "^1.0.0",
-    "@apollographql/graphql-playground-html": "1.6.29",
     "@graphql-tools/schema": "^9.0.0",
     "@josephg/resolvable": "^1.0.0",
     "@types/express-serve-static-core": "4.17.30",
