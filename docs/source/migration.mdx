@@ -1427,7 +1427,7 @@ export interface GraphQLResponse {
 
 Additionally, the  `data` and `extensions` fields are both type `Record<string, unknown>`, rather than `Record<string, any>`.
 
-The value of `http.headers` is now a `Map` (with lower-case keys) rather than a Fetch API `Headers` object.
+The value of `http.headers` is now a `Map` rather than a Fetch API `Headers` object. All keys in this map must be lower-case; if you insert any header name with capital letters, it will through.
 
 > We plan to implement experimental support for incremental delivery (`@defer`/`@stream`) before the v4.0.0 release and expect this to change the structure of `GraphQLResponse` further.
 
