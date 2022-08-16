@@ -39,13 +39,15 @@ Here's an example error response caused by misspelling the `__typename` field in
 
 To help with debugging, Apollo Server provides an `ApolloServerErrorCode` enum, which you can use to check if your error is one of the [different types produced by Apollo Server](#built-in-error-codes).
 
-If Apollo Server recognizes your error type you can write custom logic to handle that error, like so:
+You can check an error's `code` to determine why an error occurred and also add logic to respond to different types of errors, like so:
 
 ```ts
 import { ApolloServerErrorCode } from '@apollo/server/errors';
 
 if (error.extensions?.code === ApolloServerErrorCode.GRAPHQL_PARSE_FAILED) {
   // respond to the syntax error
+} else if (error.extensions?.code === "MY_CUSTOM_CODE") {
+  // do something else
 }
 ```
 
