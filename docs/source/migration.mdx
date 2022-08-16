@@ -934,7 +934,7 @@ ApolloServerPluginUsageReporting({
 
 In Apollo Server 3, you can specify a function to rewrite errors before sending them to Apollo's server via the `rewriteError` option to `ApolloServerPluginUsageReporting` (for monoliths) and `ApolloServerPluginInlineTrace` (for subgraphs).
 
-In Apollo Server 4, you specify the same function as the `transform` option on the `sendErrorsInTrace` option to `ApolloServerPluginUsageReporting` and the `includeErrors` option to `ApolloServerPluginInlineTrace`.
+In Apollo Server 4, you specify the same function as the `transform` option on the `sendErrorsInTraces` option to `ApolloServerPluginUsageReporting` and the `includeErrors` option to `ApolloServerPluginInlineTrace`.
 
 (Additionally, the [default behavior has changed to mask errors](#usage-reporting-and-inline-trace-plugins-mask-errors-by-default).)
 
@@ -960,7 +960,7 @@ you can now write:
 // monoliths
 new ApolloServer({
   plugins: [ApolloServerPluginUsageReporting({
-    sendErrorsInTrace: { transform: rewriteError },
+    sendErrorsInTraces { transform: rewriteError },
   })],
   // ...
 })
@@ -1560,7 +1560,7 @@ To restore the Apollo Server 3 behavior, you can pass `{ unmodified: true }` to 
 // monoliths
 new ApolloServer({
   plugins: [ApolloServerPluginUsageReporting({
-    sendErrorsInTrace: { unmodified: true },
+    sendErrorsInTraces { unmodified: true },
   })],
   // ...
 })
@@ -1574,7 +1574,7 @@ new ApolloServer({
 })
 ```
 
-(As [described above](#rewriteerror-plugin-option), the `rewriteError` option has been replaced by a `transform` option on `sendErrorsInTrace` or `includeErrors`.)
+(As [described above](#rewriteerror-plugin-option), the `rewriteError` option has been replaced by a `transform` option on `sendErrorsInTraces` or `includeErrors`.)
 
 ## Renamed packages
 

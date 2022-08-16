@@ -37,7 +37,7 @@ Here's an example error response caused by misspelling the `__typename` field in
 
 </ExpansionPanel>
 
-To help with debugging, Apollo Server provides an `ApolloServerErrorCode` enum, which you can use to check if your error is one of the [different types produced by Apollo Server](#error-codes).
+To help with debugging, Apollo Server provides an `ApolloServerErrorCode` enum, which you can use to check if your error is one of the [different types produced by Apollo Server](#built-in-error-codes).
 
 If Apollo Server recognizes your error type you can write custom logic to handle that error, like so:
 
@@ -51,7 +51,7 @@ if (error.extensions?.code === ApolloServerErrorCode.GRAPHQL_PARSE_FAILED) {
 
 Apollo Server's variety of error codes enables requesting clients to respond differently to different error types. You can also [create your own custom errors and codes](#custom-errors).
 
-## Error codes
+## Built-in error codes
 
 <table class="field-table">
   <thead>
@@ -200,7 +200,7 @@ throw new GraphQLError('You are not authorized to perform this action.', {
 
 ## Throwing errors
 
-Apollo Server throws [errors](#error-codes) automatically when applicable. For example, it throws a `GRAPHQL_VALIDATION_FAILED` error whenever an incoming operation isn't valid against the server's schema.
+Apollo Server throws [errors](#built-in-error-codes) automatically when applicable. For example, it throws a `GRAPHQL_VALIDATION_FAILED` error whenever an incoming operation isn't valid against the server's schema.
 
 Your resolvers can also throw errors in situations where Apollo Server doesn't do so automatically.
 
@@ -395,7 +395,7 @@ formatError: (formattedError, error) => {
 
 If you want to access the originally thrown error (without the JSON formatting), you can use `formatError`'s second argument.
 
-For example, if you are using a database package in your app and you'd like your server to do something when it throws a specific type of database error:
+For example, if you are using a database package in your app and you'd like to do something when your server throws a specific type of database error:
 
 ```ts
  formatError: (formattedError, error) => {
@@ -405,9 +405,9 @@ For example, if you are using a database package in your app and you'd like your
   },
 ```
 
-However, if a _resolver_ throws the error, a `GraphQLError` is wrapped around the initially thrown error.
+Note, if a _resolver_ throws the error, a `GraphQLError` is wrapped around the initially thrown error. This `GraphQLError` neatly formats the error and contains useful fields, such as the `path` where the error occurred.
 
-The `unwrapResolverError` function can remove the `GraphQLError` wrapping from a resolver error or return the error unaltered if it isn't from a resolver.
+In you want to remove the outer `GraphQLError` to access the originally thrown error you can use `unwrapResolverError` from `@apollo/server/errors`. The `unwrapResolverError` function can remove the `GraphQLError` wrapping from a resolver error or return the error unaltered if it isn't from a resolver.
 
 So, we can rewrite the above code snippet to work for errors thrown in and outside of resolvers, like so:
 
@@ -416,8 +416,9 @@ import { unwrapResolverError } from '@apollo/server/errors';
 
 new ApolloServer({
   formatError: (formattedError, error) => {
-    // unwrapResolverError removes the outer GraphQLError from
-    // errors thrown in resolvers
+    // unwrapResolverError removes the outer GraphQLError wrapping from
+    // errors thrown in resolvers, enabling us to check the instance of
+    // the original error
     if (unwrapResolverError(error) instanceof CustomDBError) {
       return { message: 'Internal server error' };
     }
@@ -433,7 +434,9 @@ new ApolloServer({
 
 You can use Apollo Studio to analyze your server's error rates. By default, the operations sent to Studio as detailed traces _don't_ contain error details.
 
-If you _do_ want error information sent to Studio, you can send every error, or you can modify or redact specific errors before they're transmitted:
+If you _do_ want error information sent to Studio, you can send every error, or you can modify or redact specific errors before they're transmitted.
+
+To send all errors to Studio you can pass `{ unmodified: true }` to `sendErrorsInTraces`, like so:
 
 ```ts {7}
 new ApolloServer({
@@ -442,20 +445,30 @@ new ApolloServer({
     ApolloServerPluginUsageReporting({
       // If you pass unmodified: true to the usage reporting
       // plugin, Apollo Studio receives ALL error details
-      sendErrorsInTrace: { unmodified: true },
+      sendErrorsInTraces { unmodified: true },
     }),
   ],
 });
 ```
 
-To mask or transform errors, you can pass a function to the `sendErrorsInTrace.transform` option for the [usage reporting plugin](/apollo-server/api/plugin/usage-reporting/):
+If you want to report specific errors or modify an error before reporting it, you can pass a function to the `sendErrorsInTraces.transform` option, like so:
 
 ```ts {4-6}
 new ApolloServer({
   // etc.
   plugins: [
     ApolloServerPluginUsageReporting({
-      sendErrorsInTrace: { transform: functionToRewriteErrors },
+      sendErrorsInTraces {
+        transform: (err) => {
+          if (err.extensions.code === 'MY_CUSTOM_CODE') {
+            // returning null will skip reporting this error 
+            return null;
+          }
+
+          // All other errors are reported.
+          return err;
+        },
+      },
     }),
   ],
 });
@@ -589,7 +602,7 @@ The REDACTED doesn't have sufficient privileges.
 
 ## Returning HTTP status codes
 
-GraphQL, by design, does not use the same conventions from REST to communicate via HTTP verbs and status codes. Client information should be contained in the schema or as part of the standard response `errors` field. We recommend using the included [Error Codes](#error-codes) or [Custom Errors](#custom-errors) for error consistency rather than directly modifying the HTTP response.
+GraphQL, by design, does not use the same conventions from REST to communicate via HTTP verbs and status codes. Client information should be contained in the schema or as part of the standard response `errors` field. We recommend using the included [Error Codes](#built-in-error-codes) or [Custom Errors](#custom-errors) for error consistency rather than directly modifying the HTTP response.
 
 You can set custom fields on your HTTP response by using a [plugin](/apollo-server/integrations/plugins). Be aware that GraphQL client libraries may not treat all response status codes the same, and so it will be up to your team to decide what patterns to use.
 
