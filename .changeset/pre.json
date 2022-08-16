@@ -5,7 +5,8 @@
     "@apollo/server-integration-testsuite": "3.6.7",
     "@apollo/server-plugin-response-cache": "3.6.7",
     "@apollo/server": "3.6.7",
-    "@apollo/usage-reporting-protobuf": "3.3.1"
+    "@apollo/usage-reporting-protobuf": "3.3.1",
+    "@apollo/server-plugin-landing-page-graphql-playground": "3.0.0"
   },
   "changesets": [
     "eleven-needles-collect",
@@ -13,6 +14,7 @@
     "hip-cheetahs-fail",
     "lazy-emus-hunt",
     "neat-buckets-marry",
+    "ninety-panthers-accept",
     "ninety-tips-unite",
     "old-insects-smash",
     "pink-eggs-draw",
