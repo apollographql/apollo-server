@@ -132,7 +132,7 @@ For example, a correctly parsed body should have a shape resembling this:
 
 Your integration should pass along whatever it parses to Apollo Server; Apollo Server will handle validating the parsed request.
 
-Apollo Server also accepts GraphQL queries [sent using `GET`](/apollo-server/v3/requests) with query string parameters. Apollo Server expects a raw query string for these types of HTTP requests. Apollo Server is indifferent to whether or not the `?` is included at the beginning of your query string. Fragments (starting with `#`) at the end of a URL should not be included.
+Apollo Server also accepts GraphQL queries [sent using `GET`](/apollo-server/requests) with query string parameters. Apollo Server expects a raw query string for these types of HTTP requests. Apollo Server is indifferent to whether or not the `?` is included at the beginning of your query string. Fragments (starting with `#`) at the end of a URL should not be included.
 
 Apollo Server 4's Express integration computes the query string using the request's full URL, like so:
 ```ts
