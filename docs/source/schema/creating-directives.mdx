@@ -19,8 +19,11 @@ type Query {
 
 > See an example implementation of this directive on CodeSandbox:
 >
-> <a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v3/custom-directives/upper-case-directive?fontsize=14&hidenavigation=1&theme=dark">
->   <img alt="Edit upper-case-directive" src="https://codesandbox.io/static/img/play-codesandbox.svg" />
+> <a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v4/custom-directives/upper-case-directive?fontsize=14&hidenavigation=1&theme=dark">
+>   <img
+>     alt="Edit upper-case-directive"
+>     src="https://codesandbox.io/static/img/play-codesandbox.svg"
+>   />
 > </a>
 
 When you start up your app, you can use directives to transform your executable schema's behavior before you provide that schema to Apollo Server. For example, you can modify the resolver function for any decorated field (for the schema above, it could transform the `hello` resolver's original result to uppercase).
@@ -35,9 +38,9 @@ directive @deprecated(
 ) on FIELD_DEFINITION | ENUM_VALUE
 ```
 
-* This is the definition for the `@deprecated` directive in the [GraphQL spec](https://spec.graphql.org/June2018/#sec--deprecated).
-* The directive takes one optional argument (`reason`) with a default value (`"No longer supported"`).
-* The directive can decorate any number of `FIELD_DEFINITION`s and `ENUM_VALUE`s in your schema.
+- This is the definition for the `@deprecated` directive in the [GraphQL spec](https://spec.graphql.org/June2018/#sec--deprecated).
+- The directive takes one optional argument (`reason`) with a default value (`"No longer supported"`).
+- The directive can decorate any number of `FIELD_DEFINITION`s and `ENUM_VALUE`s in your schema.
 
 ### Supported locations
 
@@ -60,6 +63,7 @@ The table below lists all available locations in a GraphQL schema. Your directiv
 ###### `SCALAR`
 
 `SCALAR_TYPE`
+
 </td>
 <td>
 
@@ -74,6 +78,7 @@ The definition of a [custom scalar](./custom-scalars/)
 ###### `OBJECT`
 
 `OBJECT_TYPE`
+
 </td>
 <td>
 
@@ -88,6 +93,7 @@ The definition of an [object type](./schema/#object-types/)
 ###### `FIELD_DEFINITION`
 
 `OBJECT_FIELD`
+
 </td>
 <td>
 
@@ -102,6 +108,7 @@ The definition of a field within any defined type _except_ an [input type](./sch
 ###### `ARGUMENT_DEFINITION`
 
 `ARGUMENT`
+
 </td>
 <td>
 
@@ -116,6 +123,7 @@ The definition of a field argument
 ###### `INTERFACE`
 
 `INTERFACE_TYPE`
+
 </td>
 <td>
 
@@ -130,6 +138,7 @@ The definition of an [interface](unions-interfaces/#interface-type)
 ###### `UNION`
 
 `UNION_TYPE`
+
 </td>
 <td>
 
@@ -144,6 +153,7 @@ The definition of a [union](./unions-interfaces/#union-type)
 ###### `ENUM`
 
 `ENUM_TYPE`
+
 </td>
 <td>
 
@@ -158,6 +168,7 @@ The definition of an [enum](./schema/#enum-types)
 ###### `ENUM_VALUE`
 
 `ENUM_VALUE`
+
 </td>
 <td>
 
@@ -172,6 +183,7 @@ The definition of one value within an [enum](./schema/#enum-types)
 ###### `INPUT_OBJECT`
 
 `INPUT_OBJECT_TYPE`
+
 </td>
 <td>
 
@@ -186,6 +198,7 @@ The definition of an [input type](./schema/#input-types)
 ###### `INPUT_FIELD_DEFINITION`
 
 `INPUT_OBJECT_FIELD`
+
 </td>
 <td>
 
@@ -194,13 +207,13 @@ The definition of a field within an [input type](./schema/#input-types)
 </td>
 </tr>
 
-
 <tr>
 <td>
 
 ###### `SCHEMA`
 
 `ROOT_OBJECT`
+
 </td>
 <td>
 
@@ -213,7 +226,7 @@ The top-level `schema` object declaration with `query`, `mutation`, and/or `subs
 
 ## Implementing
 
-> **Important:** Apollo Server 3 does not provide built-in support for custom directives. To enable this support, you need to install certain `@graphql-tools` libraries.
+> **Important:** Apollo Server 4 does not provide built-in support for custom directives. To enable this support, you need to install certain `@graphql-tools` libraries.
 >
 > This article uses `@graphql-tools` version 8. Previous versions use a different API for custom directives. If you're using an earlier version of `@graphql-tools`, see the [Apollo Server v2 docs](/apollo-server/v2/schema/creating-directives).
 
@@ -235,15 +248,18 @@ To define what Apollo Server does when it encounters your directive, you can cre
 
 For example, here's a possible transformer function for the default `@deprecated` directive:
 
-```js title="directives.js"
-const { mapSchema, getDirective, MapperKind } = require('@graphql-tools/utils');
+```ts title="directives.ts"
+import { mapSchema, getDirective, MapperKind } from '@graphql-tools/utils';
 
 function deprecatedDirectiveTransformer(schema, directiveName) {
-  return  mapSchema(schema, {
-
+  return mapSchema(schema, {
     // Executes once for each object field definition in the schema
     [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
-      const deprecatedDirective = getDirective(schema, fieldConfig, directiveName)?.[0];
+      const deprecatedDirective = getDirective(
+        schema,
+        fieldConfig,
+        directiveName,
+      )?.[0];
       if (deprecatedDirective) {
         fieldConfig.deprecationReason = deprecatedDirective['reason'];
         return fieldConfig;
@@ -252,14 +268,18 @@ function deprecatedDirectiveTransformer(schema, directiveName) {
 
     // Executes once for each enum value definition in the schema
     [MapperKind.ENUM_VALUE]: (enumValueConfig) => {
-      const deprecatedDirective = getDirective(schema, enumValueConfig, directiveName)?.[0];
+      const deprecatedDirective = getDirective(
+        schema,
+        enumValueConfig,
+        directiveName,
+      )?.[0];
       if (deprecatedDirective) {
         enumValueConfig.deprecationReason = deprecatedDirective['reason'];
         return enumValueConfig;
       }
-    }
+    },
   });
-};
+}
 ```
 
 As shown, the second parameter you pass `mapSchema` is an object with keys that represent one or more locations in your schema. The `MapperKind` enum value for each supported location is listed in [the table above](#supported-locations).
@@ -272,17 +292,17 @@ This example defines an `@uppercase` directive for this purpose:
 
 <ExpansionPanel title="Click to expand">
 
-```js title="index.js"
-const { ApolloServer, gql } = require('apollo-server');
-const {
-  ApolloServerPluginLandingPageLocalDefault,
-} = require('apollo-server-core');
-const { makeExecutableSchema } = require('@graphql-tools/schema');
-const { mapSchema, getDirective, MapperKind } = require('@graphql-tools/utils');
-const { defaultFieldResolver } = require('graphql');
+<MultiCodeBlock>
+
+```ts title="index.ts"
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { mapSchema, getDirective, MapperKind } from '@graphql-tools/utils';
+import { defaultFieldResolver } from 'graphql';
 
 // Our GraphQL schema
-const typeDefs = gql`
+const typeDefs = `#graphql
   directive @upper on FIELD_DEFINITION
 
   type Query {
@@ -295,8 +315,8 @@ const resolvers = {
   Query: {
     hello() {
       return 'Hello World!';
-    }
-  }
+    },
+  },
 };
 
 // This function takes in a schema and adds upper-casing logic
@@ -304,56 +324,52 @@ const resolvers = {
 // the specified name (we're using `upper`)
 function upperDirectiveTransformer(schema, directiveName) {
   return mapSchema(schema, {
-
     // Executes once for each object field in the schema
     [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
-
       // Check whether this field has the specified directive
-      const upperDirective = getDirective(schema, fieldConfig, directiveName)?.[0];
+      const upperDirective = getDirective(
+        schema,
+        fieldConfig,
+        directiveName,
+      )?.[0];
 
       if (upperDirective) {
-
         // Get this field's original resolver
         const { resolve = defaultFieldResolver } = fieldConfig;
 
         // Replace the original resolver with a function that *first* calls
         // the original resolver, then converts its result to upper case
-        fieldConfig.resolve = async function (source, args, context, info) {
+        fieldConfig.resolve = async function (source, args, contextValue, info) {
           const result = await resolve(source, args, context, info);
           if (typeof result === 'string') {
             return result.toUpperCase();
           }
           return result;
-        }
+        };
         return fieldConfig;
       }
-    }
+    },
   });
 }
 
 // Create the base executable schema
 let schema = makeExecutableSchema({
   typeDefs,
-  resolvers
+  resolvers,
 });
 
 // Transform the schema by applying directive logic
 schema = upperDirectiveTransformer(schema, 'upper');
 
 // Provide the schema to the ApolloServer constructor
-const server = new ApolloServer({
-  schema,
-  csrfPrevention: true,
-  cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
-});
+const server = new ApolloServer({ schema });
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
+const { url } = await startStandaloneServer(server);
+
+console.log(`🚀 Server listening at: ${url}`);
 ```
+
+</MultiCodeBlock>
 
 </ExpansionPanel>
 

@@ -20,10 +20,10 @@ However, Apollo Server still needs to know how to interact with values of this n
 
 After you define a custom scalar type, you need to define how Apollo Server interacts with it. In particular, you need to define:
 
-* How the scalar's value is represented in your backend
-    * _This is often the representation used by the driver for your backing data store._
-* How the value's back-end representation is **serialized** to a JSON-compatible type
-* How the JSON-compatible representation is **deserialized** to the back-end representation
+- How the scalar's value is represented in your backend
+  - _This is often the representation used by the driver for your backing data store._
+- How the value's back-end representation is **serialized** to a JSON-compatible type
+- How the JSON-compatible representation is **deserialized** to the back-end representation
 
 You define these interactions in an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class.
 
@@ -31,34 +31,42 @@ You define these interactions in an instance of the [`GraphQLScalarType`](http:/
 
 ## Example: The `Date` scalar
 
+<Disclaimer />
+
 The following `GraphQLScalarType` object defines interactions for a custom scalar that represents a date (this is one of the most commonly implemented custom scalars). It assumes that our backend represents a date with the `Date` JavaScript object.
 
-```js
-const { GraphQLScalarType, Kind } = require('graphql');
+<MultiCodeBlock>
+
+```ts
+import { GraphQLScalarType, Kind } from 'graphql';
 
 const dateScalar = new GraphQLScalarType({
   name: 'Date',
   description: 'Date custom scalar type',
-  serialize(value) {
+  serialize(value: Date) {
     return value.getTime(); // Convert outgoing Date to integer for JSON
   },
-  parseValue(value) {
+  parseValue(value: number) {
     return new Date(value); // Convert incoming integer to Date
   },
   parseLiteral(ast) {
     if (ast.kind === Kind.INT) {
-      return new Date(parseInt(ast.value, 10)); // Convert hard-coded AST string to integer and then to Date
+      // Convert hard-coded AST string to integer and then to Date
+      return new Date(parseInt(ast.value, 10));
     }
-    return null; // Invalid hard-coded value (not an integer)
+    // Invalid hard-coded value (not an integer)
+    return null;
   },
 });
 ```
 
+</MultiCodeBlock>
+
 This initialization defines the following methods:
 
-* `serialize`
-* `parseValue`
-* `parseLiteral`
+- `serialize`
+- `parseValue`
+- `parseLiteral`
 
 Together, these methods describe how Apollo Server interacts with the scalar in every scenario.
 
@@ -86,14 +94,14 @@ In [the example above](#example-the-date-scalar), `parseLiteral` converts the AS
 
 After you define your `GraphQLScalarType` instance, you include it in the same [resolver map](../data/resolvers/#defining-a-resolver) that contains resolvers for your schema's other types and fields:
 
-```js {21-24}
-const { ApolloServer, gql } = require('apollo-server');
-const {
-  ApolloServerPluginLandingPageLocalDefault,
-} = require('apollo-server-core');
-const { GraphQLScalarType, Kind } = require('graphql');
+<MultiCodeBlock>
 
-const typeDefs = gql`
+```ts {6, 22-25}
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { GraphQLScalarType, Kind } from 'graphql';
+
+const typeDefs = `#graphql
   scalar Date
 
   type Event {
@@ -111,34 +119,35 @@ const dateScalar = new GraphQLScalarType({
 });
 
 const resolvers = {
-  Date: dateScalar
+  Date: dateScalar,
   // ...other resolver definitions...
 };
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
 });
+
+const { url } = await startStandaloneServer(server);
+
+console.log(`🚀 Server listening at: ${url}`);
 ```
+
+</MultiCodeBlock>
 
 ## Example: Restricting integers to odd values
 
 In this example, we create a custom scalar called `Odd` that can only contain odd integers:
 
-```js title="index.js"
-const { ApolloServer, gql, UserInputError } = require('apollo-server');
-const {
-  ApolloServerPluginLandingPageLocalDefault,
-} = require('apollo-server-core');
-const { GraphQLScalarType, Kind } = require('graphql');
+<MultiCodeBlock>
+
+```ts title="index.ts"
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { GraphQLScalarType, Kind, GraphQLError } from 'graphql';
 
 // Basic schema
-const typeDefs = gql`
+const typeDefs = `#graphql
   scalar Odd
 
   type Query {
@@ -148,11 +157,13 @@ const typeDefs = gql`
 `;
 
 // Validation function for checking "oddness"
-function oddValue(value) {
+function oddValue(value: number) {
   if (typeof value === 'number' && Number.isInteger(value) && value % 2 !== 0) {
     return value;
   }
-  throw new UserInputError('Provided value is not an odd integer');
+  throw new GraphQLError('Provided value is not an odd integer', {
+    extensions: { code: 'BAD_USER_INPUT' },
+  });
 }
 
 const resolvers = {
@@ -165,30 +176,29 @@ const resolvers = {
       if (ast.kind === Kind.INT) {
         return oddValue(parseInt(ast.value, 10));
       }
-      throw new UserInputError('Provided value is not an odd integer');
+      throw new GraphQLError('Provided value is not an odd integer', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
     },
   }),
   Query: {
-    echoOdd(_, {odd}) {
+    echoOdd(_, { odd }) {
       return odd;
-    }
-  }
+    },
+  },
 };
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
 });
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
+const { url } = await startStandaloneServer(server);
+
+console.log(`🚀 Server listening at: ${url}`);
 ```
+
+</MultiCodeBlock>
 
 ## Importing a third-party custom scalar
 
@@ -202,16 +212,14 @@ First, install the library:
 $ npm install graphql-type-json
 ```
 
-Then `require` the `GraphQLJSON` object and add it to the resolver map as usual:
+Then import the `GraphQLJSON` object and add it to the resolver map as usual:
 
-```js
-const { ApolloServer, gql } = require('apollo-server');
-const {
-  ApolloServerPluginLandingPageLocalDefault,
-} = require('apollo-server-core');
-const GraphQLJSON = require('graphql-type-json');
+```ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { GraphQLJSONObject } from 'graphql-type-json';
 
-const typeDefs = gql`
+const typeDefs = `#graphql
   scalar JSON
 
   type MyObject {
@@ -224,21 +232,16 @@ const typeDefs = gql`
 `;
 
 const resolvers = {
-  JSON: GraphQLJSON
+  JSON: GraphQLJSON,
   // ...other resolvers...
 };
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
 });
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
+const { url } = await startStandaloneServer(server);
+
+console.log(`🚀 Server listening at: ${url}`);
 ```

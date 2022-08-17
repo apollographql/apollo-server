@@ -1,22 +1,27 @@
 {
   "title": "Apollo Server",
   "version": "v4 (Alpha)",
-  "algoliaFilters": [
-    "docset:server",
-    [
-      "docset:react",
-      "docset:federation"
-    ]
-  ],
+  "algoliaFilters": ["docset:server", ["docset:react", "docset:federation"]],
   "sidebar": {
     "Introduction": "/",
     "Get started": "/getting-started",
-      "New in v4": {
-        "Migrating to Apollo Server 4": "/migration",
-        "Changelog": "https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md"
-      },
-      "Server frameworks": {
-        "Building integrations": "/integrations/building-integrations"
-      }
+    "New in v4": {
+      "Migrating to Apollo Server 4": "/migration",
+      "Changelog": "https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md"
+    },
+    "Defining a Schema": {
+      "Schema basics": "/schema/schema",
+      "Unions and interfaces": "/schema/unions-interfaces",
+      "Custom scalars": "/schema/custom-scalars",
+      "Directives": "/schema/directives"
+    },
+    "Fetching Data": {
+      "Resolvers": "/data/resolvers",
+      "Error handling": "/data/errors",
+      "Subscriptions": "/data/subscriptions"
+    },
+    "Server frameworks": {
+      "Building integrations": "/integrations/building-integrations"
+    }
   }
 }

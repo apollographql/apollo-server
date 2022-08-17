@@ -34,16 +34,16 @@ const resolvers = {
     },
     numberSeven() {
       return 7;
-    }
-  }
+    },
+  },
 };
 ```
 
 #### As this example shows:
 
-* You define all of your server's resolvers in a single JavaScript object (named `resolvers` above). This object is called the **resolver map**.
-* The resolver map has top-level fields that correspond to your schema's types (such as `Query` above).
-* Each resolver function belongs to whichever type its corresponding field belongs to.
+- You define all of your server's resolvers in a single JavaScript object (named `resolvers` above). This object is called the **resolver map**.
+- The resolver map has top-level fields that correspond to your schema's types (such as `Query` above).
+- Each resolver function belongs to whichever type its corresponding field belongs to.
 
 ### Handling arguments
 
@@ -68,16 +68,20 @@ To achieve this, our server needs access to user data. For this contrived exampl
 const users = [
   {
     id: '1',
-    name: 'Elizabeth Bennet'
+    name: 'Elizabeth Bennet',
   },
   {
     id: '2',
-    name: 'Fitzwilliam Darcy'
-  }
+    name: 'Fitzwilliam Darcy',
+  },
 ];
 ```
 
+<!-- TODO (AS4): add this back in once data sources are up
+
 > To learn how to fetch data from an external source (like a database or REST API), see [Data sources](./data-sources/).
+
+-->
 
 Now we can define a resolver for the `user` field, like so:
 
@@ -85,17 +89,17 @@ Now we can define a resolver for the `user` field, like so:
 const resolvers = {
   Query: {
     user(parent, args, context, info) {
-      return users.find(user => user.id === args.id);
-    }
-  }
-}
+      return users.find((user) => user.id === args.id);
+    },
+  },
+};
 ```
 
 #### As this example shows:
 
-* A resolver can optionally accept four positional arguments: `(parent, args, context, info)`.
-    * [Learn more about these arguments.](#resolver-arguments)
-* The `args` argument is an object that contains all _GraphQL_ arguments that were provided for the field by the GraphQL operation.
+- A resolver can optionally accept four positional arguments: `(parent, args, context, info)`.
+  - [Learn more about these arguments.](#resolver-arguments)
+- The `args` argument is an object that contains all _GraphQL_ arguments that were provided for the field by the GraphQL operation.
 
 > Notice that this example _doesn't_ define resolvers for `User` fields (`id` and `name`). That's because the [default resolver](#default-resolvers) that Apollo Server creates for these fields does the right thing: it obtains the value directly from the object returned by the `user` resolver.
 
@@ -108,10 +112,8 @@ The following example defines a hardcoded data set, a schema, and a resolver map
 <ExpansionPanel title="Expand example">
 
 ```javascript
-const { ApolloServer, gql } = require('apollo-server');
-const {
-  ApolloServerPluginLandingPageLocalDefault,
-} = require('apollo-server-core');
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 
 // Hardcoded data store
 const books = [
@@ -126,7 +128,7 @@ const books = [
 ];
 
 // Schema definition
-const typeDefs = gql`
+const typeDefs = `#graphql
   type Book {
     title: String
     author: String
@@ -142,7 +144,7 @@ const resolvers = {
   Query: {
     books() {
       return books;
-    }
+    },
   },
 };
 
@@ -151,17 +153,12 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
 });
 
 // Launch the server
-server.listen().then(({ url }) => {
-  console.log(`🚀  Server ready at ${url}`);
-});
+const { url } = await startStandaloneServer(server);
+
+console.log(`🚀 Server listening at: ${url}`);
 ```
 
 </ExpansionPanel>
@@ -247,17 +244,15 @@ Here's a code sample that can resolve the query above with this resolver chain:
 <ExpansionPanel title="Expand example">
 
 ```javascript
-const { ApolloServer, gql } = require('apollo-server');
-const {
-  ApolloServerPluginLandingPageLocalDefault,
-} = require('apollo-server-core');
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 
 const libraries = [
   {
-    branch: 'downtown'
+    branch: 'downtown',
   },
   {
-    branch: 'riverside'
+    branch: 'riverside',
   },
 ];
 
@@ -266,19 +261,18 @@ const books = [
   {
     title: 'The Awakening',
     author: 'Kate Chopin',
-    branch: 'riverside'
+    branch: 'riverside',
   },
   {
     title: 'City of Glass',
     author: 'Paul Auster',
-    branch: 'downtown'
+    branch: 'downtown',
   },
 ];
 
 // Schema definition
-const typeDefs = gql`
-
-# A library has a branch and books
+const typeDefs = `#graphql
+  # A library has a branch and books
   type Library {
     branch: String!
     books: [Book!]
@@ -305,30 +299,27 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     libraries() {
-
       // Return our hardcoded array of libraries
       return libraries;
-    }
+    },
   },
   Library: {
     books(parent) {
-
       // Filter the hardcoded array of books to only include
       // books that are located at the correct branch
-      return books.filter(book => book.branch === parent.branch);
-    }
+      return books.filter((book) => book.branch === parent.branch);
+    },
   },
   Book: {
-
     // The parent resolver (Library.books) returns an object with the
     // author's name in the "author" field. Return a JSON object containing
     // the name, because this field expects an object.
     author(parent) {
       return {
-        name: parent.author
+        name: parent.author,
       };
-    }
-  }
+    },
+  },
 
   // Because Book.author returns an object with a "name" field,
   // Apollo Server's default resolver for Author.name will work.
@@ -340,17 +331,12 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
 });
 
 // Launch the server
-server.listen().then(({ url }) => {
-  console.log(`🚀  Server ready at ${url}`);
-});
+const { url } = await startStandaloneServer(server);
+
+console.log(`🚀 Server listening at: ${url}`);
 ```
 
 </ExpansionPanel>
@@ -397,40 +383,69 @@ Resolver functions are passed four arguments: `parent`, `args`, `context`, and `
 
 ### The `context` argument
 
-The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./data-sources/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
+> ⚠️ The Apollo Server 4 alpha doesn't currently support using [`RESTDataSource`](./migration#datasources), a class commonly used to fetch data from a database or a REST API. This feature is in active development, so check back frequently for updates.
+
+The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions.
+
+<!-- TODO(AS4) Add this paragraph in once data sources work
+If you're using [dataloaders to batch requests](./data-sources/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
+-->
 
 **Resolvers should never destructively modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
 
-To provide an initial `context` to your resolvers, add a `context` initialization function to the `ApolloServer` constructor. This function is called with every request, so you can customize the context based on each request's details (such as HTTP headers).
+To provide an initial `context` to your resolvers, add an asynchronous `context` initialization function to your integration function (e.g., `expressMiddleware` or `startStandaloneServer`). This function is called _with every request_, so you can customize the context based on each request's details (such as HTTP headers).
 
-```js
+<Disclaimer />
 
-// Constructor
-const server = new ApolloServer({
+<MultiCodeBlock>
+
+```ts
+import { GraphQLError } from 'graphql';
+
+const resolvers = {
+  Query: {
+  // Example resolver
+    adminExample: (parent, args, context, info) => {
+      if (context.authScope !== ADMIN) {
+        throw new GraphQLError('not admin!', { 
+          extensions: { code: 'UNAUTHENTICATED' }
+        });
+      }
+    },
+  },
+};
+
+interface MyContext { // Context typing
+  authScope?: String;
+}
+
+const server = new ApolloServer<MyContext>({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
-  context: ({ req }) => ({
-    authScope: getScope(req.headers.authorization)
-  }),
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
 });
 
-// Example resolver
-(parent, args, context, info) => {
-  if(context.authScope !== ADMIN) throw new AuthenticationError('not admin');
-  // Proceed
-}
+const { url } = await startStandaloneServer(server, {
+  // A named context function is required if you are not
+  // using ApolloServer<BaseContext>
+  context: async ({req, res}) => ({
+      authScope: getScope(req.headers.authorization),
+  })
+});
+
 ```
 
-> This example assumes you're using either the `apollo-server` or `apollo-server-express` package, both of which use Express. The fields of the object passed to your `context` function might differ if you're using middleware besides Express. [See the API reference for details.](../api/apollo-server/#middleware-specific-context-fields)
->
->For more information on middleware in general, see [Choosing an Apollo Server package](../integrations/middleware/).
+</MultiCodeBlock>
 
-Context initialization can be asynchronous, allowing database connections and other operations to complete:
+> This example assumes you're using either the `startStandaloneServer` or `expressMiddleware`, both of which use Express under the hood. The fields of the object passed to your `context` function might differ if you're using a different integration.
+
+The `context` function should be *asynchronous* and return an object, which is then accessible to your server's resolvers and plugins (via the `contextValue` field).
+
+<!-- TODO (AS4): update these links once we have an article with other integration functions
+
+[For more details on Apollo Server integrations, see [Choosing an Apollo Server package](/apollo-server/api/apollo-server/#middleware-specific-context-fields).
+-->
+
+Because the `context` initialization function is asynchronous, you can use it to establish database connections and wait for other operations to complete:
 
 ```js
 context: async () => ({
@@ -452,8 +467,7 @@ A resolver function's return value is treated differently by Apollo Server depen
 | Scalar / object | <p>A resolver can return a single value or an object, as shown in [Defining a resolver](#defining-a-resolver). This return value is passed down to any nested resolvers via the `parent` argument.</p> |
 | `Array` | <p>Return an array if and only if your schema indicates that the resolver's associated field contains a list.</p><p>After you return an array, Apollo Server executes nested resolvers for each item in the array. </p>|
 | `null` / `undefined` | <p>Indicates that the value for the field could not be found.</p> <p>If your schema indicates that this resolver's field is nullable, then the operation result has a `null` value at the field's position.</p><p>If this resolver's field is _not_ nullable, Apollo Server sets the field's _parent_ to `null`. If necessary, this process continues up the resolver chain until it reaches a field that _is_ nullable. This ensures that a response never includes a `null` value for a non-nullable field. When this happens, the response's `errors` property will be populated with relevant errors concerning the nullability of that field.</p>|
-| [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) | <p>Resolvers often perform asynchronous actions, such as fetching from a database or back-end API. To support this, a resolver can return a promise that resolves to any other supported return type.</p> |
-
+| [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) | <p>Resolvers can be asynchronous and perform async actions, such as fetching from a database or back-end API. To support this, a resolver can return a promise that resolves to any other supported return type.</p> |
 
 ## Default resolvers
 
