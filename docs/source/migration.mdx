@@ -955,7 +955,7 @@ you can now write:
 // monoliths
 new ApolloServer({
   plugins: [ApolloServerPluginUsageReporting({
-    sendErrorsInTraces { transform: rewriteError },
+    sendErrorsInTraces: { transform: rewriteError },
   })],
   // ...
 })
@@ -1592,7 +1592,7 @@ To restore the Apollo Server 3 behavior, you can pass `{ unmodified: true }` to 
 // monoliths
 new ApolloServer({
   plugins: [ApolloServerPluginUsageReporting({
-    sendErrorsInTraces { unmodified: true },
+    sendErrorsInTraces: { unmodified: true },
   })],
   // ...
 })

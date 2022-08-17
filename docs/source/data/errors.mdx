@@ -447,7 +447,7 @@ new ApolloServer({
     ApolloServerPluginUsageReporting({
       // If you pass unmodified: true to the usage reporting
       // plugin, Apollo Studio receives ALL error details
-      sendErrorsInTraces { unmodified: true },
+      sendErrorsInTraces: { unmodified: true },
     }),
   ],
 });
@@ -460,7 +460,7 @@ new ApolloServer({
   // etc.
   plugins: [
     ApolloServerPluginUsageReporting({
-      sendErrorsInTraces {
+      sendErrorsInTraces: {
         transform: (err) => {
           if (err.extensions.code === 'MY_CUSTOM_CODE') {
             // returning null will skip reporting this error 
