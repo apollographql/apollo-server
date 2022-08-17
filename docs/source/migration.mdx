@@ -300,7 +300,7 @@ In Apollo Server 3, the `apollo-server-core` package exports built-in plugins, l
 
 In Apollo Server 4, these built-in plugins are part of the main `@apollo/server` package, which also imports the `ApolloServer` class. The  `@apollo/server` package exports these built-in plugins with deep exports. This means you use deep imports for each built-in plugin, enabling you to evaluate only the plugin you use in your app and making it easier for bundlers to eliminate unused code.
 
-There's one exception: the plugin `ApolloServerPluginLandingPageGraphQLPlayground` has been moved to its own package `@apollo/server-plugin-landing-page-graphql-playground` which must be installed separately. (This plugin installs the [unmaintained](https://github.com/graphql/graphql-playground/issues/1143) project GraphQL Playground as a landing page, and is provided for compatibility with Apollo Server 2. We encourage you to switch to the [default landing page](/apollo-server/v3/api/plugin/landing-pages), which installs the similar but the actively maintained Apollo Sandbox instead.)
+There's one exception: the plugin `ApolloServerPluginLandingPageGraphQLPlayground` has been moved to its own package `@apollo/server-plugin-landing-page-graphql-playground` which must be installed separately. (This plugin installs the [unmaintained](https://github.com/graphql/graphql-playground/issues/1143) project GraphQL Playground as a landing page, and is provided for compatibility with Apollo Server 2. We encourage you to switch to the [default landing page](/apollo-server/api/plugin/landing-pages), which installs the similar but the actively maintained Apollo Sandbox instead.)
 
  Apollo Server exports the following plugins:
 
@@ -901,7 +901,7 @@ the [`__resolveReference`](/federation/api/apollo-subgraph/#__resolvereference) 
 
 ### `requestAgent` option to `ApolloServerPluginUsageReporting`
 
-Apollo Server's usage reporting plugin (i.e., `ApolloServerPluginUsageReporting`) lets you replace its HTTP client using the [`fetcher` option](/apollo-server/v3/api/plugin/usage-reporting/#fetcher). In Apollo Server 3, you can use an older `requestAgent` option, passed to the `fetcher` function via the non-standard `agent` option.
+Apollo Server's usage reporting plugin (i.e., `ApolloServerPluginUsageReporting`) lets you replace its HTTP client using the [`fetcher` option](/apollo-server/api/plugin/usage-reporting/#fetcher). In Apollo Server 3, you can use an older `requestAgent` option, passed to the `fetcher` function via the non-standard `agent` option.
 
 Apollo Server 4 removes the `requestAgent` option from `ApolloServerPluginUsageReporting`. Now, all of the options you pass to `ApolloServerPluginUsageReporting`'s `fetcher` are part of the Fetch API spec.
 
