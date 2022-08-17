@@ -121,7 +121,7 @@ Under the hood, the batteries-included `apollo-server` wraps around middleware p
 
 If you're using another integration of Apollo Server, you can add the `cors` configuration option to your framework-specific middleware function to change your server's CORS behavior. To learn more about the CORS defaults and options for your integration of Apollo Server, see [CORS configuration options](../api/apollo-server/#cors-1).
 
-Below is an example of setting up CORS with the [`apollo-server-express`](../integrations/middleware#swapping-out-apollo-server) package:
+Below is an example of setting up CORS with the [`expressMiddleware`](../migration) function:
 
 ```js
 // ... set up the server
