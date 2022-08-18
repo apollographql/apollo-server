@@ -27,6 +27,7 @@ export function defineIntegrationTestSuite(
   createServer: CreateServerForIntegrationTests,
   options: {
     serverIsStartedInBackground?: boolean;
+    noIncrementalDelivery?: boolean;
   } = {},
 ) {
   describe('integration tests', () => {

@@ -4,7 +4,7 @@
 // function. Newer tests have generally been added to the apolloServerTests.ts
 // file.
 import { createHash } from '@apollo/utils.createhash';
-import resolvable from '@josephg/resolvable';
+import resolvable, { type Resolvable } from '@josephg/resolvable';
 import {
   BREAK,
   DocumentNode,
@@ -21,7 +21,7 @@ import {
 } from 'graphql';
 import gql from 'graphql-tag';
 import { InMemoryLRUCache, KeyValueCache } from '@apollo/utils.keyvaluecache';
-import type { HTTPError } from 'superagent';
+import superagent, { type HTTPError } from 'superagent';
 import request from 'supertest';
 import type {
   CreateServerForIntegrationTests,
@@ -31,7 +31,7 @@ import type {
   ApolloServer,
   ApolloServerOptions,
   BaseContext,
-  GraphQLRequestContext,
+  GraphQLRequestContextWillSendResponse,
   GraphQLRequestListener,
   PersistedQueryOptions,
 } from '@apollo/server';
@@ -265,6 +265,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
   createServer: CreateServerForIntegrationTests,
   options: {
     serverIsStartedInBackground?: boolean;
+    noIncrementalDelivery?: boolean;
   } = {},
 ) {
   describe('httpServerTests.ts', () => {
@@ -685,14 +686,55 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const expected = {
           testString: 'it works',
         };
-        const req = request(app).post('/').send({
+        const res = await request(app).post('/').send({
           query: 'query test{ testString }',
         });
-        return req.then((res) => {
-          expect(res.status).toEqual(200);
-          expect(res.body.data).toEqual(expected);
-        });
+        expect(res.status).toEqual(200);
+        // This default may change by 2025 according to the graphql-over-http spec.
+        expect(res.headers['content-type']).toBe(
+          'application/json; charset=utf-8',
+        );
+        expect(res.body.data).toEqual(expected);
       });
+
+      it.each([
+        ['application/json', 'application/json; charset=utf-8'],
+        ['application/json; charset=utf-8', 'application/json; charset=utf-8'],
+        [
+          'application/graphql-response+json',
+          'application/graphql-response+json; charset=utf-8',
+        ],
+        [
+          'application/graphql-response+json; charset=utf-8',
+          'application/graphql-response+json; charset=utf-8',
+        ],
+        [
+          'application/graphql-response+json, application/json',
+          'application/graphql-response+json; charset=utf-8',
+        ],
+        [
+          'application/json, application/graphql-response+json',
+          'application/json; charset=utf-8',
+        ],
+        [
+          'application/json; q=0.5, application/graphql-response+json',
+          'application/graphql-response+json; charset=utf-8',
+        ],
+      ])(
+        'can handle a basic request accepting %s',
+        async (accept, expectedContentType) => {
+          const app = await createApp();
+          const expected = {
+            testString: 'it works',
+          };
+          const res = await request(app).post('/').set('accept', accept).send({
+            query: 'query test{ testString }',
+          });
+          expect(res.status).toEqual(200);
+          expect(res.headers['content-type']).toBe(expectedContentType);
+          expect(res.body.data).toEqual(expected);
+        },
+      );
 
       // Apollo Server doesn't calculate content-length itself because most web
       // frameworks (eg, Express if you use res.send, Lambda, etc) add them
@@ -1339,9 +1381,14 @@ export function defineIntegrationTestSuiteHttpServerTests(
               async requestDidStart() {
                 return {
                   async willSendResponse(
-                    requestContext: GraphQLRequestContext<BaseContext>,
+                    requestContext: GraphQLRequestContextWillSendResponse<BaseContext>,
                   ) {
-                    requestContext.response.result.extensions = { it: 'works' };
+                    if (!('singleResult' in requestContext.response.body)) {
+                      throw Error('expected single result');
+                    }
+                    requestContext.response.body.singleResult.extensions = {
+                      it: 'works',
+                    };
                   },
                 };
               },
@@ -1791,6 +1838,271 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
     });
+
+    // Some servers (like Lambda) do not support streaming responses, so there's
+    // no point in implementing incremental delivery.
+    (options.noIncrementalDelivery ? describe.skip : describe)(
+      'incremental delivery',
+      () => {
+        const typeDefs = `#graphql
+      directive @defer(if: Boolean! = true, label: String) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+      type Query {
+        testString: String
+        barrierString: String
+      }
+      `;
+
+        // These tests mock out execution, so that we can test the incremental
+        // delivery transport even if we're built against graphql@16.
+        describe('mocked execution', () => {
+          it('basic @defer working', async () => {
+            const app = await createApp({
+              typeDefs,
+              __testing_incrementalExecutionResults: {
+                initialResult: {
+                  hasNext: true,
+                  data: { first: 'it works' },
+                },
+                subsequentResults: (async function* () {
+                  yield {
+                    hasNext: false,
+                    incremental: [
+                      { path: [], data: { testString: 'it works' } },
+                    ],
+                  };
+                })(),
+              },
+            });
+            const res = await request(app)
+              .post('/')
+              .set('accept', 'multipart/mixed; deferSpec=20220824')
+              // disables supertest's use of formidable for multipart
+              .parse(superagent.parse.text)
+              .send({
+                query: '{ first: testString ... @defer { testString } }',
+              });
+            expect(res.status).toEqual(200);
+            expect(res.header['content-type']).toMatchInlineSnapshot(
+              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+            );
+            expect(res.text).toMatchInlineSnapshot(`
+              "
+              ---
+              content-type: application/json; charset=utf-8
+
+              {"hasNext":true,"data":{"first":"it works"}}
+              ---
+              content-type: application/json; charset=utf-8
+
+              {"hasNext":false,"incremental":[{"path":[],"data":{"testString":"it works"}}]}
+              -----
+              "
+            `);
+          });
+
+          it('first payload sent while deferred field is blocking', async () => {
+            const gotFirstChunkBarrier = resolvable();
+            const sendSecondChunkBarrier = resolvable();
+            const app = await createApp({
+              typeDefs,
+              __testing_incrementalExecutionResults: {
+                initialResult: {
+                  hasNext: true,
+                  data: { testString: 'it works' },
+                },
+                subsequentResults: (async function* () {
+                  await sendSecondChunkBarrier;
+                  yield {
+                    hasNext: false,
+                    incremental: [
+                      { path: [], data: { barrierString: 'we waited' } },
+                    ],
+                  };
+                })(),
+              },
+            });
+            const resPromise = request(app)
+              .post('/')
+              .set('accept', 'multipart/mixed; deferSpec=20220824')
+              .parse((res, fn) => {
+                res.text = '';
+                res.setEncoding('utf8');
+                res.on('data', (chunk) => {
+                  res.text += chunk;
+                  if (
+                    res.text.includes('it works') &&
+                    res.text.endsWith('---\r\n')
+                  ) {
+                    gotFirstChunkBarrier.resolve();
+                  }
+                });
+                res.on('end', fn);
+              })
+              .send({ query: '{ testString ... @defer { barrierString } }' })
+              // believe it or not, superagent uses `.then` to decide to actually send the request
+              .then((r) => r);
+
+            // We ensure that the second chunk can't be sent until after we've
+            // gotten back a chunk containing the value of testString.
+            await gotFirstChunkBarrier;
+            sendSecondChunkBarrier.resolve();
+
+            const res = await resPromise;
+            expect(res.status).toEqual(200);
+            expect(res.header['content-type']).toMatchInlineSnapshot(
+              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+            );
+            expect(res.text).toMatchInlineSnapshot(`
+              "
+              ---
+              content-type: application/json; charset=utf-8
+
+              {"hasNext":true,"data":{"testString":"it works"}}
+              ---
+              content-type: application/json; charset=utf-8
+
+              {"hasNext":false,"incremental":[{"path":[],"data":{"barrierString":"we waited"}}]}
+              -----
+              "
+            `);
+          });
+        });
+
+        // These tests actually execute incremental delivery operations with
+        // graphql-js, so we only run them from the CI job that installs a
+        // prerelease of graphql@17. Once graphql@17 is released we can switch
+        // to running them by default (and run tests against graphql@16 for
+        // back-compat).
+        (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED
+          ? describe
+          : describe.skip)('tests that require graphql@17', () => {
+          let barrierStringBarrier: Resolvable<void>;
+          beforeEach(() => {
+            barrierStringBarrier = resolvable();
+          });
+          const resolvers = {
+            Query: {
+              testString() {
+                return 'it works';
+              },
+              async barrierString() {
+                await barrierStringBarrier;
+                return 'we waited';
+              },
+            },
+          };
+
+          it.each([
+            [undefined],
+            ['application/json'],
+            ['multipart/mixed'],
+            ['multipart/mixed; deferSpec=12345'],
+          ])('errors when @defer is used with accept: %s', async (accept) => {
+            const app = await createApp({ typeDefs, resolvers });
+            const req = request(app).post('/');
+            if (accept) {
+              req.set('accept', accept);
+            }
+            const res = await req.send({
+              query: '{ ... @defer { testString } }',
+            });
+            expect(res.status).toEqual(406);
+            expect(res.body).toMatchInlineSnapshot(`
+                      {
+                        "errors": [
+                          {
+                            "extensions": {
+                              "code": "BAD_REQUEST",
+                            },
+                            "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream), but the client does not accept multipart/mixed HTTP responses. To enable incremental delivery support, add the HTTP header 'Accept: multipart/mixed; deferSpec=20220824'.",
+                          },
+                        ],
+                      }
+                  `);
+          });
+
+          it.each([
+            ['multipart/mixed; deferSpec=20220824'],
+            ['multipart/mixed; deferSpec=20220824, application/json'],
+            ['application/json, multipart/mixed; deferSpec=20220824'],
+          ])('basic @defer working with accept: %s', async (accept) => {
+            const app = await createApp({ typeDefs, resolvers });
+            const res = await request(app)
+              .post('/')
+              .set('accept', accept)
+              // disables supertest's use of formidable for multipart
+              .parse(superagent.parse.text)
+              .send({
+                query: '{ first: testString ... @defer { testString } }',
+              });
+            expect(res.status).toEqual(200);
+            expect(res.header['content-type']).toMatchInlineSnapshot(
+              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+            );
+            expect(res.text).toEqual(`\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":true,"data":{"first":"it works"}}\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":false,"incremental":[{"path":[],"data":{"testString":"it works"}}]}\r
+-----\r
+`);
+          });
+
+          it('first payload sent while deferred field is blocking', async () => {
+            const app = await createApp({ typeDefs, resolvers });
+            const gotFirstChunkBarrier = resolvable();
+            const resPromise = request(app)
+              .post('/')
+              .set('accept', 'multipart/mixed; deferSpec=20220824')
+              .parse((res, fn) => {
+                res.text = '';
+                res.setEncoding('utf8');
+                res.on('data', (chunk) => {
+                  res.text += chunk;
+                  if (
+                    res.text.includes('it works') &&
+                    res.text.endsWith('---\r\n')
+                  ) {
+                    gotFirstChunkBarrier.resolve();
+                  }
+                });
+                res.on('end', fn);
+              })
+              .send({ query: '{ testString ... @defer { barrierString } }' })
+              // believe it or not, superagent uses `.then` to decide to actually send the request
+              .then((r) => r);
+
+            // We ensure that the `barrierString` resolver isn't allowed to resolve
+            // until after we've gotten back a chunk containing the value of testString.
+            await gotFirstChunkBarrier;
+            barrierStringBarrier.resolve();
+
+            const res = await resPromise;
+            expect(res.status).toEqual(200);
+            expect(res.header['content-type']).toMatchInlineSnapshot(
+              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+            );
+            expect(res.text).toMatchInlineSnapshot(`
+              "
+              ---
+              content-type: application/json; charset=utf-8
+
+              {"hasNext":true,"data":{"testString":"it works"}}
+              ---
+              content-type: application/json; charset=utf-8
+
+              {"hasNext":false,"incremental":[{"path":[],"data":{"barrierString":"we waited"}}]}
+              -----
+              "
+            `);
+          });
+        });
+      },
+    );
 
     describe('Persisted Queries', () => {
       const query = '{testString}';

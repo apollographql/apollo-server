@@ -84,17 +84,29 @@ export function expressMiddleware<TContext extends BaseContext>(
         httpGraphQLRequest,
         context: () => context({ req, res }),
       })
-      .then((httpGraphQLResponse) => {
-        if (httpGraphQLResponse.completeBody === null) {
-          // TODO(AS4): Implement incremental delivery or improve error handling.
-          throw Error('Incremental delivery not implemented');
-        }
-
+      .then(async (httpGraphQLResponse) => {
         for (const [key, value] of httpGraphQLResponse.headers) {
           res.setHeader(key, value);
         }
         res.statusCode = httpGraphQLResponse.status || 200;
-        res.send(httpGraphQLResponse.completeBody);
+
+        if (httpGraphQLResponse.body.kind === 'complete') {
+          res.send(httpGraphQLResponse.body.string);
+          return;
+        }
+
+        for await (const chunk of httpGraphQLResponse.body.asyncIterator) {
+          res.write(chunk);
+          // Express/Node doesn't define a way of saying "it's time to send this
+          // data over the wire"... but the popular `compression` middleware
+          // (which implements `accept-encoding: gzip` and friends) does, by
+          // monkey-patching a `flush` method onto the response. So we call it
+          // if it's there.
+          if (typeof (res as any).flush === 'function') {
+            (res as any).flush();
+          }
+        }
+        res.end();
       })
       .catch(next);
   };

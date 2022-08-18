@@ -48,3 +48,11 @@ export type {
   CSRFPreventionOptions,
   ApolloServerOptions,
 } from './constructor.js';
+
+export type {
+  GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
+  GraphQLExperimentalFormattedIncrementalResult,
+  GraphQLExperimentalFormattedIncrementalDeferResult,
+  GraphQLExperimentalFormattedIncrementalStreamResult,
+} from './incrementalDeliveryPolyfill.js';

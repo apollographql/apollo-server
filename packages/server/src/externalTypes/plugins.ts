@@ -1,11 +1,13 @@
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { Logger } from '@apollo/utils.logger';
-import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql';
+import type { GraphQLError, GraphQLResolveInfo, GraphQLSchema } from 'graphql';
 import type { ApolloConfig } from './constructor.js';
 import type { BaseContext } from './context.js';
 import type { GraphQLRequestContext, GraphQLResponse } from './graphql.js';
+import type { GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult } from './incrementalDeliveryPolyfill.js';
 import type {
   GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestContextDidEncounterSubsequentErrors,
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextExecutionDidStart,
@@ -13,6 +15,7 @@ import type {
   GraphQLRequestContextResponseForOperation,
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextWillSendResponse,
+  GraphQLRequestContextWillSendSubsequentPayload,
 } from './requestPipeline.js';
 
 export interface GraphQLServerContext {
@@ -131,12 +134,27 @@ export interface GraphQLRequestListener<TContext extends BaseContext> {
     requestContext: GraphQLRequestContextResponseForOperation<TContext>,
   ): Promise<GraphQLResponse | null>;
 
+  // Note that in the case of incremental delivery, the end hook gets called
+  // when the initial response is ready to go: further execution can still occur.
   executionDidStart?(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
   ): Promise<GraphQLRequestExecutionListener<TContext> | void>;
 
+  // Note that in the case of incremental delivery, this is called when the
+  // initial response is ready to go.
   willSendResponse?(
     requestContext: GraphQLRequestContextWillSendResponse<TContext>,
+  ): Promise<void>;
+
+  didEncounterSubsequentErrors?(
+    requestContext: GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
+    errors: ReadonlyArray<GraphQLError>,
+  ): Promise<void>;
+
+  // You can use hasNext to tell if this is the end or not.
+  willSendSubsequentPayload?(
+    requestContext: GraphQLRequestContextWillSendSubsequentPayload<TContext>,
+    payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
   ): Promise<void>;
 }
 

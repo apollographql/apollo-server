@@ -370,7 +370,7 @@ executionDidStart?(
 ): Promise<GraphQLRequestExecutionListener | void>;
 ```
 
-`executionDidStart` may return an object with one or both of the methods `executionDidEnd` and `willResolveField`.  `executionDidEnd` is treated like an end hook: it is called after execution with any errors that occurred. `willResolveField` is documented in the next section.
+`executionDidStart` may return an object with one or both of the methods `executionDidEnd` and `willResolveField`.  `executionDidEnd` is treated like an end hook: it is called after execution with any errors that occurred. (If the operation uses [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`, `executionDidEnd` is called when the fields required to fill the *initial* payload have finished executing; you can use `willSendSubsequentPayload` to hook into the end of execution for each subsequent payload.) `willResolveField` is documented in the next section.
 
 ### `willResolveField`
 
@@ -424,7 +424,9 @@ const server = new ApolloServer({
 ### `didEncounterErrors`
 
 The `didEncounterErrors` event fires when Apollo Server encounters errors while
-parsing, validating, or executing a GraphQL operation.
+parsing, validating, or executing a GraphQL operation. The errors are available on `requestContext.errors`.
+
+(If the operation uses [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`, `didEncounterErrors` is only called when errors that will be sent in the *initial* payload are encountered; you can use `didEncounterSubsequentErrors` to find out if more errors are found later.)
 
 ```ts
 didEncounterErrors?(
@@ -434,16 +436,42 @@ didEncounterErrors?(
 ): Promise<void>;
 ```
 
+### `didEncounterSubsequentErrors`
+
+The `didEncounterSubsequentErrors` event only fires for operations that use [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`. This hook is called when any execution errors are encountered *after* the initial payload is sent; `didEncounterErrors` is *not* called in this case. The errors in question are provided as the second argument to the hook (*not* as `requestContext.errors`, which will continue to be the list of errors sent in the initial payload).
+
+```ts
+didEncounterSubsequentErrors?(
+  requestContext: GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
+  errors: ReadonlyArray<GraphQLError>,
+): Promise<void>;
+```
+
+
+
 ### `willSendResponse`
 
 The `willSendResponse` event fires whenever Apollo Server is about to send a response
 for a GraphQL operation. This event fires (and Apollo Server sends a response) even
 if the GraphQL operation encounters one or more errors.
 
+(If the operation uses [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`, `willSendResponse` is called before the *initial* payload is sent; you can use `willSendSubsequentPayload` to find out when more payloads will be sent.)
+
 ```ts
 willSendResponse?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>, 'source' | 'queryHash'
   >,
+): Promise<void>;
+```
+
+### `willSendSubsequentPayload`
+
+The `willSendSubsequentPayload` event only fires for operations that use [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`. This hook is called before each payload after the initial one is sent, similarly to `willSendResponse`. The payload in question is provided as the second argument to the hook (*not* on `requestContext`). If this is the last payload, `payload.hasNext` will be false. Note that the precise format of `payload` is determined by the `graphql-js` project, and incremental delivery support has not yet (as of September 2022) been released in an official release of `graphql-js`. When the official release (expected to be `graphql@17`) is released, the format of this argument may potentially change; in this case, Apollo Server may change the precise details of this hook in a backward-incompatible way in a minor release of Apollo Server. (For now, this hook can only be called if you install a pre-release of `graphql@17`.)
+
+```ts
+willSendSubsequentPayload?(
+  requestContext: GraphQLRequestContextWillSendSubsequentPayload<TContext>,
+  payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
 ): Promise<void>;
 ```

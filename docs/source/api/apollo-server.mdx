@@ -589,7 +589,7 @@ In some circumstances, Apollo Server calls `stop` automatically when the process
 The async `executeOperation` method is used primarily for [testing GraphQL operations](../testing/testing/#testing-using-executeoperation) through Apollo Server's request pipeline _without_ sending an HTTP request.
 
 ```js
-const result = await server.executeOperation({
+const response = await server.executeOperation({
   query: 'query SayHelloWorld($name: String) { hello(name: $name) }',
   variables: { name: 'world' },
 });
@@ -600,6 +600,12 @@ The `executeOperation` method takes two arguments:
 - The first argument is an object describing the GraphQL operation to be executed.
   - Supported fields are listed in the table below.
 - The second optional argument is used as the operation's [context value](../data/resolvers/#the-context-argument). Note, this argument is only optional if your server _doesn't_ expect a context value (i.e., your server uses the default context because you didn't explicitly provide another one).
+
+The `response` object returned from `executeOperation` is a `GraphQLResponse`, which has `body` and `http` fields.
+
+Apollo Server 4 supports incremental delivery directives such as `@defer` and `@stream` (when combined with an appropriate version of `graphql-js`), and so the structure of `response.body` can represent either a single result or multiple results. `response.body.kind` is either `'single'` or `'incremental'`. If it is `'single'`, then incremental delivery has not been used, and `response.body.singleResult` is an object with `data`, `errors`, and `extensions` fields. If it is `'incremental'`, then `response.body.initialResult` is the initial result of the operation, and `response.body.subsequentResults` is an async iterator that will yield subsequent results. (The precise structure of `initialResult` and `subsequentResults` is defined by `graphql-js` and may change between the current pre-release of `graphql-js` v17 and its final release; if you write code that processes these values before `graphql-js` v17 has been released you may have to adapt it when the API is finalized.)
+
+The `http` field contains an optional numeric `status` code and a `headers` map specifying any HTTP status code and headers that should be set.
 
 Below are the available fields for the first argument of `executeOperation`:
 

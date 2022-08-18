@@ -46,6 +46,7 @@ import type {
   PersistedQueryOptions,
   ContextThunk,
   GraphQLRequestContext,
+  HTTPGraphQLHead,
 } from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
 import { InternalPluginId, pluginIsInternal } from './internalPlugin.js';
@@ -66,6 +67,7 @@ import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
 import type { WithRequired } from '@apollo/utils.withrequired';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type { GatewayExecutor } from '@apollo/server-gateway-interface';
+import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -159,6 +161,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   stopOnTerminationSignals: boolean | undefined;
   gatewayExecutor: GatewayExecutor | null;
   csrfPreventionRequestHeaders: string[] | null;
+  __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
 }
 
 function defaultLogger(): Logger {
@@ -299,6 +302,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           ? null
           : config.csrfPrevention.requestHeaders ??
             recommendedCsrfPreventionRequestHeaders,
+      __testing_incrementalExecutionResults:
+        config.__testing_incrementalExecutionResults,
     };
   }
 
@@ -936,7 +941,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // This is typically either the masked error from when background startup
         // failed, or related to invoking this function before startup or
         // during/after shutdown (due to lack of draining).
-        return this.errorResponse(error);
+        return this.errorResponse(error, httpGraphQLRequest);
       }
 
       if (
@@ -945,8 +950,10 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       ) {
         return {
           headers: new HeaderMap([['content-type', 'text/html']]),
-          completeBody: runningServerState.landingPage.html,
-          bodyChunks: null,
+          body: {
+            kind: 'complete',
+            string: runningServerState.landingPage.html,
+          },
         };
       }
 
@@ -983,6 +990,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // message was chosen thoughtfully and leave off the prefix.
         return this.errorResponse(
           ensureGraphQLError(error, 'Context creation failed: '),
+          httpGraphQLRequest,
         );
       }
 
@@ -1011,11 +1019,14 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           );
         }
       }
-      return this.errorResponse(maybeError);
+      return this.errorResponse(maybeError, httpGraphQLRequest);
     }
   }
 
-  private errorResponse(error: unknown): HTTPGraphQLResponse {
+  private errorResponse(
+    error: unknown,
+    requestHead: HTTPGraphQLHead,
+  ): HTTPGraphQLResponse {
     const { formattedErrors, httpFromErrors } = normalizeAndFormatErrors(
       [error],
       {
@@ -1029,21 +1040,45 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       status: httpFromErrors.status ?? 500,
       headers: new HeaderMap([
         ...httpFromErrors.headers,
-        ['content-type', 'application/json'],
+        [
+          'content-type',
+          // Note that we may change the default to
+          // 'application/graphql-response+json' by 2025 as encouraged by the
+          // graphql-over-http spec. It's maybe a bit bad for us to provide
+          // an application/json response if they send `accept: foo/bar`,
+          // but we're already providing some sort of bad request error, and
+          // it's probably more useful for them to fix the other error before
+          // they deal with the `accept` header.
+          chooseContentTypeForSingleResultResponse(requestHead) ??
+            MEDIA_TYPES.APPLICATION_JSON,
+        ],
       ]),
-      completeBody: prettyJSONStringify({
-        errors: formattedErrors,
-      }),
-      bodyChunks: null,
+      body: {
+        kind: 'complete',
+        string: prettyJSONStringify({
+          errors: formattedErrors,
+        }),
+      },
     };
   }
 
   private prefersHTML(request: HTTPGraphQLRequest): boolean {
+    const acceptHeader = request.headers.get('accept');
     return (
       request.method === 'GET' &&
+      !!acceptHeader &&
       new Negotiator({
-        headers: { accept: request.headers.get('accept') },
-      }).mediaType(['application/json', 'text/html']) === 'text/html'
+        headers: { accept: acceptHeader },
+      }).mediaType([
+        // We need it to actively prefer text/html over less browser-y types;
+        // eg, `accept: */*' should still go for JSON. Negotiator does tiebreak
+        // by the order in the list we provide, so we put text/html last.
+        MEDIA_TYPES.APPLICATION_JSON,
+        MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON,
+        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
+        MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
+        MEDIA_TYPES.TEXT_HTML,
+      ]) === MEDIA_TYPES.TEXT_HTML
     );
   }
 
@@ -1131,15 +1166,14 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
   internals: ApolloServerInternals<TContext>;
   schemaDerivedData: SchemaDerivedData;
 }): Promise<GraphQLResponse> {
-  const httpGraphQLHead = newHTTPGraphQLHead();
-  httpGraphQLHead.headers.set('content-type', 'application/json');
-
   const requestContext: GraphQLRequestContext<TContext> = {
     logger: server.logger,
     cache: server.cache,
     schema: schemaDerivedData.schema,
     request: graphQLRequest,
-    response: { result: {}, http: httpGraphQLHead },
+    response: {
+      http: newHTTPGraphQLHead(),
+    },
     // We clone the context because there are some assumptions that every operation
     // execution has a brand new context object; specifically, in order to implement
     // willResolveField we put a Symbol on the context that is specific to a particular
@@ -1155,7 +1189,7 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
   };
 
   try {
-    await processGraphQLRequest(
+    return await processGraphQLRequest(
       schemaDerivedData,
       server,
       internals,
@@ -1179,7 +1213,6 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
     server.logger.error(`Unexpected error processing request: ${error}`);
     throw new Error('Internal server error');
   }
-  return requestContext.response;
 }
 
 // Unlike InternalPlugins (where we can decide whether to install the default
@@ -1197,4 +1230,39 @@ export function isImplicitlyInstallablePlugin<TContext extends BaseContext>(
   p: ApolloServerPlugin<TContext>,
 ): p is ImplicitlyInstallablePlugin<TContext> {
   return '__internal_installed_implicitly__' in p;
+}
+
+export const MEDIA_TYPES = {
+  APPLICATION_JSON: 'application/json; charset=utf-8',
+  APPLICATION_GRAPHQL_RESPONSE_JSON:
+    'application/graphql-response+json; charset=utf-8',
+  // We do *not* currently support this content-type; we will once incremental
+  // delivery is part of the official GraphQL spec.
+  MULTIPART_MIXED_NO_DEFER_SPEC: 'multipart/mixed',
+  MULTIPART_MIXED_EXPERIMENTAL: 'multipart/mixed; deferSpec=20220824',
+  TEXT_HTML: 'text/html',
+};
+
+export function chooseContentTypeForSingleResultResponse(
+  head: HTTPGraphQLHead,
+): string | null {
+  const acceptHeader = head.headers.get('accept');
+  if (!acceptHeader) {
+    // Note that we may change the default to
+    // 'application/graphql-response+json' by 2025 as encouraged by the
+    // graphql-over-http spec.
+    return MEDIA_TYPES.APPLICATION_JSON;
+  } else {
+    const preferred = new Negotiator({
+      headers: { accept: head.headers.get('accept') },
+    }).mediaType([
+      MEDIA_TYPES.APPLICATION_JSON,
+      MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON,
+    ]);
+    if (preferred) {
+      return preferred;
+    } else {
+      return null;
+    }
+  }
 }
