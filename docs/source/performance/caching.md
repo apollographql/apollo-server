@@ -152,7 +152,7 @@ This object represents the field's current cache hint. Its fields include the fo
 - The field's current `maxAge` and `scope` (which might have been set [statically](#in-your-schema-static))
 - A `restrict` method, which is similar to `setCacheHint` but it can't _relax_ existing hint settings:
 
-  ```js
+  ```ts
   // If we call this first...
   info.cacheControl.setCacheHint({ maxAge: 60, scope: 'PRIVATE' });
 
@@ -210,7 +210,7 @@ import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheContr
 
 const server = new ApolloServer({
   // ...other options...
-  plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
+  plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],  // 5 seconds
 });
 ```
 
@@ -253,8 +253,7 @@ Let's look at some queries and their resulting `maxAge` values:
 # maxAge: 0
 # Query.book doesn't set a maxAge and it's a root field (default 0).
 query GetBookTitle {
-  book {
-    # 0
+  book { # 0
     cachedTitle # 30
   }
 }
@@ -263,8 +262,7 @@ query GetBookTitle {
 # Query.cachedBook has a maxAge of 60, and Book.title is a scalar, so it
 # inherits maxAge from its parent by default.
 query GetCachedBookTitle {
-  cachedBook {
-    # 60
+  cachedBook { # 60
     title # inherits
   }
 }
@@ -273,8 +271,7 @@ query GetCachedBookTitle {
 # Query.cachedBook has a maxAge of 60, but Book.cachedTitle has
 # a maxAge of 30.
 query GetCachedBookCachedTitle {
-  cachedBook {
-    # 60
+  cachedBook { # 60
     cachedTitle # 30
   }
 }
@@ -284,10 +281,8 @@ query GetCachedBookCachedTitle {
 # inheritMaxAge from its parent, and Book.title is a scalar
 # that inherits maxAge from its parent by default.
 query GetReaderBookTitle {
-  reader {
-    # 40
-    book {
-      # inherits
+  reader { # 40
+    book { # inherits
       title # inherits
     }
   }

@@ -60,7 +60,7 @@ If you don't, while your personal computer is on your private network, a script 
 
 #### Federated subgraphs
 
-If you're building a [federated graph](/federation/), we strongly recommend that _all_ of your production subgraph servers _disable_ CORS or limit your subgraph's origins to tools like the [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/embed-explorer/). Most subgraphs should _only_ allow communication from your gateways, and that communication doesn't involve a browser.
+If you're building a [federated graph](/federation/), we strongly recommend that _all_ of your production subgraph servers _disable_ CORS or limit your subgraph's origins to tools like the [Apollo Studio Explorer](/studio/explorer/embed-explorer/). Most subgraphs should _only_ allow communication from your gateways, and that communication doesn't involve a browser.
 
 For more information, see [Securing your subgraphs](/federation/subgraphs/#securing-your-subgraphs).
 
@@ -82,12 +82,9 @@ If you create a public API or an API to embed in websites you don't control your
 
 #### None of the above
 
-<!-- TODO(AS4) add link back in to API page once that is updated -->
-
 If your application doesn't fit into any of the above categories, the default Apollo Server CORS behavior should suit your use case. You can always specify origins in your CORS configuration later or disable cross-origin requests by disabling CORS for your server.
 
 ## Configuring CORS options for Apollo Server
-<!-- TODO(AS4) add links to the api pages for startStandaloneServer and expressMiddleware -->
 
 > 📣 **New in Apollo Server 4**: if you are using an Apollo Server integration (e.g., `expressMiddleware`), you are responsible for [setting up CORS for your web framework](../migration#body-parser-and-cors).
 

@@ -33,7 +33,7 @@ Apollo Server supports APQ without any additional configuration. However, some _
 
 To set up APQ in Apollo Client, first import the `createPersistedQueryLink` function in the same file where you initialize `ApolloClient`:
 
-```js title="index.js"
+```ts title="index.ts"
 import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 ```
 
@@ -41,7 +41,7 @@ This function creates a link that you can add to your client's [Apollo Link chai
 
 Add the persisted query link anywhere in the chain before the terminating link. This example shows a basic two-link chain:
 
-```js
+```ts
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 import { sha256 } from 'crypto-hash';
@@ -155,7 +155,7 @@ Often, GraphQL requests are big POST requests and most CDNs will only cache GET 
 
 To do this, update the **client** code. Add the persisted queries link to the Apollo Client constructor before the HTTP link:
 
-```js
+```ts
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 import { sha256 } from 'crypto-hash';
@@ -171,7 +171,7 @@ const client = new ApolloClient({
 });
 ```
 
-> If you are testing locally, make sure to include the full [URI](https://developer.mozilla.org/en-US/docs/Glossary/URI) including the port number. For example: ` uri: "http://localhost:4000/graphql"`.
+> If you are testing locally, make sure to include the full [URI](https://developer.mozilla.org/en-US/docs/Glossary/URI) including the port number. For example: `uri: "http://localhost:4000/graphql"`.
 
 Make sure to include `useGETForHashedQueries: true`. Note that the client will still use POSTs for mutations because it's generally best to avoid GETs for non-idempotent requests.
 
@@ -202,7 +202,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   persistedQueries: {
+    // highlight-start
     ttl: 900, // 15 minutes
+    // highlight-end
   },
 });
 ```
