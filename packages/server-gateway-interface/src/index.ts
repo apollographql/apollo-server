@@ -68,7 +68,10 @@ export interface GatewayGraphQLRequestContext<TContext = Record<string, any>> {
   readonly errors?: ReadonlyArray<GraphQLError>;
   readonly metrics: GatewayGraphQLRequestMetrics;
   debug?: boolean;
-  readonly overallCachePolicy: GatewayCachePolicy;
+  // In AS3 and AS4, this field is always set and is a GatewayCachePolicy, but
+  // in AS2 it is not always set and is only a GatewayCacheHint. To keep Gateway
+  // compatible with AS2, we allow either case here.
+  readonly overallCachePolicy?: GatewayCachePolicy | GatewayCacheHint;
 }
 
 export interface GatewayGraphQLRequest {
