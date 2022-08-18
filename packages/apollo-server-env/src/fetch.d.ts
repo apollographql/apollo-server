@@ -21,7 +21,7 @@ export declare class Headers implements Iterable<[string, string]> {
 
   entries(): Iterator<[string, string]>;
   keys(): Iterator<string>;
-  values(): Iterator<[string]>;
+  values(): Iterator<string>;
   [Symbol.iterator](): Iterator<[string, string]>;
 }
 
