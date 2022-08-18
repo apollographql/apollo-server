@@ -31,6 +31,7 @@ codecov
 codegen
 codepaths
 codesandbox
+concat
 contravariance
 contravariantly
 createhash
@@ -100,6 +101,7 @@ Loftis
 loglevel
 Luca
 MAXAGE
+memjs
 mget
 Mget
 microrouter
