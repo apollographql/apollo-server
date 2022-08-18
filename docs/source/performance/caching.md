@@ -55,10 +55,10 @@ If you don't add these definitions, Apollo Server throws an `Unknown directive "
 
 The `@cacheControl` directive accepts the following arguments:
 
-| Name            | Description                                                                                                                                                                                         |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `maxAge`        | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-a-different-default-maxage).                     |
-| `scope`         | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses).        |
+| Name | Description |
+|------|-------------|
+| `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-a-different-default-maxage). |
+| `scope` | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses). |
 | `inheritMaxAge` | If `true`, this field inherits the `maxAge` of its parent field instead of using the [default `maxAge`](#setting-a-different-default-maxage). Do not provide `maxAge` if you provide this argument. |
 
 Use `@cacheControl` for fields that should usually be cached with the same settings. If caching settings might change at runtime, you can use the [dynamic method](#in-your-resolvers-dynamic).
@@ -130,11 +130,13 @@ You can decide how to cache a particular field's result _while_ you're resolving
 
 The `cacheControl` object includes a `setCacheHint` method, which you call like so:
 
-```js {4}
+```ts 
 const resolvers = {
   Query: {
     post: (_, { id }, _, info) => {
+      // highlight-start
       info.cacheControl.setCacheHint({ maxAge: 60, scope: 'PRIVATE' });
+      // highlight-end
       return find(posts, { id });
     },
   },
@@ -203,7 +205,7 @@ You can set a default `maxAge` that's applied to fields that otherwise receive t
 
 Set your default `maxAge` by passing the cache control plugin to the `ApolloServer` constructor, like so:
 
-```javascript
+```ts
 import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheControl';
 
 const server = new ApolloServer({
@@ -320,6 +322,7 @@ To set cache hints dynamically, the [`cacheControl` object and its methods](#in-
 ### Overriding subgraph cache hints in the gateway
 
 <!-- TODO(AS4) update once AS4 alpha supports gateways -->
+
 > ⚠️ Note: The alpha version of Apollo Server 4 does **not** work as an [Apollo Gateway](/federation/gateway). You can still use this alpha to serve [subgraphs](/federation/subgraphs), just not Gateways.
 
 If a subgraph does not specify a `max-age`, the gateway will assume its response (and
@@ -327,7 +330,7 @@ in turn, the overall response) cannot be cached. To override this behavior, you 
 
 Additionally, if the gateway should ignore `Cache-Control` response headers from subgraphs that will affect the operation's cache policy, then you can set the `honorSubgraphCacheControlHeader` property of a `RemoteGraphQLDataSource` to `false` (this value is `true` by default):
 
-```javascript
+```ts
 const gateway = new ApolloGateway({
   // ...
   buildService({ url }) {
@@ -355,7 +358,7 @@ If you run Apollo Server behind a CDN or another caching proxy, you can configur
 
 Some CDNs require custom headers for caching or custom values in the `cache-control` header like `s-maxage`. You can configure your `ApolloServer` instance accordingly by telling the built-in cache control plugin to just calculate a policy without setting HTTP headers, and specifying your own [plugin](https://www.apollographql.com/docs/apollo-server/integrations/plugins):
 
-```javascript
+```ts
 new ApolloServer({
   plugins: [
     ApolloServerPluginCacheControl({ calculateHttpHeaders: false }),
@@ -392,7 +395,7 @@ Alternatively, you can set the `useGETForQueries` option of [HttpLink](/react/ap
 
 You can prevent Apollo Server from setting `Cache-Control` headers by installing the `ApolloServerPluginCacheControl` plugin yourself and setting `calculateHttpHeaders` to `false`:
 
-```js
+```ts
 import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheControl';
 
 const server = new ApolloServer({
@@ -405,13 +408,13 @@ If you do this, the cache control plugin still calculates caching behavior for e
 
 To disable cache control calculations entirely, instead install the `ApolloServerPluginCacheControlDisabled` plugin (this plugin has no effect other than preventing the cache control plugin from being installed):
 
-```js
+```ts
 import { ApolloServerPluginCacheControlDisabled } from '@apollo/server/plugin/disabled';
 
 const server = new ApolloServer({
   // ...other options...
   plugins: [ApolloServerPluginCacheControlDisabled()],
-}));
+});
 ```
 
 ## Caching with `responseCachePlugin` (advanced)
@@ -422,7 +425,7 @@ You can cache Apollo Server query responses in stores like Redis, Memcached, or 
 
 To set up your in-memory response cache, you first import the `responseCachePlugin` and provide it to the `ApolloServer` constructor:
 
-```javascript
+```ts
 import responseCachePlugin from '@apollo/server-plugin-response-cache';
 
 const server = new ApolloServer({
@@ -449,7 +452,7 @@ If a cached response has a [`PRIVATE` scope](#in-your-schema-static), its value 
 
 To enable this identification, you provide a `sessionId` function to your `responseCachePlugin`, like so:
 
-```javascript
+```ts
 import responseCachePlugin from '@apollo/server-plugin-response-cache';
 const server = new ApolloServer({
   // ...other settings...
@@ -481,9 +484,9 @@ This enables you to cache different responses for logged-in and logged-out users
 
 In addition to [the `sessionId` function](#identifying-users-for-private-responses), you can provide the following functions to your `responseCachePlugin` to configure cache reads and writes. Each of these functions takes a `GraphQLRequestContext` (representing the incoming operation) as a parameter.
 
-| Function              | Description                                                                                                                                                                                                                                                                 |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `extraCacheKeyData`   | This function's return value (any JSON-stringifiable object) is added to the key for the cached response. For example, if your API includes translatable text, this function can return a string derived from `requestContext.request.http.headers.get('Accept-Language')`. |
-| `shouldReadFromCache` | If this function returns `false`, Apollo Server _skips_ the cache for the incoming operation, even if a valid response is available.                                                                                                                                        |
-| `shouldWriteToCache`  | If this function returns `false`, Apollo Server doesn't cache its response for the incoming operation, even if the response's `maxAge` is greater than `0`.                                                                                                                 |
-| `generateCacheKey`    | Customize generation of the cache key. By default, this is the SHA256 hash of the JSON encoding of an object containing relevant data.                                                                                                                                      |
+| Function | Description |
+|----------|-------------|
+| `extraCacheKeyData` | This function's return value (any JSON-stringifiable object) is added to the key for the cached response. For example, if your API includes translatable text, this function can return a string derived from `requestContext.request.http.headers.get('Accept-Language')`. |
+| `shouldReadFromCache` | If this function returns `false`, Apollo Server _skips_ the cache for the incoming operation, even if a valid response is available. |
+| `shouldWriteToCache` | If this function returns `false`, Apollo Server doesn't cache its response for the incoming operation, even if the response's `maxAge` is greater than `0`. |
+| `generateCacheKey` | Customize generation of the cache key. By default, this is the SHA256 hash of the JSON encoding of an object containing relevant data. |
