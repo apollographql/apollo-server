@@ -25,26 +25,18 @@ npm install global-agent
 
 After the `global-agent` dependency has been installed, invoke its `bootstrap` method **before** Apollo Server is initialized:
 
-```js {2-5}
-const { ApolloServer, gql } = require('apollo-server');
-const {
-  ApolloServerPluginLandingPageLocalDefault
-} = require('apollo-server-core');
-const { bootstrap: bootstrapGlobalAgent } = require('global-agent');
+```ts 
+import { ApolloServer } from '@apollo/server';
+import { bootstrap } from 'global-agent'; // highlight-line
 
 // Setup global support for environment variable based proxy configuration.
-bootstrapGlobalAgent();
+bootstrap();// highlight-line
 
 // The following represents existing configuration, though its
 // important to bootstrap the agent before Apollo Server.
 const server = new ApolloServer({
-  typesDefs,
+  typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
 });
 ```
 
@@ -82,7 +74,7 @@ $ GLOBAL_AGENT_NO_PROXY='*.foo.com,10.0.1.100,baz.com' node index.js
 
 > For more information, see [Exclude URLs](https://github.com/gajus/global-agent#exclude-urls) in the `global-agent` documentation.
 
-As shown above, the [supported environment variables](https://github.com/gajus/global-agent#environment-variables) are all prefixed with `GLOBAL_AGENT_` to avoid undesirable by-products](https://github.com/gajus/global-agent#what-is-the-reason-global-agentbootstrap-does-not-use-http_proxy) of using the more common non-prefixed versions (e.g. `HTTP_PROXY`).  To disable this default namespacing (i.e. prefixing), the server can be started with `GLOBAL_AGENT_ENVIRONMENT_VARIABLE_NAMESPACE` set to an empty string:
+As shown above, the [supported environment variables](https://github.com/gajus/global-agent#environment-variables) are all prefixed with `GLOBAL_AGENT_` to avoid [undesirable by-products](https://github.com/gajus/global-agent#what-is-the-reason-global-agentbootstrap-does-not-use-http_proxy) of using the more common non-prefixed versions (e.g. `HTTP_PROXY`).  To disable this default namespacing (i.e. prefixing), the server can be started with `GLOBAL_AGENT_ENVIRONMENT_VARIABLE_NAMESPACE` set to an empty string:
 
 ```shell
 $ GLOBAL_AGENT_ENVIRONMENT_VARIABLE_NAMESPACE="" HTTP_PROXY=http://proxy:3128/ node index.js
