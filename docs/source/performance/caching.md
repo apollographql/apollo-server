@@ -294,8 +294,6 @@ query GetReaderBookTitle {
 <!-- TODO(AS4) update once AS4 alpha supports gateways -->
 
 > Using cache control with Apollo Federation requires v0.1.0 of `@apollo/subgraph` (previously v0.28 of `@apollo/federation`) in your subgraph, v0.36 of `@apollo/gateway` in your router, and v3.0.2 of Apollo Server in both servers.
->
-> ⚠️ Note: The alpha version of Apollo Server 4 does **not** work as an [Apollo Gateway](/federation/gateway). You can still use this alpha to serve [subgraphs](/federation/subgraphs), just not Gateways. In the meantime, you can use cache control with Apollo Server 4 subgraphs and the [Apollo Router](/router/).
 
 When using [Apollo Federation](/federation), the `@cacheControl` directive and `CacheControlScope` enum may be defined in a subgraph's schema. An Apollo Server-based subgraph will calculate and set the cache hint for the response that it sends to the gateway as it would for a non-federated Apollo Server sending a response to a client. The gateway will then calculate the cache hint for the overall response based on the most restrictive settings among all of the responses received from the subgraphs involved in query plan execution.
 
@@ -315,10 +313,6 @@ When the `_entities` field is resolved it will check the applicable concrete typ
 To set cache hints dynamically, the [`cacheControl` object and its methods](#in-your-resolvers-dynamic) are also available in the `info` parameter of the `__resolveReference` resolver.
 
 ### Overriding subgraph cache hints in the gateway
-
-<!-- TODO(AS4) update once AS4 alpha supports gateways -->
-
-> ⚠️ Note: The alpha version of Apollo Server 4 does **not** work as an [Apollo Gateway](/federation/gateway). You can still use this alpha to serve [subgraphs](/federation/subgraphs), just not Gateways.
 
 If a subgraph does not specify a `max-age`, the gateway will assume its response (and
 in turn, the overall response) cannot be cached. To override this behavior, you can set the `Cache-Control` header in the `didReceiveResponse` method of a `RemoteGraphQLDataSource`.
