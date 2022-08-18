@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server-gateway-interface",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Interface used to connect Apollo Gateway to Apollo Server",
   "type": "module",
   "types": "dist/index.d.ts",

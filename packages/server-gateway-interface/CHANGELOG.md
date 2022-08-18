@@ -1,5 +1,11 @@
 # @apollo/server-gateway-interface
 
+## 1.0.2
+
+### Patch Changes
+
+- [#184](https://github.com/apollographql/apollo-utils/pull/184) [`9d8c7c7`](https://github.com/apollographql/apollo-utils/commit/9d8c7c778626b818e74c741593aaf6e367c6457a) Thanks [@glasser](https://github.com/glasser)! - Make the interface more compatible with Apollo Server 2
+
 ## 1.0.1
 
 ### Patch Changes
