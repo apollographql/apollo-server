@@ -117,6 +117,7 @@ namespacing
 nanos
 npmrc
 nsolid
+memjs
 oneof
 onwarn
 opde
