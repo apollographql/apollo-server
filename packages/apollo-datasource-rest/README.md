@@ -69,13 +69,13 @@ class MoviesAPI extends RESTDataSource {
 }
 ```
 
-#### `requestCacheEnabled`
+#### `memoizeGetRequests`
 By default, `RESTDataSource` caches all outgoing GET **requests** in a separate memoized cache from the regular response cache. It makes the assumption that all responses from HTTP GET calls are cacheable by their URL.
 If a request is made with the same cache key (URL by default) but with an HTTP method other than GET, the cached request is then cleared.
 
-If you would like to disable the GET request cache, set the `requestCacheEnabled` property to `false`. You might want to do this if your API is not actually cacheable or your data changes over time.
+If you would like to disable the GET request cache, set the `memoizeGetRequests` property to `false`. You might want to do this if your API is not actually cacheable or your data changes over time.
 
-```js title="requestCacheEnabled.js"
+```js title="memoizeGetRequests.js"
 class MoviesAPI extends RESTDataSource {
   constructor() {
     super();
