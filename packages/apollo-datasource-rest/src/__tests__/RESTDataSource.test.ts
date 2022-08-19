@@ -806,7 +806,7 @@ describe('RESTDataSource', () => {
 
   describe('http cache', () => {
     it('allows setting cache options for each request', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         override baseURL = 'https://api.example.com';
         override requestCacheEnabled = false;
 
@@ -820,7 +820,7 @@ describe('RESTDataSource', () => {
             ttl: 1000000,
           };
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -835,7 +835,7 @@ describe('RESTDataSource', () => {
     });
 
     it('allows setting a short TTL for the cache', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         override baseURL = 'https://api.example.com';
         override requestCacheEnabled = false;
 
@@ -849,7 +849,7 @@ describe('RESTDataSource', () => {
             ttl: 1,
           };
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
