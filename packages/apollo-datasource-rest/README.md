@@ -80,7 +80,7 @@ class MoviesAPI extends RESTDataSource {
   constructor() {
     super();
     // Defaults to true
-    this.requestCacheEnabled = false;
+    this.memoizeGetRequests = false;
   }
 
   // Outgoing requests are never cached, however the response cache is still enabled
