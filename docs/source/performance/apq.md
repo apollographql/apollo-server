@@ -132,7 +132,7 @@ type Author @cacheControl(maxAge: 60) {
 }
 ```
 
-To learn how to define the `@cacheControl` directive, specify hints dynamically inside resolvers, set a default `maxAge` for all fields, and cache fields only for specific users only (enabling CDNs to ignore those fields), see [Caching](./caching).
+To learn how to define the `@cacheControl` directive, specify hints dynamically inside resolvers, set a default `maxAge` for all fields, and cache fields only for specific users (enabling CDNs to ignore those fields), see [Caching](./caching).
 
 For example, to set a default max age other than `0` you can modify the Apollo Server constructor to include `cacheControl`:
 
@@ -195,9 +195,9 @@ To learn how to configure the in-memory cache, set up an external cache, or writ
 
 The cache time-to-live (TTL) value determines how long a registered APQ remains in the cache. If a cached query's TTL elapses and the query is purged, it's re-registered the next time it's sent by a client.
 
-Apollo Server's default in-memory store does not specify a TTL for an APQ (an APQ remains cached until it is overwritten by the cache's standard eviction policy). For all other [supported stores](#cache-configuration), the default TTL is 300 seconds. You can override or disable this value by setting the `ttl` attribute of the `persistedQueries` option, in seconds:
+Apollo Server's default in-memory store does not specify a TTL for APQs (an APQ remains cached until it is overwritten by the cache's standard eviction policy). For all other [supported stores](#cache-configuration), the default TTL is 300 seconds. You can override or disable this value by setting the `ttl` attribute of the `persistedQueries` option, in seconds:
 
-```ts {5}
+```ts
 const server = new ApolloServer({
   typeDefs,
   resolvers,

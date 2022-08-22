@@ -45,7 +45,7 @@ const { url } = await startStandaloneServer(server, {
     const token = req.headers.authorization || '';
 
     // Try to retrieve a user with the token
-    const user = getUser(token);
+    const user = await getUser(token);
 
     // Add the user to the context
     return { user };
@@ -277,7 +277,7 @@ If you're using a REST API that has built-in authorization, like with an HTTP he
 Here's an example:
 
 ```ts title="src/server.ts"
-context: ({ req }) => {
+context: async ({ req }) => {
  // pass the request information through to the model
  return {
    user,
