@@ -85,6 +85,7 @@ hrtime
 htmls
 httpcache
 IHTTP
+importability
 instanceof
 isnodelike
 iteratees
@@ -172,6 +173,8 @@ testonly
 testsuite
 triaging
 tsbuildinfo
+tsconfig
+tsconfigs
 typecheck
 typeis
 typeof
