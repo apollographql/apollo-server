@@ -49,7 +49,7 @@ If none of these implementations applies to your use case, you can create your o
 
 You provide your `DataSource` subclasses to the `ApolloServer` constructor, like so:
 
-```js {4-9} title="index.js"
+```ts {4-9} title="index.js"
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -71,7 +71,7 @@ const server = new ApolloServer({
 
 Your resolvers can now access your data sources from the shared `context` object and use them to fetch data:
 
-```js title="resolvers.js"
+```ts title="resolvers.js"
 const resolvers = {
   Query: {
     movie: async (_, { id }, { dataSources }) => {
@@ -117,7 +117,7 @@ You then extend the `RESTDataSource` class and implement whatever data-fetching 
 
 Here's an example `RESTDataSource` subclass that defines two data-fetching methods, `getMovie` and `getMostViewedMovies`:
 
-```js title="movies-api.js"
+```ts title="movies-api.js"
 const { RESTDataSource } = require('apollo-datasource-rest');
 
 class MoviesAPI extends RESTDataSource {

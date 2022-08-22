@@ -468,7 +468,7 @@ const server = new ApolloServer<ContextValue>({
 });
 
 await startStandaloneServer(server, {
-  context: ({ req }) => {
+  context: async ({ req }) => {
     const token = getTokenFromRequest(req);
     const { cache } = server;
     return {
@@ -530,7 +530,7 @@ const server = new ApolloServer<ContextValue>({
   resolvers,
 });
 await startStandaloneServer(server, {
-  context: ({ req }) => new ContextValue({ req, server }),
+  context: async ({ req }) => new ContextValue({ req, server }),
 });
 ```
 

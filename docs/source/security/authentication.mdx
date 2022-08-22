@@ -78,7 +78,7 @@ To perform this kind of authorization, we can modify the context function:
 import { GraphQLError } from 'graphql';
 // set up server, etc.
 
-context: ({ req }) => {
+context: async ({ req }) => {
  // get the user token from the headers
  const token = req.headers.authorization || '';
 
@@ -185,7 +185,7 @@ Rather than having the same fetching logic for a single user in two separate pla
 You may have noticed that our models also exist on the context, alongside the user object we added earlier. We can add the models to the context in exactly the same way as we did the user.
 
 ```js
-context: ({ req }) => {
+context: async ({ req }) => {
  // get the user token from the headers
  const token = req.headers.authentication || '';
 
