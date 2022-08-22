@@ -70,9 +70,9 @@ jobs:
     steps:
       - common_test_steps
 
-  NodeJS 17:
+  NodeJS 18:
     docker:
-    - image: cimg/node:17.2.0
+    - image: cimg/node:18.7.0
     steps:
       - common_test_steps
 
@@ -140,7 +140,7 @@ workflows:
           <<: *common_non_publish_filters
       - NodeJS 16:
           <<: *common_non_publish_filters
-      - NodeJS 17:
+      - NodeJS 18:
           <<: *common_non_publish_filters
       - "Check for FIXM\x45"
       - Prettier
@@ -152,7 +152,7 @@ workflows:
             - NodeJS 12
             - NodeJS 14
             - NodeJS 16
-            - NodeJS 17
+            - NodeJS 18
             - Prettier
       - oss/dry_run:
           name: Dry-run
@@ -161,7 +161,7 @@ workflows:
             - NodeJS 12
             - NodeJS 14
             - NodeJS 16
-            - NodeJS 17
+            - NodeJS 18
             - Prettier
       - oss/confirmation:
           name: Confirmation
