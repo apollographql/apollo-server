@@ -5,8 +5,6 @@ api_reference: true
 
 This API reference documents the `ApolloServer` class.
 
-There are [multiple implementations](../integrations/middleware/) of `ApolloServer` for different web frameworks with slightly different behavior.
-
 ## `constructor`
 
 Returns an initialized `ApolloServer` instance.
@@ -15,15 +13,10 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 
 ### Example
 
-```js
+```ts
 const server = new ApolloServer({
 	typeDefs,
 	resolvers,
-  csrfPrevention: true,  // highly recommended
-  cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
 });
 ```
 
@@ -78,41 +71,6 @@ A map of functions that populate data for individual schema fields. Can also be 
 For details, see [Resolvers](../data/resolvers/).
 </td>
 </tr>
-
-
-<tr>
-<td>
-
-##### `context`
-
-`Object` or `Function`
-</td>
-<td>
-
-An object (or a function that _creates_ an object) that's passed to every resolver that executes for a particular operation. This enables resolvers to share helpful context, such as a database connection.
-
-[Certain fields](#middleware-specific-context-fields) are added to this object automatically, depending on which [Node.js middleware](../integrations/middleware/) your server uses.
-
-For more details, see [The `context` argument](../data/resolvers/#the-context-argument).
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-##### `dataSources`
-
-`Function`
-</td>
-<td>
-
-A function that returns an object containing `DataSource` instances for use by your resolvers. The object is automatically added to each operation's [`context`](#context).
-
-For more details, see [Adding data sources to Apollo Server](../data/data-sources/#adding-data-sources-to-apollo-server).
-</td>
-</tr>
-
 
 <tr>
 <td>
@@ -243,8 +201,6 @@ Available in Apollo Server v3.4.0 and later.
 
 A `KeyValueCache` which Apollo Server uses for several features, including APQs and full response caching. This cache is also available to Apollo Server's data sources and plugins.
 
-By default, the cache that Apollo Server 3 uses is unbounded. We _strongly recommend_ that all users pass `cache: "bounded"` or configure their cache in a manner that isn't unbounded. This protects your server from attacks that exhaust available memory, causing a DOS.
-
 The default bounded cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
 
 To learn more about configuring Apollo Server's cache, see [Configuring cache backends](../performance/cache-backends).
@@ -269,7 +225,9 @@ To learn more about configuring Apollo Server's cache, see [Configuring cache ba
 </td>
 <td>
 
-Passing `true` enables Apollo Server's [CSRF and XS-Search prevention](../security/cors#preventing-cross-site-request-forgery-csrf) features. This flag is **highly recommended** for all users and will be enabled by default in Apollo Server 4. Enabling this feature prevents certain `GET` requests from executing GraphQL operations. If your server has clients that send `GET` requests and those clients are _not_ one of Apollo Client Web, Apollo iOS, or Apollo Kotlin, you might need to modify the configuration of those clients before enabling this feature. For more details, see [the full CSRF prevention documentation](../security/cors#preventing-cross-site-request-forgery-csrf).
+By default, the [CSRF prevention](../security/cors#preventing-cross-site-request-forgery-csrf) feature is enabled to protect Apollo Server from CSRF and XS-Search attacks. This feature requires that clients sending operations via `GET` or multipart upload requests _must_ include a non-empty `Apollo-Require-Preflight` (or another non-special-cased) header in that request. If you want to disable this recommended security feature, pass `csrfPrevention: false` to the `ApolloServer` constructor. 
+
+[CSRF prevention](../security/cors#preventing-cross-site-request-forgery-csrf) is enabled in Apollo Server 4. You can disable this prevention by passing `false` to `csrfPrevention`.
 </td>
 </tr>
 
@@ -283,6 +241,9 @@ Passing `true` enables Apollo Server's [CSRF and XS-Search prevention](../securi
 <td>
 
 Provide this function to transform the structure of error objects before they're sent to a client. The function takes a [`GraphQLError`](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts) object and should return a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts#L26) object.
+
+The `formatError` hook receives two arguments: the first is a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts) (to be spent with the response), and the second is the original error. This function should return a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts#L26) object.
+
 </td>
 </tr>
 
@@ -505,6 +466,59 @@ A custom function to execute when Apollo Server receives a request at the [HTTP-
 </td>
 </tr>
 
+</tbody>
+</table>
+
+## Apollo Server 4 integrations
+
+
+### `startStandaloneServer`
+
+### `expressMiddleware`
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+
+<tr>
+<td>
+
+##### `context`
+
+`Object` or `Function`
+</td>
+<td>
+
+An object (or a function that _creates_ an object) that's passed to every resolver that executes for a particular operation. This enables resolvers to share helpful context, such as a database connection.
+
+[Certain fields](#middleware-specific-context-fields) are added to this object automatically, depending on which [Node.js middleware](../integrations/middleware/) your server uses.
+
+For more details, see [The `context` argument](../data/resolvers/#the-context-argument).
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+##### `dataSources`
+
+`Function`
+</td>
+<td>
+
+A function that returns an object containing `DataSource` instances for use by your resolvers. The object is automatically added to each operation's [`context`](#context).
+
+For more details, see [Adding data sources to Apollo Server](../data/data-sources/#adding-data-sources-to-apollo-server).
+</td>
+</tr>
 
 <tr>
 <td>
@@ -536,9 +550,9 @@ The default value is `10_000` (10 seconds).
 </td>
 </tr>
 
-
 </tbody>
 </table>
+
 
 ### Middleware-specific `context` fields
 
