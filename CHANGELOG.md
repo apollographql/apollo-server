@@ -10,7 +10,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
-- [apollo-datasource-rest] Add option to disable GET cache [PR #6650](https://github.com/apollographql/apollo-server/pull/6650) and [PR #6834](https://github.com/apollographql/apollo-server/pull/6834)
+## 3.7.0 (RESTDataSource only)
+
+- [apollo-datasource-rest] Add option `memoizeGetRequests` to disable GET cache [PR #6650](https://github.com/apollographql/apollo-server/pull/6650) and [PR #6834](https://github.com/apollographql/apollo-server/pull/6834)
 
 ## v3.10.1
 
