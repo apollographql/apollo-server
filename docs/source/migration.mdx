@@ -426,6 +426,7 @@ Below is how you write the same code in Apollo Server 4.
 
 ```ts title="Apollo Server 4"
 import { RESTDataSource, RequestOptions } from '@apollo/datasource-rest';
+// KeyValueCache is the type of Apollo server's default cache
 import { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
@@ -435,7 +436,7 @@ class MoviesAPI extends RESTDataSource { // highlight-line
   private token: string;
 
   constructor(options: { token: string; cache: KeyValueCache }) {
-    super(options); // this should send `cache` through
+    super(options); // this should send our server's `cache` through
     this.token = options.token;
   }
 
