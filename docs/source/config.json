@@ -17,6 +17,7 @@
     },
     "Fetching Data": {
       "Resolvers": "/data/resolvers",
+      "Data sources": "/data/data-sources",
       "Error handling": "/data/errors",
       "Subscriptions": "/data/subscriptions"
     },

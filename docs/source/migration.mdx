@@ -4,7 +4,7 @@ title: Migrating to Apollo Server 4 (Alpha)
 
 > ⚠️ **Apollo Server 4 is currently in public alpha.** It is not yet feature-complete, and breaking changes might occur between this release and general availability. [Learn about release stages.](/resources/release-stages/#open-source-release-stages)
 >
-> This alpha primarily aims to enable community members to develop integrations between Apollo Server and their favorite web frameworks. Many Apollo Server 3 users **can't upgrade** to this alpha yet. For example, this alpha [removes multiple web framework integrations](#removed-integrations) and doesn't support using [`RESTDataSource`](#datasources).
+> This alpha primarily aims to enable community members to develop integrations between Apollo Server and their favorite web frameworks. Many Apollo Server 3 users **can't upgrade** to this alpha yet. For example, this alpha [removes multiple web framework integrations](#removed-integrations).
 >
 > We are working on updating our documentation to reflect the changes introduced in Apollo Server 4. This article explains which features _do_ require code changes and how to make them.
 
@@ -359,17 +359,11 @@ For background, Apollo Server uses type system features introduced in v4.7. We w
 
 If supporting older versions of TypeScript is important to you and you'd like to help us get `typesVersions` working, we'd appreciate PRs!
 
-
-
 ## Removed constructor options
 
 The following `ApolloServer` constructor options have been removed in favor of other features or configuration methods.
 
 ### `dataSources`
-
-> ⚠️ This feature is in active development and **does not** currently work as described.
->
-> The Apollo Server 4 alpha doesn't support importing from the [`apollo-datasource-rest`](https://www.npmjs.com/package/apollo-datasource-rest) package. We intend to [rename](https://github.com/apollographql/apollo-server/issues/6048) the `apollo-datasource-rest` package to `@apollo/datasource-rest` and update it to be fully compatible with Apollo Server 4.
 
 In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](/apollo-server/data/resolvers/#the-context-argument) object. This means the TypeScript type the `context` function returns is _different_ from the `context` type your resolvers and plugins receive. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
 
@@ -381,11 +375,11 @@ For example, below, we use the `RESTDataSource` class to create a `DataSource` w
 
 <MultiCodeBlock>
 
-```ts {4, 26-35} title="Apollo Server 3"
+```ts title="Apollo Server 3"
 import { RESTDataSource } from 'apollo-datasource-rest';
 import { ApolloServer } from 'apollo-server';
 
-class MoviesAPI extends RESTDataSource {
+class MoviesAPI extends RESTDataSource { //highlight-line
   baseURL = 'https://movies-api.example.com/';
 
   willSendRequest(request: RequestOptions) {
@@ -407,16 +401,18 @@ interface ContextValue {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ req: ExpressRequest }): Omit<ContextValue, 'dataSources'> => {
+  context: ({ req: ExpressRequest }): Omit<ContextValue, 'dataSources'> => { //highlight-line
     return {
       token: getTokenFromRequest(req),
     };
   },
+  //highlight-start
   dataSources: (): ContextValue['dataSources'] => {
     return {
       moviesAPI: new MoviesAPI(),
     };
   },
+  //highlight-end
 });
 
 await server.listen();
@@ -424,71 +420,76 @@ await server.listen();
 
 </MultiCodeBlock>
 
-<!-- TODO(AS4): Update the next line before release -->
-
-Below is how you write the same code in Apollo Server 4. Note that the `@apollo/datasource-rest` package is now renamed `@apollo/datasource-rest`.
-
-> ⚠️ This feature is in active development, and the below code snippets **do not** currently work as described. [See above for more details](#datasources).
+Below is how you write the same code in Apollo Server 4.
 
 <MultiCodeBlock>
 
-```ts {5, 25-27, 38, 41-43}  title="Apollo Server 4"
-import { RESTDataSource, RESTDataSourceOptions } from '@apollo/datasource-rest';
+```ts title="Apollo Server 4"
+import { RESTDataSource, RequestOptions } from '@apollo/datasource-rest';
+import { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 
-class MoviesAPI extends RESTDataSource {
+class MoviesAPI extends RESTDataSource { // highlight-line
   baseURL = 'https://movies-api.example.com/';
   private token: string;
 
-  constructor(options: { token: string } & RESTDataSourceOptions) {
-    super(options);  // this should send `cache` through
+  constructor(options: { token: string; cache: KeyValueCache }) {
+    super(options); // this should send `cache` through
     this.token = options.token;
   }
 
   willSendRequest(request: RequestOptions) {
-    request.headers.set('Authorization', this.token);
+    request.headers['authorization'] = this.token;
   }
 
-  async getMovie(id: string): Movie {
+  async getMovie(id: string): Promise<Movie> {
     return this.get(`movies/${encodeURIComponent(id)}`);
   }
 }
 
+// highlight-start
 interface ContextValue {
   token: string;
   dataSources: {
     moviesAPI: MoviesAPI;
-  }
-};
+  };
+}
+// highlight-end
 
 const server = new ApolloServer<ContextValue>({
   typeDefs,
   resolvers,
 });
 
-await startStandaloneServer(server, {
+const { url } = await startStandaloneServer(server, {
   context: async ({ req }) => {
     const token = getTokenFromRequest(req);
     const { cache } = server;
     return {
       token,
+      //highlight-start
       dataSources: {
         moviesAPI: new MoviesAPI({ cache, token }),
       },
+      //highlight-end
     };
   },
 });
+
 ```
 
 </MultiCodeBlock>
+
+> For Apollo Server 4, `apollo-datasource-rest` package has been updated and renamed [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest).
 
 If you want to access your entire context's value within your `DataSource`, you can do so by making your context value a `class` (enabling it to refer to itself via `this` in its constructor):
 
 <MultiCodeBlock>
 
-```ts {24-36, 38, 43}
-import { RESTDataSource, RESTDataSourceOptions } from '@apollo/datasource-rest';
+```ts
+import { RESTDataSource, RequestOptions } from '@apollo/datasource-rest'; //highlight-line
+import { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { IncomingMessage } from 'http';
@@ -497,26 +498,27 @@ class MoviesAPI extends RESTDataSource {
   baseURL = 'https://movies-api.example.com/';
   private contextValue: ContextValue;
 
-  constructor(options: { contextValue: ContextValue } & RESTDataSourceOptions) {
-    super(options);  // this should send `cache` through
+  constructor(options: { contextValue: ContextValue; cache: KeyValueCache }) {
+    super(options); // this should send `cache` through
     this.contextValue = options.contextValue;
   }
 
   willSendRequest(request: RequestOptions) {
-    request.headers.set('Authorization', this.contextValue.token);
+    request.headers['authorization'] = this.contextValue.token;
   }
 
-  async getMovie(id: string): Movie {
+  async getMovie(id: string): Promise<Movie> {
     return this.get(`movies/${encodeURIComponent(id)}`);
   }
 }
 
+// highlight-start
 class ContextValue {
   public token: string;
   public dataSources: {
     moviesAPI: MoviesAPI;
-  }
-  constructor({ req, server }: { req: IncomingMessage, server: ApolloServer }) {
+  };
+  constructor({ req, server }: { req: IncomingMessage; server: ApolloServer<ContextValue> }) {
     this.token = getTokenFromRequest(req);
     const { cache } = server;
     this.dataSources = {
@@ -524,13 +526,15 @@ class ContextValue {
     };
   }
 }
+// highlight-end
 
 const server = new ApolloServer<ContextValue>({
   typeDefs,
   resolvers,
 });
+
 await startStandaloneServer(server, {
-  context: async ({ req }) => new ContextValue({ req, server }),
+  context: async ({ req }) => new ContextValue({ req, server }), //highlight-line
 });
 ```
 
@@ -1611,6 +1615,7 @@ new ApolloServer({
 ## Renamed packages
 
 The following packages have been renamed in Apollo Server 4:
+ * `apollo-datasource-rest` is now [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest). The `@apollo/datasource-rest` package is compatible with both Apollo Server 3 and 4.
  * `apollo-server-plugin-response-cache` is now [`@apollo/server-plugin-response-cache`](https://www.npmjs.com/package/@apollo/server-plugin-response-cache).
  * `apollo-server-plugin-operation-registry` is now [`@apollo/server-plugin-operation-registry`](https://www.npmjs.com/package/@apollo/server-plugin-operation-registry).
  * `apollo-reporting-protobuf` (an internal implementation detail for the usage reporting plugin) is now [`@apollo/usage-reporting-protobuf`](https://www.npmjs.com/package/@apollo/usage-reporting-protobuf).
