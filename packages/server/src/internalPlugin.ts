@@ -1,4 +1,4 @@
-import type { BaseContext, ApolloServerPlugin } from './externalTypes';
+import type { BaseContext, ApolloServerPlugin } from './externalTypes/index.js';
 
 // This file's exports should not be exported from the overall
 // @apollo/server module.

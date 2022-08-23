@@ -1,4 +1,4 @@
-import type { ApolloServerPlugin } from '../../externalTypes';
+import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 import {
   DirectiveNode,
   getNamedType,

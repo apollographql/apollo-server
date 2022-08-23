@@ -2,7 +2,7 @@ import type {
   BaseContext,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
-} from './externalTypes';
+} from './externalTypes/index.js';
 import type {
   ApolloServer,
   ApolloServerInternals,

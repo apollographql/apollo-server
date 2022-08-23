@@ -1,11 +1,11 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
 import type express from 'express';
-import type { ApolloServer } from '..';
+import type { ApolloServer } from '../index.js';
 import type {
   BaseContext,
   ContextFunction,
   HTTPGraphQLRequest,
-} from '../externalTypes';
+} from '../externalTypes/index.js';
 import { parse as urlParse } from 'url';
 
 export interface ExpressContextFunctionArgument {

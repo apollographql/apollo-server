@@ -1,10 +1,10 @@
 // TODO(AS4): Document this file
 // TODO(AS4): Decide where it is imported from.
-import type { BaseContext, ApolloServerPlugin } from '../..';
+import type { BaseContext, ApolloServerPlugin } from '../../index.js';
 import type {
   InternalApolloServerPlugin,
   InternalPluginId,
-} from '../../internalPlugin';
+} from '../../internalPlugin.js';
 
 function disabledPlugin(id: InternalPluginId): ApolloServerPlugin {
   const plugin: InternalApolloServerPlugin<BaseContext> = {

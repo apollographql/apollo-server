@@ -1,5 +1,5 @@
 import { createHash } from '@apollo/utils.createhash';
-import type { ApolloConfig, ApolloConfigInput } from './externalTypes';
+import type { ApolloConfig, ApolloConfigInput } from './externalTypes/index.js';
 
 // This function combines the `apollo` constructor argument and some environment
 // variables to come up with a full ApolloConfig.

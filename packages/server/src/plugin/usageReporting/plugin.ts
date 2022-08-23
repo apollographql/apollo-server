@@ -19,9 +19,9 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestListener,
   GraphQLServerListener,
-} from '../../externalTypes';
+} from '../../externalTypes/index.js';
 import { internalPlugin } from '../../internalPlugin.js';
-import type { HeaderMap } from '../../runHttpQuery';
+import type { HeaderMap } from '../../runHttpQuery.js';
 import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder.js';
 import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace.js';
 import {
@@ -32,7 +32,7 @@ import {
 import type {
   ApolloServerPluginUsageReportingOptions,
   SendValuesBaseOptions,
-} from './options';
+} from './options.js';
 import { OurReport } from './stats.js';
 import { makeTraceDetails } from './traceDetails.js';
 import { packageVersion } from '../../generated/packageVersion.js';

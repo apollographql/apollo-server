@@ -1,6 +1,6 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
-import type { BaseContext } from './context';
-import type { GraphQLRequestContext } from './graphql';
+import type { BaseContext } from './context.js';
+import type { GraphQLRequestContext } from './graphql.js';
 
 export type GraphQLRequestContextDidResolveSource<
   TContext extends BaseContext,
