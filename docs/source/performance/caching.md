@@ -3,7 +3,7 @@ title: Server-side caching
 description: Configure caching behavior on a per-field basis
 ---
 
-[Once enabled](#in-your-schema-static), Apollo Server let's you to define cache control settings (`maxAge` and `scope`) for each field in your schema:
+[Once enabled](#in-your-schema-static), Apollo Server lets you to define cache control settings (`maxAge` and `scope`) for each field in your schema:
 
 ```graphql {5,7}
 type Post {
