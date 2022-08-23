@@ -23,7 +23,7 @@ Smoke tests run separately from Jest tests. They can be run with `npm run test:s
 
 ESLint can be run via `npm run lint`.
 Prettier can be run via `npm run prettier-fix`.
-Spell checking can be run via `npm run spell-check`. Words can be added to the dictionary: [`cspell-dict.txt`](./cspell-dict.txt) or ignore with the directive: `// cspell:ignore`.
+Spell checking can be run via `npm run spell-check`. Words can be added to the dictionary: [`cspell-dict.txt`](./cspell-dict.txt) or ignored with the directive: `// cspell:ignore`.
 
 All 3 of these tools have respective VSCode extensions which can be found here:
 [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
