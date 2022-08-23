@@ -79,8 +79,8 @@ For examples, see [Passing credentials with CORS](#passing-credentials-with-cors
 If you create an API on the public internet to serve resources to your _own_ websites or apps, you might want to [specify which origins](#configuring-cors-options-for-apollo-server) can access your server's resources. Explicitly specifying origins can provide an extra level of security.
 
 #### Public or embedded APIs
-
-If you create a public API or an API to embed in websites you don't control yourself, you probably want to allow _all_ origins to access your server's resources. You can use the [`startStandaloneServer`]('s ACAO value (the wildcard `*`) in these situations, allowing requests from any origin.
+<!-- TODO(AS4) replace link for api page -->
+If you create a public API or an API to embed in websites you don't control yourself, you probably want to allow _all_ origins to access your server's resources. You can use the [`startStandaloneServer`](../migration#migrate-from-apollo-server)'s ACAO value (the wildcard `*`) in these situations, allowing requests from any origin.
 
 > Using the [wildcard (`*`)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin#directives) value for the ACAO header enables _any_ website to tell a user's browser to send an arbitrary request (without cookies or other credentials) to your server and read that server's response.
 
@@ -206,7 +206,7 @@ The most important rule for whether or not a request is ["simple"](https://devel
 
 However, Apollo Server also handles [`GET` requests](../requests#get-requests). `GET` requests do not require a `Content-Type` header, so they can potentially be simple requests. So how can we ensure that we only execute `GET` requests that are _not_ simple requests? If we require the request to include an HTTP header that is never set automatically by the browser, then that is sufficient: requests that set HTTP headers other than the handful defined in the spec must be preflighted.
 
-When this feature is enabled, Apollo Server only executes GraphQL operations if at least one of the following conditions is true:
+When CSRF protection is enabled, Apollo Server only executes GraphQL operations if at least one of the following conditions is true:
 
 - The incoming request includes a `Content-Type` header that specifies a type other than `text/plain`, `application/x-www-form-urlencoded`, or `multipart/form-data`. Notably, a `Content-Type` of `application/json` (including any suffix like `application/json; charset=utf-8`) is sufficient. This means that all `POST` requests (which must use `Content-Type: application/json`) will be executed. Additionally, all versions of [Apollo Client Web](/react/api/link/apollo-link-http) that support `GET` requests do include `Content-Type: application/json` headers, so any request from Apollo Client Web (`POST` or `GET`) will be executed.
 - There is a non-empty `X-Apollo-Operation-Name` header. This header is sent with all operations (`POST` or `GET`) by [Apollo iOS](/ios) (v0.13.0+) and [Apollo Kotlin](/kotlin) (all versions, including its former name "Apollo Android"), so any request from Apollo iOS or Apollo Kotlin will be executed.
@@ -242,4 +242,4 @@ Apollo Server 4's default [CSRF prevention feature](#preventing-cross-site-reque
 
 For example, if you use the [`apollo-upload-client`](https://github.com/jaydenseric/apollo-upload-client) package with Apollo Client Web, pass  `{headers: {'Apollo-Require-Preflight': 'true'}}` to `createUploadLink`.
 
-For more information about file upload best practices, see [our blog post uploads](https://www.apollographql.com/blog/backend/file-uploads/file-upload-best-practices/).
+For more information about file upload best practices, see [our blog post](https://www.apollographql.com/blog/backend/file-uploads/file-upload-best-practices/).
