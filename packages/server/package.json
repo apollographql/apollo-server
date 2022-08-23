@@ -52,11 +52,6 @@
       "import": "./dist/esm/plugin/landingPage/default/index.js",
       "require": "./dist/cjs/plugin/landingPage/default/index.js"
     },
-    "./plugin/landingPage/graphqlPlayground": {
-      "types": "./dist/esm/plugin/landingPage/graphqlPlayground/index.d.ts",
-      "import": "./dist/esm/plugin/landingPage/graphqlPlayground/index.js",
-      "require": "./dist/cjs/plugin/landingPage/graphqlPlayground/index.js"
-    },
     "./plugin/schemaReporting": {
       "types": "./dist/esm/plugin/schemaReporting/index.d.ts",
       "import": "./dist/esm/plugin/schemaReporting/index.js",
