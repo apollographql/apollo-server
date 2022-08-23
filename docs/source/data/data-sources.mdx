@@ -45,25 +45,44 @@ If none of these implementations applies to your use case, you can create your o
 
 ## Adding data sources to Apollo Server
 
-You provide your `DataSource` subclasses to the `ApolloServer` constructor, like so:
+You provide your `DataSource` subclasses to the `context` initialization function, like so:
 
-```ts {4-9} title="index.js"
-const server = new ApolloServer({
+```ts title="index.ts"
+//highlight-start
+interface ContextValue {
+  token: string;
+  dataSources: {
+    moviesAPI: MoviesAPI;
+    personalizationAPI: PersonalizationAPI;
+  };
+}
+//highlight-end
+
+const server = new ApolloServer<ContextValue>({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
-  plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
-  dataSources: () => {
+});
+
+const { url } = await startStandaloneServer(server, {
+  context: async ({ req }) => {
+    const token = getTokenFromRequest(req);
+    const { cache } = server;
     return {
-      moviesAPI: new MoviesAPI(),
-      personalizationAPI: new PersonalizationAPI(),
+      token,
+      //highlight-start
+      dataSources: {
+        moviesAPI: new MoviesAPI(),
+        personalizationAPI: new PersonalizationAPI(),
+      },
+      //highlight-end
     };
   },
 });
+
+console.log(`🚀  Server ready at ${url}`);
 ```
 
-- As shown, the `dataSources` option is a _function_. This function returns an _object_ containing instances of your `DataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
+- As shown, the `context` option is a _function_. This function returns an _object_ containing instances of your `DataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
 - Apollo Server calls this function for _every incoming operation_. It automatically assigns the returned object to the `dataSources` field of [the `context` object](./resolvers/#the-context-argument) that's passed between your server's resolvers.
 - Also as shown, **the function should create a new instance of each data source for each operation.** If multiple operations share a single data source instance, you might accidentally combine results from multiple operations.
 
@@ -150,7 +169,7 @@ An example of each is shown below:
 
 <ExpansionPanel title="Click to expand">
 
-```ts 
+```ts
 class MoviesAPI extends RESTDataSource {
   constructor() {
     super();
@@ -227,7 +246,7 @@ Data sources also have access to the GraphQL operation context, which is useful 
 
 #### Setting a header
 
-```ts 
+```ts
 class PersonalizationAPI extends RESTDataSource {
   willSendRequest(request) {
     request.headers.set('Authorization', this.context.token);
@@ -237,7 +256,7 @@ class PersonalizationAPI extends RESTDataSource {
 
 #### Adding a query parameter
 
-```ts 
+```ts
 class PersonalizationAPI extends RESTDataSource {
   willSendRequest(request) {
     request.params.set('api_key', this.context.token);
@@ -265,7 +284,7 @@ class PersonalizationAPI extends RESTDataSource {
 
 In some cases, you'll want to set the URL based on the environment or other contextual values. To do this, you can override `resolveURL`:
 
-```ts 
+```ts
 async resolveURL(request: RequestOptions) {
   if (!this.baseURL) {
     const addresses = await resolveSrv(request.path.split("/")[1] + ".service.consul");
@@ -293,7 +312,7 @@ Most REST APIs don't support batching. When they do, using a batched endpoint ca
 
 We recommend that you restrict batching to requests that _can't_ be cached. In these cases, you can take advantage of DataLoader as a private implementation detail inside your `RESTDataSource`:
 
-```ts 
+```ts
 class PersonalizationAPI extends RESTDataSource {
   constructor() {
     super();

@@ -77,11 +77,7 @@ const users = [
 ];
 ```
 
-<!-- TODO (AS4): add this back in once data sources are up
-
 > To learn how to fetch data from an external source (like a database or REST API), see [Data sources](./data-sources/).
-
--->
 
 Now we can define a resolver for the `user` field, like so:
 
@@ -385,11 +381,7 @@ Resolver functions are passed four arguments: `parent`, `args`, `context`, and `
 
 > ⚠️ The Apollo Server 4 alpha doesn't currently support using [`RESTDataSource`](../migration#datasources), a class commonly used to fetch data from a database or a REST API. This feature is in active development, so check back frequently for updates.
 
-The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions.
-
-<!-- TODO(AS4) Add this paragraph in once data sources work
-If you're using [dataloaders to batch requests](./data-sources/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
--->
+The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./data-sources/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
 
 **Resolvers should never destructively modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
 
@@ -407,7 +399,7 @@ const resolvers = {
   // Example resolver
     adminExample: (parent, args, context, info) => {
       if (context.authScope !== ADMIN) {
-        throw new GraphQLError('not admin!', { 
+        throw new GraphQLError('not admin!', {
           extensions: { code: 'UNAUTHENTICATED' }
         });
       }
