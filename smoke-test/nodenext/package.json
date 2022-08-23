@@ -1,15 +1,4 @@
 {
-  "name": "nodenext-smoke-test",
-  "version": "0.0.0",
   "type": "module",
-  "module": "./dist/smoke-test.js",
-  "dependencies": {
-    "@apollo/server": "../node_modules/@apollo/server",
-    "graphql": "16.5.0"
-  },
-  "devDependencies": {
-    "@types/node": "16",
-    "nodemon": "2.x",
-    "typescript": "next"
-  }
+  "module": "./dist/smoke-test.js"
 }

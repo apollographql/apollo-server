@@ -5,6 +5,8 @@ set -x
 
 TARBALL_DIR=$(mktemp -d)
 
+# Ensure build is current.
+npm run compile
 # Make tarballs of all packages.
 npm pack --pack-destination="$TARBALL_DIR" --workspaces=true
 
