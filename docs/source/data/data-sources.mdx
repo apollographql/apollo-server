@@ -152,7 +152,7 @@ An example of each is shown below:
 
 <ExpansionPanel title="Click to expand">
 
-```js
+```ts 
 class MoviesAPI extends RESTDataSource {
   constructor() {
     super();
@@ -229,7 +229,7 @@ Data sources also have access to the GraphQL operation context, which is useful 
 
 #### Setting a header
 
-```js
+```ts 
 class PersonalizationAPI extends RESTDataSource {
   willSendRequest(request) {
     request.headers.set('Authorization', this.context.token);
@@ -239,7 +239,7 @@ class PersonalizationAPI extends RESTDataSource {
 
 #### Adding a query parameter
 
-```js
+```ts 
 class PersonalizationAPI extends RESTDataSource {
   willSendRequest(request) {
     request.params.set('api_key', this.context.token);
@@ -267,7 +267,7 @@ class PersonalizationAPI extends RESTDataSource {
 
 In some cases, you'll want to set the URL based on the environment or other contextual values. To do this, you can override `resolveURL`:
 
-```js
+```ts 
 async resolveURL(request: RequestOptions) {
   if (!this.baseURL) {
     const addresses = await resolveSrv(request.path.split("/")[1] + ".service.consul");
@@ -295,7 +295,7 @@ Most REST APIs don't support batching. When they do, using a batched endpoint ca
 
 We recommend that you restrict batching to requests that _can't_ be cached. In these cases, you can take advantage of DataLoader as a private implementation detail inside your `RESTDataSource`:
 
-```js
+```ts 
 class PersonalizationAPI extends RESTDataSource {
   constructor() {
     super();

@@ -3,6 +3,8 @@ title: Mocking
 description: Mock your GraphQL data based on a schema.
 ---
 
+> 📣 **New in Apollo Server 4:** Apollo Server 4 removes both the [`mocks` and `mockEntireSchema`](../migration/#mocks-and-mockentireschema) constructor options. This article has been updated to use the `@graphql-tools` package to mock data for Apollo Server. For the most up-to-date information on `@graphql-tools`, we recommend referencing [their documentation](https://www.graphql-tools.com/docs/mocking).
+
 Mocking enables Apollo Server to return simulated data for GraphQL operations based on your server's schema. The strongly-typed nature of a GraphQL API lends itself to mocking, which is an important part of a GraphQL-first development process.
 
 Mocking enables frontend developers to build out and test UI components and features without needing to wait for a full backend implementation. Mocking is also valuable when using a UI tool like [Storybook](https://storybook.js.org/), because you don't need to start a real GraphQL server.
@@ -25,7 +27,8 @@ import { typeDefs } from './schema';
 import { resolvers } from './resolvers';
 
 new ApolloServer({
-  // addMocksToSchema accepts a schema instance to
+  // addMocksToSchema accepts a schema instance and provides
+  // mocked data for each field in the schema
   // highlight-start
   schema: addMocksToSchema({
     schema: makeExecutableSchema({ typeDefs, resolvers }),
@@ -168,7 +171,7 @@ console.log(`🚀 Server listening at: ${url}`);
 
 You can also use `mocks` to define object types and the fields belonging to those object types (much like a [resolver map](../data/resolvers/#base-syntax)). In the below example, our mocked `Person` object calls a function returning an object with fields that contain _other_ functions:
 
-```js
+```ts 
 // importing the casual library
 const casual = require('casual');
 
@@ -243,32 +246,3 @@ console.log(`🚀 Server listening at: ${url}`);
 ```
 
 Above, the `resolved` query now uses its defined resolver, so it returns the string `Resolved`.
-
-## Mocking a schema using introspection
-
-The GraphQL specification enables clients to introspect the schema with a [special set of types and fields](http://spec.graphql.org/October2021/#sec-Introspection) that every schema must include. You can use the results of a [standard introspection query](https://github.com/graphql/graphql-js/blob/main/src/utilities/getIntrospectionQuery.ts) to generate an instance of `GraphQLSchema` that you can then mock [as shown above](#enabling-mocks).
-
-This can help when you need to mock a schema defined in a language besides JavaScript.
-
-To convert an [introspection query](https://github.com/graphql/graphql-js/blob/main/src/utilities/getIntrospectionQuery.ts) result to a `GraphQLSchema` object, you can use the `buildClientSchema` utility from the `graphql` package:
-
-```js
-import { buildClientSchema } from 'graphql';
-import * as introspectionResult from 'schema.json';
-import { ApolloServer } from '@apollo/server';
-import { addMocksToSchema } from '@graphql-tools/mock';
-import { makeExecutableSchema } from '@graphql-tools/schema';
-
-const schema = buildClientSchema(introspectionResult); // highlight-line
-
-const server = new ApolloServer({
-  schema: addMocksToSchema({
-    schema,
-    mocks,
-  }),
-});
-
-const { url } = await startStandaloneServer(server, { listen: { port: 4000 } });
-
-console.log(`🚀 Server listening at: ${url}`);
-```

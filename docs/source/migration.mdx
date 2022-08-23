@@ -543,7 +543,7 @@ In Apollo Server 3, there are [several ways](https://github.com/apollographql/ap
 
 To simplify its API, Apollo Server 4 removes the `modules` constructor option. You can replace any previous usage of `modules` with the following syntax:
 
-```js
+```ts
 new ApolloServer({
   typeDefs: modules.map({ typeDefs } => typeDefs),
   resolvers: modules.map({ resolvers } => resolvers),
@@ -1025,7 +1025,7 @@ Apollo Server 4's other non-serverless framework integrations expect the develop
 
 In Apollo Server 3, you could provide an initial [`context`](/apollo-server/data/resolvers#the-context-argument) to your resolvers by adding a `context` initialization function to the `ApolloServer` constructor:
 
-```js
+```ts
 // Apollo Server 3 Constructor
 const server = new ApolloServer({
   typeDefs,
@@ -1219,7 +1219,7 @@ When Apollo Server 3 formats an error, it may add an extension called `exception
 
 For example, if this code runs in a resolver:
 
-```js
+```ts
 const e = new Error("hello");
 e.extraProperty = "bye";
 throw e;
@@ -1227,7 +1227,7 @@ throw e;
 
 then (in debug mode) Apollo Server 3 will format the error like this:
 
-```js
+```ts
 {
   "errors": [
     {

@@ -3,9 +3,7 @@ title: Server-side caching
 description: Configure caching behavior on a per-field basis
 ---
 
-> You must manually define the `@cacheControl` directive in your schema to use static cache hints. [See below for details.](#in-your-schema-static)
-
-Apollo Server enables you to define cache control settings (`maxAge` and `scope`) for each field in your schema:
+[Once enabled](#in-your-schema-static), Apollo Server let's you to define cache control settings (`maxAge` and `scope`) for each field in your schema:
 
 ```graphql {5,7}
 type Post {
@@ -289,9 +287,9 @@ query GetReaderBookTitle {
 }
 ```
 
-## Using with federation
+## Using with Federation
 
-> Using cache control with Apollo Federation requires v0.1.0 of `@apollo/subgraph` (previously v0.28 of `@apollo/federation`) in your subgraph, v0.36 of `@apollo/gateway` in your router, and v3.0.2 of Apollo Server in both servers.
+> Using cache control with Apollo Federation requires v0.1.0 of `@apollo/subgraph` (previously v0.28 of `@apollo/federation`) in your subgraph, v0.36 of `@apollo/gateway` in your Gateway, and v3.0.2 of Apollo Server in both servers.
 
 When using [Apollo Federation](/federation), the `@cacheControl` directive and `CacheControlScope` enum may be defined in a subgraph's schema. An Apollo Server-based subgraph will calculate and set the cache hint for the response that it sends to the gateway as it would for a non-federated Apollo Server sending a response to a client. The gateway will then calculate the cache hint for the overall response based on the most restrictive settings among all of the responses received from the subgraphs involved in query plan execution.
 
@@ -406,7 +404,7 @@ const server = new ApolloServer({
 
 ## Caching with `responseCachePlugin` (advanced)
 
-You can cache Apollo Server query responses in stores like Redis, Memcached, or Apollo Server's in-memory cache. For more information, see [Configuring cache backends](./cache-backends).
+You can cache Apollo Server query responses in stores like Redis, Memcached, or Apollo Server's default in-memory cache. For more information, see [Configuring cache backends](./cache-backends).
 
 ### In-memory cache setup
 
@@ -423,7 +421,7 @@ const server = new ApolloServer({
 
 On initialization, this plugin automatically begins caching responses according to [field settings](#in-your-schema-static).
 
-The plugin uses the same bounded in-memory LRU cache as Apollo Server's other features. For environments with multiple server instances, you might instead want to use a shared cache backend, such as [Memcached or Redis](./cache-backends#configuring-external-caching).
+The plugin uses the same in-memory LRU cache as Apollo Server's other features. For environments with multiple server instances, you might instead want to use a shared cache backend, such as [Memcached or Redis](./cache-backends#configuring-external-caching).
 
 > In addition to the [`Cache-Control` HTTP header](#caching-with-a-cdn), the `responseCachePlugin` also sets the `Age` HTTP header to the number of seconds the returned value has been in the cache.
 
@@ -473,7 +471,7 @@ In addition to [the `sessionId` function](#identifying-users-for-private-respons
 
 | Function | Description |
 |----------|-------------|
-| `extraCacheKeyData` | This function's return value (any JSON-stringifiable object) is added to the key for the cached response. For example, if your API includes translatable text, this function can return a string derived from `requestContext.request.http.headers.get('Accept-Language')`. |
+| `extraCacheKeyData` | This function's return value (any JSON-stringifiable object) is added to the key for the cached response. For example, if your API includes translatable text, this function can return a string derived from `requestContext.request.http.headers.get('accept-language')`. |
 | `shouldReadFromCache` | If this function returns `false`, Apollo Server _skips_ the cache for the incoming operation, even if a valid response is available. |
 | `shouldWriteToCache` | If this function returns `false`, Apollo Server doesn't cache its response for the incoming operation, even if the response's `maxAge` is greater than `0`. |
 | `generateCacheKey` | Customize generation of the cache key. By default, this is the SHA256 hash of the JSON encoding of an object containing relevant data. |

@@ -3,11 +3,12 @@ title: Configuring CORS
 description: Control access to your server's resources
 ---
 
-> 📣 By default, Apollo Server 4 ships with a feature protecting from CSRF and XS-Search attacks. This feature requires that any client sending operations via `GET` or multipart upload requests _must_ include a non-empty `Apollo-Require-Preflight` (or another non-special-cased) header in that request. For more information, see [Preventing Cross-Site Request Forgery (CSRF)](#preventing-cross-site-request-forgery-csrf).
+> 📣 By default, Apollo Server 4 ships with a feature that protects users from CSRF and XS-Search attacks. This feature requires that any client sending operations via `GET` or multipart upload requests _must_ include a special header (such as `Apollo-Require-Preflight`) in that request. For more information, see [Preventing Cross-Site Request Forgery (CSRF)](#preventing-cross-site-request-forgery-csrf).
 
 [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header-based protocol that enables a server to dictate which origins can access its resources. Put another way, your server can specify which websites can tell a user's browser to talk to your server, and precisely which types of HTTP requests are allowed.
 
-Apollo Server's default CORS behavior enables any website on the internet to tell a user's browser to connect to your server.
+<!-- TODO(AS4) replace link with API link -->
+The [`startStandaloneServer` function](../migration#migrate-from-apollo-server)'s CORS settings enable any website on the internet to tell a user's browser to connect to your server. However, `startStandaloneServer` doesn't support configuring its CORS behavior. If you want to [customize your CORS behavior](#configuring-cors-options-for-apollo-server), you'll need to swap to using [`expressMiddleware`](../migration#migrate-from-apollo-server-express) (or any other Apollo Server integration). 
 
 > ⚠️ If your app is only visible on a private network and uses network separation for security, the default CORS behavior is **not secure**. See [Specifying origins](#specifying-origins) for more information.
 
@@ -260,4 +261,4 @@ Apollo Server 4's default [CSRF prevention feature](#preventing-cross-site-reque
 
 For example, if you use the [`apollo-upload-client`](https://github.com/jaydenseric/apollo-upload-client) package with Apollo Client Web, pass the header: `{'Apollo-Require-Preflight': 'true'}` to `createUploadLink`.
 
-For more information about file upload best practices, [our blog post uploads](https://www.apollographql.com/blog/backend/file-uploads/file-upload-best-practices/). 
+For more information about file upload best practices, [our blog post uploads](https://www.apollographql.com/blog/backend/file-uploads/file-upload-best-practices/).

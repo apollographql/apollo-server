@@ -26,7 +26,7 @@ We want to define resolvers for the `numberSix` and `numberSeven` fields of the 
 
 Those resolver definitions look like this:
 
-```js
+```ts 
 const resolvers = {
   Query: {
     numberSix() {
@@ -64,7 +64,7 @@ We want to be able to query the `user` field to fetch a user by its `id`.
 
 To achieve this, our server needs access to user data. For this contrived example, assume our server defines the following hardcoded array:
 
-```js
+```ts 
 const users = [
   {
     id: '1',
@@ -85,7 +85,7 @@ const users = [
 
 Now we can define a resolver for the `user` field, like so:
 
-```js
+```ts 
 const resolvers = {
   Query: {
     user(parent, args, context, info) {
@@ -447,7 +447,7 @@ The `context` function should be *asynchronous* and return an object, which is t
 
 Because the `context` initialization function is asynchronous, you can use it to establish database connections and wait for other operations to complete:
 
-```js
+```ts 
 context: async () => ({
   db: await client.connect(),
 })

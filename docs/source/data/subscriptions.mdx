@@ -249,7 +249,7 @@ npm install graphql-subscriptions
 
 A `PubSub` instance enables your server code to both `publish` events to a particular label and listen for events associated with a particular label. We can create a `PubSub` instance like so:
 
-```js
+```ts 
 import { PubSub } from 'graphql-subscriptions';
 
 const pubsub = new PubSub();
@@ -259,7 +259,7 @@ const pubsub = new PubSub();
 
 You can publish an event using the `publish` method of a `PubSub` instance:
 
-```js
+```ts 
 pubsub.publish('POST_CREATED', {
   postCreated: {
     author: 'Ali Baba',
@@ -299,7 +299,7 @@ const resolvers = {
 
 Before we persist the new post's details in our datastore, we can `publish` an event that _also_ includes those details:
 
-```js
+```ts 
 const resolvers = {
   Mutation: {
     createPost(parent, args, context) {
@@ -319,7 +319,7 @@ An [`AsyncIterator`](https://github.com/apollographql/graphql-subscriptions/blob
 
 You can create an `AsyncIterator` by calling the `asyncIterator` method of `PubSub` and passing in an array containing the names of the event labels that this `AsyncIterator` should listen for.
 
-```js
+```ts 
 pubsub.asyncIterator(['POST_CREATED']);
 ```
 
@@ -515,7 +515,7 @@ In Apollo Client, the `GraphQLWsLink` constructor supports adding information to
 
 Let's suppose we create our subscription client like so:
 
-```js
+```ts 
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 
@@ -535,7 +535,7 @@ From there you can use the [`useServer.context` property](#operation-context) to
 
 For our example, we can use the `connectionParams.authentication` value provided by the client to look up the related user before passing that user along to our resolvers:
 
-```js
+```ts 
 const findUser = async (authToken) => {
   // Find a user by their auth token
 };

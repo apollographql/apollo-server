@@ -565,7 +565,7 @@ If you _do_ want to send an error's details to Apollo Studio, but need to redact
 
 For example, if there is personally identifiable information in the error `message`, like an API key:
 
-```js
+```ts 
 import { GraphQLError } from 'graphql';
 
 throw new GraphQLError(

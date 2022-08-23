@@ -27,7 +27,9 @@ For this reason, if you choose to [change your Apollo Server landing page](#chan
 
 ## Changing the landing page
 
-You can change the landing page that's served from Apollo Server's base URL. You can choose to [configure the default landing page](#configuring-the-default-landing-page), serve [GraphQL Playground](#graphql-playground) (an open-source GraphQL IDE), create a completely [custom landing page](#custom-landing-page), or you can [disable the landing page entirely](#disabling-the-landing-page).
+<!-- TODO(AS4) replace GraphQL Playground link -->
+
+You can change the landing page that's served from Apollo Server's base URL. You can choose to [configure the default landing page](#configuring-the-default-landing-page), serve [GraphQL Playground](/apollo-server/api/plugin/landing-pages/#graphql-playground-landing-page) (a legacy open-source GraphQL IDE), create a completely [custom landing page](#custom-landing-page), or you can [disable the landing page entirely](#disabling-the-landing-page).
 
 You do this by installing one of a few different Apollo Server **plugins**.
 
@@ -66,41 +68,6 @@ const server = new ApolloServer({
 
 For all available configuration options for these plugins, [see the API reference](/apollo-server/api/plugin/landing-pages/).
 
-### GraphQL Playground
-
-> **Note:** The GraphQL Playground project has been [retired](https://github.com/graphql/graphql-playground/issues/1143). Apollo Server provides an integration with GraphQL Playground to help developers migrate from Apollo Server 2 with as few changes as possible, but we do not recommend long-term use of this unmaintained project.
-
-A previous version of Apollo Server (v2) serves GraphQL Playground from its base URL:
-
-<img
-  class="screenshot"
-  src="../images/playground.png"
-  alt="GraphQL Playground"
-/>
-
-You can replicate this behavior in Apollo Server 4 by providing the following plugin to the `ApolloServer` constructor:
-
-```ts title="index.ts"
-import { ApolloServer } from '@apollo/server';
-// highlight-start
-import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground';
-// highlight-end
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  plugins: [
-    // highlight-start
-    ApolloServerPluginLandingPageGraphQLPlayground({
-      // options
-    }),
-    // highlight-end
-  ],
-});
-```
-
-You can configure GraphQL Playground's behavior by [providing options to this plugin](/apollo-server/api/plugin/landing-pages/#graphql-playground-landing-page).
-
 ### Custom landing page
 
 You can serve a custom HTML landing page from Apollo Server's base URL. To do so, define your own [custom plugin](/apollo-server/integrations/plugins/) that calls the [`renderLandingPage` method](/apollo-server/integrations/plugins-event-reference/#renderlandingpage), like so:
@@ -138,8 +105,8 @@ const server = new ApolloServer({
 
 You can disable Apollo Server's landing page by providing the following plugin to the `ApolloServer` constructor:
 
-```ts {1,7} title="index.ts"
-import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
+```ts title="index.ts"
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled'; // highlight-line
 
 const server = new ApolloServer({
   typeDefs,
