@@ -27,3 +27,11 @@ grep 'function createApplication' "$ROLLUP_OUT_DIR"/bundle.mjs
 tsc --build tsconfig.{esm,cjs}.json
 node generated/tsc/smoke-test.cjs
 node generated/tsc/smoke-test.mjs
+
+# Nodenext needs its own special folder - for this test to exercise the case
+# we're after, we need a package.json using type: module and a bleeding edge
+# tsconfig using nodenext.
+cd nodenext
+tsc --build .
+node ./dist/smoke-test.js
+cd ..

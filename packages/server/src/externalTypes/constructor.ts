@@ -10,7 +10,7 @@ import type {
 } from 'graphql';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { GatewayInterface } from '@apollo/server-gateway-interface';
-import type { ApolloServerPlugin } from './plugins';
+import type { ApolloServerPlugin } from './plugins.js';
 import type { BaseContext } from './index.js';
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
