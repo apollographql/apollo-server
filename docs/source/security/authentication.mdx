@@ -5,8 +5,8 @@ description: Control access to your GraphQL API
 
 Your GraphQL API probably needs to control which users can see and interact with the various data it provides.
 
-* **Authentication** is determining whether a given user is logged in, and subsequently determining _which_ user someone is.
-* **Authorization** is then determining what a given user has permission to do or see.
+- **Authentication** is determining whether a given user is logged in, and subsequently determining _which_ user someone is.
+- **Authorization** is then determining what a given user has permission to do or see.
 
 ## Putting authenticated user info on the `context`
 
@@ -14,43 +14,51 @@ Before we can correctly control access to data, we have to authenticate a user. 
 
 The example below extracts a user token from the HTTP `Authorization` header included in each operation request. It then fetches the corresponding user object for that token and adds that object to [the `context` object](../data/resolvers/#the-context-argument) that's passed to every executed resolver. Each resolver can then use this object to determine what data the user has access to.
 
-```js
-const { ApolloServer } = require('apollo-server');
-const {
-  ApolloServerPluginLandingPageLocalDefault,
-} = require('apollo-server-core');
+<!-- TODO(AS4) Add note back in about where to find integration specific context arguments -->
 
-const server = new ApolloServer({
- typeDefs,
- resolvers,
- csrfPrevention: true,
- cache: 'bounded',
- context: ({ req }) => {
-   // Note: This example uses the `req` argument to access headers,
-   // but the arguments received by `context` vary by integration.
-   // This means they vary for Express, Koa, Lambda, etc.
-   //
-   // To find out the correct arguments for a specific integration,
-   // see https://www.apollographql.com/docs/apollo-server/api/apollo-server/#middleware-specific-context-fields
+<MultiCodeBlock>
 
-   // Get the user token from the headers.
-   const token = req.headers.authorization || '';
+```ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 
-   // Try to retrieve a user with the token
-   const user = getUser(token);
+interface MyContext {
+  // we'd define the properties a user should have
+  // in a separate user interface (e.g., email, id, url, etc.)
+  user: UserInterface;
+}
 
-   // Add the user to the context
-   return { user };
- },
- plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
 });
 
-server.listen().then(({ url }) => {
- console.log(`🚀 Server ready at ${url}`)
+const { url } = await startStandaloneServer(server, {
+  // highlight-start
+  // Note: This example uses the `req` argument to access headers,
+  // but the arguments received by `context` vary by integration.
+  // This means they vary for Express, Fastify, Lambda, etc.
+
+  // For `startStandaloneServer`, the `req` and `res` objects are
+  // `http.IncomingMessage` and `http.ServerResponse` types.
+  context: async ({ req, res }) => {
+
+    // Get the user token from the headers.
+    const token = req.headers.authorization || '';
+
+    // Try to retrieve a user with the token
+    const user = await getUser(token);
+
+    // Add the user to the context
+    return { user };
+  },
+  // highlight-end
 });
+
+console.log(`🚀 Server listening at: ${url}`);
 ```
+
+</MultiCodeBlock>
 
 > Because `context` is generated separately for every new request, we don't have to worry about cleaning up user data at the end of an operation's execution.
 
@@ -66,24 +74,53 @@ Once we have information about the user making a request, the most basic thing w
 
 We should use this method only on highly restrictive environments that provide no public access to the API whatsoever, like an internal tool or an independent microservice that shouldn't be exposed to the public.
 
-To perform this kind of authorization, we can modify the context function:
+To perform this kind of authorization, we can modify the `context` function:
+<!-- TODO(AS4) check back and see if throwing errors in context changes this? -->
 
-```js
-context: ({ req }) => {
- // get the user token from the headers
- const token = req.headers.authorization || '';
+<MultiCodeBlock>
 
- // try to retrieve a user with the token
- const user = getUser(token);
+```ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { GraphQLError } from 'graphql';
 
- // optionally block the user
- // we could also check user roles/permissions here
- if (!user) throw new AuthenticationError('you must be logged in');
+interface MyContext {
+  user: UserInterface;
+}
 
- // add the user to the context
- return { user };
-},
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+
+const { url } = await startStandaloneServer(server, {
+  // highlight-start
+  context: async ({ req }) => {
+    // get the user token from the headers
+    const token = req.headers.authorization || '';
+
+    // try to retrieve a user with the token
+    const user = getUser(token);
+
+    // optionally block the user
+    // we could also check user roles/permissions here
+    if (!user)
+      throw new GraphQLError('you must be logged in', {
+        extensions: {
+          code: 'UNAUTHENTICATED',
+        },
+      });
+
+    // add the user to the context
+    return { user };
+  },
+  // highlight-end
+});
+
+console.log(`🚀 Server listening at: ${url}`);
 ```
+
+</MultiCodeBlock>
 
 The only difference from the basic context function is the check for the user. If no user exists or if lookup fails, the function throws an error and the corresponding operation is not executed.
 
@@ -95,15 +132,15 @@ Luckily, GraphQL offers very granular control over data. In GraphQL servers, ind
 
 For our first example, let's look at a resolver that's only accessible with a valid user:
 
-```js
+```ts disableCopy
 users: (parent, args, context) => {
- // In this case, we'll pretend there is no data when
- // we're not logged in. Another option would be to
- // throw an error.
- if (!context.user) return null;
+  // In this case, we'll pretend there is no data when
+  // we're not logged in. Another option would be to
+  // throw an error.
+  if (!context.user) return null;
 
- return ['bob', 'jake'];
-}
+  return ['bob', 'jake'];
+};
 ```
 
 This example is a field in our schema named `users` that returns a list of users' names. The `if` check on the first line of the function looks at the `context` generated from our request, checks for a `user` object, and if one doesn't exist, returns `null` for the whole field.
@@ -112,11 +149,11 @@ One choice to make when building out our resolvers is what an unauthorized field
 
 Now let's expand that example a little further, and only allow users with an `admin` role to look at our user list. After all, we probably don't want just anyone to have access to all our users.
 
-```js
+```ts 
 users: (parent, args, context) => {
- if (!context.user || !context.user.roles.includes('admin')) return null;
- return context.models.User.getAll();
-}
+  if (!context.user || !context.user.roles.includes('admin')) return null;
+  return context.models.User.getAll();
+};
 ```
 
 This example looks almost the same as the previous one, with one addition: it expects the `roles` array on a user to include an `admin` role. Otherwise, it returns `null`. The benefit of doing authorization like this is that we can short-circuit our resolvers and not even call lookup functions when we don't have permission to use them, limiting the possible errors that could expose sensitive data.
@@ -127,33 +164,41 @@ Because our resolvers have access to everything in the context, an important que
 
 As our server gets more complex, there will probably be multiple places in the schema that need to fetch the same kind of data. In our last example, you may have noticed the return array was replaced with a call to `context.models.User.getAll()`.
 
-As always, we recommend moving the actual data fetching and transformation logic from your resolvers to [data sources](../data/data-sources) or model objects that each represent a concept from your application: `User`, `Post`, etc. This allows you to make your resolvers a thin routing layer, and put all of your business logic in one place.
+<!-- TODO(AS4) add link back in for data sources -->
+
+As always, we recommend moving the actual data fetching and transformation logic from your resolvers to data sources or model objects that each represent a concept from your application: `User`, `Post`, etc. This allows you to make your resolvers a thin routing layer, and put all of your business logic in one place.
 
 For example, a model file for `User` would include all the logic for operating on users, and might look something like this:
 
-```js
+```ts 
 export const User = {
- getAll: () => { /* fetching/transformation logic for all users */ },
- getById: (id) => { /* fetching/transformation logic for a single user */ },
- getByGroupId: (id) => { /* fetching/transformation logic for a group of users */ },
+  getAll: () => {
+    /* fetching/transformation logic for all users */
+  },
+  getById: (id) => {
+    /* fetching/transformation logic for a single user */
+  },
+  getByGroupId: (id) => {
+    /* fetching/transformation logic for a group of users */
+  },
 };
 ```
 
 In the following example, our schema has multiple ways to request a single user:
 
-```js
+```graphql 
 type Query {
- user (id: ID!): User
- article (id: ID!): Article
+  user(id: ID!): User
+  article(id: ID!): Article
 }
 
 type Article {
- author: User
+  author: User
 }
 
 type User {
- id: ID!
- name: String!
+  id: ID!
+  name: String!
 }
 ```
 
@@ -163,8 +208,8 @@ Rather than having the same fetching logic for a single user in two separate pla
 
 You may have noticed that our models also exist on the context, alongside the user object we added earlier. We can add the models to the context in exactly the same way as we did the user.
 
-```js
-context: ({ req }) => {
+```ts 
+context: async ({ req }) => {
  // get the user token from the headers
  const token = req.headers.authentication || '';
 
@@ -173,7 +218,11 @@ context: ({ req }) => {
 
  // optionally block the user
  // we could also check user roles/permissions here
- if (!user) throw new AuthenticationError('you must be logged in to query this schema');
+  if (!user) throw new GraphQLError("you must be logged in to query this schema", {
+    extensions: {
+      code: 'UNAUTHENTICATED',
+    },
+  });
 
  // add the user to the context
  return {
@@ -188,21 +237,27 @@ context: ({ req }) => {
 
 Starting to generate our models with a function requires a small refactor, that would leave our User model looking something like this:
 
-```js
+```ts 
 export const generateUserModel = ({ user }) => ({
- getAll: () => { /* fetching/transform logic for all users */ },
- getById: (id) => { /* fetching/transform logic for a single user */ },
- getByGroupId: (id) => { /* fetching/transform logic for a group of users */ },
+  getAll: () => {
+    /* fetching/transform logic for all users */
+  },
+  getById: (id) => {
+    /* fetching/transform logic for a single user */
+  },
+  getByGroupId: (id) => {
+    /* fetching/transform logic for a group of users */
+  },
 });
 ```
 
 Now any model method in `User` has access to the same `user` information that resolvers already had, allowing us to refactor the `getAll` function to do the permissions check directly rather than having to put it in the resolver:
 
-```js
+```ts 
 getAll: () => {
- if(!user || !user.roles.includes('admin')) return null;
- return fetch('http://myurl.com/users');
-}
+  if (!user || !user.roles.includes('admin')) return null;
+  return fetch('http://myurl.com/users');
+};
 ```
 
 ### With custom directives
@@ -211,8 +266,8 @@ Another way to go about authorization is via GraphQL Schema Directives. A direct
 
 Check out this example of an authorization directive:
 
-```js
-const typeDefs = `
+```ts
+const typeDefs = `#graphql
   directive @auth(requires: Role = ADMIN) on OBJECT | FIELD_DEFINITION
 
   enum Role {
@@ -226,22 +281,12 @@ const typeDefs = `
     banned: Boolean @auth(requires: ADMIN)
     canPost: Boolean @auth(requires: REVIEWER)
   }
-`
+`;
 ```
 
-The `@auth` directive can be called directly on the type, or on the fields if you want to limit access to specific fields as shown in the example above. The logic behind authorization is hidden away in the directive implementation.
+The `@auth` directive can be called directly on specific fields or on a type. This nicely hides the authorization logic behind the directive implementation.
 
-One way of implementing the `@auth` directive is by constructing your schema using the [`schemaTransforms` option of the `makeExecutableSchema`](https://www.graphql-tools.com/docs/schema-directives/) function from the [graphql-tools](https://www.graphql-tools.com/) project. You can read the `graphql-tools` docs for details on how to write `schemaTransforms`; then just create your server with
-```js
-new ApolloServer({
-  schema: makeExecutableSchema({ typeDefs, resolvers, schemaTransforms }),
-  csrfPrevention: true,
-  cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
-});
-```
+With your `@auth` directive in place, your resolvers now need to check the user's role against the role specified by the directive. One way to do this is using the `mapSchema` function from the [`@graphql-tools/utils`](https://www.npmjs.com/package/@graphql-tools/utils) package to transform every resolver in your schema. For an example of setting up directive-based permission checks, see the [`mapSchema` docs](https://www.graphql-tools.com/docs/schema-directives#enforcing-access-permissions).
 
 ### Outside of GraphQL
 
@@ -249,9 +294,8 @@ If you're using a REST API that has built-in authorization, like with an HTTP he
 
 Here's an example:
 
-```js
-// src/server.js
-context: ({ req }) => {
+```ts title="src/server.ts"
+context: async ({ req }) => {
  // pass the request information through to the model
  return {
    user,
@@ -263,12 +307,11 @@ context: ({ req }) => {
 },
 ```
 
-```js
-// src/models/user.js
+```ts title="src/models/user.ts"
 export const generateUserModel = ({ req }) => ({
- getAll: () => {
-   return fetch('http://myurl.com/users', { headers: req.headers });
- },
+  getAll: () => {
+    return fetch('http://myurl.com/users', { token: req.headers.token });
+  },
 });
 ```
 

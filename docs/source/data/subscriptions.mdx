@@ -249,7 +249,7 @@ npm install graphql-subscriptions
 
 A `PubSub` instance enables your server code to both `publish` events to a particular label and listen for events associated with a particular label. We can create a `PubSub` instance like so:
 
-```js
+```ts 
 import { PubSub } from 'graphql-subscriptions';
 
 const pubsub = new PubSub();
@@ -259,7 +259,7 @@ const pubsub = new PubSub();
 
 You can publish an event using the `publish` method of a `PubSub` instance:
 
-```js
+```ts 
 pubsub.publish('POST_CREATED', {
   postCreated: {
     author: 'Ali Baba',
@@ -285,7 +285,7 @@ type Mutation {
 
 A basic resolver for `createPost` might look like this:
 
-```js {3-6}
+```ts {3-6}
 const resolvers = {
   Mutation: {
     createPost(parent, args, context) {
@@ -299,7 +299,7 @@ const resolvers = {
 
 Before we persist the new post's details in our datastore, we can `publish` an event that _also_ includes those details:
 
-```js
+```ts 
 const resolvers = {
   Mutation: {
     createPost(parent, args, context) {
@@ -319,7 +319,7 @@ An [`AsyncIterator`](https://github.com/apollographql/graphql-subscriptions/blob
 
 You can create an `AsyncIterator` by calling the `asyncIterator` method of `PubSub` and passing in an array containing the names of the event labels that this `AsyncIterator` should listen for.
 
-```js
+```ts 
 pubsub.asyncIterator(['POST_CREATED']);
 ```
 
@@ -327,7 +327,7 @@ Every `Subscription` field resolver's `subscribe` function must return an `Async
 
 This brings us back to the code sample at the top of [Resolving a subscription](#resolving-a-subscription):
 
-```js title="index.js"
+```ts title="index.ts"
 const resolvers = {
   Subscription: {
     postCreated: {
@@ -363,7 +363,7 @@ To fix this, we can use the `withFilter` helper function to control updates on a
 
 Here's an example resolver for `commentAdded` that uses the `withFilter` function:
 
-```js {5-12}
+```ts {5-12}
 import { withFilter } from 'graphql-subscriptions';
 
 const resolvers = {
@@ -432,7 +432,7 @@ useServer(
     // Our GraphQL schema.
     schema,
     // Adding a context property lets you add data to your GraphQL operation context
-    context: (ctx, msg, args) => {
+    context: async (ctx, msg, args) => {
       // You can define your own function for setting a dynamic context
       // or provide a static value
       return getDynamicContext(ctx, msg, args);
@@ -463,7 +463,7 @@ useServer(
   {
     schema,
     // Adding a context property lets you add data to your GraphQL operation context
-    context: (ctx, msg, args) => {
+    context: async (ctx, msg, args) => {
       // Returning an object will add that information to our
       // GraphQL context, which all of our resolvers have access to.
       return getDynamicContext(ctx, msg, args);
@@ -515,7 +515,7 @@ In Apollo Client, the `GraphQLWsLink` constructor supports adding information to
 
 Let's suppose we create our subscription client like so:
 
-```js
+```ts 
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 
@@ -535,7 +535,7 @@ From there you can use the [`useServer.context` property](#operation-context) to
 
 For our example, we can use the `connectionParams.authentication` value provided by the client to look up the related user before passing that user along to our resolvers:
 
-```js
+```ts 
 const findUser = async (authToken) => {
   // Find a user by their auth token
 };
@@ -555,7 +555,7 @@ useServer(
   {
     // Our GraphQL schema.
     schema,
-    context: (ctx, msg, args) => {
+    context: async (ctx, msg, args) => {
       // This will be run every time the client sends a subscription request
       return getDynamicContext(ctx, msg, args);
     },
