@@ -2,4 +2,4 @@
 "@apollo/server": patch
 ---
 
-Use extensions for all imports to accommodate TS users using module: "nodenext" and moduleResolution: "nodenext"
+Use extensions for all imports to accommodate TS users using moduleResolution: "nodenext"
