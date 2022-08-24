@@ -1,5 +1,11 @@
 # @apollo/server-gateway-interface
 
+## 1.0.3
+
+### Patch Changes
+
+- [#191](https://github.com/apollographql/apollo-utils/pull/191) [`5f34436`](https://github.com/apollographql/apollo-utils/commit/5f344367345d297ea2caae4b7c4eb9ec224f2105) Thanks [@glasser](https://github.com/glasser)! - Now make the interface compatible with Apollo Server 3 again.
+
 ## 1.0.2
 
 ### Patch Changes
