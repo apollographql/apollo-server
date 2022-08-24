@@ -427,7 +427,7 @@ describe('request pipeline life-cycle hooks', () => {
         expect(executionDidEnd).toHaveBeenCalledTimes(1);
       });
 
-      it('is called twice if it throws (undesirable)', async () => {
+      it('is only called once if it throws', async () => {
         const executionDidEnd = jest.fn(() => {
           throw new Error('boom');
         });
@@ -459,7 +459,7 @@ describe('request pipeline life-cycle hooks', () => {
           ),
         ).rejects.toThrowError(/Internal server error/);
 
-        expect(executionDidEnd).toHaveBeenCalledTimes(2);
+        expect(executionDidEnd).toHaveBeenCalledTimes(1);
         expect(logger.error).toHaveBeenCalledWith(
           'Unexpected error processing request: Error: boom',
         );

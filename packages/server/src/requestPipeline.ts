@@ -459,8 +459,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         ...result,
         errors: resultErrors ? formatErrors(resultErrors) : undefined,
       };
-
-      await Promise.all(executionListeners.map((l) => l.executionDidEnd?.()));
     } catch (executionMaybeError: unknown) {
       const executionError = ensureError(executionMaybeError);
       await Promise.all(
@@ -472,6 +470,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         newHTTPGraphQLHead(statusIfExecuteThrows),
       );
     }
+
+    await Promise.all(executionListeners.map((l) => l.executionDidEnd?.()));
   }
 
   await invokeWillSendResponse();
