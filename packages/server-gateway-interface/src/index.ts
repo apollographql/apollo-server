@@ -69,9 +69,13 @@ export interface GatewayGraphQLRequestContext<TContext = Record<string, any>> {
   readonly metrics: GatewayGraphQLRequestMetrics;
   debug?: boolean;
   // In AS3 and AS4, this field is always set and is a GatewayCachePolicy, but
-  // in AS2 it is not always set and is only a GatewayCacheHint. To keep Gateway
-  // compatible with AS2, we allow either case here.
-  readonly overallCachePolicy?: GatewayCachePolicy | GatewayCacheHint;
+  // in AS2 it is not always set and is only a GatewayCacheHint. We can't just
+  // declare this as `readonly overallCachePolicy?: GatewayCachePolicy |
+  // GatewayCacheHint` because then older versions of Gateway built against AS3
+  // types will fail to build. Gateway's own code always probes this field at
+  // runtime before using it anyway, so let's just make everything build by
+  // declaring this as `any`.
+  readonly overallCachePolicy: any;
 }
 
 export interface GatewayGraphQLRequest {
