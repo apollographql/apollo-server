@@ -22,6 +22,7 @@ import {
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
 } from '..';
+import { mockLogger } from './mockLogger';
 
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,
@@ -424,6 +425,44 @@ describe('request pipeline life-cycle hooks', () => {
 
         expect(executionDidStart).toHaveBeenCalledTimes(1);
         expect(executionDidEnd).toHaveBeenCalledTimes(1);
+      });
+
+      it('is called twice if it throws (undesirable)', async () => {
+        const executionDidEnd = jest.fn(() => {
+          throw new Error('boom');
+        });
+
+        const plugins = [
+          {
+            async requestDidStart() {
+              return {
+                async executionDidStart() {
+                  return {
+                    executionDidEnd,
+                  };
+                },
+              };
+            },
+          },
+        ];
+
+        const logger = mockLogger();
+
+        await expect(
+          runQuery(
+            {
+              schema,
+              plugins,
+              logger,
+            },
+            { query: '{ testString }' },
+          ),
+        ).rejects.toThrowError(/Internal server error/);
+
+        expect(executionDidEnd).toHaveBeenCalledTimes(2);
+        expect(logger.error).toHaveBeenCalledWith(
+          'Unexpected error processing request: Error: boom',
+        );
       });
     });
 
