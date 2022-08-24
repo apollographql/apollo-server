@@ -1,9 +1,9 @@
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { Logger } from '@apollo/utils.logger';
 import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql';
-import type { ApolloConfig } from './constructor';
-import type { BaseContext } from './context';
-import type { GraphQLRequestContext, GraphQLResponse } from './graphql';
+import type { ApolloConfig } from './constructor.js';
+import type { BaseContext } from './context.js';
+import type { GraphQLRequestContext, GraphQLResponse } from './graphql.js';
 import type {
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextDidResolveOperation,
@@ -13,7 +13,7 @@ import type {
   GraphQLRequestContextResponseForOperation,
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextWillSendResponse,
-} from './requestPipeline';
+} from './requestPipeline.js';
 
 export interface GraphQLServerContext {
   readonly logger: Logger;

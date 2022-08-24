@@ -4,7 +4,7 @@ import type {
   HTTPGraphQLHead,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
-} from './externalTypes';
+} from './externalTypes/index.js';
 import {
   ApolloServer,
   ApolloServerInternals,

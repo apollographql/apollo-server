@@ -115,6 +115,7 @@ mygraph
 myvariant
 namespacing
 nanos
+nodenext
 npmrc
 nsolid
 oneof

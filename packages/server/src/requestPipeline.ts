@@ -42,7 +42,7 @@ import type {
   GraphQLRequestExecutionListener,
   BaseContext,
   HTTPGraphQLHead,
-} from './externalTypes';
+} from './externalTypes/index.js';
 
 import {
   invokeDidStartHook,
@@ -57,7 +57,7 @@ import type {
   ApolloServer,
   ApolloServerInternals,
   SchemaDerivedData,
-} from './ApolloServer';
+} from './ApolloServer.js';
 import { isDefined } from './utils/isDefined.js';
 
 export const APQ_CACHE_PREFIX = 'apq:';

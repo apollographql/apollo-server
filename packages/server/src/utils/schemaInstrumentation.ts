@@ -9,7 +9,7 @@ import {
 import type {
   BaseContext,
   GraphQLRequestExecutionListener,
-} from '../externalTypes';
+} from '../externalTypes/index.js';
 
 export const symbolExecutionDispatcherWillResolveField = Symbol(
   'apolloServerExecutionDispatcherWillResolveField',

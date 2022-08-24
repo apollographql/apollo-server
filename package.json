@@ -17,7 +17,7 @@
     "test:clean": "jest --clearCache",
     "test:watch": "jest --verbose --watchAll",
     "test:smoke": "npm run test:smoke:prepare && npm run test:smoke:run",
-    "test:smoke:prepare": "npm run compile && smoke-test/prepare.sh",
+    "test:smoke:prepare": "smoke-test/prepare.sh",
     "test:smoke:run": "smoke-test/smoke-test.sh",
     "testonly": "npm test",
     "test:ci": "npm test -- --ci --maxWorkers=2  --reporters=default --reporters=jest-junit",

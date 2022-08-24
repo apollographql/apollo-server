@@ -1,5 +1,5 @@
 import { Trace } from '@apollo/usage-reporting-protobuf';
-import type { VariableValueOptions } from './options';
+import type { VariableValueOptions } from './options.js';
 
 // Creates trace details from request variables, given a specification for modifying
 // values of private or sensitive variables.

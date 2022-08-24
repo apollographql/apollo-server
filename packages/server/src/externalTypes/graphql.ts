@@ -7,8 +7,8 @@ import type {
   OperationDefinitionNode,
 } from 'graphql';
 import type { CachePolicy } from '@apollo/cache-control-types';
-import type { BaseContext } from './context';
-import type { HTTPGraphQLHead, HTTPGraphQLRequest } from './http';
+import type { BaseContext } from './context.js';
+import type { HTTPGraphQLHead, HTTPGraphQLRequest } from './http.js';
 import type { Logger } from '@apollo/utils.logger';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 

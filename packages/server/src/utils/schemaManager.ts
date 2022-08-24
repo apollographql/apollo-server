@@ -5,8 +5,11 @@ import type {
   GatewayInterface,
   GatewayUnsubscriber,
 } from '@apollo/server-gateway-interface';
-import type { SchemaDerivedData } from '../ApolloServer';
-import type { ApolloConfig, GraphQLSchemaContext } from '../externalTypes';
+import type { SchemaDerivedData } from '../ApolloServer.js';
+import type {
+  ApolloConfig,
+  GraphQLSchemaContext,
+} from '../externalTypes/index.js';
 
 type SchemaDerivedDataProvider = (
   apiSchema: GraphQLSchema,

@@ -43,7 +43,7 @@ import type {
   HTTPGraphQLHead,
   ContextThunk,
   GraphQLRequestContext,
-} from './externalTypes';
+} from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
 import { InternalPluginId, pluginIsInternal } from './internalPlugin.js';
 import {
@@ -62,7 +62,7 @@ import { SchemaManager } from './utils/schemaManager.js';
 import { isDefined } from './utils/isDefined.js';
 import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
 import type { WithRequired } from '@apollo/utils.withrequired';
-import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor';
+import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type { GatewayExecutor } from '@apollo/server-gateway-interface';
 
 const NoIntrospection = (context: ValidationContext) => ({

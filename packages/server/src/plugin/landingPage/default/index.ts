@@ -1,10 +1,13 @@
-import type { ApolloServerPlugin, BaseContext } from '../../../externalTypes';
-import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer';
+import type {
+  ApolloServerPlugin,
+  BaseContext,
+} from '../../../externalTypes/index.js';
+import type { ImplicitlyInstallablePlugin } from '../../../ApolloServer.js';
 import type {
   ApolloServerPluginLandingPageLocalDefaultOptions,
   ApolloServerPluginLandingPageProductionDefaultOptions,
   LandingPageConfig,
-} from './types';
+} from './types.js';
 import {
   getEmbeddedExplorerHTML,
   getEmbeddedSandboxHTML,
