@@ -1,5 +1,15 @@
 # @apollo/server
 
+## 4.0.0-alpha.8
+
+### Patch Changes
+
+- [#6841](https://github.com/apollographql/apollo-server/pull/6841) [`3320fee92`](https://github.com/apollographql/apollo-server/commit/3320fee922ffa50080aa63597c84844516583860) Thanks [@glasser](https://github.com/glasser)! - Upgrade @apollo/server-gateway-interface to have laxer definition of overallCachePolicy.
+
+* [#6731](https://github.com/apollographql/apollo-server/pull/6731) [`9fc23f799`](https://github.com/apollographql/apollo-server/commit/9fc23f7995205e8239890197dbeaabc5db6fb073) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Use extensions for all imports to accommodate TS users using moduleResolution: "nodenext"
+
+- [#6846](https://github.com/apollographql/apollo-server/pull/6846) [`2cab8f785`](https://github.com/apollographql/apollo-server/commit/2cab8f78580f6dacc64a497d06397b5b3cce89f6) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Ensure executionDidEnd hooks are only called once (when they throw)
+
 ## 4.0.0-alpha.7
 
 ### Patch Changes
