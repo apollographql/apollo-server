@@ -54,7 +54,6 @@ Do we want to tell people how to create data sources themselves? Is there an exa
     - but we don't want to tell folks this
       - Could make a expandable "How to make V3 data source work"
 -->
-<ExpansionPanel title="Using an Apollo Server 3 data source?">
 
 All data source implementations extend the generic [`DataSource` abstract class](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-datasource/src/index.ts), which is included in the `apollo-datasource` package. Subclasses of a `DataSource` should define whatever logic is required to communicate with a particular store or API.
 
@@ -73,7 +72,6 @@ Apollo and the larger community maintain the following open-source implementatio
 
 To make any of the Above Apollo Server 3 data sources work you have to first construct the data source before calling `initialize` and passing in Apollo Server's cache, like so.
 
-</ExpansionPanel>
 
 ## Adding data sources to Apollo Server's context
 
