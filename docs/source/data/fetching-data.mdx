@@ -49,11 +49,12 @@ Do we want to tell people how to create data sources themselves? Is there an exa
 ## Open-source implementations
 
 > **New in Apollo Server 4**: if you are using an open-source data source implementation from Apollo Server 3 expand the below example to see how to make it work in Apollo Server 4. 
+
 <!-- 2. old data sources can be used but need to construct then initialize
   - The below packages could be used but they'd need to initialize themselves with the correct args (cache)
     - but we don't want to tell folks this
       - Could make a expandable "How to make V3 data source work"
--->
+
 
 All data source implementations extend the generic [`DataSource` abstract class](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-datasource/src/index.ts), which is included in the `apollo-datasource` package. Subclasses of a `DataSource` should define whatever logic is required to communicate with a particular store or API.
 
@@ -113,7 +114,9 @@ console.log(`🚀  Server ready at ${url}`);
 
 </MultiCodeBlock>
 
-<!-- TODO(AS4) add link to context article once exists  -->
+-->
+<!--
+
 Apollo Server calls the [the `context` initialization](../resolvers/#the-context-argument) function for _every incoming operation_. This means:
 - As shown above, with every operation `context` returns an _object_ containing new instances of your `DataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
 -  These subclasses are accessible from the [the `context` value argument](./resolvers/#the-context-argument) that's passed between your server's resolvers.
@@ -159,3 +162,4 @@ Apollo Server supports using [Memcached](https://memcached.org/), [Redis](https:
 
 You can also choose to implement your own cache backend. For more information, see [Implementing your own cache backend](../performance/cache-backends#implementing-your-own-cache-backend).
 
+-->
