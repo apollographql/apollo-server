@@ -376,18 +376,18 @@ For example, below, we use the `RESTDataSource` class to create a `DataSource` w
 <MultiCodeBlock>
 
 ```ts title="Apollo Server 3"
-import { RESTDataSource } from 'apollo-datasource-rest';
+import { RESTDataSource, RequestOptions } from 'apollo-datasource-rest';
 import { ApolloServer } from 'apollo-server';
 
 class MoviesAPI extends RESTDataSource { //highlight-line
-  baseURL = 'https://movies-api.example.com/';
+  override baseURL = 'https://movies-api.example.com/';
 
-  willSendRequest(request: RequestOptions) {
+  override willSendRequest(request: RequestOptions) {
     request.headers.set('Authorization', this.context.token);
   }
 
-  async getMovie(id: string): Movie {
-    return this.get(`movies/${encodeURIComponent(id)}`);
+  async getMovie(id: string): Promise<Movie> {
+    return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
   }
 }
 
@@ -425,27 +425,27 @@ Below is how you write the same code in Apollo Server 4.
 <MultiCodeBlock>
 
 ```ts title="Apollo Server 4"
-import { RESTDataSource, RequestOptions } from '@apollo/datasource-rest';
+import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
 // KeyValueCache is the type of Apollo server's default cache
-import { KeyValueCache } from '@apollo/utils.keyvaluecache';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 
 class MoviesAPI extends RESTDataSource { // highlight-line
-  baseURL = 'https://movies-api.example.com/';
+  override baseURL = 'https://movies-api.example.com/';
   private token: string;
 
   constructor(options: { token: string; cache: KeyValueCache }) {
-    super(options); // this should send our server's `cache` through
+    super(options); // this sends our server's `cache` through
     this.token = options.token;
   }
 
-  willSendRequest(request: RequestOptions) {
+  override willSendRequest(request: WillSendRequestOptions) {
     request.headers['authorization'] = this.token;
   }
 
   async getMovie(id: string): Promise<Movie> {
-    return this.get(`movies/${encodeURIComponent(id)}`);
+    return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
   }
 }
 
@@ -490,14 +490,14 @@ If you want to access your entire context's value within your `DataSource`, you 
 <MultiCodeBlock>
 
 ```ts
-import { RESTDataSource, RequestOptions } from '@apollo/datasource-rest'; //highlight-line
+import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest'; //highlight-line
 import { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { IncomingMessage } from 'http';
 
 class MoviesAPI extends RESTDataSource {
-  baseURL = 'https://movies-api.example.com/';
+  override baseURL = 'https://movies-api.example.com/';
   private contextValue: ContextValue;
 
   constructor(options: { contextValue: ContextValue; cache: KeyValueCache }) {
@@ -505,12 +505,12 @@ class MoviesAPI extends RESTDataSource {
     this.contextValue = options.contextValue;
   }
 
-  willSendRequest(request: RequestOptions) {
+  override willSendRequest(request: WillSendRequestOptions) {
     request.headers['authorization'] = this.contextValue.token;
   }
 
-  async getMovie(id: string): Promise<Movie> {
-    return this.get(`movies/${encodeURIComponent(id)}`);
+  async getMovie(id):Promise<Movie> {
+    return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
   }
 }
 

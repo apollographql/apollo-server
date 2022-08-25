@@ -1,9 +1,9 @@
 ---
 title: Fetching Data
-description: Using RESTDataSource to fetch data from REST APIs
+description: Fetching data from data sources besides REST
 ---
 
-<!-- 
+<!--  (TODO) this whole article!
 MOVE THIS to separate article:
 
 3. RESTDS has a response cache that provides caching when fetching from rest
@@ -71,9 +71,11 @@ Apollo and the larger community maintain the following open-source implementatio
 | [`CosmosDataSource`](https://github.com/andrejpk/apollo-datasource-cosmosdb) | Community | Azure Cosmos DB |
 | [`FirestoreDataSource`](https://github.com/swantzter/apollo-datasource-firestore) | Community | Cloud Firestore |
 
-If none of these implementations applies to your use case, you can create your own custom `DataSource` subclass.
+To make any of the Above Apollo Server 3 data sources work you have to first construct the data source before calling `intialize` and passing in Apollo Server's cache, like so:
 
-> Apollo does not provide official support for community-maintained libraries. We cannot guarantee that community-maintained libraries adhere to best practices, or that they will continue to be maintained. -->
+```ts
+
+```
 
 </ ExpansionPanel>
 
