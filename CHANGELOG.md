@@ -10,9 +10,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
-## 3.7.0 (RESTDataSource only)
+## v3.10.2
 
-- [apollo-datasource-rest] Add option `memoizeGetRequests` to disable GET cache [PR #6650](https://github.com/apollographql/apollo-server/pull/6650) and [PR #6834](https://github.com/apollographql/apollo-server/pull/6834)
+- `apollo-server-fastify`: Use `return reply.send` in handlers to match the pattern encouraged by Fastify 4 (although [`apollo-server-fastify@3` only works with Fastify 3](https://github.com/apollographql/apollo-server/issues/6576#issuecomment-1159249244)). [PR #6798](https://github.com/apollographql/apollo-server/pull/6798)
+- `apollo-datasource-rest@3.7.0`: Add option `memoizeGetRequests` to disable GET cache [PR #6650](https://github.com/apollographql/apollo-server/pull/6650) and [PR #6834](https://github.com/apollographql/apollo-server/pull/6834)
 
 ## v3.10.1
 
