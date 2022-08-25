@@ -3,18 +3,9 @@ title: Fetching Data
 description: Using RESTDataSource to fetch data from REST APIs
 ---
 
-<!-- Do we want this article to just cover REST? Or do we also want people to use the [`DataSource` abstract class] to make their own data sources? Essentially, do we want folks to import and use the Data source classes? That'll significantly change the narrative.
-
-We do want this to mainly be REST datasource
-
-What this article should cover:
-1. REST Datasource including examples
-
+<!-- 
 MOVE THIS to separate article:
-2. old data sources can be used but need to construct then initialize
-  - The below packages could be used but they'd need to initialize themselves with the correct args (cache)
-    - but we don't want to tell folks this
-      - Could make a expandable "How to make V3 data source work"
+
 3. RESTDS has a response cache that provides caching when fetching from rest
   - in the past uses the AS cache
   - these other data sources provide a wrapper cache
@@ -29,7 +20,7 @@ MOVE THIS to separate article:
             - only create one DB class then pass into context
  -->
 
-**Data sources** are classes that Apollo Server can use to encapsulate fetching data from a particular source, such as a database or a REST API. These classes help handle caching, deduplication, and errors while resolving operations.
+Apollo Server can use to encapsulate fetching data from a particular source, such as a database or a REST API. These classes help handle caching, deduplication, and errors while resolving operations.
 
 Your server can use any number of different data sources. You don't _have_ to use data sources to fetch data, but they're strongly recommended.
 
@@ -57,6 +48,14 @@ Do we want to tell people how to create data sources themselves? Is there an exa
 
 ## Open-source implementations
 
+> **New in Apollo Server 4**: if you are using an open-source data source implementation from Apollo Server 3 expand the below example to see how to make it work in Apollo Server 4. 
+<!-- 2. old data sources can be used but need to construct then initialize
+  - The below packages could be used but they'd need to initialize themselves with the correct args (cache)
+    - but we don't want to tell folks this
+      - Could make a expandable "How to make V3 data source work"
+-->
+<ExpansionPanel title="Using an Apollo Server 3 data source?">
+
 All data source implementations extend the generic [`DataSource` abstract class](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-datasource/src/index.ts), which is included in the `apollo-datasource` package. Subclasses of a `DataSource` should define whatever logic is required to communicate with a particular store or API.
 
 Apollo and the larger community maintain the following open-source implementations:
@@ -75,6 +74,8 @@ Apollo and the larger community maintain the following open-source implementatio
 If none of these implementations applies to your use case, you can create your own custom `DataSource` subclass.
 
 > Apollo does not provide official support for community-maintained libraries. We cannot guarantee that community-maintained libraries adhere to best practices, or that they will continue to be maintained. -->
+
+</ ExpansionPanel>
 
 ## Adding data sources to Apollo Server's context
 

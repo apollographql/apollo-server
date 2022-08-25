@@ -35,13 +35,10 @@ Your server should define a separate subclass of `RESTDataSource` for each REST 
 import { RESTDataSource } from '@apollo/datasource-rest';
 
 class MoviesAPI extends RESTDataSource {
-  baseURL = 'https://movies-api.example.com/';
-  constructor() {
-    super();
-  }
+  override baseURL = 'https://movies-api.example.com/';
 
   async getMovie(id):Promise<Movie> {
-    return this.get(`movies/${encodeURIComponent(id)}`);
+    return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
   }
 
   async getMostViewedMovies(limit = '10'):Promise<Movie[]> {
@@ -58,9 +55,9 @@ class MoviesAPI extends RESTDataSource {
 
 </MultiCodeBlock>
 
-You can extend the `RESTDataSource` class to implement whatever data-fetching methods your resolvers need. These methods can use built-in convenience methods (like `get` and `post`) to perform HTTP requests, helping you add query parameters, parse JSON results, and handle errors.
+You can extend the `RESTDataSource` class to implement whatever data-fetching methods your resolvers need. These methods should use the built-in convenience methods (e.g., `get` and `post`) to perform HTTP requests, helping you add query parameters, parse and cache JSON results, dedupe requests, and handle errors.
 
-## Adding subclasses to Apollo Server's context
+## Adding data sources to Apollo Server's context
 
 You can then provide your `RESTDataSource` subclasses to the `context` initialization function, like so:
 
@@ -82,13 +79,15 @@ const server = new ApolloServer<ContextValue>({
 });
 
 const { url } = await startStandaloneServer(server, {
-  context: async ({ req }) => {
+  context: async () => {
+    const { cache } = server; // highlight-line
     return {
       //highlight-start
-      // We create new instances of our data sources with each request
+      // We create new instances of our data sources with each request,
+      // passing in our server's cache.
       dataSources: {
-        moviesAPI: new MoviesAPI(),
-        personalizationAPI: new PersonalizationAPI(),
+        moviesAPI: new MoviesAPI({ cache }),
+        personalizationAPI: new PersonalizationAPI({ cache }),
       },
       //highlight-end
     };
@@ -128,48 +127,69 @@ const resolvers = {
 
 > 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides it's cache to data sources. [See here for more details](#datasources).
 
-You can pass your `RESTDataSource` subclasses a cache (such as Apollo Server's default cache) to store the results of past fetches:
+As shown in the above code snippet, by default, each `RESTDataSource` subclass accepts a cache argument (such as Apollo Server's default cache) to store the results of past fetches:
+
+```ts disableCopy
+class MoviesAPI extends RESTDataSource {
+  override baseURL = 'https://movies-api.example.com/';
+
+  // We can omit the constructor function here because 
+  // RESTDataSource accepts a cache argument by default
+}
+
+// server set up, etc.
+
+const { url } = await startStandaloneServer(server, {
+  context: async ({ req }) => {
+    const { cache } = server; // highlight-line
+    return {
+      dataSources: {
+        // highlight-start
+        moviesAPI: new MoviesAPI({ cache }),  
+        personalizationAPI: new PersonalizationAPI({ cache }), 
+        // highlight-end
+      },
+    };
+  },
+});
+```
+
+If your data source accepts other arguments, ensure you do define a constructor function to accept those arguments, like so:
+
 
 <MultiCodeBlock>
 
 ```ts
-import { RESTDataSource } from '@apollo/datasource-rest';
-// KeyValueCache is the type of Apollo server's default cache
-import { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
+import { RESTDataSource } from '@apollo/datasource-rest';
+// KeyValueCache is the type of Apollo server's default cache
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
-class MoviesAPI extends RESTDataSource {
-  baseURL = 'https://movies-api.example.com/';
+class PersonalizationAPI extends RESTDataSource {
+  override baseURL = 'https://movies-api.example.com/';
+  private token: string;
 
   //highlight-start
-  constructor(options: {cache: KeyValueCache }) { 
-    super(options); // this should send our server's `cache` through
+  constructor(options: { token: string; cache: KeyValueCache }) { 
+    super(options); // this sends our server's `cache` through
+    this.token = options.token;
   }
   //highlight-end
 
   // data fetching methods, etc.
 }
 
-interface ContextValue {
-  dataSources: {
-    moviesAPI: MoviesAPI;
-  };
-}
-
-const server = new ApolloServer<ContextValue>({
-  typeDefs,
-  resolvers,
-});
+// set up server and context typing
 
 const { url } = await startStandaloneServer(server, {
   context: async ({ req }) => {
+    const token = getTokenFromRequest(req);
     const { cache } = server;
     return {
-      token,
       //highlight-start
       dataSources: {
-        moviesAPI: new MoviesAPI({ cache, token }),
+        personalizationApi: new PersonalizationAPI({ cache, token }),
       },
       //highlight-end
     };
@@ -179,27 +199,13 @@ const { url } = await startStandaloneServer(server, {
 
 </MultiCodeBlock>
 
-If you want Apollo Server to use another cache backend, you can provide its constructor a _different_ cache object that implements the [`KeyValueCache` interface](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface):
-
-```ts title="server.ts"
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  cache: new MyCustomKeyValueCache()
-});
-```
-
-### Using an external cache backend
-
 When running multiple instances of your server, you should use a shared cache backend. This enables one server instance to use the cached result from _another_ instance.
 
-Apollo Server supports using [Memcached](https://memcached.org/), [Redis](https://redis.io/), or other cache backends via the [`keyv`](https://www.npmjs.com/package/keyv) package. For examples, see [Configuring external caching](../performance/cache-backends#configuring-external-caching).
-
-You can also choose to implement your own cache backend. For more information, see [Implementing your own cache backend](../performance/cache-backends#implementing-your-own-cache-backend).
+> If you want to use another cache backend with Apollo Sever, see [Configuring external caching](../performance/cache-backends#configuring-external-caching).
 
 ## HTTP Methods
 
-`RESTDataSource` includes convenience methods for common REST API request methods: `get`, `post`, `put`, `patch`, and `delete` ([see the source](https://github.com/apollographql/datasource-rest/blob/main/src/RESTDataSource.ts#L163)).
+`RESTDataSource` includes convenience methods for common REST API request methods: `get`, `post`, `put`, `patch`, and `delete` ([see the source](https://github.com/apollographql/datasource-rest/blob/25862e18d8b35e324c150654c5686ed317b3fca8/src/RESTDataSource.ts#L163)).
 
 An example of each is shown below:
 
@@ -207,7 +213,7 @@ An example of each is shown below:
 
 ```ts
 class MoviesAPI extends RESTDataSource {
-  baseURL = 'https://movies-api.example.com/';
+  override baseURL = 'https://movies-api.example.com/';
 
   // GET
   async getMovie(id) {
@@ -267,7 +273,7 @@ For all HTTP convenience methods, the **first parameter** is the relative path o
 
 The **second parameter** depends on the HTTP method:
 
-- For HTTP methods with a request body (`post`, `put`, `patch`), the second parameter _is_ the request body (e.g., `{ body: { id: movie.id } }`).
+- For HTTP methods with a request body (`post`, `put`, `patch`), the second parameter is an _object_ that contains the request body (e.g., `{ body: { id: movie.id } }`), `method`, and `cacheOptions`.
 - For HTTP methods _without_ a request body, the second parameter is an object with keys and values corresponding to the request's query parameters.
 
 For all methods, the **third parameter** is an `init` object that enables you to provide additional options (such as headers and referrers) to the `fetch` API that's used to send the request. For details, [see MDN's fetch docs](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters).
@@ -280,39 +286,55 @@ Data sources also have access to the GraphQL operation context, which is useful 
 
 ### Setting a header
 
+> If you're using TypeScript, make sure to import the `WillSendRequestOptions` type.
+
 <MultiCodeBlock>
 
 ```ts
 import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 class PersonalizationAPI extends RESTDataSource {
-  override baseURL = 'https://personalization-api.example.com/';
+  override baseURL = 'https://movies-api.example.com/';
+  private token: string;
 
-  constructor(private token: string) {
-    super();
+  constructor(options: { token: string; cache: KeyValueCache }) { 
+    super(options);
+    this.token = options.token;
   }
 
+  // highlight-start
   override willSendRequest(request: WillSendRequestOptions) {
     request.headers['authorization'] = this.token;
   }
+  // highlight-end
 }
 ```
 
 </MultiCodeBlock>
-
-> If you're using TypeScript, make sure to import the `WillSendRequestOptions` type.
 
 ### Adding a query parameter
 
 <MultiCodeBlock>
 
 ```ts
-import { RESTDataSource } from '@apollo/datasource-rest';
+import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 class PersonalizationAPI extends RESTDataSource {
-  willSendRequest(request) {
+  override baseURL = 'https://movies-api.example.com/';
+  private token: string;
+
+  constructor(options: { token: string; cache: KeyValueCache }) { 
+    super(options);
+    this.token = options.token;
+  }
+  
+  // highlight-start
+  override willSendRequest(request: WillSendRequestOptions) {
     request.params.set('api_key', this.token);
   }
+  // highlight-end
 }
 ```
 
@@ -326,10 +348,14 @@ In some cases, you'll want to set the URL based on the environment or other cont
 
 ```ts
 import { RESTDataSource, RequestOptions } from '@apollo/datasource-rest';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 class PersonalizationAPI extends RESTDataSource {
-  constructor(private token: string) {
-    super();
+  private token: string;
+
+  constructor(options: { token: string; cache: KeyValueCache }) { 
+    super(options);
+    this.token = options.token;
   }
 
   override async resolveURL(path: string, request: RequestOptions) {
@@ -365,30 +391,31 @@ Most REST APIs don't support batching. When they do, using a batched endpoint ca
 We recommend that you restrict batching to requests that _can't_ be cached. In these cases, you can take advantage of DataLoader as a private implementation detail inside your `RESTDataSource`:
 
 ```ts
+import DataLoader from 'dataloader';
+import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
+
 class PersonalizationAPI extends RESTDataSource {
-  constructor() {
-    super();
-    this.baseURL = 'https://personalization-api.example.com/';
+  override baseURL = 'https://movies-api.example.com/';
+  private token: string;
+
+  constructor(options: { token: string; cache: KeyValueCache }) {
+    super(options); // this should send our server's `cache` through
+    this.token = options.token;
   }
 
-  willSendRequest(request) {
-    request.headers.set('Authorization', this.context.token);
+  override willSendRequest(request: WillSendRequestOptions) {
+    request.headers['authorization'] = this.token;
   }
 
   private progressLoader = new DataLoader(async (ids) => {
-    const progressList = await this.get('progress', {
-      ids: ids.join(','),
-    });
-    return ids.map(id =>
-      progressList.find((progress) => progress.id === id),
-    );
+    const progressList = await this.get('progress', { params: { ids: ids.join(',') } });
+    return ids.map((id) => progressList.find((progress) => progress.id === id));
   });
 
   async getProgressFor(id) {
     return this.progressLoader.load(id);
   }
 }
+
 ```
-
-
-
