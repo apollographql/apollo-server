@@ -1,0 +1,91 @@
+
+### `startStandaloneServer`
+
+### `expressMiddleware`
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+
+<tr>
+<td>
+
+##### `context`
+
+`Object` or `Function`
+</td>
+<td>
+
+An object (or a function that _creates_ an object) that's passed to every resolver that executes for a particular operation. This enables resolvers to share helpful context, such as a database connection.
+
+[Certain fields](#middleware-specific-context-fields) are added to this object automatically, depending on which [Node.js middleware](../integrations/middleware/) your server uses.
+
+For more details, see [The `context` argument](../data/resolvers/#the-context-argument).
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+##### `dataSources`
+
+`Function`
+</td>
+<td>
+
+A function that returns an object containing `DataSource` instances for use by your resolvers. The object is automatically added to each operation's [`context`](#context).
+
+For more details, see [Adding data sources to Apollo Server](../data/data-sources/#adding-data-sources-to-apollo-server).
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `cors`
+
+`Object` or `Boolean`
+</td>
+<td>
+
+An `Object` containing [configuration options](https://github.com/expressjs/cors#configuration-options) for the server's CORS behavior. Provide `false` to remove CORS middleware entirely.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `stopGracePeriodMillis`
+
+`number`
+</td>
+<td>
+
+The amount of time to wait after [`ApolloServer.stop()`](#stop) is called (including via a [termination signal](#stoponterminationsignals)) before forcefully closing all active connections. If you pass `Infinity`, Apollo Server waits indefinitely for all active connections to go idle.
+
+The default value is `10_000` (10 seconds).
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+
+
+### Middleware-specific `context` fields
+
+The `context` object passed between Apollo Server resolvers automatically includes certain fields, depending on which [Node.js middleware](../integrations/middleware/) you're using:
+
+| Middleware | Context fields |
+|---|---|
+| Express (including `apollo-server`) | <code>{<br/>&nbsp;&nbsp;req: [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts),<br/>&nbsp;&nbsp;res: [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861)<br/>}</code> |

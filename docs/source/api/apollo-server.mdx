@@ -92,6 +92,21 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 <tr>
 <td>
 
+##### `fieldResolver`
+
+`GraphQLFieldResolver`
+</td>
+
+<td>
+
+TODO: FILL IN
+</td>
+</tr>
+
+
+<tr>
+<td>
+
 ##### `schema`
 
 `Object`
@@ -255,6 +270,7 @@ The `formatError` hook receives two arguments: the first is a [`GraphQLFormatted
 `Function`
 </td>
 <td>
+TODO: remove
 
 Provide this function to transform the structure of GraphQL response objects before they're sent to a client. The function takes a [`GraphQLResponse`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#109-L114) object and a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L127-L162) object, and it should return a `GraphQLResponse` object, or null to preserve the existing structure.
 </td>
@@ -288,7 +304,7 @@ An object containing configuration options for connecting Apollo Server to [Apol
 </td>
 <td>
 
-Controls whether to allow [Batching Queries](../requests/#batching) in a single HTTP Request. Defaults to `true`. If the GraphQL Server has this flag set to `false` and a request comes in formatted as an array rather than as a single request object, an error will be thrown.
+Controls whether to allow [Batching Queries](../requests/#batching) in a single HTTP Request. Defaults to `false`. If a request comes in formatted as an array rather than as a single request object, an error will be thrown.
 </td>
 </tr>
 
@@ -348,16 +364,15 @@ You can also manually call `stop()` in other contexts. Note that `stop()` is asy
 <tr>
 <td>
 
-##### `debug`
+##### `includeStacktraceInErrorResponses`
 
 `Boolean`
 </td>
 
 <td>
 
-If `true`, stack traces are included in GraphQL responses when errors occur, and some extra information is logged via the `logger` at the `debug` level.
-
-Defaults to `true` unless the `NODE_ENV` environment variable is `production` or `test`.
+TODO: Update this
+If `true`, stack traces are included in GraphQL responses when errors occur, 
 </td>
 </tr>
 
@@ -383,29 +398,13 @@ This logger is automatically added to the `GraphQLRequestContext` object that's 
 <tr>
 <td>
 
-##### `mocks`
+##### `parseOptions`
 
-`Boolean` or `Object`
+`ParseOptions`
 </td>
 <td>
 
-If `true`, enables [default mock resolvers](../testing/mocking/#using-default-mocks) for schema fields. If an object, enables [_custom_ mock resolvers](../testing/mocking/#customizing-mocks) based on the object's fields.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-##### `mockEntireSchema`
-
-`Boolean`
-</td>
-<td>
-
-If `true` and `mocks` is also specified, mock resolvers are enabled even for fields that you've defined a resolver for.
-
-The default value is `true`. Set this to `false` to use mocked resolvers only for fields that you _haven't_ defined a resolver for.
+TODO: Fill this in
 </td>
 </tr>
 
@@ -424,151 +423,6 @@ If this is set to any string value, use that value instead of the environment va
 
 </tbody>
 </table>
-
-### `apollo-server`-specific options
-
-**These options are only part of the batteries-included `apollo-server` package.**  They do not exist in framework integrations.
-
-<table class="field-table">
-  <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-
-<tr>
-<td>
-
-##### `healthCheckPath`
-
-`string` or `null`
-</td>
-<td>
-
-Disable [HTTP-level health checks](../monitoring/health-checks/#http-level-health-checks) by passing `null`, or change the path on which it is served from the default of `/.well-known/apollo/server-health`.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-##### `onHealthCheck`
-
-`Function`
-</td>
-<td>
-
-A custom function to execute when Apollo Server receives a request at the [HTTP-level health check](../monitoring/health-checks/#http-level-health-checks) endpoint.
-
-</td>
-</tr>
-
-</tbody>
-</table>
-
-## Apollo Server 4 integrations
-
-
-### `startStandaloneServer`
-
-### `expressMiddleware`
-
-<table class="field-table">
-  <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-
-<tbody>
-
-
-<tr>
-<td>
-
-##### `context`
-
-`Object` or `Function`
-</td>
-<td>
-
-An object (or a function that _creates_ an object) that's passed to every resolver that executes for a particular operation. This enables resolvers to share helpful context, such as a database connection.
-
-[Certain fields](#middleware-specific-context-fields) are added to this object automatically, depending on which [Node.js middleware](../integrations/middleware/) your server uses.
-
-For more details, see [The `context` argument](../data/resolvers/#the-context-argument).
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-##### `dataSources`
-
-`Function`
-</td>
-<td>
-
-A function that returns an object containing `DataSource` instances for use by your resolvers. The object is automatically added to each operation's [`context`](#context).
-
-For more details, see [Adding data sources to Apollo Server](../data/data-sources/#adding-data-sources-to-apollo-server).
-</td>
-</tr>
-
-<tr>
-<td>
-
-##### `cors`
-
-`Object` or `Boolean`
-</td>
-<td>
-
-An `Object` containing [configuration options](https://github.com/expressjs/cors#configuration-options) for the server's CORS behavior. Provide `false` to remove CORS middleware entirely.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-##### `stopGracePeriodMillis`
-
-`number`
-</td>
-<td>
-
-The amount of time to wait after [`ApolloServer.stop()`](#stop) is called (including via a [termination signal](#stoponterminationsignals)) before forcefully closing all active connections. If you pass `Infinity`, Apollo Server waits indefinitely for all active connections to go idle.
-
-The default value is `10_000` (10 seconds).
-
-</td>
-</tr>
-
-</tbody>
-</table>
-
-
-### Middleware-specific `context` fields
-
-The `context` object passed between Apollo Server resolvers automatically includes certain fields, depending on which [Node.js middleware](../integrations/middleware/) you're using:
-
-| Middleware | Context fields |
-|---|---|
-| AWS Lambda | <code>{<br/>&nbsp;&nbsp;event: [`APIGatewayProxyEvent`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L78-L92),<br/>&nbsp;&nbsp;context: [`LambdaContext`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L510-L534),<br/>&nbsp;&nbsp;express: {<br/>&nbsp;&nbsp;&nbsp;&nbsp;req: [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts),<br/>&nbsp;&nbsp;&nbsp;&nbsp;res: [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861)<br/>&nbsp;&nbsp;}<br/>}</code> |
-| Azure Functions  | <code>{<br/>&nbsp;&nbsp;request: [`HttpRequest`](https://github.com/Azure/azure-functions-nodejs-worker/blob/ba8402bd3e86344e68cb06f65f9740b5d05a9700/types/public/Interfaces.d.ts#L73-L108),<br/>&nbsp;&nbsp;context: [`Context`](https://github.com/Azure/azure-functions-nodejs-worker/blob/ba8402bd3e86344e68cb06f65f9740b5d05a9700/types/public/Interfaces.d.ts#L18-L69)<br/>}</code> |
-| Cloudflare  | <code>{ req: [`Request`](https://github.com/apollographql/apollo-server/blob/04fe6aa1314ca84de26b4dc26e9b29dda16b81bc/packages/apollo-server-env/src/fetch.d.ts#L37-L45) }</code> |
-| Express (including `apollo-server`) | <code>{<br/>&nbsp;&nbsp;req: [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts),<br/>&nbsp;&nbsp;res: [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861)<br/>}</code> |
-| Fastify  | <code>{<br/>&nbsp;&nbsp;request: [`FastifyRequest`](https://github.com/fastify/fastify/blob/1d4dcf2bcde46256c72e96c2cafc843a461c721e/types/request.d.ts#L15),<br/>&nbsp;&nbsp;reply: [`FastifyReply`](https://github.com/fastify/fastify/blob/1d4dcf2bcde46256c72e96c2cafc843a461c721e/types/reply.d.ts#L10)<br/>}</code> |
-| Google Cloud Functions  | <code>{ req: [`Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts), res: [`Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861) }</code> |
-| hapi  | <code>{<br/>&nbsp;&nbsp;request: [`hapi.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/05cbc5521f895344fb7dbf5c51902b6ff235aa69/types/hapi__hapi/index.d.ts#L406-L615),<br/>&nbsp;&nbsp;h: [`hapi.ResponseToolkit`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/05cbc5521f895344fb7dbf5c51902b6ff235aa69/types/hapi__hapi/index.d.ts#L999-L1113)<br/>}</code> |
-| Koa | <code>{ ctx: [`Koa.Context`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/koa/index.d.ts#L724-L731) }</code> |
-| Micro | <code>{ req: [`MicroRequest`](https://github.com/apollographql/apollo-server/blob/c356bcf3f2864b8d2fcca0add455071e0606ef46/packages/apollo-server-micro/src/types.ts#L3-L5), res: [`ServerResponse`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/node/v10/http.d.ts#L145-L158) }</code> |
 
 ## `listen`
 
