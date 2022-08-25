@@ -9,6 +9,8 @@
     "@apollo/server-plugin-landing-page-graphql-playground": "3.0.0"
   },
   "changesets": [
+    "blue-bottles-jump",
+    "chatty-baboons-search",
     "eleven-needles-collect",
     "famous-parents-argue",
     "hip-cheetahs-fail",
@@ -17,11 +19,13 @@
     "ninety-panthers-accept",
     "ninety-tips-unite",
     "old-insects-smash",
+    "old-papayas-switch",
     "pink-eggs-draw",
     "small-cycles-hammer",
     "small-suits-compare",
     "spicy-lions-deliver",
     "spicy-pugs-deliver",
+    "spotty-days-eat",
     "stale-sheep-search",
     "twenty-cooks-repair",
     "violet-mayflies-help",
