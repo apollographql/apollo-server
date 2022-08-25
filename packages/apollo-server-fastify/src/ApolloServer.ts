@@ -56,12 +56,12 @@ export class ApolloServer<
           if (onHealthCheck) {
             try {
               await onHealthCheck(request);
-              reply.send('{"status":"pass"}');
+              return reply.send('{"status":"pass"}');
             } catch (e) {
-              reply.status(503).send('{"status":"fail"}');
+              return reply.status(503).send('{"status":"fail"}');
             }
           } else {
-            reply.send('{"status":"pass"}');
+            return reply.send('{"status":"pass"}');
           }
         });
       }
@@ -94,9 +94,11 @@ export class ApolloServer<
 
                   if (prefersHtml) {
                     reply.type('text/html');
-                    reply.send(landingPage.html);
+                    return reply.send(landingPage.html);
                   }
                 }
+
+                return undefined;
               }
             : undefined;
 
@@ -129,7 +131,7 @@ export class ApolloServer<
                 }
                 reply.status(responseInit.status || 200);
                 reply.serializer((payload: string) => payload);
-                reply.send(graphqlResponse);
+                return reply.send(graphqlResponse);
               } catch (error) {
                 if (!isHttpQueryError(error)) {
                   throw error;
@@ -143,7 +145,7 @@ export class ApolloServer<
 
                 reply.code(error.statusCode);
                 reply.serializer((payload: string) => payload);
-                reply.send(error.message);
+                return reply.send(error.message);
               }
             },
           });
