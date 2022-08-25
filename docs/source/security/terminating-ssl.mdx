@@ -44,7 +44,7 @@ async function startApolloServer() {
   // our express server is mounted at /graphql
   app.use(
     '/graphql',
-    cors<cors.CorsRequest>,
+    cors<cors.CorsRequest>(),
     bodyParser.json(),
     expressMiddleware(server),
   );
