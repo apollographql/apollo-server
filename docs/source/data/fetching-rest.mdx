@@ -16,11 +16,11 @@ flowchart LR;
   client --Sends query--> ApolloServer;
 ```
 
-<--! TODO(AS4) add this note back in when fetching data article is ready
-> For more information about fetching from data sources other than a REST API, see [Fetching Data](./fetching-data). 
+<!-- TODO(AS4) add this note back in when fetching data article is ready
+> For more information about fetching from data sources other than a REST API, see [Fetching Data](./fetching-data).
 -->
 
-See the [`@apollo/datasource-rest` page](https://www.npmjs.com/package/@apollo/datasource-rest) for the full details of the `RESTDataSource` API.
+> See the [`@apollo/datasource-rest` page](https://www.npmjs.com/package/@apollo/datasource-rest) for the full details of the `RESTDataSource` API.
 
 ## Creating subclasses
 
@@ -61,7 +61,7 @@ You can extend the `RESTDataSource` class to implement whatever data-fetching me
 
 ## Adding data sources to Apollo Server's context
 
-You can then provide your `RESTDataSource` subclasses to the `context` initialization function, like so:
+You can add data sources to the `context` initialization function, like so:
 
 <MultiCodeBlock>
 
@@ -84,9 +84,9 @@ const { url } = await startStandaloneServer(server, {
   context: async () => {
     const { cache } = server; // highlight-line
     return {
-      //highlight-start
       // We create new instances of our data sources with each request,
       // passing in our server's cache.
+      //highlight-start
       dataSources: {
         moviesAPI: new MoviesAPI({ cache }),
         personalizationAPI: new PersonalizationAPI({ cache }),
@@ -102,12 +102,11 @@ console.log(`🚀  Server ready at ${url}`);
 </MultiCodeBlock>
 
 <!-- TODO(AS4) add link to context article once exists  -->
-Apollo Server calls the [the `context` initialization](../resolvers/#the-context-argument) function for _every incoming operation_. This means:
-- As shown above, with every operation `context` returns an _object_ containing new instances of your `RESTDataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
--  These subclasses are accessible from the [the `context` argument](./resolvers/#the-context-argument) that's passed between your server's resolvers.
+Apollo Server calls [the `context` initialization](../resolvers/#the-context-argument) function for _every incoming operation_. This means:
+- For every operation, `context` returns an _object_ containing new instances of your `RESTDataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
 - The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation.** If multiple operations share a single data source instance, you might accidentally combine results from multiple operations.
 
-Your resolvers can now access your data sources from the shared `context` object and use them to fetch data:
+Your resolvers can then access your data sources from the shared `context` object and use them to fetch data:
 
 ```ts title="resolvers.ts"
 const resolvers = {
@@ -127,15 +126,15 @@ const resolvers = {
 
 ## Caching
 
-> 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides it's cache to data sources. [See here for more details](#datasources).
+> 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](#datasources).
 
-As shown in the above code snippet, by default, each `RESTDataSource` subclass accepts a cache argument (such as Apollo Server's default cache) to store the results of past fetches:
+As shown in the above code snippet, by default, each `RESTDataSource` subclass accepts a `cache` argument (e.g., Apollo Server's default cache) to store the results of past fetches:
 
 ```ts disableCopy
 class MoviesAPI extends RESTDataSource {
   override baseURL = 'https://movies-api.example.com/';
 
-  // We can omit the constructor function here because 
+  // We omit the constructor function here because
   // RESTDataSource accepts a cache argument by default
 }
 
@@ -147,8 +146,8 @@ const { url } = await startStandaloneServer(server, {
     return {
       dataSources: {
         // highlight-start
-        moviesAPI: new MoviesAPI({ cache }),  
-        personalizationAPI: new PersonalizationAPI({ cache }), 
+        moviesAPI: new MoviesAPI({ cache }),
+        personalizationAPI: new PersonalizationAPI({ cache }),
         // highlight-end
       },
     };
@@ -156,8 +155,7 @@ const { url } = await startStandaloneServer(server, {
 });
 ```
 
-If your data source accepts other arguments, ensure you do define a constructor function to accept those arguments, like so:
-
+If your `RESTDataSource` subclass accepts multiple arguments, make sure you add a constructor function, like so:
 
 <MultiCodeBlock>
 
@@ -173,7 +171,7 @@ class PersonalizationAPI extends RESTDataSource {
   private token: string;
 
   //highlight-start
-  constructor(options: { token: string; cache: KeyValueCache }) { 
+  constructor(options: { token: string; cache: KeyValueCache }) {
     super(options); // this sends our server's `cache` through
     this.token = options.token;
   }
@@ -182,7 +180,7 @@ class PersonalizationAPI extends RESTDataSource {
   // data fetching methods, etc.
 }
 
-// set up server and context typing
+// set up server, context typing, etc.
 
 const { url } = await startStandaloneServer(server, {
   context: async ({ req }) => {
@@ -203,7 +201,7 @@ const { url } = await startStandaloneServer(server, {
 
 When running multiple instances of your server, you should use a shared cache backend. This enables one server instance to use the cached result from _another_ instance.
 
-> If you want to use another cache backend with Apollo Sever, see [Configuring external caching](../performance/cache-backends#configuring-external-caching).
+> If you want to configure or replace Apollo Sever's default cache, see [Configuring external caching](../performance/cache-backends) for more details.
 
 ## HTTP Methods
 
@@ -260,7 +258,7 @@ class MoviesAPI extends RESTDataSource {
 
 </ExpansionPanel>
 
-> Note the use of [`encodeURIComponent`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent). This is a standard function that encodes special characters in a URI, preventing a possible injection attack vector.
+Note the use of [`encodeURIComponent`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) in the above snippet. This is a standard function that encodes special characters in a URI, preventing a possible injection attack vector.
 
 For a simple example, suppose our REST endpoint responded to the following URLs:
 
@@ -275,7 +273,7 @@ For all HTTP convenience methods, the **first parameter** is the relative path o
 
 The **second parameter** depends on the HTTP method:
 
-- For HTTP methods with a request body (`post`, `put`, `patch`), the second parameter is an _object_ that contains the request body (e.g., `{ body: { id: movie.id } }`), `method`, and `cacheOptions`.
+- For HTTP methods with a request body (`post`, `put`, `patch`), the second parameter is an _object_ that contains the `method` `cacheOptions`, and request body (e.g., `{ body: { id: movie.id } }`).
 - For HTTP methods _without_ a request body, the second parameter is an object with keys and values corresponding to the request's query parameters.
 
 For all methods, the **third parameter** is an `init` object that enables you to provide additional options (such as headers and referrers) to the `fetch` API that's used to send the request. For details, [see MDN's fetch docs](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters).
@@ -286,9 +284,9 @@ For all methods, the **third parameter** is an `init` object that enables you to
 
 Data sources also have access to the GraphQL operation context, which is useful for storing a user token or other relevant information.
 
-### Setting a header
-
 > If you're using TypeScript, make sure to import the `WillSendRequestOptions` type.
+
+### Setting a header
 
 <MultiCodeBlock>
 
@@ -300,7 +298,7 @@ class PersonalizationAPI extends RESTDataSource {
   override baseURL = 'https://movies-api.example.com/';
   private token: string;
 
-  constructor(options: { token: string; cache: KeyValueCache }) { 
+  constructor(options: { token: string; cache: KeyValueCache }) {
     super(options);
     this.token = options.token;
   }
@@ -327,11 +325,11 @@ class PersonalizationAPI extends RESTDataSource {
   override baseURL = 'https://movies-api.example.com/';
   private token: string;
 
-  constructor(options: { token: string; cache: KeyValueCache }) { 
+  constructor(options: { token: string; cache: KeyValueCache }) {
     super(options);
     this.token = options.token;
   }
-  
+
   // highlight-start
   override willSendRequest(request: WillSendRequestOptions) {
     request.params.set('api_key', this.token);
@@ -355,7 +353,7 @@ import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 class PersonalizationAPI extends RESTDataSource {
   private token: string;
 
-  constructor(options: { token: string; cache: KeyValueCache }) { 
+  constructor(options: { token: string; cache: KeyValueCache }) {
     super(options);
     this.token = options.token;
   }

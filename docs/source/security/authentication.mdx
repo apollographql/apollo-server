@@ -149,7 +149,7 @@ One choice to make when building out our resolvers is what an unauthorized field
 
 Now let's expand that example a little further, and only allow users with an `admin` role to look at our user list. After all, we probably don't want just anyone to have access to all our users.
 
-```ts 
+```ts
 users: (parent, args, context) => {
   if (!context.user || !context.user.roles.includes('admin')) return null;
   return context.models.User.getAll();
@@ -166,11 +166,11 @@ As our server gets more complex, there will probably be multiple places in the s
 
 <!-- TODO(AS4) add link back in for data sources -->
 
-As always, we recommend moving the actual data fetching and transformation logic from your resolvers to data sources or model objects that each represent a concept from your application: `User`, `Post`, etc. This allows you to make your resolvers a thin routing layer, and put all of your business logic in one place.
+As always, we recommend moving the actual data fetching and transformation logic from your resolvers to [data sources](../fetching-rest/) or model objects that each represent a concept from your application: `User`, `Post`, etc. This allows you to make your resolvers a thin routing layer, and put all of your business logic in one place.
 
 For example, a model file for `User` would include all the logic for operating on users, and might look something like this:
 
-```ts 
+```ts
 export const User = {
   getAll: () => {
     /* fetching/transformation logic for all users */
@@ -186,7 +186,7 @@ export const User = {
 
 In the following example, our schema has multiple ways to request a single user:
 
-```graphql 
+```graphql
 type Query {
   user(id: ID!): User
   article(id: ID!): Article
@@ -208,7 +208,7 @@ Rather than having the same fetching logic for a single user in two separate pla
 
 You may have noticed that our models also exist on the context, alongside the user object we added earlier. We can add the models to the context in exactly the same way as we did the user.
 
-```ts 
+```ts
 context: async ({ req }) => {
  // get the user token from the headers
  const token = req.headers.authentication || '';
@@ -237,7 +237,7 @@ context: async ({ req }) => {
 
 Starting to generate our models with a function requires a small refactor, that would leave our User model looking something like this:
 
-```ts 
+```ts
 export const generateUserModel = ({ user }) => ({
   getAll: () => {
     /* fetching/transform logic for all users */
@@ -253,7 +253,7 @@ export const generateUserModel = ({ user }) => ({
 
 Now any model method in `User` has access to the same `user` information that resolvers already had, allowing us to refactor the `getAll` function to do the permissions check directly rather than having to put it in the resolver:
 
-```ts 
+```ts
 getAll: () => {
   if (!user || !user.roles.includes('admin')) return null;
   return fetch('http://myurl.com/users');
