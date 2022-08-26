@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.0-alpha.9
+
+### Patch Changes
+
+- [#6855](https://github.com/apollographql/apollo-server/pull/6855) [`3e4ab3fca`](https://github.com/apollographql/apollo-server/commit/3e4ab3fcafb72027bf3c6359884808ba11381315) Thanks [@glasser](https://github.com/glasser)! - Rename usage reporting option `sendErrorsInTraces` (added in 4.0.0-alpha.4) to `sendErrors`, as it also affects error statistics outside of traces.
+
+- Updated dependencies [[`3e4ab3fca`](https://github.com/apollographql/apollo-server/commit/3e4ab3fcafb72027bf3c6359884808ba11381315), [`3e4ab3fca`](https://github.com/apollographql/apollo-server/commit/3e4ab3fcafb72027bf3c6359884808ba11381315), [`3e4ab3fca`](https://github.com/apollographql/apollo-server/commit/3e4ab3fcafb72027bf3c6359884808ba11381315), [`3e4ab3fca`](https://github.com/apollographql/apollo-server/commit/3e4ab3fcafb72027bf3c6359884808ba11381315)]:
+  - @apollo/server@4.0.0-alpha.9
+
 ## 4.0.0-alpha.8
 
 ### Patch Changes

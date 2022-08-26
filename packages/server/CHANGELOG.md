@@ -1,5 +1,17 @@
 # @apollo/server
 
+## 4.0.0-alpha.9
+
+### Patch Changes
+
+- [#6855](https://github.com/apollographql/apollo-server/pull/6855) [`3e4ab3fca`](https://github.com/apollographql/apollo-server/commit/3e4ab3fcafb72027bf3c6359884808ba11381315) Thanks [@glasser](https://github.com/glasser)! - New usage reporting option `sendTraces: false` to only send usage reports as aggregated statistics, not per-request traces.
+
+* [#6855](https://github.com/apollographql/apollo-server/pull/6855) [`3e4ab3fca`](https://github.com/apollographql/apollo-server/commit/3e4ab3fcafb72027bf3c6359884808ba11381315) Thanks [@glasser](https://github.com/glasser)! - Remove Apollo-internal `internal_includeTracesContributingToStats`. This should not have been used other than inside Apollo's own servers.
+
+- [#6855](https://github.com/apollographql/apollo-server/pull/6855) [`3e4ab3fca`](https://github.com/apollographql/apollo-server/commit/3e4ab3fcafb72027bf3c6359884808ba11381315) Thanks [@glasser](https://github.com/glasser)! - The usage reporting option `debugPrintReports` now displays reports via `logger.info` rather than `logger.warn`.
+
+* [#6855](https://github.com/apollographql/apollo-server/pull/6855) [`3e4ab3fca`](https://github.com/apollographql/apollo-server/commit/3e4ab3fcafb72027bf3c6359884808ba11381315) Thanks [@glasser](https://github.com/glasser)! - Rename usage reporting option `sendErrorsInTraces` (added in 4.0.0-alpha.4) to `sendErrors`, as it also affects error statistics outside of traces.
+
 ## 4.0.0-alpha.8
 
 ### Patch Changes
