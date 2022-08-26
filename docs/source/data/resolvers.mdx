@@ -26,7 +26,7 @@ We want to define resolvers for the `numberSix` and `numberSeven` fields of the 
 
 Those resolver definitions look like this:
 
-```ts 
+```ts
 const resolvers = {
   Query: {
     numberSix() {
@@ -64,7 +64,7 @@ We want to be able to query the `user` field to fetch a user by its `id`.
 
 To achieve this, our server needs access to user data. For this contrived example, assume our server defines the following hardcoded array:
 
-```ts 
+```ts
 const users = [
   {
     id: '1',
@@ -77,15 +77,9 @@ const users = [
 ];
 ```
 
-<!-- TODO (AS4): add this back in once data sources are up
-
-> To learn how to fetch data from an external source (like a database or REST API), see [Data sources](./data-sources/).
-
--->
-
 Now we can define a resolver for the `user` field, like so:
 
-```ts 
+```ts
 const resolvers = {
   Query: {
     user(parent, args, context, info) {
@@ -164,6 +158,9 @@ console.log(`🚀 Server listening at: ${url}`);
 </ExpansionPanel>
 
 Note that you can define your resolvers across as many different files and objects as you want, as long as you merge all of them into a single resolver map that's passed to the `ApolloServer` constructor.
+
+<!-- (TODO(AS4) Add note to fetching from other data sources data once it's done  -->
+> To learn how to fetch data from a REST API, see [Fetching from REST](./fetching-rest/).
 
 ## Resolver chains
 
@@ -383,13 +380,8 @@ Resolver functions are passed four arguments: `parent`, `args`, `context`, and `
 
 ### The `context` argument
 
-> ⚠️ The Apollo Server 4 alpha doesn't currently support using [`RESTDataSource`](../migration#datasources), a class commonly used to fetch data from a database or a REST API. This feature is in active development, so check back frequently for updates.
-
-The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions.
-
-<!-- TODO(AS4) Add this paragraph in once data sources work
-If you're using [dataloaders to batch requests](./data-sources/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
--->
+<!-- (TODO(AS4) Add note to fetching data too once it's done  -->
+The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), [sources for fetching data](./fetching-rest/), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./fetching-rest/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
 
 **Resolvers should never destructively modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
 
@@ -407,7 +399,7 @@ const resolvers = {
   // Example resolver
     adminExample: (parent, args, context, info) => {
       if (context.authScope !== ADMIN) {
-        throw new GraphQLError('not admin!', { 
+        throw new GraphQLError('not admin!', {
           extensions: { code: 'UNAUTHENTICATED' }
         });
       }
@@ -447,7 +439,7 @@ The `context` function should be *asynchronous* and return an object, which is t
 
 Because the `context` initialization function is asynchronous, you can use it to establish database connections and wait for other operations to complete:
 
-```ts 
+```ts
 context: async () => ({
   db: await client.connect(),
 })
