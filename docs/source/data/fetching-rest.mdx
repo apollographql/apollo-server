@@ -239,7 +239,7 @@ class MoviesAPI extends RESTDataSource {
   async newMovie(movie) {
     return this.put(
       `movies`, // path
-      movie, // request body
+      { body: { movie } }, // request body
     );
   }
 
@@ -278,14 +278,12 @@ For all HTTP convenience methods, the **first parameter** is the relative path o
 
 The **second parameter** depends on the HTTP method:
 
-- For HTTP methods with a request body (`post`, `put`, `patch`), the second parameter is an _object_ that contains the `method` `cacheOptions`, and request body (e.g., `{ body: { id: movie.id } }`).
+- For HTTP methods with a request body (`post`, `put`, `patch`), the second parameter is an _object_ that contains the `method` `cacheOptions`, and request `body` (e.g., `{ body: { id: movie.id } }`).
 - For HTTP methods _without_ a request body, the second parameter is an object with keys and values corresponding to the request's query parameters.
-
-For all methods, the **third parameter** is an `init` object that enables you to provide additional options (such as headers and referrers) to the `fetch` API that's used to send the request. For details, [see MDN's fetch docs](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters).
 
 ## Intercepting fetches
 
-> **New in Apollo Server 4**: Apollo Server 4 now uses [`@apollo/fetcher`](../migration#apolloutilsfetcher-replaces-apollo-server-env) under-the-hood, so you can no longer directly use `Request` or `Headers` methods.
+> **New in Apollo Server 4**: Apollo Server 4 now uses [`@apollo/fetcher`](../migration#apolloutilsfetcher-replaces-apollo-server-env) under-the-hood for fetching, so hooks like `willSendRequest` no longer have direct access to `Request` or `Headers` methods.
 
 `RESTDataSource` includes a `willSendRequest` method that you can override to modify outgoing requests before they're sent. For example, you can use this method to add headers or query parameters. This method is most commonly used for authorization or other concerns that apply to all sent requests.
 
