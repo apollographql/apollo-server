@@ -35,7 +35,7 @@ import type {
   BaseContext,
   ApolloServerPlugin,
 } from '@apollo/server';
-import fetch from 'node-fetch';
+import fetch, { type Headers } from 'node-fetch';
 
 import resolvable, { Resolvable } from '@josephg/resolvable';
 import type { AddressInfo } from 'net';
@@ -1653,58 +1653,192 @@ export function defineIntegrationTestSuiteApolloServerTests(
             expect(spy).toHaveBeenCalledTimes(1);
           });
 
-          it('returns thrown context error as a valid graphql result', async () => {
-            const typeDefs = gql`
-              type Query {
-                hello: String
-              }
-            `;
-            const resolvers = {
-              Query: {
-                hello: () => {
-                  throw Error('never get here');
-                },
-              },
-            };
-            const contextCreationDidFail = jest.fn<() => Promise<void>>();
-            const uri = await createServerAndGetUrl(
-              {
-                typeDefs,
-                resolvers,
-                stopOnTerminationSignals: false,
-                nodeEnv: '',
-                plugins: [{ contextCreationDidFail }],
-              },
-              {
-                context: async () => {
-                  throw new GraphQLError('valid result', {
-                    extensions: { code: 'SOME_CODE' },
-                  });
-                },
-              },
-            );
-
-            const apolloFetch = createApolloFetch({ uri });
-
-            const result = await apolloFetch({ query: '{hello}' });
-            expect(result.errors.length).toEqual(1);
-            expect(result.data).toBeUndefined();
-
-            const e = result.errors[0];
-            expect(e.message).toMatch('valid result');
-            expect(e.extensions).toBeDefined();
-            expect(e.extensions.code).toEqual('SOME_CODE');
-            expect(e.extensions.stacktrace).toBeDefined();
-
-            expect(contextCreationDidFail.mock.calls).toMatchInlineSnapshot(`
-              Array [
-                Array [
-                  Object {
-                    "error": [GraphQLError: Context creation failed: valid result],
+          describe('context errors', () => {
+            async function run(errorToThrow: Error) {
+              const typeDefs = gql`
+                type Query {
+                  hello: String
+                }
+              `;
+              const resolvers = {
+                Query: {
+                  hello: () => {
+                    throw Error('never get here');
                   },
-                ],
-              ]
-            `);
+                },
+              };
+              const contextCreationDidFail = jest.fn<() => Promise<void>>();
+              const uri = await createServerAndGetUrl(
+                {
+                  typeDefs,
+                  resolvers,
+                  stopOnTerminationSignals: false,
+                  includeStacktraceInErrorResponses: false,
+                  plugins: [{ contextCreationDidFail }],
+                  formatError(formattedError) {
+                    return {
+                      ...formattedError,
+                      extensions: {
+                        ...formattedError.extensions,
+                        formatErrorCalled: true,
+                      },
+                    };
+                  },
+                },
+                {
+                  context: async () => {
+                    throw errorToThrow;
+                  },
+                },
+              );
+
+              let status = 0;
+              let headers: Headers | undefined;
+              const apolloFetch = createApolloFetch({ uri }).useAfter(
+                (res, next) => {
+                  status = res.response.status;
+                  headers = res.response.headers;
+                  next();
+                },
+              );
+
+              const result = await apolloFetch({ query: '{hello}' });
+
+              return {
+                result,
+                status,
+                specialHeader: headers!.get('special'),
+                contextCreationDidFailMockCalls:
+                  contextCreationDidFail.mock.calls,
+              };
+            }
+
+            it('GraphQLErrors are formatted, defaulting to status 500', async () => {
+              expect(
+                await run(
+                  new GraphQLError('valid result', {
+                    extensions: { code: 'SOME_CODE' },
+                  }),
+                ),
+              ).toMatchInlineSnapshot(`
+                Object {
+                  "contextCreationDidFailMockCalls": Array [
+                    Array [
+                      Object {
+                        "error": [GraphQLError: valid result],
+                      },
+                    ],
+                  ],
+                  "result": Object {
+                    "errors": Array [
+                      Object {
+                        "extensions": Object {
+                          "code": "SOME_CODE",
+                          "formatErrorCalled": true,
+                        },
+                        "message": "valid result",
+                      },
+                    ],
+                  },
+                  "specialHeader": null,
+                  "status": 500,
+                }
+              `);
+            });
+
+            it('GraphQLErrors are formatted, defaulting to INTERNAL_SERVER_ERROR', async () => {
+              expect(await run(new GraphQLError('some error')))
+                .toMatchInlineSnapshot(`
+                Object {
+                  "contextCreationDidFailMockCalls": Array [
+                    Array [
+                      Object {
+                        "error": [GraphQLError: some error],
+                      },
+                    ],
+                  ],
+                  "result": Object {
+                    "errors": Array [
+                      Object {
+                        "extensions": Object {
+                          "code": "INTERNAL_SERVER_ERROR",
+                          "formatErrorCalled": true,
+                        },
+                        "message": "some error",
+                      },
+                    ],
+                  },
+                  "specialHeader": null,
+                  "status": 500,
+                }
+              `);
+            });
+
+            it('GraphQLErrors are formatted, obeying http extension', async () => {
+              expect(
+                await run(
+                  new GraphQLError('some error', {
+                    extensions: {
+                      http: {
+                        status: 404,
+                        headers: new Map([['special', 'hello']]),
+                      },
+                    },
+                  }),
+                ),
+              ).toMatchInlineSnapshot(`
+                Object {
+                  "contextCreationDidFailMockCalls": Array [
+                    Array [
+                      Object {
+                        "error": [GraphQLError: some error],
+                      },
+                    ],
+                  ],
+                  "result": Object {
+                    "errors": Array [
+                      Object {
+                        "extensions": Object {
+                          "code": "INTERNAL_SERVER_ERROR",
+                          "formatErrorCalled": true,
+                        },
+                        "message": "some error",
+                      },
+                    ],
+                  },
+                  "specialHeader": "hello",
+                  "status": 404,
+                }
+              `);
+            });
+
+            it('non-GraphQLErrors are formatted', async () => {
+              expect(await run(new Error('random error')))
+                .toMatchInlineSnapshot(`
+                Object {
+                  "contextCreationDidFailMockCalls": Array [
+                    Array [
+                      Object {
+                        "error": [Error: random error],
+                      },
+                    ],
+                  ],
+                  "result": Object {
+                    "errors": Array [
+                      Object {
+                        "extensions": Object {
+                          "code": "INTERNAL_SERVER_ERROR",
+                          "formatErrorCalled": true,
+                        },
+                        "message": "Context creation failed: random error",
+                      },
+                    ],
+                  },
+                  "specialHeader": null,
+                  "status": 500,
+                }
+              `);
+            });
           });
         });
 

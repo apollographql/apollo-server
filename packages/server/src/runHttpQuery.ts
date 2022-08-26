@@ -120,9 +120,6 @@ function ensureQueryIsStringOrMissing(query: unknown) {
   }
 }
 
-export const badMethodErrorMessage =
-  'Apollo Server supports only GET/POST requests.';
-
 export async function runHttpQuery<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
   httpRequest: HTTPGraphQLRequest,
@@ -191,7 +188,17 @@ export async function runHttpQuery<TContext extends BaseContext>(
       break;
     }
     default:
-      throw new BadRequestError(badMethodErrorMessage);
+      throw new BadRequestError(
+        'Apollo Server supports only GET/POST requests.',
+        {
+          extensions: {
+            http: {
+              status: 405,
+              headers: new HeaderMap([['allow', 'GET, POST']]),
+            },
+          },
+        },
+      );
   }
 
   const graphQLResponse = await internalExecuteOperation({
@@ -239,4 +246,23 @@ export function newHTTPGraphQLHead(status?: number): HTTPGraphQLHead {
     status,
     headers: new HeaderMap(),
   };
+}
+
+// Updates `target` with status code and headers from `source`. For now let's
+// consider it undefined what happens if both have a status code set or both set
+// the same header.
+export function mergeHTTPGraphQLHead(
+  target: HTTPGraphQLHead,
+  source: HTTPGraphQLHead,
+) {
+  if (source.status) {
+    target.status = source.status;
+  }
+  if (source.headers) {
+    for (const [name, value] of source.headers) {
+      // If source.headers contains non-lowercase header names, this will
+      // catch that case as long as target.headers is a HeaderMap.
+      target.headers.set(name, value);
+    }
+  }
 }

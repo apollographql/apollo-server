@@ -20,7 +20,7 @@ describe('Errors', () => {
           }),
         ],
         { includeStacktraceInErrorResponses: true },
-      );
+      ).formattedErrors;
       expect(error.message).toEqual(message);
       expect(error.extensions?.key).toEqual(key);
       expect(error.extensions).not.toHaveProperty('exception'); // Removed in AS4
@@ -33,7 +33,7 @@ describe('Errors', () => {
       (thrown as any).key = key;
       const error = normalizeAndFormatErrors([
         new GraphQLError(thrown.message, { originalError: thrown }),
-      ])[0];
+      ]).formattedErrors[0];
       expect(error.message).toEqual(message);
       expect(error.extensions?.code).toEqual('INTERNAL_SERVER_ERROR');
       expect(error.extensions).not.toHaveProperty('exception'); // Removed in AS4
@@ -45,7 +45,7 @@ describe('Errors', () => {
         new GraphQLError(message, {
           extensions: { code, key },
         }),
-      ])[0];
+      ]).formattedErrors[0];
       expect(error.message).toEqual(message);
       expect(error.extensions?.key).toEqual(key);
       expect(error.extensions).not.toHaveProperty('exception'); // Removed in AS4
@@ -71,7 +71,9 @@ describe('Errors', () => {
     });
     it('Formats native Errors in a JSON-compatible way', () => {
       const error = new Error('Hello');
-      const [formattedError] = normalizeAndFormatErrors([error]);
+      const [formattedError] = normalizeAndFormatErrors([
+        error,
+      ]).formattedErrors;
       expect(JSON.parse(JSON.stringify(formattedError)).message).toBe('Hello');
     });
 
@@ -106,7 +108,7 @@ describe('Errors', () => {
         const errors = normalizeAndFormatErrors([thrown], {
           formatError,
           includeStacktraceInErrorResponses: true,
-        });
+        }).formattedErrors;
         expect(errors).toHaveLength(1);
         const [error] = errors;
         expect(error.extensions?.exception).toHaveProperty('stacktrace');
@@ -130,7 +132,7 @@ describe('Errors', () => {
         const errors = normalizeAndFormatErrors([thrown], {
           formatError,
           includeStacktraceInErrorResponses: false,
-        });
+        }).formattedErrors;
         expect(errors).toHaveLength(1);
         const [error] = errors;
         expect(error).toMatchInlineSnapshot(`
