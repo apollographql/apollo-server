@@ -229,7 +229,7 @@ class MoviesAPI extends RESTDataSource {
   async postMovie(movie) {
     return this.post(
       `movies`, // path
-      movie, // request body
+       { body: { movie } }, // request body
     );
   }
 
@@ -272,12 +272,21 @@ A "malicious" client could provide an `:id` of `1/characters` to target the dele
 
 ### Method parameters
 
-For all HTTP convenience methods, the **first parameter** is the relative path of the endpoint you're sending the request to (e.g., `movies`).
+For all HTTP convenience methods, the first parameter is the relative path of the endpoint you're sending the request to (e.g., `movies`). The second parameter is an object where you can set a request's `headers`, `params`, `cacheOptions`, and `body`:
 
-The **second parameter** depends on the HTTP method:
+```ts
+class MoviesAPI extends RESTDataSource {
+  override baseURL = 'https://movies-api.example.com/';
 
-- For HTTP methods with a request body (`post`, `put`, `patch`), the second parameter is an _object_ that contains the `method` `cacheOptions`, and request `body` (e.g., `{ body: { id: movie.id } }`).
-- For HTTP methods _without_ a request body, the second parameter is an object with keys and values corresponding to the request's query parameters.
+  // an example making an HTTP POST request
+  async postMovie(movie) {
+    return this.post(
+      `movies`, // path
+      { body: movie }, // request body
+    );
+  }
+}
+```
 
 ## Intercepting fetches
 
