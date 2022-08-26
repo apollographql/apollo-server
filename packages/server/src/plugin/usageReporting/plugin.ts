@@ -166,12 +166,13 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         );
       }
 
-      let graphMightSupportTraces = true;
+      // We don't send traces if the user set `sendTraces: false`. We also may
+      // set this to false later if the usage-reporting ingress informs us that
+      // this graph does not support viewing traces.
+      let sendTraces = options.sendTraces ?? true;
       const sendOperationAsTrace =
         options.experimental_sendOperationAsTrace ??
         defaultSendOperationsAsTrace();
-      const includeTracesContributingToStats =
-        options.internal_includeTracesContributingToStats ?? false;
 
       let stopped = false;
 
@@ -255,20 +256,10 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         // off and adjust it based on what we learn.
 
         if (options.debugPrintReports) {
-          // In terms of verbosity, and as the name of this option suggests,
-          // this message is either an "info" or a "debug" level message.
-          // However, we are using `warn` here for compatibility reasons since
-          // the `debugPrintReports` flag pre-dated the existence of log-levels
-          // and changing this to also require `debug: true` (in addition to
-          // `debugPrintReports`) just to reach the level of verbosity to
-          // produce the output would be a breaking change.  The "warn" level is
-          // on by default.  There is a similar theory and comment applied
-          // below.
-          //
           // We decode the report rather than printing the original `report`
           // so that it includes all of the pre-encoded traces.
           const decodedReport = Report.decode(message);
-          logger.warn(
+          logger.info(
             `Apollo usage report: ${JSON.stringify(decodedReport.toJSON())}`,
           );
         }
@@ -345,7 +336,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         }
 
         if (
-          graphMightSupportTraces &&
+          sendTraces &&
           response.status === 200 &&
           response.headers
             .get('content-type')
@@ -363,21 +354,11 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
               "This graph's organization does not have access to traces; sending all " +
                 'subsequent operations as traces.',
             );
-            graphMightSupportTraces = false;
-            // XXX We could also parse traces that are already in the current
-            // report and convert them to stats if we wanted?
+            sendTraces = false;
           }
         }
         if (options.debugPrintReports) {
-          // In terms of verbosity, and as the name of this option suggests, this
-          // message is either an "info" or a "debug" level message.  However,
-          // we are using `warn` here for compatibility reasons since the
-          // `debugPrintReports` flag pre-dated the existence of log-levels and
-          // changing this to also require `debug: true` (in addition to
-          // `debugPrintReports`) just to reach the level of verbosity to produce
-          // the output would be a breaking change.  The "warn" level is on by
-          // default.  There is a similar theory and comment applied above.
-          logger.warn(`Apollo usage report: status ${response.status}`);
+          logger.info(`Apollo usage report: status ${response.status}`);
         }
       };
 
@@ -388,7 +369,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
       }): GraphQLRequestListener<TContext> => {
         const treeBuilder: TraceTreeBuilder = new TraceTreeBuilder({
           maskedBy: 'ApolloServerPluginUsageReporting',
-          sendErrors: options.sendErrorsInTraces,
+          sendErrors: options.sendErrors,
           logger,
         });
         treeBuilder.startTiming();
@@ -677,10 +658,10 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                 statsReportKey,
                 trace,
                 // We include the operation as a trace (rather than aggregated
-                // into stats) only if we believe it's possible that our
-                // organization's plan allows for viewing traces *and* we
-                // actually captured this as a full trace *and*
-                // sendOperationAsTrace says so.
+                // into stats) only if the user didn't set `sendTraces: false`
+                // *and8 we believe it's possible that our organization's plan
+                // allows for viewing traces *and* we actually captured this as
+                // a full trace *and* sendOperationAsTrace says so.
                 //
                 // (As an edge case, if the reason metrics.captureTraces is
                 // falsey is that this is an unexecutable operation and thus we
@@ -689,10 +670,9 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                 // means we'll still send some parse and validation failures as
                 // traces, for the sake of the Errors page.)
                 asTrace:
-                  graphMightSupportTraces &&
+                  sendTraces &&
                   (!isExecutable || !!metrics.captureTraces) &&
                   sendOperationAsTrace(trace, statsReportKey),
-                includeTracesContributingToStats,
                 referencedFieldsByType,
               });
 

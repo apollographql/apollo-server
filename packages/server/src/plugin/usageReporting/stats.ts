@@ -60,13 +60,11 @@ export class OurReport implements Required<IReport> {
     statsReportKey,
     trace,
     asTrace,
-    includeTracesContributingToStats,
     referencedFieldsByType,
   }: {
     statsReportKey: string;
     trace: Trace;
     asTrace: boolean;
-    includeTracesContributingToStats: boolean;
     referencedFieldsByType: ReferencedFieldsByType;
   }) {
     const tracesAndStats = this.getTracesAndStats({
@@ -79,16 +77,6 @@ export class OurReport implements Required<IReport> {
       this.sizeEstimator.bytes += 2 + encodedTrace.length;
     } else {
       tracesAndStats.statsWithContext.addTrace(trace, this.sizeEstimator);
-      if (includeTracesContributingToStats) {
-        // For specific use inside Apollo's infrastructure to help validate that
-        // the code in this file matches similar code in Apollo's servers,
-        // include the traces that contribute to the stats. Doing this outside
-        // of Apollo's infrastructure only serves to make reports larger with no
-        // other advantage.
-        const encodedTrace = Trace.encode(trace).finish();
-        tracesAndStats.internalTracesContributingToStats.push(encodedTrace);
-        this.sizeEstimator.bytes += 2 + encodedTrace.length;
-      }
     }
   }
 

@@ -1139,14 +1139,14 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
 
           describe('error munging', () => {
-            describe('sendErrorsInTraces', () => {
+            describe('sendErrors', () => {
               it('new error', async () => {
                 throwError.mockImplementationOnce(() => {
                   throw new Error('transform nope');
                 });
 
                 await setupApolloServerAndFetchPair({
-                  sendErrorsInTraces: {
+                  sendErrors: {
                     transform: () =>
                       new GraphQLError('rewritten as a new error'),
                   },
@@ -1191,7 +1191,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 });
 
                 await setupApolloServerAndFetchPair({
-                  sendErrorsInTraces: {
+                  sendErrors: {
                     transform: (err) => {
                       err.message = 'rewritten as a modified error';
                       return err;
@@ -1236,7 +1236,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 });
 
                 await setupApolloServerAndFetchPair({
-                  sendErrorsInTraces: { transform: () => null },
+                  sendErrors: { transform: () => null },
                 });
 
                 const result = await apolloFetch({
@@ -1271,7 +1271,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               });
 
               await setupApolloServerAndFetchPair({
-                sendErrorsInTraces: {
+                sendErrors: {
                   // @ts-expect-error (not allowed to be undefined)
                   transform: () => undefined,
                 },
@@ -1319,7 +1319,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               });
 
               await setupApolloServerAndFetchPair({
-                sendErrorsInTraces: {
+                sendErrors: {
                   unmodified: true,
                 },
               });
@@ -1370,7 +1370,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               });
 
               await setupApolloServerAndFetchPair({
-                sendErrorsInTraces: {
+                sendErrors: {
                   masked: true,
                 },
               });
