@@ -14,23 +14,65 @@ export interface ApolloServerPluginUsageReportingOptions<
 > {
   //#region Configure exactly which data should be sent to Apollo.
   /**
-   * By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable
-   * values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option.
-   * This option can take several forms:
+   * Apollo Server's usage reports describe each individual request in one of
+   * two ways: as a "trace" (a detailed description of the specific request,
+   * including a query plan and resolver tree with timings and errors, as well
+   * as optional details like variable values and HTTP headers), or as part of
+   * aggregated "stats" (where invocations of the same operation from the same
+   * client program are aggregated together rather than described individually).
+   * Apollo Server uses an heuristic to decide which operations to describe as
+   * traces and which to aggregate as stats.
+   *
+   * By setting the `sendTraces` option to `false`, Apollo Server will describe
+   * *all* operations as stats; individual requests will never be broken out
+   * into separate traces. If you set `sendTraces: false`, then Apollo Studio's
+   * Traces view won't show any traces (other Studio functionality will be
+   * unaffected).
+   *
+   * Note that the values of `sendVariableValues`, `sendHeaders`, and
+   *  `sendUnexecutableOperationDocuments` are irrelevant if you set
+   *  `sendTraces: false`, because those options control data that is contained
+   *  only in traces (not in stats).
+   *
+   * Setting `sendTraces: false` does *NOT* imply `fieldLevelInstrumentation:
+   * 0`. Apollo Server can still take advantage of field-level instrumentation
+   * (either directly for monolith servers, or via federated tracing for
+   * Gateways) in order to accurately report field execution usage in "stats".
+   * This option only controls whether data is sent to Apollo's servers as
+   * traces, not whether traces are internally used to learn about usage.
+   */
+  sendTraces?: boolean;
+
+  /**
+   * By default, Apollo Server does not send the values of any GraphQL variables
+   * to Apollo's servers, because variable values often contain the private data
+   * of your app's users. If you'd like variable values to be included in
+   * traces, set this option. This option can take several forms:
    * - { none: true }: don't send any variable values (DEFAULT)
    * - { all: true}: send all variable values
-   * - { transform: ... }: a custom function for modifying variable values. Keys added by the custom function will
-   *    be removed, and keys removed will be added back with an empty value. For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`.
-   * - { exceptNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
-   * - { onlyNames: ... }: A case-sensitive list of names of variables whose values will be sent to Apollo servers
+   * - { transform: ... }: a custom function for modifying variable values. The
+   *    function receives `variables` and `operationString` and should return a
+   *    record of `variables` with the same keys as the `variables` it receives
+   *    (added variables will be ignored and removed variables will be reported
+   *    with an empty value). For security reasons, if an error occurs within
+   *    this function, all variable values will be replaced with
+   *    `[PREDICATE_FUNCTION_ERROR]`.
+   * - { exceptNames: ... }: a case-sensitive list of names of variables whose
+   *   values should not be sent to Apollo servers
+   * - { onlyNames: ... }: A case-sensitive list of names of variables whose
+   *   values will be sent to Apollo servers
    *
-   * Defaults to not sending any variable values if both this parameter and
-   * the deprecated `privateVariables` are not set. The report will
-   * indicate each private variable key whose value was redacted by { none: true } or { exceptNames: [...] }.
+   * Defaults to not sending any variable values if both this parameter and the
+   * deprecated `privateVariables` are not set. The report will indicate each
+   * private variable key whose value was redacted by { none: true } or {
+   * exceptNames: [...] }.
+   *
+   * The value of this option is not relevant if you set `sendTraces: false`,
+   * because variable values only appear in traces.
    */
   sendVariableValues?: VariableValueOptions;
   /**
-   * By default, Apollo Server does not send the list of HTTP headers and values
+   * By default, Apollo Server does not send the HTTP request headers and values
    * to Apollo's servers, as these headers may contain your users' private data.
    * If you'd like this information included in traces, set this option. This
    * option can take several forms:
@@ -44,6 +86,9 @@ export interface ApolloServerPluginUsageReportingOptions<
    *
    * Unlike with sendVariableValues, names of dropped headers are not reported.
    * The headers 'authorization', 'cookie', and 'set-cookie' are never reported.
+   *
+   * The value of this option is not relevant if you set `sendTraces: false`,
+   * because request headers only appear in traces.
    */
   sendHeaders?: SendValuesBaseOptions;
   /**
@@ -65,10 +110,12 @@ export interface ApolloServerPluginUsageReportingOptions<
    *   (either a new error, or its potentially-modified argument) or `null`.
    *   This error is used in the report to Apollo servers; if `null`, the error
    *   is not included in traces or error statistics.
+   *
+   * If you set `sendTraces: false`, then the only relevant aspect of this
+   * option is whether you return `null` from a `transform` function or not
+   * (which affects aggregated error statistics).
    */
-  sendErrorsInTraces?: SendErrorsOptions;
-
-  // We should strongly consider changing the default to false in AS4.
+  sendErrors?: SendErrorsOptions;
 
   /**
    * This option allows you to choose if Apollo Server should calculate detailed
@@ -127,8 +174,9 @@ export interface ApolloServerPluginUsageReportingOptions<
    * (Note that returning true here does *not* mean that the data derived from
    * field-level instrumentation must be transmitted to Apollo Studio's servers
    * in the form of a trace; it may still be aggregated locally to statistics.
-   * But either way this operation will contribute to the "field executions"
-   * statistic and timing hints.)
+   * Similarly, setting `sendTraces: false` does not affect
+   * `fieldLevelInstrumentation`. But either way this operation will contribute
+   * to the "field executions" statistic and timing hints.)
    *
    * The default `fieldLevelInstrumentation` is a function that always returns
    * true.
@@ -211,6 +259,9 @@ export interface ApolloServerPluginUsageReportingOptions<
    * and the operation name and signature will always be reported with a constant
    * identifier. Whether the operation was a parse failure or a validation
    * failure will be embedded within the stats report key itself.
+   *
+   * The value of this option is not relevant if you set `sendTraces: false`,
+   * because unexecutable operation documents only appear in traces.
    */
   sendUnexecutableOperationDocuments?: boolean;
 
@@ -224,6 +275,9 @@ export interface ApolloServerPluginUsageReportingOptions<
    * operation each minute, plus more if the operations have errors. (Note that
    * Apollo's servers perform their own sampling on received traces; not all
    * traces sent to Apollo's servers can be later retrieved via the trace UI.)
+   *
+   * If you just want to send all operations as stats, set `sendTraces: false`
+   * instead of using this experimental hook.
    *
    * This option is highly experimental and may change or be removed in future
    * versions.
@@ -298,7 +352,7 @@ export interface ApolloServerPluginUsageReportingOptions<
   /**
    * If set, prints all reports as JSON when they are sent. (Note that for
    * technical reasons, traces embedded in a report are printed separately when
-   * they are added to a report.)
+   * they are added to a report.) Reports are sent through `logger.info`.
    */
   debugPrintReports?: boolean;
   /**
@@ -307,12 +361,6 @@ export interface ApolloServerPluginUsageReportingOptions<
    * about how the signature relates to the operation you executed.
    */
   calculateSignature?: (ast: DocumentNode, operationName: string) => string;
-  /**
-   * This option includes extra data in reports that helps Apollo validate the
-   * stats generation code in this plugin. Do not set it; the only impact on
-   * your app will be a decrease in performance.
-   */
-  internal_includeTracesContributingToStats?: boolean;
   //#endregion
 }
 

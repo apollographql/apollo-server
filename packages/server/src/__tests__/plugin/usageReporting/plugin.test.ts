@@ -174,6 +174,24 @@ describe('end-to-end', () => {
     ).toBeTruthy();
   });
 
+  it('sendTraces: false', async () => {
+    const { report } = await runTest({ pluginOptions: { sendTraces: false } });
+
+    expect(Object.keys(report.tracesPerQuery)).toHaveLength(1);
+    expect(Object.keys(report.tracesPerQuery)[0]).toMatch(/^# q\n/);
+    const tracesAndStats = Object.values(report.tracesPerQuery)[0]!;
+    expect(tracesAndStats.trace).toHaveLength(0);
+    expect(tracesAndStats.statsWithContext).toHaveLength(1);
+    const contextualizedStats = (
+      tracesAndStats.statsWithContext as ContextualizedStats[]
+    )[0]!;
+    expect(contextualizedStats.queryLatencyStats?.requestCount).toBe(1);
+    expect(
+      contextualizedStats.perTypeStat['User'].perFieldStat?.['name']
+        .observedExecutionCount,
+    ).toBe(1);
+  });
+
   [
     {
       testName: 'fails parse for non-parsable gql',

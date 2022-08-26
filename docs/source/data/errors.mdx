@@ -438,7 +438,7 @@ You can use Apollo Studio to analyze your server's error rates. By default, the 
 
 If you _do_ want error information sent to Studio, you can send every error, or you can modify or redact specific errors before they're transmitted.
 
-To send all errors to Studio you can pass `{ unmodified: true }` to `sendErrorsInTraces`, like so:
+To send all errors to Studio you can pass `{ unmodified: true }` to `sendErrors`, like so:
 
 ```ts {7}
 new ApolloServer({
@@ -447,23 +447,23 @@ new ApolloServer({
     ApolloServerPluginUsageReporting({
       // If you pass unmodified: true to the usage reporting
       // plugin, Apollo Studio receives ALL error details
-      sendErrorsInTraces: { unmodified: true },
+      sendErrors: { unmodified: true },
     }),
   ],
 });
 ```
 
-If you want to report specific errors or modify an error before reporting it, you can pass a function to the `sendErrorsInTraces.transform` option, like so:
+If you want to report specific errors or modify an error before reporting it, you can pass a function to the `sendErrors.transform` option, like so:
 
 ```ts {4-6}
 new ApolloServer({
   // etc.
   plugins: [
     ApolloServerPluginUsageReporting({
-      sendErrorsInTraces: {
+      sendErrors: {
         transform: (err) => {
           if (err.extensions.code === 'MY_CUSTOM_CODE') {
-            // returning null will skip reporting this error 
+            // returning null will skip reporting this error
             return null;
           }
 
@@ -482,6 +482,8 @@ The function you pass to `transform` is called for each error (`GraphQLError`) t
 
 - Return a modified form of the error (e.g., by changing the `err.message` to remove potentially sensitive information)
 - Return `null` to prevent the error from being reported entirely
+
+Note that returning `null`` also affects Studio's aggregated statistics about how many operations contain errors and at what paths those errors appear.
 
 [As mentioned above](#for-client-responses), you can use the `unwrapResolverError` (from `@apollo/server/errors`) to remove the `GraphQLError` wrapping an original error.
 
@@ -502,7 +504,7 @@ const server = new ApolloServer({
   plugins: [
     // highlight-start
     ApolloServerPluginUsageReporting({
-      sendErrorsInTraces: {
+      sendErrors: {
         transform: (err) => {
           // Return `null` to avoid reporting `UNAUTHENTICATED` errors
           if (err.extensions.code === 'UNAUTHENTICATED') {
@@ -536,7 +538,7 @@ const server = new ApolloServer({
   resolvers,
   plugins: [
     ApolloServerPluginUsageReporting({
-      sendErrorsInTraces: {
+      sendErrors: {
         transform: (err) => {
           // Using a more stable, known error extension (e.g. `err.code`) would be
           // more defensive, however checking the `message` might serve most needs!
@@ -565,7 +567,7 @@ If you _do_ want to send an error's details to Apollo Studio, but need to redact
 
 For example, if there is personally identifiable information in the error `message`, like an API key:
 
-```ts 
+```ts
 import { GraphQLError } from 'graphql';
 
 throw new GraphQLError(
@@ -584,7 +586,7 @@ const server = new ApolloServer({
   resolvers,
   plugins: [
     ApolloServerPluginUsageReporting({
-      sendErrorsInTraces: {
+      sendErrors: {
         transform: (err) => {
           // Make sure that a specific pattern is removed from all error messages.
           err.message = err.message.replace(/x-api-key:[A-Z0-9-]+/, 'REDACTED');
