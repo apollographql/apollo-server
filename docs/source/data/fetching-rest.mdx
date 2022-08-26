@@ -3,6 +3,8 @@ title: Fetching from REST
 description: Using RESTDataSource to fetch data from REST APIs
 ---
 
+> See the [`@apollo/datasource-rest` page](https://github.com/apollographql/datasource-rest) for the full details of the `RESTDataSource` API.
+
 The `RESTDataSource` class helps you fetch data from REST APIs. The `RESTDataSource` class helps handle caching, deduplication, and errors while resolving operations.
 
 ```mermaid
@@ -19,8 +21,6 @@ flowchart LR;
 <!-- TODO(AS4) add this note back in when fetching data article is ready
 > For more information about fetching from data sources other than a REST API, see [Fetching Data](./fetching-data).
 -->
-
-> See the [`@apollo/datasource-rest` page](https://www.npmjs.com/package/@apollo/datasource-rest) for the full details of the `RESTDataSource` API.
 
 ## Creating subclasses
 
@@ -39,11 +39,11 @@ import { RESTDataSource } from '@apollo/datasource-rest';
 class MoviesAPI extends RESTDataSource {
   override baseURL = 'https://movies-api.example.com/';
 
-  async getMovie(id):Promise<Movie> {
+  async getMovie(id): Promise<Movie> {
     return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
   }
 
-  async getMostViewedMovies(limit = '10'):Promise<Movie[]> {
+  async getMostViewedMovies(limit = '10'): Promise<Movie[]> {
     const data = await this.get('movies', {
       params: {
         per_page: limit,
@@ -128,6 +128,8 @@ const resolvers = {
 
 > 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](#datasources).
 
+If you've set up [caching](../preformance/caching/#recommended-starting-usage) for your server, a data source can help store the results of past fetches for particular fields in your schema.
+
 As shown in the above code snippet, by default, each `RESTDataSource` subclass accepts a `cache` argument (e.g., Apollo Server's default cache) to store the results of past fetches:
 
 ```ts disableCopy
@@ -154,6 +156,8 @@ const { url } = await startStandaloneServer(server, {
   },
 });
 ```
+
+> Note that `RESTDataSource` only caches data for the fields specified by your server. To learn more about how to set up caching for your server, see [Server-side caching](../preformance/caching).
 
 If your `RESTDataSource` subclass accepts multiple arguments, make sure you add a constructor function, like so:
 
@@ -198,6 +202,7 @@ const { url } = await startStandaloneServer(server, {
 ```
 
 </MultiCodeBlock>
+
 
 When running multiple instances of your server, you should use a shared cache backend. This enables one server instance to use the cached result from _another_ instance.
 
@@ -279,6 +284,8 @@ The **second parameter** depends on the HTTP method:
 For all methods, the **third parameter** is an `init` object that enables you to provide additional options (such as headers and referrers) to the `fetch` API that's used to send the request. For details, [see MDN's fetch docs](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters).
 
 ## Intercepting fetches
+
+> **New in Apollo Server 4**: Apollo Server 4 now uses [`@apollo/fetcher`](../migration#apolloutilsfetcher-replaces-apollo-server-env) under-the-hood, so you can no longer directly use `Request` or `Headers` methods.
 
 `RESTDataSource` includes a `willSendRequest` method that you can override to modify outgoing requests before they're sent. For example, you can use this method to add headers or query parameters. This method is most commonly used for authorization or other concerns that apply to all sent requests.
 
@@ -417,5 +424,4 @@ class PersonalizationAPI extends RESTDataSource {
     return this.progressLoader.load(id);
   }
 }
-
 ```
