@@ -12,7 +12,7 @@
     "watch": "tsc --build tsconfig.esm.json --watch",
     "install-with-npm-8.5": "npm i -g npm@^8.5.0 && npm i",
     "postinstall": "npm run compile",
-    "pretest": "tsc --build tsconfig.esm.json",
+    "pretest": "tsc --build tsconfig.json",
     "test": "jest --verbose",
     "test:clean": "jest --clearCache",
     "test:watch": "jest --verbose --watchAll",
