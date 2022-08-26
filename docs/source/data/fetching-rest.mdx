@@ -104,7 +104,7 @@ console.log(`🚀  Server ready at ${url}`);
 <!-- TODO(AS4) add link to context article once exists  -->
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
 - For every operation, `context` returns an _object_ containing new instances of your `RESTDataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
-- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation.** If multiple operations share a single data source instance, you might accidentally combine results from multiple operations.
+- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation.** 
 
 Your resolvers can then access your data sources from the shared `context` object and use them to fetch data:
 
@@ -128,7 +128,7 @@ const resolvers = {
 
 > 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](#datasources).
 
-If you've set up [caching](../preformance/caching/#recommended-starting-usage) for your server, a data source can help store the results of past fetches for particular fields in your schema.
+The `RESTDataSource` class can cache results if the REST API it fetches from specifies caching headers in its HTTP responses (e.g., [`cache-control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)). 
 
 As shown in the above code snippet, by default, each `RESTDataSource` subclass accepts a `cache` argument (e.g., Apollo Server's default cache) to store the results of past fetches:
 
@@ -156,8 +156,6 @@ const { url } = await startStandaloneServer(server, {
   },
 });
 ```
-
-> Note that `RESTDataSource` only caches data for the fields specified by your server. To learn more about how to set up caching for your server, see [Server-side caching](../preformance/caching).
 
 If your `RESTDataSource` subclass accepts multiple arguments, make sure you add a constructor function, like so:
 
