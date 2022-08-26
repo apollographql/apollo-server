@@ -25,14 +25,14 @@ export interface ApolloServerPluginUsageReportingOptions<
    *
    * By setting the `sendTraces` option to `false`, Apollo Server will describe
    * *all* operations as stats; individual requests will never be broken out
-   * into separate traces. If you set `sendTraces: false`, the Traces view in
-   * Apollo Studio will not show any traces, but all other Studio functionality
-   * should be unaffected.
+   * into separate traces. If you set `sendTraces: false`, then Apollo Studio's
+   * Traces view won't show any traces (other Studio functionality will be
+   * unaffected).
    *
    * Note that the values of `sendVariableValues`, `sendHeaders`, and
    *  `sendUnexecutableOperationDocuments` are irrelevant if you set
    *  `sendTraces: false`, because those options control data that is contained
-   *  only in traces and not in stats.
+   *  only in traces (not in stats).
    *
    * Setting `sendTraces: false` does *NOT* imply `fieldLevelInstrumentation:
    * 0`. Apollo Server can still take advantage of field-level instrumentation
@@ -50,10 +50,12 @@ export interface ApolloServerPluginUsageReportingOptions<
    * traces, set this option. This option can take several forms:
    * - { none: true }: don't send any variable values (DEFAULT)
    * - { all: true}: send all variable values
-   * - { transform: ... }: a custom function for modifying variable values. Keys
-   *    added by the custom function will be removed, and keys removed will be
-   *    added back with an empty value. For security reasons, if an error occurs
-   *    within this function, all variable values will be replaced with
+   * - { transform: ... }: a custom function for modifying variable values. The
+   *    function receives `variables` and `operationString` and should return a
+   *    record of `variables` with the same keys as the `variables` it receives
+   *    (added variables will be ignored and removed variables will be reported
+   *    with an empty value). For security reasons, if an error occurs within
+   *    this function, all variable values will be replaced with
    *    `[PREDICATE_FUNCTION_ERROR]`.
    * - { exceptNames: ... }: a case-sensitive list of names of variables whose
    *   values should not be sent to Apollo servers
