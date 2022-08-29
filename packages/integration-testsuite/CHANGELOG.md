@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.0-alpha.10
+
+### Patch Changes
+
+- [#6857](https://github.com/apollographql/apollo-server/pull/6857) [`15b1cb2e9`](https://github.com/apollographql/apollo-server/commit/15b1cb2e96d9ede9007d22f33b2f5a745f071dba) Thanks [@glasser](https://github.com/glasser)! - Errors thrown in resolvers and context functions can use `extensions.http` to affect the response status code and headers. The default behavior when a context function throws is now to always use status code 500 rather than comparing `extensions.code` to `INTERNAL_SERVER_ERROR`.
+
+- Updated dependencies [[`15b1cb2e9`](https://github.com/apollographql/apollo-server/commit/15b1cb2e96d9ede9007d22f33b2f5a745f071dba)]:
+  - @apollo/server@4.0.0-alpha.10
+
 ## 4.0.0-alpha.9
 
 ### Patch Changes
