@@ -610,15 +610,15 @@ GraphQL, by design, does not use the same conventions from REST to communicate v
 
 Apollo Server's general behavior with respect to status codes is as follows:
 - If Apollo Server has not properly started up or is in the process of shutting down, use status code 500. (The former only happens if you're using a serverless integration instead of `await`ing `startStandaloneServer(server)` or `server.start()`; the latter only happens if you have not properly set up draining for your non-standalone integration.)
-- If Apollo Server cannot parse the request into a legal GraphQL document and validate it against your schema, use status code 400. This also includes other problems with the request, such as attempting to send a batched HTTP request when `allowBatchedHttpRequests` is not enabled, or if CSRF prevention blocks the request.
-- If an invalid HTTP method is used (`GET` with a mutation, or any HTTP method other than `GET` or `POST`), use status code 405.
-- If your `context` function throws, use status code 500.
-- If there is an unexpected error during the processing of the request (either a bug in Apollo Server, or a plugin hook that throws), use status code 500.
-- Otherwise, use status code 200. This is essentially the case where the server is able to execute the GraphQL operation, and execution completes successfully (possibly with some resolver-specific errors).
+- If Apollo Server can't parse the request into a legal GraphQL document and validate it against your schema, it responds with a 400 status code. This can also happen with other request problems, such as if a client attempts to send a batched HTTP request when `allowBatchedHttpRequests` isn't enabled or if CSRF prevention blocks a request.
+- If a request uses an invalid HTTP method (`GET` with a mutation, or any HTTP method other than `GET` or `POST`), then Apollo Server responds with a 405 status code.
+- If your `context` function throws, Apollo Server responds with a 500 status code.
+- If there is an unexpected error during the processing of the request (either a bug in Apollo Server or a plugin hook throws), Apollo Server responds with a 500 status code.
+- Otherwise, Apollo Server returns a 200 status code. This is essentially the case where the server can execute the GraphQL operation, and execution completes successfully (though this can still include resolver-specific errors).
 
 You can affect the HTTP status code or set response headers either by throwing an error in a resolver or `context` function, or by writing a [plugin](/apollo-server/integrations/plugins). Be aware that GraphQL client libraries may not treat all response status codes the same, and so it will be up to your team to decide what patterns to use. We strongly encourage you to avoid setting the HTTP status code based on an error thrown from a resolver; setting the status code from context creation errors can be more useful.
 
-To affect the HTTP status code and response headers from an error throw in a resolver or context function, throw a `GraphQLError` with an `http` extension:
+To change the HTTP status code and response headers based on an error thrown in either a resolver or `context` function, throw a `GraphQLError` with an `http` extension, like so:
 
 <MultiCodeBlock>
 
@@ -649,7 +649,7 @@ const resolvers = {
 
 You do not need to include `status` unless you want to override the default (200 for a resolver, 500 for a `context` function). You do not need to include `headers` unless you want to set headers. You should not rely on the behavior of what happens if multiple resolvers throw errors which set the status or set the same header; if you need to handle this case, write a plugin instead. (However, different resolver errors can set different headers.) Headers should be provided in a `Map` with lowercase names.
 
-Alternatively, you can set the HTTP status code and headers from a plugin. As an example, here is how you could set a custom response header and status code based on a GraphQL error:
+You can also set the HTTP status code and headers from a plugin. As an example, here is how you could set a custom response header and status code based on a GraphQL error:
 
 ```ts
 const setHttpPlugin = {
