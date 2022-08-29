@@ -616,7 +616,11 @@ Apollo Server uses different HTTP status codes in various situations:
 - If there is an unexpected error during the processing of the request (either a bug in Apollo Server or a plugin hook throws), Apollo Server responds with a 500 status code.
 - Otherwise, Apollo Server returns a 200 status code. This is essentially the case where the server can execute the GraphQL operation, and execution completes successfully (though this can still include resolver-specific errors).
 
-You can affect the HTTP status code or set response headers either by throwing an error in a resolver or `context` function, or by writing a [plugin](/apollo-server/integrations/plugins). Be aware that GraphQL client libraries may not treat all response status codes the same, and so it will be up to your team to decide what patterns to use. We strongly encourage you to avoid setting the HTTP status code based on an error thrown from a resolver; setting the status code from context creation errors can be more useful.
+There are three ways to change an HTTP status code or set custom response headers, you can: throw an error in a resolver, throw an error in your `context` function, or write a [plugin](/apollo-server/integrations/plugins).
+
+While Apollo Server does enable you to set HTTP status codes based on errors thrown by resolvers, best practices for GraphQL over HTTP encourage sending 200 whenever an operation executes. So, we don't recommend using this mechanism in resolvers, just in the `context` function or in a plugin hooking into an early stage of the request pipeline.
+
+Be aware that GraphQL client libraries might not treat all response status codes the same, so it will be up to your team to decide which patterns to use.
 
 To change the HTTP status code and response headers based on an error thrown in either a resolver or `context` function, throw a `GraphQLError` with an `http` extension, like so:
 
@@ -647,7 +651,9 @@ const resolvers = {
 
 </MultiCodeBlock>
 
-You do not need to include `status` unless you want to override the default (200 for a resolver, 500 for a `context` function). You do not need to include `headers` unless you want to set headers. You should not rely on the behavior of what happens if multiple resolvers throw errors which set the status or set the same header; if you need to handle this case, write a plugin instead. (However, different resolver errors can set different headers.) Headers should be provided in a `Map` with lowercase names.
+You don't need to include `status` unless you want to override the default status code (200 for a resolver or 500 for a `context` function). The optional `headers` field should provide a `Map` with lowercase header names.
+
+If your setup includes multiple resolvers which throw errors that set status codes or set the same header, Apollo Server might resolve this conflict in an arbitrary way (which could change in future versions). Instead, we recommend writing a plugin (as shown below).
 
 You can also set the HTTP status code and headers from a plugin. As an example, here is how you could set a custom response header and status code based on a GraphQL error:
 
