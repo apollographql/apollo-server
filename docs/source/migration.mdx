@@ -520,7 +520,7 @@ class ContextValue {
   public dataSources: {
     moviesAPI: MoviesAPI;
   };
-  
+
   constructor({ req, server }: { req: IncomingMessage; server: ApolloServer<ContextValue> }) {
     this.token = getTokenFromRequest(req);
     const { cache } = server;
@@ -1302,9 +1302,9 @@ Apollo Server 3.5.0 and newer included a TypeScript `declare module` declaration
 
 
 
-### HTTP error handling changes
+### Improvements to error handling outside of resolvers
 
-Apollo Server 3 returns specific errors relating to GraphQL operations over HTTP/JSON as `text/plain` error messages.
+Apollo Server 3 returns some errors relating to GraphQL operations over HTTP/JSON as `text/plain` error messages.
 
 Apollo Server 4 now returns all non-landing-page-related responses as `application/json` JSON responses. This means all single-error responses render like any other GraphQL error:
 
@@ -1318,7 +1318,11 @@ Additionally, the [`formatError` hook](/apollo-server/data/errors/#for-client-re
 
 Apollo Server 4 also introduces new plugin hooks `startupDidFail`, `contextCreationDidFail`, `invalidRequestWasReceived`, and `unexpectedErrorProcessingRequest`, enabling plugins to observe errors in new settings.
 
+In Apollo Server 3, if your `context` function throws, then the string `"Context creation failed: "` is *always* prepended to its message, and the error is rendered with HTTP status code 500 (if the error is a GraphQLError with `extensions.code` equal to `INTERNAL_SERVER_ERROR`) or 400. You cannot select a different HTTP status code or control HTTP response headers.
+
 In Apollo Server 4, if either the `resolveOperation` or `execute` function throws an error, that error is rendered with the HTTP status code 500 (rather than 400). Note that the `execute` function commonly returns a non-empty list of errors rather than throwing an explicit error.
+
+In Apollo Server 4, if your `context` function throws, the string `"Context creation failed: "` is only prepended to the message if the thrown error was not a `GraphQLError`. There is no special-casing of `extensions.code`; instead, you can use [`extensions.http`](./data/errors/#setting-http-status-code-and-headers) to set the HTTP status code or headers. If this extension is not provided, the status code defaults to 500 (not 400).
 
 
 ### Warning for servers without draining
@@ -1618,7 +1622,7 @@ new ApolloServer({
 ## Renamed packages
 
 The following packages have been renamed in Apollo Server 4:
-  - `apollo-datasource-rest` is now [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest). 
+  - `apollo-datasource-rest` is now [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest).
   - `apollo-server-plugin-response-cache` is now [`@apollo/server-plugin-response-cache`](https://www.npmjs.com/package/@apollo/server-plugin-response-cache).
   - `apollo-server-plugin-operation-registry` is now [`@apollo/server-plugin-operation-registry`](https://www.npmjs.com/package/@apollo/server-plugin-operation-registry).
   - `apollo-reporting-protobuf` (an internal implementation detail for the usage reporting plugin) is now [`@apollo/usage-reporting-protobuf`](https://www.npmjs.com/package/@apollo/usage-reporting-protobuf).

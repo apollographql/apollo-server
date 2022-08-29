@@ -3,7 +3,6 @@ import {
   specifiedRules,
   getOperationAST,
   GraphQLError,
-  GraphQLFormattedError,
   validate,
   parse,
   execute as graphqlExecute,
@@ -41,7 +40,6 @@ import type {
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
   BaseContext,
-  HTTPGraphQLHead,
 } from './externalTypes/index.js';
 
 import {
@@ -52,7 +50,11 @@ import {
 
 import { makeGatewayGraphQLRequestContext } from './utils/makeGatewayGraphQLRequestContext.js';
 
-import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery.js';
+import {
+  HeaderMap,
+  mergeHTTPGraphQLHead,
+  newHTTPGraphQLHead,
+} from './runHttpQuery.js';
 import type {
   ApolloServer,
   ApolloServerInternals,
@@ -84,18 +86,6 @@ function isBadUserInputGraphQLError(error: GraphQLError): boolean {
   );
 }
 
-// Persisted query errors (especially "not found") need to be uncached, because
-// hopefully we're about to fill in the APQ cache and the same request will
-// succeed next time. We also want a 200 response to avoid any error handling
-// that may mask the contents of an error response. (Otherwise, the default
-// status code for a response with `errors` but no `data` (even null) is 400.)
-const getPersistedQueryErrorHttp = () => ({
-  status: 200,
-  headers: new HeaderMap([
-    ['cache-control', 'private, no-cache, must-revalidate'],
-  ]),
-});
-
 export async function processGraphQLRequest<TContext extends BaseContext>(
   schemaDerivedData: SchemaDerivedData,
   server: ApolloServer<TContext>,
@@ -121,17 +111,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     // It looks like we've received a persisted query. Check if we
     // support them.
     if (!internals.persistedQueries) {
-      return await sendErrorResponse(
-        [new PersistedQueryNotSupportedError()],
-        // Not super clear why we need this to be uncached (makes sense for
-        // PersistedQueryNotFoundError, because there we're about to fill the
-        // cache and make the next copy of the same request succeed) but we've
-        // been doing it for years so :shrug:
-        getPersistedQueryErrorHttp(),
-      );
+      return await sendErrorResponse([new PersistedQueryNotSupportedError()]);
     } else if (extensions.persistedQuery.version !== 1) {
       return await sendErrorResponse([
-        new GraphQLError('Unsupported persisted query version'),
+        new GraphQLError('Unsupported persisted query version', {
+          extensions: { http: newHTTPGraphQLHead(400) },
+        }),
       ]);
     }
 
@@ -142,10 +127,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       if (query) {
         requestContext.metrics.persistedQueryHit = true;
       } else {
-        return await sendErrorResponse(
-          [new PersistedQueryNotFoundError()],
-          getPersistedQueryErrorHttp(),
-        );
+        return await sendErrorResponse([new PersistedQueryNotFoundError()]);
       }
     } else {
       const computedQueryHash = computeQueryHash(query);
@@ -156,7 +138,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // an existing hash.
       if (queryHash !== computedQueryHash) {
         return await sendErrorResponse([
-          new GraphQLError('provided sha does not match query'),
+          new GraphQLError('provided sha does not match query', {
+            extensions: { http: newHTTPGraphQLHead(400) },
+          }),
         ]);
       }
 
@@ -300,14 +284,16 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     operation?.operation &&
     operation.operation !== 'query'
   ) {
-    return await sendErrorResponse(
-      [
-        new BadRequestError(
-          `GET requests only support query operations, not ${operation.operation} operations`,
-        ),
-      ],
-      { status: 405, headers: new HeaderMap([['allow', 'POST']]) },
-    );
+    return await sendErrorResponse([
+      new BadRequestError(
+        `GET requests only support query operations, not ${operation.operation} operations`,
+        {
+          extensions: {
+            http: { status: 405, headers: new HeaderMap([['allow', 'POST']]) },
+          },
+        },
+      ),
+    ]);
   }
 
   try {
@@ -319,10 +305,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       ),
     );
   } catch (err: unknown) {
-    return await sendErrorResponse(
-      [ensureGraphQLError(err)],
-      newHTTPGraphQLHead(500),
-    );
+    return await sendErrorResponse([ensureGraphQLError(err)]);
   }
 
   // Now that we've gone through the pre-execution phases of the request
@@ -359,7 +342,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   );
   if (responseFromPlugin !== null) {
     requestContext.response.result = responseFromPlugin.result;
-    updateResponseHTTP(responseFromPlugin.http);
+    mergeHTTPGraphQLHead(requestContext.response.http, responseFromPlugin.http);
   } else {
     const executionListeners = (
       await Promise.all(
@@ -414,7 +397,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       enablePluginsForSchemaResolvers(schemaDerivedData.schema);
     }
 
-    let statusIfExecuteThrows = 500;
     try {
       const result = await execute(
         requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
@@ -429,7 +411,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
             'Unexpected error: Apollo Server did not resolve an operation but execute did not return errors',
           );
         }
-        statusIfExecuteThrows = 400;
         throw new OperationResolutionError(result.errors[0]);
       }
 
@@ -455,20 +436,22 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         await didEncounterErrors(resultErrors);
       }
 
+      const { formattedErrors, httpFromErrors } = resultErrors
+        ? formatErrors(resultErrors)
+        : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
+
       requestContext.response.result = {
         ...result,
-        errors: resultErrors ? formatErrors(resultErrors) : undefined,
+        errors: formattedErrors,
       };
+      mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
     } catch (executionMaybeError: unknown) {
       const executionError = ensureError(executionMaybeError);
       await Promise.all(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
 
-      return await sendErrorResponse(
-        [ensureGraphQLError(executionError)],
-        newHTTPGraphQLHead(statusIfExecuteThrows),
-      );
+      return await sendErrorResponse([ensureGraphQLError(executionError)]);
     }
 
     await Promise.all(executionListeners.map((l) => l.executionDidEnd?.()));
@@ -503,17 +486,6 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     }
   }
 
-  function updateResponseHTTP(http: HTTPGraphQLHead) {
-    if (http.status) {
-      requestContext.response.http.status = http.status;
-    }
-    for (const [name, value] of http.headers) {
-      // TODO(AS4): this is overwriting rather than appending. However we should
-      // probably be able to eliminate this whole block if we refactor GraphQLResponse.
-      requestContext.response.http.headers.set(name, value);
-    }
-  }
-
   async function invokeWillSendResponse() {
     await Promise.all(
       requestListeners.map((l) =>
@@ -544,23 +516,23 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // some errors.) In this case "send" means "update requestContext.response and
   // invoke willSendResponse hooks".
   //
-  // If `http` is provided, it sets its status code and headers if given.
+  // If any errors have `extensions.http` set, it sets the response's status code
+  // and errors from them.
   //
-  // Then, if the HTTP status code is not yet set, it sets it to 400.
-  async function sendErrorResponse(
-    errors: ReadonlyArray<GraphQLError>,
-    http: HTTPGraphQLHead = newHTTPGraphQLHead(),
-  ) {
+  // Then, if the HTTP status code is not yet set, it sets it to 500.
+  async function sendErrorResponse(errors: ReadonlyArray<GraphQLError>) {
     await didEncounterErrors(errors);
 
+    const { formattedErrors, httpFromErrors } = formatErrors(errors);
+
     requestContext.response.result = {
-      errors: formatErrors(errors),
+      errors: formattedErrors,
     };
 
-    updateResponseHTTP(http);
+    mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
 
     if (!requestContext.response.http.status) {
-      requestContext.response.http.status = 400;
+      requestContext.response.http.status = 500;
     }
 
     await invokeWillSendResponse();
@@ -568,7 +540,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
   function formatErrors(
     errors: ReadonlyArray<GraphQLError>,
-  ): ReadonlyArray<GraphQLFormattedError> {
+  ): ReturnType<typeof normalizeAndFormatErrors> {
     return normalizeAndFormatErrors(errors, {
       formatError: internals.formatError,
       includeStacktraceInErrorResponses:

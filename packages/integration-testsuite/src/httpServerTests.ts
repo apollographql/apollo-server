@@ -187,6 +187,36 @@ const queryType = new GraphQLObjectType({
         throw new MyGraphQLError('Secret error message');
       },
     },
+    testGraphQLErrorWithHTTP1: {
+      type: GraphQLString,
+      resolve() {
+        throw new GraphQLError('error 1', {
+          extensions: {
+            http: { status: 402 },
+          },
+        });
+      },
+    },
+    testGraphQLErrorWithHTTP2: {
+      type: GraphQLString,
+      resolve() {
+        throw new GraphQLError('error 2', {
+          extensions: {
+            http: { headers: new Map([['erroneous', 'indeed']]) },
+          },
+        });
+      },
+    },
+    testGraphQLErrorWithHTTP3: {
+      type: GraphQLString,
+      resolve() {
+        throw new GraphQLError('error 3', {
+          extensions: {
+            http: { headers: new Map([['felonious', 'nah']]) },
+          },
+        });
+      },
+    },
   },
 });
 
@@ -1476,6 +1506,75 @@ export function defineIntegrationTestSuiteHttpServerTests(
         expect(error).not.toBeInstanceOf(MyGraphQLError);
         expect(error).toHaveProperty('path');
         expect(unwrapResolverError(error)).toBeInstanceOf(MyGraphQLError);
+      });
+
+      it('GraphQLError HTTP extensions are respected and stripped', async () => {
+        const app = await createApp({
+          schema,
+        });
+        const res = await request(app).post('/').send({
+          query:
+            'query test{ testGraphQLErrorWithHTTP1 testGraphQLErrorWithHTTP2 testGraphQLErrorWithHTTP3 }',
+        });
+        expect(res.status).toEqual(402);
+        expect(res.headers.erroneous).toBe('indeed');
+        expect(res.headers.felonious).toBe('nah');
+        expect(res.body).toMatchInlineSnapshot(`
+          Object {
+            "data": Object {
+              "testGraphQLErrorWithHTTP1": null,
+              "testGraphQLErrorWithHTTP2": null,
+              "testGraphQLErrorWithHTTP3": null,
+            },
+            "errors": Array [
+              Object {
+                "extensions": Object {
+                  "code": "INTERNAL_SERVER_ERROR",
+                },
+                "locations": Array [
+                  Object {
+                    "column": 13,
+                    "line": 1,
+                  },
+                ],
+                "message": "error 1",
+                "path": Array [
+                  "testGraphQLErrorWithHTTP1",
+                ],
+              },
+              Object {
+                "extensions": Object {
+                  "code": "INTERNAL_SERVER_ERROR",
+                },
+                "locations": Array [
+                  Object {
+                    "column": 39,
+                    "line": 1,
+                  },
+                ],
+                "message": "error 2",
+                "path": Array [
+                  "testGraphQLErrorWithHTTP2",
+                ],
+              },
+              Object {
+                "extensions": Object {
+                  "code": "INTERNAL_SERVER_ERROR",
+                },
+                "locations": Array [
+                  Object {
+                    "column": 65,
+                    "line": 1,
+                  },
+                ],
+                "message": "error 3",
+                "path": Array [
+                  "testGraphQLErrorWithHTTP3",
+                ],
+              },
+            ],
+          }
+        `);
       });
 
       it('formatError receives correct error for parse failure', async () => {

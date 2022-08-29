@@ -24,7 +24,11 @@ import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
 import { newCachePolicy } from './cachePolicy.js';
 import { determineApolloConfig } from './determineApolloConfig.js';
-import { ensureError, normalizeAndFormatErrors } from './errorNormalize.js';
+import {
+  ensureError,
+  ensureGraphQLError,
+  normalizeAndFormatErrors,
+} from './errorNormalize.js';
 import { ApolloServerErrorCode } from './errors/index.js';
 import type {
   ApolloServerPlugin,
@@ -40,7 +44,6 @@ import type {
   ApolloServerOptions,
   DocumentStore,
   PersistedQueryOptions,
-  HTTPGraphQLHead,
   ContextThunk,
   GraphQLRequestContext,
 } from './externalTypes/index.js';
@@ -52,7 +55,6 @@ import {
 } from './preventCsrf.js';
 import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline.js';
 import {
-  badMethodErrorMessage,
   cloneObject,
   HeaderMap,
   newHTTPGraphQLHead,
@@ -976,16 +978,12 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           );
         }
 
-        error.message = `Context creation failed: ${error.message}`;
-        // If we explicitly provide an error code that isn't
-        // INTERNAL_SERVER_ERROR, we'll treat it as a client error.
-        const status =
-          error instanceof GraphQLError &&
-          error.extensions.code &&
-          error.extensions.code !== ApolloServerErrorCode.INTERNAL_SERVER_ERROR
-            ? 400
-            : 500;
-        return this.errorResponse(error, newHTTPGraphQLHead(status));
+        // If some random function threw, add a helpful prefix when converting
+        // to GraphQLError. If it was already a GraphQLError, trust that the
+        // message was chosen thoughtfully and leave off the prefix.
+        return this.errorResponse(
+          ensureGraphQLError(error, 'Context creation failed: '),
+        );
       }
 
       return await runPotentiallyBatchedHttpQuery(
@@ -1012,38 +1010,29 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
             `invalidRequestWasReceived hook threw: ${pluginError}`,
           );
         }
-        return this.errorResponse(
-          maybeError,
-          // Quite hacky, but beats putting more stuff on GraphQLError
-          // subclasses, maybe?
-          maybeError.message === badMethodErrorMessage
-            ? {
-                status: 405,
-                headers: new HeaderMap([['allow', 'GET, POST']]),
-              }
-            : newHTTPGraphQLHead(400),
-        );
       }
       return this.errorResponse(maybeError);
     }
   }
 
-  private errorResponse(
-    error: unknown,
-    httpGraphQLHead: HTTPGraphQLHead = newHTTPGraphQLHead(),
-  ): HTTPGraphQLResponse {
+  private errorResponse(error: unknown): HTTPGraphQLResponse {
+    const { formattedErrors, httpFromErrors } = normalizeAndFormatErrors(
+      [error],
+      {
+        includeStacktraceInErrorResponses:
+          this.internals.includeStacktraceInErrorResponses,
+        formatError: this.internals.formatError,
+      },
+    );
+
     return {
-      status: httpGraphQLHead.status ?? 500,
+      status: httpFromErrors.status ?? 500,
       headers: new HeaderMap([
-        ...httpGraphQLHead.headers,
+        ...httpFromErrors.headers,
         ['content-type', 'application/json'],
       ]),
       completeBody: prettyJSONStringify({
-        errors: normalizeAndFormatErrors([error], {
-          includeStacktraceInErrorResponses:
-            this.internals.includeStacktraceInErrorResponses,
-          formatError: this.internals.formatError,
-        }),
+        errors: formattedErrors,
       }),
       bodyChunks: null,
     };
