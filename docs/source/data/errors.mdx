@@ -608,7 +608,7 @@ The REDACTED doesn't have sufficient privileges.
 
 GraphQL, by design, does not use the same conventions from REST to communicate via HTTP verbs and status codes. Client information should be contained in the schema or as part of the standard response `errors` field. We recommend using the included [Error Codes](#built-in-error-codes) or [Custom Errors](#custom-errors) for error consistency rather than directly modifying the HTTP response.
 
-Apollo Server's general behavior with respect to status codes is as follows:
+Apollo Server uses different HTTP status codes in various situations:
 - If Apollo Server has not properly started up or is in the process of shutting down, use status code 500. (The former only happens if you're using a serverless integration instead of `await`ing `startStandaloneServer(server)` or `server.start()`; the latter only happens if you have not properly set up draining for your non-standalone integration.)
 - If Apollo Server can't parse the request into a legal GraphQL document and validate it against your schema, it responds with a 400 status code. This can also happen with other request problems, such as if a client attempts to send a batched HTTP request when `allowBatchedHttpRequests` isn't enabled or if CSRF prevention blocks a request.
 - If a request uses an invalid HTTP method (`GET` with a mutation, or any HTTP method other than `GET` or `POST`), then Apollo Server responds with a 405 status code.
