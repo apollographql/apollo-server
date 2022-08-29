@@ -41,6 +41,20 @@
       "CORS": "/security/cors",
       "Terminating SSL": "/security/terminating-ssl",
       "Proxy configuration": "/security/proxy-configuration"
+    },
+    "Deployment": {
+      "Heroku": "/deployment/heroku"
+    },
+    "Monitoring": {
+      "Metrics and logging": "/monitoring/metrics",
+      "Health checks": "/monitoring/health-checks"
+    },
+    "API Reference": {
+      "ApolloServer": "/api/apollo-server",
+      "startStandaloneServer": "/api/standalone",
+      "expressMiddleware": "/api/express-middleware",
+      "@apollo/subgraph": "https://www.apollographql.com/docs/federation/api/apollo-subgraph/",
+      "@apollo/gateway": "https://www.apollographql.com/docs/federation/api/apollo-gateway/"
     }
   }
 }
