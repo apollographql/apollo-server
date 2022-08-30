@@ -2,7 +2,7 @@
 title: Deploying with Heroku
 ---
 
-> Heroku is planning to [phase out their free tier in the near future](https://blog.heroku.com/next-chapter). 
+> Heroku is planning to [phase out their free tier in the near future](https://blog.heroku.com/next-chapter).  
 
 Heroku is a common platform-as-a-service solution that enables you to deploy Apollo Server and have a running GraphQL endpoint in a matter of minutes.
 
@@ -40,8 +40,9 @@ When deployed to Heroku, your server _must_ `listen` on the port specified by th
 
 The following example server listens on the port specified by `process.env.PORT` and defaults to `4000` if none is specified:
 
-```ts
+<MultiCodeBlock>
 
+```ts
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -53,6 +54,8 @@ const { url } = await startStandaloneServer(server, { listen: { port } });
 
 console.log(`🚀 Server listening at: ${url}`);
 ```
+
+</MultiCodeBlock>
 
 ### Adding a Procfile
 

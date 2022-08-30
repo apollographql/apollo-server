@@ -13,6 +13,8 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 
 ### Example
 
+<MultiCodeBlock>
+
 ```ts
 import { ApolloServer } from '@apollo/server';
 
@@ -21,6 +23,8 @@ const server = new ApolloServer({
 	resolvers,
 });
 ```
+
+</MultiCodeBlock>
 
 ### Options
 
@@ -421,6 +425,8 @@ The async `start` method instructs Apollo Server to prepare to handle incoming o
 
 Always call `await server.start()` *before* passing your server into your integration function and starting to accept requests:
 
+<MultiCodeBlock>
+
 ```ts
 const server = new ApolloServer<MyContext>({
   typeDefs,
@@ -434,6 +440,8 @@ app.use('/graphql',
   expressMiddleware(server),
 );
 ```
+
+</MultiCodeBlock>
 
 This allows you to react to Apollo Server startup failures by crashing your process instead of starting to serve traffic.
 
@@ -449,6 +457,8 @@ The `start` method triggers the following actions:
 ## `addPlugin`
 You can use the `addPlugin` method to add plugins before your server is started. This is helpful when you want to add a plugin that accepts your initialized `ApolloServer` instance itself, like so:
 
+<MultiCodeBlock>
+
 ```ts
 const server = new ApolloServer({
   typeDefs,
@@ -459,6 +469,8 @@ const server = new ApolloServer({
 
 server.addPlugin(makeSecondPlugin(server));
 ```
+
+</MultiCodeBlock>
 
 ## `assertStarted`
 
