@@ -5,17 +5,17 @@ description: How to monitor Apollo Server's performance
 
 Apollo Server integrates seamlessly with Apollo Studio to help you monitor the execution of your GraphQL operations. It also provides configurable mechanisms for logging each phase of a GraphQL operation.
 
-> Using Federation? Check out the documentation for [federated tracing](https://www.apollographql.com/docs/federation/metrics/).
+> Using Federation? Check out the documentation for [federated tracing](/federation/metrics/).
 
 ## Sending metrics to Apollo Studio
 
-[Apollo Studio](https://www.apollographql.com/docs/studio/) provides an integrated hub for all of your GraphQL performance data. It [aggregates and displays information](https://www.apollographql.com/docs/studio/performance/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack](https://www.apollographql.com/docs/studio/slack-integration/) and [Datadog](https://www.apollographql.com/docs/studio/datadog-integration/) integrations.
+[Apollo Studio](/studio/) provides an integrated hub for all of your GraphQL performance data. It [aggregates and displays information](/studio/performance/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack](/studio/slack-integration/) and [Datadog](/studio/datadog-integration/) integrations.
 
 ### Connecting to Apollo Studio
 
-To connect Apollo Server to Apollo Studio, first [obtain a graph API key](https://www.apollographql.com/docs/studio/setup-analytics/#pushing-traces-from-apollo-server). To provide this key to Apollo Server, assign it to the `APOLLO_KEY` environment variable in your server's environment.
+To connect Apollo Server to Apollo Studio, first [obtain a graph API key](/studio/setup-analytics/#pushing-traces-from-apollo-server). To provide this key to Apollo Server, assign it to the `APOLLO_KEY` environment variable in your server's environment.
 
-Then associate your server instance with a particular graph ID and [graph variant](https://www.apollographql.com/docs/studio/schema/registry/#managing-environments-with-variants) by  setting the `APOLLO_GRAPH_REF` environment variable.
+Then associate your server instance with a particular graph ID and [graph variant](/studio/schema/registry/#managing-environments-with-variants) by  setting the `APOLLO_GRAPH_REF` environment variable.
 
 You can set environment variable values on the command line as seen below, or with the [`dotenv` npm package](https://www.npmjs.com/package/dotenv) (or similar).
 
@@ -29,11 +29,11 @@ $ APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_REF=my-graph@my-variant \
 
 #### Communicating with Studio
 
-By default, Apollo Server aggregates your traces and sends them in batches to Studio every minute. This behavior is highly configurable, and you can change the parameters in the [Usage Reporting plugin's configuration](https://www.apollographql.com/docs/apollo-server/api/plugin/usage-reporting/#custom-installation).
+By default, Apollo Server aggregates your traces and sends them in batches to Studio every minute. This behavior is highly configurable, and you can change the parameters in the [Usage Reporting plugin's configuration](/apollo-server/api/plugin/usage-reporting/#custom-installation).
 
 ### Identifying distinct clients
 
-Apollo Studio's [client awareness feature](https://www.apollographql.com/docs/studio/client-awareness/) enables you to view metrics for distinct versions
+Apollo Studio's [client awareness feature](/studio/client-awareness/) enables you to view metrics for distinct versions
 of your clients. To enable this, your clients need to include some or all of the following identifying information in the headers of GraphQL requests they
 send to Apollo Server:
 
@@ -49,7 +49,7 @@ Each of these fields can have any string value that's useful for your applicatio
 #### Setting client awareness headers in Apollo Client
 
 If you're using Apollo Client, you can set default values for client name and
-version in the [`ApolloClient` constructor](https://www.apollographql.com/docs/react/api/apollo-client/#the-apolloclient-constructor). All requests to Apollo Server will automatically include these values in the appropriate headers.
+version in the [`ApolloClient` constructor](/react/api/apollo-client/#the-apolloclient-constructor). All requests to Apollo Server will automatically include these values in the appropriate headers.
 
 #### Using custom headers
 
@@ -141,4 +141,4 @@ const server = new ApolloServer({
 
 ## OpenTelemetry support
 
-See [OpenTelemetry in Apollo Server](https://www.apollographql.com/docs/federation/opentelemetry/).
+See [OpenTelemetry in Apollo Server](/federation/opentelemetry/).
