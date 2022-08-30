@@ -294,7 +294,7 @@ An object containing configuration options for connecting Apollo Server to [Apol
 </td>
 <td>
 
-Controls whether to allow [Batching Queries](../requests/#batching) in a single HTTP Request. Defaults to `false`. If a request comes in formatted as an array rather than as a single request object, an error will be thrown.
+Controls whether to allow [Batching Queries](../workflow/requests/#batching) in a single HTTP Request. Defaults to `false`. If a request comes in formatted as an array rather than as a single request object, an error will be thrown.
 </td>
 </tr>
 
@@ -315,7 +315,7 @@ Controls whether to allow [Batching Queries](../requests/#batching) in a single 
 </td>
 <td>
 
-An array of [plugins](../integrations/plugins) to install in your server instance. Each array element can be either a valid plugin object or a zero-argument function that _returns_ a valid plugin object.
+An array of [plugins](/apollo-server/integrations/plugins) to install in your server instance. Each array element can be either a valid plugin object or a zero-argument function that _returns_ a valid plugin object.
 
 In certain cases, Apollo Server installs some of its built-in plugins automatically (for example, when you provide an Apollo Studio API key with the `APOLLO_KEY` environment variable). For details, see the API references for these plugins: [usage reporting](/apollo-server/plugin/usage-reporting/), [schema reporting](/apollo-server/plugin/schema-reporting/), and [inline trace](/apollo-server/plugin/inline-trace/).
 
@@ -452,7 +452,7 @@ If you are testing your server using [`executeOperation`](../testing/testing/) (
 The `start` method triggers the following actions:
 
 1. If your server is a [federated gateway](https://www.apollographql.com/docs/federation/managed-federation/overview/), it attempts to fetch its schema. If the fetch fails, `start` throws an error.
-2. Your server calls all of the [`serverWillStart` handlers](../integrations/plugins-event-reference/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
+2. Your server calls all of the [`serverWillStart` handlers](/apollo-server/integrations/plugins-event-reference/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
 
 ## `addPlugin`
 You can use the `addPlugin` method to add plugins before your server is started. This is helpful when you want to add a plugin that accepts your initialized `ApolloServer` instance itself, like so:
