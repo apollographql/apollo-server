@@ -15,8 +15,9 @@ Apollo Server installs this plugin by default in all servers, with its default c
 
 If you want to configure `ApolloServerPluginCacheControl` plugin, import it and pass it to your `ApolloServer` in the `plugins` array:
 
+<MultiCodeBlock>
 
-```js
+```ts
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheControl';
 
@@ -33,6 +34,8 @@ const server = new ApolloServer({
   ],
 });
 ```
+
+</MultiCodeBlock>
 
 If you don't want to use cache control at all, you can explicitly disable it with the `ApolloServerPluginCacheControlDisabled` plugin:
 
