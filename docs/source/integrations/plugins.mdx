@@ -3,13 +3,14 @@ title: Creating Apollo Server plugins
 description: Extend Apollo Server with custom functionality
 ---
 
-> **Note:** All plugin lifecycle methods are `async`, _except for [`willResolveField`](./plugins-event-reference/#willresolvefield) and [`schemaDidLoadOrUpdate`](./plugins-event-reference/#schemadidloadorupdate)_.
-
 You can create your own Apollo Server plugins to perform custom operations in response to certain events. For example, a basic logging plugin might log the GraphQL query string associated with each request that's sent to Apollo Server.
 
 ## The anatomy of a plugin
 
+> If you're using TypeScript to create a plugin, you can implement your plugin using the [`ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/cc447c5687f67938efb976d7aa282f7a95e313db/packages/server/src/externalTypes/plugins.ts#L34).
+
 Plugins are JavaScript objects that implement one or more functions that respond to events. Here's a basic plugin that responds to the `serverWillStart` event:
+
 
 <MultiCodeBlock>
 
@@ -23,8 +24,6 @@ const myPlugin = {
 
 </MultiCodeBlock>
 
-<!-- TODO(AS4) Replace link once this ApolloServerPlugin on main --> 
-> If you're using TypeScript to create a plugin, you can implement your plugin using the [`ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/cc447c5687f67938efb976d7aa282f7a95e313db/packages/server/src/externalTypes/plugins.ts#L34).
 
 You can define a plugin in the same file where you initialize Apollo Server, or
 you can export it as a separate module:
@@ -60,8 +59,7 @@ export default (options: { logMessage: string }) => {
 
 ## Responding to events
 
-A plugin specifies exactly which events it responds to by implementing functions that correspond to those events. The plugin in the examples above responds to the `serverWillStart` event, which fires when Apollo Server is preparing to start up. Almost all plugin events are `async` functions (i.e., functions that return `Promise`s). The only exceptions
-are [`willResolveField`](./plugins-event-reference/#willresolvefield) and [`schemaDidLoadOrUpdate`](./plugins-event-reference/#schemadidloadorupdate).
+A plugin specifies exactly which events it responds to by implementing functions that correspond to those events. The plugin in the examples above responds to the `serverWillStart` event, which fires when Apollo Server is preparing to start up. Almost all plugin events are `async` functions (i.e., functions that return `Promise`s).
 
 A plugin can respond to any combination of [supported events](./plugins-event-reference/).
 
@@ -162,9 +160,9 @@ Event handlers for the following events can optionally return a function that is
 * [`validationDidStart`](./plugins-event-reference/#validationdidstart)
 * [`willResolveField`](./plugins-event-reference/#willresolvefield)
 
-([`executionDidStart`](./plugins-event-reference/#executiondidstart) returns an _object_ containing an `executionDidEnd` function instead of just a function as an end hook. This is because the returned object can also contain `willResolveField`.)
+The [`executionDidStart`](./plugins-event-reference/#executiondidstart) hook returns an _object_ containing an `executionDidEnd` function instead of just a function as an end hook. This is because the returned object can also contain `willResolveField`.
 
-Just like the event handlers themselves, these end hooks are async functions (except for the end hook for `willResolveField`).
+Just like the event handlers themselves, these end hooks are async functions.
 
 End hooks are passed any errors that occurred during the execution of that lifecycle phase. For example, the following plugin logs any errors that occur during any of the above lifecycle events:
 
@@ -212,7 +210,7 @@ Note that the `validationDidStart` end hook receives an _array_ of errors that c
 
 As the example above shows, `requestDidStart` and request lifecycle functions accept a `requestContext` parameter. This parameter is of type `GraphQLRequestContext`, which includes a `request` (of type `GraphQLRequest`), along with a `response` field (of type `GraphQLResponse`) if it's available.
 
-These types and their related subtypes are all defined in [`apollo-server-types/src/index.ts`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts).
+These types and their related subtypes are all defined in [`@apollo/server`](https://github.com/apollographql/apollo-server/blob/6b4945935a786d06e7ff904be94c0035fe27aeb1/packages/server/src/externalTypes/index.ts).
 
 ## Installing custom plugins
 
@@ -226,7 +224,7 @@ import ApolloServerOperationRegistry from '@apollo/server-plugin-operation-regis
 
 /* This example doesn't provide `typeDefs` or `resolvers`,
    both of which are required to start the server. */
-const { typeDefs, resolvers } = require('./separatelyDefined');
+import { typeDefs, resolvers } from './separatelyDefined';
 
 const server = new ApolloServer({
   typeDefs,
