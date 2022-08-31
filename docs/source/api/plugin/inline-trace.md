@@ -5,59 +5,51 @@ api_reference: true
 
 ## Using the plugin
 
+> 📣 **New in Apollo Server 4**: error details are not included in traces by default. For more details, see [Error Handling](../../data/errors/#masking-and-logging-errors).
+
 This API reference documents the `ApolloServerPluginInlineTrace` plugin.
 
-This plugin enables your GraphQL server to include encoded performance and usage traces inside responses. This is primarily designed for use with [Apollo Federation](https://www.apollographql.com/docs/federation/metrics/). Federated subgraphs use this plugin and include a trace in the `ftv1` GraphQL response extension if requested to do so by the Apollo gateway. The gateway requests this trace by passing the HTTP header `apollo-federation-include-trace: ftv1`.
+This plugin enables your GraphQL server to include encoded performance and usage traces inside responses. This is primarily designed for use with [Apollo Federation](/federation/metrics/). Federated subgraphs use this plugin and include a trace in the `ftv1` GraphQL response extension if requested to do so by the Apollo gateway. The gateway requests this trace by passing the HTTP header `apollo-federation-include-trace: ftv1`.
 
-Apollo Server installs this plugin by default in all federated subgraphs, with its default configuration. (Apollo Server decides that it is a federated subgraph if the schema it is serving includes a field `_Service.sdl: String`.)  You typically do not have to install this plugin yourself; you only need to do so if you want to provide non-default configuration.
+Apollo Server installs this plugin by default in all federated subgraphs, with its default configuration. Apollo Server check whether it it is a federated subgraph if the schema it is serving includes a field `_Service.sdl: String`.  You typically do not have to install this plugin yourself; you only need to do so if you want to provide non-default configuration.
 
-If you want to configure this plugin (or if you want to use it in a graph that is not a federated subgraph), import it from the `apollo-server-core` package and pass it to your `ApolloServer` in the `plugins` array:
+If you want to configure `ApolloServerPluginInlineTrace` plugin, import it and pass it to your `ApolloServer` in the `plugins` array:
 
-```js
-import { ApolloServer } from "apollo-server";
-import {
-  ApolloServerPluginInlineTrace,
-  ApolloServerPluginLandingPageLocalDefault,
-} from "apollo-server-core";
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: "bounded",
   plugins: [
     ApolloServerPluginInlineTrace({
-      rewriteError: (err) => err.message.match(SENSITIVE_REGEX) ? null : err,
+      includeErrors: { transform: (err) => (err.message.match(SENSITIVE_REGEX) ? null : err ) },
     }),
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
 
+</MultiCodeBlock>
+
 If you don't want to use the inline trace plugin even though your schema defines `_Service.sdl: String`, you can explicitly disable it with the `ApolloServerPluginInlineTraceDisabled` plugin:
 
 ```js
-import { ApolloServer } from "apollo-server";
-import {
-  ApolloServerPluginInlineTraceDisabled,
-  ApolloServerPluginLandingPageLocalDefault,
-} from "apollo-server-core";
+import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginInlineTraceDisabled } from '@apollo/server/plugin/disabled';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: "bounded",
   plugins: [
     ApolloServerPluginInlineTraceDisabled(),
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
 
 Note that when this plugin is installed in your app, any client can request a trace for any operation they run, which may reveal information about your server that you consider sensitive (such as how long each individual field takes to execute). Federated subgraphs generally should not be directly exposed to the public Internet.
-
-(Note: in addition to this plugin (which adds a base64-encoded trace to the `ftv1` extension of responses), the Apollo platform used to have support for an older JSON-based format which added a `tracing` extension to responses. This support was enabled in Apollo Server 2 by passing `tracing: true` to the `ApolloServer` constructor; that option has been removed from Apollo Server 3. That format was designed for use with a no longer supported tool called `engineproxy`, and also is recognized by graphql-playground.  That format was more verbose due to its use of JSON and the way that it represented trace node IDs.)
 
 When using Federation, you typically run this plugin in subgraphs and you run the usage reporting plugin in gateways; this is how the default behavior works. If you include this plugin in a gateway, then the gateway will include a full trace including the query plan and all subgraph traces inline in its responses. This is not recommended for publicly exposed servers, but can be helpful when developing locally if you want to see the exact query plan generated by your gateway.
 
@@ -76,15 +68,26 @@ When using Federation, you typically run this plugin in subgraphs and you run th
 <tr>
 <td>
 
-###### `rewriteError`
+###### `includeErrors`
 
-`Function`
+`Object`
 </td>
 <td>
 
-By default, all errors from this service get included in the trace. You can specify a filter function to exclude specific errors from being reported by returning an explicit `null`, or you can mask certain details of the error by modifying it and returning the modified error. This function has type `(GraphQLError) => GraphQLError | null`.
+Provide this object to modify GraphQL operation errors before your server reports those errors in traces to Apollo Studio. Valid options are described in [Valid `includeErrors` object signatures](#valid-includeerrors-object-signatures).
+
+The default value is `{ masked: true }`, which means error messages are masked and extensions are omitted. This is a security measure to prevent sensitive data from potentially reaching Apollo servers.
 </td>
 </tr>
 
 </tbody>
 </table>
+
+
+#### Valid `includeErrors` object signatures
+
+| Object | Description |
+|--------|-------------|
+| `{ masked: true }` | If you provide this object, error messages are masked and extensions omitted in the traces sent to Apollo Studio.  This is the default behavior.|
+| `{ unmodified: true }`| If you provide this object, all error messages and extensions are included in traces. |
+| <code>{ transform: (err: GraphQLError) => { GraphQLError &vert; null }</code> |<p>The value of `transform` is a function that receives each error (`GraphQLError`) and must also return a `GraphQLError` object (or `null` to prevent Apollo Server from reporting a particular error entirely).</p><br/><p>The only properties of the reported error you can modify are its `message` and its `extensions`. See [Masking and logging errors](../../data/errors/#masking-and-logging-errors) for more details.</p>|

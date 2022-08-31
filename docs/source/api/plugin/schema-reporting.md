@@ -7,32 +7,32 @@ api_reference: true
 
 This API reference documents the `ApolloServerPluginSchemaReporting` plugin.
 
-This plugin enables your GraphQL server to register its latest schema with the Apollo schema registry every time it starts up. Full details on schema reporting can be found in [the Apollo Studio docs](https://www.apollographql.com/docs/studio/schema/schema-reporting/).
+This plugin enables your GraphQL server to register its latest schema with the Apollo schema registry every time it starts up. Full details on schema reporting can be found in [the Apollo Studio docs](/studio/schema/schema-reporting/).
 
-> **Schema reporting does not currently support graphs that use Apollo Federation.** This plugin will not work if your graph is a federated subgraph or a composed federated graph running in a gateway. If you have a federated graph, you will need to register schema via the CLI; see [Setting up managed federation](https://www.apollographql.com/docs/studio/managed-federation/setup/).
+> **Schema reporting does not currently support graphs that use Apollo Federation.** This plugin will not work if your graph is a federated subgraph or a composed federated graph running in a gateway. If you have a federated graph, you will need to register schema via the CLI; see [Setting up managed federation](/studio/managed-federation/setup/).
 
-In order to use this plugin, you must configure your server with a graph API key, either with the `APOLLO_KEY` environment variable or by passing it directly to your `ApolloServer` with `new ApolloServer({apollo: {key: KEY}})`. (This is the same way you configure your `ApolloServer` to enable usage reporting.)
+In order to use this plugin, you must configure your server with a graph API key, either with the `APOLLO_KEY` environment variable or by passing it directly to your `ApolloServer` constructor (e.g., `new ApolloServer({apollo: {key: KEY}})`). This is the same way you configure [usage reporting](./usage-reporting).
 
-Additionally, you must explicitly enable schema reporting. If you just want to turn on schema reporting with its default configuration, you can set the `APOLLO_SCHEMA_REPORTING` environment variable to `true`. If you want to configure schema reporting (or prefer your setup to be via code rather than environment variables), import `ApolloServerPluginSchemaReporting` from the `apollo-server-core` package and pass it to your `ApolloServer` in the `plugins` array:
+Additionally, you must explicitly enable schema reporting. If you want to turn on schema reporting with its default configuration, you can set the `APOLLO_SCHEMA_REPORTING` environment variable to `true`.
 
-```js
-import { ApolloServer } from "apollo-server";
-import {
-  ApolloServerPluginSchemaReporting,
-  ApolloServerPluginLandingPageLocalDefault,
-} from "apollo-server-core";
+If you want to configure schema reporting (or prefer your setup to be via code rather than using environment variables), import the `ApolloServerPluginSchemaReporting` plugin and pass it to `ApolloServer` constructor:
+
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginSchemaReporting } from '@apollo/server/plugin/schemaReporting';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: "bounded",
   plugins: [
     ApolloServerPluginSchemaReporting(),
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
   ],
 });
 ```
+
+</MultiCodeBlock>
 
 ## Options
 
