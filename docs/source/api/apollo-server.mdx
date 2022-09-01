@@ -48,7 +48,7 @@ const server = new ApolloServer({
 
 ##### `typeDefs`
 
-`String`, `DocumentNode`, or `Array<DocumentNode>`
+`string`, `DocumentNode`, or `Array<DocumentNode>`
 </td>
 <td>
 
@@ -332,7 +332,7 @@ In certain cases, Apollo Server installs some of its built-in plugins automatica
 </td>
 <td>
 
-By default (when running in Node when the `NODE_ENV` environment variable does not equal `test` and not using a serverless-specific package), whenever Apollo Server receives a `SIGINT` or `SIGTERM` signal, it calls `await this.stop()` on itself. (While this call to `this.stop()` is running, it ignores all `SIGINT` and `SIGTERM` signals.) It then sends that same signal to itself to continue process shutdown.
+By default, whenever Apollo Server receives a `SIGINT` or `SIGTERM` signal, it calls `await this.stop()` on itself. It then sends that same signal to itself to continue process shutdown. Subsequent `SIGINT` and `SIGTERM` signals are ignored while Apollo Server awaits `this.stop()`. Note that this does _not_ happen when `NODE_ENV` equals `test` or when Apollo Server is running in serverless mode.
 
 Set this option to `false` to disable this default behavior, or to `true` to enable the behavior even when `NODE_ENV` _does_ equal `test`.
 
@@ -419,7 +419,7 @@ If this is set to any string value, use that value instead of the environment va
 The async `start` method instructs Apollo Server to prepare to handle incoming operations.
 
 > Call `start` **only** if you are using a framework integration for a non-"serverless" environment (e.g., [`expressMiddleware`](./express-middleware)).
-> * If you're using a "serverless" framework integration (such as Lambda), you **don't** need to call this method before passing your server into the integration function. Your serverless integration function will take care of starting your server for you. 
+> * If you're using a "serverless" framework integration (such as Lambda), you **shouldn't** call this method before passing your server into the integration function. Your serverless integration function will take care of starting your server for you.
 >
 > * If you're using `startStandaloneServer` you do **not** need to start your server before [passing it directly to `startStandaloneServer`](./standalone).
 
@@ -482,9 +482,9 @@ Framework integrations should call `server.assertStarted()` to ensure a server h
 
 - Calls and awaits all [`drainServer` plugin handlers](/apollo-server/integrations/plugins-event-reference/#drainserver). These should generally:
   - Stop listening for new connections
-  - Closes idle connections (i.e., connections with no current HTTP request)
-  - Closes active connections whenever they become idle
-  - Waits for all connections to be closed
+  - Close idle connections (i.e., connections with no current HTTP request)
+  - Close active connections whenever they become idle
+  - Wait for all connections to be closed
   - After a grace period, if any connections remain active, forcefully close them. If you're using `startStandaloneServer`, this happens by default. Otherwise, you can use the [drain HTTP server plugin](/apollo-server/plugin/drain-http-server/) to drain your HTTP server.
 - Transitions the server to a state where it will not start executing more GraphQL operations.
 - Calls and awaits all [`serverWillStop` plugin handlers](/apollo-server/integrations/plugins-event-reference/#serverwillstop) (including the [usage reporting plugin](/apollo-server/plugin/usage-reporting/)'s handler, which sends a final usage report to Apollo Studio).
