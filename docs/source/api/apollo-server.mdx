@@ -244,7 +244,11 @@ To learn more about configuring Apollo Server's cache, see [Configuring cache ba
 </td>
 <td>
 
-By default, the [CSRF prevention](../security/cors#preventing-cross-site-request-forgery-csrf) feature is enabled to protect Apollo Server from CSRF and XS-Search attacks. This feature requires that clients sending operations via `GET` or multipart upload requests _must_ include a non-empty `Apollo-Require-Preflight` (or another non-special-cased) header in that request. 
+By default, the [CSRF prevention](../security/cors#preventing-cross-site-request-forgery-csrf) feature is enabled to protect Apollo Server from CSRF and XS-Search attacks. 
+
+This feature can prevent certain `GET` requests from executing GraphQL operations if those requests don't specify [certain headers](../security/cors/#why-use-cors). You can configure the headers that allow operation execution by passing a configuration object to this option (e.g., `csrfPrevention: { requestHeaders: ['special-header'] }`).
+
+If your server has clients that send `GET` requests and those clients **aren't** one of Apollo's client libraries (Web, iOS, Kotlin), you might need to modify the configuration of those clients to use this feature. For more details, see [the CSRF prevention documentation](../security/cors#preventing-cross-site-request-forgery-csrf).
 
 You can disable this recommended security feature by passing `false` to `csrfPrevention`.
 </td>
@@ -421,8 +425,8 @@ If this is set to any string value, use that value instead of the environment va
 
 The async `start` method instructs Apollo Server to prepare to handle incoming operations.
 
-> Call `start` **only** if you are using a framework integration for a non-"serverless" environment (e.g., [`expressMiddleware`](./express-middleware)).
-> * If you're using a "serverless" framework integration (such as Lambda), you **shouldn't** call this method before passing your server into the integration function. Your serverless integration function will take care of starting your server for you.
+> Call `start` **only** if you are using a framework integration for a non-serverless environment (e.g., [`expressMiddleware`](./express-middleware)).
+> * If you're using a serverless framework integration (such as Lambda), you **shouldn't** call this method before passing your server into the integration function. Your serverless integration function will take care of starting your server for you.
 >
 > * If you're using `startStandaloneServer` you do **not** need to start your server before [passing it directly to `startStandaloneServer`](./standalone).
 
