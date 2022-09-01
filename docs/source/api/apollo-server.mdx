@@ -218,9 +218,9 @@ Pass `null` to disable this cache entirely.
 </td>
 <td>
 
-A `KeyValueCache` which Apollo Server uses for several features, including APQs and full response caching. This cache is also available to Apollo Server's data sources and plugins.
+A [`KeyValueCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) which Apollo Server uses for several features, including APQs and full response caching. This cache is also available to Apollo Server's plugins.
 
-The default bounded cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
+The default cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
 
 To learn more about configuring Apollo Server's cache, see [Configuring cache backends](../performance/cache-backends).
 
@@ -294,7 +294,8 @@ An object containing configuration options for connecting Apollo Server to [Apol
 </td>
 <td>
 
-Controls whether to allow [Batching Queries](../workflow/requests/#batching) in a single HTTP Request. Defaults to `false`. If a request comes in formatted as an array rather than as a single request object, an error will be thrown.
+Controls whether to allow [Batching Queries](../workflow/requests/#batching) in a single HTTP Request. Defaults to `false`. If a request comes in formatted as an array rather than as a single request object, an error will be thrown ( i.e., `Operation batching disabled.`).
+
 </td>
 </tr>
 
@@ -318,6 +319,8 @@ Controls whether to allow [Batching Queries](../workflow/requests/#batching) in 
 An array of [plugins](/apollo-server/integrations/plugins) to install in your server instance. Each array element can be either a valid plugin object or a zero-argument function that _returns_ a valid plugin object.
 
 In certain cases, Apollo Server installs some of its built-in plugins automatically (for example, when you provide an Apollo Studio API key with the `APOLLO_KEY` environment variable). For details, see the API references for these plugins: [usage reporting](/apollo-server/plugin/usage-reporting/), [schema reporting](/apollo-server/plugin/schema-reporting/), and [inline trace](/apollo-server/plugin/inline-trace/).
+
+You can _also_ add plugins to your server before you start it using the [`addPlugin`](#addplugin) method.
 
 </td>
 </tr>
