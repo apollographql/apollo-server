@@ -91,11 +91,11 @@ functions:
     handler: graphql.graphqlHandler
     events:
     - http:
-        path: /
+        path: graphql
         method: post
         cors: true
     - http:
-        path: /
+        path: graphql
         method: get
         cors: true
 ```
