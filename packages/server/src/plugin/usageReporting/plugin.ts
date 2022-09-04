@@ -352,7 +352,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           if (parsedBody.tracesIgnored === true) {
             logger.debug(
               "This graph's organization does not have access to traces; sending all " +
-                'subsequent operations as traces.',
+                'subsequent operations as stats.',
             );
             sendTraces = false;
           }
