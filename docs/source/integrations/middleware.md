@@ -35,7 +35,7 @@ const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
-async function startApolloServer() {
+(async function startApolloServer() {
   const app = express();
   const server = new ApolloServer({
     typeDefs,
@@ -54,7 +54,7 @@ async function startApolloServer() {
   await new Promise(resolve => app.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
   return { server, app };
-}
+})(typeDefs, resolvers)
 ```
 
 The parameter you provide to `applyMiddleware` is your middleware's top-level representation of your application. In Express applications, this variable is commonly named `app`.
