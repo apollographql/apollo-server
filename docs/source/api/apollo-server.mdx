@@ -3,7 +3,9 @@ title: "API Reference: ApolloServer"
 api_reference: true
 ---
 
-This API reference documents the `ApolloServer` class.
+This article documents the `ApolloServer` class from the `@apollo/server` package. You can use the `ApolloServer` class to create an instance of Apollo Server that you can then pass to a web framework integration function (e.g., `startStandaloneServer` or `expressMiddleware`). 
+
+> Check out our [Getting Started](../getting-started) guide for an example of setting up Apollo Server!
 
 ## `constructor`
 
@@ -40,7 +42,7 @@ const server = new ApolloServer({
 <tr>
 <td colspan="2">
 
-**Schema options**
+**Specifying a schema**
 </td>
 </tr>
 <tr class="required">
@@ -54,7 +56,7 @@ const server = new ApolloServer({
 
 A valid [Schema Definition Language](../schema/schema/#the-schema-definition-language) (SDL) string, document, or documents that represent your server's GraphQL schema. To generate documents, you can apply the `gql` tag (from [`graphql-tag`](https://www.npmjs.com/package/graphql-tag)) to valid SDL strings.
 
-**Required** unless you provide [`schema`](#schema).
+**Required** unless you provide a [`schema`](#schema) or a [`gateway`](#gateway).
 
 For an example, see [Define your GraphQL schema](../getting-started/#step-3-define-your-graphql-schema).
 </td>
@@ -72,9 +74,47 @@ For an example, see [Define your GraphQL schema](../getting-started/#step-3-defi
 
 A map of functions that populate data for individual schema fields. Can also be an array of multiple maps that are merged.
 
-**Required** unless you provide [`schema`](#schema).
+**Required** unless you provide a [`schema`](#schema) or a [`gateway`](#gateway).
 
 For details, see [Resolvers](../data/resolvers/).
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `schema`
+
+`Object`
+</td>
+
+<td>
+
+An executable GraphQL schema. You usually don't need to provide this value, because Apollo Server generates it from [`typeDefs`](#typedefs) and [`resolvers`](#resolvers).
+
+This field is most commonly used with [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses a special `buildFederatedSchema` function to generate its schema.
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `gateway`
+
+`Object`
+</td>
+
+<td>
+
+You can use this field to integrate your server with [Apollo Gateway](/federation/api/apollo-gateway/).
+
+</td>
+</tr>
+
+<tr>
+<td colspan="2">
+
+**Schema options**
 </td>
 </tr>
 
@@ -106,23 +146,6 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 <td>
 
 A custom resolver that will replace Apollo Server's [default field resolvers](../data/resolvers/#default-resolvers).
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-##### `schema`
-
-`Object`
-</td>
-
-<td>
-
-An executable GraphQL schema. You usually don't need to provide this value, because Apollo Server generates it from [`typeDefs`](#typedefs) and [`resolvers`](#resolvers).
-
-This field is most commonly used with [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses a special `buildFederatedSchema` function to generate its schema.
 </td>
 </tr>
 
