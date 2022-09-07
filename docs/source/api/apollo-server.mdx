@@ -153,21 +153,6 @@ A custom resolver that will replace Apollo Server's [default field resolvers](..
 <tr>
 <td>
 
-##### `persistedQueries`
-
-`Object` or `false`
-</td>
-
-<td>
-
-If you're using [automated persisted queries (APQ)](../performance/apq/), you can provide an object with `cache` and/or `ttl` fields to customize how Apollo Server stores the mapping between operation hashes and query strings, or provide `false` to disable APQ entirely.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
 ##### `rootValue`
 
 `Any` or `Function`
@@ -232,29 +217,25 @@ Pass `null` to disable this cache entirely.
 </td>
 </tr>
 
-<tr>
-<td>
-
-##### `cache`
-
-`KeyValueCache`
-</td>
-<td>
-
-A [`KeyValueCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) which Apollo Server uses for several features, including APQs and full response caching. This cache is also available to Apollo Server's plugins.
-
-The default cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
-
-To learn more about configuring Apollo Server's cache, see [Configuring cache backends](../performance/cache-backends).
-
-</td>
-</tr>
-
 
 <tr>
 <td colspan="2">
 
-**Networking options**
+**Protocol options**
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `persistedQueries`
+
+`Object` or `false`
+</td>
+
+<td>
+
+If you're using [automated persisted queries (APQ)](../performance/apq/), you can provide an object with `cache` and/or `ttl` fields to customize how Apollo Server stores the mapping between operation hashes and query strings, or provide `false` to disable APQ entirely.
 </td>
 </tr>
 
@@ -337,6 +318,24 @@ Controls whether to allow [Batching Queries](../workflow/requests/#batching) in 
 <tr>
 <td>
 
+##### `cache`
+
+`KeyValueCache`
+</td>
+<td>
+
+A [`KeyValueCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) which Apollo Server uses for several features, including APQs and full response caching. This cache is also available to Apollo Server's plugins.
+
+The default cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
+
+To learn more about configuring Apollo Server's cache, see [Configuring cache backends](../performance/cache-backends).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ##### `plugins`
 
 `Array`
@@ -345,7 +344,7 @@ Controls whether to allow [Batching Queries](../workflow/requests/#batching) in 
 
 An array of [plugins](/apollo-server/integrations/plugins) to install in your server instance. Each array element can be either a valid plugin object or a zero-argument function that _returns_ a valid plugin object.
 
-In certain cases, Apollo Server installs some of its built-in plugins automatically (for example, when you provide an Apollo Studio API key with the `APOLLO_KEY` environment variable). For details, see the API references for these plugins: [usage reporting](/apollo-server/plugin/usage-reporting/), [schema reporting](/apollo-server/plugin/schema-reporting/), and [inline trace](/apollo-server/plugin/inline-trace/).
+In certain cases, Apollo Server installs some of its built-in plugins automatically (for example, when you provide an Apollo Studio API key with the `APOLLO_KEY` environment variable). For details, see the API references for these plugins: [usage reporting](/apollo-server/plugin/usage-reporting/), [schema reporting](/apollo-server/plugin/schema-reporting/), [landing page](/apollo-server/api/plugin/landing-pages/), and [inline trace](/apollo-server/plugin/inline-trace/).
 
 You can _also_ add plugins to your server before you start it using the [`addPlugin`](#addplugin) method.
 
@@ -390,6 +389,7 @@ You can also manually call `stop()` in other contexts. Note that `stop()` is asy
 </td>
 
 <td>
+
 If `true`, stack traces are included in GraphQL responses when errors occur. 
 
 Defaults to `true` unless the `NODE_ENV` environment variable is `production` or `test`.
@@ -475,7 +475,7 @@ app.use('/graphql',
 
 This allows you to react to Apollo Server startup failures by crashing your process instead of starting to serve traffic.
 
-If you are testing your server using [`executeOperation`](../testing/testing/) (i.e., you're not actually starting an HTTP server), you still need to call `start()` because `executeOperation` will *not* do that for you.
+If you are testing your server using [`executeOperation`](../testing/testing/) (i.e., you're not actually starting an HTTP server), you don't need to call `start()` because `executeOperation` will do that for you.
 
 ### Triggered actions
 
