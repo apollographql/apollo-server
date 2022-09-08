@@ -302,7 +302,7 @@ An object containing configuration options for connecting Apollo Server to [Apol
 </td>
 <td>
 
-Controls whether to allow [Batching Queries](../workflow/requests/#batching) in a single HTTP Request. Defaults to `false`. If a request comes in formatted as an array rather than as a single request object, an error will be thrown ( i.e., `Operation batching disabled.`) _unless_ batching is enabled.
+Controls whether to allow [Batching Queries](../workflow/requests/#batching) in a single HTTP Request. Defaults to `false`. If a request comes in formatted as an array rather than as a single request object, an error will be thrown ( i.e., `Operation batching disabled`) _unless_ batching is enabled.
 
 </td>
 </tr>
@@ -484,6 +484,31 @@ The `start` method triggers the following actions:
 1. If your server is a [federated gateway](https://www.apollographql.com/docs/federation/managed-federation/overview/), it attempts to fetch its schema. If the fetch fails, `start` throws an error.
 2. Your server calls all of the [`serverWillStart` handlers](/apollo-server/integrations/plugins-event-reference/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
 
+
+## `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests`
+
+**Serverless** integrations handle starting an Apollo Server instance in the background by calling the  `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method. See [Building integrations](../integrations/building-integrations#ensure-successful-startup) for more details. 
+
+This method [triggers the same actions](#triggered-actions) at the `start()` method.
+
+## `executeHTTPGraphQLRequest`
+
+You can use the `executeHTTPGraphQLRequest` method to execute a GraphQL request by passing in an [`HTTPGraphQLRequest`](./integrations/building-integrations/#construct-the-httpgraphqlrequest-object) object.
+
+<MultiCodeBlock>
+
+```ts
+const result = await server
+  .executeHTTPGraphQLRequest({
+    OurHttpGraphQLRequest,
+    context: () => context({ req, res }),
+  });
+```
+
+</MultiCodeBlock>
+
+For details and examples, see [Building Integrations](../integrations/building-integrations/#execute-the-graphql-request).
+
 ## `addPlugin`
 You can use the `addPlugin` method to add plugins before your server is started. This is helpful when you want to add a plugin that accepts your initialized `ApolloServer` instance itself, like so:
 
@@ -538,7 +563,7 @@ const result = await server.executeOperation({
 The `executeOperation` method takes two arguments:
 * The first argument is an object describing the GraphQL operation to be executed.
   * Supported fields are listed in the table below.
-* The second optional argument is used as the operation's [context value](../data/resolvers/#the-context-argument).
+* The second optional argument is used as the operation's [context value](../data/resolvers/#the-context-argument). Note, this argument is **not optional** if your server uses a context function.  
 
 Below are the available fields for the first argument of `executeOperation`:
 
@@ -591,5 +616,40 @@ If `query` contains more than one operation definition, you must provide this op
 </td>
 </tr>
 
+<tr>
+<td>
+
+##### `extensions`
+
+`object`
+</td>
+<td>
+
+<!-- TODO(AS4) Make this better -->
+This field contains information about a request's extensions. 
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+##### `http`
+
+`HTTPGraphQLRequest`
+</td>
+<td>
+
+An object implementing the [`HTTPGraphQLRequest`](https://github.com/apollographql/apollo-server/blob/2d5d564abe3d817f8902f07a712a6e105f1b2e41/packages/server/src/externalTypes/http.ts#L2) interface, mimicking the information that would in a real HTTP request. 
+</td>
+</tr>
+
 </tbody>
 </table>
+
+## `cache`
+A public readonly field on `ApolloServer` that enables you to access your server's [cache](#cache).
+
+## `logger`
+
+A public readonly field on `ApolloServer` that enables you to access your server's [logger](#logger). 
