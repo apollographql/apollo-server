@@ -280,7 +280,7 @@ At this stage, there is not a guarantee that the operation is not malformed.
 ```ts
 didResolveSource?(
   requestContext: WithRequired<
-    GraphQLRequestContext<TContext>, 'source' | 'logger'>,
+    GraphQLRequestContext<TContext>, 'metrics' | 'source' | 'queryHash'>,
   >,
 ): Promise<void>;
 ```
@@ -299,7 +299,7 @@ does not occur.
 parsingDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'logger'
+    'metrics' | 'source' | 'queryHash'
   >,
 ): Promise<void | (err?: Error) => Promise<void>>;
 ```
@@ -319,7 +319,7 @@ available at this stage, because parsing must succeed for validation to occur.
 validationDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'logger'
+    'document', 'queryHash' | 'source' | 'metrics'
   >,
 ): Promise<void | (err?: ReadonlyArray<Error>) => Promise<void>>;
 ```
@@ -432,7 +432,7 @@ parsing, validating, or executing a GraphQL operation.
 didEncounterErrors?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'errors' | 'logger'
+    'metrics' | 'errors' 
   >,
 ): Promise<void>;
 ```
@@ -447,7 +447,7 @@ if the GraphQL operation encounters one or more errors.
 willSendResponse?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'response' | 'logger'
+    'metrics' | 'queryHash' | 'source' 
   >,
 ): Promise<void>;
 ```
