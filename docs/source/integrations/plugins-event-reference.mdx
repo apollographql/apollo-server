@@ -13,7 +13,7 @@ events** and **request lifecycle events**.
 * Request lifecycle events are associated with the lifecycle of a specific request.
   * You define responses to these events _within_ the response to a `requestDidStart` event, as described in [Responding to request lifecycle events](./plugins#responding-to-request-lifecycle-events).
 
-> With two exceptions, all plugin methods in Apollo Server 4 are `async`. The first exception is `willResolveField`, which is called much more frequently than other plugin methods. The second exception is `schemaDidLoadOrUpdate`, where making the method `async` would introduce unclear ordering semantics around method executions.
+> With two exceptions, all plugin methods in Apollo Server are `async`. The first exception is `willResolveField`, which is called much more frequently than other plugin methods. The second exception is `schemaDidLoadOrUpdate`, where making the method `async` would introduce unclear ordering semantics around method executions.
 
 ## Server lifecycle events
 
@@ -127,18 +127,20 @@ const server = new ApolloServer({
     {
       async serverWillStart() {
         return {
+          //highlight-start
           async renderLandingPage() {
             const html = `
-                <!DOCTYPE html>
-                <html>
-                    <head>
-                    </head>
-                    <body>
-                        <h1>Hello world!</h1>
-                    </body>
-                </html>`;
+              <!DOCTYPE html>
+              <html>
+                  <head>
+                  </head>
+                  <body>
+                      <h1>Hello world!</h1>
+                  </body>
+              </html>`;
             return { html };
           },
+          //highlight-end
         };
       },
     },
@@ -319,7 +321,7 @@ available at this stage, because parsing must succeed for validation to occur.
 validationDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'document', 'queryHash' | 'source' | 'metrics'
+    'document' | 'queryHash' | 'source' | 'metrics'
   >,
 ): Promise<void | (err?: ReadonlyArray<Error>) => Promise<void>>;
 ```
@@ -338,7 +340,7 @@ This event is _not_ associated with your GraphQL server's _resolvers_. When this
 didResolveOperation?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
+    'metrics' | 'source' | 'queryHash' | 'operationName' 
   >,
 ): Promise<void>;
 ```
@@ -354,8 +356,7 @@ are invoked in series, and the first non-null response is used.
 responseForOperation?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
-  >,
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
 ): Promise<GraphQLResponse | null>;
 ```
 
@@ -368,12 +369,13 @@ GraphQL operation specified by a request's `document` AST.
 executionDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'queryHash'
   >,
 ): Promise<GraphQLRequestExecutionListener | void>;
 ```
 
 `executionDidStart` may return an object with one or both of the methods `executionDidEnd` and `willResolveField`.  `executionDidEnd` is treated like an end hook: it is called after execution with any errors that occurred. `willResolveField` is documented in the next section.
+
 ### `willResolveField`
 
 The `willResolveField` event fires whenever Apollo Server is about to resolve a single field during the execution of an operation. The handler is passed an object with four fields (`source`, `args`, `contextValue`, and `info`) that correspond to the [four positional arguments passed to resolvers](../data/resolvers/#resolver-arguments). Note that `source` corresponds to the argument often called `parent` in our docs.

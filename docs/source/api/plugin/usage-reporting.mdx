@@ -7,6 +7,8 @@ Apollo Server's built-in usage reporting plugin gathers data on how your clients
 
 ## Default installation
 
+> 📣 **New in Apollo Server 4**: error details are not included in traces by default. For more details, see [Error Handling](../../data/errors/#masking-and-logging-errors).
+
 Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](../../monitoring/metrics/#connecting-to-apollo-studio). You usually do this by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables. No other action is required.
 
 If you don't provide an API key and graph ref, this plugin is not installed.
@@ -15,9 +17,7 @@ If you provide an API key but _don't_ provide a graph ref, a warning is logged. 
 
 ## Custom installation
 
-> 📣 **New in Apollo Server 4**: error details are not included in traces by default. For more details, see [Error Handling](../../data/errors/#masking-and-logging-errors).
-
-You can configure the usage reporting plugin's behavior by including it in the `plugins` array you pass to the `ApolloServer` constructor:
+If you want to configure the usage reporting plugin, import it and pass it to your `ApolloServer` constructor's `plugins` array:
 
 <MultiCodeBlock>
 
@@ -173,7 +173,7 @@ Specify this asynchronous function to configure which requests are included in u
 
 Note that returning `false` here means that the operation is completely ignored by all Apollo Studio features. If you want to improve performance by skipping the field-level execution trace, set the [`fieldLevelInstrumentation`](#fieldlevelinstrumentation) option instead of this one.
 
-This function is called for each received request. It takes a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/6b4945935a786d06e7ff904be94c0035fe27aeb1/packages/server/src/externalTypes/graphql.ts#L47) object and must return a `Promise<Boolean>` that indicates whether to include the request. It's called either after the operation is successfully resolved (via [the `didResolveOperation` event](/apollo-server/integrations/plugins/#didresolveoperation)), or when sending the final error response if the operation was not successfully resolved (via [the `willSendResponse` event](/apollo-server/integrations/plugins/#willsendresponse)).
+This function is called for each received request. It takes a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/6b4945935a786d06e7ff904be94c0035fe27aeb1/packages/server/src/externalTypes/graphql.ts#L47) object and must return a `Promise<Boolean>` that indicates whether to include the request. It's called either after the operation is successfully resolved (via [the `didResolveOperation` event](../../integrations/plugins/plugins-event-reference#didresolveoperation)), or when sending the final error response if the operation was not successfully resolved (via [the `willSendResponse` event](../../integrations/plugins-event-reference#willsendresponse)).
 
 If you don't want any usage reporting at all, don't use this option: instead, either avoid specifying an Apollo API key or explicitly [disable the plugin](#disabling-the-plugin).
 
@@ -244,7 +244,7 @@ Statistics about operations that your server cannot execute are not reported und
 </td>
 <td>
 
-If `true`, the plugin sends a usage report to Apollo Studio after every request instead of sending batched reports.
+If `true`, the plugin sends a usage report to Apollo Studio after every request instead of sending batched reports. By default, this option is set to `false`.
 
 This option is useful for stateless environments like Amazon Lambda where processes terminate after handling a small number of requests.
 
@@ -262,7 +262,7 @@ Note that "immediately" does not mean _synchronously_ with completing the respon
 </td>
 <td>
 
-Specifies which [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) function implementation to use when sending usage reports. 
+Specifies which [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) function implementation to use when sending usage reports.
 </td>
 </tr>
 
@@ -435,11 +435,61 @@ Specify this function to create a signature for a query. This option is not reco
 
 #### Valid `sendErrors` object signatures
 
-| Object | Description |
-|--------|-------------|
-| `{ masked: true }` | If you provide this object, error messages are masked and extensions omitted in the traces sent to Apollo Studio.  This is the default behavior.|
-| `{ unmodified: true }`| If you provide this object, all error messages and extensions are included in the traces sent to Apollo Studio. |
-| <code>{ transform: (err: GraphQLError) => { GraphQLError &vert; null }</code> |<p>The value of `transform` is a function that receives each error (`GraphQLError`) and must also return a `GraphQLError` object (or `null` to prevent Apollo Server from reporting a particular error entirely).</p><br/><p>The only properties of the reported error you can modify are its `message` and its `extensions`. See [Masking and logging errors](../../data/errors/#masking-and-logging-errors) for more details.</p>|
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Object</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `{ masked: true }`
+
+</td>
+<td>
+
+If you provide this object, error messages are masked and extensions omitted in the traces sent to Apollo Studio.  This is the default behavior.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `{ unmodified: true }`
+
+</td>
+<td>
+
+If you provide this object, all error messages and extensions are included in the traces sent to Apollo Studio.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `{ transform: (err: GraphQLError) => { GraphQLError | null }}`
+
+</td>
+<td>
+
+The value of `transform` is a function that receives each error (`GraphQLError`) and must also return a `GraphQLError` object (or `null` to prevent Apollo Server from reporting a particular error entirely).
+
+The only properties of the reported error you can modify are its `message` and its `extensions`. See [Masking and logging errors](../../data/errors/#masking-and-logging-errors) for more details.
+</td>
+</tr>
+
+
+</tbody>
+</table>
+
+
 
 
 ## Disabling the plugin

@@ -5,13 +5,15 @@ api_reference: true
 
 ## Using the plugin
 
-This API reference documents the `ApolloServerPluginDrainHttpServer` plugin.
+This article documents the options for the `ApolloServerPluginDrainHttpServer` plugin, which you can import from `@apollo/server/plugin/drainHttpServer`.
 
-This plugin is designed for use with `expressMiddleware` and other framework integrations built on top of [Node `http.Server`s](https://nodejs.org/api/http.html#http_class_http_server). **We highly recommended** using this plugin to ensure your server shuts down gracefully.
+This plugin is designed for use with `expressMiddleware` and other framework integrations built on top of [Node `http.Server`s](https://nodejs.org/api/http.html#http_class_http_server). **We highly recommend** using this plugin to ensure your server shuts down gracefully.
 
-You do not need to explicitly use this plugin with the `startStandaloneServer` function, it will handle proper server draining for you. 
+> You do not need to use this plugin with the `startStandaloneServer` function; it automatically handles server draining.
 
-When you use this plugin, Apollo Server will drain your HTTP server when you call the `stop()` method (which is also called for you when the `SIGTERM` and `SIGINT` signals are received, unless disabled with the [`stopOnTerminationSignals` constructor option](../apollo-server/#stoponterminationsignals)). Specifically, it will:
+When you use this plugin, Apollo Server will drain your HTTP server when you call the `stop()` method (which is also called for you when the `SIGTERM` and `SIGINT` signals are received, unless disabled with the [`stopOnTerminationSignals` constructor option](../apollo-server/#stoponterminationsignals)).
+
+Specifically, it will:
 
 - Stop listening for new connections
 - Close idle connections (i.e., connections with no current HTTP request)

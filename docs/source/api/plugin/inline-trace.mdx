@@ -7,13 +7,13 @@ api_reference: true
 
 > 📣 **New in Apollo Server 4**: error details are not included in traces by default. For more details, see [Error Handling](../../data/errors/#masking-and-logging-errors).
 
-This API reference documents the `ApolloServerPluginInlineTrace` plugin.
+This article documents the options for the `ApolloServerPluginInlineTrace` plugin, which you can import from `@apollo/server/plugin/inlineTrace`.
 
 This plugin enables your GraphQL server to include encoded performance and usage traces inside responses. This is primarily designed for use with [Apollo Federation](/federation/metrics/). Federated subgraphs use this plugin and include a trace in the `ftv1` GraphQL response extension if requested to do so by the Apollo gateway. The gateway requests this trace by passing the HTTP header `apollo-federation-include-trace: ftv1`.
 
 Apollo Server installs this plugin by default in all federated subgraphs, with its default configuration. Apollo Server check whether it it is a federated subgraph if the schema it is serving includes a field `_Service.sdl: String`.  You typically do not have to install this plugin yourself; you only need to do so if you want to provide non-default configuration.
 
-If you want to configure `ApolloServerPluginInlineTrace` plugin, import it and pass it to your `ApolloServer` in the `plugins` array:
+If you want to configure the `ApolloServerPluginInlineTrace` plugin, import it and pass it to your `ApolloServer` constructor's `plugins` array:
 
 <MultiCodeBlock>
 
@@ -86,8 +86,57 @@ The default value is `{ masked: true }`, which means error messages are masked a
 
 #### Valid `includeErrors` object signatures
 
-| Object | Description |
-|--------|-------------|
-| `{ masked: true }` | If you provide this object, error messages are masked and extensions omitted in the traces sent to Apollo Studio.  This is the default behavior.|
-| `{ unmodified: true }`| If you provide this object, all error messages and extensions are included in traces. |
-| <code>{ transform: (err: GraphQLError) => { GraphQLError &vert; null }</code> |<p>The value of `transform` is a function that receives each error (`GraphQLError`) and must also return a `GraphQLError` object (or `null` to prevent Apollo Server from reporting a particular error entirely).</p><br/><p>The only properties of the reported error you can modify are its `message` and its `extensions`. See [Masking and logging errors](../../data/errors/#masking-and-logging-errors) for more details.</p>|
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Object</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `{ masked: true }`
+
+</td>
+<td>
+
+If you provide this object, error messages are masked and extensions omitted in the traces sent to Apollo Studio.  This is the default behavior.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `{ unmodified: true }`
+
+</td>
+<td>
+
+If you provide this object, all error messages and extensions are included in traces
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `{ transform: (err: GraphQLError) => { GraphQLError | null }`
+
+</td>
+<td>
+
+The value of `transform` is a function that receives each error (`GraphQLError`) and must also return a `GraphQLError` object (or `null` to prevent Apollo Server from reporting a particular error entirely).
+
+The only properties of the reported error you can modify are its `message` and its `extensions`. See [Masking and logging errors](../../data/errors/#masking-and-logging-errors) for more details.
+</td>
+</tr>
+
+
+</tbody>
+</table>
+
