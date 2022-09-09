@@ -13,7 +13,7 @@ Because it sets helpful defaults, this function is less configurable than other 
 
 ## `startStandaloneServer`
 
-The `startStandaloneServer` function accepts two arguments, the first **required** argument is the instance of `ApolloServer` to begin listening for incoming requests:
+The `startStandaloneServer` function accepts two arguments. The first **required** argument is the instance of `ApolloServer` to begin listening for incoming requests:
 
 <MultiCodeBlock>
 
@@ -57,7 +57,7 @@ The `startStandaloneServer` function's second optional argument is an object for
 
 An optional asynchronous [`context` initialization function](../data/resolvers#the-context-argument). 
 
-The `context` function should return an object, which gets passed to every resolver that executes for a particular operation. This enables resolvers to share helpful context values, such as a database connection.
+The `context` function should return an object shared across all resolvers that are executing for a particular operation. This enables resolvers to share helpful context values, such as a database connection.
 
 The `context` function receives `req` and `res` options which are `http.IncomingMessage` and `http.ServerResponse` types.
 
@@ -77,9 +77,9 @@ The `context` function receives `req` and `res` options which are `http.Incoming
 
 <td>
 
-  An optional `listen` configuration option. The `listen` option accepts an object with the same properties as the [`net.Server.listen` options object](https://nodejs.org/api/net.html#serverlistenoptions-callback).
+An optional `listen` configuration object. The `listen` option accepts an object with the same properties as the [`net.Server.listen` _options object_](https://nodejs.org/api/net.html#serverlistenoptions-callback).
 
-  If no `port` is specified, this defaults to using `{port: 4000}`.
+If no `port` is specified, this defaults to using `{port: 4000}`.
 </td>
 
 </tr>
@@ -152,7 +152,7 @@ async function startApolloServer() {
 To swap to using `expressMiddleware`, you'll first need to install the following packages so you'll be able to set up HTTP body parsing and CORS for your server:
 
 ```bash
-npm install cors body-parser
+npm install express cors body-parser
 ```
 
 Next, we can modify our code to match the following:
