@@ -202,6 +202,7 @@ To use `InMemoryLRUCache` but change its size to an amount `approximateDocumentS
 ```typescript
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import type { DocumentNode } from 'graphql';
+
 new ApolloServer({
   documentStore: new InMemoryLRUCache<DocumentNode>({
     maxSize: Math.pow(2, 20) * approximateDocumentStoreMiB,
@@ -489,11 +490,11 @@ The `start` method triggers the following actions:
 
 **Serverless** integrations handle starting an Apollo Server instance in the background by calling the  `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method. See [Building integrations](../integrations/building-integrations#ensure-successful-startup) for more details. 
 
-This method [triggers the same actions](#triggered-actions) at the `start()` method.
+This method [triggers the same actions](#triggered-actions) as the `start()` method.
 
 ## `executeHTTPGraphQLRequest`
 
-You can use the `executeHTTPGraphQLRequest` method to execute a GraphQL request by passing in an [`HTTPGraphQLRequest`](./integrations/building-integrations/#construct-the-httpgraphqlrequest-object) object.
+You can pass a [`HTTPGraphQLRequest`](./integrations/building-integrations/#construct-the-httpgraphqlrequest-object) object to the `executeHTTPGraphQLRequest` method to execute a GraphQL request:
 
 <MultiCodeBlock>
 
@@ -563,7 +564,7 @@ const result = await server.executeOperation({
 The `executeOperation` method takes two arguments:
 * The first argument is an object describing the GraphQL operation to be executed.
   * Supported fields are listed in the table below.
-* The second optional argument is used as the operation's [context value](../data/resolvers/#the-context-argument). Note, this argument is **not optional** if your server uses a context function.  
+* The second optional argument is used as the operation's [context value](../data/resolvers/#the-context-argument). Note, this argument is only optional if your server _doesn't_ expect a context value (i.e., your server uses the default context because you didn't explicitly provide another one). 
 
 Below are the available fields for the first argument of `executeOperation`:
 
@@ -640,7 +641,7 @@ This field contains information about a request's extensions.
 </td>
 <td>
 
-An object implementing the [`HTTPGraphQLRequest`](https://github.com/apollographql/apollo-server/blob/2d5d564abe3d817f8902f07a712a6e105f1b2e41/packages/server/src/externalTypes/http.ts#L2) interface, mimicking the information that would in a real HTTP request. 
+An object implementing the [`HTTPGraphQLRequest`](https://github.com/apollographql/apollo-server/blob/2d5d564abe3d817f8902f07a712a6e105f1b2e41/packages/server/src/externalTypes/http.ts#L2) interface, mimicking the information that would be in a real HTTP request. 
 </td>
 </tr>
 
