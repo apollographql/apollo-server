@@ -1,8 +1,9 @@
-import { Trace } from '@apollo/usage-reporting-protobuf';
+import { Trace, ReportHeader, ReferencedFieldsForType } from '@apollo/usage-reporting-protobuf';
 import { dateToProtoTimestamp } from '../../../plugin/traceTreeBuilder';
 import {
   OurContextualizedStats,
   SizeEstimator,
+  OurReport,
 } from '../../../plugin/usageReporting/stats';
 import { DurationHistogram } from '../../../plugin/usageReporting/durationHistogram';
 
@@ -470,5 +471,61 @@ describe('Check type stats', () => {
     contextualizedStats.addTrace(errorTrace, new SizeEstimator());
     contextualizedStats.addTrace(errorTrace, new SizeEstimator());
     expect(contextualizedStats).toMatchSnapshot();
+  });
+});
+
+describe('Add trace to report', () => {
+  const defaultHeader = new ReportHeader({
+    hostname: 'hostname',
+    agentVersion: `@apollo/server`,
+    runtimeVersion: `node latest`,
+    uname: 'uname',
+    executableSchemaId: 'schema',
+    graphRef: 'graph',
+  });
+  const referencedFieldsByType = Object.create(null);
+  referencedFieldsByType['type'] = new ReferencedFieldsForType({
+    fieldNames: ['field1', 'field2'],
+    isInterface: false,
+  });
+
+  it('add as stats if asTrace is false', () => {
+    const report = new OurReport(defaultHeader);
+    report.addTrace({
+      statsReportKey: 'key',
+      trace: baseTrace,
+      asTrace: false,
+      referencedFieldsByType
+    });
+
+    expect(report.tracesPerQuery['key']?.trace?.length).toBe(0);
+    expect(Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length).toBe(1);
+  });
+
+  it('add as stats if asTrace is true but trace is too large', () => {
+    const report = new OurReport(defaultHeader);
+    (report as any).maxTraceBytes = 10;
+    report.addTrace({
+      statsReportKey: 'key',
+      trace: baseTrace,
+      asTrace: true,
+      referencedFieldsByType
+    });
+
+    expect(report.tracesPerQuery['key']?.trace?.length).toBe(0);
+    expect(Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length).toBe(1);
+  });
+
+  it('add as trace if asTrace is true and trace is not too large', () => {
+    const report = new OurReport(defaultHeader);
+    report.addTrace({
+      statsReportKey: 'key',
+      trace: baseTrace,
+      asTrace: true,
+      referencedFieldsByType
+    });
+
+    expect(report.tracesPerQuery['key']?.trace?.length).toBe(1);
+    expect(Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length).toBe(0);
   });
 });

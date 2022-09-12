@@ -49,6 +49,7 @@ export class OurReport implements Required<IReport> {
   // We store this in a class so we can pass it down as a reference to other
   // methods which increment it.
   readonly sizeEstimator = new SizeEstimator();
+  readonly maxTraceBytes = 10*1024*1024;
 
   ensureCountsAreIntegers() {
     for (const tracesAndStats of Object.values(this.tracesPerQuery)) {
@@ -73,8 +74,14 @@ export class OurReport implements Required<IReport> {
     });
     if (asTrace) {
       const encodedTrace = Trace.encode(trace).finish();
-      tracesAndStats.trace.push(encodedTrace);
-      this.sizeEstimator.bytes += 2 + encodedTrace.length;
+
+      // Don't send large traces - always send those as stats
+      if (encodedTrace.length > this.maxTraceBytes) {
+        tracesAndStats.statsWithContext.addTrace(trace, this.sizeEstimator);
+      } else {
+        tracesAndStats.trace.push(encodedTrace);
+        this.sizeEstimator.bytes += 2 + encodedTrace.length;
+      }
     } else {
       tracesAndStats.statsWithContext.addTrace(trace, this.sizeEstimator);
     }
