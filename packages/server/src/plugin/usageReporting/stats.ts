@@ -49,7 +49,7 @@ export class OurReport implements Required<IReport> {
   // We store this in a class so we can pass it down as a reference to other
   // methods which increment it.
   readonly sizeEstimator = new SizeEstimator();
-  readonly maxTraceBytes = 10*1024*1024;
+  readonly maxTraceBytes = 10 * 1024 * 1024;
 
   ensureCountsAreIntegers() {
     for (const tracesAndStats of Object.values(this.tracesPerQuery)) {

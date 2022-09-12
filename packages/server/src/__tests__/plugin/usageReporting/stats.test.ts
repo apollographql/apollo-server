@@ -1,4 +1,8 @@
-import { Trace, ReportHeader, ReferencedFieldsForType } from '@apollo/usage-reporting-protobuf';
+import {
+  Trace,
+  ReportHeader,
+  ReferencedFieldsForType,
+} from '@apollo/usage-reporting-protobuf';
 import { dateToProtoTimestamp } from '../../../plugin/traceTreeBuilder';
 import {
   OurContextualizedStats,
@@ -495,11 +499,13 @@ describe('Add trace to report', () => {
       statsReportKey: 'key',
       trace: baseTrace,
       asTrace: false,
-      referencedFieldsByType
+      referencedFieldsByType,
     });
 
     expect(report.tracesPerQuery['key']?.trace?.length).toBe(0);
-    expect(Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length).toBe(1);
+    expect(
+      Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length,
+    ).toBe(1);
   });
 
   it('add as stats if asTrace is true but trace is too large', () => {
@@ -509,11 +515,13 @@ describe('Add trace to report', () => {
       statsReportKey: 'key',
       trace: baseTrace,
       asTrace: true,
-      referencedFieldsByType
+      referencedFieldsByType,
     });
 
     expect(report.tracesPerQuery['key']?.trace?.length).toBe(0);
-    expect(Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length).toBe(1);
+    expect(
+      Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length,
+    ).toBe(1);
   });
 
   it('add as trace if asTrace is true and trace is not too large', () => {
@@ -522,10 +530,12 @@ describe('Add trace to report', () => {
       statsReportKey: 'key',
       trace: baseTrace,
       asTrace: true,
-      referencedFieldsByType
+      referencedFieldsByType,
     });
 
     expect(report.tracesPerQuery['key']?.trace?.length).toBe(1);
-    expect(Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length).toBe(0);
+    expect(
+      Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length,
+    ).toBe(0);
   });
 });
