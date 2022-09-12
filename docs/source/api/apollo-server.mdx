@@ -74,7 +74,7 @@ For an example, see [Define your GraphQL schema](../getting-started/#step-3-defi
 
 A map of functions that populate data for individual schema fields. Can also be an array of multiple maps that are merged.
 
-**Required** unless you provide a [`schema`](#schema) or a [`gateway`](#gateway).
+While technically optional, if you are providing `typeDefs`, it is strongly recommended that you provide `resolvers` as well. 
 
 For details, see [Resolvers](../data/resolvers/).
 </td>
@@ -90,9 +90,13 @@ For details, see [Resolvers](../data/resolvers/).
 
 <td>
 
-An executable GraphQL schema. You usually don't need to provide this value, because Apollo Server generates it from [`typeDefs`](#typedefs) and [`resolvers`](#resolvers).
+An executable GraphQL schema.  Under the hood, Apollo Server automatically generates this field from [`typeDefs`](#typedefs) and [`resolvers`](#resolvers).
 
-This field is most commonly used with [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses a special `buildFederatedSchema` function to generate its schema.
+This field is helpful if you are using:
+ - [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses the `buildFederatedSchema` function to generate its schema 
+ - A function like `makeExecutableSchema` from [`graphql-tools`](https://www.graphql-tools.com/docs/generate-schema) to create your schema
+ - A code-first approach (i.e., instead of a schema-first approach) 
+
 </td>
 </tr>
 
@@ -628,8 +632,7 @@ If `query` contains more than one operation definition, you must provide this op
 </td>
 <td>
 
-<!-- TODO(AS4) Make this better -->
-This field contains information about a request's extensions. 
+The `extensions` object is usually used to pass information within your server from one touch point to another (e.g., from a request to a plugin). 
 
 </td>
 </tr>

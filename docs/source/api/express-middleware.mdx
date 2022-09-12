@@ -49,7 +49,7 @@ app.use(
 
 > ⚠️ To ensure your server gracefully shuts down, we recommend using the [`ApolloServerPluginDrainHttpServer`](/apollo-server/api/plugin/drain-http-server) plugin. [See below for an example](#example).
 
-The `expressMiddleware` function's second optional argument is an _object_ for configuring `ApolloServer`, which can contain the following option:
+The `expressMiddleware` function's second optional argument is an _object_ for configuring `ApolloServer`, which can contain the following options:
 
 <table class="field-table">
   <thead>
@@ -74,7 +74,7 @@ The `expressMiddleware` function's second optional argument is an _object_ for c
 
 An optional asynchronous [`context` initialization function](../data/resolvers#the-context-argument). 
   
-The `context` function should return an object shared across all resolvers that are executing for a particular operation. This enables resolvers to share helpful context values, such as a database connection.
+The `context` function should return an object that all your server's resolvers share. This enables resolvers to share helpful context values, such as a database connection.
 
 The `context` function receives `req` and `res` options which are [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/2c4c1d0b106a1305c384cde84bb14bbf1a938d2c/types/express-serve-static-core/index.d.ts#L367) and [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/2c4c1d0b106a1305c384cde84bb14bbf1a938d2c/types/express-serve-static-core/index.d.ts#L659) objects.
 
