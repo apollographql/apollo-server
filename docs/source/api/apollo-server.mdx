@@ -488,7 +488,7 @@ The `start` method triggers the following actions:
 
 ## `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests`
 
-**Serverless** integrations handle starting an Apollo Server instance in the background by calling the  `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method. See [Building integrations](../integrations/building-integrations#ensure-successful-startup) for more details. 
+**Serverless** integrations handle starting an Apollo Server instance in the background by calling the `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method. See [Building integrations](../integrations/building-integrations#ensure-successful-startup) for more details.
 
 This method [triggers the same actions](#triggered-actions) as the `start()` method.
 
@@ -501,8 +501,10 @@ You can pass a [`HTTPGraphQLRequest`](./integrations/building-integrations/#cons
 ```ts
 const result = await server
   .executeHTTPGraphQLRequest({
-    OurHttpGraphQLRequest,
-    context: () => context({ req, res }),
+    httpGraphQLRequest: OurHttpGraphQLRequest,
+    context: async () => ({
+      // token: ...,
+    }),
   });
 ```
 
