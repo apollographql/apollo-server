@@ -57,7 +57,7 @@ The `startStandaloneServer` function's second optional argument is an object for
 
 An optional asynchronous [`context` initialization function](../data/resolvers#the-context-argument). 
 
-The `context` function should return an object that all your server's resolvers share. This enables resolvers to share helpful context values, such as a database connection.
+The `context` function should return an object that all your server's resolvers share during an operation's execution. This enables resolvers to share helpful context values, such as a database connection.
 
 The `context` function receives `req` and `res` options which are `http.IncomingMessage` and `http.ServerResponse` types.
 
