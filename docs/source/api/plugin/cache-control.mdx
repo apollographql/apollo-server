@@ -7,7 +7,7 @@ api_reference: true
 
 This article documents the options for the `ApolloServerPluginCacheControl` plugin, which you can import from `@apollo/server/plugin/cacheControl`.
 
-This plugin enables your GraphQL server to specify a cache policy at the field level, either statically in your schema with the `@cacheControl` directive, or dynamically in your resolvers via the `info.cacheControl` API. It also, by default, sets the `cache-control` HTTP response header. See [Server-side caching](../../performance/caching/) for more information and examples.
+This plugin enables your GraphQL server to specify a cache policy at the field level, either statically in your schema with the `@cacheControl` directive, or dynamically in your resolvers via the `info.cacheControl` API. It also sets the `cache-control` HTTP response header by default. See [Server-side caching](../../performance/caching/) for more information and examples.
 
 > To use the `@cacheControl` directive, you must first [define it in your schema](../../performance/caching/#in-your-schema-static).
 
@@ -75,7 +75,7 @@ The plugin doesn't affect your app much if you don't use the `@cacheControl` dir
 </td>
 <td>
 
-By default, root fields and fields that return a composite type (object, interface, or union) are considered to be uncacheable (`maxAge` 0) unless a cache hint is explicitly provided via `@cacheControl` or `info.cacheControl`. You can set this option to make the default `maxAge` for these larger than 0; this will effectively cause all requests to be be cacheable.
+By default, root fields and fields that return a composite type (object, interface, or union) are considered to be uncacheable (`maxAge` 0) unless a cache hint is explicitly provided via `@cacheControl` or `info.cacheControl`. You can set this option to make the default `maxAge` for these larger than 0; this will effectively cause all requests to be cacheable.
 
 This option was popular in Apollo Server 2 as a workaround for the problem solved by the [`@cacheControl(inheritMaxAge: true)`](../../performance/caching/#in-your-schema-static) directive argument. See [Default `maxAge`](../../performance/caching/#default-maxage) for more details.
 
