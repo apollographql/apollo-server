@@ -29,7 +29,7 @@
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.2",
     "@apollo/client": "^3.6.9",
-    "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0-alpha.0",
+    "@apollo/server-plugin-landing-page-graphql-playground": "^4.0.0-alpha.0",
     "@apollo/utils.keyvaluecache": "^1.0.1",
     "@apollo/utils.createhash": "^1.1.0",
     "@apollo/usage-reporting-protobuf": "^4.0.0-alpha.1",
