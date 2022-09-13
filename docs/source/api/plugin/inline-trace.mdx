@@ -36,7 +36,9 @@ const server = new ApolloServer({
 
 If you don't want to use the inline trace plugin even though your schema defines `_Service.sdl: String`, you can explicitly disable it with the `ApolloServerPluginInlineTraceDisabled` plugin:
 
-```js
+<MultiCodeBlock>
+
+```ts
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginInlineTraceDisabled } from '@apollo/server/plugin/disabled';
 
@@ -48,6 +50,8 @@ const server = new ApolloServer({
   ],
 });
 ```
+
+</MultiCodeBlock>
 
 Note that when this plugin is installed in your app, any client can request a trace for any operation they run, which may reveal information about your server that you consider sensitive (such as how long each individual field takes to execute). Federated subgraphs generally should not be directly exposed to the public Internet.
 

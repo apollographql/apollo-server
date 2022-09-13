@@ -39,7 +39,9 @@ const server = new ApolloServer({
 
 If you don't want to use cache control at all, you can explicitly disable it with the `ApolloServerPluginCacheControlDisabled` plugin:
 
-```js
+<MultiCodeBlock>
+
+```ts
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginCacheControlDisabled } from '@apollo/server/plugin/disabled';
 
@@ -51,6 +53,8 @@ const server = new ApolloServer({
   ],
 });
 ```
+
+</MultiCodeBlock>
 
 The plugin doesn't affect your app much if you don't use the `@cacheControl` directive or the `info.cacheControl` API. If you don't currently use it, there might be a very slight performance improvement from disabling the plugin.
 
