@@ -60,7 +60,7 @@ it('returns hello with the provided name', async () => {
 
 Note that when testing, any errors in parsing, validating, and executing your GraphQL operation are returned in the `errors` field of the operation result. As with any GraphQL response, these errors are not _thrown_.
 
-If you are using the `startStandaloneServer` function you don't need to start your server before calling `executeOperation`. The server instance will start automatically and throw any startup errors. If you are using an Apollo Server integration (e.g., `expressMiddleware`) you do need to start your server before calling the `executeOperation` method.
+You don't need to start your server before calling `executeOperation`. The server instance will start automatically and throw any startup errors.
 
 To expand on the example above, here's a full integration test being run against a test instance of `ApolloServer`. This test imports all of the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `ApolloServer`.
 

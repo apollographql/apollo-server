@@ -3,7 +3,7 @@ title: Metrics and logging
 description: How to monitor Apollo Server's performance
 ---
 
-Apollo Server integrates seamlessly with Apollo Studio to help you monitor the execution of your GraphQL operations. It also provides configurable mechanisms for logging each phase of a GraphQL operation.
+Apollo Server integrates seamlessly with [Apollo Studio](/studio) to help you monitor the execution of your GraphQL operations. Apollo Server additionally provides configurable mechanisms for logging each phase of a GraphQL operation.
 
 > Using Federation? Check out the documentation for [federated tracing](/federation/metrics/).
 
@@ -15,7 +15,7 @@ Apollo Server integrates seamlessly with Apollo Studio to help you monitor the e
 
 To connect Apollo Server to Apollo Studio, first [obtain a graph API key](/studio/setup-analytics/#pushing-traces-from-apollo-server). To provide this key to Apollo Server, assign it to the `APOLLO_KEY` environment variable in your server's environment.
 
-Then associate your server instance with a particular graph ID and [graph variant](/studio/schema/registry/#managing-environments-with-variants) by  setting the `APOLLO_GRAPH_REF` environment variable.
+Then associate your server instance with a particular graph ID and [graph variant](/studio/schema/registry/#managing-environments-with-variants) by setting the `APOLLO_GRAPH_REF` environment variable.
 
 You can set environment variable values on the command line as seen below, or with the [`dotenv` npm package](https://www.npmjs.com/package/dotenv) (or similar).
 
@@ -28,6 +28,8 @@ $ APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_REF=my-graph@my-variant \
 ```
 
 #### Communicating with Studio
+
+<!-- TODO(AS4) replace this link once updated plugin api page -->
 
 By default, Apollo Server aggregates your traces and sends them in batches to Studio every minute. This behavior is highly configurable, and you can change the parameters in the [Usage Reporting plugin's configuration](/apollo-server/api/plugin/usage-reporting/#custom-installation).
 
@@ -53,21 +55,19 @@ version in the [`ApolloClient` constructor](/react/api/apollo-client/#the-apollo
 
 #### Using custom headers
 
-For more advanced cases, or to use headers other than the default headers, pass a `generateClientInfo` function into the [usage reporting plugin](../api/plugin/usage-reporting/):
+For more advanced cases, or to use headers other than the default headers, pass a `generateClientInfo` function into the [usage reporting plugin](/apollo-server/api/plugin/usage-reporting/):
 
-```js {10-25}
-const { ApolloServer } = require("apollo-server");
-const {
-  ApolloServerPluginUsageReporting,
-  ApolloServerPluginLandingPageLocalDefault,
-} = require('apollo-server-core');
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginUsageReporting } from '@apollo/server/plugin/usageReporting';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: "bounded",
   plugins: [
+    //highlight-start
     ApolloServerPluginUsageReporting({
       generateClientInfo: ({
         request
@@ -85,15 +85,17 @@ const server = new ApolloServer({
           };
         }
       },
-    }),
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    })
   ],
+  //highlight-end
 });
 
-server.listen().then(({ url }) => {
-  console.log(`🚀  Server ready at ${url}`);
-});
+const { url } = await startStandaloneServer(server);
+
+console.log(`🚀 Server listening at: ${url}`);
 ```
+
+</MultiCodeBlock>
 
 ## Logging
 
@@ -101,14 +103,15 @@ You can set up fine-grained operation logging in Apollo Server by defining a cus
 
 The example below defines a plugin that responds to three different operation events. As it shows, you provide an array of your defined `plugins` to the `ApolloServer` constructor.
 
-For a list of available lifecycle events and their descriptions, see [Plugins](../integrations/plugins/).
+For a list of available lifecycle events and their descriptions, see [Plugins](/apollo-server/integrations/plugins/).
 
-```js
+<MultiCodeBlock>
+
+```ts
 const myPlugin = {
   // Fires whenever a GraphQL request is received from a client.
   async requestDidStart(requestContext) {
-    console.log('Request started! Query:\n' +
-      requestContext.request.query);
+    console.log('Request started! Query:\n' + requestContext.request.query);
 
     return {
       // Fires whenever Apollo Server will parse a GraphQL
@@ -122,22 +125,18 @@ const myPlugin = {
       async validationDidStart(requestContext) {
         console.log('Validation started!');
       },
-
-    }
+    };
   },
 };
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
-  plugins: [
-    myPlugin,
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ]
+  plugins: [myPlugin],
 });
 ```
+
+</MultiCodeBlock>
 
 ## OpenTelemetry support
 
