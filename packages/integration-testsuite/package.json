@@ -43,9 +43,9 @@
   },
   "peerDependencies": {
     "@apollo/server": "^4.0.0-alpha.11",
-    "@jest/globals": "28.x",
+    "@jest/globals": "28.x || 29.x",
     "graphql": "^16.5.0",
-    "jest": "28.x"
+    "jest": "28.x || 29.x"
   },
   "volta": {
     "extends": "../../package.json"
