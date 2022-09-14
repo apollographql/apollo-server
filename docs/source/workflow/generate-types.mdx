@@ -1,34 +1,86 @@
 ---
-title: Generating types from your schema 
-description: How to make your server type safe 
+title: Generating types from a GraphQL Schema
+description: How to ensure your resolvers type safe
 ---
 
-GraphQL is a 
+> 👋 If you haven't set up a TypeScript project yet, follow our [Getting Started](../../getting-started) guide to quickly set one up before following the steps below. 
+
+GraphQL uses a type system to clearly define the available data for each type and field in a [schema](../schema/schema). Type generation libraries can take advantage of the strongly-typed nature of a GraphQL schema to generate TypeScript types that you can use in your resolvers to catch errors at compile time.
 
 > Looking to generate types for your [Apollo Federation](/federation/) subgraphs? Our [Subgraph Template](https://github.com/apollographql/subgraph-template-typescript-apollo-server) lays down the ground work so you can quickly set up a subgraph with generated types.
 
-
-
 ## Setting up your project
 
-The first thing you'll need is a `.graphql` file containing your schema, if you already have your schema in a `.graphql` file feel free to [skip this step](#installing-dependencies).
+This article describes how to use the [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) library to generate types based on a GraphQL schema. Note, there are multiple ways to provide a schema to GraphQL Code Generator, but this guide covers how to generate types based off of a `.graphql` file.
 
-Create a `.graphql` file and move your project's GraphQL schema inside. For example:
+If you haven't already, move your server's schema into a `.graphql` file, like so:
 
+```graphql title="schema.graphql"
+type Query {
+  books: [Book]
+}
 
-you'll want to begin by setting up creating a `.graphql` file and moving your schema into it. 
+type Book {
+  title: String
+  author: String
+}
 
-## Installing dependencies
+type AddBookMutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  book: Book
+}
 
-The first step is to install the packages you'll need to generate types for your resolvers based of your schema:
+type Mutation {
+  addBook(title: String, author: String): AddBookMutationResponse
+}
+```
+
+Next, you'll need to update your imports to ensure you're still passing your schema to your server. In the file where you create your server, you can update your imports to read in your schema using `readFileSync` from the `fs` package:
+
+```ts title="index.ts"
+// ...other imports
+import { readFileSync } from 'fs';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// If you are using ESM module syntax you can redefine `__dirname` as 
+// shown below. If you are using CJS syntax you can use `__dirname` directly.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const schemaFile = path.join(__dirname, '../schema.graphql');
+// Once we have the file path, read in our schema 
+const typeDefs = readFileSync(schemaFile, { encoding: 'utf-8' });
+
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+
+// ... start our server
+```
+
+Restart your server to make sure it can find and use your schema, and that everything works as expected.
+
+Next, we'll install the packages we need to automatically generate types based on our schema. 
+
+### Installing dependencies
+
+Install the follow packages as developer dependencies:
 
 ```bash
 npm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-resolvers
 ```
 
-With those packages installed, you'll can now set up a configuration file telling GraphQL Code Generator where and how to generate types. You can do this by using `npx graphql-code-generator init` or manually create a `codegen.yml` file.
+> For more information on each of the packages above, check out the [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen/plugins) docs.
 
-Below is an example of a `codegen.yaml` file:
+Next, we'll set up a configuration file telling GraphQL Code Generator where and how to generate types. You can do this by manually creating a `codegen.yaml` file or by using the following command:
+
+```bash
+npx graphql-code-generator init
+```
+
+Below is an example of a `codegen.yaml` file we created:
 
 ```yml
 # This configuration file tells GraphQL Code Generator how to generate types based on our schema.
