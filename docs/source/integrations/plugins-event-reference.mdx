@@ -187,10 +187,7 @@ The `requestDidStart` event fires whenever Apollo Server begins fulfilling a Gra
 
 ```ts
 requestDidStart?(
-  requestContext: WithRequired<
-    GraphQLRequestContext<TContext>,
-    'request' | 'context' | 'logger'
-  >
+  requestContext: GraphQLRequestContext<TContext>,
 ): Promise<GraphQLRequestListener<TContext> | void>;
 ```
 
@@ -229,7 +226,7 @@ should not return a value.
 
 ### `schemaDidLoadOrUpdate`
 
-The `schemaDidLoadOrUpdate` event fires whenever Apollo Server initially loads the schema or updates the schema. 
+The `schemaDidLoadOrUpdate` event fires whenever Apollo Server initially loads the schema or updates the schema.
 
 A `schemaDidLoadOrUpdate` handler is given the new API schema and optionally the new core schema (if using a gateway).
 
@@ -282,7 +279,7 @@ At this stage, there is not a guarantee that the operation is not malformed.
 ```ts
 didResolveSource?(
   requestContext: WithRequired<
-    GraphQLRequestContext<TContext>, 'metrics' | 'source' | 'queryHash'>,
+    GraphQLRequestContext<TContext>, 'source' | 'queryHash'>,
   >,
 ): Promise<void>;
 ```
@@ -300,8 +297,7 @@ does not occur.
 ```ts
 parsingDidStart?(
   requestContext: WithRequired<
-    GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'queryHash'
+    GraphQLRequestContext<TContext>, 'source' | 'queryHash'
   >,
 ): Promise<void | (err?: Error) => Promise<void>>;
 ```
@@ -321,7 +317,7 @@ available at this stage, because parsing must succeed for validation to occur.
 validationDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'document' | 'queryHash' | 'source' | 'metrics'
+    'source' | 'queryHash' | 'document'
   >,
 ): Promise<void | (err?: ReadonlyArray<Error>) => Promise<void>>;
 ```
@@ -340,7 +336,7 @@ This event is _not_ associated with your GraphQL server's _resolvers_. When this
 didResolveOperation?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'queryHash' | 'operationName' 
+    'source' | 'queryHash' | 'document' | 'operationName'
   >,
 ): Promise<void>;
 ```
@@ -356,7 +352,7 @@ are invoked in series, and the first non-null response is used.
 responseForOperation?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
+    'source' | 'queryHash' | 'document' | 'operationName' | 'operation'
 ): Promise<GraphQLResponse | null>;
 ```
 
@@ -369,7 +365,7 @@ GraphQL operation specified by a request's `document` AST.
 executionDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'queryHash'
+    'source' | 'queryHash' | 'document' | 'operationName' | 'operation'
   >,
 ): Promise<GraphQLRequestExecutionListener | void>;
 ```
@@ -433,8 +429,7 @@ parsing, validating, or executing a GraphQL operation.
 ```ts
 didEncounterErrors?(
   requestContext: WithRequired<
-    GraphQLRequestContext<TContext>,
-    'metrics' | 'errors' 
+    GraphQLRequestContext<TContext>, 'errors'
   >,
 ): Promise<void>;
 ```
@@ -448,8 +443,7 @@ if the GraphQL operation encounters one or more errors.
 ```ts
 willSendResponse?(
   requestContext: WithRequired<
-    GraphQLRequestContext<TContext>,
-    'metrics' | 'queryHash' | 'source' 
+    GraphQLRequestContext<TContext>, 'source' | 'queryHash'
   >,
 ): Promise<void>;
 ```

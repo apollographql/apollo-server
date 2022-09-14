@@ -4,10 +4,7 @@ import type { GraphQLRequestContext } from './graphql.js';
 
 export type GraphQLRequestContextDidResolveSource<
   TContext extends BaseContext,
-> = WithRequired<
-  GraphQLRequestContext<TContext>,
-  'metrics' | 'source' | 'queryHash'
->;
+> = WithRequired<GraphQLRequestContext<TContext>, 'source' | 'queryHash'>;
 export type GraphQLRequestContextParsingDidStart<TContext extends BaseContext> =
   GraphQLRequestContextDidResolveSource<TContext>;
 export type GraphQLRequestContextValidationDidStart<
@@ -20,12 +17,12 @@ export type GraphQLRequestContextDidResolveOperation<
   WithRequired<GraphQLRequestContext<TContext>, 'operationName'>;
 export type GraphQLRequestContextDidEncounterErrors<
   TContext extends BaseContext,
-> = WithRequired<GraphQLRequestContext<TContext>, 'metrics' | 'errors'>;
+> = WithRequired<GraphQLRequestContext<TContext>, 'errors'>;
 export type GraphQLRequestContextResponseForOperation<
   TContext extends BaseContext,
 > = WithRequired<
   GraphQLRequestContext<TContext>,
-  'metrics' | 'source' | 'document' | 'operation' | 'operationName'
+  'source' | 'document' | 'operation' | 'operationName'
 >;
 export type GraphQLRequestContextExecutionDidStart<
   TContext extends BaseContext,
@@ -36,5 +33,4 @@ export type GraphQLRequestContextExecutionDidStart<
   >;
 export type GraphQLRequestContextWillSendResponse<
   TContext extends BaseContext,
-> = GraphQLRequestContextDidResolveSource<TContext> &
-  WithRequired<GraphQLRequestContext<TContext>, 'metrics'>;
+> = GraphQLRequestContextDidResolveSource<TContext>;
