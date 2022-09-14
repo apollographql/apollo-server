@@ -1,0 +1,106 @@
+---
+title: Generating types from your schema 
+description: How to make your server type safe 
+---
+
+GraphQL is a 
+
+> Looking to generate types for your [Apollo Federation](/federation/) subgraphs? Our [Subgraph Template](https://github.com/apollographql/subgraph-template-typescript-apollo-server) lays down the ground work so you can quickly set up a subgraph with generated types.
+
+
+
+## Setting up your project
+
+The first thing you'll need is a `.graphql` file containing your schema, if you already have your schema in a `.graphql` file feel free to [skip this step](#installing-dependencies).
+
+Create a `.graphql` file and move your project's GraphQL schema inside. For example:
+
+
+you'll want to begin by setting up creating a `.graphql` file and moving your schema into it. 
+
+## Installing dependencies
+
+The first step is to install the packages you'll need to generate types for your resolvers based of your schema:
+
+```bash
+npm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-resolvers
+```
+
+With those packages installed, you'll can now set up a configuration file telling GraphQL Code Generator where and how to generate types. You can do this by using `npx graphql-code-generator init` or manually create a `codegen.yml` file.
+
+Below is an example of a `codegen.yaml` file:
+
+```yml
+# This configuration file tells GraphQL Code Generator how to generate types based on our schema.
+schema: "./schema.graphql"
+generates:
+  # Specify where our generated types should live.
+  ./src/__generated__/resolvers-types.ts:
+    plugins:
+      - "typescript"
+      - "typescript-resolvers"
+    config:
+      useIndexSignature: true
+    # We can specify a type for the context shared by our resolvers, more on this below.  
+      contextType: ../index#MyContext
+```
+
+> See the [GraphQL Code Generator docs](https://www.the-guild.dev/graphql/codegen/plugins/typescript-resolvers#usage-example) for more information on the configuration options of GraphQL Code Generator.
+
+Next you'll want to add scripts to your `package.json` file to ensure your types are generated regularly:
+
+```json
+{
+// ...
+  "scripts": {
+    "postinstall": "npm run compile",
+    "compile": "tsc && graphql-codegen --config codegen.yml",
+    "start": "npm run compile && node ./dist/index.js",
+  },
+// ...
+}
+```
+
+Now we are ready to start using the types we generated!
+
+## Set up typing for resolvers
+
+The `typescript-resolvers` plugin creates a `Resolvers` type that you can import directly into the file where you are importing your resolvers:
+
+```ts
+
+
+```
+
+
+### Add context type for resolvers
+You can manually provide `contextValue` typing for your resolvers, like so
+
+```ts
+
+```
+
+Or you can provide a context value for all of your resolvers by specifying a `contextType` in your `codegen.yaml`:
+
+```yaml
+# This configuration file tells GraphQL Code Generator how to generate types based on our schema.
+schema: "./schema.graphql"
+generates:
+  ./src/__generated__/resolvers-types.ts:
+    plugins:
+      - "typescript"
+      - "typescript-resolvers"
+    config:
+      useIndexSignature: true
+      # Providing our context's interface ensures our context's type is set for
+      # all of our resolvers. 
+      # This file path starts from location of the file where you generate
+      # types (i.e., `/src/__generated__/resolvers-types.ts` above) 
+      contextType: ../index#MyContext
+```
+
+Now your context is automatically typed in all of your resolvers:
+
+```ts
+
+```
