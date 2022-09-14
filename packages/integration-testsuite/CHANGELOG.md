@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.0-alpha.11
+
+### Patch Changes
+
+- [#6906](https://github.com/apollographql/apollo-server/pull/6906) [`115ab2fa8`](https://github.com/apollographql/apollo-server/commit/115ab2fa8879d532d2de2fe6b0373540bda518e3) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Relax message requirement for malformed JSON POST to allow default 'Bad Request'
+  response.
+- Updated dependencies [[`6b37d169b`](https://github.com/apollographql/apollo-server/commit/6b37d169bc7163d49efdff37f5a3a5c3404806ff)]:
+  - @apollo/server@4.0.0-alpha.11
+
 ## 4.0.0-alpha.10
 
 ### Patch Changes

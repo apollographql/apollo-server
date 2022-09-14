@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.0.0-alpha.11
+
+### Patch Changes
+
+- [#6879](https://github.com/apollographql/apollo-server/pull/6879) [`6b37d169b`](https://github.com/apollographql/apollo-server/commit/6b37d169bc7163d49efdff37f5a3a5c3404806ff) Thanks [@bonnici](https://github.com/bonnici)! - Fixed usage reporting plugin log message
+
 ## 4.0.0-alpha.10
 
 ### Patch Changes

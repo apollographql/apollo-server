@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server-integration-testsuite",
-  "version": "4.0.0-alpha.10",
+  "version": "4.0.0-alpha.11",
   "description": "Test suite for Apollo Server integrations",
   "type": "module",
   "main": "dist/index.js",
@@ -42,7 +42,7 @@
     "supertest": "^6.2.3"
   },
   "peerDependencies": {
-    "@apollo/server": "^4.0.0-alpha.10",
+    "@apollo/server": "^4.0.0-alpha.11",
     "@jest/globals": "28.x",
     "graphql": "^16.5.0",
     "jest": "28.x"
