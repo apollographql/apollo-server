@@ -376,7 +376,11 @@ export function defineIntegrationTestSuiteHttpServerTests(
           .send('{foo');
         return req.then((res) => {
           expect(res.status).toEqual(400);
-          expect((res.error as HTTPError).text).toMatch('Unexpected token f');
+          expect(
+            ['Unexpected token f', 'Bad Request'].some((substring) =>
+              (res.error as HTTPError).text.includes(substring),
+            ),
+          ).toBe(true);
         });
       });
 
