@@ -733,10 +733,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
             .send({ query: INTROSPECTION_QUERY });
           expect(res.status).toBe(500);
           expect(res.body).toMatchInlineSnapshot(`
-            Object {
-              "errors": Array [
-                Object {
-                  "extensions": Object {
+            {
+              "errors": [
+                {
+                  "extensions": {
                     "code": "INTERNAL_SERVER_ERROR",
                   },
                   "message": "Internal server error",
@@ -758,10 +758,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
             .send({ query: TEST_STRING_QUERY });
           expect(res.status).toBe(500);
           expect(res.body).toMatchInlineSnapshot(`
-            Object {
-              "errors": Array [
-                Object {
-                  "extensions": Object {
+            {
+              "errors": [
+                {
+                  "extensions": {
                     "code": "INTERNAL_SERVER_ERROR",
                   },
                   "message": "Internal server error",
@@ -1347,11 +1347,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
               // The child should maintain the path and message
               expect(trace.root!.child![0].error).toMatchInlineSnapshot(`
-                Array [
-                  Object {
-                    "json": "{\\"message\\":\\"should be unmodified\\",\\"locations\\":[{\\"line\\":1,\\"column\\":2}],\\"path\\":[\\"fieldWhichWillError\\"],\\"extensions\\":{\\"custom\\":\\"extension\\"}}",
-                    "location": Array [
-                      Object {
+                [
+                  {
+                    "json": "{"message":"should be unmodified","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"],"extensions":{"custom":"extension"}}",
+                    "location": [
+                      {
                         "column": 2,
                         "line": 1,
                       },
@@ -1398,11 +1398,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
               // The child should maintain the path, but have its message masked
               expect(trace.root!.child![0].error).toMatchInlineSnapshot(`
-                Array [
-                  Object {
-                    "json": "{\\"message\\":\\"<masked>\\",\\"locations\\":[{\\"line\\":1,\\"column\\":2}],\\"path\\":[\\"fieldWhichWillError\\"],\\"extensions\\":{\\"maskedBy\\":\\"ApolloServerPluginUsageReporting\\"}}",
-                    "location": Array [
-                      Object {
+                [
+                  {
+                    "json": "{"message":"<masked>","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"],"extensions":{"maskedBy":"ApolloServerPluginUsageReporting"}}",
+                    "location": [
+                      {
                         "column": 2,
                         "line": 1,
                       },
@@ -1721,18 +1721,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   }),
                 ),
               ).toMatchInlineSnapshot(`
-                Object {
-                  "contextCreationDidFailMockCalls": Array [
-                    Array [
-                      Object {
+                {
+                  "contextCreationDidFailMockCalls": [
+                    [
+                      {
                         "error": [GraphQLError: valid result],
                       },
                     ],
                   ],
-                  "result": Object {
-                    "errors": Array [
-                      Object {
-                        "extensions": Object {
+                  "result": {
+                    "errors": [
+                      {
+                        "extensions": {
                           "code": "SOME_CODE",
                           "formatErrorCalled": true,
                         },
@@ -1749,18 +1749,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
             it('GraphQLErrors are formatted, defaulting to INTERNAL_SERVER_ERROR', async () => {
               expect(await run(new GraphQLError('some error')))
                 .toMatchInlineSnapshot(`
-                Object {
-                  "contextCreationDidFailMockCalls": Array [
-                    Array [
-                      Object {
+                {
+                  "contextCreationDidFailMockCalls": [
+                    [
+                      {
                         "error": [GraphQLError: some error],
                       },
                     ],
                   ],
-                  "result": Object {
-                    "errors": Array [
-                      Object {
-                        "extensions": Object {
+                  "result": {
+                    "errors": [
+                      {
+                        "extensions": {
                           "code": "INTERNAL_SERVER_ERROR",
                           "formatErrorCalled": true,
                         },
@@ -1787,18 +1787,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   }),
                 ),
               ).toMatchInlineSnapshot(`
-                Object {
-                  "contextCreationDidFailMockCalls": Array [
-                    Array [
-                      Object {
+                {
+                  "contextCreationDidFailMockCalls": [
+                    [
+                      {
                         "error": [GraphQLError: some error],
                       },
                     ],
                   ],
-                  "result": Object {
-                    "errors": Array [
-                      Object {
-                        "extensions": Object {
+                  "result": {
+                    "errors": [
+                      {
+                        "extensions": {
                           "code": "INTERNAL_SERVER_ERROR",
                           "formatErrorCalled": true,
                         },
@@ -1815,18 +1815,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
             it('non-GraphQLErrors are formatted', async () => {
               expect(await run(new Error('random error')))
                 .toMatchInlineSnapshot(`
-                Object {
-                  "contextCreationDidFailMockCalls": Array [
-                    Array [
-                      Object {
+                {
+                  "contextCreationDidFailMockCalls": [
+                    [
+                      {
                         "error": [Error: random error],
                       },
                     ],
                   ],
-                  "result": Object {
-                    "errors": Array [
-                      Object {
-                        "extensions": Object {
+                  "result": {
+                    "errors": [
+                      {
+                        "extensions": {
                           "code": "INTERNAL_SERVER_ERROR",
                           "formatErrorCalled": true,
                         },
