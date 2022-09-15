@@ -25,42 +25,43 @@ In either case, Apollo Server provides no configuration options to the plugin. Y
 
 ### Configuring default landing pages
 
-To configure these default plugins while still using same `NODE_ENV`-based logic, import them from the `apollo-server-core` package and pass them to the `ApolloServer` constructor in the `plugins` array:
+To configure these default plugins while still using the same `NODE_ENV`-based logic, import them from `@apollo/server/plugin/landingPage/default` and pass them to the `ApolloServer` constructor in the `plugins` array:
 
-```js
-import { ApolloServer } from "apollo-server";
-import {
-  ApolloServerPluginLandingPageLocalDefault,
-  ApolloServerPluginLandingPageProductionDefault
-} from "apollo-server-core";
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginLandingPageProductionDefault } from '@apollo/server/plugin/landingPage/default';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: "bounded",
   plugins: [
     // Install a landing page plugin based on NODE_ENV
-    process.env.NODE_ENV === "production"
+    process.env.NODE_ENV === 'production'
       ? ApolloServerPluginLandingPageProductionDefault({
-          graphRef: "my-graph-id@my-graph-variant",
+          graphRef: 'my-graph-id@my-graph-variant',
           footer: false,
         })
       : ApolloServerPluginLandingPageLocalDefault({ footer: false }),
   ],
 });
+
 ```
+
+</MultiCodeBlock>
 
 Available configuration options are listed in each plugin's reference below.
 
 ## Default non-production landing page
 
-The `ApolloServerPluginLandingPageLocalDefault` plugin shows a landing page welcoming you to Apollo Server:
+In non-production environments, Apollo Server 4's landing page is an embedded version of [Apollo Sandbox](/studio/explorer/sandbox) (served at `http://localhost:4000` by default):
 
-<img class="screenshot" src="../../images/as-landing-page.jpg" alt="Apollo Server default landing page" width="350"/>
+<img class="screenshot" src="../../images/sandbox.jpeg" alt="Apollo Sandbox" />
 
-This landing page is designed for use in local development, where `NODE_ENV` is not set to `production`. It provides a copyable command-line snippet showing how to run operations via `curl`, and it also links to [Apollo Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox) (a hosted GraphQL IDE that runs entirely inside your browser and doesn't require an account). You can choose to embed the Apollo Sandbox on your endpoint if you pass `embed: true`.
+This landing page is designed for use in local development, where `NODE_ENV` is *not* set to `production`.
 
+[Apollo Sandbox](https://studio.apollographql.com/sandbox) is a special mode of Apollo Studio used for local development, which doesn't require an Apollo account. Sandbox includes the [Apollo Studio Explorer](/studio/explorer/explorer), a powerful web IDE that enables you to build and run operations against your server (or any other reachable server).
 ### Options
 
 <table class="field-table">
@@ -98,7 +99,7 @@ The current latest version is available at [this link](https://apollo-server-lan
 </td>
 <td>
 
-By default, the landing page displays a footer that links to the documentation telling you how to configure it. To remove this footer, pass `footer: false`.
+If you aren't using the embedded Apollo Sandbox (i.e., you are using `{embed: false}`), the landing splash page displays a footer that links to the documentation telling you how to configure it. To remove this footer, pass `footer: false`.
 
 </td>
 </tr>
@@ -112,7 +113,7 @@ By default, the landing page displays a footer that links to the documentation t
 </td>
 <td>
 
-A GraphQL document (eg, query or mutation) to populate in the Studio Sandbox Explorer's editor on load.
+A GraphQL document (e.g., query or mutation) to populate in the Studio Sandbox Explorer's editor on load.
 
 If you omit this, the Explorer initially loads an example query based on your schema.
 
@@ -176,9 +177,9 @@ If you omit this, the Explorer defaults `includeCookies` to `false` or the curre
 </td>
 <td>
 
-If `true`, the Apollo Server landing page renders an embedded version of Apollo Sandbox at its GraphQL endpoint URL. This enables visitors to query the endpoint directly and use additional Sandbox features if signed in with their Apollo account.
+If `true`, the Apollo Server landing page renders an embedded version of [Apollo Sandbox](/studio/explorer/sandbox/) at its GraphQL endpoint URL. This is the default behavior.
 
-The default value is `false`, in which case the landing page instead displays a link to open the non-embedded version of Sandbox.
+If you set this option to `false`, your server's landing page is a splash page containing a copyable command-line snippet showing how to run operations via `curl` alongside a link to Apollo Sandbox.
 
 </td>
 </tr>
@@ -308,9 +309,9 @@ An object containing initial HTTP header values to populate in the Explorer on l
 </td>
 <td>
 
-If `true` or you provide an options object, the Apollo Server landing page renders an embedded version of the Apollo Studio Explorer at its GraphQL endpoint URL. This enables visitors to query the endpoint directly and use additional Explorer features if signed in with their Apollo account.
+If `true` or you provide an options object, the Apollo Server landing page renders an embedded version of the [Apollo Sandbox](https://studio.apollographql.com/sandbox) at its GraphQL endpoint URL. This enables visitors to query the endpoint directly and use additional Studio features if signed in with their Apollo account.
 
-To embed the Explorer, you must _also_ provide Apollo Server with the **graph ref** of the Studio graph to use, usually via the `APOLLO_GRAPH_REF` environment variable.
+To embed the Apollo Sandbox, you must _also_ provide Apollo Server with the **graph ref** of the Studio graph to use, usually via the `APOLLO_GRAPH_REF` environment variable.
 
 The default value is `false`, in which case the landing page displays a basic `curl` command.
 
@@ -460,28 +461,30 @@ The default value is `dark`.
 
 ## GraphQL Playground landing page
 
+> ⚠️ The GraphQL Playground project is [**retired**](https://github.com/graphql/graphql-playground/issues/1143). Instead, we recommend using Apollo Sandbox, Apollo Server's [default development landing page](#default-non-production-landing-page).
+
 The `ApolloServerPluginLandingPageGraphQLPlayground` plugin serves the [GraphQL Playground IDE](https://github.com/graphql/graphql-playground) as a landing page.
 
-> **Note:** The GraphQL Playground project is [retired](https://github.com/graphql/graphql-playground/issues/1143) in favor of GraphiQL. This functionality is provided to help developers migrating from Apollo Server 2.
+The GraphQL Playground plugin lives in its own `@apollo/server-plugin-landing-page-graphql-playground` package. To use it, install this package and provide the plugin to the `ApolloServer` constructor:
 
-The GraphQL Playground plugin is not installed by default. To install it, import it from `apollo-server-core` and provide it to the `ApolloServer` constructor:
+<MultiCodeBlock>
 
-```js
-import { ApolloServer } from "apollo-server";
+```ts
+import { ApolloServer } from '@apollo/server';
 import {
   ApolloServerPluginLandingPageGraphQLPlayground
-} from "apollo-server-core";
+} from "@apollo/server-plugin-landing-page-graphql-playground";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: "bounded",
   plugins: [
     ApolloServerPluginLandingPageGraphQLPlayground(),
   ],
 });
 ```
+
+</MultiCodeBlock>
 
 This plugin takes the same arguments as the [`renderPlaygroundPage` function](https://github.com/apollographql/graphql-playground/blob/apollo/packages/graphql-playground-html/src/render-playground-page.ts#L63) from the `graphql-playground-html` package (or specifically, the `@apollographql/graphql-playground-html` fork).
 
@@ -551,21 +554,19 @@ If specified, allows you to override the default values of GraphQL Playground's 
 
 The `ApolloServerPluginLandingPageDisabled` plugin serves _no_ landing page from Apollo Server's base URL. Install it to disable the default landing page in some or all environments:
 
-```js
-import { ApolloServer } from "apollo-server";
-import {
-  ApolloServerPluginLandingPageDisabled
-} from "apollo-server-core";
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: "bounded",
-  plugins: [
-    ApolloServerPluginLandingPageDisabled(),
-  ],
+  plugins: [ApolloServerPluginLandingPageDisabled()],
 });
 ```
+
+</MultiCodeBlock>
 
 This plugin takes no arguments.
