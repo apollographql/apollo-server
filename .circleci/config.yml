@@ -58,6 +58,7 @@ jobs:
       - setup-node:
           node-version: <<parameters.node-version>>
       - run: npm run test:ci
+      - run: npm run coverage:upload
       - store_test_results:
           path: junit.xml
 
