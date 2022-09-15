@@ -485,7 +485,7 @@ Note that returning `null` also affects Studio's aggregated statistics about how
 
 [As mentioned above](#for-client-responses), you can use the `unwrapResolverError` (from `@apollo/server/errors`) to remove the `GraphQLError` wrapping an original error.
 
-> **For federated graphs**, define your `transform` function in each subgraph's [inline trace plugin](../migration/#rewriteerror-plugin-option) to rewrite field errors. If you want to transform your gateway's parsing or validation errors, you can define your `transform` function in your gateway.
+> **For federated graphs**, define your `transform` function in each subgraph's [inline trace plugin](../api/plugin/inline-trace) to rewrite field errors. If you want to transform your gateway's parsing or validation errors, you can define your `transform` function in your gateway.
 
 #### Example: Ignoring common low-severity errors
 

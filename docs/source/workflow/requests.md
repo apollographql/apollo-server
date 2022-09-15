@@ -50,7 +50,7 @@ curl --request POST \
 
 ### Batching
 
-By default, Apollo Server 4 [doesn't support batching HTTP requests](../migration#http-batching-is-off-by-default). To enable HTTP batching, you must explicitly pass `allowBatchedHttpRequests: true` to the `ApolloServer` constructor.
+By default, Apollo Server 4 [doesn't support batching HTTP requests](../api/apollo-server#allowbatchedhttprequests). To enable HTTP batching, you must explicitly pass `allowBatchedHttpRequests: true` to the `ApolloServer` constructor.
 
 If you have enabled HTTP batching, you can send a batch of queries in a single `POST` request by providing a JSON-encoded array of query objects, like so:
 

@@ -7,7 +7,7 @@ description: Control access to your server's resources
 
 [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header-based protocol that enables a server to dictate which origins can access its resources. Put another way, your server can specify which websites can tell a user's browser to talk to your server, and precisely which types of HTTP requests are allowed.
 
-The [`startStandaloneServer`](../api/standalone) function's CORS configuration is _unalterable_ and enables any website on the internet to tell a user's browser to connect to your server. [Depending on your use case,](#choosing-cors-options-for-your-project) you might need to further [customize your CORS behavior](#passing-credentials-with-cors) to ensure your server's security. To do so, you'll first need to swap to using [`expressMiddleware`](../migration#migrate-from-apollo-server-express) (or any other Apollo Server integration).
+The [`startStandaloneServer`](../api/standalone) function's CORS configuration is _unalterable_ and enables any website on the internet to tell a user's browser to connect to your server. [Depending on your use case,](#choosing-cors-options-for-your-project) you might need to further [customize your CORS behavior](#passing-credentials-with-cors) to ensure your server's security. To do so, you'll first need to swap to using [`expressMiddleware`](../api/express-middleware) (or any other Apollo Server integration).
 
 > ⚠️ If your app is only visible on a private network and uses network separation for security, `startStandaloneServer`'s CORS behavior is **not secure**. See [Specifying origins](#specifying-origins) for more information.
 
@@ -92,7 +92,7 @@ Apollo Server's standalone server (i.e., [`startStandaloneServer`](../api/standa
 
 > If you need to pass credentials to your server (e.g., via cookies), you can't use the wildcard value (`*`) for your origin. You _must_ provide specific origins. For more details, see [Passing credentials with CORS](#passing-credentials-with-cors).
 
-The [`startStandaloneServer` function](../api/standalone) **doesn't support** configuring your server's CORS behavior.  If you want to customize your server's CORS behavior (e.g., by specifying origins or passing cookies), swap to using [`expressMiddleware`](../migration#migrate-from-apollo-server-express) (or any other Apollo Server integration).
+The [`startStandaloneServer` function](../api/standalone) **doesn't support** configuring your server's CORS behavior.  If you want to customize your server's CORS behavior (e.g., by specifying origins or passing cookies), swap to using [`expressMiddleware`](../api/standalone#swapping-to-expressmiddleware) (or any other Apollo Server integration).
 
 Below, we set up and customize the CORS behavior for our `expressMiddleware` function using the [`cors` package](https://github.com/expressjs/cors#configuration-options):
 
