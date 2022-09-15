@@ -21,4 +21,6 @@ export default {
     // Ignore '.js' at the end of imports; part of ESM support.
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
+  // this can be removed with jest v29
+  snapshotFormat: { escapeString: false, printBasicPrototype: false },
 };

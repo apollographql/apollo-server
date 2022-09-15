@@ -114,10 +114,10 @@ describe('Errors', () => {
         expect(error.extensions?.exception).toHaveProperty('stacktrace');
         delete (error as any).extensions.exception.stacktrace;
         expect(error).toMatchInlineSnapshot(`
-          Object {
-            "extensions": Object {
+          {
+            "extensions": {
               "code": "INTERNAL_SERVER_ERROR",
-              "exception": Object {
+              "exception": {
                 "key": "value",
               },
             },
@@ -136,10 +136,10 @@ describe('Errors', () => {
         expect(errors).toHaveLength(1);
         const [error] = errors;
         expect(error).toMatchInlineSnapshot(`
-          Object {
-            "extensions": Object {
+          {
+            "extensions": {
               "code": "INTERNAL_SERVER_ERROR",
-              "exception": Object {
+              "exception": {
                 "key": "value",
               },
             },

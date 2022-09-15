@@ -111,7 +111,7 @@ describe('Schema reporter', () => {
     await expect(
       schemaReporter.reportSchema(false),
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"Unexpected response shape from Apollo when reporting schema. If this continues, please reach out to support@apollographql.com. Received response: {\\"reportSchema\\":{\\"__typename\\":\\"ReportServerInfoResponse\\"}}"`,
+      `"Unexpected response shape from Apollo when reporting schema. If this continues, please reach out to support@apollographql.com. Received response: {"reportSchema":{"__typename":"ReportServerInfoResponse"}}"`,
     );
   });
 

@@ -392,14 +392,14 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         expect(res.status).toEqual(400);
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "errors": Array [
-              Object {
-                "extensions": Object {
+          {
+            "errors": [
+              {
+                "extensions": {
                   "code": "GRAPHQL_PARSE_FAILED",
                 },
-                "locations": Array [
-                  Object {
+                "locations": [
+                  {
                     "column": 2,
                     "line": 1,
                   },
@@ -419,19 +419,19 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         expect(res.status).toEqual(400);
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "errors": Array [
-              Object {
-                "extensions": Object {
+          {
+            "errors": [
+              {
+                "extensions": {
                   "code": "GRAPHQL_VALIDATION_FAILED",
                 },
-                "locations": Array [
-                  Object {
+                "locations": [
+                  {
                     "column": 3,
                     "line": 1,
                   },
                 ],
-                "message": "Cannot query field \\"hello\\" on type \\"QueryType\\".",
+                "message": "Cannot query field "hello" on type "QueryType".",
               },
             ],
           }
@@ -447,13 +447,13 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         expect(res.status).toEqual(400);
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "errors": Array [
-              Object {
-                "extensions": Object {
+          {
+            "errors": [
+              {
+                "extensions": {
                   "code": "OPERATION_RESOLUTION_FAILURE",
                 },
-                "message": "Unknown operation named \\"NotBadName\\".",
+                "message": "Unknown operation named "NotBadName".",
               },
             ],
           }
@@ -473,10 +473,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         expect(res.status).toEqual(400);
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "errors": Array [
-              Object {
-                "extensions": Object {
+          {
+            "errors": [
+              {
+                "extensions": {
                   "code": "OPERATION_RESOLUTION_FAILURE",
                 },
                 "message": "Must provide operation name if query contains multiple operations.",
@@ -494,10 +494,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
         expect(res.status).toEqual(400);
         expect(JSON.parse((res.error as HTTPError).text))
           .toMatchInlineSnapshot(`
-          Object {
-            "errors": Array [
-              Object {
-                "extensions": Object {
+          {
+            "errors": [
+              {
+                "extensions": {
                   "code": "BAD_REQUEST",
                 },
                 "message": "GraphQL operations must contain a non-empty \`query\` or a \`persistedQuery\` extension.",
@@ -567,10 +567,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
           expect(res.body).toMatchInlineSnapshot(`
-            Object {
-              "errors": Array [
-                Object {
-                  "extensions": Object {
+            {
+              "errors": [
+                {
+                  "extensions": {
                     "code": "BAD_REQUEST",
                   },
                   "message": "GET requests only support query operations, not mutation operations",
@@ -623,10 +623,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
           expect(res.body).toMatchInlineSnapshot(`
-            Object {
-              "errors": Array [
-                Object {
-                  "extensions": Object {
+            {
+              "errors": [
+                {
+                  "extensions": {
                     "code": "BAD_REQUEST",
                   },
                   "message": "GET requests only support query operations, not mutation operations",
@@ -997,10 +997,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
         expect(res.status).toEqual(400);
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "errors": Array [
-              Object {
-                "extensions": Object {
+          {
+            "errors": [
+              {
+                "extensions": {
                   "code": "BAD_REQUEST",
                 },
                 "message": "\`variables\` in a POST body should be provided as an object, not a recursively JSON-encoded string.",
@@ -1018,10 +1018,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
         expect(res.status).toEqual(400);
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "errors": Array [
-              Object {
-                "extensions": Object {
+          {
+            "errors": [
+              {
+                "extensions": {
                   "code": "BAD_REQUEST",
                 },
                 "message": "\`extensions\` in a POST body should be provided as an object, not a recursively JSON-encoded string.",
@@ -1215,10 +1215,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
         expect(res.status).toEqual(400);
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "errors": Array [
-              Object {
-                "extensions": Object {
+          {
+            "errors": [
+              {
+                "extensions": {
                   "code": "BAD_REQUEST",
                 },
                 "message": "Operation batching disabled.",
@@ -1463,12 +1463,12 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
         expect(res.status).toEqual(200);
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "data": Object {
+          {
+            "data": {
               "testError": null,
             },
-            "errors": Array [
-              Object {
+            "errors": [
+              {
                 "message": "--blank--",
               },
             ],
@@ -1494,12 +1494,12 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
         expect(res.status).toEqual(200);
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "data": Object {
+          {
+            "data": {
               "testGraphQLError": null,
             },
-            "errors": Array [
-              Object {
+            "errors": [
+              {
                 "message": "--blank--",
               },
             ],
@@ -1524,55 +1524,55 @@ export function defineIntegrationTestSuiteHttpServerTests(
         expect(res.headers.erroneous).toBe('indeed');
         expect(res.headers.felonious).toBe('nah');
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "data": Object {
+          {
+            "data": {
               "testGraphQLErrorWithHTTP1": null,
               "testGraphQLErrorWithHTTP2": null,
               "testGraphQLErrorWithHTTP3": null,
             },
-            "errors": Array [
-              Object {
-                "extensions": Object {
+            "errors": [
+              {
+                "extensions": {
                   "code": "INTERNAL_SERVER_ERROR",
                 },
-                "locations": Array [
-                  Object {
+                "locations": [
+                  {
                     "column": 13,
                     "line": 1,
                   },
                 ],
                 "message": "error 1",
-                "path": Array [
+                "path": [
                   "testGraphQLErrorWithHTTP1",
                 ],
               },
-              Object {
-                "extensions": Object {
+              {
+                "extensions": {
                   "code": "INTERNAL_SERVER_ERROR",
                 },
-                "locations": Array [
-                  Object {
+                "locations": [
+                  {
                     "column": 39,
                     "line": 1,
                   },
                 ],
                 "message": "error 2",
-                "path": Array [
+                "path": [
                   "testGraphQLErrorWithHTTP2",
                 ],
               },
-              Object {
-                "extensions": Object {
+              {
+                "extensions": {
                   "code": "INTERNAL_SERVER_ERROR",
                 },
-                "locations": Array [
-                  Object {
+                "locations": [
+                  {
                     "column": 65,
                     "line": 1,
                   },
                 ],
                 "message": "error 3",
-                "path": Array [
+                "path": [
                   "testGraphQLErrorWithHTTP3",
                 ],
               },
@@ -1598,9 +1598,9 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
         expect(res.status).toEqual(400);
         expect(res.body).toMatchInlineSnapshot(`
-          Object {
-            "errors": Array [
-              Object {
+          {
+            "errors": [
+              {
                 "message": "--blank--",
               },
             ],
