@@ -159,7 +159,8 @@ console.log(`🚀 Server listening at: ${url}`);
 
 Note that you can define your resolvers across as many different files and objects as you want, as long as you merge all of them into a single resolver map that's passed to the `ApolloServer` constructor.
 
-<!-- (TODO(AS4) Add note to fetching from other data sources data once it's done  -->
+{/* (TODO(AS4) Add note to fetching from other data sources data once it's done */}
+
 > To learn how to fetch data from a REST API, see [Fetching from REST](./fetching-rest/).
 
 ## Resolver chains
@@ -229,9 +230,9 @@ The resulting resolver chain for this query matches the hierarchical structure o
 
 ```mermaid
 graph LR;
-  libraries("Query.libraries()") --> books("Library.books()");
-  books --> author("Book.author()");
-  author --> name("Author.name()");
+  libraries("Query.libraries()") */} books("Library.books()");
+  books */} author("Book.author()");
+  author */} name("Author.name()");
 ```
 
 These resolvers execute in the order shown above, and they each pass their return value to the next resolver in the chain via the [`parent` argument](#resolver-arguments).
@@ -357,10 +358,10 @@ Then the resolver chain looks like this:
 
 ```mermaid
 graph LR;
-  libraries("Query.libraries()") --> books("Library.books()");
-  books --> title("Book.title()");
-  books --> author("Book.author()");
-  author --> name("Author.name()");
+  libraries("Query.libraries()") */} books("Library.books()");
+  books */} title("Book.title()");
+  books */} author("Book.author()");
+  author */} name("Author.name()");
 ```
 
 When a chain "diverges" like this, each subchain executes in parallel.
@@ -371,16 +372,16 @@ Resolver functions are passed four arguments: `parent`, `args`, `context`, and `
 
 > You can use any name for each argument in your code, but the Apollo docs use these names as a convention. Instead of `parent`, it's also common to use the parent type's name or `source`.
 
-| Argument  | Description  |
-|---|---|
-| `parent` | <p>The return value of the resolver for this field's parent (i.e., the previous resolver in the [resolver chain](#resolver-chains)).</p><p>For resolvers of top-level fields with no parent (such as fields of `Query`), this value is obtained from the `rootValue` function passed to [Apollo Server's constructor](/apollo-server/api/apollo-server/#constructor).</p>  |
-| `args` |  <p>An object that contains all GraphQL arguments provided for this field.</p><p> For example, when executing `query{ user(id: "4") }`, the `args` object passed to the `user` resolver is `{ "id": "4" }`.</p> |
-| `context` | <p>An object shared across all resolvers that are executing for a particular operation. Use this to share per-operation state, including authentication information, dataloader instances, and anything else to track across resolvers. </p><p>See [The `context` argument](#the-context-argument) for more information.</p> |
-| `info` | <p>Contains information about the operation's execution state, including the field name, the path to the field from the root, and more. </p><p>Its core fields are listed in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/main/src/type/definition.ts#L977-L986). Apollo Server extends it with a [`cacheControl` field](/apollo-server/performance/caching/#in-your-resolvers-dynamic).</p> |
+| Argument  | Description                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `parent`  | <p>The return value of the resolver for this field's parent (i.e., the previous resolver in the [resolver chain](#resolver-chains)).</p><p>For resolvers of top-level fields with no parent (such as fields of `Query`), this value is obtained from the `rootValue` function passed to [Apollo Server's constructor](/apollo-server/api/apollo-server/#constructor).</p>                                               |
+| `args`    | <p>An object that contains all GraphQL arguments provided for this field.</p><p> For example, when executing `query{ user(id: "4") }`, the `args` object passed to the `user` resolver is `{ "id": "4" }`.</p>                                                                                                                                                                                                          |
+| `context` | <p>An object shared across all resolvers that are executing for a particular operation. Use this to share per-operation state, including authentication information, dataloader instances, and anything else to track across resolvers. </p><p>See [The `context` argument](#the-context-argument) for more information.</p>                                                                                            |
+| `info`    | <p>Contains information about the operation's execution state, including the field name, the path to the field from the root, and more. </p><p>Its core fields are listed in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/main/src/type/definition.ts#L977-L986). Apollo Server extends it with a [`cacheControl` field](/apollo-server/performance/caching/#in-your-resolvers-dynamic).</p> |
 
 ### The `context` argument
 
-<!-- (TODO(AS4) Add note to fetching data too once it's done  -->
+{/* (TODO(AS4) Add note to fetching data too once it's done */}
 The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), [sources for fetching data](./fetching-rest/), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./fetching-rest/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
 
 **Resolvers should never destructively modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
@@ -396,18 +397,19 @@ import { GraphQLError } from 'graphql';
 
 const resolvers = {
   Query: {
-  // Example resolver
+    // Example resolver
     adminExample: (parent, args, context, info) => {
       if (context.authScope !== ADMIN) {
         throw new GraphQLError('not admin!', {
-          extensions: { code: 'UNAUTHENTICATED' }
+          extensions: { code: 'UNAUTHENTICATED' },
         });
       }
     },
   },
 };
 
-interface MyContext { // Context typing
+interface MyContext {
+  // Context typing
   authScope?: String;
 }
 
@@ -419,23 +421,20 @@ const server = new ApolloServer<MyContext>({
 const { url } = await startStandaloneServer(server, {
   // A named context function is required if you are not
   // using ApolloServer<BaseContext>
-  context: async ({req, res}) => ({
-      authScope: getScope(req.headers.authorization),
-  })
+  context: async ({ req, res }) => ({
+    authScope: getScope(req.headers.authorization),
+  }),
 });
-
 ```
 
 </MultiCodeBlock>
 
 > This example assumes you're using either the `startStandaloneServer` or `expressMiddleware`, both of which use Express under the hood. The fields of the object passed to your `context` function might differ if you're using a different integration.
 
-The `context` function should be *asynchronous* and return an object, which is then accessible to your server's resolvers and plugins (via the `contextValue` field).
+The `context` function should be _asynchronous_ and return an object, which is then accessible to your server's resolvers and plugins (via the `contextValue` field).
 
-<!-- TODO (AS4): update these links once we have an article with other integration functions
-
-[For more details on Apollo Server integrations, see [Choosing an Apollo Server package](/apollo-server/api/apollo-server/#middleware-specific-context-fields).
--->
+{/* TODO (AS4): update these links once we have an article with other integration functions */}
+{/* [For more details on Apollo Server integrations, see [Choosing an Apollo Server package](/apollo-server/api/apollo-server/#middleware-specific-context-fields). */}
 
 Because the `context` initialization function is asynchronous, you can use it to establish database connections and wait for other operations to complete:
 
@@ -452,7 +451,7 @@ context: async () => ({
 
 #### Throwing errors in `context`
 
-By default, if your `context` function throws an error, Apollo Server returns that error to the user in a JSON  response with an HTTP status code of 500. If the thrown error is not a `GraphQLError`, the error's message will be prepended with `"Context creation failed: "`.
+By default, if your `context` function throws an error, Apollo Server returns that error to the user in a JSON response with an HTTP status code of 500. If the thrown error is not a `GraphQLError`, the error's message will be prepended with `"Context creation failed: "`.
 
 You can control the HTTP status code of an error by throwing a [`GraphQLError` with an `http` extension](./errors/#setting-http-status-code-and-headers). For example:
 
@@ -475,18 +474,18 @@ context: async ({ req }) => {
 
   return { user, db };
 },
-````
+```
 
 ## Return values
 
 A resolver function's return value is treated differently by Apollo Server depending on its type:
 
-| Type  | Description  |
-|---|---|
-| Scalar / object | <p>A resolver can return a single value or an object, as shown in [Defining a resolver](#defining-a-resolver). This return value is passed down to any nested resolvers via the `parent` argument.</p> |
-| `Array` | <p>Return an array if and only if your schema indicates that the resolver's associated field contains a list.</p><p>After you return an array, Apollo Server executes nested resolvers for each item in the array. </p>|
-| `null` / `undefined` | <p>Indicates that the value for the field could not be found.</p> <p>If your schema indicates that this resolver's field is nullable, then the operation result has a `null` value at the field's position.</p><p>If this resolver's field is _not_ nullable, Apollo Server sets the field's _parent_ to `null`. If necessary, this process continues up the resolver chain until it reaches a field that _is_ nullable. This ensures that a response never includes a `null` value for a non-nullable field. When this happens, the response's `errors` property will be populated with relevant errors concerning the nullability of that field.</p>|
-| [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) | <p>Resolvers can be asynchronous and perform async actions, such as fetching from a database or back-end API. To support this, a resolver can return a promise that resolves to any other supported return type.</p> |
+| Type                                                                                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Scalar / object                                                                           | <p>A resolver can return a single value or an object, as shown in [Defining a resolver](#defining-a-resolver). This return value is passed down to any nested resolvers via the `parent` argument.</p>                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `Array`                                                                                   | <p>Return an array if and only if your schema indicates that the resolver's associated field contains a list.</p><p>After you return an array, Apollo Server executes nested resolvers for each item in the array. </p>                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `null` / `undefined`                                                                      | <p>Indicates that the value for the field could not be found.</p> <p>If your schema indicates that this resolver's field is nullable, then the operation result has a `null` value at the field's position.</p><p>If this resolver's field is _not_ nullable, Apollo Server sets the field's _parent_ to `null`. If necessary, this process continues up the resolver chain until it reaches a field that _is_ nullable. This ensures that a response never includes a `null` value for a non-nullable field. When this happens, the response's `errors` property will be populated with relevant errors concerning the nullability of that field.</p> |
+| [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) | <p>Resolvers can be asynchronous and perform async actions, such as fetching from a database or back-end API. To support this, a resolver can return a promise that resolves to any other supported return type.</p>                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ## Default resolvers
 
@@ -497,10 +496,10 @@ The default resolver function uses the following logic:
 ```mermaid
 graph TB;
   parent("Does the parent argument have a<br/>property with this resolver's exact name?");
-  parent--No-->null("Return undefined");
-  parent--Yes-->function("Is that property's value a function?");
-  function--No-->return("Return the property's value");
-  function--Yes-->call("Call the function and<br/>return its return value");
+  parent--No*/}null("Return undefined");
+  parent--Yes*/}function("Is that property's value a function?");
+  function--No*/}return("Return the property's value");
+  function--Yes*/}call("Call the function and<br/>return its return value");
 ```
 
 As an example, consider the following schema excerpt:

@@ -14,7 +14,7 @@ Before we can correctly control access to data, we have to authenticate a user. 
 
 The example below extracts a user token from the HTTP `Authorization` header included in each operation request. It then fetches the corresponding user object for that token and adds that object to [the `context` object](../data/resolvers/#the-context-argument) that's passed to every executed resolver. Each resolver can then use this object to determine what data the user has access to.
 
-<!-- TODO(AS4) Add note back in about where to find integration specific context arguments -->
+{/* TODO(AS4) Add note back in about where to find integration specific context arguments */}
 
 <MultiCodeBlock>
 
@@ -42,7 +42,6 @@ const { url } = await startStandaloneServer(server, {
   // For `startStandaloneServer`, the `req` and `res` objects are
   // `http.IncomingMessage` and `http.ServerResponse` types.
   context: async ({ req, res }) => {
-
     // Get the user token from the headers.
     const token = req.headers.authorization || '';
 
@@ -75,7 +74,7 @@ Once we have information about the user making a request, the most basic thing w
 We should use this method only on highly restrictive environments that provide no public access to the API whatsoever, like an internal tool or an independent microservice that shouldn't be exposed to the public.
 
 To perform this kind of authorization, we can modify the `context` function:
-<!-- TODO(AS4) check back and see if throwing errors in context changes this? -->
+{/* TODO(AS4) check back and see if throwing errors in context changes this? */}
 
 <MultiCodeBlock>
 
@@ -164,7 +163,7 @@ Because our resolvers have access to everything in the context, an important que
 
 As our server gets more complex, there will probably be multiple places in the schema that need to fetch the same kind of data. In our last example, you may have noticed the return array was replaced with a call to `context.models.User.getAll()`.
 
-<!-- TODO(AS4) add link back in for data sources -->
+{/* TODO(AS4) add link back in for data sources */}
 
 As always, we recommend moving the actual data fetching and transformation logic from your resolvers to [data sources](../data/fetching-rest/) or model objects that each represent a concept from your application: `User`, `Post`, etc. This allows you to make your resolvers a thin routing layer, and put all of your business logic in one place.
 

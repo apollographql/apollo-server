@@ -1,5 +1,5 @@
 ---
-title: "API Reference: Inline trace plugin"
+title: 'API Reference: Inline trace plugin'
 api_reference: true
 ---
 
@@ -26,7 +26,9 @@ const server = new ApolloServer({
   resolvers,
   plugins: [
     ApolloServerPluginInlineTrace({
-      includeErrors: { transform: (err) => (err.message.match(SENSITIVE_REGEX) ? null : err ) },
+      includeErrors: {
+        transform: (err) => (err.message.match(SENSITIVE_REGEX) ? null : err),
+      },
     }),
   ],
 });
@@ -45,9 +47,7 @@ import { ApolloServerPluginInlineTraceDisabled } from '@apollo/server/plugin/dis
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  plugins: [
-    ApolloServerPluginInlineTraceDisabled(),
-  ],
+  plugins: [ApolloServerPluginInlineTraceDisabled()],
 });
 ```
 
@@ -75,18 +75,19 @@ When using Federation, you typically run this plugin in subgraphs and you run th
 ###### `includeErrors`
 
 `Object`
+
 </td>
 <td>
 
 Provide this object to modify GraphQL operation errors before your server reports those errors in traces to Apollo Studio. Valid options are described in [Valid `includeErrors` object signatures](#valid-includeerrors-object-signatures).
 
 The default value is `{ masked: true }`, which means error messages are masked and extensions are omitted. This is a security measure to prevent sensitive data from potentially reaching Apollo servers.
+
 </td>
 </tr>
 
 </tbody>
 </table>
-
 
 #### Valid `includeErrors` object signatures
 
@@ -108,7 +109,7 @@ The default value is `{ masked: true }`, which means error messages are masked a
 </td>
 <td>
 
-If you provide this object, error messages are masked and extensions omitted in the traces sent to Apollo Studio.  This is the default behavior.
+If you provide this object, error messages are masked and extensions omitted in the traces sent to Apollo Studio. This is the default behavior.
 
 </td>
 </tr>
@@ -137,10 +138,9 @@ If you provide this object, all error messages and extensions are included in tr
 The value of `transform` is a function that receives each error (`GraphQLError`) and must also return a `GraphQLError` object (or `null` to prevent Apollo Server from reporting a particular error entirely).
 
 The only properties of the reported error you can modify are its `message` and its `extensions`. See [Masking and logging errors](../../data/errors/#masking-and-logging-errors) for more details.
+
 </td>
 </tr>
 
-
 </tbody>
 </table>
-

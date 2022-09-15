@@ -29,7 +29,7 @@ $ APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_REF=my-graph@my-variant \
 
 #### Communicating with Studio
 
-<!-- TODO(AS4) replace this link once updated plugin api page -->
+{/* TODO(AS4) replace this link once updated plugin api page */}
 
 By default, Apollo Server aggregates your traces and sends them in batches to Studio every minute. This behavior is highly configurable, and you can change the parameters in the [Usage Reporting plugin's configuration](/apollo-server/api/plugin/usage-reporting/#custom-installation).
 
@@ -39,10 +39,10 @@ Apollo Studio's [client awareness feature](/studio/client-awareness/) enables yo
 of your clients. To enable this, your clients need to include some or all of the following identifying information in the headers of GraphQL requests they
 send to Apollo Server:
 
-| Identifier | Header Name (default) | Example Value |
-|----|----|----|
-| Client name | `apollographql-client-name` | `iOS Native` |
-| Client version | `apollographql-client-version` | `1.0.1` |
+| Identifier     | Header Name (default)          | Example Value |
+| -------------- | ------------------------------ | ------------- |
+| Client name    | `apollographql-client-name`    | `iOS Native`  |
+| Client version | `apollographql-client-version` | `1.0.1`       |
 
 Each of these fields can have any string value that's useful for your application. To simplify the browsing and sorting of your client data in Studio, a three-part version number (such as `1.0.1`) is recommended for client versions.
 
@@ -69,23 +69,21 @@ const server = new ApolloServer({
   plugins: [
     //highlight-start
     ApolloServerPluginUsageReporting({
-      generateClientInfo: ({
-        request
-      }) => {
+      generateClientInfo: ({ request }) => {
         const headers = request.http && request.http.headers;
-        if(headers) {
+        if (headers) {
           return {
-            clientName: headers["apollographql-client-name"],
-            clientVersion: headers["apollographql-client-version"],
+            clientName: headers['apollographql-client-name'],
+            clientVersion: headers['apollographql-client-version'],
           };
         } else {
           return {
-            clientName: "Unknown Client",
-            clientVersion: "Unversioned",
+            clientName: 'Unknown Client',
+            clientVersion: 'Unversioned',
           };
         }
       },
-    })
+    }),
   ],
   //highlight-end
 });

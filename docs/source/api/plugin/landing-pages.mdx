@@ -1,5 +1,5 @@
 ---
-title: "API Reference: Landing page plugins"
+title: 'API Reference: Landing page plugins'
 api_reference: true
 ---
 
@@ -7,19 +7,19 @@ This API reference documents built-in plugins that add a landing page to Apollo 
 
 This includes plugins for:
 
-* The default landing page for [non-production environments](#default-non-production-landing-page) (`ApolloServerPluginLandingPageLocalDefault`)
-* The default landing page for [production](#default-production-landing-page) (`ApolloServerPluginLandingPageProductionDefault`)
-* Using [GraphQL Playground](#graphql-playground-landing-page) as a landing page (`ApolloServerPluginLandingPageGraphQLPlayground`)
-* [Disabling the landing page entirely](#disabling-the-landing-page)
+- The default landing page for [non-production environments](#default-non-production-landing-page) (`ApolloServerPluginLandingPageLocalDefault`)
+- The default landing page for [production](#default-production-landing-page) (`ApolloServerPluginLandingPageProductionDefault`)
+- Using [GraphQL Playground](#graphql-playground-landing-page) as a landing page (`ApolloServerPluginLandingPageGraphQLPlayground`)
+- [Disabling the landing page entirely](#disabling-the-landing-page)
 
-These plugins work by implementing the [`renderLandingPage`](../../integrations/plugins-event-reference/#renderlandingpage) plugin event, which serves an HTML page whenever a browser includes an `accept: text/html` header. Aside from these, you can also create a  [custom plugin](../../integrations/plugins/) that renders a [custom landing page](../../testing/build-run-queries/#custom-landing-page).
+These plugins work by implementing the [`renderLandingPage`](../../integrations/plugins-event-reference/#renderlandingpage) plugin event, which serves an HTML page whenever a browser includes an `accept: text/html` header. Aside from these, you can also create a [custom plugin](../../integrations/plugins/) that renders a [custom landing page](../../testing/build-run-queries/#custom-landing-page).
 
 ## Default behavior
 
 If you don't manually install any plugin that implements `renderLandingPage`, Apollo Server does the following by default:
 
-* In non-production environments (`NODE_ENV` is not `production`), Apollo Server installs `ApolloServerPluginLandingPageLocalDefault`.
-* In production environments (`NODE_ENV` _is_ `production`), Apollo Server installs `ApolloServerPluginLandingPageProductionDefault`.
+- In non-production environments (`NODE_ENV` is not `production`), Apollo Server installs `ApolloServerPluginLandingPageLocalDefault`.
+- In production environments (`NODE_ENV` _is_ `production`), Apollo Server installs `ApolloServerPluginLandingPageProductionDefault`.
 
 In either case, Apollo Server provides no configuration options to the plugin. You only need to install one of these plugins manually if you want to override its default configuration.
 
@@ -31,7 +31,10 @@ To configure these default plugins while still using the same `NODE_ENV`-based l
 
 ```ts
 import { ApolloServer } from '@apollo/server';
-import { ApolloServerPluginLandingPageLocalDefault, ApolloServerPluginLandingPageProductionDefault } from '@apollo/server/plugin/landingPage/default';
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault,
+} from '@apollo/server/plugin/landingPage/default';
 
 const server = new ApolloServer({
   typeDefs,
@@ -46,7 +49,6 @@ const server = new ApolloServer({
       : ApolloServerPluginLandingPageLocalDefault({ footer: false }),
   ],
 });
-
 ```
 
 </MultiCodeBlock>
@@ -59,9 +61,10 @@ In non-production environments, Apollo Server 4's landing page is an embedded ve
 
 <img class="screenshot" src="../../images/sandbox.jpeg" alt="Apollo Sandbox" />
 
-This landing page is designed for use in local development, where `NODE_ENV` is *not* set to `production`.
+This landing page is designed for use in local development, where `NODE_ENV` is _not_ set to `production`.
 
 [Apollo Sandbox](https://studio.apollographql.com/sandbox) is a special mode of Apollo Studio used for local development, which doesn't require an Apollo account. Sandbox includes the [Apollo Studio Explorer](/studio/explorer/explorer), a powerful web IDE that enables you to build and run operations against your server (or any other reachable server).
+
 ### Options
 
 <table class="field-table">
@@ -80,6 +83,7 @@ This landing page is designed for use in local development, where `NODE_ENV` is 
 ###### `version`
 
 `string`
+
 </td>
 <td>
 
@@ -96,6 +100,7 @@ The current latest version is available at [this link](https://apollo-server-lan
 ###### `footer`
 
 `boolean`
+
 </td>
 <td>
 
@@ -110,6 +115,7 @@ If you aren't using the embedded Apollo Sandbox (i.e., you are using `{embed: fa
 ###### `document`
 
 `string`
+
 </td>
 <td>
 
@@ -126,6 +132,7 @@ If you omit this, the Explorer initially loads an example query based on your sc
 ###### `variables`
 
 `Record<string, any>`
+
 </td>
 <td>
 
@@ -142,6 +149,7 @@ If provided, these variables should apply to the initial query you provide in `d
 ###### `headers`
 
 `Record<string, string>`
+
 </td>
 <td>
 
@@ -156,6 +164,7 @@ An object containing initial HTTP header values to populate in the Explorer on l
 ###### `includeCookies`
 
 `boolean`
+
 </td>
 <td>
 
@@ -174,6 +183,7 @@ If you omit this, the Explorer defaults `includeCookies` to `false` or the curre
 ###### `embed`
 
 `boolean`
+
 </td>
 <td>
 
@@ -187,12 +197,16 @@ If you set this option to `false`, your server's landing page is a splash page c
 </tbody>
 </table>
 
-
 ## Default production landing page
 
 The `ApolloServerPluginLandingPageProductionDefault` shows a minimalist landing page:
 
-<img class="screenshot" src="../../images/as-landing-page-production.jpg" alt="Apollo Server default landing page" width="350"/>
+<img
+  class="screenshot"
+  src="../../images/as-landing-page-production.jpg"
+  alt="Apollo Server default landing page"
+  width="350"
+/>
 
 This landing page is designed for use in production. It provides a copyable command-line snippet showing how to run operations with your server. By default, the only visible reference to Apollo is a footer explaining how to customize the page. You can also configure it to add a link to query your graph with the [Apollo Explorer](https://www.apollographql.com/docs/studio/explorer). You can choose to embed the Apollo Explorer on your endpoint if you pass the `embed` [option](#embed-options).
 
@@ -214,6 +228,7 @@ This landing page is designed for use in production. It provides a copyable comm
 ###### `version`
 
 `string`
+
 </td>
 <td>
 
@@ -230,6 +245,7 @@ The current latest version is available at [this link](https://apollo-server-lan
 ###### `footer`
 
 `boolean`
+
 </td>
 <td>
 
@@ -244,6 +260,7 @@ By default, the landing page displays a footer that links to the documentation t
 ###### `graphRef`
 
 `string`
+
 </td>
 <td>
 
@@ -260,6 +277,7 @@ To enable this link, you need to provide `graphRef` here even if you already pro
 ###### `document`
 
 `string`
+
 </td>
 <td>
 
@@ -276,6 +294,7 @@ If you omit this, the Explorer initially loads an example query based on your sc
 ###### `variables`
 
 `Record<string, any>`
+
 </td>
 <td>
 
@@ -292,6 +311,7 @@ If provided, these variables should apply to the initial query you provide in `d
 ###### `headers`
 
 `Record<string, string>`
+
 </td>
 <td>
 
@@ -306,6 +326,7 @@ An object containing initial HTTP header values to populate in the Explorer on l
 
 `boolean | ApolloServerPluginEmbedded`
 `LandingPageProductionConfigOptions`
+
 </td>
 <td>
 
@@ -326,6 +347,7 @@ You can configure the Explorer embedded on your Apollo Server endpoint with disp
 ###### `includeCookies`
 
 `boolean`
+
 </td>
 <td>
 
@@ -376,6 +398,7 @@ For supported subfields, see [`displayOptions` options](#embeddisplayoptions-opt
 ###### `persistExplorerState`
 
 `boolean`
+
 </td>
 <td>
 
@@ -390,8 +413,6 @@ The default value is `false`.
 
 </tbody>
 </table>
-
-
 
 ### `embed.displayOptions` options
 
@@ -471,16 +492,12 @@ The GraphQL Playground plugin lives in its own `@apollo/server-plugin-landing-pa
 
 ```ts
 import { ApolloServer } from '@apollo/server';
-import {
-  ApolloServerPluginLandingPageGraphQLPlayground
-} from "@apollo/server-plugin-landing-page-graphql-playground";
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  plugins: [
-    ApolloServerPluginLandingPageGraphQLPlayground(),
-  ],
+  plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
 });
 ```
 
@@ -508,6 +525,7 @@ This plugin takes the same arguments as the [`renderPlaygroundPage` function](ht
 ###### `version`
 
 `string`
+
 </td>
 <td>
 
@@ -524,6 +542,7 @@ You can specify a different version here.
 ###### `endpoint`
 
 `string`
+
 </td>
 <td>
 
@@ -538,6 +557,7 @@ By default, GraphQL Playground connects to a GraphQL server hosted at the same U
 ###### `settings`
 
 `Object`
+
 </td>
 <td>
 
@@ -545,7 +565,6 @@ If specified, allows you to override the default values of GraphQL Playground's 
 
 </td>
 </tr>
-
 
 </tbody>
 </table>

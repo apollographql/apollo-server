@@ -1,20 +1,20 @@
 # `apollo-reporting-protobuf`
 
-> **Note:** The Apollo usage reporting API is subject to change.  We strongly
+> **Note:** The Apollo usage reporting API is subject to change. We strongly
 > encourage developers to contact Apollo support at `support@apollographql.com`
 > to discuss their use case prior to building their own reporting agent using
 > this module.
 
 This module provides JavaScript/TypeScript
 [Protocol buffer](https://developers.google.com/protocol-buffers/) definitions
-for the Apollo usage reporting API.  These definitions are generated for
+for the Apollo usage reporting API. These definitions are generated for
 consumption from the `reports.proto` file which is defined internally within
 Apollo.
 
 ## Development
 
 > **Note:** Due to a dependency on Unix tools (e.g. `bash`, `grep`, etc.), the
-> development of this module requires a Unix system.  There is no reason why
+> development of this module requires a Unix system. There is no reason why
 > this can't be avoided, the time just hasn't been taken to make those changes.
 > We'd happily accept a PR which makes the appropriate changes!
 
@@ -27,8 +27,7 @@ generated with the `generate` npm script.
 The root of the repository provides some `devDependencies` necessary to build
 these definitions and the `prepare` npm script is invoked programmatically via
 the monorepo tooling (e.g. Lerna) thanks to _this_ module's `postinstall`
-script.  Therefore, when making changes to this module, run scripts via `npx
-lerna run SCRIPTNAME` in the **root** of this monorepo in order to update the
+script. Therefore, when making changes to this module, run scripts via `npx lerna run SCRIPTNAME` in the **root** of this monorepo in order to update the
 definitions in _this_ module.
 
 To update `reports.proto` to the current version recognized by the Studio usage

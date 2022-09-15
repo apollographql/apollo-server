@@ -3,7 +3,7 @@ title: Error handling
 description: Making errors actionable on the client and server
 ---
 
-<!-- cSpell:ignore typenam -->
+{/* cSpell:ignore typenam */}
 
 Whenever Apollo Server encounters errors while processing a GraphQL operation, its response to the client includes an `errors` array containing each error that occurred. Each error in the array has an `extensions` field that provides additional useful information, including an error `code` and (while in development mode) a `stacktrace`.
 
@@ -46,7 +46,7 @@ import { ApolloServerErrorCode } from '@apollo/server/errors';
 
 if (error.extensions?.code === ApolloServerErrorCode.GRAPHQL_PARSE_FAILED) {
   // respond to the syntax error
-} else if (error.extensions?.code === "MY_CUSTOM_CODE") {
+} else if (error.extensions?.code === 'MY_CUSTOM_CODE') {
   // do something else
 }
 ```
@@ -328,7 +328,7 @@ The `stacktrace` error field is useful while developing and debugging your serve
 
 By default, Apollo Server _omits_ the `stacktrace` field if the `NODE_ENV` environment variable is set to either `production` or `test`.
 
-<!-- TODO(AS4) link to API docs for includeStacktraceInErrorResponses -->
+{/* TODO(AS4) link to API docs for includeStacktraceInErrorResponses */}
 
 You can override this default behavior by passing the `includeStacktraceInErrorResponses` option to the constructor of `ApolloServer`. If `includeStacktraceInErrorResponses` is `true`, `stacktrace` is always included. If it's `false`, `stacktrace` is always omitted.
 
@@ -487,7 +487,7 @@ Note that returning `null`` also affects Studio's aggregated statistics about ho
 
 [As mentioned above](#for-client-responses), you can use the `unwrapResolverError` (from `@apollo/server/errors`) to remove the `GraphQLError` wrapping an original error.
 
-<!-- TODO(AS4) Replace link once plugin docs are updated -->
+{/* TODO(AS4) Replace link once plugin docs are updated */}
 
 > **For federated graphs**, define your `transform` function in each subgraph's [inline trace plugin](../migration/#rewriteerror-plugin-option) to rewrite field errors. If you want to transform your gateway's parsing or validation errors, you can define your `transform` function in your gateway.
 
@@ -609,8 +609,9 @@ The REDACTED doesn't have sufficient privileges.
 GraphQL, by design, does not use the same conventions from REST to communicate via HTTP verbs and status codes. Client information should be contained in the schema or as part of the standard response `errors` field. We recommend using the included [Error Codes](#built-in-error-codes) or [Custom Errors](#custom-errors) for error consistency rather than directly modifying the HTTP response.
 
 Apollo Server uses different HTTP status codes in various situations:
--  If Apollo Server hasn't correctly started up or is in the process of shutting down, it responds with a 500 status code. 
-  - The former can happen if you use a serverless integration and it sends requests to an Apollo Server instance that had an error on startup. The latter happens if you aren't properly [draining your server](/apollo-server/api/plugin/drain-http-server/#using-the-plugin).
+
+- If Apollo Server hasn't correctly started up or is in the process of shutting down, it responds with a 500 status code.
+- The former can happen if you use a serverless integration and it sends requests to an Apollo Server instance that had an error on startup. The latter happens if you aren't properly [draining your server](/apollo-server/api/plugin/drain-http-server/#using-the-plugin).
 - If Apollo Server can't parse the request into a legal GraphQL document and validate it against your schema, it responds with a 400 status code. This can also happen with other request problems, such as if a client attempts to send a batched HTTP request when `allowBatchedHttpRequests` isn't enabled or if CSRF prevention blocks a request.
 - If a request uses an invalid HTTP method (`GET` with a mutation, or any HTTP method other than `GET` or `POST`), then Apollo Server responds with a 405 status code.
 - If your `context` function throws, Apollo Server responds with a 500 status code.
@@ -645,9 +646,9 @@ const resolvers = {
           },
         },
       });
-    }
-  }
-}
+    },
+  },
+};
 ```
 
 </MultiCodeBlock>

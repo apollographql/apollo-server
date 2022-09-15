@@ -3,7 +3,7 @@ title: Health checks
 description: Determining the health status of Apollo Server
 ---
 
-> **Apollo Server 4 no longer [supports built-in health checks](../migration/#health-checks)**. Instead, we recommend performing [GraphQL-level health checks](#graphql-level-health-checks) to ensure your server successfully serves traffic _and_ performs GraphQL operations. 
+> **Apollo Server 4 no longer [supports built-in health checks](../migration/#health-checks)**. Instead, we recommend performing [GraphQL-level health checks](#graphql-level-health-checks) to ensure your server successfully serves traffic _and_ performs GraphQL operations.
 
 Load balancers often use health checks to determine if a server is available and ready to serve traffic.
 
@@ -11,7 +11,7 @@ Load balancers often use health checks to determine if a server is available and
 
 The easiest way to determine if your GraphQL server is healthy is to run a GraphQL operation.
 
-Every GraphQL server supports a trivial query that requests the [`__typename`](../schema/schema/#the-__typename-field) of the top-level `Query` type.  This means every GraphQL server can respond to a `GET` request to a URL such as:
+Every GraphQL server supports a trivial query that requests the [`__typename`](../schema/schema/#the-__typename-field) of the top-level `Query` type. This means every GraphQL server can respond to a `GET` request to a URL such as:
 
 ```
 https://your.server/graphql?query=%7B__typename%7D

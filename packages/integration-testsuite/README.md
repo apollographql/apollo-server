@@ -14,14 +14,15 @@ you intend to support.
 
 This package imposes dependency requirements on your project, however it should
 only require they be installed as `devDependencies`:
-* `@apollo/server`'s version must match the version of the test suite.
-* The test suite expects you to be running `jest@28`. It's possible that other
+
+- `@apollo/server`'s version must match the version of the test suite.
+- The test suite expects you to be running `jest@28`. It's possible that other
   versions of Jest may be compatible, but this use case is unsupported and might
   lead to unexpected behavior. It's fine for your project to use a testing
   framework other than Jest, but you'll still need to configure Jest in your
   project in order to run the test suite (so you'll have two test runners
   configured in your project). Because of this, we recommend using only Jest in
   your project for simplicity.
-* `graphql` must be installed in your project in `peerDependencies` and your
+- `graphql` must be installed in your project in `peerDependencies` and your
   version range should match that of `@apollo/server`. The test suite package's
   `graphql` dependency will match that of Apollo Server's.

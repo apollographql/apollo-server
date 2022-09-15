@@ -3,7 +3,7 @@ title: Deploying with Azure Functions
 description: Deploying your GraphQL server to Azure Functions
 ---
 
-<!-- TODO(AS4) update when we have an Azure Functions integration to deploy -->
+{/* TODO(AS4) update when we have an Azure Functions integration to deploy */}
 
 This tutorial walks through setting up an example project using the [Azure Functions integration](https://www.npmjs.com/package/apollo-server-azure-functions) for Apollo Server.
 
@@ -82,7 +82,7 @@ To set up the `apollo-server-azure-functions` library, replace the content of yo
 ```javascript
 const { ApolloServer, gql } = require('apollo-server-azure-functions');
 const {
-  ApolloServerPluginLandingPageLocalDefault
+  ApolloServerPluginLandingPageLocalDefault,
 } = require('apollo-server-core');
 
 // Schema definition.
@@ -105,9 +105,7 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
+  plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
 });
 exports.graphqlHandler = server.createHandler();
 ```
@@ -115,8 +113,9 @@ exports.graphqlHandler = server.createHandler();
 > See the [README](https://www.npmjs.com/package/apollo-server-azure-functions) for `apollo-server-azure-functions` for more information about this package.
 
 Next, we need to make a couple of changes to our `graphql/function.json` file:
--  Change the output `name` to `$return`
--  Add `options` to the list of `methods` (to ensure CORS works)
+
+- Change the output `name` to `$return`
+- Add `options` to the list of `methods` (to ensure CORS works)
 
 Your `graphql/function.json` file should now look like this:
 
@@ -129,11 +128,7 @@ Your `graphql/function.json` file should now look like this:
       "direction": "in",
       "name": "req",
       "route": "{*segments}",
-      "methods": [
-        "get",
-        "post",
-        "options"
-      ]
+      "methods": ["get", "post", "options"]
     },
     {
       "type": "http",
@@ -201,6 +196,7 @@ func azure functionapp publish apollo-example-YOURNAME
 ```
 
 Your terminal will output something similar to the following:
+
 ```shell
 Getting site publishing info...
 Preparing archive...
@@ -224,4 +220,3 @@ az group delete --name apollo-examples --yes
 ## Deploying to Azure with VS Code
 
 You can also publish to Azure directly from VS Code using the Azure Functions Extension. Refer to the documentation on [publishing to Azure from VS Code](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-vs-code#publish-the-project-to-azure) for more information.
-

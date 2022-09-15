@@ -53,10 +53,10 @@ If you don't add these definitions, Apollo Server throws an `Unknown directive "
 
 The `@cacheControl` directive accepts the following arguments:
 
-| Name | Description |
-|------|-------------|
-| `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-a-different-default-maxage). |
-| `scope` | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses). |
+| Name            | Description                                                                                                                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxAge`        | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-a-different-default-maxage).                     |
+| `scope`         | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses).        |
 | `inheritMaxAge` | If `true`, this field inherits the `maxAge` of its parent field instead of using the [default `maxAge`](#setting-a-different-default-maxage). Do not provide `maxAge` if you provide this argument. |
 
 Use `@cacheControl` for fields that should usually be cached with the same settings. If caching settings might change at runtime, you can use the [dynamic method](#in-your-resolvers-dynamic).
@@ -128,7 +128,7 @@ You can decide how to cache a particular field's result _while_ you're resolving
 
 The `cacheControl` object includes a `setCacheHint` method, which you call like so:
 
-```ts 
+```ts
 const resolvers = {
   Query: {
     post: (_, { id }, _, info) => {
@@ -208,7 +208,7 @@ import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheContr
 
 const server = new ApolloServer({
   // ...other options...
-  plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],  // 5 seconds
+  plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })], // 5 seconds
 });
 ```
 
@@ -251,7 +251,8 @@ Let's look at some queries and their resulting `maxAge` values:
 # maxAge: 0
 # Query.book doesn't set a maxAge and it's a root field (default 0).
 query GetBookTitle {
-  book { # 0
+  book {
+    # 0
     cachedTitle # 30
   }
 }
@@ -260,7 +261,8 @@ query GetBookTitle {
 # Query.cachedBook has a maxAge of 60, and Book.title is a scalar, so it
 # inherits maxAge from its parent by default.
 query GetCachedBookTitle {
-  cachedBook { # 60
+  cachedBook {
+    # 60
     title # inherits
   }
 }
@@ -269,7 +271,8 @@ query GetCachedBookTitle {
 # Query.cachedBook has a maxAge of 60, but Book.cachedTitle has
 # a maxAge of 30.
 query GetCachedBookCachedTitle {
-  cachedBook { # 60
+  cachedBook {
+    # 60
     cachedTitle # 30
   }
 }
@@ -279,8 +282,10 @@ query GetCachedBookCachedTitle {
 # inheritMaxAge from its parent, and Book.title is a scalar
 # that inherits maxAge from its parent by default.
 query GetReaderBookTitle {
-  reader { # 40
-    book { # inherits
+  reader {
+    # 40
+    book {
+      # inherits
       title # inherits
     }
   }
@@ -469,9 +474,9 @@ This enables you to cache different responses for logged-in and logged-out users
 
 In addition to [the `sessionId` function](#identifying-users-for-private-responses), you can provide the following functions to your `responseCachePlugin` to configure cache reads and writes. Each of these functions takes a `GraphQLRequestContext` (representing the incoming operation) as a parameter.
 
-| Function | Description |
-|----------|-------------|
-| `extraCacheKeyData` | This function's return value (any JSON-stringifiable object) is added to the key for the cached response. For example, if your API includes translatable text, this function can return a string derived from `requestContext.request.http.headers.get('accept-language')`. |
-| `shouldReadFromCache` | If this function returns `false`, Apollo Server _skips_ the cache for the incoming operation, even if a valid response is available. |
-| `shouldWriteToCache` | If this function returns `false`, Apollo Server doesn't cache its response for the incoming operation, even if the response's `maxAge` is greater than `0`. |
-| `generateCacheKey` | Customize generation of the cache key. By default, this is the SHA256 hash of the JSON encoding of an object containing relevant data. |
+| Function              | Description                                                                                                                                                                                                                                                                 |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extraCacheKeyData`   | This function's return value (any JSON-stringifiable object) is added to the key for the cached response. For example, if your API includes translatable text, this function can return a string derived from `requestContext.request.http.headers.get('accept-language')`. |
+| `shouldReadFromCache` | If this function returns `false`, Apollo Server _skips_ the cache for the incoming operation, even if a valid response is available.                                                                                                                                        |
+| `shouldWriteToCache`  | If this function returns `false`, Apollo Server doesn't cache its response for the incoming operation, even if the response's `maxAge` is greater than `0`.                                                                                                                 |
+| `generateCacheKey`    | Customize generation of the cache key. By default, this is the SHA256 hash of the JSON encoding of an object containing relevant data.                                                                                                                                      |

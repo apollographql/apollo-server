@@ -79,8 +79,8 @@ The [GraphQL spec](https://spec.graphql.org/June2018/#sec-Type-System.Directives
 
 The [GraphQL specification](http://spec.graphql.org/June2018/#sec-Type-System.Directives) defines the following default directives:
 
-| Directive | Description |
-|-----------|-------------|
-| `@deprecated(reason: String)` | Marks the schema definition of a field or enum value as deprecated with an optional reason. |
-| `@skip(if: Boolean!)` | If `true`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
-| `@include(if: Boolean!)` | If `false`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
+| Directive                     | Description                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `@deprecated(reason: String)` | Marks the schema definition of a field or enum value as deprecated with an optional reason.          |
+| `@skip(if: Boolean!)`         | If `true`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server.  |
+| `@include(if: Boolean!)`      | If `false`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |

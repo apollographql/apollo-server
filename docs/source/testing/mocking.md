@@ -171,7 +171,7 @@ console.log(`🚀 Server listening at: ${url}`);
 
 You can also use `mocks` to define object types and the fields belonging to those object types (much like a [resolver map](../data/resolvers/#base-syntax)). In the below example, our mocked `Person` object calls a function returning an object with fields that contain _other_ functions:
 
-```ts 
+```ts
 // importing the casual library
 const casual = require('casual');
 
