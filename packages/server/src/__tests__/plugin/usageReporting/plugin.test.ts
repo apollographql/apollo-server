@@ -25,6 +25,7 @@ import {
   ApolloServerPluginUsageReporting,
 } from '../../../plugin/usageReporting';
 import { ApolloServerPluginCacheControlDisabled } from '../../../plugin/disabled';
+import { describe, it, expect, afterEach } from '@jest/globals';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);

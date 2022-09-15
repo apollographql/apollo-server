@@ -1,4 +1,5 @@
 import { DurationHistogram } from '../../../plugin/usageReporting/durationHistogram';
+import { describe, it, expect } from '@jest/globals';
 
 describe('Duration histogram tests', () => {
   it('generateEmptyHistogram', () => {

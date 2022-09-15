@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 export function mockLogger() {
   return {
     debug: jest.fn(),

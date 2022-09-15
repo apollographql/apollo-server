@@ -1,15 +1,16 @@
-const rollup = require('rollup');
+import { describe, expect, it } from '@jest/globals';
 import commonjs from '@rollup/plugin-commonjs';
 import path from 'path';
+import { rollup, OutputOptions } from 'rollup';
 
 describe('@rollup/plugin-commonjs', () => {
   it('bundles into es6 without circular dependencies issues', async () => {
-    const outputOptions = {
+    const outputOptions: OutputOptions = {
       exports: 'named',
       name: 'apollo',
       format: 'umd',
     };
-    const bundle = await rollup.rollup({
+    const bundle = await rollup({
       input: path.resolve(__dirname, '..', '..', 'dist', 'cjs', 'index.js'),
       plugins: [commonjs()],
       onwarn: () => {

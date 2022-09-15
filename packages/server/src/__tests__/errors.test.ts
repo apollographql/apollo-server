@@ -2,6 +2,7 @@ import { GraphQLError, GraphQLFormattedError } from 'graphql';
 import { unwrapResolverError } from '@apollo/server/errors';
 
 import { normalizeAndFormatErrors } from '../errorNormalize.js';
+import { jest, describe, it, expect } from '@jest/globals';
 
 describe('Errors', () => {
   describe('normalizeAndFormatErrors', () => {
@@ -55,7 +56,7 @@ describe('Errors', () => {
       const error = new GraphQLError(message, {
         extensions: { code, key },
       });
-      const formatError = jest.fn();
+      const formatError = jest.fn((fErr, _err) => fErr);
       normalizeAndFormatErrors([error], {
         formatError,
         includeStacktraceInErrorResponses: true,

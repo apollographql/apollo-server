@@ -1,5 +1,6 @@
 import { getEmbeddedSandboxHTML } from '../../../plugin/landingPage/default/getEmbeddedHTML';
 import type { LandingPageConfig } from '../../../plugin/landingPage/default/types';
+import { describe, it, expect } from '@jest/globals';
 
 const version = '_latest';
 expect.addSnapshotSerializer(require('jest-serializer-html'));
