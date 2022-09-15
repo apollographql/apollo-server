@@ -328,9 +328,7 @@ The `stacktrace` error field is useful while developing and debugging your serve
 
 By default, Apollo Server _omits_ the `stacktrace` field if the `NODE_ENV` environment variable is set to either `production` or `test`.
 
-<!-- TODO(AS4) link to API docs for includeStacktraceInErrorResponses -->
-
-You can override this default behavior by passing the `includeStacktraceInErrorResponses` option to the constructor of `ApolloServer`. If `includeStacktraceInErrorResponses` is `true`, `stacktrace` is always included. If it's `false`, `stacktrace` is always omitted.
+You can override this default behavior by passing the [`includeStacktraceInErrorResponses`](../api/apollo-server#includestacktraceinerrorresponses) option to the constructor of `ApolloServer`. If `includeStacktraceInErrorResponses` is `true`, `stacktrace` is always included. If it's `false`, `stacktrace` is always omitted.
 
 Note that when `stacktrace` is omitted, it's also unavailable to your application. To log error `stacktrace`s without including them in responses to clients, see [Masking and logging errors](#masking-and-logging-errors).
 
@@ -609,7 +607,7 @@ The REDACTED doesn't have sufficient privileges.
 GraphQL, by design, does not use the same conventions from REST to communicate via HTTP verbs and status codes. Client information should be contained in the schema or as part of the standard response `errors` field. We recommend using the included [Error Codes](#built-in-error-codes) or [Custom Errors](#custom-errors) for error consistency rather than directly modifying the HTTP response.
 
 Apollo Server uses different HTTP status codes in various situations:
--  If Apollo Server hasn't correctly started up or is in the process of shutting down, it responds with a 500 status code. 
+-  If Apollo Server hasn't correctly started up or is in the process of shutting down, it responds with a 500 status code.
   - The former can happen if you use a serverless integration and it sends requests to an Apollo Server instance that had an error on startup. The latter happens if you aren't properly [draining your server](/apollo-server/api/plugin/drain-http-server/#using-the-plugin).
 - If Apollo Server can't parse the request into a legal GraphQL document and validate it against your schema, it responds with a 400 status code. This can also happen with other request problems, such as if a client attempts to send a batched HTTP request when `allowBatchedHttpRequests` isn't enabled or if CSRF prevention blocks a request.
 - If a request uses an invalid HTTP method (`GET` with a mutation, or any HTTP method other than `GET` or `POST`), then Apollo Server responds with a 405 status code.

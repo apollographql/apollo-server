@@ -42,11 +42,9 @@ subscription PostFeed {
 
 ## Enabling subscriptions
 
-<!-- TODO(AS4): Replace link when there is an expressMiddleware article-->
-
 > Subscriptions are **not** supported by Apollo Server 4's `startStandaloneServer` function. To enable subscriptions, you must first [swap to using the `expressMiddleware` function](../migration#migrate-from-apollo-server-express) (or any other Apollo Server integration package that supports subscriptions).
 >
-> The following steps assume you've already swapped to `expressMiddleware`.
+> The following steps assume you've already swapped to [`expressMiddleware`](../api/express-middleware).
 
 To run both an Express app _and_ a separate WebSocket server for subscriptions, we'll create an `http.Server` instance that effectively wraps the two and becomes our new `listen`er.
 
@@ -249,7 +247,7 @@ npm install graphql-subscriptions
 
 A `PubSub` instance enables your server code to both `publish` events to a particular label and listen for events associated with a particular label. We can create a `PubSub` instance like so:
 
-```ts 
+```ts
 import { PubSub } from 'graphql-subscriptions';
 
 const pubsub = new PubSub();
@@ -259,7 +257,7 @@ const pubsub = new PubSub();
 
 You can publish an event using the `publish` method of a `PubSub` instance:
 
-```ts 
+```ts
 pubsub.publish('POST_CREATED', {
   postCreated: {
     author: 'Ali Baba',
@@ -299,7 +297,7 @@ const resolvers = {
 
 Before we persist the new post's details in our datastore, we can `publish` an event that _also_ includes those details:
 
-```ts 
+```ts
 const resolvers = {
   Mutation: {
     createPost(parent, args, context) {
@@ -319,7 +317,7 @@ An [`AsyncIterator`](https://github.com/apollographql/graphql-subscriptions/blob
 
 You can create an `AsyncIterator` by calling the `asyncIterator` method of `PubSub` and passing in an array containing the names of the event labels that this `AsyncIterator` should listen for.
 
-```ts 
+```ts
 pubsub.asyncIterator(['POST_CREATED']);
 ```
 
@@ -515,7 +513,7 @@ In Apollo Client, the `GraphQLWsLink` constructor supports adding information to
 
 Let's suppose we create our subscription client like so:
 
-```ts 
+```ts
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 
@@ -535,7 +533,7 @@ From there you can use the [`useServer.context` property](#operation-context) to
 
 For our example, we can use the `connectionParams.authentication` value provided by the client to look up the related user before passing that user along to our resolvers:
 
-```ts 
+```ts
 const findUser = async (authToken) => {
   // Find a user by their auth token
 };
