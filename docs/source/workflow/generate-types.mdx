@@ -1,13 +1,13 @@
 ---
 title: Generating types from a GraphQL schema
-description: How to ensure your resolvers type safe
+description: How to ensure your resolvers are type safe
 ---
 
 > 👋 If you haven't set up a TypeScript project using Apollo Server yet, follow our [Getting Started](../../getting-started) guide before continuing. 
 
 GraphQL uses a type system to clearly define the available data for each type and field in a [GraphQL schema](../schema/schema). Type generation libraries can take advantage of the strongly-typed nature of a GraphQL schema to automatically generate TypeScript types based on that schema. 
 
-You can use these generated TS types in your resolvers to type-check that your resolver's return values match the field types dictated by your schema. Type checking your resolvers enables you to catch errors quickly and gives you the peace of mind that type safety ensures.
+You can use these generated TS types in your resolvers to type-check that your resolvers' return values match the field types dictated by your schema. Type checking your resolvers enables you to catch errors quickly and gives you the peace of mind that type safety ensures.
 
 > Looking to generate types for your [Apollo Federation](/federation/) subgraphs? Our [Subgraph template](https://github.com/apollographql/subgraph-template-typescript-apollo-server) lays down the groundwork so you can quickly set up a subgraph with generated types.
 
