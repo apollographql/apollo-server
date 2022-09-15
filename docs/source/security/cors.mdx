@@ -226,7 +226,7 @@ Note that Apollo Server does not permit executing mutations in `GET` requests (j
 
 > ⚠️ The [`graphql-upload`](https://www.npmjs.com/package/graphql-upload) package has a known CSRF vulnerability and is turned on by default in version of Apollo Server 2.25.4 and below. If you are using Apollo Server 2 and do not use uploads, you can disable them by passing `uploads: false` to the `ApolloServer` constructor. If you do use uploads, you must update to Apollo Server 3.7 or later and ensure CSRF prevention is enabled to use this feature safely.
 
-The [third-party `graphql-upload` package](../data/file-uploads) has a known CSRF vulnerability.
+The [third-party `graphql-upload` package](/apollo-server/v3/data/file-uploads) has a known CSRF vulnerability.
 
 The `graphql-upload` package adds a special middleware that parses `POST` requests with a `Content-Type` of `multipart/form-data`. This is one of the three special `Content-Type`s that can be set on [simple requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests), enabling your server to process mutations sent in simple requests.
 

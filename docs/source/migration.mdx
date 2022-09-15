@@ -18,7 +18,7 @@ During Apollo Server 4's alpha, we are actively looking to gather feedback and [
 
 ## The new `@apollo/server` package
 
-Apollo Server 3 is distributed as a [fixed set of packages](/apollo-server/integrations/middleware) for integrating with different web frameworks and environments. The main "batteries-included" [`apollo-server` package](/apollo-server/integrations/middleware#apollo-server) reduces setup time by providing a minimally customizable GraphQL server.
+Apollo Server 3 is distributed as a [fixed set of packages](/apollo-server/v3/integrations/middleware) for integrating with different web frameworks and environments. The main "batteries-included" [`apollo-server` package](/apollo-server/v3/integrations/middleware#apollo-server) reduces setup time by providing a minimally customizable GraphQL server.
 
 In Apollo Server 3, the `apollo-server-core` package defines an `ApolloServer` "base" class, which each integration package (`apollo-server-express`,`apollo-server-lambda`, etc.) subclasses with a slightly different API. This packaging structure means that new integration package releases are lockstep versioned to Apollo Server itself, making it challenging to support major versions of frameworks and add integration-specific changes. Additionally, Apollo Server 3 doesn't provide a way to add new integrations for additional frameworks.
 
@@ -187,7 +187,7 @@ To migrate from Apollo Server 3's `apollo-server-express` package to using the `
 2. Import symbols from `@apollo/server` (i.e., instead of from `apollo-server-express` and `apollo-server-core`).
 3. Add `cors` and `bodyParser.json()` to your server setup.
 4. Remove the Apollo Server 3 `apollo-server-express` and `apollo-server-core` packages.
-5. If you are using `apollo-server-express`'s default `/graphql` URL path (i.e., not specifying another URL with the [path option](/apollo-server/api/apollo-server/#path)), you can mount `expressMiddleware` at `/graphql` to maintain behavior. To use another URL path, mount your server (with `app.use`) at the specified path.
+5. If you are using `apollo-server-express`'s default `/graphql` URL path (i.e., not specifying another URL with the [path option](/apollo-server/v3/api/apollo-server/#path)), you can mount `expressMiddleware` at `/graphql` to maintain behavior. To use another URL path, mount your server (with `app.use`) at the specified path.
 
 This Apollo Server 3 code:
 
@@ -363,7 +363,7 @@ The following `ApolloServer` constructor options have been removed in favor of o
 
 ### `dataSources`
 
-In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](./data/resolvers/#the-context-argument) object. This means the TypeScript type the `context` function returns is _different_ from the `context` type your resolvers and plugins receive. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
+In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/v3/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](./data/resolvers/#the-context-argument) object. This means the TypeScript type the `context` function returns is _different_ from the `context` type your resolvers and plugins receive. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
 
 Apollo Server 4 removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object.
 
@@ -803,7 +803,7 @@ If you want a health check for your HTTP server unrelated to the health of the G
 
 ### Path parsing
 
-In Apollo Server 3, many framework integrations enable you to use the `path` option to configure the [URL path](/apollo-server/api/apollo-server/#path) where Apollo Server processes requests. By default, the `path` option uses the `/graphql` URL path.
+In Apollo Server 3, many framework integrations enable you to use the `path` option to configure the [URL path](/apollo-server/v3/api/apollo-server/#path) where Apollo Server processes requests. By default, the `path` option uses the `/graphql` URL path.
 
 In Apollo Server 4, you should use your framework's routing feature to mount your integration at the URL path where you want Apollo Server to process requests.  For example, if you are using `apollo-server-express` in Apollo Server 3 and would like to continue using the default `/graphql` path, you should now mount the `expressMiddleware` function at the `/graphql` path.
 
@@ -811,7 +811,7 @@ In Apollo Server 4, you should use your framework's routing feature to mount you
 
 ### `body-parser` and `cors`
 
-In Apollo Server 3, framework integrations automatically set up HTTP body parsing and CORS response headers. You can customize your integration's CORS or body parsing functionality using the Apollo Server API; these configuration options [vary by integration](/apollo-server/api/apollo-server#cors-1).
+In Apollo Server 3, framework integrations automatically set up HTTP body parsing and CORS response headers. You can customize your integration's CORS or body parsing functionality using the Apollo Server API; these configuration options [vary by integration](/apollo-server/v3/api/apollo-server#cors-1).
 
 In Apollo Server 4, it's your responsibility to set up HTTP body parsing and CORS headers for your web framework. Specifically, when using [`expressMiddleware`](#migrate-from-apollo-server-express), you should install the `body-parser` and `cors` npm packages and use them in your Express app, just like with any other JSON-based API server. If you passed a `cors` option to `applyMiddleware` or `getMiddleware`, pass the same value to the `cors` function. If you passed a `bodyParserConfig` option to `applyMiddleware` or `getMiddleware`, pass the same value to the `body-parser` package's `json` function.
 
@@ -1519,7 +1519,7 @@ Apollo Server 3.7 added a recommended security feature called CSRF prevention, w
 
 ### HTTP batching is off by default
 
-Apollo Server supports [batching HTTP requests](./requests/#batching), enabling a single HTTP request to execute multiple GraphQL operations. In Apollo Server 3, support for HTTP batching was on by default.
+Apollo Server supports [batching HTTP requests](./workflow/requests/#batching), enabling a single HTTP request to execute multiple GraphQL operations. In Apollo Server 3, support for HTTP batching was on by default.
 
 In Apollo Server 4, you must explicitly enable this feature by passing `allowBatchedHttpRequests: true` to the `ApolloServer` constructor.
 
