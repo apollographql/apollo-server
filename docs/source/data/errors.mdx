@@ -112,7 +112,7 @@ The GraphQL operation includes an invalid value for a field argument.
 </td>
 <td>
 
-A client sent the hash of a query string to execute via [automatic persisted queries](/apollo-server/performance/apq/), but the query was not in the APQ cache.
+A client sent the hash of a query string to execute via [automatic persisted queries](../performance/apq/), but the query was not in the APQ cache.
 
 </td>
 </tr>
@@ -125,7 +125,7 @@ A client sent the hash of a query string to execute via [automatic persisted que
 </td>
 <td>
 
-A client sent the hash of a query string to execute via [automatic persisted queries](/apollo-server/performance/apq/), but the server has disabled APQ.
+A client sent the hash of a query string to execute via [automatic persisted queries](../performance/apq/), but the server has disabled APQ.
 
 </td>
 </tr>
@@ -426,7 +426,7 @@ new ApolloServer({
 });
 ```
 
-> To make context-specific adjustments to the error received by `formatError` (such as localization or personalization), consider [creating a plugin](/apollo-server/integrations/plugins/) that uses the [`didEncounterErrors` lifecycle event](/apollo-server/integrations/plugins-event-reference/#didencountererrors) to attach additional properties to the error. These properties can be accessed from `formatError`.
+> To make context-specific adjustments to the error received by `formatError` (such as localization or personalization), consider [creating a plugin](../integrations/plugins/) that uses the [`didEncounterErrors` lifecycle event](../integrations/plugins-event-reference/#didencountererrors) to attach additional properties to the error. These properties can be accessed from `formatError`.
 
 ### For Apollo Studio reporting
 
@@ -474,18 +474,16 @@ new ApolloServer({
 });
 ```
 
-> The usage reporting plugin is installed automatically with its default configuration if you provide an Apollo API key to Apollo Server. To customize the usage reporting plugin's behavior, you need to install it explicitly with a custom configuration, as shown in the examples below.
+> The [usage reporting plugin](../api/plugin/usage-reporting/) is installed automatically with its default configuration if you provide an Apollo API key to Apollo Server. To customize the usage reporting plugin's behavior, you need to install it explicitly with a custom configuration, as shown in the examples below.
 
 The function you pass to `transform` is called for each error (`GraphQLError`) to be reported to Studio. The error is provided as the function's first argument. The function can either:
 
 - Return a modified form of the error (e.g., by changing the `err.message` to remove potentially sensitive information)
 - Return `null` to prevent the error from being reported entirely
 
-Note that returning `null`` also affects Studio's aggregated statistics about how many operations contain errors and at what paths those errors appear.
+Note that returning `null` also affects Studio's aggregated statistics about how many operations contain errors and at what paths those errors appear.
 
 [As mentioned above](#for-client-responses), you can use the `unwrapResolverError` (from `@apollo/server/errors`) to remove the `GraphQLError` wrapping an original error.
-
-<!-- TODO(AS4) Replace link once plugin docs are updated -->
 
 > **For federated graphs**, define your `transform` function in each subgraph's [inline trace plugin](../migration/#rewriteerror-plugin-option) to rewrite field errors. If you want to transform your gateway's parsing or validation errors, you can define your `transform` function in your gateway.
 
@@ -608,14 +606,14 @@ GraphQL, by design, does not use the same conventions from REST to communicate v
 
 Apollo Server uses different HTTP status codes in various situations:
 -  If Apollo Server hasn't correctly started up or is in the process of shutting down, it responds with a 500 status code.
-  - The former can happen if you use a serverless integration and it sends requests to an Apollo Server instance that had an error on startup. The latter happens if you aren't properly [draining your server](/apollo-server/api/plugin/drain-http-server/#using-the-plugin).
+  - The former can happen if you use a serverless integration and it sends requests to an Apollo Server instance that had an error on startup. The latter happens if you aren't properly [draining your server](../api/plugin/drain-http-server/#using-the-plugin).
 - If Apollo Server can't parse the request into a legal GraphQL document and validate it against your schema, it responds with a 400 status code. This can also happen with other request problems, such as if a client attempts to send a batched HTTP request when `allowBatchedHttpRequests` isn't enabled or if CSRF prevention blocks a request.
 - If a request uses an invalid HTTP method (`GET` with a mutation, or any HTTP method other than `GET` or `POST`), then Apollo Server responds with a 405 status code.
 - If your `context` function throws, Apollo Server responds with a 500 status code.
 - If there is an unexpected error during the processing of the request (either a bug in Apollo Server or a plugin hook throws), Apollo Server responds with a 500 status code.
 - Otherwise, Apollo Server returns a 200 status code. This is essentially the case where the server can execute the GraphQL operation, and execution completes successfully (though this can still include resolver-specific errors).
 
-There are three ways to change an HTTP status code or set custom response headers, you can: throw an error in a resolver, throw an error in your `context` function, or write a [plugin](/apollo-server/integrations/plugins).
+There are three ways to change an HTTP status code or set custom response headers, you can: throw an error in a resolver, throw an error in your `context` function, or write a [plugin](../integrations/plugins).
 
 While Apollo Server does enable you to set HTTP status codes based on errors thrown by resolvers, best practices for GraphQL over HTTP encourage sending 200 whenever an operation executes. So, we don't recommend using this mechanism in resolvers, just in the `context` function or in a plugin hooking into an early stage of the request pipeline.
 

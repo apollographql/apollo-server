@@ -148,9 +148,8 @@ If you're using another integration of Apollo Server, you can add and configure 
 You can also choose to omit CORS middleware entirely to disable cross-origin requests. This is [recommended for subgraphs in a federated graph](/federation/subgraphs/#securing-your-subgraphs).
 
 ### Passing credentials with CORS
-<!-- TODO(AS4) replace link to API page for startStandaloneServer -->
 
-> ⚠️ The [`startStandaloneServer`](../migration#migrate-from-apollo-server) function's CORS behavior is _unalterable_. To pass credentials via cookies, you must first swap to another Apollo Server integration.
+> ⚠️ The [`startStandaloneServer`](../api/standalone) function's CORS behavior is _unalterable_. To pass credentials via cookies, you must first swap to another Apollo Server integration.
 
 If your server requires requests to [include a user's credentials](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#requests_with_credentials) (e.g., cookies), you need to modify your CORS configuration to tell the browser those credentials are allowed.
 
@@ -208,7 +207,6 @@ By default, Apollo Server 4 has a CSRF prevention feature enabled. This means yo
 
 Note that all HTTP header names are case-insensitive.
 
-<!-- TODO(AS4) Update the below link to new api page -->
 > CSRF prevention only applies to requests that will execute GraphQL operations, not to requests that would load [landing pages](../api/plugin/landing-pages).
 
 HTTP requests that satisfy none of the conditions above will be rejected with a 400 status code and a message clearly explaining which headers need to be added in order to make the request succeed.

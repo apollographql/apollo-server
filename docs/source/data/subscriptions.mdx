@@ -102,7 +102,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
    const serverCleanup = useServer({ schema }, wsServer);
    ```
 
-6. Add [plugins](/apollo-server/integrations/plugins) to your `ApolloServer` constructor to shutdown both the HTTP server and the `WebSocketServer`:
+6. Add [plugins](../integrations/plugins) to your `ApolloServer` constructor to shutdown both the HTTP server and the `WebSocketServer`:
 
    ```ts title="index.ts"
    const server = new ApolloServer({
