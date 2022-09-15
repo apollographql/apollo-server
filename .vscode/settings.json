@@ -6,5 +6,12 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "typescript.tsdk": "./node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "eslint.validate": [
+    "md",
+    "mdx"
+  ],
+  "eslint.options": {
+    "extensions": [".md", ".mdx"]
+  }
 }
