@@ -209,7 +209,7 @@ By default, Apollo Server 4 has a CSRF prevention feature enabled. This means yo
 Note that all HTTP header names are case-insensitive.
 
 <!-- TODO(AS4) Update the below link to new api page -->
-> CSRF prevention only applies to requests that will execute GraphQL operations, not to requests that would load [landing pages](/apollo-server/api/plugin/landing-pages).
+> CSRF prevention only applies to requests that will execute GraphQL operations, not to requests that would load [landing pages](../api/plugin/landing-pages).
 
 HTTP requests that satisfy none of the conditions above will be rejected with a 400 status code and a message clearly explaining which headers need to be added in order to make the request succeed.
 
@@ -228,7 +228,7 @@ Note that Apollo Server does not permit executing mutations in `GET` requests (j
 
 > ⚠️ The [`graphql-upload`](https://www.npmjs.com/package/graphql-upload) package has a known CSRF vulnerability and is turned on by default in version of Apollo Server 2.25.4 and below. If you are using Apollo Server 2 and do not use uploads, you can disable them by passing `uploads: false` to the `ApolloServer` constructor. If you do use uploads, you must update to Apollo Server 3.7 or later and ensure CSRF prevention is enabled to use this feature safely.
 
-The [third-party `graphql-upload` package](/apollo-server/data/file-uploads) has a known CSRF vulnerability.
+The [third-party `graphql-upload` package](../data/file-uploads) has a known CSRF vulnerability.
 
 The `graphql-upload` package adds a special middleware that parses `POST` requests with a `Content-Type` of `multipart/form-data`. This is one of the three special `Content-Type`s that can be set on [simple requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests), enabling your server to process mutations sent in simple requests.
 

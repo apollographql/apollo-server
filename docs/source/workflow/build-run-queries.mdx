@@ -29,7 +29,7 @@ For this reason, if you choose to [change your Apollo Server landing page](#chan
 
 <!-- TODO(AS4) replace GraphQL Playground link -->
 
-You can change the landing page that's served from Apollo Server's base URL. You can choose to [configure the default landing page](#configuring-the-default-landing-page), serve [GraphQL Playground](/apollo-server/api/plugin/landing-pages/#graphql-playground-landing-page) (a legacy open-source GraphQL IDE), create a completely [custom landing page](#custom-landing-page), or you can [disable the landing page entirely](#disabling-the-landing-page).
+You can change the landing page that's served from Apollo Server's base URL. You can choose to [configure the default landing page](#configuring-the-default-landing-page), serve [GraphQL Playground](../api/plugin/landing-pages/#graphql-playground-landing-page) (a legacy open-source GraphQL IDE), create a completely [custom landing page](#custom-landing-page), or you can [disable the landing page entirely](#disabling-the-landing-page).
 
 You do this by installing one of a few different Apollo Server **plugins**.
 
@@ -66,11 +66,11 @@ const server = new ApolloServer({
 });
 ```
 
-For all available configuration options for these plugins, [see the API reference](/apollo-server/api/plugin/landing-pages/).
+For all available configuration options for these plugins, [see the API reference](../api/plugin/landing-pages/).
 
 ### Custom landing page
 
-You can serve a custom HTML landing page from Apollo Server's base URL. To do so, define your own [custom plugin](/apollo-server/integrations/plugins/) that calls the [`renderLandingPage` method](/apollo-server/integrations/plugins-event-reference/#renderlandingpage), like so:
+You can serve a custom HTML landing page from Apollo Server's base URL. To do so, define your own [custom plugin](../integrations/plugins/) that calls the [`renderLandingPage` method](../integrations/plugins-event-reference/#renderlandingpage), like so:
 
 ```ts title="index.ts"
 const server = new ApolloServer({
