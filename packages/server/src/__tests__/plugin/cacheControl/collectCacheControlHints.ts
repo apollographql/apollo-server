@@ -5,6 +5,7 @@ import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
 } from '../../../plugin/cacheControl';
+import { expect } from '@jest/globals';
 
 export async function collectCacheControlHintsAndPolicyIfCacheable(
   schema: GraphQLSchema,

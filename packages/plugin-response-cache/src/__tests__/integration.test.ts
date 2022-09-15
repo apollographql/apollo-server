@@ -6,6 +6,7 @@ import {
 import { startStandaloneServer } from '@apollo/server/standalone';
 import ApolloServerPluginResponseCache from '../index.js';
 import request, { type Response } from 'supertest';
+import { jest, describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 
 describe('Response caching', () => {
   beforeAll(() => {

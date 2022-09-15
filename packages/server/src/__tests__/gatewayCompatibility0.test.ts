@@ -3,6 +3,7 @@ import { ApolloServer } from '..';
 import { ApolloGateway as AG0OldestSupported } from 'apollo-gateway-0-oldest-supported';
 import { ApolloGateway as AG0BeforeASGI } from 'apollo-gateway-0-before-asgi';
 import { ApolloGateway as AG0Latest } from 'apollo-gateway-0-latest';
+import { it } from '@jest/globals';
 
 // This is the oldest version which prints no peer dep warnings when installed
 // with graphql-js@16; it's possible that some older versions could work as

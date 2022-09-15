@@ -5,6 +5,7 @@ import {
   SizeEstimator,
 } from '../../../plugin/usageReporting/stats';
 import { DurationHistogram } from '../../../plugin/usageReporting/durationHistogram';
+import { describe, it, expect } from '@jest/globals';
 
 const statsContext = {
   clientVersion: 'version',

@@ -8,6 +8,7 @@ import type {
 import { makeExecutableSchemaWithCacheControlSupport } from './cacheControlSupport';
 
 import { collectCacheControlHints } from './collectCacheControlHints';
+import { describe, it, expect } from '@jest/globals';
 
 export interface GraphQLResolvers {
   [fieldName: string]: (() => any) | GraphQLResolverObject | GraphQLScalarType;

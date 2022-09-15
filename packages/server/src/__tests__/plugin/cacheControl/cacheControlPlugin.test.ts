@@ -5,6 +5,7 @@ import {
 } from '../../../plugin/cacheControl';
 import { ApolloServer, HTTPGraphQLResponse } from '../../..';
 import type { CacheHint } from '@apollo/cache-control-types';
+import { describe, it, expect } from '@jest/globals';
 
 describe('plugin', () => {
   describe('willSendResponse', () => {

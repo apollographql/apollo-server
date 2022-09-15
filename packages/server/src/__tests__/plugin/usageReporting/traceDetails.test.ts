@@ -1,6 +1,7 @@
 import { makeTraceDetails } from '../../../plugin/usageReporting/traceDetails';
 import { Trace } from '@apollo/usage-reporting-protobuf';
 import { GraphQLError } from 'graphql';
+import { describe, it, expect } from '@jest/globals';
 
 const variables: Record<string, any> = {
   testing: 'testing',

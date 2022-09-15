@@ -9,6 +9,7 @@ import { HeaderMap } from '../runHttpQuery.js';
 import { mockLogger } from './mockLogger.js';
 import gql from 'graphql-tag';
 import type { GatewayInterface } from '@apollo/server-gateway-interface';
+import { jest, describe, it, expect } from '@jest/globals';
 
 const typeDefs = gql`
   type Query {
@@ -132,7 +133,7 @@ const failToStartPlugin: ApolloServerPlugin<BaseContext> = {
 
 describe('ApolloServer start', () => {
   it('start throws on startup error and startupDidFail hook is called with error', async () => {
-    const startupDidFail = jest.fn();
+    const startupDidFail = jest.fn(async () => {});
     const server = new ApolloServer({
       typeDefs,
       resolvers,

@@ -5,9 +5,9 @@ import {
 } from '../../../plugin/schemaReporting/schemaReporter';
 import type {
   SchemaReportMutation,
-  ReportSchemaResponse,
   SchemaReportMutationVariables,
 } from '../../../plugin/schemaReporting/generated/operations';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 function mockReporterRequest(
   url: any,
@@ -66,7 +66,7 @@ describe('Schema reporter', () => {
 
     expect(
       await schemaReporter.reportSchema(false),
-    ).toEqual<ReportSchemaResponse>({
+    ).toEqual({
       __typename: 'ReportSchemaResponse',
       inSeconds: 30,
       withCoreSchema: false,
@@ -80,7 +80,7 @@ describe('Schema reporter', () => {
 
     expect(
       await schemaReporter.reportSchema(false),
-    ).toEqual<ReportSchemaResponse>({
+    ).toEqual({
       __typename: 'ReportSchemaResponse',
       inSeconds: 60,
       withCoreSchema: true,

@@ -1,5 +1,6 @@
 import type { CachePolicy } from '@apollo/cache-control-types';
 import { newCachePolicy } from '../cachePolicy.js';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 
 describe('newCachePolicy', () => {
   let cachePolicy: CachePolicy;

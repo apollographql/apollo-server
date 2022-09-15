@@ -23,6 +23,7 @@ import {
   GraphQLRequestListenerValidationDidEnd,
 } from '..';
 import { mockLogger } from './mockLogger';
+import { jest, describe, it, expect } from '@jest/globals';
 
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,
@@ -291,7 +292,7 @@ it('uses custom field resolver', async () => {
 
 describe('request pipeline life-cycle hooks', () => {
   it('requestDidStart called for each request', async () => {
-    const requestDidStart = jest.fn();
+    const requestDidStart = jest.fn(async (_rc) => {});
     const runOnce = () =>
       runQuery(
         {
@@ -318,7 +319,7 @@ describe('request pipeline life-cycle hooks', () => {
    * within the "Persisted Queries" tests. (Search for "didResolveSource").
    */
   it('didResolveSource called with the source', async () => {
-    const didResolveSource = jest.fn();
+    const didResolveSource = jest.fn(async (_rc) => {});
     await runQuery(
       {
         schema,
@@ -343,7 +344,7 @@ describe('request pipeline life-cycle hooks', () => {
   });
 
   describe('parsingDidStart', () => {
-    const parsingDidStart = jest.fn();
+    const parsingDidStart = jest.fn(async (_rc) => {});
     const plugin = {
       async requestDidStart() {
         return {
@@ -378,7 +379,7 @@ describe('request pipeline life-cycle hooks', () => {
 
   describe('executionDidStart', () => {
     it('called when execution starts', async () => {
-      const executionDidStart = jest.fn();
+      const executionDidStart = jest.fn(async (_rc) => {});
       await runQuery(
         {
           schema,
@@ -400,7 +401,7 @@ describe('request pipeline life-cycle hooks', () => {
 
     describe('executionDidEnd', () => {
       it('works as a listener on an object returned from "executionDidStart"', async () => {
-        const executionDidEnd = jest.fn();
+        const executionDidEnd = jest.fn(async (_rc) => {});
         const executionDidStart = jest.fn(
           async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => ({
             executionDidEnd,
@@ -468,8 +469,8 @@ describe('request pipeline life-cycle hooks', () => {
 
     describe('willResolveField', () => {
       it('called when resolving a field starts', async () => {
-        const willResolveField = jest.fn();
-        const executionDidEnd = jest.fn();
+        const willResolveField = jest.fn((_frp) => {});
+        const executionDidEnd = jest.fn(async (_rc) => {});
         const executionDidStart = jest.fn(
           async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => ({
             willResolveField,
@@ -499,8 +500,8 @@ describe('request pipeline life-cycle hooks', () => {
       });
 
       it('called once for each field being resolved', async () => {
-        const willResolveField = jest.fn();
-        const executionDidEnd = jest.fn();
+        const willResolveField = jest.fn((_frp) => {});
+        const executionDidEnd = jest.fn(async (_rc) => {});
         const executionDidStart = jest.fn(
           async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => ({
             willResolveField,
@@ -531,7 +532,7 @@ describe('request pipeline life-cycle hooks', () => {
 
       describe('receives correct resolver parameter object', () => {
         it('receives undefined parent when there is no parent', async () => {
-          const willResolveField = jest.fn();
+          const willResolveField = jest.fn((_frp) => {});
 
           await runQuery(
             {
@@ -560,7 +561,7 @@ describe('request pipeline life-cycle hooks', () => {
         });
 
         it('receives the parent when there is one', async () => {
-          const willResolveField = jest.fn();
+          const willResolveField = jest.fn((_frp) => {});
 
           await runQuery(
             {
@@ -599,7 +600,7 @@ describe('request pipeline life-cycle hooks', () => {
         });
 
         it('receives context', async () => {
-          const willResolveField = jest.fn();
+          const willResolveField = jest.fn((_frp) => {});
 
           await runQuery(
             {
@@ -630,7 +631,7 @@ describe('request pipeline life-cycle hooks', () => {
         });
 
         it('receives arguments', async () => {
-          const willResolveField = jest.fn();
+          const willResolveField = jest.fn((_frp) => {});
 
           await runQuery(
             {
@@ -662,7 +663,7 @@ describe('request pipeline life-cycle hooks', () => {
         const didResolveField: GraphQLRequestListenerDidResolveField =
           jest.fn();
         const willResolveField = jest.fn(() => didResolveField);
-        const executionDidEnd = jest.fn();
+        const executionDidEnd = jest.fn(async () => {});
         const executionDidStart = jest.fn(
           async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => ({
             willResolveField,
@@ -696,7 +697,7 @@ describe('request pipeline life-cycle hooks', () => {
         const didResolveField: GraphQLRequestListenerDidResolveField =
           jest.fn();
         const willResolveField = jest.fn(() => didResolveField);
-        const executionDidEnd = jest.fn();
+        const executionDidEnd = jest.fn(async () => {});
         const executionDidStart = jest.fn(
           async (): Promise<GraphQLRequestExecutionListener<BaseContext>> => ({
             willResolveField,
@@ -807,7 +808,7 @@ describe('request pipeline life-cycle hooks', () => {
   });
 
   describe('didEncounterErrors', () => {
-    const didEncounterErrors = jest.fn();
+    const didEncounterErrors = jest.fn(async () => {});
     const plugins: ApolloServerPlugin<BaseContext>[] = [
       {
         async requestDidStart() {

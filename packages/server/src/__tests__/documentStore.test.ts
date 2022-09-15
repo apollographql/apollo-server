@@ -3,6 +3,7 @@ import type { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '..';
+import { jest, describe, it, expect } from '@jest/globals';
 
 const typeDefs = gql`
   type Query {
