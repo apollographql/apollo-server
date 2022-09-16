@@ -7,5 +7,6 @@ dist/
 
 # Don't format generated files!
 **/generated/**
+.changeset/*
 
 .volta
