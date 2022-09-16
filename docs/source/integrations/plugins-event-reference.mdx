@@ -9,9 +9,9 @@ This reference describes the lifecycle events that your [custom Apollo Server pl
 Apollo Server fires two types of events that plugins can hook into: **server lifecycle
 events** and **request lifecycle events**.
 
-- Server lifecycle events are high-level events related to the lifecycle of Apollo Server itself (e.g., [`serverWillStart`](#serverwillstart)).
-- Request lifecycle events are associated with the lifecycle of a specific request.
-  - You define responses to these events _within_ the response to a `requestDidStart` event, as described in [Responding to request lifecycle events](./plugins#responding-to-request-lifecycle-events).
+* Server lifecycle events are high-level events related to the lifecycle of Apollo Server itself (e.g., [`serverWillStart`](#serverwillstart)).
+* Request lifecycle events are associated with the lifecycle of a specific request.
+  * You define responses to these events _within_ the response to a `requestDidStart` event, as described in [Responding to request lifecycle events](./plugins#responding-to-request-lifecycle-events).
 
 > With two exceptions, all plugin methods in Apollo Server are `async`. The first exception is `willResolveField`, which is called much more frequently than other plugin methods. The second exception is `schemaDidLoadOrUpdate`, where making the method `async` would introduce unclear ordering semantics around method executions.
 
@@ -22,12 +22,11 @@ events** and **request lifecycle events**.
 The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. The server doesn't start until this asynchronous method completes. If it throws (i.e., if the `Promise` it returns is _rejected_), startup _fails_ and your server does not serve GraphQL operations. This helps you make sure all of your server's dependencies are available before attempting to begin serving requests.
 
 <!-- TODO(AS4) add link to integration page when exists -->
-
 This event is fired at different times depending on which Apollo Server integration you're using:
 
-- If you are using `startStandaloneServer`, it's fired when you invoke the `startStandaloneServer` function with your server instance.
-- In non-serverless integrations like `expressMiddleware`, it's fired from the `start()` method.
-- In serverless integrations, it's usually fired in response to the first incoming request.
+* If you are using `startStandaloneServer`, it's fired when you invoke the `startStandaloneServer` function with your server instance.
+* In non-serverless integrations like `expressMiddleware`, it's fired from the `start()` method.
+* In serverless integrations, it's usually fired in response to the first incoming request.
 
 #### Example
 
@@ -41,10 +40,10 @@ const server = new ApolloServer({
     {
       async serverWillStart() {
         console.log('Server starting!');
-      },
-    },
-  ],
-});
+      }
+    }
+  ]
+})
 ```
 
 </MultiCodeBlock>
@@ -69,12 +68,12 @@ const server = new ApolloServer({
         return {
           async drainServer() {
             await myCustomServer.drain();
-          },
-        };
-      },
-    },
-  ],
-});
+          }
+        }
+      }
+    }
+  ]
+})
 ```
 
 </MultiCodeBlock>
@@ -102,12 +101,12 @@ const server = new ApolloServer({
         return {
           async serverWillStop() {
             clearInterval(interval);
-          },
-        };
-      },
-    },
-  ],
-});
+          }
+        }
+      }
+    }
+  ]
+})
 ```
 
 </MultiCodeBlock>
@@ -153,7 +152,7 @@ const server = new ApolloServer({
 
 The handler should return an object with a string `html` field. The value of that field is served as HTML for any requests with `accept: text/html` headers.
 
-For more landing page options, see [Changing the landing page](../workflow/build-run-queries/#changing-the-landing-page).
+For more landing page options, see [Changing the landing page](../testing/build-run-queries/#changing-the-landing-page).
 
 #### Example
 
@@ -163,23 +162,22 @@ For more landing page options, see [Changing the landing page](../workflow/build
 const server = new ApolloServer({
   /* ... other necessary configuration ... */
 
-  plugins: [
+   plugins: [
     {
       async serverWillStart() {
         return {
           async renderLandingPage() {
-            return {
-              html: `<html><body>Welcome to your server!</body></html>`,
-            };
+            return { html: `<html><body>Welcome to your server!</body></html>` };
           },
         };
       },
     },
   ],
-});
+})
 ```
 
 </MultiCodeBlock>
+
 
 ### `requestDidStart`
 
@@ -212,13 +210,13 @@ const server = new ApolloServer({
           // when parsing begins. The event is scoped within an
           // associated `requestDidStart` server lifecycle event.
           async parsingDidStart(requestContext) {
-            console.log('Parsing started!');
+            console.log('Parsing started!')
           },
-        };
-      },
-    },
+        }
+      }
+    }
   ],
-});
+})
 ```
 
 </MultiCodeBlock>
@@ -272,7 +270,7 @@ Note that not every event fires for every request (for example, `parsingDidStart
 ### `didResolveSource`
 
 The `didResolveSource` event is invoked after Apollo Server has determined the
-`String`-representation of the incoming operation that it will act upon. In the
+`String`-representation of the incoming operation that it will act upon.  In the
 event that this `String` was not directly passed in from the client, this
 may be retrieved from a cache store (e.g., Automated Persisted Queries).
 
@@ -372,7 +370,7 @@ executionDidStart?(
 ): Promise<GraphQLRequestExecutionListener | void>;
 ```
 
-`executionDidStart` may return an object with one or both of the methods `executionDidEnd` and `willResolveField`. `executionDidEnd` is treated like an end hook: it is called after execution with any errors that occurred. `willResolveField` is documented in the next section.
+`executionDidStart` may return an object with one or both of the methods `executionDidEnd` and `willResolveField`.  `executionDidEnd` is treated like an end hook: it is called after execution with any errors that occurred. `willResolveField` is documented in the next section.
 
 ### `willResolveField`
 
@@ -400,29 +398,25 @@ const server = new ApolloServer({
         return {
           async executionDidStart(executionRequestContext) {
             return {
-              willResolveField({ source, args, contextValue, info }) {
+              willResolveField({source, args, contextValue, info}) {
                 const start = process.hrtime.bigint();
                 return (error, result) => {
                   const end = process.hrtime.bigint();
-                  console.log(
-                    `Field ${info.parentType.name}.${info.fieldName} took ${
-                      end - start
-                    }ns`,
-                  );
+                  console.log(`Field ${info.parentType.name}.${info.fieldName} took ${end - start}ns`);
                   if (error) {
                     console.log(`It failed with ${error}`);
                   } else {
                     console.log(`It returned ${result}`);
                   }
                 };
-              },
-            };
-          },
-        };
-      },
-    },
-  ],
-});
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+})
 ```
 
 </MultiCodeBlock>
