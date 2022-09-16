@@ -15,13 +15,13 @@ You can use these generated TS types in your resolvers to type-check that your r
 
 We'll use the [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) library to generate types based on our GraphQL schema. There are [multiple ways](https://www.the-guild.dev/graphql/codegen/plugins/typescript/typescript-resolvers#usage-example) to provide a schema to GraphQL Code Generator. Below, we'll show one of the common methods, beginning by wrapping our schema in a `gql` template literal tag from the [`graphql-tag`](https://www.npmjs.com/package/graphql-tag) package.
 
-If you haven't already, begin by importing the `graphql-tag` library:
+If you haven't already, begin by installing the `graphql-tag` library:
 
 ```bash
 npm install graphql-tag
 ```
 
-The `gql` template literal tag from `graphql-tag` can parse a Schema Definition Language (SDL) string into an abstract syntax tree (AST). Under the hood, Apollo Server handles this for you when you provide your schema as a string. 
+The `gql` template literal tag from `graphql-tag` can parse a Schema Definition Language (SDL) string into an abstract syntax tree (AST). Apollo Server accepts a string or an AST as a valid option for defining a schema.  
 
 If we pass GraphQL Code Generator a TypeScript file path, it will automatically generate types for the `gql` tag within that file. So, we can wrap our schema string in a `gql` tag to let GraphQL Code Generator know it should generate types for that tag. 
 
@@ -30,7 +30,7 @@ Import the `gql` tag into the file where you define your schema, then wrap your 
 ```ts title="src/schema.ts"
 import gql from 'graphql-tag';
 
-export default gql(`
+export default gql`
   type Query {
     books: [Book]
   }
@@ -50,7 +50,7 @@ export default gql(`
   type Mutation {
     addBook(title: String, author: String): AddBookMutationResponse
   }
-`);
+`;
 ```
 
 Restart your server to ensure everything still works as expected. Next, we'll install the packages we need to generate types automatically based on our schema.
