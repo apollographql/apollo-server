@@ -2,7 +2,7 @@
 title: Deploying with Heroku
 ---
 
-> Heroku is planning to [phase out their free tier in the near future](https://blog.heroku.com/next-chapter).  
+> Heroku is planning to [phase out their free tier in the near future](https://blog.heroku.com/next-chapter).
 
 Heroku is a common platform-as-a-service solution that enables you to deploy Apollo Server and have a running GraphQL endpoint in a matter of minutes.
 
@@ -32,6 +32,7 @@ Choose a name your app (this will be your `<HEROKU_APP_NAME>`) and click **Creat
 ## Setting up the project
 
 <!-- TODO (AS4) update with a link to a page listing the different integrations once that exists -->
+
 You can set up your project using the `@apollo/server` library along with any of Apollo Server's other framework integrations (Express, Fastify, etc.).
 
 ### Manually setting the port
@@ -98,14 +99,15 @@ $ git push heroku # specify your branch name, if necessary
 After deployment completes, your Apollo Server project is up and running! You can send a query to your Heroku-hosted GraphQL endpoint at `<HEROKU_APP_NAME>.herokuapp.com`.
 
 Some things to note:
+
 - `git push heroku` does _not_ push to your `origin` remote or any other remote. You must run `git push` again separately.
 - By default, Heroku sets the `NODE_ENV` variable to `production`. If you wish to change this, run this command in your project directory:
 
-    ```shell
-    $ heroku config:set NODE_ENV=development
-    ```
+  ```shell
+  $ heroku config:set NODE_ENV=development
+  ```
 
-    Alternatively, you can [configure environment variables](./heroku/#configuring-environment-variables) through the Heroku dashboard.
+  Alternatively, you can [configure environment variables](./heroku/#configuring-environment-variables) through the Heroku dashboard.
 
 - Remember that introspection is disabled by default when Apollo Server is in a production environment, which prevents tools like Apollo Sandbox from working.
 

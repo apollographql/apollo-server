@@ -1,13 +1,12 @@
 *.json
 *.json5
 *.yml
-*.md
-*.mdx
 *.snap
 
 dist/
 
 # Don't format generated files!
 **/generated/**
+.changeset/*
 
 .volta

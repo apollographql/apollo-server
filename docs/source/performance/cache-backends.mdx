@@ -7,7 +7,7 @@ Many Apollo Server features take advantage of a cache backend (these features in
 
 You can specify a cache backend by passing a `cache` option to the `ApolloServer` constructor. Your specified cache backend must implement the [`KeyValueCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#keyvaluecache-interface) interface from the `@apollo/utils.keyvaluecache` package.
 
-There are many cache backend implementations to choose from, including several implementations provided by Apollo. For example, Apollo maintains an implementation of `InMemoryLRUCache` in the `@apollo/utils.keyvaluecache` package. Apollo also provides a wrapper class for the  [`keyv` package](https://www.npmjs.com/package/keyv) (which implements several cache backends) named [`KeyvAdapter`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyvAdapter#keyvadapter-class) in the `@apollo/utils.keyvadapter` package.
+There are many cache backend implementations to choose from, including several implementations provided by Apollo. For example, Apollo maintains an implementation of `InMemoryLRUCache` in the `@apollo/utils.keyvaluecache` package. Apollo also provides a wrapper class for the [`keyv` package](https://www.npmjs.com/package/keyv) (which implements several cache backends) named [`KeyvAdapter`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyvAdapter#keyvadapter-class) in the `@apollo/utils.keyvadapter` package.
 
 ## Configuring in-memory caching
 
@@ -52,11 +52,13 @@ Apollo no longer maintains any caching backends directly. Instead, we recommend 
 `KeyvAdapter` wraps a `Keyv` instance and implements the `KeyValueCache` interface which is required by Apollo Server. You can use the `KeyvAdapter` class to wrap a `Keyv` instance and provide it to the `cache` option of the `ApolloServer` constructor like so:
 
 1. Install the required packages
+
 ```bash
 npm install keyv @apollo/utils.keyvadapter
 ```
 
 2. Configure the Apollo Server `cache`
+
 ```ts
 import Keyv from 'keyv';
 import { KeyvAdapter } from '@apollo/utils.keyvadapter';
@@ -72,6 +74,7 @@ const server = new ApolloServer({
 If your requirements are specialized or you'd prefer to implement your own cache backend, you can implement the `KeyValueCache` interface and pass it to the `ApolloServer` constructor directly.
 
 The `KeyValueCache` interface is shown below:
+
 ```ts
 interface KeyValueCache<V> {
   get(key: string): Promise<V | undefined>;
@@ -89,38 +92,41 @@ options argument is passed through to the `ioredis.Redis` constructor. See the
 available options.
 
 Start by installing the required packages:
+
 ```
 npm install keyv @keyv/redis @apollo/utils.keyvadapter
 ```
 
 ### Single instance
+
 ```ts
-import Keyv from "keyv";
-import { KeyvAdapter } from "@apollo/utils.keyvadapter";
+import Keyv from 'keyv';
+import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  cache: new KeyvAdapter(new Keyv("redis://user:pass@localhost:6379")), // highlight-line
+  cache: new KeyvAdapter(new Keyv('redis://user:pass@localhost:6379')), // highlight-line
 });
 ```
 
 ### Redis Sentinel
+
 ```ts
-import Keyv from "keyv";
-import { KeyvAdapter } from "@apollo/utils.keyvadapter";
+import Keyv from 'keyv';
+import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   // highlight-start
   cache: new KeyvAdapter(
-    new Keyv("redis://user:pass@localhost:6379", {
+    new Keyv('redis://user:pass@localhost:6379', {
       sentinels: [
-        { host: "localhost", port: 26379 },
-        { host: "localhost", port: 26380 },
+        { host: 'localhost', port: 26379 },
+        { host: 'localhost', port: 26380 },
       ],
-    })
+    }),
   ),
   // highlight-end
 });
@@ -134,20 +140,21 @@ Instead, we can create our own `ioredis.Cluster` instance and pass that to
 docs](https://github.com/luin/ioredis#cluster) for a list of available options.
 
 Start by installing the packages we'll need:
+
 ```
 npm install keyv @keyv/redis ioredis @apollo/utils.keyvadapter
 ```
 
 ```ts
-import Keyv from "keyv";
-import KeyvRedis from "@keyv/redis";
-import Redis from "ioredis";
-import { KeyvAdapter } from "@apollo/utils.keyvadapter";
+import Keyv from 'keyv';
+import KeyvRedis from '@keyv/redis';
+import Redis from 'ioredis';
+import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 
 // highlight-start
 const cluster = new Redis.Cluster([
-  { host: "localhost", port: 26379 },
-  { host: "localhost", port: 26380 },
+  { host: 'localhost', port: 26379 },
+  { host: 'localhost', port: 26380 },
 ]);
 // highlight-end
 
@@ -163,7 +170,7 @@ const server = new ApolloServer({
 ```
 
 > Note the `disableBatchReads` option. This disables batching which isn't
-supported by `ioredis.Cluster`.
+> supported by `ioredis.Cluster`.
 
 ## Configuring Memcache
 
@@ -172,21 +179,21 @@ options argument is passed to `memjs.Client.create()`. See the [`memjs`
 docs](https://memjs.netlify.app/#section-3) for a list of available options.
 
 Start by installing the required packages:
+
 ```
 npm install keyv @keyv/memcache @apollo/utils.keyvadapter
 ```
 
 ```ts
-import Keyv from "keyv";
-import KeyvMemcache from "@keyv/memcache";
-import { KeyvAdapter } from "@apollo/utils.keyvadapter";
+import Keyv from 'keyv';
+import KeyvMemcache from '@keyv/memcache';
+import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 
 // servers is a comma-separated list of strings
 // highlight-start
-const servers = [
-  "user:pass@localhost:11211",
-  "user:pass@localhost:11222"
-].join(",");
+const servers = ['user:pass@localhost:11211', 'user:pass@localhost:11222'].join(
+  ',',
+);
 
 const memcache = new KeyvMemcache(servers, {
   retries: 10,

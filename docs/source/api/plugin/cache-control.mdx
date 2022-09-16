@@ -1,5 +1,5 @@
 ---
-title: "API Reference: Cache control plugin"
+title: 'API Reference: Cache control plugin'
 api_reference: true
 ---
 
@@ -11,7 +11,7 @@ This plugin enables your GraphQL server to specify a cache policy at the field l
 
 > To use the `@cacheControl` directive, you must first [define it in your schema](../../performance/caching/#in-your-schema-static).
 
-Apollo Server installs this plugin by default in all servers, with its default configuration.  You typically do not have to install this plugin yourself; you only need to do so if you want to provide non-default configuration.
+Apollo Server installs this plugin by default in all servers, with its default configuration. You typically do not have to install this plugin yourself; you only need to do so if you want to provide non-default configuration.
 
 If you want to configure the `ApolloServerPluginCacheControl` plugin, import it and pass it to your `ApolloServer` constructor's `plugins` array:
 
@@ -48,9 +48,7 @@ import { ApolloServerPluginCacheControlDisabled } from '@apollo/server/plugin/di
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  plugins: [
-    ApolloServerPluginCacheControlDisabled(),
-  ],
+  plugins: [ApolloServerPluginCacheControlDisabled()],
 });
 ```
 
@@ -76,6 +74,7 @@ The plugin doesn't affect your app much if you don't use the `@cacheControl` dir
 ###### `defaultMaxAge`
 
 `number`
+
 </td>
 <td>
 
@@ -92,6 +91,7 @@ This option was popular in Apollo Server 2 as a workaround for the problem solve
 ###### `calculateHttpHeaders`
 
 `boolean`
+
 </td>
 <td>
 
@@ -99,7 +99,6 @@ By default, the cache control plugin sets the `cache-control` HTTP response head
 
 </td>
 </tr>
-
 
 </tbody>
 </table>

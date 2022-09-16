@@ -1,9 +1,10 @@
 ---
 title: Building Web Framework Integrations for Apollo Server
-description: ""
+description: ''
 ---
 
 <!-- TODO(AS4) Once we have a page with integrations, add link here -->
+
 > This article is for _authors_ of web framework integrations. Before
 > building a new integration, we recommend seeing if there's
 > an integration for your framework of choice that suits your needs.
@@ -12,12 +13,14 @@ One of the driving forces behind Apollo Server 4 is the creation of a stable,
 well-defined API for processing HTTP requests and responses. Apollo Server 4's
 API enables external collaborators, like you, to build integrations with Apollo
 Server in their web framework of choice.
+
 ## Overview
 
 The primary responsibility of an Apollo Server integration is to translate
 requests and responses between a web framework's native format to the format used by `ApolloServer`. This article conceptually covers how to build an integration, using the [Express integration](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/src/express4/index.ts) (i.e.,`expressMiddleware`) as an example.
 
 <!-- (AS4) TODO replace link once on main -->
+
 > For more examples, see these Apollo Server 4 [integrations demos for Fastify and Lambda](https://github.com/apollographql/server-v4-integration-demos/tree/main/packages).
 
 ### Main function signature
@@ -67,7 +70,7 @@ Apollo Server, like so:
 server.assertStarted('expressMiddleware()');
 ```
 
-*Serverless* integrations don't require users to call `server.start()`;  instead, a serverless integration calls the
+_Serverless_ integrations don't require users to call `server.start()`; instead, a serverless integration calls the
 `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method. Because serverless integrations handle starting their server instances, they also don't need to call the `assertStarted` method.
 
 ### Compute GraphQL Context
@@ -106,6 +109,7 @@ Note, the `context` function is _called_ during the [execution step](#execute-th
 We recommend implementing your integration package as either a request handler or a framework plugin. Request handlers typically receive information about each request, including standard HTTP parts (i.e., `method`, `headers`, and `body`) and other useful contextual information.
 
 A request handler has 4 main responsibilities:
+
 1. [Parse the request](#parse-the-request)
 2. [Construct an `HTTPGraphQLRequest` object](#construct-the-httpgraphqlrequest-object) from the incoming request
 3. [Execute the GraphQL request](#execute-the-graphql-request) using Apollo Server
@@ -135,6 +139,7 @@ Your integration should pass along whatever it parses to Apollo Server; Apollo S
 Apollo Server also accepts GraphQL queries [sent using `GET`](/apollo-server/requests) with query string parameters. Apollo Server expects a raw query string for these types of HTTP requests. Apollo Server is indifferent to whether or not the `?` is included at the beginning of your query string. Fragments (starting with `#`) at the end of a URL should not be included.
 
 Apollo Server 4's Express integration computes the query string using the request's full URL, like so:
+
 ```ts
 import { parse } from 'url';
 
@@ -193,11 +198,10 @@ Using the `HTTPGraphQLRequest` we created above, we now execute the GraphQL
 request:
 
 ```ts
-const result = await server
-  .executeHTTPGraphQLRequest({
-    httpGraphQLRequest,
-    context: () => context({ req, res }),
-  });
+const result = await server.executeHTTPGraphQLRequest({
+  httpGraphQLRequest,
+  context: () => context({ req, res }),
+});
 ```
 
 In the above code snippet, the `httpGraphQLRequest` variable is our `HTTPGraphQLRequest` object. The `context` function is the [one we determined earlier](#compute-graphql-context) (either given to us by the user or our default context). Note how we pass the `req` and `res` objects we received from Express to the `context` function (as promised by our `ExpressContextFunctionArgument` type).

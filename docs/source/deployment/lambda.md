@@ -38,7 +38,7 @@ Next, set up the schema's type definitions and resolvers, and pass them to the `
 
 const { ApolloServer, gql } = require('apollo-server-lambda');
 const {
-  ApolloServerPluginLandingPageLocalDefault
+  ApolloServerPluginLandingPageLocalDefault,
 } = require('apollo-server-core');
 
 // Construct a schema, using GraphQL schema language
@@ -60,9 +60,7 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
+  plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
 });
 
 exports.graphqlHandler = server.createHandler();
@@ -103,6 +101,7 @@ functions:
 ```
 
 ### Running Locally
+
 Using the `serverless` CLI, we can invoke our function locally to make sure it is running properly. As with any GraphQL "server", we need to send an operation for the schema to run as an HTTP request. You can store a mock HTTP request locally in a `query.json` file:
 
 ```json
@@ -162,6 +161,7 @@ First, it builds the functions, zips up the artifacts, and uploads the artifacts
 The resulting S3 buckets and Lambda functions can be viewed and managed after logging in to the [AWS Console](https://console.aws.amazon.com).
 
 <!-- cSpell:disable-next-line -->
+
 - To find the created S3 bucket, search the listed services for S3. For this example, the bucket created by Serverless was named `apollo-lambda-dev-serverlessdeploymentbucket-1s10e00wvoe5f`
 - To find the created Lambda function, search the listed services for `Lambda`. If the list of Lambda functions is empty, or missing the newly created function, double check the region at the top right of the screen. The default region for Serverless deployments is `us-east-1` (N. Virginia)
 
@@ -181,7 +181,7 @@ exports.handler = server.createHandler({
     app.use(someOtherMiddleware);
     app.use(middleware);
     return app;
-  }
+  },
 });
 ```
 
@@ -193,7 +193,7 @@ Because `apollo-server-lambda` is built on top of `apollo-server-express`, you c
 exports.handler = server.createHandler({
   expressGetMiddlewareOptions: {
     disableHealthCheck: true,
-  }
+  },
 });
 ```
 
@@ -206,7 +206,7 @@ The `event` object contains the API Gateway event (HTTP headers, HTTP method, bo
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
 const {
-  ApolloServerPluginLandingPageLocalDefault
+  ApolloServerPluginLandingPageLocalDefault,
 } = require('apollo-server-core');
 
 // Construct a schema, using GraphQL schema language
@@ -235,9 +235,7 @@ const server = new ApolloServer({
     context,
     expressRequest: express.req,
   }),
-  plugins: [
-    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-  ],
+  plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
 });
 
 exports.graphqlHandler = server.createHandler();

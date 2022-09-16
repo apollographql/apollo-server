@@ -20,10 +20,8 @@ type Query {
 > See an example implementation of this directive on CodeSandbox:
 >
 > <a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v4/custom-directives/upper-case-directive?fontsize=14&hidenavigation=1&theme=dark">
->   <img
->     alt="Edit upper-case-directive"
->     src="https://codesandbox.io/static/img/play-codesandbox.svg"
->   />
+>   {/* prettier-ignore */}
+>   <img src="https://codesandbox.io/static/img/play-codesandbox.svg" alt="Edit upper-case-directive"/>
 > </a>
 
 When you start up your app, you can use directives to transform your executable schema's behavior before you provide that schema to Apollo Server. For example, you can modify the resolver function for any decorated field (for the schema above, it could transform the `hello` resolver's original result to uppercase).
@@ -339,7 +337,12 @@ function upperDirectiveTransformer(schema, directiveName) {
 
         // Replace the original resolver with a function that *first* calls
         // the original resolver, then converts its result to upper case
-        fieldConfig.resolve = async function (source, args, contextValue, info) {
+        fieldConfig.resolve = async function (
+          source,
+          args,
+          contextValue,
+          info,
+        ) {
           const result = await resolve(source, args, context, info);
           if (typeof result === 'string') {
             return result.toUpperCase();

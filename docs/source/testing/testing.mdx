@@ -14,7 +14,7 @@ There are two main options for integration testing with Apollo Server:
 
 Apollo Server's `executeOperation` method enables you to run operations through the request pipeline _without_ sending an HTTP request.
 
-<!-- TODO(AS4) add link once the API article is updated -->
+{/* TODO(AS4) add link once the API article is updated */}
 The `executeOperation` method accepts the following arguments:
 
 - An object that describes the GraphQL operation to execute.
@@ -64,7 +64,7 @@ You don't need to start your server before calling `executeOperation`. The serve
 
 To expand on the example above, here's a full integration test being run against a test instance of `ApolloServer`. This test imports all of the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `ApolloServer`.
 
-<!-- TODO(AS4) remove once RESTDataSource is up and ready -->
+{/* TODO(AS4) remove once RESTDataSource is up and ready */}
 
 > ⚠️ The Apollo Server 4 alpha doesn't currently support using [`RESTDataSource`](../migration#datasources), a class commonly used to fetch data from a database or a REST API. This feature is in active development, but in the meantime the below code snippet doesn't work as described.
 
@@ -124,8 +124,8 @@ Instead of bypassing the HTTP layer, you might want to fully run your server and
 
 Instead, you can run operations against your server using a combination of any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](/react/api/link/apollo-link-http/) .
 
-<!-- TODO(AS4) double check if this package is going to be updated for AS4 -->
-<!-- There are also community packages available such as [`apollo-server-integration-testing`](https://www.npmjs.com/package/apollo-server-integration-testing), which uses mocked Express request and response objects. -->
+{/* TODO(AS4) double check if this package is going to be updated for AS4 */}
+{/* There are also community packages available such as [`apollo-server-integration-testing`](https://www.npmjs.com/package/apollo-server-integration-testing), which uses mocked Express request and response objects. */}
 
 Below is an example of writing an end-to-end test using the `@apollo/server` and `supertest` packages:
 

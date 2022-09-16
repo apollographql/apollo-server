@@ -13,7 +13,6 @@ You can create your own Apollo Server plugins to perform custom operations in re
 
 Plugins are JavaScript objects that implement one or more functions that respond to events. Here's a basic plugin that responds to the `serverWillStart` event:
 
-
 <MultiCodeBlock>
 
 ```ts title="index.ts"
@@ -25,7 +24,6 @@ const myPlugin = {
 ```
 
 </MultiCodeBlock>
-
 
 You can define a plugin in the same file where you initialize Apollo Server, or
 you can export it as a separate module:
@@ -71,14 +69,14 @@ A plugin can respond to any combination of [supported events](./plugins-event-re
 Plugins can respond to the following events associated with the GraphQL request
 lifecycle:
 
-* [`didResolveSource`](./plugins-event-reference/#didresolvesource)
-* [`parsingDidStart`](./plugins-event-reference/#parsingdidstart)
-* [`validationDidStart`](./plugins-event-reference/#validationdidstart)
-* [`didResolveOperation`](./plugins-event-reference/#didresolveoperation)
-* [`responseForOperation`](./plugins-event-reference/#responseforoperation)
-* [`executionDidStart`](./plugins-event-reference/#executiondidstart)
-* [`didEncounterErrors`](./plugins-event-reference/#didencountererrors)
-* [`willSendResponse`](./plugins-event-reference/#willsendresponse)
+- [`didResolveSource`](./plugins-event-reference/#didresolvesource)
+- [`parsingDidStart`](./plugins-event-reference/#parsingdidstart)
+- [`validationDidStart`](./plugins-event-reference/#validationdidstart)
+- [`didResolveOperation`](./plugins-event-reference/#didresolveoperation)
+- [`responseForOperation`](./plugins-event-reference/#responseforoperation)
+- [`executionDidStart`](./plugins-event-reference/#executiondidstart)
+- [`didEncounterErrors`](./plugins-event-reference/#didencountererrors)
+- [`willSendResponse`](./plugins-event-reference/#willsendresponse)
 
 **However**, the way you define these functions is slightly different from the
 `serverWillStart` example above. First, your plugin must define the `requestDidStart` function:
@@ -98,7 +96,7 @@ const myPlugin = {
 The `requestDidStart` event fires whenever Apollo Server receives a GraphQL request,
 _before_ any of the lifecycle events listed above. You can respond to this event
 just like you respond to `serverWillStart`, but you _also_ use this function
- to define responses for a request's lifecycle events, like so:
+to define responses for a request's lifecycle events, like so:
 
 <MultiCodeBlock>
 
@@ -114,8 +112,8 @@ const myPlugin = {
 
       async validationDidStart(requestContext) {
         console.log('Validation started!');
-      }
-    }
+      },
+    };
   },
 };
 ```
@@ -135,33 +133,36 @@ The following diagram illustrates the sequence of events that fire for each requ
 
 ```mermaid
 graph TB;
-  request(requestDidStart) --> resolveSource(didResolveSource);
-  resolveSource --"Success"--> parsing(parsingDidStart*);
-  parsing --"Success"--> validation(validationDidStart*);
-  validation --"Success"--> resolveOperation(didResolveOperation);
-  resolveOperation --"Success"--> response(responseForOperation);
+  request(requestDidStart) */} resolveSource(didResolveSource);
+  resolveSource --"Success"*/} parsing(parsingDidStart*);
+  parsing --"Success"*/} validation(validationDidStart*);
+  validation --"Success"*/} resolveOperation(didResolveOperation);
+  resolveOperation --"Success"*/} response(responseForOperation);
   execution(executionDidStart*);
   resolveField(willResolveField*);
   errors(didEncounterErrors);
-  errors --> send;
-  response --"Response provided"--> send;
-  response --"No response provided"--> execution;
-  execution ---->|"Success"| send(willSendResponse);
-  execution --"(Fires once per resolver)"-->resolveField;
+  errors */} send;
+  response --"Response provided"*/} send;
+  response --"No response provided"*/} execution;
+  execution --*/}|"Success"| send(willSendResponse);
+  execution --"(Fires once per resolver)"*/}resolveField;
 
 
   class errors secondary;
 ```
 
-<sup>*The indicated events also support <a href="#end-hooks">end hooks</a> that are called when their associated step <em>completes</em>.</sup>
+<sup>
+  *The indicated events also support <a href="#end-hooks">end hooks</a> that are
+  called when their associated step <em>completes</em>.
+</sup>
 
 ### End hooks
 
 Event handlers for the following events can optionally return a function that is invoked after the corresponding lifecycle phase _ends_:
 
-* [`parsingDidStart`](./plugins-event-reference/#parsingdidstart)
-* [`validationDidStart`](./plugins-event-reference/#validationdidstart)
-* [`willResolveField`](./plugins-event-reference/#willresolvefield)
+- [`parsingDidStart`](./plugins-event-reference/#parsingdidstart)
+- [`validationDidStart`](./plugins-event-reference/#validationdidstart)
+- [`willResolveField`](./plugins-event-reference/#willresolvefield)
 
 The [`executionDidStart`](./plugins-event-reference/#executiondidstart) hook returns an _object_ containing an `executionDidEnd` function instead of just a function as an end hook. This is because the returned object can also contain `willResolveField`.
 
@@ -180,16 +181,16 @@ const myPlugin = {
           if (err) {
             console.error(err);
           }
-        }
+        };
       },
       async validationDidStart() {
         // This end hook is unique in that it can receive an array of errors,
         // which will contain every validation error that occurred.
         return async (errs) => {
           if (errs) {
-            errs.forEach(err => console.error(err));
+            errs.forEach((err) => console.error(err));
           }
-        }
+        };
       },
       async executionDidStart() {
         return {
@@ -197,12 +198,12 @@ const myPlugin = {
             if (err) {
               console.error(err);
             }
-          }
+          },
         };
       },
     };
   },
-}
+};
 ```
 
 </MultiCodeBlock>
