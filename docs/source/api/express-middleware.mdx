@@ -1,5 +1,5 @@
 ---
-title: "API Reference: expressMiddleware"
+title: 'API Reference: expressMiddleware'
 api_reference: true
 ---
 
@@ -7,11 +7,11 @@ This API reference documents Apollo Server 4's [Express](https://expressjs.com/)
 
 ## `expressMiddleware`
 
-The `expressMiddleware` function enables you to attach Apollo Server to an Express server. 
+The `expressMiddleware` function enables you to attach Apollo Server to an Express server.
 
 The `expressMiddleware` function expects you to set up HTTP body parsing and CORS headers for your web framework. Specifically, you should install the [`body-parser`](https://www.npmjs.com/package/body-parser) and [`cors`](https://www.npmjs.com/package/cors) packages and use them to set up your Express app, as shown below.
 
-> See [Configuring CORS](../../security/cors#specifying-origins) for guidance on configuring the CORS behavior of your project. 
+> See [Configuring CORS](../../security/cors#specifying-origins) for guidance on configuring the CORS behavior of your project.
 
 The `expressMiddleware` function accepts two arguments. The first **required** argument is an instance of `ApolloServer` that has been `start`ed:
 
@@ -43,11 +43,11 @@ app.use(
   expressMiddleware(server),
 );
 //highlight-end
-``` 
+```
 
 </MultiCodeBlock>
 
-> ⚠️ To ensure your server gracefully shuts down, we recommend using the [`ApolloServerPluginDrainHttpServer`](../api/plugin/drain-http-server) plugin. [See below for an example](#example).
+> ⚠️ To ensure your server gracefully shuts down, we recommend using the [`ApolloServerPluginDrainHttpServer`](./plugin/drain-http-server) plugin. [See below for an example](#example).
 
 The `expressMiddleware` function's second optional argument is an _object_ for configuring `ApolloServer`, which can contain the following options:
 
@@ -64,16 +64,16 @@ The `expressMiddleware` function's second optional argument is an _object_ for c
 
 <td>
 
-  ##### `context`
+##### `context`
 
-  `Function`
+`Function`
 
 </td>
 
 <td>
 
-An optional asynchronous [`context` initialization function](../data/resolvers#the-context-argument). 
-  
+An optional asynchronous [`context` initialization function](../data/resolvers#the-context-argument).
+
 The `context` function should return an object that all your server's resolvers share during an operation's execution. This enables resolvers to share helpful context values, such as a database connection.
 
 The `context` function receives `req` and `res` options which are [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/2c4c1d0b106a1305c384cde84bb14bbf1a938d2c/types/express-serve-static-core/index.d.ts#L367) and [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/2c4c1d0b106a1305c384cde84bb14bbf1a938d2c/types/express-serve-static-core/index.d.ts#L659) objects.
@@ -85,7 +85,7 @@ The `context` function receives `req` and `res` options which are [`express.Requ
 </tbody>
 </table>
 
-## Example 
+## Example
 
 Below is a full example of setting up `expressMiddleware`:
 
@@ -126,7 +126,8 @@ async function startApolloServer() {
 
   // Set up our Express middleware to handle CORS, body parsing,
   // and our expressMiddleware function.
-  app.use('/',
+  app.use(
+    '/',
     cors<cors.CorsRequest>(),
     bodyParser.json(),
     // expressMiddleware accepts the same arguments:
@@ -137,7 +138,9 @@ async function startApolloServer() {
   );
 
   // Modified server startup
-  await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
+  await new Promise<void>((resolve) =>
+    httpServer.listen({ port: 4000 }, resolve),
+  );
   console.log(`🚀 Server ready at http://localhost:4000/`);
 }
 ```
