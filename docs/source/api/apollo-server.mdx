@@ -1,9 +1,9 @@
 ---
-title: "API Reference: ApolloServer"
+title: 'API Reference: ApolloServer'
 api_reference: true
 ---
 
-This article documents the `ApolloServer` class from the `@apollo/server` package. You can use the `ApolloServer` class to create an instance of Apollo Server that you can then pass to a web framework integration function (e.g., `startStandaloneServer` or `expressMiddleware`). 
+This article documents the `ApolloServer` class from the `@apollo/server` package. You can use the `ApolloServer` class to create an instance of Apollo Server that you can then pass to a web framework integration function (e.g., `startStandaloneServer` or `expressMiddleware`).
 
 > Check out our [Getting Started](../getting-started) guide for an example of setting up Apollo Server!
 
@@ -21,8 +21,8 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 import { ApolloServer } from '@apollo/server';
 
 const server = new ApolloServer({
-	typeDefs,
-	resolvers,
+  typeDefs,
+  resolvers,
 });
 ```
 
@@ -43,6 +43,7 @@ const server = new ApolloServer({
 <td colspan="2">
 
 **Specifying a schema**
+
 </td>
 </tr>
 <tr class="required">
@@ -51,6 +52,7 @@ const server = new ApolloServer({
 ##### `typeDefs`
 
 `string`, `DocumentNode`, or `Array<DocumentNode>`
+
 </td>
 <td>
 
@@ -59,9 +61,9 @@ A valid [Schema Definition Language](../schema/schema/#the-schema-definition-lan
 **Required** unless you provide a [`schema`](#schema) or a [`gateway`](#gateway).
 
 For an example, see [Define your GraphQL schema](../getting-started/#step-3-define-your-graphql-schema).
+
 </td>
 </tr>
-
 
 <tr class="required">
 <td>
@@ -69,14 +71,16 @@ For an example, see [Define your GraphQL schema](../getting-started/#step-3-defi
 ##### `resolvers`
 
 `Object` or `Array`
+
 </td>
 <td>
 
 A map of functions that populate data for individual schema fields. Can also be an array of multiple maps that are merged.
 
-While technically optional, if you are providing `typeDefs`, it is strongly recommended that you provide `resolvers` as well. 
+While technically optional, if you are providing `typeDefs`, it is strongly recommended that you provide `resolvers` as well.
 
 For details, see [Resolvers](../data/resolvers/).
+
 </td>
 </tr>
 
@@ -86,16 +90,18 @@ For details, see [Resolvers](../data/resolvers/).
 ##### `schema`
 
 `Object`
+
 </td>
 
 <td>
 
-An executable GraphQL schema.  Under the hood, Apollo Server automatically generates this field from [`typeDefs`](#typedefs) and [`resolvers`](#resolvers).
+An executable GraphQL schema. Under the hood, Apollo Server automatically generates this field from [`typeDefs`](#typedefs) and [`resolvers`](#resolvers).
 
 This field is helpful if you are using:
- - [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses the `buildFederatedSchema` function to generate its schema 
- - A function like `makeExecutableSchema` from [`graphql-tools`](https://www.graphql-tools.com/docs/generate-schema) to create your schema
- - A code-first approach (i.e., instead of a schema-first approach) 
+
+- [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses the `buildFederatedSchema` function to generate its schema
+- A function like `makeExecutableSchema` from [`graphql-tools`](https://www.graphql-tools.com/docs/generate-schema) to create your schema
+- A code-first approach (i.e., instead of a schema-first approach)
 
 </td>
 </tr>
@@ -106,6 +112,7 @@ This field is helpful if you are using:
 ##### `gateway`
 
 `Object`
+
 </td>
 
 <td>
@@ -119,6 +126,7 @@ You can use this field to integrate your server with [Apollo Gateway](/federatio
 <td colspan="2">
 
 **Schema options**
+
 </td>
 </tr>
 
@@ -128,6 +136,7 @@ You can use this field to integrate your server with [Apollo Gateway](/federatio
 ##### `introspection`
 
 `boolean`
+
 </td>
 
 <td>
@@ -135,9 +144,9 @@ You can use this field to integrate your server with [Apollo Gateway](/federatio
 If `true`, enables [schema introspection](https://graphql.org/learn/introspection/) by clients. This is required to use tools that figure out your server's schema from talking to it directly, like Apollo Sandbox and GraphQL Playground. (It's not needed for the non-Sandbox version of Apollo Studio Explorer, which uses the schema published in the Studio schema registry instead.)
 
 The default value is `true`, **unless** the `NODE_ENV` environment variable is set to `production`.
+
 </td>
 </tr>
-
 
 <tr>
 <td>
@@ -145,14 +154,15 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 ##### `fieldResolver`
 
 `GraphQLFieldResolver`
+
 </td>
 
 <td>
 
 A custom resolver that will replace Apollo Server's [default field resolvers](../data/resolvers/#default-resolvers).
+
 </td>
 </tr>
-
 
 <tr>
 <td>
@@ -160,15 +170,16 @@ A custom resolver that will replace Apollo Server's [default field resolvers](..
 ##### `rootValue`
 
 `Any` or `Function`
+
 </td>
 <td>
 
 A value or function called with the parsed `Document`, creating the root value passed to the GraphQL executor.
 
 Providing a function is useful if you want to use a different root value depending on the operation's details, such as whether it's a query or mutation.
+
 </td>
 </tr>
-
 
 <tr>
 <td>
@@ -176,13 +187,14 @@ Providing a function is useful if you want to use a different root value dependi
 ##### `validationRules`
 
 `Array<Function>`
+
 </td>
 <td>
 
 An array containing custom functions to use as additional [validation rules](https://github.com/graphql/graphql-js/tree/master/src/validation/rules) when validating the schema.
+
 </td>
 </tr>
-
 
 <tr>
 <td>
@@ -190,6 +202,7 @@ An array containing custom functions to use as additional [validation rules](htt
 ##### `documentStore`
 
 `KeyValueCache<DocumentNode>` or `null`
+
 </td>
 <td>
 
@@ -213,20 +226,21 @@ new ApolloServer({
     sizeCalculation: InMemoryLRUCache.sizeCalculation,
   }),
   // ...
-})
+});
 ```
 
 </div>
 
 Pass `null` to disable this cache entirely.
+
 </td>
 </tr>
-
 
 <tr>
 <td colspan="2">
 
 **Protocol options**
+
 </td>
 </tr>
 
@@ -236,11 +250,13 @@ Pass `null` to disable this cache entirely.
 ##### `persistedQueries`
 
 `Object` or `false`
+
 </td>
 
 <td>
 
 If you're using [automated persisted queries (APQ)](../performance/apq/), you can provide an object with `cache` and/or `ttl` fields to customize how Apollo Server stores the mapping between operation hashes and query strings, or provide `false` to disable APQ entirely.
+
 </td>
 </tr>
 
@@ -250,16 +266,18 @@ If you're using [automated persisted queries (APQ)](../performance/apq/), you ca
 ##### `csrfPrevention`
 
 `boolean` or `Object`
+
 </td>
 <td>
 
-By default, the [CSRF prevention](../security/cors#preventing-cross-site-request-forgery-csrf) feature is enabled to protect Apollo Server from CSRF and XS-Search attacks. 
+By default, the [CSRF prevention](../security/cors#preventing-cross-site-request-forgery-csrf) feature is enabled to protect Apollo Server from CSRF and XS-Search attacks.
 
 This feature can prevent certain `GET` requests from executing GraphQL operations if those requests don't specify [certain headers](../security/cors/#why-use-cors). You can configure the headers that allow operation execution by passing a configuration object to this option (e.g., `csrfPrevention: { requestHeaders: ['special-header'] }`).
 
 If your server has clients that send `GET` requests and those clients **aren't** one of Apollo's client libraries (Web, iOS, Kotlin), you might need to modify the configuration of those clients to use this feature. For more details, see [the CSRF prevention documentation](../security/cors#preventing-cross-site-request-forgery-csrf).
 
 You can disable this recommended security feature by passing `false` to `csrfPrevention`.
+
 </td>
 </tr>
 
@@ -269,10 +287,11 @@ You can disable this recommended security feature by passing `false` to `csrfPre
 ##### `formatError`
 
 `Function`
+
 </td>
 <td>
 
-Provide this function to transform the structure of error objects before they're sent to a client. 
+Provide this function to transform the structure of error objects before they're sent to a client.
 
 The `formatError` hook receives two arguments: the first is a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/29bf39faa670effd3c1561a1512ec7767658a63b/src/error/GraphQLError.ts#L215) (to be spent with the response), and the second is the original error. This function should return a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/29bf39faa670effd3c1561a1512ec7767658a63b/src/error/GraphQLError.ts#L215) object.
 
@@ -285,6 +304,7 @@ The `formatError` hook receives two arguments: the first is a [`GraphQLFormatted
 ##### `apollo`
 
 `Object`
+
 </td>
 <td>
 
@@ -304,6 +324,7 @@ An object containing configuration options for connecting Apollo Server to [Apol
 ##### `allowBatchedHttpRequests`
 
 `boolean`
+
 </td>
 <td>
 
@@ -312,11 +333,11 @@ Controls whether to allow [Batching Queries](../workflow/requests/#batching) in 
 </td>
 </tr>
 
-
 <tr>
 <td colspan="2">
 
 **Lifecycle options**
+
 </td>
 </tr>
 
@@ -326,6 +347,7 @@ Controls whether to allow [Batching Queries](../workflow/requests/#batching) in 
 ##### `cache`
 
 `KeyValueCache`
+
 </td>
 <td>
 
@@ -344,18 +366,18 @@ To learn more about configuring Apollo Server's cache, see [Configuring cache ba
 ##### `plugins`
 
 `Array`
+
 </td>
 <td>
 
 An array of [plugins](../integrations/plugins) to install in your server instance. Each array element can be either a valid plugin object or a zero-argument function that _returns_ a valid plugin object.
 
-In certain cases, Apollo Server installs some of its built-in plugins automatically (for example, when you provide an Apollo Studio API key with the `APOLLO_KEY` environment variable). For details, see the API references for these plugins: [usage reporting](./plugin/usage-reporting/), [schema reporting](./plugin/schema-reporting/), [landing page](../api/plugin/landing-pages/), and [inline trace](./plugin/inline-trace/).
+In certain cases, Apollo Server installs some of its built-in plugins automatically (for example, when you provide an Apollo Studio API key with the `APOLLO_KEY` environment variable). For details, see the API references for these plugins: [usage reporting](./plugin/usage-reporting/), [schema reporting](./plugin/schema-reporting/), [landing page](./plugin/landing-pages/), and [inline trace](./plugin/inline-trace/).
 
 You can _also_ add plugins to your server before you start it using the [`addPlugin`](#addplugin) method.
 
 </td>
 </tr>
-
 
 <tr>
 <td>
@@ -363,6 +385,7 @@ You can _also_ add plugins to your server before you start it using the [`addPlu
 ##### `stopOnTerminationSignals`
 
 `boolean`
+
 </td>
 <td>
 
@@ -377,11 +400,11 @@ You can also manually call `stop()` in other contexts. Note that `stop()` is asy
 </td>
 </tr>
 
-
 <tr>
 <td colspan="2">
 
 **Debugging options**
+
 </td>
 </tr>
 
@@ -391,16 +414,17 @@ You can also manually call `stop()` in other contexts. Note that `stop()` is asy
 ##### `includeStacktraceInErrorResponses`
 
 `boolean`
+
 </td>
 
 <td>
 
-If `true`, stack traces are included in GraphQL responses when errors occur. 
+If `true`, stack traces are included in GraphQL responses when errors occur.
 
 Defaults to `true` unless the `NODE_ENV` environment variable is `production` or `test`.
+
 </td>
 </tr>
-
 
 <tr>
 <td>
@@ -408,6 +432,7 @@ Defaults to `true` unless the `NODE_ENV` environment variable is `production` or
 ##### `logger`
 
 [`Logger`](https://www.npmjs.com/package/@apollo/utils.logger)
+
 </td>
 <td>
 
@@ -416,9 +441,9 @@ An object to use for logging in place of `console`. If provided, this object mus
 If you provide this value, Apollo Server automatically logs all messages of _all_ severity levels (`debug` through `error`). It is the responsibility of the logger to determine how to handle logged messages of each level.
 
 This logger is automatically added to the `GraphQLRequestContext` object that's passed to all Apollo Server [plugin functions](../integrations/plugins/).
+
 </td>
 </tr>
-
 
 <tr>
 <td>
@@ -426,10 +451,12 @@ This logger is automatically added to the `GraphQLRequestContext` object that's 
 ##### `parseOptions`
 
 `Object`
+
 </td>
 <td>
 
 An object that specifies how your server parses GraphQL operations. [See `graphql-js` for the available configuration options](https://github.com/graphql/graphql-js/blob/9df90799299f40b596938aba15e88c4cd4f2d376/src/language/parser.ts#L77).
+
 </td>
 </tr>
 
@@ -439,10 +466,12 @@ An object that specifies how your server parses GraphQL operations. [See `graphq
 ##### `nodeEnv`
 
 `string`
+
 </td>
 <td>
 
 If this is set to any string value, use that value instead of the environment variable `NODE_ENV` for the features whose defaults depend on `NODE_ENV` (such as [`introspection`](#introspection)). Note that passing the empty string here is equivalent to running with the `NODE_ENV` environment variable unset. This is primarily meant for testing the effects of the `NODE_ENV` environment variable.
+
 </td>
 </tr>
 
@@ -454,11 +483,12 @@ If this is set to any string value, use that value instead of the environment va
 The async `start` method instructs Apollo Server to prepare to handle incoming operations.
 
 > Call `start` **only** if you are using a framework integration for a non-serverless environment (e.g., [`expressMiddleware`](./express-middleware)).
-> * If you're using a serverless framework integration (such as Lambda), you **shouldn't** call this method before passing your server into the integration function. Your serverless integration function will take care of starting your server for you.
 >
-> * If you're using `startStandaloneServer` you do **not** need to start your server before [passing it directly to `startStandaloneServer`](./standalone).
+> - If you're using a serverless framework integration (such as Lambda), you **shouldn't** call this method before passing your server into the integration function. Your serverless integration function will take care of starting your server for you.
+>
+> - If you're using `startStandaloneServer` you do **not** need to start your server before [passing it directly to `startStandaloneServer`](./standalone).
 
-Always call `await server.start()` *before* passing your server into your integration function and starting to accept requests:
+Always call `await server.start()` _before_ passing your server into your integration function and starting to accept requests:
 
 <MultiCodeBlock>
 
@@ -469,7 +499,8 @@ const server = new ApolloServer<MyContext>({
 });
 await server.start();
 
-app.use('/graphql',
+app.use(
+  '/graphql',
   cors<cors.CorsRequest>(),
   json(),
   expressMiddleware(server),
@@ -489,7 +520,6 @@ The `start` method triggers the following actions:
 1. If your server is a [federated gateway](https://www.apollographql.com/docs/federation/managed-federation/overview/), it attempts to fetch its schema. If the fetch fails, `start` throws an error.
 2. Your server calls all of the [`serverWillStart` handlers](../integrations/plugins-event-reference/#serverwillstart) of your installed plugins. If any of these handlers throw an error, `start` throws an error.
 
-
 ## `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests`
 
 **Serverless** integrations handle starting an Apollo Server instance in the background by calling the `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method. See [Building integrations](../integrations/building-integrations#ensure-successful-startup) for more details.
@@ -503,13 +533,12 @@ You can pass a [`HTTPGraphQLRequest`](../integrations/building-integrations/#con
 <MultiCodeBlock>
 
 ```ts
-const result = await server
-  .executeHTTPGraphQLRequest({
-    httpGraphQLRequest: OurHttpGraphQLRequest,
-    context: async () => ({
-      // token: ...,
-    }),
-  });
+const result = await server.executeHTTPGraphQLRequest({
+  httpGraphQLRequest: OurHttpGraphQLRequest,
+  context: async () => ({
+    // token: ...,
+  }),
+});
 ```
 
 </MultiCodeBlock>
@@ -517,6 +546,7 @@ const result = await server
 For details and examples, see [Building Integrations](../integrations/building-integrations/#execute-the-graphql-request).
 
 ## `addPlugin`
+
 You can use the `addPlugin` method to add plugins before your server is started. This is helpful when you want to add a plugin that accepts your initialized `ApolloServer` instance itself, like so:
 
 <MultiCodeBlock>
@@ -524,9 +554,7 @@ You can use the `addPlugin` method to add plugins before your server is started.
 ```ts
 const server = new ApolloServer({
   typeDefs,
-  plugins: [
-    makeFirstPlugin(),
-  ],
+  plugins: [makeFirstPlugin()],
 });
 
 server.addPlugin(makeSecondPlugin(server));
@@ -568,13 +596,15 @@ const result = await server.executeOperation({
 ```
 
 The `executeOperation` method takes two arguments:
-* The first argument is an object describing the GraphQL operation to be executed.
-  * Supported fields are listed in the table below.
-* The second optional argument is used as the operation's [context value](../data/resolvers/#the-context-argument). Note, this argument is only optional if your server _doesn't_ expect a context value (i.e., your server uses the default context because you didn't explicitly provide another one). 
+
+- The first argument is an object describing the GraphQL operation to be executed.
+  - Supported fields are listed in the table below.
+- The second optional argument is used as the operation's [context value](../data/resolvers/#the-context-argument). Note, this argument is only optional if your server _doesn't_ expect a context value (i.e., your server uses the default context because you didn't explicitly provide another one).
 
 Below are the available fields for the first argument of `executeOperation`:
 
 ### Fields
+
 <table class="field-table">
   <thead>
     <tr>
@@ -590,11 +620,13 @@ Below are the available fields for the first argument of `executeOperation`:
 ##### `query`
 
 `string` or `DocumentNode`
+
 </td>
 
 <td>
 
 **Required**. The GraphQL operation to run. Note that you must use the `query` field even if the operation is a mutation.
+
 </td>
 </tr>
 
@@ -604,6 +636,7 @@ Below are the available fields for the first argument of `executeOperation`:
 ##### `variables`
 
 `object`
+
 </td>
 <td>
 An object containing any GraphQL variables to use as argument values for the executed operation.
@@ -616,10 +649,12 @@ An object containing any GraphQL variables to use as argument values for the exe
 ##### `operationName`
 
 `string`
+
 </td>
 <td>
 
 If `query` contains more than one operation definition, you must provide this option to indicate which operation to execute.
+
 </td>
 </tr>
 
@@ -629,6 +664,7 @@ If `query` contains more than one operation definition, you must provide this op
 ##### `extensions`
 
 `object`
+
 </td>
 <td>
 
@@ -643,6 +679,7 @@ The `extensions` object is usually used to pass request metadata within your ser
 ##### `http`
 
 `HTTPGraphQLRequest`
+
 </td>
 <td>
 
@@ -655,8 +692,9 @@ An object implementing the [`HTTPGraphQLRequest`](https://github.com/apollograph
 </table>
 
 ## `cache`
+
 A public readonly field on `ApolloServer` that enables you to access your server's [cache](#cache).
 
 ## `logger`
 
-A public readonly field on `ApolloServer` that enables you to access your server's [logger](#logger). 
+A public readonly field on `ApolloServer` that enables you to access your server's [logger](#logger).
