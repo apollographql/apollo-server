@@ -3,7 +3,7 @@ title: Integration testing
 description: Utilities for testing Apollo Server
 ---
 
-Apollo Server uses a [multi-step request pipeline](/apollo-server/integrations/plugins/#request-lifecycle-event-flow) to validate and execute incoming GraphQL operations. This pipeline supports integration with custom plugins at each step, which can affect an operation's execution. Because of this, it's important to perform **integration tests** with a variety of operations to ensure your request pipeline works as expected.
+Apollo Server uses a [multi-step request pipeline](../integrations/plugins/#request-lifecycle-event-flow) to validate and execute incoming GraphQL operations. This pipeline supports integration with custom plugins at each step, which can affect an operation's execution. Because of this, it's important to perform **integration tests** with a variety of operations to ensure your request pipeline works as expected.
 
 There are two main options for integration testing with Apollo Server:
 
@@ -14,8 +14,7 @@ There are two main options for integration testing with Apollo Server:
 
 Apollo Server's `executeOperation` method enables you to run operations through the request pipeline _without_ sending an HTTP request.
 
-<!-- TODO(AS4) add link once the API article is updated -->
-The `executeOperation` method accepts the following arguments:
+The [`executeOperation` method](../api/apollo-server#executeoperation) accepts the following arguments:
 
 - An object that describes the GraphQL operation to execute.
   - This object must include a `query` field specifying the GraphQL operation to run. You can use `executeOperation` to execute both queries and mutations, but both use the `query` field.
@@ -63,10 +62,6 @@ Note that when testing, any errors in parsing, validating, and executing your Gr
 You don't need to start your server before calling `executeOperation`. The server instance will start automatically and throw any startup errors.
 
 To expand on the example above, here's a full integration test being run against a test instance of `ApolloServer`. This test imports all of the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `ApolloServer`.
-
-<!-- TODO(AS4) remove once RESTDataSource is up and ready -->
-
-> ⚠️ The Apollo Server 4 alpha doesn't currently support using [`RESTDataSource`](../migration#datasources), a class commonly used to fetch data from a database or a REST API. This feature is in active development, but in the meantime the below code snippet doesn't work as described.
 
 ```ts title="integration.test.ts"
 it('fetches single launch', async () => {
@@ -122,10 +117,9 @@ If you want to test the behavior of your `context` function directly, we recomme
 
 Instead of bypassing the HTTP layer, you might want to fully run your server and test it with a real HTTP client. Apollo Server doesn't provide built-in support for this at this time.
 
-Instead, you can run operations against your server using a combination of any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](/react/api/link/apollo-link-http/) .
+Instead, you can run operations against your server using a combination of any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](/react/api/link/apollo-link-http/).
 
-<!-- TODO(AS4) double check if this package is going to be updated for AS4 -->
-<!-- There are also community packages available such as [`apollo-server-integration-testing`](https://www.npmjs.com/package/apollo-server-integration-testing), which uses mocked Express request and response objects. -->
+There are also community packages available such as [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite), which provides a suite of Jest tests that is useful for [integration authors](../integrations/building-integrations).
 
 Below is an example of writing an end-to-end test using the `@apollo/server` and `supertest` packages:
 
