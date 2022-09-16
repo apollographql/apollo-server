@@ -117,10 +117,9 @@ If you want to test the behavior of your `context` function directly, we recomme
 
 Instead of bypassing the HTTP layer, you might want to fully run your server and test it with a real HTTP client. Apollo Server doesn't provide built-in support for this at this time.
 
-Instead, you can run operations against your server using a combination of any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](/react/api/link/apollo-link-http/) .
+Instead, you can run operations against your server using a combination of any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](/react/api/link/apollo-link-http/).
 
-<!-- TODO(AS4) double check if this package is going to be updated for AS4 -->
-<!-- There are also community packages available such as [`apollo-server-integration-testing`](https://www.npmjs.com/package/apollo-server-integration-testing), which uses mocked Express request and response objects. -->
+There are also community packages available such as [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite), which provides a suite of Jest tests that is useful for [integration authors](../integrations/building-integrations).
 
 Below is an example of writing an end-to-end test using the `@apollo/server` and `supertest` packages:
 
