@@ -12,6 +12,7 @@ One of the driving forces behind Apollo Server 4 is the creation of a stable,
 well-defined API for processing HTTP requests and responses. Apollo Server 4's
 API enables external collaborators, like you, to build integrations with Apollo
 Server in their web framework of choice.
+
 ## Overview
 
 The primary responsibility of an Apollo Server integration is to translate
@@ -246,3 +247,7 @@ for (const [key, value] of httpGraphQLResponse.headers) {
 res.statusCode = httpGraphQLResponse.status || 200;
 res.send(httpGraphQLResponse.completeBody);
 ```
+
+## Additional resources
+
+The [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite) provides a set of Jest tests for authors looking to test their Apollo Server integrations. 
