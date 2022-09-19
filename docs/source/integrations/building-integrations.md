@@ -18,8 +18,9 @@ Server in their web framework of choice.
 The primary responsibility of an Apollo Server integration is to translate
 requests and responses between a web framework's native format to the format used by `ApolloServer`. This article conceptually covers how to build an integration, using the [Express integration](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/src/express4/index.ts) (i.e.,`expressMiddleware`) as an example.
 
-
 > For more examples, see these Apollo Server 4 [integrations demos for Fastify and Lambda](https://github.com/apollographql/server-v4-integration-demos/tree/main/packages).
+
+If you are building a serverless integration, we recommend prepending your function name with the word `start` (e.g., `startAndCreateLambdaHandler(server)`). This is a helpful naming convention for your integration's users and nicely aligns with the names of other Apollo Server integrations such as `startStandaloneServer(server)`. 
 
 ### Main function signature
 
