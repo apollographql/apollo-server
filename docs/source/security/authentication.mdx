@@ -74,8 +74,7 @@ Once we have information about the user making a request, the most basic thing w
 
 We should use this method only on highly restrictive environments that provide no public access to the API whatsoever, like an internal tool or an independent microservice that shouldn't be exposed to the public.
 
-To perform this kind of authorization, we can modify the `context` function:
-<!-- TODO(AS4) check back and see if throwing errors in context changes this? -->
+To perform this kind of authorization, we can modify the `context` function to throw a `GraphQLError` if the user isn't authenticated:
 
 <MultiCodeBlock>
 
@@ -105,10 +104,13 @@ const { url } = await startStandaloneServer(server, {
     // optionally block the user
     // we could also check user roles/permissions here
     if (!user)
-      throw new GraphQLError('you must be logged in', {
+      // throwing a `GraphQLError` here allows us to specify an HTTP status code,
+      // standard `Error`s will have a 500 status code by default
+      throw new GraphQLError('User is not authenticated', {
         extensions: {
           code: 'UNAUTHENTICATED',
-        },
+          http: { status: 401 },
+        }
       });
 
     // add the user to the context

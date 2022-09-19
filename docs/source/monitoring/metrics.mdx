@@ -29,9 +29,7 @@ $ APOLLO_KEY=YOUR_API_KEY APOLLO_GRAPH_REF=my-graph@my-variant \
 
 #### Communicating with Studio
 
-<!-- TODO(AS4) replace this link once updated plugin api page -->
-
-By default, Apollo Server aggregates your traces and sends them in batches to Studio every minute. This behavior is highly configurable, and you can change the parameters in the [Usage Reporting plugin's configuration](/apollo-server/api/plugin/usage-reporting/#custom-installation).
+By default, Apollo Server aggregates your traces and sends them in batches to Studio every minute. This behavior is highly configurable, and you can change the parameters in the [Usage Reporting plugin's configuration](../api/plugin/usage-reporting/#custom-installation).
 
 ### Identifying distinct clients
 
@@ -55,7 +53,7 @@ version in the [`ApolloClient` constructor](/react/api/apollo-client/#the-apollo
 
 #### Using custom headers
 
-For more advanced cases, or to use headers other than the default headers, pass a `generateClientInfo` function into the [usage reporting plugin](/apollo-server/api/plugin/usage-reporting/):
+For more advanced cases, or to use headers other than the default headers, pass a `generateClientInfo` function into the [usage reporting plugin](../api/plugin/usage-reporting/):
 
 <MultiCodeBlock>
 
@@ -103,7 +101,7 @@ You can set up fine-grained operation logging in Apollo Server by defining a cus
 
 The example below defines a plugin that responds to three different operation events. As it shows, you provide an array of your defined `plugins` to the `ApolloServer` constructor.
 
-For a list of available lifecycle events and their descriptions, see [Plugins](/apollo-server/integrations/plugins/).
+For a list of available lifecycle events and their descriptions, see [Plugins](../integrations/plugins/).
 
 <MultiCodeBlock>
 

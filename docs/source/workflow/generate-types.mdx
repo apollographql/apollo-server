@@ -1,0 +1,205 @@
+---
+title: Generating types from a GraphQL schema
+description: How to ensure your resolvers are type safe
+---
+
+> 👋 If you haven't set up a TypeScript project using Apollo Server yet, follow our [Getting Started](../../getting-started) guide before continuing. 
+
+GraphQL uses a type system to clearly define the available data for each type and field in a [GraphQL schema](../schema/schema). Type generation libraries can take advantage of the strongly-typed nature of a GraphQL schema to automatically generate TypeScript types based on that schema. 
+
+You can use these generated TS types in your resolvers to type-check that your resolvers' return values match the field types dictated by your schema. Type checking your resolvers enables you to catch errors quickly and gives you the peace of mind that type safety ensures.
+
+> Looking to generate types for your [Apollo Federation](/federation/) subgraphs? Our [Subgraph template](https://github.com/apollographql/subgraph-template-typescript-apollo-server) lays down the groundwork so you can quickly set up a subgraph with generated types.
+
+## Setting up your project
+
+We'll use the [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) library to generate types based on our GraphQL schema. There are [multiple ways](https://www.the-guild.dev/graphql/codegen/plugins/typescript/typescript-resolvers#usage-example) to provide a schema to GraphQL Code Generator. Below, we'll show one of the common methods, beginning by wrapping our schema in a `gql` template literal tag from the [`graphql-tag`](https://www.npmjs.com/package/graphql-tag) package.
+
+If you haven't already, begin by installing the `graphql-tag` library:
+
+```bash
+npm install graphql-tag
+```
+
+The `gql` template literal tag from `graphql-tag` can parse a Schema Definition Language (SDL) string into an abstract syntax tree (AST). Apollo Server accepts a string or an AST as a valid option for defining a schema.  
+
+If we pass GraphQL Code Generator a TypeScript file path, it will automatically generate types for the `gql` tag within that file. So, we can wrap our schema string in a `gql` tag to let GraphQL Code Generator know it should generate types for that tag. 
+
+Import the `gql` tag into the file where you define your schema, then wrap your schema string like so:
+
+```ts title="src/schema.ts"
+import gql from 'graphql-tag';
+
+export default gql`
+  type Query {
+    books: [Book]
+  }
+
+  type Book {
+    title: String
+    author: String
+  }
+
+  type AddBookMutationResponse {
+    code: String!
+    success: Boolean!
+    message: String!
+    book: Book
+  }
+
+  type Mutation {
+    addBook(title: String, author: String): AddBookMutationResponse
+  }
+`;
+```
+
+Restart your server to ensure everything still works as expected. Next, we'll install the packages we need to generate types automatically based on our schema.
+
+### Installing and configuring dependencies
+
+Run the following command to install the `@graphql-codegen/cli`, `@graphql-codegen/typescript`, and `@graphql-codegen/typescript-resolvers` packages into your project's dev dependencies:
+
+```bash
+npm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-resolvers
+```
+
+> For more information on each package above, check out the [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen/plugins) docs.
+
+Next, we'll set up a configuration file to tell GraphQL Code Generator where and how to generate types. You can do this by manually creating a `codegen.yml` file or by using the following command, which walks you through the process:
+
+```bash
+npx graphql-code-generator init
+```
+
+Below is an example of a `codegen.yml` file:
+
+```yaml
+# This configuration file tells GraphQL Code Generator how
+# to generate types based on our schema.
+schema: "./src/schema.ts"
+generates:
+  # Specify where our generated types should live.
+  ./src/__generated__/resolvers-types.ts:
+    plugins:
+      - "typescript"
+      - "typescript-resolvers"
+    config:
+      useIndexSignature: true
+      # More on this below!
+      contextType: ../index#MyContext
+```
+
+> [See the docs](https://www.the-guild.dev/graphql/codegen/plugins/typescript-resolvers#usage-example) for more information on the above configuration options.
+
+Finally, we recommend adding helpful scripts to your `package.json` file to ensure your TS types are regularly generated:
+
+```json
+{
+// ...
+  "scripts": {
+    "generate": "graphql-codegen --config codegen.yml",
+    "compile": "npm run generate && tsc",
+    "postinstall": "npm run compile",
+    "start": "npm run compile && node ./dist/index.js",
+  },
+// ...
+}
+```
+
+Above, running the `npm start` command generates types based on our GraphQL schema _and_ compiles our TypeScript code. The first time you run the `graphql-codegen` command, you'll see a file full of generated types at the path you specified in your `codegen.yml` file. 
+
+## Adding types to resolvers
+
+The `typescript-resolvers` plugin creates a `Resolvers` type that you can use to add a type to your [resolver map](../data/resolvers#base-syntax), ensuring your resolvers return values match the field types specified by your schema.
+
+Import the `Resolvers` type into the file where you define your resolvers:
+
+```ts title="resolvers.ts"
+// This is the file where our generated types live
+// (specified in our `codegen.yml` file)
+import { Resolvers } from './__generated__/resolvers-types';
+```
+
+You can now add the `Resolvers` type directly to your resolver map:
+
+```ts
+export const resolvers: Resolvers = {}
+```
+
+Your resolvers can now type check that the *arguments* and *return value* for each resolver match the schema:
+
+```ts
+export const resolvers: Resolvers = {
+  Query: {
+    // TypeScript now complains about the below resolver because
+    // the data returned by this resolver doesn't match the schema type
+    // (i.e., type Query { books: [Book] })
+    books: () => {
+      return "apple";
+    },
+  },
+}
+```
+
+### Context typing for resolvers
+
+You can also configure GraphQL Code Generator to add a type for the context your resolvers share, ensuring TypeScript warns you if you attempt to use a context value that doesn't exist.
+
+To do this, you must first export the interface you pass to Apollo Server as a generic type parameter for typing your context value:
+
+```ts title="src/index.ts"
+// highlight-start
+export interface MyContext {
+  dataSources: {
+    books: Book[];
+  };
+}
+// highlight-end
+
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+```
+
+Remember the `contextType` from our [`codegen.yml` file above](#installing-and-configuring-dependencies)? You can pass your exported context interface to the `contextType` configuration option, like so:
+
+```yaml
+# ...
+config:
+  useIndexSignature: true
+  # Providing our context's interface ensures our
+  # context's type is set for all of our resolvers. 
+
+  # Note, this file path starts from the location of the 
+  # file where you generate types. 
+  # (i.e., `/src/__generated__/resolvers-types.ts` above) 
+  contextType: ../index#MyContext # highlight-line
+```
+
+Once you regenerate your types, your context is now automatically typed in all of your resolvers:
+
+```ts
+const resolvers: Resolvers = {
+  Query: {
+    // Our third argument (`contextValue`) has a type here, so we
+    // can check the properties within our resolver's shared context value.
+    books: (_, __, contextValue) => {
+      return contextValue.dataSources.books;
+    },
+  },
+}
+```
+
+## Basic runnable example
+
+Check out our example using Apollo Server with generated types on CodeSandbox:
+
+<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v4/generated-types?fontsize=14&hidenavigation=1&initialpath=%2Fgraphql&theme=dark">
+  <img
+    alt="Edit server-generated-types-as4"
+    src="https://codesandbox.io/static/img/play-codesandbox.svg"
+  />
+</a>
+<br/>
+

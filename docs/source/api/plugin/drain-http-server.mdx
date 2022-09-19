@@ -1,5 +1,5 @@
 ---
-title: "API Reference: Drain HTTP server plugin"
+title: 'API Reference: Drain HTTP server plugin'
 api_reference: true
 ---
 
@@ -22,7 +22,8 @@ Specifically, it will:
 - After a grace period, if any connections remain active, forcefully close them.
 
 <!-- TODO(AS4) add link to other integration article once it exists -->
-This plugin is exported from the `@apollo/server` package.  Here's a basic example of how to use it with Express:
+
+This plugin is exported from the `@apollo/server` package. Here's a basic example of how to use it with Express:
 
 <MultiCodeBlock>
 
@@ -52,14 +53,17 @@ async function startApolloServer() {
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
   await server.start();
-  app.use('/graphql',
+  app.use(
+    '/graphql',
     cors<cors.CorsRequest>(),
     json(),
     expressMiddleware(server, {
       context: async ({ req }) => ({ token: req.headers.token }),
     }),
   );
-  await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
+  await new Promise<void>((resolve) =>
+    httpServer.listen({ port: 4000 }, resolve),
+  );
   console.log(`🚀 Server ready at http://localhost:4000/graphql`);
   return { server, app };
 }
@@ -85,10 +89,12 @@ async function startApolloServer() {
 ###### `httpServer`
 
 [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)
+
 </td>
 <td>
 
 The server to drain; required.
+
 </td>
 </tr>
 
@@ -98,10 +104,12 @@ The server to drain; required.
 ###### `stopGracePeriodMillis`
 
 `number`
+
 </td>
 <td>
 
 How long to wait before forcefully closing non-idle connections. Defaults to `10_000` (ten seconds).
+
 </td>
 </tr>
 

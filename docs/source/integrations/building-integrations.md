@@ -12,12 +12,13 @@ One of the driving forces behind Apollo Server 4 is the creation of a stable,
 well-defined API for processing HTTP requests and responses. Apollo Server 4's
 API enables external collaborators, like you, to build integrations with Apollo
 Server in their web framework of choice.
+
 ## Overview
 
 The primary responsibility of an Apollo Server integration is to translate
 requests and responses between a web framework's native format to the format used by `ApolloServer`. This article conceptually covers how to build an integration, using the [Express integration](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/src/express4/index.ts) (i.e.,`expressMiddleware`) as an example.
 
-<!-- (AS4) TODO replace link once on main -->
+
 > For more examples, see these Apollo Server 4 [integrations demos for Fastify and Lambda](https://github.com/apollographql/server-v4-integration-demos/tree/main/packages).
 
 ### Main function signature
@@ -132,7 +133,7 @@ For example, a correctly parsed body should have a shape resembling this:
 
 Your integration should pass along whatever it parses to Apollo Server; Apollo Server will handle validating the parsed request.
 
-Apollo Server also accepts GraphQL queries [sent using `GET`](/apollo-server/requests) with query string parameters. Apollo Server expects a raw query string for these types of HTTP requests. Apollo Server is indifferent to whether or not the `?` is included at the beginning of your query string. Fragments (starting with `#`) at the end of a URL should not be included.
+Apollo Server also accepts GraphQL queries [sent using `GET`](../workflow/requests) with query string parameters. Apollo Server expects a raw query string for these types of HTTP requests. Apollo Server is indifferent to whether or not the `?` is included at the beginning of your query string. Fragments (starting with `#`) at the end of a URL should not be included.
 
 Apollo Server 4's Express integration computes the query string using the request's full URL, like so:
 ```ts
@@ -246,3 +247,7 @@ for (const [key, value] of httpGraphQLResponse.headers) {
 res.statusCode = httpGraphQLResponse.status || 200;
 res.send(httpGraphQLResponse.completeBody);
 ```
+
+## Additional resources
+
+The [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite) provides a set of Jest tests for authors looking to test their Apollo Server integrations. 
