@@ -163,5 +163,11 @@
       // Once 2.1.0 is released, we should switch to "2.x" here and change out of alphas.
       allowedVersions: "2.1.0-alpha.3",
     },
+    {
+      // v29 dropped support for node 12.
+      matchPackageNames: ["jest", "jest-config", "ts-jest", "@types/jest", ],
+      matchBaseBranches: ["main"],
+      allowedVersions: "28.x"
+    },
   ]
 }
