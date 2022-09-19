@@ -458,7 +458,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
 
-      return await sendErrorResponse(requestContext.contextValue, [ensureGraphQLError(executionError)]);
+      return await sendErrorResponse(requestContext.contextValue, [
+        ensureGraphQLError(executionError),
+      ]);
     }
 
     await Promise.all(executionListeners.map((l) => l.executionDidEnd?.()));
