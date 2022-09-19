@@ -111,9 +111,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     // It looks like we've received a persisted query. Check if we
     // support them.
     if (!internals.persistedQueries) {
-      return await sendErrorResponse([new PersistedQueryNotSupportedError()]);
+      return await sendErrorResponse(requestContext.contextValue, [
+        new PersistedQueryNotSupportedError(),
+      ]);
     } else if (extensions.persistedQuery.version !== 1) {
-      return await sendErrorResponse([
+      return await sendErrorResponse(requestContext.contextValue, [
         new GraphQLError('Unsupported persisted query version', {
           extensions: { http: newHTTPGraphQLHead(400) },
         }),
@@ -127,7 +129,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       if (query) {
         requestContext.metrics.persistedQueryHit = true;
       } else {
-        return await sendErrorResponse([new PersistedQueryNotFoundError()]);
+        return await sendErrorResponse(requestContext.contextValue, [
+          new PersistedQueryNotFoundError(),
+        ]);
       }
     } else {
       const computedQueryHash = computeQueryHash(query);
@@ -137,7 +141,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // new and potentially malicious query is associated with
       // an existing hash.
       if (queryHash !== computedQueryHash) {
-        return await sendErrorResponse([
+        return await sendErrorResponse(requestContext.contextValue, [
           new GraphQLError('provided sha does not match query', {
             extensions: { http: newHTTPGraphQLHead(400) },
           }),
@@ -153,7 +157,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   } else if (query) {
     queryHash = computeQueryHash(query);
   } else {
-    return await sendErrorResponse([
+    return await sendErrorResponse(requestContext.contextValue, [
       new BadRequestError(
         'GraphQL operations must contain a non-empty `query` or a `persistedQuery` extension.',
       ),
@@ -209,7 +213,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     } catch (syntaxMaybeError: unknown) {
       const error = ensureError(syntaxMaybeError);
       await parsingDidEnd(error);
-      return await sendErrorResponse([
+      return await sendErrorResponse(requestContext.contextValue, [
         new SyntaxError(ensureGraphQLError(error)),
       ]);
     }
@@ -234,6 +238,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     } else {
       await validationDidEnd(validationErrors);
       return await sendErrorResponse(
+        requestContext.contextValue,
         validationErrors.map((error) => new ValidationError(error)),
       );
     }
@@ -284,7 +289,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     operation?.operation &&
     operation.operation !== 'query'
   ) {
-    return await sendErrorResponse([
+    return await sendErrorResponse(requestContext.contextValue, [
       new BadRequestError(
         `GET requests only support query operations, not ${operation.operation} operations`,
         {
@@ -305,7 +310,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       ),
     );
   } catch (err: unknown) {
-    return await sendErrorResponse([ensureGraphQLError(err)]);
+    return await sendErrorResponse(requestContext.contextValue, [
+      ensureGraphQLError(err),
+    ]);
   }
 
   // Now that we've gone through the pre-execution phases of the request
@@ -437,7 +444,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       }
 
       const { formattedErrors, httpFromErrors } = resultErrors
-        ? formatErrors(resultErrors)
+        ? formatErrors(requestContext.contextValue, resultErrors)
         : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
 
       requestContext.response.result = {
@@ -451,7 +458,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
 
-      return await sendErrorResponse([ensureGraphQLError(executionError)]);
+      return await sendErrorResponse(requestContext.contextValue, [ensureGraphQLError(executionError)]);
     }
 
     await Promise.all(executionListeners.map((l) => l.executionDidEnd?.()));
@@ -520,10 +527,13 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // and errors from them.
   //
   // Then, if the HTTP status code is not yet set, it sets it to 500.
-  async function sendErrorResponse(errors: ReadonlyArray<GraphQLError>) {
+  async function sendErrorResponse(
+    context: TContext,
+    errors: ReadonlyArray<GraphQLError>,
+  ) {
     await didEncounterErrors(errors);
 
-    const { formattedErrors, httpFromErrors } = formatErrors(errors);
+    const { formattedErrors, httpFromErrors } = formatErrors(context, errors);
 
     requestContext.response.result = {
       errors: formattedErrors,
@@ -539,9 +549,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   }
 
   function formatErrors(
+    context: TContext,
     errors: ReadonlyArray<GraphQLError>,
   ): ReturnType<typeof normalizeAndFormatErrors> {
     return normalizeAndFormatErrors(errors, {
+      context,
       formatError: internals.formatError,
       includeStacktraceInErrorResponses:
         internals.includeStacktraceInErrorResponses,

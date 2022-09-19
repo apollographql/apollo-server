@@ -138,6 +138,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   formatError?: (
     formattedError: GraphQLFormattedError,
     error: unknown,
+    context?: TContext,
   ) => GraphQLFormattedError;
   // TODO(AS4): Is there a way (with generics/codegen?) to make
   // this "any" more specific? In AS3 there was technically a

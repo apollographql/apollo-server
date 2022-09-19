@@ -6,7 +6,7 @@ import {
   GraphQLFormattedError,
 } from 'graphql';
 import { ApolloServerErrorCode } from './errors/index.js';
-import type { HTTPGraphQLHead } from './externalTypes/http.js';
+import type { BaseContext, HTTPGraphQLHead } from './externalTypes/index.js';
 import {
   HeaderMap,
   mergeHTTPGraphQLHead,
@@ -21,12 +21,14 @@ import {
 // are removed from the formatted error.
 //
 // This function should not throw.
-export function normalizeAndFormatErrors(
+export function normalizeAndFormatErrors<TContext extends BaseContext>(
   errors: ReadonlyArray<unknown>,
   options: {
+    context?: TContext;
     formatError?: (
       formattedError: GraphQLFormattedError,
       error: unknown,
+      context?: TContext,
     ) => GraphQLFormattedError;
     includeStacktraceInErrorResponses?: boolean;
   } = {},
@@ -41,7 +43,7 @@ export function normalizeAndFormatErrors(
     httpFromErrors,
     formattedErrors: errors.map((error) => {
       try {
-        return formatError(enrichError(error), error);
+        return formatError(enrichError(error), error, options.context);
       } catch (formattingError) {
         if (options.includeStacktraceInErrorResponses) {
           // includeStacktraceInErrorResponses is used in development
