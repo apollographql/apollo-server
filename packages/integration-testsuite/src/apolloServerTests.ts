@@ -2765,6 +2765,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         );
       });
 
+      // TODO(AS4): delete this test eventually?
       it('can install playground with specific version', async () => {
         url = (
           await createServer({
