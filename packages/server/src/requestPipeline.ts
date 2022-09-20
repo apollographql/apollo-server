@@ -414,7 +414,37 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         throw new OperationResolutionError(result.errors[0]);
       }
 
-      await handleErrorsAndStoreResult(result);
+      // The first thing that execution does is coerce the request's variables
+      // to the types declared in the operation, which can lead to errors if
+      // they are of the wrong type. It also makes sure that all non-null
+      // variables are required and get non-null values. If any of these things
+      // lead to errors, we change them into UserInputError so that their code
+      // doesn't end up being INTERNAL_SERVER_ERROR, since these are client
+      // errors.
+      //
+      // This is hacky! Hopefully graphql-js will give us a way to separate
+      // variable resolution from execution later; see
+      // https://github.com/graphql/graphql-js/issues/3169
+      const resultErrors = result.errors?.map((e) => {
+        if (isBadUserInputGraphQLError(e)) {
+          return new UserInputError(e);
+        }
+        return e;
+      });
+
+      if (resultErrors) {
+        await didEncounterErrors(resultErrors);
+      }
+
+      const { formattedErrors, httpFromErrors } = resultErrors
+        ? formatErrors(resultErrors)
+        : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
+
+      requestContext.response.result = {
+        ...result,
+        errors: formattedErrors,
+      };
+      mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
     } catch (executionMaybeError: unknown) {
       const executionError = ensureError(executionMaybeError);
       await Promise.all(
@@ -466,75 +496,18 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     );
   }
 
-  // Everything required to send a result back to the client:
-  //
-  // - Put the errors (as unformatted GraphQLError) on requestContext.errors;
-  //   as a hacky special case, wrap variable coercion errors in UserInputError
-  // - Tell plugins we did that with didEncounterErrors (and give them a chance
-  //   to edit or filter them)
-  // - Normalize and format the errors (as GraphQLFormattedError)
-  // - Store the result (with formatted errors) on
-  //   requestContext.response.result
-  // - Update HTTP status and headers if any of the errors had an http extension
-  //   (which would have been removed by normalizeAndFormatErrors)
-  //
-  // If there are no errors (including if didEncounterErrors removes them all)
-  // we just put the rest of result on requestContext.response.result.
-  //
   // Note that we ensure that all calls to didEncounterErrors are followed by
   // calls to willSendResponse. (The usage reporting plugin depends on this.)
-  async function handleErrorsAndStoreResult(result: ExecutionResult) {
-    if (!result.errors) {
-      requestContext.response.result = { ...result };
-      return;
-    }
+  async function didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
+    requestContext.errors = errors;
 
-    // The first thing that execution does is coerce the request's variables to
-    // the types declared in the operation, which can lead to errors if they are
-    // of the wrong type. It also makes sure that all non-null variables are
-    // required and get non-null values. If any of these things lead to errors,
-    // we change them into UserInputError so that their code doesn't end up
-    // being INTERNAL_SERVER_ERROR, since these are client errors.
-    //
-    // This is hacky! Hopefully graphql-js will give us a way to separate
-    // variable resolution from execution later; see
-    // https://github.com/graphql/graphql-js/issues/3169
-    requestContext.errors = result.errors?.map((e) => {
-      if (isBadUserInputGraphQLError(e)) {
-        return new UserInputError(e);
-      }
-      return e;
-    });
-
-    await Promise.all(
+    return await Promise.all(
       requestListeners.map((l) =>
         l.didEncounterErrors?.(
           requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
         ),
       ),
     );
-
-    // If the plugin removed all errors, move on with our life.
-    if (!requestContext.errors?.length) {
-      requestContext.response.result = { ...result };
-      delete requestContext.response.result.errors;
-      return;
-    }
-
-    const { formattedErrors, httpFromErrors } = normalizeAndFormatErrors(
-      requestContext.errors,
-      {
-        formatError: internals.formatError,
-        includeStacktraceInErrorResponses:
-          internals.includeStacktraceInErrorResponses,
-      },
-    );
-
-    requestContext.response.result = {
-      ...result,
-      errors: formattedErrors,
-    };
-    mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
   }
 
   // This function "sends" a response that contains errors and no data (not even
@@ -547,13 +520,31 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // and errors from them.
   //
   // Then, if the HTTP status code is not yet set, it sets it to 500.
-  async function sendErrorResponse(errors: GraphQLError[]) {
-    await handleErrorsAndStoreResult({ errors });
+  async function sendErrorResponse(errors: ReadonlyArray<GraphQLError>) {
+    await didEncounterErrors(errors);
+
+    const { formattedErrors, httpFromErrors } = formatErrors(errors);
+
+    requestContext.response.result = {
+      errors: formattedErrors,
+    };
+
+    mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
 
     if (!requestContext.response.http.status) {
       requestContext.response.http.status = 500;
     }
 
     await invokeWillSendResponse();
+  }
+
+  function formatErrors(
+    errors: ReadonlyArray<GraphQLError>,
+  ): ReturnType<typeof normalizeAndFormatErrors> {
+    return normalizeAndFormatErrors(errors, {
+      formatError: internals.formatError,
+      includeStacktraceInErrorResponses:
+        internals.includeStacktraceInErrorResponses,
+    });
   }
 }
