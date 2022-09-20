@@ -28,8 +28,9 @@
   "engines": {
     "node": ">=14.0"
   },
+  "//": "Don't caret this, we want to be explicit about the version of our fork of graphql-playground-html (and hopefully never change it)",
   "dependencies": {
-    "@apollographql/graphql-playground-html": "^1.6.29"
+    "@apollographql/graphql-playground-html": "1.6.29"
   },
   "peerDependencies": {
     "@apollo/server": "^4.0.0-alpha.7"
