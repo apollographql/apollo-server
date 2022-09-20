@@ -152,6 +152,40 @@ export const resolvers: Resolvers = {
 }
 ```
 
+If your resolvers are in multiple files, you can pull out the corresponding generated types for the resolvers in that file. For example, below, we import the generated types in the separate files we have for our queries and mutations:  
+
+<CodeColumns>
+
+```ts title="resolvers/queries.ts"
+import { QueryResolvers } from '__generated__/resolvers-types';
+
+// Use the generated `QueryResolvers`
+// type to type check our queries!
+const queries: QueryResolvers = {
+  Query: {
+  // ...queries
+  },
+};
+
+export default queries;
+```
+
+```ts title="resolvers/mutations.ts"
+import { MutationResolvers } from '__generated__/resolvers-types';
+
+// Use the generated `MutationResolvers` type
+// to type check our mutations!
+const mutations: MutationResolvers = {
+  Mutation: {
+    // ...mutations
+  },
+};
+
+export default mutations;
+```
+
+</CodeColumns>
+
 ### Context typing for resolvers
 
 You can also configure GraphQL Code Generator to add a type for the context your resolvers share, ensuring TypeScript warns you if you attempt to use a context value that doesn't exist.
