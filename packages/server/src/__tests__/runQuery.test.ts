@@ -808,7 +808,12 @@ describe('request pipeline life-cycle hooks', () => {
   });
 
   describe('didEncounterErrors', () => {
-    const didEncounterErrors = jest.fn(async () => {});
+    const didEncounterErrors = jest.fn(async ({ errors }) => {
+      // Add an extension if it's an execution error.
+      if (errors[0].path) {
+        errors[0].extensions.encountered = true;
+      }
+    });
     const plugins: ApolloServerPlugin<BaseContext>[] = [
       {
         async requestDidStart() {
@@ -880,6 +885,7 @@ describe('request pipeline life-cycle hooks', () => {
         'Secret error message',
       );
       expect(response).toHaveProperty('data.testError', null);
+      expect(response).toHaveProperty('errors[0].extensions.encountered', true);
 
       expect(didEncounterErrors).toBeCalledWith(
         expect.objectContaining({

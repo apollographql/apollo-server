@@ -433,18 +433,16 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       });
 
       if (resultErrors) {
-        await didEncounterErrors(resultErrors);
+        await handleErrors(resultErrors);
       }
 
-      const { formattedErrors, httpFromErrors } = resultErrors
-        ? formatErrors(resultErrors)
-        : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
-
+      // Put the execution result in our response. Note that handleErrors may
+      // have already set requestContext.response.result.errors to the formatted
+      // version of result.errors, so we use that if it's set.
       requestContext.response.result = {
         ...result,
-        errors: formattedErrors,
+        ...requestContext.response.result,
       };
-      mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
     } catch (executionMaybeError: unknown) {
       const executionError = ensureError(executionMaybeError);
       await Promise.all(
@@ -496,18 +494,49 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     );
   }
 
+  // Everything required to send errors back to the client:
+  //
+  // - Put the errors (as unformatted GraphQLError) on requestContext.errors
+  // - Tell plugins we did that with didEncounterErrors (and give them a chance
+  //   to edit or filter them)
+  // - Normalize and format the errors (as GraphQLFormattedError)
+  // - Add the formatted errors to the result
+  // - Update HTTP status and headers if any of the errors had an http extension
+  //   (which would have been removed by normalizeAndFormatErrors)
+  //
   // Note that we ensure that all calls to didEncounterErrors are followed by
   // calls to willSendResponse. (The usage reporting plugin depends on this.)
-  async function didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
-    requestContext.errors = errors;
+  async function handleErrors(errors: GraphQLError[]) {
+    // Make a new array object here: the plugin is allowed to mutate the array,
+    // so let's not share it with the array that happened to be passed in here.
+    requestContext.errors = [...errors];
 
-    return await Promise.all(
+    await Promise.all(
       requestListeners.map((l) =>
         l.didEncounterErrors?.(
           requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
         ),
       ),
     );
+
+    // If the plugin removed all errors, move on with our life.
+    if (!requestContext.errors?.length) {
+      return;
+    }
+
+    const { formattedErrors, httpFromErrors } = normalizeAndFormatErrors(
+      requestContext.errors,
+      {
+        formatError: internals.formatError,
+        includeStacktraceInErrorResponses:
+          internals.includeStacktraceInErrorResponses,
+      },
+    );
+
+    requestContext.response.result = {
+      errors: formattedErrors,
+    };
+    mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
   }
 
   // This function "sends" a response that contains errors and no data (not even
@@ -520,31 +549,13 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // and errors from them.
   //
   // Then, if the HTTP status code is not yet set, it sets it to 500.
-  async function sendErrorResponse(errors: ReadonlyArray<GraphQLError>) {
-    await didEncounterErrors(errors);
-
-    const { formattedErrors, httpFromErrors } = formatErrors(errors);
-
-    requestContext.response.result = {
-      errors: formattedErrors,
-    };
-
-    mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
+  async function sendErrorResponse(errors: GraphQLError[]) {
+    await handleErrors(errors);
 
     if (!requestContext.response.http.status) {
       requestContext.response.http.status = 500;
     }
 
     await invokeWillSendResponse();
-  }
-
-  function formatErrors(
-    errors: ReadonlyArray<GraphQLError>,
-  ): ReturnType<typeof normalizeAndFormatErrors> {
-    return normalizeAndFormatErrors(errors, {
-      formatError: internals.formatError,
-      includeStacktraceInErrorResponses:
-        internals.includeStacktraceInErrorResponses,
-    });
   }
 }

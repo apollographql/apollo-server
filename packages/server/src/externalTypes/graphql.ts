@@ -72,9 +72,12 @@ export interface GraphQLRequestContext<TContext extends BaseContext> {
    * are present earlier in the request pipeline and differ from **formatted**
    * errors which are the result of running the user-configurable `formatError`
    * transformation function over specific errors; these can eventually be found
-   * in `response.result.errors`.
+   * in `response.result.errors`. The didEncounterErrors hook is allowed to
+   * change the elements of this array (either by manipulating the array
+   * directly or by mutating individual errors), though it should not replace
+   * the array object itself.
    */
-  readonly errors?: ReadonlyArray<GraphQLError>;
+  readonly errors?: GraphQLError[];
 
   readonly metrics: GraphQLRequestMetrics;
 
