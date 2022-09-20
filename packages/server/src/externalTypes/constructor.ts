@@ -6,7 +6,7 @@ import type {
   GraphQLFormattedError,
   GraphQLSchema,
   ParseOptions,
-  ValidationContext,
+  ValidationRule,
 } from 'graphql';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { GatewayInterface } from '@apollo/server-gateway-interface';
@@ -78,8 +78,8 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
     formattedError: GraphQLFormattedError,
     error: unknown,
   ) => GraphQLFormattedError;
-  rootValue?: ((parsedQuery: DocumentNode) => any) | any;
-  validationRules?: Array<(context: ValidationContext) => any>;
+  rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
+  validationRules?: Array<ValidationRule>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   cache?: KeyValueCache<string>;
   includeStacktraceInErrorResponses?: boolean;

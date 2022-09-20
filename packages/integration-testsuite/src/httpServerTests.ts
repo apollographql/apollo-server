@@ -1211,6 +1211,26 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
 
+      it('returns an error on batch requests with no elements', async () => {
+        const app = await createApp({ schema, allowBatchedHttpRequests: true });
+        const req = request(app).post('/').send([]);
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect(res.body).toMatchInlineSnapshot(`
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "code": "BAD_REQUEST",
+                  },
+                  "message": "No operations found in request.",
+                },
+              ],
+            }
+          `);
+        });
+      });
+
       it('can handle batch requests in parallel', async function () {
         const parallels = 100;
         const delayPerReq = 40;

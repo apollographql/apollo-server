@@ -13,10 +13,10 @@ import {
   GraphQLString,
   GraphQLError,
   ValidationContext,
-  FieldDefinitionNode,
   ResponsePath,
   DocumentNode,
   printSchema,
+  FieldNode,
 } from 'graphql';
 
 // Note that by doing deep imports here we don't need to install React.
@@ -209,7 +209,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
       describe('validation rules', () => {
         it('accepts additional rules', async () => {
           const NoTestString = (context: ValidationContext) => ({
-            Field(node: FieldDefinitionNode) {
+            Field(node: FieldNode) {
               if (node.name.value === 'testString') {
                 context.reportError(
                   new GraphQLError('Not allowed to use', { nodes: [node] }),

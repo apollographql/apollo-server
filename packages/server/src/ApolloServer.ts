@@ -5,7 +5,6 @@ import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
   assertValidSchema,
   DocumentNode,
-  FieldDefinitionNode,
   GraphQLError,
   GraphQLFieldResolver,
   GraphQLFormattedError,
@@ -13,6 +12,7 @@ import {
   ParseOptions,
   print,
   ValidationContext,
+  ValidationRule,
 } from 'graphql';
 import {
   type KeyValueCache,
@@ -69,8 +69,8 @@ import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constr
 import type { GatewayExecutor } from '@apollo/server-gateway-interface';
 import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
 
-const NoIntrospection = (context: ValidationContext) => ({
-  Field(node: FieldDefinitionNode) {
+const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
+  Field(node) {
     if (node.name.value === '__schema' || node.name.value === '__type') {
       context.reportError(
         new GraphQLError(
@@ -134,19 +134,14 @@ type ServerState =
       stopError: Error | null;
     };
 
-// TODO(AS4): Move this to its own file or something. Also organize the fields.
-
 export interface ApolloServerInternals<TContext extends BaseContext> {
+  state: ServerState;
+  gatewayExecutor: GatewayExecutor | null;
+
   formatError?: (
     formattedError: GraphQLFormattedError,
     error: unknown,
   ) => GraphQLFormattedError;
-  // TODO(AS4): Is there a way (with generics/codegen?) to make
-  // this "any" more specific? In AS3 there was technically a
-  // generic for it but it was used inconsistently.
-  rootValue?: ((parsedQuery: DocumentNode) => any) | any;
-  validationRules: Array<(context: ValidationContext) => any>;
-  fieldResolver?: GraphQLFieldResolver<any, TContext>;
   includeStacktraceInErrorResponses: boolean;
   persistedQueries?: WithRequired<PersistedQueryOptions, 'cache'>;
   nodeEnv: string;
@@ -154,20 +149,21 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   apolloConfig: ApolloConfig;
   plugins: ApolloServerPlugin<TContext>[];
   parseOptions: ParseOptions;
-  state: ServerState;
   // `undefined` means we figure out what to do during _start (because
   // the default depends on whether or not we used the background version
   // of start).
   stopOnTerminationSignals: boolean | undefined;
-  gatewayExecutor: GatewayExecutor | null;
   csrfPreventionRequestHeaders: string[] | null;
+
+  rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
+  validationRules: Array<ValidationRule>;
+  fieldResolver?: GraphQLFieldResolver<any, TContext>;
+
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
 }
 
 function defaultLogger(): Logger {
   const loglevelLogger = loglevel.getLogger('apollo-server');
-  // TODO(AS4): Ensure that migration guide makes it clear that
-  // debug:true doesn't set the log level any more.
   loglevelLogger.setLevel(loglevel.levels.INFO);
   return loglevelLogger;
 }
@@ -250,13 +246,6 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
     const introspectionEnabled = config.introspection ?? isDev;
 
-    // The default internal cache is a vanilla `Keyv` which uses a `Map` by
-    // default for its underlying store. For production, we recommend using a
-    // more appropriate Keyv implementation (see
-    // https://github.com/jaredwray/keyv/tree/main/packages for 1st party
-    // maintained Keyv packages or our own Keyv store `LRUCacheStore`).
-    // TODO(AS4): warn users and provide better documentation around providing
-    // an appropriate Keyv.
     this.cache = config.cache ?? new InMemoryLRUCache();
 
     // Note that we avoid calling methods on `this` before `this.internals` is assigned
@@ -925,7 +914,6 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     this.internals.plugins.push(plugin);
   }
 
-  // TODO(AS4): Make sure we like the name of this function.
   public async executeHTTPGraphQLRequest({
     httpGraphQLRequest,
     context,
@@ -1095,7 +1083,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
    *
    * The second object will be the `contextValue` object available in resolvers.
    */
-  // TODO(AS4): document this
+  // TODO(AS4): Make the parameters to this function an object
   public async executeOperation(
     this: ApolloServer<BaseContext>,
     request: Omit<GraphQLRequest, 'query'> & {

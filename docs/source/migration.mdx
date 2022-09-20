@@ -1676,6 +1676,10 @@ const { url } = await startStandaloneServer(apolloServerInstance, {
 });
 ```
 
+### Improved typing for `validationRules`
+
+In Apollo Server 3, the `validationRules` option was declared as a list of functions that returned `any`. However, at runtime the functions actually needed to return a `graphql-js` `ASTVisitor`. In Apollo Server 4, the TypeScript type ensures that `validationRules` is a list of `graphql-js` `ValidationRule`s. If your `validationRules` has a TypeScript error, you will need to fix one or more of your rules to correctly return `ASTVisitor`s.
+
 ### `@apollo/utils.fetcher` replaces `apollo-server-env`
 
 In Apollo Server 3, the `apollo-server-env` package primarily provides TypeScript typings and polyfills for the `fetch` and `URL` APIs.

@@ -19,7 +19,9 @@ export async function runBatchHttpQuery<TContext extends BaseContext>(
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
-  // TODO(AS4): Handle empty list as an error
+  if (body.length === 0) {
+    throw new BadRequestError('No operations found in request.');
+  }
 
   const combinedResponseHead = newHTTPGraphQLHead();
   const responseBodies = await Promise.all(
