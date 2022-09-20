@@ -20,8 +20,7 @@ requests and responses between a web framework's native format to the format use
 
 > For more examples, see these Apollo Server 4 [integrations demos for Fastify and Lambda](https://github.com/apollographql/server-v4-integration-demos/tree/main/packages).
 
-If you are building a serverless integration, we recommend prepending your function name with the word `start` (e.g., `startAndCreateLambdaHandler(server)`). This is a helpful naming convention for your integration's users and nicely aligns with the names of other Apollo Server integrations such as `startStandaloneServer(server)`. 
-
+If you are building a serverless integration, we **strongly recommend** prepending your function name with the word `start` (e.g., `startServerAndCreateLambdaHandler(server)`). This naming convention helps maintain Apollo Server's standard that every server uses a function or method whose name contains the word `start` (such as `startStandaloneServer(server)`. 
 ### Main function signature
 
 Let's start by looking at the main function signature. The below snippet uses
