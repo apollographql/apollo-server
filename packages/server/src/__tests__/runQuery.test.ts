@@ -1,6 +1,7 @@
 import {
   DocumentNode,
   FormattedExecutionResult,
+  GraphQLError,
   GraphQLInt,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -23,7 +24,7 @@ import {
   GraphQLRequestListenerValidationDidEnd,
 } from '..';
 import { mockLogger } from './mockLogger';
-import { jest, describe, it, expect } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,
@@ -808,12 +809,21 @@ describe('request pipeline life-cycle hooks', () => {
   });
 
   describe('didEncounterErrors', () => {
-    const didEncounterErrors = jest.fn(async ({ errors }) => {
-      // Add an extension if it's an execution error.
-      if (errors[0].path) {
-        errors[0].extensions.encountered = true;
-      }
+    let addExtensionToError: boolean, removeErrors: boolean;
+    beforeEach(() => {
+      addExtensionToError = false;
+      removeErrors = false;
     });
+    const didEncounterErrors = jest.fn(
+      async ({ errors }: { errors: GraphQLError[] }) => {
+        if (addExtensionToError) {
+          errors[0].extensions.encountered = true;
+        }
+        if (removeErrors) {
+          errors.splice(0, errors.length);
+        }
+      },
+    );
     const plugins: ApolloServerPlugin<BaseContext>[] = [
       {
         async requestDidStart() {
@@ -871,7 +881,27 @@ describe('request pipeline life-cycle hooks', () => {
       );
     });
 
+    it('removing all errors in plugin works', async () => {
+      removeErrors = true;
+      const response = await runQuery(
+        {
+          schema,
+          plugins,
+        },
+        { query: '{ testError }' },
+      );
+
+      expect(response).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "testError": null,
+          },
+        }
+      `);
+    });
+
     it('called when an error occurs in execution', async () => {
+      addExtensionToError = true;
       const response = await runQuery(
         {
           schema,
