@@ -365,10 +365,6 @@ export function prettyJSONStringify(value: FormattedExecutionResult) {
   return JSON.stringify(value) + '\n';
 }
 
-export function cloneObject<T extends Object>(object: T): T {
-  return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
-}
-
 export function newHTTPGraphQLHead(status?: number): HTTPGraphQLHead {
   return {
     status,

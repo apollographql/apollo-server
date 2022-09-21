@@ -56,7 +56,6 @@ import {
 } from './preventCsrf.js';
 import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline.js';
 import {
-  cloneObject,
   HeaderMap,
   newHTTPGraphQLHead,
   prettyJSONStringify,
@@ -1253,4 +1252,8 @@ export function chooseContentTypeForSingleResultResponse(
       return null;
     }
   }
+}
+
+function cloneObject<T extends Object>(object: T): T {
+  return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
 }

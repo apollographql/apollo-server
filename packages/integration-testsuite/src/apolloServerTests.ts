@@ -565,64 +565,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
       };
 
-      // TODO(AS4): Is this test still relevant now that we pass
-      // the context explicitly to executeOperation?
-      // Test for https://github.com/apollographql/apollo-server/issues/4170
-      it('works when using executeOperation', async () => {
-        const encounteredFields: ResponsePath[] = [];
-        const encounteredContext: BaseContext[] = [];
-        await setupApolloServerAndFetchPairForPlugins([
-          {
-            requestDidStart: async () => ({
-              executionDidStart: async () => ({
-                willResolveField({ info, contextValue }) {
-                  encounteredFields.push(info.path);
-                  encounteredContext.push(contextValue);
-                },
-              }),
-            }),
-          },
-        ]);
-
-        // The bug in 4170 (linked above) was occurring because of a failure
-        // to clone context in `executeOperation` in the same way that occurs
-        // in `runHttpQuery` prior to entering the request pipeline.  That
-        // resulted in the inability to attach a symbol to the context because
-        // the symbol already existed on the context.  Of course, a context
-        // is only created after the first invocation, so we'll run this twice
-        // to encounter the error where it was in the way when we tried to set
-        // it the second time.  While we could have tested for the property
-        // before assigning to it, that is not the contract we have with the
-        // context, which should have been copied on `executeOperation` (which
-        // is meant to be used by testing, currently).
-        await serverInstance.executeOperation(
-          {
-            query: '{ justAField }',
-          },
-          { customContext: true },
-        );
-        await serverInstance.executeOperation(
-          {
-            query: '{ justAField }',
-          },
-          { customContext: true },
-        );
-
-        expect(encounteredFields).toStrictEqual([
-          { key: 'justAField', prev: undefined, typename: 'Query' },
-          { key: 'justAField', prev: undefined, typename: 'Query' },
-        ]);
-
-        // This bit is just to ensure that nobody removes `context` from the
-        // `setupApolloServerAndFetchPairForPlugins` thinking it's unimportant.
-        // When a custom context is not provided, a new one is initialized
-        // on each request.
-        expect(encounteredContext).toStrictEqual([
-          expect.objectContaining({ customContext: true }),
-          expect.objectContaining({ customContext: true }),
-        ]);
-      });
-
       it('returns correct status code for a normal operation', async () => {
         await setupApolloServerAndFetchPairForPlugins();
 
