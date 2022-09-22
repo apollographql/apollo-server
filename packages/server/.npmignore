@@ -1,8 +1,6 @@
 *
 # Include the package.json files that give us deep imports.
 !**/package.json
-# TODO(AS4): glasser isn't this covered by the * above?
-node_modules/**/*
 !src/**/*
 src/**/__tests__/**
 !dist/**/*
