@@ -51,11 +51,7 @@ import {
 
 import { makeGatewayGraphQLRequestContext } from './utils/makeGatewayGraphQLRequestContext.js';
 
-import {
-  HeaderMap,
-  mergeHTTPGraphQLHead,
-  newHTTPGraphQLHead,
-} from './runHttpQuery.js';
+import { mergeHTTPGraphQLHead, newHTTPGraphQLHead } from './runHttpQuery.js';
 import type {
   ApolloServer,
   ApolloServerInternals,
@@ -71,6 +67,7 @@ import {
   GraphQLExperimentalInitialIncrementalExecutionResult,
   GraphQLExperimentalSubsequentIncrementalExecutionResult,
 } from './incrementalDeliveryPolyfill.js';
+import { HeaderMap } from './utils/HeaderMap.js';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 

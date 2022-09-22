@@ -28,11 +28,12 @@ import {
   ApolloFetch,
   ParsedResponse,
 } from './apolloFetch.js';
-import type {
+import {
   ApolloServerOptions,
   ApolloServer,
   BaseContext,
   ApolloServerPlugin,
+  HeaderMap,
 } from '@apollo/server';
 import fetch, { type Headers } from 'node-fetch';
 
@@ -1791,7 +1792,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                     extensions: {
                       http: {
                         status: 404,
-                        headers: new Map([['special', 'hello']]),
+                        headers: new HeaderMap([['special', 'hello']]),
                       },
                     },
                   }),

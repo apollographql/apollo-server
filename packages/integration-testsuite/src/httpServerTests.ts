@@ -27,12 +27,13 @@ import type {
   CreateServerForIntegrationTests,
   CreateServerForIntegrationTestsOptions,
 } from './index.js';
-import type {
+import {
   ApolloServer,
   ApolloServerOptions,
   BaseContext,
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestListener,
+  HeaderMap,
   PersistedQueryOptions,
 } from '@apollo/server';
 import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheControl';
@@ -202,7 +203,7 @@ const queryType = new GraphQLObjectType({
       resolve() {
         throw new GraphQLError('error 2', {
           extensions: {
-            http: { headers: new Map([['erroneous', 'indeed']]) },
+            http: { headers: new HeaderMap([['erroneous', 'indeed']]) },
           },
         });
       },
@@ -212,7 +213,7 @@ const queryType = new GraphQLObjectType({
       resolve() {
         throw new GraphQLError('error 3', {
           extensions: {
-            http: { headers: new Map([['felonious', 'nah']]) },
+            http: { headers: new HeaderMap([['felonious', 'nah']]) },
           },
         });
       },

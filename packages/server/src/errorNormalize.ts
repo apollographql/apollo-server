@@ -8,10 +8,10 @@ import {
 import { ApolloServerErrorCode } from './errors/index.js';
 import type { HTTPGraphQLHead } from './externalTypes/http.js';
 import {
-  HeaderMap,
   mergeHTTPGraphQLHead,
   newHTTPGraphQLHead,
 } from './runHttpQuery.js';
+import { HeaderMap } from './utils/HeaderMap.js';
 
 // This function accepts any value that were thrown and convert it to GraphQLFormattedError.
 // It also add default extensions.code and copy stack trace onto an extension if requested.

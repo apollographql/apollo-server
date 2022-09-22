@@ -14,11 +14,11 @@ import nock from 'nock';
 import sumBy from 'lodash.sumby';
 import { mockRandom, resetMockRandom } from 'jest-mock-random';
 import { gunzipSync } from 'zlib';
-import { HeaderMap } from '../../../runHttpQuery';
 import {
   ApolloServer,
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestMetrics,
+  HeaderMap,
 } from '../../..';
 import {
   ApolloServerPluginUsageReportingOptions,

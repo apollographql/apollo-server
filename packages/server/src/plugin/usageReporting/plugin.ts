@@ -21,7 +21,6 @@ import type {
   GraphQLServerListener,
 } from '../../externalTypes/index.js';
 import { internalPlugin } from '../../internalPlugin.js';
-import type { HeaderMap } from '../../runHttpQuery.js';
 import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder.js';
 import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace.js';
 import {
@@ -37,6 +36,7 @@ import { OurReport } from './stats.js';
 import { makeTraceDetails } from './traceDetails.js';
 import { packageVersion } from '../../generated/packageVersion.js';
 import { computeCoreSchemaHash } from '../../utils/computeCoreSchemaHash.js';
+import type { HeaderMap } from '../../utils/HeaderMap.js';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),

@@ -1,11 +1,10 @@
-import { ApolloServer } from '..';
+import { ApolloServer, HeaderMap } from '..';
 import type { ApolloServerOptions } from '..';
 import { FormattedExecutionResult, GraphQLError, GraphQLSchema } from 'graphql';
 import type { ApolloServerPlugin, BaseContext } from '../externalTypes';
 import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled/index.js';
 import { ApolloServerPluginUsageReporting } from '../plugin/usageReporting/index.js';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { HeaderMap } from '../runHttpQuery.js';
 import { mockLogger } from './mockLogger.js';
 import gql from 'graphql-tag';
 import type { GatewayInterface } from '@apollo/server-gateway-interface';

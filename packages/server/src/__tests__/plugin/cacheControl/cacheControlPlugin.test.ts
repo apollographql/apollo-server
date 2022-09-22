@@ -3,7 +3,7 @@ import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
 } from '../../../plugin/cacheControl';
-import { ApolloServer, HTTPGraphQLResponse } from '../../..';
+import { ApolloServer, HTTPGraphQLResponse, HeaderMap } from '../../..';
 import type { CacheHint } from '@apollo/cache-control-types';
 import { describe, it, expect } from '@jest/globals';
 
@@ -51,7 +51,7 @@ describe('plugin', () => {
         return await server.executeHTTPGraphQLRequest({
           httpGraphQLRequest: {
             method: 'GET',
-            headers: new Map([['apollo-require-preflight', 't']]),
+            headers: new HeaderMap([['apollo-require-preflight', 't']]),
             // cspell:ignore Bhello
             search: 'query=%7Bhello%7D',
             body: {},

@@ -21,6 +21,7 @@ import {
   GraphQLRequestListenerExecutionDidEnd,
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
+  HeaderMap,
 } from '..';
 import { mockLogger } from './mockLogger';
 import { jest, describe, it, expect } from '@jest/globals';
@@ -836,7 +837,7 @@ describe('request pipeline life-cycle hooks', () => {
               message: 'Syntax Error: Expected Name, found "}".',
               extensions: {
                 code: 'GRAPHQL_PARSE_FAILED',
-                http: { status: 400, headers: new Map() },
+                http: { status: 400, headers: new HeaderMap() },
               },
             }),
           ]),
@@ -861,7 +862,7 @@ describe('request pipeline life-cycle hooks', () => {
                 'Cannot query field "testStringWithParseError" on type "QueryType".',
               extensions: {
                 code: 'GRAPHQL_VALIDATION_FAILED',
-                http: { status: 400, headers: new Map() },
+                http: { status: 400, headers: new HeaderMap() },
               },
             }),
           ]),

@@ -55,11 +55,7 @@ import {
   recommendedCsrfPreventionRequestHeaders,
 } from './preventCsrf.js';
 import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline.js';
-import {
-  HeaderMap,
-  newHTTPGraphQLHead,
-  prettyJSONStringify,
-} from './runHttpQuery.js';
+import { newHTTPGraphQLHead, prettyJSONStringify } from './runHttpQuery.js';
 import { SchemaManager } from './utils/schemaManager.js';
 import { isDefined } from './utils/isDefined.js';
 import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
@@ -67,6 +63,7 @@ import type { WithRequired } from '@apollo/utils.withrequired';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type { GatewayExecutor } from '@apollo/server-gateway-interface';
 import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
+import { HeaderMap } from './utils/HeaderMap.js';
 
 const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
   Field(node) {

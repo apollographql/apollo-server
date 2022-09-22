@@ -1,10 +1,12 @@
+import type { HeaderMap } from '../utils/HeaderMap.js';
+
 // TODO(AS4): Document this interface.
 export interface HTTPGraphQLRequest {
   // capitalized (GET, POST, etc)
   method: string;
   // lowercase header name, multiple headers joined with ', ' like Headers.get
   // does
-  headers: Map<string, string>;
+  headers: HeaderMap;
   /**
    * The part of the URL after the question mark (not including the #fragment),
    * or the empty string if there is no question mark. Including the question
@@ -21,7 +23,7 @@ export interface HTTPGraphQLRequest {
 export interface HTTPGraphQLHead {
   status?: number;
   // TODO(AS4): need to figure out what headers this includes (eg JSON???)
-  headers: Map<string, string>;
+  headers: HeaderMap;
 }
 
 // TODO(AS4): document why we chose strings as output. (tl;dr: consistent

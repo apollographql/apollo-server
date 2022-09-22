@@ -1,10 +1,11 @@
 import type { CacheHint } from '@apollo/cache-control-types';
-import type {
+import {
   ApolloServerPlugin,
   BaseContext,
   GraphQLRequestContext,
   GraphQLRequestListener,
   GraphQLResponse,
+  HeaderMap,
 } from '@apollo/server';
 import { createHash } from '@apollo/utils.createhash';
 import {
@@ -220,7 +221,7 @@ export default function plugin<TContext extends BaseContext>(
               body: { kind: 'single', singleResult: { data: value.data } },
               http: {
                 status: undefined,
-                headers: new Map(),
+                headers: new HeaderMap(),
               },
             };
           }
