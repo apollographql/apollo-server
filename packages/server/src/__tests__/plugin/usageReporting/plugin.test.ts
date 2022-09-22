@@ -129,13 +129,15 @@ describe('end-to-end', () => {
     await server.start();
 
     const response = await server.executeOperation({
-      query: query ?? defaultQuery,
-      // If operation name is specified use it. If it is specified as null convert it to
-      // undefined because graphqlRequest expects string | undefined
-      operationName:
-        operationName === undefined ? 'q' : operationName || undefined,
-      extensions: {
-        clientName: 'testing suite',
+      request: {
+        query: query ?? defaultQuery,
+        // If operation name is specified use it. If it is specified as null convert it to
+        // undefined because graphqlRequest expects string | undefined
+        operationName:
+          operationName === undefined ? 'q' : operationName || undefined,
+        extensions: {
+          clientName: 'testing suite',
+        },
       },
     });
 

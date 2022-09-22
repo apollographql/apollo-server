@@ -13,7 +13,6 @@ import {
   GraphQLString,
   GraphQLError,
   ValidationContext,
-  ResponsePath,
   DocumentNode,
   printSchema,
   FieldNode,
@@ -538,12 +537,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
     describe('Plugins', () => {
       let apolloFetch: ApolloFetch;
       let apolloFetchResponse: ParsedResponse;
-      let serverInstance: ApolloServer<BaseContext>;
 
       const setupApolloServerAndFetchPairForPlugins = async (
         plugins: ApolloServerPlugin<BaseContext>[] = [],
       ) => {
-        const { server, url } = await createServer(
+        const { url } = await createServer(
           {
             typeDefs: gql`
               type Query {
@@ -554,8 +552,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
           },
           { context: async () => ({ customContext: true }) },
         );
-
-        serverInstance = server;
 
         apolloFetch = createApolloFetch({ uri: url })
           // Store the response so we can inspect it.
@@ -1606,9 +1602,15 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             expect(spy).not.toBeCalled();
 
-            await server.executeOperation({ query: '{hello}' }, uniqueContext);
+            await server.executeOperation({
+              request: { query: '{hello}' },
+              contextValue: uniqueContext,
+            });
             expect(spy).toHaveBeenCalledTimes(1);
-            await server.executeOperation({ query: '{hello}' }, uniqueContext);
+            await server.executeOperation({
+              request: { query: '{hello}' },
+              contextValue: uniqueContext,
+            });
             expect(spy).toHaveBeenCalledTimes(2);
           });
         });
@@ -2573,7 +2575,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         // Executing an operation ensures that (even if
         // serverIsStartedInBackground) startup completes, so that we can
         // legally call stop().
-        await server.executeOperation({ query: '{__typename}' });
+        await server.executeOperation({ request: { query: '{__typename}' } });
       });
 
       it('unsubscribes from schema update on close', async () => {
@@ -2592,7 +2594,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           // to be executed concurrently with start(). (Without this query,
           // stop() may be executed before the gateway schema update
           // unsubscriber is registered for disposal, causing the test to fail.)
-          await server.executeOperation({ query: '{__typename}' });
+          await server.executeOperation({ request: { query: '{__typename}' } });
         }
         expect(unsubscribeSpy).not.toHaveBeenCalled();
         await stopServer();
@@ -2689,11 +2691,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
         triggers.triggerSchemaChange!(getSchemaUpdateWithField('testString2'));
         // Hacky, but: executeOperation awaits schemaDerivedData, so when it
         // finishes we know the new schema is loaded.
-        await server.executeOperation({ query: '{__typename}' });
+        await server.executeOperation({ request: { query: '{__typename}' } });
         const result2 = apolloFetch({ query: '{testString2}' });
         await executorData['{testString2}'].startPromise;
         triggers.triggerSchemaChange!(getSchemaUpdateWithField('testString3'));
-        await server.executeOperation({ query: '{__typename}' });
+        await server.executeOperation({ request: { query: '{__typename}' } });
         const result3 = apolloFetch({ query: '{testString3}' });
         await executorData['{testString3}'].startPromise;
         executorData['{testString3}'].endPromise.resolve();

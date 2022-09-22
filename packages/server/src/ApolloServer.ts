@@ -161,6 +161,13 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
 }
 
+interface ExecuteOperation<TContext extends BaseContext> {
+  request: Omit<GraphQLRequest, 'query'> & {
+    query?: string | DocumentNode;
+  };
+  contextValue?: TContext;
+}
+
 function defaultLogger(): Logger {
   const loglevelLogger = loglevel.getLogger('apollo-server');
   loglevelLogger.setLevel(loglevel.levels.INFO);
@@ -1080,28 +1087,24 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
    * just a convenience, not an optimization (we convert provided ASTs back into
    * string).
    *
-   * The second object will be the `contextValue` object available in resolvers.
+   * `request.contextValue` will be the `contextValue` object available in resolvers.
    */
-  // TODO(AS4): Make the parameters to this function an object
   public async executeOperation(
     this: ApolloServer<BaseContext>,
-    request: Omit<GraphQLRequest, 'query'> & {
-      query?: string | DocumentNode;
-    },
+    { request }: Omit<ExecuteOperation<TContext>, 'contextValue'>,
   ): Promise<GraphQLResponse>;
-  public async executeOperation(
-    request: Omit<GraphQLRequest, 'query'> & {
-      query?: string | DocumentNode;
-    },
-    contextValue: TContext,
-  ): Promise<GraphQLResponse>;
+  public async executeOperation({
+    request,
+    contextValue,
+  }: WithRequired<
+    ExecuteOperation<TContext>,
+    'contextValue'
+  >): Promise<GraphQLResponse>;
 
-  async executeOperation(
-    request: Omit<GraphQLRequest, 'query'> & {
-      query?: string | DocumentNode;
-    },
-    contextValue?: TContext,
-  ): Promise<GraphQLResponse> {
+  async executeOperation({
+    request,
+    contextValue,
+  }: ExecuteOperation<TContext>): Promise<GraphQLResponse> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
     // `apollo-server` which doesn't support `start()`.)

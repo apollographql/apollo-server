@@ -39,13 +39,13 @@ async function runQuery<TContext extends BaseContext>(
   request: GraphQLRequest,
   contextValue?: TContext,
 ): Promise<FormattedExecutionResult> {
-  const server = new ApolloServer(config);
+  const server = new ApolloServer<TContext>(config);
   await server.start();
-  const response = await server.executeOperation(
+  const response = await server.executeOperation({
     request,
     // `as` safe because TContext must be BaseContext if no contextValue provided
-    contextValue ?? ({} as TContext),
-  );
+    contextValue: contextValue ?? ({} as TContext),
+  });
   await server.stop();
   if (!('singleResult' in response.body)) {
     throw Error('expected single result');
@@ -1077,12 +1077,12 @@ describe('parsing and validation cache', () => {
     const query = '{ testString }';
 
     // The first request will do a parse and validate. (1/1)
-    await server.executeOperation({ query });
+    await server.executeOperation({ request: { query } });
     expect(parsingDidStart.mock.calls.length).toBe(1);
     expect(validationDidStart.mock.calls.length).toBe(1);
 
     // The second request should ALSO do a parse and validate. (2/2)
-    await server.executeOperation({ query });
+    await server.executeOperation({ request: { query } });
     expect(parsingDidStart.mock.calls.length).toBe(2);
     expect(validationDidStart.mock.calls.length).toBe(2);
 
@@ -1104,12 +1104,12 @@ describe('parsing and validation cache', () => {
     const query = '{ testString }';
 
     // The first request will do a parse and validate. (1/1)
-    await server.executeOperation({ query });
+    await server.executeOperation({ request: { query } });
     expect(parsingDidStart.mock.calls.length).toBe(1);
     expect(validationDidStart.mock.calls.length).toBe(1);
 
     // The second request should still only have a 1 validate and 1 parse.
-    await server.executeOperation({ query });
+    await server.executeOperation({ request: { query } });
     expect(parsingDidStart.mock.calls.length).toBe(1);
     expect(validationDidStart.mock.calls.length).toBe(1);
 
@@ -1154,11 +1154,11 @@ describe('parsing and validation cache', () => {
     });
     await server.start();
 
-    await server.executeOperation({ query: querySmall1 });
+    await server.executeOperation({ request: { query: querySmall1 } });
     expect(parsingDidStart.mock.calls.length).toBe(1);
     expect(validationDidStart.mock.calls.length).toBe(1);
 
-    await server.executeOperation({ query: querySmall2 });
+    await server.executeOperation({ request: { query: querySmall2 } });
     expect(parsingDidStart.mock.calls.length).toBe(2);
     expect(validationDidStart.mock.calls.length).toBe(2);
 
@@ -1166,28 +1166,28 @@ describe('parsing and validation cache', () => {
     // from the LRU cache since it's larger than the TOTAL limit of the cache
     // (which is capped at the length of small1 + small2) — though this will
     // still fit (barely).
-    await server.executeOperation({ query: queryLarge });
+    await server.executeOperation({ request: { query: queryLarge } });
     expect(parsingDidStart.mock.calls.length).toBe(3);
     expect(validationDidStart.mock.calls.length).toBe(3);
 
     // Make sure the large query is still cached (No incr. to parse/validate.)
-    await server.executeOperation({ query: queryLarge });
+    await server.executeOperation({ request: { query: queryLarge } });
     expect(parsingDidStart.mock.calls.length).toBe(3);
     expect(validationDidStart.mock.calls.length).toBe(3);
 
     // This small (and the other) should both trigger parse/validate since
     // the cache had to have evicted them both after accommodating the larger.
-    await server.executeOperation({ query: querySmall1 });
+    await server.executeOperation({ request: { query: querySmall1 } });
     expect(parsingDidStart.mock.calls.length).toBe(4);
     expect(validationDidStart.mock.calls.length).toBe(4);
 
-    await server.executeOperation({ query: querySmall2 });
+    await server.executeOperation({ request: { query: querySmall2 } });
     expect(parsingDidStart.mock.calls.length).toBe(5);
     expect(validationDidStart.mock.calls.length).toBe(5);
 
     // Finally, make sure that the large query is gone (it should be, after
     // the last two have taken its spot again.)
-    await server.executeOperation({ query: queryLarge });
+    await server.executeOperation({ request: { query: queryLarge } });
     expect(parsingDidStart.mock.calls.length).toBe(6);
     expect(validationDidStart.mock.calls.length).toBe(6);
   });
