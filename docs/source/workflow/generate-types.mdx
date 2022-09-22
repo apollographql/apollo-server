@@ -90,7 +90,7 @@ generates:
     config:
       useIndexSignature: true
       # More on this below!
-      contextType: ../index#MyContext
+      contextType: "../index#MyContext"
 ```
 
 > [See the docs](https://www.the-guild.dev/graphql/codegen/plugins/typescript-resolvers#usage-example) for more information on the above configuration options.
@@ -214,7 +214,7 @@ config:
   # Note, this file path starts from the location of the 
   # file where you generate types. 
   # (i.e., `/src/__generated__/resolvers-types.ts` above) 
-  contextType: ../index#MyContext # highlight-line
+  contextType: "../index#MyContext" # highlight-line
 ```
 
 Once you regenerate your types, your context is now automatically typed in all of your resolvers:
