@@ -45,8 +45,9 @@ If you moved your schema into a `.graphql` file, update your imports to ensure y
 // ...other imports
 import { readFileSync } from 'fs';
 
-// Note: this only works locally because it relies on `npm` routing
-// from the root directory of the project.
+// Note: this uses a path relative to the project's
+// root directory, which is the current working directory
+// if the server is executed using `npm run`.
 const typeDefs = readFileSync('./schema.graphql', { encoding: 'utf-8' });
 
 const server = new ApolloServer<MyContext>({
