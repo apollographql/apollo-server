@@ -125,7 +125,6 @@ export async function runHttpQuery<TContext extends BaseContext>(
 
   switch (httpRequest.method) {
     case 'POST': {
-      // TODO(AS4): If it's an array, some error about enabling batching?
       if (!isNonEmptyStringRecord(httpRequest.body)) {
         throw new BadRequestError(
           'POST body missing, invalid Content-Type, or JSON object has no keys.',
