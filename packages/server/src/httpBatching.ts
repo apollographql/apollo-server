@@ -46,7 +46,6 @@ export async function runBatchHttpQuery<TContext extends BaseContext>(
       }
       for (const [key, value] of response.headers) {
         // Override any similar header set in other responses.
-        // TODO(AS4): this is what AS3 did but maybe this is silly
         combinedResponseHead.headers.set(key, value);
       }
       // If two responses both want to set the status code, one of them will win.
