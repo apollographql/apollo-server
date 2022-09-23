@@ -3,10 +3,9 @@ title: Building Web Framework Integrations for Apollo Server
 description: ""
 ---
 
-<!-- TODO(AS4) Once we have a page with integrations, add link here -->
 > This article is for _authors_ of web framework integrations. Before
 > building a new integration, we recommend seeing if there's
-> an integration for your framework of choice that suits your needs.
+> [an integration for your framework of choice](./integration-index) that suits your needs.
 
 One of the driving forces behind Apollo Server 4 is the creation of a stable,
 well-defined API for processing HTTP requests and responses. Apollo Server 4's

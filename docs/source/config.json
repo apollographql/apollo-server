@@ -22,6 +22,7 @@
       "Subscriptions": "/data/subscriptions"
     },
     "Server frameworks": {
+      "Integrations": "/integrations/integration-index",
       "Building integrations": "/integrations/building-integrations"
     },
     "Development Workflow": {
