@@ -1168,7 +1168,7 @@ const { body } = await server.executeOperation({
 });
 
 // Note the use of Node's assert rather than Jest's expect; if using
-// TypeScript, `assert`` will appropriately narrow the type of `body`
+// TypeScript, `assert` will appropriately narrow the type of `body`
 // and `expect` will not.
 assert(body.kind === 'single');
 expect(body.singleResult.data?.hello).toBe('Hello world!'); // -> true
