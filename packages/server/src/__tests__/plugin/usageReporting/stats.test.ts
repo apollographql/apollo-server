@@ -531,7 +531,7 @@ describe('Add trace to report', () => {
       trace: baseTrace,
       asTrace: true,
       referencedFieldsByType,
-      maxTraceBytes: 500*1024,
+      maxTraceBytes: 500 * 1024,
     });
 
     expect(report.tracesPerQuery['key']?.trace?.length).toBe(1);
