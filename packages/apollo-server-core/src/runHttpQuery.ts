@@ -2,6 +2,7 @@ import { Headers, Request } from 'apollo-server-env';
 import { ApolloError, formatApolloErrors } from 'apollo-server-errors';
 import type { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import type {
+  BaseContext,
   GraphQLExecutionResult,
   ValueOrPromise,
   WithRequired,
@@ -290,7 +291,7 @@ export async function runHttpQuery(
   return processHTTPRequest(config, request);
 }
 
-export async function processHTTPRequest<TContext>(
+export async function processHTTPRequest<TContext extends BaseContext>(
   options: WithRequired<GraphQLOptions<TContext>, 'cache' | 'plugins'> & {
     context: TContext;
   },

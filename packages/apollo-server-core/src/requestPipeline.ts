@@ -37,6 +37,7 @@ import type {
   GraphQLExecutor,
   GraphQLExecutionResult,
   ValidationRule,
+  BaseContext,
 } from 'apollo-server-types';
 import type {
   ApolloServerPlugin,
@@ -117,7 +118,7 @@ function isBadUserInputGraphQLError(error: GraphQLError): Boolean {
   );
 }
 
-export async function processGraphQLRequest<TContext>(
+export async function processGraphQLRequest<TContext extends BaseContext>(
   config: GraphQLRequestPipelineConfig<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
 ): Promise<GraphQLResponse> {
