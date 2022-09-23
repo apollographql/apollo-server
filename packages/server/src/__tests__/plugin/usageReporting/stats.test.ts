@@ -510,12 +510,12 @@ describe('Add trace to report', () => {
 
   it('add as stats if asTrace is true but trace is too large', () => {
     const report = new OurReport(defaultHeader);
-    (report as any).maxTraceBytes = 10;
     report.addTrace({
       statsReportKey: 'key',
       trace: baseTrace,
       asTrace: true,
       referencedFieldsByType,
+      maxTraceBytes: 10,
     });
 
     expect(report.tracesPerQuery['key']?.trace?.length).toBe(0);
@@ -531,6 +531,38 @@ describe('Add trace to report', () => {
       trace: baseTrace,
       asTrace: true,
       referencedFieldsByType,
+      maxTraceBytes: 500*1024,
+    });
+
+    expect(report.tracesPerQuery['key']?.trace?.length).toBe(1);
+    expect(
+      Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length,
+    ).toBe(0);
+  });
+
+  it('add as trace if asTrace is true and trace is not too large and max trace size is left as default', () => {
+    const report = new OurReport(defaultHeader);
+    report.addTrace({
+      statsReportKey: 'key',
+      trace: baseTrace,
+      asTrace: true,
+      referencedFieldsByType,
+    });
+
+    expect(report.tracesPerQuery['key']?.trace?.length).toBe(1);
+    expect(
+      Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length,
+    ).toBe(0);
+  });
+
+  it('add as trace if asTrace is true and max trace size is invalid', () => {
+    const report = new OurReport(defaultHeader);
+    report.addTrace({
+      statsReportKey: 'key',
+      trace: baseTrace,
+      asTrace: true,
+      referencedFieldsByType,
+      maxTraceBytes: 'one' as unknown as number,
     });
 
     expect(report.tracesPerQuery['key']?.trace?.length).toBe(1);
