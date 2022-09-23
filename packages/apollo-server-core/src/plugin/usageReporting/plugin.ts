@@ -13,6 +13,7 @@ import {
   GraphQLServiceContext,
   GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextWillSendResponse,
+  BaseContext,
 } from 'apollo-server-types';
 import {
   createOperationDerivedDataCache,
@@ -63,7 +64,7 @@ class ReportData {
   }
 }
 
-export function ApolloServerPluginUsageReporting<TContext>(
+export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
   options: ApolloServerPluginUsageReportingOptions<TContext> = Object.create(
     null,
   ),

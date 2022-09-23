@@ -11,6 +11,7 @@ import type {
   GraphQLRequestContextParsingDidStart,
   GraphQLRequestContextValidationDidStart,
   SchemaHash,
+  BaseContext,
 } from 'apollo-server-types';
 import type { Logger } from '@apollo/utils.logger';
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
@@ -35,7 +36,7 @@ type IPluginTestHarnessExecutionDidStart<TContext> =
     request: IPluginTestHarnessGraphqlRequest;
   };
 
-export default async function pluginTestHarness<TContext>({
+export default async function pluginTestHarness<TContext extends BaseContext>({
   pluginInstance,
   schema,
   logger,

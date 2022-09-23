@@ -168,13 +168,6 @@
       matchPackageNames: ["jest", "jest-config", "ts-jest", "@types/jest", ],
       matchBaseBranches: ["main"],
       allowedVersions: "28.x"
-    },
-    {
-      // typescript@4.8 breaks the build on main; since AS4 is imminent, pinning
-      // seems better than fixing.
-      matchPackageNames: ["typescript"],
-      matchBaseBranches: ["main"],
-      allowedVersions: "4.7.x",
-    },
+    }
   ]
 }
