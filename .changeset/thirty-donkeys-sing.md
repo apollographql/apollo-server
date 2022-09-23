@@ -1,6 +1,5 @@
 ---
 '@apollo/server-integration-testsuite': patch
-'@apollo/server-plugin-response-cache': patch
 '@apollo/server': patch
 ---
 
