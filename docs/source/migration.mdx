@@ -732,7 +732,7 @@ new ApolloServer<MyContext>({
             // incremental delivery responses specially.)
             if (response.body.kind === 'single' && 'data' in response.body.singleResult) {
               response.body.singleResult.extensions = {
-                ...(response.body.singleResult.extensions),
+                ...response.body.singleResult.extensions,
                 hello: 'world',
               };
             }
