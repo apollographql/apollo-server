@@ -270,7 +270,13 @@ export function ApolloServerPluginCacheControl(
           if (
             calculateHttpHeaders &&
             policyIfCacheable &&
-            !response.result.errors &&
+            // At least for now, we don't set cache-control headers for
+            // incremental delivery responses, since we don't know if a later
+            // part of the execution will affect the cache policy (perhaps
+            // dynamically). (Note that willSendResponse is called when the
+            // initial payload is sent, not the final payload.)
+            response.body.kind === 'single' &&
+            !response.body.singleResult.errors &&
             response.http
           ) {
             response.http.headers.set(

@@ -660,7 +660,8 @@ const setHttpPlugin = {
     return {
       async willSendResponse({ response }) {
         response.http.headers.set('custom-header', 'hello');
-        if (response?.result?.errors?.[0]?.extensions?.code === 'TEAPOT') {
+        if (response.body.kind === 'single' &&
+            response.body.singleResult.errors?.[0]?.extensions?.code === 'TEAPOT') {
           response.http.status = 418;
         }
       },

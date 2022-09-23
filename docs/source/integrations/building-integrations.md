@@ -20,7 +20,7 @@ requests and responses between a web framework's native format to the format use
 
 > For more examples, see these Apollo Server 4 [integrations demos for Fastify and Lambda](https://github.com/apollographql/server-v4-integration-demos/tree/main/packages).
 
-If you are building a serverless integration, we **strongly recommend** prepending your function name with the word `start` (e.g., `startServerAndCreateLambdaHandler(server)`). This naming convention helps maintain Apollo Server's standard that every server uses a function or method whose name contains the word `start` (such as `startStandaloneServer(server)`. 
+If you are building a serverless integration, we **strongly recommend** prepending your function name with the word `start` (e.g., `startServerAndCreateLambdaHandler(server)`). This naming convention helps maintain Apollo Server's standard that every server uses a function or method whose name contains the word `start` (such as `startStandaloneServer(server)`.
 
 ### Main function signature
 
@@ -225,30 +225,40 @@ interface HTTPGraphQLHead {
   headers: Map<string, string>;
 }
 
-type HTTPGraphQLResponse = HTTPGraphQLHead &
-  (
-    | {
-        completeBody: string;
-        bodyChunks: null;
-      }
-    | {
-        completeBody: null;
-        bodyChunks: AsyncIterableIterator<HTTPGraphQLResponseChunk>;
-      }
-  );
+type HTTPGraphQLResponseBody =
+  | { kind: 'complete'; string: string }
+  | { kind: 'chunked'; asyncIterator: AsyncIterableIterator<string> };
+
+
+type HTTPGraphQLResponse = HTTPGraphQLHead & {
+  body: HTTPGraphQLResponseBody;
+};
 ```
 
-The Express implementation uses the `res` object to update the response
-with the appropriate status code and headers, and finally sends the body:
+Note that a body can either be "complete" (a complete response that can be sent immediately with a `content-length` header), or "chunked", in which case the integration should read from the async iterator and send each chunk one at a time. This typically will use `transfer-encoding: chunked`, though your web framework may handle that for you automatically. If your web environment does not support streaming responses (as in some serverless function environments like AWS Lambda), you can return an error response if a chunked body is received.
+
+The Express implementation uses the `res` object to update the response with the appropriate status code and headers, and finally sends the body. Note that in Express, `res.send` will send a complete body (including calculating the `content-length` header), and `res.write` will use `transfer-encoding: chunked`. Express does not have a built-in "flush" method, but the popular `compression` middleware (which supports `accept-encoding: gzip` and similar headers) adds a `flush` method to the response; since response compression typically buffers output until a certain block size it hit, you should ensure that your integration works with your web framework's response compression feature.
 
 ```ts
 for (const [key, value] of httpGraphQLResponse.headers) {
   res.setHeader(key, value);
 }
 res.statusCode = httpGraphQLResponse.status || 200;
-res.send(httpGraphQLResponse.completeBody);
+
+if (httpGraphQLResponse.body.kind === 'complete') {
+  res.send(httpGraphQLResponse.body.string);
+  return;
+}
+
+for await (const chunk of httpGraphQLResponse.body.asyncIterator) {
+  res.write(chunk);
+  if (typeof (res as any).flush === 'function') {
+    (res as any).flush();
+  }
+}
+res.end();
 ```
 
 ## Additional resources
 
-The [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite) provides a set of Jest tests for authors looking to test their Apollo Server integrations. 
+The [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite) provides a set of Jest tests for authors looking to test their Apollo Server integrations.

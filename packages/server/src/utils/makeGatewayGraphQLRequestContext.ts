@@ -118,17 +118,8 @@ export function makeGatewayGraphQLRequestContext<TContext extends BaseContext>(
         Object.fromEntries(as4RequestContext.response.http.headers),
       ),
     },
+    // We leave off `body` because it hasn't been set yet.
   };
-  const as4Result = as4RequestContext.response.result;
-  if ('data' in as4Result) {
-    response.data = as4Result.data;
-  }
-  if ('errors' in as4Result) {
-    response.errors = as4Result.errors;
-  }
-  if ('extensions' in as4Result) {
-    response.extensions = as4Result.extensions;
-  }
   if ('status' in as4RequestContext.response.http) {
     response.http!.status = as4RequestContext.response.http.status;
   }

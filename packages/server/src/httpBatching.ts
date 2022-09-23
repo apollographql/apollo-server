@@ -8,7 +8,7 @@ import type {
   ApolloServerInternals,
   SchemaDerivedData,
 } from './ApolloServer';
-import { HeaderMap, runHttpQuery } from './runHttpQuery.js';
+import { newHTTPGraphQLHead, runHttpQuery } from './runHttpQuery.js';
 import { BadRequestError } from './internalErrorClasses.js';
 
 export async function runBatchHttpQuery<TContext extends BaseContext>(
@@ -21,11 +21,7 @@ export async function runBatchHttpQuery<TContext extends BaseContext>(
 ): Promise<HTTPGraphQLResponse> {
   // TODO(AS4): Handle empty list as an error
 
-  const combinedResponse: HTTPGraphQLResponse = {
-    headers: new HeaderMap(),
-    bodyChunks: null,
-    completeBody: '',
-  };
+  const combinedResponseHead = newHTTPGraphQLHead();
   const responseBodies = await Promise.all(
     body.map(async (bodyPiece: unknown) => {
       const singleRequest: HTTPGraphQLRequest = {
@@ -41,25 +37,28 @@ export async function runBatchHttpQuery<TContext extends BaseContext>(
         internals,
       );
 
-      if (response.completeBody === null) {
-        // TODO(AS4): Implement incremental delivery or improve error handling.
-        throw Error('Incremental delivery not implemented');
+      if (response.body.kind === 'chunked') {
+        throw Error(
+          'Incremental delivery is not implemented for batch requests',
+        );
       }
       for (const [key, value] of response.headers) {
         // Override any similar header set in other responses.
         // TODO(AS4): this is what AS3 did but maybe this is silly
-        combinedResponse.headers.set(key, value);
+        combinedResponseHead.headers.set(key, value);
       }
       // If two responses both want to set the status code, one of them will win.
       // Note that the normal success case leaves status empty.
       if (response.status) {
-        combinedResponse.status = response.status;
+        combinedResponseHead.status = response.status;
       }
-      return response.completeBody;
+      return response.body.string;
     }),
   );
-  combinedResponse.completeBody = `[${responseBodies.join(',')}]`;
-  return combinedResponse;
+  return {
+    ...combinedResponseHead,
+    body: { kind: 'complete', string: `[${responseBodies.join(',')}]` },
+  };
 }
 
 export async function runPotentiallyBatchedHttpQuery<

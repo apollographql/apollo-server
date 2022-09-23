@@ -1,8 +1,12 @@
 import express from 'express';
 import request from 'supertest';
+import compression, { filter as defaultFilter } from 'compression';
 import { ApolloServer } from '../../index.js';
 import { expressMiddleware } from '../../express4/index.js';
 import { it, expect } from '@jest/globals';
+import resolvable from '@josephg/resolvable';
+import cors from 'cors';
+import { json } from 'body-parser';
 
 it('gives helpful error if body-parser middleware is not installed', async () => {
   const server = new ApolloServer({ typeDefs: 'type Query {f: ID}' });
@@ -23,4 +27,96 @@ it('not calling start causes a clear error', async () => {
   expect(() => expressMiddleware(server)).toThrow(
     'You must `await server.start()`',
   );
+});
+
+// This test validates that you can use incremental delivery with the
+// `compression` package (which requires a hacky `res.flush()` call in the
+// middleware).
+it('incremental delivery works with compression', async () => {
+  const gotFirstChunkBarrier = resolvable();
+  const sendSecondChunkBarrier = resolvable();
+  const app = express();
+  const server = new ApolloServer({
+    typeDefs: `#graphql
+  directive @defer(if: Boolean! = true, label: String) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+  type Query {
+    testString: String
+    barrierString: String
+  }
+  `,
+    __testing_incrementalExecutionResults: {
+      initialResult: {
+        hasNext: true,
+        data: { testString: 'it works' },
+      },
+      subsequentResults: (async function* () {
+        await sendSecondChunkBarrier;
+        yield {
+          hasNext: false,
+          incremental: [{ path: [], data: { barrierString: 'we waited' } }],
+        };
+      })(),
+    },
+  });
+  await server.start();
+  app.use(
+    // Teach `compression` to treat multipart/mixed as compressible.
+    compression({
+      filter: (req, res) =>
+        defaultFilter(req, res) ||
+        !!res
+          .getHeader('content-type')
+          ?.toString()
+          .startsWith('multipart/mixed'),
+    }),
+    cors(),
+    json(),
+    expressMiddleware(server),
+  );
+
+  const resPromise = request(app)
+    .post('/')
+    .set('accept', 'multipart/mixed; deferSpec=20220824, application/json')
+    .parse((res, fn) => {
+      res.text = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => {
+        res.text += chunk;
+        if (res.text.includes('it works') && res.text.endsWith('---\r\n')) {
+          gotFirstChunkBarrier.resolve();
+        }
+      });
+      res.on('end', fn);
+    })
+    .send({ query: '{ testString ... @defer { barrierString } }' })
+    // believe it or not, superagent uses `.then` to decide to actually send the request
+    .then((r) => r);
+
+  // We ensure that the second chunk can't be sent until after we've
+  // gotten back a chunk containing the value of testString.
+  await gotFirstChunkBarrier;
+  sendSecondChunkBarrier.resolve();
+
+  const res = await resPromise;
+  expect(res.status).toEqual(200);
+  // Confirm that the response has actually been gzipped.
+  expect(res.header['content-encoding']).toMatchInlineSnapshot(`"gzip"`);
+  expect(res.header['content-type']).toMatchInlineSnapshot(
+    `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+  );
+  expect(res.text).toMatchInlineSnapshot(`
+    "
+    ---
+    content-type: application/json; charset=utf-8
+
+    {"hasNext":true,"data":{"testString":"it works"}}
+    ---
+    content-type: application/json; charset=utf-8
+
+    {"hasNext":false,"incremental":[{"path":[],"data":{"barrierString":"we waited"}}]}
+    -----
+    "
+  `);
+
+  await server.stop();
 });

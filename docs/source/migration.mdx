@@ -298,7 +298,7 @@ In Apollo Server 3, the `apollo-server-core` package exports built-in plugins, l
 
 In Apollo Server 4, these built-in plugins are part of the main `@apollo/server` package, which also imports the `ApolloServer` class. The  `@apollo/server` package exports these built-in plugins with deep exports. This means you use deep imports for each built-in plugin, enabling you to evaluate only the plugin you use in your app and making it easier for bundlers to eliminate unused code.
 
-There's one exception: the `ApolloServerPluginLandingPageGraphQLPlayground` plugin is now in its own package `@apollo/server-plugin-landing-page-graphql-playground`, which you can install separately. 
+There's one exception: the `ApolloServerPluginLandingPageGraphQLPlayground` plugin is now in its own package `@apollo/server-plugin-landing-page-graphql-playground`, which you can install separately.
 
 This plugin installs the [unmaintained](https://github.com/graphql/graphql-playground/issues/1143) GraphQL Playground project as a landing page and is provided for compatibility with Apollo Server 2. This package will **not** be supported after Apollo Server 4 is released. We strongly recommend you switch to Apollo Server's 4's [default landing page](./api/plugin/landing-pages), which installs the actively maintained Apollo Sandbox.
 
@@ -727,11 +727,12 @@ new ApolloServer<MyContext>({
         return {
           async willSendResponse(requestContext) {
             const { response } = requestContext;
-            // Augment response with an extension, as long
-            // as the operation actually executed.
-            if ('data' in response.result) {
-              response.result.extensions = {
-                ...(response.result.extensions),
+            // Augment response with an extension, as long as the operation
+            // actually executed. (The `kind` check allows you to handle
+            // incremental delivery responses specially.)
+            if (response.body.kind === 'single' && 'data' in response.body.singleResult) {
+              response.body.singleResult.extensions = {
+                ...response.body.singleResult.extensions,
                 hello: 'world',
               };
             }
@@ -1112,6 +1113,8 @@ In Apollo Server 3, you can indirectly specify an operation's context value by p
 
 In Apollo Server 4, the `executeOperation` method optionally receives a context value directly, bypassing your `context` function. If you want to test the behavior of your `context` function, we recommend running actual HTTP requests against your server.
 
+Additionally, the [structure of the returned `GraphQLResponse` has changed](#graphqlresponse), as described below.
+
 So a test for Apollo Server 3 that looks like this:
 
 <MultiCodeBlock>
@@ -1127,7 +1130,7 @@ const server = new ApolloServer({
   context: async ({ req }) => ({ name: req.headers.name }),
 });
 
-const { result } = await server.executeOperation({
+const result = await server.executeOperation({
   query: 'query helloContext { hello }',
 }, {
   // A half-hearted attempt at making something vaguely like an express.Request,
@@ -1158,13 +1161,17 @@ const server = new ApolloServer<MyContext>({
   },
 });
 
-const { result } = await server.executeOperation({
+const { body } = await server.executeOperation({
   query: 'query helloContext { hello }',
 }, {
   name: 'world',
 });
 
-expect(result.data?.hello).toBe('Hello world!'); // -> true
+// Note the use of Node's assert rather than Jest's expect; if using
+// TypeScript, `assert` will appropriately narrow the type of `body`
+// and `expect` will not.
+assert(body.kind === 'single');
+expect(body.singleResult.data?.hello).toBe('Hello world!'); // -> true
 ```
 
 </MultiCodeBlock>
@@ -1425,22 +1432,15 @@ Specifically, the `http` field is now an `HTTPGraphQLRequest` type instead of a 
 
 Apollo Server 4 refactors the [`GraphQLResponse` object](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/src/externalTypes/graphql.ts#L25), which is available to plugins as `requestContext.response` and is the type `server.executeOperation` returns.
 
-The `data`, `errors`, and `extensions` fields are now nested within an object returned by the `result` field:
+In Apollo Server 3, the  `data`, `errors`, and `extensions` fields existed at the top level, right beside `http`.
 
-```ts disableCopy
-export interface GraphQLResponse {
-  // The below result field contains an object with the
-  //  data, errors, and extensions fields
-  result: FormattedExecutionResult;
-  http: HTTPGraphQLHead;
-}
-```
+Because Apollo Server 4 supports incremental delivery directives such as `@defer` and `@stream` (when combined with an appropriate version of `graphql-js`), the structure of the response can now represent either a single result or multiple results, so these fields no longer exist at the top level of `GraphQLResponse`.
+
+Instead, there is a `body` field at the top level of `GraphQLResponse`. `response.body.kind` is either `'single'` or `'incremental'`. If it is `'single'`, then incremental delivery has not been used, and `response.body.singleResult` is an object with `data`, `errors`, and `extensions` fields. If it is `'incremental'`, then `response.body.initialResult` is the initial result of the operation, and `response.body.subsequentResults` is an async iterator that will yield subsequent results. (The precise structure of `initialResult` and `subsequentResults` is defined by `graphql-js` and may change between the current pre-release of `graphql-js` v17 and its final release; if you write code that processes these values before `graphql-js` v17 has been released you may have to adapt it when the API is finalized.)
 
 Additionally, the  `data` and `extensions` fields are both type `Record<string, unknown>`, rather than `Record<string, any>`.
 
 The value of `http.headers` is now a `Map` rather than a Fetch API `Headers` object. All keys in this map must be lower-case; if you insert any header name with capital letters, it will throw.
-
-> We plan to implement experimental support for incremental delivery (`@defer`/`@stream`) before the v4.0.0 release and expect this to change the structure of `GraphQLResponse` further.
 
 ### `plugins` constructor argument does not take factory functions
 
@@ -1525,7 +1525,7 @@ Apollo Server supports [batching HTTP requests](./workflow/requests/#batching), 
 
 In Apollo Server 4, you must explicitly enable this feature by passing `allowBatchedHttpRequests: true` to the `ApolloServer` constructor.
 
-Not all GraphQL clients support HTTP batching, and batched requests will not support incremental delivery when Apollo Server implements that feature. HTTP batching can help performance by sharing a `context` object across operations, but it can make it harder to understand the amount of work any given request does.
+Not all GraphQL clients support HTTP batching, and batched requests do not support incremental delivery. HTTP batching can help performance by sharing a `context` object across operations, but it can make it harder to understand the amount of work any given request does.
 
 
 ### Default cache is bounded

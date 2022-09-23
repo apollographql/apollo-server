@@ -5,7 +5,6 @@ import {
   GraphQLError,
   validate,
   parse,
-  execute as graphqlExecute,
   Kind,
   ExecutionResult,
 } from 'graphql';
@@ -40,6 +39,8 @@ import type {
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
   BaseContext,
+  GraphQLResponse,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
 } from './externalTypes/index.js';
 
 import {
@@ -61,6 +62,15 @@ import type {
   SchemaDerivedData,
 } from './ApolloServer.js';
 import { isDefined } from './utils/isDefined.js';
+import type {
+  GraphQLRequestContextDidEncounterSubsequentErrors,
+  GraphQLRequestContextWillSendSubsequentPayload,
+} from './externalTypes/requestPipeline.js';
+import {
+  executeIncrementally,
+  GraphQLExperimentalInitialIncrementalExecutionResult,
+  GraphQLExperimentalSubsequentIncrementalExecutionResult,
+} from './incrementalDeliveryPolyfill.js';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 
@@ -86,12 +96,24 @@ function isBadUserInputGraphQLError(error: GraphQLError): boolean {
   );
 }
 
+// This is "semi-formatted" because the initial result has not yet been
+// formatted but the subsequent results "have been" --- in the sense that they
+// are an async iterable that will format them as they come in.
+type SemiFormattedExecuteIncrementallyResults =
+  | {
+      singleResult: ExecutionResult;
+    }
+  | {
+      initialResult: GraphQLExperimentalInitialIncrementalExecutionResult;
+      subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult>;
+    };
+
 export async function processGraphQLRequest<TContext extends BaseContext>(
   schemaDerivedData: SchemaDerivedData,
   server: ApolloServer<TContext>,
   internals: ApolloServerInternals<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
-) {
+): Promise<GraphQLResponse> {
   const requestListeners = (
     await Promise.all(
       internals.plugins.map((p) => p.requestDidStart?.(requestContext)),
@@ -341,7 +363,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       ),
   );
   if (responseFromPlugin !== null) {
-    requestContext.response.result = responseFromPlugin.result;
+    requestContext.response.body = responseFromPlugin.body;
     mergeHTTPGraphQLHead(requestContext.response.http, responseFromPlugin.http);
   } else {
     const executionListeners = (
@@ -398,9 +420,13 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     }
 
     try {
-      const result = await execute(
+      const fullResult = await execute(
         requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
       );
+      const result =
+        'singleResult' in fullResult
+          ? fullResult.singleResult
+          : fullResult.initialResult;
 
       // If we don't have an operation, there's no reason to go further. We know
       // `result` will consist of one error (returned by `graphql-js`'s
@@ -439,12 +465,26 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       const { formattedErrors, httpFromErrors } = resultErrors
         ? formatErrors(resultErrors)
         : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
-
-      requestContext.response.result = {
-        ...result,
-        errors: formattedErrors,
-      };
       mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
+
+      if ('singleResult' in fullResult) {
+        requestContext.response.body = {
+          kind: 'single',
+          singleResult: {
+            ...result,
+            errors: formattedErrors,
+          },
+        };
+      } else {
+        requestContext.response.body = {
+          kind: 'incremental',
+          initialResult: {
+            ...fullResult.initialResult,
+            errors: formattedErrors,
+          },
+          subsequentResults: fullResult.subsequentResults,
+        };
+      }
     } catch (executionMaybeError: unknown) {
       const executionError = ensureError(executionMaybeError);
       await Promise.all(
@@ -458,20 +498,25 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   }
 
   await invokeWillSendResponse();
-  return;
+  if (!requestContext.response.body) {
+    throw Error('got to end of processGraphQLRequest without setting body?');
+  }
+  return requestContext.response as GraphQLResponse; // cast checked on previous line
 
   async function execute(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ): Promise<ExecutionResult> {
+  ): Promise<SemiFormattedExecuteIncrementallyResults> {
     const { request, document } = requestContext;
 
-    if (internals.gatewayExecutor) {
+    if (internals.__testing_incrementalExecutionResults) {
+      return internals.__testing_incrementalExecutionResults;
+    } else if (internals.gatewayExecutor) {
       const result = await internals.gatewayExecutor(
         makeGatewayGraphQLRequestContext(requestContext, server, internals),
       );
-      return result;
+      return { singleResult: result };
     } else {
-      return await graphqlExecute({
+      const resultOrResults = await executeIncrementally({
         schema: schemaDerivedData.schema,
         document,
         rootValue:
@@ -483,6 +528,66 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         operationName: request.operationName,
         fieldResolver: internals.fieldResolver,
       });
+      if ('initialResult' in resultOrResults) {
+        return {
+          initialResult: resultOrResults.initialResult,
+          subsequentResults: formatErrorsInSubsequentResults(
+            resultOrResults.subsequentResults,
+          ),
+        };
+      } else {
+        return { singleResult: resultOrResults };
+      }
+    }
+  }
+
+  async function* formatErrorsInSubsequentResults(
+    results: AsyncIterable<GraphQLExperimentalSubsequentIncrementalExecutionResult>,
+  ): AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult> {
+    for await (const result of results) {
+      const payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult =
+        result.incremental
+          ? {
+              ...result,
+              incremental: await seriesAsyncMap(
+                result.incremental,
+                async (incrementalResult) => {
+                  const { errors } = incrementalResult;
+                  if (errors) {
+                    await Promise.all(
+                      requestListeners.map((l) =>
+                        l.didEncounterSubsequentErrors?.(
+                          requestContext as GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
+                          errors,
+                        ),
+                      ),
+                    );
+
+                    return {
+                      ...incrementalResult,
+                      // Note that any `http` extensions in errors have no
+                      // effect, because we've already sent the status code
+                      // and response headers.
+                      errors: formatErrors(errors).formattedErrors,
+                    };
+                  }
+                  return incrementalResult;
+                },
+              ),
+            }
+          : result;
+
+      // Invoke hook, which is allowed to mutate payload if it really wants to.
+      await Promise.all(
+        requestListeners.map((l) =>
+          l.willSendSubsequentPayload?.(
+            requestContext as GraphQLRequestContextWillSendSubsequentPayload<TContext>,
+            payload,
+          ),
+        ),
+      );
+
+      yield payload;
     }
   }
 
@@ -520,13 +625,18 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // and errors from them.
   //
   // Then, if the HTTP status code is not yet set, it sets it to 500.
-  async function sendErrorResponse(errors: ReadonlyArray<GraphQLError>) {
+  async function sendErrorResponse(
+    errors: ReadonlyArray<GraphQLError>,
+  ): Promise<GraphQLResponse> {
     await didEncounterErrors(errors);
 
     const { formattedErrors, httpFromErrors } = formatErrors(errors);
 
-    requestContext.response.result = {
-      errors: formattedErrors,
+    requestContext.response.body = {
+      kind: 'single',
+      singleResult: {
+        errors: formattedErrors,
+      },
     };
 
     mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
@@ -536,6 +646,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     }
 
     await invokeWillSendResponse();
+
+    // cast safe because we assigned to `body` above
+    return requestContext.response as GraphQLResponse;
   }
 
   function formatErrors(
@@ -547,4 +660,16 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         internals.includeStacktraceInErrorResponses,
     });
   }
+}
+
+async function seriesAsyncMap<T, U>(
+  ts: readonly T[],
+  fn: (value: T) => Promise<U>,
+): Promise<U[]> {
+  const us: U[] = [];
+  for (const t of ts) {
+    const u = await fn(t);
+    us.push(u);
+  }
+  return us;
 }

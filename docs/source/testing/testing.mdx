@@ -50,14 +50,18 @@ it('returns hello with the provided name', async () => {
     variables: { name: 'world' },
   });
 
-  expect(response.result.errors).toBeUndefined();
-  expect(response.result.data?.hello).toBe('Hello world!');
+  // Note the use of Node's assert rather than Jest's expect; if using
+  // TypeScript, `assert`` will appropriately narrow the type of `body`
+  // and `expect` will not.
+  assert(body.kind === 'single');
+  expect(response.body.singleResult.errors).toBeUndefined();
+  expect(response.body.singleResult.data?.hello).toBe('Hello world!');
 });
 ```
 
 </MultiCodeBlock>
 
-Note that when testing, any errors in parsing, validating, and executing your GraphQL operation are returned in the `errors` field of the operation result. As with any GraphQL response, these errors are not _thrown_.
+Note that when testing, any errors in parsing, validating, and executing your GraphQL operation are returned in the nested `errors` field of the result. As with any GraphQL response, these errors are not _thrown_.
 
 You don't need to start your server before calling `executeOperation`. The server instance will start automatically and throw any startup errors.
 

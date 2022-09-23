@@ -110,9 +110,12 @@ describe('ApolloServer documentStore', () => {
     ).schemaManager.getSchemaDerivedData();
     expect(documentStore).toBeNull();
 
-    const { result } = await server.executeOperation(operations.simple.op);
+    const { body } = await server.executeOperation(operations.simple.op);
 
-    expect(result.data).toEqual({ hello: 'world' });
+    expect(body).toEqual({
+      kind: 'single',
+      singleResult: { data: { hello: 'world' } },
+    });
   });
 
   it('documentStore with changing schema', async () => {});

@@ -212,7 +212,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             Field(node: FieldDefinitionNode) {
               if (node.name.value === 'testString') {
                 context.reportError(
-                  new GraphQLError('Not allowed to use', [node]),
+                  new GraphQLError('Not allowed to use', { nodes: [node] }),
                 );
               }
             },
@@ -639,13 +639,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 async didResolveOperation() {
                   throw new Error('known_error');
                 },
-                async willSendResponse({
-                  response: {
-                    http,
-                    result: { errors },
-                  },
-                }) {
-                  if (errors![0].message === 'known_error') {
+                async willSendResponse({ response: { http, body } }) {
+                  if (
+                    body.kind === 'single' &&
+                    body.singleResult.errors?.[0].message === 'known_error'
+                  ) {
                     http!.status = 403;
                   }
                 },
@@ -665,7 +663,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
             async requestDidStart() {
               return {
                 async willSendResponse({ response }) {
-                  response.result.extensions = { myExtension: true };
+                  if (!('singleResult' in response.body)) {
+                    throw Error('expected single result');
+                  }
+                  response.body.singleResult.extensions = { myExtension: true };
                 },
               };
             },
@@ -687,7 +688,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
             async requestDidStart() {
               return {
                 async willSendResponse({ response }) {
-                  response.result.extensions = { myExtension: true };
+                  if (!('singleResult' in response.body)) {
+                    throw Error('expected single result');
+                  }
+                  response.body.singleResult.extensions = { myExtension: true };
                 },
               };
             },
@@ -868,6 +872,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         describe('traces', () => {
           let throwError: Mock;
           let apolloFetch: ApolloFetch;
+          let uri: string;
 
           beforeEach(async () => {
             throwError = jest.fn();
@@ -880,8 +885,13 @@ export function defineIntegrationTestSuiteApolloServerTests(
             constructorOptions: Partial<CreateServerForIntegrationTests> = {},
             plugins: ApolloServerPlugin<BaseContext>[] = [],
           ) => {
-            const uri = await createServerAndGetUrl({
+            uri = await createServerAndGetUrl({
               typeDefs: gql`
+                directive @defer(
+                  if: Boolean! = true
+                  label: String
+                ) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
                 enum CacheControlScope {
                   PUBLIC
                   PRIVATE
@@ -894,13 +904,22 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
                 type Query {
                   fieldWhichWillError: String
+                  delayedFoo: Foo
                   justAField: String @cacheControl(maxAge: 5, scope: PRIVATE)
+                }
+
+                type Foo {
+                  bar: String
                 }
               `,
               resolvers: {
                 Query: {
                   fieldWhichWillError: () => {
                     throwError();
+                  },
+                  delayedFoo: async () => {
+                    await new Promise<void>((r) => setTimeout(r, 10));
+                    return { bar: 'hi' };
                   },
                   justAField: () => 'a string',
                 },
@@ -1068,6 +1087,53 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
           });
+
+          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
+            'includes all fields with defer',
+            async () => {
+              await setupApolloServerAndFetchPair();
+              const response = await fetch(uri, {
+                method: 'POST',
+                headers: {
+                  'content-type': 'application/json',
+                  accept: 'multipart/mixed; deferSpec=20220824',
+                },
+                body: JSON.stringify({
+                  query: '{ justAField ...@defer { delayedFoo { bar} } }',
+                }),
+              });
+              expect(response.status).toBe(200);
+              expect(
+                response.headers.get('content-type'),
+              ).toMatchInlineSnapshot(
+                `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+              );
+              expect(await response.text()).toMatchInlineSnapshot(`
+                "
+                ---
+                content-type: application/json; charset=utf-8
+
+                {"hasNext":true,"data":{"justAField":"a string"}}
+                ---
+                content-type: application/json; charset=utf-8
+
+                {"hasNext":false,"incremental":[{"path":[],"data":{"delayedFoo":{"bar":"hi"}}}]}
+                -----
+                "
+              `);
+              const reports = await reportIngress.promiseOfReports;
+              expect(reports.length).toBe(1);
+              expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace?.[0] as Trace;
+              expect(trace).toBeDefined();
+              expect(trace?.root?.child?.[0].responseName).toBe('justAField');
+              expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
+              expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
+                'bar',
+              );
+            },
+          );
 
           it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
             await setupApolloServerAndFetchPair({}, {}, [

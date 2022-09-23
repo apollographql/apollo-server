@@ -113,6 +113,17 @@ export function ApolloServerPluginInlineTrace(
           // If we wait any longer, the time we record won't actually be sent anywhere!
           treeBuilder.stopTiming();
 
+          // For now, we don't support inline traces on incremental delivery
+          // responses. (We could perhaps place the trace on the final chunk, or
+          // even deliver it bit by bit. For now, since Gateway does not support
+          // incremental delivery and Router does not pass through defers to
+          // subgraphs, this doesn't affect the "federated tracing" use case,
+          // though it does affect the ability to look at inline traces in other
+          // tools like Explorer.
+          if (response.body.kind === 'incremental') {
+            return;
+          }
+
           // If we're in a gateway, include the query plan (and subgraph traces)
           // in the inline trace. This is designed more for manually querying
           // your graph while running locally to see what the query planner is
@@ -129,8 +140,8 @@ export function ApolloServerPluginInlineTrace(
           );
 
           const extensions =
-            response.result.extensions ||
-            (response.result.extensions = Object.create(null));
+            response.body.singleResult.extensions ||
+            (response.body.singleResult.extensions = Object.create(null));
 
           // This should only happen if another plugin is using the same name-
           // space within the `extensions` object and got to it before us.

@@ -11,6 +11,11 @@ import type { BaseContext } from './context.js';
 import type { HTTPGraphQLHead, HTTPGraphQLRequest } from './http.js';
 import type { Logger } from '@apollo/utils.logger';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
+import type { WithRequired } from '@apollo/utils.withrequired';
+import type {
+  GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
+} from './incrementalDeliveryPolyfill.js';
 
 export interface GraphQLRequest {
   query?: string;
@@ -22,12 +27,28 @@ export interface GraphQLRequest {
 
 export type VariableValues = { [name: string]: any };
 
-export interface GraphQLResponse {
-  // TODO(AS4): for incremental delivery, maybe we'll have an iterator here
-  // instead of a single result?
-  result: FormattedExecutionResult;
+// A GraphQL response can either be a single result, or an initial result
+// followed by a stream of subsequent results. The latter occurs when the
+// GraphQL operation uses incremental delivery directives such as `@defer` or
+// `@stream`. Note that incremental delivery currently requires using a
+// pre-release of graphql-js v17.
+export type GraphQLResponseBody =
+  | {
+      kind: 'single';
+      singleResult: FormattedExecutionResult;
+    }
+  | {
+      kind: 'incremental';
+      initialResult: GraphQLExperimentalFormattedInitialIncrementalExecutionResult;
+      subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult>;
+    };
+
+export type GraphQLInProgressResponse = {
   http: HTTPGraphQLHead;
-}
+  body?: GraphQLResponseBody;
+};
+
+export type GraphQLResponse = WithRequired<GraphQLInProgressResponse, 'body'>;
 
 export interface GraphQLRequestMetrics {
   // It would be more accurate to call this fieldLevelInstrumentation (it is
@@ -49,7 +70,7 @@ export interface GraphQLRequestContext<TContext extends BaseContext> {
   readonly cache: KeyValueCache<string>;
 
   readonly request: GraphQLRequest;
-  readonly response: GraphQLResponse;
+  readonly response: GraphQLInProgressResponse;
 
   readonly schema: GraphQLSchema;
 

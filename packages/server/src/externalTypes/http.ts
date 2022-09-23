@@ -18,33 +18,20 @@ export interface HTTPGraphQLRequest {
   body: unknown;
 }
 
-// TODO(AS4): Should this be exported for integrations?
-interface HTTPGraphQLResponseChunk {
-  // TODO(AS4): is it reasonable to make users have to lowercase keys? should
-  // we write our own Headers class? would prefer to not use a specific node-fetch
-  // implementation in AS4.
-  headers: Map<string, string>;
-  body: string;
-}
-
 export interface HTTPGraphQLHead {
   status?: number;
   // TODO(AS4): need to figure out what headers this includes (eg JSON???)
   headers: Map<string, string>;
 }
 
-export type HTTPGraphQLResponse = HTTPGraphQLHead &
-  (
-    | {
-        // TODO(AS4): document why we chose strings as output. (tl;dr: consistent
-        // rather than flexible JSON output. Can represent landing page. We can
-        // always add another entry point that returns un-serialized responses
-        // later.)
-        completeBody: string;
-        bodyChunks: null;
-      }
-    | {
-        completeBody: null;
-        bodyChunks: AsyncIterableIterator<HTTPGraphQLResponseChunk>;
-      }
-  );
+// TODO(AS4): document why we chose strings as output. (tl;dr: consistent
+// rather than flexible JSON output. Can represent landing page. We can
+// always add another entry point that returns un-serialized responses
+// later.) Although maybe should be Buffer instead?
+export type HTTPGraphQLResponseBody =
+  | { kind: 'complete'; string: string }
+  | { kind: 'chunked'; asyncIterator: AsyncIterableIterator<string> };
+
+export type HTTPGraphQLResponse = HTTPGraphQLHead & {
+  body: HTTPGraphQLResponseBody;
+};

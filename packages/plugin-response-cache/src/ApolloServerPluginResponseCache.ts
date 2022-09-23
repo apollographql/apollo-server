@@ -217,7 +217,7 @@ export default function plugin<TContext extends BaseContext>(
             requestContext.metrics.responseCacheHit = true;
             age = Math.round((+new Date() - value.cacheTime) / 1000);
             return {
-              result: { data: value.data },
+              body: { kind: 'single', singleResult: { data: value.data } },
               http: {
                 status: undefined,
                 headers: new Map(),
@@ -269,6 +269,14 @@ export default function plugin<TContext extends BaseContext>(
         async willSendResponse(requestContext) {
           const logger = requestContext.logger || console;
 
+          // We don't support caching incremental delivery responses (ie,
+          // responses that use @defer or @stream) now. (It might be useful to
+          // do so: after all, deferred responses might benefit the most from
+          // caching! But we don't right now.)
+          if (requestContext.response.body.kind !== 'single') {
+            return;
+          }
+
           if (!isGraphQLQuery(requestContext)) {
             return;
           }
@@ -288,7 +296,7 @@ export default function plugin<TContext extends BaseContext>(
             if (!shouldWriteToCache) return;
           }
 
-          const { data, errors } = requestContext.response.result;
+          const { data, errors } = requestContext.response.body.singleResult;
           const policyIfCacheable =
             requestContext.overallCachePolicy.policyIfCacheable();
           if (errors || !data || !policyIfCacheable) {

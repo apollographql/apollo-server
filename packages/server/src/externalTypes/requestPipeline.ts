@@ -1,6 +1,6 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
 import type { BaseContext } from './context.js';
-import type { GraphQLRequestContext } from './graphql.js';
+import type { GraphQLRequestContext, GraphQLResponse } from './graphql.js';
 
 export type GraphQLRequestContextDidResolveSource<
   TContext extends BaseContext,
@@ -33,4 +33,12 @@ export type GraphQLRequestContextExecutionDidStart<
   >;
 export type GraphQLRequestContextWillSendResponse<
   TContext extends BaseContext,
-> = GraphQLRequestContextDidResolveSource<TContext>;
+> = GraphQLRequestContextDidResolveSource<TContext> & {
+  readonly response: GraphQLResponse;
+};
+export type GraphQLRequestContextDidEncounterSubsequentErrors<
+  TContext extends BaseContext,
+> = GraphQLRequestContextWillSendResponse<TContext>;
+export type GraphQLRequestContextWillSendSubsequentPayload<
+  TContext extends BaseContext,
+> = GraphQLRequestContextWillSendResponse<TContext>;
