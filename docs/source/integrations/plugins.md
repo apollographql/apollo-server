@@ -111,6 +111,7 @@ easier to reason about.
 The following diagram illustrates the sequence of events that fire for each request. Each of these events is documented in [Apollo Server plugin events](./plugins-event-reference/).
 
 > **Important:** Any event below that can result in "Success" can also result in an error. Whenever an error occurs, the `didEncounterErrors` event fires and the remainder of the "Success" path does _not_.
+> Note: There are some [known inconsistencies](https://github.com/apollographql/apollo-server/issues/4820) with how errors are propagated across multiple plugins and can lead to some plugin methods not being called.
 
 ```mermaid
 graph TB;
