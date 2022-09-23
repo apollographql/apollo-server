@@ -45,7 +45,7 @@ if (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED) {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      accept: 'multipart/mixed; deferSpec=20220824',
+      accept: 'multipart/mixed; deferSpec=20220824, application/json',
     },
     body: JSON.stringify({ query: '{h1: hello ...@defer{ h2: hello }}' }),
   });

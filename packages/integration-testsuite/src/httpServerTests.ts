@@ -1875,7 +1875,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
             });
             const res = await request(app)
               .post('/')
-              .set('accept', 'multipart/mixed; deferSpec=20220824')
+              .set(
+                'accept',
+                'multipart/mixed; deferSpec=20220824, application/json',
+              )
               // disables supertest's use of formidable for multipart
               .parse(superagent.parse.text)
               .send({
@@ -1923,7 +1926,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
             });
             const resPromise = request(app)
               .post('/')
-              .set('accept', 'multipart/mixed; deferSpec=20220824')
+              .set(
+                'accept',
+                'multipart/mixed; deferSpec=20220824, application/json',
+              )
               .parse((res, fn) => {
                 res.text = '';
                 res.setEncoding('utf8');
@@ -2057,7 +2063,10 @@ content-type: application/json; charset=utf-8\r
             const gotFirstChunkBarrier = resolvable();
             const resPromise = request(app)
               .post('/')
-              .set('accept', 'multipart/mixed; deferSpec=20220824')
+              .set(
+                'accept',
+                'multipart/mixed; deferSpec=20220824, application/json',
+              )
               .parse((res, fn) => {
                 res.text = '';
                 res.setEncoding('utf8');

@@ -76,7 +76,7 @@ it('incremental delivery works with compression', async () => {
 
   const resPromise = request(app)
     .post('/')
-    .set('accept', 'multipart/mixed; deferSpec=20220824')
+    .set('accept', 'multipart/mixed; deferSpec=20220824, application/json')
     .parse((res, fn) => {
       res.text = '';
       res.setEncoding('utf8');
