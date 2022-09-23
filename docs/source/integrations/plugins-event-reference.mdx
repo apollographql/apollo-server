@@ -21,8 +21,7 @@ events** and **request lifecycle events**.
 
 The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. The server doesn't start until this asynchronous method completes. If it throws (i.e., if the `Promise` it returns is _rejected_), startup _fails_ and your server does not serve GraphQL operations. This helps you make sure all of your server's dependencies are available before attempting to begin serving requests.
 
-<!-- TODO(AS4) add link to integration page when exists -->
-This event is fired at different times depending on which [Apollo Server integration](./integration-index.md) you're using:
+This event is fired at different times depending on which [Apollo Server integration](./integration-index) you're using:
 
 * If you are using `startStandaloneServer`, it's fired when you invoke the `startStandaloneServer` function with your server instance.
 * In non-serverless integrations like `expressMiddleware`, it's fired from the `start()` method.
