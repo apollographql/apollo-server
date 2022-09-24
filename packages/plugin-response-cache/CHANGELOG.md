@@ -1,5 +1,14 @@
 # @apollo/server-plugin-response-cache
 
+## 4.0.0-alpha.5
+
+### Patch Changes
+
+- [#6827](https://github.com/apollographql/apollo-server/pull/6827) [`0c2909aa1`](https://github.com/apollographql/apollo-server/commit/0c2909aa1593a9b0abf299b071629a4ab23dc71b) Thanks [@glasser](https://github.com/glasser)! - Experimental support for incremental delivery (`@defer`/`@stream`) when combined with a prerelease of `graphql-js`.
+
+- Updated dependencies [[`0c2909aa1`](https://github.com/apollographql/apollo-server/commit/0c2909aa1593a9b0abf299b071629a4ab23dc71b), [`0c2909aa1`](https://github.com/apollographql/apollo-server/commit/0c2909aa1593a9b0abf299b071629a4ab23dc71b)]:
+  - @apollo/server@4.0.0-alpha.12
+
 ## 4.0.0-alpha.4
 
 ### Patch Changes
