@@ -23,7 +23,73 @@ flowchart LR;
 
 You can create data source classes to encapsulate the logic of fetching data from a particular source, then providing methods that resolvers can access to neatly fetch data. You don't _have_ to use data sources to fetch data, but they're recommended because they help keep your resolvers tidy.
 
-## Adding data sources to your context
+
+## Adding data sources to Apollo Server's context
+
+You can add data sources to the `context` initialization function, like so:
+
+<MultiCodeBlock>
+
+```ts title="index.ts"
+//highlight-start
+interface ContextValue {
+  dataSources: {
+    dogsDB: DogsDataSource;
+    catsAPI: CatsAPI;
+  };
+}
+//highlight-end
+
+const server = new ApolloServer<ContextValue>({
+  typeDefs,
+  resolvers,
+});
+
+const { url } = await startStandaloneServer(server, {
+  context: async () => {
+    const { cache } = server; // highlight-line
+    return {
+      // We create new instances of our data sources with each request,
+      // passing in our server's cache.
+      //highlight-start
+      dataSources: {
+        moviesAPI: new DogsDataSource({ cache }),
+        personalizationAPI: new CatsAPI(),
+      },
+      //highlight-end
+    };
+  },
+});
+
+console.log(`🚀  Server ready at ${url}`);
+```
+
+</MultiCodeBlock>
+
+<!-- TODO(AS4) add link to context article once exists  -->
+Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
+- For every operation, `context` returns an _object_ containing new instances of your `RESTDataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
+- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation.** 
+
+Your resolvers can then access your data sources from the shared `context` object and use them to fetch data:
+
+```ts title="resolvers.ts"
+const resolvers = {
+  Query: {
+    movie: async (_, { id }, { dataSources }) => {
+      return dataSources.moviesAPI.getMovie(id);
+    },
+    mostViewedMovies: async (_, __, { dataSources }) => {
+      return dataSources.moviesAPI.getMostViewedMovies();
+    },
+    favorites: async (_, __, { dataSources }) => {
+      return dataSources.personalizationAPI.getFavorites();
+    },
+  },
+};
+```
+
+
 
 ## Create your own data source class
 
