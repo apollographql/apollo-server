@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.0-alpha.13
+
+### Patch Changes
+
+- [#6936](https://github.com/apollographql/apollo-server/pull/6936) [`a404bf17e`](https://github.com/apollographql/apollo-server/commit/a404bf17e86d6f53588b2796c9190ad98779a6f9) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Add test for batch requests with no elements
+
+- Updated dependencies [[`a404bf17e`](https://github.com/apollographql/apollo-server/commit/a404bf17e86d6f53588b2796c9190ad98779a6f9), [`a404bf17e`](https://github.com/apollographql/apollo-server/commit/a404bf17e86d6f53588b2796c9190ad98779a6f9), [`a404bf17e`](https://github.com/apollographql/apollo-server/commit/a404bf17e86d6f53588b2796c9190ad98779a6f9)]:
+  - @apollo/server@4.0.0-alpha.13
+
 ## 4.0.0-alpha.12
 
 ### Patch Changes
