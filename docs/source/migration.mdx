@@ -1119,7 +1119,7 @@ So a test for Apollo Server 3 that looks like this:
 
 <MultiCodeBlock>
 
-```ts {13-17}
+```ts
 const server = new ApolloServer({
   typeDefs: "type Query { hello: String!}",
   resolvers: {
@@ -1133,9 +1133,13 @@ const server = new ApolloServer({
 const result = await server.executeOperation({
   query: 'query helloContext { hello }',
 }, {
-  // A half-hearted attempt at making something vaguely like an express.Request,
-  // and not bothering to make the express.Response at all.
-  req: { headers: { name: 'world' } },
+  // highlight-start
+  contextValue: {
+    // A half-hearted attempt at making something vaguely like an express.Request,
+    // and not bothering to make the express.Response at all.
+    req: { headers: { name: 'world' } },
+  }
+  // highlight-end
 });
 
 expect(result.data?.hello).toBe('Hello world!'); // -> true
@@ -1147,7 +1151,7 @@ looks like this in Apollo Server 4:
 
 <MultiCodeBlock>
 
-```ts {16-18}
+```ts
 interface MyContext {
   name: string;
 }
@@ -1164,7 +1168,11 @@ const server = new ApolloServer<MyContext>({
 const { body } = await server.executeOperation({
   query: 'query helloContext { hello }',
 }, {
-  name: 'world',
+  // highlight-start
+  contextValue: {
+    name: 'world',
+  }
+  // highlight-end
 });
 
 // Note the use of Node's assert rather than Jest's expect; if using

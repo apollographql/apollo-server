@@ -194,13 +194,15 @@ export async function runHttpQuery<TContext extends BaseContext>(
       );
   }
 
-  const graphQLResponse = await internalExecuteOperation({
-    server,
-    graphQLRequest,
-    contextValue,
-    internals,
-    schemaDerivedData,
-  });
+  const graphQLResponse = await internalExecuteOperation(
+    {
+      server,
+      graphQLRequest,
+      internals,
+      schemaDerivedData,
+    },
+    { contextValue },
+  );
 
   if (graphQLResponse.body.kind === 'single') {
     if (!graphQLResponse.http.headers.get('content-type')) {

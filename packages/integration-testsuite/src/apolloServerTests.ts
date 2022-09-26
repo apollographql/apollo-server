@@ -13,7 +13,6 @@ import {
   GraphQLString,
   GraphQLError,
   ValidationContext,
-  ResponsePath,
   DocumentNode,
   printSchema,
   FieldNode,
@@ -539,12 +538,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
     describe('Plugins', () => {
       let apolloFetch: ApolloFetch;
       let apolloFetchResponse: ParsedResponse;
-      let serverInstance: ApolloServer<BaseContext>;
 
       const setupApolloServerAndFetchPairForPlugins = async (
         plugins: ApolloServerPlugin<BaseContext>[] = [],
       ) => {
-        const { server, url } = await createServer(
+        const { url } = await createServer(
           {
             typeDefs: gql`
               type Query {
@@ -555,8 +553,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
           },
           { context: async () => ({ customContext: true }) },
         );
-
-        serverInstance = server;
 
         apolloFetch = createApolloFetch({ uri: url })
           // Store the response so we can inspect it.
@@ -1607,9 +1603,15 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             expect(spy).not.toBeCalled();
 
-            await server.executeOperation({ query: '{hello}' }, uniqueContext);
+            await server.executeOperation(
+              { query: '{hello}' },
+              { contextValue: uniqueContext },
+            );
             expect(spy).toHaveBeenCalledTimes(1);
-            await server.executeOperation({ query: '{hello}' }, uniqueContext);
+            await server.executeOperation(
+              { query: '{hello}' },
+              { contextValue: uniqueContext },
+            );
             expect(spy).toHaveBeenCalledTimes(2);
           });
         });

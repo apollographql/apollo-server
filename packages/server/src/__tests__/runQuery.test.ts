@@ -45,7 +45,7 @@ async function runQuery<TContext extends BaseContext>(
   const response = await server.executeOperation(
     request,
     // `as` safe because TContext must be BaseContext if no contextValue provided
-    contextValue ?? ({} as TContext),
+    { contextValue: contextValue ?? ({} as TContext) },
   );
   await server.stop();
   if (!('singleResult' in response.body)) {

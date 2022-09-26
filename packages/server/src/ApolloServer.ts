@@ -168,7 +168,7 @@ function defaultLogger(): Logger {
 //
 //     const s: ApolloServer<{}> =
 //       new ApolloServer<{importantContextField: boolean}>({ ... });
-//     s.executeOperation({query}, {});
+//     s.executeOperation({query}, {contextValue: {}});
 //
 // ie, if you declare an ApolloServer whose context values must be of a certain
 // type, you can't assign it to a variable whose context values are less
@@ -179,7 +179,7 @@ function defaultLogger(): Logger {
 //     const sBase = new ApolloServer<{}>({ ... });
 //     const s: ApolloServer<{importantContextField: boolean}> = sBase;
 //     s.addPlugin({async requestDidStart({contextValue: {importantContextField}}) { ... }})
-//     sBase.executeOperation({query}, {});
+//     sBase.executeOperation({query}, {contextValue: {}});
 //
 // so you shouldn't be able to assign an ApolloServer to a variable whose
 // context values are more constrained, either. So we want to declare that
@@ -1090,14 +1090,14 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
     },
-    contextValue: TContext,
+    options: ExecuteOperationOptions<TContext>,
   ): Promise<GraphQLResponse>;
 
   async executeOperation(
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
     },
-    contextValue?: TContext,
+    options: ExecuteOperationOptions<TContext> = {},
   ): Promise<GraphQLResponse> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
@@ -1120,36 +1120,38 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           : request.query,
     };
 
-    return await internalExecuteOperation({
-      server: this,
-      graphQLRequest,
-      // The typecast here is safe, because the only way `contextValue` can be
-      // null-ish is if we used the `contextValue?: BaseContext` override, in
-      // which case TContext is BaseContext and {} is ok. (This does depend on
-      // the fact we've hackily forced the class to be contravariant in
-      // TContext.)
-      contextValue: contextValue ?? ({} as TContext),
-      internals: this.internals,
-      schemaDerivedData,
-    });
+    return await internalExecuteOperation(
+      {
+        server: this,
+        graphQLRequest,
+        internals: this.internals,
+        schemaDerivedData,
+      },
+      options,
+    );
   }
+}
+
+interface ExecuteOperationOptions<TContext extends BaseContext> {
+  contextValue?: TContext;
 }
 
 // Shared code between runHttpQuery (ie executeHTTPGraphQLRequest) and
 // executeOperation to set up a request context and invoke the request pipeline.
-export async function internalExecuteOperation<TContext extends BaseContext>({
-  server,
-  graphQLRequest,
-  contextValue,
-  internals,
-  schemaDerivedData,
-}: {
-  server: ApolloServer<TContext>;
-  graphQLRequest: GraphQLRequest;
-  contextValue: TContext;
-  internals: ApolloServerInternals<TContext>;
-  schemaDerivedData: SchemaDerivedData;
-}): Promise<GraphQLResponse> {
+export async function internalExecuteOperation<TContext extends BaseContext>(
+  {
+    server,
+    graphQLRequest,
+    internals,
+    schemaDerivedData,
+  }: {
+    server: ApolloServer<TContext>;
+    graphQLRequest: GraphQLRequest;
+    internals: ApolloServerInternals<TContext>;
+    schemaDerivedData: SchemaDerivedData;
+  },
+  options: ExecuteOperationOptions<TContext>,
+): Promise<GraphQLResponse> {
   const requestContext: GraphQLRequestContext<TContext> = {
     logger: server.logger,
     cache: server.cache,
@@ -1167,7 +1169,13 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
     // We don't want to do a deep clone here, because one of the main advantages of
     // using batched HTTP requests is to share context across operations for a
     // single request.
-    contextValue: cloneObject(contextValue),
+    //
+    // The typecast here is safe, because the only way `contextValue` can be
+    // null-ish is if we used the `contextValue?: BaseContext` override, in
+    // which case TContext is BaseContext and {} is ok. (This does depend on
+    // the fact we've hackily forced the class to be contravariant in
+    // TContext.)
+    contextValue: cloneObject(options?.contextValue ?? ({} as TContext)),
     metrics: {},
     overallCachePolicy: newCachePolicy(),
   };

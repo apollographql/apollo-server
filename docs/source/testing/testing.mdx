@@ -103,8 +103,17 @@ it('fetches single launch', async () => {
       query: GET_LAUNCH,
       variables: { id: 1 },
     },
-    // this second argument is used as the context for our operation
-    { user: { id: 1, email: 'a@a.a' }, dataSources: { userAPI, launchAPI } }, //highlight-line
+    {
+      // highlight-start
+      contextValue: {
+        user: { id: 1, email: 'a@a.a' },
+        dataSources: {
+          userAPI,
+          launchAPI,
+        },
+      },
+      // highlight-end
+    },
   );
 
   expect(res).toMatchSnapshot();

@@ -601,7 +601,7 @@ The `executeOperation` method takes two arguments:
 
 - The first argument is an object describing the GraphQL operation to be executed.
   - Supported fields are listed in the table below.
-- The second optional argument is used as the operation's [context value](../data/resolvers/#the-context-argument). Note, this argument is only optional if your server _doesn't_ expect a context value (i.e., your server uses the default context because you didn't explicitly provide another one).
+- The second argument is the optional options object. This object includes the operation's optional [`contextValue`](../data/resolvers/#the-context-argument). Note, this argument is only optional if your server _doesn't_ expect a context value (i.e., your server uses the default context because you didn't explicitly provide another one).
 
 The `response` object returned from `executeOperation` is a `GraphQLResponse`, which has `body` and `http` fields.
 
