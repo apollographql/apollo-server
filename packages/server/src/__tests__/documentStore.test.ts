@@ -51,7 +51,7 @@ describe('ApolloServer documentStore', () => {
     assert(documentStore);
     expect(documentStore).toBeInstanceOf(InMemoryLRUCache);
 
-    await server.executeOperation({ request: operations.simple.op });
+    await server.executeOperation(operations.simple.op);
 
     expect(
       (documentStore as InMemoryLRUCache<DocumentNode>)['cache'].calculatedSize,
@@ -77,7 +77,7 @@ describe('ApolloServer documentStore', () => {
     });
     await server.start();
 
-    await server.executeOperation({ request: operations.simple.op });
+    await server.executeOperation(operations.simple.op);
     const keys = documentStore.keys();
     expect(keys).toHaveLength(1);
     const theKey = keys[0];
@@ -88,7 +88,7 @@ describe('ApolloServer documentStore', () => {
     const result = await documentStore.get(`${uuid}:${hash}`);
     expect(result).toMatchObject(documentNodeMatcher);
 
-    await server.executeOperation({ request: operations.simple.op });
+    await server.executeOperation(operations.simple.op);
 
     // one of these calls is ours
     expect(getSpy.mock.calls.length).toBe(2 + 1);
@@ -110,9 +110,7 @@ describe('ApolloServer documentStore', () => {
     ).schemaManager.getSchemaDerivedData();
     expect(documentStore).toBeNull();
 
-    const { body } = await server.executeOperation({
-      request: operations.simple.op,
-    });
+    const { body } = await server.executeOperation(operations.simple.op);
 
     expect(body).toEqual({
       kind: 'single',

@@ -262,9 +262,7 @@ describe('ApolloServer executeOperation', () => {
     await server.start();
 
     const { body } = await server.executeOperation({
-      request: {
-        query: 'query { error }',
-      },
+      query: 'query { error }',
     });
 
     assert(body.kind === 'single');
@@ -286,9 +284,7 @@ describe('ApolloServer executeOperation', () => {
     await server.start();
 
     const { body } = await server.executeOperation({
-      request: {
-        query: 'query { error }',
-      },
+      query: 'query { error }',
     });
 
     const result = singleResult(body);
@@ -307,9 +303,7 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
-    const { body } = await server.executeOperation({
-      request: { query: '{ hello }' },
-    });
+    const { body } = await server.executeOperation({ query: '{ hello }' });
     const result = singleResult(body);
     expect(result.errors).toBeUndefined();
     expect(result.data?.hello).toBe('world');
@@ -324,13 +318,11 @@ describe('ApolloServer executeOperation', () => {
     await server.start();
 
     const { body } = await server.executeOperation({
-      request: {
-        query: gql`
-          {
-            hello
-          }
-        `,
-      },
+      query: gql`
+        {
+          hello
+        }
+      `,
     });
     const result = singleResult(body);
     expect(result.errors).toBeUndefined();
@@ -345,9 +337,7 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
-    const { body } = await server.executeOperation({
-      request: { query: '{' },
-    });
+    const { body } = await server.executeOperation({ query: '{' });
     const result = singleResult(body);
     expect(result.errors).toEqual([
       {
@@ -368,9 +358,7 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
-    const { body } = await server.executeOperation({
-      request: { query: '{ unknown }' },
-    });
+    const { body } = await server.executeOperation({ query: '{ unknown }' });
     const result = singleResult(body);
     expect(result.errors).toEqual([
       {
@@ -385,19 +373,16 @@ describe('ApolloServer executeOperation', () => {
   });
 
   it('passes its second argument as context object', async () => {
-    interface MyContext {
-      foo: string;
-    }
-    const server = new ApolloServer<MyContext>({
+    const server = new ApolloServer({
       typeDefs,
       resolvers,
     });
     await server.start();
 
-    const { body } = await server.executeOperation({
-      request: { query: '{ contextFoo }' },
-      contextValue: { foo: 'bla' },
-    });
+    const { body } = await server.executeOperation(
+      { query: '{ contextFoo }' },
+      { foo: 'bla' },
+    );
     const result = singleResult(body);
     expect(result.errors).toBeUndefined();
     expect(result.data?.contextFoo).toBe('bla');
@@ -437,24 +422,21 @@ describe('ApolloServer executeOperation', () => {
         ],
       });
       await server.start();
-      const { body } = await server.executeOperation({
-        request: { query: '{ n }' },
-        contextValue: { foo: 123 },
-      });
+      const { body } = await server.executeOperation(
+        { query: '{ n }' },
+        { foo: 123 },
+      );
       const result = singleResult(body);
       expect(result.errors).toBeUndefined();
       expect(result.data?.n).toBe(123);
 
-      // It knows that context.foo is a number so it doesn't work as a string.
-      // @ts-expect-error
-      const { body: body2 } = await server.executeOperation({
-        request: { query: '{ n }' },
-        contextValue: {
-          foo: 'asdf',
-        },
-      });
+      const { body: body2 } = await server.executeOperation(
+        { query: '{ n }' },
+        // It knows that context.foo is a number so it doesn't work as a string.
+        // @ts-expect-error
+        { foo: 'asdf' },
+      );
       const result2 = singleResult(body2);
-
       // GraphQL will be sad that a string was returned from an Int! field.
       expect(result2.errors).toBeDefined();
       await server.stop();

@@ -43,9 +43,7 @@ export async function collectCacheControlHintsAndPolicyIfCacheable(
     ],
   });
   await server.start();
-  const response = await server.executeOperation({
-    request: { query: source },
-  });
+  const response = await server.executeOperation({ query: source });
   await server.stop();
 
   if (!('singleResult' in response.body)) {
