@@ -101,3 +101,7 @@ export interface GraphQLRequestContext<TContext extends BaseContext> {
 
   readonly overallCachePolicy: CachePolicy;
 }
+
+export interface ExecuteOperationOptions<TContext extends BaseContext> {
+  contextValue?: TContext;
+}

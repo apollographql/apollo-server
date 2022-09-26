@@ -64,6 +64,7 @@ import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constr
 import type { GatewayExecutor } from '@apollo/server-gateway-interface';
 import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
 import { HeaderMap } from './utils/HeaderMap.js';
+import type { ExecuteOperationOptions } from './externalTypes/graphql.js';
 
 const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
   Field(node) {
@@ -1077,9 +1078,9 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
    * just a convenience, not an optimization (we convert provided ASTs back into
    * string).
    *
-   * The second object will be the `contextValue` object available in resolvers.
+   * The second object is an optional options object which includes the optional
+   * `contextValue` object available in resolvers.
    */
-  // TODO(AS4): Make the parameters to this function an object
   public async executeOperation(
     this: ApolloServer<BaseContext>,
     request: Omit<GraphQLRequest, 'query'> & {
@@ -1090,7 +1091,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
     },
-    options: ExecuteOperationOptions<TContext>,
+    options?: ExecuteOperationOptions<TContext>,
   ): Promise<GraphQLResponse>;
 
   async executeOperation(
@@ -1130,10 +1131,6 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       options,
     );
   }
-}
-
-interface ExecuteOperationOptions<TContext extends BaseContext> {
-  contextValue?: TContext;
 }
 
 // Shared code between runHttpQuery (ie executeHTTPGraphQLRequest) and
