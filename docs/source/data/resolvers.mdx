@@ -159,8 +159,7 @@ console.log(`🚀 Server listening at: ${url}`);
 
 Note that you can define your resolvers across as many different files and objects as you want, as long as you merge all of them into a single resolver map that's passed to the `ApolloServer` constructor.
 
-<!-- (TODO(AS4) Add note to fetching from other data sources data once it's done  -->
-> To learn how to fetch data from a REST API, see [Fetching from REST](./fetching-rest/).
+> To learn how to fetch data from a REST API, see [Fetching from REST](./fetching-rest/). To learn how to fetch data from other sources, see [Fetching Data](./fetching-data).
 
 ## Resolver chains
 
@@ -380,8 +379,7 @@ Resolver functions are passed four arguments: `parent`, `args`, `context`, and `
 
 ### The `context` argument
 
-<!-- (TODO(AS4) Add note to fetching data too once it's done  -->
-The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), [sources for fetching data](./fetching-rest/), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./fetching-rest/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
+The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), [sources for fetching data](./fetching-data/), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./fetching-rest/#using-with-dataloader) across resolvers, you can attach them to the `context` as well.
 
 **Resolvers should never destructively modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
 
