@@ -24,42 +24,45 @@ flowchart LR;
   client --Sends query--> ApolloServer;
 ```
 
-Because your server can use various data sources, keeping your [resolvers](./resolvers) tidy becomes even more important. For this reason, we recommend creating data source classes to encapsulate the logic of fetching data from a particular source, then providing methods that resolvers can use to fetch data neatly.
+Because your server can use any number of various data sources, keeping your [resolvers](./resolvers) tidy becomes _even more_ important. 
+
+For this reason, we recommend creating individual data source classes to encapsulate the logic of fetching data from a particular source, providing methods that resolvers can use to access data neatly. You can additionally customize your data source classes to help with caching, deduplication, or errors while resolving operations.
 
 ## Creating data source classes
 
-> [In Apollo Server 3](/apollo-server/v3/data/data-sources), you'd subclass the `DataSource` abstract class for each of your data sources. In Apollo Server 4, we recommend [making a custom class for each data source](#creating-data-source-classes), each class best suited for that particular store or API.
-
 Your data source class can be as straightforward or complex as you need it to be. You know what data your server needs, and you can let that be the guide for the methods your class should include. 
 
-Below is simple class for connecting to a built-in static data set:
+Below is an example of a data source class that connects to a database:
 
 <MultiCodeBlock>
 
-```ts title="datasources.ts"
-export class BooksDataSource {
-  // Our example static data set
-  books: { title?: string; author?: string }[] = [
-    {
-      title: 'The Awakening',
-      author: 'Kate Chopin',
-    },
-    {
-      title: 'City of Glass',
-      author: 'Paul Auster',
-    },
-  ];
+```ts title="bookings.ts"
+export class BookingsDataSource {
+  private dbConnection;
+  private context;
 
-  getBooks(): Book[] {
-    // simulate fetching a list of books
-    return this.books;
+  constructor(options: { context: { token: string } }) {
+    this.dbConnection = this.initializeDBConnection();
+    this.context = options.context;
   }
+
+  async initializeDBConnection() {
+    // set up our database details, instantiate our connection,
+    // and return that database connection
+    return dbConnection;
+  }
+
+  async getBooking(bookingId) {
+    return await this.db.Booking.findByPk(bookingId);
+  }
+
+  //... more methods for finding and creating bookings
 }
 ```
 
 </MultiCodeBlock>
 
-Check out [`RestDataSource`](https://github.com/apollographql/datasource-rest/blob/main/src/RESTDataSource.ts) class for an example of a data source class that handles caching, deduplication, and errors.
+> Apollo's [`RestDataSource`](https://github.com/apollographql/datasource-rest/blob/main/src/RESTDataSource.ts) class is a built-out example of how a data source class can handle caching, deduplication, and errors.
 
 ## Adding data sources to your context
 
@@ -97,6 +100,7 @@ const { url } = await startStandaloneServer(server, {
         catsApi: new CatsAPI({ cache }),
       },
       //highlight-end
+      token
     };
   },
 });
@@ -116,20 +120,22 @@ Your resolvers can then access your data sources from the shared `context` objec
 ```ts title="resolvers.ts"
 const resolvers = {
   Query: {
-    dogs: async (_, { id }, { dataSources }) => {
-      return dataSources.dogsDB.getDogs();
+    dog: async (_, { id }, { dataSources }) => {
+      return dataSources.dogsDB.getDog(id);
     },
     popularDogs: async (_, __, { dataSources }) => {
       return dataSources.dogsDB.getMostLikedDogs();
     },
     bigCats: async (_, __, { dataSources }) => {
-      return dataSources.catsApi.getCats({size: 10});
+      return dataSources.catsApi.getCats({ size: 10 });
     },
   },
 };
 ```
 
 ## Open-source implementations
+
+[In Apollo Server 3](/apollo-server/v3/data/data-sources), you'd subclass the `DataSource` abstract class for each of your data sources. In Apollo Server 4, we recommend [making a custom class for each data source](#creating-data-source-classes), with each class best suited for that particular source of data.
 
 > ⚠️ **Note**: The community built each data source package below for use with Apollo Server 3. [As shown below](#using-datasource-subclasses), you can still use these packages in Apollo Server 4 with a bit of extra setup.
 
@@ -149,7 +155,7 @@ The larger community maintains the following open-source implementations:
 
 ### Using `DataSource` subclasses
 
-In Apollo Server 3, immediately after constructing each `DataSource` subclass, your server would invokes the `initialize({ cache, context })` method on each new `DataSource`. 
+In Apollo Server 3, immediately after constructing each `DataSource` subclass, your server would invoke the `initialize({ cache, context })` method on each new `DataSource` behind the scenes.
 
 To replicate this in Apollo Sever 4, you can manually invoke the `initialize` method in the constructor function of each `DataSource` subclass, like so:
 
